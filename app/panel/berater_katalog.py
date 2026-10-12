@@ -158,7 +158,7 @@ OHNE = {
         "remarkable_plus", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
         "room_remote", "room_voices", "route_extra", "route_off", "routing", "search", "search_url",
         "self_echo_mode", "spark_drawer", "spark_help", "spark_suggest", "speaker_code", "speaker_id",
-        "speaker_strictness", "storage_folder", "storage_lan", "storage_own", "storage_root",
+        "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",
         "svc_watch", "svc_watch_users", "system_prompt", "systemone", "systemone_mail",
         "systemone_quality", "systemone_tidy", "tasks", "telegram", "thinking", "tool_thinking", "top_p", "transit",
         "transit_url", "weather", "weather_url", "wiki", "wiki_url", "write_apps", "write_help", "wyoming",

@@ -1315,6 +1315,8 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 390, 844, mic=True)
+                # the profile's settings arrive after the sign-in (loadSettings replaces S): only then switch hands-free on
+                await pg.wait_for_load_state("networkidle")
                 await pg.evaluate("goSec('chat');S.hands=true;S.live=false;S.turn=false")
                 await pg.evaluate("startListening()")
                 await pg.wait_for_function("!!chat.rec&&micLive()", timeout=20000)

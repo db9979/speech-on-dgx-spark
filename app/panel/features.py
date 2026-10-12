@@ -223,6 +223,8 @@ FEATURES = (
       me="storebox", guide="speicherlan"),
     F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
       me="storebox", guide="speicherordner"),
+    F("speicherauslagern", "Originale auslagern", "Move originals out", "data", ("storage_offload",), parent="speicher",
+      me="storebox", guide="speicherauslagern"),
     F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",),
       "svc_hint", parent="dienstwacht", me="setbox", guide="dienstnutzer"),
     # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile

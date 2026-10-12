@@ -615,6 +615,8 @@ def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader))
         owner = find_shared(prof["id"], doc_id)
         got = documents.original(owner, doc_id) if owner else None
     if not got:
+        if documents.away(prof["id"], doc_id):
+            raise HTTPException(503, "Das Original liegt auf deinem eigenen Speicher und ist gerade nicht erreichbar.")
         raise HTTPException(404, "the original is not kept")
     path, name, ctype = got
     inline = bool(view) and ctype in INLINE

@@ -185,6 +185,7 @@
     "storage_own": false,
     "storage_lan": false,
     "storage_folder": false,
+    "storage_offload": false,
     "storage_root": "",
     "dev_updates_night": false,
     "dev_updates_night_at": "05:15",

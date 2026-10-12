@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.462** Own storage: old originals of documents can live only on the own storage and come back when opened
 - **V01.0.461** "Turn on the TV in the living room" hits the TV, not the box next to it
 - **V01.0.460** Companion: every text field can be spoken into, button labels no longer break mid-word
 - **V01.0.459** Pages show that they load (bar, placeholders, errors with “Try again”); Me loads all boxes side by side
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.455** Answers never come twice, even when the model repeats them after a tool
 - **V01.0.454** Instant acknowledgement with a wink: 60 funnier sentences added (186 in all).
 - **V01.0.453** Own storage: keep chats, memory, documents and created files encrypted on your own NAS (WebDAV) or a mounted folder, watched, with a note when it fails
-- **V01.0.452** Update check by itself only every 3 hours; internet check no longer via GitHub (limit of 60 questions per hour)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -449,6 +449,148 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class Offload(Base):
+    """Originale auslagern: only kept originals of documents, only after OFFLOAD_DAYS unchanged and unused, each
+    read back and checked before the Spark deletes it, fetched back and checked when opened, never lost. The files
+    get a time stamp from 1970, so no test depends on the clock."""
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(storage_offload=True)
+
+    def tearDown(self):
+        helpers.set_config(storage_offload=False)
+        super().tearDown()
+
+    def doc(self, uid, text="Mietvertrag Seite eins", old=True):
+        import documents
+        d = documents.add(uid, "Vertrag.txt", text.encode(), keep=10 ** 6)
+        self.assertTrue(d["file"], d)
+        rel = "docs/files/" + d["id"] + ".txt"
+        if old:
+            os.utime(profiles._path(uid, rel), ns=(10 ** 9, 10 ** 9))
+        return d["id"], rel, profiles._path(uid, rel)
+
+    def on(self, c, tid):
+        r = c.put(f"/api/profile/speicher/{tid}", json={"offload": True})
+        self.assertEqual(r.status_code, 200, r.text)
+
+    def test_needs_the_admin_switch_and_only_one_storage(self):
+        c, uid = self.ready("SpAusSchalter")
+        tid = self.add(c, areas=["dokumente"])
+        helpers.set_config(storage_offload=False)
+        self.assertEqual(c.put(f"/api/profile/speicher/{tid}", json={"offload": True}).status_code, 400)
+        self.assertEqual(c.put(f"/api/profile/speicher/{tid}", json={"offload": "ja"}).status_code, 400)
+        self.assertFalse(c.get("/api/profile/speicher").json()["offload"])
+        _, rel, p = self.doc(uid)
+        run(speicher.copy_once(uid, tid))
+        self.assertTrue(os.path.exists(p))                                        # switch off: nothing moves
+        helpers.set_config(storage_offload=True)
+        self.on(c, tid)
+        r = c.post("/api/profile/speicher", json=dict(name="Zweiter", kind="webdav", url=BASE, user="spark",
+                                                      password="nas-pass-4711", offload=True))
+        self.assertEqual(r.status_code, 400, r.text)
+        self.assertIn("einen Speicher", r.json()["detail"])
+        helpers.set_config(storage_offload=False)                                 # admin switch off again: nothing moves
+        run(speicher.copy_once(uid, tid))
+        self.assertTrue(os.path.exists(p))
+
+    def test_moved_out_after_a_check_and_fetched_back_when_opened(self):
+        import documents
+        c, uid = self.ready("SpAuslagern")
+        tid = self.add(c, areas=["gedaechtnis", "dokumente"])
+        self.on(c, tid)
+        doc_id, rel, p = self.doc(uid)
+        old_mem = self.write(uid, "memory.json", "[1]")
+        os.utime(old_mem, ns=(10 ** 9, 10 ** 9))
+        _, _, fresh = self.doc(uid, "Neue Rechnung", old=False)
+        self.assertTrue(run(speicher.copy_once(uid, tid))["ok"])
+        self.assertFalse(os.path.exists(p))                                       # old original: only there now
+        self.assertTrue(os.path.exists(fresh))                                    # changed lately: stays
+        self.assertTrue(os.path.exists(old_mem))                                  # not a document original: stays
+        self.assertEqual(speicher.away(uid), {tid: 1})
+        self.assertEqual(c.get("/api/profile/speicher").json()["targets"][0]["away"], 1)
+        self.assertIn(rel, self.manifest(uid)["files"])                           # still listed, not in the bin
+        self.assertEqual(speicher._state(uid, tid)["trash"], [])
+        got = documents.original(uid, doc_id)                                     # opened: fetched and checked
+        self.assertIsNotNone(got)
+        with open(got[0]) as f:
+            self.assertEqual(f.read(), "Mietvertrag Seite eins")
+        self.assertEqual(speicher.away(uid), {})
+        run(speicher.copy_once(uid, tid))
+        self.assertTrue(os.path.exists(p))                                        # just used: not moved again
+        self.assertEqual(speicher.away(uid), {})
+
+    def test_never_deleted_without_a_good_copy_and_unreachable_is_said(self):
+        import documents
+        c, uid = self.ready("SpPruefen")
+        tid = self.add(c, areas=["dokumente"])
+        doc_id, rel, p = self.doc(uid)
+        run(speicher.copy_once(uid, tid))
+        o = self.manifest(uid)["files"][rel]["o"]
+        name = next(k for k in objects() if o in k)
+        good = DAV["files"][name]
+        DAV["files"][name] = good[:-5] + b"xxxxx"                                 # broken on the storage
+        self.on(c, tid)
+        run(speicher.copy_once(uid, tid))
+        self.assertTrue(os.path.exists(p))                                        # read back, did not match: stays
+        DAV["files"][name] = good
+        run(speicher.copy_once(uid, tid))
+        self.assertFalse(os.path.exists(p))
+        DAV["mode"] = "down"                                                      # storage gone: nothing invented
+        self.assertIsNone(documents.original(uid, doc_id))
+        self.assertTrue(documents.away(uid, doc_id))
+        self.assertEqual(speicher.away(uid), {tid: 1})
+        DAV["mode"] = ""
+        DAV["files"][name] = good[:-5] + b"xxxxx"                                 # changed there: never written here
+        self.assertIsNone(documents.original(uid, doc_id))
+        self.assertFalse(os.path.exists(p))
+        DAV["files"][name] = good
+        self.assertIsNotNone(documents.original(uid, doc_id))
+        self.assertFalse(documents.away(uid, doc_id))
+
+    def test_kept_while_only_there_and_a_deleted_document_goes_to_the_bin(self):
+        import documents
+        c, uid = self.ready("SpBleibt")
+        tid = self.add(c, areas=["dokumente"])
+        self.on(c, tid)
+        doc_id, rel, p = self.doc(uid)
+        run(speicher.copy_once(uid, tid))
+        self.assertFalse(os.path.exists(p))
+        r = c.delete(f"/api/profile/speicher/{tid}")                              # would lose the only copy
+        self.assertEqual(r.status_code, 409, r.text)
+        r = c.put(f"/api/profile/speicher/{tid}", json={"url": BASE + "anders/", "password": "nas-pass-4711"})
+        self.assertEqual(r.status_code, 409, r.text)
+        r = c.put(f"/api/profile/speicher/{tid}", json={"areas": []})             # area off: still kept there
+        self.assertEqual(r.status_code, 200, r.text)
+        run(speicher.copy_once(uid, tid))
+        self.assertIn(rel, speicher._state(uid, tid)["files"])
+        o = speicher._state(uid, tid)["files"][rel]["o"]
+        self.assertNotIn(o, [x["o"] for x in speicher._state(uid, tid)["trash"]])
+        self.assertTrue(documents.delete(uid, doc_id))                            # the document itself deleted
+        run(speicher.copy_once(uid, tid))
+        self.assertNotIn(rel, speicher._state(uid, tid)["files"])
+        self.assertIn(o, [x["o"] for x in speicher._state(uid, tid)["trash"]])    # in the bin for TRASH_DAYS
+        self.assertEqual(c.delete(f"/api/profile/speicher/{tid}").status_code, 200)
+
+    def test_restore_brings_every_original_back(self):
+        c, uid = self.ready("SpAlleZurueck")
+        tid = self.add(c, areas=["dokumente"])
+        self.on(c, tid)
+        _, rel, p = self.doc(uid)
+        run(speicher.copy_once(uid, tid))
+        self.assertFalse(os.path.exists(p))
+        c.put(f"/api/profile/speicher/{tid}", json={"offload": False})
+        self.assertEqual(run(speicher.restore_missing(uid, tid))["n"], 1)
+        self.assertTrue(os.path.exists(p))
+        self.assertEqual(speicher.away(uid), {})
+        self.assertEqual(c.delete(f"/api/profile/speicher/{tid}").status_code, 200)
+
+    def test_bring_back_stays_in_its_folder(self):
+        _, uid = self.ready("SpPfad")
+        for bad in ("docs/files/../../speicher.json", "memory.json", "docs/files/x/../../../y"):
+            self.assertFalse(speicher.bring_back(uid, bad))
+
+
 class Classified(unittest.TestCase):
     def test_every_profile_file_is_copied_or_stays_local(self):
         """Richtlinie Teil 1, Punkt 24: each name the code passes to profiles._path(uid, "…") is in speicher.AREAS

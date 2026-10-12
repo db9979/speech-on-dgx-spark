@@ -87,6 +87,9 @@ RUN_BYTES = 2 * 1024 ** 3      # one run sends at most this much; the next run g
 EVERY = 30 * 60                # a target is looked at this often (only changed files go)
 RETRY = (10 * 60, 30 * 60, 60 * 60, 2 * 3600)   # after failures in a row
 TRASH_DAYS = 30
+OFFLOAD_DAYS = 30              # Auslagern (5b): an original unchanged and unused this long may live only on the storage
+OFFLOAD_RUN = 1024 ** 3        # at most this much is moved out per run (each object read back and checked first)
+OFF_PREFIX = "docs/files/"     # only kept originals of documents are moved out; everything else stays a copy
 NOTE_AFTER = 3600              # the owner hears of a failure that lasts this long
 NOTE_AGAIN = 24 * 3600         # and of the same kind again only after this long
 KEEP_HIST = 7 * 86400
@@ -165,6 +168,10 @@ def _chat():
     return features.chat_cfg()
 
 
+def offload_ok(c=None):
+    return features.admin_on("speicherauslagern", c)
+
+
 def lan_ok(c=None):
     return features.admin_on("speicherlan", c)
 
@@ -216,7 +223,7 @@ def _clean(t):
     if not isinstance(t, dict) or not TID.fullmatch(str(t.get("id", ""))) or t.get("kind") not in KINDS \
             or not NAME.fullmatch(str(t.get("name", ""))):
         return None
-    out = {"id": t["id"], "name": t["name"], "kind": t["kind"], "added": int(t.get("added") or 0),
+    out = {"id": t["id"], "name": t["name"], "kind": t["kind"], "added": int(t.get("added") or 0), "offload": t.get("offload") is True,
            "areas": [a for a in t.get("areas") or [] if a in AREAS] if isinstance(t.get("areas"), list) else []}
     if t["kind"] in LOGIN_KINDS:
         try:
@@ -292,7 +299,9 @@ def _state(uid, tid):
             "noted": s.get("noted") if isinstance(s.get("noted"), dict) else {},
             "free": s.get("free") if isinstance(s.get("free"), dict) else None,
             "hist": [x for x in s.get("hist") or [] if isinstance(x, dict)][-MAX_HIST:] if isinstance(s.get("hist"), list) else [],
-            "manifest": s.get("manifest") is True}
+            "manifest": s.get("manifest") is True,
+            "used": {k: int(v) for k, v in (s.get("used") or {}).items() if _rel_ok(k) and isinstance(v, (int, float))}
+            if isinstance(s.get("used"), dict) else {}}
 
 
 def _put_state(uid, tid, st):
@@ -301,6 +310,15 @@ def _put_state(uid, tid, st):
         if st is None:
             d.pop(tid, None)
         else:
+            old = d.get(tid)
+            if isinstance(old, dict) and isinstance(old.get("used"), dict):   # stamped by another writer since st was read
+                used = st.setdefault("used", {})
+                for k, v in old["used"].items():
+                    if _rel_ok(k) and isinstance(v, (int, float)) and v > used.get(k, 0):
+                        used[k] = int(v)
+                for k, x in (st.get("files") or {}).items():
+                    if x.get("off") and used.get(k, 0) >= x["off"]:
+                        x.pop("off")      # fetched back meanwhile (bring_back)
             d[tid] = st
         known = {t["id"] for t in targets(uid)}
         profiles._write(_state_file(uid), {k: v for k, v in d.items() if k in known or k == tid and st is not None})
@@ -1134,7 +1152,7 @@ async def copy_once(uid, tid, why="auto", now=None):
                 continue   # gone or locked just now: the next run
             try:
                 if old and old.get("sha") == sha:
-                    st["files"][rel] = dict(old, size=size, mt=mt)
+                    st["files"][rel] = {k: v for k, v in dict(old, size=size, mt=mt).items() if k != "off"}
                     continue
                 await drv.put("o/" + obj + ".enc", enc)
             finally:
@@ -1147,8 +1165,12 @@ async def copy_once(uid, tid, why="auto", now=None):
                 await _manifest(drv, key, st)
                 _put_state(uid, tid, st)
         for rel in [r for r in st["files"] if r not in files]:   # deleted, or its area taken off the list
+            if st["files"][rel].get("off") and await asyncio.to_thread(_still_used, uid, rel):
+                continue      # moved out (Auslagern): it lives only there now
             st["trash"].append({"o": st["files"].pop(rel)["o"], "t": int(time.time())})
             changed = True
+        if t.get("offload") and offload_ok() and "dokumente" in t["areas"]:
+            changed = await _offload(uid, tid, st, drv, key, files) or changed
         if changed or not st["manifest"]:
             await _manifest(drv, key, st)
         keep = []
@@ -1210,6 +1232,7 @@ async def restore_missing(uid, tid, now=None):
     t0 = time.time()
     n = skipped = 0
     drv = None
+    back = []
     try:
         key = _key(uid)
         if not key:
@@ -1253,6 +1276,7 @@ async def restore_missing(uid, tid, now=None):
                         _rm(part)
                 await asyncio.to_thread(unpack)
                 n += 1
+                back.append(rel)
             except (ValueError, OSError):
                 skipped += 1
             except StoreError as e:
@@ -1262,6 +1286,10 @@ async def restore_missing(uid, tid, now=None):
             finally:
                 _rm(enc)
         st = _state(uid, tid)
+        for rel in back:          # an original that was moved out is on the Spark again
+            if rel in st["files"]:
+                st["files"][rel].pop("off", None)
+                st["used"][rel] = int(time.time())
         _rec(st, True, n=n, what="restore")
         _put_state(uid, tid, st)
         print(f"speicher: zurueckgeholt ziel={t['kind']} prof={_log_name(uid)} dateien={n} uebersprungen={skipped}", flush=True)
@@ -1279,6 +1307,168 @@ async def restore_missing(uid, tid, now=None):
         if drv is not None:
             await drv.close()
         _running.pop((uid, tid), None)
+
+
+class _Null:
+    def write(self, b):
+        return len(b)
+
+
+def _still_used(uid, rel):
+    """A moved-out original whose document still exists (else it goes to the bin like any deleted file)."""
+    if not rel.startswith(OFF_PREFIX):
+        return False
+    try:
+        import documents
+        if not os.path.exists(documents.db_path(uid)):
+            return False
+        with documents._Db(uid) as con:
+            return bool(con.execute("SELECT 1 FROM docs WHERE file=?", (rel[len(OFF_PREFIX):],)).fetchone())
+    except Exception:
+        return True       # in doubt it stays listed: nothing is ever lost because of a locked database
+
+
+async def _offload(uid, tid, st, drv, key, files, now=None):
+    """Auslagern (5b): originals unchanged and unused for OFFLOAD_DAYS live only on the storage. Each object is
+    read back and checked against its SHA-256 before the file on the Spark is removed. Returns whether any moved."""
+    now, budget, moved = now or time.time(), OFFLOAD_RUN, 0
+    for rel, x in list(st["files"].items()):
+        if not rel.startswith(OFF_PREFIX) or x.get("off") or rel not in files:
+            continue
+        path, size, mt = files[rel]
+        if x.get("mt") != mt or x.get("size") != size or size > budget:
+            continue
+        if now - mt / 1e9 < OFFLOAD_DAYS * 86400 or now - st["used"].get(rel, 0) < OFFLOAD_DAYS * 86400:
+            continue
+        enc = _tmp(".enc")
+        try:
+            await drv.get("o/" + x["o"] + ".enc", enc, size + 64 * 1024)
+
+            def verify():
+                with open(enc, "rb") as f:
+                    return open_file(f, _Null(), key, x["o"], size)
+            if await asyncio.to_thread(verify) != x["sha"]:
+                continue
+            if now - _state(uid, tid)["used"].get(rel, 0) < OFFLOAD_DAYS * 86400:
+                continue        # opened while it was checked
+            a = os.lstat(path)
+            if not stat.S_ISREG(a.st_mode) or a.st_size != size or a.st_mtime_ns != mt:
+                continue        # changed while it was checked: stays
+            os.remove(path)
+        except (ValueError, OSError):
+            continue
+        except StoreError as e:
+            if e.kind != "other":
+                raise
+            continue
+        finally:
+            _rm(enc)
+        x["off"] = int(now)
+        budget -= size
+        moved += 1
+    if moved:
+        print(f"speicher: ausgelagert prof={_log_name(uid)} dateien={moved}", flush=True)
+        _event(f"{moved} Originale auf den eigenen Speicher ausgelagert")
+    return moved > 0
+
+
+def offloaded(uid, rel):
+    """The target (id) that holds a moved-out file, or None."""
+    for tid, s in _states(uid).items():
+        x = (s.get("files") or {}).get(rel) if isinstance(s, dict) else None
+        if isinstance(x, dict) and x.get("off") and find(uid, tid):
+            return tid
+    return None
+
+
+def opened(uid, rel):
+    """documents.original: an original in use is not moved out (one stamp a day is enough)."""
+    if not _rel_ok(rel) or not rel.startswith(OFF_PREFIX) or not offload_ok():
+        return
+    now = int(time.time())
+    with _lock:
+        for t in targets(uid):
+            if t.get("offload"):
+                st = _state(uid, t["id"])
+                if rel in st["files"] and now - st["used"].get(rel, 0) > 86400:
+                    st["used"][rel] = now
+                    _put_state(uid, t["id"], st)
+
+
+def away(uid):
+    """{tid: number of originals that live only on that storage}."""
+    out = {}
+    for tid, s in _states(uid).items():
+        n = sum(1 for x in (s.get("files") or {}).values() if isinstance(x, dict) and x.get("off"))
+        if n:
+            out[tid] = n
+    return out
+
+
+_back_locks = {}
+
+
+def bring_back(uid, rel):
+    """A moved-out original back on the Spark (documents.original calls it when the file is missing): fetched,
+    checked against its SHA-256 and written only where nothing is. Blocking; never in the event loop's own
+    thread (there it gives up: a page waits, the panel does not). True when the file is there now."""
+    if not _rel_ok(rel) or not rel.startswith(OFF_PREFIX):
+        return False
+    try:
+        asyncio.get_running_loop()
+        return False
+    except RuntimeError:
+        pass
+    tid = offloaded(uid, rel)
+    if not tid or not allowed(uid):
+        return False
+    lk = _back_locks.setdefault(uid, threading.Lock())
+    with lk:
+        dst = os.path.join(profiles._path(uid), rel)
+        if os.path.lexists(dst):
+            return os.path.isfile(dst)
+        return asyncio.run(_bring_back(uid, tid, rel, dst))
+
+
+async def _bring_back(uid, tid, rel, dst):
+    t, t0 = find(uid, tid), time.time()
+    x = _state(uid, tid)["files"].get(rel) or {}
+    key = _key(uid)
+    if not t or not key or not x.get("off"):
+        return False
+    drv, enc, ok = driver(t, key), _tmp(".enc"), False
+    try:
+        await drv.get("o/" + x["o"] + ".enc", enc, MAX_FILE + 64 * 1024)
+
+        def unpack():
+            os.makedirs(os.path.dirname(dst), mode=0o700, exist_ok=True)
+            part = dst + ".tmp"
+            try:
+                with open(enc, "rb") as a, open(os.open(part, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), "wb") as b:
+                    sha = open_file(a, b, key, x["o"])
+                if sha != x["sha"] or os.path.lexists(dst):
+                    return False
+                os.replace(part, dst)
+                return True
+            finally:
+                _rm(part)
+        ok = await asyncio.to_thread(unpack)
+    except (StoreError, ValueError, OSError) as e:
+        print(f"speicher: holen fehler ziel={t['kind']} prof={_log_name(uid)} art={getattr(e, 'kind', 'other')}", flush=True)
+    finally:
+        _rm(enc)
+        await drv.close()
+    if ok:
+        with _lock:
+            st = _state(uid, tid)
+            if rel in st["files"]:
+                st["files"][rel].pop("off", None)
+                st["used"][rel] = int(time.time())
+                _put_state(uid, tid, st)
+        print(f"speicher: geholt ziel={t['kind']} prof={_log_name(uid)}", flush=True)
+        _event("Original vom eigenen Speicher geholt")
+    _job(t0, ok, uid, "Speicher holen")
+    return ok
 
 
 async def check(t, key):
@@ -1482,7 +1672,8 @@ def public(uid, t, st=None):
     out = {"id": t["id"], "name": t["name"], "kind": t["kind"], "zone": _zone(t), "areas": t["areas"], "added": t["added"],
            "last": st["last"], "fail": st["fail"], "free": st["free"], "files": len(st["files"]),
            "bytes": sum(int(x.get("size") or 0) for x in st["files"].values()), "trash": len(st["trash"]),
-           "running": _running.get((uid, t["id"]), ""),
+           "running": _running.get((uid, t["id"]), ""), "offload": t["offload"],
+           "away": sum(1 for x in st["files"].values() if x.get("off")),
            "hist": [{k: x.get(k) for k in ("t", "ok", "kind", "n", "bytes", "what")} for x in st["hist"][-50:]]}
     if t["kind"] in LOGIN_KINDS:
         out.update(url=t["url"], user=t["user"], has_password=bool(t["password"]))
@@ -1496,7 +1687,7 @@ def public(uid, t, st=None):
 def _view(uid):
     c = _chat()
     return {"admin": admin_on(c), "on": allowed(uid), "why": features.reason("speicher", uid),
-            "lan": lan_ok(c), "folder": folder_ok(c), "root": root(c) if folder_ok(c) else "", "max": MAX_TARGETS,
+            "lan": lan_ok(c), "folder": folder_ok(c), "offload": offload_ok(c), "offload_days": OFFLOAD_DAYS, "root": root(c) if folder_ok(c) else "", "max": MAX_TARGETS,
             "key": bool(load(uid)["key"]) and _key(uid) is not None or not load(uid)["key"],
             "areas": [{"id": k, "name": [v[0], v[1]]} for k, v in AREAS.items()],
             "targets": [public(uid, t) for t in targets(uid)]}
@@ -1513,7 +1704,8 @@ def overview():
             rows.append({"profile": names.get(uid, "?"), "name": t["name"], "kind": t["kind"], "zone": _zone(t),
                          "last": st["last"], "fail": st["fail"], "free": st["free"], "files": len(st["files"]),
                          "bytes": sum(int(x.get("size") or 0) for x in st["files"].values()),
-                         "pending": (st["last"] or {}).get("pending", 0), "errors_today": sum(1 for x in day if not x.get("ok")),
+                         "pending": (st["last"] or {}).get("pending", 0), "offload": t["offload"],
+                         "away": sum(1 for x in st["files"].values() if x.get("off")), "errors_today": sum(1 for x in day if not x.get("ok")),
                          "allowed": allowed(uid), "running": bool(_running.get((uid, t["id"])))})
     return {"on": admin_on(), "lan": lan_ok(), "folder": folder_ok(), "root": root(), "rows": rows,
             "sum": {"targets": len(rows), "bytes": sum(r["bytes"] for r in rows), "failing": sum(1 for r in rows if r["fail"]),
@@ -1557,7 +1749,12 @@ def _target_from(body, old=None):
         raise HTTPException(400, "kind: webdav, sftp, smb or folder")
     t = {"id": old["id"] if old else secrets.token_hex(3), "name": name, "kind": kind,
          "areas": _areas(body["areas"]) if "areas" in body else (old["areas"] if old else list(AREAS)),
-         "added": old["added"] if old else int(time.time())}
+         "added": old["added"] if old else int(time.time()),
+         "offload": body["offload"] if "offload" in body else bool(old and old["offload"])}
+    if not isinstance(t["offload"], bool):
+        raise HTTPException(400, "offload: true or false")
+    if t["offload"] and not (old and old["offload"]) and not offload_ok():
+        raise HTTPException(400, "Auslagern hat der Admin nicht erlaubt (Funktionen → Eigener Speicher).")
     if kind in LOGIN_KINDS:
         try:
             t["url"] = check_url(body.get("url", old["url"] if old else ""), kind)
@@ -1580,6 +1777,18 @@ def _target_from(body, old=None):
             raise HTTPException(400, "Unterordner: bis 40 Buchstaben, Ziffern, . _ - (kein Verweis, kein ..)")
         t["folder"] = sub
     return t
+
+
+def _one_offload(uid, t):
+    if t["offload"] and any(x["offload"] for x in targets(uid) if x["id"] != t["id"]):
+        raise HTTPException(400, "Auslagern geht nur auf einen Speicher.")
+
+
+def _keep_away(uid, tid):
+    """Originals that live only on this storage: it may not be taken away or pointed elsewhere first."""
+    n = away(uid).get(tid, 0)
+    if n:
+        raise HTTPException(409, f"Erst „Fehlendes zurückholen“: {n} Originale liegen nur auf diesem Speicher.")
 
 
 def _say(e):
@@ -1606,6 +1815,7 @@ async def add(request: Request, prof=Depends(_on)):
     uid = prof["id"]
     body = await _body(request)
     t = _target_from(body)
+    _one_offload(uid, t)
     pw = body.get("password")
     if t["kind"] in LOGIN_KINDS and isinstance(pw, str) and pw:
         if len(pw) > 256:
@@ -1647,10 +1857,15 @@ async def change(tid: str, request: Request, prof=Depends(_on)):
         raise HTTPException(404, "no such target")
     body = await _body(request)
     t = _target_from(body, old)
+    _one_offload(uid, t)
     login = old["kind"] in LOGIN_KINDS and (t["url"] != old["url"] or t["user"] != old["user"] or bool(body.get("password"))
                                             or t.get("hostkey") != old.get("hostkey"))
     if old["kind"] == "folder" and t["folder"] != old["folder"]:
         login = True
+    if t.get("url") != old.get("url") or t.get("folder") != old.get("folder"):
+        _keep_away(uid, tid)
+    if t["offload"] and not old["offload"] and not login:
+        await secret_profile(request)     # from now on originals may live only there: a code like a new place
     if login:
         if t["kind"] in LOGIN_KINDS:
             pw = body.get("password")
@@ -1678,7 +1893,8 @@ async def change(tid: str, request: Request, prof=Depends(_on)):
             st.update(fail=None)          # a new password: the next run tries at once
         st["last"] = None
         _put_state(uid, tid, st)
-    guard.log("storage_change", detail=f"{t['kind']} {'Zugang' if login else 'Bereiche'}")
+    what = "Zugang" if login else ("Auslagern an" if t["offload"] else "Auslagern aus") if t["offload"] != old["offload"] else "Bereiche"
+    guard.log("storage_change", detail=f"{t['kind']} {what}")
     return _view(uid)
 
 
@@ -1690,6 +1906,7 @@ def remove(tid: str, request: Request, prof=Depends(_on)):
     if (uid, tid) in _running:
         raise HTTPException(409, "Der Abgleich läuft gerade; gleich noch einmal.")
     t = find(uid, tid)
+    _keep_away(uid, tid)
     with _lock:
         d = load(uid)
         d["targets"] = [x for x in d["targets"] if x["id"] != tid]

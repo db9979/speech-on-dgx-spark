@@ -511,7 +511,7 @@ def validate(new):
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
-              "storage_own", "storage_lan", "storage_folder"):
+              "storage_own", "storage_lan", "storage_folder", "storage_offload"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24)):

@@ -792,6 +792,35 @@ def is_shared(uid, doc_id):
                                 (doc_id,)).fetchone())
 
 
+def _from_storage(uid, file, path):
+    """Eigener Speicher, "Originale auslagern": a missing original is fetched back (speicher.bring_back checks it);
+    one that is here is marked as used, so it is not moved out."""
+    try:
+        import speicher
+        rel = "docs/files/" + file
+        if os.path.lexists(path):
+            speicher.opened(uid, rel)
+        else:
+            speicher.bring_back(uid, rel)
+    except Exception:
+        pass
+
+
+def away(uid, doc_id):
+    """The original lives only on the profile's own storage (and could not be fetched just now)."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
+        return False
+    with _Db(uid) as con:
+        r = con.execute("SELECT file FROM docs WHERE id=?", (doc_id,)).fetchone()
+    if not r or not r["file"]:
+        return False
+    try:
+        import speicher
+        return bool(speicher.offloaded(uid, "docs/files/" + r["file"]))
+    except Exception:
+        return False
+
+
 def original(uid, doc_id):
     """(path, download name, content type) of the kept original, or None."""
     if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
@@ -801,6 +830,7 @@ def original(uid, doc_id):
     if not r or not r["file"] or not re.fullmatch(r"[0-9a-f]{12}\.[a-z]{2,4}", r["file"]):
         return None
     path = os.path.join(_files(uid), r["file"])
+    _from_storage(uid, r["file"], path)
     if not os.path.isfile(path) or os.path.islink(path):
         return None
     ext = os.path.splitext(r["file"])[1]

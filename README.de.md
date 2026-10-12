@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.462** Eigener Speicher: alte Originale von Dokumenten können nur noch auf dem eigenen Speicher liegen und kommen beim Öffnen zurück
 - **V01.0.461** „Schalte den Fernseher im Wohnzimmer ein“ trifft den Fernseher, nicht die Box daneben
 - **V01.0.460** Begleiter: jedes Textfeld einsprechbar, Knöpfe ohne Umbruch im Wort
 - **V01.0.459** Seiten zeigen, dass sie laden (Balken, Platzhalter, Fehler mit „Noch einmal“); Ich lädt alle Kästen gleichzeitig
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.455** Antworten kommen nie mehr doppelt, auch wenn das Modell sie nach einem Werkzeug wiederholt
 - **V01.0.454** Sofortige Rückmeldung mit Augenzwinkern: 60 witzigere Sätze dazu (jetzt 186).
 - **V01.0.453** Eigener Speicher: Gespräche, Gedächtnis, Dokumente und Erstelltes verschlüsselt auf dem eigenen NAS (WebDAV) oder einem eingehängten Ordner sichern, mit Überwachung und Hinweis bei Ausfall
-- **V01.0.452** Update-Prüfung von selbst nur alle 3 Stunden; Internet-Prüfung nicht mehr über GitHub (Grenze von 60 Abfragen pro Stunde)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

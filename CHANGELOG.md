@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.462** · 2026-10-12 · Eigener Speicher: Originale auslagern (aus): Originale von Dokumenten, die 30 Tage ruhen, liegen nur noch auf dem eigenen Speicher, jedes vorher zurückgelesen und geprüft; beim Öffnen holt der Spark sie zurück und prüft sie wieder; Trennen erst, wenn nichts mehr nur dort liegt
 - **V01.0.461** · 2026-10-12 · Fernseher per Codewort schalten: passt ein Schaltbefehl auf mehrere Geräte, gewinnt das Gerät, zu dem Name, Raum oder Geräteklasse passen; bleibt es unklar, nennt der Spark die Geräte mit Namen und das Modell ruft kein nicht angebotenes Werkzeug mehr
 - **V01.0.460** · 2026-10-12 · Begleiter (Windows, Mac): Mikrofon-Knopf in jedem freien Textfeld (Antwort entwerfen, Text verbessern, Bildschirm fragen) mit Teil Diktieren; Text wird nur eingefügt, nie in Codewort-Feldern; Knopf-Beschriftungen brechen nicht mehr mitten im Wort um
 - **V01.0.459** · 2026-10-12 · Seiten zeigen, dass sie laden: Balken oben, Platzhalter in Kästen, „dauert länger“, Fehler mit „Noch einmal“, nach 30 s Hinweis, Band „Spark antwortet nicht“; Ich lädt gleichzeitig und meldet bei einem Kasten-Fehler nicht mehr ab; langsame Seiten in Logs → Diagnose
