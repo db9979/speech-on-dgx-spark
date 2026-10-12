@@ -463,6 +463,129 @@ class Sending(Base):
         self.assertEqual(len(got), 1)
 
 
+class Delivery(Base):
+    """Downloading everywhere and the mailbox (Dominik 2026-10-12): a download link for a browser without the
+    login, a draft to oneself, a mail filed into the own mailbox, a finished document delivered on its own."""
+
+    def test_download_link_for_a_browser_without_login(self):
+        c, uid = profile("DmLink")
+        d = make_doc(uid)
+        r = c.post(f"/api/make/doc/{d['id']}/link", json={"fmt": "pdf"})
+        self.assertEqual(r.status_code, 200, r.text)
+        url = r.json()["url"]
+        self.assertTrue(url.startswith("/api/make/dl?t="))
+        stranger = client()   # the phone's browser: no login at all
+        f = stranger.get(url)
+        self.assertEqual(f.status_code, 200, f.text)
+        self.assertTrue(f.content.startswith(b"%PDF"))
+        self.assertIn("attachment", f.headers["content-disposition"])
+        self.assertEqual(f.headers["referrer-policy"], "no-referrer")
+        for _ in range(docmake.LINK_USES - 1):
+            self.assertEqual(stranger.get(url).status_code, 200)
+        self.assertEqual(stranger.get(url).status_code, 404)          # used up
+        self.assertEqual(stranger.get("/api/make/dl?t=" + "A" * 32).status_code, 404)
+        self.assertEqual(stranger.get("/api/make/dl?t=../x").status_code, 404)
+        # only formats the kind has, only own documents, never for a guest
+        self.assertEqual(c.post(f"/api/make/doc/{d['id']}/link", json={"fmt": "csv"}).status_code, 400)
+        other, _ = profile("DmLinkOther")
+        self.assertEqual(other.post(f"/api/make/doc/{d['id']}/link", json={}).status_code, 404)
+        self.assertEqual(stranger.post(f"/api/make/doc/{d['id']}/link", json={}).status_code, 401)
+        # old links end, and every link ends with the function
+        url = c.post(f"/api/make/doc/{d['id']}/link", json={}).json()["url"]
+        token = url.split("t=", 1)[1]
+        self.assertIsNone(docmake.use_link(token, now=10 ** 12))
+        url = c.post(f"/api/make/doc/{d['id']}/link", json={}).json()["url"]
+        profiles.save_settings(uid, {"doc_make": False})
+        self.assertEqual(stranger.get(url).status_code, 404)
+        self.assertFalse(any(k in docmake._link_hash(token) for k in ("uid", uid)))
+
+    def test_links_per_profile_are_capped(self):
+        c, uid = profile("DmLinkCap")
+        d = make_doc(uid)
+        urls = [c.post(f"/api/make/doc/{d['id']}/link", json={}).json()["url"] for _ in range(docmake.LINKS_PER_PROFILE + 2)]
+        self.assertEqual(sum(1 for x in docmake._links.values() if x["uid"] == uid), docmake.LINKS_PER_PROFILE)
+        self.assertEqual(client().get(urls[0]).status_code, 404)
+        self.assertEqual(client().get(urls[-1]).status_code, 200)
+
+    def _mailbox(self):
+        import tidy
+        got = []
+        real = (docmake.mailboxes, tidy.make_draft, tidy.file_doc, tidy.own_address)
+        docmake.mailboxes = lambda u: [{"id": "m1", "name": "Privat"}]
+        tidy.make_draft = lambda u, a, to, subj, text, reply=None, files=None: got.append(("draft", a, to, subj, files[0][0])) or {"folder": "Entwürfe"}
+        tidy.file_doc = lambda u, a, subj, text, files: got.append(("box", a, subj, files[0][0], len(files[0][1]))) or {"folder": "Spark/Dokumente"}
+        tidy.own_address = lambda u, a: "ich@example.org"
+
+        def back():
+            docmake.mailboxes, tidy.make_draft, tidy.file_doc, tidy.own_address = real
+        self.addCleanup(back)
+        return got
+
+    def test_mail_draft_to_oneself_and_filed_into_the_mailbox(self):
+        got = self._mailbox()
+        c, uid = profile("DmMail")
+        d = make_doc(uid)
+        self.assertEqual(docmake.send_targets(uid)[-2:], ["mail", "box"])
+        r = c.post(f"/api/make/doc/{d['id']}/send", json={"to": "mail", "fmt": "docx"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("nicht gesendet", r.json()["message"])
+        self.assertEqual(got[-1][:3], ("draft", "m1", "ich@example.org"))
+        self.assertTrue(got[-1][4].endswith(".docx"))
+        c.post(f"/api/make/doc/{d['id']}/send", json={"to": "mail", "mail_to": "chef@example.org"})
+        self.assertEqual(got[-1][2], "chef@example.org")
+        r = c.post(f"/api/make/doc/{d['id']}/send", json={"to": "box", "fmt": "pdf"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("Spark/Dokumente", r.json()["message"])
+        self.assertEqual(got[-1][:2], ("box", "m1"))
+        self.assertTrue(got[-1][3].endswith(".pdf"))
+        # by voice only to oneself: the tool has no recipient
+        res = asyncio.run(docmake.tool("document_send", {"to": "box"}, ctx(uid, "Leg sie mir ins Postfach")))
+        self.assertIn("Postfach", res)
+        props = docmake.SEND_TOOL["function"]["parameters"]["properties"]
+        self.assertNotIn("mail_to", props)
+        self.assertIn("box", props["to"]["enum"])
+
+    def test_no_mailbox_says_where_to_switch_it_on(self):
+        c, uid = profile("DmNoMail")
+        make_doc(uid)
+        m = c.get("/api/make").json()
+        self.assertNotIn("box", m["targets"])
+        self.assertIn("Antwort-Entwürfe erlauben", m["mail_hint"])
+        self.assertEqual(c.post(f"/api/make/doc/{docmake.find(uid, '')['id']}/send", json={"to": "box"}).status_code, 400)
+
+    def test_finished_document_delivered_on_its_own(self):
+        got = self._mailbox()
+        c, uid = profile("DmAuto")
+        c.put("/api/profile/settings", json={"doc_deliver": "irgendwo"})     # a wrong value changes nothing
+        self.assertEqual(profiles.settings(uid).get("doc_deliver", ""), "")
+        self.assertEqual(c.put("/api/profile/settings", json={"doc_deliver": "box"}).status_code, 200)
+        self.assertEqual(c.get("/api/make").json()["deliver"], "box")
+        make_doc(uid)
+        self.assertEqual(got[-1][0], "box")
+        self.assertIn("Postfach", self.pushed[-1][2])
+        # a target that is no longer set up counts as none
+        docmake.mailboxes = lambda u: []
+        self.assertEqual(docmake.deliver_of(uid), "")
+
+    def test_small_preview(self):
+        c, uid = profile("DmPeek")
+        d = make_doc(uid)
+        m = c.get("/api/make").json()
+        pk = next(x for x in m["docs"] if x["id"] == d["id"])["peek"]
+        self.assertEqual(pk["heading"], "Eins")
+        self.assertEqual(pk["lines"], ["Punkt 1"])
+        self.assertEqual(pk["parts"], 2)
+        long = docmake.peek({"sections": [{"heading": "H" * 300, "bullets": ["x " * 200] * 9,
+                                           "table": {"head": ["a"] * 9, "rows": [["1"] * 9] * 9}}]})
+        self.assertLessEqual(len(long["heading"]), 80)
+        self.assertEqual(len(long["lines"]), 4)
+        self.assertTrue(all(len(x) <= 90 for x in long["lines"]))
+        self.assertEqual([len(r) for r in long["rows"]], [4, 4, 4, 4])
+        letter = docmake.peek({"letter": {"subject": "Heizung", "paras": ["Die Heizung ist kalt.", "B", "C"]}, "sections": []})
+        self.assertEqual(letter["heading"], "Heizung")
+        self.assertEqual(len(letter["lines"]), 2)
+
+
 class Templates(Base):
     def _docx(self, extra=None, ct=None):
         from docx import Document

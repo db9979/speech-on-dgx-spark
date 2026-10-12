@@ -324,7 +324,9 @@ def app_hello(prof=Depends(own_profile)):
             # panel areas in the app (plaene/iphone-uebernimmt-panel.md); panel: the bridge "Im Panel öffnen"
             "panel": panel_on(), "areas": panel_rights(prof["id"]),
             # "Problem melden" in the settings (meldung.py): admin switch and the profile's own
-            "report": features.allowed("melden", prof["id"])}
+            "report": features.allowed("melden", prof["id"]),
+            # "Vom Spark erstellt" (docmake.py): the made documents to look at, download and share
+            "make": features.allowed("erstellen", prof["id"])}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)

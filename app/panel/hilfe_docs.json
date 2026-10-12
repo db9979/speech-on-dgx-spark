@@ -901,7 +901,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Dokumente erstellen (V01.0.415)",
-"text": "nicht als Text; Ich → Dokumente zeigt dann „Vom Spark erstellt“ mit dem Knopf „Einschalten“."
+"text": "nicht als Text; Ich → Dokumente zeigt dann „Vom Spark erstellt“ mit dem Knopf „Einschalten“. Überall bekommen (V01.0.429): Im Chat zeigt die Karte nach dem Fertigwerden eine kleine Vorschau der ersten Folie, Seite oder Tabelle (peek in GET /api/make), dazu Herunterladen, Ansehen und Schicken. Wo der Browser keine Anmeldung hat (die Android-App gibt Downloads an den Browser des Handys weiter, ein anderes Gerät), gibt es einen Download-Link: POST /api/make/doc/{id}/link liefert /api/make/dl?t=…, gültig 10 Minuten und höchstens 5 Abrufe, nur für diese Datei und Version, der Spark merkt sich nur die Prüfsumme des Schlüssels; höchstens 5 offene Links pro Profil; ist die Funktion aus, gilt kein Link mehr. In der Vorschau „Link kopieren“. Per Mail zwei Wege, beide nur mit einem Postfach, bei dem „Antwort-Entwürfe erlauben“ an ist (Ich → E-Mail → Postfach aufräumen), und nie gesendet: „Als Mail-Entwurf“ (an die eingetragene Adresse, leer an die eigene des Postfachs) und „Ins Postfach ablegen“ (eine Mail von dir an dich mit der Datei, ungelesen im Ordner „Spark/Dokumente“, der bei Bedarf angelegt wird). Per Satz gehen beide nur an dich selbst (document_send mit mail oder box, ohne Empfänger"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Dokumente erstellen (V01.0.415)",
+"text": "). „Fertige Dokumente zusätzlich“ unter Ich → Dokumente → Vom Spark erstellt (doc_deliver: PC, reMarkable, Telegram, Mail-Entwurf oder Postfach; nur ein eingerichtetes Ziel zählt) stellt jedes fertige Dokument nach deinem Ja gleich zu; der Push sagt, wohin. iPhone-App: Ich → Vom Spark erstellt (wenn die Funktion an ist) mit Vorschau, Apples Ansicht für Word, PowerPoint, Excel und PDF und „Teilen“ (in Dateien sichern, weiterschicken). Aussehen: Ohne eigene Vorlage baut der Spark Präsentationen mit Titelfolie, Überblicksfolie (ab 4 Teilen), nummerierten Kästchen, Kennzahlen-Karten (stats, bis 4), Zitatbox (quote), gestalteten Tabellen und Diagrammen; Word und PDF bekommen einen farbigen Titelblock, nummerierte Überschriften mit Linie, Karten, Zitatbox, Tabellen mit Zebrastreifen und Seitenzahlen; Excel ein Titelband ohne Gitternetz, farbige Kopfzeile, Zebrastreifen, abgesetzte Summenzeile und ein Diagramm mit Werten. Zu den Looks kommen „Frisch“ und „Warm“; „Spark dunkel“ druckt in Word, PDF und Excel hell. Mit eigener Vorlage bleibt alles wie bisher."
 },
 {
 "lang": "de",
@@ -3885,7 +3893,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Creating documents (V01.0.415)",
-"text": "s → Sender for letters*. Own templates (.docx/.dotx/.pptx/.potx, at most 10 MB, 10 of them) are checked on upload: no macros, ActiveX, embedded objects or external links, no zip trick. Storage: users/<p>/erstellt/ (at most 100 documents). End of a job: push \"document ready\". Status → Live shows the target \"Dokumente erstellen\" with counts (running, waiting, done today), never contents. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. When the Spark asks back (\"What should it be about?\"), the answer stays with the file wish for 15 minutes in the same conversation (Weiche group \"erstellen\", V01.0.423). When the function is off, the model gets a fixed sentence on where to switch it on instead of the tools and does not write the content as text; Me → Documents then shows \"Made by the Spark\" with a \"Switch on\" button."
+"text": "s → Sender for letters*. Own templates (.docx/.dotx/.pptx/.potx, at most 10 MB, 10 of them) are checked on upload: no macros, ActiveX, embedded objects or external links, no zip trick. Storage: users/<p>/erstellt/ (at most 100 documents). End of a job: push \"document ready\". Status → Live shows the target \"Dokumente erstellen\" with counts (running, waiting, done today), never contents. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. When the Spark asks back (\"What should it be about?\"), the answer stays with the file wish for 15 minutes in the same conversation (Weiche group \"erstellen\", V01.0.423). When the function is off, the model gets a fixed sentence on where to switch it on instead of the tools and does not write the content as text; Me → Documents then shows \"Made by the Spark\" with a \"Switch on\" button. Getting it everywhere (V01.0.429): once done, the card in the chat shows a small preview of the first sl"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Creating documents (V01.0.415)",
+"text": "ide, page or sheet (peek in GET /api/make), plus download, view and send. Where the browser has no login (the Android app hands downloads to the phone's browser, another device) there is a download link: POST /api/make/doc/{id}/link returns /api/make/dl?t=…, valid 10 minutes and at most 5 downloads, only for this file and version; the Spark keeps only the key's hash; at most 5 open links per profile; when the function is off no link works. \"Copy link\" in the preview. By mail two ways, both only with a mailbox that has \"Allow reply drafts\" on (Me → Email → Tidy up the mailbox), and never sent: \"As mail draft\" (to the address entered, empty: to the mailbox's own) and \"File into the mailbox\" (a mail from you to you with the file, unread in the folder \"Spark/Dokumente\", created when needed). By a sentence both go only to yourself (document_send with mail or box, no recipient). \"Finished documents also\" under Me → Documents → Made by the Spark (doc_deliver: PC, reMarkable, Telegram, mail draft or mailbox; only a target that is set up counts) delivers every finished document right after your yes; the push says where. iPhone app: Me → Made by the Spark (when the function is on) with previ"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Creating documents (V01.0.415)",
+"text": "ew, Apple's viewer for Word, PowerPoint, Excel and PDF and \"Share\" (save to Files, send on). Looks: without an own template the Spark builds presentations with a title slide, an overview slide (from 4 parts), numbered boxes, key-number cards (stats, up to 4), a quote box (quote), styled tables and charts; Word and PDF get a colored title block, numbered headings with a line, cards, quote box, zebra tables and page numbers; Excel a title band without gridlines, a colored head row, zebra rows, a set-off total row and a chart with values. New looks \"Frisch\" (fresh) and \"Warm\"; \"Spark dark\" prints light in Word, PDF and Excel. With an own template everything stays as before."
 },
 {
 "lang": "en",

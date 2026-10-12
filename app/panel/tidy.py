@@ -755,6 +755,29 @@ class Box:
             return []
         return done
 
+    def append_doc(self, path, raw_msg):
+        """Files a mail the Spark made (Dokumente erstellen) into exactly its folder for made documents, created
+        when missing; never into a folder of the mail program, never anything else."""
+        notaus.stop("aktion")
+        name = self.name(path)
+        if name not in self.boxes:
+            parent = self.name(path.rsplit("/", 1)[0]) if "/" in path else None
+            for p in ([parent] if parent and parent not in self.boxes else []) + [name]:
+                typ, data = self.c.create(_q(_utf7(p)))
+                if typ != "OK" and p == name:
+                    raise ValueError(f"folder '{path}' could not be created")
+                try:
+                    self.c.subscribe(_q(_utf7(p)))
+                except Exception:
+                    pass
+                self.boxes[p] = {"raw": _utf7(p), "flags": ""}
+        if self.is_special(name):
+            raise ValueError(f"'{path}' is a folder of the mail program")
+        typ, data = self.c.append(_q(self.boxes[name]["raw"]), "", imaplib.Time2Internaldate(time.time()), raw_msg)
+        if typ != "OK":
+            raise ValueError("the mail server refused the mail")
+        return name
+
     def append_draft(self, raw_msg):
         notaus.stop("aktion")
         folder = self.special("\\drafts", ["Drafts", "Entwürfe", "[Gmail]/Drafts", "[Gmail]/Entwürfe",
@@ -1201,6 +1224,50 @@ def backlog_apply(uid):
 
 
 # ---------------------------------------------------------------- drafts
+DOC_FOLDER = "Dokumente"     # under the main folder ("Spark/Dokumente"): mails with files the Spark made
+
+
+def own_address(uid, aid):
+    """The mailbox's own address (its user name when that is one), for a draft to oneself; "" when unknown."""
+    acct = _account(uid, aid) or {}
+    _, addr = email.utils.parseaddr(str(acct.get("user") or ""))
+    return addr if re.fullmatch(r"[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+", addr or "") else ""
+
+
+def _attach(msg, files):
+    files = list(files or [])[:3]
+    if sum(len(f[1]) for f in files) > 25 * 1024 * 1024:
+        raise ValueError("attachments larger than 25 MB")
+    for name, data, ctype in files:
+        main, _, sub = str(ctype).partition("/")
+        msg.add_attachment(bytes(data), maintype=main or "application", subtype=sub or "octet-stream",
+                           filename=re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument")
+
+
+def file_doc(uid, aid, subject, text, files):
+    """Dokumente erstellen, "Im Postfach ablegen": a mail from and to the mailbox's own address with the made file,
+    put straight into the folder for made documents (APPEND, unread). Nothing is sent; the same switch as drafts."""
+    acct = _account(uid, aid)
+    if not acct:
+        raise ValueError("unknown mailbox")
+    d = state(uid)
+    if not acct_state(d, aid).get("drafts"):
+        raise ValueError("drafts are turned off for this mailbox")
+    me = own_address(uid, aid) or str(acct.get("user") or "")
+    msg = email.message.EmailMessage(policy=email.policy.SMTP)
+    msg["From"] = me
+    msg["To"] = me
+    msg["Date"] = email.utils.formatdate(localtime=True)
+    msg["Message-ID"] = email.utils.make_msgid(domain="spark.local")
+    msg["Subject"] = re.sub(r"[\r\n]+", " ", str(subject or "")).strip()[:200]
+    msg.set_content(str(text or "").strip()[:8000] + "\n")
+    _attach(msg, files)
+    path = f"{d['root']}/{DOC_FOLDER}" if d.get("root") else "Spark-Dokumente"
+    with Box(acct) as b:
+        folder = b.append_doc(path, msg.as_bytes())
+    return {"folder": folder}
+
+
 def make_draft(uid, aid, to, subject, text, reply_uid=None, files=None):
     """Puts a draft into the mailbox's drafts folder; it is never sent from here. files: [(name, bytes, type)]
     built by the Spark itself (Dokumente erstellen), at most 3 and 25 MB together."""
@@ -1231,13 +1298,7 @@ def make_draft(uid, aid, to, subject, text, reply_uid=None, files=None):
         msg["To"] = to
         msg["Subject"] = (subject or "").strip()[:200]
         msg.set_content(str(text or "").strip()[:8000] + "\n")
-        files = list(files or [])[:3]
-        if sum(len(f[1]) for f in files) > 25 * 1024 * 1024:
-            raise ValueError("attachments larger than 25 MB")
-        for name, data, ctype in files:
-            main, _, sub = str(ctype).partition("/")
-            msg.add_attachment(bytes(data), maintype=main or "application", subtype=sub or "octet-stream",
-                               filename=re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument")
+        _attach(msg, files)
         folder = b.append_draft(msg.as_bytes())
     return {"folder": folder, "to": addr, "subject": msg["Subject"]}
 

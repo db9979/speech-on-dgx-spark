@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.429** Creating documents: preview in the chat, download everywhere (Android, iPhone too), by mail as a draft or into the mailbox, much better looks
 - **V01.0.428** Instant acknowledgement with more variety: 126 ready-made sentences, picked at random, never one of the last six.
 - **V01.0.427** Second step made uniform: one code per person, three levels with locks, the dialog says whose code and what for, sign in straight as admin, panel password only via #admin
 - **V01.0.426** Mail mode buttons fit narrow phones too
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.422** Failed tests get one second try (GitHub and the Spark's self-test); green only then is a visible warning
 - **V01.0.421** Invitation test waits up to 120 s on a busy runner and logs where it hangs
 - **V01.0.420** Stable GitHub test runs (atomic config writes in tests, wait for page state); jump from Who may do what stays on its row with many profiles
-- **V01.0.419** Companion: "open heise.de on my Mac" from a speaker or the phone reliably reaches the computer (question there); if it cannot, the Spark says why
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

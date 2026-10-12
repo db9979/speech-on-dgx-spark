@@ -200,6 +200,27 @@ class Tidy(unittest.TestCase):
         self.assertIn(b"ich komme gern", raw)
         self.assertEqual(FMB.boxes["Drafts"][0]["flags"], ["\\Draft"])
 
+    def test_made_document_filed_into_the_mailbox(self):
+        """Dokumente erstellen, "Im Postfach ablegen": only with the mailbox's draft switch, into the Spark's own
+        folder for made documents, unread, from and to the own address; nothing sent."""
+        p, aid = self.setup_profile("Filine")
+        import profiles
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Filine")
+        files = [("Bericht.pdf", b"%PDF-1.4 x", "application/pdf")]
+        with self.assertRaises(ValueError):
+            tidy.file_doc(uid, aid, "Bericht", "Vom Spark erstellt", files)
+        p.put("/api/profile/tidy", json={"accounts": {aid: {"drafts": True}}})
+        r = tidy.file_doc(uid, aid, "Bericht\r\nBcc: x@y", "Vom Spark erstellt", files)
+        self.assertEqual(r["folder"], "Spark/Dokumente")
+        m = FMB.boxes["Spark/Dokumente"][0]
+        self.assertEqual(m["flags"], [])
+        self.assertIn(b"Subject: Bericht Bcc: x@y", m["raw"])
+        self.assertNotIn(b"\r\nBcc:", m["raw"])
+        self.assertIn(b"Bericht.pdf", m["raw"])
+        self.assertIn(b"To: anna@example.de", m["raw"])
+        self.assertEqual(tidy.own_address(uid, aid), "anna@example.de")
+        self.assertFalse([c for c in FMB.calls if c[0] in ("MOVE", "EXPUNGE", "STORE")])
+
     def test_old_mail_cleanup(self):
         p, aid = self.setup_profile("Ottilie", mode="preview")
         for i in range(3):

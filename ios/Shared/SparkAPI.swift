@@ -105,6 +105,8 @@ struct Allowed: Equatable {
     var adminRole = ""
     /// "Problem melden" (meldung.py): admin switch chat.report and the profile's switch report_on
     var report = false
+    /// "Vom Spark erstellt" (docmake.py): admin switch chat.doc_make and the profile's doc_make
+    var make = false
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -178,6 +180,25 @@ struct SparkDoc: Identifiable, Equatable {
     var title = ""
     var due = ""
     var tags: [String] = []
+}
+
+/// A document the Spark made (GET /api/make): its newest version and the small preview of the first part.
+struct MadeDoc: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let kind: String        // praesentation, brief, tabelle, ...
+    let format: String      // docx, pptx, xlsx, pdf, md, txt, csv
+    let style: String
+    let updated: Date
+    let version: Int
+    var heading = ""
+    var lines: [String] = []
+    var rows: [[String]] = []
+    var parts = 0
+
+    static let formatNames = ["docx": "Word", "pptx": "PowerPoint", "xlsx": "Excel", "pdf": "PDF", "md": "Markdown",
+                              "txt": "Text", "csv": "CSV"]
+    var formatName: String { Self.formatNames[format] ?? format }
 }
 
 /// What a document says, as the Spark stored it.
@@ -320,7 +341,7 @@ struct SparkAPI {
                        panel: d["panel"] as? Bool ?? false,
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
                        adminRole: ["coadmin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
-                       report: d["report"] as? Bool ?? false)
+                       report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false)
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).
@@ -524,6 +545,48 @@ struct SparkAPI {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("docs", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let url = dir.appendingPathComponent("\(id).\(ext)")
+        try data.write(to: url, options: [.atomic, .completeFileProtection])
+        return url
+    }
+
+    // ---------------------------------------------------------------- documents the Spark made (docmake.py)
+    /// The made documents, newest first; nil when "Dokumente erstellen" is off for the profile.
+    func madeDocs() async throws -> [MadeDoc]? {
+        let (data, response) = try await URLSession.shared.data(for: request("api/make"))
+        if [401, 403].contains((response as? HTTPURLResponse)?.statusCode ?? 0) { return nil }
+        try Self.check(data, response)
+        let list = (Self.object(data)["docs"] as? [[String: Any]]) ?? []
+        // every text is the model's or the person's: shown as plain text only (Text(verbatim:)), cut to size
+        func cut(_ v: Any?, _ n: Int) -> String { String((v as? String ?? "").prefix(n)) }
+        return list.compactMap { d in
+            guard let id = d["id"] as? String, Self.docId(id) else { return nil }
+            let p = d["peek"] as? [String: Any] ?? [:]
+            return MadeDoc(id: id, title: cut(d["title"], 200), kind: cut(d["kind"], 20), format: cut(d["format"], 8),
+                           style: cut(d["style"], 20),
+                           updated: Date(timeIntervalSince1970: (d["updated"] as? NSNumber)?.doubleValue ?? 0),
+                           version: (d["version"] as? NSNumber)?.intValue ?? 0, heading: cut(p["heading"], 100),
+                           lines: (p["lines"] as? [String] ?? []).prefix(4).map { String($0.prefix(200)) },
+                           rows: (p["rows"] as? [[String]] ?? []).prefix(4).map { $0.prefix(4).map { String($0.prefix(30)) } },
+                           parts: (p["parts"] as? NSNumber)?.intValue ?? 0)
+        }
+    }
+
+    /// A made document's file, written to the app's temporary folder under its own name (for Apple's viewer and
+    /// "Teilen"); the caller deletes it. Only the formats the Spark builds, at most 25 MB.
+    func madeFile(_ d: MadeDoc) async throws -> URL {
+        guard Self.docId(d.id), MadeDoc.formatNames[d.format] != nil else { throw SparkError(message: String(localized: "Das Dokument gibt es nicht.")) }
+        var r = request("api/make/doc/\(d.id)/file")
+        r.timeoutInterval = 120
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        guard data.count <= 25 * 1024 * 1024 else { throw SparkError(message: String(localized: "Die Datei ist zu groß.")) }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("made-\(d.id)", isDirectory: true)
+        try? FileManager.default.removeItem(at: dir)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        var name = d.title.replacingOccurrences(of: "[/\\\\:?*\"<>|\\x{00}-\\x{1F}]", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        if name.isEmpty || name.hasPrefix(".") { name = "Dokument" }
+        let url = dir.appendingPathComponent(String(name.prefix(80)) + "." + d.format)
         try data.write(to: url, options: [.atomic, .completeFileProtection])
         return url
     }

@@ -632,6 +632,9 @@ struct SettingsView: View {
                     if talk.allowed.docs {
                         NavigationLink("Meine Dokumente") { DocumentsView(manage: talk.allowed.areas.contains("app_docs_edit")) }
                     }
+                    if talk.allowed.make {
+                        NavigationLink("Vom Spark erstellt") { MadeDocsView() }
+                    }
                     if talk.allowed.areas.contains("app_mine") {
                         NavigationLink("Mein Alltag") { MineView() }
                     }

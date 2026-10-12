@@ -475,7 +475,8 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "deskmeet": (0, 20), "deskhome": (0, 30), "deskdaily": (0, 10), "deskapps": (0, 6),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
         "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "devup": (0, 20), "report": (0, 30),
-        "make": (0, 60), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10)}  # per minute: (guest, profile or admin)
+        "make": (0, 60), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10),
+        "makedl": (20, 30)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.429** Dokumente erstellen: Vorschau im Chat, Download überall (auch Android, iPhone), per Mail als Entwurf oder ins Postfach, viel schöneres Aussehen
 - **V01.0.428** Sofortige Rückmeldung abwechslungsreicher: 126 fertige Sätze, zufällig, nie einer der letzten sechs.
 - **V01.0.427** Zweiter Faktor einheitlich: ein Code pro Person, drei Stufen mit Schloss, Dialog sagt wessen Code und wofür, gleich als Admin anmelden, Panel-Passwort nur über #admin
 - **V01.0.426** E-Mail-Modusknöpfe passen auch am schmalen Handy
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.422** Gescheiterte Tests bekommen einen zweiten Versuch (GitHub und Selbsttest auf dem Spark); erst dann grün steht als Warnung im Lauf
 - **V01.0.421** Einladungstest wartet bis 120 s auf langsamen Rechnern und schreibt, wo es hängt
 - **V01.0.420** Stabile GitHub-Testläufe (Einstellungen in einem Schritt, Warten auf Seitenzustand); Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile
-- **V01.0.419** Begleiter: „Öffne heise.de auf meinem Mac“ vom Lautsprecher oder Handy kommt sicher am Rechner an (Rückfrage dort); sonst sagt der Spark warum
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

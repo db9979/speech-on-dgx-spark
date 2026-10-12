@@ -86,6 +86,7 @@ OPEN = {
     "/api/notaus/mine/off": "Mein Notaus off: the profile's browser login only, PIN with lockout and its fresh code, rate limit",
     "/api/notaus/ha": "Home Assistant raises the Notaus with its own key (notaus.key_find, hash, compare_digest), home network only, lockout, rate limit",
     "/api/admin/notaus/mine/off": "an admin lifts a profile's own Notaus: notaus._lift_how (browser at home), fresh code or password",
+    "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }
 LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")

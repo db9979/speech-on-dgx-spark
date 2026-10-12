@@ -317,3 +317,140 @@ struct QuickLookView: UIViewControllerRepresentable {
         func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { url as NSURL }
     }
 }
+
+/// "Vom Spark erstellt": the documents the Spark made (Dokumente erstellen, docmake.py) with a small preview of the
+/// first slide, page or sheet; tapping opens Apple's viewer (Word, PowerPoint, Excel, PDF) with "Teilen" to save
+/// it in Files, send it on or open it in another app. Reading only: making and changing stay with the assistant.
+@MainActor
+final class MadeDocsModel: ObservableObject {
+    @Published var docs: [MadeDoc] = []
+    @Published var loading = true
+    @Published var off = false
+    @Published var error: String?
+
+    func load() async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            if let d = try await api.madeDocs() { docs = d; off = false } else { off = true }
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+        loading = false
+    }
+}
+
+struct MadeDocsView: View {
+    @StateObject private var m = MadeDocsModel()
+
+    var body: some View {
+        List {
+            if m.loading {
+                ProgressView()
+            } else if m.off {
+                Text("Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.")
+            } else if m.docs.isEmpty {
+                Text("Noch nichts erstellt. Sag zum Beispiel „Mach eine Präsentation über unseren Urlaub“.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(m.docs) { d in
+                NavigationLink { MadeDocView(doc: d) } label: {
+                    HStack(alignment: .top, spacing: 12) {
+                        PeekView(doc: d).frame(width: 96).accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: d.title).lineLimit(2)
+                            HStack(spacing: 6) {
+                                Text(verbatim: d.formatName)
+                                Text("Version \(d.version)")
+                                Text(d.updated, format: .dateTime.day().month())
+                            }
+                            .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+        }
+        .navigationTitle("Vom Spark erstellt")
+        .refreshable { await m.load() }
+        .task { await m.load() }
+    }
+}
+
+/// The small preview of a made document: the first part in a few lines, in the file's own colours (docrender.STYLES).
+struct PeekView: View {
+    let doc: MadeDoc
+    var big = false
+
+    private var dark: Bool { doc.style == "spark-dunkel" }
+    private var accent: Color {
+        switch doc.style {
+        case "spark-hell": return Color(red: 0.36, green: 0.36, blue: 0.94)
+        case "spark-dunkel": return Color(red: 0.55, green: 0.55, blue: 1)
+        case "frisch": return Color(red: 0.06, green: 0.46, blue: 0.43)
+        case "warm": return Color(red: 0.76, green: 0.25, blue: 0.05)
+        default: return Color(red: 0.18, green: 0.23, blue: 0.31)
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: big ? 4 : 2) {
+            Text(verbatim: doc.heading.isEmpty ? doc.title : doc.heading)
+                .font(.system(size: big ? 15 : 7, weight: .semibold)).foregroundStyle(accent).lineLimit(2)
+            ForEach(Array(doc.rows.enumerated()), id: \.offset) { _, r in
+                Text(verbatim: r.joined(separator: " · ")).lineLimit(1)
+            }
+            ForEach(Array(doc.lines.enumerated()), id: \.offset) { _, l in
+                Text(verbatim: doc.kind == "praesentation" ? "• " + l : l).lineLimit(big ? 3 : 1)
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: big ? 12 : 5))
+        .foregroundStyle(dark ? Color(white: 0.92) : Color(red: 0.11, green: 0.14, blue: 0.2))
+        .padding(big ? 12 : 5)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .aspectRatio(doc.kind == "praesentation" ? 16 / 9 : 1 / 1.1, contentMode: .fit)
+        .background(dark ? Color(red: 0.04, green: 0.05, blue: 0.08) : Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
+    }
+}
+
+/// One made document in Apple's viewer, "Teilen" in the bar; the preview while the file loads or when it cannot.
+struct MadeDocView: View {
+    let doc: MadeDoc
+    @State private var file: URL?
+    @State private var error: String?
+    @State private var loading = true
+
+    var body: some View {
+        Group {
+            if let file {
+                QuickLookView(url: file)
+            } else if loading {
+                ProgressView().frame(maxHeight: .infinity)
+            } else {
+                VStack(spacing: 12) {
+                    PeekView(doc: doc, big: true).padding()
+                    if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+                    Spacer()
+                }
+            }
+        }
+        .navigationTitle(Text(verbatim: doc.title))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if let file { ShareLink(item: file) { Label("Teilen", systemImage: "square.and.arrow.up") } }
+            }
+        }
+        .task { await load() }
+        .onDisappear { if let file { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) } }
+    }
+
+    private func load() async {
+        guard let api = SparkAPI.current, file == nil else { return }
+        do { file = try await api.madeFile(doc) } catch { self.error = error.localizedDescription }
+        loading = false
+    }
+}

@@ -33,7 +33,9 @@ function whoRow(f){const el=$('chat.'+f.switch);if(!el)return null;let row=el.cl
     const sw=$(dep.dataset.show);if(!sw)break;row=sw.closest('.setrow')||sw.closest('.fitem')||sw}
   return row}
 async function whoOpen(f){goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
-  const row=whoRow(f);WHO_LAST=row;if(!row)return;whoJumped();const it=row.closest('#pane-feat .fitem');
+  // a settings load started elsewhere (Wer darf was loads them too) may still be drawing the rows: wait for them
+  let row=whoRow(f);for(let i=0;!row&&i<40;i++){await new Promise(r=>setTimeout(r,250));row=whoRow(f)}
+  WHO_LAST=row;if(!row)return;whoJumped();const it=row.closest('#pane-feat .fitem');
   if(it&&typeof featShow==='function')featShow(it);
   for(let d=row.parentElement;d&&d!==document.body;d=d.parentElement)if(d.tagName==='DETAILS'&&!d.open)d.open=true;
   requestAnimationFrame(()=>{if(typeof sFlash==='function')sFlash(row);else row.scrollIntoView({block:'center'})})}

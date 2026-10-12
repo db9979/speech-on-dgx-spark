@@ -6620,6 +6620,56 @@
           }
         }
       }
+    },
+    "Vom Spark erstellt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made by the Spark"
+          }
+        }
+      }
+    },
+    "Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on \"Create documents\" in the panel under Me → Documents."
+          }
+        }
+      }
+    },
+    "Noch nichts erstellt. Sag zum Beispiel „Mach eine Präsentation über unseren Urlaub“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing made yet. Say for example \"Make a presentation about our holiday\"."
+          }
+        }
+      }
+    },
+    "Version %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %lld"
+          }
+        }
+      }
+    },
+    "Die Datei ist zu groß.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is too large."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
