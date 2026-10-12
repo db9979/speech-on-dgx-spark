@@ -82,7 +82,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen"}
+       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher"}
 
 
 def _setup(prof, request):

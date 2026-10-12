@@ -85,6 +85,9 @@ SVC = {
     "mail": ("Mail", "Mail", "Mails lesen und suchen geht gerade nicht.", SLOW, "mail"),
     "cal": ("Kalender", "Calendar", "Termine lesen und eintragen geht gerade nicht.", SLOW, "cal"),
     "nas": ("NAS (Sicherung)", "NAS (backup)", "Die Sicherung auf das NAS geht gerade nicht.", SLOW, "nas"),
+    # Eigener Speicher (speicher.py): the WebDAV targets of the profiles, one part per address
+    "store": ("Eigener Speicher", "Own storage", "Kopien auf den eigenen Speicher warten; alles bleibt auf dem Spark.", SLOW,
+              "speicher"),
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
@@ -253,6 +256,13 @@ def active(c=None, cfg=None):
         d = offsite._read()
         if d.get("on") is True and _origin(d.get("url")):
             out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True}}
+    except Exception:
+        pass
+    try:
+        import speicher
+        p = dict(list(speicher.probes().items())[:MAX_PARTS])
+        if p:
+            out["store"] = p
     except Exception:
         pass
     skip = set(_read()["skip"])

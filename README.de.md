@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.453** Eigener Speicher: Gespräche, Gedächtnis, Dokumente und Erstelltes verschlüsselt auf dem eigenen NAS (WebDAV) oder einem eingehängten Ordner sichern, mit Überwachung und Hinweis bei Ausfall
 - **V01.0.452** Update-Prüfung von selbst nur alle 3 Stunden; Internet-Prüfung nicht mehr über GitHub (Grenze von 60 Abfragen pro Stunde)
 - **V01.0.451** Antworten im Chat formatiert (Listen, fett, Code, Links), vorgelesen ohne Markdown-Zeichen
 - **V01.0.450** Einstellungs-Assistent: aus Fehlern, 👎 und unklaren Fragen macht der Spark geprüfte Vorschläge zum Verbessern (Zustand → Verbessern), 👍/👎 unter Antworten; alles aus, bis du es einschaltest
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.446** Voraussetzungen beim Einschalten gleich mit einschalten, beim Ausschalten sagen, was mit ausgeht
 - **V01.0.445** Live-Bild ruhiger: jede Strecke einmal, Runden als „↻ 3“, Zeiten neben den Kästen
 - **V01.0.444** Bedeutungssuche geht nach 10 Minuten ohne Arbeit wirklich schlafen; Zustand zeigt „Standby“ statt „läuft“, wenn nichts rechnet.
-- **V01.0.443** Coding-Richtlinie im Repo: [docs/de/richtlinien.md](docs/de/richtlinien.md) mit Pflichtliste für neue Funktionen, Sicherheits-Checkliste mit „Stand der Technik“, Journal ohne Profilnamen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

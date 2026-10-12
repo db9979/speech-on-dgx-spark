@@ -89,12 +89,13 @@ import geraeteupdate  # noqa: E402
 import dienstwacht  # noqa: E402
 import faelle  # noqa: E402
 import berater  # noqa: E402
+import speicher  # noqa: E402
 import meldung  # noqa: E402
 import docmake  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, docmake, weiche, dienstwacht, faelle, berater):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, docmake, weiche, dienstwacht, faelle, berater, speicher):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -328,6 +329,7 @@ async def stability():
     spawn(geraeteupdate.loop())
     spawn(dienstwacht.loop())
     spawn(berater.loop())
+    spawn(speicher.loop())
     spawn(every_minute())
     spawn(watchdog())
     spawn(backups())

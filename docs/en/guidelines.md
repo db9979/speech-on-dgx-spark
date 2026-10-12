@@ -66,12 +66,12 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
 | 22 | **Prerequisites** | When a feature builds on another one, that is its `parent` in `features.py` (the chain follows from it, `features.chain`). No own "switch on X first" text: hints name missing switches through `features.missing_text`, the pages Features and Who may do what offer the chain when switching on (`needs.js`, `POST /api/admin/features/{key}/enable`) and say what goes off with a switch. A setup that can be missing goes into `features.READY`. | 🧪 test_voraussetzungen, test_voraussetzungen_mit_einschalten |
 | 23 | **Settings assistant** | Every new setting in `config.default.json` or `profiles.SETTINGS` gets its classification in `berater_katalog.py` in the same commit: in the catalogue (stage A–C, P), in `NEVER_KEYS` (D, never) or in `OHNE` / `OHNE_PROFIL` (deliberately not suggestible). So the assistant can suggest it or safely leave it out. | 🧪 test_einstellungs_assistent.test_every_setting_is_classified |
+| 24 | **Own storage** | Every new file under `users/<id>/` is classified in `speicher.py`: `AREAS` (may go encrypted to the own storage) or `LOCAL` with a reason (always stays on the Spark: keys, logins, settings, voiceprint, queues). Local first; the sync runs in the background via the watcher. | 🧪 test_speicher |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
 | Area | What to do then | Thread |
 |---|---|---|
-| **Own storage** | New data is classified: always stays local (keys, logins, settings, voiceprint) or may be copied encrypted or offloaded. Local first, sync in the background via the watcher. | "Connect own storage" ("Eigenen Speicher einbinden") |
 | **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
 | **Background models** | The display says "working" only while something is really being computed, otherwise "Standby" (loaded or not); sharing a running model does not extend its run time and never starts it (`docembed.embed(..., keep=False)`); the stop check also runs during a Notaus and after errors. | applies since V01.0.444, 🧪 test_wissen.Worker |
 

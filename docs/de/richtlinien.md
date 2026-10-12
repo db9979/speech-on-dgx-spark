@@ -66,12 +66,12 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 21 | **Sicherheit nach Stand der Technik** | Die Änderung wird gegen den Teil „Stand der Technik“ der Sicherheits-Checkliste geprüft (Kryptografie, Anmeldung, Header, Lieferkette, LLM-Risiken). | 📝 |
 | 22 | **Voraussetzungen** | Baut eine Funktion auf einer anderen auf, steht das als `parent` in `features.py` (die Kette entsteht daraus, `features.chain`). Kein eigener Text „schalte erst X ein“: Hinweise nennen fehlende Schalter über `features.missing_text`, die Seiten Funktionen und Wer darf was bieten die Kette beim Einschalten mit an (`needs.js`, `POST /api/admin/features/{key}/enable`) und sagen beim Ausschalten, was mit ausgeht. Eine Einrichtung, die fehlen kann, kommt nach `features.READY`. | 🧪 test_voraussetzungen, test_voraussetzungen_mit_einschalten |
 | 23 | **Einstellungs-Assistent** | Jede neue Einstellung in `config.default.json` oder `profiles.SETTINGS` bekommt im selben Commit ihre Einordnung in `berater_katalog.py`: im Katalog (Stufe A–C, P), in `NEVER_KEYS` (D, nie) oder in `OHNE` / `OHNE_PROFIL` (bewusst nicht vorschlagbar). So kann der Assistent sie vorschlagen oder sicher auslassen. | 🧪 test_einstellungs_assistent.test_every_setting_is_classified |
+| 24 | **Eigener Speicher** | Jede neue Datei unter `users/<id>/` wird in `speicher.py` eingeordnet: `AREAS` (darf verschlüsselt auf den eigenen Speicher) oder `LOCAL` mit Grund (bleibt immer auf dem Spark: Schlüssel, Logins, Einstellungen, Stimmabdruck, Warteschlangen). Lokal zuerst; der Abgleich läuft im Hintergrund über den Wächter. | 🧪 test_speicher |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
 | Bereich | Was dann zu tun ist | Thread |
 |---|---|---|
-| **Eigener Speicher** | Neue Daten werden eingeordnet: bleibt immer lokal (Schlüssel, Logins, Einstellungen, Stimmabdruck) oder darf verschlüsselt kopiert bzw. ausgelagert werden. Lokal zuerst, Abgleich im Hintergrund über den Wächter. | „Eigenen Speicher einbinden“ |
 | **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
 | **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“ (geladen oder nicht); Mitnutzen eines laufenden Modells verlängert keine Laufzeit und startet es nie (`docembed.embed(..., keep=False)`); die Stopp-Prüfung läuft auch bei Notaus und nach Fehlern. | gilt seit V01.0.444, 🧪 test_wissen.Worker |
 
