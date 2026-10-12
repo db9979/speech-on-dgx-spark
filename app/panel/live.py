@@ -132,6 +132,8 @@ TARGETS = {
     "klaeren": ("Rückfrage und Merken", "Auswahl und Zuordnungen · auf dem Spark", "spark", False),
     # Chats (chats.py): shown while they are on, the line with chats, groups and today's messages in numbers
     "chats": ("Chats", "Nachrichten zwischen Personen · auf dem Spark", "spark", False),
+    # Taten prüfen, Fehlerschleife stoppen (taten.py): shown while one is on, how often they stepped in today
+    "taten": ("Taten-Prüfung", "zurückgehalten und gestoppt · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -1063,6 +1065,13 @@ def snapshot(view="admin", now=None):
         cht = {"on": False}
     if cht.get("on"):
         used.add("chats")
+    cc = load_config().get("chat", {})
+    if cc.get("action_check", True) or cc.get("loop_stop", True):
+        import taten
+        tat = taten.for_live(now)
+        used.add("taten")
+    else:
+        tat = {}
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1086,6 +1095,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{cht.get('chats', 0)} Chats · {cht.get('groups', 0)} Gruppen · heute {cht.get('sent', 0)} Nachrichten · "
                         f"{cht.get('pushed', 0)} Mitteilungen" + (f" · {cht['push_failed']} nicht zugestellt" if cht.get("push_failed") else "")
                         + (f" · {cht.get('media', 0)} Fotos/Dateien/Sprache · {cht.get('media_mb', 0)} MB" if cht.get("media_on") else ""))
+        if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
+            x["sub"] = f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

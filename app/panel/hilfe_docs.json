@@ -1540,6 +1540,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Taten prüfen und Fehlerschleife stoppen (V01.0.477)",
+"text": "Taten prüfen und Fehlerschleife stoppen (V01.0.477): Zwei Schutzregeln, wie die Antwort-Prüfung standardmäßig an (Einstellungen → Sprachmodell, chat.action_check, chat.loop_stop, Grund in features.DEFAULT_ON), ohne Schalter pro Profil (taten.py, feste Regeln, kein Modell). Taten prüfen: Jedes Werkzeug, das etwas ändert, hat eine Art (taten.KIND: geraet, erinnerung, termin, mail_entwurf, dokument, remarkable, nachricht, merken, aufgabe). Das Panel merkt sich pro Antwort, welche Art geklappt hat (gleiche Fehlerwörter wie Logs → Anfragen; „NOT saved yet“ zählt als Vorschlag, nicht als Tat). Behauptet ein fertiger Satz eine Tat („ist jetzt an“, „habe eingetragen“, „ist gesendet“, „habe ich mir gemerkt“, ein bloßes „Erledigt.“, wenn etwas Änderndes angeboten war) und keine der genannten Arten hat geklappt, wird er weder gezeigt noch gesprochen. Am Ende kommt ein fester Satz: „Das hat nicht geklappt: Fernseher.“ (Werkzeug lief mit Fehler) oder „Das habe ich nicht ausgeführt.“ (lief nicht); bei einem offenen Vorschlag nichts. Kein zweiter Versuch. Im Zweifel geht der Satz durch (nennt er mehrere Taten und eine davon hat geklappt). Fehlerschleife stoppen: Scheitert dasselbe Werkzeug mit de"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Taten prüfen und Fehlerschleife stoppen (V01.0.477)",
+"text": "nselben Angaben zweimal (oder mit beliebigen Angaben dreimal), wird es für den Rest der Antwort nicht mehr angeboten, das Modell hört warum, ein weiterer Aufruf läuft nicht. Sichtbar in Logs → Anfragen („Taten-Prüfung“, „Schleife gestoppt“), im Journal (chat: action check: held back kind=… reason=…, chat: loop stop: tool=… fails=…) und in der Live-Übersicht („Taten-Prüfung“: zurückgehalten und gestoppt heute, nur Zahlen). Die Schnittstelle taten.check(text, acts, offered) nutzt später auch das Regelwerk des Einstellungs-Assistenten (feste Regel „eingebaut“)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Termine nur frisch aus dem Kalender (V01.0.348)",
 "text": "Termine nur frisch aus dem Kalender (V01.0.348): „Guten Morgen“ allein (auch mit „Spark“, „wie geht’s“) zählt als Bitte um den Tag: Die Weiche ordnet es dem Kalender zu, und die erste Runde muss daily_briefing aufrufen (ohne Briefing: calendar_events). Vor einer anderen Bitte („Guten Morgen, mach das Licht an“) gilt das nicht. Jedes Kalender-Ergebnis markiert Termine, die schon zu Ende sind, mit „(already over)“; Briefing und Tagesüberblick nennen sie nicht als anstehend. Hat eine Antwort den Kalender gelesen, nimmt die Antwort-Prüfung Uhrzeiten, Daten und in Anführungszeichen genannte Termintitel nur noch aus der Frage, den Anweisungen und den Ergebnissen dieser Antwort, nicht mehr aus früheren Antworten im Gespräch; so kommen gestrige Termine nie als heutige zurück (im Protokoll „Termin aus früherer Antwort“)."
 },
@@ -4854,6 +4870,22 @@
 "head": "Voice chat",
 "title": "Required tools and answer check (V01.0.117)",
 "text": "<think> in the prompt), everything before it is never shown, spoken or kept; a lone </think> is never shown (before, the answer came twice with </think> between). Since V01.0.455 no sentence of an answer comes twice: when the model writes the answer before a tool call (also one it only writes as text) and again after the result, the next round shows each sentence only once it is complete and leaves out sentences already said, in the chat and in the voice; Logs → Requests then show \"Repetition left out\" with the count."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Check deeds and stop error loops (V01.0.477)",
+"text": "Check deeds and stop error loops (V01.0.477): two protection rules, on by default like the answer check (Settings → Language model, chat.action_check, chat.loop_stop, reason in features.DEFAULT_ON), without a switch per profile (taten.py, fixed rules, no model). Check deeds: every tool that changes something has a kind (taten.KIND: geraet, erinnerung, termin, mail_entwurf, dokument, remarkable, nachricht, merken, aufgabe). Per answer the panel keeps which kind worked (the same failure words as Logs → Requests; \"NOT saved yet\" counts as a proposal, not as a deed). When a finished sentence claims a deed (\"is on now\", \"I have entered it\", \"has been sent\", \"I'll remember\", a bare \"Done.\" while something that changes things was offered) and none of the kinds it names worked, it is neither shown nor spoken. At the end comes one fixed sentence: \"That did not work: TV.\" (the tool ran and failed) or \"I did not do that.\" (it did not run); nothing while a proposal is open. No second try. In doubt the sentence is said (it names several deeds and one of them worked). Stop error loops: when the same tool fails twice with the same details (or three times with any), it is not offered again for the"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Check deeds and stop error loops (V01.0.477)",
+"text": " rest of the answer, the model hears why, a further call is not run. Visible in Logs → Requests (\"Taten-Prüfung\", \"Schleife gestoppt\"), in the journal (chat: action check: held back kind=… reason=…, chat: loop stop: tool=… fails=…) and on the Live page (\"Taten-Prüfung\": held back and stopped today, numbers only). The settings assistant's rule set will use the same interface taten.check(text, acts, offered) (a fixed \"built-in\" rule)."
 },
 {
 "lang": "en",

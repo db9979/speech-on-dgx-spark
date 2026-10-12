@@ -140,6 +140,7 @@ OHNE = {
         "engine_port", "host", "max_batch_size", "max_new_tokens", "model", "port", "recognizer", "timestamps",
     ),
     "chat": (
+        "action_check", "loop_stop",
         "telegram_panel_url",
         "agent", "agent_mcp", "android", "android_live", "berater", "berater_auto", "berater_calls", "berater_chat",
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_issue", "berater_me", "berater_notify",

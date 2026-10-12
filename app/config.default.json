@@ -79,6 +79,8 @@
     "temperature": 0.3,
     "tool_temperature": 0.1,
     "answer_check": true,
+    "action_check": true,
+    "loop_stop": true,
     "tool_thinking": false,
     "routing": false,
     "direct_read": false,

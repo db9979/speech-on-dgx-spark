@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.477** · 2026-10-13 · Taten prüfen und Fehlerschleife stoppen (Schutzregeln, an wie die Antwort-Prüfung): ein Satz wie „Der Fernseher ist jetzt an“ wird nur gesagt, wenn ein Werkzeug dieser Art geklappt hat, sonst ein fester ehrlicher Satz; ein Werkzeug, das zweimal gleich scheitert, wird für den Rest der Antwort gesperrt; kein zweiter Versuch ohne Frage; Live, Logs → Anfragen, neue Richtlinien-Regel 28
 - **V01.0.476** · 2026-10-13 · Werkzeuge heißen verständlich: Live „Weg der Anfrage“, Logs → Anfragen, Weiche, Verbessern und „Erklären“ zeigen z. B. „Postfach-Überblick“ statt mail_tidy_overview (de/en, interner Name klein daneben und in „Kopieren für Thread“); ein Verzeichnis werkzeuge.py, Selbsttest prüft jedes Werkzeug
 - **V01.0.475** · 2026-10-13 · Rot-Fix nach V01.0.473: Browser-Testklassen stoppen ihr Panel wieder (helpers.serve_panel); vorher liefen neun Panels mit ihren Hintergrund-Schleifen bis zum Ende des Laufs weiter, das Panel wurde immer langsamer und nahm späteren Tests die Arbeit weg (12 rote Tests); Regel und test_testserver
 - **V01.0.474** · 2026-10-13 · Rot-Fix nach V01.0.473: Chats-Test legt kein Gerät „Lautsprecher“ mehr an (störte Probleme melden), Rückfrage-Test trennt Home Assistant des Testprofils wieder
