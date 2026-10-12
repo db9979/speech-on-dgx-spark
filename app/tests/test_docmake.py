@@ -8,9 +8,11 @@ import asyncio
 import io
 import json
 import os
+import posixpath
 import re
 import unittest
 import zipfile
+import xml.etree.ElementTree as ET
 
 from tests import helpers
 
@@ -287,6 +289,64 @@ class Render(Base):
             "sender": ["Dominik", "Weg 1"], "recipient": ["Firma"], "subject": "Betreff", "paras": ["Text"]}})
         for fmt in ("docx", "pdf", "md", "txt"):
             self.assertIn(b"PDF" if fmt == "pdf" else b"", docrender.render(letter, fmt, "brief")[:8] + b"PDF")
+
+    def test_office_files_are_valid(self):
+        """Dominik (2026-10-12, "Der Rheingraben.pptx"): PowerPoint said the file had a problem and offered to
+        repair it; a chart beside text sat at x="5815446.75". Every built Word, PowerPoint and Excel file, in every
+        look and with an own template: well-formed XML, every part has a content type, every relation points to
+        a part that exists, positions and sizes are whole numbers, no shape id twice on a slide."""
+        from docx import Document
+        from pptx import Presentation
+        rich = docmake.check_content(dict(SAMPLE, sections=SAMPLE["sections"] + [
+            {"heading": "Seite an Seite", "bullets": ["Erster Punkt", "Zweiter Punkt"],
+             "chart": {"type": "bar", "labels": ["A", "B", "C"], "series": [{"label": "x", "values": [1, 2.5, 3]}]}},
+            {"heading": "Anteil", "paras": ["Ein Satz."], "chart": {"type": "pie", "labels": ["A", "B"],
+                                                                     "series": [{"label": "", "values": [1, 99]}]},
+             "table": {"head": ["a", "b", "c"], "rows": [["1", "2", "3"]]}},
+            {"heading": "Kennzahlen", "stats": [{"value": "320 km", "label": "lang"}, {"value": "40 km", "label": "breit"}],
+             "quote": "Ein Graben, der die Landschaft prägt."}]))
+        bases = {}
+        for fmt, make in (("pptx", Presentation), ("docx", Document)):
+            b = io.BytesIO()
+            make().save(b)
+            bases[fmt] = b.getvalue()
+        builds = [(fmt, st, None) for fmt in ("pptx", "docx", "xlsx") for st in docrender.STYLES]
+        builds += [(fmt, "spark-hell", io.BytesIO(bases[fmt])) for fmt in bases]
+        for fmt, st, base in builds:
+            where = (fmt, st, base is not None)
+            z = zipfile.ZipFile(io.BytesIO(docrender.render(rich, fmt, st, None, base)))
+            names = set(z.namelist())
+            types = ET.fromstring(z.read("[Content_Types].xml"))
+            ext = {e.get("Extension").lower() for e in types if e.tag.endswith("Default")}
+            over = {e.get("PartName").lstrip("/") for e in types if e.tag.endswith("Override")}
+            for n in names:
+                if n.endswith("/"):
+                    continue
+                self.assertTrue(n in over or n.rsplit(".", 1)[-1].lower() in ext, (where, n, "no content type"))
+                if n.endswith((".xml", ".rels")):
+                    root = ET.fromstring(z.read(n))       # well-formed
+                    if n.endswith(".rels"):
+                        folder = posixpath.dirname(posixpath.dirname(n))
+                        for r in root:
+                            if r.get("TargetMode") == "External":
+                                continue
+                            t = r.get("Target")
+                            t = t.lstrip("/") if t.startswith("/") else posixpath.normpath(posixpath.join(folder, t))
+                            self.assertIn(t, names, (where, n, t))
+                    if n.endswith(".xml") and not n.startswith(("docProps/", "xl/")):
+                        self.assertEqual(re.findall(r'\s(?:cx|cy)="-?\d+\.\d*"', z.read(n).decode()), [], (where, n))
+                    if re.match(r"ppt/slides/slide\d+\.xml$", n):
+                        xml = z.read(n).decode()
+                        self.assertEqual(re.findall(r'\s(?:x|y|cx|cy|w|h)="-?\d+\.\d*"', xml), [], (where, n))
+                        ids = re.findall(r'<p:cNvPr id="(\d+)"', xml)
+                        self.assertEqual(len(ids), len(set(ids)), (where, n))
+
+    def test_heading_numbers_are_the_layouts_job(self):
+        """Dominik's Rheingraben slides: "7. Aktuelle Themen" showed as "07  7. Aktuelle Themen"."""
+        for raw, want in (("7. Aktuelle Themen", "Aktuelle Themen"), ("3) Kosten", "Kosten"),
+                          ("19. Jahrhundert", "19. Jahrhundert"), ("9. November 1989", "9. November 1989"),
+                          ("1989: Mauerfall", "1989: Mauerfall")):
+            self.assertEqual(docmake.check_section({"heading": raw, "bullets": ["x"]}, "praesentation")["heading"], want)
 
     def test_only_allowed_formulas_and_no_links(self):
         c = docmake.check_content(SAMPLE)

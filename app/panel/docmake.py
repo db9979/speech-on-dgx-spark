@@ -174,11 +174,18 @@ def _list(v, most, name):
     return v[:most]
 
 
+# "7. Aktuelle Themen": the layout numbers the parts itself (Dominik's Rheingraben slides showed "07  7. …");
+# "19. Jahrhundert" or "9. November" stay
+LEAD_NUMBER = re.compile(r"^\s*\d{1,2}[.)]\s+(?!(?:Jahrhundert|Jh|Januar|Februar|März|April|Mai|Juni|Juli|August|"
+                         r"September|Oktober|November|Dezember|century|January|February|March|May|June|July|"
+                         r"October|December)\b)")
+
+
 def check_section(s, kind="sonstiges", cells=None):
     """One section of a content plan, cut to the limits. cells: [count] of table cells so far (all sections)."""
     if not isinstance(s, dict):
         raise ValueError("section: Objekt erwartet")
-    out = {"heading": text(s.get("heading"), MAX_TITLE, "heading")}
+    out = {"heading": LEAD_NUMBER.sub("", text(s.get("heading"), MAX_TITLE, "heading"))}
     paras = [text(x, MAX_PARA, "paras", lines=True) for x in _list(s.get("paras"), MAX_PARAS, "paras")]
     bullets = [text(x, MAX_BULLET, "bullets") for x in _list(s.get("bullets"), MAX_BULLETS, "bullets")]
     out["paras"], out["bullets"] = [x for x in paras if x], [x for x in bullets if x]
@@ -280,7 +287,7 @@ def check_plan(args, wish="", lang="de"):
             s = {"heading": s}
         if not isinstance(s, dict):
             continue
-        h = text(s.get("heading"), MAX_TITLE, "heading")
+        h = LEAD_NUMBER.sub("", text(s.get("heading"), MAX_TITLE, "heading"))
         if not h:
             continue
         sec = {"heading": h, "note": text(s.get("note"), MAX_NOTE, "note")}

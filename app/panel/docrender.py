@@ -622,6 +622,21 @@ def _docx_letter(doc, c, Pt, Cm, center):
 
 
 # ---------------------------------------------------------------- PowerPoint
+_EMU_ATTRS = ("x", "y", "cx", "cy", "w", "h")
+_FRACTION = re.compile(r"-?\d+\.\d*(?:[eE][-+]?\d+)?")
+
+
+def _whole_emu(prs):
+    """Positions and sizes in a slide are whole numbers (EMU). python-pptx writes a float as "123.5", and
+    PowerPoint then says the file has a problem and offers to repair it (Dominik, "Der Rheingraben.pptx")."""
+    for slide in prs.slides:
+        for el in slide._element.iter():
+            for a in _EMU_ATTRS:
+                v = el.get(a)
+                if v is not None and _FRACTION.fullmatch(v):
+                    el.set(a, str(int(round(float(v)))))
+
+
 def pptx(c, style, pictures=None, base=None):
     if not base:
         return _pptx_designed(c, style, pictures)
@@ -792,6 +807,7 @@ def pptx(c, style, pictures=None, base=None):
         if sec.get("notes"):
             s.notes_slide.notes_text_frame.text = sec["notes"]
     out = io.BytesIO()
+    _whole_emu(prs)
     prs.save(out)
     return out.getvalue()
 
@@ -1118,6 +1134,7 @@ def _pptx_designed(c, style, pictures=None):
         if sec.get("notes"):
             sl.notes_slide.notes_text_frame.text = sec["notes"]
     out = io.BytesIO()
+    _whole_emu(prs)
     prs.save(out)
     return out.getvalue()
 

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.432** PowerPoint-Dateien öffnen ohne „Reparieren“, Gültigkeitsprüfung für Office-Dateien
 - **V01.0.431** Live-Bild zeigt nur eingerichtete Dienste und Ziele
 - **V01.0.430** Weniger Sprachaussetzer bei langen Antworten: mehr Ton auf Vorrat, solange der Spark schreibt (auch bei schnellerem Sprechtempo); iPhone-App puffert nach Leerlauf
 - **V01.0.429** Dokumente erstellen: Vorschau im Chat, Download überall (auch Android, iPhone), per Mail als Entwurf oder ins Postfach, viel schöneres Aussehen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.425** Live-Bild: Internet als Fläche, Wächter als Wand mit Geblocktem, ruhige Ziele zusammengefasst, Legende, keine Überlappungen mehr
 - **V01.0.424** Ich-Seiten aufgeräumt: Reiter mit Zahlen, E-Mail-Fragen mit einem Tipp, reMarkable-Ordnerbaum, Gedächtnis ändern und suchen
 - **V01.0.423** Dokumente erstellen: Antwort auf die Rückfrage bleibt beim Datei-Wunsch, bei „aus“ sagt der Spark, wo man es einschaltet
-- **V01.0.422** Gescheiterte Tests bekommen einen zweiten Versuch (GitHub und Selbsttest auf dem Spark); erst dann grün steht als Warnung im Lauf
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
