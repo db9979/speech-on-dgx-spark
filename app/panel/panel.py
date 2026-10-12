@@ -206,6 +206,38 @@ async def emergency(request: Request, call_next):
     return await call_next(request)
 
 
+# Seiten sichtbar laden (plan seiten-laden.md): a read of the page that took long is one line in Zustand → Logs →
+# Diagnose ("seite: slow GET /api/profile/calendar 4.2 s"), so it shows which page waits on what. Only the route's
+# pattern and the time, never the query, ids or names; one line per route a minute at most (Zustand polls every 3 s).
+SLOW_READ = 1.5
+SLOW_EVERY = 60
+_slow_said = {}
+
+
+def slow_read(method, route, took, now):
+    """The Diagnose line for a slow read, or None (fast, not a read, or said in the last minute)."""
+    if method != "GET" or took < SLOW_READ or not route.startswith("/api/"):
+        return None
+    if now - _slow_said.get(route, -SLOW_EVERY) < SLOW_EVERY:
+        return None
+    if len(_slow_said) > 500:
+        _slow_said.clear()
+    _slow_said[route] = now
+    return f"seite: slow GET {route} {took:.1f} s"
+
+
+@app.middleware("http")
+async def slow_reads(request: Request, call_next):
+    t0 = time.monotonic()
+    response = await call_next(request)
+    now = time.monotonic()
+    route = getattr(request.scope.get("route"), "path", None) or ("/api/?" if request.url.path.startswith("/api/") else "")
+    line = slow_read(request.method, route, now - t0, now)
+    if line:
+        print(line, flush=True)
+    return response
+
+
 @app.exception_handler(notaus.NotausAktiv)
 async def held_off(request: Request, exc: notaus.NotausAktiv):
     """An action the Notaus held off deep down (the last line of defence): said plainly, never a 500."""

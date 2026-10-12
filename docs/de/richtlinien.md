@@ -76,7 +76,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
 | **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“ (geladen oder nicht); Mitnutzen eines laufenden Modells verlängert keine Laufzeit und startet es nie (`docembed.embed(..., keep=False)`); die Stopp-Prüfung läuft auch bei Notaus und nach Fehlern. | gilt seit V01.0.444, 🧪 test_wissen.Worker |
 
-**Geplant, noch nicht freigegeben** (keine Regel): Lade- und Fehlerzustand pro Kasten mit Zeitlimit (Plan `seiten-laden.md`), Lesestand für den Verlauf (Plan `verlauf-sync.md`), Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
+**Geplant, noch nicht freigegeben** (keine Regel): Lesestand für den Verlauf (Plan `verlauf-sync.md`), Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
 
 ---
 
@@ -205,6 +205,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Handy:** Tippziele mindestens 44 px, Eingabefelder 16 px, Safe-Area beachten. Das Gesicht bzw. „Frag Spark“ liegt nie über Bedienelementen. (P handy-wie-app; teils 🧪)
 - **Statusfarben** grün, gelb und rot. „Braucht dich“ hat immer einen Knopf dorthin. Bernstein (`--c4`) gibt es im Live-Bild nur für Internet. (P design-klar, M)
 - **Browser-Cache:** HTML ist `no-store`, CSS und JS werden mit `?v=VERSION` geladen, `/api` ist `no-store`. (🧪 test_panel.Page)
+- **Laden sichtbar** (seit V01.0.459, Plan `seiten-laden.md`): Was eine Seite oder ein Kasten beim Öffnen lädt, läuft über `ladeBox`/`lzb` (`laden.js`): Platzhalter, „wird aktualisiert …“, „dauert länger als sonst …“ und der Fehler mit „Noch einmal“ stehen im Kasten selbst; ein Fehler nimmt der Seite nichts weg und meldet nie ab (nur 401). Mehrere Kästen laden gleichzeitig (`lzPool`, höchstens 4), nie in einer `await`-Kette. Nach 30 s ohne Antwort zeigt der Kasten den Fehler mit „Noch einmal“; die Anfrage wird nicht abgebrochen, kommt die Antwort doch noch, erscheint der Inhalt. (🧪 test_seiten_laden)
 - **Alle Panel-Skripte teilen einen globalen Namensraum.** Neue Funktionsnamen gegen alle JS-Dateien prüfen. (M [[dienst-ausfall-plan]]; 📝)
 - **Begriffe:** „Ich“ (nicht „Mein Profil“), „Zustand“ (nicht Übersicht), „Personen und Geräte“ (nicht Profile), „Betrieb“ (nicht System), „Spark“, „Admin-Rechte“ (Rollen meint die Sprech-Rollen). Alte Seitennamen sind verboten. (P ordnung-und-darstellung, bedienung-gesamt; 🧪 test_bedienung_hilfe.Names, test_guides)
 
@@ -329,6 +330,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_bedienung_hilfe | Englisch, Fehler als Sätze, „?“ mit Hilfe, alte Namen verboten |
 | test_guides | Seitenbausteine, Menü, Anleitung pro Schalter, ≤ 140 Zeichen |
 | test_hilfe, test_hilfe_quality | Hilfe-Index aktuell, ≥ 60 Alltagsfragen richtig |
+| test_seiten_laden | Seiten laden über `ladeBox`, Ich gleichzeitig, Fehler im Kasten, nach 30 s „Noch einmal“, Band „Spark antwortet nicht“, langsame Lesezugriffe in Diagnose |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | keine Breite über den Rand (320/390/1280), Höhenbudgets, keine inneren Scroll-Kästen |
 | test_workflows, test_lock, test_lieferkette | gepinnte Actions, Rechte, Signierumgebung, Paket-Hashes, ffmpeg-Whitelist |
 | test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |

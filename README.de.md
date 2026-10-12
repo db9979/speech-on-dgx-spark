@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.459** Seiten zeigen, dass sie laden (Balken, Platzhalter, Fehler mit „Noch einmal“); Ich lädt alle Kästen gleichzeitig
 - **V01.0.458** GitHub-Token nur zum Lesen für Updates (5000 statt 60 Abfragen pro Stunde)
 - **V01.0.457** Verlauf auf allen Geräten: kein Überschreiben mehr, Neues ohne Neuladen, Quellen bleiben unter Antworten, Pebble-Uhr wieder ganz; neu (aus, unter Ich einschaltbar): sofort abgleichen, ein Gespräch für alle Kanäle, offline lesen nur auf vertrauten Browsern.
 - **V01.0.456** Eigener Speicher: jetzt auch per SFTP und als SMB-Freigabe im Heimnetz, der Schlüssel des SFTP-Servers wird gemerkt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.452** Update-Prüfung von selbst nur alle 3 Stunden; Internet-Prüfung nicht mehr über GitHub (Grenze von 60 Abfragen pro Stunde)
 - **V01.0.451** Antworten im Chat formatiert (Listen, fett, Code, Links), vorgelesen ohne Markdown-Zeichen
 - **V01.0.450** Einstellungs-Assistent: aus Fehlern, 👎 und unklaren Fragen macht der Spark geprüfte Vorschläge zum Verbessern (Zustand → Verbessern), 👍/👎 unter Antworten; alles aus, bis du es einschaltest
-- **V01.0.449** iPhone-App baut wieder (Fehler aus .448)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

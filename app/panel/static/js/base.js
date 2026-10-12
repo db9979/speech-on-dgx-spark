@@ -94,7 +94,8 @@ const errRaw=e=>String(e&&(e.detail!==undefined?e.detail:e.message)||'');
 // 428: the change needs a current code from the authenticator app (second login step); asked here, then sent again.
 // With a passkey (passkey.py) the 428 answer carries its challenge; confirmAsk (mfa.js) offers it next to the code.
 const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Speech-Code':code}:{'X-Speech-Passkey':code.pk};
-  const r=await fetch(p,hd?Object.assign({},o,{headers:Object.assign({},o.headers||{},hd)}):o);
+  // window.lzFetch (laden.js): the loading bar on top, 30 s at most for a read, the band when the Spark is gone
+  const r=await (window.lzFetch||fetch)(p,hd?Object.assign({},o,{headers:Object.assign({},o.headers||{},hd)}):o);
   if(r.status===428){const wrong=/wrong/.test(await r.text());let opt=null;
     const b64j=h=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(h.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((h.length+3)%4)),c=>c.charCodeAt(0))));
     try{const h=r.headers.get('X-Speech-Passkey-Options');if(h)opt=b64j(h)}catch{}
@@ -126,12 +127,16 @@ const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['liv
   feat:[['feat',t('Funktionen','Features')],['who',t('Wer darf was','Who may do what')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
+// Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
+// „dauert länger als sonst …“ or its error in the page itself. The settings form keeps its fields (no placeholders).
+const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
+const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
   document.body.classList.toggle('inchat',s==='chat');
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
-  if(s==='feat'){cw.classList.add('sub');loadCfg();if(typeof cfgPane==='function')cfgPane('feat')}
+  if(s==='feat'){cw.classList.add('sub');lzb($('cfg'),loadCfg,LZ_CFG);if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){loadProf();if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')loadLogs();if(s==='live'&&window.liveOpen)liveOpen();if(s==='apps'){loadInt();if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='who'&&window.loadWho)loadWho();if(s==='route'&&window.loadWeiche)loadWeiche();if(s==='verb'&&window.loadVerb)loadVerb();}
+  if(s==='cfg'){cw.classList.remove('sub');lzb($('cfg'),loadCfg,LZ_CFG);mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){lzb($('proflist'),loadProf,{form:'tabelle'});if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')lzb($('logout'),loadLogs);if(s==='live'&&window.liveOpen){if(window.lzSkelIn)lzSkelIn($('lvroot'),'karten',4);liveOpen()}if(s==='apps'){lzb($('int-ep'),loadInt,{form:'tabelle'});if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='who'&&window.loadWho)lzb($('whobox'),loadWho);if(s==='route'&&window.loadWeiche)lzb($('whbox'),loadWeiche,{at:$('whlist')});if(s==='verb'&&window.loadVerb)loadVerb();}
 // Zustand, Funktionen and Personen und Geräte have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;

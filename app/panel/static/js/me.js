@@ -478,7 +478,17 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 // the ~30 boxes of Ich, one load at a time
 function meLoadOnce(){if(!PROFILE)return;return ME_LOAD.p=meLoad().finally(()=>{ME_LOAD.p=null})}
-async function meLoad(){{try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver();if(typeof goShow==='function')goShow();if(window.meBerater)meBerater();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()})}catch{setProfile(null);openMe('loginbox')}}}
+// Ich's boxes side by side, at most four loads at a time (plan seiten-laden.md; before: one after the other, so a
+// slow calendar or mail server held up every box after it). Each box shows its placeholders, „dauert länger …“ and
+// its own error with „Noch einmal“ (laden.js ladeBox); one failing box takes nothing from the others. Only a 401,
+// the profile's login has ended, still signs out (before: any error looked like being signed out).
+// [box, load, quiet]: quiet boxes stay silent on an error, as they were before
+async function meLoad(){let out=false;
+  const jobs=[['factbox',showFacts],['docbox',showDocs],['voicebox',showVoice],['calbox',showCal],['mailbox',async()=>{await showMail();await showMailTidy().catch(()=>{})}],
+    ['habox',showHa],['secbox',showSecurity],['logbox',showToolLog],['probox',showPro,1],['pushbox',showPush,1]].concat(typeof extrasJobs==='function'?extrasJobs():[]);
+  await lzPool(jobs.map(([id,f,quiet])=>()=>lzb($(id),f,{auth:true,quiet:!!quiet}).catch(e=>{if(e&&e.status===401)out=true})),4);
+  if(out){setProfile(null);openMe('loginbox');return}
+  showRoom();showOver();if(typeof goShow==='function')goShow();if(window.meBerater)meBerater();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()}).catch(()=>{})}
 window.openMe=openMe;
 // Ich says what the admin has not switched on instead of hiding it without a word (plan „Vereinheitlichen“ Phase 4,
 // V01.0.270): the names with the reason, for an admin a jump to Funktionen → Wer darf was. From /api/features.

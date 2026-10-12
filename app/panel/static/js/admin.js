@@ -429,7 +429,7 @@ $('tts.model').addEventListener('change',()=>instrHint(true));
 
 
 function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" ${onAttr('copyPrev')}>${t('kopieren','copy')}</button></td></tr>`).join('')}
-async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
+async function loadInt(){const [c,v]=await Promise.all([api('/api/config').then(r=>r.json()),api('/api/tts/voices').then(r=>r.json())]);   // side by side (seiten-laden.md)
   const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||t('beliebig, z. B. sk-local','anything, e.g. sk-local');
   const voice=c.tts.default_voice||((v.voices||[])[0]||'ryan');
   $('int-ep').innerHTML=kv([[t('Spracherkennung (STT)','Speech recognition (STT)'),asr+'/audio/transcriptions'],[t('Sprachausgabe (TTS)','Speech output (TTS)'),tts+'/audio/speech'],[t('API-Schlüssel','API key'),c.api.key||t('(keiner gesetzt)','(none set)')]]);

@@ -76,7 +76,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
 | **Background models** | The display says "working" only while something is really being computed, otherwise "Standby" (loaded or not); sharing a running model does not extend its run time and never starts it (`docembed.embed(..., keep=False)`); the stop check also runs during a Notaus and after errors. | applies since V01.0.444, 🧪 test_wissen.Worker |
 
-**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), read state for the history (plan `verlauf-sync.md`), asking before GitHub reports (plan `frage-vor-meldung.md`).
+**Planned, not yet approved** (no rule): read state for the history (plan `verlauf-sync.md`), asking before GitHub reports (plan `frage-vor-meldung.md`).
 
 ---
 
@@ -205,6 +205,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Phone:** tap targets at least 44 px, input fields 16 px, respect the safe area. The face or "Ask Spark" ("Frag Spark") never lies over controls. (P handy-wie-app; partly 🧪)
 - **Status colours** green, yellow and red. "Needs you" always has a button leading there. Amber (`--c4`) exists in the live picture only for the internet. (P design-klar, M)
 - **Browser cache:** HTML is `no-store`, CSS and JS are loaded with `?v=VERSION`, `/api` is `no-store`. (🧪 test_panel.Page)
+- **Loading is visible** (since V01.0.459, plan `seiten-laden.md`): what a page or box loads when it opens goes through `ladeBox`/`lzb` (`laden.js`): placeholders, "updating …", "taking longer than usual …" and the error with "Try again" stand in the box itself; an error takes nothing from the rest of the page and never signs out (only a 401 does). Several boxes load side by side (`lzPool`, at most 4), never in an `await` chain. After 30 s without an answer the box shows the error with "Try again"; the request is not cut off, and a late answer still fills the box. (🧪 test_seiten_laden)
 - **All panel scripts share one global namespace.** Check new function names against all JS files. (M [[dienst-ausfall-plan]]; 📝)
 - **Terms:** "Me" (not "My profile"), "Status" (not Overview), "People and devices" (not Profiles), "Operation" (not System), "Spark", "Admin rights" (roles means the speaking roles). Old page names are forbidden. (P ordnung-und-darstellung, bedienung-gesamt; 🧪 test_bedienung_hilfe.Names, test_guides)
 
@@ -329,6 +330,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_bedienung_hilfe | English, errors as sentences, "?" with help, old names forbidden |
 | test_guides | page building blocks, menu, guide per switch, ≤ 140 characters |
 | test_hilfe, test_hilfe_quality | help index current, ≥ 60 everyday questions right |
+| test_seiten_laden | pages load through `ladeBox`, Me side by side, errors in the box, "Try again" after 30 s, band "The Spark is not answering", slow reads in Diagnosis |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | no width beyond the edge (320/390/1280), height budgets, no inner scroll boxes |
 | test_workflows, test_lock, test_lieferkette | pinned actions, permissions, signing environment, package hashes, ffmpeg whitelist |
 | test_selftest_runner | one second attempt, > 5 no attempt, warning |
