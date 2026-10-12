@@ -1914,6 +1914,43 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_admin_hash_opens_the_emergency_access(self):
+        """V01.0.439 (Dominik: „/#admin öffnet keine andere Seite“): the address with #admin opens the panel password
+        dialog when typed into an open page (only the hash changes, no new load) and for a signed-in profile too."""
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)).new_page()
+                errors = []
+                pg.on("pageerror", lambda e: errors.append(str(e)))
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                await self.until(pg, PAGE_READY)
+                await pg.goto(base + "/#admin")                      # same page: only the hash changes
+                await pg.wait_for_selector("#login", state="visible")
+                self.assertEqual(await pg.evaluate("location.hash"), "")
+                await pg.click("#logincancel")
+                await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
+                for how in ("load", "hash"):
+                    if how == "load":
+                        await pg.goto("about:blank")
+                        await pg.goto(base + "/#admin")
+                    else:
+                        await pg.goto(base + "/")
+                        await self.until(pg, PAGE_READY)
+                        await pg.goto(base + "/#admin")
+                    await self.until(pg, PAGE_READY)
+                    await pg.wait_for_selector("#login", state="visible")
+                    await pg.wait_for_timeout(500)                   # nothing that starts later closes it again
+                    self.assertTrue(await pg.is_visible("#login"), how)
+                    self.assertFalse(await pg.is_visible("#profmodal"), how)
+                    await pg.click("#logincancel")
+                await pg.request.post(base + "/api/profile/logout")
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_profile_gets_the_same_shell(self):
         """Phase 7: a signed-in profile (no admin login) gets the admin's menu with only Assistent and Ich; guests keep
         the plain page."""
@@ -1931,8 +1968,7 @@ class Browser(unittest.TestCase):
                     self.assertIn("guest", await pg.evaluate("document.body.className"))
                     # V01.0.285: "Spark verwalten" is not for guests; the admin opens the page with #admin
                     self.assertFalse(await pg.is_visible("#loginbtn"))
-                    await pg.goto(base + "/#admin")
-                    await pg.reload()                                    # the hash alone does not load the page again
+                    await pg.goto(base + "/#admin")                      # only the hash changes (V01.0.439)
                     await pg.wait_for_selector("#login", state="visible")
                     self.assertFalse(await pg.is_visible("#profmodal"))  # the password dialog is not covered
                     await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})

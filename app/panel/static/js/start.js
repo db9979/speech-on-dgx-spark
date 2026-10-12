@@ -8,6 +8,9 @@ ON.adminLogin=()=>{$('profmodal').style.display='none';showLogin()};
 // its own code; the panel password is the emergency access, only over the address with #admin
 window.adminEnter=async()=>{if(!document.body.classList.contains('mayadm')){showLogin();return}
   try{await api('/api/admin/elevate',{method:'POST'});location.reload()}catch(e){alert(e.message)}};
+// the address with #admin typed into an open page changes only the hash, the page is not loaded again (V01.0.439)
+window.addEventListener('hashchange',()=>{if(location.hash!=='#admin')return;history.replaceState(null,'',location.pathname+location.search);
+  if(!ADMIN){$('profmodal').style.display='none';showLogin()}});
 $('loginbtn').onclick=()=>adminEnter();$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
 $('loginform').onsubmit=async e=>{e.preventDefault();
   try{const r=await (await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value,code:$('logincode').value,trust:$('logintrust').checked})})).json();

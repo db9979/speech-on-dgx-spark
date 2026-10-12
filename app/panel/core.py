@@ -78,6 +78,16 @@ def password_set():
     return bool(_stored_hash() or PASSWORD)
 
 
+def store_password(new):
+    """Writes the panel password's hash (Einstellungen → Sicherheit, and sudo speech-spark notzugang)."""
+    salt = secrets.token_bytes(16)
+    os.makedirs(os.path.dirname(PASSWORD_FILE), exist_ok=True)
+    tmp = PASSWORD_FILE + ".tmp"
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+        f.write(f"{salt.hex()} {_hash(new, salt)}\n")
+    os.replace(tmp, PASSWORD_FILE)
+
+
 def check_password(password):
     stored = _stored_hash()
     if stored:

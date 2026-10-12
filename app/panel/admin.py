@@ -4,7 +4,6 @@ import json
 import os
 import re
 import io
-import secrets
 import sys
 import threading
 import time
@@ -40,12 +39,10 @@ from core import (  # noqa: E402
     ENGINE_KEYS,
     LANGS,
     LOG_UNITS,
-    PASSWORD_FILE,
     QWEN38_UNITS,
     SERVICES,
     UNITS,
     VOICES_DIR,
-    _hash,
     _session_token,
     admin_cookie_ok,
     acting_profile,
@@ -58,6 +55,7 @@ from core import (  # noqa: E402
     owner_auth,
     check_password,
     password_set,
+    store_password,
     run,
     unit_exists,
     unit_state)
@@ -300,12 +298,7 @@ async def change_password(request: Request):
         guard.failed(request, guard.ADMIN, what="admin_password")
         await asyncio.sleep(1)
         raise HTTPException(401, "current password is wrong")
-    salt = secrets.token_bytes(16)
-    os.makedirs(os.path.dirname(PASSWORD_FILE), exist_ok=True)
-    tmp = PASSWORD_FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        f.write(f"{salt.hex()} {_hash(new, salt)}\n")
-    os.replace(tmp, PASSWORD_FILE)
+    await asyncio.to_thread(store_password, new)
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
     guard.log("admin_password_changed", ip=guard.client_ip(request))

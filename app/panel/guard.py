@@ -401,7 +401,7 @@ LIVE_WORDS = {
     "handoff_login": ("Eingang", "Anmeldung per Übergabe"), "trusted_browser": ("Eingang", "neuer vertrauter Browser"),
     "trusted_browser_removed": ("Eingang", "vertrauter Browser entfernt"),
     "admin_mode_on": ("Eingang", "Admin-Modus geöffnet"), "admin_mode_off": ("Eingang", "Admin-Modus beendet"),
-    "admin_mode_failed": ("Eingang", "Admin-Modus abgewiesen"), "passkey_added": ("Eingang", "Passkey angelegt"),
+    "admin_mode_failed": ("Eingang", "Admin-Modus abgewiesen"), "notzugang_cli": ("Eingang", "Notzugang auf dem Spark zurückgesetzt"), "passkey_added": ("Eingang", "Passkey angelegt"),
     "passkey_removed": ("Eingang", "Passkey entfernt"), "invite_used": ("Eingang", "Einladung benutzt"),
     "invite_made": ("Eingang", "Einladung erstellt"), "invite_revoked": ("Eingang", "Einladung zurückgezogen"),
     "invite_app": ("Eingang", "Einladung in der App angenommen"), "profile_device_removed": ("Eingang", "Gerät entfernt"),

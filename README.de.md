@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.439** Ausgesperrt? `sudo speech-spark notzugang` auf dem Spark gibt ein neues Panel-Passwort; /#admin öffnet die Anmeldung auch auf schon offener Seite
 - **V01.0.438** Weiche sichtbar: Funktionen → Weiche mit Weg eines Satzes als Bild, Gruppen mit eigenen Wörtern, „Nicht bei“, Zusatzwerkzeugen, Testsätzen, „Falsch zugeordnet …“, Rückgängig und Statistik
 - **V01.0.437** Live-Bild: Geräte über den Proxy unter Internet, Dokumenten-Aufträge, Aufträge, Postfach aufräumen und mehr sichtbar
 - **V01.0.436** Einladung: der Cursor springt nicht mehr ins Namensfeld, während man die PIN tippt; Testlauf wieder grün
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.432** PowerPoint-Dateien öffnen ohne „Reparieren“, Gültigkeitsprüfung für Office-Dateien
 - **V01.0.431** Live-Bild zeigt nur eingerichtete Dienste und Ziele
 - **V01.0.430** Weniger Sprachaussetzer bei langen Antworten: mehr Ton auf Vorrat, solange der Spark schreibt (auch bei schnellerem Sprechtempo); iPhone-App puffert nach Leerlauf
-- **V01.0.429** Dokumente erstellen: Vorschau im Chat, Download überall (auch Android, iPhone), per Mail als Entwurf oder ins Postfach, viel schöneres Aussehen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

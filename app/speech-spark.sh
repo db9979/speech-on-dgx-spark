@@ -11,6 +11,8 @@
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design,
 #                                  panel, watch, update or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
+#   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
+#                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -192,6 +194,29 @@ cmd_panel() {
   esac
 }
 
+# Locked out (V01.0.439): only here, as root on the Spark; the panel itself cannot do this.
+# The work runs as the panel's service user, so every file keeps its owner (app/panel/notzugang.py).
+cmd_notzugang() {
+  need_root notzugang "$@"
+  [ "$(mode)" = full ] || die "no web panel installed"
+  if [ "${1:-}" != --yes ]; then
+    [ -t 0 ] || die "notzugang asks first; run it in a terminal (or add --yes)"
+    echo "Das setzt ein neues Panel-Passwort, schaltet den zweiten Schritt des Notzugangs aus (die Datei bleibt"
+    echo "als .bak) und „Benutzer als Admin“ aus (die Rollen bleiben). Alle Admin-Anmeldungen enden."
+    local a; read -r -p "Weiter? [j/N] " a
+    case "$a" in j|J|ja|Ja|y|Y|yes) ;; *) echo "Abgebrochen, nichts geändert."; exit 1 ;; esac
+  fi
+  local svc
+  svc=$(systemctl show -p User --value speech-spark-panel.service 2>/dev/null || true)
+  [ -n "$svc" ] || svc=$(stat -c %U "$VAR/state")
+  [ -n "$svc" ] && [ "$svc" != root ] || die "cannot tell the panel's service user"
+  cd "$PREFIX/app/panel"
+  runuser -u "$svc" -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 PYTHONUNBUFFERED=1 \
+    SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_STATE="$VAR/state" SPEECH_SPARK_USERS="$VAR/users" \
+    SPEECH_SPARK_VOICES="$VAR/voices" SPEECH_SPARK_PREFIX="$PREFIX" HF_HOME="$VAR/hf" \
+    "$PREFIX/venv-panel/bin/python" "$PREFIX/app/panel/notzugang.py"
+}
+
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
 case "${1:-}" in
   status) shift; cmd_status ;;
@@ -201,6 +226,7 @@ case "${1:-}" in
   update) shift; cmd_update "$@" ;;
   logs) shift; cmd_logs "$@" ;;
   panel) shift; cmd_panel "$@" ;;
-  ""|-h|--help|help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' ;;
+  notzugang) shift; cmd_notzugang "$@" ;;
+  ""|-h|--help|help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac
