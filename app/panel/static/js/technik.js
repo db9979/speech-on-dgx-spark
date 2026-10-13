@@ -2,8 +2,8 @@
 // version. Four views: the picture (click a box: what it does, its files and modules, where it writes), the way of
 // one request in 8 steps (the way lights up), every storage place (filters, search, list with detail) and the
 // building blocks. Admin only; names of modules and paths, never contents. Only text from the data, always esc().
-const TK={d:null,lang:'',view:'bild',sel:'antwort',step:0,filt:'alle',q:'',row:null};
-const TKW=150,TKH=52;
+const TK={d:null,lang:'',view:'bild',sel:'antwort',step:0,filt:'alle',q:'',row:null,full:false,zoom:1};
+const TKW=156,TKH=52,TKZ=[1,1.5,2,3];
 async function loadTechnik(){const lang=L==='en'?'en':'de';
   if(!TK.d||TK.lang!==lang){TK.d=await (await api('/api/admin/technik'+(lang==='en'?'?lang=en':''))).json();TK.lang=lang}
   tkRender();tkFocusPic()}
@@ -16,10 +16,10 @@ function tkPath(a,b){const A=tkNode(a),B=tkNode(b);if(!A||!B)return'';const[ax,a
   if(Math.abs(bx-ax)>Math.abs(by-ay)*1.2){const r=bx>ax,x1=r?A.x+TKW:A.x,x2=r?B.x:B.x+TKW,m=(x1+x2)/2;return`M${x1},${ay}C${m},${ay} ${m},${by} ${x2},${by}`}
   const d=by>ay,y1=d?A.y+TKH:A.y,y2=d?B.y:B.y+TKH,m=(y1+y2)/2;return`M${ax},${y1}C${ax},${m} ${bx},${m} ${bx},${y2}`}
 function tkSvg(lit,litEdges,dim){const d=TK.d;
-  const boxes=[[t('Geräte','Devices'),10,20,170,385],[t('Panel :31080 / :31443','Panel :31080 / :31443'),190,20,550,325],
-    [t('Dienste','Services'),760,20,170,325],['/var/lib/speech-spark · journald',190,420,740,90]];
+  const boxes=[[t('Geräte','Devices'),4,20,180,385],[t('Panel :31080 / :31443','Panel :31080 / :31443'),188,20,552,325],
+    [t('Dienste','Services'),752,20,184,325],['/var/lib/speech-spark · journald',188,355,748,85]];
   const has=(a,b)=>litEdges.includes(a+'>'+b)||litEdges.includes(b+'>'+a);
-  return`<svg class="tk-svg" viewBox="0 0 940 520" role="img" aria-label="${esc(t('Teile des Spark und ihre Verbindungen','Parts of the Spark and their connections'))}">`+
+  return`<svg class="tk-svg" viewBox="0 0 940 445" role="img" aria-label="${esc(t('Teile des Spark und ihre Verbindungen','Parts of the Spark and their connections'))}">`+
     boxes.map(b=>`<rect class="tk-grp" x="${b[1]}" y="${b[2]}" width="${b[3]}" height="${b[4]}" rx="14"/><text class="tk-glab" x="${b[1]+12}" y="${b[2]+16}">${esc(b[0])}</text>`).join('')+
     d.edges.map(([a,b])=>`<path class="tk-edge${has(a,b)?' on':''}" d="${tkPath(a,b)}"/>`).join('')+
     d.nodes.map(n=>`<g class="tk-node${n.store?' store':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
@@ -51,16 +51,31 @@ function tkRowDetail(r){const yes=v=>v==='ja'?t('ja','yes'):v==='nein'?t('nein',
     `<dt>${esc(t('Sicherung','Backup'))}</dt><dd>${esc(yes(r.sicherung))}</dd>`+(r.eigen?`<dt>${esc(t('Eigener Speicher','Own storage'))}</dt><dd>${esc(TK.d.areas[r.eigen]||r.eigen)}</dd>`:'')+
     (r.grund?`<dt>${esc(r.art==='state'?t('Warum nicht gesichert','Why not backed up'):t('Art','Kind'))}</dt><dd>${esc(r.grund)}</dd>`:'')+`</dl>`+
     (tkWriter(r)?`<div class="ld-acts"><button class="b" type="button" data-tkgo="bild" data-tknode="${esc(tkWriter(r))}">${esc(t('Im Bild zeigen','Show in the picture'))}</button></div>`:'')}
+// „Vollbild“: the picture over the whole screen (with the steps in Datenfluss), zoom in steps, Escape closes
+function tkFullBar(){const z=TK.zoom;
+  return`<div class="tk-fsbar"><b>${esc(t('Technik','Architecture'))} · ${esc(TK.view==='fluss'?t('Datenfluss','Data flow'):t('Überblick','Overview'))}</b>`+
+    `<button class="b" type="button" data-tkzoom="-"${z<=TKZ[0]?' disabled':''} aria-label="${esc(t('Kleiner','Smaller'))}">−</button>`+
+    `<span class="tk-zl">${z===1?esc(t('Eingepasst','Fitted')):Math.round(z*100)+' %'}</span>`+
+    `<button class="b" type="button" data-tkzoom="+"${z>=TKZ[TKZ.length-1]?' disabled':''} aria-label="${esc(t('Größer','Larger'))}">＋</button>`+
+    `<button class="b" type="button" data-tkzoom="0"${z===1?' disabled':''}>${esc(t('Einpassen','Fit'))}</button>`+
+    `<button class="b" type="button" data-tkclose>✕ ${esc(t('Schließen','Close'))}</button></div>`}
+function tkPic(svg){return`<div class="tk-pic">${svg}</div>`}
+// the row above the picture: what to do on the left (hint or steps), „Vollbild“ on the right
+function tkTop(left){return`<div class="tk-top">${left}${TK.full?'':`<button class="b tk-fsbtn" type="button" data-tkfull>⛶ ${esc(t('Vollbild','Full screen'))}</button>`}</div>`}
+function tkFull(on){const b=$('tkbox');if(!b)return;TK.full=on&&(TK.view==='bild'||TK.view==='fluss');if(!TK.full)TK.zoom=1;
+  b.classList.toggle('tk-full',TK.full);document.documentElement.classList.toggle('tk-lock',TK.full)}
 function tkRender(){const d=TK.d,box=$('tkview');if(!d||!box)return;
+  if(TK.full&&TK.view!=='bild'&&TK.view!=='fluss')tkFull(false);
+  box.style.setProperty('--tkz',TK.zoom);box.classList.toggle('tk-zoomed',TK.zoom>1);
   document.querySelectorAll('#tktabs button').forEach(b=>{b.classList.toggle('on',b.dataset.tkv===TK.view);b.setAttribute('aria-selected',b.dataset.tkv===TK.view?'true':'false')});
   $('tkbox').classList.remove('tk-sel');
   const ver=`<div class="mut tk-ver">${esc(t('Stand','Version'))} ${esc(d.version||'–')}</div>`;
   if(TK.view==='bild'){const n=tkNode(TK.sel)?TK.sel:'antwort';TK.sel=n;
     const lit=d.edges.filter(([a,b])=>a===n||b===n).map(([a,b])=>a+'>'+b);
-    box.innerHTML=`<div class="tk-split"><div class="tk-pic">${tkSvg([],lit,false)}</div><div class="ld-detail tk-det">${tkNodeDetail(n)}</div></div>`+ver}
+    box.innerHTML=(TK.full?tkFullBar():'')+tkTop(`<span class="mut tk-hint">${esc(t('Klicke auf einen Kasten: was er tut, seine Dateien und wohin er schreibt.','Click a box: what it does, its files and where it writes.'))}</span>`)+`<div class="tk-split">${tkPic(tkSvg([],lit,false))}<div class="ld-detail tk-det">${tkNodeDetail(n)}</div></div>`+ver}
   else if(TK.view==='fluss'){const i=Math.max(0,Math.min(TK.step,d.steps.length-1)),s=d.steps[i];TK.step=i;
-    box.innerHTML=`<div class="ld-chips tk-steps">${d.steps.map((x,j)=>`<button class="ld-chip${j===i?' on':''}" type="button" data-tkstep="${j}"><b>${j+1}</b> ${esc(x.name)}</button>`).join('')}</div>`+
-      `<div class="tk-split"><div class="tk-pic">${tkSvg(s.nodes,s.edges,true)}</div><div class="ld-detail tk-det">${tkStepDetail(i)}</div></div>`+ver}
+    box.innerHTML=(TK.full?tkFullBar():'')+tkTop(`<div class="ld-chips tk-steps">${d.steps.map((x,j)=>`<button class="ld-chip${j===i?' on':''}" type="button" data-tkstep="${j}"><b>${j+1}</b> ${esc(x.name)}</button>`).join('')}</div>`)+
+      `<div class="tk-split">${tkPic(tkSvg(s.nodes,s.edges,true))}<div class="ld-detail tk-det">${tkStepDetail(i)}</div></div>`+ver}
   else if(TK.view==='speicher'){const rows=tkFilter(),sel=rows.find(r=>r.pfad===TK.row)||null;
     const extra=['state','users','ablage','journal'].includes(TK.filt)?[[TK.filt,tkNode(TK.filt).name]]:[];
     box.innerHTML=`<div class="ld-tools"><input type="search" id="tkq" maxlength="80" autocomplete="off" placeholder="${esc(t('Pfad oder Inhalt suchen','Search path or content'))}" aria-label="${esc(t('Pfad oder Inhalt suchen','Search path or content'))}"><span class="mut tk-cnt">${esc(t(`${rows.length} von ${d.storage.length}`,`${rows.length} of ${d.storage.length}`))}</span></div>`+
@@ -77,8 +92,11 @@ function tkRender(){const d=TK.d,box=$('tkview');if(!d||!box)return;
 function tkFocusPic(){const pic=document.querySelector('#tkview .tk-pic');if(!pic||pic.scrollWidth<=pic.clientWidth)return;
   const n=pic.querySelector('.tk-node.sel,.tk-node.lit');if(!n)return;const r=n.getBoundingClientRect(),p=pic.getBoundingClientRect();
   pic.scrollLeft+=r.left-p.left-(p.width-r.width)/2}
-function tkClick(e){const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep],[data-tkfilt],[data-tkrow],[data-tkgo],[data-tkback],[data-tkgroup]');if(!x||!TK.d)return;
-  if(x.dataset.tkv){TK.view=x.dataset.tkv;TK.row=null}
+function tkClick(e){const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep],[data-tkfilt],[data-tkrow],[data-tkgo],[data-tkback],[data-tkgroup],[data-tkfull],[data-tkzoom],[data-tkclose]');if(!x||!TK.d)return;
+  if(x.dataset.tkfull!==undefined)tkFull(true);
+  else if(x.dataset.tkclose!==undefined)tkFull(false);
+  else if(x.dataset.tkzoom){const i=TKZ.indexOf(TK.zoom),z=x.dataset.tkzoom;TK.zoom=z==='0'?1:TKZ[Math.max(0,Math.min(TKZ.length-1,i+(z==='+'?1:-1)))]}
+  else if(x.dataset.tkv){TK.view=x.dataset.tkv;TK.row=null}
   else if(x.dataset.tkgo){TK.view=x.dataset.tkgo;if(x.dataset.tkfilt){TK.filt=x.dataset.tkfilt;TK.q='';TK.row=null}if(x.dataset.tkstep)TK.step=+x.dataset.tkstep;if(x.dataset.tknode)TK.sel=x.dataset.tknode}
   else if(x.dataset.tkn){if(TK.view==='fluss'){const i=TK.d.steps.findIndex(s=>s.nodes.includes(x.dataset.tkn));TK.sel=x.dataset.tkn;TK.view='bild';if(i<0)TK.step=0}else TK.sel=x.dataset.tkn}
   else if(x.dataset.tkstep!==undefined){const i=+x.dataset.tkstep;if(i<0||i>=TK.d.steps.length)return;TK.step=i}
@@ -86,7 +104,8 @@ function tkClick(e){const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep
   else if(x.dataset.tkrow){TK.row=x.dataset.tkrow;TK.narrow=$('tkbox').getBoundingClientRect().width<660}
   else if(x.dataset.tkback){TK.row=null}
   else if(x.dataset.tkgroup){const g=tkGroup(x.dataset.tkgroup);TK.view='bild';if(g&&g.node)TK.sel=g.node}
-  tkRender();tkFocusPic()}
+  tkRender();tkFocusPic();if(x.dataset.tkfull!==undefined){const c=document.querySelector('#tkview [data-tkclose]');if(c)c.focus()}}
 (()=>{const b=$('tkbox');if(!b)return;b.addEventListener('click',tkClick);
-  b.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-tkn],[data-tkrow],[data-tkgroup]')){e.preventDefault();tkClick(e)}})})();
-window.loadTechnik=loadTechnik;
+  b.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-tkn],[data-tkrow],[data-tkgroup]')){e.preventDefault();tkClick(e)}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&TK.full){tkFull(false);tkRender();const f=document.querySelector('#tkview [data-tkfull]');if(f)f.focus()}})})();
+window.loadTechnik=loadTechnik;window.tkFull=tkFull;

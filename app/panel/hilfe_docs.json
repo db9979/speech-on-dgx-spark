@@ -405,7 +405,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Architektur und Datenfluss",
 "title": "Architektur und Datenfluss",
-"text": "Diese Seite beschreibt, wie der Spark gebaut ist: welche Teile es gibt, welchen Weg eine Anfrage nimmt und wo welche Daten liegen. Im Panel steht dasselbe zum Anklicken unter Zustand → Technik (nur für Admins). Wie gebaut wird, regelt die Coding-Richtlinie."
+"text": "Diese Seite beschreibt, wie der Spark gebaut ist: welche Teile es gibt, welchen Weg eine Anfrage nimmt und wo welche Daten liegen. Im Panel steht dasselbe zum Anklicken unter Zustand → Technik (nur für Admins). Das Bild nutzt dort die ganze Breite, das Detail steht darunter; „⛶ Vollbild“ legt Überblick oder Datenfluss über den ganzen Bildschirm, mit ＋/− zum Vergrößern und Escape zum Schließen. Wie gebaut wird, regelt die Coding-Richtlinie."
 },
 {
 "lang": "de",
@@ -541,7 +541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Schlüssel und Verschlüsselung",
 "title": "Schlüssel und Verschlüsselung",
-"text": "- state/secret.key versiegelt alle Passwörter und Tokens (Fernet, vault.py). Aus ihm wird auch der Schlüssel der Chats abgeleitet (HKDF, AES-256-GCM). Er kommt nur in die Umzugs-Sicherung, versiegelt mit dem Passwort des Admins (state/move-keys.json, scrypt). Eine normale Sicherung auf einem anderen Spark verliert deshalb Chats und alle versiegelten Zugänge. - users/secret und state/admin-session.key unterschreiben Anmeldungen und kommen nie in eine Sicherung. Nach einem Umzug melden sich alle neu an. - Der Stimmabdruck users/ID/voice.json liegt als Zahlenreihe unverschlüsselt in der Sicherung. - Die Sicherung nach außen (offsite.py) und der eigene Speicher (speicher.py) sind als Ganzes verschlüsselt (scrypt + AES-GCM, AES-256-GCM in Stücken von 1 MiB)."
+"text": "- state/secret.key versiegelt alle Passwörter und Tokens (Fernet, vault.py). Aus ihm wird auch der Schlüssel der Chats abgeleitet (HKDF, AES-256-GCM). Er kommt nur in die Umzugs-Sicherung, versiegelt mit dem Passwort des Admins (state/move-keys.json, scrypt). Eine normale Sicherung auf einem anderen Spark verliert deshalb Chats und alle versiegelten Zugänge. - users/secret und state/admin-session.key unterschreiben Anmeldungen und kommen nie in eine Sicherung. Nach einem Umzug melden sich alle neu an. - Der Stimmabdruck users/ID/voice.json ist versiegelt wie ein Passwort (speakers.py), auch in der Sicherung. Eine ältere, offene Datei wird beim ersten Lesen versiegelt. Nach einer Sicherung auf einem anderen Spark nimmt das Profil seine Stimme neu auf. - Die Sicherung nach außen (offsite.py) und der eigene Speicher (speicher.py) sind als Ganzes verschlüsselt (scrypt + AES-GCM, AES-256-GCM in Stücken von 1 MiB)."
 },
 {
 "lang": "de",
@@ -4365,7 +4365,7 @@
 "file": "Architecture and data flow",
 "head": "Architecture and data flow",
 "title": "Architecture and data flow",
-"text": "This page describes how the Spark is built: which parts exist, which way a request takes and where which data lies. The panel shows the same to click through under Status → Architecture (admins only). How to build is set by the coding guideline."
+"text": "This page describes how the Spark is built: which parts exist, which way a request takes and where which data lies. The panel shows the same to click through under Status → Architecture (admins only). There the picture uses the whole width with the detail below it; \"⛶ Full screen\" lays the overview or the data flow over the whole screen, with ＋/− to zoom and Escape to close. How to build is set by the coding guideline."
 },
 {
 "lang": "en",
@@ -4501,7 +4501,7 @@
 "file": "Architecture and data flow",
 "head": "Keys and encryption",
 "title": "Keys and encryption",
-"text": "- state/secret.key seals every password and token (Fernet, vault.py). The chats' key is derived from it too (HKDF, AES-256-GCM). It goes only into a move backup, sealed with the admin's password (state/move-keys.json, scrypt). A normal backup restored on another Spark therefore loses chats and every sealed account. - users/secret and state/admin-session.key sign logins and never go into a backup. After a move everyone signs in again. - The voiceprint users/ID/voice.json is a row of numbers and lies unencrypted in the backup. - The offsite backup (offsite.py) and the own storage (speicher.py) are encrypted as a whole (scrypt + AES-GCM, AES-256-GCM in chunks of 1 MiB)."
+"text": "- state/secret.key seals every password and token (Fernet, vault.py). The chats' key is derived from it too (HKDF, AES-256-GCM). It goes only into a move backup, sealed with the admin's password (state/move-keys.json, scrypt). A normal backup restored on another Spark therefore loses chats and every sealed account. - users/secret and state/admin-session.key sign logins and never go into a backup. After a move everyone signs in again. - The voiceprint users/ID/voice.json is sealed like a password (speakers.py), in the backup too. An older open file is sealed the first time it is read. After a backup restored on another Spark the profile records its voice anew. - The offsite backup (offsite.py) and the own storage (speicher.py) are encrypted as a whole (scrypt + AES-GCM, AES-256-GCM in chunks of 1 MiB)."
 },
 {
 "lang": "en",

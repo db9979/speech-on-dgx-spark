@@ -1,12 +1,33 @@
-/* Zustand → Technik (technik.js): the picture as an SVG with the detail beside it (below it on phones), steps as
-   chips, storage places as "Liste mit Detailbereich" (ld-). Colours only from the theme (--acc, --acc2, --line …). */
+/* Zustand → Technik (technik.js): the picture as an SVG across the whole width with the detail below it, steps as
+   chips, storage places as "Liste mit Detailbereich" (ld-). „Vollbild“ lays the picture over the whole screen with
+   zoom. Colours only from the theme (--acc, --acc2, --line …). Dominik 2026-10-13: „2+3+4“ (layout plan). */
+body.intech main{max-width:1800px}
 #tkbox .ltabs{margin:10px 0 12px}
 .tk-view{min-width:0}
 .tk-split{display:block}
-.tk-pic{overflow-x:auto;border:1px solid var(--line);border-radius:14px;padding:8px;background:var(--card)}
-.tk-svg{display:block;width:100%;min-width:640px;height:auto}
+.tk-pic{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:14px;padding:8px;background:var(--card)}
+.tk-svg{display:block;width:100%;min-width:640px;height:auto;margin:0 auto}
 .tk-det{margin-top:12px}
-@container (min-width:900px){.tk-split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}.tk-det{margin-top:0;position:sticky;top:0}}
+.tk-top{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin:0 0 10px}
+.tk-top>.ld-chips{flex:1;min-width:0;margin:0}.tk-hint{flex:1;min-width:0;font-size:13px}
+.tk-fsbtn{margin-left:auto;font-size:13px;padding:6px 12px;min-height:0;white-space:nowrap}
+/* wide: the picture as large as the screen allows (no higher than the window), the detail as a band below it */
+@container (min-width:900px){.tk-svg{max-height:max(420px,calc(100vh - 250px))}
+  .tk-det{column-count:2;column-gap:32px;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+  .tk-det>*{break-inside:avoid}}
+/* Vollbild: #tkview over the whole window; Einpassen fits the picture, ＋ makes it wider and the picture scrolls */
+html.tk-lock{overflow:hidden}
+#tkbox.tk-full #tkview{position:fixed;inset:0;z-index:80;background:var(--bg);overflow:auto;padding:12px 20px 20px;box-sizing:border-box}
+.tk-fsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.tk-fsbar b{flex:1;min-width:0;font-size:15px}
+.tk-fsbar .b{min-height:0;padding:6px 12px}
+.tk-zl{font-size:13px;min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+#tkbox.tk-full .tk-svg{max-height:calc(100vh - 150px)}
+#tkbox.tk-full .tk-zoomed .tk-svg{max-height:none;width:calc(var(--tkz,1)*max(100%,640px))}
+#tkbox.tk-full .tk-det{column-count:1;border:0;padding:0;margin-top:12px}
+@media (min-width:1000px){#tkbox.tk-full .tk-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+  #tkbox.tk-full .tk-det{margin-top:0;position:sticky;top:0}
+  #tkbox.tk-full .tk-pic{max-height:calc(100vh - 80px);overflow:auto}}
 .tk-grp{fill:color-mix(in srgb,var(--line) 30%,transparent);stroke:var(--line);stroke-dasharray:4 4}
 .tk-glab{fill:var(--mut);font:600 10.5px var(--font,system-ui);letter-spacing:.07em;text-transform:uppercase}
 .tk-edge{stroke:var(--line);stroke-width:1.6;fill:none}
@@ -15,8 +36,8 @@
 @media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none}}
 .tk-node{cursor:pointer}
 .tk-node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
-.tk-node text{fill:var(--fg);font:600 12.5px var(--font,system-ui)}
-.tk-node .tk-sub{fill:var(--mut);font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
+.tk-node text{fill:var(--fg);font:600 13.5px var(--font,system-ui)}
+.tk-node .tk-sub{fill:var(--mut);font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace}
 .tk-node:hover rect,.tk-node:focus-visible rect{stroke:var(--acc)}
 .tk-node:focus{outline:none}
 .tk-node.sel rect{stroke:var(--acc);stroke-width:2.2;fill:color-mix(in srgb,var(--acc) 9%,var(--card))}
@@ -34,3 +55,6 @@
 .tk-ver{font-size:12px;margin-top:10px}
 /* phones: a chosen storage place opens as its own page, "Zurück zur Liste" goes back (like ld-sel) */
 @container (max-width:659.98px){#tkbox.tk-sel>:not(#tkview),#tkbox.tk-sel #tkview>:not(.ld-split),#tkbox.tk-sel .ld-list{display:none}}
+/* phones: the steps get the whole row, „Vollbild“ goes below them; in Vollbild the title has its own row */
+@container (max-width:659.98px){.tk-top>.ld-chips{flex-basis:100%}}
+@media (max-width:659.98px){.tk-fsbar b{flex-basis:100%}}

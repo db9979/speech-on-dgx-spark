@@ -2,8 +2,12 @@
 
 Each profile can record a few sentences; their voice embeddings are kept in the profile's folder:
 
-    USERS_DIR/<user id>/voice.json   {"samples": [[256 floats], ...], "updated": epoch,
-                                      "devices": {speaker device id: [[256 floats], ...]}}
+    USERS_DIR/<user id>/voice.json   {"sealed": vault.seal(json of {"samples": [[256 floats], ...], "updated": epoch,
+                                      "devices": {speaker device id: [[256 floats], ...]}})}
+
+A voiceprint is biometric data: it lies sealed with the Spark's key (vault, like passwords), also in a backup. An
+older file still lies in plain JSON; it is read as before and sealed the first time it is read.
+After a restore on another Spark (other key) the voiceprint cannot be opened: the profile records its voice anew.
 
 "samples" are taught in the browser; "devices" are taught through one of the profile's own speakers
 (ESP32, esp32.py), because a small board microphone sounds quite different from a phone or a PC. Each
@@ -31,6 +35,7 @@ import wave
 import numpy as np
 
 import profiles
+import vault
 
 SR = 16000
 N_FFT, HOP, N_MELS = 400, 160, 40         # 25 ms windows, 10 ms steps
@@ -39,7 +44,7 @@ MAX_SAMPLES = 10
 MIN_SECONDS = 1.0
 MAX_SECONDS = 120
 _W = None
-_lock = threading.Lock()
+_lock = threading.RLock()   # _read seals an old file while enroll holds the lock
 
 
 # ---------------------------------------------------------------- audio
@@ -184,13 +189,43 @@ def _file(uid):
     return profiles._path(uid, "voice.json")
 
 
+_cache = {}                    # uid -> (mtime_ns, size, data): opening costs a decryption, identification reads often
+
+
 def _read(uid):
+    p = _file(uid)
     try:
-        with open(_file(uid)) as f:
+        st = os.stat(p)
+        hit = _cache.get(uid)
+        if hit and hit[0] == st.st_mtime_ns and hit[1] == st.st_size:
+            return hit[2]
+        with open(p) as f:
             d = json.load(f)
-        return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
         return {}
+    if not isinstance(d, dict):
+        return {}
+    if "sealed" in d:
+        try:
+            d = json.loads(vault.open_(d["sealed"]) or "{}")
+        except (TypeError, ValueError):
+            d = {}
+        d = d if isinstance(d, dict) else {}
+        if not d:
+            print("vault: voiceprint cannot be opened (other key), record it anew")
+    elif d:
+        with _lock:
+            _store(uid, d)
+        print("vault: voiceprint sealed")
+        return d
+    _cache[uid] = (st.st_mtime_ns, st.st_size, d)
+    return d
+
+
+def _store(uid, d):
+    """Writes the voiceprint sealed (0600, through profiles._write)."""
+    profiles._write(_file(uid), {"sealed": vault.seal(json.dumps(d, separators=(",", ":")))})
+    _cache.pop(uid, None)
 
 
 def samples(uid):
@@ -220,7 +255,7 @@ def enroll(uid, data):
     with _lock:
         d = _read(uid)
         s = (d.get("samples", []) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
-        profiles._write(_file(uid), dict(d, samples=s, updated=int(time.time())))
+        _store(uid, dict(d, samples=s, updated=int(time.time())))
     try:
         import live
         live.mark("Sprechererkennung", f"Stimme eingelernt ({len(s)}. Aufnahme)")   # never whose
@@ -239,7 +274,7 @@ def enroll_device(uid, did, data):
         devs = d.get("devices") if isinstance(d.get("devices"), dict) else {}
         devs = {k: v for k, v in devs.items() if k in {x["id"] for x in profiles._load()["devices"]}}  # removed speakers go
         devs[did] = (devs.get(did, []) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
-        profiles._write(_file(uid), dict(d, devices=devs, updated=int(time.time())))
+        _store(uid, dict(d, devices=devs, updated=int(time.time())))
     return len(devs[did])
 
 
@@ -249,6 +284,7 @@ def forget(uid):
             os.remove(_file(uid))
         except OSError:
             pass
+        _cache.pop(uid, None)
 
 
 def voiceprints():

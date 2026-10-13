@@ -139,7 +139,7 @@ const lastSec={};
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
-  document.body.classList.toggle('inchat',s==='chat');document.body.classList.toggle('inchats',s==='chats');
+  document.body.classList.toggle('inchat',s==='chat');document.body.classList.toggle('intech',s==='tech');if(s!=='tech'&&window.tkFull)tkFull(false);document.body.classList.toggle('inchats',s==='chats');
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');lzb($('cfg'),loadCfg,LZ_CFG);if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');

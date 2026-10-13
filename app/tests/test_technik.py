@@ -175,7 +175,7 @@ class Storage(unittest.TestCase):
         self.assertEqual(rows["state/offsite.json"]["sicherung"], "ja")
         self.assertEqual(rows["state/panel-password"]["sicherung"], "ja")
         self.assertTrue(rows["users/ID/mail.json"]["schutz"][0])
-        self.assertFalse(rows["users/ID/voice.json"]["schutz"][0])   # said plainly in the docs
+        self.assertTrue(rows["users/ID/voice.json"]["schutz"][0])    # biometric: sealed (test_stimmabdruck)
 
 
 class Docs(unittest.TestCase):
@@ -292,6 +292,21 @@ class Page(unittest.TestCase):
                 await pg.click("#tkview .tk-det .b.p")
                 self.assertIn("7", await pg.text_content("#tkview .tk-kind"))
                 self.assertTrue(await pg.evaluate(wide), f"{w}: Datenfluss")
+                # Vollbild: over the whole window, zoom makes the picture wider, Escape closes (Dominik 2026-10-13 „2+3+4“)
+                await pg.click("#tkview [data-tkfull]")
+                self.assertTrue(await pg.evaluate("TK.full&&document.documentElement.classList.contains('tk-lock')"))
+                box = await pg.evaluate("(()=>{const r=document.getElementById('tkview').getBoundingClientRect();return[r.left,r.top,r.width,innerWidth]})()")
+                self.assertEqual((box[0], box[1]), (0, 0), f"{w}: Vollbild covers the window")
+                fit = await pg.evaluate("document.querySelector('#tkview .tk-svg').getBoundingClientRect().width")
+                await pg.click("#tkview [data-tkzoom='+']")
+                self.assertGreater(await pg.evaluate("document.querySelector('#tkview .tk-svg').getBoundingClientRect().width"), fit * 1.3)
+                self.assertIn("150", await pg.text_content("#tkview .tk-zl"))
+                await pg.click("#tkview [data-tkzoom='0']")
+                self.assertEqual(await pg.evaluate("TK.zoom"), 1)
+                self.assertIn("7", await pg.text_content("#tkview .tk-kind"))     # the step stays
+                await pg.keyboard.press("Escape")
+                self.assertFalse(await pg.evaluate("TK.full||document.documentElement.classList.contains('tk-lock')"))
+                self.assertTrue(await pg.evaluate(wide), f"{w}: after Vollbild")
                 # storage places: filter, a row, its detail (a page of its own on phones), back
                 await pg.click("#tktabs [data-tkv=speicher]")
                 await pg.click("#tkview .ld-chip[data-tkfilt='profil']")

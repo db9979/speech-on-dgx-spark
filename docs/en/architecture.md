@@ -2,7 +2,7 @@
 
 ← [README](../../README.md) · [Technical details and troubleshooting](technical.md) · [Security and operation](security-and-operation.md)
 
-This page describes how the Spark is built: which parts exist, which way a request takes and where which data lies. The panel shows the same to click through under **Status → Architecture** (admins only). How to build is set by the [coding guideline](guidelines.md).
+This page describes how the Spark is built: which parts exist, which way a request takes and where which data lies. The panel shows the same to click through under **Status → Architecture** (admins only). There the picture uses the whole width with the detail below it; "⛶ Full screen" lays the overview or the data flow over the whole screen, with ＋/− to zoom and Escape to close. How to build is set by the [coding guideline](guidelines.md).
 
 The sections between the markers `<!-- technik:… -->` are generated from the code (`app/panel/technik.py`, plus `speicher.AREAS`/`LOCAL` and `backup.STATE_FILES`/`STATE_LOCAL`). `python3 app/panel/hilfe.py --docs` writes them again. A self-test (`test_technik`) turns red when a module, a file or a step is missing or the docs were not written again. Only the text outside the markers is kept by hand.
 
@@ -373,7 +373,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mcp-dienste.json` | Own MCP services | Login | tokens sealed | yes | – |
 | `users/ID/mcp-actions.json` | MCP actions | State | – | yes | – |
 | `users/ID/agent.json` | Jobs and routines | Settings | – | yes | – |
-| `users/ID/voice.json` | Voiceprint | Voiceprint | – | yes | – |
+| `users/ID/voice.json` | Voiceprint | Voiceprint | sealed | yes | – |
 | `users/ID/speaker-code.json` | Speaker code word | Key | sealed | yes | – |
 | `users/ID/chatkeys.json` | Devices' public keys | Key | – | yes | – |
 | `users/ID/contacts.json` | Contacts account | not offered yet | password sealed | yes | – |
@@ -473,7 +473,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 
 - `state/secret.key` seals every password and token (Fernet, `vault.py`). The chats' key is derived from it too (HKDF, AES-256-GCM). It goes only into a **move backup**, sealed with the admin's password (`state/move-keys.json`, scrypt). A normal backup restored on another Spark therefore loses chats and every sealed account.
 - `users/secret` and `state/admin-session.key` sign logins and never go into a backup. After a move everyone signs in again.
-- The voiceprint `users/ID/voice.json` is a row of numbers and lies unencrypted in the backup.
+- The voiceprint `users/ID/voice.json` is sealed like a password (`speakers.py`), in the backup too. An older open file is sealed the first time it is read. After a backup restored on another Spark the profile records its voice anew.
 - The offsite backup (`offsite.py`) and the own storage (`speicher.py`) are encrypted as a whole (scrypt + AES-GCM, AES-256-GCM in chunks of 1 MiB).
 
 ### Caches in memory

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.517** Architecture page with a large picture and full-screen zoom; the voiceprint is now sealed
 - **V01.0.516** Search check: test questions measure at night how often the document search finds the right passage
 - **V01.0.515** Inbox tidying: create an own folder right from the question when none fits
 - **V01.0.514** Storage cleaned up: Me → Storage shows places (NAS, cloud, folder) and below them what they are for; Features → "Storage and NAS" with "Copy of my data" below
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.510** Browser: TV and other voices no longer become a question after an answer (voice check on the open microphone, room level for barge-in, iPhone app)
 - **V01.0.509** Simpler release: what the admin releases works at once for every profile, only the admin blocks single profiles; guests only get questions and answers
 - **V01.0.508** Own tasks: watching reports only what is new (firmware, episode, price), all own tasks under Me → Jobs to change and pause
-- **V01.0.507** Pebble watch app shows the comic woman
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
