@@ -156,7 +156,7 @@ class OneToOne(Base):
         cid = open_with(a, b)
         self.assertEqual(say(a, cid, "x" * 5000).json()["item"]["text"], "x" * chats.MAX_TEXT)
         self.assertEqual(say(a, cid, "   ").status_code, 400)
-        big = a.post("/api/chats/send", content=b'{"id":"' + b"x" * 70000 + b'"}', headers={"Content-Type": "application/json"})
+        big = a.post("/api/chats/send", content=b'{"id":"' + b"x" * 140000 + b'"}', headers={"Content-Type": "application/json"})
         self.assertEqual(big.status_code, 413)
         with mock.patch.object(chats, "PER_HOUR", 2):
             chats._sent.clear()
@@ -634,3 +634,252 @@ class Invite(Base):
         a.put("/api/profile/settings", json={"chats_on": False})   # the inviter turned chats off: the link ends
         self.assertEqual(n.post("/api/join", json={"code": codes[1][1], "name": "Chweg", "pin": "135791"}).status_code, 400)
         self.assertFalse(any(u["name"] == "Chweg" for u in profiles._load()["users"]))
+
+
+# ---------------------------------------------------------------- private chats (Schritt C, chatsec.py)
+# The same box the page makes in chatsec.js, made here with the cryptography package: so the Spark is tested
+# with real encryption and a text the test reads back only with the receiving device's private key.
+import base64  # noqa: E402
+
+from cryptography.hazmat.primitives import hashes, serialization  # noqa: E402
+from cryptography.hazmat.primitives.asymmetric import ec  # noqa: E402
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM  # noqa: E402
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF  # noqa: E402
+
+import chatsec  # noqa: E402
+
+b64 = lambda b: base64.b64encode(b).decode()   # noqa: E731
+
+
+class Device:
+    def __init__(self, client):
+        self.c, self.priv = client, ec.generate_private_key(ec.SECP256R1())
+        self.pub = b64(self.priv.public_key().public_bytes(serialization.Encoding.X962,
+                                                           serialization.PublicFormat.UncompressedPoint))
+        r = client.post("/api/chats/keys", json={"pub": self.pub, "kind": "browser"})
+        assert r.status_code == 200, r.text
+        self.kid = r.json()["id"]
+
+    def _wrap_key(self, other_pub, cid, frm, to, salt):
+        peer = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), base64.b64decode(other_pub))
+        shared = self.priv.exchange(ec.ECDH(), peer)
+        return HKDF(hashes.SHA256(), 32, salt, f"spark-e2e-v1|{cid}|{frm}|{to}".encode()).derive(shared)
+
+    def box(self, cid, payload, keys):
+        k, iv = os.urandom(32), os.urandom(12)
+        out = {"v": 1, "f": self.kid, "iv": b64(iv), "ct": b64(AESGCM(k).encrypt(iv, json.dumps(payload).encode(), cid.encode())), "k": {}}
+        for x in keys:
+            salt, wi = os.urandom(16), os.urandom(12)
+            wk = self._wrap_key(x["pub"], cid, self.kid, x["id"], salt)
+            out["k"][x["id"]] = {"s": b64(salt), "i": b64(wi), "w": b64(AESGCM(wk).encrypt(wi, k, None))}
+        return out, k
+
+    def open(self, cid, box, keys):
+        w = box["k"][self.kid]
+        sender = next(x for x in keys if x["id"] == box["f"])
+        wk = self._wrap_key(sender["pub"], cid, box["f"], self.kid, base64.b64decode(w["s"]))
+        k = AESGCM(wk).decrypt(base64.b64decode(w["i"]), base64.b64decode(w["w"]), None)
+        return json.loads(AESGCM(k).decrypt(base64.b64decode(box["iv"]), base64.b64decode(box["ct"]), cid.encode()))
+
+
+def keys_of(client, cid):
+    r = client.get("/api/chats/keys", params={"id": cid})
+    assert r.status_code == 200, r.text
+    return [x for x in r.json()["keys"] if not x.get("gone")]
+
+
+class Private(Base):
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(chats_private=True)
+
+    def tearDown(self):
+        helpers.set_config(chats_private=False, chats_media=False)
+        super().tearDown()
+
+    def pair(self, n1, n2):
+        a, b = profile(n1), profile(n2)
+        da, db = Device(a), Device(b)
+        r = a.post("/api/chats/private", json={"to": uid_of(b)})
+        self.assertEqual(r.status_code, 200, r.text)
+        return a, b, da, db, r.json()["id"]
+
+    def test_off_until_the_admin_switch(self):
+        import features
+        self.assertEqual(features.BY_KEY["chatprivate"].parent, "chats")
+        with open(os.path.join(helpers.APP, "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["chats_private"], False)
+        a, b = profile("Chpaula"), profile("Chpeter")
+        helpers.set_config(chats_private=False)
+        pub = b64(ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
+            serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
+        self.assertEqual(a.post("/api/chats/keys", json={"pub": pub}).status_code, 403)
+        self.assertEqual(a.post("/api/chats/private", json={"to": uid_of(b)}).status_code, 403)
+        self.assertFalse(a.get("/api/chats").json()["private"])
+        helpers.set_config(chats_private=True)
+        self.assertTrue(a.get("/api/chats").json()["private"])
+        g = TestClient(panel.app)                           # guests never
+        self.assertIn(g.post("/api/chats/keys", json={"pub": pub}).status_code, (401, 403))
+        # the iPhone app's key (a device key) cannot add a key: the private half has to live in that browser
+        token = profiles.add_device("Chtestapp", uid_of(a), scope="app")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Chtestapp")
+        self.addCleanup(profiles.delete_device, did)
+        k = TestClient(panel.app)
+        self.assertIn(k.post("/api/chats/keys", json={"pub": pub}, headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403))
+
+    def test_a_key_is_a_real_point_and_counted(self):
+        a = profile("Chquinn")
+        self.assertEqual(a.post("/api/chats/keys", json={"pub": b64(b"\x04" + b"\x01" * 64)}).status_code, 400)   # not on the curve
+        self.assertEqual(a.post("/api/chats/keys", json={"pub": "nicht base64!"}).status_code, 400)
+        d = Device(a)
+        self.assertEqual(a.post("/api/chats/keys", json={"pub": d.pub}).json()["id"], d.kid)   # the same key once
+        for _ in range(chatsec.MAX_KEYS - 1):
+            Device(a)
+        pub = b64(ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
+            serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
+        self.assertEqual(a.post("/api/chats/keys", json={"pub": pub}).status_code, 429)
+        self.assertEqual(len(a.get("/api/chats/keys").json()["keys"]), chatsec.MAX_KEYS)
+        import stufen
+        self.assertEqual(stufen.LIST[("POST", "/api/chats/keys")][0], stufen.CONFIRM)   # a new device asks for the code
+
+    def test_both_need_a_device_first(self):
+        a, b = profile("Chrolf"), profile("Chsina")
+        Device(a)
+        r = a.post("/api/chats/private", json={"to": uid_of(b)})
+        self.assertEqual(r.status_code, 403)
+        self.assertIn("noch kein Gerät", r.json()["detail"])
+        Device(b)
+        r = a.post("/api/chats/private", json={"to": uid_of(b)})
+        self.assertEqual(r.status_code, 200, r.text)
+        cid = r.json()["id"]
+        self.assertNotEqual(cid, chats.one_id(uid_of(a), uid_of(b)))   # its own chat beside the ordinary one
+        self.assertEqual(b.post("/api/chats/private", json={"to": uid_of(a)}).json()["id"], cid)
+        it = a.get("/api/chats/items", params={"id": cid}).json()
+        self.assertTrue(it["private"])
+        self.assertTrue(it["can_send"])
+
+    def test_the_spark_keeps_only_the_box_and_the_other_device_opens_it(self):
+        a, b, da, db, cid = self.pair("Chtara", "Chtimo")
+        sent = []
+
+        async def fake(uid, title, body, tag="", private=True, why="", to=""):
+            sent.append(body)
+            return 1
+        b.put("/api/profile/settings", json={"chat_push_text": True})   # even so: never the text of a private chat
+        box, _ = da.box(cid, {"t": "Streng geheim 4711"}, keys_of(a, cid))
+        with mock.patch.object(push, "send", fake), mock.patch.object(push, "reachable", lambda u, private=True: True), \
+                mock.patch("room.night", lambda u, local=None: False):
+            r = a.post("/api/chats/send", json={"id": cid, "box": box})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(sent, ["🔒 Neue Nachricht"])
+        raw = read(chats._chat_file(cid)) + read(chats._index_file())
+        self.assertNotIn("Streng geheim", raw)
+        items = b.get("/api/chats/items", params={"id": cid}).json()["items"]
+        self.assertEqual(items[-1]["kind"], "box")
+        self.assertNotIn("text", items[-1])
+        self.assertEqual(db.open(cid, items[-1]["box"], keys_of(b, cid))["t"], "Streng geheim 4711")
+        self.assertEqual(da.open(cid, items[-1]["box"], keys_of(a, cid))["t"], "Streng geheim 4711")   # and the sender's own
+        lst = next(x for x in b.get("/api/chats").json()["chats"] if x["id"] == cid)
+        self.assertTrue(lst["private"])
+        self.assertEqual(lst["unread"], 1)
+        self.assertEqual(lst["last"]["text"], "")
+        # the assistant knows only that it is there; the search on the Spark finds nothing
+        lines = chats.for_model(uid_of(b))
+        self.assertIn("🔒 private Nachricht", lines[-1][2])
+        self.assertNotIn("geheim", json.dumps(lines))
+        self.assertEqual(chats.find(uid_of(a), "geheim"), [])
+        # reactions and taking back work as everywhere; changing cannot (the Spark has no text to change)
+        mid = items[-1]["id"]
+        self.assertEqual(b.post("/api/chats/react", json={"id": cid, "mid": mid, "emoji": "👍"}).status_code, 200)
+        self.assertEqual(a.post("/api/chats/edit", json={"id": cid, "mid": mid, "text": "x"}).status_code, 403)
+        self.assertEqual(a.post("/api/chats/back", json={"id": cid, "mid": mid}).status_code, 200)
+        self.assertNotIn('"box": {', read(chats._chat_file(cid)).split(mid)[1][:400])
+
+    def test_plain_text_only_outside_and_a_box_only_inside(self):
+        a, b, da, db, cid = self.pair("Chulla", "Chveit")
+        self.assertEqual(say(a, cid, "unverschlüsselt").status_code, 400)
+        one = open_with(a, b)
+        box, _ = da.box(one, {"t": "x"}, keys_of(a, cid))
+        self.assertEqual(a.post("/api/chats/send", json={"id": one, "box": box}).status_code, 400)
+        bad, _ = da.box(cid, {"t": "x"}, keys_of(a, cid))
+        bad["k"][da.kid]["w"] = b64(b"x" * 10)                 # a wrapped key of the wrong size
+        self.assertEqual(a.post("/api/chats/send", json={"id": cid, "box": bad}).status_code, 400)
+        bad, _ = da.box(cid, {"t": "x"}, keys_of(a, cid))
+        bad["more"] = "x"                                       # nothing else rides along
+        self.assertEqual(a.post("/api/chats/send", json={"id": cid, "box": bad}).status_code, 400)
+        c = profile("Chwanda")                                  # an outsider sees neither keys nor messages
+        self.assertEqual(c.get("/api/chats/keys", params={"id": cid}).status_code, 404)
+        self.assertEqual(c.get("/api/chats/items", params={"id": cid}).status_code, 404)
+
+    def test_a_new_device_of_the_other_must_be_in_the_box(self):
+        a, b, da, db, cid = self.pair("Chxaver", "Chyara")
+        old_keys = keys_of(a, cid)
+        db2 = Device(b)                                         # Yara's second device
+        box, _ = da.box(cid, {"t": "Hallo"}, old_keys)
+        r = a.post("/api/chats/send", json={"id": cid, "box": box})
+        self.assertEqual(r.status_code, 403)
+        self.assertIn("neues Gerät", r.json()["detail"])
+        items = a.get("/api/chats/items", params={"id": cid}).json()["items"]
+        self.assertEqual(items[-1]["sys"], "newkey")            # the chat says so: compare the Sicherheitsnummer again
+        box, _ = da.box(cid, {"t": "Hallo"}, keys_of(a, cid))
+        self.assertEqual(a.post("/api/chats/send", json={"id": cid, "box": box}).status_code, 200)
+        last = b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]
+        self.assertEqual(db2.open(cid, last["box"], keys_of(b, cid))["t"], "Hallo")
+        # a removed device: its key stays for older messages, new ones are not made for it, it cannot send
+        self.assertEqual(b.post("/api/chats/keys/remove", json={"id": db2.kid}).status_code, 200)
+        allk = a.get("/api/chats/keys", params={"id": cid}).json()["keys"]
+        self.assertTrue(next(x for x in allk if x["id"] == db2.kid).get("gone"))
+        bx, _ = db2.box(cid, {"t": "von weg"}, keys_of(b, cid))
+        self.assertEqual(b.post("/api/chats/send", json={"id": cid, "box": bx}).status_code, 403)
+        self.assertEqual(a.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["sys"], "keygone")
+
+    def test_a_photo_or_file_travels_as_the_device_encrypted_it(self):
+        helpers.set_config(chats_media=True)
+        a, b, da, db, cid = self.pair("Chzora", "Chalba")
+        fk, fiv = os.urandom(32), os.urandom(12)
+        blob = fiv + AESGCM(fk).encrypt(fiv, b"%PDF-1.4 geheimer Inhalt", None)
+        box, _ = da.box(cid, {"t": "", "a": {"kind": "file", "name": "geheim.pdf", "k": b64(fk)}}, keys_of(a, cid))
+        r = a.post(f"/api/chats/media?id={cid}&kind=box", content=json.dumps(box).encode() + b"\n" + blob)
+        self.assertEqual(r.status_code, 200, r.text)
+        mid = r.json()["item"]["id"]
+        self.assertEqual(r.json()["item"]["blob"]["bytes"], len(blob))
+        stored = open(chats._media_file(cid, mid, "f"), "rb").read()
+        self.assertNotIn(b"geheim", stored)
+        self.assertNotIn(b"geheim", read(chats._chat_file(cid)).encode())
+        got = b.get("/api/chats/media", params={"id": cid, "mid": mid})
+        self.assertEqual(got.status_code, 200)
+        self.assertEqual(got.content, blob)
+        self.assertIn("attachment", got.headers["content-disposition"])
+        pl = db.open(cid, b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["box"], keys_of(b, cid))
+        k = base64.b64decode(pl["a"]["k"])
+        self.assertEqual(AESGCM(k).decrypt(got.content[:12], got.content[12:], None), b"%PDF-1.4 geheimer Inhalt")
+        self.assertGreater(chats.used(uid_of(a)), 0)
+        self.assertEqual(a.post("/api/chats/back", json={"id": cid, "mid": mid}).status_code, 200)
+        self.assertFalse(os.path.exists(chats._media_file(cid, mid, "f")))
+        helpers.set_config(chats_media=False)                   # attachments need the media switch here too
+        box, _ = da.box(cid, {"t": ""}, keys_of(a, cid))
+        r = a.post(f"/api/chats/media?id={cid}&kind=box", content=json.dumps(box).encode() + b"\n" + blob)
+        self.assertEqual(r.status_code, 403)
+
+    def test_live_and_journal_numbers_only_and_a_deleted_profile_takes_its_keys(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            a, b, da, db, cid = self.pair("Chbea", "Chcosmo")
+            box, _ = da.box(cid, {"t": "Journalprobe"}, keys_of(a, cid))
+            a.post("/api/chats/send", json={"id": cid, "box": box})
+        self.assertIn("chats: private key added", out.getvalue())
+        self.assertIn("kind priv", out.getvalue())
+        self.assertNotIn("Journalprobe", out.getvalue())
+        self.assertNotIn("Chbea", out.getvalue())
+        lv = chats.for_live()
+        self.assertTrue(lv["private_on"])
+        self.assertGreaterEqual(lv["private"], 1)
+        self.assertGreaterEqual(lv["devices"], 2)
+        self.assertGreaterEqual(lv["private_sent"], 1)
+        import live
+        snap = json.dumps(live.snapshot("admin"))
+        self.assertIn("privat", snap)
+        self.assertNotIn("Chbea", snap)
+        uid = uid_of(b)
+        self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{uid}").status_code, 200)
+        self.assertEqual(chatsec._load(uid), [])

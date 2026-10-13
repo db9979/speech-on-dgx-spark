@@ -176,6 +176,8 @@ FEATURES = (
       parent="chats", me="setbox", guide="chatmedia"),
     F("chatinvite", "In einen Chat einladen", "Invite into a chat", "day", ("chats_invite",), parent="chats", me="setbox",
       guide="chatinvite"),
+    F("chatprivate", "Private Chats (Ende-zu-Ende)", "Private chats (end-to-end)", "day", ("chats_private",), parent="chats",
+      me="setbox", guide="chatprivate"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), "wx_on", me="wxbox", guide="weather"),
     # mail and contacts

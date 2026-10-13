@@ -1087,14 +1087,8 @@ class Browser(unittest.TestCase):
                         await pg.wait_for_timeout(100)
                     self.assertIn(f"Test {name}", [x["text"] for x in messages.box(other)])
                     self.assertTrue(await pg.evaluate("!!$('msgready')"), name)     # Bereit (V01.0.200)
-                    # the envelope beside the chat input sends without the model
-                    await pg.evaluate("msgBar()")
-                    self.assertTrue(await pg.evaluate("!$('chatmsg').hidden&&!$('mmsg').hidden"), name)
-                    await pg.evaluate("msgCompose()")
-                    await pg.wait_for_timeout(600)
-                    await pg.evaluate(f"$('mcto').value={other!r};$('mctext').value='Brief {name}';msgComposeSend()")
-                    await pg.wait_for_timeout(800)
-                    self.assertIn(f"Brief {name}", [x["text"] for x in messages.box(other)])
+                    # the old envelope beside the assistant's input is gone (Dominik 2026-10-13: Chats replace it)
+                    self.assertTrue(await pg.evaluate("!$('chatmsg')&&!$('mmsg')&&!$('msgcompose')"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     self.assertEqual(errors, [], name)
@@ -2600,6 +2594,16 @@ class Browser(unittest.TestCase):
                     await pg.click("#cxsend")
                     await pg.wait_for_selector(".cx-msg.mine .cx-tk")
                     self.assertEqual(await pg.evaluate("$('cxtext').value"), "")
+                    # the assistant's face never covers or nearly touches the send button (Dominik 2026-10-13, a 1240 px window too;
+                    # the page's height differs per profile, so 40 px of room above and below count as covered)
+                    for vw, vh in ((w, h), (1240, 784)) if name == "pc" else ((w, h),):
+                        await pg.set_viewport_size({"width": vw, "height": vh})
+                        hit = await pg.evaluate("""(()=>{const f=$('fabface'),s=$('cxsend');if(!f||!f.offsetParent)return false;
+                          const a=f.getBoundingClientRect(),b=s.getBoundingClientRect();return a.left<b.right&&b.left<a.right&&a.top<b.bottom+40&&b.top<a.bottom+40})()""")
+                        self.assertIs(hit, False, f"{name} {vw}px: das Gesicht liegt über dem Senden-Knopf")
+                    await pg.set_viewport_size({"width": w, "height": h})
+                    # one line shows no scroll bar
+                    self.assertTrue(await pg.evaluate("$('cxtext').scrollHeight<=$('cxtext').clientHeight+1"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}/chat: {over}px zu breit")
                     await pg.click(".cx-msg:not(.mine) .cx-bub")   # tap: reactions and actions
@@ -2693,6 +2697,124 @@ class Browser(unittest.TestCase):
             jd = join._read()
             jd["mode"] = old_mode
             join._write(jd)
+
+    def test_private_chat_end_to_end(self):
+        """Private Chats Schritt C (chatsec.js): "🔒 Privat" beside a person gives this browser its own key and opens
+        the private chat; what the page sends the Spark keeps only as a box that the other device (here Python with
+        its own key) opens; a box from Python is read in the page; a photo goes encrypted and is shown from a blob
+        address; ⓘ shows the same Sicherheitsnummer Python computes. Strict CSP, nothing sticks out."""
+        import base64
+        import hashlib
+        import io
+        import json
+        import os
+        import chats
+        import chatsec
+        import profiles
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+        from PIL import Image
+        b64 = lambda b: base64.b64encode(b).decode()   # noqa: E731
+        helpers.set_config(chats=True, chats_private=True, chats_media=True, messages=True)
+        me = next(x for x in profiles.names() if x["name"] == "Uitest")
+        profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
+        buf = io.BytesIO()
+        Image.new("RGB", (900, 600), (200, 60, 30)).save(buf, "JPEG")
+        photo = buf.getvalue()
+        uids = [me["id"]]
+
+        def wrap(priv, pub, cid, frm, to, salt):
+            peer = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), base64.b64decode(pub))
+            return HKDF(hashes.SHA256(), 32, salt, f"spark-e2e-v1|{cid}|{frm}|{to}".encode()).derive(priv.exchange(ec.ECDH(), peer))
+
+        def unbox(priv, kid, cid, box, keys):
+            w, snd = box["k"][kid], next(x for x in keys if x["id"] == box["f"])
+            k = AESGCM(wrap(priv, snd["pub"], cid, box["f"], kid, base64.b64decode(w["s"]))).decrypt(base64.b64decode(w["i"]), base64.b64decode(w["w"]), None)
+            return json.loads(AESGCM(k).decrypt(base64.b64decode(box["iv"]), base64.b64decode(box["ct"]), cid.encode()))
+
+        def number(cid, keys):
+            by = {}
+            for k in keys:
+                if not k.get("gone"):
+                    by.setdefault(k["uid"], []).append(k["pub"])
+            h = hashlib.sha512(("spark-e2e-v1|" + cid + "|" + "|".join(u + ":" + ",".join(sorted(by[u])) for u in sorted(by))).encode()).digest()
+            out = []
+            for i in range(12):
+                v = 0
+                for j in range(5):
+                    v = (v * 256 + h[i * 5 + j]) % 100000
+                out.append(f"{v:05d}")
+            return " ".join(out)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in (VIEWS[0], ("klein", 320, 640)):
+                    try:
+                        profiles.add_user("Geheimpartner " + name, "1357")
+                    except Exception:
+                        pass
+                    other = next(x for x in profiles.names() if x["name"] == "Geheimpartner " + name)
+                    uids.append(other["id"])
+                    profiles.save_settings(other["id"], dict(profiles.settings(other["id"]), chats_on=True))
+                    priv = ec.generate_private_key(ec.SECP256R1())
+                    kid = chatsec.add_key(other["id"], b64(priv.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)), "android")
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    if name == "pc":
+                        await self.until(pg, "!document.querySelector('nav button[data-s=chats]').hidden")
+                        await pg.click("nav button[data-s=chats]")
+                    else:
+                        await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
+                        await pg.click("#aptabs [data-tab=chats]")
+                    await self.until(pg, "!$('cxsplit').hidden")
+                    await pg.click("#cxnew")
+                    await pg.click(f"[data-cxn=priv][data-to='{other['id']}']")
+                    await self.until(pg, "$('cxtitle').textContent.includes('🔒')&&!$('cxcomp').hidden")
+                    cid = chatsec.priv_id(me["id"], other["id"])
+                    await pg.fill("#cxtext", "Streng geheim 42")
+                    await pg.click("#cxsend")
+                    await pg.wait_for_selector(".cx-msg.mine .cx-tk")
+                    self.assertIn("Streng geheim 42", await pg.inner_text("#cxlog"))
+                    with open(chats._chat_file(cid), encoding="utf-8") as f:
+                        self.assertNotIn("Streng geheim", f.read())
+                    keys = chatsec.keys_for(other["id"], cid)
+                    sent = [x for x in chats._chat(cid)["items"] if x.get("kind") == "box"][-1]
+                    self.assertEqual(unbox(priv, kid, cid, sent["box"], keys)["t"], "Streng geheim 42")
+                    # an answer as the other device makes it: the page opens it
+                    k, iv = os.urandom(32), os.urandom(12)
+                    box = {"v": 1, "f": kid, "iv": b64(iv), "ct": b64(AESGCM(k).encrypt(iv, json.dumps({"t": "Antwort aus Python"}).encode(), cid.encode())), "k": {}}
+                    for x in keys:
+                        if not x.get("gone"):
+                            salt, wi = os.urandom(16), os.urandom(12)
+                            box["k"][x["id"]] = {"s": b64(salt), "i": b64(wi), "w": b64(AESGCM(wrap(priv, x["pub"], cid, kid, x["id"], salt)).encrypt(wi, k, None))}
+                    await chats.send(other["id"], cid, "", box=box)
+                    await pg.evaluate("cxOpen(CX.cur,true)")
+                    await self.until(pg, "$('cxlog').textContent.includes('Antwort aus Python')")
+                    # a photo: drawn anew and encrypted in the page, shown from a blob address
+                    await pg.set_input_files("#cxfile", files=[{"name": "urlaub.jpg", "mimeType": "image/jpeg", "buffer": photo}])
+                    await self.until(pg, "(()=>{const i=document.querySelector('.cx-msg.mine .cx-ph img');return i&&i.src.startsWith('blob:')&&i.naturalWidth>0})()")
+                    item = [x for x in chats._chat(cid)["items"] if x.get("kind") == "box"][-1]
+                    a = unbox(priv, kid, cid, item["box"], keys)["a"]
+                    got = chats.media(me["id"], cid, item["id"], "f")[0]
+                    self.assertTrue(AESGCM(base64.b64decode(a["k"])).decrypt(got[:12], got[12:], None).startswith(b"\xff\xd8"))
+                    self.assertEqual(a["kind"], "photo")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/privat: {over}px zu breit")
+                    # ⓘ: the same Sicherheitsnummer on both sides
+                    await pg.click("#cxinfo")
+                    await pg.wait_for_selector("#csnum")
+                    self.assertEqual(await pg.inner_text("#csnum"), number(cid, chatsec.keys_for(other["id"], cid)))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/sicherheitsnummer: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(chats=False, chats_private=False, chats_media=False, messages=False)
+            for u in uids:
+                chatsec.forget(u)
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class JoinBrowser(unittest.TestCase):

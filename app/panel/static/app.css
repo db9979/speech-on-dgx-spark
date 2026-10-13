@@ -556,7 +556,6 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .pics{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px 0;font-size:12px}.pics[hidden],.attach[hidden],.mbar .b[hidden]{display:none}
 .pics .pic{position:relative;flex:none}.pics img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
 .picx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:0;background:var(--bad);color:#fff;cursor:pointer;font-size:11px;line-height:22px;padding:0}
-.msgc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px 0}.msgc[hidden]{display:none}.msgc select{flex:0 1 auto;width:auto;max-width:40%}.msgc input{flex:1 1 140px;min-width:0}.msgc .fh{flex-basis:100%;margin:0}
 .rdy{list-style:none;padding:0;margin:6px 0}.rdy li{padding:2px 0}
 .mpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 100%}.mpick[hidden]{display:none}.mpick input{flex:1 1 140px;min-width:0}.mlist{display:flex;flex-wrap:wrap;gap:4px;flex-basis:100%}.mlist:empty{display:none}.mlist .b{padding:4px 10px}
 .mrdy{display:inline}.mrdy summary{display:inline;cursor:pointer;color:var(--acc)}.mrdy input{margin:6px 0 0}
@@ -1395,7 +1394,9 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .cx-reply{display:flex;align-items:center;gap:8px;padding:6px 12px;border-top:1px solid var(--line);background:var(--card);font-size:13px}.cx-reply[hidden]{display:none}
 .cx-reply span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-left:3px solid var(--acc);padding-left:8px}
 .cx-comp{display:flex;align-items:flex-end;gap:8px;padding:8px 10px;border-top:1px solid var(--line);background:var(--card)}.cx-comp[hidden]{display:none}
-.cx-comp textarea{flex:1;min-width:0;width:auto;resize:none;border-radius:20px;padding:9px 14px;max-height:160px;line-height:1.35;font:inherit}
+.cx-comp textarea{flex:1;min-width:0;width:auto;resize:none;border-radius:20px;padding:9px 14px;max-height:160px;line-height:1.35;font:inherit;overflow-y:hidden}
+/* the assistant's face stays in the bottom right corner on the Chats page: the composer leaves room for it (computer) */
+body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .cx-pane{flex:1;overflow:auto;padding:12px 14px;min-height:0;background:var(--card)}.cx-pane[hidden]{display:none}
 .cx-bigrow{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:0;background:none;border-radius:12px;font:inherit;color:inherit;cursor:pointer;text-align:left}
 .cx-bigrow:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
@@ -1428,3 +1429,5 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .cx-ava.inv{background:color-mix(in srgb,var(--acc) 20%,var(--card));font-size:18px}
 .cx-inv{display:flex;flex-direction:column;gap:6px;margin:8px 0}.cx-qr{align-self:center;width:200px;max-width:70vw;background:#fff;padding:8px;border-radius:10px}.cx-qr svg{display:block;width:100%;height:auto}
 .cx-inv input{width:100%;font-size:12px}
+.cx-num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.04em;line-height:1.7;word-spacing:.35em;padding:10px 12px;margin:6px 0;border-radius:10px;background:var(--bg2,rgba(127,127,127,.12));overflow-wrap:anywhere}
+.cx-cs .ok{color:var(--ok,#2a8a3a);margin:4px 0}

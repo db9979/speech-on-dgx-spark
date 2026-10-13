@@ -181,6 +181,7 @@
     "chats_groups": false,
     "chats_media": false,
     "chats_invite": false,
+    "chats_private": false,
     "history_one": false,
     "history_offline": false,
     "svc_watch_users": false,

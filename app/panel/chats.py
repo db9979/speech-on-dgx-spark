@@ -15,7 +15,7 @@ in the page it is shown only as text (textContent), links are not opened or fetc
 on its own. Live, the journal and Logs → Anfragen get kinds and numbers only, never a text, a name or a group name.
 
 Storage (USERS_DIR/_chats/, in the backup with users/):
-    index.json   {"chats": {cid: {"kind": "one"|"group", "members": [uid], "admins": [uid], "name": sealed,
+    index.json   {"chats": {cid: {"kind": "one"|"group"|"priv" (chatsec.py), "members": [uid], "admins": [uid], "name": sealed,
                                   "by": uid, "t", "updated", "vanish": seconds, "last": {...}, "unread": {uid: n},
                                   "read": {uid: t}, "got": {uid: t}, "mute": {uid: until | -1}, "cleared": {uid: t}}}}
     <cid>.json   {"items": [{id, from, t, text (sealed AES-GCM), kind "text"|"sys", reply?, edited?, gone?,
@@ -287,7 +287,7 @@ def _sweep(cid, items):
         names = os.listdir(_media_dir(cid))
     except OSError:
         return
-    keep = {x["id"] for x in items if x.get("kind") in MEDIA and not x.get("gone")}
+    keep = {x["id"] for x in items if (x.get("kind") in MEDIA or x.get("blob")) and not x.get("gone")}
     for n in names:
         if n[:12] not in keep:
             try:
@@ -330,6 +330,8 @@ def _last(cid, x):
         out["gone"] = True
     elif x.get("kind") == "sys":
         out["sys"] = x.get("sys")
+    elif x.get("kind") == "box":
+        pass                     # a private chat: the Spark has no text to show (the page says 🔒)
     else:
         out["text"] = seal(unseal(x.get("text"), cid, x["id"])[:120], cid, "last")
         if x.get("kind") == "voice":
@@ -420,6 +422,10 @@ def _public(x, cid, c, d, uid, names):
             out["text"] = unseal(x.get("text"), cid, x["id"])
         if x.get("sys") == "vanish":
             out["secs"] = int(x.get("secs") or 0)
+    elif x.get("kind") == "box":   # private chat (chatsec.py): the box as the sending device made it
+        out["box"] = x.get("box")
+        if x.get("blob"):
+            out["blob"] = {"bytes": int(x["blob"].get("bytes") or 0)}
     else:
         out["text"] = unseal(x.get("text"), cid, x["id"])
         if x.get("kind") in MEDIA:
@@ -434,7 +440,7 @@ def _public(x, cid, c, d, uid, names):
     if x.get("reply") and not x.get("gone"):
         r = next((y for y in d["items"] if y["id"] == x["reply"]), None)
         out["reply"] = {"id": x["reply"], "name": names.get(r["from"], "") if r else "",
-                        "text": ("" if not r or r.get("gone") else unseal(r.get("text"), cid, r["id"])[:160]),
+                        "text": ("" if not r or r.get("gone") or r.get("kind") == "box" else unseal(r.get("text"), cid, r["id"])[:160]),
                         "gone": not r or bool(r.get("gone")), "kind": (r or {}).get("kind", "text")}
     react = x.get("react") if isinstance(x.get("react"), dict) else {}
     if react:
@@ -463,11 +469,11 @@ def listing(uid, now=None):
     for cid, c in mine(uid).items():
         last = c.get("last") or {}
         d_cleared = float((c.get("cleared") or {}).get(uid) or 0)
-        if c.get("kind") == "one" and (not last or float(last.get("t") or 0) <= d_cleared):
+        if c.get("kind") in ("one", "priv") and (not last or float(last.get("t") or 0) <= d_cleared):
             continue   # deleted for me and nothing new since, or nobody wrote yet
         if c.get("vanish") and last and now - float(last.get("t") or 0) >= int(c["vanish"]):
             last = {}
-        other = next((u for u in c["members"] if u != uid), "") if c.get("kind") == "one" else ""
+        other = next((u for u in c["members"] if u != uid), "") if c.get("kind") in ("one", "priv") else ""
         item = {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
                 "members": [{"id": u, "name": names.get(u, "")} for u in c["members"]][:MAX_MEMBERS],
                 "admin": uid in (c.get("admins") or []), "unread": int((c.get("unread") or {}).get(uid) or 0),
@@ -476,6 +482,9 @@ def listing(uid, now=None):
         if other:
             item["with"] = other
             item["can_send"] = takes(other, uid)
+        if c.get("kind") == "priv":
+            import chatsec
+            item["private"], item["can_send"] = True, chatsec.can(other, uid)
         if last and float(last.get("t") or 0) > d_cleared:
             item["last"] = {"t": last["t"], "mine": last.get("from") == uid, "name": names.get(last.get("from"), ""),
                             "kind": last.get("kind", "text"), "gone": bool(last.get("gone")), "sys": last.get("sys"),
@@ -518,14 +527,20 @@ def items(uid, cid, before="", now=None):
         shown = shown[:at]
     page = shown[-PAGE:]
     others = [u for u in c["members"] if u != uid]
+    if c.get("kind") == "priv":
+        import chatsec
+        why = chatsec.why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr."
     return {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
             "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
             "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
             "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
             "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
-            "can_send": (takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
-            "why": (why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
-                    "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet.")}
+            "can_send": (not why if c.get("kind") == "priv" else
+                         takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
+            "why": (why if c.get("kind") == "priv" else
+                    why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
+                    "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
+            "private": c.get("kind") == "priv"}
 
 
 # ---------------------------------------------------------------- changing a chat
@@ -648,33 +663,63 @@ def make_group(uid, name, members, now=None):
     return cid, [name_of(u) for u in set(want) - set(ok)]
 
 
-async def send(uid, cid, text, reply="", via="", now=None, media=None):
+async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None, blob=None):
     """A message into a chat (rechecks every rule), then delivered: events to open pages, a notification to the
     devices of everybody else who has none open. media (from photo/file/voice below): {"kind", "parts": {part:
-    bytes}, "info": {...}}, stored sealed beside the chat. Returns the message as the page shows it."""
+    bytes}, "info": {...}}, stored sealed beside the chat. box/blob: a private chat's message as the device made it
+    (chatsec.py), never anything else there. Returns the message as the page shows it."""
     import notaus
     if notaus.refuse("aktion", uid):
         raise PermissionError(notaus.why(uid, "keine Nachrichten"))
     now = time.time() if now is None else now
-    text = clean(text)
-    if not text and not media:
+    c = _member(uid, cid)
+    if c.get("kind") == "priv" or box is not None:
+        import chatsec
+        if c.get("kind") != "priv" or box is None or media:
+            raise ValueError("Private Chats gehen nur verschlüsselt." if c.get("kind") == "priv" else "bad box")
+        if not chatsec.admin_on():
+            raise PermissionError("Private Chats sind auf dem Spark aus.")
+        other = next((u for u in c["members"] if u != uid), "")
+        if not other or not chatsec.can(other, uid):
+            raise PermissionError(chatsec.why_not(other, uid) if other else "Diese Person gibt es nicht mehr.")
+        box = chatsec.check_box(uid, c, box)
+        if blob is not None:
+            blob = chatsec.blob_check(blob)
+            if not media_ok(uid):
+                raise PermissionError("Fotos, Dateien und Sprachnachrichten sind für dich ausgeschaltet.")
+        text = ""
+    else:
+        text = clean(text)
+    if not text and not media and box is None:
         raise ValueError("Die Nachricht ist leer.")
     if media and not media_ok(uid):
         raise PermissionError("Fotos, Dateien und Sprachnachrichten sind für dich ausgeschaltet.")
     if not usable(uid):
         raise PermissionError("Chats sind für dich ausgeschaltet.")
-    c = _member(uid, cid)
     others = [u for u in c["members"] if u != uid]
     if c.get("kind") == "one":
         if not others or not takes(others[0], uid):
             raise PermissionError(why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr.")
-    elif not groups_on():
+    elif c.get("kind") == "group" and not groups_on():
         raise PermissionError("Gruppen-Chats sind gerade ausgeschaltet.")
     if not _rate(uid, now):
         raise OverflowError(f"Du hast in der letzten Stunde schon {PER_HOUR} Nachrichten geschickt.")
     mid = secrets.token_hex(6)
     item = {"id": mid, "from": uid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
     size = 0
+    if box is not None:
+        item = {"id": mid, "from": uid, "t": now, "kind": "box", "box": box, "react": {}}
+        if blob is not None:
+            size = len(blob)
+            if used(uid) + size > QUOTA:
+                raise OverflowError(f"Dein Platz für Fotos, Dateien und Sprache ist voll ({QUOTA // 1024**3} GB). "
+                                    "Alte Chats leeren oder Nachrichten zurücknehmen schafft Platz.")
+            item["blob"] = {"bytes": size}
+            os.makedirs(_media_dir(cid), mode=0o700, exist_ok=True)
+            tmp = _media_file(cid, mid, "f") + ".tmp"
+            with open(tmp, "wb") as f:
+                f.write(seal_bytes(blob, cid, mid, "f"))
+            os.replace(tmp, _media_file(cid, mid, "f"))
     if media:
         size = sum(len(b) for b in media["parts"].values())
         if used(uid) + size > QUOTA:
@@ -715,13 +760,17 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None):
         _sweep(cid, _chat(cid).get("items", []))   # the sealed parts written above go again
         raise
     _today()["sent"] += 1
-    if media:
+    if media or blob is not None:
         _today()["media"] = _today().get("media", 0) + 1
+    if box is not None:
+        _today()["private"] = _today().get("private", 0) + 1
     _tell(meta["members"], {"type": "chat", "id": cid})
-    _log("sent", kind=meta.get("kind", "one"), chars=len(text), **({"media": media["kind"], "kb": size // 1024} if media else {}))
+    _log("sent", kind=meta.get("kind", "one"), chars=len(text), **({"media": media["kind"], "kb": size // 1024} if media else
+                                                                   {"kb": size // 1024} if blob is not None else {}))
     for u in others:
         try:
-            await _notify(u, cid, meta, uid, text or MEDIA_WORD.get(media["kind"] if media else "", ""), now)
+            await _notify(u, cid, meta, uid, "🔒 Neue Nachricht" if box is not None else
+                          text or MEDIA_WORD.get(media["kind"] if media else "", ""), now)
         except Exception as e:
             _log("notify failed", error=type(e).__name__)
     names = {x["id"]: x["name"] for x in profiles.names()}
@@ -742,8 +791,9 @@ async def _notify(u, cid, meta, sender, text, now):
     if not push.reachable(u, private=True):
         return 0
     who = name_of(sender) or "Jemand"
-    title = "💬 " + (who if meta.get("kind") == "one" else _title(cid, meta, u, {}) + " · " + who)
-    body = text[:200] if profiles.settings(u).get("chat_push_text") is True else "Neue Nachricht"
+    title = "💬 " + (who if meta.get("kind") in ("one", "priv") else _title(cid, meta, u, {}) + " · " + who)
+    body = ("🔒 Neue Nachricht" if meta.get("kind") == "priv" else
+            text[:200] if profiles.settings(u).get("chat_push_text") is True else "Neue Nachricht")
     n = await push.send(u, title, body, tag="chat-" + cid, private=True, why="Chat", to="every")
     _today()["pushed" if n else "push_failed"] += 1
     if n:
@@ -801,7 +851,7 @@ def take_back(uid, cid, mid, now=None):
         x = _own(d, uid, mid)
         if now - x["t"] >= BACK_SECS:
             raise PermissionError("Zurückziehen geht nur in der ersten Stunde.")
-        for k in ("text", "reply", "edited", "via", "media"):
+        for k in ("text", "reply", "edited", "via", "media", "box", "blob"):
             x.pop(k, None)
         x["gone"], x["react"] = True, {}
         return meta["members"]
@@ -842,7 +892,7 @@ def options(uid, cid, body, now=None):
     """Stumm (each for itself), selbst löschen (in a group only its admins) and the group's name (its admins)."""
     now = time.time() if now is None else now
     c = _member(uid, cid)
-    admin = c.get("kind") == "one" or uid in (c.get("admins") or [])
+    admin = c.get("kind") in ("one", "priv") or uid in (c.get("admins") or [])
 
     def f(meta, d, chats):
         if "mute" in body:
@@ -982,7 +1032,7 @@ def forget(uid):
             d = _chat(cid, c, now)
             for x in d["items"]:
                 if x["from"] == uid and x.get("kind") != "sys":
-                    for k in ("text", "reply", "edited", "via", "media"):
+                    for k in ("text", "reply", "edited", "via", "media", "box", "blob"):
                         x.pop(k, None)
                     x["gone"], x["react"] = True, {}
                 (x.get("react") or {}).pop(uid, None)
@@ -1012,7 +1062,7 @@ def find(uid, q, now=None):
         d = _chat(cid, c, now)
         cleared = float(_map(c, "cleared").get(uid) or 0)
         for x in reversed(d["items"]):
-            if x["t"] <= cleared or x.get("kind") == "sys" or x.get("gone"):
+            if x["t"] <= cleared or x.get("kind") in ("sys", "box") or x.get("gone"):
                 continue
             text = unseal(x.get("text"), cid, x["id"])
             if q in text.lower():
@@ -1035,8 +1085,19 @@ def for_live(now=None):
     return {"on": True, "chats": sum(1 for x in chats.values() if x.get("kind") == "one"),
             "groups": sum(1 for x in chats.values() if x.get("kind") == "group"), "sent": c["sent"],
             "pushed": c["pushed"], "push_failed": c["push_failed"], "streams": streams(), "media_on": media_on(),
+            "private": sum(1 for x in chats.values() if x.get("kind") == "priv"), "private_sent": c.get("private", 0),
+            **_private_live(),
             "media": c.get("media", 0), "media_mb": round(sum(sum(int(v or 0) for v in (x.get("bytes") or {}).values())
                                                                for x in chats.values()) / 1024**2)}
+
+
+def _private_live():
+    try:
+        import chatsec
+        p = chatsec.for_live()
+    except Exception:
+        p = {}
+    return {"private_on": bool(p.get("on")), "devices": int(p.get("devices") or 0)}
 
 
 # ---------------------------------------------------------------- photos, files, voice messages (Schritt B)
@@ -1051,6 +1112,8 @@ def _bytes_of(items):
     for x in items:
         if x.get("kind") in MEDIA and not x.get("gone"):
             out[x["from"]] = out.get(x["from"], 0) + int((x.get("media") or {}).get("bytes") or 0)
+        elif x.get("blob") and not x.get("gone"):
+            out[x["from"]] = out.get(x["from"], 0) + int(x["blob"].get("bytes") or 0)
     return out
 
 
@@ -1188,10 +1251,19 @@ def media(uid, cid, mid, part="f"):
     c = _member(uid, cid)
     d = _chat(cid, c)
     cleared = float(_map(c, "cleared").get(uid) or 0)
-    x = next((x for x in d["items"] if x["id"] == mid and x.get("kind") in MEDIA and not x.get("gone")
+    x = next((x for x in d["items"] if x["id"] == mid and (x.get("kind") in MEDIA or x.get("blob")) and not x.get("gone")
               and x["t"] > cleared), None)
     if not x or (part == "t" and x["kind"] != "photo"):
         raise LookupError("no such message")
+    if x.get("kind") == "box":   # a private chat's photo, file or voice: as the device encrypted it
+        try:
+            with open(_media_file(cid, mid, "f"), "rb") as f:
+                data = unseal_bytes(f.read(), cid, mid, "f")
+        except OSError:
+            data = None
+        if data is None:
+            raise LookupError("no such message")
+        return data, "application/octet-stream", ""
     try:
         with open(_media_file(cid, mid, part), "rb") as f:
             data = unseal_bytes(f.read(), cid, mid, part)
@@ -1218,9 +1290,13 @@ def for_model(uid, now=None, most=10):
         d = _chat(cid, c, now)
         since = max(float(_map(c, "read").get(uid) or 0), float(_map(c, "cleared").get(uid) or 0))
         new = [x for x in d["items"] if x["t"] > since and x["from"] != uid
-               and x.get("kind") in ("text",) + MEDIA and not x.get("gone")]
-        where = "" if c.get("kind") == "one" else f" in der Gruppe {_title(cid, c, uid, names)}"
+               and x.get("kind") in ("text", "box") + MEDIA and not x.get("gone")]
+        where = "" if c.get("kind") in ("one", "priv") else f" in der Gruppe {_title(cid, c, uid, names)}"
         for x in new[-most:]:
+            if x.get("kind") == "box":   # the Spark cannot read it, so it says only that it is there
+                lines.append((x["t"], x["from"], f"Chat von {names.get(x['from'], '?')}: [🔒 private Nachricht, "
+                              "nur auf deinen Geräten lesbar]"))
+                continue
             word = MEDIA_WORD.get(x.get("kind"), "")
             lines.append((x["t"], x["from"], f"Chat von {names.get(x['from'], '?')}{where}: "
                           + " ".join(p for p in (f"[{word}]" if word else "", unseal(x.get("text"), cid, x["id"])) if p)))
@@ -1305,10 +1381,15 @@ def _state(uid):
     return {"enabled": admin_on(), "on": usable(uid), "groups": groups_on(), "chats": listing(uid),
             "contacts": contacts(uid), "max_text": MAX_TEXT, "reactions": list(REACTIONS),
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
-            "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(),
+            "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),
             "invite_switch": features._switch(features.chat_cfg(), "chats_invite"),
             "limits": {"photo_mb": MAX_PHOTO_IN // 1024**2, "file_mb": MAX_FILE // 1024**2, "voice_secs": MAX_VOICE_SECS,
                        "used_mb": round(used(uid) / 1024**2), "quota_mb": QUOTA // 1024**2}}
+
+
+def _private_ok(uid):
+    import chatsec
+    return chatsec.admin_on() and chatsec.usable(uid)
 
 
 @router.get("/api/chats", dependencies=[Depends(assistant)])
@@ -1362,9 +1443,10 @@ async def api_group(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/send", dependencies=[Depends(assistant)])
 async def api_send(request: Request, prof=Depends(_on)):
-    body = await _json(request)
+    body = await _json(request, 96 * 1024)   # a private chat's box carries the text once per device
     try:
-        item = await send(prof["id"], _cid(body.get("id")), body.get("text"), str(body.get("reply") or ""))
+        item = await send(prof["id"], _cid(body.get("id")), body.get("text"), str(body.get("reply") or ""),
+                          box=body.get("box") if "box" in body else None)
     except (LookupError, PermissionError, ValueError, OverflowError) as e:
         raise _err(e)
     return {"item": item}
@@ -1486,6 +1568,8 @@ async def api_media_send(request: Request, id: str = "", kind: str = "", reply: 
     import guard
     from urllib.parse import unquote
     cid = _cid(id)
+    if kind == "box":
+        return await _box_media(request, cid, reply, prof)
     if kind not in MEDIA:
         raise HTTPException(400, "kind must be photo, file or voice")
     if not media_on() or not media_ok(prof["id"]):
@@ -1509,6 +1593,34 @@ async def api_media_send(request: Request, id: str = "", kind: str = "", reply: 
     except (LookupError, PermissionError, ValueError, OverflowError) as e:
         raise _err(e)
     _live(f"{MEDIA_WORD[kind]} im Chat")
+    return {"item": item}
+
+
+async def _box_media(request, cid, reply, prof):
+    """A private chat's photo, file or voice: the body is the box (one line of JSON), a line break, then the blob the
+    device encrypted. The Spark sees only its size."""
+    import chatsec
+    import guard
+    if not media_on() or not media_ok(prof["id"]):
+        raise HTTPException(403, "Fotos, Dateien und Sprachnachrichten sind für dich ausgeschaltet.")
+    guard.limit(request, "chatsmedia", prof["id"])
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > chatsec.MAX_BLOB + chatsec.MAX_BOX + 16 * 1024:
+            raise HTTPException(413, "too large")
+    head, sep, blob = bytes(data).partition(b"\n")
+    if not sep or len(head) > chatsec.MAX_BOX + 8 * 1024:
+        raise HTTPException(400, "bad box")
+    try:
+        box = json.loads(head)
+    except ValueError:
+        raise HTTPException(400, "bad box")
+    try:
+        item = await send(prof["id"], cid, "", reply if MID.fullmatch(reply or "") else "", box=box, blob=blob)
+    except (LookupError, PermissionError, ValueError, OverflowError) as e:
+        raise _err(e)
+    _live("🔒 Anhang im privaten Chat")
     return {"item": item}
 
 

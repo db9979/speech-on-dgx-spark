@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.479** Private chats end-to-end (a key per device, safety number, off); old envelope removed from the assistant
 - **V01.0.478** Settings assistant with admin rules instead of code, Spark diary, monthly report, thumbs in Logs → Requests
 - **V01.0.477** Check deeds and stop error loops (on, like the answer check): "The TV is on now" only when a tool of that kind worked, else one honest sentence; a tool failing twice the same way is locked for the rest of the answer
 - **V01.0.476** Tools have readable names, e.g. "Mailbox overview" instead of mail_tidy_overview
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.472** Own speakers: "Jarvis" while speaking makes them quiet at once, "Stopp" then ends without an answer; new switch "Stop while it speaks" for "Stopp" without the wake word
 - **V01.0.471** Speech output no longer goes silent after a piece with nothing to say (tts_http_400); errors in Logs → Requests as a plain sentence
 - **V01.0.470** Ask instead of guessing (off): several devices, stops, places or lists fit, the Spark asks with buttons and can remember your choice
-- **V01.0.469** Red fix: service watch test counted "today" with the real clock, now with a fixed day
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

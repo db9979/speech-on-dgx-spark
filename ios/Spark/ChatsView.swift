@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 struct ChatSummary: Identifiable, Hashable {
     let id: String
     var group = false
+    var priv = false
     var title = ""
     var unread = 0
     var muted = false
@@ -64,6 +65,7 @@ extension SparkAPI {
             guard let id = x["id"] as? String else { return nil }
             var c = ChatSummary(id: id)
             c.group = x["kind"] as? String == "group"
+            c.priv = x["private"] as? Bool ?? false
             c.title = String((x["title"] as? String ?? "").prefix(60))
             c.unread = (x["unread"] as? NSNumber)?.intValue ?? 0
             c.muted = ((x["mute"] as? NSNumber)?.doubleValue ?? 0) != 0
@@ -90,6 +92,7 @@ extension SparkAPI {
         case "photo": return who + "📷 " + (text.isEmpty ? String(localized: "Foto") : text)
         case "file": return who + "📄 " + (text.isEmpty ? String(localized: "Datei") : text)
         case "voice": return who + "🎤 " + String(localized: "Sprachnachricht")
+        case "box": return who + "🔒 " + String(localized: "Private Nachricht")
         default: return who + text
         }
     }
@@ -116,12 +119,20 @@ extension SparkAPI {
             l.gone = x["gone"] as? Bool ?? false
             l.edited = x["edited"] as? Bool ?? false
             l.sys = x["sys"] as? String ?? ""
+            if l.kind == "box" && !l.gone {   // private chat (chatsec.py): end-to-end, this app has no key for it yet
+                l.kind = "text"
+                l.text = String(localized: "🔒 Private Nachricht. Lesbar im Browser oder in der Android-App, auf dem iPhone mit dem nächsten Build.")
+            }
             if let m = x["media"] as? [String: Any] {
                 l.media = ChatMedia(w: (m["w"] as? NSNumber)?.intValue ?? 0, h: (m["h"] as? NSNumber)?.intValue ?? 0,
                                     secs: (m["secs"] as? NSNumber)?.intValue ?? 0, size: (m["size"] as? NSNumber)?.intValue ?? 0,
                                     ext: String((m["ext"] as? String ?? "").prefix(8)), name: String((m["name"] as? String ?? "").prefix(120)))
             }
             return l
+        }
+        if d["private"] as? Bool == true {
+            return ("🔒 " + String((d["title"] as? String ?? "").prefix(60)), lines, false,
+                    String(localized: "Private Chats schreibst du im Browser oder in der Android-App; auf dem iPhone mit dem nächsten Build."))
         }
         return (String((d["title"] as? String ?? "").prefix(60)), lines, d["can_send"] as? Bool ?? false,
                 String((d["why"] as? String ?? "").prefix(200)))
@@ -279,7 +290,7 @@ private struct ChatRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: c.title).font(.headline).lineLimit(1)
+                Text(verbatim: (c.priv ? "🔒 " : "") + c.title).font(.headline).lineLimit(1)
                 Text(verbatim: c.preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
@@ -524,6 +535,8 @@ private struct ChatBubble: View {
         case "joined": return l.mine ? String(localized: "Du bist mit einer Einladung dazugekommen") : who + " " + String(localized: "ist mit deiner Einladung dazugekommen")
         case "leave": return who + " " + String(localized: "hat die Gruppe verlassen")
         case "made": return who + " " + String(localized: "hat die Gruppe erstellt")
+        case "newkey": return who + " " + String(localized: "hat ein Gerät für private Chats eingetragen")
+        case "keygone": return who + " " + String(localized: "hat ein Gerät aus den privaten Chats genommen")
         default: return String(localized: "Änderung im Chat")
         }
     }

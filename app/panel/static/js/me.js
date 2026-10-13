@@ -683,7 +683,7 @@ function meLayout(el){const panes=[...el.querySelectorAll(':scope>.setpane')];
     fold.before(d);d.append(s,fold);fold.querySelector(':scope>h3.sec').remove()}
   panes.forEach(p=>{const empty=!p.querySelector('.setrow');p.hidden=empty;const d=p.closest('details.mefold');if(d)d.hidden=empty});
   if(window.pageGroup)el.querySelectorAll('.setpane').forEach(window.pageGroup);if(window.pageSeg)window.pageSeg(el)}
-function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar();syncSettings()}
+function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();syncSettings()}
 async function refreshAllow(){const d=await (await fetch('/api/profile/settings')).json();
   const a=d&&d.allow||{};if(JSON.stringify(a)===JSON.stringify(ALLOW))return;ALLOW=a;
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}

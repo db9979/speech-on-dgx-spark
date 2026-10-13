@@ -132,7 +132,7 @@ LOCAL = {
     "mail.json": "Login", "mail-tidy.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
     "telegram.json": "Login", "push.json": "Gerät", "remarkable.json": "Login", "remarkable-lib.json": "Zustand",
     "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
-    "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
+    "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "chatkeys.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
     "ha-events.json": "Zustand", "briefing-sent": "Zustand", "messages": "Sprachnachrichten (verschlüsselt mit Spark-Schlüssel)",
     "agent-pending.json": "Warteschlange", "calendar-pending.json": "Warteschlange", "fix-pending.json": "Warteschlange", "memory-ask.json": "Warteschlange",
     "mail-pending.json": "Warteschlange", "mcp-dienste-pending.json": "Warteschlange",

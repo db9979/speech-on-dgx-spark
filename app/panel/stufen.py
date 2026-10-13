@@ -68,6 +68,7 @@ LIST = {
     ("POST", "/api/profile/ha-events/key"): (CONFIRM, "Geräte", "Schlüssel für Home-Assistant-Meldungen", "Key for Home Assistant events"),
     ("POST", "/api/profile/room/ha"): (CONFIRM, "Geräte", "Schlüssel für den Raum-Modus", "Key for room mode"),
     ("POST", "/api/profile/voice"): (CONFIRM, "Geräte", "Stimme anlernen", "Teach my voice"),
+    ("POST", "/api/chats/keys"): (CONFIRM, "Geräte", "Gerät für private Chats eintragen", "Add a device for private chats"),
     ("POST", "/api/profile/esp32/{did}/voice"): (CONFIRM, "Geräte", "Stimme am Lautsprecher anlernen", "Teach my voice at a speaker"),
     ("POST", "/api/profile/push"): (CONFIRM, "Geräte", "Meldungen an diesen Browser", "Notifications to this browser"),
     ("POST", "/api/profile/iphone/pair"): (CONFIRM, "Geräte", "iPhone koppeln", "Pair an iPhone"),

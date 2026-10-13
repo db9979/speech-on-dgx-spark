@@ -708,6 +708,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Private Chats, Ende-zu-Ende (V01.0.479)",
+"text": "Private Chats, Ende-zu-Ende (V01.0.479): Admin: Funktionen → Chats → „Private Chats (Ende-zu-Ende)“ (aus). Dann steht in Chats → ＋ Neuer Chat neben jeder Person „🔒 Privat“. Beim ersten Mal bekommt das Gerät einen eigenen Schlüssel (ECDH P-256, im Browser erzeugt, nicht exportierbar in IndexedDB); das gilt wie ein neues Gerät und braucht den Code des zweiten Schritts. Jede Nachricht verschlüsselt das Gerät selbst (AES-256-GCM, der Schlüssel der Nachricht für jedes eingetragene Gerät beider Personen eingepackt, HKDF über ECDH); Fotos werden vorher neu gezeichnet (ohne Ort und Kameradaten), Dateien und Sprachnachrichten gehen mit eigenem Schlüssel. Der Spark speichert nur die verschlüsselte Form, kann sie nicht lesen, der Assistent sagt nur „private Nachricht“, die Suche findet nichts, Mitteilungen heißen „🔒 Neue Nachricht“. Unter ⓘ stehen die Sicherheitsnummer (12 × 5 Ziffern, einmal von Angesicht zu Angesicht vergleichen) und „Deine Geräte“ mit Entfernen; nimmt jemand ein Gerät dazu oder heraus, steht eine Zeile im Chat. Ein neues Gerät liest nur, was danach kommt. Braucht https. Zuerst Browser und Android-App, die iPhone-App zeigt private Chats bis zum nächsten Build nur als 🔒. Liv"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Private Chats, Ende-zu-Ende (V01.0.479)",
+"text": "e: Kachel Chats „🔒 privat, Geräte, heute“; Logs: „private key added“, „sent | kind priv“, nur Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kein Umschlag mehr im Assistenten (V01.0.479)",
+"text": "Kein Umschlag mehr im Assistenten (V01.0.479): Der Umschlag neben der Eingabe und der Knopf „Nachricht“ über dem Gespräch sind weg (Dominik: Chats ersetzen sie). Geschrieben wird unter Chats; „Sag Anna …“ geht weiter in den Chat. Ich → Nachrichten bleibt für Profile ohne Chats."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Viele Profile (V01.0.206)",
 "text": "Viele Profile (V01.0.206): Unter Personen und Geräte sucht der Admin nach Name, Rufname oder Gerät, filtert (seit 90 Tagen nicht benutzt, ohne Gerät, mit/ohne zweiten Schritt, Nachrichten an/aus), sortiert (Name, zuletzt benutzt, neueste) und blättert in Seiten zu 25. „Details“ zeigt pro Profil Geräte, letzte Nutzung, Rufname, PIN ändern, zweiten Schritt zurücksetzen und Löschen; Löschen braucht jetzt wie PIN ändern den frischen Code. Geräte zeigen nur die der gezeigten Profile. Seit V01.0.257 wählt man das Profil eines eigenen Geräteschlüssels (Skript, Kurzbefehl) und eines neuen Geräts aus einer Liste aller Profile statt den Namen zu tippen; iPhone-App, Lautsprecher, Pebble-Uhr und Home-Assistant-Schlüssel richtet jedes Profil selbst unter Ich ein, sie stehen mit „🔒 fest“ und dem Ort, wo sie verwaltet werden, und lassen sich hier nur löschen (auch der Server lehnt das Umhängen ab). „Zuletzt benutzt“ zählt Browser-Anmeldung (ohne Adresse) und Geräteschlüssel. Rufname: pro Profil optional („Tom“, „Papa“), vom Admin in den Details oder vom Profil unter Ich → Nachrichten; eindeutig unter allen Namen und Rufnamen. Empfänger wählen: im Briefknopf und unter Ich → Nachrichten ein Feld „A"
 },
@@ -2381,7 +2405,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
-"text": "Der Umschlag neben dem Eingabefeld öffnet die Nachrichten, mit Punkt bei neuen. Das geht ohne Sprachmodell. Unter „Bereit?“ siehst du, ob der Admin und dein Profil Nachrichten erlauben und wen du erreichst. Wer nicht erreichbar ist, steht mit Grund dabei, z. B. „hat Nachrichten aus“. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt. Bei vielen Profilen (V01.0.206) öffnet „An“ eine Liste mit Suche (Name oder Rufname), oben ★ Favoriten und Zuletzt; der Stern merkt einen Favoriten auf dem Spark. „Bereit?“ zeigt dann nur Zahlen, die Namen zum Aufklappen. Passen bei Siri mehrere Profi"
+"text": "Seit V01.0.479 gibt es keinen Umschlag mehr neben dem Eingabefeld: Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Die alten Nachrichten öffnen sich noch aus einer Mitteilung oder mit Siri, ohne Sprachmodell. Unter „Bereit?“ siehst du, ob der Admin und dein Profil Nachrichten erlauben und wen du erreichst. Wer nicht erreichbar ist, steht mit Grund dabei, z. B. „hat Nachrichten aus“. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt. Bei vielen Profilen (V01.0.206) öffnet „An“ eine Liste mit Suche (Name oder Rufname), oben ★ Favoriten und Zuletzt; der Stern merkt"
 },
 {
 "lang": "de",
@@ -2389,7 +2413,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
-"text": "le, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche."
+"text": " einen Favoriten auf dem Spark. „Bereit?“ zeigt dann nur Zahlen, die Namen zum Aufklappen. Passen bei Siri mehrere Profile, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche."
 },
 {
 "lang": "de",
@@ -4140,6 +4164,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Private chats, end-to-end (V01.0.479)",
+"text": "Private chats, end-to-end (V01.0.479): Admin: Features → Chats → \"Private chats (end-to-end)\" (off). Then Chats → ＋ New chat shows \"🔒 Private\" beside every person. The first time, the device gets its own key (ECDH P-256, made in the browser, not exportable, in IndexedDB); that counts like a new device and needs the second step's code. The device encrypts every message itself (AES-256-GCM, the message key wrapped for every added device of both people, HKDF over ECDH); photos are drawn anew first (no place or camera data), files and voice messages go with their own key. The Spark stores only the encrypted form and cannot read it, the assistant only says \"private message\", the search finds nothing, notifications say \"🔒 New message\". Under ⓘ are the safety number (12 × 5 digits, compare once face to face) and \"Your devices\" with Remove; when someone adds or removes a device, a line shows in the chat. A new device only reads what comes after it. Needs https. First browser and Android app; the iPhone app shows private chats only as 🔒 until its next build. Live: tile Chats \"🔒 private, devices, today\"; logs: \"private key added\", \"sent | kind priv\", numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "No envelope in the assistant any more (V01.0.479)",
+"text": "No envelope in the assistant any more (V01.0.479): the envelope beside the input and the \"Message\" button above the conversation are gone (Dominik: chats replace them). You write under Chats; \"Tell Anna …\" still goes into the chat. Me → Messages stays for profiles without chats."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Many profiles (V01.0.206)",
 "text": "Many profiles (V01.0.206): under People and devices the admin searches by name, call name or device, filters (not used for 90 days, without a device, with/without second step, messages on/off), sorts (name, last used, newest) and pages through 25 at a time. \"Details\" shows each profile's devices, last use, call name, change PIN, reset second step and delete; deleting now needs the fresh code like changing the PIN. The device list shows only the devices of the profiles shown,. Since V01.0.257 the profile of an own device key (script, shortcut) and of a new device is picked from a list of all profiles instead of typing a name; the iPhone app, speakers, Pebble watch and Home Assistant keys are set up by each profile itself under Me, show \"🔒 fixed\" with where they are managed, and can only be deleted here (the server refuses moving them too). \"Last used\" counts the browser login (without the address) and device keys. Call name: optional per profile (\"Tom\", \"Dad\"), set by the admin in the details or by the profile under Me → Messages; unique among all names and call names. Picking the recipient: in the envelope and under Me → Messages a field \"To …\": typing shows at most 8 matching prof"
 },
@@ -5701,7 +5741,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Messages to other profiles",
 "title": "Messages to other profiles",
-"text": "The envelope next to the input opens the messages (a dot shows new ones), no language model involved. \"Ready?\" shows whether the admin and your profile allow messages and whom you can reach, with the reason for those you cannot (e.g. \"has messages off\"). Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → \"Reply\"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant (\"Do I have messages?\"), also in the car. Voice messages are listed; listen to them in the panel. With Siri: \"Message with Spark\" asks for recipient and text and confirms before sending; the name must match a profile that takes your messages. With many profiles (V01.0.206) \"To\" opens a list with a search (name or call name), ★ favourites and recent ones on top; the star keeps a favourite on the Spark. \"Ready?\" then shows only numbers, the names open on a tap. When several profiles fit for Siri, Siri asks \"Whom do you mean?\" with at most 4 names; for an unknown name it says at most 3 similar ones."
+"text": "Since V01.0.479 there is no envelope next to the input any more: you write in Chats (button at the top right when chats are on). The old messages still open from a notification or with Siri, no language model involved. \"Ready?\" shows whether the admin and your profile allow messages and whom you can reach, with the reason for those you cannot (e.g. \"has messages off\"). Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → \"Reply\"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant (\"Do I have messages?\"), also in the car. Voice messages are listed; listen to them in the panel. With Siri: \"Message with Spark\" asks for recipient and text and confirms before sending; the name must match a profile that takes your messages. With many profiles (V01.0.206) \"To\" opens a list with a search (name or call name), ★ favourites and recent ones on top; the star keeps a favourite on the Spark. \"Ready?\" then shows only numbers, the names open on a tap. When several profiles fit for Siri, Siri asks \"Whom do you mean?\" with "
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Messages to other profiles",
+"title": "Messages to other profiles",
+"text": "at most 4 names; for an unknown name it says at most 3 similar ones."
 },
 {
 "lang": "en",

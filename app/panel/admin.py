@@ -242,6 +242,8 @@ def admin_delete_profile(uid: str, request: Request):
     tipps.forget(uid)   # its hints and counts (tipps.json)
     import chats
     chats.forget(uid)   # out of every chat, its messages gone (their place stays for the others)
+    import chatsec
+    chatsec.forget(uid)   # its device keys for private chats
     return {"ok": True}
 
 
@@ -510,7 +512,7 @@ def validate(new):
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
-              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "android_live",
+              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "android_live",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload"):

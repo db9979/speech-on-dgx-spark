@@ -20,11 +20,8 @@ const msg={since:Date.now()-10*60e3,seen:new Set(),busy:false,
     if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     if(x.voice){msgPlay(x.id);return}
     sayText(text)}};
-setInterval(()=>{msg.poll();msgBar()},20000);
+setInterval(()=>msg.poll(),20000);
 
-// the envelope beside the chat input: pick a profile, type, send. No model in between, so nothing
-// earlier in the conversation can lock it; the Spark checks the same rules as for the assistant.
-function msgBar(){const on=msg.on();for(const id of ['chatmsg','mmsg'])if($(id))$(id).hidden=!on;if(!on&&$('msgcompose'))$('msgcompose').hidden=true}
 // the recipient for many profiles: type a name or Rufname and pick one of at most 8 hits; with nothing typed
 // the ★ favourites and the last ones written to (all of them while there are only a few). Only profiles that
 // take messages from me are in d.to; the Spark checks the rules again when sending.
@@ -48,21 +45,6 @@ function msgPicker(box,id,d){const fav=new Set(d.fav||[]),every=d.all&&d.to.leng
     d.fav=r.fav;fav.clear();r.fav.forEach(x=>fav.add(x));star.textContent=fav.has(h.value)?'★':'☆'}catch(e){star.title=e.message}};
   const first=(d.recent||[]).find(by)||(d.to.length===1?d.to[0].id:'');if(first)set(first);else show();
   return {set}}
-const msgOff=r=>r.off.length>MSG_HITS?r.off.length+' '+t('Profile','profiles'):r.off.map(x=>x.name+' '+(x.why==='hat Nachrichten aus'?t('hat Nachrichten aus','has messages off'):t('nimmt keine von dir an','takes none from you'))).join(', ');
-async function msgCompose(){const c=$('msgcompose');if(!c.hidden){c.hidden=true;return}
-  xmsg('mcmsg','');let d,r;try{[d,r]=await Promise.all([(await api('/api/messages')).json(),(await api('/api/messages/ready')).json()])}catch(e){xmsg('mcmsg',e.message,true);c.hidden=false;return}
-  msgPicker($('mcpick'),'mcto',d);
-  const off=msgOff(r);
-  const can=d.to.length>0;$('mcpick').hidden=$('mctext').hidden=$('mcsend').hidden=!can;
-  c.hidden=false;if(can){($('mcto').value?$('mctext'):$('mctoq')).focus();if(off)xmsg('mcmsg',t('Nicht erreichbar: ','Not reachable: ')+off)}
-  else xmsg('mcmsg',t('Gerade nimmt kein anderes Profil Nachrichten von dir an.','No other profile takes messages from you right now.')+(off?' '+off+'.':''),true)}
-async function msgComposeSend(){const v=$('mctext').value.trim();if(!v)return;
-  if(!$('mcto').value){xmsg('mcmsg',t('Erst den Empfänger wählen.','Pick the recipient first.'),true);$('mctoq').focus();return}
-  try{const r=await (await api('/api/messages/send',xjson('POST',{to:$('mcto').value,text:v}))).json();$('mctext').value='';
-    xmsg('mcmsg',t('Gesendet an ','Sent to ')+r.sent.join(', '));setTimeout(()=>{if(!$('mctext').value)$('msgcompose').hidden=true},2500)}
-  catch(e){xmsg('mcmsg',e.message,true)}}
-if($('chatmsg')){$('chatmsg').onclick=$('mmsg').onclick=()=>msgCompose();$('mcclose').onclick=()=>$('msgcompose').hidden=true;
-  $('mcsend').onclick=msgComposeSend;$('mctext').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();msgComposeSend()}})}
 // the admin's "für alle Profile einschalten" (Funktionen)
 if($('msgallon'))$('msgallon').onclick=async()=>{if(!confirm(t('Nachrichten für alle Profile einschalten?','Switch messages on for every profile?')))return;
   try{const r=await (await api('/api/admin/messages/enable_all',xjson('POST',{}))).json();xmsg('msgallmsg',t('Für ','Switched on for ')+r.switched+t(' Profil(e) eingeschaltet.',' profile(s).'))}

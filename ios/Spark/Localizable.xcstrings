@@ -7160,6 +7160,56 @@
           }
         }
       }
+    },
+    "Private Nachricht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private message"
+          }
+        }
+      }
+    },
+    "🔒 Private Nachricht. Lesbar im Browser oder in der Android-App, auf dem iPhone mit dem nächsten Build.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔒 Private message. Readable in the browser or the Android app, on the iPhone with the next build."
+          }
+        }
+      }
+    },
+    "Private Chats schreibst du im Browser oder in der Android-App; auf dem iPhone mit dem nächsten Build.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You write private chats in the browser or the Android app; on the iPhone with the next build."
+          }
+        }
+      }
+    },
+    "hat ein Gerät für private Chats eingetragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "added a device for private chats"
+          }
+        }
+      }
+    },
+    "hat ein Gerät aus den privaten Chats genommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "took a device out of private chats"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
