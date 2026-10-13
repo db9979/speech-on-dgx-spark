@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
 - **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
 - **V01.0.480** Keine erfundenen „Ja“ oder „Okay“ mehr nach Antworten: Stille, Klicks und der Signalton werden nicht zur Frage
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.476** Werkzeuge heißen verständlich, z. B. „Postfach-Überblick“ statt mail_tidy_overview
 - **V01.0.475** Rot-Fix: Selbsttests werden nicht mehr immer langsamer (Test-Panels hören nach ihrer Klasse auf)
 - **V01.0.474** Test-Fix nach V01.0.473: zwei Tests lassen kein Gerät und kein Home Assistant mehr zurück
-- **V01.0.473** Chats (aus): mit den anderen Personen deines Sparks schreiben wie im Messenger, auch in Gruppen, mit Fotos, Dateien, Sprachnachrichten und Einladung per QR; verschlüsselt auf dem Spark; Android-App 1.2.0 mit Mitteilungen sofort, iPhone-App mit Chats
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

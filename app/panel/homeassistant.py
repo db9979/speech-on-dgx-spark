@@ -884,6 +884,21 @@ def service_for(eid, service):
     return service
 
 
+_DID = {"turn_on": "eingeschaltet", "turn_off": "ausgeschaltet", "toggle": "umgeschaltet",
+        "open_cover": "geöffnet", "close_cover": "geschlossen"}
+
+
+def diary(uid, targets, service, before=None, undo=False):
+    """Spark-Tagebuch (tagebuch.py) after a switch that worked: device names and the action only, never the
+    sentence (it may carry the code word). Writes nothing while the diary is off; never raises."""
+    import tagebuch
+    names = ", ".join(str(x) for x in (targets or []) if x)[:60]
+    if not uid or not names:
+        return False
+    what = "zurückgestellt" if undo else _DID.get(service, "geschaltet")
+    return tagebuch.note(uid, "geraet", f"{names} {what}", before={"state": str(before)[:40]} if before else None)
+
+
 async def switch(item, eid, service):
     """A command the panel already resolved to one device (a choice or a remembered mapping)."""
     svc = service_for(eid, service)

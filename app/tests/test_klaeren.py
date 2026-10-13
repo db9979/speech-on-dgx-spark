@@ -104,6 +104,27 @@ class Klaeren(unittest.TestCase):
         ask(a, "Schalte den Fernseher an")
         self.assertEqual(len(helpers.HA_CALLS), n)
 
+    def test_switches_go_into_the_diary_without_the_code_word(self):
+        """Spark-Tagebuch (tagebuch.py): a choice, a correction and a remembered mapping each note the device and
+        the action under "geraet", never the sentence with the code word; nothing while the diary is off."""
+        import tagebuch
+        a, uid = self.person("Kla Tagebuch")
+        ask(a, f"Schalte den Fernseher aus Codewort {CODE}")
+        ask(a, "den Samsung The Frame")
+        self.assertEqual(tagebuch.recent(uid), [])   # diary off: nothing noted
+        helpers.set_config(tagebuch=True)
+        try:
+            profiles.save_settings(uid, {"tagebuch_on": True})
+            state("media_player.the_frame")["state"] = "on"
+            ask(a, f"Schalte den Fernseher aus Codewort {CODE}")
+            ask(a, "den Samsung The Frame")
+            rows = tagebuch.recent(uid, art="geraet")
+            self.assertEqual([r["title"] for r in rows], ["Samsung The Frame ausgeschaltet"])
+            with open(profiles._path(uid, "tagebuch.json")) as f:
+                self.assertNotIn("apollo", f.read().lower())
+        finally:
+            helpers.set_config(tagebuch=False)
+
     def test_number_answer_and_no(self):
         a, uid = self.person("Kla Zwei")
         evs = ask(a, f"Schalte den Fernseher an Codewort {CODE}")

@@ -1594,7 +1594,11 @@ async def _ha_panel(turn, ha, ha_direct, en, who, src):
             done, text = await homeassistant.undo(ha, choice["undo"]["cand"]["id"], svc, choice["undo"]["before"])
             lines.append(text.split("\n(before")[0] if text else
                          f"{choice['undo']['cand']['name']} was left as it is (it cannot be taken back from here).")
+            if done:
+                homeassistant.diary(uid, [choice["undo"]["cand"]["name"]], svc, undo=True)
         ok, answer = await homeassistant.switch(ha, c["id"], svc)
+        if ok:
+            homeassistant.diary(uid, [c["name"]], svc)
         q = klaeren.offer(uid, src, "ha", choice["said"], c, en) if ok else ""
         return ok, "\n".join(lines + [answer]), [c["name"]], "Auswahl (Panel)", q, \
             (klaeren.remember_event("ha", en) if q else None)
@@ -1602,6 +1606,8 @@ async def _ha_panel(turn, ha, ha_direct, en, who, src):
     mapped = klaeren.lookup(uid, "ha", klaeren.words(ha_direct)) if kl_on and svc else None
     if mapped:   # the person's own words for one device
         ok, answer = await homeassistant.switch(ha, mapped["id"], svc)
+        if ok:
+            homeassistant.diary(uid, [mapped["name"]], svc)
         if answer.startswith("There is no entity"):
             klaeren.forget_target(uid, "ha", mapped["id"])
         return ok, answer, [mapped["name"]], "Zuordnung (Panel)", "", None
@@ -1615,6 +1621,8 @@ async def _ha_panel(turn, ha, ha_direct, en, who, src):
                              full=not cands, en=en)
             return False, ASKED, [], "Rückfrage (Panel)", klaeren.question(cands, en=en, full=not cands,
                                                                                         near=not info.get("exact")), ev
+    if ok and info.get("service"):
+        homeassistant.diary(uid, targets, info["service"], info.get("before"))
     if kl_on and ok and info.get("chosen") and len(info.get("cands") or []) > 1:
         klaeren.did(uid, src, "ha", ha_direct, info["chosen"], {"service": info["service"]}, info.get("before"),
                     info["cands"], code_ok=True)

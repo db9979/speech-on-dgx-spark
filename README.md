@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.483** Spark diary: switched devices are noted (device and action only, never the code word)
 - **V01.0.482** Switch "Pictures from the Kiwix" now also under Me → Documents
 - **V01.0.481** Daily briefing in the history sorted with lists, the push stays plain text
 - **V01.0.480** No more made-up "Ja" or "Okay" after answers: silence, clicks and the chime never become a question
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.476** Tools have readable names, e.g. "Mailbox overview" instead of mail_tidy_overview
 - **V01.0.475** Red fix: self-tests no longer get slower and slower (test panels stop after their class)
 - **V01.0.474** Test fix after V01.0.473: two tests no longer leave a device or a Home Assistant connection behind
-- **V01.0.473** Chats (off): write with the other people of your Spark like in a messenger, in groups too, with photos, files, voice messages and invitations by QR; encrypted on the Spark; Android app 1.2.0 with notes at once, iPhone app with chats
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

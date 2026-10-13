@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.483** · 2026-10-13 · Spark-Tagebuch: geschaltete Geräte (Auswahl, Korrektur, Zuordnung, Smart-Home-Befehl) stehen als „Gerät geschaltet“ mit Gerätename und Aktion drin, nie der Satz mit dem Codewort; nur wenn das Tagebuch an ist
 - **V01.0.482** · 2026-10-13 · Bilder aus dem Kiwix: der Profil-Schalter fehlte in Ich → Dokumente → Einstellungen für Dokumente und ist jetzt da; Selbsttest, dass jeder Profil-Schalter unter Ich einstellbar ist
 - **V01.0.481** · 2026-10-13 · Tagesbriefing im Verlauf gegliedert (Termine, Erinnerungen, Mails, Themen als Listen), der Push bekommt denselben Text ohne Zeichen; im Chat darf das Briefing auch nach Bereichen gegliedert sein
 - **V01.0.480** · 2026-10-13 · Stille wird nie zu Wörtern: Klicks, Signalton oder Raumgeräusch nach einer Antwort kommen nicht mehr als „Ja“/„Okay“ beim Assistenten an (Spark sofort, iPhone-App ab dem nächsten TestFlight-Build)

@@ -129,6 +129,10 @@ async def run(t, name, args, st):
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200]})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": ok, "text": answer, "targets": targets})
+        if ok and t.who:
+            svc = homeassistant._intent(text)
+            if svc:   # a switch, not a scene or a value (those are not in the diary yet)
+                homeassistant.diary(t.who["id"], targets, svc)
         return ("Home Assistant: " if ok else "Home Assistant failed: ") + answer \
             + (f" (devices: {', '.join(targets)})" if targets else "")
     if name == "home_assistant_states" and t.ha:
