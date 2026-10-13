@@ -217,5 +217,9 @@ $('fabface').onclick=e=>{e.stopPropagation();if(e.detail>1)return;if(!CFG)api('/
 $('fabface').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fabface').click()}});
 $('fabopen').onclick=()=>{$('fab').classList.remove('open');document.querySelector('nav button[data-s=chat]').click()};
 $('fabstop').onclick=()=>$('chatstop').click();
+// × and Escape fold the window in, also while the guided setup is in it (it stays and comes back with the window);
+// listening and speaking go on, the face shows them
+$('fabx').onclick=e=>{e.stopPropagation();$('fab').classList.remove('open')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('fab').classList.contains('open')&&!document.querySelector('.modal:not(#profmodal)[style*="grid"]'))$('fab').classList.remove('open')});
 // open stays open while the guided setup of "Funktionen vorschlagen" is in it (tipps.js): its steps are done on the page
 document.addEventListener('click',e=>{if(!$('fab').contains(e.target)&&faceMode()==='idle'&&!$('tipsetup'))$('fab').classList.remove('open')});

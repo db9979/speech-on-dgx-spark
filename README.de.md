@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.489** Fenster am Kopf lässt sich mit × oder Escape einklappen und deckt auf kleinen Bildschirmen höchstens die halbe Höhe ab
 - **V01.0.488** „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
 - **V01.0.487** Sicherung aufs NAS: Zertifikat, das nicht zur Adresse passt, per Fingerabdruck annehmen statt Fehler
 - **V01.0.486** Einordnung mit Wahrscheinlichkeit: messen und Schwelle wählen, Label-Masse, Katalogwahl im Einstellungs-Assistenten, Antworten im Hintergrund prüfen, Beschwerde erkennen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
 - **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
 - **V01.0.480** Keine erfundenen „Ja“ oder „Okay“ mehr nach Antworten: Stille, Klicks und der Signalton werden nicht zur Frage
-- **V01.0.479** Private Chats mit Ende-zu-Ende (Schlüssel je Gerät, Sicherheitsnummer, aus); alter Umschlag im Assistenten entfernt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

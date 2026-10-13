@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.489** · 2026-10-13 · Fenster am Kopf unten rechts: × und Escape klappen es ein, auch während „Einrichten“ darin läuft; auf schmalen Bildschirmen und in der iPhone-App höchstens die halbe Höhe, rollt innen, × bleibt sichtbar; Browser-Test
 - **V01.0.488** · 2026-10-13 · „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
 - **V01.0.487** · 2026-10-13 · Sicherung nach außen: NAS mit Zertifikat, das nicht zur Adresse passt (z. B. IP statt Name), über „Zertifikat prüfen“ annehmen (Fingerabdruck vergleichen, genau dieses Zertifikat, Prüfung bleibt an); verständliche Meldung mit Weg; Dienst-Wächter prüft mit demselben Zertifikat
 - **V01.0.486** · 2026-10-13 · Einordnung mit Wahrscheinlichkeit ausgebaut (alles aus): „Einordnung messen“ mit den Testsätzen der Weiche und Schwellen-Vorschlag, Schwelle wählbar, Label-Masse als feste Regel (unsicher = ohne), Anzeige „zwei Reihenfolgen“; Katalogwahl im Einstellungs-Assistenten mit Wahrscheinlichkeit; Antworten im Hintergrund prüfen (Fall „Erfundenes vermutet“); Beschwerde erkennen („geht immer noch nicht“: erst nachsehen, nicht erneut schalten)

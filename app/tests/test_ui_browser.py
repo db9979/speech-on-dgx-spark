@@ -326,6 +326,25 @@ class Browser(unittest.TestCase):
                         await pg.mouse.click(5, h // 2)    # a click on the page keeps the setup open
                         await pg.wait_for_timeout(200)
                         self.assertTrue(await pg.evaluate("$('fab').classList.contains('open')&&!!$('tipsetup')"))
+                        # the window never covers more than half of a small screen, × and Escape fold it in, the
+                        # setup stays and comes back with the window
+                        box = await pg.evaluate("(()=>{const r=$('fabpop').getBoundingClientRect();return [r.top,r.bottom,r.height]})()")
+                        self.assertGreaterEqual(box[0], 0, f"{w}: {box}")
+                        self.assertLessEqual(box[1], h, f"{w}: {box}")
+                        if w < 760:
+                            self.assertLessEqual(box[2], h / 2 + 1, f"{w}: {box}")
+                        await pg.evaluate("$('fabpop').scrollTop=9999")   # × stays in reach when it scrolls
+                        hit = await pg.evaluate("(()=>{const r=$('fabx').getBoundingClientRect();"
+                                                "const e=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);"
+                                                "return !!(e&&e.closest('#fabx'))})()")
+                        self.assertTrue(hit, f"{w}: × is covered or scrolled away")
+                        await pg.click("#fabx")
+                        await self.until(pg, "!$('fab').classList.contains('open')&&!!$('tipsetup')", 20)
+                        self.assertFalse(await pg.is_visible("#fabpop"))
+                        await pg.evaluate("$('fab').classList.add('open')")
+                        await pg.keyboard.press("Escape")
+                        await self.until(pg, "!$('fab').classList.contains('open')", 20)
+                        await pg.evaluate("$('fab').classList.add('open')")
                         await pg.locator("#tipsetup .row .b.p").click()   # Prüfen
                         await self.until(pg, "$('tipsetup').querySelector(':scope>.tipmsg').textContent.length>0", 20)
                         self.assertIn("Eingerichtet", await pg.text_content("#tipsetup>.tipmsg"))

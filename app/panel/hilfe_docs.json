@@ -1908,6 +1908,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Fenster am Kopf einklappen (V01.0.489)",
+"text": "Fenster am Kopf einklappen (V01.0.489): Oben rechts im Fenster des Kopfes steht ein ×, Escape tut dasselbe; es klappt das Fenster ein, auch während „Einrichten“ darin läuft (die Schritte bleiben und kommen mit dem nächsten Öffnen wieder, „Fertig“ beendet sie). Zuhören und Sprechen laufen weiter, der Kopf zeigt sie. Auf schmalen Bildschirmen (unter 760 Pixel Breite oder 600 Pixel Höhe, auch in der iPhone-App) nimmt das Fenster höchstens die halbe Höhe ein und rollt innen; das × bleibt dabei oben sichtbar."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
 "text": "Funktionen vorschlagen (V01.0.380, standardmäßig aus): Der Assistent weist auf eine Funktion hin, die noch aus ist, wenn sie helfen würde, und hilft beim Einrichten. Ob ein Hinweis kommt, entscheiden feste Regeln im Panel (tipps.py), nie das Modell: (1) Wunsch ohne Werkzeug: die Weiche erkennt eine Gruppe (Kalender, Wetter, Einkaufsliste …), deren Funktion bei dir oder auf dem Spark aus ist; (2) halb eingerichtet: z. B. iPhone-App gekoppelt, aber keine Mitteilungen, Postfach verbunden, aber „Wichtige Mails“ aus, zweiter Anmeldeschritt an, aber kein Passkey, eigener Lautsprecher, aber keine Stimme angelernt; (3) Wiederholung: z. B. fünfmal in sieben Tagen im Web gesucht ohne „Erst lokal suchen“ (gezählt wird nur die Art der Frage pro Tag, nie die Worte); (4) neu für dich: der Admin hat etwas eingeschaltet, das du noch nie an hattest. Beim Einrichten (5): ist es nur dein eigener Schalter, zeigt das Kopf-Fenster die Karte „Übernehmen“ (dieselben Regeln und dieselbe Prüfung wie „Einstellungen vorschlagen“, zehn Minuten „Rückgängig“); braucht es Angaben, zeigt es die Schritte aus der Anleitung (für ein Profil ohne die Admin-Schritte) und öffnet die richtige Ich-Seite, Passwörter nur ins"
 },
@@ -5302,6 +5310,14 @@
 "head": "Voice chat",
 "title": "The face at the bottom right everywhere (V01.0.359)",
 "text": "The face at the bottom right everywhere (V01.0.359): the face at the bottom right is there for every login (not for guests) on every page, over Me and in the phone view, also without the Spark help. One tap starts listening and opens its window with \"Open conversation\", \"Stop\" and a field to type in; a second tap stops listening, the second tap of a double tap does not count and marks no text. With the keyboard: tab to the face, then Enter or Space. The page you are on only goes along with \"Ask Spark on every page\". The wall monitor (/live) stays a pure display without a face."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Folding in the face's window (V01.0.489)",
+"text": "Folding in the face's window (V01.0.489): an × at the top right of the face's window, and Escape, fold the window in, also while \"Set up\" is in it (its steps stay and come back the next time the window opens, \"Done\" ends them). Listening and speaking go on, the face shows them. On narrow screens (below 760 pixels wide or 600 pixels high, also in the iPhone app) the window takes at most half the height and scrolls inside; the × stays visible at the top."
 },
 {
 "lang": "en",

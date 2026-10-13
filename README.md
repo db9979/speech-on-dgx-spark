@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.489** The face's window folds in with × or Escape and covers at most half of a small screen
 - **V01.0.488** "Messages" fully moved into chats: fixed group "Alle", announcements and read-aloud on own speakers, old messages carried over; Me → Messages removed, Siri writes into the chat
 - **V01.0.487** Backup to the NAS: accept a certificate that does not fit the address by its fingerprint instead of an error
 - **V01.0.486** Classification with probabilities: measure and choose the threshold, label mass, catalog pick in the settings assistant, background answer check, recognizing complaints
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.482** Switch "Pictures from the Kiwix" now also under Me → Documents
 - **V01.0.481** Daily briefing in the history sorted with lists, the push stays plain text
 - **V01.0.480** No more made-up "Ja" or "Okay" after answers: silence, clicks and the chime never become a question
-- **V01.0.479** Private chats end-to-end (a key per device, safety number, off); old envelope removed from the assistant
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

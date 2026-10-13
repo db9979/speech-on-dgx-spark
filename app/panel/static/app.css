@@ -84,6 +84,12 @@ body.inchat #fab{display:none}
 .fabpop{display:none;width:min(320px,calc(100vw - 40px));background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(16,24,40,.22);padding:12px 14px;animation:pop .2s ease}
 #fab.open .fabpop{display:block}
 .fabstate{font-weight:600;font-size:13px}.fabtext{font-size:13px;color:var(--mut);margin-top:4px;max-height:140px;overflow:auto;white-space:pre-wrap}
+.fabstate{min-height:18px}
+/* sticky: stays in reach when the window scrolls inside */
+.fabx{position:sticky;top:0;float:right;z-index:1;margin:-6px -8px 0 6px;width:28px;height:28px;border:0;border-radius:50%;background:var(--card);color:var(--mut);font-size:20px;line-height:1;cursor:pointer;padding:0}
+.fabx:hover,.fabx:focus-visible{background:var(--line);color:var(--fg)}
+/* on a small screen the window never takes more than half of it: it scrolls inside */
+@media (max-width:760px),(max-height:600px){.fabpop{max-height:50vh!important;overflow:auto;box-sizing:border-box}}
 .fabtext:empty{display:none}.fabrow{display:flex;gap:8px;margin-top:10px}.fabrow .ib{padding:6px 12px;font-size:12px}
 .face .spin{transform-origin:100px 104px;animation:spin 2.2s linear infinite;opacity:0;transition:opacity .3s}
 .face[data-mode=think] .spin,.face[data-mode=search] .spin{opacity:1}
