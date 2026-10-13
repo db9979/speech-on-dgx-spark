@@ -611,7 +611,6 @@ class Classified(unittest.TestCase):
 
 
 # ---------------------------------------------------------------- SFTP and SMB (V2)
-import socket  # noqa: E402
 import threading  # noqa: E402
 
 import paramiko  # noqa: E402
@@ -698,9 +697,7 @@ class _Auth(paramiko.ServerInterface):
 
 
 def _sftp_server(port):
-    ls = socket.socket()
-    ls.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    ls.bind(("127.0.0.1", port))
+    ls = helpers.take_port(port)   # reserved by helpers._port(), nobody else took it
     ls.listen(20)
 
     def one(sock):

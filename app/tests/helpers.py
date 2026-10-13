@@ -18,10 +18,35 @@ TMP = tempfile.mkdtemp(prefix="speech-spark-test-")
 atexit.register(lambda: shutil.rmtree(TMP, ignore_errors=True))
 
 
+_HELD = {}   # port -> its socket, bound but not listening: _port() reserves it until _serve or take_port uses it
+atexit.register(lambda: [s.close() for s in list(_HELD.values())])
+
+
 def _port():
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+    """A free port that stays ours: the socket stays bound until the server for it starts (_serve, take_port).
+    Nothing else on the machine can take it in between; until then a connection is refused like on a dead port.
+    Earlier the port was given back at once and something else on the GitHub runner took it: the fake
+    server never started and every test waited 60 s for it again (run of V01.0.489 cut off after 45 min)."""
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    _HELD[port] = s
+    return port
+
+
+def take_port(port):
+    """The bound socket for port, for a server that listens on it itself; a port not reserved with _port() (or
+    already used once) is bound here. Busy: OSError at once, never a wait."""
+    s = _HELD.pop(port, None)
+    if s is None:
+        s = socket.socket()
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)   # a stopped server's TIME_WAIT is no reason
+            s.bind(("127.0.0.1", port))
+        except OSError:
+            s.close()
+            raise
+    return s
 
 
 LLM_PORT, TTS_PORT, HA_PORT, CAL_PORT = _port(), _port(), _port(), _port()
@@ -726,7 +751,11 @@ def _serve(app, port):
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error",
                                           timeout_graceful_shutdown=5))   # open streams end with it
     server.install_signal_handlers = lambda: None
-    th = threading.Thread(target=lambda: asyncio.run(server.serve()), daemon=True)
+    try:
+        sock = take_port(port)
+    except OSError as e:
+        raise RuntimeError(f"fake server on {port} did not start: port busy ({e.errno})") from None
+    th = threading.Thread(target=lambda: asyncio.run(server.serve(sockets=[sock])), daemon=True)
     th.start()
 
     def stop():
@@ -736,6 +765,8 @@ def _serve(app, port):
     for _ in range(1200):   # 60 s: late in the run (600 profiles) the panel's start took over 5 s on a busy machine
         if server.started:
             return stop
+        if not th.is_alive():   # it ended without starting: say so at once instead of waiting the 60 s
+            break
         time.sleep(0.05)
     raise RuntimeError(f"fake server on {port} did not start")
 

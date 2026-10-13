@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.498** · 2026-10-13 · Selbsttests: Ports der Test-Server bleiben reserviert, bis ihr Server startet; ein belegter Port scheitert sofort statt bei jedem Test 60 s zu warten (Lauf von V01.0.489 nach 45 min abgebrochen); neue Regel in der Richtlinie, Selbsttest
 - **V01.0.497** · 2026-10-13 · Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben, lange Haare mit Seitenscheitel, Lippen bewegen sich mit der Stimme, Ausdrücke wie beim Comic; auch in iPhone-App, Begleitern und Pebble; Tests für jedes Gesicht
 - **V01.0.496** · 2026-10-13 · Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
 - **V01.0.495** · 2026-10-13 · Werkzeug-Abdeckung: Abdeckungsliste mit Selbsttest (Regel 29), Weiche behält genannte Werkzeuge, „Lösch die Erinnerung“ repariert; neu Zustand per Sprache, Dokumentliste, reMarkable-Ablage, Kamerabild, Smart-Home-Regeln; Termine verschieben/löschen, Pläne und Regeln ändern, Meldungen pausieren, Lautstärke, wiederholte Erinnerungen, Gruppen-Nachricht, Rückgängig (alles nach Ja)
