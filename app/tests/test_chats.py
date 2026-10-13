@@ -91,7 +91,9 @@ class Off(Base):
     def test_only_browser_or_app_keys(self):
         a = profile("Chdora")
         uid = uid_of(a)
-        token = profiles.add_device("Lautsprecher", uid)
+        token = profiles.add_device("Chtestgeraet", uid)   # a name no other test writes (Probleme melden checks device names)
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Chtestgeraet")
+        self.addCleanup(profiles.delete_device, did)
         k = TestClient(panel.app)
         r = k.get("/api/chats", headers={profiles.DEVICE_HEADER: token})
         self.assertEqual(r.status_code, 403)

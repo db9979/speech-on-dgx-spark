@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.474** Test fix after V01.0.473: two tests no longer leave a device or a Home Assistant connection behind
 - **V01.0.473** Chats (off): write with the other people of your Spark like in a messenger, in groups too, with photos, files, voice messages and invitations by QR; encrypted on the Spark; Android app 1.2.0 with notes at once, iPhone app with chats
 - **V01.0.472** Own speakers: "Jarvis" while speaking makes them quiet at once, "Stopp" then ends without an answer; new switch "Stop while it speaks" for "Stopp" without the wake word
 - **V01.0.471** Speech output no longer goes silent after a piece with nothing to say (tts_http_400); errors in Logs → Requests as a plain sentence
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.467** Memory check (off): every entry keeps where it came from, fixed rules mark what may be out of date, earlier versions, a check-back in the conversation, topics
 - **V01.0.466** Mail times right: a mail from 20:30 was read out as 18:30 (sender's offset instead of your time zone)
 - **V01.0.465** Presentations with ten slide types, icons, pictures from the Kiwix and checked numbers
-- **V01.0.464** Settings assistant: gaps closed, code word sentences never a case, ideas outside the catalog (off)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

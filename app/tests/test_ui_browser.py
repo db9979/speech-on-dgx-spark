@@ -1374,6 +1374,8 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(klaeren=False, klaeren_merken=False)
             profiles.save_settings(uid, {"klaeren": False, "klaeren_merken": False})
+            import homeassistant
+            homeassistant.remove(uid)   # the next tests start without this profile's Home Assistant
             for x in helpers.HA_STATES:
                 x["state"] = saved.get(x["entity_id"], x["state"])
 
