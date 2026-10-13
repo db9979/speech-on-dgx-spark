@@ -10,6 +10,7 @@ the note tool only when the person's own words name the reMarkable, and it is lo
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import asyncio
+import contextlib
 import datetime
 import hashlib
 import io
@@ -752,6 +753,55 @@ class Fresh(Base):
                 run(remarkable.root(uid))
         finally:
             remarkable.BUSY_WAIT = old
+
+    def test_too_many_requests_waits_as_asked_but_not_long(self):
+        c, uid = self.paired("Rm429")
+        real, waits = CLOUD[0].request, []
+
+        async def slow_down(method, url, *a, **kw):
+            if url == remarkable.ROOT_URL and not waits:
+                return httpx.Response(429, headers={"Retry-After": "120"})
+            return await real(method, url, *a, **kw)
+
+        async def sleep(t):
+            waits.append(t)
+        remarkable._request, old = slow_down, remarkable.asyncio.sleep
+        remarkable.asyncio.sleep = sleep
+        try:
+            self.assertEqual(run(remarkable.root(uid))[0], CLOUD[0].root)
+        finally:
+            remarkable.asyncio.sleep = old
+        self.assertEqual(waits, [remarkable.BUSY_WAIT_MAX])          # Retry-After honoured, but capped
+
+    def test_entries_not_read_name_their_reasons_in_fixed_words(self):
+        """Log-Auszug 2026-10-13: "comparison failed: CloudError" and "15 of 75 entries could not be read" without why."""
+        c, uid = self.paired("Rmwhy")
+        for i in range(8):
+            CLOUD[0].doc(str(uuid.UUID(int=900 + i)), f"Heft {i}", [(P1, page_file("x"))])
+        real, n = remarkable.blob, [0]
+
+        async def blob(uid_, h, name, most=remarkable.MAX_INDEX):
+            if name.endswith(".docSchema") and name != "root.docSchema":
+                n[0] += 1
+                if n[0] % 4 == 0:
+                    raise httpx.ReadTimeout("secret cloud text")
+                raise remarkable.CloudError("file HTTP 429")
+            return await real(uid_, h, name, most)
+        remarkable.blob = blob
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                self.assertIsNone(run(remarkable.run(uid)))
+        finally:
+            remarkable.blob = real
+        log = out.getvalue()
+        self.assertRegex(log, r"remarkable: \d+ of \d+ entries not read \| file HTTP 429 ×\d+, ReadTimeout ×\d+")
+        self.assertRegex(log, r"remarkable: comparison failed: \d+ of \d+ entries could not be read \(file HTTP 429 ×\d+, ReadTimeout ×\d+\)")
+        self.assertNotIn("secret", log)
+        self.assertEqual(remarkable.why(remarkable.CloudError("root HTTP 503")), "root HTTP 503")
+        self.assertEqual(remarkable.why(remarkable.CloudError("upload refused: <html>cloud text")), "CloudError")
+        self.assertEqual(remarkable.why_long(remarkable.CloudError("3 of 9 entries could not be read (x <b>); try again later")),
+                         "CloudError")
 
     @unittest.skipIf(si is None, "rmscene not installed")
     def test_reader_hints_are_counted_not_logged(self):

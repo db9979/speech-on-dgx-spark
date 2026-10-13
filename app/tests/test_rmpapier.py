@@ -33,10 +33,11 @@ if si is not None:
     from rmscene.tagged_block_common import CrdtId, LwwValue
 
 
-def page_mm(m, lines_mm, size=None, tool=None):
-    """A v6 page file with strokes given in mm on the sheet, written in the device's units (and its paper size)."""
+def page_mm(m, lines_mm, size=None, tool=None, units=None):
+    """A v6 page file with strokes given in mm on the sheet, written in the device's units (and its paper size).
+    units: another width across in device units than the paper size says (seen on the Move, 2026-10-13)."""
     size = size or m["px"]
-    k = m["mm"][0] / size[0]
+    k = m["mm"][0] / (units or size[0])
     blocks = list(ss.simple_text_document(" "))
     blocks.insert(2, ss.SceneInfo(current_layer=LwwValue(CrdtId(0, 0), CrdtId(0, 0)), background_visible=LwwValue(CrdtId(0, 0), True),
                                   root_document_visible=LwwValue(CrdtId(0, 0), True), paper_size=tuple(size)))
@@ -360,6 +361,28 @@ class Reading(Paper):
         self.assertTrue(png.content.startswith(b"\x89PNG"))
         self.assertEqual(c.get(f"/api/profile/remarkable/papier/{did}/7.png").status_code, 404)
 
+    def test_the_list_keeps_one_sheet_per_replaced_kind(self):
+        """Dominik 2026-10-13 „räumt sich nicht auf“: 5× Abgleich and 3× Aufgaben side by side in Gelesene Blätter."""
+        c, uid = self.on("Pplist")
+        for _ in range(3):
+            self.assertEqual(c.post("/api/profile/remarkable/papier/abgleich").status_code, 200)
+        d = remarkable.load(uid)
+        ids = sorted(d["papers"], key=lambda i: d["papers"][i]["t"])
+        for n, i in enumerate(ids):
+            d["papers"][i]["t"] = 1_000 + n             # one second apart is enough, never the clock
+        old = str(uuid.UUID(int=4242))
+        d["papers"][old] = {"f": [], "m": "move", "mm": [91.8, 163.2], "t": 500, "k": "morgen", "title": "Morgenblatt",
+                            "pages": 1, "h": "", "gone": True, "read": 600}
+        remarkable.save(uid, d)
+        papers = c.get("/api/profile/remarkable/papier").json()["papers"]
+        self.assertEqual([p["id"] for p in papers if p["kind"] == "kalib"], [ids[-1]])
+        self.assertNotIn(old, [p["id"] for p in papers])                # gone from the device more than a day ago
+        d = remarkable.load(uid)
+        d["papers"][ids[-1]]["gone"] = True                              # deleted on the device by the person
+        remarkable.save(uid, d)
+        papers = c.get("/api/profile/remarkable/papier").json()["papers"]
+        self.assertEqual([p["id"] for p in papers if p["kind"] == "kalib"], [ids[-2]])
+
     def test_marked_sheet_gets_a_new_version_never_new_text_under_the_ink(self):
         c, uid = self.on("Ppneu")
         m = rmpapier.model("move")
@@ -531,6 +554,59 @@ class Tasks(Paper):
         import rmplus
         self.assertEqual(len(rmplus.plus(uid)["todos"]), 1)
         self.assertEqual(remarkable.load(uid)["tasks"]["receipt"], [{"text": "Steuer abgeben", "res": "unklar"}])
+
+    def test_a_page_from_another_model_never_takes_this_models_calibration(self):
+        """Dominik 2026-10-13: the Move was calibrated, the task sheet was ticked on a page that says Paper Pro, and the
+        Move's calibration put every cross 0.59 times too small and off to the side ("die Kreuze falsch")."""
+        c, uid = self.prepared("Ptpro")
+        did, pp = self.sheet(c, uid)
+        m, pro = rmpapier.model("move"), rmpapier.model("pro")
+        d = remarkable.load(uid)
+        d["calib"] = {"move": [m["mm"][0] / m["px"][0], m["mm"][0] / 2, m["mm"][0] / m["px"][0], 0.0]}
+        remarkable.save(uid, d)
+        key = "todo:" + self.TODO["id"]
+        ink(did, [page_mm(m, tick(self.box(pp, key + "|ja")) + tick(self.box(pp, "fertig")), size=pro["px"])])
+        run(rmpapier.check(uid))
+        pp = remarkable.load(uid)["papers"][did]
+        self.assertEqual(pp["r"].get(key + "|ja"), "an")
+        self.assertEqual(pp["r"].get("fertig"), "an")
+        self.assertEqual(rmpapier.calib_key(m, pro["px"]), "move@pro")
+        self.assertEqual(rmpapier.calib_key(m, None), "move")
+        self.assertEqual(rmpapier.calib_key(m, m["px"]), "move")
+
+    def test_ticks_in_larger_units_than_the_page_says_still_hit_their_boxes(self):
+        """Dominik 2026-10-13: the Move's page said 954 across, but the ticks came in units as for 1620 across: every
+        cross 0.59 times too small (task sheet and the second calibration sheet)."""
+        c, uid = self.prepared("Ptunits")
+        did, pp = self.sheet(c, uid)
+        m = rmpapier.model("move")
+        d = remarkable.load(uid)
+        d["calib"] = {"move": [m["mm"][0] / m["px"][0], m["mm"][0] / 2 + 0.4, m["mm"][0] / m["px"][0], -0.3]}
+        remarkable.save(uid, d)
+        key = "todo:" + self.TODO["id"]
+        ink(did, [page_mm(m, tick(self.box(pp, key + "|nein")) + tick(self.box(pp, "fertig")), units=1620)])
+        run(rmpapier.check(uid))
+        r = remarkable.load(uid)["papers"][did]["r"]
+        self.assertEqual((r.get(key + "|nein"), r.get(key + "|ja"), r.get("fertig")), ("an", "leer", "an"))
+        # the calibration sheet in such units fits as well
+        cal = rmpapier.build_calibration(m)[1]
+        lines = []
+        for f in (f for f in cal if f["k"] == "ziel"):
+            cx, cy = f["x"] + f["w"] / 2, f["y"] + f["h"] / 2
+            lines += [dense((cx - 1.5, cy - 1.5), (cx + 1.5, cy + 1.5)), dense((cx + 1.5, cy - 1.5), (cx - 1.5, cy + 1.5))]
+        size, raw = rmpapier.strokes(page_mm(m, lines, units=1620))
+        self.assertEqual(size, tuple(m["px"]))
+        got = rmpapier.fit(cal, {0: raw}, size, m)
+        self.assertIsNotNone(got)
+        self.assertAlmostEqual(got[0], m["mm"][0] / 1620, delta=0.002)
+
+    def test_handwriting_alone_never_moves_the_mapping(self):
+        m = rmpapier.model("move")
+        fields = [{"n": "a|ja", "k": "wahl", "p": 0, "x": 9, "y": 58, "w": 6, "h": 6}]
+        size, raw = rmpapier.strokes(page_mm(m, [dense((20, 100), (70, 100)), dense((20, 110), (70, 110))]))
+        calib = rmpapier.plain(m, m["px"][0])
+        mm, used = rmpapier.best_map(fields, {0: raw}, size, m, calib)
+        self.assertEqual(used, 0)                                     # nothing in any box: the calibration stays
 
     def test_without_done_it_waits_for_quiet(self):
         import rmaufgaben

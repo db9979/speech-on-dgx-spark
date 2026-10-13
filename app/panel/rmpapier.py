@@ -532,6 +532,23 @@ def strokes(data):
     return size, out
 
 
+def calib_key(m, size):
+    """Which calibration belongs to a page: the sheet's model, or "move@pro" when the page says it was written on another
+    model (one account, two devices; Dominik 2026-10-13: the Move's calibration on a page from a Paper Pro put every
+    cross 0.59 times too small and off to the side). Unknown size: the sheet's model."""
+    mk = detect(size)
+    return m["key"] if mk in (None, m["key"]) else f"{m['key']}@{mk}"
+
+
+def _extent(raw):
+    """Where the ink lies in device units (fixed numbers for the journal): x from..to, y from..to."""
+    pts = [pt for ls in raw.values() for ln in ls for pt in ln]
+    if not pts:
+        return "none"
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return f"x {int(min(xs))}..{int(max(xs))}, y {int(min(ys))}..{int(max(ys))}"
+
+
 def to_mm(lines, size, m, calib=None):
     """Device units -> mm on the sheet. The sheet fills the page's width; x counts from the page's middle, y from the
     top. With a calibration [ax, bx, ay, by] that one is used (mm = a·unit + b)."""
@@ -610,9 +627,66 @@ def evaluate(fields, pages):
     return states, ink
 
 
+def widths(size, m):
+    """Device units across the page that a page's strokes may use: its own size, the sheet's model, every model.
+    (Dominik 2026-10-13: on the Move some sheets came back in units 1.7 times as large as others.)"""
+    out = []
+    for w in ([size[0]] if size else []) + [m["px"][0]] + [x["px"][0] for x in MODELS.values()]:
+        if w and float(w) not in out:
+            out.append(float(w))
+    return out
+
+
+def plain(m, w):
+    """The mapping without a calibration for units w across the sheet's width (x from the middle, y from the top)."""
+    k = m["mm"][0] / w
+    return [k, m["mm"][0] / 2, k, 0.0]
+
+
+def boxed(fields, pages):
+    """mm of ink inside the boxes (with their margin): how well a mapping puts the ticks into the boxes."""
+    n = 0.0
+    for p, lines in pages.items():
+        here = [f for f in fields if f["p"] == p and f["k"] != "ziel"]
+        for a, b in _segments(lines):
+            mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+            if any(_inside(mid, f["x"], f["y"], f["w"], f["h"], TOL) for f in here):
+                n += math.dist(a, b)
+    return n
+
+
+def best_map(fields, raw, size, m, calib):
+    """(the strokes in mm, units across or 0 for the calibration): the calibration, unless the page's ink lands clearly
+    better in the boxes with another unit width; then that one (a tick never moves by chance to a box)."""
+    first = to_mm_pages(raw, size, m, calib)
+    best, score, used = first, boxed(fields, first), 0
+    wc = m["mm"][0] / calib[0] if calib and len(calib) == 4 and calib[0] > 0 else 0
+    for w in widths(size, m):
+        # the calibration's own offsets kept, only its scale moved to the other unit width
+        alt = [calib[0] * wc / w, calib[1], calib[2] * wc / w, calib[3]] if wc else plain(m, w)
+        mm = to_mm_pages(raw, size, m, alt)
+        sc = boxed(fields, mm)
+        if sc >= max(2 * score, score + INK_MIN):
+            best, score, used = mm, sc, int(w)
+    return best, used
+
+
+def to_mm_pages(raw, size, m, calib):
+    return {p: to_mm(ls, size, m, calib) for p, ls in raw.items()}
+
+
 def fit(fields, raw_pages, size, m):
-    """A calibration from the four targets: [ax, bx, ay, by] or None when a target has no cross or it does not fit."""
-    rough = {p: to_mm(ls, size, m) for p, ls in raw_pages.items()}
+    """A calibration from the four targets: [ax, bx, ay, by] or None when a target has no cross or it does not fit.
+    Tries every unit width a page may use for the first rough look (widths)."""
+    for w in widths(size, m):
+        got = _fit(fields, raw_pages, plain(m, w))
+        if got:
+            return got
+    return None
+
+
+def _fit(fields, raw_pages, rough_map):
+    rough = {p: to_mm(ls, None, None, rough_map) for p, ls in raw_pages.items()}
     pairs = []
     for f in fields:
         if f["k"] != "ziel":
@@ -649,6 +723,17 @@ def fit(fields, raw_pages, size, m):
 SHADE = {"an": (22, 163, 74), "unklar": (194, 120, 3), "zurück": (120, 120, 120), "leer": (190, 194, 205)}
 
 
+def _pic_font():
+    """The sheets' own font for the control picture (arrows, umlauts), else PIL's small default."""
+    from PIL import ImageFont
+    import docrender
+    reg, _ = docrender._font_files()
+    try:
+        return ImageFont.truetype(reg, 14) if reg else ImageFont.load_default()
+    except OSError:
+        return ImageFont.load_default()
+
+
 def picture(paper, page, lines_mm):
     """The control picture of one page: the boxes (coloured by what was read) and the strokes, PNG."""
     from PIL import Image, ImageDraw
@@ -656,7 +741,9 @@ def picture(paper, page, lines_mm):
     k = 5.0
     im = Image.new("RGB", (int(w * k), int(h * k)), (250, 250, 247))
     dr = ImageDraw.Draw(im)
+    font = _pic_font()
     res = paper.get("r") or {}
+    said = set()
     for f in paper.get("f", []):
         if f["p"] != page:
             continue
@@ -667,8 +754,15 @@ def picture(paper, page, lines_mm):
         if st != "leer":
             pad = TOL * k
             dr.rectangle((box[0] - pad, box[1] - pad, box[2] + pad, box[3] + pad), outline=col, width=4)
-        if f.get("t") and f["k"] != "weg":
-            dr.text((box[2] + 6, box[1]), f["t"][:48], fill=(60, 64, 76))
+        if f.get("t") and f["k"] == "wahl":      # answers side by side: the point once above, each box its answer
+            point, _, answer = f["t"].rpartition(": ")
+            item = f["n"].split("|")[0]
+            if point and item not in said:
+                said.add(item)
+                dr.text((box[0], box[1] - 6 * k), point[:48], fill=(60, 64, 76), font=font)
+            dr.text((box[2] + 6, box[1]), (answer or f["t"])[:24], fill=(60, 64, 76), font=font)
+        elif f.get("t") and f["k"] != "weg":
+            dr.text((box[2] + 6, box[1]), f["t"][:48], fill=(60, 64, 76), font=font)
     for ln in lines_mm:
         pts = [(x * k, y * k) for x, y in ln]
         if len(pts) == 1:
@@ -917,10 +1011,14 @@ async def check(uid, now=None):
             pp["r"] = {"kalib": "an" if got else "unklar"}
             pp["read"] = int(now)
             if got:
-                calib[m["key"]] = got
-            print(f"remarkable: calibration sheet read | {'fits' if got else 'no fit'}", flush=True)
+                calib[calib_key(m, size)] = got
+            page = f"{int(size[0])}x{int(size[1])}" if size else "no size"
+            print(f"remarkable: calibration sheet read | {'fits' if got else 'no fit'} | page {page} | ink {_extent(raw)}",
+                  flush=True)
             continue
-        mm = {p: to_mm(ls, size, m, calib.get(m["key"])) for p, ls in raw.items()}
+        if calib_key(m, size) != m["key"]:
+            print(f"remarkable: sheet for {m['key']} written on {detect(size)}", flush=True)
+        mm, units = best_map(pp["f"], raw, size, m, calib.get(calib_key(m, size)))
         states, ink = evaluate(pp["f"], mm)
         pp["r"], pp["ink"], pp["read"] = states, round(ink, 1), int(now)
         done = await _act(uid, did, it, pp, states, ink, items, new, swap_changes)
@@ -930,7 +1028,10 @@ async def check(uid, now=None):
                 done += rmaufgaben.act(uid, pp, now)
         n_on = sum(1 for v in states.values() if v == "an")
         n_q = sum(1 for v in states.values() if v == "unklar")
-        print(f"remarkable: sheet read | {n_on} ticked, {n_q} unclear, {done} done", flush=True)
+        page = f"{int(size[0])}x{int(size[1])}" if size else "no size"
+        print(f"remarkable: sheet read | {n_on} ticked, {n_q} unclear, {done} done | {m['key']} sheet, page {page}, "
+              f"calibration {'yes' if calib.get(calib_key(m, size)) else 'no'}, units {units or 'calibrated'} | "
+              f"ink {_extent(raw)}", flush=True)
         _live(f"Blatt gelesen: {n_on} angekreuzt, {n_q} unklar")
     await _commit(uid, new, await set_meta(uid, items, swap_changes))
     d = remarkable.load(uid)
@@ -1005,13 +1106,27 @@ DID_DE = {"papierkorb": "in den Papierkorb gelegt", "archiv": "ins Archiv gelegt
           "notizen": "bleibt liegen (Handschrift darauf)"}
 
 
+ONE_SHOWN = ("kalib", "aufgaben")   # kinds whose newest sheet replaces the older ones in the list
+GONE_SHOWN = 86400                  # a sheet the Spark put away ("Kann weg") stays in the list one more day
+
+
 def public(uid):
     d = remarkable.load(uid)
     s = profiles.settings(uid)
     key = model_key(uid, d)
     seen = detect(d.get("paper_size"))
-    out = []
-    for did, pp in sorted((d.get("papers") or {}).items(), key=lambda x: -x[1].get("t", 0))[:15]:
+    out, kinds = [], set()
+    now = time.time()
+    # newest first; within the same second the one added last (place() appends) counts as newer
+    for did, pp in sorted(list((d.get("papers") or {}).items())[::-1], key=lambda x: -x[1].get("t", 0)):
+        k = pp.get("k", "")
+        if k in ONE_SHOWN and k in kinds:
+            continue            # a newer one of this kind is there: the older ones stay out of the list (Dominik 2026-10-13)
+        if pp.get("gone") and (not pp.get("did") or now - int(pp.get("read") or pp.get("t", 0)) > GONE_SHOWN):
+            continue            # deleted on the device: out at once; put away by "Kann weg": one more day
+        kinds.add(k)
+        if len(out) >= 15:
+            break
         res = pp.get("r") or {}
         boxes = [{"n": f["n"], "t": f.get("t", ""), "k": f["k"], "state": res.get(f["n"], "")}
                  for f in pp.get("f", []) if f["k"] != "ziel"]
@@ -1078,7 +1193,9 @@ async def control_picture(did: str, page: int, request: Request, prof=Depends(br
         except (ValueError, asyncio.TimeoutError):
             raw, size = {}, None
         m = model(pp.get("m"))
-        lines = to_mm(raw.get(page, []), size, m, (remarkable.load(uid).get("calib") or {}).get(m["key"]))
+        mm, _ = best_map(pp.get("f", []), {page: raw.get(page, [])}, size, m,
+                         (remarkable.load(uid).get("calib") or {}).get(calib_key(m, size)))
+        lines = mm[page]
     png = await asyncio.to_thread(picture, pp, page, lines)
     return Response(png, media_type="image/png", headers={"Cache-Control": "no-store"})
 

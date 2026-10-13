@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.500** · 2026-10-13 · reMarkable: Kreuze treffen wieder (Abgleich je Gerät, jeder Maßstab probiert), Liste „Gelesene Blätter“ aufgeräumt, Kontrollbild lesbar, Cloud-Fehler mit Grund im Log und einmal Wiederholen bei 429/5xx
 - **V01.0.499** · 2026-10-13 · Docling-Server anbinden (Funktionen → Eigene Dokumente, ab Werk aus): ein docling-serve im Heimnetz liest Dokumente und Scans in ruhigen Momenten noch einmal, mit Tabellen; Scans gehen zuerst an Docling, das Sprachmodell liest nur, was übrig bleibt; https mit geprüftem oder angenommenem Zertifikat, http nur im Heimnetz, Schlüssel verschlüsselt, „Probe lesen“; jedes Profil kann es unter Ich → Dokumente für sich ausschalten, Gäste nie; Live, Dienst-Wächter, Logs, Sicherung
 - **V01.0.498** · 2026-10-13 · Selbsttests: Ports der Test-Server bleiben reserviert, bis ihr Server startet; ein belegter Port scheitert sofort statt bei jedem Test 60 s zu warten (Lauf von V01.0.489 nach 45 min abgebrochen); neue Regel in der Richtlinie, Selbsttest
 - **V01.0.497** · 2026-10-13 · Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben, lange Haare mit Seitenscheitel, Lippen bewegen sich mit der Stimme, Ausdrücke wie beim Comic; auch in iPhone-App, Begleitern und Pebble; Tests für jedes Gesicht

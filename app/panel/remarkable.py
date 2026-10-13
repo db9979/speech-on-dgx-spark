@@ -231,8 +231,38 @@ async def user_token(uid, fresh=False):
     return tok
 
 
-BUSY = (502, 503, 504)          # the cloud's gateway was briefly busy: one more try (uploads go by hash, the root by generation)
-BUSY_WAIT = 2
+BUSY = (429, 500, 502, 503, 504)   # the cloud was briefly busy or asked to slow down: one more try after a pause
+BUSY_WAIT = 2                       # (uploads go by hash, the root by generation, so a second try is harmless)
+BUSY_WAIT_MAX = 10                  # at most this long when the cloud says Retry-After
+
+
+def _pause(r):
+    try:
+        return min(BUSY_WAIT_MAX, max(BUSY_WAIT, int(r.headers.get("retry-after", BUSY_WAIT))))
+    except (TypeError, ValueError, AttributeError):
+        return BUSY_WAIT
+
+
+SAFE_WHY = re.compile(r"(file|root|upload|put|send) HTTP \d{3}|bad hash|not connected")
+
+
+def why(e):
+    """Fixed words and numbers for the journal: the cloud's status for our own CloudError texts, else the type."""
+    return str(e) if isinstance(e, CloudError) and SAFE_WHY.fullmatch(str(e)) else type(e).__name__
+
+
+def why_long(e):
+    """why(e), and for the listing's own summary its counts and reasons (built from why() only)."""
+    m = re.fullmatch(r"(\d+ of \d+ entries could not be read) \(((?:[A-Za-z0-9 ]+ ×\d+)(?:, [A-Za-z0-9 ]+ ×\d+)*)\); try again later", str(e)) if isinstance(e, CloudError) else None
+    return f"{m.group(1)} ({m.group(2)})" if m else why(e)
+
+
+def why_count(errors):
+    """"file HTTP 429 ×12, ReadTimeout ×3": the reasons of a batch, most frequent first."""
+    seen = {}
+    for e in errors:
+        seen[why(e)] = seen.get(why(e), 0) + 1
+    return ", ".join(f"{k} ×{n}" for k, n in sorted(seen.items(), key=lambda x: (-x[1], x[0])))
 
 
 async def _authed(uid, method, url, most=MAX_INDEX, headers=None, **kw):
@@ -241,7 +271,7 @@ async def _authed(uid, method, url, most=MAX_INDEX, headers=None, **kw):
         r = await _request(method, url, await user_token(uid, fresh=True), most, headers, **kw)
     if r.status_code in BUSY:
         print(f"remarkable: cloud answered HTTP {r.status_code}, trying once more", flush=True)
-        await asyncio.sleep(BUSY_WAIT)
+        await asyncio.sleep(_pause(r))
         r = await _request(method, url, await user_token(uid), most, headers, **kw)
     return r
 
@@ -379,7 +409,7 @@ async def refresh_library(uid):
                              "parent": parent if parent == "trash" or ID.fullmatch(parent) else "",
                              "folder": folder, "kind": kind, "n": 0 if folder else len(page_order(content)), "mod": mod}
 
-    failed = 0
+    failed, errors = 0, []
     try:
         got_all = await asyncio.gather(*(one(e) for e in todo), return_exceptions=True)
     finally:
@@ -391,10 +421,13 @@ async def refresh_library(uid):
             if not isinstance(got, (CloudError, httpx.HTTPError, ValueError, netguard.TooLarge)):
                 raise got
             failed += 1
+            errors.append(got)
             if e["id"] in old:        # a hiccup never makes a notebook disappear: the last listing stays
                 out[e["id"]] = old[e["id"]]
+    if failed:
+        print(f"remarkable: {failed} of {len(todo)} entries not read | {why_count(errors)}", flush=True)
     if failed > max(3, len(todo) // 10):
-        raise CloudError(f"{failed} of {len(todo)} entries could not be read; try again later")
+        raise CloudError(f"{failed} of {len(todo)} entries could not be read ({why_count(errors)}); try again later")
     _save_library(uid, out)
     return out
 
@@ -651,7 +684,7 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
             typed, marks, jpeg, ink = await asyncio.wait_for(asyncio.to_thread(parse_page, data, draw, size), 60)
         except (ValueError, asyncio.TimeoutError, CloudError, httpx.HTTPError) as e:
             failed += 1
-            print("remarkable: page not read:", type(e).__name__, flush=True)
+            print("remarkable: page not read:", why(e), flush=True)
             continue
         except Exception as e:            # rmscene on a file it does not know
             failed += 1
@@ -698,7 +731,7 @@ async def due_once(idle=True, now=None):
             try:
                 rh, _ = await root(uid)
             except (CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
-                print("remarkable: quick look failed:", type(e).__name__, flush=True)
+                print("remarkable: quick look failed:", why(e), flush=True)
                 continue
             if rh == d.get("root"):
                 continue
@@ -719,7 +752,7 @@ async def run(uid):
         d["more"] = False
         save(uid, d)
         hintergrund.note(uid, "remarkable", False)
-        print("remarkable: comparison failed:", type(e).__name__, flush=True)
+        print("remarkable: comparison failed:", why_long(e), flush=True)
         return None
     if _Hints.n:
         print(f"remarkable: {_Hints.n} reader hint(s) about newer page parts it skips (usual with newer reMarkable software)", flush=True)
@@ -952,7 +985,7 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="
     try:
         items = await refresh_library(uid)
     except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
-        print("remarkable: listing before sending:", _redact(e), "- using the last listing", flush=True)
+        print("remarkable: listing before sending:", why_long(e), "- using the last listing", flush=True)
         items = library(uid)
     mine = (load(uid).get("own") or {}).get(own) if own else None
     renew = mine if mine and ID.fullmatch(str(mine)) and mine in items and not items[mine].get("folder") else None

@@ -640,7 +640,7 @@ async def due_once(idle=True, now=None, uids=None):
             except (remarkable.CloudError, ValueError, httpx.HTTPError, remarkable.netguard.Blocked,
                     remarkable.netguard.TooLarge) as e:
                 why = remarkable._redact(e if isinstance(e, (ValueError, remarkable.CloudError)) else type(e).__name__)
-                print(f"remarkable: {what} failed:", why, flush=True)
+                print(f"remarkable: {what} failed:", remarkable.why_long(e), flush=True)
                 hintergrund.note(uid, "remarkable", False)
                 _shown(what, None, False, why="Fehler")
                 live.job(LIVE_WHY[what], "reMarkable", t0, ok=False, uid=uid)   # the way to the reMarkable
@@ -798,6 +798,6 @@ async def guide_route(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(400, str(e))
     except (remarkable.CloudError, httpx.HTTPError, remarkable.netguard.Blocked, remarkable.netguard.TooLarge) as e:
         why = remarkable._redact(e if isinstance(e, remarkable.CloudError) else type(e).__name__)
-        print("remarkable: guide failed:", why, flush=True)
+        print("remarkable: guide failed:", remarkable.why_long(e), flush=True)
         raise HTTPException(502, "reMarkable-Cloud: " + why)
     return {"where": r["where"], "renewed": r["renewed"]}

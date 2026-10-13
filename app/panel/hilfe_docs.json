@@ -1852,6 +1852,38 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Kreuze in anderen Einheiten (V01.0.500, Dominik 2026-10-13 „aktueller abgleich passt nicht“): Der Move lieferte bei manchen Blättern Striche in Einheiten wie für 1620 Punkte Breite, obwohl die Seite 954 nennt; jedes Kreuz lag 0,59-mal zu klein. Der Abgleich probiert jetzt jede mögliche Breite (rmpapier.widths, fit), und beim Lesen nimmt best_map statt des Abgleichs eine andere Breite nur, wenn die Tinte damit klar besser in den Kästchen liegt (doppelt so viel und mindestens INK_MIN); Handschrift allein verschiebt nichts. Das Journal nennt Seitengröße, benutzte Einheiten und wo die Tinte liegt („page 954x1696 … units 1620 | ink x … y …“). Selbsttests test_rmpapier.Tasks.test_ticks_in_larger_units_than_the_page_says_still_hit_their_boxes und test_handwriting_alone_never_moves_the_mapping."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "„Gelesene Blätter“ aufgeräumt (V01.0.500, Dominik 2026-10-13 „räumt sich nicht auf“): Von Abgleich- und Aufgabenblättern zeigt die Liste nur das neueste (rmpapier.ONE_SHOWN), auf dem Gerät gelöschte sofort nicht mehr, mit „Kann weg“ weggelegte noch einen Tag (GONE_SHOWN); ungelesene zeigen, wann sie geschickt wurden. Selbsttest test_rmpapier.Reading.test_the_list_keeps_one_sheet_per_replaced_kind."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Kreuze von einem anderen Gerät (V01.0.500, Dominik 2026-10-13 „Aufgaben blatt sind die kreuze falsch“): Ein Blatt, dessen Seite ein anderes Modell nennt als das, für das es gebaut wurde (ein Konto, zwei Geräte), nimmt nicht mehr den Abgleich des anderen Geräts: rmpapier.calib_key gibt dann „move@pro“, ohne eigenen Abgleich gilt die Seitengröße (vorher lag jedes Kreuz 0,59-mal zu klein und seitlich versetzt). Das Journal sagt „remarkable: sheet for move written on pro“. Das Kontrollbild zeigt bei Antworten nebeneinander den Punkt einmal darüber und an jedem Kästchen nur die Antwort, mit der Schrift der Blätter (Pfeile, Umlaute). Selbsttest test_rmpapier.Tasks.test_a_page_from_another_model_never_takes_this_models_calibration."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Gründe im Log, wenn die reMarkable-Cloud hakt (V01.0.500, Log-Auszug Dominik 2026-10-13): Statt „comparison failed: CloudError“ nennt das Journal die Gründe mit festen Wörtern und Zahlen, z. B. „remarkable: 15 of 75 entries not read | file HTTP 429 ×12, ReadTimeout ×3“ (remarkable.why, why_count, why_long; fremder Cloud-Text kommt nie ins Journal). Antwortet die Cloud mit 429 oder 500/502/503/504, wartet der Spark einmal (Retry-After beachtet, höchstens 10 s) und versucht es noch einmal. Selbsttests in test_remarkable."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b)",
 "text": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b): Admin-Unterschalter „Aufgabenblatt zum Ankreuzen“ unter „Papier fürs reMarkable“ (chat.remarkable_tasks, aus, nie Gäste; code: app/panel/rmaufgaben.py); nach Dominiks Freigaberegel ohne eigenen Profil-Schalter: das erste Blatt holt jedes Profil selbst (Ich → reMarkable → Papier → „Aufgabenblatt schicken“ oder per Sprache), danach erneuert es sich, bis „Kann weg“ darauf angekreuzt oder es auf dem Gerät gelöscht ist. Ein lebendes PDF im Ordner „Spark/Aufgaben“ mit dem, was offen ist, je Punkt Kästchen mit festen Antworten: Aufgaben aus der Handschrift (Erinnern morgen 9 Uhr / Weg / Später, rm_todo), Gedächtnis-Einträge „vielleicht veraltet“ oder „Widerspruch“ (Stimmt / Stimmt nicht / Später, „Gedächtnis prüfen“), Vorschläge für die eigenen Einstellungen (Übernehmen / Nein). Nur für ein Admin-Profil (Rolle Inhaber oder Mit-Admin): offene Vorschläge des Einstellungs-Assistenten außer Stufe C, U, I und P (Übernehmen / Ablehnen / Später, angekreuzt = direkt ausgeführt, Dominik 2b; Rolle und Schalter werden beim Ausführen erneut geprüft) und der Praxistest nach einem Update (die neuen Zeilen aus CHANGELOG.md, Klappt / Klappt ni"
 },
@@ -5406,6 +5438,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": ", executed directly) and the field test on paper."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Crosses in other units (V01.0.500, Dominik 2026-10-13 \"current calibration does not fit\"): the Move delivered strokes on some sheets in units as for 1620 points across while the page said 954; every cross landed 0.59 times too small. The calibration now tries every possible width (rmpapier.widths, fit), and when reading, best_map takes another width instead of the calibration only when the ink then lies clearly better in the boxes (twice as much and at least INK_MIN); handwriting alone moves nothing. The journal names the page size, the units used and where the ink lies (\"page 954x1696 … units 1620 | ink x … y …\"). Self-tests test_rmpapier.Tasks.test_ticks_in_larger_units_than_the_page_says_still_hit_their_boxes and test_handwriting_alone_never_moves_the_mapping."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "\"Gelesene Blätter\" tidied (V01.0.500, Dominik 2026-10-13 \"it does not tidy up\")",
+"text": "\"Gelesene Blätter\" tidied (V01.0.500, Dominik 2026-10-13 \"it does not tidy up\"): of calibration and task sheets the list shows only the newest (rmpapier.ONE_SHOWN), sheets deleted on the device not at all, ones put away by \"Kann weg\" one more day (GONE_SHOWN); unread ones show when they were sent. Self-test test_rmpapier.Reading.test_the_list_keeps_one_sheet_per_replaced_kind."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Crosses from another device (V01.0.500, Dominik 2026-10-13 \"the crosses on the task sheet are wrong\"): a sheet whose page names another model than the one it was built for (one account, two devices) no longer takes the other device's calibration: rmpapier.calib_key then gives \"move@pro\", without a calibration of its own the page size counts (before, every cross landed 0.59 times too small and off to the side). The journal says \"remarkable: sheet for move written on pro\". With answers side by side the control picture shows the point once above and only the answer at each box, in the sheets' own font (arrows, umlauts). Self-test test_rmpapier.Tasks.test_a_page_from_another_model_never_takes_this_models_calibration."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Reasons in the log when the reMarkable cloud stalls (V01.0.500, log excerpt Dominik 2026-10-13): instead of \"comparison failed: CloudError\" the journal names the reasons in fixed words and numbers, e.g. \"remarkable: 15 of 75 entries not read | file HTTP 429 ×12, ReadTimeout ×3\" (remarkable.why, why_count, why_long; the cloud's own text never reaches the journal). When the cloud answers 429 or 500/502/503/504 the Spark waits once (Retry-After honoured, at most 10 s) and tries again. Self-tests in test_remarkable."
 },
 {
 "lang": "en",

@@ -175,8 +175,8 @@ function rmPaper(p){const E=icEl,w=E('div');
     if(!p.papers.length){w.appendChild(icList([icEmpty(t('Noch keine Blätter. Das nächste Morgenblatt oder eine Antwort kommt als Blatt.','No sheets yet. The next morning sheet or answer comes as a sheet.'))]));return w}
     const pic=E('div');pic.id='rmpic';
     const rows=p.papers.map(x=>{const cnt=s=>x.boxes.filter(b=>b.state===s).length;
-      let meta=x.read?t('gelesen ','read ')+rmWhen(x.read):t('noch nicht ausgefüllt','not filled in yet');
-      if(x.kind==='kalib')meta+=' · '+(x.calib==='an'?t('abgeglichen','calibrated'):x.calib?t('Kreuze nicht gefunden, bitte noch einmal','crosses not found, please again'):'');
+      let meta=x.read?t('gelesen ','read ')+rmWhen(x.read):t('geschickt ','sent ')+rmWhen(x.t)+' · '+t('noch nicht ausgefüllt','not filled in yet');
+      if(x.kind==='kalib'&&x.calib)meta+=' · '+(x.calib==='an'?t('abgeglichen','calibrated'):t('Kreuze nicht gefunden, bitte noch einmal','crosses not found, please again'));
       else if(x.read)meta+=' · '+t(`${cnt('an')} angekreuzt, ${cnt('unklar')} unklar`,`${cnt('an')} ticked, ${cnt('unklar')} unclear`);
       if(x.did)meta+=' · '+t(...(RMDID[x.did]||['','']));
       if(x.ink)meta+=' · '+t('mit Handschrift','with handwriting');
