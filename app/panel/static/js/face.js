@@ -1,4 +1,5 @@
-// The assistant's faces (eyes, mouth, moods). The admin picks one for everybody (chat.face, whoami "face"):
+// The assistant's faces (eyes, mouth, moods). The admin picks the Spark's (chat.face), each profile may pick its own
+// under Ich → Gespräch → Anzeige (whoami "face" is the one to show):
 // "robot" (the first face) or "comic" (a caricature of Dominik) or "comic_woman" (a woman drawn the same way). A new face is one more drawing here,
 // one more name in core.FACES and one more option under Einstellungen → Vorgaben.
 // ---------------------------------------------------------------- assistant face
@@ -169,6 +170,29 @@ function comicIcon(){if(COMIC_ICON[FACE_KIND])return COMIC_ICON[FACE_KIND];const
 function faceIcon(){document.body.dataset.face=FACE_KIND;if(COMICS[FACE_KIND])document.documentElement.style.setProperty('--avface',comicIcon())}
 window.setFaceKind=k=>{k=k==='comic'||k==='comic_woman'?k:'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
 window.setFaceLife=on=>{on=on===true;if(on===FACE_LIFE)return;FACE_LIFE=on;FL.act='';FL.happyNext=false;FL.happyUntil=0;FL.quiet=performance.now();mountAll()};
+// Gesicht (plaene/suche-gesicht.md): the Spark's face (chat.face, whoami "face_spark") and the profile's own pick
+// (Ich → Gespräch → Anzeige, S.face; "" = the Spark's). Only the fixed names; anything else is the robot.
+let FACE_SPARK='robot';
+const faceOk=k=>k==='robot'||k==='comic'||k==='comic_woman';
+window.setFaceSpark=k=>{FACE_SPARK=faceOk(k)?k:'robot'};
+window.faceSpark=()=>FACE_SPARK;
+// the face this browser shows: the signed-in profile's own pick, else the Spark's
+window.faceApply=()=>{const own=typeof PROFILE!=='undefined'&&PROFILE&&typeof S!=='undefined'&&S?S.face:'';setFaceKind(faceOk(own)?own:FACE_SPARK)};
+// a still of a face by name for the pick tiles, from the fixed drawings only
+let faceTileN=0;
+function faceStill(k){const sfx='T'+(++faceTileN);return COMICS[k]?COMICS[k][1](sfx).svg:FACE_SVG.replace(/\b(fhead|fshine|fglow|fsoft)\b/g,'$1'+sfx)}
+// picture tiles for every face select (select.facesel) under root: a tap sets the select and sends "change", so
+// saving stays the select's own way; called again after the select got a value from code, the tiles follow it
+window.faceTiles=root=>{(root||document).querySelectorAll('select.facesel').forEach(sel=>{let box=sel.nextElementSibling;
+  if(!box||!box.classList.contains('facetiles')){box=document.createElement('div');box.className='facetiles';box.setAttribute('role','radiogroup');box.style.setProperty('--n',sel.options.length);
+    const lb=sel.closest('.setrow')&&sel.closest('.setrow').querySelector('.lbl>b');if(lb)box.setAttribute('aria-label',lb.textContent);
+    [...sel.options].forEach(o=>{const b=document.createElement('button');b.type='button';b.className='facetile';b.dataset.v=o.value;b.setAttribute('role','radio');
+      const pic=document.createElement('span');pic.className='facepic';const k=o.value||FACE_SPARK;pic.innerHTML=faceStill(faceOk(k)?k:'robot');
+      const l=document.createElement('span');l.className='facelbl';l.textContent=o.dataset.short||o.textContent;b.title=o.textContent;b.append(pic,l);
+      b.onclick=()=>{if(sel.disabled||sel.value===o.value)return;sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));faceTiles(box.parentNode)};
+      box.appendChild(b)});
+    sel.after(box)}
+  box.querySelectorAll('.facetile').forEach(b=>{const on=b.dataset.v===sel.value;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');b.disabled=sel.disabled})})};
 mountAll();
 const F={open:0,smile:1,eyeH:24,lx:0,ly:0,halo:.25,cheeks:.6,blink:0,next:performance.now()+2500,mx:-1,my:-1};
 // the comic face's own life: looking around, heavy lids, brows, head tilt (one state for both places)

@@ -50,7 +50,7 @@ import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 from common import load_config, no_think  # noqa: E402
-from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
+from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
 
@@ -2681,10 +2681,9 @@ async def watch_ask(request: Request):
     prof = profiles.current(request)
     job.task = asyncio.create_task(_watch_run(job, response, prof, text, inner.get("tz")))
     watch.JOBS[job.id] = job
-    face = load_config().get("chat", {}).get("face")
-    # the face the admin picked for everybody, so the watch shows the same one (fixed names only)
+    # the profile's face (own pick, else the Spark's), so the watch shows the same one (fixed names only)
     import pebblewatch
-    return {"id": job.id, "format": "ima-adpcm-8k", "face": face if face in FACES else "robot",
+    return {"id": job.id, "format": "ima-adpcm-8k", "face": profiles.face_of(prof["id"] if prof else None, load_config().get("chat", {})),
             # the panel serves a newer watch app than the one asking: the phone shows a short note
             "app_new": pebblewatch.newer_app(body.get("app"))}
 

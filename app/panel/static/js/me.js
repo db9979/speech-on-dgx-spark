@@ -623,7 +623,10 @@ const SETF=[
   // Einstellungs-Assistent (faelle.py, berater.py): 👍/👎, the feedback, and for admin profiles its notes and questions
   {g:t('Verbessern','Improve'),k:'rate_back',type:'bool',prof:1,need:'rateback',l:t('Sagen, wenn es behoben ist','Tell me when it is fixed'),h:t('Hat eine Änderung nach deinem 👎 geholfen, bekommst du einmal einen Hinweis.','When a change after your 👎 helped, you get one note.')},
   {k:'berater_note',type:'bool',prof:1,need:'beratnote',only:'berateradmin',l:t('Hinweis bei neuem Vorschlag','Note on a new proposal'),h:t('Gibt es einen neuen Vorschlag unter Zustand → Verbessern, bekommst du einen Hinweis, höchstens drei am Tag.','When there is a new proposal under Status → Improve, you get a note, at most three a day.')},
-  {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
+  // Gesicht (plaene/suche-gesicht.md): the profile's own face on all its devices; "" = the Spark's (Einstellungen → Vorgaben).
+  // me: only on the own page, never a preset of the admin (who picks the Spark's face itself)
+  {g:t('Anzeige','Display'),k:'face',type:'face',prof:1,me:1,l:t('Gesicht','Face'),h:t('Nur für dich, auf all deinen Geräten: Panel, iPhone, Mac, Windows und Pebble.','Just for you, on all your devices: panel, iPhone, Mac, Windows and Pebble.')},
+  {k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')},
   {g:t('Datenschutz','Privacy'),k:'trace_name',type:'bool',prof:1,need:'trace',l:t('Mein Name im Anfragen-Log','My name in the request log'),h:t('Unter Zustand → Logs → Anfragen sieht der Admin, welchen Weg deine Anfragen nehmen (Werkzeuge, Zeiten), nie was du fragst oder was die Antwort war. Mit diesem Schalter stehen dort dein Name und dein Gerät, sonst nur „Profil“. Ändern nur in deiner eigenen Anmeldung im Browser.','Under Status → Logs → Requests the admin sees which way your requests take (tools, times), never what you ask or what the answer was. With this switch your name and device show there, otherwise only "Profile". Can only be changed in your own browser login.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
@@ -636,11 +639,14 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
   // guests: default voice, nothing learned. need: a switch of the admin; switched off it stays visible, locked with
   // the reason (V01.0.270). The admin page presets only what is no function of its own (follow, echo: preset:1);
   // the profiles' function switches are set under Funktionen → Wer darf was.
-  const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||!admin||f.preset)&&(!f.only||admin||ALLOW[f.only]));
+  const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||!admin||f.preset)&&(!f.only||admin||ALLOW[f.only])&&(!f.me||!admin));
   const why=f=>!admin&&f.need&&!ALLOW[f.need]?t('Vom Admin ausgeschaltet','Switched off by the admin'):'';
   let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
+    else if(f.type==='face'){const nm={robot:t('Roboter','Robot'),comic:'Comic',comic_woman:t('Comic (Frau)','Comic (woman)')},sp=window.faceSpark?faceSpark():'robot';
+      ctl=`<select id="${id}" class="facesel" data-noseg>${[['',t('Vorgabe','Default')+' ('+nm[sp]+')'],['robot',nm.robot],['comic',nm.comic],['comic_woman',nm.comic_woman]]
+        .map(([a,b])=>`<option value="${a}"${a?'':` data-short="${esc(t('Vorgabe','Default'))}"`}${(v[f.k]||'')===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`}
     else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;
     else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
@@ -651,6 +657,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     if(f.type==='text'&&ev.type==='input')return;   // saved when the field is left
     if(f.type==='range')$(e.id+'_o').textContent=val.toFixed(2)+'×';
     if(v[f.k]===val||(f.type==='range'&&ev.type==='input'))return;v[f.k]=val;onchange&&onchange(f.k,val)}});
+  if(window.faceTiles)faceTiles(el);
   if(!admin)meLayout(el);
   if(!admin&&window.cxWhoRows)cxWhoRows(el);   // „Wer darf mir schreiben“: the picked and blocked ones, the Rufname (chats.js)
   return()=>({...v})}
@@ -669,7 +676,7 @@ function meLayout(el){const panes=[...el.querySelectorAll(':scope>.setpane')];
     fold.before(d);d.append(s,fold);fold.querySelector(':scope>h3.sec').remove()}
   panes.forEach(p=>{const empty=!p.querySelector('.setrow');p.hidden=empty;const d=p.closest('details.mefold');if(d)d.hidden=empty});
   if(window.pageGroup)el.querySelectorAll('.setpane').forEach(window.pageGroup);if(window.pageSeg)window.pageSeg(el)}
-function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();syncSettings()}
+function applySet(){$('chathands').checked=!!S.hands;if(window.faceApply)faceApply();if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();syncSettings()}
 async function refreshAllow(){const d=await (await fetch('/api/profile/settings')).json();
   const a=d&&d.allow||{};if(JSON.stringify(a)===JSON.stringify(ALLOW))return;ALLOW=a;
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}

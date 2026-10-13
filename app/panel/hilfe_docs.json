@@ -589,7 +589,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Seit V01.0.497 gibt es als dritte Wahl *Comic (Frau)*: eine Frau mit langen dunklen Haaren und Seitenscheitel, im selben Stil gezeichnet, mit Wimpern und Lippen, die sich beim Sprechen öffnen; sie bewegt sich wie das Comic-Gesicht und zeigt auch die Ausdrücke. iPhone-App, Begleiter (Mac und Windows, als ruhendes Bild) und Pebble zeichnen sie ebenso. Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Ne"
+"text": "bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Seit V01.0.497 gibt es als dritte Wahl *Comic (Frau)*: eine Frau mit langen dunklen Haaren und Seitenscheitel, im selben Stil gezeichnet, mit Wimpern und Lippen, die sich beim Sprechen öffnen; sie bewegt sich wie das Comic-Gesicht und zeigt auch die Ausdrücke. iPhone-App, Begleiter (Mac und Windows, als ruhendes Bild) und Pebble zeichnen sie ebenso. Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.521 wählt jedes Profil sein eigenes Gesicht unter Ich → Gespräch → *Anzeige* mit Bildern (*Vorgabe*, *Roboter*, *Comic*, *Comic (Frau)*); es gilt auf allen Geräten des Profils (Panel, iPhone-App, Begleiter, Pebble), *Vorgabe* nimmt das Gesicht des Spark. In der iPhone-App steht dieselbe Wahl ganz oben unter Einstellungen → *Gesicht* (mit dem n"
 },
 {
 "lang": "de",
@@ -597,7 +597,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "tz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, bei einem Fehler schaut es ratlos mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste oder die Maus über dem Gesicht wecken es."
+"text": "ächsten TestFlight-Build). Die Wahl des Admins steht seitdem ganz oben unter Einstellungen → Vorgaben → *Gesicht*, ebenfalls mit Bildern, und gilt für Gäste, geteilte Geräte und alle, die nichts Eigenes gewählt haben; die Vorgaben kopieren nie ein Gesicht in ein Profil. Der Server nimmt nur die festen Namen an (profiles.FACES), alle Geräte fragen über profiles.face_of. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Netz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, bei einem Fehler schaut es ratlos mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste od"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "er die Maus über dem Gesicht wecken es."
 },
 {
 "lang": "de",
@@ -2517,7 +2525,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "Das Menü (seit V01.0.145, Design „Klar“) steht am Rechner als Leiste links, am Handy unten (Assistent, Ich, Zustand, Verwalten). Ganz oben sucht Suchen (Strg K bzw. ⌘ K, seit V01.0.265) in Seiten, Schaltern, Einstellungen, Ich, Prüfen, Logs und Anleitungen; ein Treffer öffnet die Stelle und markiert sie. Steht in einem Hinweis oder einer Antwort ein Weg wie „Einstellungen → Spark → Betrieb“ oder „Ich → Dokumente“, ist er ein Link, der genau dorthin springt (seit V01.0.433). Darunter stehen Assistent und Ich für dich selbst, dann unter *Spark verwalten* die Admin-Seiten Zustand, Funktionen, Personen und Geräte und Einstellungen (seit V01.0.265; „Einbinden“ gibt es nicht mehr). Zustand, Funktionen und Personen und Geräte zeigen ihre Unterseiten wie Einstellungen: am Rechner als zweite Spalte, am Handy als Liste mit einer Zeile Stand, die die Seite öffnet (oben „zurück“); neben „Einstellungen“ zählt eine Zahl die ungespeicherten Seiten. Am Rechner öffnet „Ich“ seit V01.0.147 als Seite rechts neben der Leiste statt als Fenster; ein anderer Menüpunkt schließt es."
+"text": "Das Menü (seit V01.0.145, Design „Klar“) steht am Rechner als Leiste links, am Handy unten (Assistent, Ich, Zustand, Verwalten). Ganz oben sucht Suchen (Strg K bzw. ⌘ K, seit V01.0.265) in Seiten, Schaltern, Einstellungen, Ich, Prüfen, Logs und Anleitungen; ein Treffer öffnet die Stelle und markiert sie. Seit V01.0.521 steht der Knopf auch für angemeldete Profile in der Leiste, am Handy sitzt eine Lupe oben im Assistenten (Admin und Profil), das Suchfenster passt auf schmale Bildschirme und schließt mit ✕. Steht in einem Hinweis oder einer Antwort ein Weg wie „Einstellungen → Spark → Betrieb“ oder „Ich → Dokumente“, ist er ein Link, der genau dorthin springt (seit V01.0.433). Darunter stehen Assistent und Ich für dich selbst, dann unter *Spark verwalten* die Admin-Seiten Zustand, Funktionen, Personen und Geräte und Einstellungen (seit V01.0.265; „Einbinden“ gibt es nicht mehr). Zustand, Funktionen und Personen und Geräte zeigen ihre Unterseiten wie Einstellungen: am Rechner als zweite Spalte, am Handy als Liste mit einer Zeile Stand, die die Seite öffnet (oben „zurück“); neben „Einstellungen“ zählt eine Zahl die ungespeicherten Seiten. Am Rechner öffnet „Ich“ seit V01.0.147 als Sei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": "te rechts neben der Leiste statt als Fenster; ein anderer Menüpunkt schließt es."
 },
 {
 "lang": "de",
@@ -2749,7 +2765,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Benutzen",
 "title": "Benutzen",
-"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter, Comic oder Comic (Frau), der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor."
+"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter, Comic oder Comic (Frau); seit V01.0.521 wählst du es selbst ganz oben unter Einstellungen → *Gesicht* in der App oder im Panel unter Ich → Gespräch, sonst gilt die Vorgabe des Admins; die App übernimmt es beim Öffnen und nach der Wahl, mit dem nächsten TestFlight-Build): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spar"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Benutzen",
+"title": "Benutzen",
+"text": "k fragen“): Siri fragt nach der Frage und liest die Antwort vor."
 },
 {
 "lang": "de",
@@ -4581,7 +4605,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "the upper lip). Since V01.0.497 there is a third choice, *Comic (woman)*: a woman with long dark hair and a side parting, drawn in the same style, with lashes and lips that open when she speaks; she moves like the comic face and shows the expressions too. The iPhone app, the companions (Mac and Windows, as a still) and the Pebble draw her too. The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, tho"
+"text": "the upper lip). Since V01.0.497 there is a third choice, *Comic (woman)*: a woman with long dark hair and a side parting, drawn in the same style, with lashes and lips that open when she speaks; she moves like the comic face and shows the expressions too. The iPhone app, the companions (Mac and Windows, as a still) and the Pebble draw her too. The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.521 every profile picks its own face under Me → Conversation → *Display* with pictures (*Default*, *Robot*, *Comic*, *Comic (woman)*); it applies on all of the profile's devices (panel, iPhone app, companions, Pebble), *Default* takes the Spark's face. In the iPhone app the same choice sits at the top of Settings → *Face* (with the next TestFlight build). The admin's pick has since been at the top of Settings → Defaults → *Face*, with pictures as well, and applies to guests, shared devices and"
 },
 {
 "lang": "en",
@@ -4589,7 +4613,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "ught bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
+"text": " everybody who picked nothing of their own; the presets never copy a face into a profile. The server only takes the fixed names (profiles.FACES), every device asks through profiles.face_of. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
 },
 {
 "lang": "en",
@@ -6397,7 +6421,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "The menu (since V01.0.145, design \"Klar\") is a sidebar on the left on computers and a bar at the bottom on phones (Assistant, Me, Status, Manage). At the very top Search (Ctrl K or ⌘ K, since V01.0.265) finds pages, switches, settings, Me, checks, logs and guides; a hit opens the place and marks it. A way in a hint or an answer like \"Settings → Spark → Operation\" or \"Me → Documents\" is a link that jumps right there (since V01.0.435). Below are Assistant and Me for yourself, then under *Manage Spark* the admin pages Status, Features (with *Guides*), People and devices (with *Apps and interfaces*) and Settings (since V01.0.265; \"Integrate\" is gone). Status, Features and People and devices have sub-pages; a number next to \"Settings\" counts unsaved pages. On a computer \"Me\" opens as a page right of the sidebar since V01.0.147 instead of a window; another menu entry closes it."
+"text": "The menu (since V01.0.145, design \"Klar\") is a sidebar on the left on computers and a bar at the bottom on phones (Assistant, Me, Status, Manage). At the very top Search (Ctrl K or ⌘ K, since V01.0.265) finds pages, switches, settings, Me, checks, logs and guides; a hit opens the place and marks it. Since V01.0.521 the button is in the menu for signed-in profiles too, phones have a magnifier at the top of the assistant (admin and profile), and the search box fits narrow screens and closes with ✕. A way in a hint or an answer like \"Settings → Spark → Operation\" or \"Me → Documents\" is a link that jumps right there (since V01.0.435). Below are Assistant and Me for yourself, then under *Manage Spark* the admin pages Status, Features (with *Guides*), People and devices (with *Apps and interfaces*) and Settings (since V01.0.265; \"Integrate\" is gone). Status, Features and People and devices have sub-pages; a number next to \"Settings\" counts unsaved pages. On a computer \"Me\" opens as a page right of the sidebar since V01.0.147 instead of a window; another menu entry closes it."
 },
 {
 "lang": "en",
@@ -6613,7 +6637,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
-"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman, picked by the admin under Settings → Defaults; the app takes it over when it opens). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself."
+"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman; since V01.0.521 you pick it yourself at the top of Settings → *Face* in the app or in the panel under Me → Conversation, else the admin's default applies; the app takes it over when it opens and after the pick, with the next TestFlight build). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself."
 },
 {
 "lang": "en",

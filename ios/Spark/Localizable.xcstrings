@@ -901,6 +901,26 @@
         }
       }
     },
+    "Comic": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comic"
+          }
+        }
+      }
+    },
+    "Comic (Frau)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comic (woman)"
+          }
+        }
+      }
+    },
     "Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.": {
       "localizations": {
         "en": {
@@ -2277,6 +2297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off for you"
+          }
+        }
+      }
+    },
+    "Gesicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face"
           }
         }
       }
@@ -3861,6 +3891,16 @@
         }
       }
     },
+    "Nur für dich, auf all deinen Geräten. Im Panel steht es unter Ich → Gespräch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just for you, on all your devices. In the panel it is under Me → Conversation."
+          }
+        }
+      }
+    },
     "Nur für mich": {
       "localizations": {
         "en": {
@@ -4227,6 +4267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Invoice, car, tax"
+          }
+        }
+      }
+    },
+    "Roboter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Robot"
           }
         }
       }
@@ -5127,6 +5177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Speak by itself"
+          }
+        }
+      }
+    },
+    "Vorgabe des Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark's default"
           }
         }
       }

@@ -192,7 +192,7 @@ OHNE_PROFIL = (
         "app_docs_edit", "app_ha", "app_images", "app_ios", "app_listen", "app_mine", "app_push", "app_room",
         "app_security", "app_voice", "auto", "barge", "barge_level", "berater_note", "berater_skip", "briefing_at",
         "chat_push_text", "chat_receipts", "con_bday", "daily", "devup_night", "doc_deliver", "doc_docling", "doc_due", "doc_sender",
-        "echo", "follow", "hands", "learn", "live", "msg_all", "msg_from", "msg_speaker", "pro_bday", "pro_events",
+        "echo", "face", "follow", "hands", "learn", "live", "msg_all", "msg_from", "msg_speaker", "pro_bday", "pro_events",
         "pro_follow", "pro_greet", "pro_ha", "pro_ha_cam", "pro_ha_events", "pro_ha_live", "pro_ha_loud", "pro_ha_me",
         "pro_lead", "pro_learn", "pro_mail", "pro_mail_from", "pro_mail_smart", "pro_max", "pro_on", "pro_parcel",
         "pro_place", "pro_quiet", "pro_tidy", "pro_tips", "pro_transit", "pro_weather", "pro_weather_at", "rate_back",

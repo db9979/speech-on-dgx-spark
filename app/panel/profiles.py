@@ -26,6 +26,8 @@ COOKIE = "speech_spark_user"
 DEVICE_HEADER = "x-speech-device"
 MAX_FACTS, MAX_FACT_LEN = 200, 300
 _lock = threading.Lock()
+# the assistant's faces (static/js/face.js): the admin picks the Spark's (chat.face), each profile may pick its own
+FACES = ("robot", "comic", "comic_woman")
 
 
 def _path(*parts):
@@ -728,6 +730,8 @@ SETTINGS = {
     # "Antworten vorlesen": off = answers as text only on every own screen (chat_turn.quiet), speakers keep speaking
     "speak": (True, lambda v: isinstance(v, bool)),
     "timing": (True, lambda v: isinstance(v, bool)),
+    # Ich → Gespräch → Anzeige „Gesicht“: the profile's own face on all its devices, "" = the Spark's (chat.face)
+    "face": ("", lambda v: v == "" or v in FACES),
     "learn": (True, lambda v: isinstance(v, bool)),
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
@@ -838,7 +842,17 @@ SETTINGS = {
 OWN_ONLY = ("style", "roles", "role")
 # the profiles' own preferences for what the Spark does unasked (features.py fills it, Feature.pref) and a few
 # settings of single modules: never from the admin's presets, each profile sets them itself
-NO_PRESET = set()
+NO_PRESET = {"face"}   # the face: the admin's own pick is chat.face, the presets never copy it into a profile
+
+
+def face_of(uid, chat):
+    """The face a profile sees: its own pick (Ich → Gespräch → Anzeige), else the Spark's (chat.face), else the
+    robot. Only names from FACES; guests (uid None) and shared devices get the Spark's."""
+    own = settings(uid).get("face") if uid else ""
+    if own in FACES:
+        return own
+    spark = (chat or {}).get("face")
+    return spark if spark in FACES else "robot"
 
 
 def clean_settings(d):

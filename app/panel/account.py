@@ -131,7 +131,9 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             # Zustand → Live (live.py): the same people
             "live": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("live", False) is True,
-            "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
+            # the profile's own face (Ich → Gespräch → Anzeige), else the Spark's (Einstellungen → Vorgaben); guests the Spark's
+            "face": profiles.face_of(prof["id"] if prof else None, cfg.get("chat", {})),
+            "face_spark": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
             # "Gesicht zeigt, was es tut" (face.js lifeMode): only a plain true switches it on
             "face_life": cfg.get("chat", {}).get("face_life") is True,
             # what the assistant needs without the full configuration (which holds keys)

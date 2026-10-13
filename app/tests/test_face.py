@@ -54,7 +54,7 @@ class Face(unittest.TestCase):
 
     def test_choice_lists_exactly_the_known_faces(self):
         html = read("index.html")
-        sel = html[html.index('<select id="chat.face">'):]
+        sel = html[html.index('<select id="chat.face" class="facesel" data-noseg>'):]
         sel = sel[:sel.index("</select>")]
         self.assertEqual(tuple(re.findall(r'value="(\w+)"', sel)), FACES)
 

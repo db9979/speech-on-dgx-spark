@@ -29,7 +29,7 @@ import profiles
 import features
 from account import browser_profile
 from common import load_config
-from core import FACES, app_version, assistant, confirm_code, own_profile
+from core import app_version, assistant, confirm_code, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -303,14 +303,14 @@ def app_hello(prof=Depends(own_profile)):
     s = profiles.settings(prof["id"])
     import apns
     import proactive
-    face = load_config().get("chat", {}).get("face")
     return {"profile": prof["name"], "version": app_version(), "language": _language(),
             # what the profile allows the app (the panel decides; the app only shows and follows it)
             "listen": bool(s.get("app_listen")), "act": bool(s.get("app_act")),
             "proactive": bool(proactive.enabled() and features.allowed("proactive", prof["id"])),
             "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
-            # the face the admin picked for everybody (Einstellungen → Vorgaben), only names from the fixed list
-            "face": face if face in FACES else "robot",
+            # the profile's own face (Ich → Gespräch → Anzeige, also the app's Einstellungen → Gesicht), else the
+            # Spark's (Einstellungen → Vorgaben); only names from the fixed list
+            "face": profiles.face_of(prof["id"], load_config().get("chat", {})),
             # the face shows what it does (signs, wink, puzzled, asleep), admin switch next to the face
             "face_life": load_config().get("chat", {}).get("face_life") is True,
             # Apple push is set up and on for this profile: reminders then come as push, not as local alarms
@@ -379,6 +379,7 @@ APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
               "pro_greet", "pro_mail", "briefing_at",
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
+              "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
               "speak")            # Antworten vorlesen: the profile's switch, every device of it follows (chat_turn.quiet)
 RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
           "app_room") + RIGHTS_PANEL

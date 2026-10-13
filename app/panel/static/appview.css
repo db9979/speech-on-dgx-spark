@@ -20,6 +20,7 @@ body.appview #apbar:not([hidden]){display:flex;align-items:center;gap:2px;positi
 body.appview.inchat #apbar{flex:none;background:var(--apcard);border-bottom:0}
 #aptitle{position:absolute;left:50%;bottom:11px;transform:translateX(-50%);max-width:40%;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .aplead,.aptrail{display:flex;gap:2px}.aptrail{margin-left:auto}
+@media (max-width:360px){.apib{width:36px}}   /* the magnifier at the top (plaene/suche-gesicht.md): room for the title at 320 px */
 .apib{width:42px;height:42px;display:grid;place-items:center;border:0;background:none;color:var(--acc);cursor:pointer;padding:0}.apib svg{width:24px;height:24px}
 .apnb{display:flex;align-items:center;border:0;background:none;color:var(--acc);font:inherit;font-size:17px;padding:8px 6px 8px 0;min-height:44px;cursor:pointer;max-width:32vw}
 .apnb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.apnb svg{width:26px;height:26px;flex:none}

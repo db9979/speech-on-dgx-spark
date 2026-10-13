@@ -108,7 +108,8 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
     lh=`<button type="button" class="apib" data-ap="new" aria-label="${esc(t('Neues Gespräch','New conversation'))}">${SV(IC.new)}</button><button type="button" class="apib" data-ap="hist" aria-label="${esc(t('Verlauf','History'))}">${SV(IC.hist)}</button>`;
     // "Vorlesen" on this device (chat.js voiceShow): the speaker in the top bar; locked while the profile has it off
     const vc=$('chatvoice'),von=!!(vc&&vc.checked);
-    th=(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?IC.vol:IC.mute)}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
+    // Suchen (plaene/suche-gesicht.md): the magnifier at the top for admins and profiles, guests have nothing to find
+    th=(ADMIN||PROFILE?`<button type="button" class="apib" data-ap="find" aria-label="${esc(t('Suchen','Search'))}">${SV(IC.find)}</button>`:'')+(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?IC.vol:IC.mute)}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
       :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV(IC.set)}</button>`)}
   else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
   if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
@@ -118,7 +119,7 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   sync()}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='apback'){back();return}
-  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click()});
+  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click();else if(a==='find')palOpen()});
 // ---------------------------------------------------------------- one level back (top left, edge swipe, back gesture)
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;

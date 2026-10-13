@@ -59,7 +59,7 @@ body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:non
 /* "Spark verwalten" only for a profile with an admin role (start.js: body.mayadm); everybody else: #admin in the address */
 body.mayadm #loginbtn{display:inline-flex!important}
 /* a signed-in profile without admin login (start.js): the admin's shell with only Assistent and Ich */
-body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]),body.prof #findbtn,
+body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
 body.coadm:not(.owner) .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* .pwonly: only with the panel password, also not for the Haupt-Admin profile */   /* a profile in its admin mode (coadmin.js): what only the main admin may do */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
@@ -728,11 +728,12 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 }
 #cfgnav button[data-p=feat]{display:none}
 .cfgwrap.featmode{grid-template-columns:minmax(0,1fr)}.cfgwrap.featmode .cfgnav,.cfgwrap.featmode .cfgback{display:none!important}
-.fpal{position:fixed;inset:0;z-index:60;background:rgba(15,18,30,.38);display:grid;place-items:start center;padding:10vh 12px 0}
+.fpal{position:fixed;inset:0;z-index:60;background:rgba(15,18,30,.38);display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;padding:10vh 12px 0}
 .fpal[hidden]{display:none}
 .fpal .fbox{width:640px;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.35);overflow:hidden}
 .fpal .fin{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}.fpal .fin svg{width:20px;height:20px;color:var(--mut);flex:none}
 .fpal .fin input{border:0;background:none;font-size:17px;padding:4px 0;flex:1;outline:none;box-shadow:none}
+.fpal .fin input{min-width:0}.fpal .fx{flex:none;width:36px;height:36px;display:grid;place-items:center;border:0;background:none;color:var(--mut);font-size:18px;border-radius:9px;cursor:pointer}.fpal .fx:hover{color:var(--fg);background:color-mix(in srgb,var(--mut) 14%,transparent)}
 .fpal .fres{max-height:56vh;overflow-y:auto}.fpal .fgrp{font-size:11.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:10px 16px 4px}
 .fpal .fit{display:flex;width:100%;align-items:center;gap:10px;padding:9px 16px;border:0;background:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .fpal .fit small{color:var(--mut);margin-left:auto;font-size:12px;text-align:right}.fpal .fit.sel,.fpal .fit:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}
@@ -1466,3 +1467,14 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 /* Ich → Dokumente → Suchprüfung (suchpruefung.js) */
 .sprbars{margin:8px 0}.sprrow{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0;flex-wrap:wrap}.sprrow>span:first-child{min-width:150px}.sprrow .qbar{max-width:200px}
 .sprtop{margin:4px 0 0 18px;padding:0;font-size:12.5px}.sprtop li.ok{font-weight:600;color:var(--ok)}
+
+/* Gesicht (plaene/suche-gesicht.md): picture tiles for the face (Ich → Gespräch → Anzeige, Einstellungen → Vorgaben);
+   the select stays for saving and screen readers keep the tiles (role radio) */
+.setrow:has(>.facetiles){flex-wrap:wrap}.setrow select.facesel{display:none}
+.facetiles{flex-basis:100%;display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:8px;margin:8px 0 2px;min-width:0}
+.facetile{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:8px 4px 7px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:inherit;font-size:12.5px;cursor:pointer}
+.facetile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+.facetile.on{border:2px solid var(--acc);padding:7px 3px 6px;font-weight:600}.facetile:disabled{opacity:.55;cursor:default}
+.facetile .facepic{width:54px;height:54px;display:block}.facetile .facepic svg{width:54px;height:54px;display:block}
+.facetile .facelbl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:420px){.facetiles{gap:6px}.facetile{font-size:11.5px}.facetile .facelbl{white-space:normal;overflow-wrap:anywhere;line-height:1.2;text-align:center}.facetile .facepic,.facetile .facepic svg{width:42px;height:42px}}

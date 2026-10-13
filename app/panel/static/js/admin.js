@@ -184,7 +184,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
-  getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(typeof presetMove==='function')presetMove();
+  getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
   asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();dlLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
@@ -314,7 +314,7 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
     $('wymsg').innerHTML=`<span class="err">${esc(m)}</span>`;msg.innerHTML=`<span class="err">${esc(m)}</span>`;$('chat.wyoming_allow').focus();return}
   msg.textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
-    if(pane.contains($('chat.face'))){setFaceKind(n.chat.face);setFaceLife(n.chat.face_life===true)}
+    if(pane.contains($('chat.face'))){setFaceSpark(n.chat.face);faceApply();setFaceLife(n.chat.face_life===true)}
     if(typeof hilfeRefresh==='function')hilfeRefresh();   // Funktionen → Hilfe zum Spark: the face follows at once
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance()}
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});

@@ -71,7 +71,7 @@ import profiles
 import schreib
 import signatur
 from common import load_config
-from core import FACES, assistant, auth, browser_profile, confirm_code
+from core import assistant, auth, browser_profile, confirm_code
 
 router = APIRouter()
 PARTS = ("write", "ask", "dictate", "notes", "status", "notaus",
@@ -270,7 +270,7 @@ def program_rev(did, uid):
     admin under Wer darf was, the profile under Ich), so the program fetches its config with the next poll and
     stops the parts that are no longer allowed, not only after a restart (V01.0.388)."""
     mask = "".join("1" if v else "0" for v in may(uid).values())
-    mask += ":" + str(load_config().get("chat", {}).get("face") or "")   # another face: the program draws it now
+    mask += ":" + profiles.face_of(uid, load_config().get("chat", {}))   # another face: the program draws it now
     mask += ":" + ("1" if aloud(uid) else "0")   # Antworten vorlesen switched: the program hears of it now
     with _lock:
         d = _load()
@@ -595,9 +595,8 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
     ok = may(prof["id"])
     _tell(dev["id"], version, arch)
     parts = {p: bool(cfg["parts"][p] and ok[p]) for p in PARTS}
-    face = load_config().get("chat", {}).get("face")
     return {"rev": rev, "profile": prof["name"], "poll": POLL_ACT if parts["act"] else POLL, "coffee": COFFEE,
-            "face": face if face in FACES else "robot",   # the face the admin picked (Einstellungen → Vorgaben)
+            "face": profiles.face_of(prof["id"], load_config().get("chat", {})),   # own face, else the Spark's
             # Antworten vorlesen (profile switch speak): off = Frag Spark answers as text only, never spoken by itself
             "aloud": aloud(prof["id"]),
             "update": newer(arch, version), "parts": parts, "allowed": ok,

@@ -752,6 +752,8 @@ struct SettingsView: View {
     @State private var synced = false
     /// Ich → Mein Zustand: only when /api/features says this profile may use it ("mystatus", can)
     @State private var myStatus = false
+    /// Gesicht: the profile's own face ("" = the Spark's), the same value as Ich → Gespräch → Anzeige in the panel
+    @State private var face = ""
 
     var body: some View {
         NavigationStack {
@@ -759,6 +761,20 @@ struct SettingsView: View {
                 Section("Gekoppelt") {
                     LabeledContent("Profil", value: app.profile)
                     LabeledContent("Spark", value: Store.baseURL?.host ?? "")
+                }
+                Section {
+                    Picker("Gesicht", selection: $face) {
+                        Text("Vorgabe des Spark").tag("")
+                        Text("Roboter").tag("robot")
+                        Text("Comic").tag("comic")
+                        Text("Comic (Frau)").tag("comic_woman")
+                    }
+                } footer: {
+                    Text(SparkAPI.way(String(localized: "Nur für dich, auf all deinen Geräten. Im Panel steht es unter Ich → Gespräch.")))
+                }
+                // saved for the profile, then hello again: the face on screen follows (own pick, else the Spark's)
+                .onChange(of: face) { _, v in
+                    if synced { Task { try? await SparkAPI.current?.saveProfileSettings(["face": v]); await talk.check() } }
                 }
                 Section {
                     NavigationLink("Mein Profil") { ProfileView() }
@@ -893,6 +909,7 @@ struct SettingsView: View {
         if let h = p["hands"] as? Bool, h != handsFree { handsFree = h }
         if let b = p["barge"] as? Bool, b != bargeIn { bargeIn = b }
         if let v = p["speak"] as? Bool, v != speakAnswers { speakAnswers = v }
+        if let f = p["face"] as? String, ["", "robot", "comic", "comic_woman"].contains(f), f != face { face = f }
         // the onChange calls for the values just read run before this (at worst they save the same value back)
         await Task.yield()
         synced = true

@@ -1,4 +1,5 @@
-// One search for everything (plan „Bedienung gesamt“, V01.0.265): Strg K / Cmd K or "Suchen" in the menu opens a
+// One search for everything (plan „Bedienung gesamt“, V01.0.265; plaene/suche-gesicht.md: the button in the menu also for
+// profiles, the magnifier at the top of the app view, a cross to close): Strg K / Cmd K or "Suchen" in the menu opens a
 // box that finds pages, admin switches and settings, the own Ich settings, the checks under Prüfen, the Logs
 // areas and the guides. Only what the viewer can open: admins see the admin pages (a Verwalter only his),
 // a profile its Ich pages, guests nothing. Runs in the browser over what is already on the page.
@@ -44,10 +45,12 @@ function palMe(){if(!PROFILE||palWarm||typeof renderSet!=='function'||GATE||isGu
 function palOpen(){if(!ADMIN&&!PROFILE)return;const p=$('fpal');p.hidden=false;PAL.open=true;PAL.sel=0;$('palq').value='';palDraw();palMe();setTimeout(()=>$('palq').focus(),0)}
 function palClose(){$('fpal').hidden=true;PAL.open=false}
 (function(){const p=document.createElement('div');p.id='fpal';p.className='fpal';p.hidden=true;p.setAttribute('role','dialog');p.setAttribute('aria-modal','true');
-  p.innerHTML=`<div class="fbox"><div class="fin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="palq" type="search" autocomplete="off"></div><div class="fres" id="palres"></div><div class="ffoot"><span></span><span></span><span></span></div></div>`;
+  p.innerHTML=`<div class="fbox"><div class="fin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="palq" type="search" autocomplete="off"><button type="button" class="fx" id="palx">✕</button></div><div class="fres" id="palres"></div><div class="ffoot"><span></span><span></span><span></span></div></div>`;
   document.body.appendChild(p);const q=$('palq');q.placeholder=t('Suchen …','Search …');q.setAttribute('aria-label',t('Suchen','Search'));
   const f=p.querySelectorAll('.ffoot span');f[0].textContent=t('↑↓ wählen','↑↓ choose');f[1].textContent=t('Enter öffnen','Enter opens');f[2].textContent=t('Esc schließt','Esc closes');
   p.onclick=e=>{if(e.target===p)palClose()};
+  // on a phone there is no Esc key: the cross closes the box
+  const x=$('palx');x.setAttribute('aria-label',t('Schließen','Close'));x.title=t('Schließen','Close');x.onclick=palClose;
   q.oninput=()=>{PAL.sel=0;palDraw()};
   q.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();PAL.sel=Math.max(0,Math.min(PAL.hits.length-1,PAL.sel+(e.key==='ArrowDown'?1:-1)));palDraw();
       const s=p.querySelector('.fit.sel');if(s)s.scrollIntoView({block:'nearest'})}

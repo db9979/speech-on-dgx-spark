@@ -26,7 +26,7 @@ import profiles
 import features
 from account import browser_profile
 from common import load_config
-from core import FACES, assistant, confirm_code, own_profile
+from core import assistant, confirm_code, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -214,8 +214,7 @@ async def watch_pair(request: Request):
     token = profiles.add_device("Pebble", uid, scope="watch")
     print("pebble: watch paired for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "Pebble-Uhr gekoppelt")
-    face = load_config().get("chat", {}).get("face")
-    return {"token": token, "profile": prof["name"], "face": face if face in FACES else "robot"}
+    return {"token": token, "profile": prof["name"], "face": profiles.face_of(uid, load_config().get("chat", {}))}
 
 
 def _live_mark(area, text):

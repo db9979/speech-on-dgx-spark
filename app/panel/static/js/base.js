@@ -25,8 +25,9 @@ function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e
   verBar(t('Neue Version ist da: ','A new version is here: ')+verWatch.newer)}
 // Switched a function on or off in the settings: the page reads the switches once at start (start.js), so
 // after a saved change it compares them with the Spark and loads itself again when one differs (no F5).
-// "rights" (features.stamp) changes with every switch under Wer darf was that touches this profile.
-const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face'||k==='rights').map(k=>[k,w[k]]));
+// "rights" (features.stamp) changes with every switch under Wer darf was that touches this profile. The face
+// counts as the Spark's (face_spark): the profile's own pick (Ich → Gespräch) shows at once without a reload.
+const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face_spark'||k==='rights').map(k=>[k,w[k]]));
 let WHO_FLAGS=null,whoT=null;
 // who is signed in, set by start.js; declared here, before the other scripts: a timer or answer of an earlier script
 // could run before start.js on a slow machine ("ADMIN is not defined", GitHub V01.0.421)
