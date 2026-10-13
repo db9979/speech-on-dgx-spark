@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.493** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
 - **V01.0.492** Admin-Schalter speichern klappt wieder, auch mit entfernten Funktionen in „Für neue Profile“
 - **V01.0.491** reMarkable: Blätter auf Wunsch per Sprache, Aufgabenblatt zum Ankreuzen, das der Spark abarbeitet
 - **V01.0.490** Live-Bild: „Von selbst“ über einen internen Bus im Spark; Eingang-Text passt; Werkzeuge mit verständlichem Namen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.486** Einordnung mit Wahrscheinlichkeit: messen und Schwelle wählen, Label-Masse, Katalogwahl im Einstellungs-Assistenten, Antworten im Hintergrund prüfen, Beschwerde erkennen
 - **V01.0.485** reMarkable: Ordner nach Art, gestaltete Blätter mit „Kann weg“, Morgenblatt zum Abhaken, Kästchen werden gelesen
 - **V01.0.484** Taten prüfen und Fehlerschleife stoppen stehen als eingebaute Regeln unter Verbessern → Regeln
-- **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

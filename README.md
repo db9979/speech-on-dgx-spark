@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.493** Docling server in the home network reads documents and scans again with tables (admin, off by default)
 - **V01.0.492** Saving admin switches works again, also with removed functions in "for new profiles"
 - **V01.0.491** reMarkable: sheets on request by voice, task sheet to tick that the Spark works through
 - **V01.0.490** Live picture: "Von selbst" runs on an internal bus inside the Spark; entrance text fits; Tools stage with a readable name
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.486** Classification with probabilities: measure and choose the threshold, label mass, catalog pick in the settings assistant, background answer check, recognizing complaints
 - **V01.0.485** reMarkable: folders by kind, designed sheets with "Kann weg", morning sheet to tick off, boxes are read back
 - **V01.0.484** Check deeds and stop error loops show as built-in rules under Improve → Rules
-- **V01.0.483** Spark diary: switched devices are noted (device and action only, never the code word)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

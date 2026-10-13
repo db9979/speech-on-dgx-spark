@@ -892,6 +892,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Docling-Server (V01.0.493, Plan plaene/docling-anbinden.md, Dominik 1 beides, 2 ja, 3 ja): Unterschalter „Docling-Server“ unter *Funktionen → Eigene Dokumente* (chat.docling, ab Werk aus; wirkt erst mit einer Adresse). Ein docling-serve auf einem anderen Rechner im Heimnetz liest hochgeladene PDFs, Office-Dateien und Bilder in ruhigen Momenten ein zweites Mal, mit Tabellen, Spalten und Texterkennung; sein Markdown ersetzt den Text, den der Spark selbst gelesen hat (Abschnitte, Bedeutungsvektoren und Steckbrief werden neu gebildet, im Dokument steht „mit Docling gelesen“). Gescannte Seiten gehen zuerst an Docling: Seiten, auf denen es mindestens 40 Zeichen fand, liest das Sprachmodell nicht mehr; der Rest wartet wie bisher auf das Sprachmodell. Einrichten nur durch den Haupt-Admin mit frischem Code: Adresse https://… oder http://… (http nur zu einer Adresse im Heimnetz, mit Warnung im Panel; geprüft vor jedem Aufruf, auch nach Namensauflösung), API-Schlüssel (DOCLING_SERVE_API_KEY, verschlüsselt gespeichert, nie angezeigt; eine neue Adresse verlangt ihn neu), bei eigenem Zertifikat „Zertifikat prüfen“ wie bei der Sicherung nach außen (Fingerabdruck vergleichen, genau dieses annehmen"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "). „Probe lesen“ schickt eine eingebaute Probe-Seite mit Tabelle und zeigt Dauer und Text, nie eine Datei eines Profils. Der Server bekommt nur die Datei unter dem Namen dokument.<endung>, nie Profil, Dateiname oder Frage. Gilt für alle Profile, sobald der Admin es einschaltet; jedes Profil kann unter Ich → Dokumente „Mit Docling lesen“ für sich ausschalten (doc_docling, ab Werk an, keine Admin-Vorgabe), Gäste nie. Bis Docling gelesen hat, liegt die Datei unter users/<profil>/docling-wait/ (auch wenn Originale nicht aufbewahrt werden); antwortet der Server nicht, fragt der Spark 10 Minuten später wieder, nach 2 Tagen gibt er auf und das Sprachmodell liest. Ausschalten (Admin oder Profil) gibt wartende Dateien sofort frei. Live zeigt „Docling-Server“ mit wartenden und heute gelesenen Dateien (nur Zahlen), der Dienst-Wächter fragt /health, Logs unter Wissen (docling: …), Schutzstufe „Daten“ für das Speichern. Server starten (anderer Rechner, Docker): docker run -d --name docling -p 5001:5001 -e DOCLING_SERVE_API_KEY=<langer zufälliger Schlüssel> quay.io/docling-project/docling-serve-cpu:v1.37.0; mit Grafikkarte das Abbild docling-serve-cu128. Für https einen Caddy oder nginx davor se"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "tzen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Größe und Speicher (V01.0.242)",
 "text": "Größe und Speicher (V01.0.242): PDFs dürfen bis 100 MB groß sein, der Admin stellt das unter *Funktionen → Eigene Dokumente → Größte PDF-Datei* zwischen 20 und 300 MB ein (chat.doc_max_mb); alle anderen Dateiarten bleiben bei 20 MB. Zu große Uploads lehnt das Panel ab, bevor es sie liest; die Seite sagt das schon vor dem Hochladen. Der „Speicher pro Profil“ (chat.doc_quota_mb, Standard 500 MB) gilt jetzt für alle Uploads eines Profils zusammen (Datenbank mit Text, Bedeutungs-Vektoren und wartenden Seiten plus Originale). Ist er voll, nimmt der Spark nichts Neues an; Originale werden nur aufbewahrt, solange Platz ist. Ich → Dokumente zeigt „Belegt: 120 MB von 500 MB“ mit Balken. Unter Zustand → Monitoring sieht der Admin pro Profil, wie viel belegt ist, und setzt einzelnen Profilen einen eigenen Wert (50 bis 50.000 MB, state/doc-quotas.json, in der Sicherung)."
 },
@@ -4382,6 +4406,22 @@
 "head": "Voice chat",
 "title": "Read long documents at night (V01.0.240)",
 "text": "Read long documents at night (V01.0.240): admin switch under *Features → Own documents → Read pictures and scans* (chat.doc_night, off) with a night window (doc_night_from/doc_night_to, default 01:00 to 06:00, may cross midnight). By day the Spark reads in quiet moments only documents with at most 10 waiting pages; longer ones only after 30 minutes without a question, or in the night window. At night pages are counted apart, up to 400 per profile and night on top of the daily limit of 100. Speech still comes first (vorrang.py). Me → Documents names the reason: \"long document, read at night from 01:00\" or \"daily limit reached, continues at night from 01:00\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Docling server (V01.0.493, plan `plaene/docling-anbinden.md`)",
+"text": "Docling server (V01.0.493, plan plaene/docling-anbinden.md): sub-switch \"Docling server\" under *Features → Own documents* (chat.docling, off by default; works only with an address). A docling-serve on another machine in the home network reads uploaded PDFs, Office files and pictures a second time in quiet moments, with tables, columns and OCR; its Markdown replaces the text the Spark read itself (pieces, meaning vectors and the summary card are made again, the document says \"mit Docling gelesen\"). Scanned pages go to Docling first: pages where it found at least 40 characters are no longer read by the language model; the rest waits for the language model as before. Set up by the main admin only, with a fresh code: address https://… or http://… (http only to an address in the home network, with a warning in the panel; checked before every call, also after name resolution), API key (DOCLING_SERVE_API_KEY, stored sealed, never shown; a new address asks for it again), with its own certificate \"Check certificate\" as for the offsite backup (compare the fingerprint, accept exactly that one). \"Read sample\" sends a built-in sample page with a table and shows time and text, never a profile's "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Docling server (V01.0.493, plan `plaene/docling-anbinden.md`)",
+"text": "file. The server gets only the file, named dokument.<ext>, never the profile, the file name or a question. Applies to all profiles once the admin switches it on; each profile can switch \"Read with Docling\" off for itself under Me → Documents (doc_docling, on by default, no admin preset), guests never. Until Docling has read it the file stays in users/<profile>/docling-wait/ (also when originals are not kept); if the server does not answer the Spark asks again 10 minutes later, after 2 days it gives up and the language model reads. Switching off (admin or profile) lets waiting files go at once. Live shows \"Docling-Server\" with waiting and today's files (numbers only), the service watch asks /health, logs under Knowledge (docling: …), protection level \"Data\" for saving. Starting the server (other machine, Docker): docker run -d --name docling -p 5001:5001 -e DOCLING_SERVE_API_KEY=<long random key> quay.io/docling-project/docling-serve-cpu:v1.37.0; with a GPU the image docling-serve-cu128. For https put a Caddy or nginx in front."
 },
 {
 "lang": "en",

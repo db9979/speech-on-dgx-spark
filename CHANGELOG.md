@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.493** · 2026-10-13 · Docling-Server anbinden (Funktionen → Eigene Dokumente, ab Werk aus): ein docling-serve im Heimnetz liest Dokumente und Scans in ruhigen Momenten noch einmal, mit Tabellen; Scans gehen zuerst an Docling, das Sprachmodell liest nur, was übrig bleibt; https mit geprüftem oder angenommenem Zertifikat, http nur im Heimnetz, Schlüssel verschlüsselt, „Probe lesen“; jedes Profil kann es unter Ich → Dokumente für sich ausschalten, Gäste nie; Live, Dienst-Wächter, Logs, Sicherung
 - **V01.0.492** · 2026-10-13 · Admin-Schalter ließen sich nicht speichern („new_profile_on: functions with an own switch, each once“): eine entfernte Funktion stand noch in „Für neue Profile“; der Spark räumt sie jetzt selbst weg
 - **V01.0.491** · 2026-10-13 · reMarkable: Morgenblatt, Wochenrückblick, Abgleich-Blatt und Anleitung auf Wunsch per Sprache neu; Aufgabenblatt zum Ankreuzen (offene Punkte, der Spark führt die Antworten aus, mit Rückgängig); alles aus
 - **V01.0.490** · 2026-10-13 · Live-Bild: „Von selbst“ läuft über einen internen Bus im Spark (Eingänge rule, timer, job, note, Punkte laufen bis zur Stufe, „IRQ rule→tool“, Zähler je Tag) statt links bei den Geräten; „0 abgewiesen“ am Eingang bleibt im Kasten; Stufe Werkzeuge mit verständlichem Namen statt chat_tools
