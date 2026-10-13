@@ -98,8 +98,8 @@ struct FaceView: View {
     @ObservedObject private var model = AppModel.shared
 
     var body: some View {
-        if model.face == .comic {
-            ComicFaceView(size: size)
+        if model.face != .robot {
+            ComicFaceView(size: size, woman: model.face == .comicWoman)
         } else {
             robot
         }
@@ -388,13 +388,13 @@ enum MenuIcon {
     /// The face as menu-bar icon (18 pt). Without a dot it is a template silhouette (macOS colours it like the
     /// other icons); with a dot it is drawn in colour, the dot bottom right.
     /// `moon`: part "quiet" found the person busy (a call, a presentation): a small crescent top left.
-    /// `face` "comic": the comic still in colour (a silhouette of it would only be a disc), dot and moon as usual.
+    /// `face` "comic" or "comic_woman": the comic still in colour (a silhouette of it would only be a disc), dot and moon as usual.
     static func image(dot: Dot, moon: Bool = false, face: FaceKind = .robot) -> NSImage {
         let size = NSSize(width: 18, height: 18)
-        let comic = face == .comic
+        let comic = face != .robot
         let img = NSImage(size: size, flipped: true) { rect in
             if comic, let g = NSGraphicsContext.current?.cgContext {
-                ComicStill.draw(g, in: rect)
+                if face == .comicWoman { ComicWomanStill.draw(g, in: rect) } else { ComicStill.draw(g, in: rect) }
                 drawDot(in: rect, dot: dot)
             } else {
                 draw(in: rect, coloured: dot != .plain, dot: dot)

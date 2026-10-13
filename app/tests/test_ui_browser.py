@@ -293,6 +293,41 @@ class Browser(unittest.TestCase):
                         await br.close()
         self.run_async(go())
 
+    def test_every_face_draws_and_moves(self):
+        """Every face the admin can pick (core.FACES) mounts in the chat and the floating button with the strict CSP on,
+        and the comic faces move: lids, mouth line and, for the comic woman (V01.0.497), the lips around the mouth.
+        The small picture before each answer follows the face."""
+        from core import FACES
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                try:
+                    await pg.evaluate("goSec('chat')")
+                    await pg.evaluate("setFaceKind('comic')")   # setFaceKind skips the face already shown
+                    for kind in FACES:
+                        await pg.evaluate(f"setFaceKind('{kind}')")
+                        await pg.wait_for_timeout(400)
+                        self.assertEqual(await pg.evaluate("document.body.dataset.face"), kind)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#face svg,#fabface svg').length"), 2, kind)
+                        if kind == "robot":
+                            continue
+                        await self.until(pg, "!!document.querySelector('#face [data-p=ml]').getAttribute('d')")
+                        lips = await pg.evaluate("[...document.querySelectorAll('#face [data-p=lipT],#face [data-p=lipB]')]"
+                                                 ".map(e=>e.getAttribute('d')||'')")
+                        if kind == "comic_woman":
+                            self.assertEqual(len(lips), 2)
+                            self.assertTrue(all(d.startswith("M") for d in lips), lips)
+                        else:
+                            self.assertEqual(lips, [])
+                        self.assertTrue(await pg.evaluate("getComputedStyle(document.documentElement)"
+                                                          ".getPropertyValue('--avface').includes('data:image/svg+xml')"))
+                    await pg.evaluate("setFaceKind('robot')")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        self.run_async(go())
+
     def test_feature_hint_card_and_guided_setup(self):
         """Funktionen vorschlagen (tipps.js): asked for something that is off for this profile, the answer carries the
         hint with "Einrichten"; that opens the guided setup in the face's window and the Ich page, the card there

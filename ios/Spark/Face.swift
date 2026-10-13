@@ -137,13 +137,14 @@ struct FaceView: View {
     var mic: Float
     /// read every frame: the loudness of what plays right now
     var out: () -> Float
-    /// the face the admin picked in the panel ("robot" or "comic", from hello)
+    /// the face the admin picked in the panel ("robot", "comic" or "comic_woman", from hello)
     var kind = "robot"
     /// "Gesicht zeigt, was es tut": the assistant's state of the chat events, nil while the admin switch is off
     var acts: FaceActs? = nil
     @State private var life = FaceLife()
     @State private var robot = RobotFace()
     @State private var comic = ComicFace()
+    @State private var comicWoman = ComicFace(woman: true)
 
     var body: some View {
         TimelineView(.animation) { tl in
@@ -152,7 +153,7 @@ struct FaceView: View {
                 let s = min(size.width, size.height) / 200
                 ctx.translateBy(x: (size.width - 200 * s) / 2, y: (size.height - 200 * s) / 2)
                 ctx.scaleBy(x: s, y: s)
-                let style: FaceStyle = kind == "comic" ? comic as FaceStyle : robot
+                let style = drawing
                 style.draw(&ctx, pose)
                 if acts != nil { FaceProps.draw(&ctx, pose.mood, pose.now, life) }
             }
@@ -160,6 +161,15 @@ struct FaceView: View {
         .aspectRatio(1, contentMode: .fit)
         .onAppear { acts?.wake() }
         .accessibilityLabel("Gesicht des Assistenten")
+    }
+
+    /// the drawing for the picked face; unknown names keep the robot
+    private var drawing: FaceStyle {
+        switch kind {
+        case "comic": return comic
+        case "comic_woman": return comicWoman
+        default: return robot
+        }
     }
 
     private func lerp(_ a: Double, _ b: Double, _ k: Double) -> Double { a + (b - a) * k }

@@ -1,8 +1,9 @@
-"""Writes src/c/comic_shapes.h: the fixed parts of the comic face as point lists.
+"""Writes src/c/comic_shapes.h: the fixed parts of the comic faces as point lists.
 
-The drawing is the same as COMIC in app/panel/static/js/face.js (200 x 200 box); curves are cut
-into short lines here, so the watch only fills and outlines polygons. Run it again after the
-comic face in the panel changes:  python3 tools/comic_shapes.py
+The drawings are the same as COMIC and COMIC_W (the comic woman, V01.0.497) in
+app/panel/static/js/face.js (200 x 200 box); curves are cut into short lines here, so the watch only
+fills and outlines polygons. Run it again after a comic face in the panel changes:
+python3 tools/comic_shapes.py
 """
 import math
 import os
@@ -112,11 +113,30 @@ def shapes():
     }
 
 
+def woman():
+    """The comic woman (comicWSvg in face.js, chin at 164): the same path strings."""
+    return {
+        "w_neck": clip_circle(path("M82 138 L80 200 L120 200 L118 138Z")),
+        "w_shirt": clip_circle(path("M0 200 L0 196 Q30 180 80 177 Q100 194 120 177 Q170 180 200 196 L200 200Z")),
+        "w_back": clip_circle(path("M100 24 C152 24 164 66 160 118 C157 156 166 184 176 200 L121 200 L119 140 L81 140 "
+                                   "L79 200 L24 200 C34 184 43 156 40 118 C36 66 48 24 100 24Z")),
+        "w_lock_l": clip_circle(path("M52 96 C44 130 46 168 34 200 L62 200 C64 172 58 140 60 110Z")),
+        "w_lock_r": clip_circle(path("M148 96 C156 130 154 168 166 200 L138 200 C136 172 142 140 140 110Z")),
+        "w_face": path("M100 38 C132.4 38 145 60 145 92 C145 128 132 149 119 159 Q100 169 81 159 C68 149 55 128 55 92 "
+                       "C55 60 67.6 38 100 38Z"),
+        "w_nose": path("M97.5 97 C97.5 103.5 96 109.75 95.2 112 C91 116 93 120 96.5 119.5 Q100 121 103.5 119.5 "
+                       "C107 120 109 116 104.8 112"),
+        "w_front": path("M52 104 C44 54 68 27 101 27 C134 27 156 54 148 104 C146 84 142 70 136 62 C126 50 116 47 107 47 "
+                        "C90 50 74 60 66 74 C60 82 55 92 52 104Z"),
+    }
+
+
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     out = ["// Made by tools/comic_shapes.py from the comic face in app/panel/static/js/face.js; do not edit.",
            "// Points in the face's 200 x 200 box, times 4 (quarter units).", "#pragma once", "#include <pebble.h>", ""]
-    for name, pts in shapes().items():
+    for name, pts in {**shapes(), **woman()}.items():
+        assert len(pts) <= 48, (name, len(pts))   # face.c draws at most 48 points per shape
         flat = ", ".join(f"{{{r(x * 4)}, {r(y * 4)}}}" for x, y in pts for r in [round])
         out.append(f"static const GPoint COMIC_{name.upper()}[] = {{{flat}}};")
     out.append("")

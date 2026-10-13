@@ -13,9 +13,9 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
 - Notaus: holding SELECT 3 s (after the 600 ms "Neues Gespräch") arms it with a long buzz; letting go sends
   the fixed sentence "Spark, Notaus" as a question. The Spark decides (big Notaus only for an admin profile's watch).
 - `src/c/face.c`: the face above the answer (idle, listen, think, speak, sad; the mouth follows
-  the audio level): the robot or the comic face, whichever the admin picked in the panel
+  the audio level): the robot, the comic face or the comic woman, whichever the admin picked in the panel
   (`chat.face`, sent as `FACE` with each answer and kept on the watch). `src/c/comic_shapes.h` is
-  made by `tools/comic_shapes.py` from the comic face in `app/panel/static/js/face.js`.
+  made by `tools/comic_shapes.py` from the comic faces in `app/panel/static/js/face.js`.
 - `src/pkjs/index.js`: phone side. `POST /api/watch/ask`, then `GET /api/watch/poll` until done,
   with the device key in `X-Speech-Device`. Text goes ahead of audio, failed sends are retried,
   audio pieces are up to 3.8 KB, and at the end `POST /api/watch/report` puts the times into the

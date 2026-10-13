@@ -512,7 +512,7 @@ static void inbox_received(DictionaryIterator *it, void *context) {
     persist_write_bool(PERSIST_AUTOLISTEN, s_autolisten);
   }
   if ((t = dict_find(it, MESSAGE_KEY_FACE))) {
-    // the face the admin picked in the panel (0 robot, 1 comic)
+    // the face the admin picked in the panel (0 robot, 1 comic, 2 comic woman)
     persist_write_int(PERSIST_FACE, t->value->int32);
     face_set_kind(t->value->int32);
   }
