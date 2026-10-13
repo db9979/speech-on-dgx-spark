@@ -67,6 +67,10 @@ $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'au
 // sentences come out in English from the EN table, and a page that is no answer of the panel (a proxy, a crash)
 // says only what kind of error it was. The panel's own words stay in e.detail for the checks of the callers.
 const ERR_PLAIN=[[/^(too large|too big)$/i,'Das ist zu groß.','That is too large.'],
+  [/^folder name: 1 to 40/,'Ordnername: 1 bis 40 Buchstaben oder Ziffern (auch Leerzeichen . , & ( ) + \' -), kein / und keine anderen Zeichen.','Folder name: 1 to 40 letters or digits (also space . , & ( ) + \' -), no / or other marks.'],
+  [/^'.*' is a folder of the mail program$/,'Diesen Namen hat schon ein Ordner des Mailprogramms (Posteingang, Gesendet, Papierkorb …). Bitte einen anderen wählen.','A folder of the mail program already has this name (inbox, sent, trash …). Please pick another.'],
+  [/^at most \d+ own folders$/,'Es gibt schon 20 eigene Ordner. Bitte erst einen entfernen.','There are 20 own folders already. Please remove one first.'],
+  [/^only folders you added yourself can be removed$/,'Nur selbst angelegte Ordner lassen sich entfernen.','Only folders you added yourself can be removed.'],
   [/^(invalid JSON|not JSON|JSON (object )?expected)$/i,'Die Anfrage kam nicht vollständig an. Bitte die Seite neu laden und noch einmal versuchen.','The request did not arrive complete. Please reload the page and try again.'],
   [/^(not found|no such [a-z ]+|unknown [a-z ]+)$/i,'Nicht gefunden, vielleicht schon gelöscht. Bitte die Seite neu laden.','Not found, maybe deleted already. Please reload the page.'],
   [/^(login required|no profile)$/i,'Bitte zuerst anmelden.','Please sign in first.'],

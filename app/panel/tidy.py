@@ -55,6 +55,10 @@ CATS = {"werbung": "Werbung", "newsletter": "Newsletter", "rechnungen": "Rechnun
         "benachrichtigungen": "Benachrichtigungen", "social": "Social"}
 DEFAULT_ACTIONS = {"werbung": "move", "newsletter": "move", "social": "move",
                    "rechnungen": "ask", "benachrichtigungen": "ask"}
+OWN_MAX = 20                    # folders the profile added itself (own categories, filled only by its rules)
+OWN_KEY = re.compile(r"^o_[0-9a-f]{6}$")
+# a new folder name: letters, digits, space and a few marks; no path, wildcard, quote or control characters
+OWN_NAME = re.compile(r"^[^\W_][\w .,&()+'-]{0,39}$")
 MODES = ("off", "preview", "safe", "auto")
 EVERY = (5, 15, 60)
 PREFIX = "Spark"
@@ -106,10 +110,13 @@ def state(uid):
     d.setdefault("accounts", {})
     d.setdefault("every", 15)
     d["root"] = clean_name(d["root"]) if isinstance(d.get("root"), str) else PREFIX
-    d["actions"] = dict(DEFAULT_ACTIONS, **{k: v for k, v in (d.get("actions") or {}).items()
-                                            if k in CATS and v in ("move", "ask", "keep")})
-    own = {k: v for k, v in (d.get("folders") or {}).items() if k in CATS and isinstance(v, str) and v}
-    d["folders"] = dict(CATS, **own)
+    d["own"] = {k: clean_name(v) for k, v in (d.get("own") or {}).items()
+                if isinstance(k, str) and OWN_KEY.match(k) and isinstance(v, str) and clean_name(v)}
+    every = cats(d)
+    d["actions"] = {**DEFAULT_ACTIONS, **{k: "move" for k in d["own"]},
+                    **{k: v for k, v in (d.get("actions") or {}).items() if k in every and v in ("move", "ask", "keep")}}
+    own = {k: v for k, v in (d.get("folders") or {}).items() if k in every and isinstance(v, str) and clean_name(v)}
+    d["folders"] = {**every, **own}
     for k in ("rules", "protected", "questions", "preview", "todo", "log"):
         d[k] = d.get(k) if isinstance(d.get(k), list) else []
     for k in ("sent", "kept"):
@@ -132,6 +139,53 @@ def _mut(uid, fn):
         return res
 
 
+def cats(d):
+    """The fixed categories plus the folders the profile added itself (only its rules and answers fill those)."""
+    return dict(CATS, **(d.get("own") or {}))
+
+
+def check_new_name(d, name):
+    """A new own folder: (key of an existing category with that name or None, clean name); ValueError with a plain
+    reason. The fixed rule: 1 to 40 characters, starts with a letter or digit, then letters, digits, space and
+    . , & ( ) + ' - only; never a folder of the mail program; at most OWN_MAX own folders."""
+    name = str(name or "").strip()
+    if not OWN_NAME.match(name) or clean_name(name) != name:
+        raise ValueError("folder name: 1 to 40 letters or digits (also space . , & ( ) + ' -), no / or other marks")
+    if reserved(name):
+        raise ValueError(f"'{name}' is a folder of the mail program")
+    same = next((k for k, v in d["folders"].items() if v.lower() == name.lower()), None)
+    if same:
+        return same, d["folders"][same]
+    if len(d["own"]) >= OWN_MAX:
+        raise ValueError(f"at most {OWN_MAX} own folders")
+    return None, name
+
+
+def add_own(d, name):
+    """Adds an own folder to the state (the mailbox gets it with the first mail moved there); returns its key."""
+    same, name = check_new_name(d, name)
+    if same:
+        return same
+    key = "o_" + secrets.token_hex(3)
+    while key in d["own"]:
+        key = "o_" + secrets.token_hex(3)
+    d["own"][key] = name
+    d["folders"][key] = name
+    d["actions"][key] = "move"
+    return key
+
+
+def drop_own(d, key):
+    """Takes an own folder out of the Spark's list: its rules and proposals go, the folder and its mail stay."""
+    if key not in d["own"]:
+        raise ValueError("only folders you added yourself can be removed")
+    for k in ("own", "folders", "actions"):
+        d[k].pop(key, None)
+    d["rules"] = [r for r in d["rules"] if r.get("cat") != key]
+    d["preview"] = [p for p in d["preview"] if p.get("cat") != key]
+    d["questions"] = [dict(q, guess="") if q.get("guess") == key else q for q in d["questions"]]
+
+
 def acct_state(d, aid):
     a = d["accounts"].get(aid)
     if not isinstance(a, dict):
@@ -149,7 +203,7 @@ def folder_of(d, cat, root=None, folders=None):
 
 def our_folders(d):
     """The folders this module may move into (now), and back out of (now or earlier, see the log)."""
-    now = {folder_of(d, c) for c in CATS}
+    now = {folder_of(d, c) for c in cats(d)}
     return now, now | {x["folder"] for x in d["log"] if x.get("folder")}
 
 
@@ -159,7 +213,7 @@ def clean_name(v):
 
 
 # names a tidying folder may never have: the inbox and the usual special folders
-RESERVED = {"inbox", "sent", "sent messages", "sent items", "sent mail", "gesendet", "gesendete objekte",
+RESERVED = {"inbox", "posteingang", "sent", "sent messages", "sent items", "sent mail", "gesendet", "gesendete objekte",
             "gesendete elemente", "drafts", "entwürfe", "trash", "papierkorb", "deleted messages",
             "deleted items", "gelöschte objekte", "gelöschte elemente", "junk", "spam", "junk-e-mail",
             "archive", "archiv", "all mail", "alle nachrichten", "[gmail]", "notes", "notizen", "outbox",
@@ -182,7 +236,7 @@ def public(uid):
                     "stopped": a.get("stopped", ""), "sent": len(d["sent"].get(x["id"], []))})
     names = {x["id"]: x.get("name", "") for x in accts}
     return {"admin": admin_on(), "accounts": out, "every": d["every"], "actions": d["actions"], "root": d["root"],
-            "folders": d["folders"], "cats": CATS, "rules": d["rules"], "protected": d["protected"],
+            "folders": d["folders"], "cats": cats(d), "own": list(d["own"]), "rules": d["rules"], "protected": d["protected"],
             "questions": [dict(q, account=names.get(q["aid"], "")) for q in d["questions"]],
             "preview": [dict(p, account=names.get(p["aid"], "")) for p in d["preview"]][-200:],
             "log": [dict(x, account=names.get(x["aid"], "")) for x in reversed(d["log"][-150:])],
@@ -193,6 +247,8 @@ def set_settings(uid, body):
     """Mode and drafts per mailbox, interval, actions, protected list; main folder and folder names."""
     accts = {x["id"] for x in mail.get(uid)["accounts"]}
     _new_names(state(uid), body.get("root"), body.get("folders"))      # wrong names change nothing
+    if body.get("add_folder") is not None or body.get("remove_folder") is not None:
+        return own_folder(uid, body.get("add_folder"), body.get("remove_folder"))
 
     def fn(d):
         for aid, v in (body.get("accounts") or {}).items():
@@ -210,7 +266,7 @@ def set_settings(uid, body):
         if body.get("every") in EVERY:
             d["every"] = body["every"]
         for k, v in (body.get("actions") or {}).items():
-            if k in CATS and v in ("move", "ask", "keep"):
+            if k in cats(d) and v in ("move", "ask", "keep"):
                 d["actions"][k] = v
         if isinstance(body.get("protected"), list):
             d["protected"] = sorted({m for m in (norm_match(x) for x in body["protected"]) if m})[:200]
@@ -226,7 +282,7 @@ def _new_names(d, root, folders):
         raise ValueError("main folder: please use letters or digits")
     new_folders = dict(d["folders"])
     for k, v in (folders or {}).items():
-        if k in CATS and clean_name(v):
+        if k in cats(d) and clean_name(v):
             new_folders[k] = clean_name(v)
     if new_root and reserved(new_root):
         raise ValueError(f"'{new_root}' is a folder of the mail program and cannot be the main folder")
@@ -247,7 +303,7 @@ def rename(uid, root=None, folders=None):
     new_root, new_folders = _new_names(d, root, folders)
     if new_root == d["root"] and new_folders == d["folders"]:
         return []
-    pairs = {c: (folder_of(d, c), folder_of(d, c, new_root, new_folders)) for c in CATS}
+    pairs = {c: (folder_of(d, c), folder_of(d, c, new_root, new_folders)) for c in cats(d)}
     pairs = {c: p for c, p in pairs.items() if p[0] != p[1]}
     report, renamed = [], {}
     for acct in mail.get(uid)["accounts"]:
@@ -260,17 +316,34 @@ def rename(uid, root=None, folders=None):
             report.append({"account": acct.get("name", ""), "ok": False, "error": msg[:200]})
 
     def fn(dd):
-        dd["root"], dd["folders"] = new_root, new_folders
+        dd["root"] = new_root
+        dd["folders"].update({k: v for k, v in new_folders.items() if k in cats(dd)})
+        dd["own"].update({k: v for k, v in new_folders.items() if k in dd["own"]})
         for x in dd["log"] + dd["preview"]:
             done = renamed.get(x.get("aid"), {})
             if x.get("folder") in done:
                 x["folder"] = done[x["folder"]]
         for x in dd["preview"]:
-            if x.get("cat") in CATS:
+            if x.get("cat") in cats(dd):
                 x["folder"] = folder_of(dd, x["cat"])
     _mut(uid, fn)
     print(f"mail tidy: folders renamed: {sum(r['ok'] for r in report)} of {len(report)} mailbox(es)", flush=True)
     return report
+
+
+def own_folder(uid, add=None, remove=None):
+    """Ich → E-Mail → Ordner und Ausnahmen: add an own folder by name or take one out of the list."""
+    try:
+        if add is not None:
+            _mut(uid, lambda d: add_own(d, add))
+            print("mail tidy: own folder added", flush=True)
+        else:
+            _mut(uid, lambda d: drop_own(d, str(remove)))
+            print("mail tidy: own folder removed (folder and mail stay in the mailbox)", flush=True)
+    except ValueError:
+        print("mail tidy: own folder refused (name or limit)", flush=True)
+        raise
+    return public(uid)
 
 
 def norm_match(v):
@@ -295,7 +368,7 @@ def matches(match, sender):
 
 def add_rule(d, match, cat):
     match = norm_match(match)
-    if not match or (cat not in CATS and cat != "keep"):
+    if not match or (cat not in cats(d) and cat != "keep"):
         raise ValueError("a sender address or domain and a folder are required")
     d["rules"] = [r for r in d["rules"] if r["match"] != match][-299:]
     d["rules"].append({"id": secrets.token_hex(4), "match": match, "cat": cat, "t": int(time.time())})
@@ -1060,7 +1133,7 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None, senders=None):
             raise ValueError("the mail server has renumbered the inbox since; nothing was moved, "
                              "the next check makes new proposals")
         for cat, uids in uids_by_cat.items():
-            if not uids or cat not in CATS:
+            if not uids or cat not in cats(d):
                 continue
             present = set(b.search("UID", ",".join(map(str, uids))))
             uids = [u for u in uids if u in present]
@@ -1080,16 +1153,26 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None, senders=None):
     return len(log)
 
 
-def answer(uid, qid, cat, always=True):
-    """The person's answer to an open question: becomes a rule; waiting mail of that sender is moved."""
+def answer(uid, qid, cat, always=True, new=None):
+    """The person's answer to an open question: becomes a rule; waiting mail of that sender is moved.
+    With new (a folder name, typed and confirmed in the panel) an own folder is added first, checked by
+    check_new_name; the mailbox gets it when the mail is moved there."""
     d = state(uid)
     q = next((x for x in d["questions"] if x["id"] == qid), None)
     if not q:
         raise ValueError("unknown question")
-    if cat not in CATS and cat != "keep":
+    if new is not None:
+        try:
+            cat = _mut(uid, lambda dd: add_own(dd, new))
+        except ValueError:
+            print("mail tidy: new folder refused (name or limit)", flush=True)
+            raise
+        d = state(uid)
+        print("mail tidy: new folder for an answer", flush=True)
+    if cat not in cats(d) and cat != "keep":
         raise ValueError("unknown folder")
     n = 0
-    if cat in CATS:
+    if cat in cats(d):
         uids = sorted(set(q["uids"]) | {p["uid"] for p in d["preview"] if p["aid"] == q["aid"] and p["sender"] == q["sender"]})
         n = _move_uids(uid, q["aid"], {cat: uids}, "deine Antwort", senders={q["sender"]})
 
@@ -1101,7 +1184,7 @@ def answer(uid, qid, cat, always=True):
         if cat == "keep":
             dd["kept"][q["sender"]] = dd["kept"].get(q["sender"], 0) + KEPT_GUARD
     _mut(uid, fn)
-    return {"moved": n}
+    return {"moved": n, "cat": cat}
 
 
 def preview_ok(uid, ids):
@@ -1671,7 +1754,8 @@ def api_rule_remove(rid: str, prof=Depends(browser_profile)):
 @router.post("/api/profile/tidy/answer", dependencies=[Depends(assistant), Depends(_on)])
 async def api_answer(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)
-    r = await _do(answer, prof["id"], str(b.get("id", "")), str(b.get("cat", "")), b.get("always", True) is not False)
+    new = str(b["new"])[:80] if isinstance(b.get("new"), str) else None
+    r = await _do(answer, prof["id"], str(b.get("id", "")), str(b.get("cat", "")), b.get("always", True) is not False, new)
     return dict(public(prof["id"]), report=r)
 
 

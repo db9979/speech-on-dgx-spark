@@ -14,6 +14,19 @@ async function showMailTidy(){const box=$('mailtidy');if(!box)return;if(!PROFILE
 // folder, "Immer so" makes it a rule; the preview is grouped by the folder it would go to.
 const tcat=k=>k==='keep'?t('Posteingang','Inbox'):(TIDY.folders[k]||TIDY.cats[k]||k);
 const TSHOW=new Set();let TQ='';
+// a new own folder: the same fixed rule as tidy.check_new_name (the panel checks again, this only answers sooner)
+const TNAME=/^[\p{L}\p{N}][\p{L}\p{N}_ .,&()+'-]{0,39}$/u;
+const tnameBad=v=>!TNAME.test(v)?t('Ordnername: 1 bis 40 Buchstaben oder Ziffern (auch Leerzeichen . , & ( ) + \' -), kein / und keine anderen Zeichen.','Folder name: 1 to 40 letters or digits (also space . , & ( ) + \' -), no / or other marks.'):'';
+// "＋ Neuer Ordner" in a question: a name field; the folder is made only after "Anlegen", then the mail moves there
+function tidyNewFolder(q,chips,always){const E=icEl,f=E('div','rowin ic-newf');f.style.marginTop='8px';
+  const inp=E('input');inp.maxLength=40;inp.autocapitalize='off';inp.autocomplete='off';inp.placeholder=t('Name des neuen Ordners','Name of the new folder');inp.setAttribute('aria-label',t('Neuer Ordner','New folder'));
+  const path=E('small','fh',''),ok=E('button','b p',t('Anlegen und einsortieren','Create and file')),no=E('button','b',t('Abbrechen','Cancel'));ok.type=no.type='button';
+  const show=()=>{const v=inp.value.trim();path.textContent=v?'→ '+(TIDY.root?TIDY.root+'/':'')+v:''};inp.oninput=show;
+  no.onclick=()=>{f.remove();chips.querySelectorAll('button').forEach(b=>b.disabled=false)};
+  const go=async()=>{const v=inp.value.trim(),bad=tnameBad(v);if(bad){tidyMsg(bad,true);inp.focus();return}ok.disabled=no.disabled=true;
+    const r=await tidyCall('/answer',{id:q.id,new:v,always:always()});if(r)tidyMsg(t('Ordner angelegt.','Folder created.')+(r.report.moved?' '+r.report.moved+t(' verschoben.',' moved.'):''));else ok.disabled=no.disabled=false};
+  ok.onclick=go;inp.onkeydown=e=>{if(e.key==='Enter')go();if(e.key==='Escape')no.onclick()};
+  f.append(inp,ok,no);chips.after(f);f.after(path);chips.querySelectorAll('button').forEach(b=>b.disabled=true);inp.focus()}
 function tidyMore(list,key,rows,n){const shown=TSHOW.has(key)?rows:rows.slice(0,n);shown.forEach(r=>list.appendChild(r));
   if(rows.length>shown.length){const b=icEl('button','ic-more2',t(`Weitere ${rows.length-shown.length} zeigen`,`Show ${rows.length-shown.length} more`));b.type='button';
     b.onclick=()=>{TSHOW.add(key);b.remove();rows.slice(n).forEach(r=>list.appendChild(r))};list.appendChild(b)}return list}
@@ -55,6 +68,7 @@ function tidyQuestions(){const d=TIDY,E=icEl,w=E('div');
     for(const k of [...Object.keys(d.cats),'keep']){const ch=icChip(tcat(k),false,async()=>{chips.querySelectorAll('button').forEach(b=>b.disabled=true);
         const r=await tidyCall('/answer',{id:q.id,cat:k,always});if(r)tidyMsg(t('Gemerkt.','Noted.')+(r.report.moved?' '+r.report.moved+t(' verschoben.',' moved.'):''));else chips.querySelectorAll('button').forEach(b=>b.disabled=false)},k===q.guess?'guess':'');
       ch.dataset.cat=k;if(k===q.guess)ch.appendChild(E('em','',t('vermutet','guessed')));chips.appendChild(ch)}
+    const nf=icChip('＋ '+t('Neuer Ordner','New folder'),false,()=>{if(!c.querySelector('.ic-newf'))tidyNewFolder(q,chips,()=>always)},'new');nf.dataset.cat='new';chips.appendChild(nf);
     c.appendChild(chips);const f=E('div','ic-qf');const cb=icCheck(true,t('Immer so für diesen Absender','Always like this for this sender'),b=>{always=!always;
       b.classList.toggle('on',always);b.setAttribute('aria-checked',always?'true':'false');b.textContent='';if(always)b.appendChild(icSvg('check',12))});
     f.append(cb,E('span','',t('Immer so für diesen Absender (wird eine Regel)','Always like this for this sender (becomes a rule)')));c.appendChild(f);w.appendChild(c)}
@@ -84,15 +98,20 @@ function tidyFolders(){const d=TIDY,E=icEl,w=E('div','ic-form');const fpath=n=>(
     <div class="fh">${esc(t('Darunter liegen die Ordner. Umbenennen benennt den Ordner auch im Postfach um, die Mails darin wandern mit. Leer = Ordner direkt oben.','The folders sit below it. Renaming also renames the folder in the mailbox; the mail in it moves along. Empty = folders at the top.'))}</div>
     <div class="setrow"><div class="lbl"><b>${esc(t('Wie oft prüfen','How often to check'))}</b><span>${esc(t('Nur neue Mails seit dem letzten Mal.','Only new mail since the last time.'))}</span></div><select id="tidyevery">${[5,15,60].map(m=>`<option value="${m}"${d.every===m?' selected':''}>${m} ${esc(t('Minuten','minutes'))}</option>`).join('')}</select></div>
     <h4>${esc(t('Ordner und was verschoben wird','Folders and what is moved'))}</h4>
-    ${Object.entries(d.cats).map(([k,v])=>`<div class="setrow"><div class="lbl"><input data-fname="${k}" value="${esc(d.folders[k]||v)}" style="max-width:180px" aria-label="${esc(v)}"><span>${esc(fpath(d.folders[k]||v))}</span></div>
+    ${Object.entries(d.cats).map(([k,v])=>`<div class="setrow"><div class="lbl"><input data-fname="${k}" value="${esc(d.folders[k]||v)}" style="max-width:180px" aria-label="${esc(v)}"><span>${esc(fpath(d.folders[k]||v))}</span></div>${(d.own||[]).includes(k)?`<button class="b" type="button" data-drop="${esc(k)}" title="${esc(t('Aus der Liste nehmen','Take off the list'))}">${esc(t('Entfernen','Remove'))}</button>`:''}
       <select data-act="${k}">${[['move',t('verschieben','move')],['ask',t('erst nachfragen','ask first')],['keep',t('im Posteingang lassen','keep in inbox')]].map(([a,l])=>`<option value="${a}"${d.actions[k]===a?' selected':''}>${esc(l)}</option>`).join('')}</select></div>`).join('')}
     <div class="row"><button class="b" type="button" id="tactsave">${esc(t('Speichern','Save'))}</button></div>
+    <h4>${esc(t('Eigener Ordner','Own folder'))}</h4><div class="rowin"><input id="tnewf" maxlength="40" autocapitalize="off" autocomplete="off" placeholder="${esc(t('Name des neuen Ordners','Name of the new folder'))}" aria-label="${esc(t('Neuer Ordner','New folder'))}"><button class="b" type="button" id="tnewfadd">${esc(t('Hinzufügen','Add'))}</button></div>
+    <div class="fh">${esc(t('Eigene Ordner füllt nur, was du zuordnest (Fragen, Regeln); der Spark legt sie im Postfach an, sobald die erste Mail hineinkommt. Entfernen nimmt sie nur aus der Liste, Ordner und Mails bleiben.','Own folders get only what you assign (questions, rules); the Spark creates them in the mailbox with the first mail. Remove only takes them off the list; folder and mail stay.'))}</div>
     <h4>${esc(t('Immer im Posteingang lassen','Always keep in inbox'))}</h4><textarea id="tprot" rows="3" placeholder="${esc(t('Eine Adresse oder Domain pro Zeile','One address or domain per line'))}">${esc(d.protected.join('\n'))}</textarea>
     <div class="row"><button class="b" type="button" id="tprotsave">${esc(t('Speichern','Save'))}</button></div>`;
   const q=s=>w.querySelector(s);
   q('#tidyrootsave').onclick=async()=>{const v=q('#tidyroot').value.trim();if(v===d.root)return;
     if(!confirm(t('Den Hauptordner in allen Postfächern umbenennen? Die Mails darin wandern mit, es wird nichts gelöscht.','Rename the main folder in every mailbox? The mail in it moves along; nothing is deleted.')))return;
     tidyMsg(t('Benenne um …','Renaming …'));const r=await tidyCall('',{root:v},'PUT');if(r)tidyRenamed(r)};
+  q('#tnewfadd').onclick=()=>{const v=q('#tnewf').value.trim(),bad=tnameBad(v);if(bad){tidyMsg(bad,true);return}tidyCall('',{add_folder:v},'PUT')};
+  w.querySelectorAll('[data-drop]').forEach(b=>b.onclick=()=>{const k=b.dataset.drop;
+    if(confirm(t('„','"')+(d.folders[k]||k)+t('“ aus der Liste nehmen? Die Regeln dafür werden gelöscht; der Ordner und die Mails darin bleiben im Postfach.','" off the list? Its rules are deleted; the folder and the mail in it stay in the mailbox.')))tidyCall('',{remove_folder:k},'PUT')});
   q('#tidyevery').onchange=()=>tidyCall('',{every:+q('#tidyevery').value},'PUT');
   q('#tprotsave').onclick=()=>tidyCall('',{protected:q('#tprot').value.split(/[\n,]/).map(x=>x.trim()).filter(Boolean)},'PUT');
   q('#tactsave').onclick=async()=>{const actions={},folders={};w.querySelectorAll('[data-act]').forEach(s=>actions[s.dataset.act]=s.value);w.querySelectorAll('[data-fname]').forEach(i=>folders[i.dataset.fname]=i.value);const r=await tidyCall('',{actions,folders},'PUT');if(r)tidyRenamed(r)};

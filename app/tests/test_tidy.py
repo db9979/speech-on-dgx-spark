@@ -234,6 +234,68 @@ class Tidy(unittest.TestCase):
         self.assertEqual(self.inbox_subjects(), ["Treffen"])
         self.assertIsNone(r["backlog"])
 
+    def test_new_folder_from_a_question(self):
+        """'＋ Neuer Ordner' (Ich → E-Mail → Fragen): the name follows a fixed rule, the folder is made only with the
+        answer, the mail moves there and 'Immer so' makes a rule; removing it keeps folder and mail."""
+        tidy.classify = lambda h, text: (None, 0)
+        p, aid = self.setup_profile("Frieda")
+        FMB.put("INBOX", helpers.box_mail("Pizza <news@pizza.example>", "Gutschein 29,53 €"))
+        p.post("/api/profile/tidy/run", json={"aid": aid})
+        q = next(q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "news@pizza.example")
+        boxes = set(FMB.boxes)
+        for bad in ("", " ", "a/b", "../x", "Spark%", "x*", 'a"b', "a\\b", "a\x00b", "Neu\nZeile", "INBOX", "Papierkorb",
+                    "_x", ".x", "x" * 41, ["Liste"], "Ordner/../../INBOX"):
+            r = p.post("/api/profile/tidy/answer", json={"id": q["id"], "new": bad})
+            self.assertEqual(r.status_code, 400 if isinstance(bad, str) else 400, bad)
+            self.assertEqual(set(FMB.boxes), boxes, bad)            # nothing made on the server
+        d = p.get("/api/profile/tidy").json()
+        self.assertEqual(d["own"], [])
+        self.assertIn(q["id"], [x["id"] for x in d["questions"]])  # the question is still open
+        r = p.post("/api/profile/tidy/answer", json={"id": q["id"], "new": " Lieferdienste & Co. "})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual(d["report"]["moved"], 1)
+        self.assertEqual(self.inbox_subjects(tidy._utf7("Spark/Lieferdienste & Co.")), ["Gutschein 29,53 €"])   # "&-" on the wire
+        key = d["report"]["cat"]
+        self.assertEqual(d["own"], [key])
+        self.assertEqual(d["cats"][key], "Lieferdienste & Co.")
+        self.assertTrue(any(x["match"] == "news@pizza.example" and x["cat"] == key for x in d["rules"]))
+        # the rule files the next mail by itself; the model never picks an own folder
+        FMB.put("INBOX", helpers.box_mail("Pizza <news@pizza.example>", "Neue Karte"))
+        p.post("/api/profile/tidy/run", json={"aid": aid})
+        self.assertIn("Neue Karte", self.inbox_subjects(tidy._utf7("Spark/Lieferdienste & Co.")))
+        self.assertEqual(tidy.parse_class('{"category": "%s", "confidence": 99}' % key), (None, 0))
+        # a name that is already a folder takes that folder, nothing is overwritten or doubled
+        FMB.put("INBOX", helpers.box_mail("Laden <info@laden.example>", "Hallo"))
+        p.post("/api/profile/tidy/run", json={"aid": aid})
+        q2 = next(q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "info@laden.example")
+        d = p.post("/api/profile/tidy/answer", json={"id": q2["id"], "new": "werbung", "always": False}).json()
+        self.assertEqual(d["report"]["cat"], "werbung")
+        self.assertEqual(d["own"], [key])
+        self.assertIn("Hallo", self.inbox_subjects("Spark/Werbung"))
+        self.assertFalse(any(x["match"] == "info@laden.example" for x in d["rules"]))   # without "Immer so" no rule
+        # renamed on the server like the fixed folders; then taken off the list: rules go, folder and mail stay
+        r = p.put("/api/profile/tidy", json={"folders": {key: "Essen"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.inbox_subjects("Spark/Essen"), ["Gutschein 29,53 €", "Neue Karte"])
+        self.assertEqual(r.json()["cats"][key], "Essen")
+        self.assertEqual(p.put("/api/profile/tidy", json={"remove_folder": "werbung"}).status_code, 400)
+        n = FMB.total()
+        d = p.put("/api/profile/tidy", json={"remove_folder": key}).json()
+        self.assertEqual(d["own"], [])
+        self.assertNotIn(key, d["cats"])
+        self.assertFalse(any(x["cat"] == key for x in d["rules"]))
+        self.assertIn("Spark/Essen", FMB.boxes)
+        self.assertEqual(FMB.total(), n)
+        for c, args in FMB.calls:
+            self.assertNotIn(c, ("STORE", "EXPUNGE", "DELETE"))
+        # from the folder list, with a limit
+        for i in range(tidy.OWN_MAX):
+            self.assertEqual(p.put("/api/profile/tidy", json={"add_folder": f"Ordner {i}"}).status_code, 200)
+        r = p.put("/api/profile/tidy", json={"add_folder": "Einer zu viel"})
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(len(p.get("/api/profile/tidy").json()["own"]), tidy.OWN_MAX)
+
     def test_folder_names(self):
         for n in ("Entwürfe", "Spark/Rechnungen & Co", "Ärger"):
             self.assertEqual(tidy._unutf7(tidy._utf7(n)), n)

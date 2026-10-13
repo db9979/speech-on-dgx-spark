@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.515** Inbox tidying: create an own folder right from the question when none fits
 - **V01.0.514** Storage cleaned up: Me → Storage shows places (NAS, cloud, folder) and below them what they are for; Features → "Storage and NAS" with "Copy of my data" below
 - **V01.0.513** Logs without contents: no spoken commands, server answers or raw profile ids in log lines any more, a test turns new ones red
 - **V01.0.512** reMarkable: the note on the task sheet is read and comes back as a point to tick, also as a job
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.508** Own tasks: watching reports only what is new (firmware, episode, price), all own tasks under Me → Jobs to change and pause
 - **V01.0.507** Pebble watch app shows the comic woman
 - **V01.0.506** New page Status → Architecture: parts, the way of a request and every storage place to click through, always from the code
-- **V01.0.505** Errors with a reason in the logs; device updates no longer wrongly report "not ok" with the Android app
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -253,6 +253,33 @@ class Browser(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_mail_new_folder_from_a_question(self):
+        """'＋ Neuer Ordner' in a question: a name field, a wrong name is refused here already, a right one is sent
+        with the answer (the panel makes the folder); fits on a phone."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors, uid = await self.page(p, 390, 844)
+                try:
+                    await self.show(pg, "mailbox", "showMailTidy()")
+                    await pg.wait_for_selector("#mailtidy .ic-q")
+                    await pg.evaluate("document.querySelector('#mailtidy .ic-q .ic-chip[data-cat=new]').click()")
+                    await pg.wait_for_selector("#mailtidy .ic-newf input")
+                    self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#mailtidy .ic-q .ic-chips button')].every(b=>b.disabled)"))
+                    await pg.fill("#mailtidy .ic-newf input", "Spark/../INBOX")
+                    await pg.evaluate("document.querySelector('#mailtidy .ic-newf .b.p').click()")
+                    await pg.wait_for_timeout(200)
+                    self.assertEqual(self.answers, [])
+                    self.assertIn("Ordnername", await pg.evaluate("document.getElementById('tidymsg').textContent"))
+                    await pg.fill("#mailtidy .ic-newf input", "Lieferdienste")
+                    await self.check_layout(pg, "new folder 390")
+                    await pg.press("#mailtidy .ic-newf input", "Enter")
+                    await pg.wait_for_timeout(300)
+                    self.assertEqual(self.answers, [{"id": "q1", "new": "Lieferdienste", "always": True}])
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_remarkable_tree_and_save_bar(self):
         async def go():
             async with async_playwright() as p:
