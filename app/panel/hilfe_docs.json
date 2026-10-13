@@ -1813,7 +1813,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Für neue Profile (V01.0.492)",
-"text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features."
+"text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features. Seit V01.0.494 räumt admin._tidy beim Lesen der Konfiguration alles weg, was diese Version nicht mehr kennt: Schlüssel, die config.default.json nicht mehr hat, Vorgaben in chat.defaults, die profiles.clean_settings ablehnt (vorher „chat defaults: invalid value“ bei jedem Speichern), und Melder in berater_off, die es nicht mehr gibt. Was der Admin schickt, prüft validate weiter streng."
 },
 {
 "lang": "de",
@@ -5277,7 +5277,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "For new profiles (V01.0.492)",
-"text": "For new profiles (V01.0.492): when chat.new_profile_on names a function that no longer exists or no longer has its own profile switch (such as the old \"Nachrichten\" from V01.0.488), admin.get_config drops it; before, every save of an admin switch failed with \"new_profile_on: functions with an own switch, each once\". Self-test test_features."
+"text": "For new profiles (V01.0.492): when chat.new_profile_on names a function that no longer exists or no longer has its own profile switch (such as the old \"Nachrichten\" from V01.0.488), admin.get_config drops it; before, every save of an admin switch failed with \"new_profile_on: functions with an own switch, each once\". Self-test test_features. Since V01.0.494 admin._tidy drops whatever this version no longer knows when the configuration is read: keys config.default.json no longer has, presets in chat.defaults that profiles.clean_settings refuses (before: \"chat defaults: invalid value\" on every save) and Melder in berater_off that are gone. What the admin sends is still checked strictly by validate."
 },
 {
 "lang": "en",

@@ -461,12 +461,27 @@ async def llm_models(request: Request, fresh: bool = False):
 def get_config():
     with open(DEFAULTS) as f:
         cfg = json.load(f)
+    known = {sec: set(vals) for sec, vals in cfg.items() if isinstance(vals, dict)}
     for sec, vals in load_config().items():  # fill keys added by newer versions
         cfg.setdefault(sec, {}).update(vals)
-    npo = cfg.get("chat", {}).get("new_profile_on")
-    if isinstance(npo, list):   # a function removed or without an own switch by now must not block every save
-        cfg["chat"]["new_profile_on"] = [k for k in npo if isinstance(k, str) and k in features.BY_KEY
-                                         and features.BY_KEY[k].profile]
+    return _tidy(cfg, known)
+
+
+def _tidy(cfg, known):
+    """What older versions left in the stored config and this one no longer knows must not block every save
+    (V01.0.492/493): validate() stays strict for what the admin sends, the stored leftovers are dropped here."""
+    for sec, keys in known.items():
+        if isinstance(cfg.get(sec), dict):
+            cfg[sec] = {k: v for k, v in cfg[sec].items() if k in keys}
+    ch = cfg.get("chat", {})
+    if isinstance(ch.get("new_profile_on"), list):   # a function removed or without an own switch by now
+        ch["new_profile_on"] = list(dict.fromkeys(k for k in ch["new_profile_on"] if isinstance(k, str)
+                                                  and k in features.BY_KEY and features.BY_KEY[k].profile))
+    if isinstance(ch.get("defaults"), dict):        # a preset whose setting is gone or takes other values now
+        ch["defaults"] = profiles.clean_settings(ch["defaults"])
+    if isinstance(ch.get("berater_off"), list):     # a Melder of the Einstellungs-Assistent that is gone
+        import berater
+        ch["berater_off"] = list(dict.fromkeys(x for x in ch["berater_off"] if isinstance(x, str) and x in berater.MELDER))
     return cfg
 
 
