@@ -27,6 +27,7 @@ import admin  # noqa: E402
 import berater  # noqa: E402
 import berater_katalog as K  # noqa: E402
 import faelle  # noqa: E402
+import guard  # noqa: E402
 import features  # noqa: E402
 import intent  # noqa: E402
 import live  # noqa: E402
@@ -39,8 +40,8 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 STATE = os.environ["SPEECH_SPARK_STATE"]
 T0 = 1_791_800_000.0          # a fixed moment (Oct 2026); every time below is relative to it
 OFF = dict(berater=False, berater_explain=False, berater_chat=False, berater_notify=False, berater_issue=False,
-           berater_auto=False, berater_env=False, berater_ideas=False, berater_me=False, bewerten=False, bewerten_back=False,
-           berater_off=[], berater_calls=20, berater_check_h=24)
+           berater_auto=False, berater_env=False, berater_ideas=False, berater_analyse=False, berater_auto_undo=False, berater_me=False, bewerten=False, bewerten_back=False,
+           berater_off=[], berater_calls=20, berater_check_h=24, tool_hints="", tool_words="", route_extra="")
 
 
 def run(coro):
@@ -77,6 +78,7 @@ class Base(unittest.TestCase):
         faelle._bad_today.clear()
         faelle._live.update(day="", n={})
         berater._rt.update(wake=0.0, melder=0.0, confirm={})
+        guard._rate.clear()     # the per-minute limits of the endpoints: every test starts with a fresh minute
         sysd = mock.patch.object(admin, "run", return_value=(0, ""))   # never systemctl from a test
         sysd.start()
         self.addCleanup(sysd.stop)
@@ -658,7 +660,8 @@ class Gaps(Base):
         self.on(bewerten=True, bewerten_back=True, berater_issue=True, report=True)
         _, uid = profile("FaeIssue")
         profiles.save_settings(uid, {"rate_on": True, "rate_back": True})
-        case = faelle.add("schlecht", {"group": "", "who": uid}, grund="antwort", now=T0)
+        case = faelle.add("schlecht", {"group": "", "who": uid, "tools": [("mail_list", False)], "offered": ["mail_list"]},
+                          grund="antwort", now=T0)          # Befund „Werkzeug gescheitert“: a report is the way
         p = run(berater.propose(case, T0))
         with mock.patch("meldung.create", return_value={"id": "d1"}):
             berater.to_issue(p["id"], "main", "Admin")

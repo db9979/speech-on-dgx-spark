@@ -76,6 +76,21 @@ KINDS = {
     "weiche": ("Falsch zugeordnet", "Wrongly sorted", "person"),
     "melder": ("Befund", "Finding", "melder"),
 }
+# the answer begins with a no (the Befund's „Antwort widerspricht“, befund.py): fixed words only
+NEG = re.compile(r"(?i)\W*(nein\b|no\b|leider (nicht|kein|nichts)|ich (habe|hab|finde|fand|sehe) (dazu |da |hier )?(nichts|keine?)\b|"
+                 r"es gibt (dazu )?(keine?|nichts)\b|(da|dazu) (ist|steht|liegt) nichts|"
+                 r"i (did not|didn't|could not|couldn't|can't) find|there (is|are) no\b)")
+# „Hätte nachsehen sollen in …“ under 👎 (plan vorschlaege-besser.md, V4): chip -> (German, English, tools it means)
+SOLL = {
+    "dokumente": ("in meinen Dokumenten", "in my documents", ("document_search",)),
+    "erstellt": ("in erstellten Dokumenten", "in documents the Spark made", ("document_status", "remarkable_sent")),
+    "kalender": ("im Kalender", "in the calendar", ("calendar_events",)),
+    "mail": ("in den Mails", "in the mails", ("mail_list", "mail_search")),
+    "geraete": ("bei den Geräten", "at the devices", ("home_assistant_states", "home_assistant")),
+    "erinnerung": ("bei den Erinnerungen", "in the reminders", ("reminder_list",)),
+    "web": ("im Web", "on the web", ("web_search",)),
+    "verlauf": ("in früheren Gesprächen", "in earlier conversations", ("history_search",)),
+}
 # the reasons under 👎: key -> (German, English)
 REASONS = {"werkzeug": ("falsches Werkzeug", "wrong tool"), "antwort": ("falsche Antwort", "wrong answer"),
            "langsam": ("zu langsam", "too slow"), "verstanden": ("nicht verstanden", "not understood"),
@@ -137,13 +152,19 @@ def summary(tr, who, ask, said, outside=False, now=None, off=False):
     label = str(getattr(tr, "intent", "") or "unklar")
     marks = dict(getattr(tr, "marks", None) or {})
     behind = sum(int((s.get("x") or {}).get("behind") or 0) for s in steps if s.get("k") == "tts")
+    # for the Befund (befund.py): tool names only (offered, had to be called, found nothing) and whether the answer
+    # said „nein / nichts“ (fixed words), never the answer itself
+    names = lambda xs: [n for n in xs if isinstance(n, str) and TOOL.fullmatch(n)][:60]   # noqa: E731
+    empty = [s["n"] for s in steps if s.get("k") == "tool" and (s.get("x") or {}).get("empty")]
     return {"t": now, "who": who and who.get("id"), "kind": getattr(tr, "kind", "guest"), "client": getattr(tr, "client", "other"),
             "group": label if GROUP.fullmatch(label) else "unklar", "tools": tools[:12],
             "errors": [e for e in (getattr(tr, "errors", None) or []) if CODE.fullmatch(e)][:5],
             "held": held, "sound": marks.get("sound"), "end": marks.get("end"),
             "trace": tr.id if getattr(tr, "persist", False) else "", "q": str(ask or "")[:MAX_Q],
             "h": _hash(ask), "refusal": bool(REFUSAL.search(str(said or "")[:2000])), "outside": bool(outside), "vote": None,
-            "behind": behind, "off": bool(off)}
+            "behind": behind, "off": bool(off), "offered": names(getattr(tr, "offered", None) or []),
+            "need": names(getattr(tr, "need", None) or []), "empty": names(empty)[:12],
+            "neg": bool(NEG.match(str(said or "")[:300]))}
 
 
 def triggers(s, before=None):
@@ -253,7 +274,8 @@ def _keep(rows, now):
     return rows[-MAX_CASES:]
 
 
-def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", title="", want="", own=False, now=None):
+def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", title="", want="", own=False, now=None,
+        soll=""):
     """A case of `kind` from a turn summary `s` (or {} for a melder): a new one, or the open one with the same
     fingerprint counts up. `want`: the group the sentence belongs in (Weiche, „Falsch zugeordnet“); `own`: the
     sentence is the admin's own (typed on Funktionen → Weiche, kept). Returns the case."""
@@ -271,6 +293,9 @@ def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", ti
     fp = fingerprint(kind, group, tool or melder or want, code or grund)
     who = s.get("who")
     ex = {"t": round(now, 1), "trace": s.get("trace") or "", "client": s.get("client") or ""}
+    if "offered" in s:      # the Befund's facts of this turn: tool names and yes/no only (befund.facts)
+        import befund
+        ex["f"] = befund.facts(s)
     if isinstance(s.get("sound"), (int, float)) and not isinstance(s.get("sound"), bool):
         ex["sound"] = int(s["sound"])   # ms to the first sound (a number only; stopped answers, Punkt 11)
     if s.get("q") and CODEWORD not in s["q"] and (own or _consent(who, asked)) and not s.get("outside"):
@@ -296,6 +321,9 @@ def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", ti
             case["title"] = str(title)[:120]
         if want:
             case["want"] = want
+        if soll in SOLL:    # the person's chip: counted per chip, the most named one is the case's expectation
+            c = case.setdefault("soll", {})
+            c[soll] = int(c.get(soll, 0)) + 1
         _write(rows)
     print(f"faelle: {kind} | {group or '-'} | {tool or code or melder or grund or '-'} | {case['n']}×", flush=True)
     _live_mark(kind)
@@ -314,6 +342,21 @@ def cases(now=None):
 
 def get(cid):
     return next((x for x in cases() if x["id"] == cid), None)
+
+
+def set_want_tool(cid, tool):
+    """The admin's „Erwartetes Werkzeug“ for a case (befund.expected); one tool, the case starts over as „neu“."""
+    if not TOOL.fullmatch(str(tool)):
+        raise ValueError("tool")
+    with _lock:
+        rows = _read()
+        case = next((x for x in rows if x["id"] == cid), None)
+        if not case:
+            return None
+        case["want_tool"] = [tool]
+        case["status"] = "neu"
+        _write(rows)
+    return case
 
 
 def set_status(cid, status, pid=None):
@@ -439,7 +482,7 @@ def _good_add(s, now):
     write_json(_file("gut-saetze.json"), rows[-MAX_GOOD:])
 
 
-def rate(rid, uid, good, grund="", note="", with_q=False, now=None):
+def rate(rid, uid, good, grund="", note="", with_q=False, now=None, soll=""):
     """One person's 👍 or 👎 for one of their answers (changeable). Returns {"vote", "case"}."""
     now = time.time() if now is None else now
     with _lock:
@@ -465,12 +508,18 @@ def rate(rid, uid, good, grund="", note="", with_q=False, now=None):
     case = None
     if not good:
         c = add("schlecht", dict(s, q=s["q"] if with_q else ""), tool=_tool_of(s, grund), grund=grund, note=note,
-                asked=with_q, now=now)
+                asked=with_q, now=now, soll=soll if soll in SOLL else "")
         case = c["id"]
         with _lock:
             if rid in _recent:
                 _recent[rid]["case"] = case
     _live_mark("gut" if good else "schlecht")
+    if s.get("trace"):   # the thumb on its request in Zustand → Logs → Anfragen (tracelog.vote)
+        try:
+            import tracelog
+            tracelog.vote(s["trace"], "gut" if good else "schlecht", grund, case, now)
+        except OSError as e:
+            print("faelle: Bewertung nicht an der Anfrage", type(e).__name__, flush=True)
     return {"vote": "gut" if good else "schlecht", "case": case}
 
 
@@ -530,7 +579,7 @@ def for_live(now=None):
 # ---------------------------------------------------------------- endpoint: 👍 / 👎 under an answer
 @router.post("/api/chat/rate", dependencies=[Depends(assistant)])
 async def post_rate(request: Request):
-    """{id, good, grund?, text?, frage?}: the person's own vote for one of their answers of the last 24 hours."""
+    """{id, good, grund?, text?, frage?, soll?}: the person's own vote for one of their answers of the last 24 hours."""
     prof = profiles.current(request)
     if not prof:
         raise HTTPException(403, "Bewerten gibt es nur mit Profil.")
@@ -553,7 +602,8 @@ async def post_rate(request: Request):
     if not b["good"] and _day_bad(prof["id"]) >= 10:
         raise HTTPException(429, "Heute höchstens 10 Meldungen.")
     try:
-        res = rate(b["id"], prof["id"], b["good"], grund, note, b.get("frage") is True)
+        res = rate(b["id"], prof["id"], b["good"], grund, note, b.get("frage") is True,
+                   soll=b.get("soll") if b.get("soll") in SOLL else "")
     except KeyError:
         raise HTTPException(404, "Diese Antwort ist zu alt oder nicht deine.")
     if not b["good"]:

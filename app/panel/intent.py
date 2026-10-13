@@ -91,7 +91,11 @@ GROUPS = {
     # only when the person names it ("Schau in Wikipedia ..."); other knowledge questions stay "unklar"
     "wikipedia": ({"wikipedia", "article_more"}, dict(chat.NEED_TOOLS)["wikipedia"]),
     # Dokumente erstellen (docmake.py): a letter, presentation, table … as a file
-    "erstellen": ({"document_plan", "document_change", "document_status", "document_send"}, docmake.MAKE_WORDS),
+    # and what the Spark already made or put on the reMarkable (chat.DONE_WORDS: „Wurde ein Dokument erstellt?“)
+    "erstellen": ({"document_plan", "document_change", "document_status", "document_send", "remarkable_sent",
+                   "spark_tagebuch"},
+                  re.compile(docmake.MAKE_WORDS.pattern + "|" + chat.DONE_WORDS.pattern.removeprefix("(?i)") + "|"
+                             + chat.DIARY_WORDS.pattern.removeprefix("(?i)"), re.I)),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }

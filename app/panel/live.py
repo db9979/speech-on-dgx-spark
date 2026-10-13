@@ -59,12 +59,12 @@ TOOLS = {
     "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "pages",
     "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
-    "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "iphone_action": "push", "weather": "weather",
+    "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "iphone_action": "push", "weather": "weather",
     "parcels": "parcels", "transit": "transit", "document_search": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "pc_action": "desk", "pc_send": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "pc_action": "desk", "pc_send": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -1082,7 +1082,9 @@ def snapshot(view="admin", now=None):
                         + ("" if meld.get("token") else " · kein Token"))
         if x["id"] == "verb":   # Einstellungs-Assistent: numbers only (never a question, a title or a word)
             x["sub"] = (f"heute {verb.get('gut', 0)} 👍 · {verb.get('schlecht', 0)} 👎 · {verb.get('faelle', 0)} Fälle · "
-                        f"{verb.get('open', 0)} Vorschläge offen" + (f" · {verb['check']} in Nachkontrolle" if verb.get("check") else ""))
+                        f"{verb.get('open', 0)} Vorschläge offen" + (f" · {verb['check']} in Nachkontrolle" if verb.get("check") else "")
+                        + (f" · {verb['luecken']} Lücken" if verb.get("luecken") else "")
+                        + (f" · {verb['regeln']} eigene Regeln" if verb.get("regeln") else ""))
         if x["id"] == "ged":    # Gedächtnis prüfen: how many facts per mark (never a fact)
             x["sub"] = (f"{ged.get('facts', 0)} Einträge · {ged.get('ok', 0)} bestätigt · {ged.get('learned', 0)} gelernt · "
                         f"{ged.get('stale', 0)} veraltet?" + (f" · {ged['contra']} Widerspruch" if ged.get("contra") else "")

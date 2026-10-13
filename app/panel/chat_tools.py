@@ -253,6 +253,9 @@ async def run(t, name, args, st):
             item = profiles.add_reminder(t.who["id"], text, due) if t.who else \
                 {"id": secrets.token_hex(4), "text": text[:200], "due": due}
             await t.out.put({"type": "reminder", "action": "set", "item": item, "foreign": not t.own_browser})
+            if t.who:
+                import tagebuch
+                tagebuch.note(t.who["id"], "erinnerung", f"{item['text']} ({fmt(item)})", ref=item["id"])
             return f"Set: '{item['text']}' at {fmt(item)}."
         if name == "reminder_list":
             return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders. Say so."

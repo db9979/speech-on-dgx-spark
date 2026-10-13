@@ -668,6 +668,7 @@ struct RateSheet: View {
     @State private var reason = ""
     @State private var note = ""
     @State private var question = false
+    @State private var soll = ""
 
     var body: some View {
         NavigationStack {
@@ -683,6 +684,13 @@ struct RateSheet: View {
                         .onChange(of: note) { if note.count > 200 { note = String(note.prefix(200)) } }
                     Toggle("Frage mitschicken (hilft beim Vorschlag)", isOn: $question)
                 }
+                Section("Hätte nachsehen sollen in (freiwillig)") {
+                    Picker("Hätte nachsehen sollen in", selection: $soll) {
+                        Text("weiß nicht").tag("")
+                        ForEach(Conversation.rateSoll) { r in Text(r.label).tag(r.id) }
+                    }
+                    .pickerStyle(.menu)
+                }
             }
             .navigationTitle("Schlechte Antwort")
             .navigationBarTitleDisplayMode(.inline)
@@ -690,7 +698,7 @@ struct RateSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Melden") {
-                        Task { await Conversation.shared.rate(message.id, good: false, reason: reason, note: note, question: question) }
+                        Task { await Conversation.shared.rate(message.id, good: false, reason: reason, note: note, question: question, soll: soll) }
                         dismiss()
                     }
                 }

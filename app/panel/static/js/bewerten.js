@@ -4,6 +4,10 @@
 // Also: Ich → Gespräch „Vorschläge für dich“ (berater.py, Punkt 10): the profile's own settings, taken only here.
 const RATE_WHY=[['werkzeug',t('falsches Werkzeug','wrong tool')],['antwort',t('falsche Antwort','wrong answer')],['langsam',t('zu langsam','too slow')],
   ['verstanden',t('nicht verstanden','not understood')],['aussprache',t('falsch ausgesprochen','mispronounced')]];
+// „Hätte nachsehen sollen in …“ (faelle.SOLL, plan vorschlaege-besser.md V4): optional, only the chip is kept
+const RATE_SOLL=[['dokumente',t('meinen Dokumenten','my documents')],['erstellt',t('erstellten Dokumenten','documents the Spark made')],
+  ['kalender',t('Kalender','calendar')],['mail',t('Mails','mails')],['geraete',t('Geräten','devices')],['erinnerung',t('Erinnerungen','reminders')],
+  ['web',t('Web','web')],['verlauf',t('früheren Gesprächen','earlier conversations')]];
 function rateBar(id){const d=document.createElement('div');d.className='ratebar';d.dataset.rid=id;
   d.innerHTML=`<button type="button" class="b rb" data-rate="up" aria-label="${esc(t('Gute Antwort','Good answer'))}" title="${esc(t('Gute Antwort','Good answer'))}">👍</button>`+
     `<button type="button" class="b rb" data-rate="down" aria-label="${esc(t('Schlechte Antwort','Bad answer'))}" title="${esc(t('Schlechte Antwort','Bad answer'))}">👎</button><span class="mut rmsg"></span>`;
@@ -15,14 +19,17 @@ async function rateSend(bar,body){const m=bar.querySelector('.rmsg');
   catch(e){m.textContent=e.message}}
 function rateSheet(bar){if(bar.querySelector('.ratesheet'))return;const s=document.createElement('div');s.className='ratesheet';
   s.innerHTML=`<div class="rwhy">${RATE_WHY.map(([k,l])=>`<button type="button" class="ld-chip" data-why="${k}">${esc(l)}</button>`).join('')}</div>`+
+    `<div class="mut rsolll">${esc(t('Hätte nachsehen sollen in (freiwillig):','Should have looked in (optional):'))}</div><div class="rwhy rsoll">${RATE_SOLL.map(([k,l])=>`<button type="button" class="ld-chip" data-soll="${k}">${esc(l)}</button>`).join('')}</div>`+
     `<input class="rtext" maxlength="200" autocomplete="off" placeholder="${esc(t('Was war falsch? (kurz, freiwillig)','What was wrong? (short, optional)'))}" aria-label="${esc(t('Was war falsch?','What was wrong?'))}">`+
     `<label class="mut rq"><input type="checkbox" class="rwith"> ${esc(t('Frage mitschicken (hilft beim Vorschlag)','Send the question along (helps the proposal)'))}</label>`+
     `<div class="row"><button type="button" class="b p" data-rate="send">${esc(t('Melden','Report'))}</button><button type="button" class="b" data-rate="close">${esc(t('Abbrechen','Cancel'))}</button></div>`;
   bar.appendChild(s);s.querySelector('.rtext').focus()}
 document.addEventListener('click',e=>{const b=e.target.closest('.ratebar button');if(!b)return;const bar=b.closest('.ratebar');
   if(b.dataset.why){bar.querySelectorAll('[data-why]').forEach(x=>x.classList.toggle('on',x===b&&!b.classList.contains('on')));return}
+  if(b.dataset.soll){bar.querySelectorAll('[data-soll]').forEach(x=>x.classList.toggle('on',x===b&&!b.classList.contains('on')));return}
   const r=b.dataset.rate;if(r==='up')rateSend(bar,{good:true});else if(r==='down')rateSheet(bar);else if(r==='close'){const sh=bar.querySelector('.ratesheet');if(sh)sh.remove()}
-  else if(r==='send'){const w=bar.querySelector('[data-why].on');rateSend(bar,{good:false,grund:w?w.dataset.why:'',text:bar.querySelector('.rtext').value.trim().slice(0,200),frage:bar.querySelector('.rwith').checked})}});
+  else if(r==='send'){const w=bar.querySelector('[data-why].on'),so=bar.querySelector('[data-soll].on');
+    rateSend(bar,{good:false,grund:w?w.dataset.why:'',soll:so?so.dataset.soll:'',text:bar.querySelector('.rtext').value.trim().slice(0,200),frage:bar.querySelector('.rwith').checked})}});
 // Ich → Gespräch: proposals for the profile's own settings
 async function meBerater(){const box=$('mebvbox');if(!box)return;
   let d;try{const r=await fetch('/api/me/berater',{cache:'no-store'});if(!r.ok){box.hidden=true;return}d=await r.json()}catch{box.hidden=true;return}

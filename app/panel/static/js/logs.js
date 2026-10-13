@@ -103,13 +103,17 @@ const rfirst=x=>x.marks&&x.marks.sound!=null?x.marks.sound:(x.marks||{}).end;
 async function loadReq(){const d=await (await api(`/api/admin/traces?minutes=${LG.min}`)).json();if(LG.tab!=='req')return;
   RQ.data=d;if(RQ.sel&&!d.items.some(x=>x.id===RQ.sel))RQ.sel=null;if(!RQ.sel&&d.items.length&&!PHONE.matches)RQ.sel=d.items[0].id;rrender()}
 function rpill(text,cls){return el('span','rpill'+(cls?' '+cls:''),text)}
+// 👍/👎 of the person for this answer (tracelog.vote): thumb, fixed reason, seconds after the answer, never the note
+const rvote=x=>(x.vote||{}).v||'';
+function rthumb(x){const v=rvote(x);if(!v)return null;const s=el('span','rvote '+(v==='gut'?'up':'dn'),v==='gut'?'👍':'👎');s.title=v==='gut'?t('Gut bewertet','Rated good'):t('Schlecht bewertet','Rated bad');s.setAttribute('aria-label',s.title);return s}
+function rreason(x){const g=(x.vote||{}).grund,r=(RQ.data&&RQ.data.reasons||{})[g];return r?t(r[0],r[1]):''}
 function rchain(x){const c=el('span','rchain');let n=0;
   (x.steps||[]).filter(s=>s.k!=='weiche'&&s.k!=='check').forEach(s=>{if(n++)c.append(el('s'));
     if(s.k==='tool'){const b=el('i','rtool'+((s.x||{}).ok===false?' bad':''),wzName(s.n));b.title=s.n;c.append(b)}else{const i=el('i');i.style.background=RK[s.k][0];i.title=s.n;c.append(i)}});return c}
 function rlist(items){const box=el('div','rlist');
   for(const x of items){const b=el('button','rq'+(x.id===RQ.sel?' on':'')+(x.status==='err'?' err':x.status==='slow'?' slow':''));b.type='button';
     const top=el('div','rtop');top.append(el('span','rt',rtime(x)),el('b','',x.name));top.append(el('span','rdev',' · '+(x.device||RCLIENT[x.client]||x.client)));
-    top.append(el('span','rid',' · '+x.id),el('span','rdur',rsec(rfirst(x))));b.append(top);
+    top.append(el('span','rid',' · '+x.id),el('span','rdur',rsec(rfirst(x))));const th=rthumb(x);if(th)top.append(th);b.append(top);
     const row=el('div','rrow');if(x.intent)row.append(rpill(x.intent,'int'));row.append(rchain(x));b.append(row);
     b.onclick=()=>{RQ.sel=x.id;RQ.lines=null;rrender();if(PHONE.matches)window.scrollTo(0,0)};box.append(b)}
   if(!items.length)box.append(el('div','lempty',RQ.data&&!RQ.data.on?t('Die Aufzeichnung ist aus: Einstellungen → Spark → Betrieb → Anfragen verfolgen.','Recording is off: Settings → Spark → Operation → Trace requests.'):t('Keine Anfragen in diesem Zeitraum.','No requests in this time range.')));
@@ -177,6 +181,10 @@ function rdetail(x){const box=el('div','rdet');
   const sub=el('div','rsub');sub.append(document.createTextNode((x.device?x.device+' · ':'')+(RCLIENT[x.client]||x.client)+' · '+t('Absicht ','intent ')));sub.append(rpill(x.intent||'–','int'));
   sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);
   if((x.errors||[]).length){const eb=el('div','lasterr');for(const c of x.errors){const r=el('div','',t('Fehler: ','Error: ')+rerr(c)+' ');r.append(el('code','lcode',c));eb.append(r)}box.append(eb)}
+  if(rvote(x)){const v=x.vote,vb=el('div','rvoted '+(v.v==='gut'?'up':'dn'));const r=rreason(x);
+    vb.append(el('b','',(v.v==='gut'?'👍 ':'👎 ')+t(`Bewertet nach ${v.after} s`,`Rated after ${v.after} s`)+(r?' · '+t('Grund: ','Reason: ')+r:'')));
+    if(v.case&&typeof window.openCase==='function'&&!document.body.classList.contains('mgr')){const cb=el('button','mlink',t('Fall öffnen: Zustand → Verbessern','Open case: Status → Improve'));cb.type='button';cb.onclick=()=>window.openCase(v.case);vb.append(document.createTextNode(' '),cb)}
+    box.append(vb)}
   const bar=el('div','lbar');const lb=el('button','b',t('Zugehörige Logzeilen','Related log lines'));lb.type='button';const cp=el('button','b',t('Kopieren für Thread','Copy for thread'));cp.type='button';
   cp.onclick=()=>copyString(rcopyText(),cp);bar.append(lb,cp);box.append(bar);
   // „Erklären“ (Einstellungs-Assistent, berater.py): the request in fixed sentences and what could help; „Als Fall aufnehmen“
@@ -189,10 +197,11 @@ function rdetail(x){const box=el('div','rdet');
   box.append(el('div','rnote',t('🔒 Ohne Frage- und Antworttext: nur Wege, Werkzeugnamen, Zahlen und Zeiten.','🔒 Without question or answer text: only ways, tool names, numbers and times.')+(x.named?'':' '+t('Name nur, wenn das Profil es erlaubt.','Name only when the profile allows it.'))));
   box.append(rshares(x),rsteps(x));const lines=el('div','rlinesbox');box.append(lines);lb.onclick=()=>rshowLines(x,lines);if(RQ.lines&&RQ.linesFor===x.id)rlinesShow(lines);return box}
 function rfiltered(){const d=RQ.data;if(!d)return [];const q=$('logq').value.trim().toLowerCase();
-  return d.items.filter(x=>(!RQ.filter||x.status===RQ.filter)&&(!q||[x.id,x.name,x.device,x.client,x.intent,...(x.steps||[]).map(s=>s.k==='tool'?s.n+' '+wzName(s.n):s.n)].join(' ').toLowerCase().includes(q)))}
+  return d.items.filter(x=>(!RQ.filter||(RQ.filter==='gut'||RQ.filter==='schlecht'?rvote(x)===RQ.filter:x.status===RQ.filter))&&(!q||[x.id,x.name,x.device,x.client,x.intent,...(x.steps||[]).map(s=>s.k==='tool'?s.n+' '+wzName(s.n):s.n)].join(' ').toLowerCase().includes(q)))}
 function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');if(!d)return;
   chips.replaceChildren();const n=k=>d.items.filter(x=>x.status===k).length;
-  [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')]].forEach(([k,label,c,cnt])=>{
+  const nv=k=>d.items.filter(x=>rvote(x)===k).length;
+  [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')],['gut','👍','#16a34a',nv('gut')],['schlecht','👎','#dc2626',nv('schlecht')]].forEach(([k,label,c,cnt])=>{
     const b=el('button','lchip'+(RQ.filter===k?' on':''));b.type='button';if(c){b.style.setProperty('--c',c);b.append(el('i'))}b.append(document.createTextNode(label));b.append(el('b','',String(cnt)));
     b.setAttribute('aria-pressed',RQ.filter===k?'true':'false');b.onclick=()=>{RQ.filter=k;rrender()};chips.append(b)});
   // the live refresh (every 10 s) builds the list anew: it keeps where the person had scrolled to (V01.0.387, Dominik
@@ -204,7 +213,7 @@ function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');i
   $('loghead').textContent=t('Anfragen','Requests')+(d.on?'':' · '+t('Aufzeichnung aus','recording off'));
   $('logcount').textContent=t(`${items.length} von ${d.items.length} · höchstens ${d.keep_hours} h`,`${items.length} of ${d.items.length} · at most ${d.keep_hours} h`)}
 function rcopyText(){const x=RQ.data&&RQ.data.items.find(y=>y.id===RQ.sel);if(!x)return '';const m=x.marks||{};
-  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.ack!=null?` · Rückmeldung ${rsecs(m.ack)}`:'')+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`;
+  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.ack!=null?` · Rückmeldung ${rsecs(m.ack)}`:'')+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`+(rvote(x)?` · Bewertung ${x.vote.v==='gut'?'👍':'👎'}`+(rreason(x)?` (${rreason(x)})`:''):'');
   const rows=[...(x.steps||[])].sort((a,b)=>a.a-b.a).map(s=>`+${(s.a/1000).toFixed(2)} ${rtitle(s)} ${s.d?rsec(s.d):''} (${rdesc(s)})`.replace(' ()',''));
   return `${head}\n\`\`\`\n${rows.join('\n')}\n\`\`\``}
 // detail switches (Ausführlich): admin only, off by default, switch themselves off

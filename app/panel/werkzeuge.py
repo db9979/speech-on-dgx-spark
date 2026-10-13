@@ -35,10 +35,12 @@ NAMES = {
     "agent_list": ("Agenten zeigen", "List agents"), "agent_task": ("Agent beauftragen", "Agent task"),
     "agent_schedule": ("Agent planen", "Schedule agent"), "routine_save": ("Ablauf speichern", "Save routine"),
     "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
+    "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"),
     "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),
     "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),
     "document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"),
     "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document"),
+    "remarkable_sent": ("Aufs reMarkable Gelegtes", "Put on the reMarkable"),
     "pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer"),
     # tools outside the switch's groups, the panel's own steps and tools only programs call over MCP
     "get_time": ("Uhrzeit", "Time"), "read_page": ("Webseite lesen", "Read web page"),

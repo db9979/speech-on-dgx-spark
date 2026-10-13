@@ -414,7 +414,7 @@ async def web_page(uid, url, title=""):
         return "Die Seite ließ sich nicht lesen (nicht öffentlich, kein HTML oder zu wenig Text)."
     title = remarkable._clean(title, 80) or re.sub(r"^https?://(www\.)?", "", url)[:60]
     paras = re.sub(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ])", "\n\n", text)      # page_text is one line: sentences as paragraphs
-    r = await remarkable.place(uid, title, remarkable.epub(title, paras + "\n\nQuelle: " + url))
+    r = await remarkable.place(uid, title, remarkable.epub(title, paras + "\n\nQuelle: " + url), src="web")
     return "Liegt jetzt auf dem reMarkable " + remarkable._told(r)
 
 
@@ -426,7 +426,7 @@ async def attachment(uid, query=""):
     if not got:
         return "In den Mails der letzten 30 Tage" + (f" zu „{query}“" if query else "") + " fand ich keinen PDF- oder EPUB-Anhang."
     name, data, kind = got
-    r = await remarkable.place(uid, re.sub(r"\.(pdf|epub)$", "", name, flags=re.I), data, kind)
+    r = await remarkable.place(uid, re.sub(r"\.(pdf|epub)$", "", name, flags=re.I), data, kind, src="mail")
     return f"Der Anhang „{name}“ liegt jetzt auf dem reMarkable " + remarkable._told(r)
 
 

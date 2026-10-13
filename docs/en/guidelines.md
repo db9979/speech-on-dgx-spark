@@ -246,6 +246,8 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Local first, then external:** documents, Kiwix, history. Data stays in the LAN as far as possible. No second model just for a sub-feature (GPU memory). Creating documents works offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
 - **Never change:** dgx-spark-qwen38 on ports 30000–30099. Own ports are at 31001–31443. (M)
 - **Tools have names people understand:** what shows is the name from `werkzeuge.NAMES` (de/en), the internal name only small beside it or in copies for threads. (Dominik 2026-10-12; 🧪 test_werkzeuge)
+- **Own doing into the Spark diary:** every function that does something for a person (switching, reminding, saving a draft, making or sending a file, sending a message) calls `tagebuch.note(uid, art, title, ref, before, src)` with a fixed kind; titles from outside with `src="web"` or `"mail"`. Questions about its own doing are answered by the model only from `spark_tagebuch` or `document_status`. (P vorschlaege-besser; 🧪 test_tagebuch)
+- **Fix errors with rules, not code:** what the admin can set in the panel (must words, tool hints, Weiche), the settings assistant only proposes from fixed templates; the model never writes the text of a rule, and a rule is never taken by itself from the reports of a single person. (P vorschlaege-besser; 🧪 test_regeln_admin, test_regeln_v3)
 
 ---
 

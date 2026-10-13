@@ -7080,6 +7080,86 @@
           }
         }
       }
+    },
+    "Hätte nachsehen sollen in (freiwillig)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Should have looked in (optional)"
+          }
+        }
+      }
+    },
+    "Hätte nachsehen sollen in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Should have looked in"
+          }
+        }
+      }
+    },
+    "weiß nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "don't know"
+          }
+        }
+      }
+    },
+    "meinen Dokumenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "my documents"
+          }
+        }
+      }
+    },
+    "erstellten Dokumenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "documents the Spark made"
+          }
+        }
+      }
+    },
+    "Geräten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "devices"
+          }
+        }
+      }
+    },
+    "Web": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web"
+          }
+        }
+      }
+    },
+    "früheren Gesprächen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "earlier conversations"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -780,12 +780,14 @@ async def prepare(request):
                           + ". Sag ihm das in einem Satz. Das Archiv ist nicht dasselbe wie seine hochgeladenen Dokumente: "
                             "durchsuche die Dokumente nicht stattdessen und antworte nicht aus ihnen.")
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
-    # one clear intent with one needed tool: the first round must call exactly that one
-    force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
-    if "daily_briefing" in need and set(route.names) <= {"kalender"}:
-        force = "daily_briefing"   # "Guten Morgen": the day read fresh, never from an earlier answer (chat.MORNING)
-    if not force and need == ["archive_search"]:
-        force = "archive_search"   # "Schau in meinem Archiv": the archive, never the uploaded documents (V01.0.264)
+    own_hint = chat.hint_lines(ccfg.get("tool_hints", ""), {t["function"]["name"] for t in tools})
+    if own_hint:     # the admin's sentence per offered tool (chat.tool_hints, R2), never the model's own
+        system = per_turn(system, own_hint)
+    # the one tool the first round must call (chat.first_tool; Nachstellen uses the same rules)
+    force = chat.first_tool(route, need, {t["function"]["name"] for t in tools}, route_on)
+    import berater
+    if berater.wanted():    # which own rules this turn used (Verbessern → Regeln „30 Tage nicht gebraucht“)
+        berater.rule_hits(ask_text, route, need, {t["function"]["name"] for t in tools}, ccfg)
     # "Was habe ich zuletzt / heute notiert?" ("Neueste zuerst", wissen.recent_window): a fixed rule on the person's
     # own words; the first round must look in the documents, which then lists the pages changed last
     recent_ask = None

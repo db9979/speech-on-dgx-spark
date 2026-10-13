@@ -886,6 +886,8 @@ async def _work(j, plan, todo=None, wish=""):
         d["checked"] = dict(tally, numbers=have is not None, kiwix=any("Kiwix" in o[0] for o in origins))
         j.update(state="done", doc=d["id"], end=time.time(), version=n, checked=d["checked"])
         _bump("done")
+        import tagebuch
+        tagebuch.note(uid, "dokument", d.get("title") or plan["title"], ref=d["id"])
         secs = time.time() - j["t0"]
         _live(f"{KINDS[plan['kind']][0]} fertig ({FORMAT_NAMES[d['format']]}, {len(content['sections']) or 1} Teile, {secs:.0f} s)")
         print(f"docmake: fertig {plan['kind']} {d['format']} Version {n} in {secs:.0f} s", flush=True)
@@ -1229,6 +1231,29 @@ def change_now(uid, d, action, sections=(), fmt=None, style=None):
     return note
 
 
+def _when(t):
+    return time.strftime("%d.%m. %H:%M", time.localtime(t)) if isinstance(t, (int, float)) and t > 0 else ""
+
+
+def status_text(uid):
+    """What the Spark made for the person (newest 5, with time and where it was sent) and, when the profile may
+    send to the reMarkable, what landed there in the last 7 days (remarkable.recent): titles and times only."""
+    docs = all_docs(uid)[:5]
+    js = jobs_of(uid)
+    parts = [f"Läuft: {KINDS[j['kind']][0]} „{j['title']}“, Teil {j['step']} von {j['steps']}" for j in js if j["state"] in ("wait", "run")]
+    for d in docs:
+        v = d["versions"][-1]
+        sent = [s for s in d.get("sent") or [] if isinstance(s, dict) and s.get("to") in TARGET_NAMES][-3:]
+        parts.append(f"{KINDS.get(d['kind'], ('Dokument',))[0]} „{d['title']}“ ({FORMAT_NAMES.get(d['format'], d['format'])}, Version "
+                     f"{v['n']}, {len(v['content'].get('sections') or [])} Teile, zuletzt {_when(v.get('t'))})"
+                     + "".join(f", geschickt an {TARGET_NAMES[s['to']]} {_when(s.get('t'))}" for s in sent))
+    out = ("; ".join(parts) or "Noch keine Dokumente erstellt.") + " Alles liegt unter Ich → Dokumente."
+    import remarkable
+    if remarkable.send_allowed(uid) and remarkable.load(uid).get("token"):
+        out += " " + remarkable.recent_text(uid)
+    return out
+
+
 # ---------------------------------------------------------------- the assistant's tools
 # the person asks for a file (the Weiche's group "erstellen", intent.py): a verb of making and a kind of document,
 # or "als Word/PDF/…"
@@ -1310,6 +1335,8 @@ HINT = ("Soll der Spark ein Dokument, einen Brief, eine Präsentation oder Tabel
         "Fakten mit deinen anderen Werkzeugen und schlage dann mit document_plan eine Gliederung vor. Du schreibst "
         "das Dokument nie selbst in die Antwort und sagst nie, dass es fertig ist: Nach document_plan nenne kurz die "
         "Teile und frag, ob es so passt. Änderungen an einem fertigen Dokument mit document_change.")
+STATUS_HINT = ("Fragt der Nutzer, ob der Spark etwas erstellt oder geschickt hat, schau mit document_status nach und "
+               "antworte nur aus dessen Ergebnis; such dafür nicht in den hochgeladenen Dokumenten.")
 FOLLOW_HINT = (" Beantwortet diese Nachricht deine Rückfrage zum Datei-Wunsch kurz davor, schlag jetzt mit "
                "document_plan die Gliederung vor, statt den Inhalt als Text zu schreiben.")
 
@@ -1348,7 +1375,11 @@ def offer(ctx):
             return {"tools": [], "hint": off_hint(uid), "route": ("erstellen", "aus") if follow else None}
         return None
     recent = time.time() - _recent.get(uid, 0) < RECENT_SECONDS
+    import chat
     if not asked and not follow and not (recent and CHANGE_WORDS.search(words)) and uid not in _pending:
+        if chat.DONE_WORDS.search(words):   # „Ist der Brief fertig?“: only looking, never planning (Dominik's e62151)
+            return {"tools": [STATUS_TOOL], "hint": STATUS_HINT, "must": "document_status",
+                    "filler": {"document_status": ("Ich schaue nach.", "Let me check.")}}
         return None
     tools = [PLAN_TOOL, CHANGE_TOOL, STATUS_TOOL] + ([SEND_TOOL] if _send_ok(uid) else [])
     return {"tools": tools, "hint": HINT + (FOLLOW_HINT if follow else ""), "changes": {"document_send"},
@@ -1401,12 +1432,7 @@ async def tool(name, args, ctx):
                 f"Nichts ist geschrieben. Dauer etwa {est}. Nenne die Teile kurz und frag, ob es so passt; erst nach "
                 "einem Ja schreibt der Spark es im Hintergrund.")
     if name == "document_status":
-        docs = all_docs(uid)[:5]
-        js = jobs_of(uid)
-        parts = [f"Läuft: {KINDS[j['kind']][0]} „{j['title']}“, Teil {j['step']} von {j['steps']}" for j in js if j["state"] in ("wait", "run")]
-        parts += [f"{KINDS.get(d['kind'], ('Dokument',))[0]} „{d['title']}“ ({FORMAT_NAMES.get(d['format'], d['format'])}, Version "
-                  f"{d['versions'][-1]['n']}, {len(d['versions'][-1]['content'].get('sections') or [])} Teile)" for d in docs]
-        return ("; ".join(parts) or "Noch keine Dokumente erstellt.") + " Alles liegt unter Ich → Dokumente."
+        return status_text(uid)
     if name == "document_change":
         d = find(uid, args.get("document"))
         if not d:

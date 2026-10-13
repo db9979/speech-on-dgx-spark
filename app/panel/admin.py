@@ -508,11 +508,11 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "android_live",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
-              "berater_issue", "berater_ideas", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
+              "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
@@ -676,6 +676,10 @@ def validate(new):
         chat.parse_tool_words(ch.get("tool_words", ""))
     except ValueError as e:
         raise HTTPException(400, f"Eigene Stichwörter: {e}")
+    try:
+        chat.parse_tool_hints(ch.get("tool_hints", ""))
+    except ValueError as e:
+        raise HTTPException(400, f"Werkzeug-Hinweise: {e}")
     import intent   # (needs chat fully loaded)
     try:
         intent.parse_route_words(ch.get("route_words", ""))

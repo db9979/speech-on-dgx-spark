@@ -880,12 +880,13 @@ def _content(kind, title):
                        "textScale": 1}, sort_keys=True).encode()
 
 
-async def place(uid, title, data, kind="epub", own="", auto=False):
+async def place(uid, title, data, kind="epub", own="", auto=False, src=""):
     """Puts one EPUB or PDF into the chosen folder (default "Spark", created when missing).
     own: a name for one of the Spark's OWN documents (the guide, the day's inbox): when the Spark made it before
     and it is still there, that document gets the new text (its other files, e.g. the person's marks, stay);
     else a new one. Nothing the person made is ever changed. auto: made by the Spark itself (rmplus.py), its own
-    daily limit. Returns {"title", "where", "lost", "id", "renewed"}."""
+    daily limit. src: "web" or "mail" when the title is outside text (a page's or an attachment's name; recent()
+    then never repeats it). Every upload is noted (recent). Returns {"title", "where", "lost", "id", "renewed"}."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     if kind not in ("epub", "pdf") or not data:
         raise ValueError("nothing to send")
@@ -934,8 +935,42 @@ async def place(uid, title, data, kind="epub", own="", auto=False):
         d.setdefault("own", {})[own] = did
     if lost:
         d.pop("target", None)    # the chosen folder is gone: from now on "Spark" again, and the person is told
+    now = int(time.time())
+    log = [x for x in d.get("log") or [] if isinstance(x, dict) and now - int(x.get("t", 0)) < LOG_S][-(LOG_MAX - 1):]
+    d["log"] = log + [{"t": now, "title": title, "auto": bool(auto), "renewed": bool(renew),
+                       "src": src if src in ("web", "mail") else ""}]
     save(uid, d)
+    import tagebuch
+    tagebuch.note(uid, "remarkable", title, ref=did, src=src)
     return {"title": title, "where": path or "Spark", "lost": lost, "id": did, "renewed": bool(renew)}
+
+
+LOG_S = 7 * 86400       # what the Spark put on the reMarkable, kept this long (recent, document_status)
+LOG_MAX = 40
+
+
+def recent(uid, now=None):
+    """The uploads of the last 7 days, newest first: {t, title, auto, renewed, src}. Titles of web pages and mail
+    attachments (src) are outside text and come back only as their kind."""
+    now = time.time() if now is None else now
+    out = []
+    for x in reversed(load(uid).get("log") or []):
+        if isinstance(x, dict) and isinstance(x.get("t"), int) and 0 <= now - x["t"] < LOG_S:
+            title = {"web": "eine Webseite", "mail": "ein Mail-Anhang"}.get(x.get("src")) or _clean(x.get("title"), 80)
+            out.append(dict(x, title=title, src=x.get("src") or ""))
+    return out
+
+
+def recent_text(uid, now=None):
+    """One sentence for the assistant: what the Spark put on the reMarkable in the last 7 days, with time."""
+    rows = recent(uid, now)
+    if not rows:
+        return "Auf das reMarkable hat der Spark in den letzten 7 Tagen nichts gelegt."
+    parts = [("„" + x["title"] + "“" if not x["src"] else x["title"])
+             + " " + time.strftime("%d.%m. %H:%M", time.localtime(x["t"]))
+             + (" (vom Spark selbst)" if x.get("auto") else "") + (" (erneuert)" if x.get("renewed") else "")
+             for x in rows[:10]]
+    return f"Auf das reMarkable gelegt (letzte 7 Tage, {len(rows)}): " + "; ".join(parts) + "."
 
 
 def _told(r):
@@ -953,6 +988,11 @@ NOTE_TOOL = {"type": "function", "function": {
         "title": {"type": "string", "description": "Short title, at most 8 words"},
         "text": {"type": "string", "description": "The text of the note, as the user said it"}},
         "required": ["title", "text"]}}}
+SENT_TOOL = {"type": "function", "function": {
+    "name": "remarkable_sent",
+    "description": "Lists what the Spark put on the user's reMarkable in the last 7 days (title and time). Use it when "
+                   "the user asks whether something was made, sent or put on the reMarkable.",
+    "parameters": {"type": "object", "properties": {}}}}
 NOTE_HINT = ("remarkable_note puts a note the user dictates onto the user's reMarkable as a new document; use it only "
              "when the user asks to write or send something to the reMarkable.")
 WORDS = re.compile(r"re\s?markable|remarkabel|e-?ink[- ]?tablet", re.I)
@@ -960,6 +1000,11 @@ WORDS = re.compile(r"re\s?markable|remarkabel|e-?ink[- ]?tablet", re.I)
 
 # "Fass die Lage zusammen und leg es aufs reMarkable": the answer itself goes there. A fixed panel rule on the
 # person's own words decides it, never the model: the tool would be cut by the switch (intent.narrow) and locked
+# remarkable_sent reads only the Spark's own list of what it put on the tablet; titles from outside (a web page,
+# an attachment) come back only as their kind (recent), so no text other people wrote (see chat.INSIDE)
+INSIDE = {"remarkable_sent"}
+
+
 # after the web search (outside text), and the destination is fixed anyway (a new document in "Spark").
 ANSWER_ASK = re.compile(r"\b(?:aufs|auf(?:\s+(?:das|dem|mein(?:em|en)?|dein(?:em)?))?|ins|an(?:s|\s+(?:das|mein(?:en)?))?|on(?:to)?|to)"
                         r"\s+(?:(?:my|the)\s+)?re\s?markable\b", re.I)
@@ -974,6 +1019,9 @@ def answer_wanted(text, uid=None):
     text = str(text or "")[:2000]
     if not (ANSWER_ASK.search(text) and ANSWER_VERB.search(text) and not DICTATE.search(text)):
         return False
+    import chat
+    if chat.DONE_WORDS.search(text) and "?" in text:
+        return False      # „Hast du mir was aufs reMarkable geschickt?“ asks about the past, it sends nothing
     import rmplus
     return not (uid and rmplus.tools_for(uid, text))
 
@@ -1023,19 +1071,22 @@ def offer(ctx):
         return None   # the whole answer: the panel sends it afterwards (answer_wanted), no tool
     import rmplus     # a web page or a mail attachment (rmplus.py, rm_web), only with an address / attachment named
     more = rmplus.tools_for(who["id"], ctx.get("text"))
-    return {"tools": [NOTE_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
+    return {"tools": [NOTE_TOOL, SENT_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
             "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment"},
             # what comes back names the page's title or the mail's file name: outside text, the rest of the answer locked
             "mail": {"remarkable_attachment"}, "outside": {"remarkable_page"},
             "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable."),
                        "remarkable_page": ("Ich hole die Seite.", "Fetching the page."),
-                       "remarkable_attachment": ("Ich suche den Anhang.", "Looking for the attachment.")}}
+                       "remarkable_attachment": ("Ich suche den Anhang.", "Looking for the attachment."),
+                       "remarkable_sent": ("Ich schaue nach.", "Let me check.")}}
 
 
 async def tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
-    if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment") or not send_allowed(uid):
+    if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sent") or not send_allowed(uid):
         return "Aufs reMarkable schicken ist aus."
+    if name == "remarkable_sent":       # reading only: what the Spark already put there
+        return recent_text(uid)
     import rmplus
     try:
         if name != "remarkable_note":

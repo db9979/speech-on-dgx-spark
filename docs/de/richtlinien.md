@@ -246,6 +246,8 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Erst lokal, dann extern:** Dokumente, Kiwix, Verlauf. Daten bleiben möglichst im LAN. Kein zweites Modell nur für eine Teilfunktion (GPU-Speicher). Dokumente erstellen geht offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
 - **Nie ändern:** dgx-spark-qwen38 auf den Ports 30000–30099. Eigene Ports liegen bei 31001–31443. (M)
 - **Werkzeuge heißen für Menschen verständlich:** sichtbar steht der Name aus `werkzeuge.NAMES` (de/en), der interne Name nur klein daneben oder in Kopien für Threads. (Dominik 2026-10-12; 🧪 test_werkzeuge)
+- **Eigenes Tun ins Spark-Tagebuch:** Jede Funktion, die für eine Person etwas tut (schalten, erinnern, Entwurf ablegen, Datei erstellen oder schicken, Nachricht senden), ruft `tagebuch.note(uid, art, titel, ref, before, src)` mit fester Art; Titel von außen mit `src="web"` oder `"mail"`. Fragen nach dem eigenen Tun beantwortet das Modell nur aus `spark_tagebuch` oder `document_status`. (P vorschlaege-besser; 🧪 test_tagebuch)
+- **Fehler mit Regeln beheben, nicht mit Code:** Was der Admin im Panel einstellen kann (Pflicht-Wörter, Werkzeug-Hinweise, Weiche), schlägt der Einstellungs-Assistent nur aus festen Vorlagen vor; das Modell schreibt nie den Text einer Regel, und eine Regel übernimmt sich nie von selbst aus den Meldungen einer einzigen Person. (P vorschlaege-besser; 🧪 test_regeln_admin, test_regeln_v3)
 
 ---
 

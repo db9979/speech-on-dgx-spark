@@ -30,8 +30,14 @@ final class Conversation: ObservableObject {
         RateReason(id: "werkzeug", label: "falsches Werkzeug"), RateReason(id: "antwort", label: "falsche Antwort"),
         RateReason(id: "langsam", label: "zu langsam"), RateReason(id: "verstanden", label: "nicht verstanden"),
         RateReason(id: "aussprache", label: "falsch ausgesprochen")]
+    /// „Hätte nachsehen sollen in …“ (faelle.SOLL on the Spark): only the chosen key goes along
+    static let rateSoll = [
+        RateReason(id: "dokumente", label: "meinen Dokumenten"), RateReason(id: "erstellt", label: "erstellten Dokumenten"),
+        RateReason(id: "kalender", label: "Kalender"), RateReason(id: "mail", label: "Mails"),
+        RateReason(id: "geraete", label: "Geräten"), RateReason(id: "erinnerung", label: "Erinnerungen"),
+        RateReason(id: "web", label: "Web"), RateReason(id: "verlauf", label: "früheren Gesprächen")]
 
-    func rate(_ id: UUID, good: Bool, reason: String = "", note: String = "", question: Bool = false) async {
+    func rate(_ id: UUID, good: Bool, reason: String = "", note: String = "", question: Bool = false, soll: String = "") async {
         guard let i = messages.firstIndex(where: { $0.id == id }), let rid = messages[i].rateId,
               let api = SparkAPI.current else { return }
         var body: [String: Any] = ["id": rid, "good": good]
@@ -39,6 +45,7 @@ final class Conversation: ObservableObject {
             body["grund"] = reason
             body["text"] = String(note.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))
             body["frage"] = question
+            if !soll.isEmpty { body["soll"] = soll }
         }
         do {
             _ = try await api.post("api/chat/rate", body)

@@ -10,6 +10,13 @@ BENCH = [
     ("den mauer fall. gerne auch 3 folien", "erstellen"),
     ("Mach eine Präsentation über den Mauerfall mit 3 Folien", "erstellen"),
     ("Ich brauche eine Präsentation über unseren Urlaub", "erstellen"),
+    # what the Spark already made or sent (Dominik 12.10., e62151: „Nein“ from the uploaded documents)
+    ("Wurde ein neues Dokument für den reMarkable erstellt?", "dokument+erstellen"),
+    # Spark-Tagebuch: what the Spark did itself, never a switching wish
+    ("Was hast du heute für mich gemacht?", "erstellen"),
+    ("Was hast du gestern im Wohnzimmer eingeschaltet?", "erstellen"),
+    ("Ist der Brief fertig?", "erstellen"),
+    ("Hast du mir heute was aufs reMarkable geschickt?", "erstellen"),
     ("Schreib mir einen Brief an die Hausverwaltung wegen der Heizung", "erstellen"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),

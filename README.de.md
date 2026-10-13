@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.478** Einstellungs-Assistent mit Admin-Regeln statt Code, Spark-Tagebuch, Monatsbericht, Daumen in Logs → Anfragen
 - **V01.0.477** Taten prüfen und Fehlerschleife stoppen (an wie die Antwort-Prüfung): „ist jetzt an“ nur, wenn das Werkzeug geklappt hat, sonst ein ehrlicher Satz; zweimal gleicher Fehler sperrt das Werkzeug
 - **V01.0.476** Werkzeuge heißen verständlich, z. B. „Postfach-Überblick“ statt mail_tidy_overview
 - **V01.0.475** Rot-Fix: Selbsttests werden nicht mehr immer langsamer (Test-Panels hören nach ihrer Klasse auf)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.471** Sprachausgabe verstummt nicht mehr nach einem Stück ohne Sprechbares (tts_http_400); Fehler in Logs → Anfragen als Satz
 - **V01.0.470** Rückfrage statt Raten (aus): passen mehrere Geräte, Haltestellen, Orte oder Listen, fragt der Spark mit Knöpfen und merkt sich die Wahl
 - **V01.0.469** Rot-Fix: Dienst-Wächter-Test zählt „heute“ mit festem Tag statt mit der echten Uhr
-- **V01.0.468** Rot-Fix nach V01.0.467: Live-Test prüft den ganzen Gedächtnis-Satz, Themen und Live-Zählung lesen die Einstellungen nur einmal
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

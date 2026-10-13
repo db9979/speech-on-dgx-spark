@@ -467,6 +467,8 @@ async def send(sender, to, text, kind="text", audio=None, secs=None, now=None):
             print("messages: delivery", type(e).__name__, flush=True)
     # length and profiles only: the text never goes into the journal
     print(f"messages: {kind} from {sender} to {len(to)} profile(s), {len(text)} chars", flush=True)
+    import tagebuch    # who it went to, never the text
+    tagebuch.note(sender, "nachricht", "an " + ", ".join(out)[:70])
     return out, ""
 
 

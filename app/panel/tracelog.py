@@ -8,6 +8,9 @@ from the panel or passes SAFE (tool names only from the tools the turn offered).
 device show only while that profile allows it (its switch "trace_name", Ich → Gespräch); else the
 request is "Profil". Guests are "Gast". Kept for 48 hours at most, 500 requests, 40 steps each, in
 STATE/traces.jsonl (not in backups). Main admin and co-admins read it (not the Verwalter role).
+A person's 👍/👎 for the answer (faelle.rate) is added to its request by vote(): only the thumb, the fixed
+reason word (faelle.REASONS), the seconds after the answer and the case id, never the note or the question
+(Dominik 2026-10-12: „den Daumen anzeigen ob hoch oder runter“). A changed vote replaces the old one.
 """
 import json
 import os
@@ -189,6 +192,29 @@ def _write(rows):
     os.replace(tmp, _file())
 
 
+VOTES = ("gut", "schlecht")
+
+
+def vote(tid, v, grund="", case=None, now=None):
+    """Puts the person's newest 👍/👎 on its request (Logs → Anfragen). False when the request is not kept."""
+    if not tid or not ID.fullmatch(str(tid)) or v not in VOTES:
+        return False
+    import faelle
+    now = time.time() if now is None else now
+    with _lock:
+        rows = _keep(_read(), now)
+        x = next((r for r in rows if r["id"] == tid), None)
+        if x is None:
+            return False
+        end = x["t"] + ((x.get("marks") or {}).get("end") or 0) / 1000
+        x["vote"] = {"v": v, "grund": grund if v == "schlecht" and grund in faelle.REASONS else "",
+                     "after": max(0, round(now - end)), "case": case if isinstance(case, str) and
+                     re.fullmatch(r"[0-9a-f]{8}", case) else ""}
+        _write(rows)
+    print(f"anfrage: {tid} bewertet {v}", flush=True)
+    return True
+
+
 def all_traces(now=None):
     with _lock:
         return _keep(_read(), time.time() if now is None else now)
@@ -213,7 +239,7 @@ def shown(x):
             name, device = p["name"], x.get("device") or ""
         else:
             name = "Profil"
-    out = {k: x.get(k) for k in ("id", "t", "client", "intent", "steps", "marks", "errors", "status")}
+    out = {k: x.get(k) for k in ("id", "t", "client", "intent", "steps", "marks", "errors", "status", "vote")}
     out.update(name=name, device=device, named=name not in ("Gast", "Profil"))
     return out
 
@@ -225,9 +251,11 @@ def traces(request: Request, minutes: int = 60):
         raise HTTPException(400, "bad time")
     now = time.time()
     rows = [shown(x) for x in all_traces(now) if x["t"] >= now - minutes * 60]
+    import faelle
     import features
     return {"on": on(), "keep_hours": KEEP_S // 3600, "slow_s": SLOW_S, "items": rows[::-1],
-            "explain": features.admin_on("beratererklaeren")}   # „Erklären“ of the Einstellungs-Assistent (berater.py)
+            "explain": features.admin_on("beratererklaeren"),
+            "reasons": faelle.REASONS}   # the fixed words for a 👎 (vote)   # „Erklären“ of the Einstellungs-Assistent (berater.py)
 
 
 @router.get("/api/admin/traces/{tid}", dependencies=[Depends(auth)])

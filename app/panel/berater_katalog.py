@@ -12,7 +12,8 @@ Stufen:
     P   a profile's own settings: proposed to the profile on Ich → Gespräch, only the profile takes them
 
 Each entry: key -> dict(stufe, art, sec, key, de, en, way, [lo, hi, step], [choices], restart)
-    art   weiche (route_words / route_not), test (route_tests), pflicht (tool_words), pron (tts.pronunciation),
+    art   weiche (route_words / route_not), test (route_tests), pflicht (tool_words), hinweis (tool_hints, a fixed
+          sentence from chat.HINT_TPL), extra (route_extra), pron (tts.pronunciation),
           asr (asr.context), quality (quality.add_own), value (a number), switch (bool), choice, profile
     way   where the admin finds the setting by hand (a jump link, way.js)
     restart  the service that starts again when it changes ("" none)
@@ -34,6 +35,13 @@ ENTRIES = {
     "pflicht_wort": dict(stufe=A, art="pflicht", sec="chat", key="tool_words",
                          de="Wort, bei dem ein Werkzeug Pflicht ist", en="Word that makes a tool a must",
                          way="Einstellungen → Sprachmodell", restart=""),
+    # R2, R3 (plan vorschlaege-besser.md): a fixed sentence for a tool, a tool a group of the Weiche keeps as well
+    "werkzeug_hinweis": dict(stufe=A, art="hinweis", sec="chat", key="tool_hints",
+                             de="Hinweis zu einem Werkzeug", en="Hint for a tool",
+                             way="Einstellungen → Sprachmodell", restart=""),
+    "weiche_extra": dict(stufe=A, art="extra", sec="chat", key="route_extra",
+                         de="Zusätzliches Werkzeug für eine Gruppe", en="Extra tool for a group",
+                         way="Funktionen → Weiche", restart=""),
     "aussprache": dict(stufe=A, art="pron", sec="tts", key="pronunciation",
                        de="Aussprache eines Wortes", en="Pronunciation of a word",
                        way="Einstellungen → Sprachausgabe", restart="tts"),
@@ -106,7 +114,7 @@ NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "repo
                                     "mcp_server_extern", "dev_updates", "telegram_api")} \
     | {("api", "key"), ("panel", "port"), ("panel", "https_port")}
 
-ARTS = {"weiche", "test", "pflicht", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}
+ARTS = {"weiche", "test", "pflicht", "hinweis", "extra", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}
 
 
 def entry(key):
@@ -143,12 +151,12 @@ OHNE = {
         "action_check", "loop_stop",
         "telegram_panel_url",
         "agent", "agent_mcp", "android", "android_live", "berater", "berater_auto", "berater_calls", "berater_chat",
-        "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_issue", "berater_me", "berater_notify",
+        "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_issue", "berater_me", "berater_notify",
         "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
         "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_max_mb", "doc_night", "doc_night_from",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents",
-        "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips",
+        "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips", "tagebuch", "berater_why",
         "feature_tips_push", "follow_up", "geocode_url", "ha_camera", "ha_events", "ha_live", "ha_loud",
         "ha_voice_rules", "history", "history_live", "history_offline", "history_one", "homeassistant", "images", "iphone", "iphone_panel", "iphone_push",
         "iphone_update", "kiwix", "kiwix_books", "kiwix_url", "klaeren", "klaeren_merken", "learn_fixes", "llm_key_from", "llm_model",
@@ -157,7 +165,7 @@ OHNE = {
         "new_profile_on", "no_self_echo", "own_style", "parcels", "pebble", "person_priority",
         "person_priority_wait", "prefetch", "presence_penalty", "proactive", "remarkable", "remarkable_fresh",
         "remarkable_plus", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
-        "room_remote", "room_voices", "route_extra", "route_off", "routing", "search", "search_url",
+        "room_remote", "room_voices", "route_off", "routing", "search", "search_url",
         "self_echo_mode", "spark_drawer", "spark_help", "spark_suggest", "speaker_code", "speaker_id",
         "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",
         "svc_watch", "svc_watch_users", "system_prompt", "systemone", "systemone_mail",
@@ -203,7 +211,7 @@ OHNE_PROFIL = (
         "rm_on", "rm_send", "rm_todo", "rm_web", "rm_week", "role", "roles", "roles_on", "room_remote", "room_tell",
         "esp_stop", "spark_help", "speak", "spk_code", "storage_on", "style", "svc_device", "svc_hint", "svc_night", "svc_note",
         "sync_live", "sync_offline", "sync_one",
-        "systemone_on", "tasks_on", "tg_ha", "tg_images", "tg_private", "tg_push", "tg_voice", "timing", "tips_on",
+        "systemone_on", "tagebuch_on", "tasks_on", "why_on", "tg_ha", "tg_images", "tg_private", "tg_push", "tg_voice", "timing", "tips_on",
         "tool_think", "trace_name", "transit_on", "turn", "tz", "voice", "wiki_on", "write_apps", "write_on",
         "wx_on",
 )

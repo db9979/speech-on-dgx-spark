@@ -62,6 +62,7 @@ STATE_FILES = {
     "esp32.json": "json",           # ESP32 speakers: board variant, firmware, automatic updates
     "agent.json": "json",           # agent levels and MCP services (tokens sealed)
     "geraete-updates.json": "json",    # Geräte-Updates: versions seen, notes due, the night round of the speakers
+    "regel-versionen.json": "json",   # Einstellungs-Assistent: the own rules before each change (Version 3)
     "berater.json": "json",          # Einstellungs-Assistent: proposals, what was there before, Nachkontrolle
     "faelle.json": "json",           # its cases (fingerprints, counts, at most three examples with consent)
     "gut-saetze.json": "json",       # questions confirmed with 👍 (with consent): protected in the Prüfstand

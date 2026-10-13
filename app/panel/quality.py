@@ -173,6 +173,13 @@ def _own_case(x):
             "results": dict({n: nothing for n in names}, memory_save="Saved.", memory_forget="Nothing to forget."),
             "must": "", "never": ""}
     case["tool"] = "any" if _need(case) else "optional"
+    import befund
+    want = x.get("tool")
+    if isinstance(want, str) and want in befund.tool_defs():   # R5: this question has to go through this tool
+        if want not in {t["function"]["name"] for t in tools}:
+            case["tools"] = tools + [befund.tool_defs()[want]]
+        case["results"][want] = nothing
+        case["tool"] = want
     return case
 
 
@@ -186,15 +193,20 @@ def own():
         return []
 
 
-def add_own(q):
-    """A profile's question for the test (from its own log). Returns False when it was there already
-    or the list is full."""
+def add_own(q, tool=""):
+    """A profile's question for the test (from its own log), with the tool it has to call when one is known (R5,
+    plan vorschlaege-besser.md: only a tool with a fixed definition, befund.tool_defs). Returns False when it was
+    there already or the list is full."""
     q = re.sub(r"\s+", " ", str(q or "")).strip()[:200]
     items = own()
     if not q or any(x["q"].lower() == q.lower() for x in items) or len(items) >= MAX_OWN:
         return False
+    import befund
     import secrets
-    _write_own(items + [{"id": secrets.token_hex(4), "q": q, "t": int(time.time())}])
+    row = {"id": secrets.token_hex(4), "q": q, "t": int(time.time())}
+    if tool and tool in befund.tool_defs():
+        row["tool"] = tool
+    _write_own(items + [row])
     return True
 
 
@@ -222,7 +234,10 @@ async def _run_case(c, ccfg, headers, model, case):
     """One case like a real turn: tool table, steady tool choice, answer check (see chat.py)."""
     import answercheck
     import chat
-    msgs = [{"role": "system", "content": _system(ccfg, case["hints"])}, {"role": "user", "content": case["q"]}]
+    # the admin's hints for the offered tools (chat.tool_hints, R2), as in a real turn
+    own_hint = chat.hint_lines(ccfg.get("tool_hints", ""), {t["function"]["name"] for t in case["tools"]})
+    msgs = [{"role": "system", "content": _system(ccfg, list(case["hints"]) + ([own_hint] if own_hint else []))},
+            {"role": "user", "content": case["q"]}]
     called = []
     t0 = time.time()
     answer = ""

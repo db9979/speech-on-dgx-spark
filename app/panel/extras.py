@@ -24,8 +24,9 @@ import wiki
 import hilfe
 import meinmcp
 import docmake
+import tagebuch
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, tagebuch]
 
 
 def offer(ctx):

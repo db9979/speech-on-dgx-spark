@@ -1272,7 +1272,8 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
          "chats": "chats",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
-         "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken"}
+         "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken",
+         "tagebuch": "tagebuch", "warum": "beraterwarum"}
 
 
 def _allow(prof, chat):

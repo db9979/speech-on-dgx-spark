@@ -1314,6 +1314,8 @@ def make_draft(uid, aid, to, subject, text, reply_uid=None, files=None):
         msg.set_content(str(text or "").strip()[:8000] + "\n")
         _attach(msg, files)
         folder = b.append_draft(msg.as_bytes())
+    import tagebuch    # the subject may come from the mail answered: stored, never repeated to the model
+    tagebuch.note(uid, "mail_entwurf", msg["Subject"], src="mail" if reply_uid else "")
     return {"folder": folder, "to": addr, "subject": msg["Subject"]}
 
 

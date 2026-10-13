@@ -336,7 +336,7 @@ class WebAndMail(Plus):
         c.put("/api/profile/settings", json={"rm_web": True})
         self.assertFalse(remarkable.answer_wanted("Leg https://example.org/a aufs reMarkable", uid))  # on: the page itself
         o = remarkable.offer({"who": {"id": uid}, "own": True, "text": "Leg https://example.org/a aufs reMarkable"})
-        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["remarkable_note", "remarkable_page"])
+        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["remarkable_note", "remarkable_sent", "remarkable_page"])
 
     def test_page_as_ebook(self):
         c, uid = self.on("Rppage", rm_web=True)

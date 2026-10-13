@@ -505,6 +505,22 @@ CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
                      "fehlen, statt sie zu raten.")
+# a question about what the Spark already made or sent („Wurde ein Dokument für den reMarkable erstellt?“, V01.0.4xx):
+# a past form of making or sending plus a kind of document; it must go through document_status or remarkable_sent (NEED_TOOLS),
+# never through the uploaded documents
+DONE_VERB = (r"(erstellt|gemacht|geschrieben|geschickt|gesendet|abgelegt|angelegt|hochgeladen|übertragen|fertig\w*|"
+             r"created|made|sent|written|finished|ready|send|make|create|write|put)")
+DONE_THING = (r"(\w*dokument\w*|\w*datei\w*|\w*brief\b|briefe?s?|\w*präsentation\w*|\w*tabelle\w*|bericht\w*|pdf|"
+              r"morgenblatt\w*|zusammenfassung\w*|re\s?markable|document|file|letter|presentation|spreadsheet|report)")
+DONE_ASK = (r"(hast du|habt ihr|hat (der )?spark|wurde[n]?|ist|sind|gibt es|did you|have you|has (the )?spark|was|were|"
+            r"is there)")
+# the question starts with it (also after an earlier sentence), so „Erstell … und schick es, wenn es fertig ist“ stays a wish
+DONE_WORDS = re.compile(r"(?i)(?:^|[.!?]\s+)\s*(?:und |and |sag mal,? |weißt du,? )?" + DONE_ASK + r"\b(.{0,60}\b" + DONE_VERB
+                        + r"\b.{0,60}\b" + DONE_THING + r"|.{0,60}\b" + DONE_THING + r"\b.{0,80}\b" + DONE_VERB + r")\b")
+# „Was hast du heute für mich gemacht?“: the Spark's own doing from its diary (tagebuch.py), never from memory
+DIARY_WORDS = re.compile(r"(?i)\b(was|welche\w*)\b.{0,40}\b(hast du|hat (der )?spark)\b.{0,40}\b(gemacht|erledigt|getan|"
+                         r"geschaltet|eingeschaltet|ausgeschaltet|geschickt|gestellt|erstellt|angelegt)\b|"
+                         r"\bspark-?tagebuch\b|\bwhat (did|have) you (done|do|made|sent|switched)\b")
 NEED_TOOLS = [  # tool that has to be offered, words in the question: one place for chat and quality test
     ("calendar_events", NEED_CALENDAR),
     ("daily_briefing", MORNING),
@@ -519,6 +535,9 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
     ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(mein|dein|unser|euer|eur)(em|e|er|en)? archiv|im archiv|"
                                   r"archiv (nach|durch)\w*|nachschlagewerk\w*)\b")),
+    ("document_status", DONE_WORDS),
+    ("remarkable_sent", re.compile(r"(?i)(?=.*\bre\s?markable\b)(?:" + DONE_WORDS.pattern.removeprefix("(?i)") + ")")),
+    ("spark_tagebuch", DIARY_WORDS),
     ("tasks_show", re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                               r"liste\b|shopping list)")),
 ]
@@ -531,11 +550,19 @@ MAX_TOOL_WORDS = 20      # per tool
 MAX_TOOL_WORDS_CHARS = 2000
 
 
+def rule_tools():
+    """The tools an admin rule may name (Pflicht-Regeln, Werkzeug-Hinweise; plan vorschlaege-besser.md R1, R2): the
+    built-in must-tools and every tool of the Weiche's map (intent.known_tools, befund.karte)."""
+    import befund
+    import intent
+    return {n for n, _ in NEED_TOOLS} | intent.known_tools() | set(befund.karte())
+
+
 def parse_tool_words(text):
     """{tool name: [words]} from the admin's lines, or ValueError with a readable reason."""
     if not isinstance(text, str) or len(text) > MAX_TOOL_WORDS_CHARS:
         raise ValueError(f"höchstens {MAX_TOOL_WORDS_CHARS} Zeichen")
-    names = {n for n, _ in NEED_TOOLS}
+    names = rule_tools()
     out = {}
     for line in text.splitlines():
         if not line.strip():
@@ -543,7 +570,8 @@ def parse_tool_words(text):
         name, sep, rest = line.partition(":")
         name = name.strip()
         if not sep or name not in names:
-            raise ValueError(f"„{line.strip()[:40]}“: vorne steht ein Werkzeug ({', '.join(sorted(names))}), dann ein Doppelpunkt")
+            raise ValueError(f"„{line.strip()[:40]}“: vorne steht ein Werkzeug (zum Beispiel {', '.join(sorted(n for n, _ in NEED_TOOLS)[:6])}; "
+                             "alle unter Funktionen → Weiche), dann ein Doppelpunkt")
         words = [w.strip().lower() for w in rest.split(",") if w.strip()]
         for w in words:
             if not TOOL_WORD.fullmatch(w):
@@ -574,11 +602,95 @@ def own_words(text):
     return _TOOL_WORDS[text]
 
 
+def first_tool(route, need, offered, route_on=True):
+    """The one tool the first round has to call, or None (chat_turn and berater.replay, the same rules)."""
+    import intent
+    # one clear intent with one needed tool: the first round must call exactly that one
+    force = intent.forced(route, need, offered) if route_on else None
+    if "daily_briefing" in need and set(route.names) <= {"kalender"}:
+        force = "daily_briefing"   # "Guten Morgen": the day read fresh, never from an earlier answer (chat.MORNING)
+    own_need = [n for n in need if n not in {x for x, _ in NEED_TOOLS}]
+    if not force and len(own_need) == 1 and len(need) == 1:
+        force = own_need[0]    # the admin's own Pflicht-Regel for one tool (R1): that tool first, not just any
+    if not force and ("document_status" in need or "remarkable_sent" in need):
+        # „Wurde ein Dokument für den reMarkable erstellt?“: the Spark's own doing is looked up, never guessed or
+        # searched in the uploaded documents (chat.DONE_WORDS; document_status also lists the reMarkable)
+        force = "document_status" if "document_status" in need else "remarkable_sent"
+    if not force and need == ["archive_search"]:
+        force = "archive_search"   # "Schau in meinem Archiv": the archive, never the uploaded documents (V01.0.264)
+    if not force and need == ["spark_tagebuch"]:
+        force = "spark_tagebuch"   # „Was hast du heute gemacht?“: the diary, never the model's memory (tagebuch.py)
+    return force
+
+
 def needed(text, offered, extra=""):
     """The tools among offered (names) that this question has to go through (extra: chat.tool_words)."""
     own = own_words(extra)
-    return list(dict.fromkeys(name for name, words in NEED_TOOLS if name in offered
-                              and (words.search(text or "") or (name in own and own[name].search(text or "")))))
+    built = [name for name, words in NEED_TOOLS if name in offered
+             and (words.search(text or "") or (name in own and own[name].search(text or "")))]
+    # the admin's rules for any other tool (R1): whole words only, the tool must be offered in this turn
+    mine = [name for name, rx in own.items() if name in offered and name not in built and rx.search(text or "")]
+    return list(dict.fromkeys(built + mine))
+
+
+
+# chat.tool_hints (R2, plan vorschlaege-besser.md): the admin's own hint per tool, one line each,
+# "document_status: Fragt jemand, ob etwas erstellt wurde, schau hier zuerst nach." Added to a turn only for the tools
+# it offers. The admin writes it; the Einstellungs-Assistent only fills a template (HINT_TPL), never free text.
+MAX_HINTS = 20
+MAX_HINT_LEN = 200
+HINT_TEXT = re.compile(r"[^\x00-\x1f\x7f<>{}`\\|]{4,200}")
+HINT_TPL = {
+    "zuerst": ("Passt die Frage zu {tool}, rufe {tool} zuerst und antworte erst mit seinem Ergebnis.",
+               "When the question fits {tool}, call {tool} first and answer only with its result."),
+    "erledigt": ("Fragt der Nutzer, ob etwas erledigt, erstellt oder geschickt wurde, schau mit {tool} nach.",
+                 "When the user asks whether something was done, made or sent, look it up with {tool}."),
+    "kein_nein": ("Sag nie Nein oder nichts gefunden, ohne vorher {tool} gerufen zu haben.",
+                  "Never say no or nothing found without calling {tool} first."),
+    "ergebnis": ("Antworte nur mit dem, was {tool} zurückgibt, und erfinde nichts dazu.",
+                 "Answer only with what {tool} returns and add nothing of your own."),
+}
+
+
+def hint_text(tpl, tool, english=False):
+    return HINT_TPL[tpl][1 if english else 0].format(tool=tool)
+
+
+def parse_tool_hints(text):
+    """{tool name: text} from the admin's lines, or ValueError with a readable reason."""
+    if not isinstance(text, str) or len(text) > MAX_HINTS * (MAX_HINT_LEN + 45):
+        raise ValueError("zu lang")
+    names = rule_tools()
+    out = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        name, sep, rest = line.partition(":")
+        name, rest = name.strip(), rest.strip()
+        if not sep or name not in names:
+            raise ValueError(f"„{line.strip()[:40]}“: vorne steht ein Werkzeug (alle unter Funktionen → Weiche), "
+                             "dann ein Doppelpunkt")
+        if not HINT_TEXT.fullmatch(rest):
+            raise ValueError(f"{name}: 4 bis {MAX_HINT_LEN} Zeichen, ohne < > {{ }} ` \\ |")
+        if name in out:
+            raise ValueError(f"{name}: nur ein Hinweis pro Werkzeug")
+        out[name] = rest
+        if len(out) > MAX_HINTS:
+            raise ValueError(f"höchstens {MAX_HINTS} Hinweise")
+    return out
+
+
+def own_hints(text):
+    try:
+        return parse_tool_hints(text or "")
+    except ValueError:
+        return {}
+
+
+def hint_lines(text, offered):
+    """The admin's hints for the tools this turn offers, as one line for the system prompt ("" when none)."""
+    rows = [f"{n}: {h}" for n, h in own_hints(text).items() if n in offered]
+    return ("Hinweise des Admins zu Werkzeugen: " + " ".join(rows)) if rows else ""
 
 
 
@@ -1506,7 +1618,13 @@ def tool_info(name, result, st, ex):
     ok = bool(text) and not re.match(r"(?i)\s*(not done|not proposed|unknown tool|unknown action|search failed|invalid|no query|"
                                          r"no command|nicht ausgeführt|fehler|error|failed)", text)
     outside = name in READS_OUTSIDE or name in HA_READS or name in ex["outside"] or name in ex["mail"]
-    return {"ok": ok, "chars": len(text), "outside": outside or None, "locked": (name not in st["offered"]) or None}
+    return {"ok": ok, "chars": len(text), "outside": outside or None, "locked": (name not in st["offered"]) or None,
+            "empty": (ok and bool(EMPTY_RESULT.match(text))) or None}
+
+
+# a tool's result that found nothing (fixed words at its start, for the Befund in befund.py: „Werkzeug lieferte nichts“)
+EMPTY_RESULT = re.compile(r"(?i)\s*(keine?|nichts|noch keine|leer|kein treffer|0 treffer|nicht gefunden|no |nothing|none|"
+                          r"not found|empty)\b")
 
 
 async def _chat(request: Request):
@@ -2440,7 +2558,10 @@ async def _answer(request, turn):
                     await asyncio.to_thread(tracelog.finish, tr)
                 except OSError as e:
                     print("anfrage:", type(e).__name__, flush=True)
-                # Fälle (faelle.py): fixed rules on the finished turn; the id for 👍/👎 when the profile may rate
+                # Fälle (faelle.py): fixed rules on the finished turn; the id for 👍/👎 when the profile may rate.
+                # The tool names this turn offered and had to call go along for the Befund (befund.py), never words
+                tr.offered = sorted({t["function"]["name"] for t in (turn.tools or [])})
+                tr.need = list(turn.need or [])
                 rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside,
                                               None, bool(getattr(turn, "explain", None)))
                 if rid:

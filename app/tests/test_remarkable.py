@@ -441,7 +441,7 @@ class Writing(Base):
         self.assertIsNone(remarkable.offer({"who": None, "own": True, "text": "Schreib aufs reMarkable: Milch"}))
         self.assertIsNone(remarkable.offer({"who": who, "own": True, "private": False, "text": "Schreib aufs reMarkable: Milch"}))
         o = remarkable.offer({"who": who, "own": True, "text": "Schreib aufs reMarkable: Milch"})
-        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["remarkable_note"])
+        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["remarkable_note", "remarkable_sent"])
         self.assertIn("remarkable_note", o["changes"])                # locked after web pages, mails, documents
         ex = extras.offer({"who": who, "own": True, "text": "Schreib aufs Remarkable: Milch"})
         self.assertIs(ex["run"]["remarkable_note"], remarkable)
