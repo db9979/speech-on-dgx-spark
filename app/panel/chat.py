@@ -2162,7 +2162,7 @@ async def _answer(request, turn):
                 st["dropped"] += [f for f in miss if f not in st["dropped"]]
                 return
         if st["act"]:
-            held = taten.check(piece, st["acts"], st["names"], st["looked"])
+            held = answercheck.action_check(piece, st["acts"], st["names"], st["looked"])   # built-in rule
             if held:
                 print("chat: action check: held back kind=" + (held[0] or "erledigt") + " reason="
                       + ("fehler" if any(a["art"] in held for a in st["acts"]) else "nicht_gelaufen"), flush=True)

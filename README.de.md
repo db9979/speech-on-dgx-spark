@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.484** Taten prüfen und Fehlerschleife stoppen stehen als eingebaute Regeln unter Verbessern → Regeln
 - **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
 - **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.477** Taten prüfen und Fehlerschleife stoppen (an wie die Antwort-Prüfung): „ist jetzt an“ nur, wenn das Werkzeug geklappt hat, sonst ein ehrlicher Satz; zweimal gleicher Fehler sperrt das Werkzeug
 - **V01.0.476** Werkzeuge heißen verständlich, z. B. „Postfach-Überblick“ statt mail_tidy_overview
 - **V01.0.475** Rot-Fix: Selbsttests werden nicht mehr immer langsamer (Test-Panels hören nach ihrer Klasse auf)
-- **V01.0.474** Test-Fix nach V01.0.473: zwei Tests lassen kein Gerät und kein Home Assistant mehr zurück
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

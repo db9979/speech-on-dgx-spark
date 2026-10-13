@@ -7,6 +7,8 @@ out; "10:00" counts as "10 Uhr", "13.10.2026" as "13. Oktober", "3:1" as "3 zu 1
 """
 import re
 
+import taten
+
 MONTHS = {m: i + 1 for i, m in enumerate(
     ["januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november",
      "dezember"])}
@@ -143,3 +145,33 @@ def unquoted(sentence, texts):
     calendar, an appointment title the model quotes must come from this answer's results."""
     low = " ".join(t for t in texts if isinstance(t, str)).lower()
     return [m.group(1).strip() for m in QUOTED.finditer(sentence or "") if m.group(1).strip().lower() not in low]
+
+
+# ---------------------------------------------------------------- built-in answer rules (taten.py)
+# Handlungs-Prüfung and Fehlerschleife stoppen (Dominik 2026-10-12, plan handlungs-pruefung): fixed rules of the panel,
+# shown in Zustand → Verbessern → Regeln as „eingebaut“ with how often they stepped in today; never removable there,
+# only their switches (chat.action_check, chat.loop_stop, standard on) turn them off.
+BUILTIN = {
+    "action_check": ("Taten prüfen", "Check deeds",
+                     "Ein Satz, der eine Tat behauptet, die in dieser Antwort kein Werkzeug geschafft hat, wird nicht "
+                     "gesagt; stattdessen ein ehrlicher Satz.",
+                     "A sentence claiming a deed no tool managed in this answer is not said; an honest sentence instead.",
+                     "held"),
+    "loop_stop": ("Fehlerschleife stoppen", "Stop error loops",
+                  "Ein Werkzeug, das mit denselben Angaben zweimal gescheitert ist, läuft in dieser Antwort nicht noch "
+                  "einmal.", "A tool that failed twice with the same details does not run again in this answer.",
+                  "loop"),
+}
+
+
+def action_check(text, acts, offered, looked=False):
+    """The built-in rule „Taten prüfen“ (chat.speak): the kinds of deed a finished sentence claims although no tool of
+    that kind worked in this answer; the sentence is held back when this is not empty (taten.check decides)."""
+    return taten.check(text, acts, offered, looked)
+
+
+def builtin(ccfg, now=None):
+    """The built-in rules for Verbessern → Regeln: name, what it does, switch state, how often today (numbers only)."""
+    n = taten.for_live(now)
+    return [{"key": k, "name": [de, en], "what": [wde, wen], "on": bool((ccfg or {}).get(k, True)),
+             "today": int(n.get(cnt, 0))} for k, (de, en, wde, wen, cnt) in BUILTIN.items()]

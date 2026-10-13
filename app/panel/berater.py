@@ -37,11 +37,13 @@ from urllib.parse import urlparse
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import answercheck
 import berater_katalog as K
 import faelle
 import features
 import guard
 import profiles
+import taten
 from common import load_config, write_json
 from core import assistant, auth
 
@@ -402,6 +404,10 @@ def candidates(case, cfg=None):
                               f'With "{w}" {_tool_label(t, True)} must run'), k)
                 tpl = "erledigt" if q and _chat.DONE_WORDS.search(q) else "zuerst"
                 add(_hint(t, tpl), k)
+                # R4 „Nein zu eigenem Tun“: the tool that knows what the Spark did earlier (taten.STATUS, the same kinds
+                # as the action check) gets the fixed hint never to say no without it
+                if tpl == "erledigt" and t in taten.STATUS.values():
+                    add(_hint(t, "kein_nein"), k)
             add(_value_step("werkzeug_temperatur", cfg, True), k)
             if q and not acts:
                 t = (o["tools"] or [""])[0]
@@ -2481,6 +2487,7 @@ def overview(now=None):
                         for k, e in K.ENTRIES.items()],
             "never": [list(x) for x in K.NEVER], "live": for_live(now),
             "analyse": features.admin_on("beraterana", c), "regeln": regeln(cfg),
+            "eingebaut": answercheck.builtin(c, now),
             "versionen": [{k: x[k] for k in ("t", "by", "why")} for x in reversed(versions())][:VERS_KEEP],
             "bericht": report(now),
             "undo_auto": features.admin_on("beraterundo", c),

@@ -29,7 +29,7 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   const rows=L[VB.tab]||[];let html='';
   if(VB.tab==='kat')html=vbKat(d);
   else if(VB.tab==='bericht')html=vbReport(d.bericht||{});
-  else if(VB.tab==='regeln')html=rows.length?vbRules(rows,d):`<div class="ld-empty mut">${esc(t('Noch keine eigene Regel. Sie entstehen hier aus Vorschlägen oder von Hand unter Funktionen → Weiche und Einstellungen → Sprachmodell.','No own rule yet. They come from proposals here or by hand under Features → Switch and Settings → Language model.'))}</div>`;
+  else if(VB.tab==='regeln')html=vbBuiltin(d)+(rows.length?vbRules(rows,d):`<div class="ld-empty mut">${esc(t('Noch keine eigene Regel. Sie entstehen hier aus Vorschlägen oder von Hand unter Funktionen → Weiche und Einstellungen → Sprachmodell.','No own rule yet. They come from proposals here or by hand under Features → Switch and Settings → Language model.'))}</div>`);
   else if(VB.tab==='luecken')html=rows.length?vbGaps(rows):`<div class="ld-empty mut">${esc(t('Keine Lücke: für jede Frage war ein passendes Werkzeug da.','No gap: a fitting tool was there for every question.'))}</div>`;
   else if(!rows.length)html=`<div class="ld-empty mut">${esc({cases:t('Kein neuer Fall.','No new case.'),props:t('Kein offener Vorschlag.','No open proposal.'),
     check:t('Nichts wartet auf die Nachkontrolle.','Nothing waits for the re-check.'),done:t('Noch nichts erledigt.','Nothing done yet.')}[VB.tab])}</div>`;
@@ -58,6 +58,10 @@ function vbRules(rows,d){const by={};rows.forEach((r,i)=>{(by[r.key]=by[r.key]||
     return `<div class="ld-grp"><span>${esc(t(a[0],a[1]))}</span><span>${rs.length}</span></div><div class="ld-note mut">${esc(t(a[2],a[3]||a[2]))}</div>`+
       rs.map(([r,i])=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(r.name==='test'?r.item:(vbT(r.label)||r.name)+': '+r.item)}</b><small>${esc(r.name==='test'?'':r.name)}${r.name==='test'?'':' · '}${esc(vbRuleSrc(r.src))}</small></div>`+(r.weg?`<span class="ld-badge due">${esc(vbT(r.weg))}</span>`:'')+
         `<div class="ld-right"><button type="button" class="b" data-vbrule="${i}">${esc(t('Entfernen','Remove'))}</button></div></div>`).join('')}).join('')}
+// the panel's built-in answer rules (answercheck.BUILTIN, taten.py): what they do, on or off, how often today; never removable
+function vbBuiltin(d){const b=d.eingebaut||[];if(!b.length)return '';
+  return `<div class="ld-grp"><span>${esc(t('Eingebaut','Built in'))}</span><span>${b.length}</span></div>`+b.map(x=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(x.name))}</b><small>${esc(vbT(x.what))}</small></div>`+
+    `<div class="ld-right"><span class="ld-badge ${x.on?'sh':'off'}">${esc(x.on?t(`heute ${x.today}× eingegriffen`,`stepped in ${x.today}× today`):t('aus','off'))}</span></div></div>`).join('')}
 // Monatsbericht (Version 4): numbers of the last 30 days, never a question
 function vbReport(r){const g=r.groups||[];
   return `<div class="ld-note">${esc(t(`Letzte ${r.days||30} Tage: ${r.taken||0} Regeln übernommen (${r.auto||0} Autopilot), ${r.helped||0} geholfen, ${r.worse||0} schlechter, ${r.undone||0} zurückgenommen · ${r.open||0} Vorschläge offen · ${r.gaps||0} Lücken · ${r.rules||0} eigene Regeln`,
