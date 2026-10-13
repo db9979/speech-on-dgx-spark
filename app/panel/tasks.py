@@ -174,7 +174,7 @@ def sent_count(uid, lst):
     return sum(1 for x in _load(uid)["items"] if x["list"] == lst and x.get("sent"))
 
 
-async def add(uid, lst, texts):
+async def _add(uid, lst, texts):
     """Adds the entries; returns the ones added (the same text twice is added once)."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     seen, out = set(), []
@@ -208,7 +208,7 @@ async def add(uid, lst, texts):
     return texts
 
 
-async def change(uid, lst, picked, action):
+async def _change(uid, lst, picked, action):
     """Ticks off ("done") or deletes ("delete") the picked entries [{"id", "etag"?, "text"}]; returns how many."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     d = _load(uid)
@@ -250,6 +250,34 @@ async def change(uid, lst, picked, action):
     return n
 
 
+def _log(what, lst, uid, result):
+    """One journal line per change of a list, said or not: fixed words and numbers, never the entries."""
+    print(f"tasks: {what} {lst} | {result} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+
+
+async def _logged(what, lst, uid, run):
+    try:
+        out = await run
+    except notaus.NotausAktiv:
+        _log(what, lst, uid, "refused notaus")
+        raise
+    except Exception as e:
+        _log(what, lst, uid, f"failed ({type(e).__name__})")
+        raise
+    _log(what, lst, uid, f"{len(out) if isinstance(out, list) else out} entries")
+    return out
+
+
+async def add(uid, lst, texts):
+    """Adds the entries (_add) with a journal line for every outcome."""
+    return await _logged("add", lst, uid, _add(uid, lst, texts))
+
+
+async def change(uid, lst, picked, action):
+    """Ticks off or deletes (_change) with a journal line for every outcome."""
+    return await _logged("done" if action != "delete" else "delete", lst, uid, _change(uid, lst, picked, action))
+
+
 def match(entries, wanted):
     """The entries the words mean: exact, contained or close (never a guess beyond that)."""
     out = []
@@ -277,6 +305,8 @@ def inbox(uid, lst, take):
             for x in out:
                 x["sent"] = now
             _save(uid, d)
+    if take and out:
+        print(f"tasks: {len(out)} entries handed to the iPhone | {lst} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return [x["text"] for x in out]
 
 

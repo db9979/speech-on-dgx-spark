@@ -2007,16 +2007,20 @@ async def doc_send(did: str, request: Request, prof=Depends(browser_profile)):
     fmt = body.get("fmt") or d["format"]
     if fmt not in docrender.FORMATS:
         raise HTTPException(400, "fmt")
+    to = body.get("to") if body.get("to") in TARGETS else "?"   # the journal names only a known target
     try:
         msg = await send(uid, d, body.get("to"), fmt, text(body.get("device"), 40), text(body.get("account"), 40),
                          text(body.get("mail_to"), 200), text(body.get("subject"), 200))
     except notaus.NotausAktiv as e:
+        print(f"docmake: send to {to} refused, notaus", flush=True)
         raise HTTPException(409, str(e))
     except ValueError as e:
+        print(f"docmake: send to {to} refused", flush=True)
         raise HTTPException(400, str(e))
     except Exception as e:
         print("docmake: senden fehlgeschlagen:", type(e).__name__, flush=True)
         raise HTTPException(502, "Senden ging nicht: " + type(e).__name__)
+    print(f"docmake: sent to {to} | {fmt}", flush=True)
     return {"ok": True, "message": msg}
 
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.493** · 2026-10-13 · Logs lückenlos: Durchsage und jede andere Aktion (Chats, Listen, Termine, Erinnerungen, Mitteilungen, Mail, Gedächtnis, Rechner, eigene Dienste, Dokumente) schreibt für jedes Ergebnis eine Zeile mit Grund; jeder Werkzeugaufruf mit ok/nicht ok; neue Diagnose-Filter; Reiter Änderungen enthält Durchsage, Gruppen und Mitglieder der Chats; Regel in der Richtlinie, test_log_luecken
 - **V01.0.492** · 2026-10-13 · Admin-Schalter ließen sich nicht speichern („new_profile_on: functions with an own switch, each once“): eine entfernte Funktion stand noch in „Für neue Profile“; der Spark räumt sie jetzt selbst weg
 - **V01.0.491** · 2026-10-13 · reMarkable: Morgenblatt, Wochenrückblick, Abgleich-Blatt und Anleitung auf Wunsch per Sprache neu; Aufgabenblatt zum Ankreuzen (offene Punkte, der Spark führt die Antworten aus, mit Rückgängig); alles aus
 - **V01.0.490** · 2026-10-13 · Live-Bild: „Von selbst“ läuft über einen internen Bus im Spark (Eingänge rule, timer, job, note, Punkte laufen bis zur Stufe, „IRQ rule→tool“, Zähler je Tag) statt links bei den Geräten; „0 abgewiesen“ am Eingang bleibt im Kasten; Stufe Werkzeuge mit verständlichem Namen statt chat_tools

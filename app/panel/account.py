@@ -1036,12 +1036,17 @@ async def profile_reminder_played(request: Request, prof=Depends(own_profile)):
     if not re.fullmatch(r"[0-9a-f]{1,16}", rid):
         raise HTTPException(400, "id is required")
     # only a due one (a device whose clock runs ahead does not take it early)
-    return {"play": profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None}
+    play = profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None
+    if play:   # only the device that plays it writes the line (the others get "play": false)
+        print(f"reminders: one played on a device | {profiles.log_name(prof)}", flush=True)
+    return {"play": play}
 
 
 @router.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
 def profile_reminder_done(rid: str, prof=Depends(own_profile)):
-    return {"removed": profiles.remove_reminders(prof["id"], {rid})}
+    n = profiles.remove_reminders(prof["id"], {rid})
+    print(f"reminders: {n} deleted on a page or device | {profiles.log_name(prof)}", flush=True)
+    return {"removed": n}
 
 
 @router.get("/api/profile/calendar", dependencies=[Depends(assistant)])

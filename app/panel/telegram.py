@@ -644,7 +644,10 @@ async def loop():
 
 async def notify(uid, text, private=True):
     """A reminder, briefing or proactive note as a Telegram message (when the profile wants that)."""
-    if not push_on(uid, private) or notaus.refuse("aussen"):
+    if not push_on(uid, private):
+        return 0
+    if notaus.refuse("aussen"):
+        print("telegram: note refused, notaus", flush=True)
         return 0
     try:
         async with httpx.AsyncClient(timeout=20) as c:
@@ -658,13 +661,17 @@ async def notify(uid, text, private=True):
 async def send_file(uid, name, data, caption=""):
     """A document the Spark made (docmake.py) to the profile's own Telegram chat; personal data, so only when the
     profile allowed that there. Returns True when Telegram took it."""
-    if not push_on(uid, True) or not link(uid) or notaus.refuse("aussen") or len(data) > 45 * 1024 * 1024:
+    if not push_on(uid, True) or not link(uid):
+        return False
+    if notaus.refuse("aussen") or len(data) > 45 * 1024 * 1024:
+        print(f"telegram: document refused, {'notaus' if notaus.refuse('aussen') else 'too big'}", flush=True)
         return False
     try:
         async with httpx.AsyncClient(timeout=60) as c:
             r = await c.post(f"{base()}/sendDocument", data={"chat_id": str(link(uid)["chat"]), "caption": str(caption)[:900]},
                              files={"document": (re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument", data)})
         ok = bool(r.json().get("ok"))
+        print(f"telegram: document {'sent' if ok else 'refused'} | {len(data) // 1024} KB", flush=True)
         if not ok:
             print("telegram: send_file", safe(str(r.json().get("description")), 120), flush=True)
         return ok

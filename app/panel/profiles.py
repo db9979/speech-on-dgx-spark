@@ -1157,6 +1157,7 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
             item["convo"] = convo
         facts.append(item)
         _write(_path(uid, "memory.json"), facts[-MAX_FACTS:])
+    print(f"gedaechtnis: fact saved | {src} | {log_name(by_id(uid))}", flush=True)   # never the fact itself
     return text
 
 
@@ -1218,7 +1219,8 @@ def forget(uid, fact_id=None, text=None):
         else:
             keep = []
         _write(_path(uid, "memory.json"), keep)
-        return len(facts) - len(keep)
+    print(f"gedaechtnis: {len(facts) - len(keep)} fact(s) forgotten | {log_name(by_id(uid))}", flush=True)
+    return len(facts) - len(keep)
 
 
 # ---------------------------------------------------------------- tool log

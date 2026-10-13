@@ -1239,6 +1239,8 @@ async def tool(name, args, ctx):
     except ValueError as e:
         return "Geht nicht: " + str(e)
     state, err = await wait_act(uid, x["id"])
+    print(f"begleiter: pc action {state if state in ('done', 'no') else 'no answer'}{' with error there' if err else ''}"
+          f" | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     if state == "done":
         return "Erledigt am Rechner: " + x["text"] + (f" (Fehler dort: {err})" if err else "")
     if state == "no":

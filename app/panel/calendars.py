@@ -486,6 +486,22 @@ def ical(item, uid_text):
 
 
 async def add_event(uid, item):
+    """_add_event with one journal line for every outcome (saved, refused by the Notaus, failed); never the
+    appointment or the calendar's name."""
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        out = await _add_event(uid, item)
+    except notaus.NotausAktiv:
+        print(f"calendar: appointment refused, notaus | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"calendar: appointment not saved ({type(e).__name__}) | {who}", flush=True)
+        raise
+    print(f"calendar: appointment saved | {who}", flush=True)
+    return out
+
+
+async def _add_event(uid, item):
     """Writes the appointment to a writable CalDAV calendar: the one named in item "calendar" (its exact name
     first, then a name containing the words, across all connected accounts), else the first one. A named
     calendar that no account has is never swapped for another one: ValueError with the names there are

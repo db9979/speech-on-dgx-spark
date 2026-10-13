@@ -372,7 +372,12 @@ def foreign_page():
 # ---------------------------------------------------------------- change log
 _audit_lock = threading.Lock()
 # changing requests that are normal use, not a change worth logging
-QUIET = ("/api/chat", "/api/siri/", "/api/assistant/say", "/api/watch/", "/api/profile/convos", "/api/test/",
+# "/api/chat" is the assistant's chat only: before, the bare prefix also swallowed every /api/chats/ change,
+# among them a Durchsage. Of the Chats only writing itself stays out (many per minute, CHATS_QUIET); a Durchsage,
+# groups, members, invitations, keys and who may write are in the change log.
+CHATS_QUIET = ("/api/chats/send", "/api/chats/edit", "/api/chats/back", "/api/chats/react", "/api/chats/read",
+               "/api/chats/typing", "/api/chats/find", "/api/chats/media", "/api/chats/open")
+QUIET = ("/api/chat/", "/api/siri/", "/api/assistant/say", "/api/watch/", "/api/profile/convos", "/api/test/",
          "/api/profile/calendar/test", "/api/profile/mail/test", "/api/profile/homeassistant/test", "/api/login", "/api/logout",
          "/api/profile/login", "/api/profile/logout", "/api/profile/reminders", "/api/tasks/inbox",
          "/api/admin/elevate")   # opening, keeping and ending the admin mode have their own entries (admin_mode_*)
@@ -485,7 +490,7 @@ def read(limit=300, user=None):
 
 
 def logged(path, method):
-    return method in CHANGING and path.startswith("/api/") and not path.startswith(QUIET)
+    return method in CHANGING and path.startswith("/api/") and path != "/api/chat" and not path.startswith(QUIET + CHATS_QUIET)
 
 
 # ---------------------------------------------------------------- load limits

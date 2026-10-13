@@ -2116,7 +2116,13 @@ async def _answer(request, turn):
             st["saves"] += 1
             if st["saves"] > MAX_SAVES:
                 return "Not saved: at most a few notes per answer."
+        t_run = time.monotonic()
         result = await chat_tools.run(turn, name, args, st)
+        # every tool call, done or not, in Zustand → Logs → Diagnose (filter Chat): the name only when it was offered,
+        # ok or not ok by taten's fixed words and the time; never its arguments or its result
+        print(f"chat: tool {name if name in st['offered'] else 'unbekannt'} "
+              f"{'not offered' if name not in st['offered'] else 'not ok' if isinstance(result, str) and taten.failed(result) else 'ok'} | "
+              f"{int((time.monotonic() - t_run) * 1000)} ms", flush=True)
         if not isinstance(result, str):
             return result
         if name in CAL_READS and name in st["offered"]:

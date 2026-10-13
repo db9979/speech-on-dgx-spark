@@ -3156,6 +3156,22 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
+"title": "Lückenlose Log-Zeilen",
+"text": "Lückenlose Log-Zeilen (ab V01.0.493, Dominik: „Wieso taucht eine Durchsage aus dem Chat nicht im Log auf?“): Bis dahin schrieb eine Durchsage nur dann eine Zeile, wenn sie gesagt wurde; wurde sie abgelehnt (Schalter aus, kein Lautsprecher erlaubt, Stundenlimit, Notaus, Ruhezeit), stand nirgends etwas. Im Reiter Änderungen fehlten alle Chats-Pfade, weil die Ausnahme /api/chat als Präfix auch /api/chats/… traf. Jetzt gilt: Jede Aktion schreibt für jedes Ergebnis eine Zeile, nur feste Wörter und Zahlen, das Profil nur als profiles.log_name. - Durchsage (Filter „Nachrichten und Chats“): messages: announcement sent|refused <grund> | via chats|assistant|house | N speaker(s) picked, N now, N at next wake word, N quiet time | N chars, beim Wake-Word messages: announcement said at wake word oder too old, dropped. Dazu Nachrichten des Assistenten bei Ablehnung, Chat-Nachrichten auf dem Lautsprecher (sofort oder beim Wake-Word), ein abgebrochener Satz am Lautsprecher, jede Ablehnung der Chats-Seite (chats: refused | why … | http …) und „Chat für mich löschen“. - Werkzeuge (neuer Filter „Werkzeuge“): chat: tool <name> ok|not ok|not offered | N ms für jeden Aufruf; der Name nur, wenn das Werkze"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
+"title": "Lückenlose Log-Zeilen",
+"text": "ug angeboten war. - Listen, Termine, Erinnerungen (neuer Filter): Eintrag gesetzt, abgehakt oder gelöscht (mit Anzahl, Notaus oder Fehlerart), Übergabe ans iPhone, Termin gespeichert oder nicht, Erinnerung auf einem Gerät gespielt, gelöscht oder nach mehr als 6 h verworfen. - Mitteilungen (neuer Filter): jede Mitteilung mit Art (Auftrag, Erinnerung, Chat …), erreichten Geräten und Wegen, „Nicht stören“ zurückgehalten; Browser-Push ohne den Text des fremden Servers. - Rechner, eigene Dienste, Dokumente (neuer Filter): Am-PC-Handeln (erledigt, abgelehnt, keine Antwort), eigener MCP-Dienst (ausgeführt, abgelehnt, Fehler), Dokument verschickt oder abgelehnt. - Gedächtnis: Eintrag gemerkt (mit Herkunft) oder vergessen (Anzahl); Mail: bestätigtes Sortieren, Rückgängig, Aufräumen oder Entwurf erledigt, abgelehnt oder fehlgeschlagen; Telegram: Dokument gesendet oder abgelehnt. - Reiter Änderungen: Durchsage, Gruppen, Mitglieder, Einladungen, Schlüssel und „Wer darf mir schreiben“ stehen jetzt drin; das Schreiben, Lesen und Tippen in Chats bleibt draußen."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
 "title": "Telegram: nur ein Abruf",
 "text": "Telegram: nur ein Abruf (ab V01.0.214): Telegram gibt neue Nachrichten immer nur an einen Abruf (getUpdates) gleichzeitig. Bis V01.0.213 liefen die Startaufgaben des Panels doppelt (der https-Server führte sie ein zweites Mal aus), und die zwei Telegram-Abrufe warfen sich alle 15 s gegenseitig raus („Conflict: terminated by other getUpdates request“). Jetzt startet der https-Server ohne eigene Startaufgaben, und ein zweiter Abruf im selben Prozess wird nicht gestartet. Meldet Telegram trotzdem einen Konflikt, nutzt ein anderes Programm denselben Bot-Token: Der Spark wartet dann 5 s, 30 s, 1, 2, 5 und höchstens 10 min, schreibt nur die zweite und jede 20. Meldung ins Log (ohne Token) und zeigt unter Zustand und bei Funktionen → Telegram den Hinweis, den Token nur an einer Stelle zu nutzen oder bei @BotFather einen neuen zu holen. Ein einzelner Konflikt direkt nach einem Neustart ist normal (der alte Abruf läuft noch bis zu 25 s)."
 },
@@ -6502,6 +6518,22 @@
 "head": "Logs",
 "title": "Logs page \"overview first\"",
 "text": "Logs page \"overview first\" (since V01.0.212): tabs Diagnosis, Services, Update and Changes. Under Diagnosis tiles show the error count and the three busiest areas with a small history over the time range (tap to filter), below the newest error with a fixed hint (e.g. HTTP 401 from Home Assistant → token expired). Filter buttons with counts: conversation, web search, router, Home Assistant, room, speakers, Telegram, mail and \"errors only\". Each line shows time, area and message; errors red, warnings yellow (fixed word list in the panel), repeated lines as \"×n\", pauses from 2 min as a divider. Search runs in the browser over the loaded lines only. \"Live\" reloads every 10 s (services every 3 s) and pauses while you scroll up or select text. \"Copy for thread\" takes version, filter and the raw lines in a code block."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Complete log lines",
+"text": "Complete log lines (since V01.0.493, Dominik: \"Why does an announcement from the chat not show up in the log?\"): until then an announcement wrote a line only when it was said; when it was refused (switch off, no speaker allowed, hourly limit, Notaus, quiet time) nothing was written anywhere. The Changes tab missed every Chats path, because the exception /api/chat as a prefix also matched /api/chats/…. Now every action writes one line for every outcome, fixed words and numbers only, the profile only as profiles.log_name. - Announcement (filter \"Messages and chats\"): messages: announcement sent|refused <reason> | via chats|assistant|house | N speaker(s) picked, N now, N at next wake word, N quiet time | N chars, at the wake word messages: announcement said at wake word or too old, dropped. Also refused messages of the assistant, chat messages read on the speaker (at once or at the wake word), a sentence stopped at the speaker, every refusal of the Chats page (chats: refused | why … | http …) and \"delete chat for me\". - Tools (new filter \"Tools\"): chat: tool <name> ok|not ok|not offered | N ms for every call; the name only when the tool was offered. - Lists, appointments, reminders (n"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Complete log lines",
+"text": "ew filter): entry added, ticked off or deleted (with count, Notaus or kind of error), handed to the iPhone, appointment saved or not, reminder played on a device, deleted or dropped after more than 6 h. - Notifications (new filter): every notification with its kind (job, reminder, chat …), devices and ways reached, held by \"Do not disturb\"; browser push without the outside server's text. - Computer, own services, documents (new filter): acting on the PC (done, declined, no answer), own MCP service (done, declined, error), document sent or refused. - Memory: fact saved (with its source) or forgotten (count); mail: confirmed sorting, undo, cleanup or draft done, refused or failed; Telegram: document sent or refused. - Changes tab: announcement, groups, members, invitations, keys and \"who may write to me\" are in it now; writing, reading and typing in chats stays out."
 },
 {
 "lang": "en",

@@ -1102,6 +1102,7 @@ def clear(uid, cid, now=None):
         _map(meta, "unread")[uid] = 0
     _mutate(cid, f, now, items=False)
     _send_event(uid, {"type": "gone", "id": cid})
+    _log("cleared for one member")
 
 
 def _drop(cid):
@@ -1514,14 +1515,12 @@ def _mid(v):
 
 
 def _err(e):
-    """A refusal as a sentence the page shows (fixed sentences from above, never an exception text from outside)."""
-    if isinstance(e, LookupError):
-        return HTTPException(404, "Diesen Chat oder diese Nachricht gibt es nicht.")
-    if isinstance(e, OverflowError):
-        return HTTPException(429, str(e))
-    if isinstance(e, PermissionError):
-        return HTTPException(403, str(e))
-    return HTTPException(400, str(e))
+    """A refusal as a sentence the page shows (fixed sentences from above, never an exception text from outside),
+    with its journal line: the kind of refusal only, never the sentence (it can name people)."""
+    kind = {LookupError: ("not found", 404), OverflowError: ("limit", 429), PermissionError: ("not allowed", 403)}
+    word, code = next((v for k, v in kind.items() if isinstance(e, k)), ("invalid", 400))
+    _log("refused", why=word, http=code)
+    return HTTPException(code, "Diesen Chat oder diese Nachricht gibt es nicht." if code == 404 else str(e))
 
 
 def _state(uid):
