@@ -41,7 +41,7 @@ def offer(ctx):
         try:
             o = m.offer(ctx)
         except Exception as e:
-            print(f"{m.__name__}:", type(e).__name__, e, flush=True)
+            print(f"extras: {m.__name__}", type(e).__name__, e, flush=True)
             o = None
         if not o:
             continue
@@ -65,7 +65,7 @@ async def answer(ctx, text):
             try:
                 res = await m.answer(ctx, text)
             except Exception as e:
-                print(f"{m.__name__}: answer", type(e).__name__, e, flush=True)
+                print(f"extras: {m.__name__} answer", type(e).__name__, e, flush=True)
                 res = None
             if res:
                 return res
@@ -81,7 +81,7 @@ async def briefing(uid, zone=None, private=True):
         try:
             part = await m.briefing(uid, zone)
         except Exception as e:
-            print(f"{m.__name__}: briefing", type(e).__name__, flush=True)
+            print(f"extras: {m.__name__} briefing", type(e).__name__, flush=True)
             part = ""
         if part:
             out.append((m.__name__, part))

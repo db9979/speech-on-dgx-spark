@@ -21,12 +21,23 @@ from core import auth
 router = APIRouter()
 
 # areas: which kind of line it is, from the word before the colon (search before chat: it is a chat line)
-AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "), ("chat", r"^(chat|vorab):"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
-         ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
-         ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal|docling):"), ("anfrage", r"^anfrage:"),
-         ("speicher", r"^speicher:"), ("nas", r"^nas:"), ("gedaechtnis", r"^gedaechtnis:"), ("nachrichten", r"^(chats|messages|verbund):"),
-         ("seite", r"^seite:"), ("klaeren", r"^klaeren:"), ("listen", r"^(tasks|reminders|calendar):"),
-         ("mitteilung", r"^(push|apns):"), ("pc", r"^(begleiter|meinmcp|docmake):"))
+# Every journal line of the panel starts with one of these words (test_log_luecken.Structure): one place to
+# filter it under Zustand → Logs → Diagnose. A new word goes into an area here, in the same commit.
+AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
+         ("chat", r"^(chat|vorab|ack|latency|rolle|briefing|extras|images|schreib|quality|hilfe|aendern):"),
+         ("weiche", r"^(weiche|systemone|taten):"), ("ha", r"^(homeassistant|hamelden):"),
+         ("room", r"^room:"), ("esp32", r"^(esp32|wyoming):"), ("watch", r"^(watch|pebble):"), ("telegram", r"^telegram:"),
+         ("mail", r"^(mail|tidy|imap)\b"), ("vorrang", r"^(vorrang|hintergrund|sampler):"),
+         ("wissen", r"^(kiwix|lokal|wissen|docembed|documents|docling):"), ("anfrage", r"^anfrage:"),
+         ("speicher", r"^(speicher|offsite|backup):"), ("nas", r"^nas:"), ("gedaechtnis", r"^(gedaechtnis|memtidy|learning|fixes|profiles):"),
+         ("nachrichten", r"^(chats|messages|verbund):"), ("seite", r"^seite:"), ("klaeren", r"^klaeren:"),
+         ("listen", r"^(tasks|reminders|calendar|contacts):"), ("mitteilung", r"^(push|apns):"),
+         ("pc", r"^(begleiter|meinmcp|docmake|mcp-server):"), ("remarkable", r"^remarkable:"),
+         ("apps", r"^(iphone|android|join|onboard):"), ("vonselbst", r"^(proactive|agent|tipps):"),
+         ("verbessern", r"^(berater|faelle|tagebuch|meldung):"),
+         ("system", r"^(notaus|notzugang|guard|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
+                    r"ghtoken|netguard)\b"),
+         ("ereignis", r"^ereignis:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 # filter keys the page may send: every area, "errors" (lines at level err) and "update" (the update unit)
 FILTERS = dict(AREAS, update=None, errors=None)

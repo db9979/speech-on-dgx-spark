@@ -371,16 +371,37 @@ def foreign_page():
 
 # ---------------------------------------------------------------- change log
 _audit_lock = threading.Lock()
-# changing requests that are normal use, not a change worth logging
-# "/api/chat" is the assistant's chat only: before, the bare prefix also swallowed every /api/chats/ change,
-# among them a Durchsage. Of the Chats only writing itself stays out (many per minute, CHATS_QUIET); a Durchsage,
-# groups, members, invitations, keys and who may write are in the change log.
-CHATS_QUIET = ("/api/chats/send", "/api/chats/edit", "/api/chats/back", "/api/chats/react", "/api/chats/read",
-               "/api/chats/typing", "/api/chats/find", "/api/chats/media", "/api/chats/open")
-QUIET = ("/api/chat/", "/api/siri/", "/api/assistant/say", "/api/watch/", "/api/profile/convos", "/api/test/",
-         "/api/profile/calendar/test", "/api/profile/mail/test", "/api/profile/homeassistant/test", "/api/login", "/api/logout",
-         "/api/profile/login", "/api/profile/logout", "/api/profile/reminders", "/api/tasks/inbox",
-         "/api/admin/elevate")   # opening, keeping and ending the admin mode have their own entries (admin_mode_*)
+# changing requests that are normal use, not a change worth logging: each exact path or prefix with its reason
+# (test_log_luecken.Structure). "/api/chat" is the assistant's chat only: before V01.0.493 the bare prefix also
+# swallowed every /api/chats/ change, among them a Durchsage. Of the Chats only writing itself stays out.
+QUIET_WHY = {
+    "/api/chat/": "Bild zum Gespräch, Daumen: eigene Zeilen im Journal (chat:)",
+    "/api/siri/": "Fragen per Siri: Logs → Anfragen",
+    "/api/assistant/say": "Vorlesen einer Antwort: viele pro Minute",
+    "/api/watch/": "Fragen von der Uhr: Logs → Anfragen",
+    "/api/profile/convos": "Verlauf speichern: bei jeder Antwort",
+    "/api/test/": "Tests von Spracherkennung und Sprachausgabe: nichts ändert sich",
+    "/api/profile/calendar/test": "Kalender prüfen: nichts ändert sich",
+    "/api/profile/mail/test": "Postfach prüfen: nichts ändert sich",
+    "/api/profile/homeassistant/test": "Home Assistant prüfen: nichts ändert sich",
+    "/api/login": "eigene Einträge login/login_failed",
+    "/api/logout": "eigener Eintrag",
+    "/api/profile/login": "eigene Einträge login/login_failed",
+    "/api/profile/logout": "eigener Eintrag",
+    "/api/profile/reminders": "Erinnerung gespielt oder gelöscht: eigene Zeilen im Journal (reminders:)",
+    "/api/tasks/inbox": "Einkaufsliste ans iPhone: eigene Zeile im Journal (tasks:)",
+    "/api/admin/elevate": "Admin-Modus öffnen, halten, beenden: eigene Einträge admin_mode_*",
+    "/api/chats/send": "Schreiben im Chat: viele pro Minute, Zeilen im Journal (chats:)",
+    "/api/chats/edit": "Schreiben im Chat",
+    "/api/chats/back": "Schreiben im Chat",
+    "/api/chats/react": "Schreiben im Chat",
+    "/api/chats/read": "Lesen im Chat",
+    "/api/chats/typing": "Tippen im Chat",
+    "/api/chats/find": "Suchen im Chat: nichts ändert sich",
+    "/api/chats/media": "Fotos und Dateien im Chat: Zeilen im Journal (chats:)",
+    "/api/chats/open": "Chat zu zweit öffnen",
+}
+QUIET = tuple(QUIET_WHY)
 
 
 def log(event, **detail):
@@ -494,7 +515,7 @@ def read(limit=300, user=None):
 
 
 def logged(path, method):
-    return method in CHANGING and path.startswith("/api/") and path != "/api/chat" and not path.startswith(QUIET + CHATS_QUIET)
+    return method in CHANGING and path.startswith("/api/") and path != "/api/chat" and not path.startswith(QUIET)
 
 
 # ---------------------------------------------------------------- load limits

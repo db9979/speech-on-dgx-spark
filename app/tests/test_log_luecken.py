@@ -2,9 +2,13 @@
 outcome, done, refused or failed (Dominik 2026-10-13: "wieso taucht eine Durchsage aus dem Chat nicht im Log auf?").
 The lines carry fixed words and numbers only, never texts, entries or names, and land under a filter of Zustand →
 Logs → Diagnose. The Durchsage itself is in test_messages.Speakers.test_every_announcement_writes_a_journal_line."""
+import ast
 import asyncio
 import contextlib
+import glob
 import io
+import os
+import re
 import unittest
 
 from tests import helpers
@@ -160,6 +164,143 @@ class Others(Lines):
         for path in ("/api/chat", "/api/chat/rate", "/api/chats/send", "/api/chats/read", "/api/chats/typing",
                      "/api/chats/react", "/api/chats/edit", "/api/chats/find", "/api/chats/media", "/api/chats/open"):
             self.assertFalse(guard.logged(path, "POST"), path)
+
+
+PANEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel")
+# prints whose line a helper builds (the helper's own words start with an area) or that go to a console, not the journal
+PRINT_OK = {
+    ("chat.py", "watch_report"): "watch.report_line baut „watch: …“",
+    ("chat_turn.py", "prepare"): "lokal.log_line baut „wissen: …“ bzw. „lokal: …“",
+    ("lokal.py", "run"): "log_line baut „wissen: …“",
+    ("panel.py", "slow_reads"): "slow_read baut „seite: slow GET …“",
+    ("tracelog.py", "finish"): "line() baut „anfrage: …“",
+    ("logfilter.py", "detail"): "ausführliche Zeile „<bereich>: detail …“ eines festen Bereichs",
+    ("notzugang.py", "main"): "Konsole von „speech-spark notzugang“, nicht das Journal",
+    ("hilfe.py", "<module>"): "Konsole von „hilfe.py --docs“",
+    ("werkzeuge.py", "<module>"): "Konsole von „werkzeuge.py --write“",
+}
+# functions behind a Notaus gate that write no line themselves, each with where its line comes from
+ACTION_OK = {
+    ("aendern.py", "set_volume"): "volume schreibt „aendern: lautstaerke …“, das Rückgängig answer seine Zeile",
+    ("aendern.py", "undo"): "answer schreibt „aendern: rueckgaengig … ok|fehler“",
+    ("begleiter.py", "asked"): "startet begleiter.check, das seine Zeile schreibt",
+    ("begleiter.py", "_send_tool"): "ein Werkzeug: chat.run_tool schreibt „chat: tool pc_send …“",
+    ("berater.py", "feedback"): "proactive.deliver schreibt die Zeile",
+    ("berater.py", "_notify"): "proactive.deliver schreibt die Zeile",
+    ("berater.py", "_tell_admins"): "proactive.deliver schreibt die Zeile",
+    ("calendars.py", "_add_event"): "add_event schreibt für jedes Ergebnis die Zeile",
+    ("calendars.py", "_change_event"): "change_event schreibt für jedes Ergebnis die Zeile",
+    ("calendars.py", "delete_href"): "nur über aendern.undo; answer schreibt die Zeile",
+    ("calendars.py", "put_ics"): "nur über aendern.undo; answer schreibt die Zeile",
+    ("dienstwacht.py", "round_once"): "Ausfall und Entwarnung über live.event (ereignis: Dienste …)",
+    ("docmake.py", "_can_start"): "nur eine Prüfung; Auftrag und Senden schreiben ihre Zeilen",
+    ("geraeteupdate.py", "tick"): "check_all schreibt über live.job",
+    ("mcpserver.py", "carry_out"): "decide schreibt guard.log und „mcp-server: confirmed action …“",
+    ("netguard.py", "allowed"): "nur eine Prüfung; der Wächter loggt die Ablehnung selbst",
+    ("proactive.py", "blocked"): "nur eine Prüfung; deliver loggt „not said (Grund)“",
+    ("tasks.py", "_add"): "add schreibt für jedes Ergebnis die Zeile",
+    ("tasks.py", "_change"): "change schreibt für jedes Ergebnis die Zeile",
+    ("tidy.py", "_carry_out"): "carry_out schreibt für jedes Ergebnis die Zeile",
+    ("tidy.py", "append_doc"): "Teil von docmake-Senden und carry_out, die ihre Zeile schreiben",
+    ("tidy.py", "append_draft"): "Teil von make_draft (carry_out, docmake), die ihre Zeile schreiben",
+    ("tipps.py", "_quiet"): "nur eine Prüfung",
+    ("tipps.py", "weekly_text"): "proactive.check_tips sagt den Tipp über deliver (Zeile dort)",
+}
+LOGS = re.compile(r"^(print|_?log\w*|\w*_log|_live\w*|_journal)$")
+
+
+def _lead(a):
+    """The fixed start of a print's first argument ("{}" for each placeholder), or None for an expression."""
+    if isinstance(a, ast.Constant) and isinstance(a.value, str):
+        return a.value
+    if isinstance(a, ast.JoinedStr):
+        return "".join(v.value if isinstance(v, ast.Constant) else "{}" for v in a.values)
+    if isinstance(a, ast.BinOp) and isinstance(a.op, ast.Add):
+        return _lead(a.left)
+    if isinstance(a, ast.Subscript):
+        return _lead(a.value)
+    return None
+
+
+def _files():
+    for path in sorted(glob.glob(os.path.join(PANEL, "*.py"))):
+        with open(path, encoding="utf-8") as f:
+            yield os.path.basename(path), ast.parse(f.read())
+
+
+class Structure(unittest.TestCase):
+    """Dominik 2026-10-13: „alles neues immer im log mit aufnehmen“. These fail for a new line or action that
+    does not fit, without anyone having to remember it."""
+
+    def test_every_journal_line_has_an_area(self):
+        """Every print of the panel starts with a word of logfilter.AREAS, so it shows under a filter of Zustand →
+        Logs → Diagnose. A new word goes into an area in the same commit."""
+        bad = []
+
+        class V(ast.NodeVisitor):
+            def __init__(self, name):
+                self.name, self.stack = name, []
+
+            def visit_FunctionDef(self, n):
+                self.stack.append(n.name)
+                self.generic_visit(n)
+                self.stack.pop()
+            visit_AsyncFunctionDef = visit_FunctionDef
+
+            def visit_Call(self, n):
+                if isinstance(n.func, ast.Name) and n.func.id == "print" and n.args:
+                    where = (self.name, self.stack[-1] if self.stack else "<module>")
+                    lead = _lead(n.args[0])
+                    if where not in PRINT_OK and (lead is None or not logfilter.parse(lead.replace("{}", "x"))["area"]):
+                        bad.append(f"{self.name}:{n.lineno} {(lead or '<Ausdruck>')[:40]!r}")
+                self.generic_visit(n)
+        for name, tree in _files():
+            V(name).visit(tree)
+        self.assertEqual(bad, [], "Zeilen ohne Bereich in logfilter.AREAS")
+
+    def test_every_action_writes_a_line(self):
+        """A function behind a Notaus gate (notaus.stop/refuse/blocks) does something: it writes a journal line
+        (print, a _log or _live helper, live.mark/event/job/note/begin), is an endpoint (the change log has it) or
+        says in ACTION_OK where its line comes from."""
+        bad = []
+        for name, tree in _files():
+            for fn in ast.walk(tree):
+                if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)) or (name, fn.name) in ACTION_OK:
+                    continue
+                if any(isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute) and isinstance(d.func.value, ast.Name)
+                       and d.func.value.id in ("router", "app") for d in fn.decorator_list):
+                    continue
+                gate = logs = False
+                for n in ast.walk(fn):
+                    if not isinstance(n, ast.Call):
+                        continue
+                    f = n.func
+                    owner = f.value.id if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name) else ""
+                    word = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else ""
+                    gate = gate or (owner == "notaus" and word in ("stop", "refuse", "blocks"))
+                    logs = logs or bool(LOGS.match(word)) or (owner == "live" and word in ("mark", "event", "job", "note", "begin"))
+                if gate and not logs:
+                    bad.append(f"{name}:{fn.lineno} {fn.name}")
+        self.assertEqual(bad, [], "Aktionen ohne Log-Zeile (oder Grund in ACTION_OK)")
+        for (name, fn), why in ACTION_OK.items():
+            self.assertTrue(os.path.exists(os.path.join(PANEL, name)) and why, name)
+
+    def test_quiet_paths_have_a_reason(self):
+        """Every path the change log leaves out has its reason (guard.QUIET_WHY); a prefix never swallows a whole
+        family of other paths again (the Durchsage under /api/chats/)."""
+        self.assertEqual(set(guard.QUIET), set(guard.QUIET_WHY))
+        for path, why in guard.QUIET_WHY.items():
+            self.assertTrue(path.startswith("/api/") and len(why) > 5, path)
+        self.assertTrue(guard.logged("/api/chats/announce", "POST"))
+
+    def test_live_events_are_in_the_journal(self):
+        """What Zustand → Live shows under Ereignisse is in the journal too, whether Live is on or not."""
+        import live
+        got = Lines.lines(self, lambda: (live.mark("Chats", "Durchsage auf 1 Lautsprecher"),
+                                        live.event("Notaus", "Stufe 1")))
+        self.assertIn("ereignis: Chats | Durchsage auf 1 Lautsprecher", got)
+        self.assertIn("ereignis: Notaus | Stufe 1", got)
+        self.assertEqual({logfilter.parse(x)["area"] for x in got}, {"ereignis"})
 
 
 if __name__ == "__main__":

@@ -303,7 +303,7 @@ async def stability():
         if health.after_update_due(update.update_progress()):
             await health.ready(load_config())
             res = await health.livecheck("after update")
-            print("live check after update:", "ok" if res and res["ok"] else res, flush=True)
+            print("livecheck: after update:", "ok" if res and res["ok"] else res, flush=True)
             if res and res["ok"]:
                 await quality.run("after update")
     async def reminders():
@@ -315,7 +315,7 @@ async def stability():
                     continue
                 await push.due_reminders()
             except Exception as e:
-                print("push reminders:", type(e).__name__, e, flush=True)
+                print("reminders: push failed:", type(e).__name__, e, flush=True)
 
     async def every_minute():
         # each minute once, even when the work of the one before took longer than a minute
@@ -328,7 +328,7 @@ async def stability():
                 try:
                     room.sweep()
                 except Exception as e:
-                    print("room sweep:", type(e).__name__, flush=True)
+                    print("room: sweep failed:", type(e).__name__, flush=True)
                 try:
                     held = notaus.blocks("auto")   # Notaus stage 2: nothing happens by itself (notaus.py)
                 except Exception as e:
@@ -356,11 +356,11 @@ async def stability():
                 try:
                     await appupdate.due_once()
                 except Exception as e:
-                    print("iphone update notice:", type(e).__name__, flush=True)
+                    print("iphone: update notice failed:", type(e).__name__, flush=True)
                 try:
                     await update.night_once()      # "Heute Nacht einspielen" (update.py), off by default
                 except Exception as e:
-                    print("update overnight:", type(e).__name__, flush=True)
+                    print("update: overnight failed:", type(e).__name__, flush=True)
             await asyncio.sleep(5)
     spawn(reminders())
     spawn(telegram.loop())
@@ -442,7 +442,7 @@ def seal_secrets():
             calendars.seal_stored(uid)
             homeassistant.seal_stored(uid)
         except Exception as e:
-            print("sealing secrets:", type(e).__name__, e, flush=True)
+            print("vault: sealing secrets failed:", type(e).__name__, e, flush=True)
 
 
 @app.on_event("startup")
@@ -470,16 +470,16 @@ async def learner():
             try:
                 n = await learn_once()
                 if n:
-                    print(f"learned {n} fact(s) from conversations", flush=True)
+                    print(f"gedaechtnis: learned {n} fact(s) from conversations", flush=True)
             except Exception as e:
                 print("learning:", type(e).__name__, e, flush=True)
             try:
                 if not vorrang.speaking():   # never while someone is talking (vorrang.py)
                     uid = await memtidy.due_once()
                     if uid:
-                        print("memory tidy: checked a profile", flush=True)
+                        print("memtidy: checked a profile", flush=True)
             except Exception as e:
-                print("memory tidy:", type(e).__name__, e, flush=True)
+                print("memtidy:", type(e).__name__, e, flush=True)
             try:
                 if not vorrang.speaking():   # Gedächtnis-Themen (gedaechtnis.py): only for showing Ich → Gedächtnis
                     import gedaechtnis

@@ -828,6 +828,9 @@ def status(uid, aid):
             "fail": "Bestätigt, aber nicht ausgeführt: "}[x["state"]] + (x.get("result") or "" if x["state"] in ("done", "fail") else "")
 
 
+MCP_ACTS = ("home_assistant", "reminder_set", "calendar_add")   # what carry_out runs; only these names in a line
+
+
 async def carry_out(uid, x):
     """Runs a confirmed action; returns (ok, text)."""
     if notaus.refuse("aktion", uid):
@@ -891,6 +894,8 @@ async def decide(uid, aid, yes, now=None):
                 y.update(state=state, result=result, decided=int(now))
         _save_actions(uid, items)
     guard.log("mcp_action", uid=uid, detail=f"{x['by'][:40]}: {x['what'][:120]} → {state}")
+    print(f"mcp-server: confirmed action {x['tool'] if x.get('tool') in MCP_ACTS else '?'} {state} | "
+          f"{profiles.log_name(profiles.by_id(uid))}", flush=True)
     return {"state": state, "result": result}
 
 

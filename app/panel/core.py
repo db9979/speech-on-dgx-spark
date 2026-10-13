@@ -403,7 +403,7 @@ def _done(task):
     _tasks.discard(task)
     if not task.cancelled() and task.exception() is not None:
         e = task.exception()
-        print(f"background task {task.get_name()} ended: {type(e).__name__}: {str(e)[:200]}", flush=True)
+        print(f"hintergrund: background task {task.get_name()} ended: {type(e).__name__}: {str(e)[:200]}", flush=True)
 
 
 def unit_state(unit):

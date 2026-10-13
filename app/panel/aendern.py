@@ -171,6 +171,7 @@ async def volume(uid, args):
     try:
         live = await set_volume(uid, did, v)
     except Exception as e:
+        print(f"aendern: lautstaerke nicht geaendert ({type(e).__name__})", flush=True)
         return f"Not done: {e}"
     note(uid, "volume", {"device": did, "volume": old}, f"die Lautstärke von „{name[:40]}“ wieder auf {old} stellen")
     print(f"aendern: lautstaerke {old} -> {v} {'sofort' if live else 'beim naechsten verbinden'}", flush=True)
@@ -336,6 +337,8 @@ async def tool(name, args, ctx):
         if name == "proactive_pause" and features.allowed("proactive", uid):
             return pause(uid, args, ctx.get("tz"))
     except Exception as e:     # the Notaus (notaus.NotausAktiv) or a vanished device
+        print(f"aendern: {'lautstaerke' if name == 'speaker_volume' else 'meldungen pause'} nicht ausgefuehrt "
+              f"({type(e).__name__})", flush=True)
         return f"Not done: {str(e)[:160]}"
     if name == "undo_last" and features.allowed("rueckgaengig", uid):
         entry = last(uid, args.get("what"))

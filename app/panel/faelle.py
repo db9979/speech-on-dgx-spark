@@ -326,7 +326,12 @@ def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", ti
             c = case.setdefault("soll", {})
             c[soll] = int(c.get(soll, 0)) + 1
         _write(rows)
-    print(f"faelle: {kind} | {group or '-'} | {tool or code or melder or grund or '-'} | {case['n']}×", flush=True)
+    if kind == "melder":   # a detector of the Einstellungs-Assistent: its name and its fixed sentence (berater.melders)
+        said = re.sub(r"[^\w ,.:()%-]", "", str(title or "-"))[:100]
+        print(f"faelle: melder {melder or '-'} | {said} | {group or '-'} | {tool or '-'} | {case['n']}× | "
+              f"Fall {case['id']} (Zustand → Verbessern)", flush=True)
+    else:
+        print(f"faelle: {kind} | {group or '-'} | {tool or code or melder or grund or '-'} | {case['n']}×", flush=True)
     _live_mark(kind)
     try:
         import berater

@@ -72,7 +72,7 @@ async def get(c, url, headers=None, **kw):
     r = await c.get(url, headers={**plain, **tok}, **kw)
     if r.status_code == 401 and tok:
         _state.update(refused=True, ok=False, why="Token abgelehnt oder abgelaufen", t=int(time.time()))
-        print("github token: refused by GitHub (401), asking without it until a new one is saved", flush=True)
+        print("ghtoken: refused by GitHub (401), asking without it until a new one is saved", flush=True)
         r = await c.get(url, headers=plain, **kw)
     return r
 
@@ -130,7 +130,7 @@ async def check():
                       refused=r.status_code == 401)
     except Exception as e:
         _state.update(t=int(time.time()), ok=False, why="GitHub nicht erreichbar")
-        print("github token: check", type(e).__name__, flush=True)
+        print("ghtoken: check", type(e).__name__, flush=True)
     return info()
 
 
@@ -155,7 +155,7 @@ async def admin_save(request: Request):
         raise HTTPException(400, "Nur ein fine-grained Token (beginnt mit github_pat_), nur „Public repositories“, ohne Rechte.")
     save(tok)
     guard.log("github_token", detail="GitHub-Token für Updates gesetzt")
-    print("github token: set", flush=True)
+    print("ghtoken: set", flush=True)
     return await check()
 
 
@@ -164,7 +164,7 @@ def admin_drop(request: Request):
     guard.limit(request, "ghtoken", admin=True)
     drop()
     guard.log("github_token", detail="GitHub-Token für Updates entfernt")
-    print("github token: removed", flush=True)
+    print("ghtoken: removed", flush=True)
     return info()
 
 

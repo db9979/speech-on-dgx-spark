@@ -206,9 +206,19 @@ def _bump(key, now=None):
 
 
 def event(area, text, now=None):
-    """One line for "Ereignisse": fixed words and numbers only."""
+    """One line for "Ereignisse": fixed words and numbers only. Also in the journal (Zustand → Logs → Diagnose,
+    filter Ereignisse), whether Live is on or not: what Live shows, the log shows too (Dominik 2026-10-13)."""
+    _journal(area, text)
     with _lock:
         _events.append((now or time.time(), area, str(text)[:120]))
+
+
+def _journal(area, text):
+    """The journal line of a Live event: the same fixed words, without line breaks; never raises."""
+    try:
+        print("ereignis: " + re.sub(r"\s+", " ", f"{area} | {text}")[:160], flush=True)
+    except Exception:
+        pass
 
 
 def short_ip(ip):
@@ -455,6 +465,8 @@ def mark(area, text, now=None):
     try:
         if on():
             event(area, text, now)
+        else:
+            _journal(area, text)   # Live off: the journal line all the same
     except Exception:
         pass
 
@@ -464,6 +476,8 @@ def job(why, tool, t0, ok=True, uid=None, now=None):
     of "Von selbst" with one step to the tool's target, shown like the others. never raises."""
     try:
         rec = begin("auto", "", t=t0, uid=uid, auto=True, why=why, src="job")
+        if rec is None or not getattr(rec, "persist", False):   # no "anfrage:" line from Logs → Anfragen: one here
+            _journal("Von selbst", f"{why} · {tool} {'ok' if ok else 'nicht ok'}")
         if rec is not None:
             rec.step("in", "Von selbst", t0)
             rec.step("tool", tool, t0, now or time.time(), ok=bool(ok))

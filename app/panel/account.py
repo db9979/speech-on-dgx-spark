@@ -198,7 +198,7 @@ async def _tell_trusted(who, name):
         return await push.send(uid, "🔐 Spark", f"Neuer vertrauter Browser für {whose}: {name}. "
                                "Warst du das nicht? Unter Sicherheit entfernen.", tag="security", private=False)
     except Exception as e:
-        print("trust note failed:", type(e).__name__, flush=True)
+        print("push: trust note failed:", type(e).__name__, flush=True)
         return 0
 
 

@@ -2138,7 +2138,7 @@ async def _answer(request, turn):
                 try:
                     profiles.tool_log_add(who["id"], messages[-1]["content"], trace["calls"], trace["said"])
                 except Exception as e:
-                    print("tool log:", type(e).__name__, e, flush=True)
+                    print("chat: tool log failed:", type(e).__name__, e, flush=True)
             tm["written"] = True   # the GPU is the speech engine's alone from here on (tts(): less lead)
             await sentences.put(None)
 
@@ -2701,7 +2701,7 @@ async def _watch_run(job, response, prof, text, tz):
         await asyncio.to_thread(verlauf.keep, prof["id"], "watch-" + local.strftime("%Y%m%d"), "Uhr " + local.strftime("%d.%m."), local,
                                 "watch", msgs)
     except Exception as e:
-        print("watch convo:", type(e).__name__, e, flush=True)
+        print("chat: watch convo:", type(e).__name__, e, flush=True)
 
 
 # "Hey Siri, frag Spark": an iPhone shortcut posts the dictated question with the profile's device
@@ -2785,7 +2785,7 @@ async def text_ask(request, prof, body, who="siri"):
     try:
         await asyncio.to_thread(verlauf.keep, prof["id"], conv + day, title + " " + local.strftime("%d.%m."), local, client, msgs[-2:])
     except Exception as e:
-        print("siri convo:", type(e).__name__, e, flush=True)
+        print("chat: siri convo:", type(e).__name__, e, flush=True)
     # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them), and neither
     # shows Markdown: Siri gets the speakable text, the Begleiter the plain one (the history keeps the original)
     return {"answer": hide_secrets(speech_markdown(answer) if who == "siri" else plain_markdown(answer))}
