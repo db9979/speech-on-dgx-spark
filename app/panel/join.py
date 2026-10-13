@@ -67,7 +67,7 @@ JOIN_KEY = "\0join"       # one lockout entry for every wrong code from one addr
 DATA_KEYS = ("mail", "documents", "agent")   # what waits for the second step ("mfa": "data")
 
 # the functions a pack may switch on: those with their own profile switch, never a role
-PACKS = ({"id": "familie", "name": "Familie", "keys": ["weather", "tasks", "messages", "iphone", "iphonepush", "contacts",
+PACKS = ({"id": "familie", "name": "Familie", "keys": ["weather", "tasks", "chats", "iphone", "iphonepush", "contacts",
                                                         "esp32", "transit"]},
          {"id": "gast", "name": "Gast plus", "keys": ["weather"]})
 

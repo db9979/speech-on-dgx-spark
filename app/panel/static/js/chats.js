@@ -209,9 +209,9 @@ function cxSay(text){const w=cxEl('cxwhy');w.hidden=false;w.textContent=cxTr(tex
 function cxPane(k){CX.pane=k;const p=cxEl('cxpane');p.hidden=!k;if(!k){p.innerHTML='';if(CX.data){cxEl('cxlog').hidden=false;cxTop()}return}
   box().classList.add('sel');cxEl('cxempty').hidden=true;cxEl('cxlog').hidden=true;cxEl('cxcomp').hidden=true;cxEl('cxreply').hidden=true;cxEl('cxwhy').hidden=true;
   cxEl('cxtop').hidden=false;const tt=cxEl('cxtitle');tt.querySelector('small').hidden=true;
-  cxEl('cxinfo').hidden=k==='new'||k==='group'||k==='invite'||!CX.data;
-  tt.querySelector('b').textContent=k==='new'?t('Neuer Chat','New chat'):k==='group'?t('Neue Gruppe','New group'):k==='invite'?t('Jemanden einladen','Invite someone'):t('Chat-Info','Chat info');
-  if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd()}
+  cxEl('cxinfo').hidden=k==='new'||k==='group'||k==='invite'||k==='ann'||!CX.data;
+  tt.querySelector('b').textContent=k==='new'?t('Neuer Chat','New chat'):k==='group'?t('Neue Gruppe','New group'):k==='invite'?t('Jemanden einladen','Invite someone'):k==='ann'?t('Durchsage','Announcement'):t('Chat-Info','Chat info');
+  if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd();else if(k==='ann')cxAnn()}
 const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<label class="cx-pp">${sel?`<input type="checkbox" data-pp="${esc(p.id)}"${CX.pick.has(p.id)?' checked':''}>`:''}`+
   `${cxAva(p.id,p.name)}<span>${esc(p.name)}</span>${sel?'':`<button type="button" class="b" data-cxn="one" data-to="${esc(p.id)}">${esc(t('Schreiben','Write'))}</button>`+
   (CX.S&&CX.S.private?`<button type="button" class="b" data-cxn="priv" data-to="${esc(p.id)}" title="${esc(t('Privat: Ende-zu-Ende verschlüsselt','Private: end-to-end encrypted'))}">🔒 ${esc(t('Privat','Private'))}</button>`:'')}</label>`).join('')}</div>`
@@ -219,7 +219,15 @@ const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<l
 function cxNew(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');
   p.innerHTML=(S.groups?`<button type="button" class="cx-bigrow" data-cxn="group">${cxAva('g','',true)}<b>${esc(t('Neue Gruppe','New group'))}</b></button>`:'')+
     (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="cx-ava inv">✉️</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+
+    ((S.speakers||[]).length?`<button type="button" class="cx-bigrow" data-cxn="ann"><span class="cx-ava inv">📢</span><b>${esc(t('Durchsage','Announcement'))}</b></button>`:'')+
     `<div class="cx-grp">${esc(t('Personen','People'))}</div>`+cxPeople(S.contacts||[],false);cxHues(p)}
+// Durchsage (messages.py): the speakers whose owner allows it, the text typed here; said at once or at the next wake word
+function cxAnn(){const S=CX.S||{speakers:[]},p=cxEl('cxpane');CX.pick.clear();
+  p.innerHTML=`<div class="cx-grp">${esc(t('Auf welchen Lautsprechern?','On which speakers?'))}</div><div class="cx-people">`+
+    (S.speakers||[]).map(x=>`<label class="cx-pp"><input type="checkbox" data-pp="${esc(x.id)}"><span>📢 ${esc(x.name)}</span></label>`).join('')+`</div>`+
+    `<label class="cx-lbl" for="cxanntext">${esc(t('Was soll gesagt werden?','What should be said?'))}</label><input id="cxanntext" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Essen ist fertig','e.g. Dinner is ready'))}">`+
+    `<div class="cx-acts2"><button type="button" class="b p" data-cxn="anngo">${esc(t('Durchsagen','Announce'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
+  cxEl('cxanntext').focus()}
 function cxGroup(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');CX.pick.clear();
   p.innerHTML=`<label class="cx-lbl" for="cxgname">${esc(t('Name der Gruppe','Name of the group'))}</label><input id="cxgname" maxlength="40" autocomplete="off" placeholder="${esc(t('z. B. Familie','e.g. Family'))}">`+
     `<div class="cx-grp">${esc(t('Wer ist dabei?','Who is in?'))}</div>`+cxPeople(S.contacts||[],true)+
@@ -232,15 +240,15 @@ function cxInfo(){const d=CX.data,p=cxEl('cxpane');if(!d){cxPane('');return}
   const sel=(id,list,val,dis)=>`<select id="${id}"${dis?' disabled':''}>${list.map(([v,l])=>`<option value="${v}"${v===val?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
   const muteV=d.mute===-1?-1:d.mute?(d.mute-Date.now()/1000>3*3600?28800:3600):0,may=d.kind!=='group'||d.admin;
   let h=`<div class="cx-ihead">${cxAva(d.kind==='group'?d.id:(d.members.find(m=>m.id!==cxMe())||{}).id,cxTitle(d.title),d.kind==='group')}<b>${esc(cxTitle(d.title))}</b>`+
-    `<small class="mut">${esc(d.kind==='group'?d.members.length+' '+t('Personen','people'):d.private?t('Privater Chat zu zweit, Ende-zu-Ende','Private chat for two, end-to-end'):t('Chat zu zweit','Chat for two'))}</small></div>`;
+    `<small class="mut">${esc(d.fixed?d.members.length+' '+t('Personen · alle, die bei „Nachricht an alle“ mitmachen','people · everybody who takes part in "Message to everybody"'):d.kind==='group'?d.members.length+' '+t('Personen','people'):d.private?t('Privater Chat zu zweit, Ende-zu-Ende','Private chat for two, end-to-end'):t('Chat zu zweit','Chat for two'))}</small></div>`;
   if(d.kind==='group'&&d.admin)h+=`<div class="cx-sw"><label for="cxname">${esc(t('Name','Name'))}</label><span class="cx-inl"><input id="cxname" maxlength="40" value="${esc(cxTitle(d.title))}"><button type="button" class="b" data-cxn="rename">${esc(t('Speichern','Save'))}</button></span></div>`;
   h+=`<div class="cx-sw"><label for="cxmute">${esc(t('Stumm','Mute'))}<small class="mut">${esc(t('Keine Mitteilungen aufs Handy, nur für dich','No notifications to the phone, only for you'))}</small></label>${sel('cxmute',CX_MUTE,muteV)}</div>`+
-    `<div class="cx-sw"><label for="cxvan">${esc(t('Nachrichten verschwinden','Messages disappear'))}<small class="mut">${esc(may?t('Für alle in diesem Chat','For everybody in this chat'):t('Stellen die Admins der Gruppe ein','Set by the group\'s admins'))}</small></label>${sel('cxvan',CX_VANISH,d.vanish,!may)}</div>`;
+    `<div class="cx-sw"><label for="cxvan">${esc(t('Nachrichten verschwinden','Messages disappear'))}<small class="mut">${esc(d.fixed?t('Feste Gruppe ohne Admins','Fixed group without admins'):may?t('Für alle in diesem Chat','For everybody in this chat'):t('Stellen die Admins der Gruppe ein','Set by the group\'s admins'))}</small></label>${sel('cxvan',CX_VANISH,d.vanish,!may)}</div>`;
   if(d.kind==='group'){h+=`<div class="cx-grp">${esc(t('Mitglieder','Members'))}</div><div class="cx-people">`+d.members.map(m=>`<div class="cx-pp">${cxAva(m.id,m.name)}<span>${esc(m.name||t('Gelöschtes Profil','Deleted profile'))}${m.admin?` <small class="mut">${esc(t('Admin','admin'))}</small>`:''}</span>`+
       (d.admin&&m.id!==cxMe()?`<span class="cx-mact">${m.admin?'':`<button type="button" class="b" data-cxn="mkadm" data-to="${esc(m.id)}">${esc(t('Zum Admin','Make admin'))}</button>`}<button type="button" class="b danger" data-cxn="rm" data-to="${esc(m.id)}">${esc(t('Entfernen','Remove'))}</button></span>`:'')+`</div>`).join('')+`</div>`;
     if(d.admin)h+=`<div class="cx-acts2"><button type="button" class="b" data-cxn="add">${esc(t('Personen hinzufügen','Add people'))}</button></div>`}
   h+=`<div class="cx-acts2"><button type="button" class="b danger" data-cxn="clear">${esc(t('Chat für mich leeren','Clear chat for me'))}</button>`+
-    (d.kind==='group'?`<button type="button" class="b danger" data-cxn="leave">${esc(t('Gruppe verlassen','Leave group'))}</button>`:'')+`</div>`+
+    (d.kind==='group'?`<button type="button" class="b danger" data-cxn="leave">${esc(d.fixed?t('Nicht mehr mitmachen','Stop taking part'):t('Gruppe verlassen','Leave group'))}</button>`:'')+`</div>`+
     `<div class="cx-msgline mut" id="cxpmsg"></div><div class="cx-acts2"><button type="button" class="b p" data-cxn="done">${esc(t('Fertig','Done'))}</button></div>`;
   if(d.private&&window.csInfoHtml)h=h.replace('<div class="cx-msgline mut" id="cxpmsg">',csInfoHtml()+'<div class="cx-msgline mut" id="cxpmsg">');
   p.innerHTML=h;cxHues(p);if(d.private&&window.csInfo)csInfo(d.id)}
@@ -280,7 +288,10 @@ cxEl('cxpane').addEventListener('click',async e=>{const b=e.target.closest('[dat
     else if(a==='rename'){await cxApi('/api/chats/opts',{id:CX.cur,name:cxEl('cxname').value});await cxRefresh();cxPmsg(t('Gespeichert.','Saved.'))}
     else if(a==='clear'){if(!confirm(t('Alle Nachrichten dieses Chats nur bei dir löschen? Die anderen behalten sie.','Delete all messages of this chat only for you? The others keep them.')))return;
       await cxApi('/api/chats/clear',{id:CX.cur});cxClose();cxLoad()}
-    else if(a==='leave'){if(!confirm(t('Die Gruppe verlassen? Du bekommst danach keine Nachrichten mehr aus ihr.','Leave the group? You get no more messages from it afterwards.')))return;
+    else if(a==='ann')cxPane('ann');
+    else if(a==='anngo'){const text=cxEl('cxanntext').value.trim();if(!CX.pick.size||!text){cxPmsg(t('Lautsprecher wählen und Text eingeben.','Pick a speaker and enter the text.'),true);return}
+      b.disabled=true;try{const r=await cxApi('/api/chats/announce',{speakers:[...CX.pick],text});cxEl('cxanntext').value='';cxPmsg(t('Durchgesagt auf ','Announced on ')+r.sent.join(', '))}finally{b.disabled=false}}
+    else if(a==='leave'){if(!confirm(CX.data&&CX.data.fixed?t('Bei „Nachricht an alle“ nicht mehr mitmachen? Du bekommst dann keine Nachrichten an alle mehr; unter Ich → Gespräch → Chats schaltest du es wieder ein.','Stop taking part in "Message to everybody"? You then get no more messages to everybody; switch it on again under Me → Conversation → Chats.'):t('Die Gruppe verlassen? Du bekommst danach keine Nachrichten mehr aus ihr.','Leave the group? You get no more messages from it afterwards.')))return;
       await cxApi('/api/chats/leave',{id:CX.cur});cxClose();cxLoad()}}
   catch(err){cxPmsg(err.message,true)}});
 // ---------------------------------------------------------------- photos, files, voice messages (Schritt B)
@@ -354,3 +365,21 @@ async function cxInvite(made){const p=cxEl('cxpane');let d;
 // the app view (appview.js): one level back on a phone closes the open chat
 window.cxDepth=()=>CX.shown&&(!cxEl('cxbig').hidden||box().classList.contains('sel'))?1:0;
 window.cxBackStep=()=>{if(cxBigClose())return true;if(!window.cxDepth())return false;cxEl('cxback').click();return true};
+
+// ---------------------------------------------------------------- Ich → Gespräch → Chats: who may write to me (messages.py)
+// Below the row „Wer darf mir schreiben“: the picked profiles (only with „nur ausgewählte“), the blocked ones and the own
+// Rufname. Settings: the browser login only (the Spark refuses the apps there).
+async function cxWhoRows(el){const sel=el.querySelector('select[id$="_msg_from"]');if(!sel)return;const row=sel.closest('.setrow');if(!row||row.classList.contains('locked'))return;
+  let d;try{d=await (await api('/api/chats/who')).json()}catch{return}
+  let box=el.querySelector('#cxwho');if(!box){box=document.createElement('div');box.id='cxwho';box.className='cx-who';row.after(box)}
+  const pick=(key,list)=>d.others.length?d.others.map(o=>`<label class="chk"><input type="checkbox" data-cxwho="${key}" value="${esc(o.id)}"${list.includes(o.id)?' checked':''}> ${esc(o.name)}</label>`).join(' '):`<span class="mut">${esc(t('Noch kein anderes Profil mit Chats.','No other profile with chats yet.'))}</span>`;
+  const draw=()=>{box.innerHTML=(sel.value==='chosen'?`<div class="fh">${esc(t('Ausgewählt:','Picked:'))}</div><div class="row cx-whol">${pick('allow',d.allow)}</div>`:'')+
+    `<details${d.block.length?' open':''}><summary>${esc(t('Gesperrt','Blocked'))} (${d.block.length})</summary><div class="row cx-whol">${pick('block',d.block)}</div></details>`+
+    `<label for="cxcall">${esc(t('Mein Rufname','My call name'))}</label><div class="rowin"><input id="cxcall" maxlength="40" value="${esc(d.call||'')}" placeholder="${esc(t('z. B. Tom oder Papa','e.g. Tom or Dad'))}"><button class="b" type="button" id="cxcallsave">${esc(t('Speichern','Save'))}</button></div>`+
+    `<div class="fh">${esc(t('So können andere dich nennen („Schreib Tom, …“), wenn Namen sich ähneln. Muss eindeutig sein.','How others can name you ("Tell Tom …") when names are alike. Must be unique.'))}</div><div class="fh" id="cxwhomsg" role="status"></div>`;
+    box.querySelectorAll('[data-cxwho]').forEach(c=>c.onchange=async()=>{const k=c.dataset.cxwho;
+      try{d=await (await api('/api/chats/who',xjson('PUT',{[k]:[...box.querySelectorAll(`[data-cxwho="${k}"]:checked`)].map(x=>x.value)}))).json();xmsg('cxwhomsg',t('Gespeichert.','Saved.'))}catch(e){xmsg('cxwhomsg',e.message,true)}});
+    $('cxcallsave').onclick=async()=>{try{d=await (await api('/api/chats/call',xjson('PUT',{call:$('cxcall').value}))).json();
+      xmsg('cxwhomsg',d.call?t('Rufname gespeichert: ','Call name saved: ')+d.call:t('Rufname entfernt.','Call name removed.'))}catch(e){xmsg('cxwhomsg',e.message,true)}}};
+  sel.addEventListener('change',draw);draw()}
+window.cxWhoRows=cxWhoRows;

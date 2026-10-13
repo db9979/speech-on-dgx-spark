@@ -1434,3 +1434,4 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 
 /* reMarkable: the control picture of a sheet read back (rmpapier.py) */
 .rmpic{display:block;max-width:min(100%,420px);height:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.cx-who{margin:2px 0 12px}.cx-whol{flex-wrap:wrap;gap:6px}

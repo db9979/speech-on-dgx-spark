@@ -40,7 +40,7 @@ class Static(unittest.TestCase):
     def test_building_blocks_load_before_the_pages(self):
         scripts = re.findall(r'<script src="/static/js/([\w]+)\.js"', read("index.html"))
         self.assertIn("ichteile", scripts)
-        for page in ("me", "tidy", "remarkable", "agent", "messages"):
+        for page in ("me", "tidy", "remarkable", "agent", "chats"):
             self.assertLess(scripts.index("ichteile"), scripts.index(page), page)
 
     def test_blocks_build_with_text_only(self):

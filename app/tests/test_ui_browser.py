@@ -1058,37 +1058,43 @@ class Browser(unittest.TestCase):
             for i in ids:
                 profiles.delete_device(i)
 
-    def test_messages_page_sends(self):
-        """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
-        computer and a phone, without script errors or sideways scrolling."""
+    def test_who_may_write_in_settings(self):
+        """Nachrichten in Chats (V01.0.488): Ich → Nachrichten is gone; „Wer darf mir schreiben“ sits in Ich → Gespräch
+        under Chats with the picked and blocked profiles and the Rufname, saved over /api/chats/who and /api/chats/call;
+        on a computer and a phone, without script errors or sideways scrolling."""
         import messages
         import profiles
-        helpers.set_config(messages=True, messages_all=True, messages_voice=True)
+        helpers.set_config(chats=True)
         try:
             profiles.add_user("Uitest2", "4711")
         except Exception:
             pass
         other = next(u for u in profiles._load()["users"] if u["name"] == "Uitest2")["id"]
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(other, {"msg_on": True})
-        profiles.save_settings(me, {"msg_on": True})
+        profiles.save_settings(other, {"chats_on": True})
+        profiles.save_settings(me, {"chats_on": True, "msg_from": "chosen"})
 
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
-                    await pg.evaluate("openMe('msgbox')")
-                    # wait for the state, not 800 ms: Ich loads its boxes one after the other (slow on a busy runner)
-                    await self.until(pg, "$('msgbox').classList.contains('on')&&!!$('msgsend')", 20)
-                    await pg.evaluate(f"$('msgto').value={other!r};$('msgtext').value='Test {name}';$('msgsend').click()")
+                    self.assertTrue(await pg.evaluate("!$('msgbox')&&!$('chatmsg')&&!$('mmsg')&&!$('msgcompose')"), name)
+                    await pg.evaluate("openMe('setbox')")
+                    # wait for the state, not a fixed time: Ich loads its boxes one after the other
+                    await self.until(pg, f"!!document.querySelector('#cxwho input[data-cxwho=\"allow\"][value=\"{other}\"]')", 20)
+                    await pg.evaluate(f"document.querySelector('#cxwho input[data-cxwho=\"allow\"][value=\"{other}\"]').click()")
                     for _ in range(150):
-                        if f"Test {name}" in [x["text"] for x in messages.box(other)]:
+                        if other in messages._load(me)["allow"]:
                             break
                         await pg.wait_for_timeout(100)
-                    self.assertIn(f"Test {name}", [x["text"] for x in messages.box(other)])
-                    self.assertTrue(await pg.evaluate("!!$('msgready')"), name)     # Bereit (V01.0.200)
-                    # the old envelope beside the assistant's input is gone (Dominik 2026-10-13: Chats replace it)
-                    self.assertTrue(await pg.evaluate("!$('chatmsg')&&!$('mmsg')&&!$('msgcompose')"), name)
+                    self.assertIn(other, messages._load(me)["allow"], name)
+                    await pg.evaluate("document.querySelector('#cxwho input[data-cxwho=\"allow\"]:checked').click()")
+                    for _ in range(150):
+                        if other not in messages._load(me)["allow"]:
+                            break
+                        await pg.wait_for_timeout(100)
+                    self.assertNotIn(other, messages._load(me)["allow"], name)
+                    self.assertTrue(await pg.evaluate("!!$('cxcall')&&!!$('cxcallsave')"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     self.assertEqual(errors, [], name)
@@ -1096,8 +1102,9 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(messages=False, messages_all=False, messages_voice=False)
-            profiles.save_settings(me, {"msg_on": False})
+            helpers.set_config(chats=False)
+            profiles.save_settings(me, {"chats_on": False, "msg_from": "all"})
+            messages.mutate(me, lambda d: d.update(allow=[], block=[]))
 
     def test_speakers_list_and_one_speaker(self):
         """Ich → Lautsprecher (V01.0.149): a list of the speakers, a tap opens that speaker's page in sections
@@ -2283,7 +2290,7 @@ class Browser(unittest.TestCase):
         rule list, the form and the events sit below the "Smart-Home-Regeln" row, all switches in one column,
         nothing reaches past the page, the events block has its own heading."""
         helpers.set_config(proactive=True, ha_live=True, ha_loud=True, ha_events=True, ha_voice_rules=True, ha_camera=True,
-                           messages=True, messages_announce=True)
+                           chats=True, messages_announce=True)
         helpers.HA_STATES.append({"entity_id": "binary_sensor.ui_lineup", "state": "off", "last_changed": "2026-10-10T18:00:00+00:00",
                                   "attributes": {"friendly_name": "Haustür Bewegungserkennung"}})
 
@@ -2323,7 +2330,7 @@ class Browser(unittest.TestCase):
         finally:
             helpers.HA_STATES[:] = [x for x in helpers.HA_STATES if x["entity_id"] != "binary_sensor.ui_lineup"]
             helpers.set_config(proactive=False, ha_live=False, ha_loud=False, ha_events=False, ha_voice_rules=False,
-                               ha_camera=False, messages=False, messages_announce=False)
+                               ha_camera=False, chats=False, messages_announce=False)
 
     def test_nothing_sticks_out_on_phones(self):
         """V01.0.302 (Dominik: buttons under the face cut off left and right): on phone widths, in the app view and
@@ -2335,7 +2342,7 @@ class Browser(unittest.TestCase):
           let p=e.parentElement,ok=false;while(p&&p!==document.body){const o=getComputedStyle(p).overflowX;if(o==='auto'||o==='scroll'){ok=true;break}p=p.parentElement}
           if(!ok)bad.push((e.id?'#'+e.id:e.tagName.toLowerCase()+'.'+String(e.className||'').trim().replace(/\\s+/g,'.'))+' '+Math.round(r.left)+'..'+Math.round(r.right))}
           return bad.slice(0,6)})()"""
-        helpers.set_config(images=True, messages=True)
+        helpers.set_config(images=True, chats=True)
         async def go():
             async with async_playwright() as p:
                 for w in (320, 390):
@@ -2384,7 +2391,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(images=False, messages=False)
+            helpers.set_config(images=False, chats=False)
 
     def test_changelog_window(self):
         """Was ist neu (V01.0.355): the line at the bottom and Einstellungen → Update open the changelog with the strict
@@ -2561,7 +2568,7 @@ class Browser(unittest.TestCase):
         answer gets its tick, info, new chat and new group open as a pane; strict CSP, nothing sticks out."""
         import chats
         import profiles
-        helpers.set_config(chats=True, chats_groups=True, messages=True)
+        helpers.set_config(chats=True, chats_groups=True)
         me = next(x for x in profiles.names() if x["name"] == "Uitest")
         profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
 
@@ -2628,7 +2635,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(chats=False, chats_groups=False, messages=False)
+            helpers.set_config(chats=False, chats_groups=False)
 
     def test_chat_photo_voice_and_invite(self):
         """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows 📎 and 🎤; a photo
@@ -2639,7 +2646,7 @@ class Browser(unittest.TestCase):
         import join
         import profiles
         from PIL import Image
-        helpers.set_config(chats=True, chats_media=True, chats_invite=True, messages=True)
+        helpers.set_config(chats=True, chats_media=True, chats_invite=True)
         jd = join._read()
         old_mode = jd["mode"]
         jd["mode"] = "invite"
@@ -2693,7 +2700,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(chats=False, chats_media=False, chats_invite=False, messages=False)
+            helpers.set_config(chats=False, chats_media=False, chats_invite=False)
             jd = join._read()
             jd["mode"] = old_mode
             join._write(jd)
@@ -2717,7 +2724,7 @@ class Browser(unittest.TestCase):
         from cryptography.hazmat.primitives.kdf.hkdf import HKDF
         from PIL import Image
         b64 = lambda b: base64.b64encode(b).decode()   # noqa: E731
-        helpers.set_config(chats=True, chats_private=True, chats_media=True, messages=True)
+        helpers.set_config(chats=True, chats_private=True, chats_media=True)
         me = next(x for x in profiles.names() if x["name"] == "Uitest")
         profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
         buf = io.BytesIO()
@@ -2768,6 +2775,9 @@ class Browser(unittest.TestCase):
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
                         await pg.click("#aptabs [data-tab=chats]")
                     await self.until(pg, "!$('cxsplit').hidden")
+                    # wait for the page's state, not for the section: with many profiles (the whole test run)
+                    # /api/chats takes longer, and ＋ drawn before it arrives shows nobody yet
+                    await self.until(pg, f"!!(CX.S&&(CX.S.contacts||[]).some(x=>x.id=={other['id']!r}))", 20)
                     await pg.click("#cxnew")
                     await pg.click(f"[data-cxn=priv][data-to='{other['id']}']")
                     await self.until(pg, "$('cxtitle').textContent.includes('🔒')&&!$('cxcomp').hidden")
@@ -2812,7 +2822,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(chats=False, chats_private=False, chats_media=False, messages=False)
+            helpers.set_config(chats=False, chats_private=False, chats_media=False)
             for u in uids:
                 chatsec.forget(u)
 

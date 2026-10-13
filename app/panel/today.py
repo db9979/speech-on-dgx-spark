@@ -66,9 +66,9 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
         now = time.time() * 1000
         rem = sorted((x for x in profiles.reminders(uid) if x.get("due", 0) >= now), key=lambda x: x["due"])
         out["cards"]["reminders"] = {"count": len(rem), "next": {"text": str(rem[0]["text"])[:80], "due": int(rem[0]["due"] // 1000)} if rem else None}
-    if may("messages"):
-        import messages
-        out["cards"]["messages"] = {"unread": len(messages.unread(uid))}
+    if may("chats"):   # the card keeps its old name "messages" for the apps; it counts unread chat messages (V01.0.488)
+        import chats
+        out["cards"]["messages"] = {"unread": chats.unread_total(uid), "chats": True}
     if may("documents"):
         import documents
         has = os.path.exists(documents.db_path(uid))

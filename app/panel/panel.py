@@ -437,6 +437,15 @@ def seal_secrets():
 
 
 @app.on_event("startup")
+def messages_into_chats():
+    """Once after V01.0.488: the old mailboxes of "Nachrichten" into the chats (messages.migrate_all)."""
+    try:
+        messages.migrate_all()
+    except Exception as e:
+        print("messages: moving into chats failed:", type(e).__name__, flush=True)
+
+
+@app.on_event("startup")
 async def learner():
     async def loop():
         while True:

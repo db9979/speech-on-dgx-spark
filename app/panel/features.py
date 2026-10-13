@@ -156,7 +156,7 @@ FEATURES = (
     F("halive", "Sofort-Meldungen aus Home Assistant", "Instant notes from Home Assistant", "day", ("ha_live", "homeassistant"),
       "pro_ha_live", parent="proactive", me="probox", guide="halive"),
     F("haloud", "Haus-Meldungen über Lautsprecher", "House notes on speakers", "day",
-      ("ha_loud", "homeassistant", "messages_announce"), "pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
+      ("ha_loud", "homeassistant", "messages_announce", "chats"), "pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
     F("haevent", "Home Assistant meldet an Spark", "Home Assistant tells the Spark", "day", ("ha_events", "homeassistant"),
       "pro_ha_events", parent="proactive", me="probox", guide="haevent"),
     F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"),
@@ -177,13 +177,11 @@ FEATURES = (
       parent="mymcp", me="mymcpbox", guide="mymcpjobs"),
     F("mymcpoauth", "Eigene MCP-Dienste mit Anmeldung", "Own MCP services with sign-in", "day", ("mcp_own_oauth",), "mymcp_on",
       parent="mymcp", me="mymcpbox", guide="mymcpoauth"),
-    F("messages", "Nachrichten an andere", "Messages to others", "day", ("messages",), "msg_on", me="msgbox", guide="messages"),
-    F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), parent="messages",
-      me="msgbox", guide="messages_all"),
-    F("messages_voice", "Sprachnachrichten", "Voice messages", "day", ("messages_voice",), parent="messages",
-      me="msgbox", guide="messages_voice"),
-    # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger
-    F("chats", "Chats", "Chats", "day", ("chats",), "chats_on", parent="messages", me="setbox", guide="chats"),
+    # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger; since V01.0.488
+    # also what "Nachrichten an andere" did (plan plaene/nachrichten-in-chats.md): "Sag Anna …", "an alle", Durchsagen
+    F("chats", "Chats", "Chats", "day", ("chats",), "chats_on", me="setbox", guide="chats"),
+    F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), "msg_all", parent="chats",
+      me="setbox", guide="messages_all"),
     F("chatgroups", "Gruppen-Chats", "Group chats", "day", ("chats_groups",), parent="chats", me="setbox", guide="chatgroups"),
     F("chatmedia", "Fotos, Dateien und Sprache in Chats", "Photos, files and voice in chats", "day", ("chats_media",),
       parent="chats", me="setbox", guide="chatmedia"),
@@ -213,7 +211,7 @@ FEATURES = (
     F("roomfar", "Raum-Modus aus der Ferne starten", "Start room mode from afar", "home", ("room_remote", "esp32"), "room_remote",
       parent="room", me="roombox", guide="roomfar"),
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",),
-      "msg_announce", parent="messages", me="msgbox", guide="messages_announce"),
+      "msg_announce", parent="chats", me="setbox", guide="messages_announce"),
     F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), "transit_on", me="trbox", guide="transit"),

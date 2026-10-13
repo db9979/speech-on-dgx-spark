@@ -143,18 +143,6 @@ struct UpdateState {
     var wait = 0
 }
 
-/// A message from another profile (messages.py). Its text is someone else's words: shown, never acted on.
-struct SparkMessage: Identifiable, Equatable {
-    let id: String
-    let from: String
-    let name: String
-    let text: String
-    let date: Date
-    var read: Bool
-    let voice: Bool
-    let secs: Int?
-}
-
 struct Recipient: Identifiable, Hashable {
     let id: String
     let name: String
@@ -209,27 +197,6 @@ struct DocText {
     var cut = false
     /// Where the next part starts ("Weiterlesen"), nil when everything is here.
     var next: Int?
-}
-
-/// Is everything on for messages, who can be reached (GET /api/messages/ready, also while off).
-struct MessageReady {
-    var enabled = false
-    var on = false
-    var reach: [Recipient] = []
-    var off: [(name: String, why: String)] = []
-    var why: String?
-}
-
-/// The profile's inbox and whom it may write to (GET /api/messages).
-struct MessageBox {
-    var items: [SparkMessage] = []
-    var to: [Recipient] = []
-    var all = false
-    /// "Zuletzt" (newest first) and the ★ favourites: profile ids, set on the Spark.
-    var recent: [String] = []
-    var fav: [String] = []
-    var maxText = 500
-    var unread = 0
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -620,86 +587,6 @@ struct SparkAPI {
         r.httpBody = try JSONSerialization.data(withJSONObject: ["name": String(name.prefix(100)), "text": text])
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
-    }
-
-    // ---------------------------------------------------------------- messages between profiles
-    /// The inbox; nil when messages are off (admin or profile switch).
-    func messages() async throws -> MessageBox? {
-        let (data, response) = try await URLSession.shared.data(for: request("api/messages"))
-        if (response as? HTTPURLResponse)?.statusCode == 403 { return nil }
-        try Self.check(data, response)
-        let d = Self.object(data)
-        guard d["on"] as? Bool == true else { return nil }
-        var b = MessageBox()
-        b.items = (d["items"] as? [[String: Any]] ?? []).compactMap { x in
-            guard let id = x["id"] as? String, let from = x["from"] as? String else { return nil }
-            return SparkMessage(id: id, from: from, name: x["name"] as? String ?? "",
-                                text: String((x["text"] as? String ?? "").prefix(2000)),
-                                date: Date(timeIntervalSince1970: ((x["t"] as? NSNumber)?.doubleValue ?? 0) / 1000),
-                                read: x["read"] as? Bool ?? false, voice: x["voice"] as? Bool ?? false,
-                                secs: (x["secs"] as? NSNumber)?.intValue)
-        }
-        b.to = (d["to"] as? [[String: Any]] ?? []).compactMap { x in
-            guard let id = x["id"] as? String else { return nil }
-            return Recipient(id: id, name: String((x["name"] as? String ?? id).prefix(60)),
-                             call: String((x["call"] as? String ?? "").prefix(60)))
-        }
-        b.all = d["all"] as? Bool ?? false
-        b.recent = Array((d["recent"] as? [String] ?? []).prefix(10))
-        b.fav = Array((d["fav"] as? [String] ?? []).prefix(40))
-        b.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 500
-        b.unread = (d["unread"] as? NSNumber)?.intValue ?? 0
-        return b
-    }
-
-    func messagesReady() async throws -> MessageReady {
-        let (data, response) = try await URLSession.shared.data(for: request("api/messages/ready"))
-        try Self.check(data, response)
-        let d = Self.object(data)
-        var r = MessageReady()
-        r.enabled = d["enabled"] as? Bool ?? false
-        r.on = d["on"] as? Bool ?? false
-        r.reach = (d["reach"] as? [[String: Any]] ?? []).compactMap { x in
-            guard let id = x["id"] as? String else { return nil }
-            return Recipient(id: id, name: x["name"] as? String ?? id)
-        }
-        r.off = (d["off"] as? [[String: Any]] ?? []).map { x in
-            (String((x["name"] as? String ?? "").prefix(60)), String((x["why"] as? String ?? "").prefix(120)))
-        }
-        r.why = (d["why"] as? String).map { String($0.prefix(200)) }
-        return r
-    }
-
-    /// ★ a profile in the recipient list (at most 20 on the Spark); returns the favourites now.
-    func setFavourite(_ id: String, on: Bool) async throws -> [String] {
-        var r = request("api/messages/fav", method: "PUT")
-        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        r.httpBody = try JSONSerialization.data(withJSONObject: ["id": id, "on": on])
-        let (data, response) = try await URLSession.shared.data(for: r)
-        try Self.check(data, response)
-        return Self.object(data)["fav"] as? [String] ?? []
-    }
-
-    /// to: a profile id or "all"; the Spark checks who may write to whom.
-    func sendMessage(to: String, text: String) async throws {
-        _ = try await post("api/messages/send", ["to": to, "text": text])
-    }
-
-    /// Answer a message (from a notification): to whoever wrote it.
-    func reply(to messageId: String, text: String) async throws {
-        guard let box = try await messages(), let m = box.items.first(where: { $0.id == messageId }) else {
-            throw SparkError(message: String(localized: "Die Nachricht gibt es nicht mehr."))
-        }
-        try await sendMessage(to: m.from, text: text)
-        try? await markRead([m.id])
-    }
-
-    func markRead(_ ids: [String]? = nil) async throws {
-        _ = try await post("api/messages/read", ids.map { ["ids": $0] } ?? [:])
-    }
-
-    func deleteMessages(_ ids: [String]? = nil) async throws {
-        _ = try await post("api/messages/delete", ids.map { ["ids": $0] } ?? [:])
     }
 
     /// New entries of a Spark list ("einkauf", "aufgaben"); the Spark hands each one over once.

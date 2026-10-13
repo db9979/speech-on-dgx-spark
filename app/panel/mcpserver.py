@@ -690,9 +690,9 @@ async def today_text(uid, zone):
         now = time.time() * 1000
         rem = sorted((x for x in profiles.reminders(uid) if x.get("due", 0) >= now), key=lambda x: x["due"])
         lines.append(f"Offene Erinnerungen: {len(rem)}" + (f", nächste {_when(rem[0]['due'], zone)} {rem[0]['text'][:80]}" if rem else ""))
-    if features.allowed("messages", uid):
-        import messages
-        lines.append(f"Ungelesene Nachrichten: {len(messages.unread(uid))}")
+    if features.allowed("chats", uid):
+        import chats
+        lines.append(f"Ungelesene Chat-Nachrichten: {chats.unread_total(uid)}")
     return "\n".join(lines) or "Für dieses Profil ist nichts davon eingeschaltet."
 
 

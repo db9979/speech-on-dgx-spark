@@ -94,8 +94,8 @@ def _add_dir(tar, path, arc):
                 full = os.path.join(root, f)
                 if arc == "users" and os.path.relpath(full, path) == "secret":
                     continue  # the login key of this Spark: with it, a backup file could forge profile logins
-                if arc == "users" and re.match(r"[^/]+/messages(\.json|-pending\.json|/)", os.path.relpath(full, path)):
-                    continue  # messages between profiles are short-lived (messages.py): not in backups
+                if arc == "users" and re.match(r"[^/]+/messages(-pending\.json|/)", os.path.relpath(full, path)):
+                    continue  # a proposal waiting for "Ja" and the old mailbox's sound (messages.py): not in backups
                 if f.endswith((".db-journal", ".db-wal", ".db-shm")):
                     continue  # (an SQLite file is copied whole below)
                 if f.endswith(".db"):

@@ -21,7 +21,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // notifications that arrive while the app is open: banner, sound and said aloud
         UNUserNotificationCenter.current().delegate = Relay.shared
-        Relay.registerCategories()
         Store.share()
         Passkey.install()
         Task { @MainActor in CodePrompt.install() }

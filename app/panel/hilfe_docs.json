@@ -299,17 +299,9 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
-"head": "Nachrichten zwischen Profilen (für die iPhone-App)",
-"title": "Nachrichten zwischen Profilen (für die iPhone-App)",
-"text": "Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header X-Speech-Device), nur wenn der Admin „Nachrichten an andere“ und das Profil „Nachrichten für mich nutzen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403. Höchstens 30 Aufrufe pro Minute. - GET /api/messages: Postfach (items mit id, from, name, text, t, read, kind, voice, secs), Empfänger to, Lautsprecher für Durchsagen, Schalter (all, announce, voice), max_text, max_voice. - GET /api/messages/ready (auch bei ausgeschaltetem Schalter): enabled, on, reach (id, name), off (name, why), why; für die Bereit-Anzeige. Der Admin schaltet mit POST /api/admin/messages/enable_all alle Profile ein. - GET /api/messages/poll?since=<ms>: neue, noch nirgends gesprochene Nachrichten; markiert das Gerät als offen (dann keine Mitteilung). - POST /api/messages/played {\"id\"}: {\"play\": true} nur für das erste Gerät, das sie spricht. - POST /api/messages/send {\"to\": \"<Profil-id>\" | \"all\", \"text\"} (höchstens 500 Zeichen). - POST /api/messages/voice?to=<Profil-id>: Aufnahme als Body (höchstens 2 MB, 30 Sekunden); GET /api/messages/audio?id= liefert sie als Ogg/Opus. - POST /api/messages/announce {\"speakers\": [id], \"text\""
-},
-{
-"lang": "de",
-"src": "apis-und-einbinden",
-"file": "APIs und Einbinden",
-"head": "Nachrichten zwischen Profilen (für die iPhone-App)",
-"title": "Nachrichten zwischen Profilen (für die iPhone-App)",
-"text": "}, POST /api/messages/read {\"ids\"?}, POST /api/messages/delete {\"ids\"?} (ohne ids: alle). - Mitteilungen: APNs mit Tag msg-<id>, der Text kommt wie bisher über /api/iphone/note. „Wer darf mir schreiben“ (PUT /api/messages/who) nur im Browser. - V01.0.206: to enthält call (Rufname), dazu recent (zuletzt angeschrieben, höchstens 5) und fav. PUT /api/messages/fav {\"id\", \"on\"} setzt einen Favoriten (höchstens 20, auch mit App-Schlüssel). PUT /api/messages/call {\"call\"} setzt den eigenen Rufnamen (nur Browser). Admin: GET /api/admin/profiles?q=&show=&sort=&page=&per= (höchstens 100 pro Seite), GET /api/admin/profiles/<id>, PUT /api/admin/profiles/<id>/call."
+"head": "Chats zwischen Profilen (für die iPhone-App)",
+"title": "Chats zwischen Profilen (für die iPhone-App)",
+"text": "Seit V01.0.488 gehen Nachrichten zwischen Profilen nur noch über die Chats; /api/messages… gibt es nicht mehr. Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header X-Speech-Device), nur wenn der Admin „Chats“ und das Profil „Chats mit anderen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403. - GET /api/chats: enabled, on, chats (je id, kind, title, unread, mute, last, die Gruppe „Alle“ mit fixed), contacts (id, name, call), all (nimmt an „Alle“ teil), speakers (für Durchsagen), max_text. - POST /api/chats/open {\"to\": \"<Profil-id>\"} liefert die id des Chats zu zweit; POST /api/chats/send {\"id\", \"text\"} schreibt hinein (in „Alle“ höchstens 5 pro Stunde). - POST /api/chats/announce {\"speakers\": [id], \"text\"}: Durchsage auf gewählten Lautsprechern (Admin-Schalter „Durchsagen auf Lautsprechern“). - Nur im Browser: GET/PUT /api/chats/who {\"allow\"?, \"block\"?} („Wer darf mir schreiben“) und PUT /api/chats/call {\"call\"} (eigener Rufname, eindeutig). Admin: GET /api/admin/profiles?q=&show=&sort=&page=&per= (höchstens 100 pro Seite), GET /api/admin/profiles/<id>, PUT /api/admin/profiles/<id>/call."
 },
 {
 "lang": "de",
@@ -652,16 +644,24 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Nachrichten an andere (V01.0.192)",
-"text": "Nachrichten an andere (V01.0.192): Profile desselben Sparks schreiben sich kurze Nachrichten. Admin: Funktionen → „Nachrichten an andere“ (aus), darunter einzeln „Nachricht an alle“, „Durchsagen auf Lautsprechern“ und „Sprachnachrichten“ (alle aus). Profil: Ich → Nachrichten → „Nachrichten für mich nutzen“ (aus). Dort steht auch, wer schreiben darf (alle Profile mit Nachrichten oder nur ausgewählte), wer gesperrt ist, ob Nachrichten an alle ankommen, was die eigenen Lautsprecher sagen (nichts, nur von wem, mit Text) und ob andere dort Durchsagen machen dürfen. Gäste können weder senden noch empfangen. Bittet man im Gespräch darum, jemandem zu schreiben, wird eine vorherige Antwort aus Web, Mail oder Bild dafür ausgelassen, damit das Werkzeug angeboten werden kann (V01.0.196). Ist Senden nicht möglich (Schalter aus, Gast, Telegram ohne „privat“), nennt der Assistent genau diesen Grund. Einfacher (V01.0.200): Neben dem Eingabefeld im Assistenten (am Handy unten „Nachricht“) öffnet der Briefknopf eine Zeile: Empfänger wählen, Text tippen, Senden. Das Sprachmodell ist dabei nicht beteiligt, frühere Antworten aus Web oder Mail sperren nichts. Sagst du „Schreib sb, dass ich später komme“"
+"title": "Nachrichten in Chats (V01.0.488)",
+"text": "Nachrichten in Chats (V01.0.488): Die alten „Nachrichten an andere“ (seit V01.0.192, Ich → Nachrichten) sind ganz in die Chats umgezogen. Admin: Funktionen → „Chats“ (aus), darunter „Nachricht an alle“ und „Durchsagen auf Lautsprechern“ (beide aus). Profil: Ich → Gespräch → Chats → „Chats mit anderen“; dort stehen jetzt auch „Wer darf mir schreiben“ (alle Profile mit Chats oder nur ausgewählte, dazu Gesperrt und der eigene Rufname), „Neue Nachrichten auf meinem Lautsprecher“ (nichts, nur von wem, mit Text), „Nachricht an alle“ und „Durchsagen auf meinen Lautsprechern“ (alle aus). Gäste können weder senden noch empfangen. Beim ersten Start übernimmt der Spark einmal die alten Nachrichten jedes Profils in den Chat mit dem Absender (Sprachnachrichten als 🎤 mit ihrem Text, „an alle“ mit diesem Vorsatz) und schaltet Chats für alle ein, die Nachrichten anhatten; die alten Aufnahmen werden danach gelöscht. Weg sind Ich → Nachrichten, /api/messages…, „Für alle Profile einschalten“, der Filter „Nachrichten an/aus“ unter Personen und Geräte und die eigenen Mitteilungen mit Antwortfeld in der iPhone-App. - Senden: „Sag Anna, das Essen ist fertig“, „Schreib sb, dass ich später komme“ oder „Nac"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Nachrichten an andere (V01.0.192)",
-"text": ", „Sag Anna, das Essen ist fertig“ oder „Nachricht an Ben: …“, liest das Panel Empfänger und Text selbst (feste Regeln), liest die Nachricht vor und sendet nach „Ja“. Ist die Nachricht für dich noch aus, fragt der Assistent „Soll ich sie einschalten?“; dein „Ja“ schaltet nur dein eigenes Profil ein und geht dann zur Nachricht weiter. Geht Senden nicht, nennt er den Grund (Admin-Schalter aus, „sb hat Nachrichten nicht eingeschaltet“ …). Unter Ich → Nachrichten zeigt „Bereit“, was an ist und wer erreichbar ist; der Admin kann dort und unter Funktionen „Für alle Profile einschalten“ (jedes Profil kann es wieder ausschalten)."
+"title": "Nachrichten in Chats (V01.0.488)",
+"text": "hricht an Ben: …“. Das Panel liest Empfänger und Text selbst (feste Regeln), sucht nur unter den Profilen, die von dir Nachrichten annehmen, liest die Nachricht vor und schreibt sie erst nach einem schlichten „Ja“ in den Chat (mit 🎙). Sind Chats für dich noch aus, fragt der Assistent „Soll ich sie einschalten?“; dein „Ja“ schaltet nur dein eigenes Profil ein. Geht Senden nicht, nennt er den Grund. - Nachricht an alle: „Sag allen, wir fahren um acht“ geht in die feste Gruppe „Alle“. In ihr ist jeder, der „Nachricht an alle“ eingeschaltet hat; niemand fügt hinzu oder entfernt, es gibt keine Admins. „Nicht mehr mitmachen“ unter ⓘ schaltet den eigenen Schalter aus. Höchstens 5 Nachrichten an alle pro Stunde. - Auf dem Lautsprecher: Ist keine Seite des Profils offen, sagt der eigene Lautsprecher eine neue Chat-Nachricht sofort („Nachricht von Anna: …“ oder nur „Nachricht von Anna.“), sonst beim nächsten Weckwort innerhalb von zwei Stunden (höchstens 3). Nie in der Ruhezeit, nie aus stummen Chats, aus privaten Chats nur, von wem. - Durchsage: „Durchsage im Wohnzimmer: Essen ist fertig“ (oder „überall“) nach „Ja“, oder Chats → ＋ → „📢 Durchsage“: Lautsprecher wählen, Text tippen. Nur auf L"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Nachrichten in Chats (V01.0.488)",
+"text": "autsprechern, deren Besitzer Durchsagen erlaubt; ist einer nicht verbunden, beim nächsten Weckwort innerhalb von zehn Minuten. - Lesen und antworten: „Habe ich neue Nachrichten?“ liest ungelesene Chat-Nachrichten als fremden Text vor, nie als Anweisung; „Antworte ihr: komme gleich“ und „Ja“. Was in einer Nachricht steht, sperrt für den Rest der Antwort und die nächste Runde alles, was etwas ändert, und kommt nie ins Gedächtnis. - iPhone: „Nachricht mit Spark“ (Siri) schreibt in den Chat, „an alle“ in die Gruppe „Alle“; die Heute-Karte heißt „Chats“ und zählt ungelesene Chat-Nachrichten. Braucht den nächsten TestFlight-Build. - Logs (Bereich „Nachrichten und Chats“) und Live (Kachel „Chats“: dazu „Alle: N Personen“ und „N vorgelesen“) zeigen nur Zahlen. Die Listen „Wer darf mir schreiben“ (messages.json) sind jetzt in der Sicherung."
 },
 {
 "lang": "de",
@@ -669,7 +669,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Chats (V01.0.473)",
-"text": "Chats (V01.0.473): Schreiben wie im Messenger, alles auf dem Spark. Admin: Funktionen → „Nachrichten an andere“, darunter „Chats“ und „Gruppen-Chats“ (beide aus). Profil: Ich → Gespräch → Chats → „Chats mit anderen“ (aus), dazu „Lesebestätigung“ (an) und „Text in der Mitteilung“ (aus). Dann steht im Menü „Chats“ (am Handy der Tab „Chats“ mit der Zahl ungelesener Nachrichten): links die Liste, rechts der Chat; am Handy zwei Seiten mit „‹“ zurück. Haken: ✓ gesendet, ✓✓ auf einem Gerät angekommen, blaue ✓✓ gelesen (nur zwischen Profilen, die beide die Lesebestätigung anhaben). Antippen einer Nachricht: Reaktion (👍 ❤️ 😂 😮 😢 🙏), Antworten, Kopieren, Ändern (15 Minuten), für alle zurücknehmen (1 Stunde). ⓘ: stumm (1 Stunde, 8 Stunden, immer), „Nachrichten verschwinden“ (24 Stunden, 7 oder 90 Tage; in Gruppen stellen das die Admins ein), Chat für mich leeren, in Gruppen Name, Mitglieder, Admins und Verlassen. Schreiben darf nur, wen die andere Person annimmt (dieselben Regeln wie Ich → Nachrichten: von wem, gesperrt); der Absender hört nur „nimmt gerade keine Nachrichten von dir an“, nie warum. „Sag Anna, das Essen ist fertig“ landet im Chat mit Anna (mit 🎙 als Zeichen), „Habe ich neue Na"
+"text": "Chats (V01.0.473): Schreiben wie im Messenger, alles auf dem Spark. Admin: Funktionen → „Chats“, darunter „Gruppen-Chats“ (beide aus). Profil: Ich → Gespräch → Chats → „Chats mit anderen“ (aus), dazu „Lesebestätigung“ (an) und „Text in der Mitteilung“ (aus). Dann steht im Menü „Chats“ (am Handy der Tab „Chats“ mit der Zahl ungelesener Nachrichten): links die Liste, rechts der Chat; am Handy zwei Seiten mit „‹“ zurück. Haken: ✓ gesendet, ✓✓ auf einem Gerät angekommen, blaue ✓✓ gelesen (nur zwischen Profilen, die beide die Lesebestätigung anhaben). Antippen einer Nachricht: Reaktion (👍 ❤️ 😂 😮 😢 🙏), Antworten, Kopieren, Ändern (15 Minuten), für alle zurücknehmen (1 Stunde). ⓘ: stumm (1 Stunde, 8 Stunden, immer), „Nachrichten verschwinden“ (24 Stunden, 7 oder 90 Tage; in Gruppen stellen das die Admins ein), Chat für mich leeren, in Gruppen Name, Mitglieder, Admins und Verlassen. Schreiben darf nur, wen die andere Person annimmt (Ich → Gespräch → Chats → „Wer darf mir schreiben“: von wem, gesperrt); der Absender hört nur „nimmt gerade keine Nachrichten von dir an“, nie warum. „Sag Anna, das Essen ist fertig“ landet im Chat mit Anna (mit 🎙 als Zeichen), „Habe ich neue Nachrichten?“ liest"
 },
 {
 "lang": "de",
@@ -677,7 +677,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Chats (V01.0.473)",
-"text": "chrichten?“ liest ungelesene Chat-Nachrichten als fremden Text vor, nie als Anweisung. Die Texte, Gruppennamen und Vorschauen liegen mit AES-256-GCM verschlüsselt unter users/_chats/ (Schlüssel aus dem Schlüssel des Sparks abgeleitet, jede Nachricht an Chat und Nummer gebunden) und sind in der Sicherung. Eine offene Chats-Seite bekommt Änderungen sofort über eine Verbindung, die nur Nummern trägt; ohne offene Seite geht eine Mitteilung an alle eingerichteten Geräte (iPhone, Android, Begleiter, Browser), nur „💬 Name“ und „Neue Nachricht“, nie über Telegram, nicht bei stumm oder in der Ruhezeit. Grenzen: 4000 Zeichen pro Nachricht, 240 Nachrichten pro Stunde, 50 Personen pro Gruppe. Wird ein Profil gelöscht, verschwinden seine Nachrichten aus allen Chats. Logs (Bereich „Nachrichten und Chats“) und Live (Kachel „Chats“: Anzahl Chats, Nachrichten heute, offene Verbindungen, Mitteilungen) zeigen nur Zahlen. Private Chats mit Ende-zu-Ende-Verschlüsselung und Anrufe folgen."
+"text": " ungelesene Chat-Nachrichten als fremden Text vor, nie als Anweisung. Die Texte, Gruppennamen und Vorschauen liegen mit AES-256-GCM verschlüsselt unter users/_chats/ (Schlüssel aus dem Schlüssel des Sparks abgeleitet, jede Nachricht an Chat und Nummer gebunden) und sind in der Sicherung. Eine offene Chats-Seite bekommt Änderungen sofort über eine Verbindung, die nur Nummern trägt; ohne offene Seite geht eine Mitteilung an alle eingerichteten Geräte (iPhone, Android, Begleiter, Browser), nur „💬 Name“ und „Neue Nachricht“, nie über Telegram, nicht bei stumm oder in der Ruhezeit. Grenzen: 4000 Zeichen pro Nachricht, 240 Nachrichten pro Stunde, 50 Personen pro Gruppe. Wird ein Profil gelöscht, verschwinden seine Nachrichten aus allen Chats. Logs (Bereich „Nachrichten und Chats“) und Live (Kachel „Chats“: Anzahl Chats, Nachrichten heute, offene Verbindungen, Mitteilungen) zeigen nur Zahlen. Private Chats mit Ende-zu-Ende-Verschlüsselung und Anrufe folgen."
 },
 {
 "lang": "de",
@@ -725,7 +725,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Kein Umschlag mehr im Assistenten (V01.0.479)",
-"text": "Kein Umschlag mehr im Assistenten (V01.0.479): Der Umschlag neben der Eingabe und der Knopf „Nachricht“ über dem Gespräch sind weg (Dominik: Chats ersetzen sie). Geschrieben wird unter Chats; „Sag Anna …“ geht weiter in den Chat. Ich → Nachrichten bleibt für Profile ohne Chats."
+"text": "Kein Umschlag mehr im Assistenten (V01.0.479): Der Umschlag neben der Eingabe und der Knopf „Nachricht“ über dem Gespräch sind weg (Dominik: Chats ersetzen sie). Geschrieben wird unter Chats; „Sag Anna …“ geht weiter in den Chat. Seit V01.0.488 ist auch Ich → Nachrichten weg (siehe oben)."
 },
 {
 "lang": "de",
@@ -733,7 +733,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Viele Profile (V01.0.206)",
-"text": "Viele Profile (V01.0.206): Unter Personen und Geräte sucht der Admin nach Name, Rufname oder Gerät, filtert (seit 90 Tagen nicht benutzt, ohne Gerät, mit/ohne zweiten Schritt, Nachrichten an/aus), sortiert (Name, zuletzt benutzt, neueste) und blättert in Seiten zu 25. „Details“ zeigt pro Profil Geräte, letzte Nutzung, Rufname, PIN ändern, zweiten Schritt zurücksetzen und Löschen; Löschen braucht jetzt wie PIN ändern den frischen Code. Geräte zeigen nur die der gezeigten Profile. Seit V01.0.257 wählt man das Profil eines eigenen Geräteschlüssels (Skript, Kurzbefehl) und eines neuen Geräts aus einer Liste aller Profile statt den Namen zu tippen; iPhone-App, Lautsprecher, Pebble-Uhr und Home-Assistant-Schlüssel richtet jedes Profil selbst unter Ich ein, sie stehen mit „🔒 fest“ und dem Ort, wo sie verwaltet werden, und lassen sich hier nur löschen (auch der Server lehnt das Umhängen ab). „Zuletzt benutzt“ zählt Browser-Anmeldung (ohne Adresse) und Geräteschlüssel. Rufname: pro Profil optional („Tom“, „Papa“), vom Admin in den Details oder vom Profil unter Ich → Nachrichten; eindeutig unter allen Namen und Rufnamen. Empfänger wählen: im Briefknopf und unter Ich → Nachrichten ein Feld „A"
+"text": "Viele Profile (V01.0.206): Unter Personen und Geräte sucht der Admin nach Name, Rufname oder Gerät, filtert (seit 90 Tagen nicht benutzt, ohne Gerät, mit/ohne zweiten Schritt), sortiert (Name, zuletzt benutzt, neueste) und blättert in Seiten zu 25. „Details“ zeigt pro Profil Geräte, letzte Nutzung, Rufname, PIN ändern, zweiten Schritt zurücksetzen und Löschen; Löschen braucht jetzt wie PIN ändern den frischen Code. Geräte zeigen nur die der gezeigten Profile. Seit V01.0.257 wählt man das Profil eines eigenen Geräteschlüssels (Skript, Kurzbefehl) und eines neuen Geräts aus einer Liste aller Profile statt den Namen zu tippen; iPhone-App, Lautsprecher, Pebble-Uhr und Home-Assistant-Schlüssel richtet jedes Profil selbst unter Ich ein, sie stehen mit „🔒 fest“ und dem Ort, wo sie verwaltet werden, und lassen sich hier nur löschen (auch der Server lehnt das Umhängen ab). „Zuletzt benutzt“ zählt Browser-Anmeldung (ohne Adresse) und Geräteschlüssel. Rufname: pro Profil optional („Tom“, „Papa“), vom Admin in den Details oder vom Profil unter Ich → Gespräch → Chats; eindeutig unter allen Namen und Rufnamen. Gleiche Namen: Passen mehrere Profile zum gesagten Namen (zwei „Thomas“), fragt der As"
 },
 {
 "lang": "de",
@@ -741,23 +741,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Viele Profile (V01.0.206)",
-"text": "n …“: tippen zeigt höchstens 8 passende Profile, leer zeigt ★ Favoriten (höchstens 20) und die zuletzt angeschriebenen (5). „Bereit“ zeigt bei vielen Profilen nur die Zahl, die Namen aufklappbar mit Suche. Gleiche Namen: Passen mehrere Profile zum gesagten Namen (zwei „Thomas“), fragt der Assistent „Meinst du Thomas Müller oder Thomas Meier?“ (höchstens 4); die Antwort („Müller“, „den ersten“, Rufname) wählt nur unter diesen, danach kommt wie immer das „Ja“. Passen mehr als 4, bittet er um den ganzen Namen. Kennt er den Namen nicht, nennt er höchstens 3 ähnliche, nie die ganze Liste. Bei „an alle“ nennt er höchstens 4 Namen und „und N weitere“. - Senden: „Sag Anna, das Essen ist fertig.“ Das Panel sucht den Empfänger selbst unter den Profilen, die von dir Nachrichten annehmen, liest die Nachricht vor und schickt sie erst nach einem schlichten „Ja“ auf demselben Gerät. Oder unter Ich → Nachrichten Empfänger wählen und tippen. „Sag allen …“ geht an alle, die Nachrichten an alle annehmen. - Ankommen, einmal: Ist eine Seite des Empfängers offen, spricht sie die Nachricht; sonst ein eigener verbundener Lautsprecher (wenn gewünscht); sonst eine Mitteilung auf dem zuletzt benutzten Gerät "
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Viele Profile (V01.0.206)",
-"text": "(Browser, iPhone-App, Telegram nur mit erlaubten persönlichen Daten). Ein Lautsprecher sagt noch nicht gehörte Nachrichten der letzten zwei Stunden beim nächsten Weckwort. In den Ruhezeiten sprechen Lautsprecher nie. - Lesen und antworten: „Habe ich Nachrichten?“, danach „Antworte ihr: komme gleich“ und „Ja“. Was in einer Nachricht steht, gilt als fremder Text: Es wird nur wiedergegeben, sperrt für den Rest der Antwort und die nächste Runde alles, was etwas ändert, und kommt nie ins Gedächtnis. Die Antwort nimmt das Panel aus deinen eigenen Worten. - Durchsage: „Durchsage im Wohnzimmer: Essen ist fertig“ (oder „überall“), nach „Ja“. Ton, dann der Satz „Durchsage von …“; ist der Lautsprecher nicht verbunden, beim nächsten Weckwort innerhalb von zehn Minuten. - Sprachnachricht: Ich → Nachrichten → „Aufnehmen“ (höchstens 30 Sekunden), „Senden“. Die Spracherkennung schreibt den Text dazu; abgespielt wird sie unter Ich → Nachrichten oder auf der offenen Seite. - Grenzen: 500 Zeichen, 30 Nachrichten pro Stunde, 10 an dieselbe Person, 5 an alle oder Durchsagen; 100 Nachrichten im Postfach, nach 30 Tagen gelöscht. Text und Aufnahmen liegen verschlüsselt auf dem Spark, nie im Journal (nur L"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Viele Profile (V01.0.206)",
-"text": "änge und Profil), und kommen nicht in Sicherungen."
+"text": "sistent „Meinst du Thomas Müller oder Thomas Meier?“ (höchstens 4); die Antwort („Müller“, „den ersten“, Rufname) wählt nur unter diesen, danach kommt wie immer das „Ja“. Passen mehr als 4, bittet er um den ganzen Namen. Kennt er den Namen nicht, nennt er höchstens 3 ähnliche, nie die ganze Liste. Bei „an alle“ nennt er höchstens 4 Namen und „und N weitere“."
 },
 {
 "lang": "de",
@@ -2453,15 +2437,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
-"text": "Seit V01.0.479 gibt es keinen Umschlag mehr neben dem Eingabefeld: Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Die alten Nachrichten öffnen sich noch aus einer Mitteilung oder mit Siri, ohne Sprachmodell. Unter „Bereit?“ siehst du, ob der Admin und dein Profil Nachrichten erlauben und wen du erreichst. Wer nicht erreichbar ist, steht mit Grund dabei, z. B. „hat Nachrichten aus“. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt. Bei vielen Profilen (V01.0.206) öffnet „An“ eine Liste mit Suche (Name oder Rufname), oben ★ Favoriten und Zuletzt; der Stern merkt"
-},
-{
-"lang": "de",
-"src": "iphone-app",
-"file": "iPhone-App „Spark“",
-"head": "Nachrichten an andere Profile",
-"title": "Nachrichten an andere Profile",
-"text": " einen Favoriten auf dem Spark. „Bereit?“ zeigt dann nur Zahlen, die Namen zum Aufklappen. Passen bei Siri mehrere Profile, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche."
+"text": "Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Seit V01.0.488 gibt es in der App kein eigenes Nachrichten-Fenster und keine Mitteilung mit Antwortfeld mehr; neue Chat-Nachrichten kommen als „💬 Name“ und öffnen die App. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach; die Nachricht landet im Chat mit dieser Person, „alle“ in der Gruppe „Alle“. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt (Name oder Rufname). Passen mehrere, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche. Die Heute-Karte „Chats“ zählt ungelesene Chat-Nachrichten. Wer dir schreiben darf, stellst du im Browser ein (Ich → Gespräch → Chats). Braucht den nächsten TestFlight-Build."
 },
 {
 "lang": "de",
@@ -3053,7 +3029,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
-"text": " Gedächtnis, Aufgaben/Erinnerungen/Nachrichten, Dokumente (Text, Suche, Originale), erstellte Dokumente. Nie: Schlüssel, Anmeldung, zweiter Anmeldeschritt, Passwörter anderer Dienste, Einstellungen, Stimmabdrücke. Die Such-Datenbank geht als stimmige Kopie (SQLite-Backup). - Verschlüsselung: jede Datei ein eigenes Objekt unter Zufallsnamen, AES-256-GCM in 1-MiB-Stücken (nummeriert, letztes markiert), Schlüssel je Objekt per HKDF aus dem Speicher-Schlüssel des Profils und dem Objektnamen; das Verzeichnis (Manifest) ist ebenso verschlüsselt. Der Speicher-Schlüssel liegt mit dem Tresor-Schlüssel versiegelt im Profilordner; eine Umzugs-Sicherung bringt ihn mit, ohne sie ist die Kopie nicht mehr lesbar. - Verbindungen nur über netguard (Internet; Heimnetz nur mit „Speicher im Heimnetz erlauben“), https oder http nur im Heimnetz, das Passwort nur an diese Adresse; Ordner-Zugriffe mit 20 s Zeitgrenze im eigenen Thread (eine hängende Freigabe blockiert nichts), ohne Verweise zu folgen. - SFTP und SMB (seit V01.0.456): sftp://server[:port]/pfad mit Benutzer und Passwort, über das Internet erlaubt (SSH ist verschlüsselt); der Schlüssel des Servers wird beim Einbinden gemerkt (hostkey, Anzeig"
+"text": " Gedächtnis, Aufgaben/Erinnerungen, Dokumente (Text, Suche, Originale), erstellte Dokumente. Nie: Schlüssel, Anmeldung, zweiter Anmeldeschritt, Passwörter anderer Dienste, Einstellungen, Stimmabdrücke. Die Such-Datenbank geht als stimmige Kopie (SQLite-Backup). - Verschlüsselung: jede Datei ein eigenes Objekt unter Zufallsnamen, AES-256-GCM in 1-MiB-Stücken (nummeriert, letztes markiert), Schlüssel je Objekt per HKDF aus dem Speicher-Schlüssel des Profils und dem Objektnamen; das Verzeichnis (Manifest) ist ebenso verschlüsselt. Der Speicher-Schlüssel liegt mit dem Tresor-Schlüssel versiegelt im Profilordner; eine Umzugs-Sicherung bringt ihn mit, ohne sie ist die Kopie nicht mehr lesbar. - Verbindungen nur über netguard (Internet; Heimnetz nur mit „Speicher im Heimnetz erlauben“), https oder http nur im Heimnetz, das Passwort nur an diese Adresse; Ordner-Zugriffe mit 20 s Zeitgrenze im eigenen Thread (eine hängende Freigabe blockiert nichts), ohne Verweise zu folgen. - SFTP und SMB (seit V01.0.456): sftp://server[:port]/pfad mit Benutzer und Passwort, über das Internet erlaubt (SSH ist verschlüsselt); der Schlüssel des Servers wird beim Einbinden gemerkt (hostkey, Anzeige wie ssh-ke"
 },
 {
 "lang": "de",
@@ -3819,17 +3795,9 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
-"head": "Messages between profiles (for the iPhone app)",
-"title": "Messages between profiles (for the iPhone app)",
-"text": "With the profile's browser login or the iPhone app's key (header X-Speech-Device), only when the admin switched on \"Messages to others\" and the profile \"Use messages for me\"; other device keys get 403. At most 30 calls a minute. - GET /api/messages: mailbox (items with id, from, name, text, t, read, kind, voice, secs), recipients to, speakers for announcements, switches (all, announce, voice), max_text, max_voice. - GET /api/messages/ready (also while the switches are off): enabled, on, reach (id, name), off (name, why), why; for the ready view. The admin switches every profile on with POST /api/admin/messages/enable_all. - GET /api/messages/poll?since=<ms>: new messages not spoken anywhere yet; marks the device as open (then no notification). - POST /api/messages/played {\"id\"}: {\"play\": true} only for the first device that speaks it. - POST /api/messages/send {\"to\": \"<profile id>\" | \"all\", \"text\"} (at most 500 characters). - POST /api/messages/voice?to=<profile id>: the recording as body (at most 2 MB, 30 seconds); GET /api/messages/audio?id= returns it as Ogg/Opus. - POST /api/messages/announce {\"speakers\": [id], \"text\"}, POST /api/messages/read {\"ids\"?}, POST /api/messages/delet"
-},
-{
-"lang": "en",
-"src": "apis-and-integration",
-"file": "APIs and integration",
-"head": "Messages between profiles (for the iPhone app)",
-"title": "Messages between profiles (for the iPhone app)",
-"text": "e {\"ids\"?} (without ids: all). - Notifications: APNs with tag msg-<id>, the text comes through /api/iphone/note as before. \"Who may write to me\" (PUT /api/messages/who) only in the browser. - V01.0.206: to includes call (call name), plus recent (last written to, at most 5) and fav. PUT /api/messages/fav {\"id\", \"on\"} sets a favourite (at most 20, also with the app key). PUT /api/messages/call {\"call\"} sets the own call name (browser only). Admin: GET /api/admin/profiles?q=&show=&sort=&page=&per= (at most 100 per page), GET /api/admin/profiles/<id>, PUT /api/admin/profiles/<id>/call."
+"head": "Chats between profiles (for the iPhone app)",
+"title": "Chats between profiles (for the iPhone app)",
+"text": "Since V01.0.488 messages between profiles go through chats only; /api/messages… no longer exists. With the profile's browser login or the iPhone app's key (header X-Speech-Device), only when the admin switched on \"Chats\" and the profile \"Chats with others\"; other device keys get 403. - GET /api/chats: enabled, on, chats (each id, kind, title, unread, mute, last, the group \"Alle\" with fixed), contacts (id, name, call), all (takes part in \"Alle\"), speakers (for announcements), max_text. - POST /api/chats/open {\"to\": \"<profile id>\"} returns the id of the chat for two; POST /api/chats/send {\"id\", \"text\"} writes into it (into \"Alle\" at most 5 an hour). - POST /api/chats/announce {\"speakers\": [id], \"text\"}: an announcement on picked speakers (admin switch \"Announcements on speakers\"). - Browser only: GET/PUT /api/chats/who {\"allow\"?, \"block\"?} (\"Who may write to me\") and PUT /api/chats/call {\"call\"} (own call name, unique). Admin: GET /api/admin/profiles?q=&show=&sort=&page=&per= (at most 100 per page), GET /api/admin/profiles/<id>, PUT /api/admin/profiles/<id>/call."
 },
 {
 "lang": "en",
@@ -4156,16 +4124,24 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Messages to others (V01.0.192)",
-"text": "Messages to others (V01.0.192): profiles of the same Spark send each other short messages. Admin: Features → \"Messages to others\" (off), below it separately \"Message to everybody\", \"Announcements on speakers\" and \"Voice messages\" (all off). Profile: Me → Messages → \"Use messages for me\" (off). There you also set who may write (every profile with messages or only picked ones), who is blocked, whether messages to everybody arrive, what your own speakers say (nothing, only who wrote, with the text) and whether others may announce on them. Guests can neither send nor receive. When you ask in a conversation to write to someone, an earlier answer from web, mail or an image is left out for this, so the tool can be offered (V01.0.196). When sending is not possible (switch off, guest, Telegram without \"private\"), the assistant names exactly that reason. Simpler (V01.0.200): beside the input field in the assistant (on a phone \"Message\" below) the envelope opens one line: pick the recipient, type, send. The language model is not involved, earlier answers from web or mail lock nothing. When you say \"Schreib sb, dass ich später komme\", \"Sag Anna, das Essen ist fertig\" or \"Nachricht an Ben: …\", "
+"title": "Messages in chats (V01.0.488)",
+"text": "Messages in chats (V01.0.488): the old \"Messages to others\" (since V01.0.192, Me → Messages) moved completely into chats. Admin: Features → \"Chats\" (off), below it \"Message to everybody\" and \"Announcements on speakers\" (both off). Profile: Me → Conversation → Chats → \"Chats with others\"; it now also holds \"Who may write to me\" (every profile with chats or only picked ones, plus Blocked and the own call name), \"New messages on my speaker\" (nothing, only who wrote, with the text), \"Message to everybody\" and \"Announcements on my speakers\" (all off). Guests can neither send nor receive. On its first start the Spark moves each profile's old messages once into the chat with their sender (voice messages as 🎤 with their text, \"to everybody\" with that prefix) and switches chats on for everyone who had messages on; the old recordings are deleted afterwards. Gone are Me → Messages, /api/messages…, \"Switch on for every profile\", the filter \"messages on/off\" under People and devices and the iPhone app's own notifications with a reply field. - Sending: \"Tell Anna dinner is ready\", \"Write sb that I'll be late\" or \"Message to Ben: …\". The panel reads recipient and text itself (fixed rules), search"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Messages to others (V01.0.192)",
-"text": "the panel reads recipient and text itself (fixed rules), reads the message back and sends after \"Ja\". When messages are still off for you, the assistant asks whether to switch them on; your \"Ja\" switches on only your own profile and then goes on to the message. When sending is not possible it names the reason (admin switch off, \"sb has messages off\" …). Under Me → Messages \"Ready\" shows what is on and who can be reached; there and under Features the admin can \"Switch on for every profile\" (each profile can switch it off again)."
+"title": "Messages in chats (V01.0.488)",
+"text": "es only among the profiles that take messages from you, reads the message back and writes it into the chat only after a plain \"Yes\" (marked 🎙). When chats are still off for you, the assistant asks whether to switch them on; your \"Yes\" switches on only your own profile. When sending is not possible it names the reason. - Message to everybody: \"Tell everybody we leave at eight\" goes into the fixed group \"Alle\". Everybody who switched on \"Message to everybody\" is in it; nobody adds or removes members, there are no admins. \"Stop taking part\" under ⓘ switches the own switch off. At most 5 messages to everybody per hour. - On the speaker: when no page of the profile is open, the own speaker says a new chat message at once (\"Nachricht von Anna: …\" or only \"Nachricht von Anna.\"), else at the next wake word within two hours (at most 3). Never in quiet hours, never from muted chats, from private chats only who wrote. - Announcement: \"Announcement in the living room: dinner is ready\" (or \"everywhere\") after \"Yes\", or Chats → ＋ → \"📢 Announcement\": pick speakers, type the text. Only on speakers whose owner allows announcements; when one is not connected, at its next wake word within ten minutes"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Messages in chats (V01.0.488)",
+"text": ". - Reading and replying: \"Do I have new messages?\" reads unread chat messages as outside text, never as an instruction; \"Reply to her: coming\" and \"Yes\". What a message says locks everything that changes something for the rest of the answer and the next turn, and never goes into the memory. - iPhone: \"Message with Spark\" (Siri) writes into the chat, \"everybody\" into the group \"Alle\"; the Today card is called \"Chats\" and counts unread chat messages. Needs the next TestFlight build. - Logs (area \"Messages and chats\") and Live (tile \"Chats\": plus \"Alle: N people\" and \"N read aloud\") show numbers only. The \"Who may write to me\" lists (messages.json) are now part of the backup."
 },
 {
 "lang": "en",
@@ -4173,7 +4149,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Chats (V01.0.473)",
-"text": "Chats (V01.0.473): Writing like in a messenger, everything on the Spark. Admin: Features → \"Messages to others\", below it \"Chats\" and \"Group chats\" (both off). Profile: Me → Conversation → Chats → \"Chats with others\" (off), plus \"Read receipts\" (on) and \"Text in the notification\" (off). Then the menu has \"Chats\" (on a phone the \"Chats\" tab with the number of unread messages): the list on the left, the chat on the right; on a phone two pages with \"‹\" back. Ticks: ✓ sent, ✓✓ arrived on a device, blue ✓✓ read (only between profiles that both have read receipts on). Tap a message: reaction (👍 ❤️ 😂 😮 😢 🙏), reply, copy, change (15 minutes), take back for all (1 hour). ⓘ: mute (1 hour, 8 hours, always), \"messages disappear\" (24 hours, 7 or 90 days; in groups the admins set it), clear the chat for me, in groups name, members, admins and leave. Only who the other person takes may write (the same rules as Me → Messages: from whom, blocked); the sender only hears \"does not take messages from you right now\", never why. \"Tell Anna dinner is ready\" lands in the chat with Anna (marked 🎙), \"Do I have new messages?\" reads unread chat messages as foreign text, never as an instruction. Texts, group n"
+"text": "Chats (V01.0.473): Writing like in a messenger, everything on the Spark. Admin: Features → \"Chats\", below it \"Group chats\" (both off). Profile: Me → Conversation → Chats → \"Chats with others\" (off), plus \"Read receipts\" (on) and \"Text in the notification\" (off). Then the menu has \"Chats\" (on a phone the \"Chats\" tab with the number of unread messages): the list on the left, the chat on the right; on a phone two pages with \"‹\" back. Ticks: ✓ sent, ✓✓ arrived on a device, blue ✓✓ read (only between profiles that both have read receipts on). Tap a message: reaction (👍 ❤️ 😂 😮 😢 🙏), reply, copy, change (15 minutes), take back for all (1 hour). ⓘ: mute (1 hour, 8 hours, always), \"messages disappear\" (24 hours, 7 or 90 days; in groups the admins set it), clear the chat for me, in groups name, members, admins and leave. Only who the other person takes may write (Me → Conversation → Chats → \"Who may write to me\": from whom, blocked); the sender only hears \"does not take messages from you right now\", never why. \"Tell Anna dinner is ready\" lands in the chat with Anna (marked 🎙), \"Do I have new messages?\" reads unread chat messages as foreign text, never as an instruction. Texts, group names an"
 },
 {
 "lang": "en",
@@ -4181,7 +4157,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Chats (V01.0.473)",
-"text": "ames and previews are stored encrypted with AES-256-GCM under users/_chats/ (key derived from the Spark's key, each message bound to its chat and number) and are part of the backup. An open Chats page gets changes at once over a connection that carries numbers only; without an open page a notification goes to every set-up device (iPhone, Android, companion, browser), only \"💬 name\" and \"New message\", never through Telegram, not when muted or in quiet hours. Limits: 4000 characters per message, 240 messages per hour, 50 people per group. When a profile is deleted, its messages disappear from every chat. Logs (area \"Messages and chats\") and Live (tile \"Chats\": number of chats, messages today, open connections, notifications) show numbers only. Private chats with end-to-end encryption and calls follow."
+"text": "d previews are stored encrypted with AES-256-GCM under users/_chats/ (key derived from the Spark's key, each message bound to its chat and number) and are part of the backup. An open Chats page gets changes at once over a connection that carries numbers only; without an open page a notification goes to every set-up device (iPhone, Android, companion, browser), only \"💬 name\" and \"New message\", never through Telegram, not when muted or in quiet hours. Limits: 4000 characters per message, 240 messages per hour, 50 people per group. When a profile is deleted, its messages disappear from every chat. Logs (area \"Messages and chats\") and Live (tile \"Chats\": number of chats, messages today, open connections, notifications) show numbers only. Private chats with end-to-end encryption and calls follow."
 },
 {
 "lang": "en",
@@ -4221,7 +4197,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "No envelope in the assistant any more (V01.0.479)",
-"text": "No envelope in the assistant any more (V01.0.479): the envelope beside the input and the \"Message\" button above the conversation are gone (Dominik: chats replace them). You write under Chats; \"Tell Anna …\" still goes into the chat. Me → Messages stays for profiles without chats."
+"text": "No envelope in the assistant any more (V01.0.479): the envelope beside the input and the \"Message\" button above the conversation are gone (Dominik: chats replace them). You write under Chats; \"Tell Anna …\" still goes into the chat. Since V01.0.488 Me → Messages is gone too (see above)."
 },
 {
 "lang": "en",
@@ -4229,7 +4205,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Many profiles (V01.0.206)",
-"text": "Many profiles (V01.0.206): under People and devices the admin searches by name, call name or device, filters (not used for 90 days, without a device, with/without second step, messages on/off), sorts (name, last used, newest) and pages through 25 at a time. \"Details\" shows each profile's devices, last use, call name, change PIN, reset second step and delete; deleting now needs the fresh code like changing the PIN. The device list shows only the devices of the profiles shown,. Since V01.0.257 the profile of an own device key (script, shortcut) and of a new device is picked from a list of all profiles instead of typing a name; the iPhone app, speakers, Pebble watch and Home Assistant keys are set up by each profile itself under Me, show \"🔒 fixed\" with where they are managed, and can only be deleted here (the server refuses moving them too). \"Last used\" counts the browser login (without the address) and device keys. Call name: optional per profile (\"Tom\", \"Dad\"), set by the admin in the details or by the profile under Me → Messages; unique among all names and call names. Picking the recipient: in the envelope and under Me → Messages a field \"To …\": typing shows at most 8 matching prof"
+"text": "Many profiles (V01.0.206): under People and devices the admin searches by name, call name or device, filters (not used for 90 days, without a device, with/without second step), sorts (name, last used, newest) and pages through 25 at a time. \"Details\" shows each profile's devices, last use, call name, change PIN, reset second step and delete; deleting now needs the fresh code like changing the PIN. The device list shows only the devices of the profiles shown,. Since V01.0.257 the profile of an own device key (script, shortcut) and of a new device is picked from a list of all profiles instead of typing a name; the iPhone app, speakers, Pebble watch and Home Assistant keys are set up by each profile itself under Me, show \"🔒 fixed\" with where they are managed, and can only be deleted here (the server refuses moving them too). \"Last used\" counts the browser login (without the address) and device keys. Call name: optional per profile (\"Tom\", \"Dad\"), set by the admin in the details or by the profile under Me → Conversation → Chats; unique among all names and call names. Same names: when several profiles fit the spoken name (two \"Thomas\"), the assistant asks \"Thomas Müller or Thomas Meier?"
 },
 {
 "lang": "en",
@@ -4237,15 +4213,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Many profiles (V01.0.206)",
-"text": "iles, empty shows ★ favourites (at most 20) and the last ones written to (5). With many profiles \"Ready\" shows only the number, the names open with a search. Same names: when several profiles fit the spoken name (two \"Thomas\"), the assistant asks \"Thomas Müller or Thomas Meier?\" (at most 4); the answer (\"Müller\", \"the first\", call name) picks only among these, then comes the usual \"Ja\". When more than 4 fit it asks for the full name. An unknown name gets at most 3 similar ones, never the whole list. \"To everybody\" names at most 4 and \"and N more\". - Sending: \"Tell Anna dinner is ready.\" The panel finds the recipient itself among the profiles that take messages from you, reads the message back and sends it only after a plain \"Yes\" on the same device. Or pick the recipient under Me → Messages and type. \"Tell everybody …\" goes to all that take messages to everybody. - Arriving, once: when a page of the recipient is open, it speaks the message; else an own connected speaker (if wanted); else one notification on the device used last (browser, iPhone app, Telegram only with personal data allowed). A speaker says messages nobody heard yet from the last two hours at its next wake word. Spe"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Many profiles (V01.0.206)",
-"text": "akers never talk during quiet hours. - Reading and replying: \"Do I have messages?\", then \"Reply to her: coming\" and \"Yes\". What a message says counts as outside text: it is only reported, locks everything that changes something for the rest of the answer and the next turn, and never goes into the memory. The panel takes the reply from your own words. - Announcement: \"Announcement in the living room: dinner is ready\" (or \"everywhere\"), after \"Yes\". A tone, then \"Durchsage von …\"; when the speaker is not connected, at its next wake word within ten minutes. - Voice message: Me → Messages → \"Record\" (at most 30 seconds), \"Send\". The speech recognition adds the text; it plays under Me → Messages or on the open page. - Limits: 500 characters, 30 messages an hour, 10 to the same person, 5 to everybody or announcements; 100 messages in the mailbox, deleted after 30 days. Text and recordings are stored encrypted on the Spark, never in the journal (only length and profile), and are not in backups."
+"text": "\" (at most 4); the answer (\"Müller\", \"the first\", call name) picks only among these, then comes the usual \"Ja\". When more than 4 fit it asks for the full name. An unknown name gets at most 3 similar ones, never the whole list. \"To everybody\" names at most 4 and \"and N more\"."
 },
 {
 "lang": "en",
@@ -5829,15 +5797,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Messages to other profiles",
 "title": "Messages to other profiles",
-"text": "Since V01.0.479 there is no envelope next to the input any more: you write in Chats (button at the top right when chats are on). The old messages still open from a notification or with Siri, no language model involved. \"Ready?\" shows whether the admin and your profile allow messages and whom you can reach, with the reason for those you cannot (e.g. \"has messages off\"). Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → \"Reply\"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant (\"Do I have messages?\"), also in the car. Voice messages are listed; listen to them in the panel. With Siri: \"Message with Spark\" asks for recipient and text and confirms before sending; the name must match a profile that takes your messages. With many profiles (V01.0.206) \"To\" opens a list with a search (name or call name), ★ favourites and recent ones on top; the star keeps a favourite on the Spark. \"Ready?\" then shows only numbers, the names open on a tap. When several profiles fit for Siri, Siri asks \"Whom do you mean?\" with "
-},
-{
-"lang": "en",
-"src": "iphone-app",
-"file": "iPhone app \"Spark\"",
-"head": "Messages to other profiles",
-"title": "Messages to other profiles",
-"text": "at most 4 names; for an unknown name it says at most 3 similar ones."
+"text": "You write in Chats (button at the top right when chats are on). Since V01.0.488 the app has no messages window of its own and no notification with a reply field any more; new chat messages arrive as \"💬 name\" and open the app. With Siri: \"Message with Spark\" asks for recipient and text and confirms before sending; the message lands in the chat with that person, \"everybody\" in the group \"Alle\". The name must match a profile that takes your messages (name or call name). When several fit, Siri asks \"Whom do you mean?\" with at most 4 names; for an unknown name it says at most 3 similar ones. The Today card \"Chats\" counts unread chat messages. Who may write to you is set in the browser (Me → Conversation → Chats). Needs the next TestFlight build."
 },
 {
 "lang": "en",
@@ -6373,7 +6333,7 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
-"text": "cher.py; chat.storage_own, below it chat.storage_lan and chat.storage_folder with chat.storage_root, profile switch storage_on, all off, never guests): under *Me → Storage* a profile keeps a copy of its data on its own storage, at most 2 targets: a WebDAV folder (a NAS such as Synology, QNAP, Fritzbox; Nextcloud, ownCloud, HiDrive, MagentaCLOUD) or a subfolder of the folder the admin mounted on the Spark (NFS, SMB, USB disk; only below /mnt, /media or /srv, no link). The Spark mounts nothing itself and always works locally; the storage is only the target of a copy every 30 minutes in speech pauses that sends only what changed (at most 2 GB per run, 2 runs at once). - What may go there is a fixed list (areas to choose): conversations, memory, tasks/reminders/messages, documents (text, search, originals), created documents. Never: keys, sign-in, the second sign-in step, passwords of other services, settings, voice prints. The search database goes as a consistent copy (SQLite backup). - Encryption: every file an object of its own under a random name, AES-256-GCM in 1 MiB pieces (numbered, the last one marked), a key per object by HKDF from the profile's storage key and the object's na"
+"text": "cher.py; chat.storage_own, below it chat.storage_lan and chat.storage_folder with chat.storage_root, profile switch storage_on, all off, never guests): under *Me → Storage* a profile keeps a copy of its data on its own storage, at most 2 targets: a WebDAV folder (a NAS such as Synology, QNAP, Fritzbox; Nextcloud, ownCloud, HiDrive, MagentaCLOUD) or a subfolder of the folder the admin mounted on the Spark (NFS, SMB, USB disk; only below /mnt, /media or /srv, no link). The Spark mounts nothing itself and always works locally; the storage is only the target of a copy every 30 minutes in speech pauses that sends only what changed (at most 2 GB per run, 2 runs at once). - What may go there is a fixed list (areas to choose): conversations, memory, tasks/reminders, documents (text, search, originals), created documents. Never: keys, sign-in, the second sign-in step, passwords of other services, settings, voice prints. The search database goes as a consistent copy (SQLite backup). - Encryption: every file an object of its own under a random name, AES-256-GCM in 1 MiB pieces (numbered, the last one marked), a key per object by HKDF from the profile's storage key and the object's name; the l"
 },
 {
 "lang": "en",
@@ -6381,7 +6341,7 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
-"text": "me; the list (manifest) is encrypted the same way. The storage key is sealed with the vault key in the profile folder; a move backup brings it along, without it the copy cannot be read any more. - Connections only through netguard (internet; home network only with \"Allow storage in the home network\"), https, or http only at home, the password only to this address; folder calls with a 20 s limit in their own thread (a hanging share blocks nothing), never following links. - SFTP and SMB (since V01.0.456): sftp://server[:port]/path with user and password, allowed over the internet (SSH is encrypted); the server's key is remembered when the target is added (hostkey, shown like ssh-keygen -l) and must stay the same, else nothing goes there (\"the server's key changed\"; accepting only with password and code). smb://nas/share/folder only in the home network and only with SMB 3 encryption (encrypt=True, older servers are refused), NTLM, a connection cache of its own per run. Both: the address checked once by netguard and connected to exactly there, one connection per run, every call with a time limit, files first as .part, then renamed; the Dienst-Wächter only checks the port (SFTP: greetin"
+"text": "ist (manifest) is encrypted the same way. The storage key is sealed with the vault key in the profile folder; a move backup brings it along, without it the copy cannot be read any more. - Connections only through netguard (internet; home network only with \"Allow storage in the home network\"), https, or http only at home, the password only to this address; folder calls with a 20 s limit in their own thread (a hanging share blocks nothing), never following links. - SFTP and SMB (since V01.0.456): sftp://server[:port]/path with user and password, allowed over the internet (SSH is encrypted); the server's key is remembered when the target is added (hostkey, shown like ssh-keygen -l) and must stay the same, else nothing goes there (\"the server's key changed\"; accepting only with password and code). smb://nas/share/folder only in the home network and only with SMB 3 encryption (encrypt=True, older servers are refused), NTLM, a connection cache of its own per run. Both: the address checked once by netguard and connected to exactly there, one connection per run, every call with a time limit, files first as .part, then renamed; the Dienst-Wächter only checks the port (SFTP: greeting \"SSH-\")"
 },
 {
 "lang": "en",

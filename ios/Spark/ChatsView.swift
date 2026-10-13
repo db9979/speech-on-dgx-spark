@@ -16,6 +16,8 @@ struct ChatSummary: Identifiable, Hashable {
     var title = ""
     var unread = 0
     var muted = false
+    /// The fixed group "Alle": nobody adds or removes members by hand.
+    var fixed = false
     var preview = ""
     var date: Date?
 }
@@ -49,6 +51,8 @@ struct ChatState {
     var chats: [ChatSummary] = []
     var contacts: [Recipient] = []
     var maxText = 4000
+    /// Takes part in the fixed group "Alle" (Nachricht an alle).
+    var all = false
 }
 
 extension SparkAPI {
@@ -61,6 +65,7 @@ extension SparkAPI {
         s.on = d["on"] as? Bool ?? false
         s.media = d["media"] as? Bool ?? false
         s.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 4000
+        s.all = d["all"] as? Bool ?? false
         s.chats = (d["chats"] as? [[String: Any]] ?? []).compactMap { x in
             guard let id = x["id"] as? String else { return nil }
             var c = ChatSummary(id: id)
@@ -69,6 +74,7 @@ extension SparkAPI {
             c.title = String((x["title"] as? String ?? "").prefix(60))
             c.unread = (x["unread"] as? NSNumber)?.intValue ?? 0
             c.muted = ((x["mute"] as? NSNumber)?.doubleValue ?? 0) != 0
+            c.fixed = x["fixed"] as? Bool ?? false
             if let l = x["last"] as? [String: Any] {
                 c.date = Date(timeIntervalSince1970: (l["t"] as? NSNumber)?.doubleValue ?? 0)
                 c.preview = Self.preview(l, group: c.group)
@@ -77,7 +83,8 @@ extension SparkAPI {
         }
         s.contacts = (d["contacts"] as? [[String: Any]] ?? []).compactMap { x in
             guard let id = x["id"] as? String else { return nil }
-            return Recipient(id: id, name: String((x["name"] as? String ?? id).prefix(60)))
+            return Recipient(id: id, name: String((x["name"] as? String ?? id).prefix(60)),
+                             call: String((x["call"] as? String ?? "").prefix(60)))
         }
         return s
     }

@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 ALL_ON = dict(proactive=True, ha_live=True, ha_loud=True, ha_events=True, ha_voice_rules=True, ha_camera=True,
-              messages=True, messages_announce=True)
+              chats=True, messages_announce=True)
 ALL_OFF = {k: False for k in ALL_ON}
 EXTRA = [
     {"entity_id": "binary_sensor.flur_bewegung", "state": "off",

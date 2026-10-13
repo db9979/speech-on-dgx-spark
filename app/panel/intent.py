@@ -54,7 +54,7 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
                        r"(meine[nmr]?|in den) (dateien|papiere\w*)|documents?)\b")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag\w*|phone number|contacts?)\b")
-MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?)\b")
+MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?)\b")
 AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*)\b")
 REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me)\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
@@ -565,14 +565,14 @@ def own_route_words(text):
 LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail": "E-Mail", "websuche": "Websuche",
           "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter", "bahn": "Bus und Bahn",
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
-          "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone",
+          "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
           "archiv": "Eigenes Archiv"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
-           "gedaechtnis": "memory", "dokument": "documents", "nachricht": "messages", "agent": "agent",
+           "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
            "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix"}
 
 

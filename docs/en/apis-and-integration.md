@@ -147,18 +147,13 @@ and each day's questions are kept as a conversation of the profile. Step by step
 
 Own iPhone app with the Spark voice and "Hey Siri, Frag Spark", paired by QR code, its own key per iPhone that may only ask and listen. Building, pairing and security: [iphone-app.md](iphone-app.md).
 
-### Messages between profiles (for the iPhone app)
+### Chats between profiles (for the iPhone app)
 
-With the profile's browser login or the iPhone app's key (header `X-Speech-Device`), only when the admin switched on "Messages to others" and the profile "Use messages for me"; other device keys get 403. At most 30 calls a minute.
-- `GET /api/messages`: mailbox (`items` with `id, from, name, text, t, read, kind, voice, secs`), recipients `to`, speakers for announcements, switches (`all`, `announce`, `voice`), `max_text`, `max_voice`.
-- `GET /api/messages/ready` (also while the switches are off): `enabled`, `on`, `reach` (`id, name`), `off` (`name, why`), `why`; for the ready view. The admin switches every profile on with `POST /api/admin/messages/enable_all`.
-- `GET /api/messages/poll?since=<ms>`: new messages not spoken anywhere yet; marks the device as open (then no notification).
-- `POST /api/messages/played {"id"}`: `{"play": true}` only for the first device that speaks it.
-- `POST /api/messages/send {"to": "<profile id>" | "all", "text"}` (at most 500 characters).
-- `POST /api/messages/voice?to=<profile id>`: the recording as body (at most 2 MB, 30 seconds); `GET /api/messages/audio?id=` returns it as Ogg/Opus.
-- `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (without `ids`: all).
-- Notifications: APNs with tag `msg-<id>`, the text comes through `/api/iphone/note` as before. "Who may write to me" (`PUT /api/messages/who`) only in the browser.
-- V01.0.206: `to` includes `call` (call name), plus `recent` (last written to, at most 5) and `fav`. `PUT /api/messages/fav {"id", "on"}` sets a favourite (at most 20, also with the app key). `PUT /api/messages/call {"call"}` sets the own call name (browser only). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (at most 100 per page), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
+Since V01.0.488 messages between profiles go through chats only; `/api/messages…` no longer exists. With the profile's browser login or the iPhone app's key (header `X-Speech-Device`), only when the admin switched on "Chats" and the profile "Chats with others"; other device keys get 403.
+- `GET /api/chats`: `enabled`, `on`, `chats` (each `id, kind, title, unread, mute, last`, the group "Alle" with `fixed`), `contacts` (`id, name, call`), `all` (takes part in "Alle"), `speakers` (for announcements), `max_text`.
+- `POST /api/chats/open {"to": "<profile id>"}` returns the `id` of the chat for two; `POST /api/chats/send {"id", "text"}` writes into it (into "Alle" at most 5 an hour).
+- `POST /api/chats/announce {"speakers": [id], "text"}`: an announcement on picked speakers (admin switch "Announcements on speakers").
+- Browser only: `GET`/`PUT /api/chats/who {"allow"?, "block"?}` ("Who may write to me") and `PUT /api/chats/call {"call"}` (own call name, unique). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (at most 100 per page), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
 ### Pebble watch
 

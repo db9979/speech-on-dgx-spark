@@ -148,18 +148,13 @@ Schritt für Schritt unter Funktionen → Anleitungen.
 
 Eigene App fürs iPhone mit Spark-Stimme und „Hey Siri, Frag Spark“, Kopplung per QR-Code, eigener Schlüssel pro iPhone, der nur fragen und hören darf. Bauen, Koppeln und Sicherheit: [iphone-app.md](iphone-app.md).
 
-### Nachrichten zwischen Profilen (für die iPhone-App)
+### Chats zwischen Profilen (für die iPhone-App)
 
-Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header `X-Speech-Device`), nur wenn der Admin „Nachrichten an andere“ und das Profil „Nachrichten für mich nutzen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403. Höchstens 30 Aufrufe pro Minute.
-- `GET /api/messages`: Postfach (`items` mit `id, from, name, text, t, read, kind, voice, secs`), Empfänger `to`, Lautsprecher für Durchsagen, Schalter (`all`, `announce`, `voice`), `max_text`, `max_voice`.
-- `GET /api/messages/ready` (auch bei ausgeschaltetem Schalter): `enabled`, `on`, `reach` (`id, name`), `off` (`name, why`), `why`; für die Bereit-Anzeige. Der Admin schaltet mit `POST /api/admin/messages/enable_all` alle Profile ein.
-- `GET /api/messages/poll?since=<ms>`: neue, noch nirgends gesprochene Nachrichten; markiert das Gerät als offen (dann keine Mitteilung).
-- `POST /api/messages/played {"id"}`: `{"play": true}` nur für das erste Gerät, das sie spricht.
-- `POST /api/messages/send {"to": "<Profil-id>" | "all", "text"}` (höchstens 500 Zeichen).
-- `POST /api/messages/voice?to=<Profil-id>`: Aufnahme als Body (höchstens 2 MB, 30 Sekunden); `GET /api/messages/audio?id=` liefert sie als Ogg/Opus.
-- `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (ohne `ids`: alle).
-- Mitteilungen: APNs mit Tag `msg-<id>`, der Text kommt wie bisher über `/api/iphone/note`. „Wer darf mir schreiben“ (`PUT /api/messages/who`) nur im Browser.
-- V01.0.206: `to` enthält `call` (Rufname), dazu `recent` (zuletzt angeschrieben, höchstens 5) und `fav`. `PUT /api/messages/fav {"id", "on"}` setzt einen Favoriten (höchstens 20, auch mit App-Schlüssel). `PUT /api/messages/call {"call"}` setzt den eigenen Rufnamen (nur Browser). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (höchstens 100 pro Seite), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
+Seit V01.0.488 gehen Nachrichten zwischen Profilen nur noch über die Chats; `/api/messages…` gibt es nicht mehr. Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header `X-Speech-Device`), nur wenn der Admin „Chats“ und das Profil „Chats mit anderen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403.
+- `GET /api/chats`: `enabled`, `on`, `chats` (je `id, kind, title, unread, mute, last`, die Gruppe „Alle“ mit `fixed`), `contacts` (`id, name, call`), `all` (nimmt an „Alle“ teil), `speakers` (für Durchsagen), `max_text`.
+- `POST /api/chats/open {"to": "<Profil-id>"}` liefert die `id` des Chats zu zweit; `POST /api/chats/send {"id", "text"}` schreibt hinein (in „Alle“ höchstens 5 pro Stunde).
+- `POST /api/chats/announce {"speakers": [id], "text"}`: Durchsage auf gewählten Lautsprechern (Admin-Schalter „Durchsagen auf Lautsprechern“).
+- Nur im Browser: `GET`/`PUT /api/chats/who {"allow"?, "block"?}` („Wer darf mir schreiben“) und `PUT /api/chats/call {"call"}` (eigener Rufname, eindeutig). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (höchstens 100 pro Seite), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
 ### Pebble-Uhr
 

@@ -117,8 +117,7 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 AREAS = {
     "gespraeche": ("Gespräche", "Conversations", ("convos.json", "toollog.json", "room-history.json")),
     "gedaechtnis": ("Gedächtnis", "Memory", ("memory.json", "learned.json", "zuordnungen.json")),
-    "alltag": ("Aufgaben, Erinnerungen, Nachrichten", "Tasks, reminders, messages",
-               ("tasks.json", "reminders.json", "messages.json")),
+    "alltag": ("Aufgaben und Erinnerungen", "Tasks and reminders", ("tasks.json", "reminders.json")),
     "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)", ("wissen.db", "docs/files/")),
     "erstellt": ("Erstellte Dokumente", "Created documents", ("erstellt/",)),
 }
@@ -133,7 +132,8 @@ LOCAL = {
     "telegram.json": "Login", "push.json": "Gerät", "remarkable.json": "Login", "remarkable-lib.json": "Zustand",
     "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
     "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "chatkeys.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
-    "ha-events.json": "Zustand", "briefing-sent": "Zustand", "messages": "Sprachnachrichten (verschlüsselt mit Spark-Schlüssel)",
+    "ha-events.json": "Zustand", "briefing-sent": "Zustand",
+    "messages.json": "Einstellungen", "messages": "alte Sprachnachrichten (bis zur Übernahme in die Chats)",
     "agent-pending.json": "Warteschlange", "calendar-pending.json": "Warteschlange", "fix-pending.json": "Warteschlange", "memory-ask.json": "Warteschlange",
     "mail-pending.json": "Warteschlange", "mcp-dienste-pending.json": "Warteschlange",
     "messages-pending.json": "Warteschlange", "tasks-pending.json": "Warteschlange",

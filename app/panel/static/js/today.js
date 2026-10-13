@@ -4,7 +4,7 @@
 // What is still to set up is "Los geht's" (join.js, onboard.py). On computers on top of Überblick, on phones above
 // the list of pages. Only numbers and short titles; a tap opens the page or asks the sentence.
 let TODAY=null;
-const TD_GO=(id)=>()=>{if(ME_ITEMS.some(x=>x[0]===id)){meLast=id;ptab(id)}};
+const TD_GO=(id)=>()=>{if(id==='chats'){if(window.closeProf)closeProf();goSec('chats');return}if(ME_ITEMS.some(x=>x[0]===id)){meLast=id;ptab(id)}};
 const tdTime=s=>{const d=new Date(s*1000),n=new Date(),tm=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1);
   const day=d.toDateString()===n.toDateString()?t('Heute','Today'):d.toDateString()===tm.toDateString()?t('Morgen','Tomorrow'):d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'numeric'});
   return day+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
@@ -28,7 +28,7 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
       :tdCard(t('Termine','Appointments'),n.length?(n[0].allday?t('Heute ganztägig','Today all day'):tdTime(n[0].start)):t('Heute und morgen frei','Free today and tomorrow'),
         n.length?n.map(x=>x.title).join(' · '):c.calendar.error?t('Ein Kalender war nicht erreichbar.','A calendar could not be reached.'):'','calbox'))}
   if(c.reminders)cards.appendChild(tdCard(t('Erinnerungen','Reminders'),String(c.reminders.count),c.reminders.next?tdTime(c.reminders.next.due)+' · '+c.reminders.next.text:t('Keine offen','None open'),'notebox'));
-  if(c.messages)cards.appendChild(tdCard(t('Nachrichten','Messages'),String(c.messages.unread),c.messages.unread?t('ungelesen','unread'):t('Alles gelesen','All read'),'msgbox'));
+  if(c.messages)cards.appendChild(tdCard(t('Chats','Chats'),String(c.messages.unread),c.messages.unread?t('ungelesen','unread'):t('Alles gelesen','All read'),'chats'));
   if(c.documents)cards.appendChild(tdCard(t('Dokumente','Documents'),String(c.documents.count),c.documents.waiting?c.documents.waiting+t(' Seiten warten aufs Lesen',' pages waiting to be read'):'','docbox'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
   // Mein Zustand (hintergrund.js, own switch my_status): the short line here, the whole card under Ich → Mein Zustand

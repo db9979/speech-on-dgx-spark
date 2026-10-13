@@ -7210,6 +7210,46 @@
           }
         }
       }
+    },
+    "Chats sind auf dem Spark ausgeschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats are switched off on the Spark."
+          }
+        }
+      }
+    },
+    "Chats sind für dein Profil aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats are off for your profile."
+          }
+        }
+      }
+    },
+    "Gerade nimmt niemand Nachrichten an alle an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody takes messages to everyone right now."
+          }
+        }
+      }
+    },
+    "Hier erscheint, was heute dran ist, sobald der Admin Kalender, Erinnerungen, Chats oder Dokumente für dich einschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is due today shows here once the admin switches on calendar, reminders, chats or documents for you."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

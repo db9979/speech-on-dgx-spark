@@ -1098,7 +1098,9 @@ def snapshot(view="admin", now=None):
                         f"{cht.get('pushed', 0)} Mitteilungen" + (f" · {cht['push_failed']} nicht zugestellt" if cht.get("push_failed") else "")
                         + (f" · {cht.get('media', 0)} Fotos/Dateien/Sprache · {cht.get('media_mb', 0)} MB" if cht.get("media_on") else "")
                         + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}"
-                           if cht.get("private_on") else ""))
+                           if cht.get("private_on") else "")
+                        + (f" · Alle: {cht['all']} Personen" if cht.get("all") else "")
+                        + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))

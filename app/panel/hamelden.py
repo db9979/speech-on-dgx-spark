@@ -356,7 +356,7 @@ def check_loud(uid, rule, wanted):
     if not ids:
         raise ValueError("Wähle mindestens einen Lautsprecher, der Durchsagen von dir annimmt."
                          + (" Möglich: " + ", ".join(x["name"] for x in mine.values()) + "." if mine else
-                            " Gerade nimmt keiner Durchsagen von dir an (Ich → Nachrichten)."))
+                            " Gerade nimmt keiner Durchsagen von dir an (Ich → Gespräch → Chats)."))
     return {"loud": True, "speakers": list(dict.fromkeys(ids))}
 
 

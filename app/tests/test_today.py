@@ -20,7 +20,7 @@ class Today(unittest.TestCase):
 
     def test_cards_follow_the_switches(self):
         c, uid = profile("HeuteHanna")
-        helpers.set_config(memory=True, reminders=True, messages=False, calendar=False, documents=True, mfa=True,
+        helpers.set_config(memory=True, reminders=True, chats=False, calendar=False, documents=True, mfa=True,
                            iphone=False, speaker_id=False, pebble=False)
         profiles.add_reminder(uid, "Müll rausbringen", (time.time() + 3600) * 1000)
         d = c.get("/api/profile/today").json()

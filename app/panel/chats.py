@@ -3,12 +3,15 @@
 A chat is two profiles or a group. Everybody in it sees the same messages, kept until they are deleted (or the
 chat's own rule "selbst löschen" takes them), in the Spark's backup like the profiles, never anywhere else.
 
-Off until the admin allows it (chat.chats, built on "Nachrichten an andere") and the profile switches it on
-(chats_on, Ich → Gespräch → Chats). Groups have their own admin switch (chat.chats_groups). Guests get nothing.
+Off until the admin allows it (chat.chats) and the profile switches it on (chats_on, Ich → Gespräch → Chats). Groups
+have their own admin switch (chat.chats_groups). Guests get nothing. Since V01.0.488 the old "Nachrichten" live here
+(plan plaene/nachrichten-in-chats.md): the assistant's "Sag Anna …" (messages.py), the fixed group "Alle"
+(chat.messages_all, each profile's msg_all), new messages on the own speaker (msg_speaker) and announcements.
 
-Who may write to whom (fixed rules here, never the model): the same as for messages (messages.py): the other one
-has chats on, has not blocked the sender and takes messages from every profile or picked the sender. A group can
-only take in people who take messages from the one adding them; anybody can leave a group.
+Who may write to whom (fixed rules in messages.takes_from, never the model): the other one has chats on, has not
+blocked the sender and takes messages from every profile or picked the sender. A group can only take in people who
+take messages from the one adding them; anybody can leave a group. The group Alle has no admins: everybody who takes
+part is in it, leaving it switches msg_all off.
 
 What a message is: someone else's words. In the assistant it comes as outside text (it can never make it act),
 in the page it is shown only as text (textContent), links are not opened or fetched, nothing is ever spoken
@@ -60,6 +63,7 @@ FIND_MAX = 30            # hits of a search
 CID = re.compile(r"c[0-9a-f]{12}")
 MID = re.compile(r"[0-9a-f]{12}")
 UID = re.compile(r"u_[0-9a-f]{12}")
+ALL_ID = "c" + hashlib.sha256(b"all|speech-spark").hexdigest()[:12]   # the fixed group Alle (one per Spark)
 SYS = ("made", "add", "remove", "leave", "name", "vanish", "admin", "joined")   # what a line of the chat itself says
 MEDIA = ("photo", "file", "voice")             # what else a message can be (Schritt B, chat.chats_media)
 MAX_PHOTO_IN = 15 * 1024**2  # a photo as it comes from the phone
@@ -120,14 +124,9 @@ def name_of(uid):
 
 def takes(rcpt, sender):
     """True when rcpt takes chat messages from sender: both have chats on, rcpt has not blocked sender and takes
-    from everybody or picked sender (the lists of Ich → Nachrichten, messages.py)."""
-    if not rcpt or not sender or rcpt == sender or not usable(rcpt) or not usable(sender):
-        return False
+    from everybody or picked sender (Ich → Gespräch → Chats „Wer darf mir schreiben“, messages.takes_from)."""
     import messages
-    d = messages._load(rcpt)
-    if sender in d["block"]:
-        return False
-    return profiles.settings(rcpt).get("msg_from", "all") == "all" or sender in d["allow"]
+    return messages.takes_from(rcpt, sender)
 
 
 def why_not(rcpt, sender):
@@ -310,6 +309,8 @@ def mine(uid):
 
 
 def _member(uid, cid):
+    if cid == ALL_ID:   # the group Alle: who takes part right now (all_sync)
+        all_sync()
     c = _index().get(cid)
     if not c or uid not in c["members"]:
         raise LookupError("no such chat")
@@ -377,7 +378,7 @@ def _tell(members, ev, but=None):
 def _today():
     day = time.strftime("%Y-%m-%d")
     if _count["day"] != day:
-        _count.update(day=day, sent=0, pushed=0, push_failed=0, media=0)
+        _count.update(day=day, sent=0, pushed=0, push_failed=0, media=0, private=0, spoken=0)
     return _count
 
 
@@ -464,6 +465,7 @@ def _title(cid, c, uid, names):
 def listing(uid, now=None):
     """The chat list of a profile, newest first, and the people it can start a chat with."""
     now = time.time() if now is None else now
+    all_sync(now)
     names = {x["id"]: x["name"] for x in profiles.names()}
     out = []
     for cid, c in mine(uid).items():
@@ -485,6 +487,8 @@ def listing(uid, now=None):
         if c.get("kind") == "priv":
             import chatsec
             item["private"], item["can_send"] = True, chatsec.can(other, uid)
+        if c.get("fixed"):
+            item["fixed"] = True
         if last and float(last.get("t") or 0) > d_cleared:
             item["last"] = {"t": last["t"], "mine": last.get("from") == uid, "name": names.get(last.get("from"), ""),
                             "kind": last.get("kind", "text"), "gone": bool(last.get("gone")), "sys": last.get("sys"),
@@ -512,6 +516,8 @@ def items(uid, cid, before="", now=None):
     """One page of a chat (PAGE messages, the newest last), with what the page needs to draw it."""
     now = time.time() if now is None else now
     with _lock:
+        if cid == ALL_ID:
+            all_sync(now)
         chats = _index()
         c = chats.get(cid)
         if not c or uid not in c["members"]:
@@ -530,17 +536,20 @@ def items(uid, cid, before="", now=None):
     if c.get("kind") == "priv":
         import chatsec
         why = chatsec.why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr."
+    elif c.get("fixed"):
+        import messages
+        why = "" if messages.all_on() and messages.takes_all(uid) else "Nachrichten an alle sind gerade ausgeschaltet."
     return {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
             "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
             "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
             "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
             "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
-            "can_send": (not why if c.get("kind") == "priv" else
+            "can_send": (not why if c.get("kind") == "priv" or c.get("fixed") else
                          takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
-            "why": (why if c.get("kind") == "priv" else
+            "why": (why if c.get("kind") == "priv" or c.get("fixed") else
                     why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
                     "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
-            "private": c.get("kind") == "priv"}
+            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed"))}
 
 
 # ---------------------------------------------------------------- changing a chat
@@ -607,12 +616,7 @@ def joined_by_invite(uid, inviter, now=None):
         return ""
     profiles.save_settings(uid, {"chats_on": True})
     import messages
-    with messages._lock:
-        for a, b in ((inviter, uid), (uid, inviter)):   # only matters with "nur ausgewählte"; never past a block
-            d = messages._load(a)
-            if b not in d["allow"] and b not in d["block"]:
-                d["allow"] = (d["allow"] + [b])[-messages.MAX_LIST:]
-                messages._save(a, d)
+    messages.allow_each_other(inviter, uid)   # only matters with "nur ausgewählte"; never past a block
     try:
         cid = open_one(inviter, uid, now)
     except (PermissionError, LookupError, OverflowError):
@@ -624,6 +628,69 @@ def joined_by_invite(uid, inviter, now=None):
     _mutate(cid, add, now)
     _tell(_index().get(cid, {}).get("members", []), {"type": "chat", "id": cid})
     _log("invite used")
+    return cid
+
+
+def all_sync(now=None):
+    """The fixed group Alle (chat.messages_all): its members are everybody who takes part (messages.takes_all), counted
+    anew at every look; made the first time. Returns its id, or "" while nobody takes part."""
+    import messages
+    now = time.time() if now is None else now
+    want = [u for u in profiles.user_ids() if messages.takes_all(u)] if messages.all_on() else []
+    with _lock:
+        chats = _index()
+        c = chats.get(ALL_ID)
+        if c is None:
+            if not want:
+                return ""
+            chats[ALL_ID] = {"kind": "group", "fixed": True, "members": want, "admins": [], "by": "", "t": now,
+                             "updated": now, "vanish": 0, "name": seal("Alle", ALL_ID, "name"), "last": {}, "unread": {}}
+            _save_chat(ALL_ID, {"items": []})
+            _save_index(chats)
+            _log("new chat", kind="all")
+        elif c["members"] != [u for u in c["members"] if u in want] + [u for u in want if u not in c["members"]]:
+            c["members"] = [u for u in c["members"] if u in want] + [u for u in want if u not in c["members"]]
+            for k in ("unread", "mute", "read", "got", "cleared"):
+                for u in [u for u in (c.get(k) or {}) if u not in want]:
+                    c[k].pop(u, None)
+            _save_index(chats)
+    return ALL_ID if want else ""
+
+
+def all_group(now=None):
+    """The group Alle to send into (messages.send for "Sag allen …"); LookupError while nobody takes part."""
+    cid = all_sync(now)
+    if not cid:
+        raise LookupError("Niemand nimmt gerade Nachrichten an alle an.")
+    return cid
+
+
+def put_old(sender, uid, text, t, read):
+    """One message of the old mailbox (messages.migrate, before V01.0.488) into the chat of sender and uid, at its own
+    time and marked "via Spark". The chat is made even when one of them has chats off: it is their history."""
+    if not text or not UID.fullmatch(sender or "") or not UID.fullmatch(uid or ""):
+        raise ValueError("bad old message")
+    cid = one_id(sender, uid)
+    with _lock:
+        chats = _index()
+        if cid not in chats:
+            chats[cid] = {"kind": "one", "members": sorted([sender, uid]), "admins": [], "by": sender, "t": t,
+                          "updated": t, "vanish": 0, "last": {}, "unread": {}}
+            _save_chat(cid, {"items": []})
+            _save_index(chats)
+    mid = secrets.token_hex(6)
+
+    def put(meta, d, chats):
+        d["items"].append({"id": mid, "from": sender, "t": t, "kind": "text", "text": seal(clean(text), cid, mid),
+                           "react": {}, "via": "spark"})
+        d["items"].sort(key=lambda x: float(x.get("t") or 0))
+        meta["updated"] = max(float(meta.get("updated") or 0), t)
+        if not read:
+            un = _map(meta, "unread")
+            un[uid] = int(un.get(uid) or 0) + 1
+        else:
+            _map(meta, "read")[uid] = max(float(_map(meta, "read").get(uid) or 0), t)
+    _mutate(cid, put)
     return cid
 
 
@@ -700,10 +767,20 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     if c.get("kind") == "one":
         if not others or not takes(others[0], uid):
             raise PermissionError(why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr.")
+    elif c.get("fixed"):
+        import messages
+        if not messages.all_on() or not messages.takes_all(uid):
+            raise PermissionError("Nachrichten an alle sind ausgeschaltet.")
+        why = messages.allowed_now(uid, [], "all", now)
+        if why:
+            raise OverflowError(why)
     elif c.get("kind") == "group" and not groups_on():
         raise PermissionError("Gruppen-Chats sind gerade ausgeschaltet.")
     if not _rate(uid, now):
         raise OverflowError(f"Du hast in der letzten Stunde schon {PER_HOUR} Nachrichten geschickt.")
+    if c.get("fixed"):
+        import messages
+        messages._count(uid, [], "all", now)
     mid = secrets.token_hex(6)
     item = {"id": mid, "from": uid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
     size = 0
@@ -773,6 +850,15 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
                           text or MEDIA_WORD.get(media["kind"] if media else "", ""), now)
         except Exception as e:
             _log("notify failed", error=type(e).__name__)
+        try:   # the own speaker reads it (msg_speaker) when no page of u is open; a private chat only who wrote
+            if not listening(u) and not _muted_until(meta, u, now):
+                import messages
+                if await messages.speak_now(u, name_of(uid), "" if meta.get("kind") in ("one", "priv") else
+                                            _title(cid, meta, u, {}), "" if box is not None else
+                                            " ".join(p for p in (MEDIA_WORD.get(media["kind"], "") if media else "", text) if p), now):
+                    _today()["spoken"] = _today().get("spoken", 0) + 1
+        except Exception as e:
+            _log("speaker failed", error=type(e).__name__)
     names = {x["id"]: x["name"] for x in profiles.names()}
     d = _chat(cid, meta, now)
     return _public(next(x for x in d["items"] if x["id"] == mid), cid, meta, d, uid, names)
@@ -931,8 +1017,9 @@ def members(uid, cid, add=(), remove=(), admin=(), now=None):
     """A group's admins add people (only who takes messages from them), take people out and make admins."""
     now = time.time() if now is None else now
     c = _member(uid, cid)
-    if c.get("kind") != "group":
-        raise ValueError("only groups have members to change")
+    if c.get("kind") != "group" or c.get("fixed"):
+        raise ValueError("only groups have members to change" if not c.get("fixed") else
+                         "In „Alle“ ist jeder, der Nachrichten an alle annimmt.")
     if uid not in (c.get("admins") or []):
         raise PermissionError("Nur die Admins der Gruppe ändern das.")
     if not groups_on():
@@ -978,6 +1065,12 @@ def leave(uid, cid, now=None):
     c = _member(uid, cid)
     if c.get("kind") != "group":
         raise ValueError("only groups can be left")
+    if c.get("fixed"):   # Alle: leaving is the own switch „Nachrichten an alle“ going off
+        profiles.save_settings(uid, {"msg_all": False})
+        all_sync(now)
+        _send_event(uid, {"type": "gone", "id": cid})
+        _log("left group", kind="all")
+        return
 
     def f(meta, d, chats):
         meta["members"].remove(uid)
@@ -1086,6 +1179,7 @@ def for_live(now=None):
             "groups": sum(1 for x in chats.values() if x.get("kind") == "group"), "sent": c["sent"],
             "pushed": c["pushed"], "push_failed": c["push_failed"], "streams": streams(), "media_on": media_on(),
             "private": sum(1 for x in chats.values() if x.get("kind") == "priv"), "private_sent": c.get("private", 0),
+            "all": len((chats.get(ALL_ID) or {}).get("members") or []), "spoken": c.get("spoken", 0),
             **_private_live(),
             "media": c.get("media", 0), "media_mb": round(sum(sum(int(v or 0) for v in (x.get("bytes") or {}).values())
                                                                for x in chats.values()) / 1024**2)}
@@ -1222,15 +1316,35 @@ def a_file(data, name):
             "info": {"mime": mime, "ext": ext, "size": len(data), "bytes": len(data), "name": _file_name(name, ext)}}
 
 
+def _ffmpeg(data, args, secs, timeout=60):
+    """ffmpeg on a recording; secs cuts it (a small compressed file must not unpack to hours of sound)."""
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        src, dst = os.path.join(d, "in"), os.path.join(d, "out")
+        with open(src, "wb") as f:
+            f.write(data)
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", src,
+                            "-t", str(secs)] + args + [dst], capture_output=True, timeout=timeout)
+        if p.returncode != 0:
+            raise ValueError("this recording cannot be read")
+        with open(dst, "rb") as f:
+            return f.read()
+
+
+async def _transcribe(pcm):
+    import esp32
+    return clean(await esp32.transcribe(pcm), 2000).replace("\n", " ")
+
+
 async def voice(data):
     """A recorded voice message (browser, app): at most 5 minutes, kept as AAC; the speech recognition on the
     Spark writes what was said underneath (sealed like a text). Kept as AAC: it plays everywhere, also on iPhones."""
-    import messages
     if not data or len(data) > MAX_VOICE_IN:
         raise ValueError("Die Aufnahme ist zu groß.")
     try:
-        pcm = await asyncio.to_thread(messages._ffmpeg, data, ["-ac", "1", "-ar", "16000", "-f", "s16le"], MAX_VOICE_SECS, 180)
-        aac = await asyncio.to_thread(messages._ffmpeg, data, ["-ac", "1", "-ar", "24000", "-c:a", "aac", "-b:a", "32k", "-f", "adts"],
+        pcm = await asyncio.to_thread(_ffmpeg, data, ["-ac", "1", "-ar", "16000", "-f", "s16le"], MAX_VOICE_SECS, 180)
+        aac = await asyncio.to_thread(_ffmpeg, data, ["-ac", "1", "-ar", "24000", "-c:a", "aac", "-b:a", "32k", "-f", "adts"],
                                       MAX_VOICE_SECS, 180)
     except Exception:
         raise ValueError("Die Aufnahme lässt sich nicht lesen.")
@@ -1239,7 +1353,7 @@ async def voice(data):
         raise ValueError("Die Aufnahme ist zu kurz.")
     text = ""
     try:
-        text = await messages._transcribe(pcm[:MAX_VOICE_SECS * 32000])
+        text = await _transcribe(pcm[:MAX_VOICE_SECS * 32000])
     except Exception as e:
         _log("voice text failed", error=type(e).__name__)
     return {"kind": "voice", "parts": {"f": aac}, "text": text,
@@ -1277,32 +1391,66 @@ def media(uid, cid, mid, part="f"):
 
 
 # ---------------------------------------------------------------- the assistant ("Was hat Anna geschrieben?")
-def for_model(uid, now=None, most=10):
-    """Unread chat messages as lines for message_read (outside text, see messages.tool), marked read."""
+def _line(x, cid, c, names, where):
+    if x.get("kind") == "box":   # the Spark cannot read it, so it says only that it is there
+        return f"Chat von {names.get(x['from'], '?')}{where}: [🔒 private Nachricht, nur auf deinen Geräten lesbar]"
+    word = MEDIA_WORD.get(x.get("kind"), "")
+    return f"Chat von {names.get(x['from'], '?')}{where}: " + " ".join(
+        p for p in (f"[{word}]" if word else "", unseal(x.get("text"), cid, x["id"])) if p)
+
+
+def for_model(uid, now=None, most=10, old=False):
+    """Unread chat messages as (t, sender, line, new) for message_read (outside text, see messages.tool), marked read.
+    old: nothing unread, so the last ones already read (not marked again)."""
     now = time.time() if now is None else now
     if not usable(uid):
         return []
     names = {x["id"]: x["name"] for x in profiles.names()}
-    lines = []
+    lines, seen = [], []
     for cid, c in mine(uid).items():
-        if not int((c.get("unread") or {}).get(uid) or 0):
-            continue
-        d = _chat(cid, c, now)
-        since = max(float(_map(c, "read").get(uid) or 0), float(_map(c, "cleared").get(uid) or 0))
-        new = [x for x in d["items"] if x["t"] > since and x["from"] != uid
-               and x.get("kind") in ("text", "box") + MEDIA and not x.get("gone")]
+        d = None
         where = "" if c.get("kind") in ("one", "priv") else f" in der Gruppe {_title(cid, c, uid, names)}"
-        for x in new[-most:]:
-            if x.get("kind") == "box":   # the Spark cannot read it, so it says only that it is there
-                lines.append((x["t"], x["from"], f"Chat von {names.get(x['from'], '?')}: [🔒 private Nachricht, "
-                              "nur auf deinen Geräten lesbar]"))
-                continue
-            word = MEDIA_WORD.get(x.get("kind"), "")
-            lines.append((x["t"], x["from"], f"Chat von {names.get(x['from'], '?')}{where}: "
-                          + " ".join(p for p in (f"[{word}]" if word else "", unseal(x.get("text"), cid, x["id"])) if p)))
-        read(uid, cid, now)
+        cleared = float(_map(c, "cleared").get(uid) or 0)
+        if int((c.get("unread") or {}).get(uid) or 0):
+            d = _chat(cid, c, now)
+            since = max(float(_map(c, "read").get(uid) or 0), cleared)
+            new = [x for x in d["items"] if x["t"] > since and x["from"] != uid
+                   and x.get("kind") in ("text", "box") + MEDIA and not x.get("gone")]
+            lines += [(x["t"], x["from"], _line(x, cid, c, names, where), True) for x in new[-most:]]
+            read(uid, cid, now)
+        elif old:
+            d = _chat(cid, c, now)
+            seen += [(x["t"], x["from"], _line(x, cid, c, names, where), False) for x in d["items"]
+                     if x["t"] > cleared and x["from"] != uid and x.get("kind") in ("text", "box") + MEDIA
+                     and not x.get("gone")][-most:]
     lines.sort()
+    if not lines and old:
+        seen.sort()
+        return seen[-most:]
     return lines[-most:]
+
+
+def waiting(uid, since, now=None):
+    """[(who, where, text)] of the unread chat messages from others after since, oldest first, for the own speaker
+    (messages.speaker_waiting): muted chats left out, a private chat's text never (the Spark cannot read it)."""
+    now = time.time() if now is None else now
+    if not usable(uid):
+        return []
+    names = {x["id"]: x["name"] for x in profiles.names()}
+    out = []
+    for cid, c in mine(uid).items():
+        if not int((c.get("unread") or {}).get(uid) or 0) or _muted_until(c, uid, now):
+            continue
+        after = max(since, float(_map(c, "read").get(uid) or 0), float(_map(c, "cleared").get(uid) or 0))
+        where = "" if c.get("kind") in ("one", "priv") else _title(cid, c, uid, names)
+        for x in _chat(cid, c, now)["items"]:
+            if x["t"] <= after or x["from"] == uid or x.get("gone") or x.get("kind") not in ("text", "box") + MEDIA:
+                continue
+            text = "" if x.get("kind") == "box" else " ".join(p for p in (MEDIA_WORD.get(x.get("kind"), ""),
+                                                                       unseal(x.get("text"), cid, x["id"])) if p)
+            out.append((x["t"], names.get(x["from"], ""), where, text))
+    out.sort()
+    return [x[1:] for x in out]
 
 
 # ---------------------------------------------------------------- API
@@ -1378,7 +1526,9 @@ def _err(e):
 
 def _state(uid):
     s = profiles.settings(uid)
-    return {"enabled": admin_on(), "on": usable(uid), "groups": groups_on(), "chats": listing(uid),
+    import messages
+    return {"speakers": [{"id": x["id"], "name": x["name"]} for x in messages.speakers_for(uid)],
+            "all": messages.all_on() and messages.takes_all(uid), "enabled": admin_on(), "on": usable(uid), "groups": groups_on(), "chats": listing(uid),
             "contacts": contacts(uid), "max_text": MAX_TEXT, "reactions": list(REACTIONS),
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
             "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),

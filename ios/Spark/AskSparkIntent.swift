@@ -104,8 +104,9 @@ struct StoreDocumentIntent: AppIntent {
     }
 }
 
-/// "Nachricht an …": a message to someone of this Spark, without the language model. The name must match
-/// one of the profiles that take messages from you (the Spark's list); before sending Siri asks once more.
+/// "Nachricht an …": a chat message to someone of this Spark, without the language model. The name must match
+/// one of the profiles that take messages from you (the Spark's contacts); before sending Siri asks once more.
+/// It lands in the 1:1 chat (opened when there is none yet), "alle" in the fixed group "Alle".
 struct SendMessageIntent: AppIntent {
     static var title: LocalizedStringResource = "Nachricht über den Spark"
     static var description = IntentDescription("Schickt jemandem dieses Sparks eine kurze Nachricht.")
@@ -121,24 +122,30 @@ struct SendMessageIntent: AppIntent {
         guard let api = SparkAPI.current else {
             throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt."))
         }
-        guard let box = try await api.messages() else {
-            let why = (try? await api.messagesReady())?.why
-            throw SparkError(message: why ?? String(localized: "Nachrichten sind für dein Profil aus."))
-        }
-        let to = try await Self.resolve(recipient, box: box, ask: { names in
+        let s = try await api.chats()
+        guard s.enabled else { throw SparkError(message: String(localized: "Chats sind auf dem Spark ausgeschaltet.")) }
+        guard s.on else { throw SparkError(message: String(localized: "Chats sind für dein Profil aus.")) }
+        let to = try await Self.resolve(recipient, list: s.contacts, all: s.all, ask: { names in
             try await $recipient.requestDisambiguation(among: names, dialog: IntentDialog("Wen meinst du?"))
         })
-        let t = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(box.maxText))
+        let t = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(s.maxText))
         guard !t.isEmpty else { throw SparkError(message: String(localized: "Die Nachricht ist leer.")) }
         try await requestConfirmation(result: .result(dialog: "Nachricht an \(to.name): „\(t)“. Senden?"))
-        try await api.sendMessage(to: to.id, text: t)
+        if to.id == "all" {
+            guard let c = s.chats.first(where: { $0.fixed }) else {
+                throw SparkError(message: String(localized: "Gerade nimmt niemand Nachrichten an alle an."))
+            }
+            try await api.chatSend(c.id, text: t)
+        } else {
+            try await api.chatSend(try await api.chatOpen(to: to.id), text: t)
+        }
         return .result(dialog: "Gesendet.")
     }
 
     /// The recipient from the spoken name. Several fit (two "Thomas"): Siri asks which one among at most
     /// four, and the answer must be one of them. Never a list of every name: at most three similar ones.
-    static func resolve(_ said: String, box: MessageBox, ask: ([String]) async throws -> String) async throws -> Recipient {
-        switch match(said, box.to, all: box.all) {
+    static func resolve(_ said: String, list: [Recipient], all: Bool, ask: ([String]) async throws -> String) async throws -> Recipient {
+        switch match(said, list, all: all) {
         case .one(let r):
             return r
         case .several(let list):
@@ -150,8 +157,8 @@ struct SendMessageIntent: AppIntent {
         case .tooMany(let n):
             throw SparkError(message: String(localized: "Zu viele passen (\(n)). Sag den ganzen Namen oder den Rufnamen."))
         case .none:
-            guard !box.to.isEmpty else { throw SparkError(message: String(localized: "Gerade nimmt niemand Nachrichten von dir an.")) }
-            let near = similar(said, box.to)
+            guard !list.isEmpty else { throw SparkError(message: String(localized: "Gerade nimmt niemand Nachrichten von dir an.")) }
+            let near = similar(said, list)
             throw SparkError(message: near.isEmpty
                 ? String(localized: "Den Namen finde ich nicht.")
                 : String(localized: "Den Namen finde ich nicht. Ähnlich: \(near.joined(separator: ", "))."))

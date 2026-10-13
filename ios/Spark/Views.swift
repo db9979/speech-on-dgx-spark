@@ -219,7 +219,6 @@ struct ChatView: View {
             .sheet(isPresented: $today) { TodayView() }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
-            .sheet(isPresented: $talk.showMessages, onDismiss: { Task { await talk.refreshMessages() } }) { MessagesView() }
             .sheet(isPresented: $chatsOpen, onDismiss: { Task { await chats.load() } }) { ChatsView() }
             .task {
                 guard Demo.scene == nil else { return }

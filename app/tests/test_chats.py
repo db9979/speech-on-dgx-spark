@@ -43,8 +43,8 @@ def uid_of(client):
     return client.get("/api/whoami").json()["profile"]["id"]
 
 
-def switch(chats_on=True, groups=False, msgs=True):
-    helpers.set_config(messages=msgs, chats=chats_on, chats_groups=groups)
+def switch(chats_on=True, groups=False):
+    helpers.set_config(chats=chats_on, chats_groups=groups)
 
 
 def open_with(a, b):
@@ -63,7 +63,7 @@ class Base(unittest.TestCase):
         chats._sent.clear()
 
     def tearDown(self):
-        helpers.set_config(messages=False, chats=False, chats_groups=False)
+        helpers.set_config(chats=False, chats_groups=False, messages_all=False, messages_announce=False)
         chats._subs.clear()
 
 
@@ -332,7 +332,7 @@ class Assistant(Base):
         ub, ua = uid_of(b), uid_of(a)
         names, why = asyncio.run(messages.send(ua, [ub], "Das Essen ist fertig"))
         self.assertEqual((names, why), (["Chhugo"], ""))
-        self.assertEqual(messages._load(ub)["items"], [])            # not into the mailbox
+        self.assertNotIn("items", messages._raw(ub))                 # there is no mailbox any more
         cid = chats.one_id(ua, ub)
         x = b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]
         self.assertEqual((x["text"], x["via"]), ("Das Essen ist fertig", "spark"))
@@ -400,14 +400,14 @@ class Media(Base):
     def setUp(self):
         super().setUp()
         helpers.set_config(chats_media=True)
-        self._tr = messages._transcribe
+        self._tr = chats._transcribe
 
         async def tr(pcm):
             return "Bin gleich da"
-        messages._transcribe = tr
+        chats._transcribe = tr
 
     def tearDown(self):
-        messages._transcribe = self._tr
+        chats._transcribe = self._tr
         helpers.set_config(chats_media=False)
         super().tearDown()
 

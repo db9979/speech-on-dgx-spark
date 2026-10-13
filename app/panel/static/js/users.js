@@ -15,7 +15,7 @@ const dkind=x=>x.speaker?t('Lautsprecher, eingerichtet unter Ich → Lautspreche
 function profFilter(){if($('pfilter').dataset.done)return;$('pfilter').dataset.done='1';
   const o=(v,l)=>`<option value="${v}">${esc(l)}</option>`;
   $('pfilter').innerHTML=`<input id="pq" type="search" placeholder="${esc(t('Suchen: Name, Rufname oder Gerät','Search: name, call name or device'))}" style="flex:2;min-width:140px" maxlength="40">
-    <select id="pshow" style="width:auto">${o('',t('alle','all'))}${o('idle',t('seit 90 Tagen nicht benutzt','not used for 90 days'))}${o('nodev',t('ohne Gerät','without a device'))}${o('mfa',t('mit zweitem Schritt','with second step'))}${o('nomfa',t('ohne zweiten Schritt','without second step'))}${o('msg',t('Nachrichten an','messages on'))}${o('nomsg',t('Nachrichten aus','messages off'))}${o('room',t('hört gerade zu','listening right now'))}</select>
+    <select id="pshow" style="width:auto">${o('',t('alle','all'))}${o('idle',t('seit 90 Tagen nicht benutzt','not used for 90 days'))}${o('nodev',t('ohne Gerät','without a device'))}${o('mfa',t('mit zweitem Schritt','with second step'))}${o('nomfa',t('ohne zweiten Schritt','without second step'))}${o('room',t('hört gerade zu','listening right now'))}</select>
     <select id="psort" style="width:auto">${o('name',t('nach Name','by name'))}${o('recent',t('zuletzt benutzt zuerst','last used first'))}${o('new',t('neueste zuerst','newest first'))}</select>`;
   $('pq').oninput=()=>{clearTimeout(PL.timer);PL.timer=setTimeout(()=>{PL.q=$('pq').value;PL.page=0;loadProf()},250)};
   $('pshow').onchange=()=>{PL.show=$('pshow').value;PL.page=0;loadProf()};$('psort').onchange=()=>{PL.sort=$('psort').value;PL.page=0;loadProf()}}

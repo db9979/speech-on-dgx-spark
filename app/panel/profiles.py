@@ -109,7 +109,7 @@ def last_use(uid, last=None, devs=None):
     return max(ts)
 
 
-ADMIN_SHOW = ("", "mfa", "nomfa", "msg", "nomsg", "idle", "nodev", "room")
+ADMIN_SHOW = ("", "mfa", "nomfa", "idle", "nodev", "room")
 ADMIN_SORT = ("name", "recent", "new")
 ADMIN_PER = 100      # at most this many profiles per page of the admin list
 IDLE_DAYS = 90
@@ -146,10 +146,9 @@ def admin_list(q="", show="", sort="name", page=0, per=None, now=None, extra=Non
             row.update(extra(u["id"]))
             if not row.get("room"):
                 continue
-        if show in ("mfa", "nomfa", "msg", "nomsg"):
+        if show in ("mfa", "nomfa"):
             row.update(extra(u["id"]))
-            key = "mfa" if "mfa" in show else "msg"
-            if bool(row.get(key)) != (not show.startswith("no")):
+            if bool(row.get("mfa")) != (not show.startswith("no")):
                 continue
         users.append(row)
     if sort == "recent":
@@ -504,11 +503,6 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben",
              # Spark updates (appupdate.py): rights only from the admin, starting needs a fresh code
              "/api/iphone/update",
-             # messages between profiles (messages.py; who may write to me stays in the browser)
-             "/api/messages", "/api/messages/poll", "/api/messages/send", "/api/messages/voice",
-             "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
-             "/api/messages/audio", "/api/messages/ready",
-             "/api/messages/fav",     # ★ in the recipient picker (the Rufname stays in the browser)
              # chats (chats.py): the list, a chat's messages, writing, reacting, groups, the event stream
              "/api/chats", "/api/chats/items", "/api/chats/open", "/api/chats/group", "/api/chats/send", "/api/chats/edit",
              "/api/chats/back", "/api/chats/react", "/api/chats/read", "/api/chats/typing", "/api/chats/opts",
@@ -896,10 +890,10 @@ SETTINGS = {
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"
-    # messages between profiles (messages.py): off until the profile switches them on
-    "msg_on": (False, lambda v: isinstance(v, bool)),
+    # what the chats brought along from "Nachrichten" (messages.py, V01.0.488): who may write to me, the group Alle,
+    # new chat messages read on my speakers, announcements of others on my speakers
     "msg_from": ("all", lambda v: v in ("all", "chosen")),   # every profile, or only the ones picked
-    "msg_all": (True, lambda v: isinstance(v, bool)),        # also messages "an alle"
+    "msg_all": (False, lambda v: isinstance(v, bool)),       # in the group Alle („Nachricht an alle“)
     "msg_speaker": ("off", lambda v: v in ("off", "hint", "text")),   # say new ones on my speakers
     "msg_announce": (False, lambda v: isinstance(v, bool)),  # announcements of others on my speakers
     # chats (chats.py): off until the profile switches them on; "gelesen" shown both ways, the text in notifications

@@ -14,7 +14,7 @@ struct TodayView: View {
                 if let error {
                     Text(error).foregroundStyle(.red)
                 } else if loaded && cards.isEmpty {
-                    Text("Hier erscheint, was heute dran ist, sobald der Admin Kalender, Erinnerungen, Nachrichten oder Dokumente für dich einschaltet.")
+                    Text("Hier erscheint, was heute dran ist, sobald der Admin Kalender, Erinnerungen, Chats oder Dokumente für dich einschaltet.")
                         .foregroundStyle(.secondary)
                 }
                 if let cal = cards["calendar"] as? [String: Any] { calendar(cal) }
@@ -25,7 +25,7 @@ struct TodayView: View {
                 }
                 if let m = cards["messages"] as? [String: Any] {
                     let n = m["unread"] as? Int ?? 0
-                    row("envelope", String(localized: "Nachrichten"), "\(n)", n > 0 ? String(localized: "ungelesen") : String(localized: "Alles gelesen"))
+                    row("bubble.left.and.bubble.right", String(localized: "Chats"), "\(n)", n > 0 ? String(localized: "ungelesen") : String(localized: "Alles gelesen"))
                 }
                 if let d = cards["documents"] as? [String: Any] {
                     let w = d["waiting"] as? Int ?? 0
