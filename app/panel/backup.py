@@ -80,6 +80,51 @@ STATE_FILES = {
     "features-seen.json": "json",   # when each function was first on ("Neu, noch nie an", features.py)
     "join.json": "json",            # new people by invitation: the switch, invitations (code hashes), packs (join.py)
 }
+# every other file or folder in state/, with the reason it stays out of a backup (Zustand → Technik, technik.py;
+# test_technik finds each name the code writes there and wants it here or in STATE_FILES)
+STATE_LOCAL = {
+    "secret.key": "Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)",
+    "panel-password": "kommt einzeln in die Sicherung (eigener Weg in create)",
+    "admin-session.key": "Schlüssel der Admin-Sitzung: nach einem Umzug neu anmelden",
+    "vorrang-key": "Schlüssel zwischen Panel und Sprachdiensten, entsteht neu",
+    "guard.json": "Sperren nach Fehlversuchen, kurzlebig",
+    "revoked.json": "widerrufene Sitzungen, kurzlebig",
+    "guard-xff-hinted.json": "Hinweis gezeigt",
+    "audit.log": "Protokoll dieses Geräts",
+    "traces.jsonl": "Anfrage-Verlauf, 48 h",
+    "latency.json": "Statistik",
+    "livecheck.json": "letzte Echtprüfung",
+    "live-monitors.json": "Wandmonitore dieses Geräts",
+    "dienste-zustand.json": "Zustand der Hintergrund-Dienste",
+    "weiche-stats.json": "Statistik",
+    "weiche-history.json": "Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)",
+    "bewertungen.json": "Zähler pro Tag",
+    "quality.json": "letztes Ergebnis",
+    "config-undo.json": "Rückgängig dieses Geräts",
+    "tipps.json": "gezeigte Tipps",
+    "iphone-update.json": "Hinweise zum Update, entstehen neu",
+    "vision.json": "Ergebnisse von Bildfragen, 10 Minuten",
+    "doc-embed.json": "Zustand des Vektormodells",
+    "notaus.json": "Notaus gilt nur auf diesem Gerät",
+    "notaus-mine.json": "Notaus gilt nur auf diesem Gerät",
+    "notaus-keys.json": "Auslöser gelten nur auf diesem Gerät",
+    "meldung-token.json": "Token wird neu eingetragen",
+    "meldungen": "Entwürfe, kurzlebig",
+    "ack": "Ton-Cache, entsteht neu",
+    "android": "Download-Cache",
+    "begleiter": "Download-Cache",
+    "begleiter-inbox": "Dateien vom Handy, 24 h",
+    "speicher-tmp": "Zwischenablage",
+    "speech-active": "Zeitmarke",
+    "speech-spark-asr-engine.json": "Zustand der Engine",
+    "speech-spark-tts-*.json": "Zustand der Engines",
+    "bench-latest.json": "Messung dieses Geräts",
+    "bench-history.json": "Messungen dieses Geräts",
+    "update-progress.json": "Update-Fortschritt",
+    "update-target": "Update-Auftrag",
+    "update-night.json": "Nacht-Update",
+    "migrated-chunk10": "Marke einer einmaligen Umstellung",
+}
 MAX_STATE_FILE = 8 * 1024**2
 MOVE_FILE = "move-keys.json"
 MOVE_MIN, MOVE_MAX = 12, 200        # password length

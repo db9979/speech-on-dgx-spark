@@ -15,6 +15,7 @@
 <script src="/static/js/theme.js"></script>
 <link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/weiche.css">
+<link rel="stylesheet" href="/static/technik.css">
 <link rel="stylesheet" href="/static/live.css">
 <link rel="stylesheet" href="/static/appview.css">
 </head>
@@ -819,6 +820,12 @@
     <div class="ld-split"><div class="ld-list" id="vblist"></div><div class="ld-detail" id="vbdetail" hidden></div></div></div>
   <div class="mut" id="vbmsg"></div>
 </div></section>
+<section id="tech"><div class="card ld-box" id="tkbox">
+  <div class="ld-head"><h2>Technik</h2></div>
+  <div class="pintro">Wie der Spark gebaut ist: die Teile, der Weg einer Anfrage und wo welche Daten liegen. Aus dem Code der installierten Version.</div>
+  <div class="ltabs" id="tktabs" role="tablist"><button type="button" class="on" data-tkv="bild">Überblick</button><button type="button" data-tkv="fluss">Datenfluss</button><button type="button" data-tkv="speicher">Speicherorte</button><button type="button" data-tkv="module">Bausteine</button></div>
+  <div id="tkview" class="tk-view"></div>
+</div></section>
 <section id="logs">
   <div class="card lcard">
     <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="req" id="logreqtab" hidden>Anfragen</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update-Verlauf</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
@@ -1070,6 +1077,7 @@
 <script src="/static/js/changelog.js"></script>
 <script src="/static/js/melden.js"></script>
 <script src="/static/js/weiche.js"></script>
+<script src="/static/js/technik.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>
 <script src="/static/js/start.js"></script>

@@ -32,6 +32,7 @@ Applies to every thread and every person who changes code in Speech on DGX Spark
 9. **For every protection rule there is a self-test.** Tests do not depend on the time of day and also run in a copy that contains only `app/`.
 10. **Every push** goes through the push queue: whoever is on top pushes at once (even while a test run is running), first `git pull --rebase`, next free version number, self-tests green.
 11. **Every version** gets a line in CHANGELOG and README, the details are in `docs/de` and `docs/en`. The README stays short.
+12. **The docs are current with every change** (Dominik 2026-10-13). Every change updates docs, help and architecture docs in the same commit. Whatever can be derived from the code (parts, the way of a request, storage places) is generated and checked by a self-test, not kept by hand.
 
 ---
 
@@ -57,7 +58,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 12 | **Interface** | Only use the building blocks from part 6. No inline code. Every text is in `i18n.js`. Every settings row with a field has a help entry (`sw:`/`me:`). Where it fits, a line goes into the search (Ctrl K, automatically via the building blocks) and a line into `glanceText()` (At a glance). | 🧪 test_guides.BuildingBlocks, test_bedienung_hilfe, test_scanner (CSP), test_ui_browser |
 | 13 | **Guide and help** | A guide in `guides.js` with the 7 sections (what, you need, set up, say, leaves the house, off, if not). After doc changes run `python3 app/panel/hilfe.py --docs`. Questions that should be found go as a case into `test_hilfe_quality.py`. Where it fits, a tip goes into `tipps.py` (GAPS) and a card into Me → Today (`today.py`). | 🧪 test_guides (every switch has a guide), test_hilfe (index current), test_hilfe_quality (≥ 60 questions) |
 | 14 | **Hints with a way** | "Switch on under Features → …" starts with a menu name and names the steps with today's names. `way.js` turns this into a link by itself. This applies **everywhere**: in the iPhone and Android app, companion, Telegram and push as a link `…/#weg=<way>`. If a page or row is renamed, all ways are updated in the same commit. Hints without a way get a jump target: every hint at the top of the admin pages (`health.alerts`) carries `go` with a way and shows "View" (since V01.0.447). | 🧪 test_sprunglinks (panel, notes on top); apps, companion and Telegram: test_sprunglinks.Outside |
-| 15 | **Backup** | A new file in `state/` with settings goes into `backup.STATE_FILES`. Secrets live only in the vault. | 📝 (single files 🧪) |
+| 15 | **Backup** | A new file in `state/` with settings goes into `backup.STATE_FILES`, any other with its reason into `backup.STATE_LOCAL` (left out of the backup). Secrets live only in the vault. | 🧪 test_technik.Storage |
 | 16 | **Update and services** | A new module that ASR or TTS services import goes into `app/restart-map`. A new package goes with hash into `requirements-panel.lock`. A new systemd unit gets `MemoryMax=` and `PrivateTmp=yes`. A page that belongs in the panel goes into the static allowlist of `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
 | 17 | **Admin log and undo** | Admin changes to the configuration run via `undo.py` (without secrets). Sensitive switches go into `SENSITIVE`. | 📝 |
 | 18 | **Apps** | The iPhone app reads names and rights from `/api/features` and `/api/admin/switches`, never from a list of its own. Update Android and the companion as needed. | 🧪 test_features.test_swift_keeps_no_list |
@@ -72,6 +73,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 27 | **Tool name** | Every new tool (for the model, as a panel step or over MCP) gets a readable name de/en in `werkzeuge.NAMES` in the same commit, then `python3 app/panel/werkzeuge.py --js`. Pages show tools only through `wzName` (copies for threads through `wzFull`, with the internal name in brackets), the panel through `werkzeuge.label`/`full`; never the internal name alone. | 🧪 test_werkzeuge |
 | 28 | **Deeds** | Every tool that changes something (switching, entering, sending, creating, remembering) gets its kind in `taten.KIND`. Only then does the action check test sentences like "is on now" against its result; the error loop stop holds for every tool anyway. A result that did not work starts with one of the fixed words in `taten.FAILED` ("Not done", "Fehler" …), a proposal still to be confirmed with "NOT saved yet" or "NOT done yet". | 🧪 test_taten (tools with a kind) |
 | 29 | **Tool coverage** | Every function in `features.py` stands in `werkzeug_abdeckung.py` in the same commit: with its tools (`TOOLS`), with the panel's fixed rule that answers it (`RULES`), or with the reason there is nothing to ask for (`WITHOUT`). Every tool for the model sits in a Weiche group, in `intent.NARROW_KEEP` or, when its module offers it only on the person's own word, in `BY_WORD` with `keep` in its `offer()`; otherwise the Weiche drops it when narrowing. Every tool of a group has a typical sentence in `SENTENCES` that leads there, and every new tool runs once for real in a self-test. (Dominik 2026-10-13: "check whether there are tools for all services and information") | 🧪 test_werkzeug_abdeckung |
+| 30 | **Architecture docs** | The architecture docs (`docs/de/architektur.md`, `docs/en/architecture.md`, panel Status → Architecture) come from `technik.py`. A new module gets its group and a line in `technik.MODULE`; a new file in `state/` goes into `backup.STATE_FILES` or `STATE_LOCAL`, a new file under `users/` into `speicher.AREAS`, `LOCAL` or `technik.USERS_SONST`, each with a line in `technik.INHALT`; a sealed file goes into `technik.VERSCHLUESSELT`. If the way of a request changes, `KNOTEN`, `KANTEN` and `SCHRITTE` follow. Then `python3 app/panel/hilfe.py --docs`. | 🧪 test_technik |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
@@ -307,6 +309,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Per version** one line at the top of `CHANGELOG.md` in the format `- **V01.0.NNN** · YYYY-MM-DD · Text` (otherwise it is missing from "What's new") and in both READMEs; the oldest line drops out. (PA; 🧪 test_changelog only checks the format)
   - VERSION, the newest CHANGELOG line and the first line of both READMEs match, each README has exactly 10 lines. (🧪 test_richtlinie.Versions)
 - **Details** are only in `docs/de/*.md` and `docs/en/*.md`, both languages structured the same way. Then run `hilfe.py --docs`. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
+- **Docs always current** (Dominik 2026-10-13): every change updates docs, help and architecture docs in the same commit. The blocks between `<!-- technik:… -->` in `architektur.md`/`architecture.md` are written from the code by `hilfe.py --docs`; never edit them by hand. (PA; 🧪 test_technik.Docs)
 - **Plans** live under `/mnt/project-files/plaene/` with "Status" ("Stand": date, version), ★ for the recommendation and "Questions for Dominik" ("Fragen an Dominik"). Pictures come from the real panel or from mockups. (P)
 
 ---
@@ -354,6 +357,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_workflows, test_lock, test_lieferkette | pinned actions, permissions, signing environment, package hashes, ffmpeg whitelist |
 | test_selftest_runner | one second attempt, > 5 no attempt, warning |
 | test_rauchtest | every module loads, `restart-map` complete |
+| test_technik | every module, every file in `state/` and `users/` in the architecture docs and in the backup or local list, doc blocks current, Architecture page admin only |
 | test_changelog | CHANGELOG format |
 | test_releases_aufraeumen | only the newest release per series |
 | test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
@@ -362,7 +366,6 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - push order
 - independence of the time of day in general
 - log prefix
-- `STATE_FILES` for new files
 - `undo.py` / `SENSITIVE`
 - field test item
 - "data never via innerHTML" (general)

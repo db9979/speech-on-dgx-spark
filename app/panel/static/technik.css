@@ -1,0 +1,36 @@
+/* Zustand → Technik (technik.js): the picture as an SVG with the detail beside it (below it on phones), steps as
+   chips, storage places as "Liste mit Detailbereich" (ld-). Colours only from the theme (--acc, --acc2, --line …). */
+#tkbox .ltabs{margin:10px 0 12px}
+.tk-view{min-width:0}
+.tk-split{display:block}
+.tk-pic{overflow-x:auto;border:1px solid var(--line);border-radius:14px;padding:8px;background:var(--card)}
+.tk-svg{display:block;width:100%;min-width:640px;height:auto}
+.tk-det{margin-top:12px}
+@container (min-width:900px){.tk-split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}.tk-det{margin-top:0;position:sticky;top:0}}
+.tk-grp{fill:color-mix(in srgb,var(--line) 30%,transparent);stroke:var(--line);stroke-dasharray:4 4}
+.tk-glab{fill:var(--mut);font:600 10.5px var(--font,system-ui);letter-spacing:.07em;text-transform:uppercase}
+.tk-edge{stroke:var(--line);stroke-width:1.6;fill:none}
+.tk-edge.on{stroke:var(--acc2);stroke-width:2.6;stroke-dasharray:7 5;animation:tkflow 1s linear infinite}
+@keyframes tkflow{to{stroke-dashoffset:-24}}
+@media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none}}
+.tk-node{cursor:pointer}
+.tk-node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
+.tk-node text{fill:var(--fg);font:600 12.5px var(--font,system-ui)}
+.tk-node .tk-sub{fill:var(--mut);font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
+.tk-node:hover rect,.tk-node:focus-visible rect{stroke:var(--acc)}
+.tk-node:focus{outline:none}
+.tk-node.sel rect{stroke:var(--acc);stroke-width:2.2;fill:color-mix(in srgb,var(--acc) 9%,var(--card))}
+.tk-node.lit rect{stroke:var(--acc2);stroke-width:2.2}
+.tk-node.dim text{opacity:.4}.tk-node.dim rect{stroke-opacity:.5}
+.tk-kind{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+.tk-det p{margin:0 0 8px}
+.tk-files{display:flex;flex-wrap:wrap;gap:4px 8px;margin:4px 0 8px}
+.tk-mods{margin:6px 0}.tk-mods summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.tk-mod{display:flex;flex-direction:column;gap:1px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tk-mod span{color:var(--mut)}
+.tk-steps .ld-chip b{opacity:1;margin:0 2px 0 0}
+.tk-cnt{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tk-gtext{font-size:12.5px;padding:0 8px 4px}
+.tk-ver{font-size:12px;margin-top:10px}
+/* phones: a chosen storage place opens as its own page, "Zurück zur Liste" goes back (like ld-sel) */
+@container (max-width:659.98px){#tkbox.tk-sel>:not(#tkview),#tkbox.tk-sel #tkview>:not(.ld-split),#tkbox.tk-sel .ld-list{display:none}}

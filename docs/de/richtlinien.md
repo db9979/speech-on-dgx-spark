@@ -32,6 +32,7 @@ Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ände
 9. **Für jede Schutzregel gibt es einen Selbsttest.** Tests hängen nicht von der Uhrzeit ab und laufen auch in einer Kopie, die nur `app/` enthält.
 10. **Vor jedem Push** über die Push-Warteschlange: wer oben steht, pusht sofort (auch während ein Testlauf läuft), vorher `git pull --rebase`, nächste freie Versionsnummer, Selbsttests grün.
 11. **Jede Version** bekommt eine Zeile in CHANGELOG und README, die Details stehen in `docs/de` und `docs/en`. Die README bleibt kurz.
+12. **Die Doku ist bei jeder Änderung aktuell** (Dominik 2026-10-13). Jede Änderung zieht im selben Commit Doku, Hilfe und Architektur-Doku mit. Was sich aus dem Code ableiten lässt (Bausteine, Weg einer Anfrage, Speicherorte), wird erzeugt und von einem Selbsttest geprüft, nicht von Hand gepflegt.
 
 ---
 
@@ -57,7 +58,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 12 | **Oberfläche** | Nur die Bausteine aus Teil 6 verwenden. Kein Inline-Code. Jeder Text steht in `i18n.js`. Jede Einstellungszeile mit Feld hat einen Hilfe-Eintrag (`sw:`/`me:`). Wo es passt, kommt eine Zeile in die Suche (Strg K, automatisch über die Bausteine) und eine Zeile in `glanceText()` (Auf einen Blick). | 🧪 test_guides.BuildingBlocks, test_bedienung_hilfe, test_scanner (CSP), test_ui_browser |
 | 13 | **Anleitung und Hilfe** | Eine Anleitung in `guides.js` mit den 7 Abschnitten (was, brauchst, einrichten, sagen, verlässt das Haus, aus, wenn nicht). Nach Doku-Änderungen `python3 app/panel/hilfe.py --docs` ausführen. Fragen, die gefunden werden sollen, kommen als Fall in `test_hilfe_quality.py`. Passt es, kommt ein Tipp in `tipps.py` (GAPS) und eine Karte in Ich → Heute (`today.py`). | 🧪 test_guides (jeder Schalter hat eine Anleitung), test_hilfe (Index aktuell), test_hilfe_quality (≥ 60 Fragen) |
 | 14 | **Hinweise mit Weg** | „Einschalten unter Funktionen → …“ beginnt mit einem Menünamen und nennt die Schritte mit den heutigen Namen. `way.js` macht daraus von selbst einen Link. Das gilt **überall**: in iPhone- und Android-App, Begleiter, Telegram und Push als Link `…/#weg=<Weg>`. Wird eine Seite oder Zeile umbenannt, werden alle Wege im selben Commit mitgezogen. Hinweise ohne Weg bekommen ein Sprungziel: jeder Hinweis oben auf den Admin-Seiten (`health.alerts`) trägt `go` mit einem Weg und zeigt „Ansehen“ (seit V01.0.447). | 🧪 test_sprunglinks (Panel, Hinweise oben); Apps, Begleiter und Telegram: test_sprunglinks.Outside |
-| 15 | **Sicherung** | Eine neue Datei in `state/` mit Einstellungen kommt in `backup.STATE_FILES`. Geheimnisse liegen nur im vault. | 📝 (einzelne Dateien 🧪) |
+| 15 | **Sicherung** | Eine neue Datei in `state/` mit Einstellungen kommt in `backup.STATE_FILES`, jede andere mit Grund in `backup.STATE_LOCAL` (bleibt beim Sichern weg). Geheimnisse liegen nur im vault. | 🧪 test_technik.Storage |
 | 16 | **Update und Dienste** | Ein neues Modul, das ASR- oder TTS-Dienste importieren, kommt in `app/restart-map`. Ein neues Paket kommt mit Hash in `requirements-panel.lock`. Eine neue systemd-Unit bekommt `MemoryMax=` und `PrivateTmp=yes`. Eine Seite, die ins Panel gehört, kommt in die Static-Allowlist von `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
 | 17 | **Admin-Protokoll und Rückgängig** | Admin-Änderungen der Konfiguration laufen über `undo.py` (ohne Geheimnisse). Empfindliche Schalter kommen in `SENSITIVE`. | 📝 |
 | 18 | **Apps** | Die iPhone-App liest Namen und Rechte aus `/api/features` und `/api/admin/switches`, nie aus einer eigenen Liste. Android und Begleiter bei Bedarf nachziehen. | 🧪 test_features.test_swift_keeps_no_list |
@@ -72,6 +73,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 27 | **Werkzeugname** | Jedes neue Werkzeug (fürs Modell, als Panel-Schritt oder über MCP) bekommt im selben Commit einen verständlichen Namen de/en in `werkzeuge.NAMES`, danach `python3 app/panel/werkzeuge.py --js`. Seiten zeigen Werkzeuge nur über `wzName` (Kopien für Threads über `wzFull`, mit dem internen Namen in Klammern), das Panel über `werkzeuge.label`/`full`; nie den internen Namen allein. | 🧪 test_werkzeuge |
 | 28 | **Taten** | Jedes Werkzeug, das etwas ändert (schalten, eintragen, senden, erstellen, merken), bekommt in `taten.KIND` seine Art. Nur dann prüft die Handlungs-Prüfung Sätze wie „ist jetzt an“ gegen sein Ergebnis; die Fehlerschleife gilt ohnehin für alle Werkzeuge. Ein Ergebnis, das nicht geklappt hat, beginnt mit einem der festen Wörter aus `taten.FAILED` („Not done“, „Fehler“ …), ein noch zu bestätigender Vorschlag mit „NOT saved yet“ oder „NOT done yet“. | 🧪 test_taten (Werkzeuge mit Art) |
 | 29 | **Werkzeug-Abdeckung** | Jede Funktion aus `features.py` steht im selben Commit in `werkzeug_abdeckung.py`: mit ihren Werkzeugen (`TOOLS`), mit der festen Regel des Panels, die sie beantwortet (`RULES`), oder mit dem Grund, warum es nichts zu fragen gibt (`WITHOUT`). Jedes Werkzeug fürs Modell steht in einer Weiche-Gruppe, in `intent.NARROW_KEEP` oder, wenn das Modul es nur auf das eigene Wort der Person anbietet, in `BY_WORD` mit `keep` in seinem `offer()`; sonst wirft die Weiche es beim Eingrenzen weg. Jedes Werkzeug einer Gruppe hat einen typischen Satz in `SENTENCES`, der dorthin führt, und jedes neue Werkzeug wird in einem Selbsttest einmal wirklich ausgeführt. (Dominik 2026-10-13: „überprüfe ob es für alle Dienste und Infos Werkzeuge gibt“) | 🧪 test_werkzeug_abdeckung |
+| 30 | **Technik-Doku** | Die Architektur-Doku (`docs/de/architektur.md`, `docs/en/architecture.md`, Panel Zustand → Technik) kommt aus `technik.py`. Ein neues Modul bekommt in `technik.MODULE` seine Gruppe und eine Zeile; eine neue Datei in `state/` kommt nach `backup.STATE_FILES` oder `STATE_LOCAL`, eine neue Datei unter `users/` nach `speicher.AREAS`, `LOCAL` oder `technik.USERS_SONST`, jeweils mit einer Zeile in `technik.INHALT`; eine versiegelte Datei kommt nach `technik.VERSCHLUESSELT`. Ändert sich der Weg einer Anfrage, ziehen `KNOTEN`, `KANTEN` und `SCHRITTE` mit. Danach `python3 app/panel/hilfe.py --docs`. | 🧪 test_technik |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
@@ -307,6 +309,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Pro Version** eine Zeile oben in `CHANGELOG.md` im Format `- **V01.0.NNN** · YYYY-MM-DD · Text` (sonst fehlt sie in „Was ist neu“) und in beiden READMEs, die älteste Zeile fällt raus. (PA; 🧪 test_changelog prüft nur das Format)
   - VERSION, die neueste CHANGELOG-Zeile und die erste Zeile beider READMEs stimmen überein, jede README hat genau 10 Zeilen. (🧪 test_richtlinie.Versions)
 - **Details** stehen nur in `docs/de/*.md` und `docs/en/*.md`, beide Sprachen gleich gegliedert. Danach `hilfe.py --docs` ausführen. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
+- **Doku immer aktuell** (Dominik 2026-10-13): Jede Änderung zieht Doku, Hilfe und Architektur-Doku im selben Commit mit. Die Blöcke zwischen `<!-- technik:… -->` in `architektur.md`/`architecture.md` schreibt `hilfe.py --docs` aus dem Code; nie von Hand ändern. (PA; 🧪 test_technik.Docs)
 - **Pläne** liegen unter `/mnt/project-files/plaene/` mit „Stand“ (Datum, Version), ★ für die Empfehlung und „Fragen an Dominik“. Bilder kommen aus dem echten Panel bzw. aus Mockups. (P)
 
 ---
@@ -354,6 +357,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_workflows, test_lock, test_lieferkette | gepinnte Actions, Rechte, Signierumgebung, Paket-Hashes, ffmpeg-Whitelist |
 | test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |
 | test_rauchtest | jedes Modul lädt, `restart-map` vollständig |
+| test_technik | jedes Modul, jede Datei in `state/` und `users/` in der Architektur-Doku und in Sicherung oder lokaler Liste, Doku-Blöcke aktuell, Seite Technik nur für Admins |
 | test_changelog | CHANGELOG-Format |
 | test_releases_aufraeumen | nur neuestes Release pro Reihe |
 | test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
@@ -362,7 +366,6 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Push-Reihenfolge
 - Uhrzeit-Unabhängigkeit allgemein
 - Log-Präfix
-- `STATE_FILES` für neue Dateien
 - `undo.py` / `SENSITIVE`
 - Praxistest-Punkt
 - „Daten nie über innerHTML“ (allgemein)

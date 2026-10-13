@@ -401,6 +401,182 @@
 },
 {
 "lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Architektur und Datenfluss",
+"title": "Architektur und Datenfluss",
+"text": "Diese Seite beschreibt, wie der Spark gebaut ist: welche Teile es gibt, welchen Weg eine Anfrage nimmt und wo welche Daten liegen. Im Panel steht dasselbe zum Anklicken unter Zustand → Technik (nur für Admins). Wie gebaut wird, regelt die Coding-Richtlinie."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Architektur und Datenfluss",
+"title": "Architektur und Datenfluss",
+"text": "Die Abschnitte zwischen den Markierungen <!-- technik:… --> entstehen aus dem Code (app/panel/technik.py, dazu speicher.AREAS/LOCAL und backup.STATE_FILES/STATE_LOCAL). python3 app/panel/hilfe.py --docs schreibt sie neu. Ein Selbsttest (test_technik) wird rot, wenn ein Modul, eine Datei oder ein Schritt fehlt oder die Doku nicht neu geschrieben wurde. Nur die Texte außerhalb der Markierungen werden von Hand gepflegt."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Überblick",
+"title": "Überblick",
+"text": "Geräte und Programme sprechen nur mit dem Panel. Das Panel prüft jede Anfrage, fragt das Sprachmodell, ruft Werkzeuge über den Wächter auf und schreibt in die Ordner unter /var/lib/speech-spark. Spracherkennung und Sprachausgabe sind eigene Dienste. Das Sprachmodell gehört zu dgx-spark-qwen38 und ist nicht Teil dieses Repos."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Prozesse und Ports",
+"title": "Prozesse und Ports",
+"text": "Alle Dienste laufen als Systembenutzer speech und loggen in den journald-Namespace speech-spark. Das Panel startet seine Hintergrundaufgaben selbst (panel.py: Messwerte, Stabilität, Posteingang aufräumen, Dokumente lesen, reMarkable-Abgleich, Lernen aus Gesprächen). Hintergrundarbeit wartet, solange gesprochen wird (vorrang.py)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Datenfluss einer Anfrage",
+"title": "Datenfluss einer Anfrage",
+"text": "Der Weg einer gesprochenen Frage im Browser, von der Eingabe bis zur Speicherung:"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Datenfluss einer Anfrage",
+"title": "Datenfluss einer Anfrage",
+"text": "- Telegram, Siri und Uhr schicken Text (oder eine Sprachnachricht) an ihren eigenen Endpunkt. Den Verlauf legt das Panel selbst ab (verlauf.keep), nicht das Gerät. - ESP32-Lautsprecher und Home Assistant Assist sprechen mit esp32.py und wyoming.py. Eine fremde Stimme am geteilten Lautsprecher bekommt nur Gastrechte. - MCP-Programme fragen über /mcp (mcpserver.py) mit eigenem Token, das nur als Hash gespeichert ist. - Gäste bekommen nur Frage und Antwort vom Sprachmodell, ohne Werkzeuge, ohne persönliche Daten und ohne Verlauf auf dem Spark."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Datenfluss einer Anfrage",
+"title": "Datenfluss einer Anfrage",
+"text": "An jeder Stelle gilt: Alles von außen (Web, Mail, Dokumente, Werkzeugergebnisse, Modellausgaben) ist Daten, nie ein Befehl. Entscheidungen trifft das Panel mit festen Regeln."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Bausteine",
+"title": "Bausteine",
+"text": "Jedes Modul unter app/panel/ und app/ gehört zu genau einer Gruppe. Ein neues Modul ohne Eintrag in technik.MODULE macht test_technik rot."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Bausteine",
+"title": "Bausteine",
+"text": "Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profil und Freigaben."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Gespräch",
+"title": "Gespräch",
+"text": "Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesagt wird."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Weiche und Werkzeugnamen",
+"title": "Weiche und Werkzeugnamen",
+"text": "Feste Regeln, welche Werkzeuge das Modell für eine Frage sieht. Gibt nie mehr frei als die Rechte."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Wissen und Dokumente",
+"title": "Wissen und Dokumente",
+"text": "Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstellte Dokumente."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Anbindungen",
+"title": "Anbindungen",
+"text": "Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Spark von selbst tut."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Geräte und Kanäle",
+"title": "Geräte und Kanäle",
+"text": "Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Geräten."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Betrieb",
+"title": "Betrieb",
+"text": "Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Sprachdienste",
+"title": "Sprachdienste",
+"text": "Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem anderen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Datenspeicherung",
+"title": "Datenspeicherung",
+"text": "Alle Dateien gehören dem Benutzer speech (Ordner 0700, Dateien 0600) und werden atomar geschrieben (.tmp, dann umbenennen). „Sicherung“ heißt: Die Datei steckt in der Sicherung unter Zustand → System → Sicherung. „Eigener Speicher“ heißt: Ein Profil kann die Datei verschlüsselt auf seinen eigenen Speicher kopieren."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Schlüssel und Verschlüsselung",
+"title": "Schlüssel und Verschlüsselung",
+"text": "- state/secret.key versiegelt alle Passwörter und Tokens (Fernet, vault.py). Aus ihm wird auch der Schlüssel der Chats abgeleitet (HKDF, AES-256-GCM). Er kommt nur in die Umzugs-Sicherung, versiegelt mit dem Passwort des Admins (state/move-keys.json, scrypt). Eine normale Sicherung auf einem anderen Spark verliert deshalb Chats und alle versiegelten Zugänge. - users/secret und state/admin-session.key unterschreiben Anmeldungen und kommen nie in eine Sicherung. Nach einem Umzug melden sich alle neu an. - Der Stimmabdruck users/ID/voice.json liegt als Zahlenreihe unverschlüsselt in der Sicherung. - Die Sicherung nach außen (offsite.py) und der eigene Speicher (speicher.py) sind als Ganzes verschlüsselt (scrypt + AES-GCM, AES-256-GCM in Stücken von 1 MiB)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Caches im Arbeitsspeicher",
+"title": "Caches im Arbeitsspeicher",
+"text": "Diese Caches gehen bei einem Neustart verloren und enthalten nichts, was nicht neu geholt werden kann: Kalender 300 s, Mail 120 s, Bus und Bahn 60 s, Wetter 900 s, Pakete 600 s, Wikipedia und Kiwix 24 h, Bildfragen 600 s (Ergebnisse auch in state/vision.json), Antworten für die Uhr 600 s, die Vektoren der Dokumentsuche pro Profil, die Stimmen der Sprachausgabe."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Logs",
+"title": "Logs",
+"text": "Alle Dienste schreiben in den journald-Namespace speech-spark (persistent, höchstens logs.max_mb = 500 MB, logs.keep_days = 14 Tage). In die Zeilen kommen nur feste Wörter und Zahlen, ein Profil nur über profiles.log_name. Der Anfrage-Verlauf (state/traces.jsonl, 48 h) läuft nur, solange der Admin-Schalter logs.trace an ist."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "So bleibt die Doku aktuell",
+"title": "So bleibt die Doku aktuell",
+"text": "Bei jeder Änderung gilt (Richtlinie Teil 1, Punkt „Technik-Doku“):"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "So bleibt die Doku aktuell",
+"title": "So bleibt die Doku aktuell",
+"text": "1. Ein neues Modul bekommt seine Gruppe und eine Zeile in technik.MODULE. 2. Eine neue Datei unter state/ kommt in backup.STATE_FILES (gesichert) oder backup.STATE_LOCAL (mit Grund, warum nicht), dazu ihre Zeile in technik.INHALT. Eine neue Datei unter users/ID/ kommt in speicher.AREAS oder speicher.LOCAL und in technik.INHALT. Ist sie versiegelt, kommt sie in technik.VERSCHLUESSELT. 3. Ändert sich der Weg einer Anfrage, werden technik.KNOTEN, KANTEN und SCHRITTE angepasst. 4. Danach python3 app/panel/hilfe.py --docs ausführen. Das schreibt diese Seite, die englische Fassung und den Hilfe-Index neu."
+},
+{
+"lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
@@ -3501,6 +3677,14 @@
 "file": "Technik und Fehlersuche",
 "head": "Aufbau des Chats",
 "title": "Aufbau des Chats",
+"text": "Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in Architektur und Datenfluss und im Panel unter Zustand → Technik."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Aufbau des Chats",
+"title": "Aufbau des Chats",
 "text": "Eine Antwort des Assistenten läuft in drei Dateien unter app/panel/:"
 },
 {
@@ -4102,6 +4286,190 @@
 "head": "Contact",
 "title": "Contact",
 "text": "Questions about the app: https://github.com/db9979/speech-on-dgx-spark/issues"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Architecture and data flow",
+"title": "Architecture and data flow",
+"text": "← README · Technical details and troubleshooting · Security and operation"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Architecture and data flow",
+"title": "Architecture and data flow",
+"text": "This page describes how the Spark is built: which parts exist, which way a request takes and where which data lies. The panel shows the same to click through under Status → Architecture (admins only). How to build is set by the coding guideline."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Architecture and data flow",
+"title": "Architecture and data flow",
+"text": "The sections between the markers <!-- technik:… --> are generated from the code (app/panel/technik.py, plus speicher.AREAS/LOCAL and backup.STATE_FILES/STATE_LOCAL). python3 app/panel/hilfe.py --docs writes them again. A self-test (test_technik) turns red when a module, a file or a step is missing or the docs were not written again. Only the text outside the markers is kept by hand."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Overview",
+"title": "Overview",
+"text": "Devices and programs only talk to the panel. The panel checks every request, asks the language model, calls tools through the guard and writes into the folders under /var/lib/speech-spark. Speech recognition and speech output are services of their own. The language model belongs to dgx-spark-qwen38 and is not part of this repo."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Processes and ports",
+"title": "Processes and ports",
+"text": "All services run as the system user speech and log into the journald namespace speech-spark. The panel starts its background jobs itself (panel.py: samples, stability, inbox tidy, reading documents, reMarkable sync, learning from conversations). Background work waits while someone speaks (vorrang.py)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Data flow of a request",
+"title": "Data flow of a request",
+"text": "The way of a spoken question in the browser, from input to storage:"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Data flow of a request",
+"title": "Data flow of a request",
+"text": "- Telegram, Siri and the watch send text (or a voice message) to their own endpoint. The panel stores the history itself (verlauf.keep), not the device. - ESP32 speakers and Home Assistant Assist talk to esp32.py and wyoming.py. A stranger's voice at a shared speaker gets guest rights only. - MCP programs ask through /mcp (mcpserver.py) with their own token, stored only as a hash. - Guests get only question and answer from the language model, without tools, personal data or history on the Spark."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Data flow of a request",
+"title": "Data flow of a request",
+"text": "Everywhere: everything from outside (web, mail, documents, tool results, model output) is data, never a command. The panel decides by fixed rules."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Building blocks",
+"title": "Building blocks",
+"text": "Every module under app/panel/ and app/ belongs to exactly one group. A new module without an entry in technik.MODULE turns test_technik red. The English lines are the first sentence of each module's docstring."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Building blocks",
+"title": "Building blocks",
+"text": "Every request passes here first: size, origin, kill switch, login, profile and releases."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Conversation",
+"title": "Conversation",
+"text": "Prepares a request, asks the language model in rounds and checks what is said."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Switch and tool names",
+"title": "Switch and tool names",
+"text": "Fixed rules for which tools the model sees for a question. Never gives more than the rights."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Knowledge and documents",
+"title": "Knowledge and documents",
+"text": "Own documents, memory, earlier conversations, Kiwix and Wikipedia, created documents."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Connections",
+"title": "Connections",
+"text": "Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spark does by itself."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Devices and channels",
+"title": "Devices and channels",
+"text": "Apps, Telegram, watch, speakers, room mode, chats and the history on all devices."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Operation",
+"title": "Operation",
+"text": "Live overview, logs, watchers, backup, update, help and the admin pages."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Speech services",
+"title": "Speech services",
+"text": "Speech recognition and speech output as their own services, ahead of everything else."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Data storage",
+"title": "Data storage",
+"text": "All files belong to the user speech (folders 0700, files 0600) and are written atomically (.tmp, then renamed). \"Backup\" means the file is in the backup under Status → System → Backup. \"Own storage\" means a profile can copy the file encrypted to its own storage."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Keys and encryption",
+"title": "Keys and encryption",
+"text": "- state/secret.key seals every password and token (Fernet, vault.py). The chats' key is derived from it too (HKDF, AES-256-GCM). It goes only into a move backup, sealed with the admin's password (state/move-keys.json, scrypt). A normal backup restored on another Spark therefore loses chats and every sealed account. - users/secret and state/admin-session.key sign logins and never go into a backup. After a move everyone signs in again. - The voiceprint users/ID/voice.json is a row of numbers and lies unencrypted in the backup. - The offsite backup (offsite.py) and the own storage (speicher.py) are encrypted as a whole (scrypt + AES-GCM, AES-256-GCM in chunks of 1 MiB)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Caches in memory",
+"title": "Caches in memory",
+"text": "These caches are lost on a restart and hold nothing that cannot be fetched again: calendar 300 s, mail 120 s, bus and train 60 s, weather 900 s, parcels 600 s, Wikipedia and Kiwix 24 h, picture questions 600 s (results also in state/vision.json), answers for the watch 600 s, the document search vectors per profile, the voices of speech output."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Logs",
+"title": "Logs",
+"text": "All services write into the journald namespace speech-spark (persistent, at most logs.max_mb = 500 MB, logs.keep_days = 14 days). Lines hold only fixed words and numbers, a profile only through profiles.log_name. The request trace (state/traces.jsonl, 48 h) runs only while the admin switch logs.trace is on."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Keeping the docs current",
+"title": "Keeping the docs current",
+"text": "With every change (guideline part 1, item \"Architecture docs\"):"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Keeping the docs current",
+"title": "Keeping the docs current",
+"text": "1. A new module gets its group and a line in technik.MODULE. 2. A new file under state/ goes into backup.STATE_FILES (backed up) or backup.STATE_LOCAL (with the reason why not), plus its line in technik.INHALT. A new file under users/ID/ goes into speicher.AREAS or speicher.LOCAL and into technik.INHALT. If it is sealed, it goes into technik.VERSCHLUESSELT. 3. When the way of a request changes, technik.KNOTEN, KANTEN and SCHRITTE are adjusted. 4. Then run python3 app/panel/hilfe.py --docs. It writes this page, the German version and the help index again."
 },
 {
 "lang": "en",
@@ -7022,6 +7390,14 @@
 "head": "Why the installation looks like this",
 "title": "Why the installation looks like this",
 "text": "vailable memory for the cache blocks\"; raise the share in the panel."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "How the chat is built",
+"title": "How the chat is built",
+"text": "How the parts work together, the way of a request and every storage place are in Architecture and data flow and in the panel under Status → Architecture."
 },
 {
 "lang": "en",

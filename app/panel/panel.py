@@ -65,6 +65,7 @@ import messages  # noqa: E402
 import intent  # noqa: E402
 import tracelog  # noqa: E402
 import weiche  # noqa: E402
+import technik  # noqa: E402
 import lokal  # noqa: E402
 import features  # noqa: E402
 import remarkable  # noqa: E402
@@ -104,7 +105,7 @@ import verbund  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, nas, verlauf, klaeren):
+for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, nas, verlauf, klaeren, technik):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -543,7 +544,7 @@ def _asset(request: Request, path, media):
 
 @app.get("/static/{name}")
 def static_file(name: str, request: Request):
-    if name in ("app.css", "appview.css", "live.css", "weiche.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("app.css", "appview.css", "live.css", "weiche.css", "technik.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")

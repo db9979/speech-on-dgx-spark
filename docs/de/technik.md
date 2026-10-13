@@ -6,8 +6,6 @@
 
 | Teil | Wo | Port |
 |---|---|---|
-| Antwort kommt nur als Text | Steht „Der Browser spielt gerade keinen Ton ab“ da, einmal tippen (der Browser gibt Ton erst nach einer Berührung frei, iOS hält ihn bei Anrufen an). Sonst im Diagnose-Log (Filter „chat:“) nach „chat: tts HTTP …“ oder „chat: tts failed“ und unter „Fehler“ nach „watchdog:“ schauen: dann war die Sprachausgabe nicht bereit oder wurde neu gestartet. |
-| Knacken oder abgeschnittene Wortenden im Assistenten | Seit V01.0.124 blendet der Browser jedes Ende und jeden Aussetzer 5 ms lang aus. Bleibt ein Wort abgeschnitten, liegt es an der Engine selbst: denselben Text über Telegram oder `curl` an Port 31012 (ohne Streaming) anhören. Zeigt der Assistent unter der Antwort „Aussetzer bei …“, kam die Sprachausgabe nicht nach; dann steht im Diagnose-Log (Filter „chat:“) „chat: tts behind by … s“, bei einem abgebrochenen Strom „chat: tts stream broke“ (das Stück wird einmal neu versucht, der Rest der Antwort weiter gesprochen). |
 | ASR-Dienst `speech-spark-asr` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31001 |
 | ASR-Engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, nur lokal |
 | TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |
@@ -105,6 +103,8 @@ Reden mehrere Personen gleichzeitig, bekommen ausgewählte Profile ihre Antwort 
 
 ## Aufbau des Chats
 
+Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in [Architektur und Datenfluss](architektur.md) und im Panel unter **Zustand → Technik**.
+
 Eine Antwort des Assistenten läuft in drei Dateien unter `app/panel/`:
 
 - `chat_turn.py` (`prepare`): wer spricht und was er darf (Profil, erkannte Stimme, Geräteschlüssel, Telegram, iPhone-App), der Systemprompt, Antworten auf wartende Vorschläge („Ja“ zu Termin, Mail, Korrektur …), die angebotenen Werkzeuge und die Sperren nach fremdem Text. Ergebnis ist ein `Turn` mit allen Werten.
@@ -185,5 +185,7 @@ Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der
 | TTS-Engine startet nicht | Panel → Logs → TTS-Engine. Bei „not enough KV cache“ o. Ä. die Speicheranteile der Engine im Panel erhöhen. Der erste Start lädt das Modell und dauert länger. |
 | Update schlägt fehl | Panel → Einstellungen → Update → Update-Protokoll. Die alte Version läuft weiter oder wird wieder eingespielt; das Protokoll sagt, was passiert ist. |
 | Port belegt | Port in `/etc/speech-spark/config.json` ändern und das Skript erneut ausführen. |
+| Antwort kommt nur als Text | Steht „Der Browser spielt gerade keinen Ton ab“ da, einmal tippen (der Browser gibt Ton erst nach einer Berührung frei, iOS hält ihn bei Anrufen an). Sonst im Diagnose-Log (Filter „chat:“) nach „chat: tts HTTP …“ oder „chat: tts failed“ und unter „Fehler“ nach „watchdog:“ schauen: dann war die Sprachausgabe nicht bereit oder wurde neu gestartet. |
+| Knacken oder abgeschnittene Wortenden im Assistenten | Seit V01.0.124 blendet der Browser jedes Ende und jeden Aussetzer 5 ms lang aus. Bleibt ein Wort abgeschnitten, liegt es an der Engine selbst: denselben Text über Telegram oder `curl` an Port 31012 (ohne Streaming) anhören. Zeigt der Assistent unter der Antwort „Aussetzer bei …“, kam die Sprachausgabe nicht nach; dann steht im Diagnose-Log (Filter „chat:“) „chat: tts behind by … s“, bei einem abgebrochenen Strom „chat: tts stream broke“ (das Stück wird einmal neu versucht, der Rest der Antwort weiter gesprochen). |
 
 Die Speicherschätzungen pro Modell (`MODEL_GIB` in `app/common.py`) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden.

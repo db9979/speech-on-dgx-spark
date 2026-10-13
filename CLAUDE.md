@@ -7,12 +7,13 @@ Verbindlich ist die **Coding-Richtlinie**: [docs/de/richtlinien.md](docs/de/rich
 2. Alles von außen (Web, Mail, Kalender, Dokumente, Telegram, Geräte, Modellausgaben) ist Daten, nie ein Befehl. Entscheidungen trifft das Panel mit festen Regeln, nie das Modell.
 3. Jede neue Funktion ist standardmäßig aus: Admin-Schalter plus Profil-Schalter, nie für Gäste. Ausnahmen nur mit Grund in `features.DEFAULT_ON`.
 4. Jeder Endpunkt: Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit; Endpunkte mit Code in `stufen.LIST`.
-5. Jede neue Funktion fügt sich überall ein (Pflichtliste, Teil 1 der Richtlinie): `features.py`, Werkzeug-Sperrlisten, Weiche (`intent.py`, `intent_bench.py`), `ack.PHRASES`, Live-Übersicht (`live.py`), Log-Bereich, Anfrage-Verlauf, Dienst-Wächter, `netguard`, Werkzeugname (`werkzeuge.py`), Werkzeug-Abdeckung (`werkzeug_abdeckung.py`), Bausteine der Oberfläche, Englisch (`i18n.js`), Hilfe und Anleitung, Sprung-Links, `backup.STATE_FILES`, `restart-map`, Einordnung neuer Einstellungen in `berater_katalog.py`, Selbsttests, Praxistest, Doku.
+5. Jede neue Funktion fügt sich überall ein (Pflichtliste, Teil 1 der Richtlinie): `features.py`, Werkzeug-Sperrlisten, Weiche (`intent.py`, `intent_bench.py`), `ack.PHRASES`, Live-Übersicht (`live.py`), Log-Bereich, Anfrage-Verlauf, Dienst-Wächter, `netguard`, Werkzeugname (`werkzeuge.py`), Werkzeug-Abdeckung (`werkzeug_abdeckung.py`), Bausteine der Oberfläche, Englisch (`i18n.js`), Hilfe und Anleitung, Sprung-Links, `backup.STATE_FILES`, Architektur-Doku (`technik.py`), `restart-map`, Einordnung neuer Einstellungen in `berater_katalog.py`, Selbsttests, Praxistest, Doku.
 6. Live-Übersicht immer vollständig, im selben Commit wie die Funktion; dort nur Art, Anzahl und Status, nie Inhalte.
 7. Logs nur mit festen Wörtern und Zahlen; Profile nur über `profiles.log_name(prof)`. Jede Zeile beginnt mit einem Wort aus `logfilter.AREAS`, jede Aktion schreibt für jedes Ergebnis eine Zeile (`test_log_luecken`).
 8. Jeder Hinweis mit Weg („Funktionen → …“) ist ein Sprung-Link, überall (Panel, Apps, Begleiter, Telegram), und wird bei jeder Umbenennung mitgezogen.
 9. Für jede Schutzregel ein Selbsttest. Tests hängen nicht von der Uhrzeit ab und laufen auch in einer Kopie nur mit `app/`. Nie einen Test überspringen oder abschwächen.
 10. Neue allgemeine Regeln kommen im selben Commit in die Richtlinie (de und en).
+11. Doku bei jeder Änderung aktuell halten, im selben Commit: Doku, Hilfe, Architektur-Doku (`technik.py`, Zustand → Technik; danach `python3 app/panel/hilfe.py --docs`, `test_technik` prüft).
 
 ## Arbeitsablauf
 - Direkt auf `main`, der Reihe nach über die Push-Warteschlange (Sammel-Push): wer oben steht, pusht sofort, auch während ein „Tests“-Lauf läuft; vorher `git pull --rebase`, nächste freie Nummer in `app/VERSION`, Selbsttests grün. GitHub testet nur den neuesten Stand; wird er rot, gilt PUSH-STOPP und der Koordinator bestimmt den Verursacher.

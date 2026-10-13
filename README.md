@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.506** New page Status → Architecture: parts, the way of a request and every storage place to click through, always from the code
 - **V01.0.505** Errors with a reason in the logs; device updates no longer wrongly report "not ok" with the Android app
 - **V01.0.504** A log for everything: Live events are in the journal too, every line has a filter area, tests turn red when a new action writes no line
 - **V01.0.503** Tests green again: features page with "NAS verbinden", guest tests pass on their own too
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.499** Docling server in the home network reads documents and scans again with tables (admin, off by default)
 - **V01.0.498** Self-tests: test server ports stay reserved, no more 45 minute hang on a busy port
 - **V01.0.497** Assistant's face: third choice "Comic (woman)" under Settings → Defaults, also in the iPhone app, companions and Pebble
-- **V01.0.496** Chats with other Sparks (Spark network V1): own Spark address, contact requests, pairing by code or open, signed messages with a queue; text first
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -109,6 +109,7 @@ Every feature can be switched on per profile and is off by default. Updates only
 - [Assistant and panel](docs/en/assistant.md): voice chat, phone, features, menu
 - [APIs and integration](docs/en/apis-and-integration.md): transcription, speech, streaming, Open WebUI, Siri, Pebble
 - [Security and operation](docs/en/security-and-operation.md): login, lockouts, backups, watchdog, self-test, logs
+- [Architecture](docs/en/architecture.md): parts, the way of a request, every storage place (also in the panel under Status → Architecture)
 - [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, next to qwen38, troubleshooting
 - [Coding guideline](docs/en/guidelines.md) and [security checklist](docs/en/security-checklist.md): rules for every change, checklist for new features
 

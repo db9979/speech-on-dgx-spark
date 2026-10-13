@@ -6,8 +6,6 @@
 
 | Part | Where | Port |
 |---|---|---|
-| Answer comes as text only | If it says "The browser is not playing sound right now", tap once (browsers allow sound only after a touch, iOS pauses it during calls). Otherwise look for "chat: tts HTTP …" or "chat: tts failed" in the diagnosis log (filter "chat:") and for "watchdog:" under errors: speech output was not ready or was restarted. |
-| Clicks or cut-off word endings in the assistant | Since V01.0.124 the browser fades every end and every stall over 5 ms. If a word still ends cut off, it is the engine itself: listen to the same text via Telegram or `curl` on port 31012 (without streaming). If the assistant shows "stalls at …" under the answer, speech output fell behind; the diagnosis log (filter "chat:") then shows "chat: tts behind by … s", a broken stream "chat: tts stream broke" (the piece is tried once more, the rest of the answer is still spoken). |
 | ASR service `speech-spark-asr` (accepts requests, passes them to the engine) | `/opt/speech-spark/venv-panel` | 31001 |
 | ASR engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, local only |
 | TTS service `speech-spark-tts` (accepts requests, passes them to the engine) | `/opt/speech-spark/venv-panel` | 31002 |
@@ -105,6 +103,8 @@ When several people talk at once, chosen profiles get their answer first (since 
 
 ## How the chat is built
 
+How the parts work together, the way of a request and every storage place are in [Architecture and data flow](architecture.md) and in the panel under **Status → Architecture**.
+
 One answer of the assistant runs through three files in `app/panel/`:
 
 - `chat_turn.py` (`prepare`): who is speaking and what they may use (profile, recognized voice, device key, Telegram, iPhone app), the system prompt, answers to waiting proposals ("yes" to an appointment, mail change, correction ...), the tools on offer and the locks after outside text. The result is a `Turn` with all values.
@@ -185,5 +185,7 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 | Engine does not start | Panel → Logs → engine. With "No available memory for the cache blocks", raise the engine's memory share in the panel. The first start downloads the model and takes longer. |
 | Update fails | Panel → Settings → Update → update log. The old version keeps running or is installed again; the log says which. |
 | Port taken | Change the port in `/etc/speech-spark/config.json` and run the installer again. |
+| Answer comes as text only | If it says "The browser is not playing sound right now", tap once (browsers allow sound only after a touch, iOS pauses it during calls). Otherwise look for "chat: tts HTTP …" or "chat: tts failed" in the diagnosis log (filter "chat:") and for "watchdog:" under errors: speech output was not ready or was restarted. |
+| Clicks or cut-off word endings in the assistant | Since V01.0.124 the browser fades every end and every stall over 5 ms. If a word still ends cut off, it is the engine itself: listen to the same text via Telegram or `curl` on port 31012 (without streaming). If the assistant shows "stalls at …" under the answer, speech output fell behind; the diagnosis log (filter "chat:") then shows "chat: tts behind by … s", a broken stream "chat: tts stream broke" (the piece is tried once more, the rest of the answer is still spoken). |
 
 The per-model memory estimates (`MODEL_GIB` in `app/common.py`) are rough assumptions; correct them with the values the panel shows.

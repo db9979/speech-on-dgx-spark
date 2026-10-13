@@ -44,7 +44,7 @@ function hilfePage(){const pm=$('profmodal');
   if(pm&&pm.style.display==='grid'){const tab=document.querySelector('#profmodal .ptab.on');return tab&&/^[a-z]{2,10}box$/.test(tab.id)?'me/'+tab.id:'me/setbox'}
   const sec=document.querySelector('main section.on'),id=sec?sec.id:'chat';
   if(id==='cfg'){if(document.querySelector('.cfgwrap.featmode'))return 'feat';const b=document.querySelector('#cfgnav button.on[data-p]');return 'cfg/'+(b&&/^[a-z]{2,8}$/.test(b.dataset.p)?b.dataset.p:'start')}
-  return ['chat','mon','live','test','logs','who','route','int','prof','apps'].includes(id)?id:'chat'}
+  return ['chat','mon','live','test','logs','tech','who','route','int','prof','apps'].includes(id)?id:'chat'}
 function hilfePageName(p){if(p.startsWith('me/')){const n=typeof ME_NAME!=='undefined'&&ME_NAME[p.slice(3)];return t('Ich','Me')+(n?' → '+(L==='en'?n[1]:n[0]):'')}
   if(p.startsWith('cfg/')){const b=document.querySelector(`#cfgnav button[data-p="${p.slice(4)}"]`);return t('Einstellungen','Settings')+(b?' → '+visText(b):'')}
   if(p==='feat')return t('Funktionen','Features');const b=document.querySelector(`nav button[data-s="${p}"]`);return b?visText(b):p}

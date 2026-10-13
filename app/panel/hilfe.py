@@ -4,7 +4,8 @@ and suggests settings, and "Frag Spark" (the face at the bottom right) knows the
 
 Knowledge: only texts that ship with the panel: the guides (static/js/guides.js), the switches and settings with
 their sentences (index.html, the Ich settings in me.js), the function register (features.py) and the paragraphs of
-docs/de and docs/en (copied into hilfe_docs.json, `python3 hilfe.py --docs` writes it; a self-test keeps it equal).
+docs/de and docs/en (copied into hilfe_docs.json, `python3 hilfe.py --docs` writes it after the generated parts of
+architektur.md/architecture.md, technik.py; a self-test keeps it equal).
 Searched here by fixed rules (words, nothing leaves the house). Per hit the profile's own state: on, off and why
 (features.reason); for admins also "Sicherheit auf einen Blick" as counts. Never keys, addresses, PINs or the
 names of other profiles.
@@ -56,7 +57,7 @@ MAX_CARDS_UID = 10     # per profile
 SECTIONS = {"chat": ("Assistent", "Assistant"), "mon": ("Zustand", "Status"), "live": ("Zustand → Live", "Status → Live"),
             "test": ("Zustand → Prüfen", "Status → Checks"), "logs": ("Zustand → Logs", "Status → Logs"),
             "feat": ("Funktionen", "Features"), "who": ("Funktionen → Wer darf was", "Features → Who may do what"),
-            "route": ("Funktionen → Weiche", "Features → Switch"), "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
+            "route": ("Funktionen → Weiche", "Features → Switch"), "tech": ("Zustand → Technik", "Status → Architecture"), "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
             "apps": ("Personen und Geräte → Apps und Schnittstellen", "People and devices → Apps and interfaces")}
 PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|who|route|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
 # what a page is for (plan plaene/hilfe-besser.md 2): fixed sentences; the switches on it are added from the page itself
@@ -822,7 +823,7 @@ def _expand(q, vocab):
     return out
 
 
-TECH_DOCS = {"technik", "technical", "apis-und-einbinden", "apis-and-integration"}
+TECH_DOCS = {"technik", "technical", "apis-und-einbinden", "apis-and-integration", "architektur", "architecture"}
 
 
 def _focus_item(focus, lang, level, c):
@@ -1457,6 +1458,9 @@ async def card_action(cid: str, request: Request, prof=Depends(browser_profile))
 
 
 if __name__ == "__main__" and "--docs" in sys.argv:
+    import technik   # first the generated parts of the architecture docs (Zustand → Technik), then the index
+    for p in technik.write_docs():
+        print("written", p)
     with open(DOCS_FILE, "w", encoding="utf-8") as f:
         json.dump(build_docs(), f, ensure_ascii=False, indent=0)
         f.write("\n")

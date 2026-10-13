@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.506** Neue Seite Zustand → Technik: Aufbau, Weg einer Anfrage und alle Speicherorte zum Durchklicken, immer aus dem Code
 - **V01.0.505** Fehler mit Grund in den Logs; Geräte-Updates melden mit Android-App nicht mehr fälschlich „nicht ok“
 - **V01.0.504** Log für alles: Live-Ereignisse stehen auch im Journal, jede Zeile hat einen Filterbereich, Tests werden rot, wenn eine neue Aktion keine Zeile schreibt
 - **V01.0.503** Tests wieder grün: Funktionen-Seite mit „NAS verbinden“, Gast-Tests laufen auch allein
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.499** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
 - **V01.0.498** Selbsttests: Ports der Test-Server bleiben reserviert, kein 45-Minuten-Hänger mehr bei belegtem Port
 - **V01.0.497** Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben
-- **V01.0.496** Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -109,6 +109,7 @@ Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen e
 - [Assistent und Oberfläche](docs/de/assistent.md): Sprach-Chat, Handy, Funktionen, Menü
 - [APIs und Einbinden](docs/de/apis-und-einbinden.md): Transkription, Sprachausgabe, Streaming, Open WebUI, Siri, Pebble
 - [Sicherheit und Betrieb](docs/de/sicherheit-und-betrieb.md): Anmeldung, Sperren, Sicherungen, Wächter, Selbsttest, Logs
+- [Architektur](docs/de/architektur.md): Bausteine, Weg einer Anfrage, alle Speicherorte (auch im Panel unter Zustand → Technik)
 - [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, neben qwen38, Fehlersuche
 - [Coding-Richtlinie](docs/de/richtlinien.md) und [Sicherheits-Checkliste](docs/de/sicherheits-checkliste.md): Regeln für jede Änderung, Pflichtliste für neue Funktionen
 
