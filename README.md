@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.518** Tests green again: the Markdown test waits until the chat page is shown
 - **V01.0.517** Architecture page with a large picture and full-screen zoom; the voiceprint is now sealed
 - **V01.0.516** Search check: test questions measure at night how often the document search finds the right passage
 - **V01.0.515** Inbox tidying: create an own folder right from the question when none fits
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.511** Live: every event the Spark starts by itself runs once as a coloured ball down the bus to its stage, inputs in fixed colours
 - **V01.0.510** Browser: TV and other voices no longer become a question after an answer (voice check on the open microphone, room level for barge-in, iPhone app)
 - **V01.0.509** Simpler release: what the admin releases works at once for every profile, only the admin blocks single profiles; guests only get questions and answers
-- **V01.0.508** Own tasks: watching reports only what is new (firmware, episode, price), all own tasks under Me → Jobs to change and pause
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

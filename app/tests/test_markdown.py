@@ -170,17 +170,23 @@ class Browser(unittest.TestCase):
                 await pg.goto(base + "/")
                 await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
                 await pg.goto(base + "/")
-                for _ in range(100):
-                    if await pg.evaluate("typeof md==='object'&&typeof chatLog==='function'&&!!document.getElementById('chatlog')"):
+                # the start shows the chat page only once it has loaded (whoami): before that the section is hidden
+                # and a message in it has no width (red on GitHub from V01.0.514 on, when the start took longer)
+                ready = False
+                for _ in range(200):   # strict CSP: no wait_for_function with a string, so look every 100 ms
+                    ready = await pg.evaluate("typeof md==='object'&&typeof chatLog==='function'&&!!document.getElementById('chatlog')"
+                                              "&&document.getElementById('chatlog').getBoundingClientRect().width>0")
+                    if ready:
                         break
                     await pg.wait_for_timeout(100)
+                self.assertTrue(ready, "chat page never shown")
                 evil = ANSWER + ("\n<img src=x onerror=\"window.__md=1\"> <script>window.__md=2</script>"
                                  "\n[klick](javascript:window.__md=3) [lan](http://192.168.178.1/reboot) "
                                  "[mail](http://user:pw@example.com/) [gut](https://example.com/a) https://www.kiwix.org/x. [**https://bank.example**](https://evil.example/)"
                                  "\n![bild](https://tracker.example.com/p.gif)\n> **Zitat** mit <b>Tag</b>"
                                  "\n```powershell\nAdd-RecipientPermission -Identity \"Mailbox\" -Trustee \"PostfixServiceAccount\" -AccessRights SendAs\n```"
                                  "\n| Spalte mit sehr langem Inhalt ohne Umbruch | zweite_spalte_mit_noch_viel_mehr_text_darin |\n|---|---|\n| a | b |")
-                got = await pg.evaluate("""x=>{try{show('chat')}catch{}const d=chatLog('assistant',x);const box=d.firstChild;
+                got = await pg.evaluate("""x=>{showSec('chat');const d=chatLog('assistant',x);const box=d.firstChild;
                   return {tags:[...new Set([...box.querySelectorAll('*')].map(e=>e.tagName.toLowerCase()))].sort(),
                     links:[...box.querySelectorAll('a')].map(a=>[a.textContent,a.getAttribute('href'),a.target,a.rel]),
                     nolink:[...box.querySelectorAll('.md-nolink')].map(e=>e.textContent),

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.518** · 2026-10-13 · ROT-FIX: test_markdown wartet, bis die Chat-Seite nach dem Start sichtbar ist (vorher wackelig rot ab V01.0.514, wenn der Start länger dauerte; ruft showSec statt des nicht vorhandenen show)
 - **V01.0.517** · 2026-10-13 · Technik-Seite größer: Bild über die ganze Breite und bis zur Fensterhöhe, Detail darunter, „Vollbild“ mit Zoom (＋/−/Einpassen, Escape), dichteres Bild mit größerer Schrift; Stimmabdruck (voice.json) jetzt versiegelt wie ein Passwort, ältere Dateien werden beim ersten Lesen versiegelt (test_stimmabdruck)
 - **V01.0.516** · 2026-10-13 · Suchprüfung (Plan suche-schaerfen, Stufe 1): Prüffragen mit bekannter richtiger Stelle messen nachts, wie oft die Dokumentensuche trifft (Wörter, Bedeutung, gemischt); Prüffragen schreibt der Spark in ruhigen Minuten; „Richtige Stelle angeben“ unter Antworten mit Fundstellen; Zustand → Prüfen „Suche prüfen“; feste Prüfbank in den Selbsttests (15 Dokumente, 45 Fragen, Untergrenze 80 %); Admin-Schalter, aus
 - **V01.0.515** · 2026-10-13 · Postfach aufräumen: „＋ Neuer Ordner“ in der Frage legt einen eigenen Ordner an, wenn keiner passt (Name nach fester Regel, angelegt erst nach Bestätigung, „Immer so“ macht die Regel); eigene Ordner auch unter „Ordner und Ausnahmen“ anlegen, umbenennen, entfernen
