@@ -11,8 +11,12 @@ lost for good, so the panel says to write it down.
 Only https, through netguard (HOME: the NAS may live in the home network), with the login only for that site.
 WebDAV password and backup password sit sealed in the vault (state/offsite.json), never in a log; a new address
 needs the WebDAV password again. Only the copies this Spark uploaded are ever deleted there (the newest KEEP stay).
+A NAS whose certificate does not fit its address (self-made, or made for a name while the address is an IP) is
+never sent to with the check switched off: the admin compares its fingerprint and accepts exactly that certificate
+(zertpin.py, "cert"); a new address forgets it.
 
-    STATE/offsite.json  {"on", "url", "user", "password" (sealed), "key" (sealed), "last": {...}, "sent": [names]}
+    STATE/offsite.json  {"on", "url", "user", "password" (sealed), "key" (sealed), "cert" (PEM, public),
+                         "last": {...}, "sent": [names]}
 """
 import asyncio
 import base64
@@ -32,6 +36,7 @@ import guard
 import netguard
 import vault
 import vorrang
+import zertpin
 from core import spawn, admin_code, admin_code_fresh, owner_auth
 
 router = APIRouter()
@@ -152,7 +157,13 @@ def view():
     d = _read()
     return {"on": d.get("on") is True, "url": d.get("url", ""), "user": d.get("user", ""),
             "has_password": bool(d.get("password")), "has_key": bool(d.get("key")),
-            "last": d.get("last"), "running": _running["on"], "kept": len(d.get("sent") or [])}
+            "last": d.get("last"), "running": _running["on"], "kept": len(d.get("sent") or []),
+            "cert": zertpin.sha_of(d.get("cert"))}
+
+
+CERT_SAY = ("Das Zertifikat des NAS passt nicht zur Adresse oder ist selbst ausgestellt. Unter Einstellungen → "
+            "Sicherung → „Zertifikat prüfen“ den Fingerabdruck vergleichen und annehmen, oder die Adresse mit dem "
+            "Namen aus dem Zertifikat eintragen.")
 
 
 def check_url(url):
@@ -200,7 +211,7 @@ async def run(reason="daily"):
             with open(enc, "rb") as f:
                 while chunk := f.read(CHUNK):
                     yield chunk
-        async with netguard.client(netguard.HOME, origin=url, timeout=600) as c:
+        async with netguard.client(netguard.HOME, origin=url, timeout=600, verify=zertpin.verify(d.get("cert"))) as c:
             r = await c.put(url + quote(name), content=body(), auth=auth,
                             headers={"Content-Type": "application/octet-stream", "Content-Length": str(size)})
             if r.status_code not in (200, 201, 204):
@@ -220,13 +231,14 @@ async def run(reason="daily"):
         print("offsite:", name, size // 1048576, "MB sent", flush=True)
         return last
     except Exception as e:   # noqa: BLE001 - every failure is shown on the page and in the log
-        msg = f"{type(e).__name__}: {e}"[:200]
-        last = {"t": int(time.time()), "ok": False, "error": msg, "why": reason}
+        cert = zertpin.problem(e)
+        msg = CERT_SAY if cert else f"{type(e).__name__}: {e}"[:200]
+        last = {"t": int(time.time()), "ok": False, "error": msg, "why": reason, **({"kind": cert} if cert else {})}
         _update(last=last)
-        guard.log("offsite_failed", detail=msg)
+        guard.log("offsite_failed", detail="Zertifikat passt nicht" if cert else msg)
         import live
         live.job("Sicherung nach außen", "NAS-Sicherung", t0, ok=False)
-        print("offsite: failed -", msg, flush=True)
+        print("offsite: failed -", "certificate refused" if cert else msg, flush=True)
         return last
     finally:
         _running["on"] = False
@@ -279,6 +291,24 @@ async def offsite_put(request: Request):
     new = dict(d, url=url, user=user)
     if url != d.get("url", "") and d.get("password") and not pw:
         new["password"] = ""      # a new address gets the WebDAV password typed again
+    if url != d.get("url", ""):
+        new.pop("cert", None)     # and its certificate is checked anew
+    if "cert" in b:               # the fingerprint the admin compared: accepted only if the NAS shows it now
+        want = b["cert"]
+        if not isinstance(want, str) or len(want) > 200:
+            raise HTTPException(400, "cert: a fingerprint")
+        if not want:
+            new.pop("cert", None)
+        else:
+            if not url:
+                raise HTTPException(400, "address first")
+            try:
+                got = await zertpin.fetch(url, netguard.HOME)
+            except (OSError, ValueError, asyncio.TimeoutError, netguard.Blocked):
+                raise HTTPException(502, "Der NAS antwortet nicht.")
+            if got["sha256"] != want.strip().upper():
+                raise HTTPException(409, "Der NAS zeigt jetzt ein anderes Zertifikat als eben. Noch einmal prüfen.")
+            new["cert"] = got["pem"]
     if isinstance(pw, str) and pw:
         if len(pw) > 256:
             raise HTTPException(400, "password too long")
@@ -297,8 +327,36 @@ async def offsite_put(request: Request):
         raise HTTPException(400, "address and backup password first")
     with _lock:
         _write(new)
-    guard.log("offsite_settings", detail=f"{'on' if new.get('on') else 'off'} {urlsplit(url).hostname or '-'}")
+    guard.log("offsite_settings", detail=f"{'on' if new.get('on') else 'off'} {urlsplit(url).hostname or '-'}"
+              + (" Zertifikat angenommen" if new.get("cert") and new.get("cert") != d.get("cert") else ""))
     return view()
+
+
+@router.post("/api/admin/offsite/cert", dependencies=[Depends(owner_auth)])
+async def offsite_cert(request: Request):
+    """{"url"?}: the certificate the NAS shows (fingerprint, names, until, fits the address), to compare. Reads only;
+    accepting it is PUT {"cert": fingerprint} with a fresh code."""
+    guard.limit(request, "offsite", admin=True)
+    raw = await request.body()
+    if len(raw) > 1024:
+        raise HTTPException(413, "too large")
+    try:
+        b = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    url = (b.get("url") if isinstance(b, dict) else None) or _read().get("url", "")
+    try:
+        url = check_url(str(url).strip())
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    try:
+        got = await zertpin.fetch(url, netguard.HOME)
+    except netguard.Blocked:
+        raise HTTPException(403, "Der Wächter erlaubt diese Adresse nicht.")
+    except (OSError, ValueError, asyncio.TimeoutError):
+        raise HTTPException(502, "Der NAS antwortet nicht.")
+    pinned = zertpin.sha_of(_read().get("cert"))
+    return {k: got[k] for k in ("sha256", "names", "until", "self_signed", "fits", "expired")} | {"pinned": pinned == got["sha256"]}
 
 
 @router.post("/api/admin/offsite/now", dependencies=[Depends(owner_auth), Depends(admin_code)])

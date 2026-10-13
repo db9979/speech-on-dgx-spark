@@ -779,10 +779,27 @@ function offShow(d){$('offon').checked=d.on;$('offurl').value=d.url;$('offuser')
   $('offkey').placeholder=d.has_key?t('Sicherungs-Passwort (gespeichert)','Backup password (saved)'):t('Sicherungs-Passwort (mind. 12 Zeichen, aufschreiben)','Backup password (at least 12 characters, write it down)');
   const l=d.last;$('offmsg').textContent=d.running?t('wird gesendet …','sending …'):!l?t('Noch nie gesendet.','Never sent.')
     :l.ok?t('Zuletzt gesendet: ','Last sent: ')+new Date(l.t*1000).toLocaleString()+' · '+mb(l.bytes):t('Fehler am ','Failed on ')+new Date(l.t*1000).toLocaleString()+': '+l.error;
-  $('offmsg').classList.toggle('err',!!(l&&!l.ok)&&!d.running)}
+  $('offmsg').classList.toggle('err',!!(l&&!l.ok)&&!d.running);offCertShow(d)}
+// Zertifikat prüfen (zertpin.py): a NAS whose certificate does not fit its address is never sent to with the check
+// off; the admin compares the fingerprint with the one the NAS shows and accepts exactly that certificate.
+function offCertShow(d,c){const m=$('offcertmsg');if(!m)return;m.textContent='';m.classList.remove('err');
+  const line=x=>{const s=document.createElement('div');s.textContent=x;m.appendChild(s);return s};
+  const btn=(x,f)=>{const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x;b.onclick=f;m.appendChild(b)};
+  if(c){line(t('Fingerabdruck (SHA-256): ','Fingerprint (SHA-256): ')+c.sha256);
+    line(t('Gilt für: ','Valid for: ')+(c.names.join(', ')||'–')+' · '+t('bis ','until ')+new Date(c.until*1000).toLocaleDateString()+(c.expired?t(' (abgelaufen)',' (expired)'):''));
+    if(c.pinned)line(t('Dieses Zertifikat ist angenommen.','This certificate is accepted.'));
+    else if(c.fits&&!c.self_signed)line(t('Passt zur Adresse; nichts zu tun.','Fits the address; nothing to do.'));
+    else{line(t('Passt nicht zur Adresse oder ist selbst ausgestellt. Besser: die Adresse mit einem Namen von oben eintragen. Sonst den Fingerabdruck mit dem im NAS vergleichen (Synology: Systemsteuerung, Sicherheit, Zertifikat) und nur wenn er gleich ist annehmen.',
+      'Does not fit the address or is self-made. Better: enter the address with a name from above. Otherwise compare the fingerprint with the one in the NAS (Synology: Control Panel, Security, Certificate) and accept it only when it is the same.'));
+      btn(t('Diesem Zertifikat vertrauen','Trust this certificate'),()=>offPut({url:$('offurl').value.trim(),cert:c.sha256}))}
+    return}
+  if(d&&d.cert){line(t('Angenommenes Zertifikat: ','Accepted certificate: ')+d.cert);
+    btn(t('Vergessen','Forget'),()=>{if(confirm(t('Das angenommene Zertifikat vergessen? Danach geht die Sicherung nur noch mit einem Zertifikat, das zur Adresse passt.','Forget the accepted certificate? Then the backup only goes to a certificate that fits the address.')))offPut({cert:''})})}}
 async function loadOff(){if(!$('offbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
   try{offShow(await (await api('/api/admin/offsite')).json())}catch{}}
 async function offPut(b){try{offShow(await (await api('/api/admin/offsite',xjson('PUT',b))).json())}catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err');return false}return true}
+if($('offcert'))$('offcert').onclick=async()=>{const m=$('offcertmsg');m.textContent=t('frage den NAS …','asking the NAS …');
+  try{offCertShow(null,await (await api('/api/admin/offsite/cert',xjson('POST',{url:$('offurl').value.trim()}))).json())}catch(e){m.textContent=e.message;m.classList.add('err')}};
 if($('offsave'))$('offsave').onclick=()=>offPut({url:$('offurl').value.trim(),user:$('offuser').value.trim(),password:$('offpw').value,key:$('offkey').value});
 if($('offon'))$('offon').onchange=async e=>{const on=e.target.checked;if(!await offPut({on,url:$('offurl').value.trim(),user:$('offuser').value.trim(),password:$('offpw').value,key:$('offkey').value}))e.target.checked=!on};
 if($('offnow'))$('offnow').onclick=async()=>{try{offShow(await (await api('/api/admin/offsite/now',{method:'POST'})).json());

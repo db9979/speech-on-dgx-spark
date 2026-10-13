@@ -256,7 +256,7 @@ def active(c=None, cfg=None):
         import offsite
         d = offsite._read()
         if d.get("on") is True and _origin(d.get("url")):
-            out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True}}
+            out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True, "pin": d.get("cert") or ""}}
     except Exception:
         pass
     try:
@@ -300,7 +300,9 @@ class Probe(NamedTuple):
 
 async def _http(p):
     try:
-        async with netguard.client(p["level"], max_bytes=MOST, verify=p.get("verify", True),
+        import zertpin           # a certificate the admin accepted (offsite, Eigener Speicher) counts, nothing else
+        verify = zertpin.verify(p["pin"]) if p.get("pin") else p.get("verify", True)
+        async with netguard.client(p["level"], max_bytes=MOST, verify=verify,
                                    timeout=httpx.Timeout(TIMEOUT, connect=TIMEOUT)) as c:
             async with c.stream("HEAD" if p.get("any") else "GET", p["url"]) as r:
                 return Probe(r.status_code < 500)

@@ -237,10 +237,14 @@ FAQ = (
       "address. Recommended: \"New people\" set to \"Only by invitation\". Then Me → Let's go guides the new person.")),
     ("sicherung", "admin", "cfg/bak", ("Sicherung (Backup)", "Einstellungen → Sicherung: „Jetzt sichern“ legt eine "
      "Sicherung an; „Sicherung nach außen“ schickt einmal am Tag eine verschlüsselte Sicherung per WebDAV auf ein NAS oder eine "
-     "Nextcloud (nur Haupt-Admin, mit Sicherungs-Passwort). „Sicherheit auf einen Blick“ unter Einstellungen → Sicherheit warnt, "
+     "Nextcloud (nur Haupt-Admin, mit Sicherungs-Passwort). Passt das Zertifikat des NAS nicht zur Adresse (etwa eine IP "
+     "statt des Namens), zeigt „Zertifikat prüfen“ den Fingerabdruck; stimmt er mit dem im NAS überein, „Diesem Zertifikat "
+     "vertrauen“. „Sicherheit auf einen Blick“ unter Einstellungen → Sicherheit warnt, "
      "wenn die Sicherung fehlt oder alt ist."),
      ("Backup", "Settings → Backup: \"Back up now\" makes a backup; \"Backup elsewhere\" sends an encrypted backup "
-      "once a day over WebDAV to a NAS or Nextcloud (main admin only, with the backup password). \"Security at a glance\" under "
+      "once a day over WebDAV to a NAS or Nextcloud (main admin only, with the backup password). When the NAS certificate "
+      "does not fit the address (an IP instead of the name), \"Check certificate\" shows its fingerprint; if it matches the "
+      "one in the NAS, \"Trust this certificate\". \"Security at a glance\" under "
       "Settings → Security warns when the backup is missing or old.")),
     ("logs", "admin", "logs", ("Logs ansehen", "Zustand → Logs zeigt das Protokoll des Spark. Die Filter-Knöpfe grenzen ein "
      "(z. B. Diagnose, Anfragen); „Kopieren für Thread“ gibt einen Auszug ohne Geheimnisse zum Weitergeben. Logs → Anfragen zeigt "

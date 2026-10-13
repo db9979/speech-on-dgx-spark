@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.487** · 2026-10-13 · Sicherung nach außen: NAS mit Zertifikat, das nicht zur Adresse passt (z. B. IP statt Name), über „Zertifikat prüfen“ annehmen (Fingerabdruck vergleichen, genau dieses Zertifikat, Prüfung bleibt an); verständliche Meldung mit Weg; Dienst-Wächter prüft mit demselben Zertifikat
 - **V01.0.486** · 2026-10-13 · Einordnung mit Wahrscheinlichkeit ausgebaut (alles aus): „Einordnung messen“ mit den Testsätzen der Weiche und Schwellen-Vorschlag, Schwelle wählbar, Label-Masse als feste Regel (unsicher = ohne), Anzeige „zwei Reihenfolgen“; Katalogwahl im Einstellungs-Assistenten mit Wahrscheinlichkeit; Antworten im Hintergrund prüfen (Fall „Erfundenes vermutet“); Beschwerde erkennen („geht immer noch nicht“: erst nachsehen, nicht erneut schalten)
 - **V01.0.485** · 2026-10-13 · reMarkable aufwerten: Ordner nach Art mit Selbst-Aufräumen (7/30 Tage), gestaltete PDF-Blätter im Format des Geräts mit „Kann weg“, Morgenblatt zum Abhaken, Kästchen werden gelesen (Abgleich-Blatt, Kontrollbild); alles aus
 - **V01.0.484** · 2026-10-13 · „Taten prüfen“ und „Fehlerschleife stoppen“ als eingebaute Antwort-Regeln unter Zustand → Verbessern → Regeln (an oder aus, wie oft heute eingegriffen, nicht entfernbar); Vorschlag „Sag nie Nein ohne …“ nur für das Werkzeug, das das frühere Tun kennt (taten.STATUS)
