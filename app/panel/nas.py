@@ -6,7 +6,7 @@ to the NAS (offsite.py) and, in later stages, the Wissensordner, the Ablage and 
 the password are typed once; a new password or an accepted certificate counts for every use at once.
 
 Two stores, each with at most MAX connections:
-    USERS_DIR/<uid>/nas.json   {"nas": [conn]}   a profile's own NAS (Ich, Speicher, card "Meine NAS")
+    USERS_DIR/<uid>/nas.json   {"nas": [conn]}   a profile's places (Ich → Speicher, nas.js)
     STATE/nas-admin.json       {"nas": [conn]}   the Spark's NAS (backup), only the main admin
     conn = {"id", "name", "kind" (webdav, smb, sftp), "url" (scheme://host[:port], no path), "user",
             "password" (sealed), "cert" (PEM, public; webdav), "hostkey" (sftp), "added", "checked"}
@@ -286,9 +286,25 @@ def _keep(path):
         f.write(data)
 
 
+def _switch_carry():
+    from common import CONFIG_PATH, write_json
+    try:
+        with open(CONFIG_PATH) as f:
+            raw = json.load(f)
+        c = raw.get("chat") if isinstance(raw.get("chat"), dict) else None
+        if c is not None and c.get("storage_own") is True and c.get("nas_on") is not True:
+            c["nas_on"] = True
+            write_json(CONFIG_PATH, raw, indent=2)
+            print("nas: umgestellt schalter=1", flush=True)
+    except (OSError, ValueError) as e:
+        print("nas: umstellung schalter fehlgeschlagen", type(e).__name__, flush=True)
+
+
 def migrate_all():
-    """Once at start: every profile's Eigener Speicher and the backup to the NAS move onto connections (S1). Saving
-    through the modules does it; this only makes sure it happens before anybody opens a page."""
+    """Once at start: every profile's copy (speicher.py) and the backup to the NAS move onto connections (S1). Saving
+    through the modules does it; this only makes sure it happens before anybody opens a page. "Kopie meiner Daten"
+    hangs below "Speicher und NAS" since the clean-up: who had only the copy on gets the heading switched on too."""
+    _switch_carry()
     n = 0
     try:
         import speicher
@@ -369,9 +385,9 @@ def say(kind):
     return {"offline": "Die NAS antwortet nicht (Adresse, Netz oder NAS aus?).",
             "auth": "Die NAS lehnt die Anmeldung ab (Benutzer, Passwort oder Rechte prüfen).",
             "cert": "Das Zertifikat der NAS passt nicht zur Adresse oder ist selbst ausgestellt. Fingerabdruck "
-                    "vergleichen und unter Ich → Speicher beim „Ändern“ der NAS annehmen.",
+                    "vergleichen und unter Ich → Speicher beim Ort „Verbindung prüfen“ annehmen.",
             "hostkey": "Der Schlüssel des Servers ist ein anderer als beim Einrichten. Nur wenn du weißt, warum "
-                       "(NAS neu eingerichtet), unter Ich → Speicher beim „Ändern“ der NAS den neuen Schlüssel annehmen.",
+                       "(NAS neu eingerichtet), unter Ich → Speicher beim Ort „Anmeldung ändern“ den neuen Schlüssel annehmen.",
             "blocked": "Der Wächter erlaubt diese Adresse nicht.", "notaus": "Notaus ist an: keine Verbindung nach außen.",
             "other": "Die NAS antwortet nicht wie erwartet (Adresse, Freigabe oder Art prüfen)."}.get(kind, "Fehler")
 
@@ -623,7 +639,7 @@ def remove(nid: str, request: Request, prof=Depends(browser_profile)):
     if not c:
         raise HTTPException(404, "no such connection")
     if uses(uid).get(nid):
-        raise HTTPException(409, "Diese NAS wird noch genutzt (Eigener Speicher). Erst dort trennen.")
+        raise HTTPException(409, "Dieser Ort ist noch für „Kopie meiner Daten“ an. Erst dort ausschalten.")
     with _lock:
         save(uid, [x for x in load(uid) if x["id"] != nid])
     guard.log("nas_remove", detail=c["kind"])

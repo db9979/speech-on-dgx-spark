@@ -136,7 +136,7 @@ WITHOUT = {
     "speicherlan": "Einstellung des Speichers",
     "speicherordner": "Einstellung des Speichers",
     "speicherauslagern": "läuft im Hintergrund",
-    "nas": "Anmeldung für Eigener Speicher und Sicherung, kein Werkzeug",
+    "nas": "Speicherorte mit Anmeldung für Kopie und Sicherung, kein Werkzeug",
     "geraeteupdate": "läuft im Hintergrund",
     "geraetenacht": "läuft im Hintergrund",
     "xiaozhihinweis": "meldet sich von selbst",

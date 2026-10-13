@@ -1323,7 +1323,7 @@ async def restore_missing(uid, tid, now=None):
         _put_state(uid, tid, st)
         print(f"speicher: zurueckgeholt ziel={t['kind']} prof={_log_name(uid)} dateien={n} uebersprungen={skipped}", flush=True)
         _job(t0, True, uid, "Speicher holen")
-        _event(f"{n} Dateien vom eigenen Speicher zurückgeholt")
+        _event(f"{n} Dateien aus der Kopie zurückgeholt")
         return {"n": n, "skipped": skipped}
     except StoreError as e:
         st = _state(uid, tid)
@@ -1397,7 +1397,7 @@ async def _offload(uid, tid, st, drv, key, files, now=None):
         moved += 1
     if moved:
         print(f"speicher: ausgelagert prof={_log_name(uid)} dateien={moved}", flush=True)
-        _event(f"{moved} Originale auf den eigenen Speicher ausgelagert")
+        _event(f"{moved} Originale in die Kopie ausgelagert")
     return moved > 0
 
 
@@ -1495,7 +1495,7 @@ async def _bring_back(uid, tid, rel, dst):
                 st["used"][rel] = int(time.time())
                 _put_state(uid, tid, st)
         print(f"speicher: geholt ziel={t['kind']} prof={_log_name(uid)}", flush=True)
-        _event("Original vom eigenen Speicher geholt")
+        _event("Original aus der Kopie geholt")
     _job(t0, ok, uid, "Speicher holen")
     return ok
 
@@ -1538,7 +1538,7 @@ def _event(text):
 def _job(t0, ok, uid, tool="Speicher-Abgleich"):
     try:
         import live
-        live.job("Eigener Speicher", tool, t0, ok=ok, uid=uid)
+        live.job("Kopie meiner Daten", tool, t0, ok=ok, uid=uid)
     except Exception:
         pass
 
@@ -1574,11 +1574,11 @@ async def _note(uid, t, kind):
     if not profiles_on(uid):
         return
     if kind == "back":
-        title, body = "✅ Eigener Speicher wieder da", f"„{t['name']}“ ist wieder erreichbar; der Abgleich hat nachgeholt."
+        title, body = "✅ Kopie meiner Daten wieder da", f"„{t['name']}“ ist wieder erreichbar; der Abgleich hat nachgeholt."
     else:
-        title = f"⚠️ Eigener Speicher: {WHY[kind][0]}"
+        title = f"⚠️ Kopie meiner Daten: {WHY[kind][0]}"
         body = {"offline": f"„{t['name']}“ ist seit über einer Stunde nicht erreichbar. Alles bleibt auf dem Spark und wird nachgeholt.",
-                "auth": f"„{t['name']}“ lehnt die Anmeldung ab. Der Abgleich pausiert; bitte unter Ich → Speicher das Passwort neu eingeben.",
+                "auth": f"„{t['name']}“ lehnt die Anmeldung ab. Der Abgleich pausiert; bitte unter Ich → Speicher beim Ort „Anmeldung ändern“ das Passwort neu eingeben.",
                 "full": f"„{t['name']}“ ist voll. Neues bleibt auf dem Spark, bis wieder Platz ist; nichts wird gelöscht.",
                 "blocked": f"„{t['name']}“ ist gerade nicht erlaubt (Wächter oder Admin). Alles bleibt auf dem Spark.",
                 "key": f"Der Schlüssel für „{t['name']}“ fehlt. Die Kopie dort kann der Spark nicht mehr lesen; Ich → Speicher.",
@@ -1706,6 +1706,12 @@ def public(uid, t, st=None):
            "hist": [{k: x.get(k) for k in ("t", "ok", "kind", "n", "bytes", "what")} for x in st["hist"][-50:]]}
     if t["kind"] in LOGIN_KINDS:
         out.update(url=t["url"], user=t["user"], has_password=bool(t["password"]), nas=t.get("nas", ""))
+        if out["nas"]:   # the folder at the place, so the page can show and change it
+            try:
+                import nas
+                out["path"] = nas.split(t["url"], t["kind"])[1]
+            except ValueError:   # only display; the target keeps working without it
+                out["path"] = ""
         if t["kind"] == "sftp":
             out["hostkey"] = t.get("hostkey", "")
     else:
@@ -1751,7 +1757,7 @@ def _on(prof=Depends(browser_profile)):
 
 def _may(prof):
     if not allowed(prof["id"]):
-        raise HTTPException(403, "Erst „Eigener Speicher“ für dich einschalten.")
+        raise HTTPException(403, "Kopie meiner Daten ist ausgeschaltet.")
 
 
 async def _body(request, most=8192):
@@ -1783,7 +1789,7 @@ def _target_from(body, old=None):
     if not isinstance(t["offload"], bool):
         raise HTTPException(400, "offload: true or false")
     if t["offload"] and not (old and old["offload"]) and not offload_ok():
-        raise HTTPException(400, "Auslagern hat der Admin nicht erlaubt (Funktionen → Eigener Speicher).")
+        raise HTTPException(400, "Auslagern hat der Admin nicht erlaubt (Funktionen → Kopie meiner Daten).")
     if kind in LOGIN_KINDS:
         try:
             t["url"] = check_url(body.get("url", old["url"] if old else ""), kind)
@@ -1791,7 +1797,7 @@ def _target_from(body, old=None):
             raise HTTPException(400, str(e))
         host = (urlsplit(t["url"]).hostname or "").lower()
         if _home_name(host) and not lan_ok():
-            raise HTTPException(400, "Ziele im Heimnetz hat der Admin nicht erlaubt (Funktionen → Eigener Speicher).")
+            raise HTTPException(400, "Ziele im Heimnetz hat der Admin nicht erlaubt (Funktionen → Kopie meiner Daten).")
         user = str(body.get("user", old["user"] if old else "") or "")
         if len(user) > 128 or re.search(r"[\x00-\x1f]", user):
             raise HTTPException(400, "invalid user name")
@@ -1800,7 +1806,7 @@ def _target_from(body, old=None):
             t["hostkey"] = old.get("hostkey", "") if old and t["url"] == old["url"] and body.get("accept_key") is not True else ""
     else:
         if not folder_ok():
-            raise HTTPException(400, "Ordner auf dem Spark hat der Admin nicht erlaubt (Funktionen → Eigener Speicher).")
+            raise HTTPException(400, "Ordner auf dem Spark hat der Admin nicht erlaubt (Funktionen → Kopie meiner Daten).")
         sub = str(body.get("folder", old["folder"] if old else "") or "").strip()
         if not SUB.fullmatch(sub) or sub.startswith("."):
             raise HTTPException(400, "Unterordner: bis 40 Buchstaben, Ziffern, . _ - (kein Verweis, kein ..)")
@@ -1855,8 +1861,8 @@ def _say(e):
             "auth": "Der Speicher lehnt die Anmeldung oder das Schreiben ab (Benutzer, Passwort, Rechte).",
             "full": "Der Speicher ist voll.", "blocked": "Der Wächter erlaubt diese Adresse nicht.",
             "notaus": "Notaus ist an: keine Verbindung nach außen.", "key": "Der Schlüssel fehlt.",
-            "cert": "Das Zertifikat der NAS passt nicht zur Adresse oder ist selbst ausgestellt. Unter Ich → Speicher → "
-                    "Meine NAS den Fingerabdruck vergleichen und annehmen.",
+            "cert": "Das Zertifikat des Speicherorts passt nicht zur Adresse oder ist selbst ausgestellt. Unter Ich → Speicher "
+                    "beim Ort „Verbindung prüfen“ und den Fingerabdruck vergleichen.",
             "hostkey": "Der Schlüssel des Servers ist ein anderer als beim Einbinden. Nur wenn du weißt, warum "
                        "(Server neu eingerichtet), unter „Adresse oder Passwort ändern“ den neuen Schlüssel annehmen.",
             "other": "Der Speicher antwortet nicht wie erwartet (Ordner, Freigabe oder Rechte prüfen)."}.get(e.kind, "Fehler")
@@ -1902,7 +1908,7 @@ async def add(request: Request, prof=Depends(_on)):
     st["free"] = dict(free or {}, t=int(time.time()))
     _put_state(uid, t["id"], st)
     guard.log("storage_add", detail=f"{t['kind']} {_zone(t)}")
-    _event(f"Profil hat einen eigenen Speicher eingebunden ({t['kind']})")
+    _event(f"Profil hat eine Kopie eingeschaltet ({t['kind']})")
     print(f"speicher: eingebunden ziel={t['kind']} prof={_log_name(uid)}", flush=True)
     return dict(_view(uid), added=t["id"])
 
@@ -1975,7 +1981,7 @@ def remove(tid: str, request: Request, prof=Depends(_on)):
         _put_state(uid, tid, None)
     if t:
         guard.log("storage_remove", detail=t["kind"])
-        _event("Profil hat einen eigenen Speicher getrennt")
+        _event("Profil hat eine Kopie ausgeschaltet")
     return _view(uid)
 
 

@@ -266,16 +266,16 @@ FEATURES = (
       parent="melden", me="rpbox", guide="meldenadmin"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
-    # speicher.py: a copy of the profile's data on its own NAS (WebDAV, SFTP, SMB) or a folder the admin mounted
-    F("speicher", "Eigener Speicher", "Own storage", "data", ("storage_own",), me="storebox", guide="speicher"),
+    # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
+    F("nas", "Speicher und NAS", "Storage and NAS", "data", ("nas_on",), me="storebox", guide="nas"),
+    # speicher.py: a copy of the profile's data at one of its places (WebDAV, SFTP, SMB) or a folder the admin mounted
+    F("speicher", "Kopie meiner Daten", "Copy of my data", "data", ("storage_own",), parent="nas", me="storebox", guide="speicher"),
     F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
       me="storebox", guide="speicherlan"),
     F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
       me="storebox", guide="speicherordner"),
     F("speicherauslagern", "Originale auslagern", "Move originals out", "data", ("storage_offload",), parent="speicher",
       me="storebox", guide="speicherauslagern"),
-    # nas.py (plan plaene/synology-bauplan.md, S1): one connection to the own NAS for everything that uses it
-    F("nas", "NAS verbinden", "Connect a NAS", "data", ("nas_on",), me="storebox", guide="nas"),
     F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",), parent="dienstwacht", me="setbox", guide="dienstnutzer"),
     # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile
     F("verlaufsync", "Verlauf sofort abgleichen", "Instant history sync", "talk", ("history_live",),

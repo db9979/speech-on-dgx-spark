@@ -260,7 +260,7 @@ class Uses(Base):
         speicher._running.clear()
 
     def test_own_storage_on_a_connection(self):
-        c, uid = profile("NasSpeicher")
+        c, uid = profile("NasSpeicher")   # no profile switch: the admin's release is enough
         nid = self.connect(c)
         r = c.post("/api/profile/speicher", json={"name": "Kopie", "nas": nid, "path": "/home/spark"})
         self.assertEqual(r.status_code, 200, r.text)
@@ -285,6 +285,23 @@ class Uses(Base):
         self.assertEqual(c.delete(f"/api/profile/speicher/{tid}").status_code, 200)
         self.assertEqual(c.delete(f"/api/profile/nas/{nid}").status_code, 200)
         self.assertEqual(nas.load(uid), [])
+
+    def test_copy_switch_brings_its_heading(self):
+        """"Kopie meiner Daten" hangs below "Speicher und NAS": who had only the copy on keeps it after the update."""
+        from common import CONFIG_PATH
+
+        def chat():
+            with open(CONFIG_PATH) as f:
+                return json.load(f)["chat"]
+        helpers.set_config(nas_on=False, storage_own=False)
+        nas._switch_carry()
+        self.assertIs(chat()["nas_on"], False)                  # nothing on: nothing switched
+        helpers.set_config(nas_on=False, storage_own=True)
+        self.assertFalse(features.admin_on("speicher"))
+        nas._switch_carry()
+        self.assertIs(chat()["nas_on"], True)
+        self.assertTrue(features.admin_on("speicher"))
+        self.assertEqual(features.BY_KEY["speicher"].parent, "nas")
 
     def test_old_files_move_over_and_keep_working(self):
         c, uid = profile("NasAlt")
@@ -312,6 +329,9 @@ class Uses(Base):
             self.assertEqual(nas.migrate_all(), 0)                   # once
         finally:
             offsite._write({})
+            for p in (profiles._path(uid, "speicher.json"), profiles._path(uid, "nas.json")):   # no copy left for other tests
+                if os.path.exists(p):
+                    os.remove(p)
             for p in (os.path.join(nas.STATE, nas.ADMIN_FILE), offsite.FILE[:-5] + ".vor-nas.json"):
                 if os.path.exists(p):
                     os.remove(p)

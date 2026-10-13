@@ -86,7 +86,7 @@ SVC = {
     "cal": ("Kalender", "Calendar", "Termine lesen und eintragen geht gerade nicht.", SLOW, "cal"),
     "nas": ("NAS (Sicherung)", "NAS (backup)", "Die Sicherung auf das NAS geht gerade nicht.", SLOW, "nas"),
     # Eigener Speicher (speicher.py): the WebDAV targets of the profiles, one part per address
-    "store": ("Eigener Speicher", "Own storage", "Kopien auf den eigenen Speicher warten; alles bleibt auf dem Spark.", SLOW,
+    "store": ("Kopie meiner Daten", "Copy of my data", "Kopien an die Speicherorte warten; alles bleibt auf dem Spark.", SLOW,
               "speicher"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),

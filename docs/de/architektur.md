@@ -273,10 +273,10 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
-| `app/panel/nas.py` | NAS-Verbindungen: eine Anmeldung pro NAS für Speicher und Sicherung |
+| `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
 | `app/panel/offsite.py` | Sicherung nach außen, verschlüsselt |
 | `app/panel/quality.py` | Qualitätstest gegen das echte Sprachmodell |
-| `app/panel/speicher.py` | Eigener Speicher pro Profil, verschlüsselt |
+| `app/panel/speicher.py` | Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt |
 | `app/panel/system.py` | Sicherung, Echtprüfung der Dienste, Hinweise oben |
 | `app/panel/technik.py` | Diese Seite: Zustand → Technik und die Architektur-Doku |
 | `app/panel/tracelog.py` | Logs → Anfragen: der Weg jeder Anfrage |
@@ -336,7 +336,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 
 ### users/ID/ (pro Profil)
 
-| Pfad | Inhalt | Art | Schutz | Sicherung | Eigener Speicher |
+| Pfad | Inhalt | Art | Schutz | Sicherung | Kopie meiner Daten |
 |---|---|---|---|---|---|
 | `users/ID/convos.json` | Gespräche |  | – | ja | Gespräche |
 | `users/ID/toollog.json` | Werkzeug-Log |  | – | ja | Gespräche |
@@ -359,8 +359,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/proactive-rules.json` | Eigene Melde-Regeln | Einstellungen | – | ja | – |
 | `users/ID/hintergrund.json` | Mein Zustand | Einstellungen | – | ja | – |
 | `users/ID/mail.json` | Mail-Zugang | Login | Passwort versiegelt | ja | – |
-| `users/ID/nas.json` | Eigene NAS-Verbindungen | Login | Passwort versiegelt | ja | – |
-| `users/ID/speicher.vor-nas.json` | Eigener Speicher vor dem Umzug auf NAS-Verbindungen | Login | – | ja | – |
+| `users/ID/nas.json` | Speicherorte des Profils (NAS, Cloud) | Login | Passwort versiegelt | ja | – |
+| `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang | Login | Passwort versiegelt | ja | – |
 | `users/ID/homeassistant.json` | Home-Assistant-Zugang | Login | Token versiegelt | ja | – |

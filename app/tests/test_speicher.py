@@ -17,6 +17,7 @@ from tests import helpers
 
 helpers.start()
 import dienstwacht  # noqa: E402
+import features  # noqa: E402
 import guard  # noqa: E402
 import live  # noqa: E402
 import logfilter  # noqa: E402
@@ -92,12 +93,12 @@ def objects():
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(storage_own=True, storage_lan=True, storage_folder=False, storage_root="", deny={})
+        helpers.set_config(nas_on=True, storage_own=True, storage_lan=True, storage_folder=False, storage_root="", deny={})
         DAV.update(files={}, dirs=set(), mode="", calls=[], pw="nas-pass-4711")
         speicher._running.clear()
 
     def tearDown(self):
-        helpers.set_config(storage_own=False, storage_lan=False, storage_folder=False, storage_root="", deny={})
+        helpers.set_config(nas_on=False, storage_own=False, storage_lan=False, storage_folder=False, storage_root="", deny={})
 
     def ready(self, name):
         return profile(name)   # released by the admin: works at once, nothing to switch on
@@ -140,6 +141,10 @@ class Switches(Base):
         helpers.set_config(deny={})                                       # released: works at once
         self.assertTrue(c.get("/api/whoami").json().get("storage"))
         self.assertTrue(c.get("/api/profile/speicher").json()["on"])
+        self.assertEqual(features.BY_KEY["speicher"].parent, "nas")
+        helpers.set_config(nas_on=False)                                    # "Kopie meiner Daten" hangs below "Speicher und NAS"
+        self.assertFalse(c.get("/api/whoami").json().get("storage"))
+        self.assertEqual(c.get("/api/profile/speicher").status_code, 403)
 
     def test_home_network_only_with_its_switch(self):
         c, uid = self.ready("SpLan")
@@ -438,7 +443,7 @@ class Shown(Base):
         try:
             act = dienstwacht.active()
             self.assertIn("store", act)
-            self.assertTrue(all(p["url"] == f"http://127.0.0.1:{PORT}/" for p in act["store"].values() if not p.get("tcp")))
+            self.assertTrue(all(p["url"] == f"http://127.0.0.1:{PORT}/" for p in act["store"].values() if not p.get("tcp")), act["store"])
             self.assertNotIn("password", json.dumps(act["store"]))
         finally:
             helpers.set_config(svc_watch=False, deny={})

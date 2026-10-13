@@ -1457,3 +1457,9 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .vb-c>.vb-who b{overflow:hidden;text-overflow:ellipsis}
 .vb-me input{width:100%}
 .vb-peer{margin:8px 0;padding:10px;overflow-wrap:anywhere}.vb-peer code,#vbadmin code{overflow-wrap:anywhere}
+/* Ich → Speicher (nas.js): places with "Wofür" */
+.places{display:flex;flex-direction:column;gap:12px;margin:12px 0}.place{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--card)}
+.place-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.place-h>span{min-width:0;overflow-wrap:anywhere}.place-h small,.use small{display:block;margin-top:2px;font-size:12px;color:var(--mut)}
+.place-h .b{flex:none}.uselbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:12px 0 2px}
+.use{border-top:1px solid var(--line);padding:9px 0}.use-h{display:flex;justify-content:space-between;align-items:center;gap:10px}.use-h>span{min-width:0;overflow-wrap:anywhere}.use-h .tgl{flex:none}
+.useform{margin-top:6px}.addplace{border:1.5px dashed var(--line);border-radius:14px;padding:10px 14px}.addplace>summary{color:var(--acc);font-weight:600;cursor:pointer}

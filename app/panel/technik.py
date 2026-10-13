@@ -190,8 +190,8 @@ MODULE = {
     "quality": ("betrieb", "Qualitätstest gegen das echte Sprachmodell"),
     "backup": ("betrieb", "Sicherungen und Wiederherstellen"),
     "offsite": ("betrieb", "Sicherung nach außen, verschlüsselt"),
-    "speicher": ("betrieb", "Eigener Speicher pro Profil, verschlüsselt"),
-    "nas": ("betrieb", "NAS-Verbindungen: eine Anmeldung pro NAS für Speicher und Sicherung"),
+    "speicher": ("betrieb", "Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt"),
+    "nas": ("betrieb", "Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung"),
     "update": ("betrieb", "Updates von GitHub, nur nach grünem Test"),
     "ghtoken": ("betrieb", "Lese-Token für GitHub"),
     "meldung": ("betrieb", "Probleme melden als GitHub-Issue"),
@@ -328,7 +328,7 @@ INHALT = {
     "speicher.json": ("Ziele des eigenen Speichers", "Own storage targets"), "speicher-stand.json": ("Stand des Abgleichs", "Sync state"),
     "transit.json": ("Haltestelle", "Stop"), "weather.json": ("Wetter-Ort", "Weather place"),
     "proactive.json": ("Von selbst melden", "Speak up by itself"), "proactive-rules.json": ("Eigene Melde-Regeln", "Own notice rules"),
-    "hintergrund.json": ("Mein Zustand", "My status"), "mail.json": ("Mail-Zugang", "Mail account"), "nas.json": ("Eigene NAS-Verbindungen", "Own NAS connections"), "docling-wait": ("Dateien, bis Docling sie gelesen hat", "Files until Docling has read them"), "speicher.vor-nas.json": ("Eigener Speicher vor dem Umzug auf NAS-Verbindungen", "Own storage before the move to NAS connections"),
+    "hintergrund.json": ("Mein Zustand", "My status"), "mail.json": ("Mail-Zugang", "Mail account"), "nas.json": ("Speicherorte des Profils (NAS, Cloud)", "Storage places of the profile (NAS, cloud)"), "docling-wait": ("Dateien, bis Docling sie gelesen hat", "Files until Docling has read them"), "speicher.vor-nas.json": ("Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places"),
     "mail-tidy.json": ("Posteingang aufräumen", "Inbox tidy"), "calendar.json": ("Kalender-Zugang", "Calendar account"),
     "homeassistant.json": ("Home-Assistant-Zugang", "Home Assistant account"), "telegram.json": ("Telegram-Kopplung", "Telegram link"),
     "push.json": ("Push-Abos der Browser", "Browser push subscriptions"), "remarkable.json": ("reMarkable-Zugang", "reMarkable account"),
@@ -557,11 +557,11 @@ def data(lang="de"):
 # ---------------------------------------------------------------- the docs (generated parts)
 TXT = {
     "de": {"modul": "Modul", "aufgabe": "Aufgabe", "pfad": "Pfad", "inhalt": "Inhalt", "sicherung": "Sicherung",
-           "eigen": "Eigener Speicher", "schutz": "Schutz", "grund": "Art", "ja": "ja", "nein": "nein",
+           "eigen": "Kopie meiner Daten", "schutz": "Schutz", "grund": "Art", "ja": "ja", "nein": "nein",
            "sys": "System", "glob": "users/ (alle Profile)", "prof": "users/ID/ (pro Profil)", "state": "state/ (global)",
            "code": "Im Code", "schritt": "Schritt"},
     "en": {"modul": "Module", "aufgabe": "Task", "pfad": "Path", "inhalt": "Content", "sicherung": "Backup",
-           "eigen": "Own storage", "schutz": "Protection", "grund": "Kind", "ja": "yes", "nein": "no",
+           "eigen": "Copy of my data", "schutz": "Protection", "grund": "Kind", "ja": "yes", "nein": "no",
            "sys": "System", "glob": "users/ (all profiles)", "prof": "users/ID/ (per profile)", "state": "state/ (global)",
            "code": "In the code", "schritt": "Step"},
 }

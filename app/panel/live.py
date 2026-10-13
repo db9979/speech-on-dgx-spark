@@ -118,7 +118,7 @@ TARGETS = {
     # the backup to the NAS (offsite.py) goes here too
     "nas": ("NAS", "Verbindungen und Sicherung · Heimnetz", "lan", False),
     # Eigener Speicher (speicher.py): copies of profiles' data on their NAS, WebDAV service or a folder; counts only
-    "speicher": ("Eigener Speicher", "NAS, WebDAV oder Ordner · verschlüsselt", "lan", False),
+    "speicher": ("Kopie meiner Daten", "an den Speicherorten · verschlüsselt", "lan", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot

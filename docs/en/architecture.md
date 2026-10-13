@@ -336,7 +336,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 
 ### users/ID/ (per profile)
 
-| Path | Content | Kind | Protection | Backup | Own storage |
+| Path | Content | Kind | Protection | Backup | Copy of my data |
 |---|---|---|---|---|---|
 | `users/ID/convos.json` | Conversations |  | – | yes | Conversations |
 | `users/ID/toollog.json` | Tool log |  | – | yes | Conversations |
@@ -359,8 +359,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/proactive-rules.json` | Own notice rules | Settings | – | yes | – |
 | `users/ID/hintergrund.json` | My status | Settings | – | yes | – |
 | `users/ID/mail.json` | Mail account | Login | password sealed | yes | – |
-| `users/ID/nas.json` | Own NAS connections | Login | password sealed | yes | – |
-| `users/ID/speicher.vor-nas.json` | Own storage before the move to NAS connections | Login | – | yes | – |
+| `users/ID/nas.json` | Storage places of the profile (NAS, cloud) | Login | password sealed | yes | – |
+| `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/calendar.json` | Calendar account | Login | password sealed | yes | – |
 | `users/ID/homeassistant.json` | Home Assistant account | Login | token sealed | yes | – |
