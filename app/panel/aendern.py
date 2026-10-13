@@ -243,6 +243,11 @@ async def undo(uid, entry, ctx):
         return "Meldungen wieder pausiert." if d["until"] > time.time() else "Die Pause ist aufgehoben."
     if k == "plan":
         import agent
+        if d.get("restore") and d.get("edit"):   # a changed plan or watch goes back to its old fields
+            def back(x):
+                x["plans"] = [d["restore"] if p["id"] == d["restore"]["id"] else p for p in x["plans"]]
+            agent.mutate(uid, back)
+            return "Geplanter Auftrag wie vorher."
         if d.get("restore"):
             agent.mutate(uid, lambda x: x["plans"].append(d["restore"]) if len(x["plans"]) < agent.MAX_PLANS
                          and all(p["id"] != d["restore"]["id"] for p in x["plans"]) else None)

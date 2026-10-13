@@ -7250,6 +7250,26 @@
           }
         }
       }
+    },
+    "Eigene Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own tasks"
+          }
+        }
+      }
+    },
+    "Aus = pausiert, bleibt gespeichert. Ändern und alle Erinnerungen: Ich → Aufträge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off = paused, stays saved. Change it and see all reminders: Me → Jobs"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

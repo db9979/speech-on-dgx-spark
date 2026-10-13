@@ -74,7 +74,7 @@ window.icAutoTabs=(box,key,hot)=>{const kids=[...box.children];const i=kids.find
   for(const x of body){if(x.tagName==='H3'){cur={label:x.textContent.trim(),nodes:[]};secs.push(cur);x.remove();continue}
     if(/msg$/.test(x.id||'')&&x===body[body.length-1]){tail.push(x);continue}cur.nodes.push(x)}
   const wrap=el('div','ic-tabwrap'),nav=el('div','ic-tabs');nav.setAttribute('role','tablist');wrap.appendChild(nav);
-  const count=p=>{const ul=p.querySelectorAll('ul.facts');if(!ul.length)return'';let n=0;ul.forEach(u=>n+=[...u.children].filter(li=>li.tagName==='LI'&&!li.classList.contains('mut')&&!li.classList.contains('ic-more')).length);return n};
+  const count=p=>{const fix=p.querySelector('[data-tabcount]');if(fix)return fix.dataset.tabcount;const ul=p.querySelectorAll('ul.facts');if(!ul.length)return'';let n=0;ul.forEach(u=>n+=[...u.children].filter(li=>li.tagName==='LI'&&!li.classList.contains('mut')&&!li.classList.contains('ic-more')).length);return n};
   const items=secs.filter(x=>x.nodes.length).map(sc=>{const p=el('div','ic-panel');sc.nodes.forEach(n=>p.appendChild(n));wrap.appendChild(p);
     const b=el('button');b.type='button';b.setAttribute('role','tab');b.appendChild(document.createTextNode(sc.label));nav.appendChild(b);return {k:sc.label,p,b}});
   const show=it=>{items.forEach(x=>{const on=x===it;x.p.hidden=!on;x.b.classList.toggle('on',on);x.b.setAttribute('aria-selected',on?'true':'false')})};

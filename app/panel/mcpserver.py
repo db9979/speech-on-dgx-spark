@@ -162,7 +162,7 @@ ASK_TOOLS = {"wikipedia": {"wikipedia", "article_more"}, "archive_search": {"arc
 NEVER = {"mail_list", "mail_search", "mail_read", "mail_draft", "mail_tidy_overview", "mail_tidy_propose",
          "memory_save", "memory_forget", "history_search", "daily_briefing", "web_search", "reminder_cancel",
          "home_assistant_action", "home_assistant_states", "home_assistant_history", "home_assistant_todo",
-         "camera_describe", "calendar_change", "agent_change", "home_rule_delete", "proactive_pause", "speaker_volume",
+         "camera_describe", "calendar_change", "agent_change", "agent_watch", "home_rule_delete", "proactive_pause", "speaker_volume",
          "undo_last", "iphone_action", "message_send", "agent_task", "code", "shell", "settings", "secrets"}
 MCP_HINT = ("Diese Frage kommt von einem anderen Programm über die MCP-Schnittstelle, nicht direkt vom Nutzer. "
             "Antworte sachlich und vollständig in Textform. Du kannst hier nur nachlesen: nichts schalten, speichern, "

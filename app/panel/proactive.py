@@ -399,6 +399,22 @@ def _save_rules(uid, items):
     profiles._write(profiles._path(uid, "proactive-rules.json"), items[:MAX_RULES])
 
 
+def pause_rule(uid, rid, paused):
+    """Pauses or resumes one rule (Ich → Aufträge); True if there was one. A paused rule stays and says nothing."""
+    with _lock:
+        have = rules(uid)
+        hit = next((r for r in have if isinstance(r, dict) and r.get("id") == rid), None)
+        if hit is None:
+            return False
+        if paused:
+            hit["paused"] = True
+        else:
+            hit.pop("paused", None)
+        _save_rules(uid, have)
+    print(f"proactive: rule {'paused' if paused else 'resumed'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return True
+
+
 async def _all_states(item):
     import homeassistant
     async with homeassistant._client(item) as c:
@@ -622,7 +638,7 @@ async def check_ha(uid, p, by_id=None):
     fired = []
     for r in rs:
         conds = r.get("conds") or []
-        if not conds:
+        if not conds or r.get("paused"):   # paused under Ich → Aufträge (plan „Eigene Aufgaben“): stays, says nothing
             continue
 
         def step(st, r=r, conds=conds):

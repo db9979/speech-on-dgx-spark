@@ -293,6 +293,15 @@ struct VoiceView: View {
 
 // MARK: - Von selbst
 
+/// An own task of Ich → Aufträge (a watch or a scheduled job): its name and when it runs, as the Spark words them.
+struct OwnTask: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let text: String
+    let watch: Bool
+    let paused: Bool
+}
+
 struct Job: Identifiable, Hashable {
     let id: String
     let task: String
@@ -314,6 +323,7 @@ final class AutoModel: ObservableObject {
     @Published var parcels: [String] = []
     @Published var parcelNote: String?
     @Published var jobs: [Job] = []
+    @Published var tasks: [OwnTask] = []
     @Published var rooms: [ListeningRoom] = []
     @Published var sample: String?
     @Published var error: String?
@@ -342,8 +352,26 @@ final class AutoModel: ObservableObject {
                            created: Date(timeIntervalSince1970: (x["created"] as? NSNumber)?.doubleValue ?? 0),
                            summary: String((x["summary"] as? String ?? "").prefix(2000)), error: String((x["error"] as? String ?? "").prefix(500)))
             }
+            tasks = (a["plans"] as? [[String: Any]] ?? []).prefix(40).compactMap { x in
+                guard let id = x["id"] as? String, SparkAPI.id(id) else { return nil }
+                let task = String((x["task"] as? String ?? "").prefix(300))
+                let title = String((x["title"] as? String ?? "").prefix(80))
+                return OwnTask(id: id, title: title.isEmpty ? task : title, text: String((x["text"] as? String ?? "").prefix(300)),
+                               watch: (x["kind"] as? String) == "watch", paused: x["paused"] as? Bool ?? false)
+            }
         }
         rooms = (try? await api.rooms()) ?? []
+    }
+
+    /// Pauses an own task or lets it run again (the same switch as in the row under Ich → Aufträge).
+    func toggle(_ t: OwnTask) async {
+        do { _ = try await SparkAPI.current?.call("POST", "api/profile/agent/plans/\(t.id)/pause"); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    func remove(_ t: OwnTask) async {
+        do { _ = try await SparkAPI.current?.call("DELETE", "api/profile/agent/plans/\(t.id)"); await load() }
+        catch { self.error = error.localizedDescription }
     }
 
     func setPlace(pick: [String: Any]? = nil) async {
@@ -464,6 +492,21 @@ struct AutoView: View {
                     }
                 }
             } header: { Text("Aufträge") } footer: { Text("Neue Aufträge gibst du einfach im Gespräch. Wischen stoppt einen laufenden.") }
+            if !m.tasks.isEmpty {
+                Section {
+                    ForEach(m.tasks) { t in
+                        Toggle(isOn: Binding(get: { !t.paused }, set: { _ in Task { await m.toggle(t) } })) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: (t.watch ? "🔔 " : "🗓 ") + t.title).lineLimit(2)
+                                Text(verbatim: t.text).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                            }
+                        }
+                        .swipeActions { Button("Löschen", role: .destructive) { Task { await m.remove(t) } } }
+                    }
+                } header: { Text("Eigene Aufgaben") } footer: {
+                    Text(SparkAPI.way(String(localized: "Aus = pausiert, bleibt gespeichert. Ändern und alle Erinnerungen: Ich → Aufträge")))
+                }
+            }
             if !m.rooms.isEmpty {
                 Section {
                     ForEach(m.rooms) { r in

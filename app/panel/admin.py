@@ -538,7 +538,7 @@ def validate(new):
     if not isinstance(books, list) or len(books) > kiwix.MAX_BOOKS \
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
-    for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages_all", "messages_announce", "pebble",
+    for k in ("agent", "agent_mcp", "agent_watch", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages_all", "messages_announce", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",

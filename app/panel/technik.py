@@ -144,6 +144,7 @@ MODULE = {
     "rmpapier": ("dienste", "Gestaltete Blätter fürs reMarkable"),
     "rmaufgaben": ("dienste", "Aufgabenblatt zum Ankreuzen aufs reMarkable"),
     "agent": ("dienste", "Aufträge im Hintergrund, Zeitpläne, Routinen"),
+    "beobachten": ("dienste", "Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben)"),
     "proactive": ("dienste", "Meldet sich von selbst, wenn etwas Echtes passiert"),
     # Geräte und Kanäle
     "telegram": ("geraete", "Telegram-Bot für Text und Sprachnachrichten"),

@@ -18,6 +18,9 @@ from outside cannot make it act. The report is outside text: marked, never learn
 (browser, iPhone app) and Telegram as the profile set them, kept under Ich → Aufträge, on request also
 as a document under "Meine Dokumente" (proposal 5).
 
+Watches (beobachten.py, plan „Eigene Aufgaben“): a scheduled job with kind "watch" that reports only what is new;
+the panel checks every find against the pages of the run. Its own admin switch (chat.agent_watch, off).
+
 Scheduled jobs (proposal 2) and routines (proposal 3) are only proposed by the model: the panel
 describes them in fixed words and saves them after the person's plain "Ja" in the next message, from
 the same device and conversation. A routine is a fixed list of smart home commands; saying its name
@@ -38,6 +41,7 @@ import time
 
 import httpx
 
+import beobachten
 import calendars
 import hintergrund
 import mcp
@@ -53,7 +57,8 @@ MAX_TASK = 500
 MAX_JOBS_KEPT = 30
 MAX_QUEUED = 3            # per profile, waiting or running
 DAY_MAX = 20              # jobs per profile and day
-MAX_PLANS = 10
+MAX_PLANS = 20             # scheduled jobs and watches together
+MAX_REPORTS = 10           # scheduled jobs that report every time
 MAX_ROUTINES = 20
 MAX_STEPS = 8             # smart home commands per routine
 MAX_ROUNDS = 8            # model rounds per job
@@ -112,6 +117,11 @@ def mcp_on():
     return features.admin_on("mcp")
 
 
+def watch_on(uid):
+    """Watches allowed for this profile: the admin's switch „Beobachten“ and the agent level (reading is enough)."""
+    return bool(level(uid)) and features.allowed("beobachten", uid)
+
+
 def granted(uid):
     """The level the admin gave this profile ("" when the feature is off)."""
     if not uid or not admin_on() or not profiles.by_id(uid):
@@ -152,7 +162,7 @@ def load(uid):
     return {"jobs": [x for x in d.get("jobs") or [] if isinstance(x, dict) and x.get("id")][-MAX_JOBS_KEPT:],
             "plans": [x for x in d.get("plans") or [] if isinstance(x, dict) and x.get("id")][:MAX_PLANS],
             "routines": [x for x in d.get("routines") or [] if isinstance(x, dict) and x.get("id")][:MAX_ROUTINES],
-            "day": str(d.get("day", "")), "count": int(d.get("count") or 0)}
+            "rem_paused": _rem_paused(d), "day": str(d.get("day", "")), "count": int(d.get("count") or 0)}
 
 
 def mutate(uid, fn):
@@ -216,6 +226,13 @@ def enqueue(uid, task, doc=False, private=True, origin="chat", plan=""):
         print(f"agent: job queued ({origin})", flush=True)
         kick()
     return item, why
+
+
+def _why_word(why):
+    """A fixed word for the journal instead of the German reason."""
+    why = str(why or "")
+    return ("notaus" if "Notaus" in why else "day limit" if "heute" in why else "queue full" if "warten" in why
+            else "no task")
 
 
 # ---------------------------------------------------------------- the worker: one job at a time
@@ -498,6 +515,7 @@ async def _job_tool_run(uid, name, args, extra, counts, steps, cfg, zone):
         steps.append({"t": int(time.time()), "what": "Suche: " + q})
         async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=5)) as c:
             text, _ = await chat.web_search(c, dict(cfg, search_pages=0), q)
+        counts.setdefault("searches", []).append(str(text)[:20000])   # a watch checks its finds against these
         return chat.wrap_outside(text)
     if name == "read_page":
         url = str(args.get("url") or "").strip()[:500]
@@ -507,6 +525,8 @@ async def _job_tool_run(uid, name, args, extra, counts, steps, cfg, zone):
         steps.append({"t": int(time.time()), "what": "Seite: " + url[:120]})
         async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=5)) as c:
             text = await chat.page_text(c, url, 8000)
+        if text:
+            counts.setdefault("pages", {})[url.rstrip(".,;:")] = str(text)
         return chat.wrap_outside(text) if text else "The page could not be read (not public, not HTML or too slow)."
     if name == "calendar_events":
         try:
@@ -562,17 +582,25 @@ async def run_job(uid, jid):
     tools, extra = job_tools(uid, item.get("private", True))
     s = profiles.settings(uid)
     prof = profiles.by_id(uid) or {"name": ""}
-    messages = [{"role": "system", "content": JOB_SYSTEM + "\n\n" + chat.now_line(s.get("tz", ""))},
-                {"role": "user", "content": f"Auftrag von {prof['name']}: {item['task']}"}]
+    plan = next((x for x in load(uid)["plans"] if x["id"] == item.get("plan")), None) if item.get("origin") == "watch" else None
+    system = JOB_SYSTEM + ("\n\n" + beobachten.RULES if plan else "") + "\n\n" + chat.now_line(s.get("tz", ""))
+    task = item["task"]
+    if plan and plan.get("known"):   # what the watch already knows (the panel decides anyway, this only saves steps)
+        task += "\nSchon bekannt (nicht neu): " + "; ".join(clean(k.get("v"), 80) for k in plan["known"][:10])
+    if plan and plan.get("below") is not None:
+        task += f"\nNur Funde mit einem Preis unter {plan['below']:g} Euro zählen."
+    messages = [{"role": "system", "content": system},
+                {"role": "user", "content": f"Auftrag von {prof['name']}: {task}"}]
     counts = {"all": 0, "search": 0, "page": 0, "task": item.get("task") or ""}
     steps = []
     used_private = False
     rec = None
     try:     # Zustand → Live: the job as a request of its own with every round and tool (never the task text)
         import live
-        rec = live.begin("auto", "", uid=uid, auto=True, why="Auftrag", src="job")
+        kind = "Beobachten" if item.get("origin") == "watch" else "Auftrag"
+        rec = live.begin("auto", "", uid=uid, auto=True, why=kind, src="job")
         if rec is not None:
-            rec.step("in", "Auftrag", rec.t0)
+            rec.step("in", kind, rec.t0)
     except Exception:
         rec = None
 
@@ -622,6 +650,9 @@ async def run_job(uid, jid):
         _set_job(uid, jid, state="failed", finished=int(time.time()), error="Sprachmodell: " + type(e).__name__,
                  steps=steps[-30:])
         _live_end(rec, False)
+        if plan:
+            await watch_done(uid, jid, "", counts)
+            return
         await deliver(uid, job(uid, jid), used_private)
         return
     except BaseException:
@@ -638,18 +669,110 @@ async def run_job(uid, jid):
         upd["error"] = "Kein Bericht entstanden."
     _set_job(uid, jid, **upd)
     hintergrund.note(uid, "agent", bool(report))
-    done = job(uid, jid)
-    if report and (done.get("doc") or s.get("agent_doc")):
-        save_doc(uid, jid)
-    if report:
-        profiles.save_convo(uid, {"id": "agent-" + jid, "title": ("Auftrag: " + done["task"])[:80],
-                                  "updated": int(time.time() * 1000),
-                                  "msgs": [{"role": "user", "content": done["task"]},
-                                           {"role": "assistant", "content": report, "outside": True}]})
-        profiles.tool_log_add(uid, "(Auftrag) " + done["task"],
-                              [{"name": "Auftrag", "args": x["what"], "result": ""} for x in steps[:12]], done["summary"])
+    if plan:
+        await watch_done(uid, jid, report, counts)
+        return
+    _keep(uid, jid)
     print(f"agent: job {state}, {len(steps)} steps", flush=True)
     await deliver(uid, job(uid, jid), used_private)
+
+
+def _keep(uid, jid):
+    """A finished report stays: as a document when asked, as a conversation and in the tool log."""
+    done = job(uid, jid)
+    if not done or not done.get("report"):
+        return
+    if done.get("doc") or profiles.settings(uid).get("agent_doc"):
+        save_doc(uid, jid)
+    profiles.save_convo(uid, {"id": "agent-" + jid, "title": ("Auftrag: " + done["task"])[:80],
+                              "updated": int(time.time() * 1000),
+                              "msgs": [{"role": "user", "content": done["task"]},
+                                       {"role": "assistant", "content": done["report"], "outside": True}]})
+    profiles.tool_log_add(uid, "(Auftrag) " + done["task"],
+                          [{"name": "Auftrag", "args": x.get("what", ""), "result": ""} for x in (done.get("steps") or [])[:12]],
+                          done.get("summary", ""))
+
+
+def _drop_job(uid, jid):
+    mutate(uid, lambda d: d.update(jobs=[x for x in d["jobs"] if x["id"] != jid]))
+
+
+PAUSED_SAY = {"fehler": f"ging {beobachten.FAILS}-mal hintereinander nicht",
+              "idle": f"hat {beobachten.IDLE_DAYS} Tage nichts Neues gefunden"}
+
+
+async def watch_done(uid, jid, report, counts):
+    """The panel's verdict on one run of a watch (beobachten.check): only checked new finds go out, a run without
+    anything new stays quiet and leaves only a line in the watch's history. Returns the result word."""
+    import push
+    item = job(uid, jid) or {}
+    pid = item.get("plan")
+    plan = next((x for x in load(uid)["plans"] if x["id"] == pid), None)
+    if not plan:
+        _drop_job(uid, jid)
+        print("agent: watch run | result gone | why deleted meanwhile", flush=True)
+        return "gone"
+    verdict = None
+    if report:
+        verdict = beobachten.check(report, {"pages": counts.get("pages") or {}, "searches": counts.get("searches") or []},
+                                   [k.get("v") for k in plan.get("known") or []], plan.get("below"))
+    now = int(time.time())
+    out = {}
+
+    def fn(d):
+        for x in d["plans"]:
+            if x["id"] != pid:
+                continue
+            x["last"] = now
+            if verdict is None:
+                x["fails"] = int(x.get("fails") or 0) + 1
+                beobachten.note(x, "fehler", item.get("error") or "kein Bericht", 0, now)
+                if x["fails"] >= beobachten.FAILS:
+                    x["paused"], x["why"] = True, "fehler"
+                out["r"] = "fehler"
+            else:
+                x["fails"] = 0
+                if verdict["new"]:
+                    beobachten.remember(x, verdict["new"], now)
+                    x["last_hit"] = now
+                    beobachten.note(x, "neu", verdict["new"][0]["v"], len(verdict["new"]), now)
+                    out["r"] = "neu"
+                elif not x.get("only_new", True):
+                    beobachten.note(x, "bericht", summary_of(report), 0, now)
+                    out["r"] = "bericht"
+                else:
+                    beobachten.note(x, "still", "", 0, now)
+                    out["r"] = "still"
+                if not verdict["new"] and beobachten.idle(x, now):
+                    x["paused"], x["why"] = True, "idle"
+            out["p"] = dict(x)
+    mutate(uid, fn)
+    r, p = out.get("r", "gone"), out.get("p") or plan
+    print(f"agent: watch run | result {r} | new {len(verdict['new']) if verdict else 0} | "
+          f"dropped {verdict['dropped'] if verdict else 0} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    if r == "neu":
+        _set_job(uid, jid, finds=verdict["new"][:beobachten.MAX_FINDS], title=p.get("title", ""))
+        _keep(uid, jid)
+        title, body = beobachten.push_text(p, verdict["new"])
+        try:
+            await push.send(uid, title, body, tag="agent", private=True)
+        except Exception as e:
+            print("agent: watch push failed |", type(e).__name__, flush=True)
+    elif r == "bericht":
+        _set_job(uid, jid, title=p.get("title", ""))
+        _keep(uid, jid)
+        await deliver(uid, job(uid, jid), True)
+    else:
+        _drop_job(uid, jid)      # a quiet run leaves only its line in the history
+    if p.get("paused") and p.get("why") and not plan.get("paused"):
+        print(f"agent: watch paused | why {p['why']}", flush=True)
+        try:
+            await push.send(uid, "⏸ Beobachtung pausiert",
+                            f"„{(p.get('title') or p.get('task', ''))[:60]}“ {PAUSED_SAY[p['why']]}. Wieder einschalten: "
+                            "Ich → Aufträge", tag="agent", private=True)
+        except Exception as e:
+            print("agent: watch push failed |", type(e).__name__, flush=True)
+    return r
 
 
 def _live_end(rec, ok):
@@ -718,6 +841,20 @@ def parse_plan(args, zone, now=None):
         raise ValueError("Uhrzeit fehlt (HH:MM).")
     hm = "%02d:%s" % (int(hm.split(":")[0]), hm.split(":")[1])
     p = {"task": task, "repeat": rep, "time": hm, "doc": bool(args.get("document") or args.get("doc"))}
+    if args.get("kind") == "watch":   # a watch (beobachten.py): reports only what is new, never just once
+        if rep == "once":
+            raise ValueError("Eine Beobachtung läuft immer wieder: täglich, werktags, wöchentlich oder monatlich.")
+        p.update(kind="watch", only_new=args.get("only_new") is not False,
+                 title=clean(args.get("title"), 80) or beobachten.title_of(task))
+        below = args.get("below")
+        if below not in (None, "", False):
+            try:
+                below = float(str(below).replace(",", "."))
+            except ValueError:
+                raise ValueError("Preisgrenze: eine Zahl in Euro.")
+            if not 0 < below < 10_000_000:
+                raise ValueError("Preisgrenze: eine Zahl in Euro.")
+            p["below"] = below
     if rep == "weekly":
         wd = args.get("weekday")
         if isinstance(wd, str):
@@ -767,7 +904,7 @@ def next_run(p, after, zone):
     return None
 
 
-def describe_plan(p):
+def describe_when(p):
     when = {"daily": "jeden Tag", "weekdays": "werktags (Montag bis Freitag)"}.get(p["repeat"])
     if p["repeat"] == "weekly":
         when = "jeden " + DAY_NAMES[p["weekday"]]
@@ -775,7 +912,15 @@ def describe_plan(p):
         when = f"jeden Monat am {p['day']}."
     elif p["repeat"] == "once":
         when = "einmal am " + datetime.date.fromisoformat(p["date"]).strftime("%d.%m.%Y")
-    return f"{when} um {p['time']} Uhr: „{p['task']}“" + (" (Bericht auch als Dokument)" if p.get("doc") else "")
+    return f"{when} um {p['time']} Uhr"
+
+
+def describe_plan(p):
+    if p.get("kind") == "watch":
+        return (f"Beobachten „{p.get('title') or p['task']}“: {describe_when(p)} nachsehen, "
+                + ("nur melden, wenn es etwas Neues gibt" if p.get("only_new", True) else "jedes Mal berichten")
+                + (f", nur unter {p['below']:g} €" if p.get("below") is not None else ""))
+    return f"{describe_when(p)}: „{p['task']}“" + (" (Bericht auch als Dokument)" if p.get("doc") else "")
 
 
 def add_plan(uid, p):
@@ -786,12 +931,24 @@ def add_plan(uid, p):
         raise ValueError("Der Zeitpunkt liegt in der Vergangenheit.")
 
     def fn(d):
+        watch = p.get("kind") == "watch"
+        if watch and sum(1 for x in d["plans"] if x.get("kind") == "watch") >= beobachten.MAX_WATCH:
+            raise ValueError(f"Höchstens {beobachten.MAX_WATCH} Beobachtungen.")
+        if not watch and sum(1 for x in d["plans"] if x.get("kind") != "watch") >= MAX_REPORTS:
+            raise ValueError(f"Höchstens {MAX_REPORTS} geplante Aufträge.")
         if len(d["plans"]) >= MAX_PLANS:
-            raise ValueError(f"Höchstens {MAX_PLANS} geplante Aufträge.")
+            raise ValueError(f"Höchstens {MAX_PLANS} geplante Aufträge und Beobachtungen.")
         item = dict(p, id=secrets.token_hex(4), next=nxt, paused=False, created=int(time.time()))
         d["plans"].append(item)
         return item
-    return mutate(uid, fn)
+    try:
+        item = mutate(uid, fn)
+    except ValueError:
+        print(f"agent: plan refused | kind {p.get('kind') or 'report'} | why limit", flush=True)
+        raise
+    print(f"agent: plan made | kind {p.get('kind') or 'report'} | by {p.get('created_by') or 'voice'} | "
+          f"{profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return item
 
 
 async def due_once(now=None):
@@ -806,7 +963,9 @@ async def due_once(now=None):
         if not level(uid):
             continue
         zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
-        due = [x for x in load(uid)["plans"] if not x.get("paused") and x.get("next") and x["next"] <= now_t]
+        watch = watch_on(uid)
+        due = [x for x in load(uid)["plans"] if not x.get("paused") and x.get("next") and x["next"] <= now_t
+               and (watch or x.get("kind") != "watch")]   # watches wait while the admin's switch is off
         for p in due:
             # the plan moves on first, so a failing job is not started again every minute
             after = datetime.datetime.fromtimestamp(max(now_t, p["next"]), zone)
@@ -820,9 +979,13 @@ async def due_once(now=None):
             mutate(uid, fn)
             if now_t - p["next"] > 3 * 3600:     # the panel was off for hours: skip, the next one comes
                 continue
-            item, why = enqueue(uid, p["task"], doc=p.get("doc"), origin="plan", plan=p["id"])
+            origin = "watch" if p.get("kind") == "watch" else "plan"
+            item, why = enqueue(uid, p["task"], doc=p.get("doc") and origin == "plan", origin=origin, plan=p["id"])
             if not item:
-                print("agent: plan skipped:", why, flush=True)
+                print(f"agent: {origin} skipped | why {_why_word(why)}", flush=True)
+                if origin == "watch":
+                    mutate(uid, lambda d, pid=p["id"], why=why: [beobachten.note(x, "fehler", why)
+                                                                  for x in d["plans"] if x["id"] == pid])
     kick()
 
 
@@ -925,8 +1088,10 @@ def propose(uid, item, src):
     import meinmcp
     import tasks
     import tidy
+    import hamelden
     for mod in (calendars, tidy, tasks, meinmcp):
         mod.drop_pending(uid)
+    hamelden._PENDING.pop(uid, None)
     profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
 
 
@@ -963,7 +1128,72 @@ def change_plan(uid, pid, act):
     return hit["p"]
 
 
+EDIT_KEYS = ("task", "title", "repeat", "time", "weekday", "day", "date", "doc", "only_new", "below")
+
+
+def edit_plan(uid, pid, changes):
+    """Changes a scheduled job or a watch (page or voice after "Ja"); returns (before, after). ValueError if wrong.
+    on: False pauses, True runs it again; forget: True clears what a watch knows."""
+    import chat
+    zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
+    old = next((x for x in load(uid)["plans"] if x["id"] == pid), None)
+    if not old:
+        raise ValueError("den geplanten Auftrag gibt es nicht mehr")
+    changes = changes if isinstance(changes, dict) else {}
+    merged = {k: old.get(k) for k in EDIT_KEYS if old.get(k) is not None}
+    merged.update({k: v for k, v in changes.items() if k in EDIT_KEYS})
+    if "below" in changes and changes["below"] in (None, ""):
+        merged.pop("below", None)
+    if old.get("kind") == "watch":
+        merged["kind"] = "watch"
+    fresh = parse_plan(merged, zone)
+    out = {}
+
+    def fn(d):
+        for x in d["plans"]:
+            if x["id"] != pid:
+                continue
+            out["before"] = dict(x)
+            for k in EDIT_KEYS:
+                x.pop(k, None)
+            x.update(fresh)
+            if "on" in changes:
+                x["paused"] = changes["on"] is False
+                if changes["on"] is not False:
+                    x.pop("why", None)
+                    x["fails"] = 0
+            if changes.get("forget"):
+                x["known"] = []
+            if not x.get("paused"):
+                x["next"] = next_run(x, datetime.datetime.now(zone), zone)
+            out["after"] = dict(x)
+    mutate(uid, fn)
+    if not out:
+        raise ValueError("den geplanten Auftrag gibt es nicht mehr")
+    print(f"agent: plan changed | kind {old.get('kind') or 'report'} | fields {len(changes)}", flush=True)
+    return out["before"], out["after"]
+
+
+def run_now(uid, pid):
+    """„Jetzt prüfen“: one run of the plan now, besides its times; (job, None) or (None, reason)."""
+    p = next((x for x in load(uid)["plans"] if x["id"] == pid), None)
+    if not p:
+        return None, "Den geplanten Auftrag gibt es nicht mehr."
+    if any(x.get("plan") == pid and x.get("state") in ("queued", "running") for x in load(uid)["jobs"]):
+        return None, "Diese Aufgabe läuft schon."
+    origin = "watch" if p.get("kind") == "watch" else "plan"
+    item, why = enqueue(uid, p["task"], doc=p.get("doc") and origin == "plan", origin=origin, plan=pid)
+    print(f"agent: run now | kind {origin} | " + ("queued" if item else "refused why " + _why_word(why)), flush=True)
+    return item, why
+
+
 def describe_pending(p):
+    if p["kind"] == "plan_edit":
+        return f"„{p['line']}“ ändern auf: {p['new_line']}"
+    if p["kind"] == "mail_from":
+        return f"bei Mails von „{p['who']}“ Bescheid geben"
+    if p["kind"] == "watch":
+        return describe_plan(p["plan"])
     if p["kind"] == "plan_change":
         return f"den geplanten Auftrag {p['line']} {CHANGE_WORDS[p['action']]}"
     if p["kind"] == "plan":
@@ -994,6 +1224,22 @@ async def answer(ctx, latest):
         return {"call": {"name": "agent (bestätigt)", "args": what, "result": note[:300]},
                 "system": "Agent: " + note + " Sag dem Nutzer genau das in ein bis zwei Sätzen.",
                 "outside": p["kind"] == "mcp"}
+    # „Sag mir Bescheid, wenn es eine neue Firmware für … gibt“: the panel makes the proposal from the person's own
+    # words (beobachten.parse), with a fixed sentence; the model only asks it (plan „Eigene Aufgaben“)
+    if ctx.get("client") != "speaker" and watch_on(uid):
+        w = beobachten.parse(latest)
+        if w:
+            return _watch_proposal(uid, w, ctx)
+        who_from = beobachten.mail_sender(latest)
+        if who_from and features.allowed("proactive", uid):
+            if who_from.lower() in (x.lower() for x in senders(uid)):
+                return {"call": {"name": "Mail-Absender (schon da)", "args": who_from, "result": "steht schon auf der Liste"},
+                        "system": f"Agent: Auf Mails von „{who_from}“ achte ich schon (Ich → Aufträge). Sag das kurz."}
+            propose(uid, {"kind": "mail_from", "who": who_from}, ctx.get("src", ""))
+            print("agent: mail sender proposed by the panel", flush=True)
+            return {"proposed": "agent", "call": {"name": "Mail-Absender (Vorschlag)", "args": who_from, "result": "wartet auf Ja"},
+                    "system": f"Agent: Noch NICHT gespeichert. Frag den Nutzer genau: „Soll ich mich melden, wenn eine "
+                              f"Mail von „{who_from}“ kommt?“ Erst sein Ja in der nächsten Nachricht speichert es."}
     # the smart home object comes from chat_turn with all its rules (own login or key, Telegram, iPhone app)
     if ctx.get("ha") and may(uid, "act"):
         r = which_routine(uid, latest)
@@ -1014,6 +1260,30 @@ async def answer(ctx, latest):
     return None
 
 
+def _watch_proposal(uid, w, ctx):
+    """The proposal of a watch, waiting for the person's yes: {"call", "system"} for the turn."""
+    import chat
+    zone = chat.user_zone(ctx.get("tz") or profiles.settings(uid).get("tz", ""))
+    try:
+        plan = parse_plan(dict(w, kind="watch"), zone)
+    except ValueError as e:
+        print("agent: watch not proposed | why invalid", flush=True)
+        return {"call": {"name": "Beobachten (nicht möglich)", "args": "", "result": str(e)},
+                "system": f"Agent: Die Beobachtung wurde NICHT vorgeschlagen: {e} Sag dem Nutzer das kurz."}
+    if sum(1 for x in load(uid)["plans"] if x.get("kind") == "watch") >= beobachten.MAX_WATCH:
+        print("agent: watch not proposed | why limit", flush=True)
+        return {"call": {"name": "Beobachten (nicht möglich)", "args": "", "result": "Höchstzahl erreicht"},
+                "system": f"Agent: Es gibt schon {beobachten.MAX_WATCH} Beobachtungen. Sag dem Nutzer, dass er erst "
+                          "eine unter Ich → Aufträge löschen muss."}
+    propose(uid, {"kind": "watch", "plan": plan}, ctx.get("src", ""))
+    line = describe_plan(plan)
+    print("agent: watch proposed by the panel", flush=True)
+    return {"proposed": "agent", "call": {"name": "Beobachten (Vorschlag)", "args": line, "result": "wartet auf Ja"},
+            "system": f"Agent: Noch NICHT angelegt. Frag den Nutzer genau: „Soll ich das so anlegen: {line}? Ich melde "
+                      "mich per Mitteilung.“ Erst sein Ja in der nächsten Nachricht legt es an. Such jetzt nicht im "
+                      "Netz, nenne kein Ergebnis und stell keine Erinnerung."}
+
+
 async def carry_out(uid, p, ctx):
     """Does what a proposal says, after the yes; returns the checked result in German."""
     notaus.stop("aktion", uid)
@@ -1022,6 +1292,30 @@ async def carry_out(uid, p, ctx):
             raise ValueError("Agent-Funktionen sind für dich aus")
         item = add_plan(uid, p["plan"])
         return "Gespeichert: " + describe_plan(item) + "."
+    if p["kind"] == "watch":
+        if not watch_on(uid):
+            raise ValueError("Beobachten ist für dich nicht freigegeben")
+        item = add_plan(uid, dict(p["plan"], created_by="voice"))
+        print("agent: watch made by voice after yes", flush=True)
+        import tagebuch
+        tagebuch.note(uid, "aenderung", "Beobachten: " + item.get("title", "")[:70], ref=item["id"])
+        return "Angelegt: " + describe_plan(item) + ". Ändern oder pausieren: Ich → Aufträge."
+    if p["kind"] == "mail_from":
+        if not features.allowed("proactive", uid):
+            raise ValueError("„Von selbst melden“ ist für dich aus")
+        set_senders(uid, senders(uid) + [p["who"]])
+        print("agent: mail sender added by voice after yes", flush=True)
+        extra = "" if profiles.effective(uid).get("pro_mail", True) else " „Wichtige Mail“ ist bei dir noch aus (Ich → Von selbst)."
+        return f"Gespeichert: Ich melde mich, wenn eine Mail von „{p['who']}“ kommt.{extra}"
+    if p["kind"] == "plan_edit":
+        if not may(uid, "read"):
+            raise ValueError("Agent-Funktionen sind für dich aus")
+        before, after = edit_plan(uid, p["id"], p["changes"])
+        import aendern
+        aendern.note(uid, "plan", {"restore": before, "edit": True}, f"„{p['line'][:60]}“ wie vorher stellen")
+        import tagebuch
+        tagebuch.note(uid, "aenderung", "Aufgabe geändert: " + (after.get("title") or after.get("task", ""))[:60], ref=after["id"])
+        return "Geändert: " + describe_plan(after) + "."
     if p["kind"] == "plan_change":
         if not may(uid, "read"):
             raise ValueError("Agent-Funktionen sind für dich aus")
@@ -1053,8 +1347,9 @@ async def carry_out(uid, p, ctx):
 
 # ---------------------------------------------------------------- the assistant's tools
 # "Pausiere den Plan mit dem Wetter", "Lösch den geplanten Auftrag": agent_change, kept whatever the Weiche says
-PLAN_CHANGE = re.compile(r"(?i)(paus|lösch|stopp|fortsetz|setz\w* .{0,30}fort)\w*.{0,40}\b(pl[aä]n|geplant|auftr[aä]g)"
-                         r"|\b(pl[aä]n|geplant|auftr[aä]g)\w*.{0,40}(paus|lösch|stopp|fortsetz)")
+PLAN_CHANGE = re.compile(r"(?i)(paus|lösch|stopp|fortsetz|setz\w* .{0,30}fort|änder|verschieb)\w*.{0,40}\b(pl[aä]n|geplant|auftr[aä]g|"
+                         r"beobacht|aufgabe)|\b(pl[aä]n|geplant|auftr[aä]g|beobacht\w*|aufgabe)\w*.{0,40}(paus|lösch|stopp|"
+                         r"fortsetz|änder|verschieb|nur noch|lieber)")
 ASK = re.compile(PLAN_CHANGE.pattern.removeprefix("(?i)") + r"|(recherch|\bagent(en)?\b|find\w* (für mich |mal )?(heraus|raus)|herausfinden|im hintergrund|"
                  r"meld(e|est)? dich|sag (mir )?(dann )?bescheid|gib (mir )?bescheid|bericht|vergleich|zusammenfass|"
                  r"fass\w* .{0,60}zusammen|überblick|auftr[aä]g|jeden (tag|morgen|abend|montag|dienstag|mittwoch|"
@@ -1062,7 +1357,7 @@ ASK = re.compile(PLAN_CHANGE.pattern.removeprefix("(?i)") + r"|(recherch|\bagent
                  r"abl[aä]uf|routine|merk dir .{0,40}\bals\b|geplant|research|find out|in the background|"
                  r"let me know|report|compare|summar|every (day|morning|evening|week|month|monday|tuesday|"
                  r"wednesday|thursday|friday|saturday|sunday)|daily|weekly|monthly)", re.I)
-CHANGES = {"agent_task", "agent_schedule", "routine_save", "agent_change"}
+CHANGES = {"agent_task", "agent_schedule", "routine_save", "agent_change", "agent_watch"}
 INSIDE = {"agent_list"}
 TOOLS = {
     "agent_task": {"type": "function", "function": {
@@ -1097,15 +1392,37 @@ TOOLS = {
             "required": ["name", "steps"]}}},
     "agent_change": {"type": "function", "function": {
         "name": "agent_change",
-        "description": "Propose to pause, resume or delete one of the user's scheduled jobs (as agent_list names "
-                       "them). Only proposes: the user must say yes in the next message.",
+        "description": "Propose to pause, resume, delete or change (edit: new repeat, time, weekday, report) one of the "
+                       "user's scheduled jobs or watches (as agent_list names them). Only proposes: the user must say "
+                       "yes in the next message.",
         "parameters": {"type": "object", "properties": {
             "plan": {"type": "string", "description": "words of the scheduled job's task, e.g. 'Wochenüberblick'"},
-            "action": {"type": "string", "enum": ["pause", "resume", "delete"]}}, "required": ["plan", "action"]}}},
+            "action": {"type": "string", "enum": ["pause", "resume", "delete", "edit"]},
+            "repeat": {"type": "string", "enum": [r for r in REPEATS if r != "once"], "description": "edit only"},
+            "time": {"type": "string", "description": "HH:MM, edit only"},
+            "weekday": {"type": "integer", "description": "0 = Monday … 6 = Sunday, edit only"},
+            "report": {"type": "string", "enum": ["only_new", "every_time"], "description": "edit of a watch only"}},
+            "required": ["plan", "action"]}}},
+    "agent_watch": {"type": "function", "function": {
+        "name": "agent_watch",
+        "description": "Propose a watch: the Spark looks on the web again and again and reports only when there is "
+                       "something new (a new firmware, a new episode, a price below a limit). Only proposes: the user "
+                       "must say yes in the next message.",
+        "parameters": {"type": "object", "properties": {
+            "task": {"type": "string", "description": "what to look for, in the user's words, complete"},
+            "title": {"type": "string", "description": "a short name, e.g. 'Neue Firmware für FRITZ!Box 7590'"},
+            "repeat": {"type": "string", "enum": [r for r in REPEATS if r != "once"]},
+            "time": {"type": "string", "description": "HH:MM, 08:00 if the user said nothing"},
+            "weekday": {"type": "integer", "description": "0 = Monday … 6 = Sunday (weekly)"},
+            "below": {"type": "number", "description": "only a price below this many euros counts (if the user said so)"}},
+            "required": ["task"]}}},
     "agent_list": {"type": "function", "function": {
         "name": "agent_list", "description": "The user's background jobs, scheduled jobs and routines.",
         "parameters": {"type": "object", "properties": {}}}},
 }
+HINT_WATCH = (" Soll der Spark etwas im Netz im Auge behalten und sich nur bei Neuem melden („Sag mir Bescheid, wenn "
+              "es eine neue Firmware gibt“), schlägst du mit agent_watch eine Beobachtung vor und fragst mit dem Satz "
+              "aus dem Ergebnis nach.")
 HINT = ("Längere Aufgaben (recherchieren, vergleichen, zusammenfassen und später Bescheid geben) gibst du mit "
         "agent_task als Auftrag in den Hintergrund; sag danach nur kurz, dass du dich meldest. Wiederkehrende oder "
         "spätere Aufträge („jeden Montag um 7 …“) schlägst du mit agent_schedule vor und fragst mit dem Satz aus dem "
@@ -1125,9 +1442,15 @@ def offer(ctx):
     if not lv:
         return None
     tools, outside, changes, hint = [], set(), set(), []
-    if ASK.search(str(ctx.get("text") or "")):
+    text = str(ctx.get("text") or "")
+    watch = watch_on(uid) and beobachten.wants(text)
+    if ASK.search(text) or watch:
         tools += [TOOLS["agent_task"], TOOLS["agent_schedule"], TOOLS["agent_list"]]
         changes |= {"agent_task", "agent_schedule"}
+        if watch_on(uid):
+            tools.append(TOOLS["agent_watch"])
+            changes.add("agent_watch")
+            hint.append(HINT_WATCH)
         if load(uid)["plans"]:
             tools.append(TOOLS["agent_change"])
             changes.add("agent_change")
@@ -1150,7 +1473,8 @@ def offer(ctx):
         return None
     return {"tools": tools, "hint": " ".join(hint), "outside": outside, "changes": changes,
             "keep": {n for n, server, _ in reads + acts if mcp.named(ctx.get("text"), server.get("name"))}
-            | ({"agent_change"} if "agent_change" in changes and PLAN_CHANGE.search(str(ctx.get("text") or "")) else set()),
+            | ({"agent_change"} if "agent_change" in changes and PLAN_CHANGE.search(str(ctx.get("text") or "")) else set())
+            | ({"agent_watch"} if watch else set()),
             "filler": {n: ("Ich frage den Dienst.", "Let me ask the service.") for n, _, _ in reads}}
 
 
@@ -1192,10 +1516,47 @@ async def tool(name, args, ctx):
         propose(uid, {"kind": "plan", "plan": p}, ctx.get("src", ""))
         return ("Noch NICHT gespeichert. Frag den Nutzer: „Soll ich das planen: " + describe_plan(p) + "?“ Erst sein "
                 "Ja in der nächsten Nachricht speichert es.")
+    if name == "agent_watch":
+        if not watch_on(uid):
+            return "Nicht vorgeschlagen: Beobachten ist für dieses Profil nicht freigegeben. Sag das dem Nutzer."
+        w = {k: args.get(k) for k in ("task", "title", "repeat", "time", "weekday", "below") if args.get(k) not in (None, "")}
+        w.setdefault("repeat", "daily")
+        w.setdefault("time", "08:00")
+        if w["repeat"] == "weekly":
+            w.setdefault("weekday", 0)
+        if w["repeat"] == "monthly":
+            w["day"] = 1
+        res = _watch_proposal(uid, w, ctx)
+        return res["system"].removeprefix("Agent: ")
     if name == "agent_change":
         act = args.get("action")
+        if act == "edit":
+            hits = which_plans(uid, args.get("plan"))
+            if len(hits) != 1:
+                return ("Nicht vorgeschlagen: " + ("kein geplanter Auftrag passt." if not hits else "mehrere passen: "
+                        + "; ".join(describe_plan(x) for x in hits[:5]) + ". Frag den Nutzer, welcher gemeint ist."))
+            ch = {k: args[k] for k in ("repeat", "time", "weekday") if args.get(k) not in (None, "")}
+            if ch.get("repeat") == "weekly" and "weekday" not in ch:
+                ch["weekday"] = hits[0].get("weekday", 0)
+            if ch.get("repeat") == "monthly":
+                ch["day"] = hits[0].get("day", 1)
+            if args.get("report") in ("only_new", "every_time") and hits[0].get("kind") == "watch":
+                ch["only_new"] = args["report"] == "only_new"
+            if not ch:
+                return "Nicht vorgeschlagen: nenne, was sich ändern soll (Wiederholung, Uhrzeit, Wochentag)."
+            import chat
+            zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
+            try:
+                after = parse_plan(dict({k: v for k, v in hits[0].items() if k in EDIT_KEYS or k == "kind"}, **ch), zone)
+            except ValueError as e:
+                return f"Nicht vorgeschlagen: {e}"
+            p = {"kind": "plan_edit", "id": hits[0]["id"], "changes": ch, "line": describe_plan(hits[0]),
+                 "new_line": describe_plan(after)}
+            propose(uid, p, ctx.get("src", ""))
+            return ("Noch NICHT geändert. Frag den Nutzer: „Soll ich " + describe_pending(p) + "?“ Erst sein Ja in der "
+                    "nächsten Nachricht ändert es.")
         if act not in CHANGE_WORDS:
-            return "Nicht vorgeschlagen: action muss pause, resume oder delete sein."
+            return "Nicht vorgeschlagen: action muss pause, resume, delete oder edit sein."
         hits = which_plans(uid, args.get("plan"))
         if not hits:
             return "Nicht vorgeschlagen: kein geplanter Auftrag passt. Nenne dem Nutzer die Pläne aus agent_list."
@@ -1272,6 +1633,7 @@ def _view(uid):
     d = load(uid)
     import homeassistant
     return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(profiles.settings(uid).get("agent_on")),
+            "watch": watch_on(uid), "max_watch": beobachten.MAX_WATCH, "own": own_tasks(uid, d),
             "ha": bool(ccfg().get("homeassistant", False) and homeassistant.get(uid)),
             "jobs": [_public_job(x) for x in reversed(d["jobs"])],
             "plans": [dict(x, text=describe_plan(x)) for x in d["plans"]],
@@ -1352,8 +1714,11 @@ async def profile_new_plan(request: Request, prof=Depends(browser_profile)):
     _uses(prof)
     import chat
     body = await _body(request)
+    if body.get("kind") == "watch" and not watch_on(prof["id"]):
+        raise HTTPException(403, "watching is not allowed for this profile")
     try:
-        add_plan(prof["id"], parse_plan(body, chat.user_zone(profiles.settings(prof["id"]).get("tz", ""))))
+        add_plan(prof["id"], dict(parse_plan(body, chat.user_zone(profiles.settings(prof["id"]).get("tz", ""))),
+                                  created_by="page"))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return _view(prof["id"])
@@ -1369,14 +1734,59 @@ def profile_pause_plan(pid: str, prof=Depends(browser_profile)):
             if x["id"] == pid:
                 x["paused"] = not x.get("paused")
                 if not x["paused"]:
+                    x.pop("why", None)
+                    x["fails"] = 0
                     x["next"] = next_run(x, datetime.datetime.now(zone), zone)
+                print(f"agent: plan {'paused' if x['paused'] else 'resumed'} on the page | {profiles.log_name(prof)}", flush=True)
     mutate(prof["id"], fn)
+    return _view(prof["id"])
+
+
+@router.put("/api/profile/agent/plans/{pid}")
+async def profile_edit_plan(pid: str, request: Request, prof=Depends(browser_profile)):
+    """Ändern im Detail von Ich → Aufträge: text, times, „nur wenn neu“, price limit, on/off, forget what it knows."""
+    if not admin_on():
+        raise HTTPException(403, "agent functions are turned off")
+    _uses(prof)
+    import guard
+    guard.limit(request, "aufgaben", prof["id"])
+    body = await _body(request, 4096)
+    old = next((x for x in load(prof["id"])["plans"] if x["id"] == pid), None)
+    if not old:
+        raise HTTPException(404, "no such plan")
+    if old.get("kind") == "watch" and not watch_on(prof["id"]):
+        raise HTTPException(403, "watching is not allowed for this profile")
+    changes = {k: body[k] for k in EDIT_KEYS + ("on", "forget") if k in body}
+    try:
+        edit_plan(prof["id"], pid, changes)
+    except ValueError as e:
+        print("agent: plan change refused | why invalid", flush=True)
+        raise HTTPException(400, str(e))
+    return _view(prof["id"])
+
+
+@router.post("/api/profile/agent/plans/{pid}/run")
+def profile_run_plan(pid: str, request: Request, prof=Depends(browser_profile)):
+    """„Jetzt prüfen“."""
+    if not admin_on():
+        raise HTTPException(403, "agent functions are turned off")
+    _uses(prof)
+    import guard
+    guard.limit(request, "aufgabenrun", prof["id"])
+    old = next((x for x in load(prof["id"])["plans"] if x["id"] == pid), None)
+    if old and old.get("kind") == "watch" and not watch_on(prof["id"]):
+        raise HTTPException(403, "watching is not allowed for this profile")
+    item, why = run_now(prof["id"], pid)
+    if not item:
+        raise HTTPException(400, why)
     return _view(prof["id"])
 
 
 @router.delete("/api/profile/agent/plans/{pid}")
 def profile_delete_plan(pid: str, prof=Depends(browser_profile)):
+    n = len(load(prof["id"])["plans"])
     mutate(prof["id"], lambda d: d.update(plans=[x for x in d["plans"] if x["id"] != pid]))
+    print(f"agent: plan deleted on the page | n {n - len(load(prof['id'])['plans'])} | {profiles.log_name(prof)}", flush=True)
     return _view(prof["id"])
 
 
@@ -1396,6 +1806,197 @@ async def profile_new_routine(request: Request, prof=Depends(browser_profile)):
 @router.delete("/api/profile/agent/routines/{rid}")
 def profile_delete_routine(rid: str, prof=Depends(browser_profile)):
     mutate(prof["id"], lambda d: d.update(routines=[x for x in d["routines"] if x["id"] != rid]))
+    return _view(prof["id"])
+
+
+# ---------------------------------------------------------------- eigene Aufgaben from other places (plan „Eigene Aufgaben“)
+# Ich → Aufträge shows everything the Spark does again and again for the profile in one list: its scheduled jobs and
+# watches (above), its repeating reminders, its smart home rules and the mail senders of „Von selbst melden“. Each is
+# kept where it always was; this list only reads them and offers the same changes (pause, resume, delete).
+REM_KEEP = 20          # paused repeating reminders kept per profile
+
+
+def _rem_paused(d):
+    return [x for x in d.get("rem_paused") or [] if isinstance(x, dict) and x.get("id")][:REM_KEEP]
+
+
+def own_tasks(uid, d=None):
+    """{"reminders": [...], "rules": [...], "mail": [...], "mail_on", "rules_on"} of this profile, for the list."""
+    import proactive
+    d = d or load(uid)
+    out = {"reminders": [], "rules": [], "mail": [], "rules_on": False, "mail_on": False, "pro": False}
+    if features.allowed("reminders", uid):
+        out["reminders"] = [dict({k: x.get(k) for k in ("id", "text", "due", "every")}, paused=False)
+                            for x in profiles.reminders(uid) if x.get("every") in profiles.REPEATS] + \
+                           [dict({k: x.get(k) for k in ("id", "text", "due", "every")}, paused=True)
+                            for x in d["rem_paused"]]
+    if features.allowed("proactive", uid):
+        p = profiles.effective(uid)
+        out["pro"] = True
+        out["rules_on"] = bool(p.get("pro_ha", True))
+        out["rules"] = [{"id": r.get("id"), "line": proactive.rule_line(r)[:200], "paused": bool(r.get("paused"))}
+                        for r in proactive.rules(uid) if isinstance(r, dict) and r.get("id")]
+        out["mail_on"] = bool(p.get("pro_mail", True))
+        out["mail"] = senders(uid)
+    return out
+
+
+def senders(uid):
+    return [x.strip() for x in str(profiles.settings(uid).get("pro_mail_from", "")).split(",") if len(x.strip()) > 2]
+
+
+def set_senders(uid, items):
+    seen, keep = set(), []
+    for x in items:     # one entry per sender, whatever its case („Sparkasse“ and „sparkasse “)
+        x = clean(x, 80)
+        if len(x) > 2 and x.lower() not in seen:
+            seen.add(x.lower())
+            keep.append(x)
+    text = ", ".join(keep)
+    if len(text) > 300:
+        raise ValueError("Die Liste der Absender ist voll (höchstens 300 Zeichen).")
+    profiles.save_settings(uid, {"pro_mail_from": text})
+    return senders(uid)
+
+
+def pause_reminder(uid, rid, paused):
+    """A repeating reminder pauses by moving out of reminders.json into agent.json (so no device rings it) and comes
+    back at its next time. True if there was one."""
+    out = {}
+
+    def fn(d):
+        held = d["rem_paused"]
+        if paused:
+            item = next((x for x in profiles.reminders(uid) if x.get("id") == rid and x.get("every") in profiles.REPEATS), None)
+            if item:
+                profiles.remove_reminders(uid, {rid})
+                d["rem_paused"] = ([dict(item, paused_at=int(time.time()))] + held)[:REM_KEEP]
+        else:
+            item = next((x for x in held if x["id"] == rid), None)
+            if item:
+                d["rem_paused"] = [x for x in held if x["id"] != rid]
+        out["item"] = item
+    mutate(uid, fn)
+    item = out["item"]
+    if not item:
+        return False
+    if not paused:
+        due = item["due"]
+        if due <= time.time() * 1000:
+            due = profiles.next_due(item, profiles.settings(uid).get("tz", "")) or due
+        profiles.add_reminder(uid, item["text"], due, item.get("every", ""))
+    print(f"agent: reminder {'paused' if paused else 'resumed'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return True
+
+
+def edit_reminder(uid, rid, body):
+    """New text, clock time or repetition for a repeating reminder; returns the new item. ValueError if wrong."""
+    import datetime as dt
+    import chat
+    item = next((x for x in profiles.reminders(uid) if x.get("id") == rid and x.get("every") in profiles.REPEATS), None)
+    if not item:
+        raise ValueError("Die Erinnerung gibt es nicht mehr (oder sie ist pausiert).")
+    text = clean(body.get("text"), 200) if "text" in body else item["text"]
+    every = body.get("every", item["every"])
+    if not text or every not in profiles.REPEATS:
+        raise ValueError("Text und Wiederholung (täglich, werktags, wöchentlich, monatlich) fehlen.")
+    zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
+    at = dt.datetime.fromtimestamp(item["due"] / 1000, zone)
+    hm = str(body.get("time") or at.strftime("%H:%M"))
+    if not re.fullmatch(r"(?:[01]?\d|2[0-3]):[0-5]\d", hm):
+        raise ValueError("Uhrzeit fehlt (HH:MM).")
+    h, m = map(int, hm.split(":"))
+    at = at.replace(hour=h, minute=m, second=0, microsecond=0)
+    if every == "weekly" and isinstance(body.get("weekday"), int) and 0 <= body["weekday"] <= 6:
+        at = at + dt.timedelta(days=(body["weekday"] - at.weekday()) % 7)
+    due = int(at.timestamp() * 1000)
+    if due <= time.time() * 1000:
+        due = profiles.next_due({"due": due, "every": every}, profiles.settings(uid).get("tz", "")) or due
+    profiles.remove_reminders(uid, {rid})
+    new = profiles.add_reminder(uid, text, due, every)
+    print(f"agent: reminder changed | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return new
+
+
+@router.post("/api/profile/agent/reminders/{rid}/pause")
+def profile_pause_reminder(rid: str, request: Request, prof=Depends(_on)):
+    """Pauses a repeating reminder, or lets a paused one ring again."""
+    import guard
+    guard.limit(request, "aufgaben", prof["id"])
+    if not features.allowed("reminders", prof["id"]):
+        raise HTTPException(403, "reminders are turned off")
+    held = any(x["id"] == rid for x in load(prof["id"])["rem_paused"])
+    if not pause_reminder(prof["id"], rid, not held):
+        raise HTTPException(404, "no such reminder")
+    return _view(prof["id"])
+
+
+@router.put("/api/profile/agent/reminders/{rid}")
+async def profile_edit_reminder(rid: str, request: Request, prof=Depends(_on)):
+    import guard
+    guard.limit(request, "aufgaben", prof["id"])
+    if not features.allowed("reminders", prof["id"]):
+        raise HTTPException(403, "reminders are turned off")
+    body = await _body(request, 2048)
+    try:
+        edit_reminder(prof["id"], rid, body)
+    except ValueError as e:
+        print("agent: reminder change refused | why invalid", flush=True)
+        raise HTTPException(400, str(e))
+    return _view(prof["id"])
+
+
+@router.delete("/api/profile/agent/reminders/{rid}")
+def profile_delete_reminder(rid: str, request: Request, prof=Depends(_on)):
+    import guard
+    guard.limit(request, "aufgaben", prof["id"])
+    gone = {}
+
+    def fn(d):
+        gone["n"] = len(d["rem_paused"])
+        d["rem_paused"] = [x for x in d["rem_paused"] if x["id"] != rid]
+        gone["n"] -= len(d["rem_paused"])
+    mutate(prof["id"], fn)
+    n = gone["n"] + profiles.remove_reminders(prof["id"], {rid})
+    print(f"agent: reminder deleted | n {n} | {profiles.log_name(prof)}", flush=True)
+    return _view(prof["id"])
+
+
+@router.post("/api/profile/agent/rules/{rid}/pause")
+def profile_pause_rule(rid: str, request: Request, prof=Depends(_on)):
+    """Pauses a smart home rule of „Von selbst melden“ or lets it speak again (changing it stays under Ich → Von selbst)."""
+    import guard
+    import proactive
+    guard.limit(request, "aufgaben", prof["id"])
+    if not features.allowed("proactive", prof["id"]):
+        raise HTTPException(403, "speaking up by itself is turned off")
+    hit = next((r for r in proactive.rules(prof["id"]) if isinstance(r, dict) and r.get("id") == rid), None)
+    if not hit or not proactive.pause_rule(prof["id"], rid, not hit.get("paused")):
+        raise HTTPException(404, "no such rule")
+    return _view(prof["id"])
+
+
+@router.put("/api/profile/agent/mail")
+async def profile_mail_senders(request: Request, prof=Depends(_on)):
+    """The senders „Von selbst melden“ watches for (pro_mail_from): {"add": "…"} or {"remove": "…"}."""
+    import guard
+    guard.limit(request, "aufgaben", prof["id"])
+    if not features.allowed("proactive", prof["id"]):
+        raise HTTPException(403, "speaking up by itself is turned off")
+    body = await _body(request, 1024)
+    have = senders(prof["id"])
+    try:
+        if body.get("add"):
+            set_senders(prof["id"], have + [str(body["add"])])
+        elif body.get("remove"):
+            gone = clean(body["remove"], 80).lower()
+            set_senders(prof["id"], [x for x in have if x.lower() != gone])
+        else:
+            raise ValueError("add oder remove fehlt.")
+    except ValueError as e:
+        print("agent: mail senders refused | why invalid", flush=True)
+        raise HTTPException(400, str(e))
+    print(f"agent: mail senders changed | n {len(senders(prof['id']))} | {profiles.log_name(prof)}", flush=True)
     return _view(prof["id"])
 
 

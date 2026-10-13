@@ -120,6 +120,13 @@ BENCH = [
     ("Lösch den Zahnarzttermin", "kalender"),
     ("Verschieb den Zahnarzttermin auf Freitag", "kalender"),
     ("Pausiere den Agenten mit dem Wochenbericht", "agent"),
+    # Eigene Aufgaben (Dominik 13.10.: „erinnere mich dran, wenn du im Internet eine neue Firmware findest“): a watch,
+    # not a search now, a reminder or the Spark's state
+    ("Erinnere mich, wenn du im Internet eine neue Firmware für meine FRITZ!Box findest", "agent"),
+    ("Sag mir Bescheid, wenn es eine neue Folge von Hard Fork gibt", "agent"),
+    ("Melde dich, sobald der Flug nach Rom unter 100 Euro kostet", "agent"),
+    ("Behalte den Preis der Bauknecht B6R 88 im Auge", "agent"),
+    ("Zeig mir meine Aufträge", "agent"),
     ("Erinnere mich jeden Montag an den Müll", "erinnerung"),
     ("Schreib in die Familiengruppe, dass ich später komme", "nachricht"),
     ("Räum mein Postfach auf", "mail"),

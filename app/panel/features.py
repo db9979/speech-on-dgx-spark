@@ -175,6 +175,8 @@ FEATURES = (
     F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), "tasks_on", me="taskbox", guide="tasks"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), "my_status", me="bgbox", guide="mystatus"),
     F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), "agent_on", me="agentbox", guide="agent"),
+    # watches (beobachten.py): admin release only, every profile with agent functions, never guests
+    F("beobachten", "Beobachten", "Watching", "day", ("agent_watch",), parent="agent", me="agentbox", guide="beobachten"),
     F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
     # each profile its own MCP services (meinmcp.py); needs no agent level, only the switches
     F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), "mymcp_on", parent="mcp", me="mymcpbox",

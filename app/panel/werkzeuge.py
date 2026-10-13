@@ -38,7 +38,7 @@ NAMES = {
     "document_list": ("Dokumentliste", "Document list"), "message_send": ("Nachricht senden", "Send message"),
     "message_read": ("Nachrichten lesen", "Read messages"), "message_announce": ("Durchsage", "Announcement"),
     "agent_list": ("Agenten zeigen", "List agents"), "agent_task": ("Agent beauftragen", "Agent task"),
-    "agent_schedule": ("Agent planen", "Schedule agent"), "routine_save": ("Ablauf speichern", "Save routine"),
+    "agent_schedule": ("Agent planen", "Schedule agent"), "agent_watch": ("Beobachten anlegen", "Set up watching"), "routine_save": ("Ablauf speichern", "Save routine"),
     "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
     "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"), "spark_zustand": ("Spark-Zustand", "Spark status"),
     "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),

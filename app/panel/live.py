@@ -64,7 +64,7 @@ TOOLS = {
     "parcels": "parcels", "transit": "transit", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
-    "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
+    "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
     "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",

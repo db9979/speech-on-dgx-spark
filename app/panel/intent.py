@@ -60,7 +60,7 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag\w*|phone number|contacts?)\b")
 MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?)\b")
-AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*)\b")
+AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*|auftr(a|ä)g\w*|beobachtung\w*)\b")
 REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me)\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
                            r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast)\b)")
@@ -94,7 +94,8 @@ GROUPS = {
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
     "dokument": ({"document_search", "document_list"}, DOC_WORDS),
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
-    "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save", "agent_change"}, AGENT_WORDS),
+    "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save", "agent_change", "agent_watch"},
+              AGENT_WORDS),
     "iphone": ({"iphone_action"}, PHONE_WORDS),
     # questions about the Spark itself (hilfe.py): its settings, switches, functions, guides and recommendations
     "spark": ({"spark_hilfe", "spark_vorschlag"}, SPARK_WORDS),
@@ -243,6 +244,19 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # "Wie warm wird es morgen?" is weather, not the thermostat
     if "wetter" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
+    # „Sag mir Bescheid, wenn es eine neue Firmware gibt“ is a watch (beobachten.py, plan „Eigene Aufgaben“):
+    # a recurring job that searches later, not a search, a reminder or a state now
+    try:
+        import beobachten
+        if beobachten.wants(text):
+            why["agent"] = "Beobachten"
+            for name in ("websuche", "erinnerung", "zustand", "nachricht", "smarthome"):
+                why.pop(name, None)
+            # „Bescheid“ here is „sag Bescheid“, not a notice from an office
+            if why.get("dokument", "").lower() == "bescheid":
+                why.pop("dokument")
+    except ImportError:
+        pass
     # the admin's „Nicht bei“ words (only taking out: never a group, a tool or a right more)
     for name, rx in own_route_words(not_words).items():
         if name in why and rx.search(text):

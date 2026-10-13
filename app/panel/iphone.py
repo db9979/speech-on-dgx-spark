@@ -87,6 +87,8 @@ AREAS = {
                  (("GET", "PUT"), r"/api/profile/transit"), (("POST",), r"/api/profile/transit/(?:find|test)"),
                  (("GET",), r"/api/profile/parcels"), (("GET",), r"/api/profile/agent"),
                  (("GET",), rf"/api/profile/agent/jobs/{_ID}"), (("POST",), rf"/api/profile/agent/jobs/{_ID}/cancel"),
+                 # own tasks (plan „Eigene Aufgaben“): pause, run again or delete a watch or scheduled job
+                 (("POST",), rf"/api/profile/agent/plans/{_ID}/pause"), (("DELETE",), rf"/api/profile/agent/plans/{_ID}"),
                  (("POST",), r"/api/room/extend"), (("GET",), r"/api/room/history")),
     # Sicherheit: own logins and devices, log out everywhere, the second step off or new recovery codes
     # (each with a current code). Setting the second step up stays in the browser: there the PIN proves

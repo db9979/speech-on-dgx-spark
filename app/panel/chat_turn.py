@@ -671,6 +671,8 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern):
+            if xprop and xprop.get("proposed") == mod.__name__:
+                continue   # the panel made this proposal from this very message (agent: „Sag mir Bescheid, wenn …“)
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])

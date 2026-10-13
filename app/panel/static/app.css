@@ -982,6 +982,16 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 .ld-badge.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
 .ld-badge.sh{background:color-mix(in srgb,var(--acc2) 16%,transparent);color:var(--acc2)}
 .ld-badge.off{background:color-mix(in srgb,var(--line) 75%,transparent)}
+/* Ich → Aufträge, eigene Aufgaben (agent.js, plan „Eigene Aufgaben“): kinds, small numbers on top, the when-row */
+.ld-ico.ag-wa{background:#7c5cff}.ld-ico.ag-pl{background:#3e63dd}.ld-ico.ag-re{background:#d93f45}.ld-ico.ag-ru{background:#1e8a5a}.ld-ico.ag-ma{background:#1f7fd6}.ld-ico.ag-ro{background:#2b9461}
+.ld-ico.ag-wa,.ld-ico.ag-pl,.ld-ico.ag-re,.ld-ico.ag-ru,.ld-ico.ag-ma,.ld-ico.ag-ro{font-size:15px}
+.ld-right .tgl{flex:none}
+.ag-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 4px}
+.ag-stat{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card);min-width:0}.ag-stat b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ag-stat span{font-size:12px;color:var(--mut)}
+.ag-stat.hot{border-color:color-mix(in srgb,var(--warn) 50%,var(--line))}.ag-stat.hot b{color:var(--warn)}
+.ag-when{flex-wrap:wrap;gap:6px}.ag-when select,.ag-when input{width:auto;flex:1 1 110px;min-width:0}.ag-when [hidden]{display:none}
+.ag-h{margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.ag-steps{margin:6px 0;padding-left:20px;font-size:13.5px}
 .ld-more{text-align:center;margin:10px 0}.ld-empty{padding:14px 8px}
 .ld-detail{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
 .ld-detail[hidden]{display:none}
