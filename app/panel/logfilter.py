@@ -23,7 +23,7 @@ router = APIRouter()
 # areas: which kind of line it is, from the word before the colon (search before chat: it is a chat line)
 AREAS = (("search", r"^chat: web search"), ("chat", r"^(chat|vorab):"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
          ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
-         ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal):"), ("anfrage", r"^anfrage:"),
+         ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal|docling):"), ("anfrage", r"^anfrage:"),
          ("speicher", r"^speicher:"), ("gedaechtnis", r"^gedaechtnis:"), ("nachrichten", r"^(chats|messages):"),
          ("seite", r"^seite:"), ("klaeren", r"^klaeren:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
@@ -54,6 +54,13 @@ HINTS = (
      "oder bei @BotFather einen neuen holen und unter Funktionen → Telegram eintragen.",
      "Another program uses the same bot token: use it in one place only or get a new one from @BotFather "
      "and enter it under Features → Telegram."),
+    ("wissen", r"^docling: server (down|blocked)", "Docling-Server nicht erreichbar: läuft der Container? Funktionen → "
+     "Eigene Dokumente → Docling-Server, „Probe lesen“.",
+     "Docling server not reachable: is the container running? Features → Own documents → Docling server, \"Read sample\"."),
+    ("wissen", r"^docling: server (key|cert)", "Docling-Server lehnt Schlüssel oder Zertifikat ab: Funktionen → Eigene Dokumente → "
+     "Docling-Server, Schlüssel neu eintragen oder „Zertifikat prüfen“.",
+     "Docling server refuses the key or certificate: Features → Own documents → Docling server, enter the key again "
+     "or \"Check certificate\"."),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
      "Telegram fails: check the bot under Features → Telegram."),
 )

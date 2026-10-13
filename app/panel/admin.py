@@ -698,7 +698,7 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
+              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "docling", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
               "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
               "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
               "systemone_klage"):

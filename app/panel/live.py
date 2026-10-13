@@ -72,6 +72,8 @@ TOOLS = {
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher",
+    # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
+    "Docling": "docling",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
@@ -114,6 +116,8 @@ TARGETS = {
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
     # Eigener Speicher (speicher.py): copies of profiles' data on their NAS, WebDAV service or a folder; counts only
     "speicher": ("Eigener Speicher", "NAS, WebDAV oder Ordner · verschlüsselt", "lan", False),
+    # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
+    "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
     "inet": ("Internet", "erreichbar? zwei feste Adressen", "net", False),
     # firmware and apps for the devices (geraeteupdate.py): shown while that function is on, its line with the counts
@@ -140,7 +144,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "mcp": "Antwort des Dienstes",
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
@@ -1073,6 +1077,13 @@ def snapshot(view="admin", now=None):
         cht = {"on": False}
     if cht.get("on"):
         used.add("chats")
+    try:
+        import doclingdienst
+        dlg = doclingdienst.for_live()
+    except Exception:
+        dlg = {"on": False}
+    if dlg.get("on"):
+        used.add("docling")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1112,6 +1123,10 @@ def snapshot(view="admin", now=None):
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))
+        if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
+            x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
+                        + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")
+                        + (" · liest gerade" if dlg.get("busy") else "") + (" · nicht erreichbar" if dlg.get("down") else ""))
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

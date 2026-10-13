@@ -435,6 +435,7 @@ LIVE_WORDS = {
     "admin_roles_switch": ("Rechte", "Rollen geändert"), "iphone_update_rights": ("Rechte", "Update-Recht der App geändert"),
     "agent_level": ("Rechte", "Stufe der Aufträge geändert"),
     "backup_move": ("Sicherung", "Sicherungsort geändert"), "offsite_settings": ("Sicherung", "Sicherung nach außen eingestellt"),
+    "docling_settings": ("Dokumente", "Docling-Server eingestellt"), "docling_test": ("Dokumente", "Docling-Server geprüft"),
     "devup_resume": ("Geräte-Updates", "Geräte-Updates fortgesetzt"), "svcwatch": ("Dienste", "Dienst-Wächter, Dienst von der Liste genommen oder zurück"), "berater_take": ("Verbessern", "Vorschlag übernommen"), "berater_undo": ("Verbessern", "Vorschlag zurückgenommen"), "berater_reject": ("Verbessern", "Vorschlag abgelehnt"), "berater_issue": ("Verbessern", "Fall als Meldung vorbereitet"), "berater_idea": ("Verbessern", "Idee als gut markiert"), "berater_analyse": ("Verbessern", "Fall vom Modell analysiert"), "berater_regel": ("Verbessern", "Regel entfernt"), "berater_me": ("Verbessern", "Profil hat einen Vorschlag übernommen"), "storage_add": ("Speicher", "eigenen Speicher eingebunden"), "storage_change": ("Speicher", "eigenen Speicher geändert"),
     "storage_remove": ("Speicher", "eigenen Speicher getrennt"), "remarkable_send": ("Geräte", "aufs reMarkable geschickt"),
     "remarkable_calibration": ("Geräte", "Abgleich-Blatt aufs reMarkable gelegt"), "remarkable_sort": ("Geräte", "reMarkable eingeräumt"),
@@ -495,7 +496,7 @@ def logged(path, method):
 _rate, _busy = {}, {}
 _rate_lock = threading.Lock()
 RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "route": (0, 60), "weichesave": (0, 20), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120), "tipps": (0, 30),
-        "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "rmpic": (0, 20), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "trust": (10, 30), "android": (0, 20), "androidwait": (0, 90),
+        "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "rmpic": (0, 20), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "docling": (0, 10), "trust": (10, 30), "android": (0, 20), "androidwait": (0, 90),
         "mcp": (0, 60), "mcpask": (0, 10), "mcpreg": (10, 10), "mcptoken": (20, 20),
         "convos": (0, 120), "convostream": (0, 30), "chats": (0, 240), "chatsstream": (0, 30), "chatstyping": (0, 40), "chatsfind": (0, 20), "chatsmedia": (0, 20), "chatsinvite": (0, 6), "chatskeys": (0, 60), "chatsget": (0, 600), "live": (0, 150), "livemon": (90, 90), "hilfe": (0, 30), "write": (0, 20), "desk": (0, 20), "deskask": (0, 10), "deskupd": (0, 6), "deskfile": (0, 10), "deskhear": (0, 40), "deskact": (0, 20),
         "deskspeak": (0, 20), "deskinbox": (0, 60), "desksend": (0, 20), "deskagenda": (0, 30), "deskbusy": (0, 30),

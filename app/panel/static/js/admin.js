@@ -177,7 +177,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();dlLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -782,19 +782,22 @@ function offShow(d){$('offon').checked=d.on;$('offurl').value=d.url;$('offuser')
   $('offmsg').classList.toggle('err',!!(l&&!l.ok)&&!d.running);offCertShow(d)}
 // Zertifikat prüfen (zertpin.py): a NAS whose certificate does not fit its address is never sent to with the check
 // off; the admin compares the fingerprint with the one the NAS shows and accepts exactly that certificate.
-function offCertShow(d,c){const m=$('offcertmsg');if(!m)return;m.textContent='';m.classList.remove('err');
+function offCertShow(d,c){certBox($('offcertmsg'),c,d&&d.cert,sha=>offPut({url:$('offurl').value.trim(),cert:sha}),
+  ()=>{if(confirm(t('Das angenommene Zertifikat vergessen? Danach geht die Sicherung nur noch mit einem Zertifikat, das zur Adresse passt.','Forget the accepted certificate? Then the backup only goes to a certificate that fits the address.')))offPut({cert:''})})}
+// one box for every server whose certificate the admin may accept (NAS backup, Docling server): c = what the server shows now,
+// pinned = the fingerprint accepted before; accept(sha) and forget() save it with a fresh code
+function certBox(m,c,pinned,accept,forget){if(!m)return;m.textContent='';m.classList.remove('err');
   const line=x=>{const s=document.createElement('div');s.textContent=x;m.appendChild(s);return s};
   const btn=(x,f)=>{const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x;b.onclick=f;m.appendChild(b)};
   if(c){line(t('Fingerabdruck (SHA-256): ','Fingerprint (SHA-256): ')+c.sha256);
     line(t('Gilt für: ','Valid for: ')+(c.names.join(', ')||'–')+' · '+t('bis ','until ')+new Date(c.until*1000).toLocaleDateString()+(c.expired?t(' (abgelaufen)',' (expired)'):''));
     if(c.pinned)line(t('Dieses Zertifikat ist angenommen.','This certificate is accepted.'));
     else if(c.fits&&!c.self_signed)line(t('Passt zur Adresse; nichts zu tun.','Fits the address; nothing to do.'));
-    else{line(t('Passt nicht zur Adresse oder ist selbst ausgestellt. Besser: die Adresse mit einem Namen von oben eintragen. Sonst den Fingerabdruck mit dem im NAS vergleichen (Synology: Systemsteuerung, Sicherheit, Zertifikat) und nur wenn er gleich ist annehmen.',
-      'Does not fit the address or is self-made. Better: enter the address with a name from above. Otherwise compare the fingerprint with the one in the NAS (Synology: Control Panel, Security, Certificate) and accept it only when it is the same.'));
-      btn(t('Diesem Zertifikat vertrauen','Trust this certificate'),()=>offPut({url:$('offurl').value.trim(),cert:c.sha256}))}
+    else{line(t('Passt nicht zur Adresse oder ist selbst ausgestellt. Besser: die Adresse mit einem Namen von oben eintragen. Sonst den Fingerabdruck mit dem auf dem Server vergleichen (Synology: Systemsteuerung, Sicherheit, Zertifikat) und nur wenn er gleich ist annehmen.',
+      'Does not fit the address or is self-made. Better: enter the address with a name from above. Otherwise compare the fingerprint with the one on the server (Synology: Control Panel, Security, Certificate) and accept it only when it is the same.'));
+      btn(t('Diesem Zertifikat vertrauen','Trust this certificate'),()=>accept(c.sha256))}
     return}
-  if(d&&d.cert){line(t('Angenommenes Zertifikat: ','Accepted certificate: ')+d.cert);
-    btn(t('Vergessen','Forget'),()=>{if(confirm(t('Das angenommene Zertifikat vergessen? Danach geht die Sicherung nur noch mit einem Zertifikat, das zur Adresse passt.','Forget the accepted certificate? Then the backup only goes to a certificate that fits the address.')))offPut({cert:''})})}}
+  if(pinned){line(t('Angenommenes Zertifikat: ','Accepted certificate: ')+pinned);btn(t('Vergessen','Forget'),forget)}}
 async function loadOff(){if(!$('offbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
   try{offShow(await (await api('/api/admin/offsite')).json())}catch{}}
 async function offPut(b){try{offShow(await (await api('/api/admin/offsite',xjson('PUT',b))).json())}catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err');return false}return true}
@@ -805,6 +808,31 @@ if($('offon'))$('offon').onchange=async e=>{const on=e.target.checked;if(!await 
 if($('offnow'))$('offnow').onclick=async()=>{try{offShow(await (await api('/api/admin/offsite/now',{method:'POST'})).json());
   const poll=async()=>{let d;try{d=await (await api('/api/admin/offsite')).json()}catch{return}offShow(d);if(d.running)setTimeout(poll,3000)};setTimeout(poll,3000)}
   catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err')}};
+// Docling-Server (doclingdienst.py): address, key and certificate; the key is never shown again (an empty field keeps it).
+// Changing the address or key asks for the code every time (stufen.py); "Probe lesen" sends only the Spark's own sample.
+const DLWHY={down:t('nicht erreichbar','not reachable'),cert:t('Zertifikat passt nicht','certificate does not fit'),key:t('Schlüssel abgelehnt','key refused'),
+  blocked:t('vom Wächter nicht erlaubt','not allowed by the Wächter'),failed:t('Probe nicht lesbar','sample not readable')};
+function dlShow(d){$('dlurl').value=d.url||'';$('dlkey').value='';$('dlplain').hidden=!d.plain;$('dlcert').hidden=!!d.plain;
+  $('dlkey').placeholder=d.has_key?t('API-Schlüssel (gespeichert)','API key (saved)'):t('API-Schlüssel (DOCLING_SERVE_API_KEY)','API key (DOCLING_SERVE_API_KEY)');
+  const l=d.last,s=d.stats||{};const m=$('dlmsg');
+  m.textContent=(!d.url?t('Noch keine Adresse.','No address yet.'):!l?t('Noch nicht geprüft.','Not checked yet.')
+    :l.ok?t('Zuletzt gelesen: ','Last read: ')+new Date(l.t*1000).toLocaleString():t('Fehler am ','Failed on ')+new Date(l.t*1000).toLocaleString()+': '+(DLWHY[l.why]||l.why))
+    +(d.url?' · '+t(`heute ${s.ok||0} gelesen, ${s.failed||0} Fehler`,`today ${s.ok||0} read, ${s.failed||0} failed`):'');
+  m.classList.toggle('err',!!(l&&!l.ok));
+  certBox($('dlcertmsg'),null,d.cert,()=>{},()=>{if(confirm(t('Das angenommene Zertifikat vergessen? Danach liest Docling nur mit einem Zertifikat, das zur Adresse passt.','Forget the accepted certificate? Then Docling only reads with a certificate that fits the address.')))dlPut({cert:''})})}
+async function dlLoad(){if(!$('dlbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
+  try{dlShow(await (await api('/api/admin/docling')).json())}catch{}}
+async function dlPut(b){try{dlShow(await (await api('/api/admin/docling',xjson('PUT',b))).json())}catch(e){$('dlmsg').textContent=e.message;$('dlmsg').classList.add('err');return false}return true}
+if($('dlsave'))$('dlsave').onclick=()=>dlPut({url:$('dlurl').value.trim(),key:$('dlkey').value});
+if($('dlurl'))$('dlurl').oninput=()=>{$('dlplain').hidden=!/^http:\/\//i.test($('dlurl').value.trim())};
+if($('dlcert'))$('dlcert').onclick=async()=>{const m=$('dlcertmsg');m.textContent=t('frage den Server …','asking the server …');
+  try{const c=await (await api('/api/admin/docling/cert',xjson('POST',{url:$('dlurl').value.trim()}))).json();
+    certBox(m,c,'',sha=>dlPut({url:$('dlurl').value.trim(),cert:sha}),()=>{})}catch(e){m.textContent=e.message;m.classList.add('err')}};
+if($('dltest'))$('dltest').onclick=async()=>{const o=$('dlout');o.hidden=false;o.textContent=t('liest die Probe …','reading the sample …');
+  try{const r=await (await api('/api/admin/docling/test',{method:'POST'})).json();
+    o.textContent=r.ok?t(`Gelesen in ${r.seconds} s, ${r.chars} Zeichen`,`Read in ${r.seconds} s, ${r.chars} characters`)+(r.table?t(', Tabelle erkannt.',', table found.'):t(', keine Tabelle erkannt.',', no table found.')):(r.say||DLWHY[r.why]||r.why);
+    o.classList.toggle('err',!r.ok);if(r.ok&&r.text){const pre=document.createElement('pre');pre.className='mut';pre.textContent=r.text;o.appendChild(pre)}dlLoad()}
+  catch(e){o.textContent=e.message;o.classList.add('err')}};
 $('bakup').onclick=()=>$('bakfile').click();
 $('bakfile').onchange=async()=>{const f=$('bakfile').files[0];$('bakfile').value='';if(!f||!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
   const fd=new FormData();fd.append('file',f,f.name);fd.append('password',$('bakpw').value);try{bakDone(await (await api('/api/backups-upload',{method:'POST',body:fd})).json())}catch(e){bakErr(e)}};

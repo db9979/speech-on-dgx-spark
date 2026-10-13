@@ -138,6 +138,7 @@ LOCAL = {
     "mail-pending.json": "Warteschlange", "mcp-dienste-pending.json": "Warteschlange",
     "messages-pending.json": "Warteschlange", "tasks-pending.json": "Warteschlange",
     "tagebuch.json": "Zustand",
+    "docling-wait": "Warteschlange",
 }
 # what the owner hears (fixed words, never an address or an error text from outside)
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),

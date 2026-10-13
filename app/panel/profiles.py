@@ -748,6 +748,8 @@ SETTINGS = {
     "doc_shared": (False, lambda v: isinstance(v, bool)),
     "doc_brief": (False, lambda v: isinstance(v, bool)),
     "doc_due": (False, lambda v: isinstance(v, bool)),
+    # "Mit Docling lesen" (doclingdienst.py): a preference, on unless the profile says no (its files leave the Spark)
+    "doc_docling": (True, lambda v: isinstance(v, bool)),
     # Dokumente erstellen (docmake.py): the profile's own switch, own templates, the sender lines of a letter
     "doc_make": (False, lambda v: isinstance(v, bool)),
     "doc_make_templates": (False, lambda v: isinstance(v, bool)),

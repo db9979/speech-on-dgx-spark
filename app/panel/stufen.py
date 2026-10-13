@@ -48,6 +48,7 @@ LIST = {
     ("POST", "/api/backups/{name}/restore"): (PROTECT, "Daten", "Sicherung einspielen", "Restore a backup"),
     ("POST", "/api/backups-upload"): (PROTECT, "Daten", "Sicherung hochladen", "Upload a backup"),
     ("PUT", "/api/admin/offsite"): (PROTECT, "Daten", "Ziel der Sicherung nach außen", "Offsite backup target"),
+    ("PUT", "/api/admin/docling"): (PROTECT, "Daten", "Docling-Server für Dokumente", "Docling server for documents"),
     ("PUT", "/api/admin/report/token"): (PROTECT, "Daten", "Token für Problem-Meldungen", "Token for problem reports"),
     ("PUT", "/api/admin/ghtoken"): (PROTECT, "Daten", "GitHub-Token für Updates", "GitHub token for updates"),
     # ------------------------------------------------------------------ accounts, devices, keys (confirm)

@@ -148,8 +148,9 @@ def add(uid, name, data, text=None, source="upload"):
     if documents.usage_total(uid) >= quota_bytes(uid):
         raise ValueError(f"the space for documents is full ({quota_bytes(uid) // 1024**2} MB): delete documents "
                          "or ask the admin for more")
+    import doclingdienst
     return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source,
-                         most=pdf_bytes())
+                         most=pdf_bytes(), docling=doclingdienst.wanted(uid, name, text))
 
 
 def _sharers(uid):
@@ -400,6 +401,9 @@ async def due_once(idle=True, now=None):
     if not idle or not _chat().get("documents", True):
         docembed.idle_stop(now)
         return None
+    import doclingdienst   # the Docling server first: what it reads, the language model need not (plan docling-anbinden)
+    if await doclingdienst.due_once(now):
+        return "docling"
     n = night(now)
     at_night = bool(n and n["active"])
     day, key, limit = (n["key"], "night", NIGHT_PAGES) if at_night else (today(now), "vision", DAY_PAGES)
@@ -548,9 +552,13 @@ def info(prof=Depends(own_profile)):
     uid = prof["id"]
     s = profiles.settings(uid)
     have, total = documents.vector_state(uid)
-    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates", "make_wikipics")},   # features.py
+    import doclingdienst
+    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates", "make_wikipics")}
+            | {"docling": doclingdienst.admin_on()},   # features.py
             "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared", "brief", "due", "make", "make_templates",
-                                                    "make_wikipics")},
+                                                    "make_wikipics")}
+            # "Mit Docling lesen" is a preference: on unless the profile turned it off
+            | {"docling": s.get(doclingdienst.PREF, True) is not False},
             "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
             "used": documents.usage_total(uid), "space": quota_bytes(uid),
@@ -695,7 +703,9 @@ async def reread(doc_id: str, request: Request, prof=Depends(browser_profile)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
     try:
-        got = await asyncio.to_thread(documents.reread, prof["id"], doc_id, on(prof["id"], "pictures"))
+        import doclingdienst
+        got = await asyncio.to_thread(documents.reread, prof["id"], doc_id, on(prof["id"], "pictures"),
+                                      doclingdienst.allowed(prof["id"]))
     except ValueError as e:
         raise HTTPException(400, str(e))
     if not got:
@@ -739,6 +749,8 @@ async def batch(request: Request, prof=Depends(browser_profile)):
         tag = tag[0]
         have = {d["id"]: d["tags"] for d in documents.list_docs(uid)}
     pictures = on(uid, "pictures")
+    import doclingdienst
+    docling = doclingdienst.allowed(uid)
 
     def one(doc_id):
         if do == "delete":
@@ -752,7 +764,7 @@ async def batch(request: Request, prof=Depends(browser_profile)):
             return old is not None and (any(x.lower() == tag.lower() for x in old)
                                         or (len(old) < documents.MAX_TAGS and documents.set_tags(uid, doc_id, old + [tag])))
         try:
-            return bool(documents.reread(uid, doc_id, pictures))
+            return bool(documents.reread(uid, doc_id, pictures, docling))
         except ValueError:
             return False
 

@@ -135,6 +135,7 @@
     "doc_quota_mb": 500,
     "doc_max_mb": 100,
     "doc_night": false,
+    "docling": false,
     "doc_night_from": "01:00",
     "doc_night_to": "06:00",
     "self_echo_mode": "pause",

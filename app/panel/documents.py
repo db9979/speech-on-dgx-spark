@@ -44,6 +44,8 @@ MAX_PARTS = 300                # slides or sheets read from one Office file
 MAX_PAGES = 1000
 MAX_SCAN_PAGES = 300           # pages per document handed to the language model (100 a day, wissen.DAY_PAGES)
 MAX_QUEUED = 600               # pages per profile waiting for the language model
+DOCLING_WAIT_MAX = 30          # files per profile waiting for the Docling server (doclingdienst.py)
+DOCLING_TYPES = (".pdf", ".docx", ".pptx", ".xlsx", ".html", ".htm", ".jpg", ".jpeg", ".png")   # what it reads
 SCAN_TEXT = 40                 # a PDF page with less text than this (and a picture) counts as scanned
 CHUNK, OVERLAP = 900, 150
 PICTURES = (".jpg", ".jpeg", ".png", ".webp")
@@ -60,7 +62,9 @@ _vcache = {}                   # uid -> (data_version stamp, ids, matrix)
 NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("art", "TEXT DEFAULT ''"),
                ("sender", "TEXT DEFAULT ''"), ("ddate", "TEXT DEFAULT ''"), ("due", "TEXT DEFAULT ''"),
                ("ref", "TEXT DEFAULT ''"), ("tags", "TEXT DEFAULT '[]'"), ("mytags", "TEXT DEFAULT ''"),
-               ("brief", "TEXT DEFAULT ''"), ("changed", "INTEGER DEFAULT 0"))
+               ("brief", "TEXT DEFAULT ''"), ("changed", "INTEGER DEFAULT 0"),
+               # Docling-Server (doclingdienst.py): '' not asked, wait, ok, x (failed or let go)
+               ("docling", "TEXT DEFAULT ''"))
 # when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
 MORE_COLUMNS = {"chunks": (("changed", "INTEGER DEFAULT 0"),), "pagetext": (("changed", "INTEGER DEFAULT 0"),)}
 FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
@@ -91,6 +95,11 @@ def _dir(uid):
 
 def _files(uid):
     return os.path.join(_dir(uid), "files")
+
+
+def _wait_dir(uid):
+    """Files waiting for the Docling server when the original is not kept (doclingdienst.py)."""
+    return profiles._path(uid, "docling-wait")
 
 
 def db_path(uid):
@@ -628,9 +637,10 @@ def usage(uid):
     return n
 
 
-def _read(name, data, text=None, pictures=False, cleaned=False):
+def _read(name, data, text=None, pictures=False, cleaned=False, later=False):
     """(pieces [(page, text)], {page: JPEG} for the language model, kind, note) of one file.
-    cleaned: a picture kept by the Spark itself (already a cleaned JPEG)."""
+    cleaned: a picture kept by the Spark itself (already a cleaned JPEG). later: the Docling server reads the
+    file afterwards, so a PDF without any text is taken (it waits for Docling instead of being refused)."""
     ext = os.path.splitext(name.lower())[1]
     pages, todo, kind, notes = [], {}, "text", []
     if text is not None:
@@ -650,9 +660,11 @@ def _read(name, data, text=None, pictures=False, cleaned=False):
             lost = min(len(scans), MAX_SCAN_PAGES) - len(todo)
             if lost > 0:
                 notes.append(f"{lost} Seite{'n' if lost > 1 else ''} ohne lesbares Bild übersprungen")
-        elif scans and not "".join(t for _, t in pages).strip():
+        elif scans and not "".join(t for _, t in pages).strip() and not later:
             raise ValueError("this PDF has no text layer (scanned pages are read only with "
                              "Funktionen → Bilder und Scans lesen)")
+        elif scans and later:
+            notes.append(f"{len(scans)} Seite{'n' if len(scans) > 1 else ''} ohne Text: wartet auf Docling")
         elif scans:
             notes.append(f"{len(scans)} Seite{'n' if len(scans) > 1 else ''} ohne Text nicht gelesen "
                          "(„Bilder und Scans lesen“ ist aus)")
@@ -661,22 +673,24 @@ def _read(name, data, text=None, pictures=False, cleaned=False):
     else:
         pages, _ = extract_pages(name, data)
     parts = [(p, c) for p, t in pages for c in chunks(_clean_text(t))]
-    if not parts and not todo:
+    if not parts and not todo and not later:
         raise ValueError("no text found in this file")
     return parts, todo, kind, "; ".join(notes)
 
 
-def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE):
+def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE, docling=False):
     """Stores a document. text: already read elsewhere (the iPhone app reads PDFs and scans itself;
     data is then only its size). pictures: photos and scanned pages may wait for the language model.
-    keep: bytes the original may take (0 = do not keep it)."""
+    keep: bytes the original may take (0 = do not keep it). docling: the Docling server reads the file again
+    later (doclingdienst.wanted); until then it is kept (the original, else in docling-wait/)."""
     if len(data) > most:
         raise ValueError(f"file is larger than {most // 1024**2} MB")
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(str(name or "document")))[:120].strip() or "document"
     ext = os.path.splitext(name.lower())[1]
     if text is None and ext != ".pdf" and len(data) > MAX_OTHER:
         raise ValueError(f"file is larger than {MAX_OTHER // 1024**2} MB (only PDFs may be bigger)")
-    parts, todo, kind, note = _read(name, data, text, pictures)
+    docling = bool(docling) and text is None
+    parts, todo, kind, note = _read(name, data, text, pictures, later=docling)
     doc_id = secrets.token_hex(6)
     stored = ""
     with _Db(uid) as con:
@@ -693,16 +707,27 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
                     f.write(blob)
             else:
                 note = (note + "; " if note else "") + "Original nicht aufbewahrt: Speicher voll"
-        con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, file, source) "
-                    "VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (doc_id, name, len(data), int(time.time()), kind, "reading" if todo else "ready", note,
-                     len(todo), stored, source))
+        if docling and not stored:
+            if con.execute("SELECT COUNT(*) FROM docs WHERE docling='wait'").fetchone()[0] >= DOCLING_WAIT_MAX:
+                docling = False            # enough waits: this one is read by the Spark only
+                if not parts and not todo:
+                    raise ValueError("no text found in this file")
+            else:
+                os.makedirs(_wait_dir(uid), mode=0o700, exist_ok=True)
+                with open(os.open(os.path.join(_wait_dir(uid), doc_id + (".jpg" if kind == "picture" else ext)),
+                                  os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as f:
+                    f.write(todo[1] if kind == "picture" else data)
+        state = "reading" if todo or (docling and not parts) else "ready"
+        con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, file, source, docling) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    (doc_id, name, len(data), int(time.time()), kind, state, note,
+                     len(todo), stored, source, "wait" if docling else ""))
         for i, (page, c) in enumerate(parts):
             _put_chunk(con, doc_id, i, page, c)
         for page, jpeg in todo.items():
             con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
-    return {"id": doc_id, "name": name, "chunks": len(parts), "state": "reading" if todo else "ready",
-            "todo": len(todo), "kind": kind, "file": bool(stored)}
+    return {"id": doc_id, "name": name, "chunks": len(parts), "state": state,
+            "todo": len(todo), "kind": kind, "file": bool(stored), "docling": docling}
 
 
 def delete(uid, doc_id):
@@ -719,6 +744,7 @@ def delete(uid, doc_id):
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM docs WHERE id=?", (doc_id,))
+        _drop_wait(uid, doc_id)
         if r["file"]:
             try:
                 os.remove(os.path.join(_files(uid), r["file"]))
@@ -742,9 +768,10 @@ def set_shared(uid, doc_id, on):
         return con.execute("UPDATE docs SET shared=? WHERE id=?", (1 if on else 0, doc_id)).rowcount > 0
 
 
-def reread(uid, doc_id, pictures=False):
+def reread(uid, doc_id, pictures=False, docling=False):
     """Reads a document again from its kept original (V01.0.238): same id, place, "use" and "Für alle";
-    pieces, meaning vectors and waiting pages are replaced. Returns like add, None without an original."""
+    pieces, meaning vectors and waiting pages are replaced. Returns like add, None without an original.
+    docling: the Docling server reads it once more afterwards."""
     got = original(uid, doc_id)
     if not got:
         return None
@@ -755,7 +782,8 @@ def reread(uid, doc_id, pictures=False):
         r = con.execute("SELECT name, kind FROM docs WHERE id=?", (doc_id,)).fetchone()
     if not r:
         return None
-    parts, todo, kind, note = _read(name, data, None, pictures, cleaned=r["kind"] == "picture")
+    docling = bool(docling) and os.path.splitext(name.lower())[1] in DOCLING_TYPES
+    parts, todo, kind, note = _read(name, data, None, pictures, cleaned=r["kind"] == "picture", later=docling)
     with _Db(uid) as con:
         waiting = con.execute("SELECT COUNT(*) FROM pages WHERE doc<>?", (doc_id,)).fetchone()[0]
         if todo and waiting + len(todo) > MAX_QUEUED:
@@ -763,14 +791,15 @@ def reread(uid, doc_id, pictures=False):
         con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
         con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
-        con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=? WHERE id=?",
-                    (kind, "reading" if todo else "ready", note, len(todo), doc_id))
+        state = "reading" if todo or (docling and not parts) else "ready"
+        con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=?, docling=? WHERE id=?",
+                    (kind, state, note, len(todo), "wait" if docling else "", doc_id))
         for i, (page, c) in enumerate(parts):
             _put_chunk(con, doc_id, i, page, c)
         for page, jpeg in todo.items():
             con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
-    return {"id": doc_id, "name": r["name"], "chunks": len(parts), "state": "reading" if todo else "ready",
-            "todo": len(todo), "kind": kind, "file": True}
+    return {"id": doc_id, "name": r["name"], "chunks": len(parts), "state": state,
+            "todo": len(todo), "kind": kind, "file": True, "docling": bool(docling)}
 
 
 def list_shared(uid):
@@ -926,6 +955,116 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
     return doc_id, left
 
 
+# ---------------------------------------------------------------- the Docling server (doclingdienst.py)
+def _wait_files(uid, doc_id):
+    d = _wait_dir(uid)
+    try:
+        return [os.path.join(d, f) for f in os.listdir(d) if f.split(".")[0] == doc_id]
+    except OSError:
+        return []
+
+
+def _drop_wait(uid, doc_id):
+    for p in _wait_files(uid, doc_id):
+        try:
+            os.remove(p)
+        except OSError:
+            pass
+
+
+def _settle(con, doc_id):
+    """After Docling: ready when no page waits for the language model (error without any text)."""
+    if con.execute("SELECT 1 FROM pages WHERE doc=?", (doc_id,)).fetchone():
+        con.execute("UPDATE docs SET state='reading' WHERE id=?", (doc_id,))
+    else:
+        has = con.execute("SELECT 1 FROM chunks WHERE doc=?", (doc_id,)).fetchone()
+        con.execute("UPDATE docs SET state=? WHERE id=?", ("ready" if has else "error", doc_id))
+
+
+def _add_note(con, doc_id, text):
+    con.execute("UPDATE docs SET note=CASE WHEN note='' THEN ? ELSE note || '; ' || ? END WHERE id=?", (text, text, doc_id))
+
+
+def docling_waiting(uid):
+    """Documents of this profile waiting for the Docling server (0 without a database; never creates one)."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM docs WHERE docling='wait'").fetchone()[0]
+
+
+def docling_next(uid, older_than):
+    """(doc id, neutral file name, path of the file) of the oldest document waiting for Docling, or None. Documents waiting since
+    before older_than (unix time) are let go first: their file goes, their pages wait for the language model."""
+    if not os.path.exists(db_path(uid)):
+        return None
+    while True:
+        with _Db(uid) as con:
+            for r in con.execute("SELECT id FROM docs WHERE docling='wait' AND created<?", (int(older_than),)).fetchall():
+                con.execute("UPDATE docs SET docling='x' WHERE id=?", (r["id"],))
+                _add_note(con, r["id"], "Docling: zu lange gewartet")
+                _drop_wait(uid, r["id"])
+                _settle(con, r["id"])
+            r = con.execute("SELECT id FROM docs WHERE docling='wait' ORDER BY created, id LIMIT 1").fetchone()
+        if not r:
+            return None
+        files = _wait_files(uid, r["id"])
+        got = files[0] if files else (original(uid, r["id"]) or [None])[0]
+        if got:   # the kind of the file as stored (a picture is kept as a cleaned JPEG)
+            return r["id"], "dokument" + os.path.splitext(got)[1], got
+        docling_done(uid, r["id"], None, "failed")     # nothing left to send: the Spark's own text stays
+
+
+def docling_done(uid, doc_id, pages, why="", text_min=SCAN_TEXT):
+    """Docling's text of a document ([(page or None, text)]) replaces the Spark's own: pieces, meaning vectors and
+    the "Steckbrief" are made again; pages the language model would read go where Docling found text. pages None:
+    not read (why), the Spark's own text stays. Returns the pages Docling gave."""
+    with _Db(uid) as con:
+        if not con.execute("SELECT 1 FROM docs WHERE id=? AND docling='wait'", (doc_id,)).fetchone():
+            _drop_wait(uid, doc_id)
+            return 0                               # deleted or let go meanwhile
+        _drop_wait(uid, doc_id)
+        if pages is None:
+            con.execute("UPDATE docs SET docling='x' WHERE id=?", (doc_id,))
+            _add_note(con, doc_id, "Docling: nicht lesbar")
+            _settle(con, doc_id)
+            return 0
+        parts = [(page, c) for page, t in pages for c in chunks(_clean_text(t))]
+        if parts:
+            con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
+            con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+            for i, (page, c) in enumerate(parts):
+                _put_chunk(con, doc_id, i, page, c)
+        found = {p for p, t in pages if p is not None and len(t.strip()) >= text_min}
+        waiting = [r[0] for r in con.execute("SELECT page FROM pages WHERE doc=?", (doc_id,)).fetchall()]
+        if any(p is None for p, _ in pages):       # no page breaks: enough text for every waiting page, or none goes
+            total = sum(len(t.strip()) for _, t in pages)
+            found = set(waiting) if total >= text_min * max(1, len(waiting)) else set()
+        for page in waiting:
+            if page in found:
+                con.execute("DELETE FROM pages WHERE doc=? AND page=?", (doc_id, page))
+        # the language model's notes about pages without text are told by Docling's reading now
+        con.execute("UPDATE docs SET docling=?, note=?, brief=CASE WHEN ? THEN '' ELSE brief END WHERE id=?",
+                    ("ok" if parts else "x", "mit Docling gelesen" if parts else "Docling: kein Text", 1 if parts else 0,
+                     doc_id))
+        _settle(con, doc_id)
+    return len(pages)
+
+
+def docling_release(uid):
+    """Docling switched off (or not for this profile): waiting documents keep the Spark's own text, their files go
+    and their pages wait for the language model again."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        ids = [r[0] for r in con.execute("SELECT id FROM docs WHERE docling='wait'").fetchall()]
+        for doc_id in ids:
+            con.execute("UPDATE docs SET docling='' WHERE id=?", (doc_id,))
+            _drop_wait(uid, doc_id)
+            _settle(con, doc_id)
+    return len(ids)
+
+
 # ---------------------------------------------------------------- pages for the language model
 def next_page(uid, most_pages=None):
     """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None.
@@ -933,8 +1072,10 @@ def next_page(uid, most_pages=None):
     if not os.path.exists(db_path(uid)):
         return None
     with _Db(uid) as con:
+        # a document waiting for the Docling server is read by it first (its pages wait until then)
         r = con.execute("SELECT p.doc, d.name, p.page, p.jpeg, p.tries FROM pages p JOIN docs d ON d.id=p.doc "
-                        + ("WHERE d.pages<=? " if most_pages else "") + "ORDER BY d.created, p.doc, p.page LIMIT 1",
+                        "WHERE d.docling<>'wait' " + ("AND d.pages<=? " if most_pages else "")
+                        + "ORDER BY d.created, p.doc, p.page LIMIT 1",
                         (most_pages,) if most_pages else ()).fetchone()
     return tuple(r) if r else None
 

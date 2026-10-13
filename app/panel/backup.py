@@ -53,6 +53,7 @@ _lock = threading.Lock()
 # shared state of this Spark (not the logs, counters, lockouts or login keys); name -> kind
 STATE_FILES = {
     "offsite.json": "json",         # Sicherung nach außen: WebDAV address, user, password and backup password (sealed)
+    "docling.json": "json",         # Docling-Server: address, key (sealed), accepted certificate
     "mfa-admin.json": "json",       # the admin's second step (secret sealed with secret.key)
     "apns.json": "json",            # iPhone push: Apple key (sealed), key id, team
     "apns-tokens.json": "json",     # iPhone push: the devices' tokens

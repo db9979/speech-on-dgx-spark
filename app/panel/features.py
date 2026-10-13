@@ -119,6 +119,10 @@ FEATURES = (
       parent="documents", me="docbox", guide="docnight"),
     F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",), "doc_shared",
       parent="documents", me="docbox", guide="docshared"),
+    # Docling-Server (doclingdienst.py): for all profiles once the admin sets it up; each may say "not my files"
+    # (preference doc_docling, on by default) because the files leave the Spark for the server in the home network
+    F("docling", "Docling-Server", "Docling server", "data", ("docling",), parent="documents", me="docbox",
+      guide="docling"),
     F("remarkable", "reMarkable-Notizen", "reMarkable notes", "data", ("remarkable",), "rm_on",
       parent="docpics", me="rmbox", guide="remarkable"),
     F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",), "rm_send",
@@ -309,7 +313,13 @@ profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)
 
 # Spark-wide conditions besides the switches (an address that must be set), registered by the module
 # that knows them, so this file imports none of them: key -> function(chat config) -> bool
-READY = {"beraterissue": lambda c: admin_on("melden", c)}   # a case as a report needs „Probleme melden“
+def _docling_set_up(c):
+    import doclingdienst
+    return doclingdienst.set_up(c)
+
+
+READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
+         "docling": _docling_set_up}                          # the Docling server needs its address
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
 # the second step a profile still owes before using a function (join.py, new profiles by invitation):

@@ -88,6 +88,8 @@ SVC = {
     # Eigener Speicher (speicher.py): the WebDAV targets of the profiles, one part per address
     "store": ("Eigener Speicher", "Own storage", "Kopien auf den eigenen Speicher warten; alles bleibt auf dem Spark.", SLOW,
               "speicher"),
+    # Docling-Server (doclingdienst.py): /health needs no key
+    "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
@@ -257,6 +259,14 @@ def active(c=None, cfg=None):
         d = offsite._read()
         if d.get("on") is True and _origin(d.get("url")):
             out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True, "pin": d.get("cert") or ""}}
+    except Exception:
+        pass
+    try:
+        import doclingdienst
+        d = doclingdienst._read()
+        if doclingdienst.admin_on(c) and _origin(d.get("url")):
+            out["docling"] = {"docling": {"url": str(d["url"]) + "/health", "level": netguard.HOME, "verify": True,
+                                          "pin": d.get("cert") or ""}}
     except Exception:
         pass
     try:
