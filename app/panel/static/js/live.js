@@ -21,7 +21,7 @@ const col=id=>{if(!LV.cm||Object.keys(LV.cm).length>300)LV.cm={};const m=LV.cm;
   if(m[id]==null){const used=new Set(((LV.data||{}).reqs||[]).map(r=>m[r.id]).filter(x=>x!=null));let i=0;
     while(i<COLS.length-1&&used.has(i))i++;m[id]=i}return COLS[m[id]]};
 const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weiche','Switch'),tt('Absicht','Intent')],['llm',tt('Sprachmodell','Language model'),'qwen38'],
-  ['tool',tt('Werkzeuge','Tools'),'chat_tools'],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
+  ['tool',tt('Werkzeuge','Tools'),tt('Suchen, Nachschlagen, Schalten','search, look up, switch')],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
 const SNAME=Object.fromEntries(STAGES.map(s=>[s[0],s[1]]));
 const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)'};
 const KIND={in:tt('Eingang','Arrival'),asr:tt('Hören','Listening'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),ack:tt('Sofort-Satz','Instant sentence'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
@@ -80,15 +80,36 @@ function kpis(d){const s=d.sys||{},h=s.hist||{},run=d.reqs.filter(r=>!r.done);
   el('lvkpi').innerHTML=k.map(x=>`<div class="card kpi"><div class="l">${lvE(x[0])}</div><div class="v">${lvE(x[1])}<small>${lvE(x[2])}</small></div>${x[3]?spark(x[3],x[4]):''}</div>`).join('')}
 
 // ------------------------------------------------------------------ the flow picture
+// the internal bus (Dominik 2026-10-13, B1): what the Spark starts by itself comes in at the top (rule, timer, job,
+// note), runs down the bus and goes into the stage where it begins; a running one in its colour with moving dots
+const BUSX=440,BUS=[['rule',()=>tt('Regeln und Home-Assistant-Ereignisse','rules and Home Assistant events')],['timer',()=>tt('eigener Zeitplan: Hinweise, Begrüßung, Termine','own schedule: notes, greetings, appointments')],
+  ['job',()=>tt('Aufträge und Wartung: Update-Prüfung, Sicherung …','jobs and upkeep: update check, backup …')],['note',()=>tt('Benachrichtigungen','notifications')]];
+const portX=i=>300+i*36;
+function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort((a,b)=>(b.done?1:0)-(a.done?1:0)),run=on.filter(r=>!r.done),day=d.bus||{},bot=H-50;
+  let o=`<g class="bus"><path class="bline" d="M${BUSX} 46 L${BUSX} ${bot}"/>`;
+  STAGES.forEach(x=>{const p=pos[x[0]];if(p)o+=`<line class="btap" x1="${BUSX-6}" x2="${BUSX+6}" y1="${p.y+p.h/2}" y2="${p.y+p.h/2}"/>`});
+  BUS.forEach(([k,tip],i)=>{const r=run.find(q=>q.src===k),x=portX(i),c=r?col(r.id):'';
+    o+=`<g class="bport${r?' on':''}" data-tip="${lvE(k+' · '+tip()+' · '+tt('heute ','today ')+(day[k]||0))}"><path class="bwire" d="M${x} 41 C${x} 46 ${BUSX-12} 44 ${BUSX} 50" ${c?`style="stroke:${c}"`:''}/><circle cx="${x}" cy="36" r="5" ${c?`style="fill:${c};stroke:${c}"`:''}/><text class="bmono" x="${x}" y="26" text-anchor="middle">${k}</text></g>`});
+  on.forEach((r,j)=>{const t=pos['r'+r.id],st=pos[entry(r)||'llm']||pos.llm,i=Math.max(0,BUS.findIndex(b=>b[0]===r.src)),x=portX(i),y=t.y+6,c=r.done?'var(--mut)':col(r.id);
+    const way=`M${x} 41 C${x} 46 ${BUSX-12} 44 ${BUSX} 50 L${BUSX} ${y} L${st.x} ${y}`;
+    o+=`<path id="lvb${j}" class="bway" d="${way}" style="stroke:${c}${r.done?';stroke-width:2;opacity:'+op(r,d)*.6:''}" data-req="${lvE(r.id)}" data-tip="${lvE(r.id+' · '+(r.src||'job')+' → '+(SNAME[entry(r)]||'')+(r.intent?' · '+r.intent:'')+' · '+(r.done?tt('fertig','done'):secs(r.age*1000)))}"/>
+      <circle cx="${BUSX}" cy="${y}" r="6" fill="${c}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}/>`;
+    if(!r.done){o+=[0,1,2].map(k=>`<circle r="4.5" fill="${c}"><animateMotion dur="1.6s" begin="${-k*.53}s" repeatCount="indefinite"><mpath href="#lvb${j}"/></animateMotion></circle>`).join('');
+      const w=`IRQ ${r.src||'job'}→${entry(r)||'llm'}`;o+=`<g data-req="${lvE(r.id)}"><rect x="${BUSX-8-w.length*6.4-10}" y="${y-22}" width="${w.length*6.4+10}" height="18" rx="3" fill="${c}"/><text class="bmono" x="${BUSX-8-w.length*6.4-5}" y="${y-9}" style="fill:#fff">${lvE(w)}</text></g>`}});
+  const today=BUS.reduce((a,[k])=>a+(day[k]||0),0);
+  o+=`<text class="bmono" x="${BUSX-6}" y="${bot+12}" text-anchor="end">sched-bus · ${run.length} ${tt('aktiv','active')} · ${tt('heute','today')} ${today}</text></g>`;
+  return o}
 function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.filter(r=>!r.net).slice(-4),net=reqs.filter(r=>r.net).slice(-3);
   const T=d.targets,order=[...T.filter(x=>x.zone!=='net'),...folded(d,T.filter(x=>x.zone==='net'))];let H;
   if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));const NETY=Math.round(H*.58);
-    lan.forEach((r,i)=>pos['r'+r.id]={x:10,y:34+i*54,w:190,h:44});net.forEach((r,i)=>pos['r'+r.id]={x:10,y:NETY+14+i*54,w:190,h:44});
+    lan.filter(r=>!r.auto).forEach((r,i)=>pos['r'+r.id]={x:10,y:34+i*54,w:190,h:44});net.forEach((r,i)=>pos['r'+r.id]={x:10,y:NETY+14+i*54,w:190,h:44});
     STAGES.forEach((s,i)=>{const step=(H-40)/5;pos[s[0]]={x:470,y:34+step*i+(step-58)/2,w:200,h:58}});
     // a gap between home and internet targets: the INTERNET line runs in it, never across a box
     const nl=order.filter(x=>x.zone!=='net').length,GAP=nl<order.length?24:0,step=Math.min(50,(H-40-GAP)/order.length),th=Math.min(40,step-6);
     order.forEach((x,i)=>pos[x.id]={x:940,y:34+i*step+(i>=nl?GAP:0)+(step-th)/2,w:190,h:th});
-    pos.door={x:300,y:NETY+60,w:30,h:34};
+    // "Von selbst" starts inside the Spark: on the bus left of the stages, at the tap of its first stage (B1)
+    reqs.filter(r=>r.auto&&!r.net).forEach(r=>{const st=pos[entry(r)||'llm']||pos.llm;pos['r'+r.id]={x:BUSX-6,y:st.y+st.h/2-6,w:12,h:12,bus:1}});
+    pos.door={x:266,y:NETY+60,w:30,h:34};   // its words ("0 abgewiesen") stay inside the area (Dominik 2026-10-13)
     // the Wächter halfway between Werkzeuge and the targets, in the middle of the internet group
     const nt=order.filter(x=>x.zone==='net');pos._nety=NETY;pos.guard=null;pos._net1=null;
     if(nt.length){const a=pos[nt[0].id].y,b=pos[nt[nt.length-1].id].y+th;pos.guard={x:790,y:Math.min(H-70,(a+b)/2-17),w:30,h:34};pos._net1=Math.round(a-GAP/2-(step-th)/2)}}
@@ -205,7 +226,7 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
   else if(!ph&&!reqs.some(r=>r.net))s+=`<text x="12" y="${pos._nety+36}" style="font-size:11.5px;fill:var(--mut)">${tt('gerade niemand von außen','nobody from outside right now')}</text>`;
   for(let i=0;i<STAGES.length-1;i++){const a=pos[STAGES[i][0]],b=pos[STAGES[i+1][0]];s+=ph?`<path class="lnk" d="M${a.x+a.w} ${a.y+a.h/2} L${b.x} ${b.y+b.h/2}" stroke-dasharray="3 3"/>`:`<path class="lnk" d="M${a.x+a.w/2} ${a.y+a.h} L${b.x+b.w/2} ${b.y}" stroke-dasharray="3 3"/>`}
   const sel=reqs.find(r=>r.id===LV.sel);
-  let links=[];reqs.forEach(r=>{const on=r.done?'':col(r.id),k='r'+r.id;if(r.net&&!ph){links.push([k,'door',on,r.done]);links.push(['door',entry(r),on,r.done])}else links.push([k,entry(r),on,r.done])});
+  let links=[];reqs.filter(r=>!(pos['r'+r.id]||{}).bus).forEach(r=>{const on=r.done?'':col(r.id),k='r'+r.id;if(r.net&&!ph){links.push([k,'door',on,r.done]);links.push(['door',entry(r),on,r.done])}else links.push([k,entry(r),on,r.done])});
   const netOn=reqs.find(r=>!r.done&&r.to&&zoneOf(r.to)==='net');if(!ph&&pos.guard)links.push(['tool','guard',netOn?NET:'',false]);
   order.forEach(x=>{const r=x.fold?null:reqs.find(q=>!q.done&&q.to===x.id);links.push([x.id==='qwen'?'llm':(x.zone==='net'&&!ph&&pos.guard?'guard':'tool'),x.id,r?(x.zone==='net'?NET:col(r.id)):'',false])});
   s+=`<g class="${sel&&!ph?'dim':''}">`;links.forEach(([a,b,on,fade],i)=>{if(!pos[a]||!pos[b])return;s+=`<path id="lvp${i}" class="lnk${on?' on':''}" d="${curve(pos[a],pos[b],ph)}" ${on?`style="stroke:${on}"`:held(b)&&!pos[b].dev?'style="stroke:var(--bad);stroke-dasharray:4 5;opacity:.7"':fade?'style="opacity:.5"':''} data-tip="${lvE(nm(a)+' → '+nm(b))}"/>`;
@@ -216,7 +237,8 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     return `<g class="node${on?' act':''}${hd?' held':''}${o.cls||''}${glow(id)?' glow':''}${LV.node===id?' picked':''}" ${o.dev?'':`data-node="${lvE(id)}"`} ${o.attrs||''} data-tip="${lvE((o.tip||a)+(hd?' · '+hd:''))}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}${hd?';stroke-dasharray:5 4':''}"`:''}/>${hd?`<text x="${p.x+p.w-12}" y="${p.y+p.h/2+5}" text-anchor="end" style="font-size:${ph?11:14}px">🔒</text>`:''}${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
       <text class="a" data-w="${room}" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" data-w="${room}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
-  reqs.forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
+  if(!ph)s+=bus(d,pos,H,reqs);
+  reqs.filter(r=>!(pos['r'+r.id]||{}).bus).forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
     s+=node('r'+r.id,ph?r.dev.slice(0,12):r.dev,sub,!r.done,{dev:1,cd:r.done,stroke:r.done?'':col(r.id),dot:r.done?'var(--mut)':col(r.id),cls:' dv'+(r.age<1.2?' pop':''),
       attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}`,
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});
@@ -227,7 +249,8 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     hb=(id,b,o)=>{const h=hint(id);if(!h)return b;o.stroke=h.level==='bad'?'var(--bad)':'var(--warn)';o.dot=o.stroke;o.tip=(o.tip||'')+' · ⚠ '+h.word;o.cls=(o.cls||'')+' warned';return '⚠ '+h.word};
   // waiting at the gate of Hören or Sprechen (common.Gate): "2 warten"
   const qw=v=>v&&v.wait?' · '+v.wait+' '+tt('warten','waiting'):'';
-  STAGES.forEach(x=>{const v=sv(x[0]),o=svo(v,x[1]);if(!o.tip)o.tip=x[1];const b=hb(x[0],ph?'':(v&&v.st!=='ok'?v.word:x[2])+qw(v),o);s+=node(x[0],x[1],b,act.has(x[0]),o)});
+  const wzNow=(reqs.find(r=>!r.done&&r.stage==='tool'&&r.tool)||{}).tool;   // the tool running now, by its readable name (werkzeuge.js)
+  STAGES.forEach(x=>{const v=sv(x[0]),o=svo(v,x[1]);if(!o.tip)o.tip=x[1];const b=hb(x[0],ph?'':(v&&v.st!=='ok'?v.word:x[0]==='tool'&&wzNow?wzName(wzNow):x[2])+qw(v),o);s+=node(x[0],x[1],b,act.has(x[0]),o)});
   // Einordnung mit Wahrscheinlichkeit (systemone.py): how often today, per use, at the language model; numbers only
   const S1=d.sys1||{},s1=S1.n?' · ⚖ '+S1.n:'',s1tip=S1.n||S1.busy||S1.fail||S1.unsure?` · ${tt('Einordnung heute','classification today')}: ${Object.entries(S1.uses||{}).filter(([,n])=>n).map(([k,n])=>({weiche:tt('Werkzeugwahl','tool choice'),mail:tt('Aufräumen','tidying'),wichtig:tt('wichtige Mail','important mail'),qualitaet:tt('Qualitätstest','quality test'),berater:tt('Einstellungs-Assistent','settings assistant'),pruefen:tt('Antwort prüfen','answer check'),klage:tt('Beschwerde','complaint')}[k]||k)+' '+n).join(', ')||'–'}${S1.ms?' · Ø '+S1.ms+' ms':''}${S1.busy?' · '+S1.busy+' '+tt('ausgelastet','busy'):''}${S1.fail?' · '+S1.fail+' '+tt('ohne Antwort','no answer'):''}${S1.unsure?' · '+S1.unsure+' '+tt('unsicher','unsure'):''}${S1.orders===2?' · '+tt('zwei Reihenfolgen','two orders'):''}`:'';
   order.forEach(x=>{if(x.fold){s+=node(x.id,x.name,x.sub,false,{dev:1,cls:' fold',attrs:'data-fold="1"',tip:x.tip||x.name,stroke:'var(--line)'});return}

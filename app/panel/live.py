@@ -413,18 +413,26 @@ def refused(request, what, locked=0):
         pass
 
 
-def begin(client, device, t=None, uid=None, auto=False, why="", request=None):
+BUS = ("rule", "timer", "job", "note")   # the sources of "Von selbst" on the bus in the picture (Dominik 2026-10-13, B1)
+
+
+def begin(client, device, t=None, uid=None, auto=False, why="", request=None, src=None):
     """A request that does not go through the chat (Wyoming, MCP tools, rules that speak up): watched like
     one, written to Logs → Anfragen only when that switch is on. With uid it belongs to that profile (its
     name and the device name show only with its consent). auto: the Spark started it itself (no way back
-    to a device); why: a fixed word shown like the Weiche's intent; request: where it came from. None while both
-    are off; never raises."""
+    to a device); why: a fixed word shown like the Weiche's intent; request: where it came from; src: which
+    input of the bus an auto request comes from (BUS: HA rules, the Spark's own schedule, jobs, notes). None while
+    both are off; never raises."""
     try:
         import tracelog
         kind = "profile" if uid else "spark" if auto else "guest"
         rec = tracelog.start(time.time() if t is None else t, client, uid, kind, device)
         if rec is not None:
             rec.auto, rec.direct = bool(auto), True
+            if auto:
+                rec.src = src if src in BUS else "rule" if client == "ha" else "job"
+                with _lock:
+                    _bump("bus_" + rec.src)
             if why:
                 rec.intent = str(why)[:40]
             if request is not None:     # from the internet: under "Über das Internet" and in Eingang
@@ -448,7 +456,7 @@ def job(why, tool, t0, ok=True, uid=None, now=None):
     """Something the Spark did by itself with a service (update check, NAS backup, reMarkable sheet): a request
     of "Von selbst" with one step to the tool's target, shown like the others. never raises."""
     try:
-        rec = begin("auto", "", t=t0, uid=uid, auto=True, why=why)
+        rec = begin("auto", "", t=t0, uid=uid, auto=True, why=why, src="job")
         if rec is not None:
             rec.step("in", "Von selbst", t0)
             rec.step("tool", tool, t0, now or time.time(), ok=bool(ok))
@@ -510,7 +518,7 @@ def note(uid, kind, t0, n, why=""):
             return
         rec, own = current(), None
         if rec is None:
-            rec = own = begin("auto", "", t=t0, uid=uid, auto=True, why=why or "Benachrichtigung")
+            rec = own = begin("auto", "", t=t0, uid=uid, auto=True, why=why or "Benachrichtigung", src="note")
             if rec is not None:
                 rec.step("in", "Von selbst", t0)
         if rec is not None:
@@ -611,7 +619,7 @@ def _req(rec, view, now):
     end, gone = getattr(rec, "t_end", None), _gone_from(rec)
     return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
-            "auto": bool(getattr(rec, "auto", False)), "direct": bool(getattr(rec, "direct", False)),
+            "auto": bool(getattr(rec, "auto", False)), "src": getattr(rec, "src", "") if getattr(rec, "auto", False) else "", "direct": bool(getattr(rec, "direct", False)),
             "prio": bool(getattr(rec, "prio", False)),
             "quiet": bool(getattr(rec, "quiet", False)),   # text only, no speech (Antworten vorlesen aus)
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
@@ -1110,6 +1118,7 @@ def snapshot(view="admin", now=None):
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
+            "bus": {k: cnt.get("bus_" + k, 0) for k in BUS},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
             "svc": dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"}),
             "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,

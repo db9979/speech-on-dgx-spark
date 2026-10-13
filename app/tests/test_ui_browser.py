@@ -1638,6 +1638,56 @@ class Browser(unittest.TestCase):
             trace(False)
             tracelog.clear()
 
+    def test_live_bus_von_selbst(self):
+        """Dominik 2026-10-13 (B1): what the Spark starts by itself is no device on the left; it comes in at a port
+        of the internal bus (rule, timer, job, note), runs down to the tap of its first stage and into it."""
+        import json as _json
+        import time as _time
+        import live
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = _json.load(f)
+        was = dict(c.get("logs", {}))
+        c.setdefault("logs", {}).update(live=True)
+        helpers.write_config(c)
+
+        def undo():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                cb = _json.load(f)
+            cb["logs"] = was
+            helpers.write_config(cb)
+            live._run.clear()
+        self.addCleanup(undo)
+        live._run.clear()
+        t = _time.time() - 2
+        rec = live.begin("ha", "", t=t, auto=True, why="Regel", src="rule")
+        rec.step("in", "Von selbst", t)
+        rec.now("tool", "home_assistant_action")
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.evaluate("goSec('live')")
+                    await pg.wait_for_selector("#lvflow svg .node", timeout=20000)
+                    await pg.wait_for_timeout(400)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    if name == "pc":
+                        self.assertEqual(await pg.locator(f"#lvd{rec.id}").count(), 0)      # no device box on the left
+                        self.assertGreaterEqual(await pg.locator("#lvflow .bus .bport.on").count(), 1)
+                        self.assertEqual(await pg.locator(f"#lvflow .bus .bway[data-req='{rec.id}']").count(), 1)
+                        text = await pg.text_content("#lvflow .bus")
+                        self.assertIn("IRQ rule→tool", text)
+                        self.assertIn("sched-bus · ", text)
+                        # the way ends at Werkzeuge: its last point is the stage's left edge at the tap
+                        end = await pg.evaluate("""(id)=>{const p=document.querySelector('#lvflow .bway[data-req="'+id+'"]'),l=p.getTotalLength(),e=p.getPointAtLength(l),
+                            r=document.querySelector('#lvflow [data-node=tool] rect').getBBox();return [Math.round(e.x-r.x),Math.round(e.y-r.y-r.height/2)]}""", rec.id)
+                        self.assertEqual(end, [0, 0])
+                        await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-bus.png"))
+                    self.assertEqual(errors, [])
+                    await br.close()
+        self.run_async(go())
+
     def test_live_each_stretch_once(self):
         """Dominik 2026-10-12 (pick A): rounds between language model and tools draw each stretch once, with
         "↻ N Runden"; repeated calls of a target and the times stand beside the boxes, not on the lines."""
@@ -1762,6 +1812,11 @@ class Browser(unittest.TestCase):
                             return [...document.querySelectorAll('#lvflow line.netline')].filter(l=>rs.some(b=>{const y=+l.getAttribute('y1'),x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2');
                             return y>b.y-2&&y<b.y+b.height+2&&x2>b.x&&x1<b.x+b.width})).length}""")
                         self.assertEqual(cross, 0)
+                        # Dominik 2026-10-13: the Eingang words stay inside the internet area, Werkzeuge has no code name
+                        door = await pg.evaluate("""()=>{const b=document.querySelector('#lvflow rect.netband').getBBox();
+                            return [...document.querySelectorAll('#lvflow [data-gate=door] text')].map(t=>t.getBBox()).filter(t=>t.x+t.width>b.x+b.width-2||t.x<b.x).length}""")
+                        self.assertEqual(door, 0)
+                        self.assertNotIn("chat_tools", await pg.text_content("#lvflow [data-node=tool]"))
                         gap = await pg.evaluate("""()=>{const g=document.querySelector('#lvflow [data-gate=guard] path').getBBox(),
                             t=document.querySelector('#lvflow [data-node=tool] rect').getBBox(),q=document.querySelector('#lvflow [data-node=qwen] rect').getBBox();
                             return [g.x-(t.x+t.width),q.x-(g.x+g.width)]}""")

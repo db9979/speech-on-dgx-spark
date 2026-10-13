@@ -9,6 +9,7 @@ Run:  python -m unittest discover -s app/tests -t app     (from the repository r
 import json
 import os
 import re
+import time
 import unittest
 import unittest.mock
 
@@ -621,3 +622,21 @@ class Proxy(unittest.TestCase):
         self.assertEqual(live.snapshot("admin", now=1001.0)["door"]["items"][0]["from"], "89.204.x.x")
         set_logs(live=False)
         reset()
+
+
+class Bus(unittest.TestCase):
+    """Dominik 2026-10-13 (B1): "Von selbst" comes in on the internal bus; each auto request names its input."""
+
+    def test_src_and_counts(self):
+        reset()
+        set_logs(live=True)
+        self.addCleanup(reset)
+        self.addCleanup(set_logs, live=False)
+        t = time.time()
+        live.begin("ha", "", t=t, auto=True, why="Regel")
+        live.begin("auto", "", t=t, auto=True, why="Wetter", src="timer")
+        live.begin("auto", "", t=t, auto=True, src="nonsense")
+        live.begin("desk", "PC", t=t)
+        snap = live.snapshot("admin", now=t + 1)
+        self.assertEqual(sorted(r["src"] for r in snap["reqs"]), ["", "job", "rule", "timer"])
+        self.assertEqual(snap["bus"], {"rule": 1, "timer": 1, "job": 1, "note": 0})

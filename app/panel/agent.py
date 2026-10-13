@@ -570,7 +570,7 @@ async def run_job(uid, jid):
     rec = None
     try:     # Zustand → Live: the job as a request of its own with every round and tool (never the task text)
         import live
-        rec = live.begin("auto", "", uid=uid, auto=True, why="Auftrag")
+        rec = live.begin("auto", "", uid=uid, auto=True, why="Auftrag", src="job")
         if rec is not None:
             rec.step("in", "Auftrag", rec.t0)
     except Exception:

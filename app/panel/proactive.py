@@ -175,7 +175,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
     import live
     rec = own = live.current()
     if rec is None:
-        rec = own = live.begin("auto", "", uid=uid, auto=True, why=KINDS[kind][0])
+        rec = own = live.begin("auto", "", uid=uid, auto=True, why=KINDS[kind][0], src="timer")
         if rec is not None:
             rec.step("in", "Von selbst", now)
     else:

@@ -482,7 +482,7 @@ async def said(uid, rule, text, data, item, why=""):
     # Zustand → Live: "Home Assistant" on the left, its way through the camera picture to the note and the speakers
     import live
     t0 = time.time()
-    rec = live.begin("ha", "", t=t0, uid=uid, auto=True, why="Ereignis" if rule.get("conds") == [] else "Regel")
+    rec = live.begin("ha", "", t=t0, uid=uid, auto=True, why="Ereignis" if rule.get("conds") == [] else "Regel", src="rule")
     if rec is not None:
         rec.step("in", "Home Assistant meldet", t0)
     if rule.get("camera") and not reason:
