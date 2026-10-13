@@ -84,7 +84,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher",
-       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate"}
+       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund"}
 
 
 def _setup(prof, request):
@@ -1275,7 +1275,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
          "mem_check": "gedpruefen", "mem_ask": "gedfragen", "mem_topics": "gedthemen",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
-         "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce",
+         "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce", "verbund": "verbund",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken",
          "tagebuch": "tagebuch", "warum": "beraterwarum"}

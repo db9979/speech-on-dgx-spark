@@ -88,11 +88,14 @@ SVC = {
     # Eigener Speicher (speicher.py): the WebDAV targets of the profiles, one part per address
     "store": ("Eigener Speicher", "Own storage", "Kopien auf den eigenen Speicher warten; alles bleibt auf dem Spark.", SLOW,
               "speicher"),
+    # Chats mit anderen Sparks (verbund.py): the own address as other Sparks see it (its /.well-known/spark-verbund)
+    "verbund": ("Erreichbar für andere Sparks", "Reachable for other Sparks",
+                "Andere Sparks erreichen diesen Spark gerade nicht; ihre Nachrichten kommen später.", SLOW, "chats"),
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
              ("wiki", "Wikipedia"), ("remarkable", "reMarkable"), ("iphonepush", "Push ans iPhone"),
-             ("chats", "Mitteilungen zu Chats"))
+             ("chats", "Mitteilungen zu Chats"), ("verbund", "Chats mit anderen Sparks"))
 # the tools whose service the assistant names when it is gone (svc_hint); the rest of chat_tools runs as before
 TOOL_SVC = {"archive_search": "kiwix", "web_search": "web",
             "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",
@@ -257,6 +260,13 @@ def active(c=None, cfg=None):
         d = offsite._read()
         if d.get("on") is True and _origin(d.get("url")):
             out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True, "pin": d.get("cert") or ""}}
+    except Exception:
+        pass
+    try:
+        import verbund
+        if features.admin_on("verbund", c) and verbund.domain(c):
+            out["verbund"] = {"own": {"url": "https://" + verbund.domain(c) + verbund.WELL_KNOWN, "level": netguard.PUBLIC,
+                                      "verify": True}}
     except Exception:
         pass
     try:

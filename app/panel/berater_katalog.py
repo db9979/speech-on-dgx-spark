@@ -152,7 +152,7 @@ OHNE = {
         "telegram_panel_url",
         "agent", "agent_mcp", "android", "android_live", "berater", "berater_auto", "berater_calls", "berater_chat",
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_issue", "berater_me", "berater_notify",
-        "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "contacts", "datetime", "defaults", "desk",
+        "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_mode", "verbund_domain", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
         "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_max_mb", "doc_night", "doc_night_from",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents",

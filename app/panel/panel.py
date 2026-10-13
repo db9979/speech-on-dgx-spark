@@ -98,10 +98,11 @@ import verlauf  # noqa: E402
 import klaeren  # noqa: E402
 import chats  # noqa: E402
 import chatsec  # noqa: E402
+import verbund  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
+for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -119,7 +120,7 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/desk/meeting/chunk", begleiter.MEET_CHUNK), ("/api/profile/desk/send", begleiter.INBOX_FILE + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
-    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
+    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/verbund", verbund.MAX_BODY + 1024), ("/api/admin/verbund", 16 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/desk/meeting/chunk", "/api/profile/desk/send", "/api/profile/voice", "/api/profile/docs",
            "/api/chat/image", "/api/chats/media", "/mcp"))
@@ -434,6 +435,12 @@ def seal_secrets():
             homeassistant.seal_stored(uid)
         except Exception as e:
             print("sealing secrets:", type(e).__name__, e, flush=True)
+
+
+@app.on_event("startup")
+async def verbund_queue():
+    """Chats mit anderen Sparks (verbund.py): what waits for another Spark goes out every 30 seconds, new ones at once."""
+    spawn(verbund.loop())
 
 
 @app.on_event("startup")

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.496** · 2026-10-13 · Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
 - **V01.0.495** · 2026-10-13 · Werkzeug-Abdeckung: Abdeckungsliste mit Selbsttest (Regel 29), Weiche behält genannte Werkzeuge, „Lösch die Erinnerung“ repariert; neu Zustand per Sprache, Dokumentliste, reMarkable-Ablage, Kamerabild, Smart-Home-Regeln; Termine verschieben/löschen, Pläne und Regeln ändern, Meldungen pausieren, Lautstärke, wiederholte Erinnerungen, Gruppen-Nachricht, Rückgängig (alles nach Ja)
 - **V01.0.494** · 2026-10-13 · Admin-Schalter speichern: auch alte Vorgaben („chat defaults: invalid value“), entfernte Einstellungen und Melder in der gespeicherten Konfiguration räumt der Spark jetzt selbst weg
 - **V01.0.493** · 2026-10-13 · Logs lückenlos: Durchsage und jede andere Aktion (Chats, Listen, Termine, Erinnerungen, Mitteilungen, Mail, Gedächtnis, Rechner, eigene Dienste, Dokumente) schreibt für jedes Ergebnis eine Zeile mit Grund; jeder Werkzeugaufruf mit ok/nicht ok; neue Diagnose-Filter; Reiter Änderungen enthält Durchsage, Gruppen und Mitglieder der Chats; Regel in der Richtlinie, test_log_luecken

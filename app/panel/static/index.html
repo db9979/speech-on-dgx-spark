@@ -190,6 +190,10 @@
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Fotos, Dateien und Sprache in Chats</b><span>Fotos ohne Ort, PDF, Office und Text bis 25 MB, Sprachnachrichten bis 5 Minuten; verschlüsselt auf dem Spark, bis 2 GB pro Person.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_media"><i></i></label></div>
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>In einen Chat einladen</b><span>Per Link oder QR-Code direkt in den eigenen Chat einladen, 3 pro Person. Braucht Personen und Geräte → Neue Personen „nur mit Einladung“.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_invite"><i></i></label></div>
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Private Chats (Ende-zu-Ende)</b><span>Chats zu zweit, die nur die Geräte der beiden lesen; der Spark speichert sie nur verschlüsselt und kann sie nicht lesen. Braucht https.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_private"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Chats mit anderen Sparks</b><span>Personen auf anderen Sparks per Adresse anfragen; erst nach „Annehmen“ kommt eine Nachricht durch. Braucht eine Adresse von außen.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_verbund"><i></i></label></div>
+      <div data-show="chat.chats_verbund" style="margin-left:36px"><label>Adresse dieses Sparks von außen</label><input id="chat.verbund_domain" placeholder="spark.example.de" autocomplete="off" autocapitalize="off"><div class="fh">Nur der Name, unter dem andere Sparks diesen per https erreichen, ohne https:// und ohne Pfad. Ändern braucht den zweiten Anmeldeschritt.</div>
+        <label>Wer darf sich verbinden</label><select id="chat.verbund_mode"><option value="pair">nur gekoppelte Sparks (ein Code zwischen beiden Admins, empfohlen)</option><option value="open">jeder Spark, wie bei E-Mail (sperren geht)</option></select>
+        <div id="vbadmin"></div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Wikipedia direkt</b><span>Wissensfragen wie „Was ist ein Quasar?“ beantwortet der Assistent aus dem Wikipedia-Artikel, ohne Websuche.</span></div><label class="tgl"><input type="checkbox" id="chat.wiki"><i></i></label></div>
       <div data-show="chat.wiki" style="margin-left:36px"><label>Adresse der Wikipedia</label><input id="chat.wiki_url" placeholder="https://de.wikipedia.org" autocomplete="off"><div class="fh">Leer = de.wikipedia.org, ohne Treffer dort en.wikipedia.org. Nur die Suchwörter verlassen den Spark.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Eigenes Kiwix-Archiv</b><span>Wissen aus deinem kiwix-serve, auch ohne Internet. Fällt die Websuche aus, antwortet der Assistent daraus.</span></div><label class="tgl"><input type="checkbox" id="chat.kiwix"><i></i></label></div>
@@ -1025,6 +1029,7 @@
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>
+<script src="/static/js/verbund.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>
 <script src="/static/js/mymcp.js"></script>

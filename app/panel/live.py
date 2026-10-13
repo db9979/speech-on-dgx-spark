@@ -1109,7 +1109,10 @@ def snapshot(view="admin", now=None):
                         + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}"
                            if cht.get("private_on") else "")
                         + (f" · Alle: {cht['all']} Personen" if cht.get("all") else "")
-                        + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else ""))
+                        + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
+                        + (f" · 🌐 Verbund: {cht.get('far_sparks', 0)} Sparks · {cht.get('far_contacts', 0)} Kontakte · heute "
+                           f"{cht.get('far_in', 0)} rein / {cht.get('far_out', 0)} raus" + (f" · {cht['far_waiting']} wartet" if cht.get("far_waiting") else "")
+                           if cht.get("far_on") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))

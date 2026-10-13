@@ -126,12 +126,12 @@ class OneToOne(Base):
     def test_texts_are_sealed_at_rest_and_bound_to_their_message(self):
         a, b = profile("Chgerd"), profile("Chhanna")
         cid = open_with(a, b)
-        say(a, cid, "Geheimes Rezept 4711")
+        say(a, cid, "Geheimes Rezept Zimt_Stern-4711")
         raw = read(chats._chat_file(cid)) + read(chats._index_file())
         self.assertNotIn("Geheimes Rezept", raw)
-        self.assertNotIn("4711", raw)
+        self.assertNotIn("Zimt_Stern-4711", raw)   # "_" and "-" never occur in base64 or a time stamp
         x = json.loads(read(chats._chat_file(cid)))["items"][-1]
-        self.assertEqual(chats.unseal(x["text"], cid, x["id"]), "Geheimes Rezept 4711")
+        self.assertEqual(chats.unseal(x["text"], cid, x["id"]), "Geheimes Rezept Zimt_Stern-4711")
         self.assertEqual(chats.unseal(x["text"], cid, "0" * 12), "")          # moved to another message: unreadable
         self.assertEqual(chats.unseal(x["text"], "c" + "1" * 12, x["id"]), "")
 

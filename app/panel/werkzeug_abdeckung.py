@@ -160,6 +160,7 @@ WITHOUT = {
     "chatmedia": "Fotos und Dateien in der Oberfläche",
     "chatinvite": "Einladen in der Oberfläche",
     "chatprivate": "Ende-zu-Ende: der Spark kann sie bewusst nicht lesen",
+    "verbund": "Nachrichten anderer Sparks sind fremder Text und gehen bewusst nie an das Sprachmodell",
     "verlaufsync": "Abgleich im Hintergrund",
     "eingespraech": "Abgleich im Hintergrund",
     "offlinelesen": "Abgleich im Hintergrund",

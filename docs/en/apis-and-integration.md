@@ -155,6 +155,11 @@ Since V01.0.488 messages between profiles go through chats only; `/api/messagesâ
 - `POST /api/chats/announce {"speakers": [id], "text"}`: an announcement on picked speakers (admin switch "Announcements on speakers").
 - Browser only: `GET`/`PUT /api/chats/who {"allow"?, "block"?}` ("Who may write to me") and `PUT /api/chats/call {"call"}` (own call name, unique). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (at most 100 per page), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
+### Chats with other Sparks (V01.0.496)
+
+Between Sparks (open, a signature instead of a login): `GET /.well-known/spark-verbund` returns `{"v": 1, "key": "<Ed25519, base64>", "inbox": "/api/verbund/in"}`, only while "Chats with other Sparks" is on. `POST /api/verbund/in` takes JSON up to 32 KB with the headers `X-Spark-From: <sender's domain>` and `X-Spark-Sig: <base64>`; signed is `spark-verbund v1\n<receiver's domain>\n<body>`. Body: `v`, `t` (Unix time, Â±600 s), `n` (32 hex characters, once), `type` (`pair`, `ask`, `yes`, `msg`, `read`, `edit`, `back`, `react`), `from`/`to` (the part before the @), by type `name`, `id`, `text`, `reply`, `emoji`, `secret`. The answer is always `{"ok": true}`, refusals 400/403/409/413/429 without a reason.
+For the profile (browser or iPhone app, switches as above): `GET /api/verbund` (own address, QR, contacts with `state` in/out/ok/block), `POST /api/verbund/ask {"addr"}`, `POST /api/verbund/answer {"id", "act": "ok"|"no"|"block"|"unblock"}`, `POST /api/verbund/remove {"id"}`, `POST /api/verbund/open {"id"}` (chat `id`). Admin: `GET /api/admin/verbund`, `POST /api/admin/verbund/pair` and `/connect {"code"}` (second step's code), `POST /api/admin/verbund/peer {"domain", "act": "allow"|"block"|"remove"}`.
+
 ### Pebble watch
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).

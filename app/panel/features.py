@@ -191,6 +191,9 @@ FEATURES = (
       guide="chatinvite"),
     F("chatprivate", "Private Chats (Ende-zu-Ende)", "Private chats (end-to-end)", "day", ("chats_private",), parent="chats",
       me="setbox", guide="chatprivate"),
+    # verbund.py (plan plaene/spark-verbund.md): chats with people on other Sparks; needs the own address from outside
+    F("verbund", "Chats mit anderen Sparks", "Chats with other Sparks", "day", ("chats_verbund",), parent="chats",
+      guide="verbund"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), "wx_on", me="wxbox", guide="weather"),
     # mail and contacts

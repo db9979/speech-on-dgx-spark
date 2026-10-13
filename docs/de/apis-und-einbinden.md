@@ -156,6 +156,11 @@ Seit V01.0.488 gehen Nachrichten zwischen Profilen nur noch über die Chats; `/a
 - `POST /api/chats/announce {"speakers": [id], "text"}`: Durchsage auf gewählten Lautsprechern (Admin-Schalter „Durchsagen auf Lautsprechern“).
 - Nur im Browser: `GET`/`PUT /api/chats/who {"allow"?, "block"?}` („Wer darf mir schreiben“) und `PUT /api/chats/call {"call"}` (eigener Rufname, eindeutig). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (höchstens 100 pro Seite), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
+### Chats mit anderen Sparks (V01.0.496)
+
+Zwischen Sparks (offen, statt einer Anmeldung eine Unterschrift): `GET /.well-known/spark-verbund` liefert `{"v": 1, "key": "<Ed25519, Base64>", "inbox": "/api/verbund/in"}`, nur solange „Chats mit anderen Sparks“ an ist. `POST /api/verbund/in` nimmt JSON bis 32 KB mit den Kopfzeilen `X-Spark-From: <Domain des Absenders>` und `X-Spark-Sig: <Base64>`; unterschrieben wird `spark-verbund v1\n<Domain des Empfängers>\n<Body>`. Body: `v`, `t` (Unix-Zeit, ±600 s), `n` (32 Hex-Zeichen, einmal), `type` (`pair`, `ask`, `yes`, `msg`, `read`, `edit`, `back`, `react`), `from`/`to` (der Teil vor dem @), je nach Art `name`, `id`, `text`, `reply`, `emoji`, `secret`. Antwort immer `{"ok": true}`, Ablehnungen 400/403/409/413/429 ohne Grund.
+Für das Profil (Browser oder iPhone-App, Schalter wie oben): `GET /api/verbund` (eigene Adresse, QR, Kontakte mit `state` in/out/ok/block), `POST /api/verbund/ask {"addr"}`, `POST /api/verbund/answer {"id", "act": "ok"|"no"|"block"|"unblock"}`, `POST /api/verbund/remove {"id"}`, `POST /api/verbund/open {"id"}` (Chat-`id`). Admin: `GET /api/admin/verbund`, `POST /api/admin/verbund/pair` und `/connect {"code"}` (Code des zweiten Schritts), `POST /api/admin/verbund/peer {"domain", "act": "allow"|"block"|"remove"}`.
+
 ### Pebble-Uhr
 
 Die Watch-App „Spark“ (`app/pebble/speech-spark.pbw`, Quellcode in `pebble/`) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170).

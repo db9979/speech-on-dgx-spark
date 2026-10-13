@@ -1441,3 +1441,9 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 /* reMarkable: the control picture of a sheet read back (rmpapier.py) */
 .rmpic{display:block;max-width:min(100%,420px);height:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .cx-who{margin:2px 0 12px}.cx-whol{flex-wrap:wrap;gap:6px}
+/* Chats mit anderen Sparks (verbund.js) */
+.cx-tk.fail{color:#d97706;letter-spacing:0}
+.vb-c{flex-wrap:wrap}.vb-c>.vb-who{display:flex;flex-direction:column;flex:1 1 140px}.vb-c>.vb-who small{white-space:normal;overflow-wrap:anywhere}
+.vb-c>.vb-who b{overflow:hidden;text-overflow:ellipsis}
+.vb-me input{width:100%}
+.vb-peer{margin:8px 0;padding:10px;overflow-wrap:anywhere}.vb-peer code,#vbadmin code{overflow-wrap:anywhere}
