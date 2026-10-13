@@ -84,7 +84,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher",
-       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate"}
+       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund"}
 
 
 def _setup(prof, request):
@@ -1036,12 +1036,17 @@ async def profile_reminder_played(request: Request, prof=Depends(own_profile)):
     if not re.fullmatch(r"[0-9a-f]{1,16}", rid):
         raise HTTPException(400, "id is required")
     # only a due one (a device whose clock runs ahead does not take it early)
-    return {"play": profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None}
+    play = profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None
+    if play:   # only the device that plays it writes the line (the others get "play": false)
+        print(f"reminders: one played on a device | {profiles.log_name(prof)}", flush=True)
+    return {"play": play}
 
 
 @router.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
 def profile_reminder_done(rid: str, prof=Depends(own_profile)):
-    return {"removed": profiles.remove_reminders(prof["id"], {rid})}
+    n = profiles.remove_reminders(prof["id"], {rid})
+    print(f"reminders: {n} deleted on a page or device | {profiles.log_name(prof)}", flush=True)
+    return {"removed": n}
 
 
 @router.get("/api/profile/calendar", dependencies=[Depends(assistant)])
@@ -1270,7 +1275,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
          "mem_check": "gedpruefen", "mem_ask": "gedfragen", "mem_topics": "gedthemen",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
-         "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce",
+         "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce", "verbund": "verbund",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken",
          "tagebuch": "tagebuch", "warum": "beraterwarum"}

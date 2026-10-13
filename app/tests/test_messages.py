@@ -360,6 +360,57 @@ class Speakers(Base):
         b.put("/api/chats/who", json={"block": []})
         b.put("/api/profile/settings", json={"msg_announce": False})
 
+    def test_every_announcement_writes_a_journal_line(self):
+        """Zustand → Logs → Diagnose (filter Nachrichten) shows every Durchsage, said or refused, and the admin
+        change log has the Chats-page Durchsage (the prefix "/api/chat" once swallowed every /api/chats/ path).
+        Fixed words and numbers only: never the text, a speaker's name or the sender's name."""
+        import contextlib
+        import io
+        import guard
+        import logfilter
+        helpers.set_config(esp32=True)
+        a, ua = profile("Ansage-Lea")
+        b, ub = profile("Ansage-Lars")
+        b.put("/api/profile/settings", json={"esp_on": True})
+        did = self.speaker(ub, "Flurlautsprecher")
+
+        def lines(do):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                do()
+            got = [x for x in out.getvalue().splitlines() if "announcement" in x]
+            for x in got:
+                self.assertEqual(logfilter.parse(x)["area"], "nachrichten", x)
+                for word in ("Ansage-Lea", "Ansage-Lars", "Flurlautsprecher", "Pizza"):
+                    self.assertNotIn(word, x)
+            return got
+        off = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza"}))
+        self.assertTrue(any("refused switched off" in x and "via chats" in x for x in off), off)
+        helpers.set_config(messages_announce=True)
+        none = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza"}))
+        self.assertTrue(any("refused no speaker allowed" in x for x in none), none)   # Lars does not allow it yet
+        b.put("/api/profile/settings", json={"msg_announce": True})
+        self.addCleanup(b.put, "/api/profile/settings", json={"msg_announce": False})
+        empty = lines(lambda: a.post("/api/chats/announce", json={"speakers": [], "text": "Pizza"}))
+        self.assertTrue(any("refused no speaker picked" in x for x in empty), empty)
+        sent = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza ist da"}))
+        self.assertTrue(any("announcement sent" in x and "1 at next wake word" in x and "12 chars" in x for x in sent), sent)
+        woke = lines(lambda: esp32._take_said(did))
+        self.assertEqual(woke, ["messages: announcement said at wake word"])
+        for _ in range(messages.ALL_PER_HOUR):
+            run(messages.announce(ua, [did], "Pizza", now=NOW))
+        limit = lines(lambda: run(messages.announce(ua, [did], "Pizza", now=NOW)))
+        self.assertTrue(any("refused hourly limit" in x and "via assistant" in x for x in limit), limit)
+        esp32._take_said(did)
+        # the change log (Logs → Admin-Protokoll) has the Durchsage, not the writing in a chat
+        self.assertTrue(guard.logged("/api/chats/announce", "POST"))
+        self.assertTrue(guard.logged("/api/chats/members", "POST"))
+        self.assertFalse(guard.logged("/api/chats/send", "POST"))
+        self.assertFalse(guard.logged("/api/chats/typing", "POST"))
+        self.assertFalse(guard.logged("/api/chat", "POST"))
+        self.assertFalse(guard.logged("/api/chat/rate", "POST"))
+        self.assertTrue(any(e.get("path") == "/api/chats/announce" for e in guard.read(50)))
+
     def test_new_chat_messages_at_wake_word(self):
         helpers.set_config(esp32=True)
         a, ua = profile("Nora")

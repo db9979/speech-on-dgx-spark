@@ -54,17 +54,18 @@ _lock = threading.RLock()
 # Where each tool goes: a target of the picture. Every tool of chat.py and the extras must be here
 # (tests/test_live.py), so a new tool shows on the monitor too (Dominik 2026-10-10: keep it current).
 TOOLS = {
-    "calendar_add": "cal", "calendar_events": "cal", "daily_briefing": "cal", "tasks_add": "cal", "tasks_change": "cal",
-    "tasks_show": "cal", "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",
+    "calendar_add": "cal", "calendar_events": "cal", "daily_briefing": "cal", "tasks_add": "cal", "tasks_change": "cal", "calendar_change": "cal",
+    "agent_change": "mem", "home_rule_delete": "ha", "proactive_pause": "mem", "speaker_volume": "geraete", "undo_last": "mem",
+    "tasks_show": "cal", "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha", "camera_describe": "ha", "home_rules_list": "ha",
     "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "pages",
     "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
-    "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "document_search": "mem", "history_search": "mem", "local_search": "mem",
+    "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
+    "parcels": "parcels", "transit": "transit", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "pc_action": "desk", "pc_send": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -1119,7 +1120,10 @@ def snapshot(view="admin", now=None):
                         + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}"
                            if cht.get("private_on") else "")
                         + (f" · Alle: {cht['all']} Personen" if cht.get("all") else "")
-                        + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else ""))
+                        + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
+                        + (f" · 🌐 Verbund: {cht.get('far_sparks', 0)} Sparks · {cht.get('far_contacts', 0)} Kontakte · heute "
+                           f"{cht.get('far_in', 0)} rein / {cht.get('far_out', 0)} raus" + (f" · {cht['far_waiting']} wartet" if cht.get("far_waiting") else "")
+                           if cht.get("far_on") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))

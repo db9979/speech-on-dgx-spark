@@ -229,7 +229,10 @@ def _reason(r):
 async def send(uid, title, body, tag="", now=None):
     """To every iPhone of the profile; returns how many Apple accepted."""
     now = time.time() if now is None else now
-    if not reachable(uid) or not _allowed_now(uid, now):
+    if not reachable(uid):
+        return 0
+    if not _allowed_now(uid, now):
+        print("apns: not sent, hourly limit of the profile", flush=True)
         return 0
     s = settings()
     nid = _keep(uid, title, body, now)

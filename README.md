@@ -33,16 +33,16 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.493** Docling server in the home network reads documents and scans again with tables (admin, off by default)
+- **V01.0.498** Docling server in the home network reads documents and scans again with tables (admin, off by default)
+- **V01.0.497** Assistant's face: third choice "Comic (woman)" under Settings → Defaults, also in the iPhone app, companions and Pebble
+- **V01.0.496** Chats with other Sparks (Spark network V1): own Spark address, contact requests, pairing by code or open, signed messages with a queue; text first
+- **V01.0.495** Tools for every service: status by voice, change and delete appointments, jobs and rules, repeating reminders, undo, all after a yes
+- **V01.0.494** Saving admin switches: old presets and settings no longer block it
+- **V01.0.493** Complete logs: every announcement and other action writes a line for every outcome, every tool call too
 - **V01.0.492** Saving admin switches works again, also with removed functions in "for new profiles"
 - **V01.0.491** reMarkable: sheets on request by voice, task sheet to tick that the Spark works through
 - **V01.0.490** Live picture: "Von selbst" runs on an internal bus inside the Spark; entrance text fits; Tools stage with a readable name
 - **V01.0.489** The face's window folds in with × or Escape and covers at most half of a small screen
-- **V01.0.488** "Messages" fully moved into chats: fixed group "Alle", announcements and read-aloud on own speakers, old messages carried over; Me → Messages removed, Siri writes into the chat
-- **V01.0.487** Backup to the NAS: accept a certificate that does not fit the address by its fingerprint instead of an error
-- **V01.0.486** Classification with probabilities: measure and choose the threshold, label mass, catalog pick in the settings assistant, background answer check, recognizing complaints
-- **V01.0.485** reMarkable: folders by kind, designed sheets with "Kann weg", morning sheet to tick off, boxes are read back
-- **V01.0.484** Check deeds and stop error loops show as built-in rules under Improve → Rules
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

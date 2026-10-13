@@ -307,6 +307,14 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Chats mit anderen Sparks (V01.0.496)",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "Zwischen Sparks (offen, statt einer Anmeldung eine Unterschrift): GET /.well-known/spark-verbund liefert {\"v\": 1, \"key\": \"<Ed25519, Base64>\", \"inbox\": \"/api/verbund/in\"}, nur solange „Chats mit anderen Sparks“ an ist. POST /api/verbund/in nimmt JSON bis 32 KB mit den Kopfzeilen X-Spark-From: <Domain des Absenders> und X-Spark-Sig: <Base64>; unterschrieben wird spark-verbund v1\\n<Domain des Empfängers>\\n<Body>. Body: v, t (Unix-Zeit, ±600 s), n (32 Hex-Zeichen, einmal), type (pair, ask, yes, msg, read, edit, back, react), from/to (der Teil vor dem @), je nach Art name, id, text, reply, emoji, secret. Antwort immer {\"ok\": true}, Ablehnungen 400/403/409/413/429 ohne Grund. Für das Profil (Browser oder iPhone-App, Schalter wie oben): GET /api/verbund (eigene Adresse, QR, Kontakte mit state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (Chat-id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair und /connect {\"code\"} (Code des zweiten Schritts), POST /api/admin/verbund/peer {\"domain\", \"act\": \"allow\"|\"block\"|\"remove\"}."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
 "text": "Die Watch-App „Spark“ (app/pebble/speech-spark.pbw, Quellcode in pebble/) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170)."
@@ -325,7 +333,7 @@
 "file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
-"text": "che, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter oder Comic, *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. Die Uhr-Einstellung Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
+"text": "che, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter, Comic oder Comic (Frau), *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. Die Uhr-Einstellung Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
 },
 {
 "lang": "de",
@@ -405,7 +413,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Netz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, bei einem Fehler schaut es ratl"
+"text": "bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Seit V01.0.497 gibt es als dritte Wahl *Comic (Frau)*: eine Frau mit langen dunklen Haaren und Seitenscheitel, im selben Stil gezeichnet, mit Wimpern und Lippen, die sich beim Sprechen öffnen; sie bewegt sich wie das Comic-Gesicht und zeigt auch die Ausdrücke. iPhone-App, Begleiter (Mac und Windows, als ruhendes Bild) und Pebble zeichnen sie ebenso. Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Ne"
 },
 {
 "lang": "de",
@@ -413,7 +421,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "os mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste oder die Maus über dem Gesicht wecken es."
+"text": "tz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, bei einem Fehler schaut es ratlos mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste oder die Maus über dem Gesicht wecken es."
 },
 {
 "lang": "de",
@@ -638,6 +646,30 @@
 "head": "Sprach-Chat",
 "title": "Agent-Funktionen (V01.0.175)",
 "text": "r auf aus. Der Spark startet nie selbst ein Programm; Heimnetz-Adressen nur mit der Freigabe unter Sicherheit. - *Eigene MCP-Dienste (V01.0.363):* Unter „Dienste per MCP“ der Schalter „Eigene MCP-Dienste für Profile“. Jedes Profil bindet unter Ich → Meine MCP-Dienste bis zu fünf eigene Dienste an (frischer Code, Schlüssel verschlüsselt) und gibt jedes Werkzeug selbst frei („Lesen“ oder „Handeln mit Ja“). Optional in Hintergrundaufträgen (nur lesend) und mit Anmeldung (OAuth). Der Admin sieht alle unter Apps und Schnittstellen und kann jeden sofort sperren. Details: APIs und Einbinden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "Chats mit anderen Sparks (V01.0.496): Personen auf einem anderen Spark per Adresse anschreiben (Plan plaene/spark-verbund.md, Stufe V1: Text-Chats zu zweit). Admin: Funktionen → Chats → „Chats mit anderen Sparks“ (aus), darunter die Adresse dieses Sparks von außen (z. B. speech.example.de, nur der Name, über https erreichbar; ohne sie bleibt die Funktion aus) und „Wer darf sich verbinden“: nur gekoppelte Sparks (Standard) oder jeder Spark wie bei E-Mail. Koppeln: „Kopplungs-Code erstellen“ (gilt einen Tag und einmal, spark.example.de#…), den Code dem Admin des anderen Sparks geben, der ihn unter „Code eines anderen Sparks“ einträgt; beide vergleichen den Fingerabdruck des Schlüssels in der Liste „Verbundene Sparks“ (dort Erlauben, Sperren, Entfernen, Zahl der Kontakte, rein/raus, wartend). Kein eigener Schalter im Profil: Ist die Funktion an, steht für jede Person mit Chats unter Chats → ＋ Neuer Chat → „🌐 Jemand auf einem anderen Spark“ die eigene Spark-Adresse (name@spark.example.de, mit QR-Code und Teilen), ein Feld für die Anfrage an eine Adresse und die Kontakte. Eine Anfrage an mich steht oben in der Chat-Liste als „Kontaktanfragen“ mit Annehmen, Ablehnen, Sperren; erst nach A"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "nnehmen kommt eine Nachricht durch, Ablehnen sagt dem anderen Spark nichts (30 Tage keine neue Anfrage von dort), höchstens 20 offene Anfragen pro Person. Der Chat ist ein Chat zu zweit mit 🌐: Haken (✓✓ heißt, der andere Spark hat die Nachricht), Lesebestätigung, Antworten, Reaktionen, Ändern, Zurücknehmen; Fotos, Dateien, Sprache, private Chats und Gruppen über Sparks hinweg kommen später. Technik: Jeder Spark hat einen eigenen Ed25519-Schlüssel (aus dem Schlüssel des Sparks abgeleitet, kommt nur mit einer Umzugs-Sicherung mit) und zeigt den öffentlichen Teil unter /.well-known/spark-verbund. Jede Nachricht ist ein HTTPS-POST an /api/verbund/in des anderen Sparks, unterschrieben samt Ziel-Domain, mit Zeit (±10 Minuten) und Einmal-Nummer; ein später anderer Schlüssel wird abgelehnt. Ausgehend nur an öffentliche Adressen (Wächter), nichts während des Notaus. Ist der andere Spark weg, versucht es der eigene nach 1 und 5 Minuten, dann stündlich, höchstens 7 Tage, danach ⚠ „nicht zugestellt“. Was von einem anderen Spark kommt, ist fremder Text: Es geht nie an das Sprachmodell und an kein Werkzeug, der eigene Lautsprecher kann es vorlesen. Der andere Spark erfährt nur Adresse, Anzeigena"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "me und Nachricht und bekommt auf jede Anfrage dieselbe Antwort, ob es die Person gibt oder nicht. Live (Kachel Chats): „🌐 Verbund: Sparks, Kontakte, heute rein/raus, wartet“; Logs (Bereich „Nachrichten und Chats“): verbund: sent, verbund: refused signature, verbund: retry, nie Domain, Name oder Text. Der Dienst-Wächter prüft „Erreichbar für andere Sparks“ (die eigene Adresse von außen). Die iPhone-App zeigt solche Chats mit 🌐; anfragen und annehmen geht im Browser."
 },
 {
 "lang": "de",
@@ -893,7 +925,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Docling-Server (V01.0.493, Plan plaene/docling-anbinden.md, Dominik 1 beides, 2 ja, 3 ja): Unterschalter „Docling-Server“ unter *Funktionen → Eigene Dokumente* (chat.docling, ab Werk aus; wirkt erst mit einer Adresse). Ein docling-serve auf einem anderen Rechner im Heimnetz liest hochgeladene PDFs, Office-Dateien und Bilder in ruhigen Momenten ein zweites Mal, mit Tabellen, Spalten und Texterkennung; sein Markdown ersetzt den Text, den der Spark selbst gelesen hat (Abschnitte, Bedeutungsvektoren und Steckbrief werden neu gebildet, im Dokument steht „mit Docling gelesen“). Gescannte Seiten gehen zuerst an Docling: Seiten, auf denen es mindestens 40 Zeichen fand, liest das Sprachmodell nicht mehr; der Rest wartet wie bisher auf das Sprachmodell. Einrichten nur durch den Haupt-Admin mit frischem Code: Adresse https://… oder http://… (http nur zu einer Adresse im Heimnetz, mit Warnung im Panel; geprüft vor jedem Aufruf, auch nach Namensauflösung), API-Schlüssel (DOCLING_SERVE_API_KEY, verschlüsselt gespeichert, nie angezeigt; eine neue Adresse verlangt ihn neu), bei eigenem Zertifikat „Zertifikat prüfen“ wie bei der Sicherung nach außen (Fingerabdruck vergleichen, genau dieses annehmen"
+"text": "Docling-Server (V01.0.498, Plan plaene/docling-anbinden.md, Dominik 1 beides, 2 ja, 3 ja): Unterschalter „Docling-Server“ unter *Funktionen → Eigene Dokumente* (chat.docling, ab Werk aus; wirkt erst mit einer Adresse). Ein docling-serve auf einem anderen Rechner im Heimnetz liest hochgeladene PDFs, Office-Dateien und Bilder in ruhigen Momenten ein zweites Mal, mit Tabellen, Spalten und Texterkennung; sein Markdown ersetzt den Text, den der Spark selbst gelesen hat (Abschnitte, Bedeutungsvektoren und Steckbrief werden neu gebildet, im Dokument steht „mit Docling gelesen“). Gescannte Seiten gehen zuerst an Docling: Seiten, auf denen es mindestens 40 Zeichen fand, liest das Sprachmodell nicht mehr; der Rest wartet wie bisher auf das Sprachmodell. Einrichten nur durch den Haupt-Admin mit frischem Code: Adresse https://… oder http://… (http nur zu einer Adresse im Heimnetz, mit Warnung im Panel; geprüft vor jedem Aufruf, auch nach Namensauflösung), API-Schlüssel (DOCLING_SERVE_API_KEY, verschlüsselt gespeichert, nie angezeigt; eine neue Adresse verlangt ihn neu), bei eigenem Zertifikat „Zertifikat prüfen“ wie bei der Sicherung nach außen (Fingerabdruck vergleichen, genau dieses annehmen"
 },
 {
 "lang": "de",
@@ -1245,7 +1277,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Begleiter mit dem gewählten Gesicht (V01.0.395)",
-"text": "Begleiter mit dem gewählten Gesicht (V01.0.395): Der Begleiter zeigt das Gesicht, das unter Einstellungen → Vorgaben gewählt ist (Roboter oder Comic), in allen Fenstern und im Symbol; ein Wechsel kommt mit dem nächsten Abruf an. Das Comic-Gesicht ist im Begleiter ein ruhendes Bild."
+"text": "Begleiter mit dem gewählten Gesicht (V01.0.395): Der Begleiter zeigt das Gesicht, das unter Einstellungen → Vorgaben gewählt ist (Roboter, Comic oder Comic (Frau)), in allen Fenstern und im Symbol; ein Wechsel kommt mit dem nächsten Abruf an. Das Comic-Gesicht ist im Begleiter ein ruhendes Bild."
 },
 {
 "lang": "de",
@@ -1837,7 +1869,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Für neue Profile (V01.0.492)",
-"text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features."
+"text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features. Seit V01.0.494 räumt admin._tidy beim Lesen der Konfiguration alles weg, was diese Version nicht mehr kennt: Schlüssel, die config.default.json nicht mehr hat, Vorgaben in chat.defaults, die profiles.clean_settings ablehnt (vorher „chat defaults: invalid value“ bei jedem Speichern), und Melder in berater_off, die es nicht mehr gibt. Was der Admin schickt, prüft validate weiter streng."
 },
 {
 "lang": "de",
@@ -1982,6 +2014,46 @@
 "head": "Sprach-Chat",
 "title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
 "text": "in gefragt), nie Inhalte. Plan: plaene/funktionen-entdecken.md; Tests: app/tests/test_tipps.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Werkzeug-Abdeckung (Plan `plaene/werkzeug-abdeckung.md`, Dominik 13.10.)",
+"text": "Werkzeug-Abdeckung (Plan plaene/werkzeug-abdeckung.md, Dominik 13.10.): Jede Funktion steht in werkzeug_abdeckung.py mit ihren Werkzeugen, mit der festen Regel des Panels, die sie beantwortet, oder mit dem Grund, warum es nichts zu fragen gibt; ein Selbsttest hält die Liste vollständig. Die Weiche wirft keine Werkzeuge mehr weg, die ein Modul nur anbietet, weil die Person sie beim Namen nennt („… aufs reMarkable“, der Name eines eigenen MCP-Dienstes): Sie bleiben, welche Gruppe der Rest des Satzes auch ist („Leg meine Einkaufsliste aufs reMarkable“). Neu erkannt: Türen, Fenster, Waschmaschine, Trockner, Spülmaschine, Strom, Akku und Kamera (Smart Home), „Ruf Mama an“ und „Navigiere nach Hause“ (iPhone), „Hak Milch ab“ (Liste), „Was hab ich heute vor?“ und zusammengesetzte Termine (Kalender), „Postfach“ (Mail), „Bestellung“ (Pakete). „Schalte die Websuche ein“ geht als Frage zum Spark an die Hilfe mit ihrer Karte, nie an die Websuche. Behoben: „Lösch die Erinnerung …“ löschte nie etwas; „Ist der Raummodus im Wohnzimmer an?“ wurde zu einem Startvorschlag und sagt jetzt, welche Geräte gerade zuhören."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Mehr zum Nachlesen (Werkzeug-Abdeckung, Paket 7)",
+"text": "Mehr zum Nachlesen (Werkzeug-Abdeckung, Paket 7): Was bisher nur auf einer Seite stand, lässt sich jetzt fragen. „Welche Dokumente habe ich?“ und „Welche Rechnungen habe ich?“ (document_list, mit den Dokumenten zusammen angeboten) nennt die Steckbriefe, nach Art oder Tags gefiltert. „Was liegt auf meinem reMarkable?“ und „Welche Aufgaben hast du auf dem reMarkable gefunden?“ (remarkable_library, rmliste.py) liest die Liste des letzten Abgleichs und die gefundenen Aufgaben, fragt die Cloud nie selbst und bleibt, wenn die Worte das reMarkable nennen. „Was sieht die Kamera an der Haustür?“ (camera_describe) beschreibt das Standbild einer Home-Assistant-Kamera in wenigen Worten, mit denselben Schaltern wie das Kamerabild in Regeln (Funktionen → Kamerabild beschreiben und das eigene „Kamerabild“ unter Ich → Von selbst, beide aus) und höchstens 30 Bildern pro Stunde; das Bild wird nie gespeichert. „Welche Smart-Home-Regeln habe ich?“ (home_rules_list) nennt die Regeln von „Von selbst melden“. Alle vier Ergebnisse sind fremder Text (Namen, Handschrift, Geräte-Namen, Modell-Beschreibung): danach wird nichts geschaltet oder geändert, und keines geht über MCP."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ändern per Sprache (Werkzeug-Abdeckung, Paket 6, `aendern.py`)",
+"text": "Ändern per Sprache (Werkzeug-Abdeckung, Paket 6, aendern.py): Was sich bisher nur anlegen ließ, lässt sich jetzt auch ändern. Alles außer Schalten wartet auf das Ja in der nächsten Nachricht, geht durch den Notaus und ist nach fremdem Text gesperrt; nichts davon geht über MCP. - Termine (calendar_change): „Verschieb den Zahnarzttermin auf Freitag 15:30“, „Lösch den Termin morgen mit Anna“. Gesucht wird in den beschreibbaren CalDAV-Kalendern nach Titel und Tag; ein wiederkehrender Termin wird nie geändert (das geht nur in der Kalender-App), passen mehrere, fragt der Spark nach. Das Etag des Servers schützt vor einer Änderung, die inzwischen anderswo gemacht wurde. Zum Verschieben nimmt das Modell nie mehr calendar_add (kein zweiter Termin). - Geplante Aufträge (agent_change): „Pausiere den Wochenüberblick“, „Setz den Wetter-Plan fort“, „Lösch den geplanten Auftrag …“. - Smart-Home-Regeln (home_rule_delete): „Lösch die Regel für die Haustür“. - Meldungen von selbst (proactive_pause): „Melde dich heute nicht mehr“ (bis Mitternacht oder einige Stunden, höchstens 24), „Du darfst dich wieder melden“; sofort, wie „nicht jetzt“ nach einer Meldung. - Lautstärke eigener Lautsprecher (speaker"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ändern per Sprache (Werkzeug-Abdeckung, Paket 6, `aendern.py`)",
+"text": "_volume): „Mach den Lautsprecher in der Küche leiser“, „Lautstärke auf 40“; nur eigene Geräte, sofort wie Schalten. - Wiederholte Erinnerungen (reminder_set mit repeat): „Erinnere mich jeden Montag um 7 an den Müll“: täglich, werktags, wöchentlich oder monatlich (am selben Tag, höchstens am 28.), immer zur selben Uhrzeit, auch über die Zeitumstellung. - Nachricht in eine eigene Gruppe (message_send): „Schreib in die Familiengruppe, dass ich später komme“; nur Gruppen, in denen das Profil ist, nie private Chats. - Rückgängig (undo_last, Funktionen → „Rückgängig per Sprache“, aus; gilt eingeschaltet für alle Profile): Der Spark merkt sich die letzten fünf Taten 30 Minuten lang nur im Speicher (Erinnerung, Listeneintrag, Notiz, Termin eingetragen, verschoben oder gelöscht, Gerät an oder aus, Lautstärke, Pause, Auftrag, Regel) und schlägt vor, die letzte zurückzunehmen; erst das Ja macht es. Bei Geräten hinter dem Codewort gilt „Ja“ mit dem Codewort."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Zustand per Sprache (`zustand_wz.py`, Werkzeug `spark_zustand`)",
+"text": "Zustand per Sprache (zustand_wz.py, Werkzeug spark_zustand): „Läuft alles?“, „Ist Home Assistant erreichbar?“, „Wann wurde zuletzt gesichert?“, „Gibt es ein Update?“, „Ist der Notaus an?“, „Ist mein Postfach verbunden?“. Der Spark liest seinen eigenen Zustand nach, statt zu raten: jedes Profil seinen Teil aus Ich → Mein Zustand und den eigenen Notaus, ein Admin (als eigenes, erkanntes Profil) dazu den Dienst-Wächter, die letzte Sicherung, die installierte Version und was die letzte Update-Prüfung fand (das Werkzeug fragt GitHub nie selbst). Nur feste Wörter und Zahlen, keine Fehlertexte oder Adressen; geschaltet wird nichts. Angeboten nur, wenn die eigenen Worte nach dem Zustand fragen (Weiche-Gruppe „zustand“). Schalter: Funktionen → Zustand per Sprache (chat.status_voice), aus; gilt eingeschaltet für alle Profile; nie für Gäste, nie über MCP."
 },
 {
 "lang": "de",
@@ -2381,7 +2453,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Benutzen",
 "title": "Benutzen",
-"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter oder Comic, der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor."
+"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter, Comic oder Comic (Frau), der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor."
 },
 {
 "lang": "de",
@@ -3180,6 +3252,22 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
+"title": "Lückenlose Log-Zeilen",
+"text": "Lückenlose Log-Zeilen (ab V01.0.493, Dominik: „Wieso taucht eine Durchsage aus dem Chat nicht im Log auf?“): Bis dahin schrieb eine Durchsage nur dann eine Zeile, wenn sie gesagt wurde; wurde sie abgelehnt (Schalter aus, kein Lautsprecher erlaubt, Stundenlimit, Notaus, Ruhezeit), stand nirgends etwas. Im Reiter Änderungen fehlten alle Chats-Pfade, weil die Ausnahme /api/chat als Präfix auch /api/chats/… traf. Jetzt gilt: Jede Aktion schreibt für jedes Ergebnis eine Zeile, nur feste Wörter und Zahlen, das Profil nur als profiles.log_name. - Durchsage (Filter „Nachrichten und Chats“): messages: announcement sent|refused <grund> | via chats|assistant|house | N speaker(s) picked, N now, N at next wake word, N quiet time | N chars, beim Wake-Word messages: announcement said at wake word oder too old, dropped. Dazu Nachrichten des Assistenten bei Ablehnung, Chat-Nachrichten auf dem Lautsprecher (sofort oder beim Wake-Word), ein abgebrochener Satz am Lautsprecher, jede Ablehnung der Chats-Seite (chats: refused | why … | http …) und „Chat für mich löschen“. - Werkzeuge (neuer Filter „Werkzeuge“): chat: tool <name> ok|not ok|not offered | N ms für jeden Aufruf; der Name nur, wenn das Werkze"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
+"title": "Lückenlose Log-Zeilen",
+"text": "ug angeboten war. - Listen, Termine, Erinnerungen (neuer Filter): Eintrag gesetzt, abgehakt oder gelöscht (mit Anzahl, Notaus oder Fehlerart), Übergabe ans iPhone, Termin gespeichert oder nicht, Erinnerung auf einem Gerät gespielt, gelöscht oder nach mehr als 6 h verworfen. - Mitteilungen (neuer Filter): jede Mitteilung mit Art (Auftrag, Erinnerung, Chat …), erreichten Geräten und Wegen, „Nicht stören“ zurückgehalten; Browser-Push ohne den Text des fremden Servers. - Rechner, eigene Dienste, Dokumente (neuer Filter): Am-PC-Handeln (erledigt, abgelehnt, keine Antwort), eigener MCP-Dienst (ausgeführt, abgelehnt, Fehler), Dokument verschickt oder abgelehnt. - Gedächtnis: Eintrag gemerkt (mit Herkunft) oder vergessen (Anzahl); Mail: bestätigtes Sortieren, Rückgängig, Aufräumen oder Entwurf erledigt, abgelehnt oder fehlgeschlagen; Telegram: Dokument gesendet oder abgelehnt. - Reiter Änderungen: Durchsage, Gruppen, Mitglieder, Einladungen, Schlüssel und „Wer darf mir schreiben“ stehen jetzt drin; das Schreiben, Lesen und Tippen in Chats bleibt draußen."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
 "title": "Telegram: nur ein Abruf",
 "text": "Telegram: nur ein Abruf (ab V01.0.214): Telegram gibt neue Nachrichten immer nur an einen Abruf (getUpdates) gleichzeitig. Bis V01.0.213 liefen die Startaufgaben des Panels doppelt (der https-Server führte sie ein zweites Mal aus), und die zwei Telegram-Abrufe warfen sich alle 15 s gegenseitig raus („Conflict: terminated by other getUpdates request“). Jetzt startet der https-Server ohne eigene Startaufgaben, und ein zweiter Abruf im selben Prozess wird nicht gestartet. Meldet Telegram trotzdem einen Konflikt, nutzt ein anderes Programm denselben Bot-Token: Der Spark wartet dann 5 s, 30 s, 1, 2, 5 und höchstens 10 min, schreibt nur die zweite und jede 20. Meldung ins Log (ohne Token) und zeigt unter Zustand und bei Funktionen → Telegram den Hinweis, den Token nur an einer Stelle zu nutzen oder bei @BotFather einen neuen zu holen. Ein einzelner Konflikt direkt nach einem Neustart ist normal (der alte Abruf läuft noch bis zu 25 s)."
 },
@@ -3859,6 +3947,14 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Chats with other Sparks (V01.0.496)",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "Between Sparks (open, a signature instead of a login): GET /.well-known/spark-verbund returns {\"v\": 1, \"key\": \"<Ed25519, base64>\", \"inbox\": \"/api/verbund/in\"}, only while \"Chats with other Sparks\" is on. POST /api/verbund/in takes JSON up to 32 KB with the headers X-Spark-From: <sender's domain> and X-Spark-Sig: <base64>; signed is spark-verbund v1\\n<receiver's domain>\\n<body>. Body: v, t (Unix time, ±600 s), n (32 hex characters, once), type (pair, ask, yes, msg, read, edit, back, react), from/to (the part before the @), by type name, id, text, reply, emoji, secret. The answer is always {\"ok\": true}, refusals 400/403/409/413/429 without a reason. For the profile (browser or iPhone app, switches as above): GET /api/verbund (own address, QR, contacts with state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (chat id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair and /connect {\"code\"} (second step's code), POST /api/admin/verbund/peer {\"domain\", \"act\": \"allow\"|\"block\"|\"remove\"}."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
 "text": "The watch app \"Spark\" (app/pebble/speech-spark.pbw, source in pebble/) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170)."
@@ -3885,7 +3981,7 @@
 "file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
-"text": "The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN such as Tailscale. The app uses HTTP because the Pebble app does not trust the self-signed certificate. On the Spark, POST /api/watch/ask and GET /api/watch/poll serve it: the answer is made like in the voice chat (kept short), the audio is compressed for the small speaker (quiet syllables lifted, peaks softly limited) and goes to the watch as 8 kHz IMA ADPCM. Watch and phone retry lost messages; after 30 s without a message the watch gives up. At the end the phone sends the times to POST /api/watch/report; *Status → Logs* then shows one line watch: zeit … per answer in the area \"Watch\" (dictation, first text, first sound, done, retries, outcome). The watch shows the same face as the panel (robot or comic), taken over with the next answer."
+"text": "The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN such as Tailscale. The app uses HTTP because the Pebble app does not trust the self-signed certificate. On the Spark, POST /api/watch/ask and GET /api/watch/poll serve it: the answer is made like in the voice chat (kept short), the audio is compressed for the small speaker (quiet syllables lifted, peaks softly limited) and goes to the watch as 8 kHz IMA ADPCM. Watch and phone retry lost messages; after 30 s without a message the watch gives up. At the end the phone sends the times to POST /api/watch/report; *Status → Logs* then shows one line watch: zeit … per answer in the area \"Watch\" (dictation, first text, first sound, done, retries, outcome). The watch shows the same face as the panel (robot, comic or comic woman), taken over with the next answer."
 },
 {
 "lang": "en",
@@ -3957,7 +4053,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "the upper lip). The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
+"text": "the upper lip). Since V01.0.497 there is a third choice, *Comic (woman)*: a woman with long dark hair and a side parting, drawn in the same style, with lashes and lips that open when she speaks; she moves like the comic face and shows the expressions too. The iPhone app, the companions (Mac and Windows, as a still) and the Pebble draw her too. The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, tho"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ught bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
 },
 {
 "lang": "en",
@@ -4174,6 +4278,30 @@
 "head": "Voice chat",
 "title": "Agent functions (V01.0.175)",
 "text": "cts up to five services of its own under Me → My MCP services (fresh code, key encrypted) and releases every tool itself (\"Read\" or \"Act after yes\"). Optionally in background jobs (read only) and with sign-in (OAuth). The admin sees all of them under Apps and interfaces and can block each at once. Details: APIs and integration."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "Chats with other Sparks (V01.0.496): write to people on another Spark by their address (plan plaene/spark-verbund.md, stage V1: text chats for two). Admin: Features → Chats → \"Chats with other Sparks\" (off), below it this Spark's address from outside (e.g. speech.example.de, the name only, reachable over https; without it the function stays off) and \"Who may connect\": only paired Sparks (default) or every Spark like e-mail. Pairing: \"Make a pairing code\" (works one day and once, spark.example.de#…), give the code to the other Spark's admin, who enters it under \"Code of another Spark\"; both compare the key's fingerprint in the list \"Connected Sparks\" (there Allow, Block, Remove, number of contacts, in/out, waiting). No switch of its own in the profile: when the function is on, for everyone with Chats, Chats → ＋ New chat → \"🌐 Someone on another Spark\" shows the own Spark address (name@spark.example.de, with QR code and Share), a field for a request to an address and the contacts. A request to me shows on top of the chat list as \"Contact requests\" with Accept, Decline, Block; only after Accept does a message get through, Decline tells the other Spark nothing (no new request from there"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": " for 30 days), at most 20 open requests per person. The chat is a chat for two with 🌐: ticks (✓✓ means the other Spark has the message), read receipts, replies, reactions, change, take back; photos, files, voice, private chats and groups across Sparks come later. Technically: every Spark has its own Ed25519 key (derived from the Spark's key, it only moves with a move backup) and shows the public part at /.well-known/spark-verbund. Every message is an HTTPS POST to the other Spark's /api/verbund/in, signed together with the receiving domain, with a time (±10 minutes) and a one-time number; a different key later is refused. Outbound only to public addresses (Wächter), nothing during the emergency stop. When the other Spark is away, this one tries again after 1 and 5 minutes, then every hour, at most 7 days, then ⚠ \"not delivered\". What comes from another Spark is someone else's text: it never goes to the language model or a tool, the own speaker can read it out. The other Spark only learns address, display name and message and gets the same answer to every request, whether the person exists or not. Live (tile Chats): \"🌐 Verbund: Sparks, contacts, in/out today, waiting\"; logs (area \"M"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "essages and chats\"): verbund: sent, verbund: refused signature, verbund: retry, never a domain, name or text. The service watch checks \"Reachable for other Sparks\" (the own address from outside). The iPhone app shows such chats with 🌐; asking and accepting work in the browser."
 },
 {
 "lang": "en",
@@ -4412,15 +4540,15 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Docling server (V01.0.493, plan `plaene/docling-anbinden.md`)",
-"text": "Docling server (V01.0.493, plan plaene/docling-anbinden.md): sub-switch \"Docling server\" under *Features → Own documents* (chat.docling, off by default; works only with an address). A docling-serve on another machine in the home network reads uploaded PDFs, Office files and pictures a second time in quiet moments, with tables, columns and OCR; its Markdown replaces the text the Spark read itself (pieces, meaning vectors and the summary card are made again, the document says \"mit Docling gelesen\"). Scanned pages go to Docling first: pages where it found at least 40 characters are no longer read by the language model; the rest waits for the language model as before. Set up by the main admin only, with a fresh code: address https://… or http://… (http only to an address in the home network, with a warning in the panel; checked before every call, also after name resolution), API key (DOCLING_SERVE_API_KEY, stored sealed, never shown; a new address asks for it again), with its own certificate \"Check certificate\" as for the offsite backup (compare the fingerprint, accept exactly that one). \"Read sample\" sends a built-in sample page with a table and shows time and text, never a profile's "
+"title": "Docling server (V01.0.498, plan `plaene/docling-anbinden.md`)",
+"text": "Docling server (V01.0.498, plan plaene/docling-anbinden.md): sub-switch \"Docling server\" under *Features → Own documents* (chat.docling, off by default; works only with an address). A docling-serve on another machine in the home network reads uploaded PDFs, Office files and pictures a second time in quiet moments, with tables, columns and OCR; its Markdown replaces the text the Spark read itself (pieces, meaning vectors and the summary card are made again, the document says \"mit Docling gelesen\"). Scanned pages go to Docling first: pages where it found at least 40 characters are no longer read by the language model; the rest waits for the language model as before. Set up by the main admin only, with a fresh code: address https://… or http://… (http only to an address in the home network, with a warning in the panel; checked before every call, also after name resolution), API key (DOCLING_SERVE_API_KEY, stored sealed, never shown; a new address asks for it again), with its own certificate \"Check certificate\" as for the offsite backup (compare the fingerprint, accept exactly that one). \"Read sample\" sends a built-in sample page with a table and shows time and text, never a profile's "
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Docling server (V01.0.493, plan `plaene/docling-anbinden.md`)",
+"title": "Docling server (V01.0.498, plan `plaene/docling-anbinden.md`)",
 "text": "file. The server gets only the file, named dokument.<ext>, never the profile, the file name or a question. Applies to all profiles once the admin switches it on; each profile can switch \"Read with Docling\" off for itself under Me → Documents (doc_docling, on by default, no admin preset), guests never. Until Docling has read it the file stays in users/<profile>/docling-wait/ (also when originals are not kept); if the server does not answer the Spark asks again 10 minutes later, after 2 days it gives up and the language model reads. Switching off (admin or profile) lets waiting files go at once. Live shows \"Docling-Server\" with waiting and today's files (numbers only), the service watch asks /health, logs under Knowledge (docling: …), protection level \"Data\" for saving. Starting the server (other machine, Docker): docker run -d --name docling -p 5001:5001 -e DOCLING_SERVE_API_KEY=<long random key> quay.io/docling-project/docling-serve-cpu:v1.37.0; with a GPU the image docling-serve-cu128. For https put a Caddy or nginx in front."
 },
 {
@@ -4725,7 +4853,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Companion with the chosen face (V01.0.395)",
-"text": "Companion with the chosen face (V01.0.395): the companion shows the face picked under Settings → Defaults (robot or comic) in every window and the icon; a change arrives with the next check. In the companion the comic face is a still picture."
+"text": "Companion with the chosen face (V01.0.395): the companion shows the face picked under Settings → Defaults (robot, comic or comic woman) in every window and the icon; a change arrives with the next check. In the companion the comic face is a still picture."
 },
 {
 "lang": "en",
@@ -5301,7 +5429,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "For new profiles (V01.0.492)",
-"text": "For new profiles (V01.0.492): when chat.new_profile_on names a function that no longer exists or no longer has its own profile switch (such as the old \"Nachrichten\" from V01.0.488), admin.get_config drops it; before, every save of an admin switch failed with \"new_profile_on: functions with an own switch, each once\". Self-test test_features."
+"text": "For new profiles (V01.0.492): when chat.new_profile_on names a function that no longer exists or no longer has its own profile switch (such as the old \"Nachrichten\" from V01.0.488), admin.get_config drops it; before, every save of an admin switch failed with \"new_profile_on: functions with an own switch, each once\". Self-test test_features. Since V01.0.494 admin._tidy drops whatever this version no longer knows when the configuration is read: keys config.default.json no longer has, presets in chat.defaults that profiles.clean_settings refuses (before: \"chat defaults: invalid value\" on every save) and Melder in berater_off that are gone. What the admin sends is still checked strictly by validate."
 },
 {
 "lang": "en",
@@ -5430,6 +5558,46 @@
 "head": "Voice chat",
 "title": "Suggesting functions (V01.0.380, off by default)",
 "text": "sends the admins a notification with the function's name (at most once a day); an admin gets the way to Features. Me → Overview (on a phone above the list) shows at most three suggestions with a reason (6); under Proactive, with its own switch, at most one a week arrives as a notification (7, 10 am to 7 pm, never in quiet hours). Sparing: at most one hint per conversation and three a week, \"Do not show again\" is for good, none after text from mail or the web, under the emergency stop, at a speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), Me → Conversation → \"Hints on functions\", Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Suggesting functions\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Tool coverage (plan `plaene/werkzeug-abdeckung.md`, Dominik 13 Oct)",
+"text": "Tool coverage (plan plaene/werkzeug-abdeckung.md, Dominik 13 Oct): every function stands in werkzeug_abdeckung.py with its tools, with the panel's fixed rule that answers it, or with the reason there is nothing to ask for; a self-test keeps the list complete. The switch no longer drops tools a module offers only because the person names them (\"… onto the reMarkable\", the name of an own MCP service): they stay whatever group the rest of the sentence is (\"Put my shopping list onto the reMarkable\"). Newly recognized: doors, windows, washing machine, dryer, dishwasher, power, battery and camera (smart home), \"Call Mum\" and \"Navigate home\" (iPhone), \"tick off milk\" (list), \"Was hab ich heute vor?\" and compound appointment words (calendar), \"Postfach\" (mail), \"Bestellung\" (parcels). \"Turn on web search\" goes to the help with its card as a question about the Spark, never to the web search. Fixed: \"Delete the reminder …\" never deleted anything; \"Is room mode on in the living room?\" became a start proposal and now says which devices are listening."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "More to read (tool coverage, package 7)",
+"text": "More to read (tool coverage, package 7): what was only on a page can now be asked. \"Which documents do I have?\" and \"Which invoices do I have?\" (document_list, offered with the documents) names the document cards, filtered by kind or tags. \"What is on my reMarkable?\" and \"Which tasks did you find on the reMarkable?\" (remarkable_library, rmliste.py) reads the list of the last comparison and the tasks found, never asks the cloud itself and stays when the words name the reMarkable. \"What does the front door camera see?\" (camera_describe) describes the still picture of a Home Assistant camera in a few words, with the same switches as the camera picture in rules (Features → Describe a camera picture and the own \"Camera picture\" under Me → Speaking up, both off) and at most 30 pictures per hour; the picture is never kept. \"Which smart home rules do I have?\" (home_rules_list) names the rules of \"Speaking up by itself\". All four results are outside text (names, handwriting, device names, the model's description): nothing is switched or changed after them, and none goes over MCP."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Changing by voice (tool coverage, package 6, `aendern.py`)",
+"text": "Changing by voice (tool coverage, package 6, aendern.py): what could only be created so far can now be changed too. Everything except switching waits for the yes in the next message, goes through the emergency stop and is locked after outside text; none of it goes over MCP. - Appointments (calendar_change): \"Move the dentist to Friday 15:30\", \"Delete tomorrow's appointment with Anna\". It searches the writable CalDAV calendars by title and day; a repeating appointment is never changed (that only works in the calendar app), and when several fit the Spark asks. The server's etag guards against a change made meanwhile elsewhere. To move one the model no longer uses calendar_add (no second appointment). - Scheduled jobs (agent_change): \"Pause the weekly overview\", \"Resume the weather plan\", \"Delete the scheduled job …\". - Smart home rules (home_rule_delete): \"Delete the rule for the front door\". - Notes by itself (proactive_pause): \"Don't speak up any more today\" (until midnight or some hours, at most 24), \"You may speak up again\"; at once, like \"not now\" after a note. - Volume of own speakers (speaker_volume): \"Make the kitchen speaker quieter\", \"Volume to 40\"; own devices only, at onc"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Changing by voice (tool coverage, package 6, `aendern.py`)",
+"text": "e like switching. - Repeating reminders (reminder_set with repeat): \"Remind me every Monday at 7 about the bins\": daily, weekdays, weekly or monthly (same day, at most the 28th), always at the same clock time, also across the clock change. - A message into an own group (message_send): \"Write into the family group that I'll be late\"; only groups the profile is in, never private chats. - Undo (undo_last, Features → \"Undo by voice\", off; once on it holds for every profile): the Spark keeps its last five deeds for 30 minutes in memory only (reminder, list entry, note, appointment entered, moved or deleted, device on or off, volume, pause, job, rule) and proposes to take back the last one; only the yes does it. For devices behind the code word, say \"yes\" with the code word."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Status by voice (`zustand_wz.py`, tool `spark_zustand`)",
+"text": "Status by voice (zustand_wz.py, tool spark_zustand): \"Is everything running?\", \"Is Home Assistant reachable?\", \"When was the last backup?\", \"Is there an update?\", \"Is the emergency stop on?\", \"Is my mailbox connected?\". The Spark reads its own state instead of guessing: every profile its part of Me → My status and its own emergency stop, an admin (as its own recognized profile) also the service watch, the last backup, the installed version and what the last update check found (the tool never asks GitHub itself). Fixed words and numbers only, no error texts or addresses; nothing is switched. Offered only when the person's own words ask about the state (switch group \"zustand\"). Switch: Features → Status by voice (chat.status_voice), off; once on it holds for every profile; never for guests, never over MCP."
 },
 {
 "lang": "en",
@@ -5805,7 +5973,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
-"text": "- The assistant's face at the top is the same as in the panel (robot or comic, picked by the admin under Settings → Defaults; the app takes it over when it opens). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself."
+"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman, picked by the admin under Settings → Defaults; the app takes it over when it opens). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself."
 },
 {
 "lang": "en",
@@ -6542,6 +6710,22 @@
 "head": "Logs",
 "title": "Logs page \"overview first\"",
 "text": "Logs page \"overview first\" (since V01.0.212): tabs Diagnosis, Services, Update and Changes. Under Diagnosis tiles show the error count and the three busiest areas with a small history over the time range (tap to filter), below the newest error with a fixed hint (e.g. HTTP 401 from Home Assistant → token expired). Filter buttons with counts: conversation, web search, router, Home Assistant, room, speakers, Telegram, mail and \"errors only\". Each line shows time, area and message; errors red, warnings yellow (fixed word list in the panel), repeated lines as \"×n\", pauses from 2 min as a divider. Search runs in the browser over the loaded lines only. \"Live\" reloads every 10 s (services every 3 s) and pauses while you scroll up or select text. \"Copy for thread\" takes version, filter and the raw lines in a code block."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Complete log lines",
+"text": "Complete log lines (since V01.0.493, Dominik: \"Why does an announcement from the chat not show up in the log?\"): until then an announcement wrote a line only when it was said; when it was refused (switch off, no speaker allowed, hourly limit, Notaus, quiet time) nothing was written anywhere. The Changes tab missed every Chats path, because the exception /api/chat as a prefix also matched /api/chats/…. Now every action writes one line for every outcome, fixed words and numbers only, the profile only as profiles.log_name. - Announcement (filter \"Messages and chats\"): messages: announcement sent|refused <reason> | via chats|assistant|house | N speaker(s) picked, N now, N at next wake word, N quiet time | N chars, at the wake word messages: announcement said at wake word or too old, dropped. Also refused messages of the assistant, chat messages read on the speaker (at once or at the wake word), a sentence stopped at the speaker, every refusal of the Chats page (chats: refused | why … | http …) and \"delete chat for me\". - Tools (new filter \"Tools\"): chat: tool <name> ok|not ok|not offered | N ms for every call; the name only when the tool was offered. - Lists, appointments, reminders (n"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Complete log lines",
+"text": "ew filter): entry added, ticked off or deleted (with count, Notaus or kind of error), handed to the iPhone, appointment saved or not, reminder played on a device, deleted or dropped after more than 6 h. - Notifications (new filter): every notification with its kind (job, reminder, chat …), devices and ways reached, held by \"Do not disturb\"; browser push without the outside server's text. - Computer, own services, documents (new filter): acting on the PC (done, declined, no answer), own MCP service (done, declined, error), document sent or refused. - Memory: fact saved (with its source) or forgotten (count); mail: confirmed sorting, undo, cleanup or draft done, refused or failed; Telegram: document sent or refused. - Changes tab: announcement, groups, members, invitations, keys and \"who may write to me\" are in it now; writing, reading and typing in chats stays out."
 },
 {
 "lang": "en",

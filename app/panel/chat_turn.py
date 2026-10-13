@@ -20,6 +20,7 @@ import extras  # noqa: E402
 import faelle  # noqa: E402
 import fixes  # noqa: E402
 import hamelden  # noqa: E402
+import aendern  # noqa: E402
 import meinmcp  # noqa: E402
 import homeassistant  # noqa: E402
 import images  # noqa: E402
@@ -525,7 +526,7 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         import roomfar
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern):
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
@@ -539,10 +540,26 @@ async def prepare(request):
         if prop:
             latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
             calendars.drop_pending(who["id"])
-            if calendars.confirms(latest):
+            if prop.get("change") and calendars.confirms(latest):
+                # calendar_change: move or delete one appointment (calendars.change_event), then keep the old one for undo
+                kept = {}
                 try:
-                    where = await calendars.add_event(who["id"], prop)
+                    note = await calendars.change_event(who["id"], prop, kept) + " (vom Kalender-Server bestätigt)"
+                    aendern.note(who["id"], "calendar_ics", kept, "den Termin „" + prop["title"][:60] + "“ wie vorher stellen")
+                except Exception as e:
+                    note = f"NICHT geändert, der Kalender lehnte ab: {str(e)[:160]}. Vorschlag war {calendars.describe_change(prop)}"
+                cal_note[:] = [{"name": "calendar_change (bestätigt)", "args": calendars.describe_change(prop), "result": note}]
+                system = per_turn(system, "Kalender: " + note + " Sag dem Nutzer genau das in einem Satz.")
+            elif prop.get("change"):
+                system = per_turn(system, "Kalender: Der Vorschlag, " + calendars.describe_change(prop)
+                                  + ", wurde NICHT ausgeführt, weil der Nutzer nicht zugestimmt hat.")
+            elif calendars.confirms(latest):
+                try:
+                    put = {}
+                    where = await calendars.add_event(who["id"], prop, put)
                     note = f"Saved in calendar '{where}' (confirmed by the calendar server): {calendars.describe(prop)}"
+                    if put.get("href"):
+                        aendern.note(who["id"], "calendar", put, "den Termin „" + prop["title"][:60] + "“ wieder löschen")
                 except Exception as e:
                     note = f"NOT saved, the calendar refused it: {e}. Proposal was {calendars.describe(prop)}"
                 cal_note[:] = [{"name": "calendar_add (bestätigt)", "args": calendars.describe(prop), "result": note}]
@@ -653,7 +670,7 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
@@ -664,10 +681,11 @@ async def prepare(request):
     # a voice recognized at someone else's device may read its own things but changes nothing that
     # lasts: no memory changes, no cancelled reminders (it could be a recording of that person)
     tools = ([chat.SEARCH_TOOL] if search else []) + (chat.MEMORY_TOOLS if prof and own_browser else []) + ([chat.HISTORY_TOOL] if past else []) \
-        + ([chat.DOC_TOOL] if docs else []) + (([chat.HA_STATES_TOOL, chat.HA_HISTORY_TOOL] if ha_direct or ha_wait
+        + ([chat.DOC_TOOL, chat.DOC_LIST_TOOL] if docs else []) + (([chat.HA_STATES_TOOL, chat.HA_HISTORY_TOOL] if ha_direct or ha_wait
              else [chat.HA_TOOL, chat.HA_STATES_TOOL, chat.HA_ACTION_TOOL, chat.HA_HISTORY_TOOL, chat.HA_TODO_TOOL]) if ha else []) \
+        + ([chat.CAMERA_TOOL] if ha and hamelden.camera_on(who["id"]) else []) \
         + (chat.REMINDER_TOOLS if timers and own_browser else []) + ([chat.BRIEFING_TOOL] if briefing else []) \
-        + ([chat.CALENDAR_TOOL] if cal["calendars"] else []) + ([chat.CALENDAR_ADD_TOOL] if cal_write else []) \
+        + ([chat.CALENDAR_TOOL] if cal["calendars"] else []) + ([chat.CALENDAR_ADD_TOOL, chat.CALENDAR_CHANGE_TOOL] if cal_write else []) \
         + (chat.MAIL_TOOLS if mailbox else []) + (chat.TIDY_TOOLS if tidy_on else []) + ([chat.DRAFT_TOOL] if drafts_on else []) \
         + ([chat.IPHONE_TOOL] if phone_act else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
@@ -734,12 +752,12 @@ async def prepare(request):
                 route = intent.Route([pick], {pick: "Modell"})
             pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else \
                 "unsicher" if pick_info.get("p") is not None else "keine"
-        tools = intent.narrow(route, tools, ccfg)
+        tools = intent.narrow(route, tools, ccfg, ex.get("keep", set()))
         if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
                 messages[-1]["content"] if messages[-1]["role"] == "user" else "",
                 {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
             # nothing recognized and no tool required: a short list, so the model starts sooner
-            tools = intent.lean(route, tools)
+            tools = intent.lean(route, tools, ex.get("keep", set()))
     if pick_task and not pick_task.done():   # not needed in this turn (no tools, a picture, a direct command)
         pick_task.cancel()
     # "Erst lokal suchen" (lokal.py): the own sources before anything outside, by a fixed rule on the person's

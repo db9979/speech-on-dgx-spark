@@ -199,6 +199,10 @@
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Fotos, Dateien und Sprache in Chats</b><span>Fotos ohne Ort, PDF, Office und Text bis 25 MB, Sprachnachrichten bis 5 Minuten; verschlüsselt auf dem Spark, bis 2 GB pro Person.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_media"><i></i></label></div>
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>In einen Chat einladen</b><span>Per Link oder QR-Code direkt in den eigenen Chat einladen, 3 pro Person. Braucht Personen und Geräte → Neue Personen „nur mit Einladung“.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_invite"><i></i></label></div>
       <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Private Chats (Ende-zu-Ende)</b><span>Chats zu zweit, die nur die Geräte der beiden lesen; der Spark speichert sie nur verschlüsselt und kann sie nicht lesen. Braucht https.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_private"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Chats mit anderen Sparks</b><span>Personen auf anderen Sparks per Adresse anfragen; erst nach „Annehmen“ kommt eine Nachricht durch. Braucht eine Adresse von außen.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_verbund"><i></i></label></div>
+      <div data-show="chat.chats_verbund" style="margin-left:36px"><label>Adresse dieses Sparks von außen</label><input id="chat.verbund_domain" placeholder="spark.example.de" autocomplete="off" autocapitalize="off"><div class="fh">Nur der Name, unter dem andere Sparks diesen per https erreichen, ohne https:// und ohne Pfad. Ändern braucht den zweiten Anmeldeschritt.</div>
+        <label>Wer darf sich verbinden</label><select id="chat.verbund_mode"><option value="pair">nur gekoppelte Sparks (ein Code zwischen beiden Admins, empfohlen)</option><option value="open">jeder Spark, wie bei E-Mail (sperren geht)</option></select>
+        <div id="vbadmin"></div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Wikipedia direkt</b><span>Wissensfragen wie „Was ist ein Quasar?“ beantwortet der Assistent aus dem Wikipedia-Artikel, ohne Websuche.</span></div><label class="tgl"><input type="checkbox" id="chat.wiki"><i></i></label></div>
       <div data-show="chat.wiki" style="margin-left:36px"><label>Adresse der Wikipedia</label><input id="chat.wiki_url" placeholder="https://de.wikipedia.org" autocomplete="off"><div class="fh">Leer = de.wikipedia.org, ohne Treffer dort en.wikipedia.org. Nur die Suchwörter verlassen den Spark.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Eigenes Kiwix-Archiv</b><span>Wissen aus deinem kiwix-serve, auch ohne Internet. Fällt die Websuche aus, antwortet der Assistent daraus.</span></div><label class="tgl"><input type="checkbox" id="chat.kiwix"><i></i></label></div>
@@ -309,6 +313,8 @@
       <div class="setrow" data-show="chat.spark_help" style="margin-left:18px"><div class="lbl"><b>Funktionen vorschlagen</b><span>Passt eine Funktion, die noch aus ist: ein Hinweis mit „Einrichten“. Höchstens 1 pro Gespräch, 3 pro Woche; schaltet nie selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.feature_tips"><i></i></label></div>
       <div class="setrow" data-show="chat.feature_tips" style="margin-left:36px"><div class="lbl"><b>… auch von selbst</b><span>Höchstens ein Vorschlag pro Woche als Mitteilung unter „Von selbst“ (braucht „Von selbst melden“).</span></div><label class="tgl"><input type="checkbox" id="chat.feature_tips_push"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Spark-Tagebuch</b><span>Der Spark notiert 7 Tage lang, was er selbst getan hat, und beantwortet daraus „Was hast du heute für mich gemacht?“.</span></div><label class="tgl"><input type="checkbox" id="chat.tagebuch"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Zustand per Sprache</b><span>„Läuft alles?“, „Ist der Notaus an?“: der Spark liest seinen Zustand nach, statt zu raten. Gilt für alle Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.status_voice"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Rückgängig per Sprache</b><span>„Mach das rückgängig“: nimmt die letzte Tat nach dem Ja zurück (30 Minuten lang). Gilt für alle Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.undo_voice"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Vorrang für Personen</b><span>Reden mehrere gleichzeitig, bekommen ausgewählte Profile ihre Antwort zuerst. Wer Vorrang hat, legst du unter Personen und Geräte fest.</span></div><label class="tgl"><input type="checkbox" id="chat.person_priority"><i></i></label></div>
       <div data-show="chat.person_priority"><label>Andere warten höchstens</label><select id="chat.person_priority_wait" data-num="1"><option value="0">gar nicht (nur Sprachausgabe und Erkennung)</option><option value="1">1 Sekunde</option><option value="2">2 Sekunden (empfohlen)</option><option value="3">3 Sekunden</option><option value="5">5 Sekunden</option></select>
         <div class="fh">So lange halten neue Anfragen anderer ans Sprachmodell an, bis die Antwort mit Vorrang ihren ersten Satz hat. Laufende Antworten werden nie abgebrochen.</div></div>
@@ -357,7 +363,7 @@
     </div>
     <div class="card pane" id="pane-talk"><h2 class="pt">Vorgaben</h2><div class="pintro">Gelten für Gäste und für Profile, die selbst nichts geändert haben.</div>
       <div id="chatdefaults"></div>
-      <div class="setrow" id="facerow"><div class="lbl"><b>Gesicht des Assistenten</b><span>Gilt für alle: Assistent, schwebender Knopf und iPhone-App.</span></div><select id="chat.face"><option value="robot">Roboter</option><option value="comic">Comic</option></select></div>
+      <div class="setrow" id="facerow"><div class="lbl"><b>Gesicht des Assistenten</b><span>Gilt für alle: Assistent, schwebender Knopf und iPhone-App.</span></div><select id="chat.face"><option value="robot">Roboter</option><option value="comic">Comic</option><option value="comic_woman">Comic (Frau)</option></select></div>
       <div class="setrow" id="faceliferow"><div class="lbl"><b>Gesicht zeigt, was es tut</b><span>Zeichen beim Suchen, Kalender, Mails, Licht und Merken; zwinkert nach Erledigtem, schaut ratlos bei Fehlern, schläft nach 5 Minuten Ruhe.</span></div><label class="tgl"><input type="checkbox" id="chat.face_life"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="talk">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -1032,6 +1038,7 @@
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>
+<script src="/static/js/verbund.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>
 <script src="/static/js/mymcp.js"></script>

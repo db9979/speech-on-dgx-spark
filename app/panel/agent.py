@@ -930,7 +930,42 @@ def propose(uid, item, src):
     profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
 
 
+CHANGE_WORDS = {"pause": "pausieren", "resume": "wieder laufen lassen", "delete": "löschen"}
+
+
+def which_plans(uid, words):
+    """The scheduled jobs whose task holds every word given (at least one word of three letters)."""
+    want = [w for w in re.findall(r"\w{3,}", str(words or "").lower()) if w not in STOP][:6]
+    if not want:
+        return []
+    return [x for x in load(uid)["plans"] if all(w in str(x.get("task", "")).lower() for w in want)]
+
+
+def change_plan(uid, pid, act):
+    """Pauses, resumes or deletes one scheduled job (the same as the buttons under Ich → Aufträge)."""
+    import chat
+    zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
+    hit = {}
+
+    def fn(d):
+        for x in d["plans"]:
+            if x["id"] == pid:
+                hit["p"] = dict(x)
+                if act in ("pause", "resume"):
+                    x["paused"] = act == "pause"
+                    if act == "resume":
+                        x["next"] = next_run(x, datetime.datetime.now(zone), zone)
+        if act == "delete":
+            d["plans"] = [x for x in d["plans"] if x["id"] != pid]
+    mutate(uid, fn)
+    if not hit:
+        raise ValueError("den geplanten Auftrag gibt es nicht mehr")
+    return hit["p"]
+
+
 def describe_pending(p):
+    if p["kind"] == "plan_change":
+        return f"den geplanten Auftrag {p['line']} {CHANGE_WORDS[p['action']]}"
     if p["kind"] == "plan":
         return "Geplanter Auftrag " + describe_plan(p["plan"])
     if p["kind"] == "routine":
@@ -987,6 +1022,16 @@ async def carry_out(uid, p, ctx):
             raise ValueError("Agent-Funktionen sind für dich aus")
         item = add_plan(uid, p["plan"])
         return "Gespeichert: " + describe_plan(item) + "."
+    if p["kind"] == "plan_change":
+        if not may(uid, "read"):
+            raise ValueError("Agent-Funktionen sind für dich aus")
+        before = change_plan(uid, p["id"], p["action"])
+        import aendern
+        aendern.note(uid, "plan", {"restore": before} if p["action"] == "delete"
+                     else {"id": p["id"], "back": "resume" if p["action"] == "pause" else "pause"},
+                     f"den geplanten Auftrag {p['line']} wie vorher stellen")
+        print(f"agent: plan changed by voice ({p['action']})", flush=True)
+        return {"pause": "Pausiert: ", "resume": "Läuft wieder: ", "delete": "Gelöscht: "}[p["action"]] + p["line"] + "."
     if p["kind"] == "routine":
         if not may(uid, "act"):
             raise ValueError("Abläufe sind für dich nicht freigegeben")
@@ -1007,14 +1052,17 @@ async def carry_out(uid, p, ctx):
 
 
 # ---------------------------------------------------------------- the assistant's tools
-ASK = re.compile(r"(?i)(recherch|find\w* (für mich |mal )?(heraus|raus)|herausfinden|im hintergrund|"
+# "Pausiere den Plan mit dem Wetter", "Lösch den geplanten Auftrag": agent_change, kept whatever the Weiche says
+PLAN_CHANGE = re.compile(r"(?i)(paus|lösch|stopp|fortsetz|setz\w* .{0,30}fort)\w*.{0,40}\b(pl[aä]n|geplant|auftr[aä]g)"
+                         r"|\b(pl[aä]n|geplant|auftr[aä]g)\w*.{0,40}(paus|lösch|stopp|fortsetz)")
+ASK = re.compile(PLAN_CHANGE.pattern.removeprefix("(?i)") + r"|(recherch|\bagent(en)?\b|find\w* (für mich |mal )?(heraus|raus)|herausfinden|im hintergrund|"
                  r"meld(e|est)? dich|sag (mir )?(dann )?bescheid|gib (mir )?bescheid|bericht|vergleich|zusammenfass|"
                  r"fass\w* .{0,60}zusammen|überblick|auftr[aä]g|jeden (tag|morgen|abend|montag|dienstag|mittwoch|"
                  r"donnerstag|freitag|samstag|sonntag|monat|woche)|t[aä]glich|w[oö]chentlich|monatlich|werktags|"
                  r"abl[aä]uf|routine|merk dir .{0,40}\bals\b|geplant|research|find out|in the background|"
                  r"let me know|report|compare|summar|every (day|morning|evening|week|month|monday|tuesday|"
-                 r"wednesday|thursday|friday|saturday|sunday)|daily|weekly|monthly)")
-CHANGES = {"agent_task", "agent_schedule", "routine_save"}
+                 r"wednesday|thursday|friday|saturday|sunday)|daily|weekly|monthly)", re.I)
+CHANGES = {"agent_task", "agent_schedule", "routine_save", "agent_change"}
 INSIDE = {"agent_list"}
 TOOLS = {
     "agent_task": {"type": "function", "function": {
@@ -1047,6 +1095,13 @@ TOOLS = {
             "steps": {"type": "array", "items": {"type": "string"},
                       "description": "commands like 'Schalte das Licht im Flur aus'"}},
             "required": ["name", "steps"]}}},
+    "agent_change": {"type": "function", "function": {
+        "name": "agent_change",
+        "description": "Propose to pause, resume or delete one of the user's scheduled jobs (as agent_list names "
+                       "them). Only proposes: the user must say yes in the next message.",
+        "parameters": {"type": "object", "properties": {
+            "plan": {"type": "string", "description": "words of the scheduled job's task, e.g. 'Wochenüberblick'"},
+            "action": {"type": "string", "enum": ["pause", "resume", "delete"]}}, "required": ["plan", "action"]}}},
     "agent_list": {"type": "function", "function": {
         "name": "agent_list", "description": "The user's background jobs, scheduled jobs and routines.",
         "parameters": {"type": "object", "properties": {}}}},
@@ -1073,6 +1128,9 @@ def offer(ctx):
     if ASK.search(str(ctx.get("text") or "")):
         tools += [TOOLS["agent_task"], TOOLS["agent_schedule"], TOOLS["agent_list"]]
         changes |= {"agent_task", "agent_schedule"}
+        if load(uid)["plans"]:
+            tools.append(TOOLS["agent_change"])
+            changes.add("agent_change")
         hint.append(HINT)
         import homeassistant
         if lv == "act" and ccfg().get("homeassistant", False) and homeassistant.get(uid):
@@ -1091,6 +1149,8 @@ def offer(ctx):
     if not tools:
         return None
     return {"tools": tools, "hint": " ".join(hint), "outside": outside, "changes": changes,
+            "keep": {n for n, server, _ in reads + acts if mcp.named(ctx.get("text"), server.get("name"))}
+            | ({"agent_change"} if "agent_change" in changes and PLAN_CHANGE.search(str(ctx.get("text") or "")) else set()),
             "filler": {n: ("Ich frage den Dienst.", "Let me ask the service.") for n, _, _ in reads}}
 
 
@@ -1132,6 +1192,20 @@ async def tool(name, args, ctx):
         propose(uid, {"kind": "plan", "plan": p}, ctx.get("src", ""))
         return ("Noch NICHT gespeichert. Frag den Nutzer: „Soll ich das planen: " + describe_plan(p) + "?“ Erst sein "
                 "Ja in der nächsten Nachricht speichert es.")
+    if name == "agent_change":
+        act = args.get("action")
+        if act not in CHANGE_WORDS:
+            return "Nicht vorgeschlagen: action muss pause, resume oder delete sein."
+        hits = which_plans(uid, args.get("plan"))
+        if not hits:
+            return "Nicht vorgeschlagen: kein geplanter Auftrag passt. Nenne dem Nutzer die Pläne aus agent_list."
+        if len(hits) > 1:
+            return ("Nicht vorgeschlagen: mehrere geplante Aufträge passen: " + "; ".join(describe_plan(x) for x in hits[:5])
+                    + ". Frag den Nutzer, welcher gemeint ist.")
+        p = {"kind": "plan_change", "id": hits[0]["id"], "action": act, "line": describe_plan(hits[0])}
+        propose(uid, p, ctx.get("src", ""))
+        return ("Noch NICHT geändert. Frag den Nutzer: „Soll ich " + describe_pending(p) + "?“ Erst sein Ja in der "
+                "nächsten Nachricht ändert es.")
     if name == "routine_save":
         try:
             rname, steps = check_routine(args.get("name"), args.get("steps"))

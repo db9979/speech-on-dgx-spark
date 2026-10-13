@@ -195,7 +195,7 @@ class IPhone(unittest.TestCase):
         # the face the admin picked; anything not in the fixed list stays the robot
         self.assertEqual(d["face"], "robot")
         try:
-            for value, want in (("comic", "comic"), ("../x", "robot")):
+            for value, want in (("comic", "comic"), ("comic_woman", "comic_woman"), ("../x", "robot")):
                 helpers.set_config(face=value)
                 self.assertEqual(app.get("/api/iphone/hello", headers=h).json()["face"], want)
         finally:

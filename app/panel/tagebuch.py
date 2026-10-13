@@ -28,6 +28,7 @@ ARTEN = {   # key -> (German, English)
     "termin": ("Termin eingetragen", "Appointment added"),
     "merken": ("Gemerkt oder vergessen", "Remembered or forgotten"),
     "aufgabe": ("Aufgabe eingetragen", "Task added"),
+    "aenderung": ("Geändert oder rückgängig gemacht", "Changed or undone"),
 }
 KEEP_S = 7 * 86400
 MAX = 200

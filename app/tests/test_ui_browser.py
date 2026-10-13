@@ -293,6 +293,41 @@ class Browser(unittest.TestCase):
                         await br.close()
         self.run_async(go())
 
+    def test_every_face_draws_and_moves(self):
+        """Every face the admin can pick (core.FACES) mounts in the chat and the floating button with the strict CSP on,
+        and the comic faces move: lids, mouth line and, for the comic woman (V01.0.497), the lips around the mouth.
+        The small picture before each answer follows the face."""
+        from core import FACES
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                try:
+                    await pg.evaluate("goSec('chat')")
+                    await pg.evaluate("setFaceKind('comic')")   # setFaceKind skips the face already shown
+                    for kind in FACES:
+                        await pg.evaluate(f"setFaceKind('{kind}')")
+                        await pg.wait_for_timeout(400)
+                        self.assertEqual(await pg.evaluate("document.body.dataset.face"), kind)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#face svg,#fabface svg').length"), 2, kind)
+                        if kind == "robot":
+                            continue
+                        await self.until(pg, "!!document.querySelector('#face [data-p=ml]').getAttribute('d')")
+                        lips = await pg.evaluate("[...document.querySelectorAll('#face [data-p=lipT],#face [data-p=lipB]')]"
+                                                 ".map(e=>e.getAttribute('d')||'')")
+                        if kind == "comic_woman":
+                            self.assertEqual(len(lips), 2)
+                            self.assertTrue(all(d.startswith("M") for d in lips), lips)
+                        else:
+                            self.assertEqual(lips, [])
+                        self.assertTrue(await pg.evaluate("getComputedStyle(document.documentElement)"
+                                                          ".getPropertyValue('--avface').includes('data:image/svg+xml')"))
+                    await pg.evaluate("setFaceKind('robot')")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        self.run_async(go())
+
     def test_feature_hint_card_and_guided_setup(self):
         """Funktionen vorschlagen (tipps.js): asked for something that is off for this profile, the answer carries the
         hint with "Einrichten"; that opens the guided setup in the face's window and the Ich page, the card there
@@ -1197,7 +1232,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4700 if w < 760 else 3670, f"{w}: {tall}px")   # V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4800 if w < 760 else 3760, f"{w}: {tall}px")   # V01.0.490: +2 lines "Zustand per Sprache", "Rückgängig per Sprache", V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -2899,6 +2934,79 @@ class Browser(unittest.TestCase):
             helpers.set_config(chats=False, chats_private=False, chats_media=False)
             for u in uids:
                 chatsec.forget(u)
+
+    def test_chat_with_someone_on_another_spark(self):
+        """Spark-Verbund V1 (verbund.js): a request from another Spark (played in Python, signed with its own key)
+        shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with 🌐, a message goes into the
+        queue for the other Spark. Own address and QR code in the pane. Strict CSP, nothing sticks out at 320 px."""
+        import base64
+        import json
+        import os
+        import time
+        from unittest import mock
+        import profiles
+        import verbund
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        far, here = "anderer.example.org", "spark.beispiel.de"
+        key = Ed25519PrivateKey.generate()
+        pub = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
+        helpers.set_config(chats=True, chats_verbund=True, verbund_domain=here, verbund_mode="pair")
+        me = next(x for x in profiles.names() if x["name"] == "Uitest")
+        profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
+        with verbund._lock:
+            p = verbund.peers()
+            p[far] = {"key": pub, "state": "paired", "t": time.time(), "last": 0, "in": 0, "out": 0}
+            verbund._save_peers(p)
+
+        async def ask(frm, name):
+            raw = json.dumps({"v": 1, "t": int(time.time()), "n": os.urandom(16).hex(), "type": "ask", "from": frm,
+                              "to": verbund.handle(me["id"]), "name": name}).encode()
+            sig = base64.b64encode(key.sign(b"spark-verbund v1\n" + here.encode() + b"\n" + raw)).decode()
+            await verbund.receive(far, raw, sig)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in (VIEWS[0], ("klein", 320, 640)):
+                    await ask("weit" + name, "Weite Wilma " + name)
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    if name == "pc":
+                        await self.until(pg, "!document.querySelector('nav button[data-s=chats]').hidden")
+                        await pg.click("nav button[data-s=chats]")
+                    else:
+                        await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
+                        await pg.click("#aptabs [data-tab=chats]")
+                    await self.until(pg, "!$('cxsplit').hidden&&!!(CX.S&&CX.S.far_asks===1)", 20)
+                    await pg.click("[data-cxfar]")
+                    await pg.wait_for_selector("#vbme")
+                    self.assertEqual(await pg.input_value("#vbme"), verbund.address(me["id"]))
+                    self.assertIn("Weite Wilma " + name, await pg.inner_text("#cxpane"))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/verbund: {over}px zu breit")
+                    await pg.click("[data-vb=ok]")
+                    await self.until(pg, "$('cxtitle').textContent.includes('🌐')&&!$('cxcomp').hidden")
+                    self.assertTrue(await pg.evaluate("$('cxatt').hidden"))     # text only across Sparks (V1)
+                    await pg.fill("#cxtext", "Hallo nach drüben " + name)
+                    await pg.click("#cxsend")
+                    await pg.wait_for_selector(".cx-msg.mine .cx-tk")
+                    q = [x["body"] for x in verbund._queue() if x["body"].get("type") == "msg"]
+                    self.assertEqual(q[-1]["text"], "Hallo nach drüben " + name)
+                    self.assertEqual(q[-1]["to"], "weit" + name)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/verbund-chat: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            with mock.patch.object(verbund, "deliver_once", new=mock.AsyncMock(return_value=0)):   # nothing leaves
+                self.run_async(go())
+        finally:
+            helpers.set_config(chats=False, chats_verbund=False, verbund_domain="")
+            verbund.forget(me["id"])
+            for name in ("peers.json", "queue.json"):
+                try:
+                    os.remove(os.path.join(verbund._dir(), name))
+                except OSError:
+                    pass
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class JoinBrowser(unittest.TestCase):

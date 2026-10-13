@@ -307,6 +307,31 @@ class Presets(unittest.TestCase):
         finally:
             helpers.set_config(new_profile_on=[])
 
+    def test_a_gone_setting_in_the_presets_never_blocks_saving(self):
+        """V01.0.494: a preset whose setting no longer exists (or no longer takes that value) stayed in chat.defaults,
+        and every admin switch failed with "chat defaults: invalid value"."""
+        helpers.set_config(defaults={"msg_gone_since_488": True, "length": "short", "echo": "kaputt"},
+                           messages_voice=True, berater_off=["gone_melder"])
+        with open(helpers.APP + "/config.default.json") as f:
+            want = dict(json.load(f)["chat"]["defaults"], length="short")     # the shipped presets fill the rest
+        try:
+            self.assertEqual(ADMIN.get("/api/config").json()["chat"]["defaults"], want)
+            r = ADMIN.put("/api/admin/switches", json={"key": "weather", "on": False})
+            self.assertEqual(r.status_code, 200, r.text)
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                stored = json.load(f)["chat"]
+            self.assertEqual(stored["defaults"], want)
+            self.assertNotIn("messages_voice", stored)                   # a switch removed in V01.0.488
+            self.assertEqual(stored["berater_off"], [])
+            cfg = ADMIN.get("/api/config").json()
+            cfg["chat"]["defaults"] = {"nothing": 1}
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400)
+            cfg["chat"]["defaults"] = {"length": "short"}
+            cfg["chat"]["gone_since_long"] = True
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400)    # what the admin sends: still strict
+        finally:
+            helpers.set_config(defaults={}, berater_off=[])
+
     def test_presets_never_switch_a_function_on(self):
         _, uid = profile("FeaFrida")
         chat = {"defaults": {"route": True, "wx_on": True, "length": "short", "echo": False}}

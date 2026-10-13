@@ -206,7 +206,10 @@ def _take_said(did):
     cid, c = by_device(did)
     said = []
     if c and c.get("announce_next"):
-        said.append(_update(lambda d: messages.take_announcement(d["clients"].get(cid, {}))))
+        got = _update(lambda d: messages.take_announcement(d["clients"].get(cid, {})))
+        said.append(got)
+        # the waiting Durchsage at the wake word, under the filter Nachrichten like messages.announce; words only
+        print(f"messages: announcement {'said at wake word' if got else 'too old, dropped'}", flush=True)
     dev = _devices().get(did)
     if dev:
         said.append(messages.speaker_waiting(dev["user"]))

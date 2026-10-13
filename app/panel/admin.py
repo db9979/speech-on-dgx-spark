@@ -245,6 +245,8 @@ def admin_delete_profile(uid: str, request: Request):
     chats.forget(uid)   # out of every chat, its messages gone (their place stays for the others)
     import chatsec
     chatsec.forget(uid)   # its device keys for private chats
+    import verbund
+    verbund.forget(uid)   # its contacts on other Sparks, its address, what still waited to go out from it
     return {"ok": True}
 
 
@@ -461,12 +463,27 @@ async def llm_models(request: Request, fresh: bool = False):
 def get_config():
     with open(DEFAULTS) as f:
         cfg = json.load(f)
+    known = {sec: set(vals) for sec, vals in cfg.items() if isinstance(vals, dict)}
     for sec, vals in load_config().items():  # fill keys added by newer versions
         cfg.setdefault(sec, {}).update(vals)
-    npo = cfg.get("chat", {}).get("new_profile_on")
-    if isinstance(npo, list):   # a function removed or without an own switch by now must not block every save
-        cfg["chat"]["new_profile_on"] = [k for k in npo if isinstance(k, str) and k in features.BY_KEY
-                                         and features.BY_KEY[k].profile]
+    return _tidy(cfg, known)
+
+
+def _tidy(cfg, known):
+    """What older versions left in the stored config and this one no longer knows must not block every save
+    (V01.0.492/493): validate() stays strict for what the admin sends, the stored leftovers are dropped here."""
+    for sec, keys in known.items():
+        if isinstance(cfg.get(sec), dict):
+            cfg[sec] = {k: v for k, v in cfg[sec].items() if k in keys}
+    ch = cfg.get("chat", {})
+    if isinstance(ch.get("new_profile_on"), list):   # a function removed or without an own switch by now
+        ch["new_profile_on"] = list(dict.fromkeys(k for k in ch["new_profile_on"] if isinstance(k, str)
+                                                  and k in features.BY_KEY and features.BY_KEY[k].profile))
+    if isinstance(ch.get("defaults"), dict):        # a preset whose setting is gone or takes other values now
+        ch["defaults"] = profiles.clean_settings(ch["defaults"])
+    if isinstance(ch.get("berater_off"), list):     # a Melder of the Einstellungs-Assistent that is gone
+        import berater
+        ch["berater_off"] = list(dict.fromkeys(x for x in ch["berater_off"] if isinstance(x, str) and x in berater.MELDER))
     return cfg
 
 
@@ -504,6 +521,14 @@ def validate(new):
     for k in ("weather_url", "geocode_url", "telegram_api", "transit_url", "wiki_url"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
+    import verbund
+    if ch.get("verbund_mode", "pair") not in verbund.MODES:
+        raise HTTPException(400, "verbund_mode: pair or open")
+    vd = ch.get("verbund_domain", "")
+    if not isinstance(vd, str) or vd.strip() and not verbund.DOMAIN.fullmatch(vd.strip().lower()):
+        raise HTTPException(400, "verbund_domain: the Spark's name from outside, e.g. spark.example.de (no https://, no path)")
+    if isinstance(vd, str):
+        ch["verbund_domain"] = vd.strip().lower()
     if ch.get("kiwix_url") and not kiwix.URL.fullmatch(str(ch["kiwix_url"]).strip().rstrip("/")):
         raise HTTPException(400, "kiwix_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
     import meldung
@@ -515,9 +540,9 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages_all", "messages_announce", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
-              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "android_live",
+              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "android_live",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload"):
@@ -745,6 +770,7 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "telegram_panel_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
+             ("chat", "chats_verbund"), ("chat", "verbund_mode"), ("chat", "verbund_domain"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 

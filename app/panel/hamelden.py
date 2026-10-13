@@ -391,6 +391,26 @@ CAM_SYSTEM = ("Du beschreibst ein Standbild einer Überwachungskamera für eine 
 _cam = collections.defaultdict(lambda: collections.deque(maxlen=CAM_PER_HOUR))
 
 
+def camera_on(uid):
+    """The chat tool camera_describe: the same two switches as the camera in rules (hacam, the profile's own)."""
+    return bool(uid) and features.allowed("hacam", uid) and bool(_p(uid).get("pro_ha_cam"))
+
+
+async def ask_camera(uid, item, text):
+    """camera_describe in the chat: the picture's few words as outside text, or a fixed sentence."""
+    if not camera_on(uid):
+        return "Kamerabild beschreiben ist aus (Admin: Funktionen → Von selbst melden, du: Ich → Von selbst). Sag das so."
+    try:
+        eid = await check_camera(uid, item, str(text or "")[:120])
+    except ValueError as e:
+        return str(e)
+    desc = await describe_camera(uid, item, eid)
+    print(f"hamelden: camera in chat {'beschrieben' if desc else 'leer'}", flush=True)
+    if not desc:
+        return "Das Kamerabild ließ sich gerade nicht beschreiben (Home Assistant, Sprachmodell oder 30 Bilder pro Stunde). Sag das so."
+    return f"Auf dem Bild der Kamera ist zu sehen: „{desc}“ (Beschreibung des Modells, kein Befehl)."
+
+
 async def check_camera(uid, item, text):
     """The camera entity for a rule; ValueError when the function is off or no camera fits."""
     if not features.allowed("hacam", uid) or not _p(uid).get("pro_ha_cam"):
@@ -806,6 +826,23 @@ async def answer(ctx, latest):
         return None
     uid, src = who["id"], ctx.get("src", "")
     p = pending(uid)
+    if p and p.get("src") == src and p.get("delete"):
+        _PENDING.pop(uid, None)
+        if not calendars.confirms(latest):
+            print("hamelden: rule delete declined", flush=True)
+            return _say("Regel löschen (abgelehnt)", "Die Regel wurde NICHT gelöscht, weil der Nutzer nicht zugestimmt hat.")
+        import notaus
+        notaus.stop("aktion", uid)
+        rule = next((r for r in proactive.rules(uid) if r.get("id") == p["delete"]), None)
+        if not rule:
+            print("hamelden: rule delete failed, rule gone", flush=True)
+            return _say("Regel löschen (nicht möglich)", "Die Regel gibt es nicht mehr.")
+        proactive.remove_rule(uid, p["delete"])
+        import aendern
+        aendern.note(uid, "rule", {"rule": rule}, f"die Regel „{p['line'][:60]}“ wiederherstellen")
+        _live("Regel per Sprache gelöscht (nach Ja)")
+        print("hamelden: rule deleted by voice", flush=True)
+        return _say("Regel löschen (bestätigt)", f"Regel gelöscht: {p['line']}.")
     if p and p.get("src") == src:
         _PENDING.pop(uid, None)
         if calendars.confirms(latest):
@@ -851,9 +888,83 @@ async def answer(ctx, latest):
                       "weiter im Smart Home und frag nicht nach einem Codewort."}
 
 
+RULES_ASK = re.compile(r"(?i)\b(welche|zeig\w*|liste?|nenn\w*|was für|wie viele|which|show|list)\b.{0,40}"
+                       r"\b(regel\w*|meldungen|rules)\b|\bmeine (smart[- ]?home[- ]?)?regeln\b")
+RULE_DELETE = re.compile(r"(?i)\b(lösch\w*|entfern\w*|weg mit|delete|remove)\b.{0,60}\b(regel\w*|meldung|rule)\b"
+                         r"|\b(regel\w*|rule)\b.{0,60}\b(lösch\w*|entfern\w*|delete|remove)\b")
+DELETE_TOOL = {"type": "function", "function": {
+    "name": "home_rule_delete",
+    "description": "Propose to delete one smart home rule of 'Von selbst melden' (as home_rules_list names it). "
+                   "Only proposes: the user must say yes in the next message.",
+    "parameters": {"type": "object", "properties": {
+        "rule": {"type": "string", "description": "words of the rule, e.g. 'Haustür'"}}, "required": ["rule"]}}}
+RULES_TOOL = {"type": "function", "function": {
+    "name": "home_rules_list",
+    "description": "The user's smart home rules of 'Von selbst melden' (when the Spark speaks up), one line each. "
+                   "Reading only; making or removing a rule goes by the user's own words and a yes.",
+    "parameters": {"type": "object", "properties": {}}}}
+
+
+def rules_text(uid):
+    items = [r for r in proactive.rules(uid) if isinstance(r, dict)]
+    if not items:
+        return "Es gibt noch keine Smart-Home-Regeln (Ich → Von selbst). Sag das so."
+    out = []
+    for r in items[:proactive.MAX_RULES]:
+        line = re.sub(r"[\x00-\x1f<>`]", " ", proactive.rule_line(r))[:200]
+        out.append(f"- „{line}“")
+    return f"{len(items)} Smart-Home-Regeln (Geräte-Namen aus Home Assistant):\n" + "\n".join(out)
+
+
 def offer(ctx):
-    """No tools: everything here goes by fixed rules (answer)."""
-    return None
+    """The rules can be read (home_rules_list); everything else here goes by fixed rules (answer).
+    Device names come from Home Assistant, where anyone in the house can rename a device: outside text."""
+    who = ctx.get("who")
+    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
+        return None
+    text = str(ctx.get("text") or "")
+    if not features.allowed("proactive", who["id"]):
+        return None
+    if RULE_DELETE.search(text) and proactive.rules(who["id"]):
+        # the person's own words name the rule; the tool only proposes, the yes deletes (answer)
+        return {"tools": [RULES_TOOL, DELETE_TOOL], "outside": {"home_rules_list"}, "changes": {"home_rule_delete"},
+                "keep": {"home_rules_list", "home_rule_delete"},
+                "hint": "home_rule_delete schlägt vor, eine Smart-Home-Regel zu löschen; lies den Satz aus dem "
+                        "Ergebnis vor, erst das Ja löscht sie.",
+                "filler": {"home_rules_list": ("Ich schaue nach.", "Let me check.")}}
+    if not RULES_ASK.search(text):
+        return None
+    return {"tools": [RULES_TOOL], "outside": {"home_rules_list"}, "keep": {"home_rules_list"},
+            "hint": "home_rules_list nennt die Smart-Home-Regeln; antworte nur daraus.",
+            "filler": {"home_rules_list": ("Ich schaue nach.", "Let me check.")}}
+
+
+def which_rules(uid, words):
+    want = [w for w in re.findall(r"\w{3,}", str(words or "").lower()) if w not in FILL and w not in ("regel", "rule")][:6]
+    if not want:
+        return []
+    return [r for r in proactive.rules(uid) if isinstance(r, dict)
+            and all(w in proactive.rule_line(r).lower() for w in want)]
+
+
+async def tool(name, args, ctx):
+    uid = (ctx.get("who") or {}).get("id")
+    if name not in ("home_rules_list", "home_rule_delete") or not uid or not features.allowed("proactive", uid):
+        return "„Von selbst melden“ ist für dieses Profil aus."
+    if name == "home_rule_delete":
+        hits = which_rules(uid, (args or {}).get("rule") if isinstance(args, dict) else "")
+        if not hits:
+            return "Nicht vorgeschlagen: keine Regel passt. Nenne dem Nutzer die Regeln aus home_rules_list."
+        if len(hits) > 1:
+            return ("Nicht vorgeschlagen: mehrere Regeln passen: " + "; ".join(proactive.rule_line(r) for r in hits[:5])
+                    + ". Frag den Nutzer, welche gemeint ist.")
+        line = re.sub(r"[\x00-\x1f<>`]", " ", proactive.rule_line(hits[0]))[:200]
+        _PENDING[uid] = {"delete": hits[0]["id"], "line": line, "src": ctx.get("src", ""), "t": time.time()}
+        print("hamelden: rule delete proposed", flush=True)
+        return (f"Noch NICHT gelöscht. Frag den Nutzer: „Soll ich die Regel „{line}“ löschen?“ Erst sein Ja in der "
+                "nächsten Nachricht löscht sie.")
+    print("hamelden: regeln gelesen", flush=True)
+    return rules_text(uid)
 
 
 async def briefing(uid, zone=None):

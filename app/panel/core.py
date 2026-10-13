@@ -495,6 +495,6 @@ def api_headers():
 
 
 # the assistant's faces (static/js/face.js); the admin picks one for everybody (chat.face)
-FACES = ("robot", "comic")
+FACES = ("robot", "comic", "comic_woman")
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.default.json")

@@ -70,6 +70,8 @@ LIST = {
     ("POST", "/api/profile/room/ha"): (CONFIRM, "Geräte", "Schlüssel für den Raum-Modus", "Key for room mode"),
     ("POST", "/api/profile/voice"): (CONFIRM, "Geräte", "Stimme anlernen", "Teach my voice"),
     ("POST", "/api/chats/keys"): (CONFIRM, "Geräte", "Gerät für private Chats eintragen", "Add a device for private chats"),
+    ("POST", "/api/admin/verbund/pair"): (CONFIRM, "Geräte", "Kopplungs-Code für einen anderen Spark", "Pairing code for another Spark"),
+    ("POST", "/api/admin/verbund/connect"): (CONFIRM, "Geräte", "Mit einem anderen Spark koppeln", "Pair with another Spark"),
     ("POST", "/api/profile/esp32/{did}/voice"): (CONFIRM, "Geräte", "Stimme am Lautsprecher anlernen", "Teach my voice at a speaker"),
     ("POST", "/api/profile/push"): (CONFIRM, "Geräte", "Meldungen an diesen Browser", "Notifications to this browser"),
     ("POST", "/api/profile/iphone/pair"): (CONFIRM, "Geräte", "iPhone koppeln", "Pair an iPhone"),

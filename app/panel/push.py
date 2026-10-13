@@ -229,6 +229,7 @@ async def send(uid, title, body, tag="", private=True, why="", to=""):
         if held:
             await begleiter.release(uid, held)
         if begleiter.hold(uid, title, tag, why):
+            print(f"push: {_word(tag, why)} held, Nicht stören | {profiles.log_name(profiles.by_id(uid))}", flush=True)
             return 1
     if tag == "hello":
         ways = [("web", subs(uid))]
@@ -243,7 +244,15 @@ async def send(uid, title, body, tag="", private=True, why="", to=""):
     n = 0
     for kind, targets in ways:
         n += await _send_one(uid, kind, targets, title, body, tag, private, why)
+    # one line per note, sent or not: the kind of note, the ways and how many devices it reached, never its text
+    print(f"push: {_word(tag, why)} {'sent' if n else 'reached no device'} | {n} device(s) | "
+          f"{','.join(k for k, _ in ways if k) or 'no way'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return n
+
+
+def _word(tag, why):
+    """The kind of a note in a journal line: a fixed word of WHY, never a free text."""
+    return why if why in set(WHY.values()) | {"Erinnerung"} else _why(tag) or "Hinweis"
 
 
 async def _send_one(uid, kind, targets, title, body, tag, private, why):
@@ -271,14 +280,14 @@ async def _send_one(uid, kind, targets, title, body, tag, private, why):
                     "Authorization": vapid(sub["endpoint"]), "Content-Encoding": "aes128gcm",
                     "Content-Type": "application/octet-stream", "TTL": "3600", "Urgency": "high"})
             except httpx.HTTPError as e:
-                print("push:", type(e).__name__, e, flush=True)
+                print(f"push: browser push failed ({type(e).__name__})", flush=True)
                 continue
             if r.status_code in (404, 410):
                 remove(uid, sub["endpoint"])
             elif r.status_code < 300:
                 n += 1
             else:
-                print("push:", r.status_code, r.text[:200], flush=True)
+                print(f"push: browser push refused | http {r.status_code}", flush=True)   # never the server's text
     import live
     live.note(uid, kind, t0, n, why or _why(tag))
     return n
@@ -314,6 +323,8 @@ async def due_reminders():
         for x in [x for x in profiles.reminders(uid) if x.get("due", 0) <= by]:
             if not profiles.take_reminder(uid, x["id"], by):
                 continue   # a device played it in the meantime
-            if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped quietly
+            if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped, with a line
                 sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False, why="Erinnerung")
+            else:
+                print(f"reminders: one dropped, more than 6 h overdue | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return sent

@@ -1,5 +1,6 @@
-// The two faces the panel offers (chat.face): the robot (a rounded head with two eyes and a mouth)
-// and the comic face, drawn after COMIC in app/panel/static/js/face.js. Keep the functions from face.h.
+// The faces the panel offers (chat.face): the robot (a rounded head with two eyes and a mouth), the
+// comic face and the comic woman, drawn after COMIC and COMIC_W in app/panel/static/js/face.js.
+// Keep the functions from face.h.
 #include "face.h"
 #include "comic_shapes.h"
 
@@ -13,7 +14,7 @@ static FaceMode s_mode = FaceIdle;
 static int s_level, s_target;   // mouth opening, smoothed toward the audio level
 static int s_frame;
 static bool s_blink;
-static int s_kind;              // 0 robot, 1 comic
+static int s_kind;              // 0 robot, 1 comic, 2 comic woman
 static int s_gx, s_gy;          // comic: where the eyes look, -100 to 100
 
 static void schedule(void);
@@ -134,6 +135,8 @@ static void draw_robot(Layer *layer, GContext *ctx) {
 #define COMIC_SKIN PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite)
 #define COMIC_LID PBL_IF_COLOR_ELSE(GColorRajah, GColorWhite)
 #define COMIC_LINE GColorBlack
+#define WOMAN_HAIR PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorBlack)
+#define WOMAN_LIPS PBL_IF_COLOR_ELSE(GColorRoseVale, GColorBlack)
 
 static GPoint s_pts[48];
 static GPoint s_org;
@@ -211,28 +214,42 @@ static void draw_comic(Layer *layer, GContext *ctx) {
     case FaceSad: lid = 54; brow_l = brow_r = -4; ang_l = ang_r = -9; break;
     default: break;
   }
+  // the comic woman (s_kind 2): lighter lids, eyes a little lower, lashes, lips, long hair, no mustache
+  const bool woman = s_kind == 2;
+  if (woman) lid = lid > 24 ? lid - 24 : 0;
   if (s_blink) lid = 100;
 
   // background, neck, shirt
-  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorCeleste, GColorWhite));
+  graphics_context_set_fill_color(ctx, woman ? PBL_IF_COLOR_ELSE(GColorRichBrilliantLavender, GColorWhite)
+                                             : PBL_IF_COLOR_ELSE(GColorCeleste, GColorWhite));
   graphics_fill_circle(ctx, to_px(400, 400), 96 * s_size / 200);
-  shape(ctx, COMIC_NECK, COUNT(COMIC_NECK), 0, COMIC_SKIN, true);
-  shape(ctx, COMIC_SHIRT, COUNT(COMIC_SHIRT), 0, PBL_IF_COLOR_ELSE(GColorIcterine, GColorWhite), true);
-
-  // ears and head
-  shape(ctx, COMIC_EAR_L, COUNT(COMIC_EAR_L), 0, COMIC_SKIN, true);
-  shape(ctx, COMIC_EAR_R, COUNT(COMIC_EAR_R), 0, COMIC_SKIN, true);
-  shape(ctx, COMIC_FACE, COUNT(COMIC_FACE), 0, COMIC_SKIN, true);
+  if (woman) {
+    shape(ctx, COMIC_W_NECK, COUNT(COMIC_W_NECK), 0, COMIC_SKIN, true);
+    shape(ctx, COMIC_W_SHIRT, COUNT(COMIC_W_SHIRT), 0, PBL_IF_COLOR_ELSE(GColorCadetBlue, GColorWhite), true);
+    // long hair behind the head and over the shoulders, then the head
+    shape(ctx, COMIC_W_BACK, COUNT(COMIC_W_BACK), 0, WOMAN_HAIR, true);
+    shape(ctx, COMIC_W_LOCK_L, COUNT(COMIC_W_LOCK_L), 0, WOMAN_HAIR, true);
+    shape(ctx, COMIC_W_LOCK_R, COUNT(COMIC_W_LOCK_R), 0, WOMAN_HAIR, true);
+    shape(ctx, COMIC_W_FACE, COUNT(COMIC_W_FACE), 0, COMIC_SKIN, true);
+  } else {
+    shape(ctx, COMIC_NECK, COUNT(COMIC_NECK), 0, COMIC_SKIN, true);
+    shape(ctx, COMIC_SHIRT, COUNT(COMIC_SHIRT), 0, PBL_IF_COLOR_ELSE(GColorIcterine, GColorWhite), true);
+    // ears and head
+    shape(ctx, COMIC_EAR_L, COUNT(COMIC_EAR_L), 0, COMIC_SKIN, true);
+    shape(ctx, COMIC_EAR_R, COUNT(COMIC_EAR_R), 0, COMIC_SKIN, true);
+    shape(ctx, COMIC_FACE, COUNT(COMIC_FACE), 0, COMIC_SKIN, true);
+  }
 
   // eyes: white, iris looking around, lid from above, brow
   for (int k = -1; k <= 1; k += 2) {
-    int cx = 400 + k * 84, cy = 360, rx = 42, ry = 26;
+    int cx = 400 + k * 84, cy = woman ? 364 : 360, rx = 42, ry = woman ? 28 : 26;
     ellipse_pts(cx, cy, rx, ry, 10000);
     fill_pts(ctx, 16, GColorWhite, false);
     GPoint iris = to_px(cx + s_gx * rx * 45 / 10000, cy + s_gy * ry * 38 / 10000);
     int ir = 22 * s_size / 800;
     int max_r = ry * s_size / 800;
-    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorArmyGreen, GColorBlack));
+    graphics_context_set_fill_color(ctx, woman ? PBL_IF_COLOR_ELSE(GColorWindsorTan, GColorBlack)
+                                               : PBL_IF_COLOR_ELSE(GColorArmyGreen, GColorBlack));
     graphics_fill_circle(ctx, iris, ir < max_r ? ir : max_r);
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_fill_circle(ctx, iris, ir / 2 > 0 ? ir / 2 : 1);
@@ -250,29 +267,47 @@ static void draw_comic(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_color(ctx, COMIC_LINE);
     graphics_context_set_stroke_width(ctx, line_w(7));
     gpath_draw_outline(ctx, &eye);
+    if (woman) {   // three lashes at the outer corner
+      graphics_context_set_stroke_width(ctx, line_w(6));
+      graphics_draw_line(ctx, to_px(cx + k * 34, 340), to_px(cx + k * 51, 326));
+      graphics_draw_line(ctx, to_px(cx + k * 42, 349), to_px(cx + k * 60, 342));
+      graphics_draw_line(ctx, to_px(cx + k * 23, 338), to_px(cx + k * 34, 322));
+    }
 
-    // brow: a thick curve, raised and turned by the mood (rotate about its middle)
-    int by = 306 + (k < 0 ? brow_l : brow_r);
+    // brow: a thick curve (thin for the woman), raised and turned by the mood (rotate about its middle)
+    int by = (woman ? 308 : 306) + (k < 0 ? brow_l : brow_r);
     int ang = k * (k < 0 ? ang_l : ang_r);
     int32_t a = DEG_TO_TRIGANGLE(ang < 0 ? 360 + ang : ang);
     int s = sin_lookup(a), c = cos_lookup(a);
     int px[3] = {cx - k * 48, cx + k * 4, cx + k * 52}, py[3] = {by + 4, by - 20, by + 8};
+    if (woman) {
+      px[0] = cx - k * 44; px[1] = cx + k * 8; px[2] = cx + k * 48;
+      py[0] = by + 4; py[1] = by - 24; py[2] = by;
+    }
     for (int i = 0; i < 3; i++) {
       int dx = px[i] - cx, dy = py[i] - by;
       px[i] = cx + (dx * c - dy * s) / TRIG_MAX_RATIO;
       py[i] = by + (dx * s + dy * c) / TRIG_MAX_RATIO;
     }
     int n = quad_pts(0, px[0], py[0], px[1], py[1], px[2], py[2]);
-    polyline(ctx, n, GColorBlack, line_w(20) < 2 ? 2 : line_w(20));
+    int bw = woman ? line_w(13) : line_w(20);
+    polyline(ctx, n, woman ? WOMAN_HAIR : GColorBlack, bw < 2 ? 2 : bw);
   }
 
   // nose
-  for (int i = 0; i < COUNT(COMIC_NOSE) && i < COUNT(s_pts); i++) s_pts[i] = to_px(COMIC_NOSE[i].x, COMIC_NOSE[i].y);
-  polyline(ctx, COUNT(COMIC_NOSE), COMIC_LINE, line_w(9));
+  const GPoint *nose = woman ? COMIC_W_NOSE : COMIC_NOSE;
+  int nn = woman ? COUNT(COMIC_W_NOSE) : COUNT(COMIC_NOSE);
+  for (int i = 0; i < nn && i < COUNT(s_pts); i++) s_pts[i] = to_px(nose[i].x, nose[i].y);
+  polyline(ctx, nn < COUNT(s_pts) ? nn : COUNT(s_pts), COMIC_LINE, line_w(9));
 
-  // mouth under the mustache: a line, open while speaking, turned down when sad
-  int my = 564, w = 32 * (100 - open * 15 / 100) / 100 + (s_mode == FaceSpeak ? 4 : 0);
+  // mouth (under the mustache, or between the woman's lips): a line, open while speaking, turned down when sad
+  int my = woman ? 532 : 564, w = (woman ? 40 : 32) * (100 - open * 15 / 100) / 100 + (s_mode == FaceSpeak ? 4 : 0);
   int o = open * 30 / 100;
+  if (woman) {   // the lips: upper arc above the mouth, lower lip below it, opening with the voice
+    int n = quad_pts(0, 400 - w - 4, my, 400, my - 18 - o / 2, 400 + w + 4, my);
+    n = quad_pts(n, 400 + w + 4, my, 400, my + o * 2 + 34, 400 - w - 4, my);
+    fill_pts(ctx, n, WOMAN_LIPS, true);
+  }
   if (o > 2) {
     int n = quad_pts(0, 400 - w, my, 400, my - o * 35 / 100, 400 + w, my);
     n = quad_pts(n, 400 + w, my, 400, my + o * 2, 400 - w, my);
@@ -283,9 +318,14 @@ static void draw_comic(Layer *layer, GContext *ctx) {
     polyline(ctx, n, COMIC_LINE, line_w(9));
   }
 
-  // short bushy mustache, lifted a little when the mouth opens, then the hair on top
-  shape(ctx, COMIC_STACHE, COUNT(COMIC_STACHE), -open * 5 / 100, GColorBlack, false);
-  shape(ctx, COMIC_HAIR, COUNT(COMIC_HAIR), 0, GColorBlack, false);
+  if (woman) {
+    // the woman's hair with the side parting on top
+    shape(ctx, COMIC_W_FRONT, COUNT(COMIC_W_FRONT), 0, WOMAN_HAIR, true);
+  } else {
+    // short bushy mustache, lifted a little when the mouth opens, then the hair on top
+    shape(ctx, COMIC_STACHE, COUNT(COMIC_STACHE), -open * 5 / 100, GColorBlack, false);
+    shape(ctx, COMIC_HAIR, COUNT(COMIC_HAIR), 0, GColorBlack, false);
+  }
 
   // the ring shows the mood like in the panel
   GColor ring = PBL_IF_COLOR_ELSE(s_mode == FaceListen ? GColorPictonBlue : s_mode == FaceThink ? GColorChromeYellow
@@ -297,7 +337,7 @@ static void draw_comic(Layer *layer, GContext *ctx) {
 }
 
 static void update(Layer *layer, GContext *ctx) {
-  if (s_kind == 1) draw_comic(layer, ctx);
+  if (s_kind == 1 || s_kind == 2) draw_comic(layer, ctx);
   else draw_robot(layer, ctx);
 }
 
@@ -334,6 +374,6 @@ void face_set_level(uint8_t level) {
 }
 
 void face_set_kind(int kind) {
-  s_kind = kind == 1 ? 1 : 0;
+  s_kind = kind == 1 || kind == 2 ? kind : 0;
   if (s_layer) layer_mark_dirty(s_layer);
 }

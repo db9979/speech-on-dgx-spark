@@ -1,5 +1,5 @@
 // The assistant's faces (eyes, mouth, moods). The admin picks one for everybody (chat.face, whoami "face"):
-// "robot" (the first face) or "comic" (a caricature of Dominik). A new face is one more drawing here,
+// "robot" (the first face) or "comic" (a caricature of Dominik) or "comic_woman" (a woman drawn the same way). A new face is one more drawing here,
 // one more name in core.FACES and one more option under Einstellungen → Vorgaben.
 // ---------------------------------------------------------------- assistant face
 // One animation drives both faces (chat tab and the floating button); its mood follows the chat state.
@@ -45,6 +45,47 @@ function comicSvg(sfx){const s=COMIC,r=n=>Math.round(n*100)/100,m=s.eyeY+s.noseL
 <g data-p="st"><g transform="translate(100 ${m}) scale(${s.stacheS}) translate(-100 ${-m})"><path d="${stache}" fill="${s.stache}" ${st}/><path transform="translate(100 ${m}) scale(.63 .77) translate(-100 ${-m})" d="M88 ${m+3} l-3 7 M95 ${m+2} l-1 7 M105 ${m+2} l1 7 M112 ${m+3} l3 7 M80 ${m+7} l-4 7 M120 ${m+7} l4 7" stroke="#000" stroke-width=".9" opacity=".25" stroke-linecap="round"/></g></g>
 <path d="${hair}" fill="${s.hair}" ${st}/></g></g><circle data-p="ring" cx="100" cy="100" r="96" fill="none" stroke="${s.ring.idle}" stroke-width="5"/></svg>`;
   return {svg:o,mcy}}
+// The comic woman (Dominik's pick 2026-10-13, "Lange Haare, Seitenscheitel"): drawn like the comic face (same line,
+// skin, eyes, nose, ring and moving parts) so comicFrame moves both; no mustache, lips that open with the mouth
+// (lipT, lipB), lashes and long hair that tilts with the head. Shapes and colours are the same in the apps.
+const COMIC_W={skin:'#f0b48c',lid:'#e09d77',shade:'#c9825e',hair:'#4a2c22',line:'#22180f',lw:2.6,bg:'#f5dfe6',lips:'#c8565a',
+  top:38,hw:45,cheekY:92,chinW:19,chinY:164,eyeX:21,eyeY:91,eRx:10.5,eRy:7,lidBase:.12,noseLen:25,noseW:8,stacheS:1,mouthW:10,
+  shirt:'#7cc4b8',chain:'#d9b45a',iris:'#6b4a2e',ring:COMIC.ring};
+function comicWSvg(sfx){const s=COMIC_W,r=n=>Math.round(n*100)/100,L=s.line,lw=s.lw,H=s.hair,c=s.chinY,ny=s.eyeY,nl=s.noseLen,nw=s.noseW,mcy=ny+nl+17;
+  const st=`stroke="${L}" stroke-width="${lw}" stroke-linejoin="round" stroke-linecap="round"`;
+  const face=`M100 ${s.top} C${r(100+s.hw*.72)} ${s.top} ${100+s.hw} ${s.top+22} ${100+s.hw} ${s.cheekY} C${100+s.hw} ${s.cheekY+36} ${100+s.chinW+13} ${c-15} ${100+s.chinW} ${c-5} Q100 ${c+5} ${100-s.chinW} ${c-5} C${100-s.chinW-13} ${c-15} ${100-s.hw} ${s.cheekY+36} ${100-s.hw} ${s.cheekY} C${100-s.hw} ${s.top+22} ${r(100-s.hw*.72)} ${s.top} 100 ${s.top}Z`;
+  let o=`<svg viewBox="0 0 200 200" aria-hidden="true"><defs><clipPath id="cc${sfx}"><circle cx="100" cy="100" r="95"/></clipPath>`;
+  for(const[k,d]of[[-1,'L'],[1,'R']])o+=`<clipPath id="ce${d}${sfx}"><ellipse cx="${100+k*s.eyeX}" cy="${ny}" rx="${s.eRx}" ry="${s.eRy}"/></clipPath>`;
+  o+=`</defs><circle cx="100" cy="100" r="96" fill="${s.bg}"/><g clip-path="url(#cc${sfx})">
+<path d="M82 ${c-26} L80 200 L120 200 L118 ${c-26}Z" fill="${s.skin}" ${st}/>
+<path d="M0 200 L0 ${c+32} Q30 ${c+16} 80 ${c+13} Q100 ${c+30} 120 ${c+13} Q170 ${c+16} 200 ${c+32} L200 200Z" fill="${s.shirt}" ${st}/>
+<path d="M86 ${c+10} Q100 ${c+22} 114 ${c+10}" fill="none" stroke="${s.chain}" stroke-width="1.6" stroke-linecap="round"/><circle cx="100" cy="${c+19}" r="2.6" fill="#e9c46a" stroke="${L}" stroke-width="1"/><g data-p="head">
+<path d="M100 24 C152 24 164 66 160 118 C157 156 166 184 176 200 L121 200 L119 ${c-24} L81 ${c-24} L79 200 L24 200 C34 184 43 156 40 118 C36 66 48 24 100 24Z" fill="${H}" ${st}/>
+<path d="M52 96 C44 130 46 168 34 200 L62 200 C64 172 58 140 60 110Z M148 96 C156 130 154 168 166 200 L138 200 C136 172 142 140 140 110Z" fill="${H}" ${st}/>
+<path d="${face}" fill="${s.skin}" ${st}/>
+<path d="M100 ${c-8} q-5 2.5 -8 -1 M100 ${c-8} q5 2.5 8 -1" fill="none" stroke="${s.shade}" stroke-width="1.1" stroke-linecap="round" opacity=".5"/>
+<ellipse cx="73" cy="${ny+21}" rx="9" ry="5" fill="#ef7f86" opacity=".35"/><ellipse cx="127" cy="${ny+21}" rx="9" ry="5" fill="#ef7f86" opacity=".35"/>`;
+  for(const[k,d]of[[-1,'L'],[1,'R']]){const x=100+k*s.eyeX,y=ny,by=y-s.eRy-7;
+    o+=`<g clip-path="url(#ce${d}${sfx})"><ellipse cx="${x}" cy="${y}" rx="${s.eRx}" ry="${s.eRy}" fill="#fbfbf8"/><g data-p="iris${d}"><circle cx="${x}" cy="${y+.5}" r="5.8" fill="${s.iris}"/><circle cx="${x}" cy="${y+.5}" r="2.8" fill="#141414"/><circle cx="${x+1.6}" cy="${y-1.4}" r="1.2" fill="#fff"/></g>
+<rect data-p="lid${d}" x="${x-s.eRx-1}" y="${y-s.eRy-1}" width="${2*s.eRx+2}" height="0" fill="${s.lid}"/></g><ellipse cx="${x}" cy="${y}" rx="${s.eRx}" ry="${s.eRy}" fill="none" stroke="${L}" stroke-width="${r(lw*.7)}"/>
+<path data-p="ll${d}" d="" fill="none" stroke="${L}" stroke-width="${r(lw*1.15)}" stroke-linecap="round"/>
+<path d="M${x+k*8.6} ${y-6} l${k*4.2} -3.6 M${x+k*10.4} ${y-3.8} l${k*4.6} -1.6 M${x+k*5.8} ${y-6.6} l${k*2.6} -4" stroke="${L}" stroke-width="1.6" stroke-linecap="round"/>
+<g data-p="brow${d}"><path d="M${x-k*11} ${by+1} Q${x+k*2} ${by-6} ${x+k*12} ${by}" fill="none" stroke="${H}" stroke-width="3.2" stroke-linecap="round"/></g>`}
+  o+=`<path d="M${100-nw*.5} ${ny+nl-6} C${100-nw-1} ${ny+nl-3} ${100-nw} ${ny+nl+5} 97.5 ${ny+nl+4} Q100 ${ny+nl+6} 102.5 ${ny+nl+4} C${100+nw} ${ny+nl+5} ${100+nw+1} ${ny+nl-3} ${100+nw*.5} ${ny+nl-6}" fill="${s.shade}" opacity=".3"/>
+<path d="M97.5 ${ny+6} C97.5 ${ny+nl*.5} ${100-nw*.5} ${ny+nl*.75} ${100-nw*.6} ${ny+nl-4} C${100-nw-1} ${ny+nl} ${100-nw+1} ${ny+nl+4} 96.5 ${ny+nl+3.5} Q100 ${ny+nl+5} 103.5 ${ny+nl+3.5} C${100+nw-1} ${ny+nl+4} ${100+nw+1} ${ny+nl} ${100+nw*.6} ${ny+nl-4}" fill="none" ${st}/>
+<path data-p="mo" d="" fill="#5a2320" stroke="${L}" stroke-width="${r(lw*.6)}" stroke-linejoin="round"/>
+<path data-p="lipT" d="" fill="${s.lips}" stroke="${L}" stroke-width="${r(lw*.6)}" stroke-linejoin="round"/><path data-p="lipB" d="" fill="${s.lips}" stroke="${L}" stroke-width="${r(lw*.6)}" stroke-linejoin="round"/>
+<path data-p="ml" d="" fill="none" stroke="${L}" stroke-width="${r(lw*.8)}" stroke-linecap="round"/>
+<path d="M52 104 C44 54 68 27 101 27 C134 27 156 54 148 104 C146 84 142 70 136 62 C126 50 116 47 107 47 C90 50 74 60 66 74 C60 82 55 92 52 104Z" fill="${H}" ${st}/>
+<path d="M107 47 C96 52 82 60 72 74 M107 47 C120 52 132 62 138 74" fill="none" stroke="${L}" stroke-width="1.3" opacity=".45" stroke-linecap="round"/>
+</g></g><circle data-p="ring" cx="100" cy="100" r="96" fill="none" stroke="${s.ring.idle}" stroke-width="5"/></svg>`;
+  return {svg:o,mcy}}
+// the comic faces by name (chat.face); both are moved by comicFrame
+const COMICS={comic:[COMIC,comicSvg],comic_woman:[COMIC_W,comicWSvg]};
+// the woman's lips around the mouth: upper lip above the opening, lower lip below it (o = opening, w = half width)
+function comicLips(mx,cy,w,o,sm){const r=n=>Math.round(n*100)/100,y0=r(cy-sm*.5),up=cy-o*.2,lo=cy+o*2+sm;
+  return[`M${r(mx-w-1)} ${y0} Q${r(mx-w*.5)} ${r(up-4.2)} ${mx} ${r(up-2)} Q${r(mx+w*.5)} ${r(up-4.2)} ${r(mx+w+1)} ${y0} Q${mx} ${r(cy+sm-o*.35)} ${r(mx-w-1)} ${y0}Z`,
+    `M${r(mx-w-1)} ${y0} Q${mx} ${r(lo+8.5)} ${r(mx+w+1)} ${y0} Q${mx} ${r(lo)} ${r(mx-w-1)} ${y0}Z`]}
 
 const faces=[];let FACE_KIND='robot',FACE_LIFE=false;
 // ---------------------------------------------------------------- "Gesicht zeigt, was es tut" (V01.0.294)
@@ -103,7 +144,7 @@ function drawProps(vis,mode,t,dt){const k=n=>Math.min(1,dt*n),r2=n=>Math.round(n
     pp.zzz.setAttribute('opacity',r2(c.zzz));
     if(c.zzz>.01)for(const[i,z]of[[0,pp.z1],[1,pp.z2],[2,pp.z3]]){const q=(t*.5+i/3)%1;z.setAttribute('opacity',r2(Math.sin(q*Math.PI)));z.setAttribute('transform',`translate(${r2(q*6)} ${r2(-q*8)})`)}
     pp.lens.setAttribute('opacity',r2(c.lens));pp.lens.setAttribute('transform',`translate(${r2(100+Math.sin(t*2.4)*30)} 96)`)}}
-function mountFace(el,sfx){const f=FACE_KIND==='comic'?mountComic(el,sfx):mountRobot(el,sfx);
+function mountFace(el,sfx){const f=COMICS[FACE_KIND]?mountComic(el,sfx):mountRobot(el,sfx);
   if(FACE_LIFE){const svg=el.querySelector('svg');svg.insertAdjacentHTML('beforeend',PROP_SVG);const q=n=>svg.querySelector(`[data-p="${n}"]`);
     f.pp={badge:q('badge'),dots:q('dots'),zzz:q('zzz'),lens:q('lens'),calendar:q('i-calendar'),calp:q('cal-page'),mail:q('i-mail'),flap:q('flap'),home:q('i-home'),glow:q('glow'),
       bulb:q('bulb'),memory:q('i-memory'),write:q('write'),pen:q('pen'),happy:q('i-happy'),error:q('i-error'),d1:q('d1'),d2:q('d2'),dd:q('dd'),z1:q('z1'),z2:q('z2'),z3:q('z3')};
@@ -111,21 +152,22 @@ function mountFace(el,sfx){const f=FACE_KIND==='comic'?mountComic(el,sfx):mountR
   faces.push(f)}
 function mountRobot(el,sfx){el.innerHTML=FACE_SVG.replace(/\b(fhead|fshine|fglow|fsoft)\b/g,'$1'+sfx);
   const q=c=>el.querySelector('.'+c);return {el,eyeL:q('feyeL'),eyeR:q('feyeR'),mouth:q('fmouth'),halo:q('fhalo'),ant:q('fant'),cheeks:q('fcheeks'),body:q('fbody')}}
-function mountComic(el,sfx){const b=comicSvg(sfx);el.innerHTML=b.svg;const q=n=>el.querySelector(`[data-p="${n}"]`);
-  return {el,comic:1,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),st:q('st'),ring:q('ring')}}}
+function mountComic(el,sfx){const[s,draw]=COMICS[FACE_KIND],b=draw(sfx);el.innerHTML=b.svg;const q=n=>el.querySelector(`[data-p="${n}"]`);
+  return {el,comic:1,s,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),lipT:q('lipT'),lipB:q('lipB'),st:q('st'),ring:q('ring')}}}
 function mountAll(){faces.length=0;mountFace($('face'),'A');mountFace($('fabface'),'B')}
 // called with whoami's "face" and after the admin saved another one; unknown names keep the robot
 // the small picture before each answer (chat.js .av) follows the face: a still of the comic face,
 // drawn once from the same drawing (lids at rest, mouth closed)
-let COMIC_ICON='';
-function comicIcon(){if(COMIC_ICON)return COMIC_ICON;const box=document.createElement('div'),s=COMIC,b=comicSvg('I');box.innerHTML=b.svg;
+const COMIC_ICON={};
+function comicIcon(){if(COMIC_ICON[FACE_KIND])return COMIC_ICON[FACE_KIND];const box=document.createElement('div'),[s,draw]=COMICS[FACE_KIND],b=draw('I');box.innerHTML=b.svg;
   const q=n=>box.querySelector(`[data-p="${n}"]`),h=(2*s.eRy+2)*s.lidBase;
   for(const[k,d]of[[-1,'L'],[1,'R']]){const x=100+k*s.eyeX,ly=s.eyeY-s.eRy-1+h;q('lid'+d).setAttribute('height',h.toFixed(2));
     q('ll'+d).setAttribute('d',`M${x-s.eRx-.5} ${ly.toFixed(2)} Q${x} ${(ly+1.6).toFixed(2)} ${x+s.eRx+.5} ${ly.toFixed(2)}`)}
-  q('ml').setAttribute('d',`M${100-s.mouthW} ${b.mcy} Q100 ${b.mcy+.6} ${100+s.mouthW} ${b.mcy}`);q('ring').setAttribute('stroke-width','0');box.firstElementChild.setAttribute('viewBox','36 24 128 128');   // the head fills the small circle
-  COMIC_ICON=`url("data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(box.firstElementChild))}")`;return COMIC_ICON}
-function faceIcon(){document.body.dataset.face=FACE_KIND;if(FACE_KIND==='comic')document.documentElement.style.setProperty('--avface',comicIcon())}
-window.setFaceKind=k=>{k=k==='comic'?'comic':'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
+  q('ml').setAttribute('d',`M${100-s.mouthW} ${b.mcy} Q100 ${b.mcy+.6} ${100+s.mouthW} ${b.mcy}`);
+  if(q('lipT')){const[t,u]=comicLips(100,b.mcy,s.mouthW,0,0);q('lipT').setAttribute('d',t);q('lipB').setAttribute('d',u)}q('ring').setAttribute('stroke-width','0');box.firstElementChild.setAttribute('viewBox','36 24 128 128');   // the head fills the small circle
+  COMIC_ICON[FACE_KIND]=`url("data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(box.firstElementChild))}")`;return COMIC_ICON[FACE_KIND]}
+function faceIcon(){document.body.dataset.face=FACE_KIND;if(COMICS[FACE_KIND])document.documentElement.style.setProperty('--avface',comicIcon())}
+window.setFaceKind=k=>{k=k==='comic'||k==='comic_woman'?k:'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
 window.setFaceLife=on=>{on=on===true;if(on===FACE_LIFE)return;FACE_LIFE=on;FL.act='';FL.happyNext=false;FL.happyUntil=0;FL.quiet=performance.now();mountAll()};
 mountAll();
 const F={open:0,smile:1,eyeH:24,lx:0,ly:0,halo:.25,cheeks:.6,blink:0,next:performance.now()+2500,mx:-1,my:-1};
@@ -137,7 +179,7 @@ function faceMode(){if(chat.rec)return'listen';if(playing())return'speak';if(cha
   if(chat.errAt&&performance.now()-chat.errAt<5000)return'sad';return'idle'}
 const lerp=(a,b,k)=>a+(b-a)*k;
 let outBuf=null;
-function comicFrame(vis,mode,out,mic,now){const s=COMIC,dt=Math.min(.05,(now-(C.last||now))/1000),k=n=>Math.min(1,dt*n),r2=n=>Math.round(n*100)/100;C.last=now;
+function comicFrame(vis,mode,out,mic,now){const s=vis[0].s,dt=Math.min(.05,(now-(C.last||now))/1000),k=n=>Math.min(1,dt*n),r2=n=>Math.round(n*100)/100;C.last=now;
   const lg=lifeGaze(mode,now/1000);if(lg){C.tx=lg[0];C.ty=lg[1]}
   else if(now>C.look){let tx=(Math.random()-.5)*.4,ty=(Math.random()-.5)*.25;
     if(mode==='think'){tx=.55+Math.random()*.3;ty=-.75+Math.random()*.2}
@@ -171,8 +213,9 @@ function comicFrame(vis,mode,out,mic,now){const s=COMIC,dt=Math.min(.05,(now-(C.
     p.mo.setAttribute('d',o>.4?`M${r2(mx-w)} ${r2(cy)} Q${mx} ${r2(cy-o*.35)} ${r2(mx+w)} ${r2(cy)} Q${mx} ${r2(cy+o*2)} ${r2(mx-w)} ${r2(cy)}Z`:'');
     p.ml.setAttribute('d',P?`M${r2(mx-w)} ${r2(cy-sm*.5)} Q${mx} ${r2(cy+sm)} ${r2(mx+w)} ${r2(cy-sm*.5)}`
       :`M${r2(mx-w)} ${r2(cy+(mode==='sad'?1.5:0))} Q${mx} ${r2(cy+(mode==='sad'?-sad:sad))} ${r2(mx+w)} ${r2(cy+(mode==='sad'?1.5:0))}`);
-    const ly=cy+o*1.7+4;p.lip.setAttribute('d',`M${r2(mx-w*.55)} ${r2(ly)} Q${mx} ${r2(ly+2.4)} ${r2(mx+w*.55)} ${r2(ly)}`);
-    p.st.setAttribute('transform',`translate(0 ${r2(-C.open*1.3-Math.max(0,C.smile)*.8)})`);
+    if(p.lipT){const[t,u]=comicLips(mx,cy,w,o,sm);p.lipT.setAttribute('d',t);p.lipB.setAttribute('d',u)}
+    const ly=cy+o*1.7+4;if(p.lip)p.lip.setAttribute('d',`M${r2(mx-w*.55)} ${r2(ly)} Q${mx} ${r2(ly+2.4)} ${r2(mx+w*.55)} ${r2(ly)}`);
+    if(p.st)p.st.setAttribute('transform',`translate(0 ${r2(-C.open*1.3-Math.max(0,C.smile)*.8)})`);
     p.ring.setAttribute('stroke',s.ring[mode]);p.ring.setAttribute('stroke-width',r2(mode==='listen'?5+mic*4:5));
     f.el.dataset.mode=mode}}
 function faceFrame(now){requestAnimationFrame(faceFrame);

@@ -1465,7 +1465,23 @@ def describe(plan, d=None):
 
 
 def carry_out(uid, plan):
-    """Does a confirmed proposal; returns a sentence saying what happened (checked)."""
+    """Does a confirmed proposal; returns a sentence saying what happened (checked). One journal line for every
+    outcome: the kind and done, refused or failed, never senders, subjects or texts."""
+    kind = plan.get("kind") if plan.get("kind") in ("sort", "undo", "backlog", "draft") else "other"
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        out = _carry_out(uid, plan)
+    except notaus.NotausAktiv:
+        print(f"tidy: confirmed {kind} refused, notaus | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"tidy: confirmed {kind} failed ({type(e).__name__}) | {who}", flush=True)
+        raise
+    print(f"tidy: confirmed {kind} done | {who}", flush=True)
+    return out
+
+
+def _carry_out(uid, plan):
     notaus.stop("aktion", uid)   # the Notaus holds every action off (notaus.py)
     if plan["kind"] == "sort":
         n = 0

@@ -396,25 +396,36 @@ def _count(sender, rcpts, kind, now):
 
 
 # ---------------------------------------------------------------- sending (into the chats)
+def _log_refused(sender, kind, why):
+    """A message from the assistant that did not go out: one journal line, fixed words only (never text or names)."""
+    print(f"messages: from the assistant refused | {why} | {'everybody' if kind == 'all' else 'chat'} | "
+          f"{profiles.log_name(profiles.by_id(sender))}", flush=True)
+
+
 async def send(sender, to, text, kind="text", now=None):
     """What the assistant sends after the "Ja": into the chat with each recipient, or into the fixed group Alle
     (kind "all"), marked "via Spark". to: [uid]. Rechecks every rule (a proposal may be minutes old). Returns
     (names reached, why not)."""
     if notaus.refuse("aktion", sender):   # the Notaus (or the sender's own) holds every action off (notaus.py)
+        _log_refused(sender, kind, "notaus")
         return [], notaus.why(sender, "keine Nachrichten")
     import chats
     now = time.time() if now is None else now
     text = clean(text)
     if not text:
+        _log_refused(sender, kind, "empty")
         return [], "Die Nachricht ist leer."
     if not usable(sender):
+        _log_refused(sender, kind, "chats off")
         return [], "Chats sind für dich ausgeschaltet."
     if kind == "all":
         if not all_on() or not takes_all(sender):
+            _log_refused(sender, kind, "everybody off")
             return [], "Nachrichten an alle sind ausgeschaltet."
         try:   # the limit for "an alle" counts in chats.send
             await chats.send(sender, chats.all_group(now), text, via="spark", now=now)
         except (LookupError, PermissionError, ValueError, OverflowError) as e:
+            _log_refused(sender, kind, "chat refused " + type(e).__name__)
             return [], str(e)
         out = [x["name"] for x in recipients(sender, everybody=True)]
         print(f"messages: to everybody from the assistant, {len(out)} profile(s), {len(text)} chars", flush=True)
@@ -423,9 +434,11 @@ async def send(sender, to, text, kind="text", now=None):
         return out or ["alle"], ""
     to = [u for u in dict.fromkeys(to) if takes_from(u, sender)]
     if not to:
+        _log_refused(sender, kind, "nobody takes it")
         return [], "Niemand davon nimmt gerade Nachrichten von dir an."
     why = allowed_now(sender, to, kind, now)
     if why:
+        _log_refused(sender, kind, "hourly limit")
         return [], why
     out = []
     for r in to:
@@ -433,6 +446,7 @@ async def send(sender, to, text, kind="text", now=None):
             await chats.send(sender, chats.open_one(sender, r, now), text, via="spark", now=now)
         except (LookupError, PermissionError, ValueError, OverflowError) as e:
             if not out:
+                _log_refused(sender, kind, "chat refused " + type(e).__name__)
                 return [], str(e)
             continue
         out.append(name_of(r))
@@ -469,6 +483,7 @@ async def speak_now(uid, who, where, text, now=None):
     if await _to_speaker(uid, spoken(who, where, text, mode)):
         now = time.time() if now is None else now
         mutate(uid, lambda d: d.update(spoken=max(float(d.get("spoken") or 0), now)))
+        print(f"messages: chat message read on speaker at once | {mode} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         return True
     return False
 
@@ -478,8 +493,17 @@ async def _to_speaker(uid, said):
     for s in list(esp32._live.values()):
         if s.dev.get("user") == uid and s.room is None and not (s.answer and not s.answer.done()):
             s.answer = asyncio.create_task(s.say(said, tone=True))
+            s.answer.add_done_callback(_said_or_not)
             return True
     return False
+
+
+def _said_or_not(task):
+    """A sentence handed to a connected speaker runs on its own: a failure there gets its journal line here."""
+    if task.cancelled():
+        print("messages: speaker sentence stopped", flush=True)
+    elif task.exception() is not None:
+        print(f"messages: speaker sentence failed ({type(task.exception()).__name__})", flush=True)
 
 
 def speaker_waiting(uid, now=None):
@@ -498,6 +522,7 @@ def speaker_waiting(uid, now=None):
     if not new:
         return ""
     mutate(uid, lambda d: d.update(spoken=now))
+    print(f"messages: {len(new)} chat message(s) read at wake word | {mode} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return " ".join(spoken(who, where, text, mode) for who, where, text in new)
 
 
@@ -538,11 +563,22 @@ def find_speakers(sender, where):
     return [], "Kein passender Lautsprecher. Möglich sind: " + ", ".join(x["name"] for x in allowed) + "."
 
 
-async def announce(sender, dids, text, now=None, house=False):
+def _log_announce(sender, via, result, picked=0, now_n=0, later=0, quiet=0, chars=0):
+    """The journal line of every Durchsage, said or not (Zustand → Logs → Diagnose, filter Nachrichten): fixed
+    words and numbers only, the sender by profiles.log_name, never the text or a speaker's name."""
+    print(f"messages: announcement {result} | via {via} | {picked} speaker(s) picked, {now_n} now, {later} at next wake word, "
+          f"{quiet} quiet time | {chars} chars | {profiles.log_name(profiles.by_id(sender))}", flush=True)
+
+
+async def announce(sender, dids, text, now=None, house=False, via="assistant"):
     """Says the text on the speakers (at once when connected, else at their next wake word). Returns
     (names, why not). house: a note of the profile's smart home (hamelden.py) with its own limits there,
-    said as it is, without "Durchsage von"."""
+    said as it is, without "Durchsage von". via: where it came from, for the journal line (chats, assistant,
+    house). Every outcome, said or refused, writes one journal line (_log_announce)."""
+    picked = len(dids or [])
+    via = "house" if house else via
     if notaus.refuse("aktion", sender):   # the Notaus (or the sender's own) holds every action off (notaus.py)
+        _log_announce(sender, via, "refused notaus", picked)
         return [], notaus.why(sender, "keine Nachrichten")
     import begleiter
     import esp32
@@ -550,32 +586,42 @@ async def announce(sender, dids, text, now=None, house=False):
     now = time.time() if now is None else now
     text = clean(text, 300)
     if not text:
+        _log_announce(sender, via, "refused empty", picked)
         return [], "Die Durchsage ist leer."
     allowed = {x["id"]: x for x in speakers_for(sender)}
-    dids = [d for d in dict.fromkeys(dids) if d in allowed]
+    dids = [d for d in dict.fromkeys(dids or []) if d in allowed]
     if not dids:
+        _log_announce(sender, via, "refused no speaker allowed", picked, chars=len(text))
         return [], "Kein Lautsprecher nimmt gerade Durchsagen von dir an."
     if not house:
         why = allowed_now(sender, [], "announce", now)
         if why:
+            _log_announce(sender, via, "refused hourly limit", picked, chars=len(text))
             return [], why
         _count(sender, [], "announce", now)
     said = text if house else f"Durchsage von {name_of(sender)}: {text}"
-    out = []
+    out, now_n, later, quiet = [], 0, 0, 0
     for did in dids:
         sp = allowed[did]
         if room.night(sp["owner"]) or begleiter.busy(sp["owner"]):   # night, or in a call (Begleiter "Nicht stören")
+            quiet += 1
             continue
         s = esp32._live.get(did)
         if s and not (s.answer and not s.answer.done()):
             s.answer = asyncio.create_task(s.say(said, tone=True))
+            s.answer.add_done_callback(_said_or_not)
+            esp32.diag(did, "Durchsage gesagt")
+            now_n += 1
         else:
             cid, _ = esp32.by_device(did)
             if not cid:
+                quiet += 1
                 continue
             esp32._update(lambda d: d["clients"][cid].update(announce_next={"t": now, "text": vault.seal(said)}))
+            esp32.diag(did, "Durchsage wartet aufs Wake-Word")
+            later += 1
         out.append(sp["name"])
-    print(f"messages: announcement on {len(out)} speaker(s), {len(text)} chars", flush=True)
+    _log_announce(sender, via, "sent" if out else "refused quiet time", len(dids), now_n, later, quiet, len(text))
     _live_mark(f"Durchsage auf {len(out)} Lautsprecher{'n' if len(out) != 1 else ''}" if out else "Durchsage: Ruhezeit")
     return out, ("" if out else "Bei den Lautsprechern ist gerade Ruhezeit.")
 
@@ -624,7 +670,8 @@ def _propose(uid, p, src, fresh=False):
 def describe(p):
     if p["kind"] == "announce":
         return f"Durchsage auf {', '.join(p['names'])}: „{p['text']}“"
-    who = "alle (" + short(p["names"]) + ")" if p["kind"] == "all" else short(p["names"])
+    who = "alle (" + short(p["names"]) + ")" if p["kind"] == "all" else \
+        f"die Gruppe „{p['names'][0]}“" if p["kind"] == "group" else short(p["names"])
     return f"Nachricht an {who}: „{p['text']}“"
 
 
@@ -634,10 +681,50 @@ async def carry_out(uid, p):
         print("messages: chats switched on by the profile's own yes", flush=True)
         return "Chats sind für dich jetzt eingeschaltet."
     if p["kind"] == "announce":
-        names, why = await announce(uid, p["to"], p["text"])
+        names, why = await announce(uid, p["to"], p["text"], via="assistant")
         return f"Durchsage gesendet an: {', '.join(names)}." if names else "NICHT gesendet: " + why
+    if p["kind"] == "group":
+        names, why = await send_group(uid, p["cid"], p["text"])
+        return f"Gesendet in die Gruppe „{p['names'][0]}“." if names else "NICHT gesendet: " + why
     names, why = await send(uid, p["to"], p["text"], kind="all" if p["kind"] == "all" else "text")
     return f"Gesendet an {short(names)}." if names else "NICHT gesendet: " + why
+
+
+def my_group(uid, name):
+    """(cid, name) of the profile's own chat group with this name (whole words, case aside), else None. Private
+    groups are not there: the Spark never writes into a chat it cannot read."""
+    import chats
+    want = _norm(name)
+    want = re.sub(r"^(die |der |das |unsere |meine |in die |an die )+", "", want)
+    want = re.sub(r"[\s-]*(gruppe|group|chat)$", "", want).strip()
+    if len(want) < 3 or not chats.groups_on():
+        return None
+    for cid, c in chats.mine(uid).items():
+        if c.get("kind") != "group" or cid == chats.ALL_ID:
+            continue
+        title = chats.unseal(c.get("name"), cid, "name") or ""
+        t = re.sub(r"[\s-]*(gruppe|group|chat)$", "", _norm(title)).strip()
+        if t and want in (t, t + "n", t + "s", t + "en"):   # „Familiengruppe“ for the group „Familie“
+            return cid, title[:60]
+    return None
+
+
+async def send_group(sender, cid, text, now=None):
+    """After the yes: into the profile's own group (chats.send rechecks membership, limits and the Notaus)."""
+    if notaus.refuse("aktion", sender):
+        return [], notaus.why(sender, "keine Nachrichten")
+    import chats
+    text = clean(text)
+    if not text or not usable(sender):
+        return [], "Die Nachricht ist leer." if not text else "Chats sind für dich ausgeschaltet."
+    try:
+        await chats.send(sender, cid, text, via="spark", now=now)
+    except (LookupError, PermissionError, ValueError, OverflowError) as e:
+        return [], str(e)
+    print("messages: into a group from the assistant", flush=True)
+    import tagebuch
+    tagebuch.note(sender, "nachricht", "in eine Gruppe")
+    return ["Gruppe"], ""
 
 
 REPLY = re.compile(r"(?is)^\s*(?:bitte\s+)?(?:antworte|antwort|schreib(?:e)?\s+(?:ihm|ihr)\s+zurück|schreib(?:e)?\s+zurück)"
@@ -849,7 +936,8 @@ TOOLS = [
         "name": "message_send", "description": "Sends a short message to another person of this Spark (or to "
         "everybody). Only proposes it: the user must say yes in the next message, then the panel sends it.",
         "parameters": {"type": "object", "properties": {
-            "to": {"type": "string", "description": "the person's name, or 'alle' for everybody"},
+            "to": {"type": "string", "description": "the person's name, the name of one of the user's chat groups, "
+                                                    "or 'alle' for everybody"},
             "text": {"type": "string", "description": "the message in the user's own words"}},
             "required": ["to", "text"]}}},
     {"type": "function", "function": {
@@ -952,6 +1040,10 @@ async def tool(name, args, ctx):
             if not rs:
                 return "Nicht gesendet: niemand nimmt gerade Nachrichten an alle an."
             p = {"kind": "all", "to": [x["id"] for x in rs], "names": [x["name"] for x in rs], "text": text}
+        elif my_group(uid, to):
+            # one of the profile's own groups („Schreib in die Familiengruppe …“), by its name
+            cid, gname = my_group(uid, to)
+            p = {"kind": "group", "cid": cid, "to": [], "names": [gname], "text": text}
         else:
             r, why, cands = find_all(uid, to)
             if cands:
@@ -962,11 +1054,12 @@ async def tool(name, args, ctx):
             if not r:
                 return "Nicht gesendet: " + why + " Frag nach, wem die Nachricht gehen soll."
             p = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": text}
-        why = allowed_now(uid, p["to"], p["kind"])
+        why = allowed_now(uid, p["to"], p["kind"]) if p["kind"] != "group" else ""
         if why:
             return "Nicht gesendet: " + why
         _propose(uid, p, src)
-        who = "allen (" + short(p["names"]) + ")" if p["kind"] == "all" else p["names"][0]
+        who = "allen (" + short(p["names"]) + ")" if p["kind"] == "all" else \
+            f"in die Gruppe „{p['names'][0]}“" if p["kind"] == "group" else p["names"][0]
         return (f"Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {who} schreiben: ‚{text}‘?“ Erst sein Ja in "
                 "der nächsten Nachricht sendet es.")
     if name == "message_announce":
@@ -1077,12 +1170,14 @@ async def api_call(request: Request, prof=Depends(browser_profile)):
 async def api_announce(request: Request, prof=Depends(chats._on)):
     """A Durchsage from the Chats page or the app: the person picks the speakers and types the text themselves."""
     if not announce_on():
+        _log_announce(prof["id"], "chats", "refused switched off")
         raise HTTPException(403, "announcements are turned off")
     body = await _json(request)
     ids = body.get("speakers")
     if not isinstance(ids, list) or not ids or len(ids) > 20 or not all(isinstance(x, str) for x in ids):
+        _log_announce(prof["id"], "chats", "refused no speaker picked")
         raise HTTPException(400, "pick a speaker")
-    names, why = await announce(prof["id"], ids, body.get("text"))
+    names, why = await announce(prof["id"], ids, body.get("text"), via="chats")
     if not names:
         raise HTTPException(429 if "Stunde" in why else 400, why)
     return {"sent": names}

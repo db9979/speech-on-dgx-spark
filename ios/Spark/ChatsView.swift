@@ -13,6 +13,8 @@ struct ChatSummary: Identifiable, Hashable {
     let id: String
     var group = false
     var priv = false
+    /// With someone on another Spark (verbund.py): text only in this version.
+    var far = false
     var title = ""
     var unread = 0
     var muted = false
@@ -71,6 +73,7 @@ extension SparkAPI {
             var c = ChatSummary(id: id)
             c.group = x["kind"] as? String == "group"
             c.priv = x["private"] as? Bool ?? false
+            c.far = x["far"] as? Bool ?? false
             c.title = String((x["title"] as? String ?? "").prefix(60))
             c.unread = (x["unread"] as? NSNumber)?.intValue ?? 0
             c.muted = ((x["mute"] as? NSNumber)?.doubleValue ?? 0) != 0
@@ -297,7 +300,7 @@ private struct ChatRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: (c.priv ? "🔒 " : "") + c.title).font(.headline).lineLimit(1)
+                Text(verbatim: (c.priv ? "🔒 " : "") + (c.far ? "🌐 " : "") + c.title).font(.headline).lineLimit(1)
                 Text(verbatim: c.preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)

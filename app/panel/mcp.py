@@ -232,6 +232,15 @@ def tools_for(servers, uid, modes):
     return out
 
 
+def named(text, name):
+    """The person's own words name this service („Frag Notion …“): whole words, at least 3 letters. Its tools are
+    then kept when the Weiche narrows (extras "keep", plan werkzeug-abdeckung B1)."""
+    name = re.sub(r"\s+", " ", str(name or "")).strip().lower()
+    if len(name) < 3:
+        return False
+    return re.search(r"(?<!\w)" + re.escape(name) + r"(?!\w)", str(text or "").lower()[:2000]) is not None
+
+
 def as_tool(name, server, t):
     """The tool in the format the language model gets."""
     return {"type": "function", "function": {

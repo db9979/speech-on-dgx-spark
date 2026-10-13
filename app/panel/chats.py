@@ -63,6 +63,8 @@ FIND_MAX = 30            # hits of a search
 CID = re.compile(r"c[0-9a-f]{12}")
 MID = re.compile(r"[0-9a-f]{12}")
 UID = re.compile(r"u_[0-9a-f]{12}")
+RID = re.compile(r"r_[0-9a-f]{12}")   # a person on another Spark (verbund.py), only in chats of kind "far"
+TWO = ("one", "priv", "far")         # the kinds of a chat of two
 ALL_ID = "c" + hashlib.sha256(b"all|speech-spark").hexdigest()[:12]   # the fixed group Alle (one per Spark)
 SYS = ("made", "add", "remove", "leave", "name", "vanish", "admin", "joined")   # what a line of the chat itself says
 MEDIA = ("photo", "file", "voice")             # what else a message can be (Schritt B, chat.chats_media)
@@ -122,15 +124,33 @@ def name_of(uid):
     return (profiles.by_id(uid) or {}).get("name", "")
 
 
+def _names():
+    """{id: name} of the profiles and of the contacts on other Sparks (the name they sent)."""
+    names = {x["id"]: x["name"] for x in profiles.names()}
+    try:
+        import verbund
+        names.update(verbund.names())
+    except Exception:
+        pass
+    return names
+
+
 def takes(rcpt, sender):
     """True when rcpt takes chat messages from sender: both have chats on, rcpt has not blocked sender and takes
-    from everybody or picked sender (Ich → Gespräch → Chats „Wer darf mir schreiben“, messages.takes_from)."""
+    from everybody or picked sender (Ich → Gespräch → Chats „Wer darf mir schreiben“, messages.takes_from).
+    rcpt on another Spark (verbund.py): an accepted contact of sender, its Spark allowed."""
+    if RID.fullmatch(rcpt or ""):
+        import verbund
+        return verbund.can_write(sender, rcpt)
     import messages
     return messages.takes_from(rcpt, sender)
 
 
 def why_not(rcpt, sender):
     """Said to the sender: only "switched off" or "takes none from you", never who blocked whom."""
+    if RID.fullmatch(rcpt or ""):
+        import verbund
+        return verbund.why_not(sender, rcpt)
     if not usable(rcpt):
         return f"{name_of(rcpt) or 'Diese Person'} hat Chats nicht eingeschaltet."
     return f"{name_of(rcpt)} nimmt gerade keine Nachrichten von dir an."
@@ -403,7 +423,7 @@ def _ticks(x, c, uid):
     if not others:
         return "sent"
     mine_on = profiles.settings(uid).get("chat_receipts", True) is not False
-    if mine_on and all(profiles.settings(u).get("chat_receipts", True) is not False
+    if mine_on and all((RID.fullmatch(u) or profiles.settings(u).get("chat_receipts", True) is not False)
                        and float(_map(c, "read").get(u) or 0) >= x["t"] for u in others):
         return "read"
     if all(max(float(_map(c, "got").get(u) or 0), float(_map(c, "read").get(u) or 0)) >= x["t"] for u in others):
@@ -449,6 +469,8 @@ def _public(x, cid, c, d, uid, names):
         out["react"] = [{"e": e, "n": k, "me": react.get(uid) == e} for e, k in n.items()]
     if out["mine"] and x.get("kind") != "sys" and not x.get("gone"):
         out["tick"] = _ticks(x, c, uid)
+        if x.get("fail"):
+            out["fail"] = True     # another Spark did not take it within 7 days (verbund.py)
         now = time.time()
         out["can_edit"] = now - x["t"] < EDIT_SECS and x.get("kind") == "text"
         out["can_back"] = now - x["t"] < BACK_SECS
@@ -459,6 +481,9 @@ def _title(cid, c, uid, names):
     if c.get("kind") == "group":
         return unseal(c.get("name"), cid, "name") or "Gruppe"
     other = next((u for u in c["members"] if u != uid), "")
+    if RID.fullmatch(other):
+        import verbund
+        return names.get(other) or verbund.addr_of(other) or "Kontakt auf einem anderen Spark"
     return names.get(other) or "Gelöschtes Profil"
 
 
@@ -466,16 +491,16 @@ def listing(uid, now=None):
     """The chat list of a profile, newest first, and the people it can start a chat with."""
     now = time.time() if now is None else now
     all_sync(now)
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     out = []
     for cid, c in mine(uid).items():
         last = c.get("last") or {}
         d_cleared = float((c.get("cleared") or {}).get(uid) or 0)
-        if c.get("kind") in ("one", "priv") and (not last or float(last.get("t") or 0) <= d_cleared):
+        if c.get("kind") in TWO and (not last or float(last.get("t") or 0) <= d_cleared):
             continue   # deleted for me and nothing new since, or nobody wrote yet
         if c.get("vanish") and last and now - float(last.get("t") or 0) >= int(c["vanish"]):
             last = {}
-        other = next((u for u in c["members"] if u != uid), "") if c.get("kind") in ("one", "priv") else ""
+        other = next((u for u in c["members"] if u != uid), "") if c.get("kind") in TWO else ""
         item = {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
                 "members": [{"id": u, "name": names.get(u, "")} for u in c["members"]][:MAX_MEMBERS],
                 "admin": uid in (c.get("admins") or []), "unread": int((c.get("unread") or {}).get(uid) or 0),
@@ -487,6 +512,9 @@ def listing(uid, now=None):
         if c.get("kind") == "priv":
             import chatsec
             item["private"], item["can_send"] = True, chatsec.can(other, uid)
+        if c.get("kind") == "far":
+            import verbund
+            item["far"], item["addr"] = True, verbund.addr_of(other)
         if c.get("fixed"):
             item["fixed"] = True
         if last and float(last.get("t") or 0) > d_cleared:
@@ -525,7 +553,7 @@ def items(uid, cid, before="", now=None):
         _map(c, "got")[uid] = now
         _save_index(chats)
         d = _chat(cid, c, now)
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     cleared = float(_map(c, "cleared").get(uid) or 0)
     shown = [x for x in d["items"] if x["t"] > cleared]
     if before and MID.fullmatch(before):
@@ -539,17 +567,25 @@ def items(uid, cid, before="", now=None):
     elif c.get("fixed"):
         import messages
         why = "" if messages.all_on() and messages.takes_all(uid) else "Nachrichten an alle sind gerade ausgeschaltet."
+    if c.get("kind") == "far":
+        why = "" if others and takes(others[0], uid) else why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr."
     return {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
             "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
             "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
             "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
             "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
-            "can_send": (not why if c.get("kind") == "priv" or c.get("fixed") else
+            "can_send": (not why if c.get("kind") in ("priv", "far") or c.get("fixed") else
                          takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
-            "why": (why if c.get("kind") == "priv" or c.get("fixed") else
+            "why": (why if c.get("kind") in ("priv", "far") or c.get("fixed") else
                     why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
                     "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
-            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed"))}
+            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed")), "far": c.get("kind") == "far",
+            **({"addr": _far_addr(c, uid)} if c.get("kind") == "far" else {})}
+
+
+def _far_addr(c, uid):
+    import verbund
+    return verbund.addr_of(next((u for u in c["members"] if u != uid), ""))
 
 
 # ---------------------------------------------------------------- changing a chat
@@ -606,6 +642,171 @@ def open_one(uid, other, now=None):
         _save_index(chats)
     _log("new chat", kind="one")
     return cid
+
+
+# ---------------------------------------------------------------- chats with people on other Sparks (verbund.py)
+def far_id(uid, rid):
+    return "c" + hashlib.sha256(("far|" + uid + "|" + rid).encode()).hexdigest()[:12]
+
+
+def open_far(uid, rid, now=None):
+    """The chat of uid with a contact on another Spark (made the first time; verbund.py decides who that may be)."""
+    now = time.time() if now is None else now
+    if not UID.fullmatch(uid or "") or not RID.fullmatch(rid or ""):
+        raise LookupError("no such contact")
+    cid = far_id(uid, rid)
+    with _lock:
+        chats = _index()
+        if cid in chats:
+            return cid
+        if sum(1 for c in chats.values() if uid in c["members"]) >= MAX_CHATS:
+            raise OverflowError(f"Höchstens {MAX_CHATS} Chats.")
+        chats[cid] = {"kind": "far", "members": [uid, rid], "admins": [], "by": uid, "t": now,
+                      "updated": now, "vanish": 0, "last": {}, "unread": {}}
+        _save_chat(cid, {"items": []})
+        _save_index(chats)
+    _log("new chat", kind="far")
+    return cid
+
+
+def far_tell(uid, ask=False):
+    """Something new about contacts on other Sparks: open pages look again; a new request also as a notification."""
+    _send_event(uid, {"type": "verbund", "id": ""})
+    if ask and not listening(uid):
+        async def note():
+            import push
+            import room
+            if room.night(uid) or not push.reachable(uid, private=True):
+                return
+            await push.send(uid, "🌐 Kontaktanfrage", "Jemand auf einem anderen Spark möchte mit dir schreiben.",
+                            tag="verbund", private=True, why="Chat", to="every")
+        try:
+            asyncio.get_running_loop().create_task(note())
+        except RuntimeError:
+            pass
+
+
+def far_in(uid, rid, mid, text, reply="", now=None):
+    """A message from a contact on another Spark (verbund.py checked who and where): stored like any other, its
+    own id kept (a second delivery of the same message changes nothing), then the notification as for a chat."""
+    now = time.time() if now is None else now
+    text = clean(text)
+    if not text or not MID.fullmatch(mid or ""):
+        return False
+    cid = open_far(uid, rid, now)
+    item = {"id": mid, "from": rid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
+
+    def put(meta, d, chats):
+        if any(x["id"] == mid for x in d["items"]):
+            return None
+        if reply and any(x["id"] == reply for x in d["items"]):
+            item["reply"] = reply
+        d["items"].append(item)
+        meta["updated"] = now
+        un = _map(meta, "unread")
+        un[uid] = int(un.get(uid) or 0) + 1
+        if listening(uid):
+            _map(meta, "got")[uid] = now
+        return json.loads(json.dumps(meta))
+    meta = _mutate(cid, put, now)
+    if meta is None:
+        return False
+    _tell([uid], {"type": "chat", "id": cid})
+    _log("far in", chars=len(text))
+
+    async def deliver():
+        try:
+            await _notify(uid, cid, meta, rid, text, now)
+            if not listening(uid) and not _muted_until(meta, uid, now):
+                import messages
+                if await messages.speak_now(uid, _names().get(rid) or "Jemand", "", text, now):
+                    _today()["spoken"] = _today().get("spoken", 0) + 1
+        except Exception as e:
+            _log("notify failed", error=type(e).__name__)
+    try:
+        asyncio.get_running_loop().create_task(deliver())
+    except RuntimeError:
+        pass
+    return True
+
+
+def far_seen(cid, mid, what):
+    """The other Spark has the own message ("got": second tick) or it was given up ("fail": not delivered)."""
+    def f(meta, d, chats):
+        x = next((x for x in d["items"] if x["id"] == mid), None)
+        if not x:
+            return None
+        rid = next((u for u in meta["members"] if RID.fullmatch(u)), "")
+        if what == "got" and rid:
+            _map(meta, "got")[rid] = max(float(_map(meta, "got").get(rid) or 0), float(x["t"]))
+            x.pop("fail", None)
+        elif what == "fail":
+            x["fail"] = True
+        return [u for u in meta["members"] if not RID.fullmatch(u)]
+    try:
+        members = _mutate(cid, f)
+    except LookupError:
+        return
+    if members:
+        _tell(members, {"type": "chat", "id": cid})
+
+
+def far_mark(uid, rid, mid, what):
+    """"Gelesen" from the other Spark: everything of uid up to the message mid of uid."""
+    cid = far_id(uid, rid)
+
+    def f(meta, d, chats):
+        x = next((x for x in d["items"] if x["id"] == mid and x["from"] == uid), None)
+        if not x:
+            return False
+        for k in ("got", what):
+            _map(meta, k)[rid] = max(float(_map(meta, k).get(rid) or 0), float(x["t"]))
+        return True
+    try:
+        if _mutate(cid, f):
+            _tell([uid], {"type": "chat", "id": cid})
+    except LookupError:
+        pass
+
+
+def far_change(uid, rid, kind, mid, value, now=None):
+    """Changed ("edit"), taken back ("back") or a reaction ("react") from the other Spark, on its own messages only
+    (a reaction on any message); the same time limits as here."""
+    now = time.time() if now is None else now
+    cid = far_id(uid, rid)
+
+    def f(meta, d, chats):
+        x = next((x for x in d["items"] if x["id"] == mid and x.get("kind") != "sys" and not x.get("gone")), None)
+        if not x:
+            return False
+        if kind == "react":
+            if value and value not in REACTIONS:
+                return False
+            r = x.setdefault("react", {})
+            if value:
+                r[rid] = value
+            else:
+                r.pop(rid, None)
+            return True
+        if x["from"] != rid:
+            return False
+        if kind == "edit":
+            text = clean(value if isinstance(value, str) else "")
+            if not text or now - x["t"] >= EDIT_SECS + 3600 or x.get("kind") != "text":
+                return False
+            x["text"], x["edited"] = seal(text, cid, mid), True
+            return True
+        if kind == "back" and now - x["t"] < BACK_SECS + 3600:
+            for k in ("text", "reply", "edited", "via", "media", "box", "blob"):
+                x.pop(k, None)
+            x["gone"], x["react"] = True, {}
+            return True
+        return False
+    try:
+        if _mutate(cid, f, now):
+            _tell([uid], {"type": "chat", "id": cid})
+    except LookupError:
+        pass
 
 
 def joined_by_invite(uid, inviter, now=None):
@@ -764,7 +965,9 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     if not usable(uid):
         raise PermissionError("Chats sind für dich ausgeschaltet.")
     others = [u for u in c["members"] if u != uid]
-    if c.get("kind") == "one":
+    if c.get("kind") in ("one", "far"):
+        if c.get("kind") == "far" and media:
+            raise ValueError("Fotos, Dateien und Sprache gehen noch nicht an andere Sparks, Text schon.")
         if not others or not takes(others[0], uid):
             raise PermissionError(why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr.")
     elif c.get("fixed"):
@@ -842,9 +1045,18 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     if box is not None:
         _today()["private"] = _today().get("private", 0) + 1
     _tell(meta["members"], {"type": "chat", "id": cid})
+    if meta.get("kind") == "far":      # to the other Spark (verbund.py): the queue sends it, the second tick comes from there
+        try:
+            import verbund
+            verbund.out_event(uid, others[0], "msg", cid, mid, id=mid, text=text, reply=item.get("reply", ""))
+        except Exception as e:
+            far_seen(cid, mid, "fail")
+            _log("far failed", error=type(e).__name__)
     _log("sent", kind=meta.get("kind", "one"), chars=len(text), **({"media": media["kind"], "kb": size // 1024} if media else
                                                                    {"kb": size // 1024} if blob is not None else {}))
     for u in others:
+        if RID.fullmatch(u):
+            continue
         try:
             await _notify(u, cid, meta, uid, "🔒 Neue Nachricht" if box is not None else
                           text or MEDIA_WORD.get(media["kind"] if media else "", ""), now)
@@ -853,13 +1065,13 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
         try:   # the own speaker reads it (msg_speaker) when no page of u is open; a private chat only who wrote
             if not listening(u) and not _muted_until(meta, u, now):
                 import messages
-                if await messages.speak_now(u, name_of(uid), "" if meta.get("kind") in ("one", "priv") else
+                if await messages.speak_now(u, name_of(uid), "" if meta.get("kind") in TWO else
                                             _title(cid, meta, u, {}), "" if box is not None else
                                             " ".join(p for p in (MEDIA_WORD.get(media["kind"], "") if media else "", text) if p), now):
                     _today()["spoken"] = _today().get("spoken", 0) + 1
         except Exception as e:
             _log("speaker failed", error=type(e).__name__)
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     d = _chat(cid, meta, now)
     return _public(next(x for x in d["items"] if x["id"] == mid), cid, meta, d, uid, names)
 
@@ -877,7 +1089,7 @@ async def _notify(u, cid, meta, sender, text, now):
     if not push.reachable(u, private=True):
         return 0
     who = name_of(sender) or "Jemand"
-    title = "💬 " + (who if meta.get("kind") in ("one", "priv") else _title(cid, meta, u, {}) + " · " + who)
+    title = "💬 " + (who if meta.get("kind") in TWO else _title(cid, meta, u, {}) + " · " + who)
     body = ("🔒 Neue Nachricht" if meta.get("kind") == "priv" else
             text[:200] if profiles.settings(u).get("chat_push_text") is True else "Neue Nachricht")
     n = await push.send(u, title, body, tag="chat-" + cid, private=True, why="Chat", to="every")
@@ -902,6 +1114,19 @@ def read(uid, cid, now=None):
     others = _mutate(cid, f, now, items=False)
     if profiles.settings(uid).get("chat_receipts", True) is not False:
         _tell(others, {"type": "chat", "id": cid, "read": True})
+        if others and RID.fullmatch(others[0]):
+            _far_read(uid, cid, others[0], now)
+
+
+def _far_read(uid, cid, rid, now):
+    """"Gelesen" to the other Spark: the newest message of the other one that uid has seen, once."""
+    c = _index().get(cid) or {}
+    newest = next((x for x in reversed(_chat(cid, c, now)["items"]) if x["from"] == rid and x.get("kind") == "text"), None)
+    if not newest or (c.get("rsent") or {}).get(uid) == newest["id"]:
+        return
+    import verbund
+    if verbund.out_event(uid, rid, "read", id=newest["id"]):
+        _mutate(cid, lambda m, d, ch: _map(m, "rsent").__setitem__(uid, newest["id"]), now, items=False)
 
 
 def _own(d, uid, mid):
@@ -916,7 +1141,7 @@ def edit(uid, cid, mid, text, now=None):
     text = clean(text)
     if not text:
         raise ValueError("Die Nachricht ist leer.")
-    _member(uid, cid)
+    c = _member(uid, cid)
 
     def f(meta, d, chats):
         x = _own(d, uid, mid)
@@ -925,13 +1150,14 @@ def edit(uid, cid, mid, text, now=None):
         x["text"], x["edited"] = seal(text, cid, mid), True
         return meta["members"]
     _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
+    _far_out(uid, c, "edit", id=mid, text=text)
     _log("edited")
 
 
 def take_back(uid, cid, mid, now=None):
     """The own message gone for everybody (only its place stays: "Nachricht zurückgezogen")."""
     now = time.time() if now is None else now
-    _member(uid, cid)
+    c = _member(uid, cid)
 
     def f(meta, d, chats):
         x = _own(d, uid, mid)
@@ -942,13 +1168,14 @@ def take_back(uid, cid, mid, now=None):
         x["gone"], x["react"] = True, {}
         return meta["members"]
     _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
+    _far_out(uid, c, "back", id=mid)
     _log("taken back")
 
 
 def react(uid, cid, mid, emoji, now=None):
     if emoji and emoji not in REACTIONS:
         raise ValueError("unknown reaction")
-    _member(uid, cid)
+    c = _member(uid, cid)
 
     def f(meta, d, chats):
         x = next((x for x in d["items"] if x["id"] == mid and x.get("kind") != "sys" and not x.get("gone")), None)
@@ -959,8 +1186,20 @@ def react(uid, cid, mid, emoji, now=None):
             r[uid] = emoji
         else:
             r.pop(uid, None)
-        return meta["members"]
-    _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
+        return meta["members"], r.get(uid, "")
+    members, mine_now = _mutate(cid, f, now)
+    _tell(members, {"type": "chat", "id": cid})
+    _far_out(uid, c, "react", id=mid, emoji=mine_now)
+
+
+def _far_out(uid, c, kind, **fields):
+    """A change in a chat with someone on another Spark goes there too (verbund.py queue)."""
+    if c.get("kind") != "far":
+        return
+    rid = next((u for u in c["members"] if u != uid), "")
+    if RID.fullmatch(rid):
+        import verbund
+        verbund.out_event(uid, rid, kind, **fields)
 
 
 def typing(uid, cid):
@@ -978,7 +1217,7 @@ def options(uid, cid, body, now=None):
     """Stumm (each for itself), selbst löschen (in a group only its admins) and the group's name (its admins)."""
     now = time.time() if now is None else now
     c = _member(uid, cid)
-    admin = c.get("kind") in ("one", "priv") or uid in (c.get("admins") or [])
+    admin = c.get("kind") in TWO or uid in (c.get("admins") or [])
 
     def f(meta, d, chats):
         if "mute" in body:
@@ -1102,6 +1341,7 @@ def clear(uid, cid, now=None):
         _map(meta, "unread")[uid] = 0
     _mutate(cid, f, now, items=False)
     _send_event(uid, {"type": "gone", "id": cid})
+    _log("cleared for one member")
 
 
 def _drop(cid):
@@ -1135,7 +1375,7 @@ def forget(uid):
                 c["admins"] = [c["members"][0]]
             for k in ("unread", "mute", "cleared", "read", "got", "bytes"):
                 (c.get(k) or {}).pop(uid, None)
-            if not c["members"]:
+            if not [u for u in c["members"] if not RID.fullmatch(u)]:   # nobody of this Spark left in it
                 chats.pop(cid)
                 _drop(cid)
                 continue
@@ -1149,7 +1389,7 @@ def find(uid, q, now=None):
     q = clean(q, 80).lower()
     if len(q) < 2:
         return []
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     hits = []
     for cid, c in mine(uid).items():
         d = _chat(cid, c, now)
@@ -1180,9 +1420,19 @@ def for_live(now=None):
             "pushed": c["pushed"], "push_failed": c["push_failed"], "streams": streams(), "media_on": media_on(),
             "private": sum(1 for x in chats.values() if x.get("kind") == "priv"), "private_sent": c.get("private", 0),
             "all": len((chats.get(ALL_ID) or {}).get("members") or []), "spoken": c.get("spoken", 0),
-            **_private_live(),
+            **_private_live(), **_far_live(),
             "media": c.get("media", 0), "media_mb": round(sum(sum(int(v or 0) for v in (x.get("bytes") or {}).values())
                                                                for x in chats.values()) / 1024**2)}
+
+
+def _far_live():
+    try:
+        import verbund
+        v = verbund.for_live()
+    except Exception:
+        v = {}
+    return {"far_on": bool(v.get("on")), "far_sparks": int(v.get("sparks") or 0), "far_contacts": int(v.get("contacts") or 0),
+            "far_in": int(v.get("in") or 0), "far_out": int(v.get("out") or 0), "far_waiting": int(v.get("waiting") or 0)}
 
 
 def _private_live():
@@ -1405,11 +1655,13 @@ def for_model(uid, now=None, most=10, old=False):
     now = time.time() if now is None else now
     if not usable(uid):
         return []
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     lines, seen = [], []
     for cid, c in mine(uid).items():
+        if c.get("kind") == "far":   # from another Spark: never to the language model (plan spark-verbund.md)
+            continue
         d = None
-        where = "" if c.get("kind") in ("one", "priv") else f" in der Gruppe {_title(cid, c, uid, names)}"
+        where = "" if c.get("kind") in TWO else f" in der Gruppe {_title(cid, c, uid, names)}"
         cleared = float(_map(c, "cleared").get(uid) or 0)
         if int((c.get("unread") or {}).get(uid) or 0):
             d = _chat(cid, c, now)
@@ -1436,13 +1688,13 @@ def waiting(uid, since, now=None):
     now = time.time() if now is None else now
     if not usable(uid):
         return []
-    names = {x["id"]: x["name"] for x in profiles.names()}
+    names = _names()
     out = []
     for cid, c in mine(uid).items():
         if not int((c.get("unread") or {}).get(uid) or 0) or _muted_until(c, uid, now):
             continue
         after = max(since, float(_map(c, "read").get(uid) or 0), float(_map(c, "cleared").get(uid) or 0))
-        where = "" if c.get("kind") in ("one", "priv") else _title(cid, c, uid, names)
+        where = "" if c.get("kind") in TWO else _title(cid, c, uid, names)
         for x in _chat(cid, c, now)["items"]:
             if x["t"] <= after or x["from"] == uid or x.get("gone") or x.get("kind") not in ("text", "box") + MEDIA:
                 continue
@@ -1514,14 +1766,12 @@ def _mid(v):
 
 
 def _err(e):
-    """A refusal as a sentence the page shows (fixed sentences from above, never an exception text from outside)."""
-    if isinstance(e, LookupError):
-        return HTTPException(404, "Diesen Chat oder diese Nachricht gibt es nicht.")
-    if isinstance(e, OverflowError):
-        return HTTPException(429, str(e))
-    if isinstance(e, PermissionError):
-        return HTTPException(403, str(e))
-    return HTTPException(400, str(e))
+    """A refusal as a sentence the page shows (fixed sentences from above, never an exception text from outside),
+    with its journal line: the kind of refusal only, never the sentence (it can name people)."""
+    kind = {LookupError: ("not found", 404), OverflowError: ("limit", 429), PermissionError: ("not allowed", 403)}
+    word, code = next((v for k, v in kind.items() if isinstance(e, k)), ("invalid", 400))
+    _log("refused", why=word, http=code)
+    return HTTPException(code, "Diesen Chat oder diese Nachricht gibt es nicht." if code == 404 else str(e))
 
 
 def _state(uid):
@@ -1533,8 +1783,16 @@ def _state(uid):
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
             "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),
             "invite_switch": features._switch(features.chat_cfg(), "chats_invite"),
+            **_far_state(uid),
             "limits": {"photo_mb": MAX_PHOTO_IN // 1024**2, "file_mb": MAX_FILE // 1024**2, "voice_secs": MAX_VOICE_SECS,
                        "used_mb": round(used(uid) / 1024**2), "quota_mb": QUOTA // 1024**2}}
+
+
+def _far_state(uid):
+    """Chats mit anderen Sparks (verbund.py): whether the page offers it, and how many requests wait."""
+    import verbund
+    on = verbund.admin_on() and verbund.usable(uid)
+    return {"verbund": on, "far_asks": sum(1 for c in verbund.contacts_of(uid).values() if c.get("state") == "in") if on else 0}
 
 
 def _private_ok(uid):

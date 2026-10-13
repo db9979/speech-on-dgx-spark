@@ -195,6 +195,9 @@ FEATURES = (
       guide="chatinvite"),
     F("chatprivate", "Private Chats (Ende-zu-Ende)", "Private chats (end-to-end)", "day", ("chats_private",), parent="chats",
       me="setbox", guide="chatprivate"),
+    # verbund.py (plan plaene/spark-verbund.md): chats with people on other Sparks; needs the own address from outside
+    F("verbund", "Chats mit anderen Sparks", "Chats with other Sparks", "day", ("chats_verbund",), parent="chats",
+      guide="verbund"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), "wx_on", me="wxbox", guide="weather"),
     # mail and contacts
@@ -305,6 +308,12 @@ FEATURES = (
     F("beraterwarum", "„Warum?“ für alle Profile", "\"Why?\" for every profile", "talk", ("berater_why",), "why_on",
       me="setbox", guide="beraterwarum", parent="berater"),
     F("tagebuch", "Spark-Tagebuch", "Spark diary", "talk", ("tagebuch",), "tagebuch_on", me="setbox", guide="tagebuch"),
+    # Zustand per Sprache (zustand_wz.py, plan werkzeug-abdeckung Paket 4): „Läuft alles?“, „Wann wurde gesichert?“
+    F("sparkzustand", "Zustand per Sprache", "Status by voice", "talk", ("status_voice",),
+      guide="sparkzustand"),
+    # Ändern per Sprache (aendern.py, plan werkzeug-abdeckung Paket 6): „Mach das rückgängig“ nach dem Ja
+    F("rueckgaengig", "Rückgängig per Sprache", "Undo by voice", "talk", ("undo_voice",),
+      guide="rueckgaengig"),
     F("bewertenzurueck", "Rückmeldung, wenn es behoben ist", "Feedback when it is fixed", "talk", ("bewerten_back",),
       "rate_back", parent="bewerten", me="setbox", guide="bewertenzurueck"),
 )
