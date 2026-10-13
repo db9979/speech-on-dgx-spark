@@ -33,7 +33,8 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.498** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
+- **V01.0.499** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
+- **V01.0.498** Selbsttests: Ports der Test-Server bleiben reserviert, kein 45-Minuten-Hänger mehr bei belegtem Port
 - **V01.0.497** Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben
 - **V01.0.496** Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
 - **V01.0.495** Werkzeuge für alle Dienste: Zustand per Sprache, Termine, Pläne und Regeln ändern, wiederholte Erinnerungen, Rückgängig, alles nach Ja
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.492** Admin-Schalter speichern klappt wieder, auch mit entfernten Funktionen in „Für neue Profile“
 - **V01.0.491** reMarkable: Blätter auf Wunsch per Sprache, Aufgabenblatt zum Ankreuzen, das der Spark abarbeitet
 - **V01.0.490** Live-Bild: „Von selbst“ über einen internen Bus im Spark; Eingang-Text passt; Werkzeuge mit verständlichem Namen
-- **V01.0.489** Fenster am Kopf lässt sich mit × oder Escape einklappen und deckt auf kleinen Bildschirmen höchstens die halbe Höhe ab
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -55,5 +55,41 @@ class OnePanelAtATime(unittest.TestCase):
         self.assertEqual(helpers.panels_running(), before)
 
 
+class PortsStayReserved(unittest.TestCase):
+    """helpers._port() keeps its port until the server for it starts; a busy port fails at once (run of V01.0.489:
+    a fake server's port was taken on the runner and every test waited 60 s for it until the 45 min cut-off)."""
+
+    def test_a_reserved_port_cannot_be_taken_and_refuses_until_served(self):
+        port = helpers._port()
+        other = socket.socket()
+        try:
+            with self.assertRaises(OSError):
+                other.bind(("127.0.0.1", port))
+        finally:
+            other.close()
+        self.assertFalse(reachable(port))            # like a dead port until a server uses it
+        from fastapi import FastAPI
+        stop = helpers._serve(FastAPI(), port)
+        try:
+            self.assertTrue(reachable(port))
+        finally:
+            stop()
+
+    def test_a_busy_port_fails_at_once(self):
+        import time
+        busy = socket.socket()
+        busy.bind(("127.0.0.1", 0))
+        busy.listen(1)
+        try:
+            from fastapi import FastAPI
+            t = time.monotonic()
+            with self.assertRaises(RuntimeError) as e:
+                helpers._serve(FastAPI(), busy.getsockname()[1])
+            self.assertLess(time.monotonic() - t, 10)
+            self.assertIn("busy", str(e.exception))
+        finally:
+            busy.close()
+
+
 if __name__ == "__main__":
     unittest.main()
