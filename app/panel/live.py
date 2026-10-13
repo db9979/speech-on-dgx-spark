@@ -114,7 +114,9 @@ TARGETS = {
     "desk": ("Spark-Begleiter", "wartet, bis PC oder Mac abholt", "spark", False),
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
     "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
-    "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
+    # NAS-Verbindungen (nas.py): shown while they are on, the line with connections and failed checks in numbers;
+    # the backup to the NAS (offsite.py) goes here too
+    "nas": ("NAS", "Verbindungen und Sicherung · Heimnetz", "lan", False),
     # Eigener Speicher (speicher.py): copies of profiles' data on their NAS, WebDAV service or a folder; counts only
     "speicher": ("Eigener Speicher", "NAS, WebDAV oder Ordner · verschlüsselt", "lan", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
@@ -1085,6 +1087,13 @@ def snapshot(view="admin", now=None):
         dlg = {"on": False}
     if dlg.get("on"):
         used.add("docling")
+    try:
+        import nas
+        nasl = nas.for_live()
+    except Exception:
+        nasl = {"on": False}
+    if nasl.get("on"):
+        used.add("nas")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1097,6 +1106,10 @@ def snapshot(view="admin", now=None):
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
                for k, v in TARGETS.items() if (v[3] and k not in off) or k in used]
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
+        if x["id"] == "nas" and nasl.get("on"):   # NAS: connections and how many failed their last check (no address)
+            x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
+                        + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")
+                        + (" · Sicherung" if nasl.get("backup") else ""))
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
                         + ("" if meld.get("token") else " · kein Token"))

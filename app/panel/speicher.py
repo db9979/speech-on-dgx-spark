@@ -72,9 +72,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import features
 import guard
+import nas
 import netguard
 import profiles
 import vault
+import zertpin
 from common import load_config
 from core import auth, browser_profile, secret_profile, spawn
 
@@ -128,7 +130,7 @@ LOCAL = {
     "settings.json": "Einstellungen", "setup.json": "Einstellungen", "speicher.json": "Einstellungen",
     "speicher-stand.json": "Zustand", "transit.json": "Einstellungen", "weather.json": "Einstellungen",
     "proactive.json": "Einstellungen", "proactive-rules.json": "Einstellungen", "hintergrund.json": "Einstellungen",
-    "mail.json": "Login", "mail-tidy.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
+    "mail.json": "Login", "nas.json": "Login", "speicher.vor-nas.json": "Login", "mail-tidy.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
     "telegram.json": "Login", "push.json": "Gerät", "remarkable.json": "Login", "remarkable-lib.json": "Zustand",
     "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
     "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "chatkeys.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
@@ -145,6 +147,7 @@ WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abg
        "full": ("voll", "full"), "blocked": ("vom Wächter nicht erlaubt", "not allowed by the Wächter"),
        "key": ("Schlüssel fehlt (nach einem Umzug ohne Umzugs-Sicherung)", "key missing (after a move without a move backup)"),
        "notaus": ("Notaus", "kill switch"), "hostkey": ("Schlüssel des Servers hat sich geändert", "the server's key changed"),
+       "cert": ("Zertifikat passt nicht", "certificate does not fit"),
        "other": ("Fehler beim Ablegen", "error while storing")}
 _lock = threading.RLock()
 _running = {}                  # (uid, tid) -> "copy" / "restore"
@@ -227,6 +230,10 @@ def _clean(t):
         return None
     out = {"id": t["id"], "name": t["name"], "kind": t["kind"], "added": int(t.get("added") or 0), "offload": t.get("offload") is True,
            "areas": [a for a in t.get("areas") or [] if a in AREAS] if isinstance(t.get("areas"), list) else []}
+    if t["kind"] in LOGIN_KINDS and nas.ID.fullmatch(str(t.get("nas") or "")):
+        out["nas"] = t["nas"]
+    if t["kind"] == "webdav":
+        out["cert"] = zertpin.clean(t.get("cert"))
     if t["kind"] in LOGIN_KINDS:
         try:
             out["url"] = check_url(str(t.get("url") or ""), t["kind"])
@@ -244,14 +251,32 @@ def _clean(t):
 
 
 def load(uid):
+    """The profile's targets; one on a NAS connection (nas.py, S1) comes with its full address and login."""
     d = _json(_file(uid))
+    raw = d.get("targets") if isinstance(d.get("targets"), list) else []
     return {"key": str(d.get("key") or ""),
-            "targets": [x for x in map(_clean, d.get("targets") or [] if isinstance(d.get("targets"), list) else []) if x][:MAX_TARGETS]}
+            "targets": [x for x in (_clean(nas.expand(uid, t)) for t in raw) if x][:MAX_TARGETS]}
 
 
 def save(uid, d):
+    """Address and login of a NAS target go into its NAS connection (nas.py); the target keeps {"nas", "path"}."""
     with _lock:
-        profiles._write(_file(uid), {"key": d["key"], "targets": d["targets"][:MAX_TARGETS]})
+        out = [nas.collapse(uid, t, t["kind"]) if t["kind"] in LOGIN_KINDS else t for t in d["targets"][:MAX_TARGETS]]
+        profiles._write(_file(uid), {"key": d["key"], "targets": out})
+
+
+def _nas_uses(owner):
+    """For nas.py: how many targets of this profile use each of its connections."""
+    if owner is nas.ADMIN:
+        return {}
+    out = {}
+    for t in targets(owner):
+        if t.get("nas"):
+            out[t["nas"]] = out.get(t["nas"], 0) + 1
+    return out
+
+
+nas.USES["speicher"] = _nas_uses
 
 
 def targets(uid):
@@ -535,9 +560,11 @@ class WebDav:
         self.root = t["url"]
         self.auth = (t["user"], vault.open_(t["password"]) or "") if t.get("user") else None
         self.level = netguard.HOME if lan_ok() else netguard.USER
+        self.cert = t.get("cert") or ""     # the certificate accepted for its NAS connection (zertpin.py), else the normal check
 
     def _client(self, timeout, most=1024 * 1024):
-        return netguard.client(self.level, origin=self.root, max_bytes=most, timeout=httpx.Timeout(timeout, connect=15))
+        return netguard.client(self.level, origin=self.root, max_bytes=most, timeout=httpx.Timeout(timeout, connect=15),
+                               verify=zertpin.verify(self.cert))
 
     @staticmethod
     def _raise(code):
@@ -557,9 +584,9 @@ class WebDav:
         except netguard.Blocked as e:
             raise StoreError("notaus" if "Notaus" in str(e) else "blocked", str(e)[:200])
         except (httpx.ConnectError, httpx.TimeoutException, OSError, ssl.SSLError) as e:
-            raise StoreError("offline", type(e).__name__)
+            raise StoreError("cert" if zertpin.problem(e) else "offline", type(e).__name__)
         except (httpx.HTTPError, netguard.TooLarge, ValueError) as e:
-            raise StoreError("other", type(e).__name__)
+            raise StoreError("cert" if zertpin.problem(e) else "other", type(e).__name__)
 
     async def prepare(self):
         for url in (self.base, self.base + "o/"):
@@ -595,9 +622,9 @@ class WebDav:
         except netguard.Blocked as e:
             raise StoreError("blocked", str(e)[:200])
         except (httpx.ConnectError, httpx.TimeoutException, OSError, ssl.SSLError) as e:
-            raise StoreError("offline", type(e).__name__)
+            raise StoreError("cert" if zertpin.problem(e) else "offline", type(e).__name__)
         except (httpx.HTTPError, netguard.TooLarge, ValueError) as e:
-            raise StoreError("other", type(e).__name__)
+            raise StoreError("cert" if zertpin.problem(e) else "other", type(e).__name__)
 
     async def delete(self, name):
         r = await self._call("DELETE", self.base + quote(name))
@@ -620,7 +647,7 @@ class WebDav:
 
     def probe(self):
         """For the Dienst-Wächter: the address it looks at (no login)."""
-        return {"url": self.root, "level": self.level, "verify": True}
+        return {"url": self.root, "level": self.level, "verify": True, "pin": self.cert}
 
     async def close(self):
         pass
@@ -1647,7 +1674,7 @@ def probes():
                 k = hashlib.sha256(f"{u.scheme}://{u.netloc}".encode()).hexdigest()[:8]
                 level = netguard.HOME if lan_ok() else netguard.USER
                 if t["kind"] == "webdav":
-                    p = {"url": f"{u.scheme}://{u.netloc}/", "level": level, "verify": True}
+                    p = {"url": f"{u.scheme}://{u.netloc}/", "level": level, "verify": True, "pin": t.get("cert") or ""}
                 else:   # SFTP: the server greets with "SSH-"; SMB: the port answers (no login, no command)
                     p = {"tcp": True, "host": (u.hostname or "").lower(), "port": u.port or (22 if t["kind"] == "sftp" else 445),
                          "level": level, "ssh": t["kind"] == "sftp"}
@@ -1678,7 +1705,7 @@ def public(uid, t, st=None):
            "away": sum(1 for x in st["files"].values() if x.get("off")),
            "hist": [{k: x.get(k) for k in ("t", "ok", "kind", "n", "bytes", "what")} for x in st["hist"][-50:]]}
     if t["kind"] in LOGIN_KINDS:
-        out.update(url=t["url"], user=t["user"], has_password=bool(t["password"]))
+        out.update(url=t["url"], user=t["user"], has_password=bool(t["password"]), nas=t.get("nas", ""))
         if t["kind"] == "sftp":
             out["hostkey"] = t.get("hostkey", "")
     else:
@@ -1781,6 +1808,36 @@ def _target_from(body, old=None):
     return t
 
 
+def _nas_body(uid, body):
+    """{"nas": id, "path": "/folder"}: a target on one of the profile's NAS connections (nas.py) takes its address
+    and user from there."""
+    if not body.get("nas"):
+        return body
+    c = nas.find(uid, str(body["nas"]))
+    if not c:
+        raise HTTPException(404, "no such NAS connection")
+    path = str(body.get("path") or "").strip().strip("/")
+    return dict(body, kind=c["kind"], url=c["url"] + ("/" + path if path else "") + ("/" if c["kind"] == "webdav" else ""),
+                user=c["user"])
+
+
+def _from_nas(uid, t, body):
+    """A target on a NAS connection the profile already has takes its accepted certificate, its server key and,
+    when none is typed, its password: a certificate or key is never learned anew by adding a target."""
+    if t["kind"] not in LOGIN_KINDS:
+        return t
+    m = nas.match(uid, t["kind"], t["url"], t["user"])
+    if not m:
+        return t
+    if t["kind"] == "webdav":
+        t["cert"] = m.get("cert", "")
+    if t["kind"] == "sftp" and not t.get("hostkey") and body.get("accept_key") is not True:
+        t["hostkey"] = m.get("hostkey", "")
+    if not body.get("password") and not t.get("password"):
+        t["password"] = m["password"]
+    return t
+
+
 def _one_offload(uid, t):
     if t["offload"] and any(x["offload"] for x in targets(uid) if x["id"] != t["id"]):
         raise HTTPException(400, "Auslagern geht nur auf einen Speicher.")
@@ -1798,6 +1855,8 @@ def _say(e):
             "auth": "Der Speicher lehnt die Anmeldung oder das Schreiben ab (Benutzer, Passwort, Rechte).",
             "full": "Der Speicher ist voll.", "blocked": "Der Wächter erlaubt diese Adresse nicht.",
             "notaus": "Notaus ist an: keine Verbindung nach außen.", "key": "Der Schlüssel fehlt.",
+            "cert": "Das Zertifikat der NAS passt nicht zur Adresse oder ist selbst ausgestellt. Unter Ich → Speicher → "
+                    "Meine NAS den Fingerabdruck vergleichen und annehmen.",
             "hostkey": "Der Schlüssel des Servers ist ein anderer als beim Einbinden. Nur wenn du weißt, warum "
                        "(Server neu eingerichtet), unter „Adresse oder Passwort ändern“ den neuen Schlüssel annehmen.",
             "other": "Der Speicher antwortet nicht wie erwartet (Ordner, Freigabe oder Rechte prüfen)."}.get(e.kind, "Fehler")
@@ -1815,8 +1874,8 @@ async def add(request: Request, prof=Depends(_on)):
     guard.limit(request, "storage", prof["id"])
     _may(prof)
     uid = prof["id"]
-    body = await _body(request)
-    t = _target_from(body)
+    body = _nas_body(uid, await _body(request))
+    t = _from_nas(uid, _target_from(body), body)
     _one_offload(uid, t)
     pw = body.get("password")
     if t["kind"] in LOGIN_KINDS and isinstance(pw, str) and pw:
@@ -1858,7 +1917,7 @@ async def change(tid: str, request: Request, prof=Depends(_on)):
     if not old:
         raise HTTPException(404, "no such target")
     body = await _body(request)
-    t = _target_from(body, old)
+    t = _from_nas(uid, _target_from(body, old), body)
     _one_offload(uid, t)
     login = old["kind"] in LOGIN_KINDS and (t["url"] != old["url"] or t["user"] != old["user"] or bool(body.get("password"))
                                             or t.get("hostkey") != old.get("hostkey"))

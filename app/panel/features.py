@@ -272,6 +272,8 @@ FEATURES = (
       me="storebox", guide="speicherordner"),
     F("speicherauslagern", "Originale auslagern", "Move originals out", "data", ("storage_offload",), parent="speicher",
       me="storebox", guide="speicherauslagern"),
+    # nas.py (plan plaene/synology-bauplan.md, S1): one connection to the own NAS for everything that uses it
+    F("nas", "NAS verbinden", "Connect a NAS", "data", ("nas_on",), me="storebox", guide="nas"),
     F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",),
       "svc_hint", parent="dienstwacht", me="setbox", guide="dienstnutzer"),
     # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile

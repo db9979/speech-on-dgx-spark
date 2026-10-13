@@ -24,7 +24,7 @@ router = APIRouter()
 AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "), ("chat", r"^(chat|vorab):"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
          ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
          ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal|docling):"), ("anfrage", r"^anfrage:"),
-         ("speicher", r"^speicher:"), ("gedaechtnis", r"^gedaechtnis:"), ("nachrichten", r"^(chats|messages|verbund):"),
+         ("speicher", r"^speicher:"), ("nas", r"^nas:"), ("gedaechtnis", r"^gedaechtnis:"), ("nachrichten", r"^(chats|messages|verbund):"),
          ("seite", r"^seite:"), ("klaeren", r"^klaeren:"), ("listen", r"^(tasks|reminders|calendar):"),
          ("mitteilung", r"^(push|apns):"), ("pc", r"^(begleiter|meinmcp|docmake):"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]

@@ -19,7 +19,8 @@ function spState(x){if(x.running)return ['warn',x.running==='restore'?t('holt zu
   if(x.last&&x.last.ok)return ['ok',t('abgeglichen','in sync')];return ['',t('noch nicht abgeglichen','not copied yet')]}
 function spFree(f){if(!f||f.avail==null&&f.used==null)return '';
   return f.avail!=null?t(`${spSize(f.avail)} frei`,`${spSize(f.avail)} free`):t(`${spSize(f.used)} belegt`,`${spSize(f.used)} used`)}
-async function showStore(){const box=$('storebox');if(!box)return;if(!PROFILE||!STORE_ON){box.innerHTML='';return}
+async function showStore(){if(typeof showNas==='function')await showNas();   // Meine NAS (nas.js) above
+  const box=$('spbox');if(!box)return;if(!PROFILE||!STORE_ON){box.innerHTML='';return}
   let d;try{d=await (await api('/api/profile/speicher')).json()}catch{box.innerHTML='';return}
   const area=(id,on,pre)=>`<label class="chk"><input type="checkbox" data-sparea="${esc(pre)}" value="${esc(id)}"${on?' checked':''}> ${esc(t(...d.areas.find(a=>a.id===id).name))}</label>`;
   const areas=(sel,pre)=>d.areas.map(a=>area(a.id,sel.includes(a.id),pre)).join('');
@@ -47,7 +48,8 @@ async function showStore(){const box=$('storebox');if(!box)return;if(!PROFILE||!
         <div class="row"><button class="b" type="button" data-spnew="${esc(x.id)}">${esc(t('Übernehmen','Apply'))}</button></div></details>`:''}
       <details><summary>${esc(t('Letzte 7 Tage','Last 7 days'))}</summary>${hist(x)}</details></span>
       <button class="b" type="button" data-spdel="${esc(x.id)}" data-spname="${esc(x.name)}">${esc(t('Trennen','Disconnect'))}</button></li>`};
-  const kinds=[['webdav',t('NAS oder WebDAV-Dienst','NAS or WebDAV service')],['sftp',t('SFTP (SSH)','SFTP (SSH)')]].concat(d.lan?[['smb',t('SMB-Freigabe im Heimnetz','SMB share at home')]]:[]).concat(d.folder?[['folder',t('Ordner auf dem Spark','Folder on the Spark')]]:[]);
+  const nasK=(typeof NAS_LIST!=='undefined'?NAS_LIST:[]).filter(c=>c.kind!=='smb'||d.lan).map(c=>['nas:'+c.id,t('Auf meiner NAS: ','On my NAS: ')+c.name]);
+  const kinds=nasK.concat([['webdav',t('NAS oder WebDAV-Dienst','NAS or WebDAV service')],['sftp',t('SFTP (SSH)','SFTP (SSH)')]].concat(d.lan?[['smb',t('SMB-Freigabe im Heimnetz','SMB share at home')]]:[]).concat(d.folder?[['folder',t('Ordner auf dem Spark','Folder on the Spark')]]:[]));
   box.innerHTML=`<div class="intro">${esc(t('Eine Kopie deiner Daten auf deinem eigenen Speicher: NAS im Heimnetz (Synology, QNAP, Fritzbox), Nextcloud, ownCloud, HiDrive, MagentaCLOUD, ein anderer WebDAV-Dienst, ein SFTP-Server oder eine SMB-Freigabe. Alles geht verschlüsselt dorthin; der Speicher sieht nur Rauschen. Der Spark arbeitet immer lokal weiter, auch wenn der Speicher mal weg ist.','A copy of your data on your own storage: a NAS at home (Synology, QNAP, Fritzbox), Nextcloud, ownCloud, HiDrive, MagentaCLOUD, another WebDAV service, an SFTP server or an SMB share. Everything goes there encrypted; the storage only sees noise. The Spark always keeps working locally, even when the storage is gone.'))}</div>
     ${xsw('storage_on',t('Eigener Speicher für mich','Own storage for me'),t('Aus: Es geht nichts mehr zu deinen Speichern; was dort liegt, bleibt.','Off: nothing goes to your storage any more; what is there stays.'))}
     ${d.on?`<div class="fh">${esc(t('Bleibt immer auf dem Spark: Schlüssel und Anmeldung, zweiter Anmeldeschritt, Passwörter deiner Dienste, Einstellungen und Stimmabdruck.','Always stays on the Spark: keys and sign-in, second sign-in step, passwords of your services, settings and voice print.'))}</div>
@@ -59,6 +61,8 @@ async function showStore(){const box=$('storebox');if(!box)return;if(!PROFILE||!
         <label>${esc(t('Benutzer','User'))}</label><input id="spuser" maxlength="128" autocomplete="off">
         <label>${esc(t('Passwort','Password'))}</label><input type="password" id="sppw" maxlength="256" autocomplete="new-password">
         <div class="fh"><span id="sphint">${esc(t(SP_HINT.webdav[1],SP_HINT.webdav[2]))}</span>${d.lan?'':' '+esc(t('Adressen im Heimnetz hat der Admin nicht erlaubt.','The admin has not allowed addresses in the home network.'))}</div></div>
+      <div id="spnas" hidden><label>${esc(t('Ordner auf der NAS','Folder on the NAS'))}</label><input id="sppath" maxlength="200" placeholder="${esc(t('z. B. /home/spark','e.g. /home/spark'))}" autocomplete="off">
+        <div class="fh">${esc(t('Adresse, Benutzer und Passwort kommen von der NAS-Verbindung oben. WebDAV: der Ordner unter der Adresse; SMB: Freigabe und Ordner; SFTP: der Pfad auf dem Server.','Address, user and password come from the NAS connection above. WebDAV: the folder below the address; SMB: share and folder; SFTP: the path on the server.'))}</div></div>
       <div id="spfolder" hidden><label>${esc(t('Unterordner','Subfolder'))}</label><input id="spsub" maxlength="40" placeholder="${esc(t('z. B. anna','e.g. anna'))}" autocomplete="off">
         <div class="fh">${esc(t('Liegt unter ','Lies below '))}${esc(d.root||'')}</div></div>
       <label style="margin-top:8px">${esc(t('Was dorthin geht','What goes there'))}</label>${areas(d.areas.map(a=>a.id),'new')}
@@ -69,12 +73,14 @@ async function showStore(){const box=$('storebox');if(!box)return;if(!PROFILE||!
   const say=(id,x,err)=>{xmsg(id,x,err);const m=$(id);if(m)m.scrollIntoView({block:'nearest'})};
   const codeErr=e=>/code required|Code/i.test(errRaw(e))?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code eingeben.','Not without your code: tap again and enter your code.'):e.message;
   const picked=pre=>[...box.querySelectorAll(`[data-sparea="${pre}"]`)].filter(c=>c.checked).map(c=>c.value);
-  if($('spkind'))$('spkind').onchange=()=>{const k=$('spkind').value,f=k==='folder';$('spwebdav').hidden=f;$('spfolder').hidden=!f;
-    if(!f){$('spurl').placeholder=SP_HINT[k][0];$('sphint').textContent=t(SP_HINT[k][1],SP_HINT[k][2])}};
+  const spKind=()=>{const k=$('spkind').value,f=k==='folder',n=k.startsWith('nas:');$('spwebdav').hidden=f||n;$('spfolder').hidden=!f;$('spnas').hidden=!n;
+    if(!f&&!n){$('spurl').placeholder=SP_HINT[k][0];$('sphint').textContent=t(SP_HINT[k][1],SP_HINT[k][2])}};
+  if($('spkind')){$('spkind').onchange=spKind;spKind()}
   if($('spadd'))$('spadd').onclick=async()=>{const b=$('spadd'),kind=$('spkind').value,name=$('spname').value.trim();
     if(!name){say('spaddmsg',t('Bitte zuerst einen Namen eingeben.','Please enter a name first.'),true);$('spname').focus();return}
     const body={name,kind,areas:picked('new')};
-    if(kind!=='folder'){body.url=$('spurl').value.trim();body.user=$('spuser').value.trim();body.password=$('sppw').value;
+    if(kind.startsWith('nas:')){delete body.kind;body.nas=kind.slice(4);body.path=$('sppath').value.trim()}
+    else if(kind!=='folder'){body.url=$('spurl').value.trim();body.user=$('spuser').value.trim();body.password=$('sppw').value;
       const ok=kind==='webdav'?/^https?:\/\//.test(body.url):body.url.startsWith(SP_START[kind]);
       if(!ok){say('spaddmsg',t(`Bitte die Adresse mit ${SP_START[kind]} eingeben.`,`Please enter the address with ${SP_START[kind]}.`),true);$('spurl').focus();return}}
     else body.folder=$('spsub').value.trim();

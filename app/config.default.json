@@ -217,6 +217,7 @@
     "storage_lan": false,
     "storage_folder": false,
     "storage_offload": false,
+    "nas_on": false,
     "storage_root": "",
     "dev_updates_night": false,
     "dev_updates_night_at": "05:15",

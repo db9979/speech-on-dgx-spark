@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.501** Connect a NAS once (Synology and others): own storage and the backup take address, password and certificate from there
 - **V01.0.500** reMarkable: ticks hit their boxes again, list tidied, cloud errors with their reason in the log
 - **V01.0.499** Docling server in the home network reads documents and scans again with tables (admin, off by default)
 - **V01.0.498** Self-tests: test server ports stay reserved, no more 45 minute hang on a busy port
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.494** Saving admin switches: old presets and settings no longer block it
 - **V01.0.493** Complete logs: every announcement and other action writes a line for every outcome, every tool call too
 - **V01.0.492** Saving admin switches works again, also with removed functions in "for new profiles"
-- **V01.0.491** reMarkable: sheets on request by voice, task sheet to tick that the Spark works through
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

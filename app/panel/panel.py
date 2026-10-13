@@ -92,6 +92,7 @@ import dienstwacht  # noqa: E402
 import faelle  # noqa: E402
 import berater  # noqa: E402
 import speicher  # noqa: E402
+import nas  # noqa: E402
 import meldung  # noqa: E402
 import ghtoken  # noqa: E402
 import docmake  # noqa: E402
@@ -103,7 +104,7 @@ import verbund  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
+for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, nas, verlauf, klaeren):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -375,6 +376,12 @@ async def stability():
     spawn(watchdog())
     spawn(backups())
     spawn(after_update())
+
+
+@app.on_event("startup")
+async def nas_move():
+    """S1 (nas.py): Eigener Speicher and the backup to the NAS keep their login in one NAS connection."""
+    await asyncio.to_thread(nas.migrate_all)
 
 
 @app.on_event("startup")

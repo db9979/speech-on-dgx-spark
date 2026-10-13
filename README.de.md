@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.501** NAS einmal verbinden (Synology und andere): Eigener Speicher und Sicherung nehmen Adresse, Passwort und Zertifikat von dort
 - **V01.0.500** reMarkable: Kreuze treffen wieder, Liste aufgeräumt, Cloud-Fehler mit Grund im Log
 - **V01.0.499** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
 - **V01.0.498** Selbsttests: Ports der Test-Server bleiben reserviert, kein 45-Minuten-Hänger mehr bei belegtem Port
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.494** Admin-Schalter speichern: alte Vorgaben und Einstellungen blockieren nicht mehr
 - **V01.0.493** Logs lückenlos: jede Durchsage und andere Aktion schreibt für jedes Ergebnis eine Zeile, jeder Werkzeugaufruf auch
 - **V01.0.492** Admin-Schalter speichern klappt wieder, auch mit entfernten Funktionen in „Für neue Profile“
-- **V01.0.491** reMarkable: Blätter auf Wunsch per Sprache, Aufgabenblatt zum Ankreuzen, das der Spark abarbeitet
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

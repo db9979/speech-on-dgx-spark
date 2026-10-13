@@ -15,8 +15,14 @@ A NAS whose certificate does not fit its address (self-made, or made for a name 
 never sent to with the check switched off: the admin compares its fingerprint and accepts exactly that certificate
 (zertpin.py, "cert"); a new address forgets it.
 
-    STATE/offsite.json  {"on", "url", "user", "password" (sealed), "key" (sealed), "cert" (PEM, public),
+    STATE/offsite.json  {"on", "nas" (the Spark's NAS connection, nas.py), "path", "key" (sealed),
                          "last": {...}, "sent": [names]}
+                        (before V01.0.4xx "url", "user", "password" (sealed) and "cert" stood here; such a file is
+                        read as before and moved onto a NAS connection the next time it is written)
+
+Address, user, password and the accepted certificate live in the Spark's NAS connection (nas.py, plan
+synology-bauplan.md S1): _read() gives them back in the old shape, _write() puts them there, so everything below
+works as before.
 """
 import asyncio
 import base64
@@ -36,6 +42,7 @@ import guard
 import netguard
 import vault
 import vorrang
+import nas
 import zertpin
 from core import spawn, admin_code, admin_code_fresh, owner_auth
 
@@ -128,7 +135,7 @@ def decrypt(src, dst, password, most=backup.MAX_UPLOAD):
 
 
 # ---------------------------------------------------------------- settings
-def _read():
+def _raw():
     try:
         with open(FILE) as f:
             d = json.load(f)
@@ -137,12 +144,45 @@ def _read():
     return d if isinstance(d, dict) else {}
 
 
+def _read():
+    """The settings with address, user, password and certificate from the Spark's NAS connection."""
+    d = _raw()
+    if "nas" not in d:
+        return d
+    out = {k: v for k, v in d.items() if k not in ("nas", "path")}
+    e = nas.expand(nas.ADMIN, {"nas": d.get("nas"), "path": d.get("path", "")})
+    if e and e.get("url"):
+        out.update(url=e["url"], user=e["user"], password=e["password"], cert=e.get("cert", ""))
+        if not out["cert"]:
+            out.pop("cert")
+    return out
+
+
 def _write(d):
+    """Address and login go into the Spark's NAS connection (nas.py); this file keeps {"nas", "path"}."""
+    d = dict(d)
+    if d.get("url"):
+        t = {"url": d["url"], "user": d.get("user", ""), "password": d.get("password", ""), "cert": d.get("cert") or ""}
+        d = {k: v for k, v in d.items() if k not in ("url", "user", "password", "cert")}
+        d.update({k: v for k, v in nas.collapse(nas.ADMIN, t, "webdav").items() if k in ("nas", "path")})
+    else:
+        d = {k: v for k, v in d.items() if k not in ("nas", "path")}
     os.makedirs(STATE, exist_ok=True)
     tmp = FILE + ".tmp"
     with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
         json.dump(d, f)
     os.replace(tmp, FILE)
+
+
+def _nas_uses(owner):
+    """For nas.py: the backup uses the Spark's connection it names."""
+    if owner is not nas.ADMIN:
+        return {}
+    nid = _raw().get("nas")
+    return {nid: 1} if nid else {}
+
+
+nas.USES["sicherung"] = _nas_uses
 
 
 def _update(**kw):

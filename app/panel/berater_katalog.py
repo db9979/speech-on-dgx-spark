@@ -161,7 +161,7 @@ OHNE = {
         "ha_voice_rules", "history", "history_live", "history_offline", "history_one", "homeassistant", "images", "iphone", "iphone_panel", "iphone_push",
         "iphone_update", "kiwix", "kiwix_books", "kiwix_url", "klaeren", "klaeren_merken", "learn_fixes", "llm_key_from", "llm_model",
         "llm_timeout", "mail", "mail_tidy", "max_tokens", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "mcp_server",
-        "mcp_server_act", "memory", "memory_ask", "memory_check", "memory_stale_months", "memory_topics", "messages_all", "messages_announce", "my_status",
+        "mcp_server_act", "memory", "memory_ask", "memory_check", "memory_stale_months", "memory_topics", "messages_all", "messages_announce", "my_status", "nas_on",
         "new_profile_on", "no_self_echo", "own_style", "parcels", "pebble", "person_priority",
         "person_priority_wait", "prefetch", "presence_penalty", "proactive", "remarkable", "remarkable_fresh",
         "remarkable_paper", "remarkable_plus", "remarkable_tasks", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",

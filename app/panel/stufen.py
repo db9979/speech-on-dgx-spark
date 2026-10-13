@@ -61,6 +61,8 @@ LIST = {
     ("PUT", "/api/profile/tidy"): (CONFIRM, "Konten", "Postfach aufräumen einstellen", "Set up mailbox tidying"),
     ("POST", "/api/profile/mymcp"): (CONFIRM, "Konten", "Eigenen Dienst verbinden", "Connect an own service"),
     ("PUT", "/api/profile/mymcp/{sid}"): (CONFIRM, "Konten", "Adresse oder Schlüssel eines eigenen Dienstes", "Address or key of an own service"),
+    ("POST", "/api/profile/nas"): (CONFIRM, "Konten", "NAS verbinden", "Connect a NAS"),
+    ("PUT", "/api/profile/nas/{nid}"): (CONFIRM, "Konten", "Benutzer, Passwort oder Zertifikat einer NAS", "User, password or certificate of a NAS"),
     ("POST", "/api/profile/speicher"): (CONFIRM, "Konten", "Eigenen Speicher einbinden", "Add own storage"),
     ("PUT", "/api/profile/speicher/{tid}"): (CONFIRM, "Konten", "Adresse, Passwort oder Auslagern eines eigenen Speichers", "Address, password or offloading of own storage"),
     ("POST", "/api/profile/mymcp/{sid}/oauth/start"): (CONFIRM, "Konten", "Eigenen Dienst anmelden", "Sign in an own service"),

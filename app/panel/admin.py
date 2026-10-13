@@ -545,7 +545,7 @@ def validate(new):
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "android_live",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
-              "storage_own", "storage_lan", "storage_folder", "storage_offload"):
+              "storage_own", "storage_lan", "storage_folder", "storage_offload", "nas_on"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24), ("memory_stale_months", 1, 60, 6)):
