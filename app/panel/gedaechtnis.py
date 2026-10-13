@@ -288,22 +288,23 @@ def confirm(uid, fact_id, now=None):
 def for_live(now=None):
     """Live node „Gedächtnis“ while the admin switch is on: counts of all profiles' facts, never a fact.
     Refreshed at most once a minute per profile (cheap: at most 200 short facts each)."""
-    if not features.admin_on("gedpruefen"):
+    c = features.chat_cfg()
+    if not features.admin_on("gedpruefen", c):
         return {"on": False}
     now = time.time() if now is None else now
     if _live[1] is not None and now - _live[0] < LIVE_S:
         return dict(_live[1])
     total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0}
     for uid in profiles.user_ids():
-        if not on(uid):
+        if not on(uid, c):
             continue
         with _lock:
             x = _counts.get(uid)
-        n = x[1] if x and now - x[0] < 60 else count(marks_of(uid, now=now))
+        n = x[1] if x and now - x[0] < 60 else count(marks_of(uid, now=now, c=c))
         for k in n:
             total[k] += n[k]
         total["ask"] += bool(pending(uid))
-        total["untagged"] += len(untagged(uid)) if topics_on(uid) else 0
+        total["untagged"] += len(untagged(uid)) if topics_on(uid, c) else 0
     _live[:] = [now, dict(total, on=True)]
     return dict(_live[1])
 
@@ -527,9 +528,13 @@ async def assign_topics(uid, now=None):
 
 
 async def topics_once():
-    """For the background loop: at most one profile per call whose facts still lack a topic."""
+    """For the background loop: at most one profile per call whose facts still lack a topic. Reads the config once
+    and nothing at all while the admin switch is off (the loop runs often, there can be many profiles)."""
+    c = features.chat_cfg()
+    if not features.admin_on("gedthemen", c):
+        return None
     for uid in profiles.user_ids():
-        if topics_on(uid) and untagged(uid) and time.time() - _topic_tried.get(uid, 0) >= TOPIC_RETRY_S:
+        if topics_on(uid, c) and time.time() - _topic_tried.get(uid, 0) >= TOPIC_RETRY_S and untagged(uid):
             await assign_topics(uid)
             return uid
     return None

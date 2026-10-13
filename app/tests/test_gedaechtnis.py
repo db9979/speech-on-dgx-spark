@@ -177,8 +177,8 @@ class Panel(unittest.TestCase):
         snap = live.snapshot("admin")
         node = next(x for x in snap["targets"] if x["id"] == "ged")
         self.assertIn("Einträge", node["sub"])
-        self.assertNotIn("Golf", str(snap))
-        self.assertNotIn("Tim", str(snap))
+        self.assertNotIn("VW Golf", str(snap))
+        self.assertNotIn("Bruder heißt Tim", str(snap))   # never a fact ("Tim" alone is in "Timer" of the Weiche)
         # the switch off: the old single list for the model, no marks for Ich
         helpers.set_config(memory_check=False)
         d = c.get("/api/profile/memory").json()
