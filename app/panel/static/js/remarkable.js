@@ -1,7 +1,7 @@
 // Ich → reMarkable (remarkable.py): connect the own my.remarkable account with a one-time code, pick
 // notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers (rm_send).
 // Names from the cloud are put in with esc()/textContent only.
-let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
+let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RMPAPER_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
 const rmWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const RMKIND={folder:['Ordner','folder'],notebook:['Notizbuch','notebook'],pdf:['PDF','PDF'],epub:['E-Book','e-book']};
 async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer);if(!PROFILE||!RM_ON){box.innerHTML='';return}
@@ -49,6 +49,7 @@ function rmDraw(box,d){const E=icEl,lib=d.library||[];
   const tabs=[{k:'read',label:t('Lesen','Read'),n:RMALL?'':RMPICK.size,body:()=>rmRead(d,lib,byPath,state,up)}];
   if(RMSEND_ON)tabs.push({k:'send',label:t('Schicken','Send'),n:'',body:()=>rmSendTab(d,lib)});
   if(d.send&&RMPLUS_ON&&d.plus)tabs.push({k:'plus',label:t('Mehr','More'),n:d.plus.on&&d.plus.on.rmtodo&&d.plus.todos.length?d.plus.todos.length:'',body:()=>{const w=E('div');w.innerHTML=rmPlus(d.plus);xbind(w,showRm);rmBind(w);return w}});
+  if(d.send&&RMPAPER_ON&&d.paper)tabs.push({k:'paper',label:t('Papier','Paper'),n:d.paper.papers.filter(x=>x.boxes.some(b=>b.state==='unklar')).length||'',body:()=>rmPaper(d.paper)});
   tabs.push({k:'set',label:t('Einstellungen','Settings'),n:'',body:()=>{const w=E('div');w.innerHTML=xsw('rm_on',t('reMarkable für mich','reMarkable for me'),t('Aus: Es wird nichts mehr abgeglichen; die gelesenen Notizbücher bleiben, bis du trennst.','Off: nothing is compared any more; notebooks already read stay until you disconnect.'))+
     (RMFRESH_ON?xsw('rm_fresh',t('Neueste zuerst','Newest first'),t('Bei ähnlich guten Treffern nimmt der Assistent die neuere Notiz und nennt ihr Datum; „Was habe ich zuletzt notiert?“ (auch heute, gestern, diese Woche) nennt die neuesten Seiten. Gilt für alle deine Dokumente.','With similar hits the assistant takes the newer note and names its date; "What did I note last?" (also today, yesterday, this week) names the newest pages. Applies to all your documents.')):'');
     xbind(w,showRm);if(typeof pageGroup==='function')pageGroup(w);return w}});
@@ -141,3 +142,43 @@ function rmPlus(p){const at=new Date(Date.now()+864e5);at.setHours(9,0,0,0);cons
   ${p.on.rmmorning?`<div class="rowin"><span>${t('Morgenblatt um','Morning sheet at')}</span><input type="time" id="rmat" value="${esc(p.morning_at)}"></div>`:''}
   ${p.on.rmguide?`<div class="row"><button class="b" type="button" id="rmguide">${t('Anleitung jetzt ablegen','Put the guide there now')}</button></div>`:''}
   ${p.on.rmtodo?`<h3>${t('Aufgaben vom Papier','Tasks from paper')}</h3>${p.todos.length?`<ul class="facts small">${p.todos.map(x=>`<li><span style="flex:1"><b>${esc(x.text)}</b><br><small class="mut">${esc(x.doc)}${x.page?', '+t('Seite ','page ')+x.page:''}</small><br><input type="datetime-local" id="rmdue-${esc(x.id)}" value="${dflt}"></span><button class="b p" type="button" data-rmtodo="${esc(x.id)}" data-do="remind">${t('Erinnern','Remind')}</button><button class="b" type="button" data-rmtodo="${esc(x.id)}" data-do="drop">${t('Weg','Remove')}</button></li>`).join('')}</ul>`:`<div class="fh">${t('Noch keine gefunden.','None found yet.')}</div>`}`:''}`}
+// paper for the reMarkable (rmpapier.py): designed sheets with boxes, folders by kind, tidying up, the device's format,
+// the calibration sheet and what was read from each sheet (control picture). Titles from the cloud only via textContent.
+const RMSTATE={an:['angekreuzt','ticked'],unklar:['unklar','unclear'],'zurück':['zurückgenommen','taken back'],leer:['leer','empty']};
+const RMDID={papierkorb:['in den Papierkorb gelegt','put into the trash'],archiv:['ins Archiv gelegt','put into the archive'],notizen:['bleibt liegen (Handschrift darauf)','stays (handwriting on it)']};
+function rmPaper(p){const E=icEl,w=E('div');
+  const sw=[['rmpapier','rm_paper',['Gestaltete Blätter','Designed sheets'],['Morgenblatt, Rückblick, Zusammenfassungen, Antworten, Eingang und Anleitung als Blatt im Format deines Geräts, mit „Kann weg“ oben rechts; auf dem Morgenblatt Erinnerungen zum Abhaken.','Morning sheet, review, summaries, answers, inbox and guide as a sheet in your device’s format, with "Kann weg" at the top right; reminders to tick off on the morning sheet.']],
+    ['rmordner','rm_folders',['Ordner nach Art','Folders by kind'],['Ein Ordner je Art unter „Spark“: Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. Die Anleitung liegt oben als Favorit.','One folder per kind below "Spark": Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. The guide lies on top as a favourite.']],
+    ['rmaufraeumen','rm_tidy',['Selbst aufräumen','Tidy up by itself'],[`Morgenblätter und Wochenrückblicke ohne deine Handschrift nach ${p.archive_days} Tagen ins Archiv, von dort nach ${p.trash_days} Tagen in den Papierkorb des reMarkable (dort wiederherstellbar).`,`Morning sheets and week reviews without your handwriting go to the archive after ${p.archive_days} days, from there into the reMarkable’s trash after ${p.trash_days} days (restorable there).`]]];
+  const head=E('div');head.innerHTML=sw.filter(x=>p.spark[x[0]]).map(x=>xsw(x[1],t(...x[2]),t(...x[3]))).join('');xbind(head,showRm);w.appendChild(head);
+  if(p.on.rmpapier){const name=k=>{const m=p.models.find(x=>x.k===k);return m?t(m.de,m.en):''};
+    w.appendChild(E('h4','ic-h4',t('Mein reMarkable','My reMarkable')));
+    const sel=document.createElement('select');sel.id='rmmodel';sel.setAttribute('aria-label',t('Mein reMarkable','My reMarkable'));
+    const auto=document.createElement('option');auto.value='auto';auto.textContent=p.seen?t('Automatisch (erkannt: ','Automatic (recognised: ')+name(p.seen)+')':t('Automatisch (noch nicht erkannt)','Automatic (not recognised yet)');sel.appendChild(auto);
+    for(const m of p.models){const o=document.createElement('option');o.value=m.k;o.textContent=t(m.de,m.en)+' · '+m.mm[0]+' × '+m.mm[1]+' mm'+(m.color?t(', Farbe',', colour'):'');sel.appendChild(o)}
+    sel.value=p.model;sel.onchange=()=>{saveSet('rm_model',sel.value);setTimeout(showRm,600)};w.appendChild(sel);
+    w.appendChild(E('div','fh',t('Neue Blätter bekommen genau das Seitenformat dieses Geräts; so liegt deine Schrift über den Kästchen. Jetzt: ','New sheets get exactly this device’s page format, so your writing lies over the boxes. Now: ')+name(p.used)+(p.calibrated.includes(p.used)?t(' · abgeglichen',' · calibrated'):'')));
+    const row=E('div','row');const cal=E('button','b',t('Abgleich-Blatt schicken','Send calibration sheet'));cal.type='button';cal.id='rmcalib';
+    cal.onclick=async()=>{cal.disabled=true;try{const r=await (await api('/api/profile/remarkable/papier/abgleich',{method:'POST'})).json();xmsg('rmmsg',t('Liegt in „','It is in "')+r.where+t('“. Kreuz die vier Kreise an; das Ergebnis steht dann hier.','". Tick the four circles; the result shows here then.'))}catch(e){xmsg('rmmsg',e.message,true)}cal.disabled=false};row.appendChild(cal);
+    if(p.on.rmordner){const so=E('button','b',t('Jetzt einsortieren','Sort in now'));so.type='button';so.id='rmsortin';
+      so.onclick=async()=>{so.disabled=true;try{const r=await (await api('/api/profile/remarkable/papier/einsortieren',{method:'POST'})).json();xmsg('rmmsg',t(`${r.moved} Dokument(e) einsortiert.`,`${r.moved} document(s) sorted in.`))}catch(e){xmsg('rmmsg',e.message,true)}so.disabled=false};row.appendChild(so)}
+    w.appendChild(row);
+    w.appendChild(E('h4','ic-h4',t('Gelesene Blätter','Sheets read')));
+    if(!p.papers.length){w.appendChild(icList([icEmpty(t('Noch keine Blätter. Das nächste Morgenblatt oder eine Antwort kommt als Blatt.','No sheets yet. The next morning sheet or answer comes as a sheet.'))]));return w}
+    const pic=E('div');pic.id='rmpic';
+    const rows=p.papers.map(x=>{const cnt=s=>x.boxes.filter(b=>b.state===s).length;
+      let meta=x.read?t('gelesen ','read ')+rmWhen(x.read):t('noch nicht ausgefüllt','not filled in yet');
+      if(x.kind==='kalib')meta+=' · '+(x.calib==='an'?t('abgeglichen','calibrated'):x.calib?t('Kreuze nicht gefunden, bitte noch einmal','crosses not found, please again'):'');
+      else if(x.read)meta+=' · '+t(`${cnt('an')} angekreuzt, ${cnt('unklar')} unklar`,`${cnt('an')} ticked, ${cnt('unklar')} unclear`);
+      if(x.did)meta+=' · '+t(...(RMDID[x.did]||['','']));
+      if(x.ink)meta+=' · '+t('mit Handschrift','with handwriting');
+      const acts=[];
+      if(x.read&&!x.gone){const b=icBtn('search',t('Kontrollbild','Control picture'),async()=>{pic.textContent=t('Lädt …','Loading …');
+        try{const r=await api(`/api/profile/remarkable/papier/${encodeURIComponent(x.id)}/0.png`);const u=URL.createObjectURL(await r.blob());const img=document.createElement('img');img.src=u;img.alt=t('Kontrollbild','Control picture');img.className='rmpic';
+          pic.textContent='';pic.append(E('div','fh',t('Grün: angekreuzt · Gelb: unklar · Grau: zurückgenommen. ','Green: ticked · Amber: unclear · Grey: taken back. ')+x.title),img)}catch(e){pic.textContent=e.message}});acts.push(b)}
+      for(const n of x.undo){const b=E('button','b',n==='weg'?t('Zurückholen','Bring back'):t('Erinnerung zurück','Reminder back'));b.type='button';
+        b.onclick=async()=>{b.disabled=true;try{await api('/api/profile/remarkable/papier/zurueck',xjson('POST',{id:x.id,n}));showRm()}catch(e){b.disabled=false;xmsg('rmmsg',e.message,true)}};acts.push(b)}
+      const unclear=x.boxes.filter(b=>b.state==='unklar').map(b=>b.t).filter(Boolean);
+      return icRow(x.title,meta+(unclear.length?' · '+t('unklar: ','unclear: ')+unclear.join(', '):''),acts,[],true)});
+    w.appendChild(icList(rows));w.appendChild(pic)}
+  if(typeof pageGroup==='function')pageGroup(w);return w}

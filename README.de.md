@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.485** reMarkable: Ordner nach Art, gestaltete Blätter mit „Kann weg“, Morgenblatt zum Abhaken, Kästchen werden gelesen
 - **V01.0.484** Taten prüfen und Fehlerschleife stoppen stehen als eingebaute Regeln unter Verbessern → Regeln
 - **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.478** Einstellungs-Assistent mit Admin-Regeln statt Code, Spark-Tagebuch, Monatsbericht, Daumen in Logs → Anfragen
 - **V01.0.477** Taten prüfen und Fehlerschleife stoppen (an wie die Antwort-Prüfung): „ist jetzt an“ nur, wenn das Werkzeug geklappt hat, sonst ein ehrlicher Satz; zweimal gleicher Fehler sperrt das Werkzeug
 - **V01.0.476** Werkzeuge heißen verständlich, z. B. „Postfach-Überblick“ statt mail_tidy_overview
-- **V01.0.475** Rot-Fix: Selbsttests werden nicht mehr immer langsamer (Test-Panels hören nach ihrer Klasse auf)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

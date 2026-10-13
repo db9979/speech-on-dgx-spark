@@ -1431,3 +1431,6 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .cx-inv input{width:100%;font-size:12px}
 .cx-num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.04em;line-height:1.7;word-spacing:.35em;padding:10px 12px;margin:6px 0;border-radius:10px;background:var(--bg2,rgba(127,127,127,.12));overflow-wrap:anywhere}
 .cx-cs .ok{color:var(--ok,#2a8a3a);margin:4px 0}
+
+/* reMarkable: the control picture of a sheet read back (rmpapier.py) */
+.rmpic{display:block;max-width:min(100%,420px);height:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:#fff}

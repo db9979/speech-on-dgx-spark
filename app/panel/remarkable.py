@@ -463,8 +463,9 @@ def _quiet_rmscene():
                 lg.addFilter(_HINTS)
 
 
-def parse_page(data, draw=True):
+def parse_page(data, draw=True, size=None):
     """(typed text, [highlighted texts], JPEG of the handwriting or None, has ink) of one v6 page file.
+    size: a list that gets the page's size in device pixels when the file names it (which model, rmpapier.py).
     Raises ValueError for other formats (old firmware) or broken files."""
     if not data.startswith(b"reMarkable .lines file, version=6"):
         raise ValueError("old page format (please update the reMarkable)")
@@ -474,6 +475,8 @@ def parse_page(data, draw=True):
     _quiet_rmscene()
     typed, marks, lines, points = [], [], [], 0
     for b in ss.read_blocks(io.BytesIO(data)):
+        if size is not None and isinstance(b, ss.SceneInfo) and getattr(b, "paper_size", None):
+            size[:] = list(b.paper_size)[:2]
         v = getattr(b, "value", None)
         if isinstance(v, si.Text):
             try:
@@ -554,6 +557,21 @@ async def sync(uid, budget=MAX_RUN_PAGES):
         _busy.discard(uid)
 
 
+SYNC_KEYS = ("docs", "picked", "skip", "last", "count", "error", "paper_size")
+
+
+def _save_sync(uid, d):
+    """The comparison runs for minutes with its own copy: it writes back only its own parts, so what was saved in
+    between (a document sent, a sheet's boxes, rmpapier.py) stays."""
+    cur = load(uid)
+    for k in SYNC_KEYS:
+        if k in d:
+            cur[k] = d[k]
+        else:
+            cur.pop(k, None)
+    save(uid, cur)
+
+
 async def _sync(uid, budget):
     items = await refresh_library(uid)
     d = load(uid)
@@ -590,15 +608,17 @@ async def _sync(uid, budget):
         got = await _notebook(uid, rid, it, path, st, draw, budget)
         budget -= got["fetched"]
         d["docs"][rid] = got["state"]
+        if got.get("size"):        # the page size names the model (rmpapier.detect): sheets are made in its format
+            d["paper_size"] = got["size"]
         res["docs"] += 1
         res["pages"] += got["fetched"]
-        save(uid, d)
+        _save_sync(uid, d)
     d["last"] = int(time.time())
     d["count"] = len(d["docs"])
     d.pop("error", None)
     if full:
         d["error"] = "Der Speicher für Dokumente ist voll (Ich → Dokumente)."
-    save(uid, d)
+    _save_sync(uid, d)
     return res
 
 
@@ -612,7 +632,7 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
     texts = documents.notebook_texts(uid, st.get("doc", ""))
     times = page_times(content)
     doc_time = int(it.get("mod") or 0) or int(time.time())
-    pages, new_map, fetched, ink_skipped, failed = [], {}, 0, False, 0
+    pages, new_map, fetched, ink_skipped, failed, size = [], {}, 0, False, 0, []
     for n, pid in enumerate(order, 1):
         f = byid.get(f"{rid}/{pid}.rm")
         if not f:
@@ -628,7 +648,7 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
         fetched += 1
         try:
             data = await blob(uid, f["hash"], f["id"], MAX_PAGE)
-            typed, marks, jpeg, ink = await asyncio.wait_for(asyncio.to_thread(parse_page, data, draw), 60)
+            typed, marks, jpeg, ink = await asyncio.wait_for(asyncio.to_thread(parse_page, data, draw, size), 60)
         except (ValueError, asyncio.TimeoutError, CloudError, httpx.HTTPError) as e:
             failed += 1
             print("remarkable: page not read:", type(e).__name__, flush=True)
@@ -654,7 +674,7 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
     doc, left = await asyncio.to_thread(documents.notebook_put, uid, st.get("doc"), path, pages, "; ".join(notes),
                                         "remarkable", doc_time)
     cut = fetched >= budget and len(new_map) < len([p for p in order if f"{rid}/{p}.rm" in byid])
-    return {"fetched": fetched, "state": {"doc": doc, "h": "" if cut else it["h"], "pages": new_map,
+    return {"fetched": fetched, "size": size, "state": {"doc": doc, "h": "" if cut else it["h"], "pages": new_map,
                                           "left": left, "ink_skipped": ink_skipped, "seen": True}}
 
 
@@ -775,14 +795,19 @@ async def _put(uid, data, name, ctype="application/octet-stream", h=None):
     return {"hash": h, "id": name, "size": len(data)}
 
 
-async def _new_doc(uid, name, files):
-    """Uploads the files of one new document and its index; returns its root line."""
-    entries = [await _put(uid, data, fid) for fid, data in files]
-    entries.sort(key=lambda e: e["id"])
+async def _index(uid, name, entries):
+    """Uploads one document's index for its (sorted) files; returns its root line."""
     body = ("3\n" + "".join(f"{e['hash']}:0:{e['id']}:0:{e['size']}\n" for e in entries)).encode()
     dh = hashlib.sha256(b"".join(bytes.fromhex(e["hash"]) for e in entries)).hexdigest()
     await _put(uid, body, name + ".docSchema", h=dh)
     return {"hash": dh, "id": name, "subfiles": len(entries), "size": sum(e["size"] for e in entries)}
+
+
+async def _new_doc(uid, name, files):
+    """Uploads the files of one new document and its index; returns its root line."""
+    entries = [await _put(uid, data, fid) for fid, data in files]
+    entries.sort(key=lambda e: e["id"])
+    return await _index(uid, name, entries)
 
 
 async def _add_to_root(uid, new, swap=None):
@@ -831,10 +856,10 @@ def _own_root(uid, before, after):
         save(uid, d)
 
 
-def _meta(name, parent, kind):
+def _meta(name, parent, kind, pinned=False):
     now = str(int(time.time() * 1000))
     return json.dumps({"createdTime": now, "deleted": False, "lastModified": now, "lastOpened": "0", "lastOpenedPage": 0,
-                       "metadatamodified": False, "modified": False, "new": False, "parent": parent, "pinned": False,
+                       "metadatamodified": False, "modified": False, "new": False, "parent": parent, "pinned": bool(pinned),
                        "source": "", "synced": False, "type": kind, "version": 1, "visibleName": name}, sort_keys=True).encode()
 
 
@@ -856,7 +881,11 @@ async def send(uid, title, text):
     if not text:
         raise ValueError("nothing to send")
     title = _clean(title, 80) or "Vom Spark"
-    return await place(uid, title, epub(title, text))
+    import rmpapier
+    if rmpapier.paper_on(uid):      # a designed sheet in the device's format, in "Antworten" (rmpapier.py)
+        return await rmpapier.place(uid, "antwort", title, rmpapier.built_text(uid, "Antwort", title, text), "text",
+                                    auto=False)
+    return await place(uid, title, epub(title, text), art="antwort")
 
 
 def _count(d, key, most):
@@ -880,18 +909,43 @@ def _content(kind, title):
                        "textScale": 1}, sort_keys=True).encode()
 
 
-async def place(uid, title, data, kind="epub", own="", auto=False, src=""):
+async def base_folder(uid, items, new):
+    """(folder id, path, lost) where new documents go: the folder chosen under "Ablegen in", else "Spark" (made when
+    missing; the new folder's root line is appended to new). lost: the chosen folder is gone."""
+    folder, path = where(uid, items)
+    lost = bool(load(uid).get("target")) and not folder
+    if not folder:
+        folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
+    if not folder:
+        folder = next((e["id"] for e in new if e.get("spark_base")), None)
+    if not folder:
+        folder = str(uuid.uuid4())
+        entry = await _new_doc(uid, folder, [(folder + ".metadata", _meta("Spark", "", "CollectionType"))])
+        entry["spark_base"] = True
+        new.append(entry)
+    return folder, path, lost
+
+
+MAX_MADE = 400              # documents the Spark made, remembered for sorting and tidying up (rmpapier.py)
+
+
+async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="", pinned=False):
     """Puts one EPUB or PDF into the chosen folder (default "Spark", created when missing).
     own: a name for one of the Spark's OWN documents (the guide, the day's inbox): when the Spark made it before
     and it is still there, that document gets the new text (its other files, e.g. the person's marks, stay);
-    else a new one. Nothing the person made is ever changed. auto: made by the Spark itself (rmplus.py), its own
-    daily limit. src: "web" or "mail" when the title is outside text (a page's or an attachment's name; recent()
-    then never repeats it). Every upload is noted (recent). Returns {"title", "where", "lost", "id", "renewed"}."""
+    else a new one. A PDF sheet with handwriting on it is never filled with new text: it gets a new version (and
+    the old one goes to "Archiv" with "Ordner nach Art"). Nothing the person made is ever changed. auto: made by
+    the Spark itself (rmplus.py), its own daily limit. src: "web" or "mail" when the title is outside text (a page's
+    or an attachment's name; recent() then never repeats it). Every upload is noted (recent). art: a kind from
+    rmpapier.ARTEN, its folder below the base folder ("Ordner nach Art"; the caller passes it only when that is on).
+    pinned: a favourite on the device.
+    Returns {"title", "where", "lost", "id", "renewed"}."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     if kind not in ("epub", "pdf") or not data:
         raise ValueError("nothing to send")
     if len(data) > MAX_FILE:
         raise ValueError(f"zu groß (höchstens {MAX_FILE // 1024**2} MB)")
+    import rmpapier
     title = _clean(title, 80) or "Vom Spark"
     key = "auto" if auto else "sent"
     s = _count(load(uid), key, AUTO_DAY if auto else SEND_DAY)
@@ -902,32 +956,33 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src=""):
         items = library(uid)
     mine = (load(uid).get("own") or {}).get(own) if own else None
     renew = mine if mine and ID.fullmatch(str(mine)) and mine in items and not items[mine].get("folder") else None
-    swap, new, lost, path = {}, [], False, ""
+    swap, new, lost, path, marked = {}, [], False, "", None
     if renew:
         old = parse_index(await blob(uid, items[renew]["h"], renew + ".docSchema"))
+        if kind == "pdf" and any(e["id"].endswith(".rm") for e in old):
+            marked, renew = renew, None     # handwriting on the sheet: never new text under it, a new version
+    if renew:
         keep = [(e["id"], e) for e in old if not e["id"].endswith((".epub", ".pdf", ".content", ".metadata"))]
-        meta = _meta(title, items[renew].get("parent") or "", "DocumentType")
+        meta = _meta(title, items[renew].get("parent") or "", "DocumentType", pinned)
         fresh = [await _put(uid, x, n) for n, x in ((renew + "." + kind, data), (renew + ".content", _content(kind, title)),
                                                     (renew + ".metadata", meta))]
         entries = sorted([e for _, e in keep] + fresh, key=lambda e: e["id"])
-        body = ("3\n" + "".join(f"{e['hash']}:0:{e['id']}:0:{e['size']}\n" for e in entries)).encode()
-        dh = hashlib.sha256(b"".join(bytes.fromhex(e["hash"]) for e in entries)).hexdigest()
-        await _put(uid, body, renew + ".docSchema", h=dh)
-        swap[renew] = {"hash": dh, "id": renew, "subfiles": len(entries), "size": sum(e["size"] for e in entries)}
+        swap[renew] = await _index(uid, renew, entries)
         did, path = renew, path_of(items, items[renew].get("parent")) if items[renew].get("parent") else ""
     else:
-        folder, path = where(uid, items)
-        lost = bool(load(uid).get("target")) and not folder
-        if not folder:
-            folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
-        if not folder:
-            folder = str(uuid.uuid4())
-            new.append(await _new_doc(uid, folder, [(folder + ".metadata", _meta("Spark", "", "CollectionType"))]))
+        folder, path, lost = await base_folder(uid, items, new)
+        if art in rmpapier.ARTEN and rmpapier.folders_on(uid):
+            folder = await rmpapier.art_folder(uid, items, folder, art, new)
+            path = (path or "Spark") + "/" + rmpapier.ARTEN[art]
+        if marked and rmpapier.folders_on(uid):
+            base, _, _ = await base_folder(uid, items, new)
+            swap.update(await rmpapier.set_meta(uid, items, {marked: {
+                "parent": await rmpapier.art_folder(uid, items, base, "archiv", new), "pinned": False}}))
         did = str(uuid.uuid4())
         new.append(await _new_doc(uid, did, [(did + ".content", _content(kind, title)),
-                                            (did + ".metadata", _meta(title, folder, "DocumentType")),
+                                            (did + ".metadata", _meta(title, folder, "DocumentType", pinned)),
                                             (did + ".pagedata", b"\n"), (did + "." + kind, data)]))
-    await _add_to_root(uid, new, swap)
+    await _add_to_root(uid, [{k: v for k, v in e.items() if k not in ("spark_base", "folder_of")} for e in new], swap)
     d = load(uid)
     s["n"] += 1
     d[key] = s
@@ -939,6 +994,9 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src=""):
     log = [x for x in d.get("log") or [] if isinstance(x, dict) and now - int(x.get("t", 0)) < LOG_S][-(LOG_MAX - 1):]
     d["log"] = log + [{"t": now, "title": title, "auto": bool(auto), "renewed": bool(renew),
                        "src": src if src in ("web", "mail") else ""}]
+    made = d.get("made") if isinstance(d.get("made"), dict) else {}
+    made[did] = dict(made.get(did) or {}, art=art, t=now, k=kind)
+    d["made"] = dict(sorted(made.items(), key=lambda x: x[1].get("t", 0))[-MAX_MADE:])
     save(uid, d)
     import tagebuch
     tagebuch.note(uid, "remarkable", title, ref=did, src=src)
@@ -1117,6 +1175,7 @@ def _on(prof=Depends(browser_profile)):
 
 def public(uid):
     import rmplus
+    import rmpapier
     d, items = load(uid), library(uid)
     want = wanted(uid, items, d)
     lib = []
@@ -1133,7 +1192,8 @@ def public(uid):
             "target": where(uid, items)[0], "target_path": where(uid, items)[1],
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
             "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or []),
-            "plus": rmplus.public(uid)}
+            "plus": rmplus.public(uid),
+            "paper": rmpapier.public(uid) if features.admin_on("rmpapier") and send_allowed(uid) else None}
 
 
 @router.get("/api/profile/remarkable", dependencies=[Depends(assistant)])

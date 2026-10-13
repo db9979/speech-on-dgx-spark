@@ -40,6 +40,7 @@ import guard
 import hintergrund
 import profiles
 import remarkable
+import rmpapier
 import vorrang
 from core import assistant, browser_profile
 
@@ -198,6 +199,9 @@ def _zone(uid):
 
 # ---------------------------------------------------------------- 1 Morgenblatt
 WEEKDAY = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+DAYS = ("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+MONTHS = ("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November",
+          "Dezember")
 
 
 def morning_due(uid, local, p):
@@ -214,7 +218,17 @@ async def morning(uid, local):
     if not text:
         return None
     title = f"Morgenblatt {WEEKDAY[local.weekday()]} {local:%d.%m.}"
-    r = await remarkable.place(uid, title, sheet(title, text), "pdf", auto=True)
+    if rmpapier.paper_on(uid):      # designed, in the device's format, today's reminders with boxes (rmpapier.py)
+        end = local.replace(hour=23, minute=59, second=59).timestamp() * 1000
+        todo = [{"id": x["id"], "text": x["text"],
+                 "at": datetime.datetime.fromtimestamp(x["due"] / 1000, _zone(uid)).strftime("%H:%M")}
+                for x in profiles.reminders(uid) if x.get("due", 0) <= end and re.fullmatch(r"[0-9a-f]{8}", str(x.get("id")))]
+        day = f"{DAYS[local.weekday()]}, {local.day}. {MONTHS[local.month - 1]}"
+        built = rmpapier.build_morning(rmpapier.model(rmpapier.model_key(uid)), day, "Guten Morgen", text, todo)
+        r = await rmpapier.place(uid, "morgen", title, built, "morgen")
+        print("remarkable: morning sheet sent", flush=True)
+        return r
+    r = await remarkable.place(uid, title, sheet(title, text), "pdf", auto=True, art="morgen")
     print("remarkable: morning sheet sent", flush=True)
     return r
 
@@ -284,7 +298,12 @@ async def answer(uid, q, page):
         return None
     short = " ".join(q.split()[:7]).rstrip("?.!,")
     body = f"Frage (aus „{page['name']}“, Seite {page['page']}):\n{q}\n\n{text}"
-    return await remarkable.place(uid, f"Antwort: {short}", remarkable.epub(f"Antwort: {short}", body), auto=True)
+    if rmpapier.paper_on(uid):
+        return await rmpapier.place(uid, "antwort", f"Antwort: {short}", rmpapier.built_text(
+            uid, "Antwort", short, f"## Deine Frage\n{q}\n\naus „{page['name']}“, Seite {page['page']}\n\n## Antwort\n{text}"),
+            "text")
+    return await remarkable.place(uid, f"Antwort: {short}", remarkable.epub(f"Antwort: {short}", body), auto=True,
+                                  art="antwort")
 
 
 def scan_tasks(uid, pages):
@@ -313,8 +332,12 @@ async def meeting(uid, doc, name, pages):
     out = await _llm(MEET_SYSTEM, "Notizbuch: " + name + "\n\n" + _outside(text), 900, job="reMarkable: Sprachmodell")
     if not out:
         return None
-    r = await remarkable.place(uid, f"Zusammenfassung {name.rsplit('/', 1)[-1]}"[:80], remarkable.epub(
-        f"Zusammenfassung {name.rsplit('/', 1)[-1]}", out.replace("## ", "")), auto=True)
+    title = f"Zusammenfassung {name.rsplit('/', 1)[-1]}"[:80]
+    if rmpapier.paper_on(uid):
+        r = await rmpapier.place(uid, "besprechung", title, rmpapier.built_text(
+            uid, "Besprechung", name.rsplit("/", 1)[-1][:70], out), "text")
+    else:
+        r = await remarkable.place(uid, title, remarkable.epub(title, out.replace("## ", "")), auto=True, art="besprechung")
     import push
     await push.send(uid, "📝 Besprechung zusammengefasst", (name.rsplit("/", 1)[-1] + ": " + re.sub(r"#+ ", "", out))[:600],
                     tag="rm", why="reMarkable")
@@ -380,7 +403,10 @@ async def week(uid, local):
     if not out:
         return None
     title = f"Wochenrückblick KW {local:%V}"
-    return await remarkable.place(uid, title, sheet(title, out), "pdf", auto=True)
+    if rmpapier.paper_on(uid):
+        return await rmpapier.place(uid, "woche", title, rmpapier.built_text(
+            uid, "Wochenrückblick", f"Kalenderwoche {local:%V}", out, f"{monday:%d.%m.} bis {local:%d.%m.%Y}"), "text")
+    return await remarkable.place(uid, title, sheet(title, out), "pdf", auto=True, art="woche")
 
 
 # ---------------------------------------------------------------- 7 Eingang: one document per day
@@ -394,7 +420,12 @@ async def inbox_add(uid, title, text):
     items = (box["items"] + [item])[-INBOX_MAX:]
     body = "\n\n".join(f"{x['t']} · {x['title']}\n{x['text']}" for x in items)[-remarkable.MAX_SEND:]
     title = f"Eingang {local:%d.%m.%Y}"
-    r = await remarkable.place(uid, title, remarkable.epub(title, body), own="inbox-" + day)
+    if rmpapier.paper_on(uid):
+        r = await rmpapier.place(uid, "eingang", title, rmpapier.built_text(
+            uid, "Eingang", f"Eingang {local:%d.%m.%Y}", "\n\n".join(f"## {x['t']} · {x['title']}\n{x['text']}" for x in items)),
+            "text", own="inbox-" + day, auto=False)
+    else:
+        r = await remarkable.place(uid, title, remarkable.epub(title, body), own="inbox-" + day, art="eingang")
     _mut(uid, lambda x: x.update(inbox={"day": day, "items": items}))
     d = remarkable.load(uid)        # yesterday's inbox is no longer the Spark's to renew
     d["own"] = {k: v for k, v in (d.get("own") or {}).items() if not k.startswith("inbox-") or k == "inbox-" + day}
@@ -414,7 +445,7 @@ async def web_page(uid, url, title=""):
         return "Die Seite ließ sich nicht lesen (nicht öffentlich, kein HTML oder zu wenig Text)."
     title = remarkable._clean(title, 80) or re.sub(r"^https?://(www\.)?", "", url)[:60]
     paras = re.sub(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ])", "\n\n", text)      # page_text is one line: sentences as paragraphs
-    r = await remarkable.place(uid, title, remarkable.epub(title, paras + "\n\nQuelle: " + url), src="web")
+    r = await remarkable.place(uid, title, remarkable.epub(title, paras + "\n\nQuelle: " + url), src="web", art="web")
     return "Liegt jetzt auf dem reMarkable " + remarkable._told(r)
 
 
@@ -426,7 +457,7 @@ async def attachment(uid, query=""):
     if not got:
         return "In den Mails der letzten 30 Tage" + (f" zu „{query}“" if query else "") + " fand ich keinen PDF- oder EPUB-Anhang."
     name, data, kind = got
-    r = await remarkable.place(uid, re.sub(r"\.(pdf|epub)$", "", name, flags=re.I), data, kind, src="mail")
+    r = await remarkable.place(uid, re.sub(r"\.(pdf|epub)$", "", name, flags=re.I), data, kind, src="mail", art="web")
     return f"Der Anhang „{name}“ liegt jetzt auf dem reMarkable " + remarkable._told(r)
 
 
@@ -470,6 +501,21 @@ GUIDE = (
     ("rminbox", "Eingang pro Tag",
      "Diktierte Notizen („Notier auf dem reMarkable …“) landen nicht mehr einzeln, sondern gesammelt im Dokument "
      "„Eingang“ des Tages, mit Uhrzeit."),
+    ("rmordner", "Ordner nach Art",
+     "Was der Spark aufs reMarkable legt, kommt in einen Ordner je Art unter „Spark“: Morgenblatt, Wochenrückblick, "
+     "Besprechungen, Antworten, Web und Anhänge, Eingang und Archiv. Die Anleitung liegt oben als Favorit. Du darfst "
+     "die Ordner umbenennen oder verschieben; fehlt einer, legt der Spark ihn neu an. „Jetzt einsortieren“ unter "
+     "Ich → reMarkable → Papier räumt seine alten Dokumente ein."),
+    ("rmaufraeumen", "Selbst aufräumen",
+     "Morgenblätter und Wochenrückblicke ohne deine Handschrift wandern nach 7 Tagen ins Archiv und nach 30 weiteren "
+     "Tagen in den Papierkorb des reMarkable, wo du sie noch zurückholen kannst. Hast du etwas darauf geschrieben, "
+     "bleiben sie liegen."),
+    ("rmpapier", "Gestaltete Blätter zum Ankreuzen",
+     "Morgenblatt, Rückblick, Zusammenfassungen, Antworten, Eingang und diese Anleitung kommen als gestaltete Blätter "
+     "genau im Format deines Geräts. Oben rechts steht „Kann weg“: ankreuzen, dann legt der Spark das Blatt in den "
+     "Papierkorb (mit deiner Handschrift darauf ins Archiv). Auf dem Morgenblatt hakst du Erinnerungen ab; ganz "
+     "ausmalen nimmt es zurück. Liegen die Kreuze daneben, schick dir unter Ich → reMarkable → Papier das "
+     "Abgleich-Blatt und kreuz die vier Kreise an."),
     ("rmguide", "Diese Anleitung",
      "Der Spark hält diese Anleitung selbst aktuell: Kommt eine Funktion dazu oder schaltest du etwas um, ersetzt er "
      "sie. Deine Markierungen darin bleiben, wenn sich nur der Text ändert."),
@@ -511,7 +557,12 @@ async def guide(uid, force=False):
         return None
     stamp = datetime.datetime.now(_zone(uid)).strftime("%d.%m.%Y")
     body = re.sub(r"(?m)^## ", "", text) + f"\n\nStand: {stamp}"
-    r = await remarkable.place(uid, "Spark-Anleitung", remarkable.epub("Spark-Anleitung", body), own="guide", auto=True)
+    if rmpapier.paper_on(uid):      # on top as a favourite with "Ordner nach Art"
+        r = await rmpapier.place(uid, "", "Spark-Anleitung", rmpapier.built_text(
+            uid, "Anleitung", "Spark-Anleitung", text, "Stand: " + stamp), "text", own="guide", pinned=True)
+    else:
+        r = await remarkable.place(uid, "Spark-Anleitung", remarkable.epub("Spark-Anleitung", body), own="guide",
+                                   auto=True, pinned=rmpapier.folders_on(uid))
     _mut(uid, lambda x: x.update(guide=k))
     print("remarkable: guide " + ("renewed" if r["renewed"] else "added"), flush=True)
     return r
@@ -519,9 +570,11 @@ async def guide(uid, force=False):
 
 # ---------------------------------------------------------------- background
 _last = {}
-LIVE_WHY = {"guide": "reMarkable-Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "reMarkable-Seiten"}
+LIVE_WHY = {"guide": "reMarkable-Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "reMarkable-Seiten",
+            "paper": "reMarkable-Blätter", "tidy": "reMarkable aufräumen"}
 # Zustand → Live (live.py): each job on the list of background work while it runs, its end as an event; fixed words
 SHOWN = {"guide": "Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "Seiten prüfen",
+         "paper": "Blätter lesen", "tidy": "Aufräumen",
          "ask": "@Spark-Antwort", "meet": "Besprechung"}
 
 
@@ -545,7 +598,8 @@ def _shown(what, state, ok=True, secs=None, why="", quiet=False):
 async def due_once(idle=True, now=None, uids=None):
     """Each minute: for each profile at most one of guide, Morgenblatt, Wochenrückblick, pages (in this order);
     never while someone talks. uids: only these profiles (tests). Returns what ran, or None."""
-    if not idle or not features.admin_on("rmguide"):     # rmguide stands for the admin switch chat.remarkable_plus
+    # rmguide stands for the admin switch chat.remarkable_plus, rmpapier for chat.remarkable_paper (rmpapier.py)
+    if not idle or not (features.admin_on("rmguide") or features.admin_on("rmpapier")):
         return None
     now = now or time.time()
     for uid in uids or profiles.user_ids():
@@ -562,6 +616,11 @@ async def due_once(idle=True, now=None, uids=None):
             jobs.append(("week", lambda: week(uid, local)))
         if any(on(k, uid) for k in ("rmask", "rmtodo", "rmmeet")) and now - _last.get((uid, "pages"), 0) >= 60:
             jobs.append(("pages", lambda: from_pages(uid, now)))
+        if on("rmpapier", uid) and now - _last.get((uid, "paper"), 0) >= remarkable.PEEK:
+            jobs.append(("paper", lambda: rmpapier.check(uid, now)))
+        if on("rmaufraeumen", uid) and remarkable.load(uid).get("tidied") != local.strftime("%Y-%m-%d") \
+                and now - _last.get((uid, "tidy"), 0) >= 3600:
+            jobs.append(("tidy", lambda: _tidy(uid, now)))
         for what, job in jobs:
             _last[(uid, what)] = now
             t0 = time.time()
@@ -584,6 +643,11 @@ async def due_once(idle=True, now=None, uids=None):
                 live.job(LIVE_WHY[what], "reMarkable", t0, uid=uid)   # Zustand → Live: a request of "Von selbst"
                 return what
     return None
+
+
+async def _tidy(uid, now):
+    a, g = await rmpapier.tidy(uid, now)
+    return "tidy" if a or g else None
 
 
 # ---------------------------------------------------------------- the assistant: web pages and mail attachments

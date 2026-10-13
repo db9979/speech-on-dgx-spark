@@ -127,6 +127,13 @@ FEATURES = (
     F("rmweb", "Webseiten und Anhänge aufs reMarkable", "Web pages and attachments to the reMarkable", "data", ("remarkable_plus",), "rm_web", parent="rmsend", me="rmbox", guide="rmplus"),
     F("rminbox", "Eingang pro Tag", "Daily inbox", "data", ("remarkable_plus",), "rm_inbox", parent="rmsend", me="rmbox", guide="rmplus"),
     F("rmguide", "Spark-Anleitung auf dem reMarkable", "Spark guide on the reMarkable", "data", ("remarkable_plus",), "rm_guide", parent="rmsend", me="rmbox", guide="rmplus"),
+    # paper for the reMarkable (rmpapier.py): one admin switch, three profile switches
+    F("rmpapier", "Gestaltete Blätter zum Ankreuzen", "Designed sheets to tick", "data", ("remarkable_paper",), "rm_paper",
+      parent="rmsend", me="rmbox", guide="rmpapier"),
+    F("rmordner", "Ordner nach Art", "Folders by kind", "data", ("remarkable_paper",), "rm_folders", parent="rmsend", me="rmbox",
+      guide="rmpapier"),
+    F("rmaufraeumen", "Selbst aufräumen", "Tidy up by itself", "data", ("remarkable_paper",), "rm_tidy", parent="rmordner",
+      me="rmbox", guide="rmpapier"),
     # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
     F("erstellen", "Dokumente erstellen", "Creating documents", "data", ("doc_make",), "doc_make",
       parent="documents", me="docbox", guide="erstellen"),

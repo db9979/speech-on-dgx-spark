@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.485** reMarkable: folders by kind, designed sheets with "Kann weg", morning sheet to tick off, boxes are read back
 - **V01.0.484** Check deeds and stop error loops show as built-in rules under Improve → Rules
 - **V01.0.483** Spark diary: switched devices are noted (device and action only, never the code word)
 - **V01.0.482** Switch "Pictures from the Kiwix" now also under Me → Documents
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.478** Settings assistant with admin rules instead of code, Spark diary, monthly report, thumbs in Logs → Requests
 - **V01.0.477** Check deeds and stop error loops (on, like the answer check): "The TV is on now" only when a tool of that kind worked, else one honest sentence; a tool failing twice the same way is locked for the rest of the answer
 - **V01.0.476** Tools have readable names, e.g. "Mailbox overview" instead of mail_tidy_overview
-- **V01.0.475** Red fix: self-tests no longer get slower and slower (test panels stop after their class)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

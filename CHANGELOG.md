@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.485** · 2026-10-13 · reMarkable aufwerten: Ordner nach Art mit Selbst-Aufräumen (7/30 Tage), gestaltete PDF-Blätter im Format des Geräts mit „Kann weg“, Morgenblatt zum Abhaken, Kästchen werden gelesen (Abgleich-Blatt, Kontrollbild); alles aus
 - **V01.0.484** · 2026-10-13 · „Taten prüfen“ und „Fehlerschleife stoppen“ als eingebaute Antwort-Regeln unter Zustand → Verbessern → Regeln (an oder aus, wie oft heute eingegriffen, nicht entfernbar); Vorschlag „Sag nie Nein ohne …“ nur für das Werkzeug, das das frühere Tun kennt (taten.STATUS)
 - **V01.0.483** · 2026-10-13 · Spark-Tagebuch: geschaltete Geräte (Auswahl, Korrektur, Zuordnung, Smart-Home-Befehl) stehen als „Gerät geschaltet“ mit Gerätename und Aktion drin, nie der Satz mit dem Codewort; nur wenn das Tagebuch an ist
 - **V01.0.482** · 2026-10-13 · Bilder aus dem Kiwix: der Profil-Schalter fehlte in Ich → Dokumente → Einstellungen für Dokumente und ist jetzt da; Selbsttest, dass jeder Profil-Schalter unter Ich einstellbar ist

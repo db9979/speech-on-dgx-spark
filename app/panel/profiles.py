@@ -774,7 +774,12 @@ SETTINGS = {
     "rm_week": (False, lambda v: isinstance(v, bool)),
     "rm_web": (False, lambda v: isinstance(v, bool)),
     "rm_inbox": (False, lambda v: isinstance(v, bool)),
-    "rm_guide": (False, lambda v: isinstance(v, bool)),     # newer notes first in the document search (chat.remarkable_fresh)      # answers onto the reMarkable (admin chat.remarkable_send)
+    "rm_guide": (False, lambda v: isinstance(v, bool)),
+    # paper for the reMarkable (rmpapier.py, admin chat.remarkable_paper)
+    "rm_paper": (False, lambda v: isinstance(v, bool)),
+    "rm_folders": (False, lambda v: isinstance(v, bool)),
+    "rm_tidy": (False, lambda v: isinstance(v, bool)),
+    "rm_model": ("auto", lambda v: v in ("auto", "rm2", "pro", "move")),     # newer notes first in the document search (chat.remarkable_fresh)      # answers onto the reMarkable (admin chat.remarkable_send)
     "my_status": (False, lambda v: isinstance(v, bool)),    # Ich → Mein Zustand (hintergrund.py, admin chat.my_status)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
