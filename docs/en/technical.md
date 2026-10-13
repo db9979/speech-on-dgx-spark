@@ -172,7 +172,7 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 
 ## Tests
 
-`app/tests/` holds the self-tests that run on every update (`cd app && python -m unittest discover -s tests`). All services are faked (`tests/helpers.py`); no test talks to real models or Home Assistant. `tests/test_ui_browser.py` also opens the panel in Chromium (Playwright) at computer and phone width: every page without script errors and without sideways scrolling, the settings search, the Me window. Without Playwright (as in the self-test on the Spark) it is skipped; on GitHub it runs in the "Tests" workflow on every push.
+`app/tests/` holds the self-tests that run on every update (`cd app && python -m unittest discover -s tests`). All services are faked (`tests/helpers.py`); no test talks to real models or Home Assistant. `tests/test_ui_browser.py` also opens the panel in Chromium (Playwright) at computer and phone width: every page without script errors and without sideways scrolling, the settings search, the Me window. Without Playwright (as in the self-test on the Spark) it is skipped; on GitHub it runs in the "Tests" workflow on every push. There everything runs in four parts at the same time (`python selftest.py discover -s tests --part K/4`, cut by test module and its duration in `tests/dauer.json`, the long browser test test by test); the job "Ergebnis" checks that every part reported and counts the failures over the whole run.
 
 ## Troubleshooting
 

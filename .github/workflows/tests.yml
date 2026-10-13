@@ -20,9 +20,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # four parts at the same time (V01.0.502): one run took 15-45 min in a single job. selftest.py cuts the test
+  # modules by their duration in app/tests/dauer.json; together the parts hold every test exactly once
   test:
+    name: Teil ${{ matrix.part }}
     runs-on: ubuntu-latest
     timeout-minutes: 45   # 30 was cut off twice on 2026-10-12 (V01.0.459, .461: slow runner, still in test_wissen), 20 before
+    strategy:
+      fail-fast: false    # every part runs to its end, so a red run shows all failures at once
+      matrix:
+        part: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -30,6 +37,8 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: app/requirements-panel.lock
       - name: Install
         run: |
           # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
@@ -40,4 +49,46 @@ jobs:
       - name: Self-tests
         working-directory: app
         # a failed test gets one second try (selftest.py); green only then is a warning in the summary
-        run: python selftest.py discover -s tests
+        env:
+          SELFTEST_REPORT: ${{ runner.temp }}/teil.json
+        run: python selftest.py discover -s tests --part ${{ matrix.part }}/4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: teil-${{ matrix.part }}
+          path: ${{ runner.temp }}/teil.json
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # the parts together: every part reported, and "more than 5 failures is red" counts over the whole run
+  ergebnis:
+    name: Ergebnis
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: app/selftest.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: ${{ runner.temp }}/teile
+          pattern: teil-*
+      - name: All parts
+        env:
+          PARTS: ${{ needs.test.result }}
+          SELFTEST_DAUER: ${{ runner.temp }}/dauer.json
+        run: |
+          python3 app/selftest.py --sum "$RUNNER_TEMP/teile" 4
+          [ "$PARTS" = "success" ] || { echo "::error::A part of the self-tests is red ($PARTS)"; exit 1; }
+      # the durations measured here, for app/tests/dauer.json when one part gets much longer than the others
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: dauer
+          path: ${{ runner.temp }}/dauer.json
+          retention-days: 7
+          if-no-files-found: ignore

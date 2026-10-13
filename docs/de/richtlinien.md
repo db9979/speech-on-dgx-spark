@@ -30,7 +30,7 @@ Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ände
 7. **Logs enthalten nur feste Wörter und Zahlen.** Nie Fragen, Antworten, Geheimnisse oder Profilnamen ohne Zustimmung.
 8. **Jeder Hinweis mit einem Weg ist ein Sprung-Link, überall** (Panel, Apps, Begleiter, Telegram) und wird bei jeder Umbenennung mitgezogen. Jeder sichtbare Text hat eine englische Fassung, jedes „?“ einen Hilfe-Eintrag.
 9. **Für jede Schutzregel gibt es einen Selbsttest.** Tests hängen nicht von der Uhrzeit ab und laufen auch in einer Kopie, die nur `app/` enthält.
-10. **Vor jedem Push** auf einen laufenden Testlauf warten, `git pull`, die nächste freie Versionsnummer nehmen, die Selbsttests laufen lassen und erst dann pushen.
+10. **Vor jedem Push** über die Push-Warteschlange: wer oben steht, pusht sofort (auch während ein Testlauf läuft), vorher `git pull --rebase`, nächste freie Versionsnummer, Selbsttests grün.
 11. **Jede Version** bekommt eine Zeile in CHANGELOG und README, die Details stehen in `docs/de` und `docs/en`. Die README bleibt kurz.
 
 ---
@@ -281,11 +281,12 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 ## 10. Repo, Push-Ablauf, CI, Releases
 
 - **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.NNN). (PA)
-- **Push-Reihenfolge (PA, 2026-10-11):**
-  1. Läuft oder wartet auf GitHub ein Lauf „Tests“ für main, warten, bis er fertig ist.
-  2. Dann `git pull`, **nächste freie Versionsnummer zum Push-Zeitpunkt** nehmen (nie vorab reservieren), Selbsttests laufen lassen.
-  3. Erst dann pushen. Nie in einen laufenden Testlauf hineinpushen.
-  4. Ist der letzte Lauf rot, zuerst klären: Repariert mein Push ihn? Arbeitet schon ein anderer Thread daran?
+- **Sammel-Push (PA, Dominik 2026-10-13, ersetzt „auf den Testlauf warten“):**
+  1. Gepusht wird der Reihe nach über die Push-Warteschlange (`push-warteschlange.md`); nur wer ganz oben steht, pusht, nie vordrängeln.
+  2. Wer oben steht, pusht sofort, auch wenn ein Lauf „Tests“ für main läuft oder wartet: vorher `git pull --rebase`, **nächste freie Versionsnummer zum Push-Zeitpunkt** (nie vorab reservieren), Selbsttests grün. Danach eigene Zeile entfernen, der Nächste ist sofort dran.
+  3. GitHub testet am Ende nur den neuesten Stand: der laufende Lauf endet, von den wartenden bleibt nur der neueste (`cancel-in-progress: false`).
+  4. Wird der Lauf auf main rot: PUSH-STOPP für alle; der Koordinator bestimmt den Verursacher und setzt dessen ROT-FIX nach oben.
+- **Tests in Teilen (V01.0.502):** „Tests“ läuft in vier Teilen gleichzeitig (`selftest.py --part K/4`), geschnitten nach Testmodulen und ihrer Dauer in `app/tests/dauer.json` (ein Modul bleibt zusammen, weil manche Tests auf frühere Klassen ihres Moduls bauen; nur eine sehr lange Klasse mit Einträgen je Test wird Test für Test verteilt); zusammen enthalten die Teile jeden Test genau einmal. Der Job „Ergebnis“ zählt die Fehler aller Teile zusammen, die Grenze von 5 Fehlern gilt für den ganzen Lauf. Wird ein Teil deutlich länger als die anderen, `dauer.json` neu messen. (🧪 test_selftest_runner)
 - **PUSH-STOPP:** Sagt der Koordinator „PUSH-STOPP“, wird nicht gepusht, bis er die Sperre ausdrücklich aufhebt. (M)
 - **Commit-Nachricht:** `V01.0.NNN Kurzbeschreibung`. Die CHANGELOG-Zeilen entstehen daraus. Ein einfaches „merge main“ als Nachricht vermeiden. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):

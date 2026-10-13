@@ -15,7 +15,7 @@ Verbindlich ist die **Coding-Richtlinie**: [docs/de/richtlinien.md](docs/de/rich
 10. Neue allgemeine Regeln kommen im selben Commit in die Richtlinie (de und en).
 
 ## Arbeitsablauf
-- Direkt auf `main`. Vor jedem Push: läuft oder wartet ein GitHub-Lauf „Tests“ für main, warten; dann `git pull`, nächste freie Nummer in `app/VERSION`, Selbsttests, erst dann pushen. Ist der letzte Lauf rot, zuerst klären, ob der eigene Push ihn repariert oder ein anderer Thread daran arbeitet.
+- Direkt auf `main`, der Reihe nach über die Push-Warteschlange (Sammel-Push): wer oben steht, pusht sofort, auch während ein „Tests“-Lauf läuft; vorher `git pull --rebase`, nächste freie Nummer in `app/VERSION`, Selbsttests grün. GitHub testet nur den neuesten Stand; wird er rot, gilt PUSH-STOPP und der Koordinator bestimmt den Verursacher.
 - Selbsttests: `cd app && python selftest.py discover -s tests` (ein zweiter Versuch je rotem Test, mehr als 5 Fehler ohne zweiten Versuch). Neue Tests auch in einer Kopie nur mit `app/` laufen lassen.
 - Pro Version eine Zeile oben in `CHANGELOG.md` (`- **V01.0.NNN** · JJJJ-MM-TT · Text`) und in „Letzte Änderungen“/„Latest changes“ beider READMEs (genau 10 Zeilen); Details nur in `docs/de` und `docs/en`, danach `python3 app/panel/hilfe.py --docs`. `test_richtlinie` prüft den Einklang.
 - Alte GitHub-Releases löschen, nur das neueste pro Reihe behalten.

@@ -30,7 +30,7 @@ Applies to every thread and every person who changes code in Speech on DGX Spark
 7. **Logs contain only fixed words and numbers.** Never questions, answers, secrets or profile names without consent.
 8. **Every hint with a way is a jump link, everywhere** (panel, apps, companion, Telegram) and is updated along with every rename. Every visible text has an English version, every "?" a help entry.
 9. **For every protection rule there is a self-test.** Tests do not depend on the time of day and also run in a copy that contains only `app/`.
-10. **Before every push** wait for a running test run, `git pull`, take the next free version number, run the self-tests and only then push.
+10. **Every push** goes through the push queue: whoever is on top pushes at once (even while a test run is running), first `git pull --rebase`, next free version number, self-tests green.
 11. **Every version** gets a line in CHANGELOG and README, the details are in `docs/de` and `docs/en`. The README stays short.
 
 ---
@@ -281,11 +281,12 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 ## 10. Repo, push procedure, CI, releases
 
 - **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.NNN). (PA)
-- **Push order (PA, 2026-10-11):**
-  1. If a "Tests" run for main is running or waiting on GitHub, wait until it has finished.
-  2. Then `git pull`, take the **next free version number at push time** (never reserve in advance), run the self-tests.
-  3. Only then push. Never push into a running test run.
-  4. If the last run is red, first clarify: does my push repair it? Is another thread already working on it?
+- **Batched push (PA, Dominik 2026-10-13, replaces "wait for the test run"):**
+  1. Pushes go in order through the push queue (`push-warteschlange.md`); only whoever is on top pushes, never jump the queue.
+  2. Whoever is on top pushes at once, even while a "Tests" run for main is running or waiting: first `git pull --rebase`, the **next free version number at push time** (never reserve in advance), self-tests green. Then remove your own line; the next one goes at once.
+  3. In the end GitHub tests only the newest state: the running run finishes, of the waiting ones only the newest stays (`cancel-in-progress: false`).
+  4. If the run on main turns red: PUSH-STOPP for everyone; the coordinator finds the cause and puts its ROT-FIX on top.
+- **Tests in parts (V01.0.502):** "Tests" runs in four parts at the same time (`selftest.py --part K/4`), cut by test module and its duration in `app/tests/dauer.json` (a module stays together because some tests build on earlier classes of their module; only a very long class with entries per test is spread test by test); together the parts hold every test exactly once. The job "Ergebnis" adds up the failures of all parts; the limit of 5 failures counts for the whole run. If one part gets clearly longer than the others, measure `dauer.json` again. (🧪 test_selftest_runner)
 - **PUSH STOP:** if the coordinator says "PUSH-STOPP", nothing is pushed until they explicitly lift the block. (M)
 - **Commit message:** `V01.0.NNN short description`. The CHANGELOG lines are made from it. Avoid a plain "merge main" as the message. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):

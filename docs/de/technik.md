@@ -172,7 +172,7 @@ Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der
 
 ## Tests
 
-`app/tests/` enthält die Selbsttests, die bei jedem Update laufen (`cd app && python -m unittest discover -s tests`). Alle Dienste sind dabei nachgebaut (`tests/helpers.py`), kein Test spricht echte Modelle oder Home Assistant an. `tests/test_ui_browser.py` öffnet das Panel zusätzlich in Chromium (Playwright) am Rechner und in Handybreite: jede Seite ohne Skriptfehler und ohne seitliches Scrollen, die Einstellungssuche, das Ich-Fenster. Ohne Playwright (wie im Selbsttest auf dem Spark) wird er übersprungen; auf GitHub läuft er im Workflow „Tests“ bei jedem Push.
+`app/tests/` enthält die Selbsttests, die bei jedem Update laufen (`cd app && python -m unittest discover -s tests`). Alle Dienste sind dabei nachgebaut (`tests/helpers.py`), kein Test spricht echte Modelle oder Home Assistant an. `tests/test_ui_browser.py` öffnet das Panel zusätzlich in Chromium (Playwright) am Rechner und in Handybreite: jede Seite ohne Skriptfehler und ohne seitliches Scrollen, die Einstellungssuche, das Ich-Fenster. Ohne Playwright (wie im Selbsttest auf dem Spark) wird er übersprungen; auf GitHub läuft er im Workflow „Tests“ bei jedem Push. Dort läuft alles in vier Teilen gleichzeitig (`python selftest.py discover -s tests --part K/4`, geschnitten nach Testmodulen und ihrer Dauer in `tests/dauer.json`, der lange Browser-Test Test für Test); der Job „Ergebnis“ prüft, dass alle Teile gemeldet haben, und zählt die Fehler über den ganzen Lauf.
 
 ## Fehlersuche
 
