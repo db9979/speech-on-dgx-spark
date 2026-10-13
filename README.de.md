@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.519** Dokumentensuche: Schnitt an Überschriften, Kontextzeile je Abschnitt, Abschnitt in der Quellenangabe
 - **V01.0.518** Tests wieder grün: Markdown-Test wartet, bis die Chat-Seite sichtbar ist
 - **V01.0.517** Technik-Seite mit großem Bild und Vollbild-Zoom; Stimmabdruck liegt jetzt versiegelt
 - **V01.0.516** Suchprüfung: Prüffragen messen nachts, wie oft die Dokumentensuche die richtige Stelle findet
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.512** reMarkable: Die Anmerkung auf dem Aufgabenblatt wird gelesen und kommt als Punkt zum Ankreuzen zurück, auch als Auftrag
 - **V01.0.511** Live: jedes Von-selbst-Ereignis läuft einmal als farbige Kugel über den Bus bis zu seiner Stufe, Eingänge in fester Farbe
 - **V01.0.510** Browser: Fernseher und fremde Stimmen werden nach einer Antwort keine Frage mehr (Stimmprüfung im offenen Mikrofon, Raumpegel beim Ins-Wort-Fallen, iPhone-App)
-- **V01.0.509** Freigabe vereinfacht: Freigegebenes gilt sofort für jedes Profil, nur der Admin sperrt einzelne Profile; Gäste nur Frage und Antwort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

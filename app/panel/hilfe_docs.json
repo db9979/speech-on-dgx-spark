@@ -1197,6 +1197,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Zusammenhang in den Abschnitten (V01.0.519, Plan *suche-schaerfen*, Stufe 2, ohne Schalter): Dokumente werden an ihren Überschriften geschnitten: Markdown-Überschriften (Docling, .md), „§ 3 …“, „TOP 2 …“, „Artikel 4“, nummerierte Zeilen wie „2.1 Kosten“ und kurze eigene Zeilen über einem Absatz (feste Regeln in documents.heading, nie ein Modell). Innerhalb eines Abschnitts bleibt es bei etwa 900 Zeichen mit 150 Überlappung; kleine Abschnitte gehen mit dem nächsten zusammen; eine Markdown-Tabelle bleibt bis 2.400 Zeichen ein Stück. Text ohne Überschriften wird genau wie bisher geschnitten. Jedes Stück bekommt eine Kontextzeile chunks.head aus Titel (Steckbrief, sonst Dateiname), Art und den Überschriften darüber (chunks.part). Die Wortsuche durchsucht die Kontextzeilen in einem zweiten Index (ftshead) mit Gewicht 0,4 neben dem eigenen Text des Stücks; die Bedeutungssuche bettet Kontextzeile und Stück zusammen ein. Ändert sich die Zeile (neuer Steckbrief), wird der Vektor des Stücks in Pausen neu berechnet. Bestehende Dokumente bekommen ihre Zeilen in ruhigen Minuten (20 Dokumente pro Schritt, ohne Modell, Logzeile wissen: kontext gebaut | N dokumente, Ereignis in der Live-Übersicht)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "; Ich → Dokumente zeigt, wie viele noch warten. Das Modell sieht den Abschnitt in der Quellenangabe („Vertrag.txt, Seite 2, Abschnitt § 4 Kaution“), gekürzt auf 60 Zeichen und ohne Klammern und Anführungszeichen, weil er Text von außen ist. Die Prüfbank stieg damit von 84 % auf 89 % unter den ersten 5; test_suchpruefung verlangt jetzt mindestens 85 %."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Dokumentliste für viele Dateien (V01.0.413, Plan /mnt/project-files/dateiliste/plan.md): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearb"
 },
 {
@@ -5110,6 +5126,22 @@
 "head": "Voice chat",
 "title": "Search check (V01.0.516, plan *suche-schaerfen*, stage 1)",
 "text": "right document among the first 30, whether the right page was among the first 5, and the time (median and slowest 10 %). The profile sees the shares among the first 5 and first, the history of the last runs and \"Found badly\" with \"Try\" (the first 5 hits now). The admin sees only sums over all profiles under *Status → Checks → Check the search*, the live overview the number of questions and the share; the journal fixed words and numbers only. The fixed test bank app/tests/data/suchbank.json (15 invented papers, 45 questions) keeps the word search at no less than 80 % among the first 5 in test_suchpruefung (measured 84 %)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Context in the sections (V01.0.519, plan *suche-schaerfen*, stage 2, no switch)",
+"text": "Context in the sections (V01.0.519, plan *suche-schaerfen*, stage 2, no switch): documents are cut at their headings: Markdown headings (Docling, .md), \"§ 3 …\", \"TOP 2 …\", \"Artikel 4\", numbered lines like \"2.1 Kosten\" and short lines of their own over a paragraph (fixed rules in documents.heading, never a model). Inside a section it stays at about 900 characters with 150 overlap; small sections go with the next one; a Markdown table stays one piece up to 2,400 characters. Text without headings is cut exactly as before. Every piece gets a context line chunks.head from title (the card's, else the file name), kind and the headings above it (chunks.part). The word search looks at the context lines in a second index (ftshead) with weight 0.4 next to the piece's own text; the meaning search embeds context line and piece together. When the line changes (a new card), the piece's vector is computed again in quiet moments. Existing documents get their lines in quiet minutes (20 documents per step, no model, log line wissen: kontext gebaut | N dokumente, an event in the live overview); Me → Documents shows how many still wait. The model sees the section in the source line (\"Vertrag.txt, Seite"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Context in the sections (V01.0.519, plan *suche-schaerfen*, stage 2, no switch)",
+"text": " 2, Abschnitt § 4 Kaution\"), cut to 60 characters and without brackets and quotes, because it is outside text. The test bank rose from 84 % to 89 % among the first 5; test_suchpruefung now asks for at least 85 %."
 },
 {
 "lang": "en",

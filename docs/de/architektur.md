@@ -176,7 +176,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/doclingdienst.py` | Docling-Server im Heimnetz: Dokumente und Scans besser lesen |
 | `app/panel/docmake.py` | Dokumente erstellen: Aufträge, Vorlagen, Ablage |
 | `app/panel/docrender.py` | Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code |
-| `app/panel/documents.py` | Dokumente pro Profil in wissen.db: Text, Abschnitte, Suche |
+| `app/panel/documents.py` | Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche |
 | `app/panel/embed_worker.py` | Das Vektormodell im eigenen Prozess |
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
@@ -347,7 +347,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | – | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
-| `users/ID/wissen.db` | Dokumente: Text, Suche, Vektoren (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |

@@ -347,7 +347,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | – | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, search, vectors (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |

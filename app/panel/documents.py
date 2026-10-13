@@ -64,9 +64,17 @@ NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("
                ("ref", "TEXT DEFAULT ''"), ("tags", "TEXT DEFAULT '[]'"), ("mytags", "TEXT DEFAULT ''"),
                ("brief", "TEXT DEFAULT ''"), ("changed", "INTEGER DEFAULT 0"),
                # Docling-Server (doclingdienst.py): '' not asked, wait, ok, x (failed or let go)
-               ("docling", "TEXT DEFAULT ''"))
+               ("docling", "TEXT DEFAULT ''"),
+               # Stufe 2 of plan suche-schaerfen: the version of the context lines of its pieces (0 = to do)
+               ("headv", "INTEGER DEFAULT 0"))
 # when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
-MORE_COLUMNS = {"chunks": (("changed", "INTEGER DEFAULT 0"),), "pagetext": (("changed", "INTEGER DEFAULT 0"),)}
+# part: the headings the piece stands under (NULL = not known yet, from before V01.0.519); head: the context line
+# (title, kind, part) that the word search weighs lower (ftshead) and the meaning search reads with the piece
+MORE_COLUMNS = {"chunks": (("changed", "INTEGER DEFAULT 0"), ("part", "TEXT"), ("head", "TEXT DEFAULT ''")),
+                "pagetext": (("changed", "INTEGER DEFAULT 0"),)}
+HEADV = 1                      # raise to build every context line again (in quiet moments, due_heads)
+HEAD_WEIGHT = 0.4              # the context line counts this much against the piece's own words
+TABLE = 2400                   # a table stays one piece up to this many characters
 FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
 FRESH_HALF = 14 * 86400      # ... halved every two weeks
 ARTS = ("Vertrag", "Rechnung", "Brief", "Anleitung", "Bescheid", "Versicherung", "Kontoauszug", "Beleg", "Befund",
@@ -81,6 +89,7 @@ CREATE TABLE IF NOT EXISTS chunks (id INTEGER PRIMARY KEY, doc TEXT NOT NULL, n 
     text TEXT NOT NULL, vec BLOB);
 CREATE INDEX IF NOT EXISTS chunks_doc ON chunks(doc);
 CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(terms);
+CREATE VIRTUAL TABLE IF NOT EXISTS ftshead USING fts5(terms);
 CREATE TABLE IF NOT EXISTS pages (doc TEXT NOT NULL, page INTEGER NOT NULL, jpeg BLOB NOT NULL,
     tries INTEGER DEFAULT 0, PRIMARY KEY (doc, page));
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT);
@@ -179,9 +188,17 @@ def _import_json(uid, con):
             print("documents: old document not taken over:", type(e).__name__, flush=True)
 
 
-def _put_chunk(con, doc, n, page, text, changed=0):
-    cur = con.execute("INSERT INTO chunks (doc, n, page, text, changed) VALUES (?,?,?,?,?)", (doc, n, page, text, int(changed or 0)))
+def _put_chunk(con, doc, n, page, text, changed=0, part=None):
+    cur = con.execute("INSERT INTO chunks (doc, n, page, text, changed, part) VALUES (?,?,?,?,?,?)",
+                      (doc, n, page, text, int(changed or 0), part))
     con.execute("INSERT INTO fts (rowid, terms) VALUES (?,?)", (cur.lastrowid, " ".join(_terms(text))))
+    con.execute("UPDATE docs SET headv=0 WHERE id=?", (doc,))
+
+
+def _drop_chunks(con, doc_id):
+    for t in ("fts", "ftshead"):
+        con.execute(f"DELETE FROM {t} WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
+    con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
 
 
 # ---------------------------------------------------------------- extraction
@@ -366,10 +383,8 @@ def extract_pages(name, data):
     raise ValueError("supported: " + ", ".join(TYPES))
 
 
-def chunks(text):
+def _cut(text):
     """Pieces of about CHUNK characters, cut at paragraph or sentence ends, overlapping a little."""
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n\s*\n+", "\n\n", text).strip()[:MAX_CHARS]
     out, i = [], 0
     while i < len(text):
         end = min(len(text), i + CHUNK)
@@ -384,6 +399,97 @@ def chunks(text):
             break
         i = max(end - OVERLAP, i + 1)
     return out
+
+
+# a heading at the start of a paragraph (Stufe 2 of plan suche-schaerfen): Markdown (Docling, .md, Word headings),
+# "§ 3 Miete.", "TOP 2 …", "Artikel 4", a numbered "2.1 Kosten", or a short line of its own without a full stop
+_H_MD = re.compile(r"#{1,6}\s+(\S.{0,118})")
+_H_LAW = re.compile(r"((?:§|Art\.|Artikel|TOP|Kapitel|Abschnitt|Teil)\s*\d+[a-z]?\b[^.:\n]{0,60})[.:]?(\s|$)")
+_H_NUM = re.compile(r"(\d{1,2}(?:\.\d{1,2}){0,3}\.?\s+[A-ZÄÖÜ][^.!?:\n]{1,70})$")
+_H_LINE = re.compile(r"[A-ZÄÖÜ0-9][^.!?;,:\n]{1,68}[^.!?;,:\s]")
+
+
+def heading(block):
+    """The heading a paragraph starts with, or "" (fixed rules, nothing from a model)."""
+    first = block.split("\n", 1)[0].strip()
+    m = _H_MD.fullmatch(first)
+    if m:
+        return m[1].strip(" #*")
+    m = _H_LAW.match(first)
+    if m:
+        return m[1].strip()
+    m = _H_NUM.fullmatch(first)
+    if m and len(first.split()) <= 10:
+        return m[1].strip()
+    rest = block.strip().split("\n")[1:]
+    # a short line over a paragraph (never over more short lines: an address, a list of names)
+    if rest and len(rest[0]) >= 40 and _H_LINE.fullmatch(first) and len(first.split()) <= 8 and not first.isdigit():
+        return first
+    return ""
+
+
+def _is_table(block):
+    lines = [x for x in block.split("\n") if x.strip()]
+    return len(lines) >= 2 and all(x.lstrip().startswith("|") for x in lines)
+
+
+def pieces(text):
+    """[(piece, part)]: the text cut at its headings into sections, each section cut as before (_cut), small
+    sections joined with the next; a table stays one piece up to TABLE characters. part: the headings the piece
+    stands under ("" when the text has none). A text without headings is cut exactly as before."""
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n\s*\n+", "\n\n", text).strip()[:MAX_CHARS]
+    if not text:
+        return []
+    secs, cur, title, last = [], [], "", ""     # sections: (heading, [blocks]); last: the heading above
+    for b in text.split("\n\n"):
+        h = heading(b)
+        if (h or _is_table(b)) and cur:
+            secs.append((title, cur))
+            cur = []
+        if h:
+            title = last = h
+        elif not cur:
+            title = last
+        cur.append(b)
+        if _is_table(b):
+            secs.append((title, cur))
+            cur = []
+    if cur:
+        secs.append((title, cur))
+    out, buf, heads = [], [], []
+    for n, (h, blocks) in enumerate(secs):
+        body = "\n\n".join(blocks)
+        if len(body) <= TABLE and _is_table(blocks[-1]):
+            if buf:
+                out += _with_parts(_cut("\n\n".join(buf)), heads)
+                buf, heads = [], []
+            out.append((body, _part([h])))
+            continue
+        buf.append(body)
+        if h and h not in heads:
+            heads.append(h)
+        if len("\n\n".join(buf)) >= CHUNK // 2 or n == len(secs) - 1:
+            out += _with_parts(_cut("\n\n".join(buf)), heads)
+            buf, heads = [], []
+    if buf:
+        out += _with_parts(_cut("\n\n".join(buf)), heads)
+    return out
+
+
+def _part(heads):
+    return ", ".join(heads)[:120]
+
+
+def _with_parts(cut, heads):
+    """Small sections joined with the next: the first piece stands under all their headings, the rest only
+    under the last one."""
+    return [(p, _part(heads if i == 0 else heads[-1:])) for i, p in enumerate(cut)]
+
+
+def chunks(text):
+    """The pieces of a text without their parts (see pieces)."""
+    return [p for p, _ in pieces(text)]
 
 
 def _clean_text(text):
@@ -538,6 +644,7 @@ def set_card(uid, doc_id, d=None, failed=False):
                     (_short(d.get("titel"), 80), art if art in ARTS else ("Sonstiges" if art else ""),
                      _short(d.get("absender"), 60), _when(d.get("datum")), _when(d.get("frist")),
                      _short(d.get("nummer"), 40), json.dumps(clean_tags(d.get("tags"))[:6]), doc_id))
+        set_heads(con, doc_id)      # the card's title and kind go into the context lines
 
 
 def set_tags(uid, doc_id, tags):
@@ -672,7 +779,7 @@ def _read(name, data, text=None, pictures=False, cleaned=False, later=False):
             notes.append(f"Text nach Seite {pages[-1][0]} abgeschnitten")
     else:
         pages, _ = extract_pages(name, data)
-    parts = [(p, c) for p, t in pages for c in chunks(_clean_text(t))]
+    parts = [(p, c, part) for p, t in pages for c, part in pieces(_clean_text(t))]
     if not parts and not todo and not later:
         raise ValueError("no text found in this file")
     return parts, todo, kind, "; ".join(notes)
@@ -722,10 +829,11 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                     (doc_id, name, len(data), int(time.time()), kind, state, note,
                      len(todo), stored, source, "wait" if docling else ""))
-        for i, (page, c) in enumerate(parts):
-            _put_chunk(con, doc_id, i, page, c)
+        for i, (page, c, part) in enumerate(parts):
+            _put_chunk(con, doc_id, i, page, c, part=part)
         for page, jpeg in todo.items():
             con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
+        set_heads(con, doc_id)
     return {"id": doc_id, "name": name, "chunks": len(parts), "state": state,
             "todo": len(todo), "kind": kind, "file": bool(stored), "docling": docling}
 
@@ -739,8 +847,7 @@ def delete(uid, doc_id):
         r = con.execute("SELECT file FROM docs WHERE id=?", (doc_id,)).fetchone()
         if not r:
             return False
-        con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
-        con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+        _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM docs WHERE id=?", (doc_id,))
@@ -788,16 +895,16 @@ def reread(uid, doc_id, pictures=False, docling=False):
         waiting = con.execute("SELECT COUNT(*) FROM pages WHERE doc<>?", (doc_id,)).fetchone()[0]
         if todo and waiting + len(todo) > MAX_QUEUED:
             raise ValueError(f"at most {MAX_QUEUED} pages may wait to be read; try again later")
-        con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
-        con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+        _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         state = "reading" if todo or (docling and not parts) else "ready"
         con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=?, docling=? WHERE id=?",
                     (kind, state, note, len(todo), "wait" if docling else "", doc_id))
-        for i, (page, c) in enumerate(parts):
-            _put_chunk(con, doc_id, i, page, c)
+        for i, (page, c, part) in enumerate(parts):
+            _put_chunk(con, doc_id, i, page, c, part=part)
         for page, jpeg in todo.items():
             con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
+        set_heads(con, doc_id)
     return {"id": doc_id, "name": r["name"], "chunks": len(parts), "state": state,
             "todo": len(todo), "kind": kind, "file": True, "docling": bool(docling)}
 
@@ -922,8 +1029,7 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
             doc_id = secrets.token_hex(6)
             con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, source) "
                         "VALUES (?,?,?,?,?,?,?,?,?)", (doc_id, name, 0, int(time.time()), "notebook", "ready", "", 0, source))
-        con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
-        con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+        _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
         room = MAX_QUEUED - con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
@@ -938,8 +1044,8 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
                 continue
             con.execute("INSERT INTO pagetext (doc, page, text, done, changed) VALUES (?,?,?,?,?)",
                         (doc_id, page, text, 0 if jpeg else 1, when))
-            for c in chunks(_clean_text(text)):
-                _put_chunk(con, doc_id, n, page, c, when)
+            for c, part in pieces(_clean_text(text)):
+                _put_chunk(con, doc_id, n, page, c, when, part)
                 n += 1
             size += len(text.encode())
             if jpeg:
@@ -952,6 +1058,7 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
             note = (note + "; " if note else "") + f"{left} Seite{'n' if left > 1 else ''} warten auf Platz"
         con.execute("UPDATE docs SET name=?, size=?, kind='notebook', state=?, note=?, pages=?, changed=? WHERE id=?",
                     (name, size, state, note[:300], waiting, changed, doc_id))
+        set_heads(con, doc_id)
     return doc_id, left
 
 
@@ -1029,12 +1136,12 @@ def docling_done(uid, doc_id, pages, why="", text_min=SCAN_TEXT):
             _add_note(con, doc_id, "Docling: nicht lesbar")
             _settle(con, doc_id)
             return 0
-        parts = [(page, c) for page, t in pages for c in chunks(_clean_text(t))]
+        parts = [(page, c, part) for page, t in pages for c, part in pieces(_clean_text(t))]
         if parts:
-            con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
-            con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
-            for i, (page, c) in enumerate(parts):
-                _put_chunk(con, doc_id, i, page, c)
+            _drop_chunks(con, doc_id)
+            for i, (page, c, part) in enumerate(parts):
+                _put_chunk(con, doc_id, i, page, c, part=part)
+            set_heads(con, doc_id)
         found = {p for p, t in pages if p is not None and len(t.strip()) >= text_min}
         waiting = [r[0] for r in con.execute("SELECT page FROM pages WHERE doc=?", (doc_id,)).fetchall()]
         if any(p is None for p, _ in pages):       # no page breaks: enough text for every waiting page, or none goes
@@ -1127,13 +1234,14 @@ def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
         else:
             n = con.execute("SELECT COALESCE(MAX(n), -1) FROM chunks WHERE doc=?", (doc_id,)).fetchone()[0]
             w = con.execute("SELECT changed FROM pagetext WHERE doc=? AND page=?", (doc_id, page)).fetchone()
-            for c in chunks(_clean_text(text or "")):
+            for c, part in pieces(_clean_text(text or "")):
                 n += 1
-                _put_chunk(con, doc_id, n, page, c, w[0] if w else 0)
+                _put_chunk(con, doc_id, n, page, c, w[0] if w else 0, part)
         # a notebook page (reMarkable): its whole text is kept, so an unchanged page is not read again
         con.execute("UPDATE pagetext SET text=CASE WHEN text='' THEN ? ELSE text || char(10) || ? END, done=1 "
                     "WHERE doc=? AND page=?", (text or "", text or "", doc_id, page))
         con.execute("DELETE FROM pages WHERE doc=? AND page=?", (doc_id, page))
+        set_heads(con, doc_id)
         if not con.execute("SELECT 1 FROM pages WHERE doc=?", (doc_id,)).fetchone():
             has = con.execute("SELECT 1 FROM chunks WHERE doc=?", (doc_id,)).fetchone()
             con.execute("UPDATE docs SET state=? WHERE id=?", ("ready" if has else "error", doc_id))
@@ -1154,12 +1262,82 @@ def count_today(uid, day, add=0, key="vision"):
 
 # ---------------------------------------------------------------- meaning vectors (docembed.py)
 def missing_vectors(uid, limit=16):
-    """[(chunk id, text)] of pieces without a vector yet."""
+    """[(chunk id, text)] of pieces without a vector yet; the text with its context line in front (Stufe 2)."""
     if not os.path.exists(db_path(uid)):
         return []
     with _Db(uid) as con:
-        return [tuple(r) for r in con.execute("SELECT id, text FROM chunks WHERE vec IS NULL ORDER BY id LIMIT ?",
+        return [tuple(r) for r in con.execute("SELECT id, CASE WHEN COALESCE(head, '')<>'' THEN head || char(10) || text "
+                                              "ELSE text END FROM chunks WHERE vec IS NULL ORDER BY id LIMIT ?",
                                               (limit,)).fetchall()]
+
+
+# ---------------------------------------------------------------- context lines (Stufe 2 of plan suche-schaerfen)
+def _title(d):
+    return str(d["title"] or "").strip() or re.sub(r"[_]+", " ", os.path.splitext(d["name"])[0]).strip()
+
+
+def head_line(title, art, part):
+    """The context line of a piece: the document's title (its card's, else the file name), its kind and the
+    headings above the piece. Outside text, so it is cut hard and only ever read as data."""
+    q = lambda v, n: re.sub(r"\s+", " ", re.sub(r"<<<|>>>|[„“\n\r\t]", "", str(v or ""))).strip()[:n]  # noqa: E731
+    return " · ".join(x for x in (q(title, 80), q(art, 30), q(part, 120)) if x)
+
+
+def _old_parts(texts):
+    """The parts of pieces cut before V01.0.519, from the headings inside them (one heading carries on)."""
+    out, carry = [], ""
+    for t in texts:
+        blocks = [b for b in re.sub(r"\n\s*\n+", "\n\n", t).split("\n\n") if b.strip()]
+        found = [h for h in (heading(b) for b in blocks) if h]
+        starts = bool(blocks) and bool(heading(blocks[0]))
+        heads = ([] if starts or not carry else [carry]) + [h for h in found if h != carry or starts]
+        out.append(_part(list(dict.fromkeys(heads))))
+        if found:
+            carry = found[-1]
+    return out
+
+
+def set_heads(con, doc_id):
+    """Builds the context lines of one document's pieces (and their entry in ftshead). A piece whose line
+    changed loses its meaning vector, so missing_vectors embeds it again with the line."""
+    d = con.execute("SELECT name, title, art FROM docs WHERE id=?", (doc_id,)).fetchone()
+    if not d:
+        return 0
+    rows = con.execute("SELECT id, text, part, head FROM chunks WHERE doc=? ORDER BY n, id", (doc_id,)).fetchall()
+    old = _old_parts([r["text"] for r in rows]) if any(r["part"] is None for r in rows) else []
+    changed = 0
+    for i, r in enumerate(rows):
+        part = r["part"] if r["part"] is not None else old[i]
+        h = head_line(_title(d), d["art"], part)
+        con.execute("DELETE FROM ftshead WHERE rowid=?", (r["id"],))
+        if h:
+            con.execute("INSERT INTO ftshead (rowid, terms) VALUES (?,?)", (r["id"], " ".join(_terms(h))))
+        if h != (r["head"] or "") or r["part"] is None:
+            con.execute("UPDATE chunks SET part=?, head=?, vec=CASE WHEN ?<>COALESCE(head, '') THEN NULL ELSE vec END "
+                        "WHERE id=?", (part, h, h, r["id"]))
+            changed += 1
+    con.execute("UPDATE docs SET headv=? WHERE id=?", (HEADV, doc_id))
+    return changed
+
+
+def due_heads(uid, most=20):
+    """Quiet moments (wissen.due_once): context lines for up to `most` documents still without (new, read
+    again, a new card, or from before V01.0.519). Returns how many documents were done."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        ids = [r[0] for r in con.execute("SELECT id FROM docs WHERE COALESCE(headv, 0)<? ORDER BY created LIMIT ?", (HEADV, int(most))).fetchall()]
+        for i in ids:
+            set_heads(con, i)
+    return len(ids)
+
+
+def heads_left(uid):
+    """Documents whose context lines are still to be built (Live-Übersicht, Ich → Dokumente)."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM docs WHERE COALESCE(headv, 0)<?", (HEADV,)).fetchone()[0]
 
 
 def set_vectors(uid, pairs):
@@ -1236,11 +1414,16 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
             if not only:
                 return []
         if q:
-            rows = con.execute("SELECT fts.rowid FROM fts JOIN chunks c ON c.id=fts.rowid JOIN docs d ON d.id=c.doc "
-                               "WHERE fts MATCH ? AND " + cond + " ORDER BY bm25(fts) LIMIT 30",
-                               (" OR ".join(f'"{t}"' for t in q),)).fetchall()
-            for i, r in enumerate(rows):
-                ranks[r[0]] = 1 / (60 + i)
+            # the piece's own words, and its context line (title, kind, headings) weighed lower (Stufe 2)
+            match = " OR ".join(f'"{t}"' for t in q)
+            score = {}
+            for table, w, most in (("fts", 1.0, 60), ("ftshead", HEAD_WEIGHT, 200)):
+                for r in con.execute(f"SELECT {table}.rowid, bm25({table}) FROM {table} JOIN chunks c ON c.id={table}.rowid "
+                                     f"JOIN docs d ON d.id=c.doc WHERE {table} MATCH ? AND " + cond +
+                                     f" ORDER BY bm25({table}) LIMIT {most}", (match,)):
+                    score[r[0]] = score.get(r[0], 0.0) + w * r[1]
+            for i, cid in enumerate(sorted(score, key=lambda x: (score[x], x))[:30]):
+                ranks[cid] = 1 / (60 + i)
     if qvec is not None:
         import numpy as np
         ids, mat = _vectors(uid)
@@ -1266,9 +1449,10 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
-            "SELECT c.id, c.doc, c.page, c.text, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
+            "SELECT c.id, c.doc, c.page, c.text, c.part, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
     return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
+                  "part": got[i]["part"] or "",
                   "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]},
                  **({"changed": when.get(i, 0)} if fresh else {})) for i in best if i in got]
 

@@ -30,7 +30,7 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 NIGHT = datetime.datetime(2027, 1, 5, 3, 0).timestamp()
 DAY = datetime.datetime(2027, 1, 5, 14, 0).timestamp()
 BANK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "suchbank.json")
-FLOOR = 80      # measured 84 % (45 questions, words only, V01.0.508); a little room, never lowered to get green
+FLOOR = 85      # measured 84 % words only (V01.0.508), 89 % with the context lines (V01.0.519); raised, never lowered
 
 
 def profile(name, pin="1234"):
