@@ -411,6 +411,14 @@ class Sheet:
             k += 1
         d.set_y(y)
 
+    def note_area(self, name, title="Anmerkung", n=4, pitch=8.0):
+        """Ruled lines whose handwriting the panel reads as text (rmaufgaben: a point on the next version to tick,
+        never a command). Recorded as a field of kind "notiz": no box, never judged as a tick."""
+        self.need(14 + n * pitch)
+        top = self.doc.get_y() + 7
+        self.lines(title, n, pitch)
+        self.field(name, "notiz", self.M, top, self.width, self.doc.get_y() - top)
+
     def lined_page(self):
         self._page()
         d = self.doc
@@ -621,9 +629,9 @@ def evaluate(fields, pages):
     for p, lines in pages.items():
         here = [f for f in fields if f["p"] == p]
         for f in here:
-            if f["k"] != "ziel":
+            if f["k"] not in ("ziel", "notiz"):
                 states[f["n"]] = judge(lines, f)
-        ink += other_ink(lines, here)
+        ink += other_ink(lines, [f for f in here if f["k"] != "notiz"])   # writing in the Anmerkung is handwriting
     return states, ink
 
 
@@ -644,14 +652,21 @@ def plain(m, w):
 
 
 def boxed(fields, pages):
-    """mm of ink inside the boxes (with their margin): how well a mapping puts the ticks into the boxes."""
+    """mm of ink inside the boxes (with their margin): how well a mapping puts the ticks into the boxes. Only strokes
+    lying (almost) wholly in a box count: a line of handwriting that a scale drags across boxes is no tick."""
     n = 0.0
     for p, lines in pages.items():
-        here = [f for f in fields if f["p"] == p and f["k"] != "ziel"]
-        for a, b in _segments(lines):
-            mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-            if any(_inside(mid, f["x"], f["y"], f["w"], f["h"], TOL) for f in here):
-                n += math.dist(a, b)
+        here = [f for f in fields if f["p"] == p and f["k"] not in ("ziel", "notiz")]
+        for ln in lines:
+            inside = total = 0.0
+            for a, b in _segments([ln]):
+                mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+                length = math.dist(a, b)
+                total += length
+                if any(_inside(mid, f["x"], f["y"], f["w"], f["h"], TOL) for f in here):
+                    inside += length
+            if inside and inside >= 0.8 * total:
+                n += inside
     return n
 
 
@@ -761,7 +776,7 @@ def picture(paper, page, lines_mm):
                 said.add(item)
                 dr.text((box[0], box[1] - 6 * k), point[:48], fill=(60, 64, 76), font=font)
             dr.text((box[2] + 6, box[1]), (answer or f["t"])[:24], fill=(60, 64, 76), font=font)
-        elif f.get("t") and f["k"] != "weg":
+        elif f.get("t") and f["k"] not in ("weg", "notiz"):
             dr.text((box[2] + 6, box[1]), f["t"][:48], fill=(60, 64, 76), font=font)
     for ln in lines_mm:
         pts = [(x * k, y * k) for x, y in ln]
@@ -1024,6 +1039,8 @@ async def check(uid, now=None):
         done = await _act(uid, did, it, pp, states, ink, items, new, swap_changes)
         if pp.get("k") == "aufgaben":
             pp["changed"] = int(now)
+            if rmaufgaben.on(uid):
+                await rmaufgaben.read_note(uid, did, pp, mm, now)
             if rmaufgaben.on(uid) and rmaufgaben.ready(pp, now):
                 done += rmaufgaben.act(uid, pp, now)
         n_on = sum(1 for v in states.values() if v == "an")
@@ -1129,7 +1146,7 @@ def public(uid):
             break
         res = pp.get("r") or {}
         boxes = [{"n": f["n"], "t": f.get("t", ""), "k": f["k"], "state": res.get(f["n"], "")}
-                 for f in pp.get("f", []) if f["k"] != "ziel"]
+                 for f in pp.get("f", []) if f["k"] not in ("ziel", "notiz")]
         out.append({"id": did, "title": pp.get("title", ""), "t": pp.get("t", 0), "read": pp.get("read", 0),
                     "kind": pp.get("k", ""), "pages": pp.get("pages", 1), "boxes": boxes, "did": pp.get("did", ""),
                     "gone": bool(pp.get("gone")), "ink": bool(pp.get("ink", 0) >= NOTES_MM),

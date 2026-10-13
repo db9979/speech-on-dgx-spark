@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.512** reMarkable: the note on the task sheet is read and comes back as a point to tick, also as a job
 - **V01.0.511** Live: every event the Spark starts by itself runs once as a coloured ball down the bus to its stage, inputs in fixed colours
 - **V01.0.510** Browser: TV and other voices no longer become a question after an answer (voice check on the open microphone, room level for barge-in, iPhone app)
 - **V01.0.509** Simpler release: what the admin releases works at once for every profile, only the admin blocks single profiles; guests only get questions and answers
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.505** Errors with a reason in the logs; device updates no longer wrongly report "not ok" with the Android app
 - **V01.0.504** A log for everything: Live events are in the journal too, every line has a filter area, tests turn red when a new action writes no line
 - **V01.0.503** Tests green again: features page with "NAS verbinden", guest tests pass on their own too
-- **V01.0.502** GitHub tests run in four parts at the same time: a run takes about a quarter as long; batched push in the guideline and CLAUDE.md
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

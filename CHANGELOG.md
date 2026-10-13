@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.512** · 2026-10-13 · reMarkable: Was auf dem Aufgabenblatt unter „Anmerkung“ steht, liest der Spark und legt es auf der nächsten Version zum Ankreuzen vor (Erinnern, Als Auftrag bei „Sag mir Bescheid, wenn …“, Weg, Später); Kreuze zählen nur noch Striche, die im Kästchen liegen
 - **V01.0.511** · 2026-10-13 · Live: jedes Von-selbst-Ereignis läuft einmal als farbige Kugel vom Bus-Eingang bis zu seiner Stufe, auch wenn es schon fertig war; Eingänge rule, timer, job und note in fester Farbe
 - **V01.0.510** · 2026-10-13 · Browser: Fernseher und fremde Stimmen werden nach einer Antwort keine Frage mehr: ein von selbst geöffnetes Mikrofon (Ins-Wort-Fallen, Rückfrage, Freihändig) nimmt mit angelernter Stimme nur bekannte Stimmen (fremdstimme.py), ohne Abdruck nur Stimmen über dem gelernten Raumpegel; die iPhone-App sagt es ab dem nächsten Build genauso
 - **V01.0.509** · 2026-10-13 · Freigabe vereinfacht: Was der Admin unter Funktionen freigibt, gilt sofort für jedes Profil, ohne eigenen Schalter unter Ich; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was), unter Ich bleiben nur Einrichten und das Abschalten von Dingen, die der Spark von selbst tut; Gäste bekommen nur Frage und Antwort ohne Werkzeuge; Startpakete und „Neue Profile“ entfallen; auch iPhone-App, Doku und Richtlinie

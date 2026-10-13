@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.512** reMarkable: Die Anmerkung auf dem Aufgabenblatt wird gelesen und kommt als Punkt zum Ankreuzen zurück, auch als Auftrag
 - **V01.0.511** Live: jedes Von-selbst-Ereignis läuft einmal als farbige Kugel über den Bus bis zu seiner Stufe, Eingänge in fester Farbe
 - **V01.0.510** Browser: Fernseher und fremde Stimmen werden nach einer Antwort keine Frage mehr (Stimmprüfung im offenen Mikrofon, Raumpegel beim Ins-Wort-Fallen, iPhone-App)
 - **V01.0.509** Freigabe vereinfacht: Freigegebenes gilt sofort für jedes Profil, nur der Admin sperrt einzelne Profile; Gäste nur Frage und Antwort
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.505** Fehler mit Grund in den Logs; Geräte-Updates melden mit Android-App nicht mehr fälschlich „nicht ok“
 - **V01.0.504** Log für alles: Live-Ereignisse stehen auch im Journal, jede Zeile hat einen Filterbereich, Tests werden rot, wenn eine neue Aktion keine Zeile schreibt
 - **V01.0.503** Tests wieder grün: Funktionen-Seite mit „NAS verbinden“, Gast-Tests laufen auch allein
-- **V01.0.502** Tests auf GitHub in vier Teilen gleichzeitig: ein Lauf dauert etwa ein Viertel so lange; Sammel-Push in Richtlinie und CLAUDE.md
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
