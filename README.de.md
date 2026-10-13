@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.503** Tests wieder grün: Funktionen-Seite mit „NAS verbinden“, Gast-Tests laufen auch allein
 - **V01.0.502** Tests auf GitHub in vier Teilen gleichzeitig: ein Lauf dauert etwa ein Viertel so lange; Sammel-Push in Richtlinie und CLAUDE.md
 - **V01.0.501** NAS einmal verbinden (Synology und andere): Eigener Speicher und Sicherung nehmen Adresse, Passwort und Zertifikat von dort
 - **V01.0.500** reMarkable: Kreuze treffen wieder, Liste aufgeräumt, Cloud-Fehler mit Grund im Log
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.496** Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
 - **V01.0.495** Werkzeuge für alle Dienste: Zustand per Sprache, Termine, Pläne und Regeln ändern, wiederholte Erinnerungen, Rückgängig, alles nach Ja
 - **V01.0.494** Admin-Schalter speichern: alte Vorgaben und Einstellungen blockieren nicht mehr
-- **V01.0.493** Logs lückenlos: jede Durchsage und andere Aktion schreibt für jedes Ergebnis eine Zeile, jeder Werkzeugaufruf auch
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

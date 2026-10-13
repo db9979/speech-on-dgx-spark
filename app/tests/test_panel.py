@@ -118,6 +118,9 @@ class Page(unittest.TestCase):
 class Isolation(unittest.TestCase):
     """What one profile stores is never visible to another profile or a guest."""
 
+    def setUp(self):
+        helpers.set_config(public=True)   # guests may chat (as Access sets it): the class passes on its own too
+
     def test_memory_documents_conversations(self):
         a, b, g = profile("Anna"), profile("Bert"), TestClient(panel.app)
         ask(a, 'TOOL memory_save {"fact": "Anna mag Rosen."}')
@@ -690,6 +693,9 @@ class Security(unittest.TestCase):
 
 
 class Errors(unittest.TestCase):
+    def setUp(self):
+        helpers.set_config(public=True)   # guests may chat (as Access sets it): the class passes on its own too
+
     def _set(self, sec, **kw):
         with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
@@ -2420,6 +2426,9 @@ def core_cookie():
 
 
 class GuestsChangeNothing(unittest.TestCase):
+    def setUp(self):
+        helpers.set_config(public=True)   # guests may chat (as Access sets it): the class passes on its own too
+
     def test_guest_settings_are_ignored_and_locked(self):
         g = TestClient(panel.app)
         ask(g, "Hallo, wie geht es?", length="short", speed=1.3)

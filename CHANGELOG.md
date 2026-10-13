@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.503** · 2026-10-13 · Tests wieder grün: Grenze für die Funktionen-Seite am Rechner passt zur Zeile „NAS verbinden“ (GitHub 3811 px); test_panel Isolation, Errors und GuestsChangeNothing laufen auch allein grün
 - **V01.0.502** · 2026-10-13 · Tests auf GitHub laufen in vier Teilen gleichzeitig (selftest.py --part K/4, geschnitten nach Testmodulen und ihrer Dauer in tests/dauer.json, Job „Ergebnis“ zählt die Fehler über den ganzen Lauf, kein Test fällt weg); Sammel-Push in Richtlinie und CLAUDE.md
 - **V01.0.501** · 2026-10-13 · NAS verbinden (Synology S1): eine Verbindung pro NAS mit Art, Adresse, Benutzer, versiegeltem Passwort und angenommenem Zertifikat oder Server-Schlüssel; Eigener Speicher wählt „Auf meiner NAS“ und nur den Ordner; bestehende Speicher-Ziele und die Sicherung aufs NAS ziehen beim Start von selbst um (alte Datei bleibt als *.vor-nas.json); Zustand, Live, Logs, Anleitung
 - **V01.0.500** · 2026-10-13 · reMarkable: Kreuze treffen wieder (Abgleich je Gerät, jeder Maßstab probiert), Liste „Gelesene Blätter“ aufgeräumt, Kontrollbild lesbar, Cloud-Fehler mit Grund im Log und einmal Wiederholen bei 429/5xx

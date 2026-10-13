@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.503** Tests green again: features page with "NAS verbinden", guest tests pass on their own too
 - **V01.0.502** GitHub tests run in four parts at the same time: a run takes about a quarter as long; batched push in the guideline and CLAUDE.md
 - **V01.0.501** Connect a NAS once (Synology and others): own storage and the backup take address, password and certificate from there
 - **V01.0.500** reMarkable: ticks hit their boxes again, list tidied, cloud errors with their reason in the log
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.496** Chats with other Sparks (Spark network V1): own Spark address, contact requests, pairing by code or open, signed messages with a queue; text first
 - **V01.0.495** Tools for every service: status by voice, change and delete appointments, jobs and rules, repeating reminders, undo, all after a yes
 - **V01.0.494** Saving admin switches: old presets and settings no longer block it
-- **V01.0.493** Complete logs: every announcement and other action writes a line for every outcome, every tool call too
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
