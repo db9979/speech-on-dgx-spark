@@ -92,6 +92,7 @@ MODULE = {
     "fixes": ("gespraech", "Lernt aus Korrekturen der Person"),
     "roles": ("gespraech", "Rollen: wie der Assistent antworten soll"),
     "stille": ("gespraech", "Aus Stille werden nie Wörter"),
+    "fremdstimme": ("gespraech", "Fernseher und fremde Stimmen im von selbst geöffneten Mikrofon werden keine Frage"),
     "echo": ("gespraech", "Der Assistent antwortet nicht auf seine eigene Stimme"),
     "images": ("gespraech", "Bilder in der Frage: das Sprachmodell sieht sie selbst"),
     "schreib": ("gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen"),

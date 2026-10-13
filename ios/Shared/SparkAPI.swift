@@ -412,12 +412,16 @@ struct SparkAPI {
     }
 
     /// The recorded question (WAV) as text.
-    func transcribe(wav: Data, language: String) async throws -> String {
+    /// opened: how the microphone opened by itself ("barge", "hands"); the Spark then takes only a known voice.
+    func transcribe(wav: Data, language: String, opened: String = "") async throws -> String {
         let boundary = "spark-" + UUID().uuidString
         var r = request("api/test/asr", method: "POST")
         r.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         var body = Data()
         body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"language\"\r\n\r\n\(language)\r\n".utf8))
+        if !opened.isEmpty {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"opened\"\r\n\r\n\(opened)\r\n".utf8))
+        }
         body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"frage.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
         body.append(wav)
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))

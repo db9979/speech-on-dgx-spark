@@ -101,6 +101,8 @@ final class Conversation: ObservableObject {
     private var ring: [Int16] = []
     private var heard = false
     private var fromWake = false
+    /// How the microphone opened by itself ("barge", "hands"): the Spark then takes only a known voice (fremdstimme.py)
+    private var opened = ""
     private var startedAt = Date()
     private var lastLoud = Date()
     private var loud: TimeInterval = 0
@@ -422,7 +424,7 @@ final class Conversation: ObservableObject {
         listen(preroll: 1.5, fromWake: true)
     }
 
-    private func listen(preroll: Double, fromWake: Bool) {
+    private func listen(preroll: Double, fromWake: Bool, opened: String = "") {
         error = nil
         wake.stop()
         do { try audio.startInput() } catch {
@@ -443,6 +445,7 @@ final class Conversation: ObservableObject {
         heard = preroll > 0
         loud = 0
         self.fromWake = fromWake
+        self.opened = opened
         startedAt = Date()
         lastLoud = Date()
         phase = .listening
@@ -480,7 +483,7 @@ final class Conversation: ObservableObject {
                 task?.cancel()
                 audio.stopPlaying()
                 streamDone = true
-                listen(preroll: 0.6, fromWake: false)
+                listen(preroll: 0.6, fromWake: false, opened: "barge")
             }
         default:
             break
@@ -495,10 +498,10 @@ final class Conversation: ObservableObject {
         guard wasHeard, let api = SparkAPI.current else { base(); return }
         if !(Prefs.handsFree || canWake) { audio.stopInput() }
         phase = .transcribing
-        let woke = fromWake
+        let woke = fromWake, how = opened
         task = Task {
             do {
-                var text = try await api.transcribe(wav: wav, language: Store.language)
+                var text = try await api.transcribe(wav: wav, language: Store.language, opened: how)
                 guard !Task.isCancelled else { return }
                 if woke { text = wake.strip(text) }
                 if text.isEmpty {
@@ -721,7 +724,7 @@ final class Conversation: ObservableObject {
             if flushNext() { return }
         }
         if Prefs.handsFree || inCar || offer != nil && canWake {
-            listen(preroll: 0, fromWake: false)
+            listen(preroll: 0, fromWake: false, opened: "hands")
         } else {
             base()
         }

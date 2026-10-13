@@ -19,6 +19,7 @@ import backup  # noqa: E402
 import undo  # noqa: E402
 import echo  # noqa: E402
 import stille  # noqa: E402
+import fremdstimme  # noqa: E402
 import guard  # noqa: E402
 import kiwix  # noqa: E402
 import health  # noqa: E402
@@ -973,14 +974,14 @@ async def read_audio(file):
 
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
 async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form(""),
-                   room: str = Form("")):
+                   room: str = Form(""), opened: str = Form("")):
     """Load limits (per caller per minute, guests only a few at once), then the transcription."""
     me = profiles.current(request)
     admin = not me and admin_cookie_ok(request)
     guard.limit(request, "asr", me and me["id"], admin)
     slot = None if me or admin else guard.Slot("asr")
     try:
-        return await _test_asr(request, file, language, wake, room)
+        return await _test_asr(request, file, language, wake, room, opened)
     finally:
         if slot:
             slot.release()
@@ -1002,7 +1003,7 @@ def _quiet(task):
     return task
 
 
-async def _test_asr(request, file, language, wake, room):
+async def _test_asr(request, file, language, wake, room, opened=""):
     cfg = load_config()
     data = await read_audio(file)
     ended = time.time()   # the recording ended about now (for "speaking pause", echo.py)
@@ -1027,6 +1028,12 @@ async def _test_asr(request, file, language, wake, room):
         room_mode.set_voice(me["id"], room, None)
         if room_mode.needs_voice(me["id"], room):
             rv = _quiet(asyncio.create_task(asyncio.to_thread(speakers.identify, data, th)))
+    # a microphone the page opened by itself (barge-in, follow-up window, hands-free) takes only a known voice,
+    # never the TV (fremdstimme.py; only with a taught voice), checked on the CPU while the GPU transcribes
+    how = fremdstimme.opened(opened)
+    fv = None
+    if me and not wake and not room and fremdstimme.applies(cfg, me["id"], how):
+        fv = _quiet(asyncio.create_task(asyncio.to_thread(fremdstimme.check, me["id"], data, th)))
     # silence never becomes words (stille.py): how much of the recording is voice, measured while the GPU listens
     quiet = _quiet(asyncio.create_task(asyncio.to_thread(stille.measure, data)))
     try:
@@ -1036,7 +1043,7 @@ async def _test_asr(request, file, language, wake, room):
                              files={"file": (file.filename or "audio.wav", data)},
                              data=form, headers=dict(api_headers(), **stufe.headers(stufe.asr_level(request))))
     except (httpx.ConnectError, httpx.ConnectTimeout):
-        for task in (spk, rv, quiet):
+        for task in (spk, rv, quiet, fv):
             if task is not None:
                 task.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
@@ -1049,7 +1056,7 @@ async def _test_asr(request, file, language, wake, room):
         got = got if isinstance(got, dict) else {}
         why = stille.check(str(got.get("text") or ""), await quiet)
         if why:
-            for task in (spk, rv):
+            for task in (spk, rv, fv):
                 if task is not None:
                     task.cancel()
             stille.note(why, echo.device_of(request).split(":")[0])
@@ -1073,6 +1080,18 @@ async def _test_asr(request, file, language, wake, room):
                     task.cancel()
             echo.note(why, dev.split(":")[0])
             return {"text": "", "ignored": why}
+    if fv is not None and r.status_code == 200:
+        try:
+            why, v = await fv
+        except Exception:   # unreadable audio: no numbers, the question counts as before
+            why, v = None, {}
+        fremdstimme.note(why, how, v, echo.device_of(request).split(":")[0])
+        if why:
+            if spk is not None:
+                spk.cancel()
+            return {"text": "", "ignored": why}
+    elif fv is not None:
+        fv.cancel()
     if rv is not None:
         # the voice belongs to exactly this recording: kept together with its words, so a "Ja" heard in
         # another recording (TV, another person) never borrows the owner's voice

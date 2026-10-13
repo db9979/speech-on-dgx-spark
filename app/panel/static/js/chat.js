@@ -3,7 +3,11 @@
 // Record -> /api/test/asr -> /api/chat (LLM text and streamed TTS audio as one SSE stream) -> play.
 // Conversation settings (see renderSet). Profiles keep them on the Spark, guests in this browser.
 let S={hands:false,speak:true,auto:true,turn:true,daily:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
-const BARGE={low:[0.05,6,0.8],mid:[0.03,4,0.5],high:[0.02,3,0.35]};   // min level, x noise floor, x own output
+const BARGE={low:[0.05,6,0.8,3.5],mid:[0.03,4,0.5,2.5],high:[0.02,3,0.35,2]};   // min level, x noise floor, x own output, x room level
+// The room level (TV, radio, other people) is learned while the answer plays, in the moments the Spark itself is
+// quiet. A voice must stand out from it to interrupt, and the follow-up window and hands-free use it as well:
+// a TV across the room is quieter than someone talking to the device (Dominik 2026-10-13, Anfrage d80a75).
+const roomLevel=()=>chat.amb&&performance.now()-chat.amb.t<10000?chat.amb.v:0;
 const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,ctrl:null,ctx:null,sources:[],playEnd:0,vad:null,cancelRec:false,busy:false};
 const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
 function chatLog(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'bot');
@@ -87,7 +91,7 @@ function micBack(){if(document.hidden)return;
   [chat.ctx,chat.pctx].forEach(c=>{if(c&&c.state!=='running'&&c.state!=='closed')c.resume().catch(()=>{})});
   let guest=true;try{guest=isGuest()}catch{}
   if(($('chatwake').checked||(window.room&&room.on))&&!wake.on&&!guest)startWake();
-  if(chat.resumeMic&&S.hands&&!chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy){chat.resumeMic=false;startListening()}}
+  if(chat.resumeMic&&S.hands&&!chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy){chat.resumeMic=false;startListening({opened:'hands'})}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(chat.rec&&S.hands)chat.resumeMic=true}else setTimeout(micBack,300)});
 addEventListener('pageshow',()=>setTimeout(micBack,300));
 
@@ -95,6 +99,7 @@ addEventListener('pageshow',()=>setTimeout(micBack,300));
 function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();
   an.fftSize=1024;src.connect(an);const buf=new Float32Array(an.fftSize);let floor=o.floor||0.01,heard=o.speaking?300:0,quiet=0,last=performance.now(),paused=false,lastSnap=last;
   let t0=o.floor?last-300:last,held=0;   // after a barge-in the room noise is already known and the user is talking
+  const amb=o.follow||o.opened==='hands'?roomLevel()*2:0;   // opened by itself: a voice above the TV, not the TV
   const iv=setInterval(()=>{an.getFloatTimeDomainData(buf);let e=0;for(const v of buf)e+=v*v;const rms=Math.sqrt(e/buf.length);
     const now=performance.now(),dt=now-last;last=now;
     if(ctx.state!=='running'||micMuted()){t0+=dt;held+=dt;chat.micPaused=true;if(ctx.state!=='running')ctx.resume().catch(()=>{});
@@ -104,7 +109,7 @@ function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(cha
     if(held){held=0;chat.micPaused=false;chatSay(t('Ich höre zu …','Listening …'))}
     if(now-t0<300){floor=Math.max(floor*0.8,rms);chat.floor=floor;return}   // learn the room noise first
     chat.micLevel=Math.min(1,Math.max(0,rms-floor)*12);if(!S.auto)return;
-    if(rms>Math.max(0.015,floor*2.5)){heard+=dt;quiet=0;chat.lastVoice=now}else quiet+=dt;
+    if(rms>Math.max(0.015,floor*2.5,amb)){heard+=dt;quiet=0;chat.lastVoice=now}else quiet+=dt;
     if(heard>200&&(S.live||S.turn)){   // transcript every ~1.2 s (live view), and once at each pause
       if(quiet>=250){if(!paused){paused=true;liveSnap(true)}}
       else{paused=false;chat.turnWait=null;if(S.live&&now-lastSnap>1200){lastSnap=now;liveSnap()}}}
@@ -123,11 +128,13 @@ async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
   catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);return}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
   const rec=o.rec||new MediaRecorder(chat.stream,mime?{mimeType:mime}:{}),parts=o.parts||[];
+  // how the microphone opened (fremdstimme.py): by itself after an answer it takes only a known voice, never the TV
+  rec.opened=o.opened||(o.speaking?'barge':o.follow?'follow':'');
   rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};chat.parts=parts;chat.live.last=null;chat.lastVoice=o.speaking?performance.now():null;
   rec.onstop=()=>{stopVad();chat.rec=null;setTalk();const cancel=chat.cancelRec;chat.cancelRec=false;
     const why=chat.stopWhy;chat.stopWhy=null;
     if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
-    transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec)};
+    transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec,rec.opened)};
   if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();vorSpricht();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
@@ -137,7 +144,7 @@ function startBarge(){if(chat.barge||!micLive()||!S.barge||(window.room&&room.sp
   const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
   const buf=new Float32Array(an.fftSize),ob=new Float32Array(chat.out.fftSize),floor=Math.max(chat.floor||0.01,0.005);
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
-  let voiced=0,pre=null,parts=[],last=performance.now(),outHold=0;
+  let voiced=0,pre=null,parts=[],last=performance.now(),outHold=0,amb=roomLevel();
   const rms=(a,b)=>{a.getFloatTimeDomainData(b);let e=0;for(const v of b)e+=v*v;return Math.sqrt(e/b.length)};
   const iv=setInterval(()=>{const now=performance.now(),dt=now-last;last=now;
     if(!playing()&&!chat.ctrl){stopBarge();return}
@@ -145,10 +152,12 @@ function startBarge(){if(chat.barge||!micLive()||!S.barge||(window.room&&room.sp
     // word or sentence): a slowly falling peak keeps that echo from counting as an interruption
     const m=rms(an,buf),out=outHold=Math.max(rms(chat.out,ob),outHold*0.85),b=BARGE[S.barge_level]||BARGE.mid,thr=Math.max(b[0],floor*b[1],out*b[2]);
     chat.micLevel=Math.min(1,Math.max(0,m-floor)*12);
-    if(m>thr*0.7){voiced+=dt;
+    const gate=Math.max(thr*0.7,amb*b[3]);
+    if(out<0.004&&m<=gate){amb=amb?amb*0.97+m*0.03:m;chat.amb={v:amb,t:now}}   // the room while the Spark is quiet
+    if(m>gate){voiced+=dt;
       if(!pre){parts=[];pre=new MediaRecorder(chat.stream,mime?{mimeType:mime}:{});pre.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};pre.start()}}
     else{voiced=Math.max(0,voiced-dt*0.5);if(pre&&voiced===0){pre.onstop=null;try{pre.stop()}catch{}pre=null}}
-    if(voiced>=250&&m>thr*0.5){const rec=pre;pre=null;stopBarge();
+    if(voiced>=250&&m>Math.max(thr*0.5,amb*b[3]*0.8)){const rec=pre;pre=null;stopBarge();
       startListening({rec,parts,floor,speaking:true})}},40);
   chat.barge={iv,src,stopPre:()=>{if(pre){pre.onstop=null;try{pre.stop()}catch{}pre=null}}}}
 function stopBarge(){if(chat.barge){clearInterval(chat.barge.iv);try{chat.barge.src.disconnect()}catch{}chat.barge.stopPre();chat.barge=null;if(!chat.rec)chat.micLevel=0}}
@@ -163,23 +172,23 @@ async function toWav(blob,rate=16000){const raw=await audioCtx().decodeAudioData
   v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,pcm.length*2,true);
   for(let i=0;i<pcm.length;i++)v.setInt16(44+2*i,Math.max(-1,Math.min(1,pcm[i]))*32767,true);
   return new Blob([buf],{type:'audio/wav'})}
-async function transcribe(blob,tEnd,rec){chat.asrBusy=true;try{await transcribe2(blob,tEnd,rec)}finally{chat.asrBusy=false}}
-async function asrText(blob){
+async function transcribe(blob,tEnd,rec,opened){chat.asrBusy=true;try{await transcribe2(blob,tEnd,rec,opened)}finally{chat.asrBusy=false}}
+async function asrText(blob,opened){
   let file=blob,name='frage.'+(blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm');
   try{file=await toWav(blob);name='frage.wav'}catch{}            // fall back to the original recording
-  const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');
+  const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');if(opened)fd.append('opened',opened);
   const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json();
   // recognized voice: a signed one-time token the chat request sends back, kept with its own text
   return {text:(d.text||'').trim(),speaker:d.speaker||null,ignored:d.ignored||''}}
-async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Transcribing …'));
+async function transcribe2(blob,tEnd,rec,opened){chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
   const last=chat.live.last;chat.live.last=null;let r=null;
   if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
+  if(!r)try{r=await asrText(blob,opened)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
   // the Spark's own voice (another device answering, echo.py) counts as silence
   // silence, a click or the chime that came back as "Ja"/"Okay" (stille.py) is no question either
-  if(!r.text){chatSay(/own|pause/.test(r.ignored)?t('Eigene Stimme überhört.','Ignored my own voice.'):r.ignored?t('Nichts gehört.','Heard nothing.'):t('Nichts verstanden.','Did not catch that.'));return}
+  if(!r.text){chatSay(/foreign/.test(r.ignored)?t('Fremde Stimme überhört, zum Beispiel vom Fernseher.','Ignored a voice that is not yours, for example from the TV.'):/own|pause/.test(r.ignored)?t('Eigene Stimme überhört.','Ignored my own voice.'):r.ignored?t('Nichts gehört.','Heard nothing.'):t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
 // bubble. requestData() flushes the recorder first so the snapshot holds the last moments too.
@@ -187,7 +196,7 @@ function liveSnap(pause){const rec=chat.rec,parts=chat.parts;if(!rec||rec.state!
   if(chat.live.busy){chat.live.want=true;chat.live.pause=chat.live.pause||pause;return}
   chat.live.busy=true;chat.live.want=false;pause=pause||chat.live.pause;chat.live.pause=false;let started=false;
   const go=()=>{if(started)return;started=true;const at=performance.now(),n=parts.length;
-    const p=asrText(new Blob(parts.slice(0,n),{type:rec.mimeType||'audio/webm'}))
+    const p=asrText(new Blob(parts.slice(0,n),{type:rec.mimeType||'audio/webm'}),rec.opened)
       .then(r=>{const x=r.text;if(chat.rec===rec&&x){if(S.live)showLive(x);if(pause&&S.turn)turnCheck(x,at,rec)}return r}).catch(()=>null)
       .finally(()=>{chat.live.busy=false;if(chat.live.want&&chat.rec===rec)liveSnap()});
     chat.live.last={at,p,rec}};
@@ -304,7 +313,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(aborted){setTalk();return}
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
-  chatSay(t('Bereit.','Ready.'));if(S.hands)startListening();else if(spoken&&followSecs())startListening({follow:followSecs()})}
+  chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})}
 // Rückfrage statt Raten (klaeren.py): the panel's own question as buttons, or the whole list with a search field.
 // A tap sends the name like a typed answer; the panel takes it by fixed rules, the model never picks.
 function choiceCard(c){const d=document.createElement('div');d.className='choice';const opts=c.options||[];

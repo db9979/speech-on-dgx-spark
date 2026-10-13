@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.510** · 2026-10-13 · Browser: Fernseher und fremde Stimmen werden nach einer Antwort keine Frage mehr: ein von selbst geöffnetes Mikrofon (Ins-Wort-Fallen, Rückfrage, Freihändig) nimmt mit angelernter Stimme nur bekannte Stimmen (fremdstimme.py), ohne Abdruck nur Stimmen über dem gelernten Raumpegel; die iPhone-App sagt es ab dem nächsten Build genauso
 - **V01.0.509** · 2026-10-13 · Freigabe vereinfacht: Was der Admin unter Funktionen freigibt, gilt sofort für jedes Profil, ohne eigenen Schalter unter Ich; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was), unter Ich bleiben nur Einrichten und das Abschalten von Dingen, die der Spark von selbst tut; Gäste bekommen nur Frage und Antwort ohne Werkzeuge; Startpakete und „Neue Profile“ entfallen; auch iPhone-App, Doku und Richtlinie
 - **V01.0.508** · 2026-10-13 · Eigene Aufgaben: Beobachten („Sag mir Bescheid, wenn es eine neue Firmware gibt“) meldet nur, was das Panel als neu geprüft hat; Ich → Aufträge zeigt alle eigenen Aufgaben (Beobachtungen, Pläne, Erinnerungen, Regeln, Absender) zum Ändern, Pausieren und Löschen; per Sprache nach Ja; iPhone-App; Admin-Schalter aus
 - **V01.0.507** · 2026-10-13 · Pebble-Uhr-App mit der Comic-Frau: das Panel liefert die neu gebaute App aus (aus V01.0.497)

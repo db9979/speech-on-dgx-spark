@@ -142,6 +142,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/chat_turn.py` | Bereitet eine Anfrage vor: Rechte, Sperren, Systemprompt, Werkzeuge |
 | `app/panel/echo.py` | Der Assistent antwortet nicht auf seine eigene Stimme |
 | `app/panel/fixes.py` | Lernt aus Korrekturen der Person |
+| `app/panel/fremdstimme.py` | Fernseher und fremde Stimmen im von selbst geöffneten Mikrofon werden keine Frage |
 | `app/panel/images.py` | Bilder in der Frage: das Sprachmodell sieht sie selbst |
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken von Zuordnungen |
 | `app/panel/roles.py` | Rollen: wie der Assistent antworten soll |
