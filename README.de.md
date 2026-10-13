@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.507** Pebble-Uhr-App zeigt die Comic-Frau
 - **V01.0.506** Neue Seite Zustand → Technik: Aufbau, Weg einer Anfrage und alle Speicherorte zum Durchklicken, immer aus dem Code
 - **V01.0.505** Fehler mit Grund in den Logs; Geräte-Updates melden mit Android-App nicht mehr fälschlich „nicht ok“
 - **V01.0.504** Log für alles: Live-Ereignisse stehen auch im Journal, jede Zeile hat einen Filterbereich, Tests werden rot, wenn eine neue Aktion keine Zeile schreibt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.500** reMarkable: Kreuze treffen wieder, Liste aufgeräumt, Cloud-Fehler mit Grund im Log
 - **V01.0.499** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
 - **V01.0.498** Selbsttests: Ports der Test-Server bleiben reserviert, kein 45-Minuten-Hänger mehr bei belegtem Port
-- **V01.0.497** Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
