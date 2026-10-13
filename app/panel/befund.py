@@ -29,6 +29,8 @@ KLASSEN = {
                     "something", ("Antworten prüfen, Temperatur", "Check answers, temperature")),
     "wissen": ("Ohne Nachschlagen geantwortet", "Answered without looking anything up",
                ("Nachschlagen, Websuche als Pflicht", "Lookups, web search as a must")),
+    "erfunden": ("Antwort nennt Angaben, die in keinem Ergebnis stehen", "The answer names details that are in no "
+                 "result", ("Antworten prüfen, Temperatur, Qualitätstest", "Check answers, temperature, quality test")),
     "richtig": ("Das erwartete Werkzeug lief und fand etwas", "The expected tool ran and found something",
                 ("Keine Änderung; Erklären zeigt den Weg", "No change; Explain shows the way")),
     "unklar": ("Ursache noch unklar", "Cause not clear yet",
@@ -142,6 +144,8 @@ def diagnose(case, cfg=None):
 
     if f.get("x"):
         add("fehler", f["x"])
+    if case.get("kind") == "erfunden":   # Antworten im Hintergrund prüfen (systemone.check_answer)
+        add("erfunden", sorted(called))
     # the Weiche: a wrong group named by the admin, or the question's words point elsewhere
     groups_now = set((f.get("g") or case.get("group") or "").split("+")) - {"", "unklar"}
     if case.get("kind") == "weiche" and case.get("want"):

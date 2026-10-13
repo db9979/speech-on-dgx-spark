@@ -119,6 +119,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Es laufen nur angebotene Werkzeuge. Die Absicht (Weiche) und die Herkunft können nur **einschränken**, nie freigeben. Die Reihenfolge ist Rechte → Sperren → Absicht. (P funktionswahl, hilfe-besser)
 - Wer fragt, kommt aus der Anmeldung, nie aus dem Text. (P vorrang-personen)
 - Inhalte mit ungeprüftem Absender werden nie als „von DHL“ ausgegeben. (C)
+- **Wahrscheinlichkeiten des Modells** (`systemone.py`, qwen38 `/v1/systemone`) sind nur ein Signal: Fragen und Antwortmöglichkeiten stehen fest im Code, der beurteilte Text geht nur als „state“ hin, und das Panel entscheidet mit einer festen Schwelle (Konstante oder Auswahl aus festen Stufen). Unter `systemone.MIN_MASS` Label-Masse gilt eine Antwort als unsicher, dann läuft alles wie ohne. Jeder neue Einsatz bekommt einen Namen in `systemone.USES` und läuft im Hintergrund über `vorrang`. Sicherheit, Rechte, Notaus und die Auswahl bei einer Rückfrage nie über Wahrscheinlichkeiten. (Dominik 2026-10-13; 🧪 test_systemone)
 
 ### 2.4 Bestätigen und Handeln
 - Pro Profil gibt es genau einen offenen Vorschlag. Er gilt nur für dasselbe Gerät, ein schlichtes „Ja“ und 15 Minuten. (C; 🧪 test_hardening)

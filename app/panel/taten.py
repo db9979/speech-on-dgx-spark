@@ -133,17 +133,86 @@ def sentence(art, status, en=False, what=""):
     return SENTENCE["missing"][lang]
 
 
+# „Beschwerde erkennen“ (features einordnungklage, plan systemone/einschaetzung.md 6): the deeds of a profile's last
+# answer stay in memory for LAST_S (kind, worked, short name; never a file). When the next message of that profile
+# says it did not work (the fixed list COMPLAINT, else qwen38's /v1/systemone in chat_turn.py), the panel only
+# lets the model look: the tools that change things of that kind are not offered in this answer.
+LAST_S = 600
+COMPLAINT = re.compile(r"(?i)^\W*(?:nein,?\s*|hm+,?\s*|äh+,?\s*)?(?:(?:das|der|die)\s+\w+\s+|(?:das|es|er|sie)\s+)?(?:"
+                       r"geht\s+(?:immer\s+)?(?:noch\s+)?nicht|funktioniert\s+(?:immer\s+)?(?:noch\s+)?nicht|"
+                       r"hat\s+(?:aber\s+)?nicht\s+geklappt|klappt\s+(?:immer\s+)?(?:noch\s+)?nicht|"
+                       r"(?:ist|sind|bleibt|bleiben)\s+(?:aber\s+)?(?:immer\s+)?noch\s+(?:an|aus|offen|zu)|"
+                       r"(?:ist|sind)\s+(?:aber\s+)?(?:gar\s+)?nicht\s+(?:an|aus|offen|zu|angegangen|ausgegangen)|"
+                       r"(?:it|that)\s+(?:still\s+)?(?:does\s*n[o']?t|did\s*n[o']?t)\s+work|(?:it'?s|it\s+is)\s+still\s+(?:on|off))"
+                       r"\b[^?]{0,60}$")
+# the person asks for it again in the same message ("… mach es nochmal aus"): then nothing is locked
+RETRY = re.compile(r"(?i)\b(?:nochmal|noch\s+einmal|erneut|wieder|again|try|retry|mach|schalte?|stell|probier\w*|turn)\b")
+_last = {}            # uid -> (time, [{"art", "ok", "what"}])
+
+
+def note_last(uid, acts, now=None):
+    """The deeds of the answer just finished (only those done or tried, never proposals); none clears it."""
+    if not uid:
+        return
+    now = time.time() if now is None else now
+    keep = [{"art": a["art"], "ok": bool(a.get("ok")), "what": str(a.get("what") or "")[:40]}
+            for a in acts or [] if isinstance(a, dict) and a.get("art") in WHAT and not a.get("wait")][:5]
+    if keep:
+        _last[uid] = (now, keep)
+    else:
+        _last.pop(uid, None)
+    for k in [k for k, (t, _) in _last.items() if now - t > LAST_S]:
+        _last.pop(k, None)
+
+
+def last(uid, now=None):
+    """The deeds of the profile's last answer within LAST_S, else []."""
+    now = time.time() if now is None else now
+    t, acts = _last.get(uid, (0, []))
+    return acts if now - t <= LAST_S else []
+
+
+def complaint(text):
+    """The fixed list: the whole (short) message says the last deed did not work ("geht immer noch nicht")."""
+    t = str(text or "").strip()
+    return 0 < len(t) <= 120 and bool(COMPLAINT.match(t))
+
+
+def complaint_note(acts, en=False):
+    """The fixed note for the model in an answer to a complaint (never the person's words)."""
+    a = acts[-1]
+    name = (a["what"] or WHAT.get(a["art"], WHAT[""])[1 if en else 0])[:40]
+    if en:
+        return (f"Complaint: the user says the last deed did not work ({name}; the tool reported "
+                f"{'success' if a['ok'] else 'a failure'}). Look up the current state first and say it honestly. Change "
+                "something only when the user asks for it in this message; otherwise offer to try again.")
+    return (f"Beschwerde: Der Nutzer sagt, das Letzte habe nicht geklappt ({name}; das Werkzeug meldete "
+            f"{'Erfolg' if a['ok'] else 'einen Fehler'}). Sieh zuerst nach, wie der Stand ist, und sag ihn ehrlich. "
+            "Ändere nur etwas, wenn der Nutzer in dieser Nachricht ausdrücklich darum bittet; sonst biete an, es noch "
+            "einmal zu versuchen.")
+
+
+def locked(acts, text=""):
+    """The tools that change things of the kinds of these deeds: not offered in the answer to a complaint, unless the
+    message itself asks for it again (RETRY)."""
+    if RETRY.search(str(text or "")):
+        return set()
+    arts = {a["art"] for a in acts}
+    return {name for name, art in KIND.items() if art in arts}
+
+
 # Live page: how often the checks stepped in today (numbers only, never a sentence)
-_live = {"day": "", "held": 0, "loop": 0}
+_live = {"day": "", "held": 0, "loop": 0, "klage": 0}
 
 
 def note_live(what, now=None):
     day = time.strftime("%Y-%m-%d", time.localtime(now))
     if _live["day"] != day:
-        _live.update(day=day, held=0, loop=0)
+        _live.update(day=day, held=0, loop=0, klage=0)
     _live[what] = _live.get(what, 0) + 1
 
 
 def for_live(now=None):
     day = time.strftime("%Y-%m-%d", time.localtime(now))
-    return {"held": _live["held"], "loop": _live["loop"]} if _live["day"] == day else {"held": 0, "loop": 0}
+    return {"held": _live["held"], "loop": _live["loop"], "klage": _live.get("klage", 0)} if _live["day"] == day \
+        else {"held": 0, "loop": 0, "klage": 0}

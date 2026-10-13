@@ -119,6 +119,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Only offered tools run. The intent (intent switch) and the origin can only **restrict**, never grant. The order is rights → blocks → intent. (P funktionswahl, hilfe-besser)
 - Who is asking comes from the login, never from the text. (P vorrang-personen)
 - Content with an unverified sender is never presented as "from DHL". (C)
+- **Probabilities from the model** (`systemone.py`, qwen38 `/v1/systemone`) are only a signal: questions and options are fixed in the code, the judged text goes only into "state", and the panel decides with a fixed threshold (a constant or a choice among fixed steps). Below `systemone.MIN_MASS` label mass an answer counts as unsure, and everything goes on as without it. Every new use gets a name in `systemone.USES` and runs in the background through `vorrang`. Security, rights, Notaus and the choice in a follow-up question never go by probabilities. (Dominik 2026-10-13; 🧪 test_systemone)
 
 ### 2.4 Confirming and acting
 - Per profile there is exactly one open suggestion. It is valid only for the same device, a plain "Yes" and 15 minutes. (C; 🧪 test_hardening)

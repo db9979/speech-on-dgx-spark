@@ -361,7 +361,8 @@ CACHED_WAIT = 0.3
 
 
 # chat.route_model "systemone" (systemone.py): one choice with probabilities; the panel narrows only from
-# systemone.ROUTE_MIN on. What each group is for, as the question names it (fixed words, never outside text).
+# systemone.route_min (chat.systemone_min, 80 % unless a measurement chose another). What each group is for, as
+# the question names it (fixed words, never outside text).
 GROUP_SAYS = {
     "smarthome": "Licht, Heizung, Geräte oder Zustände im Haus schalten oder abfragen",
     "kalender": "Termine ansehen oder eintragen, Tagesüberblick",
@@ -385,8 +386,9 @@ GROUP_SAYS = {
 
 async def ask_systemone(ccfg, text, info=None):
     """chat.route_model "systemone": the pick from INTENT_NAMES as one choice of qwen38's /v1/systemone, only
-    from systemone.ROUTE_MIN on; None for "unklar", too unsure, busy or missing (the turn goes on as without).
-    `info` gets the probability for Logs → Anfragen. Like ask_model, it can only narrow."""
+    from systemone.route_min on; None for "unklar", too unsure (also a label mass under systemone.MIN_MASS), busy
+    or missing (the turn goes on as without). `info` gets the probability for Logs → Anfragen. Like ask_model, it
+    can only narrow."""
     import systemone
     names = list(INTENT_NAMES)   # every group, also one added later (its name when GROUP_SAYS has no words for it)
     try:
@@ -396,11 +398,12 @@ async def ask_systemone(ccfg, text, info=None):
         if info is not None:
             info["why"] = getattr(e, "why", "Frage ungültig")
         return None
-    pick, p = systemone.route_pick(ans, names)
+    least = systemone.route_min(ccfg)
+    pick, p = systemone.route_pick(ans, names, least)
     if info is not None:
         info.update(p=round(p, 2), raw=(ans.get("absicht") or {}).get("pick"))
     print(f"weiche: systemone {(ans.get('absicht') or {}).get('pick')} {p:.2f}"
-          + ("" if pick else f" (unter {systemone.ROUTE_MIN:.2f} oder unklar: keine Eingrenzung)"), flush=True)
+          + ("" if pick else f" (unter {least:.2f} oder unklar: keine Eingrenzung)"), flush=True)
     return pick
 
 

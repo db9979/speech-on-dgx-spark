@@ -814,11 +814,32 @@ function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.
     :`<span class="err">✗ ${esc(r.error||t('kann keine Bilder','sees no pictures'))}</span> · ${esc(when)}`}
 async function visionLoad(){if(!$('visiongo'))return;try{visionShow((await (await api('/api/admin/vision-test')).json()).last)}catch{}}
 // Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through qwen38's /v1/systemone
+// the label mass (how much of the probability fell on any option) and the option orders qwen38 asked in
+function s1Extra(r){const m=typeof r.mass==='number'?' · '+t('Label-Masse','label mass')+' '+Math.round(r.mass*100)+' %':'';
+  const o=r.orders===2?' · '+t('zwei Reihenfolgen an','two orders on'):r.orders===1?' · '+t('eine Reihenfolge (zwei Reihenfolgen aus)','one order (two orders off)'):'';return m+o}
 if($('s1go'))$('s1go').onclick=async()=>{$('s1go').disabled=true;$('s1msg').textContent=t('prüft …','checking …');
   try{const r=await (await api('/api/admin/systemone/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:($('routetext')&&$('routetext').value.trim())||''})})).json();
-    $('s1msg').innerHTML=r.ok?`<b>${t('antwortet','answers')}</b> ${t('in','in')} ${r.ms} ms · ${(r.top||[]).map(([k,p])=>esc(k)+' '+Math.round(p*100)+' %').join(', ')} · ${r.used?t('Weiche grenzt ein','switch narrows'):t('unter 80 % oder unklar: alle Werkzeuge','below 80 % or unclear: all tools')}${r.sentence?' '+t('(Beispielsatz; ein Satz unter „Ausprobieren“ wird genommen)','(sample sentence; a sentence under "Try it" is used)'):''}`
-      :`<span class="err">${esc(t('Keine Antwort: ','No answer: ')+(r.why||''))}</span>`}
+    const pc=Math.round((r.min||0.8)*100)+' %';
+    $('s1msg').innerHTML=r.ok?`<b>${t('antwortet','answers')}</b> ${t('in','in')} ${r.ms} ms · ${(r.top||[]).map(([k,p])=>esc(k)+' '+Math.round(p*100)+' %').join(', ')} · ${r.used?t('Weiche grenzt ein','switch narrows'):esc(t('unter ','below ')+pc+t(' oder unklar: alle Werkzeuge',' or unclear: all tools'))}${esc(s1Extra(r))}${r.sentence?' '+t('(Beispielsatz; ein Satz unter „Ausprobieren“ wird genommen)','(sample sentence; a sentence under "Try it" is used)'):''}`
+      :`<span class="err">${esc(t('Keine Antwort: ','No answer: ')+(r.why==='unsicher'?t('unsicher (Label-Masse zu klein)','unsure (label mass too small)'):(r.why||'')))}</span>${esc(s1Extra(r))}`}
   catch(e){$('s1msg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('s1go').disabled=false};
+// Einordnung messen: the Weiche's test sentences through the switch question, numbers per threshold (systemone.bench_result)
+function s1BenchShow(d){const out=$('s1benchout'),msg=$('s1benchmsg');if(!out)return;
+  msg.textContent=d.run?t('misst … ','measuring … ')+d.done+' / '+d.total:d.why?t('abgebrochen: ','stopped: ')+d.why:'';
+  const r=d.result;if(!r){out.textContent='';return}
+  const rows=r.per.map(x=>`<tr><td class="bnum">${Math.round(x.min*100)} %</td><td class="bnum">${x.narrow} (${Math.round(x.share*100)} %)</td><td class="bnum">${x.wrong} (${Math.round(x.wrong_share*100)} %)</td></tr>`).join('');
+  const miss=(r.misses||[]).map(([k,n])=>esc(k.replace('>',' → '))+' '+n+'×').join(', ');
+  out.innerHTML=`<div class="fh">${esc(t('Sätze','Sentences'))} ${r.n} · ${esc(t('beantwortet','answered'))} ${r.answered} · ${esc(t('richtig','right'))} ${r.hits} · ${esc(t('Mitte','median'))} ${r.ms_mid} ms${typeof r.mass_mid==='number'?' · '+esc(t('Label-Masse Mitte','label mass median'))+' '+Math.round(r.mass_mid*100)+' %, '+esc(t('kleinste','smallest'))+' '+Math.round(r.mass_min*100)+' %':''}${esc(s1Extra({orders:r.orders}))}</div>
+    <table class="brate"><tbody><tr class="bgrp"><td>${esc(t('Schwelle','Threshold'))}</td><td>${esc(t('grenzt ein','narrows'))}</td><td>${esc(t('davon falsch','of them wrong'))}</td></tr>${rows}</tbody></table>
+    <div class="fh">${r.suggest?esc(t('Vorschlag: ','Suggestion: ')+Math.round(r.suggest*100)+' %'+t(' (höchstens 3 % falsch eingegrenzt).',' (at most 3 % narrowed wrongly).')):esc(t('Keine Schwelle mit höchstens 3 % Fehlern: lieber 90 % oder die Einordnung für die Werkzeugwahl nicht nutzen.','No threshold with at most 3 % errors: rather 90 % or do not use the classification for the tool choice.'))}${miss?' '+esc(t('Verwechselt: ','Mixed up: '))+miss:''}</div>
+    ${r.suggest?`<div class="row"><button class="b" type="button" id="s1take">${esc(t('Vorschlag übernehmen','Take the suggestion'))}</button></div>`:''}`;
+  if($('s1take'))$('s1take').onclick=()=>{const el=$('chat.systemone_min');if(!el)return;el.value=String(r.suggest);el.dispatchEvent(new Event('change',{bubbles:true}));
+    msg.textContent=t('Eingesetzt, noch nicht gespeichert.','Filled in, not saved yet.')}}
+let s1Timer=null;
+async function s1BenchPoll(){clearTimeout(s1Timer);try{const d=await (await api('/api/admin/systemone/messen')).json();s1BenchShow(d);
+  if(d.run&&document.getElementById('s1bench'))s1Timer=setTimeout(s1BenchPoll,2000)}catch{}}
+if($('s1bench'))$('s1bench').onclick=async()=>{try{s1BenchShow(await (await api('/api/admin/systemone/messen',{method:'POST'})).json());s1Timer=setTimeout(s1BenchPoll,2000)}
+  catch(e){$('s1benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 if($('visiongo'))$('visiongo').onclick=async()=>{$('visiongo').disabled=true;$('visionmsg').textContent=t('prüft …','checking …');
   try{visionShow((await (await api('/api/admin/vision-test',{method:'POST'})).json()).last)}catch(e){$('visionmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('visiongo').disabled=false};
 

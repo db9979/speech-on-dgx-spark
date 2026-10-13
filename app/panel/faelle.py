@@ -72,6 +72,7 @@ KINDS = {
     "pruefung": ("Antwortprüfung griff", "Answer check held back", "auto"),
     "abbruch": ("Antwort abgebrochen", "Answer stopped", "auto"),
     "aussetzer": ("Aussetzer in der Sprachausgabe", "Gaps in the speech output", "auto"),
+    "erfunden": ("Erfundenes vermutet", "Made-up suspected", "auto"),   # systemone.check_answer, from CHECK_MIN
     "schlecht": ("👎 gemeldet", "👎 reported", "person"),
     "weiche": ("Falsch zugeordnet", "Wrongly sorted", "person"),
     "melder": ("Befund", "Finding", "melder"),

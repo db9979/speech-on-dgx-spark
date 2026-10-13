@@ -91,6 +91,12 @@ FEATURES = (
       ("systemone_tidy", "mail_tidy", "mail"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungpost"),
     F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "speed", ("systemone_quality",),
       parent="einordnung", guide="einordnungtest"),
+    F("einordnungrat", "Einordnung im Einstellungs-Assistenten", "Classification in the settings assistant", "speed",
+      ("systemone_berater", "berater"), parent="einordnung", guide="einordnungrat"),
+    F("einordnungcheck", "Antworten im Hintergrund prüfen", "Check answers in the background", "speed",
+      ("systemone_check", "berater"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungcheck"),
+    F("einordnungklage", "Beschwerde erkennen", "Recognize complaints", "speed", ("systemone_klage", "loop_stop"),
+      "systemone_on", parent="einordnung", me="setbox", guide="einordnungklage"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),

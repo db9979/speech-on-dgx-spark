@@ -17,6 +17,17 @@ Uses, each with its own admin switch below chat.systemone (all off) and the prof
   mail       Postfach aufräumen, stage 4 (chat.systemone_tidy)
   wichtig    Von selbst melden: important mail by sender and subject (chat.systemone_mail, pro_mail_smart)
   qualitaet  Qualitätstest: a second opinion per case, shown only, never pass or fail (chat.systemone_quality)
+  berater    Einstellungs-Assistent: which catalog entry fits a case (chat.systemone_berater), proposed from 60 %
+  pruefen    Antworten im Hintergrund prüfen: after an answer with tool results, made up from 90 % becomes a case
+             „Erfundenes vermutet“ in the case inbox, never before the answer is spoken (chat.systemone_check)
+  klage      Beschwerde erkennen: „geht immer noch nicht“ after a deed, when taten.COMPLAINT does not match
+             (chat.systemone_klage), from 80 %; the panel then only lets the model look (taten.locked)
+  messen     Funktionen → … → „Einordnung messen“: the Weiche's test sentences (intent_bench.BENCH) through the switch
+             question, hit rate per threshold and a suggested threshold (chat.systemone_min), on a button only
+
+Since qwen38 v1.15 its answer also carries x-systemone-label-mass (how much of the probability fell on any option
+at all) and x-systemone-branches (two per question when SYSTEMONE_PERMUTATIONS=2 asks every question in two option
+orders). Below MIN_MASS the question did not take: the answer counts as unsure and the caller goes on as without.
 
 Logs ("systemone:" lines) and Zustand → Live carry only the use, the pick, numbers and times, never text.
 """
@@ -40,14 +51,21 @@ MAX_OPTIONS = 40
 MAX_BYTES = 64 * 1024         # of the answer
 NAME = re.compile(r"[a-z][a-z0-9_]{0,31}")
 USES = {"weiche": "Werkzeugwahl", "mail": "Postfach aufräumen", "wichtig": "Wichtige Mail",
-        "qualitaet": "Qualitätstest", "test": "Prüfen"}
+        "qualitaet": "Qualitätstest", "test": "Prüfen", "messen": "Messen", "berater": "Einstellungs-Assistent",
+        "pruefen": "Antwort prüfen", "klage": "Beschwerde"}
 # the panel's thresholds (Dominik 2026-10-10: "wie empfohlen")
-ROUTE_MIN = 0.80              # the switch narrows only from here
+ROUTE_MIN = 0.80              # the switch narrows only from here (chat.systemone_min, after a measurement)
+ROUTE_STEPS = (0.6, 0.7, 0.8, 0.9)   # the thresholds an admin may choose for the switch
+MIN_MASS = 0.5                # below this share of probability on the options a question did not take: unsure
 TIDY_SURE = 90                # mail tidying moves by itself only from here (percent), else it asks
 WICHTIG_MIN = 0.80            # an important mail is said from here
+BERATER_MIN = 0.60            # the settings assistant proposes the catalog entry it picked only from here
+CHECK_MIN = 0.90              # an answer becomes a case "erfunden" in the case inbox from here
+KLAGE_MIN = 0.80              # a message counts as a complaint about the last deed from here
 _lock = threading.Lock()
 _count = {}                   # per day: use -> n, "busy", "fail", "ms" (sum)
 _last = {}                    # use -> (time, ok, ms)
+_orders = [0]                 # option orders qwen38 asked in at its last answer (1, 2; 0 = unknown)
 _transport = None             # the self-tests put an httpx.MockTransport here
 
 
@@ -145,6 +163,19 @@ def parse(data, questions):
     return out
 
 
+def _meta(r, questions):
+    """(label mass or None, option orders 1/2 or 0) from qwen38's headers outside the contract (v1.15 and later)."""
+    try:
+        mass = float(r.headers.get("x-systemone-label-mass", ""))
+        mass = mass if 0.0 <= mass <= 1.0 else None
+    except ValueError:
+        mass = None
+    b = str(r.headers.get("x-systemone-branches", ""))
+    n = len(questions) or 1
+    orders = int(b) // n if b.isdigit() and int(b) % n == 0 and int(b) // n in (1, 2) else 0
+    return mass, orders
+
+
 def _read(r):
     if r.status_code == 529 or r.status_code == 503:
         raise Unavailable("ausgelastet")
@@ -173,9 +204,11 @@ def _note(use, ok, ms, why=""):
             _count[use] = _count.get(use, 0) + 1
             _count["ms"] = _count.get("ms", 0) + ms
         else:
-            _count["busy" if why == "ausgelastet" else "fail"] = _count.get("busy" if why == "ausgelastet" else "fail", 0) + 1
+            k = {"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail")
+            _count[k] = _count.get(k, 0) + 1
         _last[use] = (time.time(), ok, ms)
-    print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" if ok else f"nicht genutzt ({why}), weiter ohne"), flush=True)
+    if not (ok and use == "messen"):   # a measurement says its sum once at the end (no flood of lines)
+        print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" if ok else f"nicht genutzt ({why}), weiter ohne"), flush=True)
     if not ok:
         try:
             import live
@@ -194,8 +227,20 @@ def _prep(ccfg, use, state, questions):
     return url, body(state, questions)
 
 
-async def ask(ccfg, use, state, questions, timeout=4.0):
-    """The parsed answers, or Unavailable. For the conversation itself: never waits for speech."""
+def _sure(r, questions, info):
+    """The fixed rule on qwen38's own measure: a label mass under MIN_MASS is unsure (Unavailable)."""
+    mass, orders = _meta(r, questions)
+    if orders:
+        _orders[0] = orders
+    if info is not None:
+        info["mass"], info["orders"] = mass, orders
+    if mass is not None and mass < MIN_MASS:
+        raise Unavailable("unsicher")
+
+
+async def ask(ccfg, use, state, questions, timeout=4.0, info=None):
+    """The parsed answers, or Unavailable. For the conversation itself: never waits for speech. `info` (a dict)
+    gets the label mass and the option orders."""
     url, payload = _prep(ccfg, use, state, questions)
     t0 = time.monotonic()
     try:
@@ -203,6 +248,7 @@ async def ask(ccfg, use, state, questions, timeout=4.0):
                                      trust_env=False, transport=_transport) as c:
             r = await c.post(url, json=payload, headers=_headers(ccfg))
         out = parse(_read(r), questions)
+        _sure(r, questions, info)
     except Unavailable as e:
         _note(use, False, 0, e.why)
         raise
@@ -214,7 +260,7 @@ async def ask(ccfg, use, state, questions, timeout=4.0):
     return out
 
 
-def ask_sync(ccfg, use, state, questions, timeout=20.0, job=""):
+def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
     """The same from a worker thread (mail tidying); with `job` it first waits while somebody speaks."""
     url, payload = _prep(ccfg, use, state, questions)
     if job:
@@ -226,6 +272,7 @@ def ask_sync(ccfg, use, state, questions, timeout=20.0, job=""):
                           transport=_transport) as c:
             r = c.post(url, json=payload, headers=_headers(ccfg))
         out = parse(_read(r), questions)
+        _sure(r, questions, info)
     except Unavailable as e:
         _note(use, False, 0, e.why)
         raise
@@ -242,10 +289,10 @@ def for_live(now=None):
     day = time.strftime("%Y-%m-%d", time.localtime(now or time.time()))
     with _lock:
         c = dict(_count) if _count.get("day") == day else {}
-    uses = {k: c.get(k, 0) for k in USES if k != "test"}
+    uses = {k: c.get(k, 0) for k in USES if k not in ("test", "messen")}
     n = sum(uses.values())
-    return {"n": n, "uses": uses, "busy": c.get("busy", 0), "fail": c.get("fail", 0),
-            "ms": round(c.get("ms", 0) / n) if n else 0}
+    return {"n": n, "uses": uses, "busy": c.get("busy", 0), "fail": c.get("fail", 0), "unsure": c.get("unsure", 0),
+            "ms": round(c.get("ms", 0) / n) if n else 0, "orders": _orders[0]}
 
 
 # ---------------------------------------------------------------- the fixed questions of each use
@@ -255,6 +302,12 @@ def route_question(names, labels):
     opts["unklar"] = "passt zu keiner Gruppe oder ist eine allgemeine Frage oder Plauderei"
     return {"absicht": choice("Worum bittet die Person mit dieser Nachricht? Wähle die Gruppe der Werkzeuge, die sie braucht.",
                               opts)}
+
+
+def route_min(ccfg):
+    """The switch's threshold: chat.systemone_min when it is one of ROUTE_STEPS, else ROUTE_MIN."""
+    v = ccfg.get("systemone_min", ROUTE_MIN)
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v in ROUTE_STEPS else ROUTE_MIN
 
 
 def route_pick(ans, names, minimum=ROUTE_MIN):
@@ -293,6 +346,86 @@ def quality_questions():
                              "in den Werkzeugergebnissen stehen.")}
 
 
+CHECK_DAY = 50                # Antworten im Hintergrund prüfen: at most this many checks per day
+_bg = set()                   # running background checks (a reference, so they are not collected)
+TOOL_NAME = re.compile(r"[a-z][a-z0-9_]{1,40}")
+
+
+def check_later(ccfg, tr, who, ask_text, said, calls, outside=False):
+    """Antworten im Hintergrund prüfen: schedules check_answer after a finished answer; never raises, never waits."""
+    try:
+        import asyncio
+        import features
+        if not who or tr is None or not features.allowed("einordnungcheck", who["id"], ccfg):
+            return None
+        results = [str(c.get("result") or "") for c in calls or [] if isinstance(c, dict)
+                   and TOOL_NAME.fullmatch(str(c.get("name"))) and c.get("result")][:4]
+        if not results or not str(said or "").strip() or "[Codewort]" in str(ask_text or ""):
+            return None
+        task = asyncio.create_task(check_answer(ccfg, tr, who, ask_text, said, results, outside))
+        _bg.add(task)
+        task.add_done_callback(_bg.discard)
+        return task
+    except Exception as e:
+        print("systemone: Antwort prüfen nicht geplant", type(e).__name__, flush=True)
+        return None
+
+
+async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, now=None):
+    """The quality questions about one finished answer, as background work (vorrang: speech first). From CHECK_MIN
+    on „erfunden“ the panel makes a case „Erfundenes vermutet“ (faelle.add); the model only gives the number."""
+    import faelle
+    import vorrang
+    day = time.strftime("%Y-%m-%d")
+    with _lock:
+        done = _count.get("pruefen", 0) if _count.get("day") == day else 0
+    if done >= CHECK_DAY:
+        return None
+    res = "\n".join(r[:800] for r in results)
+    state = f"Frage: {str(ask_text or '')[:500]}\nWerkzeugergebnisse:\n{res}\nAntwort: {str(said or '')[:1500]}"
+    try:
+        ans = await vorrang.run("Antwort prüfen", lambda: ask(ccfg, "pruefen", state, quality_questions(), timeout=30))
+    except (Unavailable, vorrang.Busy, ValueError):
+        return None
+    p = ans["erfunden"]["yes"]
+    if p < CHECK_MIN or not faelle.wanted():
+        return None
+    case = faelle.add("erfunden", faelle.summary(tr, who, ask_text, said, outside, now), now=now)
+    print(f"systemone: Antwort prüfen erfunden {p:.2f}, Fall angelegt", flush=True)
+    return case
+
+
+def klage_question():
+    return {"klage": noul("Die Person sagt mit dieser Nachricht, dass das, was der Assistent gerade getan hat, nicht "
+                          "geklappt hat oder nicht stimmt.")}
+
+
+async def complaint(ccfg, text, art=""):
+    """Beschwerde erkennen: the probability that the message complains about the last deed, or None (busy, unsure,
+    missing). Only the person's own message and the fixed kind of the deed go in."""
+    state = (f"Zuletzt getan: {art}\n" if art else "") + "Nachricht: " + str(text or "")[:300]
+    try:
+        ans = await ask(ccfg, "klage", state, klage_question(), timeout=1.5)
+    except (Unavailable, ValueError):
+        return None
+    return ans["klage"]["yes"]
+
+
+def berater_question(titles):
+    """The settings assistant: one choice among the catalog entries (keys o0, o1 … in the order given)."""
+    opts = {f"o{i}": str(t)[:160] for i, t in enumerate(titles[:MAX_OPTIONS - 1])}
+    opts["keiner"] = "keine dieser Änderungen hilft bei diesem Fall"
+    return {"wahl": choice("Welche dieser Änderungen hilft am ehesten gegen diesen Fall?", opts)}
+
+
+def berater_pick(ans, n, minimum=BERATER_MIN):
+    """(index or None, p): an entry of the list only from `minimum` on, never "keiner"."""
+    a = ans.get("wahl") or {}
+    pick, p = str(a.get("pick") or ""), a.get("p") or 0.0
+    i = int(pick[1:]) if re.fullmatch(r"o\d{1,2}", pick) else -1
+    return (i if 0 <= i < n and p >= minimum else None), p
+
+
 # ---------------------------------------------------------------- Funktionen → Einordnung → Prüfen (admin)
 TEST_SENTENCE = "Mach bitte das Licht im Wohnzimmer aus."
 
@@ -313,13 +446,134 @@ async def admin_test(request: Request):
     import intent
     ccfg = load_config().get("chat", {})
     names = list(intent.INTENT_NAMES)
+    info = {}
     t0 = time.monotonic()
     try:
-        ans = await ask(ccfg, "test", text, route_question(names, intent.GROUP_SAYS), timeout=15)
+        ans = await ask(ccfg, "test", text, route_question(names, intent.GROUP_SAYS), timeout=15, info=info)
     except Unavailable as e:
-        return {"ok": False, "why": e.why}
+        return {"ok": False, "why": e.why, "mass": _r(info.get("mass")), "orders": info.get("orders") or 0}
     a = ans["absicht"]
+    least = route_min(ccfg)
     top = sorted(a["probs"].items(), key=lambda kv: -kv[1])[:3]
     return {"ok": True, "ms": int((time.monotonic() - t0) * 1000), "pick": a["pick"], "p": round(a["p"], 3),
-            "top": [[k, round(v, 3)] for k, v in top], "used": a["pick"] != "unklar" and a["p"] >= ROUTE_MIN,
+            "top": [[k, round(v, 3)] for k, v in top], "used": a["pick"] != "unklar" and a["p"] >= least,
+            "min": least, "mass": _r(info.get("mass")), "orders": info.get("orders") or 0,
             "sentence": text == TEST_SENTENCE}
+
+
+def _r(v, n=3):
+    return round(v, n) if isinstance(v, float) else None
+
+
+# ---------------------------------------------------------------- Funktionen → Einordnung → Messen (admin)
+# The Weiche's own test sentences (intent_bench.BENCH, fixed in the code, plus the admin's chat.route_tests) go
+# through the switch question one by one as background work (vorrang: speech first). The result says, per
+# threshold of ROUTE_STEPS, how often the switch would narrow and how often that would be wrong, and suggests the
+# lowest threshold with at most SUGGEST_WRONG wrong narrowings. Kept in memory only; nothing is switched.
+BENCH_MAX = 200               # sentences per measurement
+SUGGEST_WRONG = 0.03          # a threshold is suggested when at most this share of its narrowings is wrong
+SUGGEST_LEAST = 10            # ... and it narrows at least this many sentences
+_bench = {"run": False, "done": 0, "total": 0, "t": 0.0, "result": None, "why": ""}
+_bench_task = [None]
+STOP = ("keine Adresse", "fehlt (qwen38 älter als v1.15?)", "Schlüssel abgelehnt")
+
+
+def bench_rows(ccfg):
+    """[(sentence, wanted group or "unklar")]: the bench without sentences of two groups at once, then the admin's own."""
+    import intent
+    import intent_bench
+    import weiche
+    names = set(intent.INTENT_NAMES)
+    rows = [(q, g or "unklar") for q, g in intent_bench.BENCH if "+" not in g and (not g or g in names)]
+    try:
+        own = weiche.parse_tests(ccfg.get("route_tests", []))
+    except ValueError:
+        own = []
+    rows += [(x["q"], x["want"] or "unklar") for x in own if "+" not in (x.get("want") or "")
+             and (not x.get("want") or x["want"] in names)]
+    return rows[:BENCH_MAX]
+
+
+def bench_result(seen, steps=ROUTE_STEPS):
+    """The numbers of one measurement from [(wanted, pick or None, p, mass, ms)]; pick None = no usable answer."""
+    answered = [x for x in seen if x[1] is not None]
+    groups = [x for x in seen if x[0] != "unklar"]
+    per = []
+    for t in steps:
+        narrow = [x for x in answered if x[1] != "unklar" and x[2] >= t]
+        wrong = [x for x in narrow if x[1] != x[0]]
+        per.append({"min": t, "narrow": len(narrow), "wrong": len(wrong),
+                    "share": round(len(narrow) / len(groups), 3) if groups else 0.0,
+                    "wrong_share": round(len(wrong) / len(narrow), 3) if narrow else 0.0})
+    good = [x for x in per if x["narrow"] >= SUGGEST_LEAST and x["wrong_share"] <= SUGGEST_WRONG]
+    masses = sorted(x[3] for x in answered if isinstance(x[3], float))
+    ms = sorted(x[4] for x in answered)
+    misses = {}
+    for x in answered:
+        if x[1] != x[0]:
+            k = f"{x[0]}>{x[1]}"
+            misses[k] = misses.get(k, 0) + 1
+    return {"n": len(seen), "answered": len(answered), "hits": sum(1 for x in answered if x[1] == x[0]),
+            "per": per, "suggest": good[0]["min"] if good else None,
+            "mass_min": _r(masses[0]) if masses else None, "mass_mid": _r(masses[len(masses) // 2]) if masses else None,
+            "ms_mid": ms[len(ms) // 2] if ms else 0, "orders": _orders[0],
+            "misses": sorted(misses.items(), key=lambda kv: -kv[1])[:8]}
+
+
+async def _bench_run(ccfg, rows):
+    import intent
+    import vorrang
+    names = list(intent.INTENT_NAMES)
+    question = route_question(names, intent.GROUP_SAYS)
+    seen = []
+    try:
+        for q, want in rows:
+            info = {}
+            t0 = time.monotonic()
+            try:
+                ans = await vorrang.run("Einordnung messen",
+                                        lambda: ask(ccfg, "messen", q, question, timeout=15, info=info))
+                a = ans["absicht"]
+                seen.append((want, a["pick"], a["p"], info.get("mass"), int((time.monotonic() - t0) * 1000)))
+            except Unavailable as e:
+                if e.why in STOP:
+                    _bench["why"] = e.why
+                    break
+                seen.append((want, None, 0.0, info.get("mass"), 0))
+            _bench["done"] += 1
+    except vorrang.Busy:
+        _bench["why"] = "aufgegeben (Gespräche)"
+    except Exception as e:
+        _bench["why"] = type(e).__name__
+    finally:
+        _bench["result"] = bench_result(seen) if seen else None
+        _bench["run"] = False
+        _bench["t"] = time.time()
+        r = _bench["result"] or {}
+        print(f"systemone: Messen {len(seen)} Sätze, {r.get('hits', 0)} Treffer, Vorschlag {r.get('suggest')}"
+              + (f" ({_bench['why']})" if _bench["why"] else ""), flush=True)
+
+
+def bench_view():
+    return {k: _bench[k] for k in ("run", "done", "total", "t", "result", "why")}
+
+
+@router.post("/api/admin/systemone/messen", dependencies=[Depends(auth)])
+async def admin_bench(request: Request):
+    """Starts one measurement (only one at a time) and returns its state; the page asks GET for the rest."""
+    guard.limit(request, "systemone", admin=True)
+    if not _bench["run"]:
+        import asyncio
+        ccfg = load_config().get("chat", {})
+        if not endpoint(ccfg):
+            raise HTTPException(400, "Keine Adresse des Sprachmodells gespeichert")
+        rows = bench_rows(ccfg)
+        _bench.update(run=True, done=0, total=len(rows), why="", result=None)
+        _bench_task[0] = asyncio.create_task(_bench_run(ccfg, rows))
+    return bench_view()
+
+
+@router.get("/api/admin/systemone/messen", dependencies=[Depends(auth)])
+async def admin_bench_state():
+    """The state of the measurement: how far, and the numbers of the last one (fixed group names and numbers)."""
+    return bench_view()

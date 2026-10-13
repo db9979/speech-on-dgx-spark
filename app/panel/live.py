@@ -1100,7 +1100,8 @@ def snapshot(view="admin", now=None):
                         + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}"
                            if cht.get("private_on") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
-            x["sub"] = f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
+            x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
+                        + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

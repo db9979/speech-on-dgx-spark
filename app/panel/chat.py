@@ -42,6 +42,7 @@ import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
 import stufe  # noqa: E402  (priority for people)
 import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
+import systemone  # noqa: E402  (Einordnung mit Wahrscheinlichkeit: Antworten im Hintergrund prüfen)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules for facts)
@@ -2034,6 +2035,8 @@ async def _answer(request, turn):
                 if tr:
                     tr.step("check", "Taten-Prüfung", time.time(), held=len(st["held_acts"]), kind=art or "erledigt",
                             why="fehler" if ran else "nicht_gelaufen")
+            if who and own_browser:   # „Beschwerde erkennen“: the next message may say this did not work (taten.last)
+                taten.note_last(who["id"], st["acts"])
             if fix_task:
                 lesson = await fix_task
                 busy = any((m.pending(who["id"]) or {}).get("src") == src for m in (calendars, tidy))
@@ -2581,6 +2584,8 @@ async def _answer(request, turn):
                 tr.need = list(turn.need or [])
                 rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside,
                                               None, bool(getattr(turn, "explain", None)))
+                # Antworten im Hintergrund prüfen (systemone.py): after the answer, never before it is spoken
+                systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"

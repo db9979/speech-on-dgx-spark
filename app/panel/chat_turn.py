@@ -28,6 +28,7 @@ import mail  # noqa: E402
 import proactive  # noqa: E402
 import profiles  # noqa: E402
 import speakers  # noqa: E402
+import taten  # noqa: E402
 import tidy  # noqa: E402
 import wissen  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
@@ -691,6 +692,26 @@ async def prepare(request):
             system = per_turn(system, "Raum-Modus: " + (note or "Das geht hier nicht.") + " Sag dem Nutzer genau das, kurz.")
         tools = []
         print("room: message about another device's room mode - fixed rules, no tools in this answer", flush=True)
+    # „Beschwerde erkennen“ (taten.py, systemone.py): "geht immer noch nicht" right after a deed of this profile.
+    # The fixed list first, qwen38's probability only when the list finds nothing; then the model is told to look
+    # first, and the tools that change things of that kind are not offered (unless the message asks again)
+    last_acts = taten.last(who["id"]) if who and own_browser and not mcp and messages[-1]["role"] == "user" \
+        and isinstance(messages[-1].get("content"), str) and features.allowed("einordnungklage", who["id"], ccfg) else []
+    if last_acts and tools:
+        said = messages[-1]["content"]
+        klage, via = taten.complaint(said), "Liste"
+        if not klage and len(said) <= 300:
+            import systemone
+            p_klage = await systemone.complaint(ccfg, said, taten.WHAT.get(last_acts[-1]["art"], taten.WHAT[""])[0])
+            klage, via = p_klage is not None and p_klage >= systemone.KLAGE_MIN, "Einordnung"
+        if klage:
+            gone = taten.locked(last_acts, said)
+            tools = [t for t in tools if t["function"]["name"] not in gone]
+            system = per_turn(system, taten.complaint_note(last_acts, chat.guess_language(said) == "English"))
+            cal_note.append({"name": "Beschwerde (Panel)", "args": "", "result": f"erkannt ({via}), "
+                             + ("nur nachsehen" if gone else "Nutzer bittet erneut")})
+            taten.note_live("klage")
+            print(f"taten: beschwerde erkannt {profiles.log_name(who)} | {via} | gesperrt={len(gone)}", flush=True)
     # the switch narrows what the model sees (never more than the rights above left); a question no
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)

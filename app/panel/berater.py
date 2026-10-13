@@ -434,6 +434,9 @@ def candidates(case, cfg=None):
                 add(_hint(t, "ergebnis"), k)
             add(_switch("antwort_pruefen", cfg, True), k)
             add(_value_step("temperatur", cfg, True), k)
+        elif k == "erfunden":   # Antworten im Hintergrund prüfen: details in no result (systemone.check_answer)
+            add(_switch("antwort_pruefen", cfg, True), k)
+            add(_value_step("temperatur", cfg, True), k)
         elif k == "wissen":
             add(_value_step("nachschlagen", cfg, False), k)
             for w in _words(q)[:2]:
@@ -460,7 +463,7 @@ def candidates(case, cfg=None):
             if why:
                 add(_cand("weiche_nicht", {"group": group, "word": why}, f"„{why}“ nicht mehr zu {_label(group)}",
                           f'"{why}" no longer to {_label(group)}'))
-    if kind in ("doppelt", "pruefung", "absage") or (kind == "schlecht" and grund in ("antwort", "")):
+    if kind in ("doppelt", "pruefung", "absage", "erfunden") or (kind == "schlecht" and grund in ("antwort", "")):
         if q and not acts:   # never a question that switches, sends or writes into the quality test
             add(_cand("qualitaet_fall", {"q": q[:200]}, f"„{q[:60]}“ in den Qualitätstest",
                       f'"{q[:60]}" into the quality test'))
@@ -1428,8 +1431,20 @@ async def pick(case, cands, c):
             + (f", Werkzeug {case['tool']}" if case.get("tool") else "") + (f", Fehler {case['code']}" if case.get("code") else "")
             + (f", Grund {faelle.REASONS[case['grund']][0]}" if case.get("grund") in faelle.REASONS else "")
             + f", {case.get('n', 1)}-mal." + "".join(f"\nFrage: <<<{data(q)}>>>" for q in qs)
-            + "".join(f"\nNotiz: <<<{data(n)}>>>" for n in case.get("notes", [])[-2:])
-            + "\n\nMögliche Änderungen:\n" + "\n".join(f"{x['id']}: {x['title'][0]}" for x in cands))
+            + "".join(f"\nNotiz: <<<{data(n)}>>>" for n in case.get("notes", [])[-2:]))
+    if features.admin_on("einordnungrat", c):
+        # Einordnung im Einstellungs-Assistenten (systemone.py): the pick with a real probability, proposed only from
+        # systemone.BERATER_MIN; below it the catalog's order. qwen38 busy or missing: the JSON question below
+        import systemone
+        try:
+            ans = await vorrang.run("Verbessern", lambda: systemone.ask(
+                c, "berater", text, systemone.berater_question([x["title"][0] for x in cands]), timeout=MODEL_TIMEOUT))
+            i, p = systemone.berater_pick(ans, len(cands))
+            print(f"berater: Einordnung {'Wahl' if i is not None else 'unter Schwelle'} {p:.2f}", flush=True)
+            return (i, f"Einordnung, {round(p * 100)} % sicher") if i is not None else (0, "")
+        except (systemone.Unavailable, vorrang.Busy, ValueError):
+            pass
+    text += "\n\nMögliche Änderungen:\n" + "\n".join(f"{x['id']}: {x['title'][0]}" for x in cands)
     headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:

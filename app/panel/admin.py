@@ -700,7 +700,8 @@ def validate(new):
     for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
               "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "remarkable", "remarkable_paper", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
               "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
-              "systemone", "systemone_tidy", "systemone_mail", "systemone_quality"):
+              "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
+              "systemone_klage"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for k in ("doc_night_from", "doc_night_to", "dev_updates_night_at"):
@@ -720,6 +721,10 @@ def validate(new):
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")
+    import systemone
+    if ch.get("systemone_min", systemone.ROUTE_MIN) not in systemone.ROUTE_STEPS \
+            or isinstance(ch.get("systemone_min"), bool):
+        raise HTTPException(400, "systemone_min: " + ", ".join(str(x) for x in systemone.ROUTE_STEPS))
     if ch.get("route_model", "off") not in ("off", "on", "lean", "systemone"):
         raise HTTPException(400, "route_model: off, on, lean or systemone")
     for sec in ("asr", "tts"):
