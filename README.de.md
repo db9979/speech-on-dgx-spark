@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.495** Werkzeuge für alle Dienste: Zustand per Sprache, Termine, Pläne und Regeln ändern, wiederholte Erinnerungen, Rückgängig, alles nach Ja
 - **V01.0.494** Admin-Schalter speichern: alte Vorgaben und Einstellungen blockieren nicht mehr
 - **V01.0.493** Logs lückenlos: jede Durchsage und andere Aktion schreibt für jedes Ergebnis eine Zeile, jeder Werkzeugaufruf auch
 - **V01.0.492** Admin-Schalter speichern klappt wieder, auch mit entfernten Funktionen in „Für neue Profile“
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.488** „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
 - **V01.0.487** Sicherung aufs NAS: Zertifikat, das nicht zur Adresse passt, per Fingerabdruck annehmen statt Fehler
 - **V01.0.486** Einordnung mit Wahrscheinlichkeit: messen und Schwelle wählen, Label-Masse, Katalogwahl im Einstellungs-Assistenten, Antworten im Hintergrund prüfen, Beschwerde erkennen
-- **V01.0.485** reMarkable: Ordner nach Art, gestaltete Blätter mit „Kann weg“, Morgenblatt zum Abhaken, Kästchen werden gelesen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -24,6 +24,7 @@ import profiles  # noqa: E402
 import recall  # noqa: E402
 import answercheck  # noqa: E402
 import taten  # noqa: E402  (Taten prüfen, Fehlerschleife stoppen)
+import aendern  # noqa: E402  („Mach das rückgängig“)
 import fixes  # noqa: E402
 import hintergrund  # noqa: E402
 import homeassistant  # noqa: E402
@@ -341,6 +342,13 @@ HA_HISTORY_TOOL = {"type": "function", "function": {
         "query": {"type": "string", "description": "device, room or kind in words, or one exact entity id"},
         "hours": {"type": "integer", "description": "how far back, default 24, at most 720"}},
         "required": ["query"]}}}
+CAMERA_TOOL = {"type": "function", "function": {
+    "name": "camera_describe",
+    "description": "What a Home Assistant camera shows right now, in a few words made by the local model from a "
+                   "still picture (never kept): 'Was sieht die Kamera an der Haustür?', 'Steht ein Paket vor der Tür?'.",
+    "parameters": {"type": "object", "properties": {
+        "camera": {"type": "string", "description": "the camera's name or place in words, or its exact entity id"}},
+        "required": ["camera"]}}}
 HA_TODO_TOOL = {"type": "function", "function": {
     "name": "home_assistant_todo",
     "description": "The user's to-do lists in Home Assistant, e.g. the shopping list: show what is on it, "
@@ -384,6 +392,16 @@ DOC_TOOL = {"type": "function", "function": {
         "art": {"type": "string", "description": "optional: only documents of this kind, e.g. Vertrag, Rechnung"}},
         "required": ["query"]}}}
 
+# „Welche Dokumente habe ich?“ (plan werkzeug-abdeckung Paket 7): the list itself, one Steckbrief line each
+DOC_LIST_TOOL = {"type": "function", "function": {
+    "name": "document_list",
+    "description": "List the user's own documents (and those shared with the household): title, kind, sender, "
+                   "deadline and tags, one line each. Use it for 'which documents do I have', not to answer from them.",
+    "parameters": {"type": "object", "properties": {
+        "tags": {"type": "array", "items": {"type": "string"}, "description": "optional: only documents with all these tags"},
+        "art": {"type": "string", "description": "optional: only documents of this kind, e.g. Vertrag, Rechnung"}}}}}
+DOC_LIST_MAX = 60
+
 
 REMINDER_TOOLS = [
     {"type": "function", "function": {
@@ -393,7 +411,10 @@ REMINDER_TOOLS = [
                        "and speaks the text when it is due.",
         "parameters": {"type": "object", "properties": {
             "text": {"type": "string", "description": "what to remind of, short, e.g. 'Ofen ausschalten'"},
-            "minutes": {"type": "number"}, "at": {"type": "string"}}, "required": ["text"]}}},
+            "minutes": {"type": "number"}, "at": {"type": "string"},
+            "repeat": {"type": "string", "enum": ["daily", "weekdays", "weekly", "monthly"],
+                       "description": "only when the user asks for it again and again ('jeden Montag'): give 'at' as "
+                                      "the first time"}}, "required": ["text"]}}},
     {"type": "function", "function": {
         "name": "reminder_list", "description": "List the pending timers and reminders.",
         "parameters": {"type": "object", "properties": {}}}},
@@ -478,6 +499,18 @@ CALENDAR_ADD_TOOL = {"type": "function", "function": {
         "alarm_minutes": {"type": "integer", "description": "a reminder this many minutes before (optional)"},
         "calendar": {"type": "string", "description": "name of the calendar, only if the user named one"}},
         "required": ["title", "start"]}}}
+CALENDAR_CHANGE_TOOL = {"type": "function", "function": {
+    "name": "calendar_change",
+    "description": "Propose to move or delete one existing appointment in the user's calendar (never a repeating "
+                   "one). It is NOT changed by this call: the panel changes it only after the user says yes in the "
+                   "next message. To move an appointment never use calendar_add.",
+    "parameters": {"type": "object", "properties": {
+        "title": {"type": "string", "description": "words of the appointment's title, e.g. 'Zahnarzt'"},
+        "date": {"type": "string", "description": "the appointment's current day 'YYYY-MM-DD', if the user named it"},
+        "action": {"type": "string", "enum": ["move", "delete"]},
+        "new_start": {"type": "string", "description": "move: new local start 'YYYY-MM-DDTHH:MM', or 'YYYY-MM-DD' "
+                                                       "to keep the time of day"}},
+        "required": ["title", "action"]}}}
 # questions that must go through a calendar or mail tool (tool_choice "required" in the first round);
 # "Trag Zahnarzt am Dienstag ein" names no appointment word, so "eintragen" counts as well
 NEED_CALENDAR = re.compile(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b"
@@ -506,7 +539,8 @@ NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|s
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
-                     "fehlen, statt sie zu raten.")
+                     "fehlen, statt sie zu raten. Einen bestehenden Termin verschieben oder löschen geht nur mit "
+                     "calendar_change (auch erst nach dem Ja), nie mit calendar_add.")
 # a question about what the Spark already made or sent („Wurde ein Dokument für den reMarkable erstellt?“, V01.0.4xx):
 # a past form of making or sending plus a kind of document; it must go through document_status or remarkable_sent (NEED_TOOLS),
 # never through the uploaded documents
@@ -802,14 +836,14 @@ def loop_count(st, name, args):
 # (local_search: the panel's own quick look before the answer, lokal.py; the model is never offered it)
 # the calendar was read in this answer: no time or date of an earlier answer may come back as an appointment
 CAL_READS = {"calendar_events", "daily_briefing"}
-READS_OUTSIDE = {"web_search", "document_search", "calendar_events", "daily_briefing", "history_search", "local_search"}
+READS_OUTSIDE = {"web_search", "document_search", "document_list", "camera_describe", "calendar_events", "daily_briefing", "history_search", "local_search"}
 # Home Assistant reads: names, media titles and text states can come from other people (anyone in the
 # LAN can cast a title); they are handed over as data, and free text in them locks like outside text
 HA_READS = {"home_assistant_states", "home_assistant_history", "home_assistant_todo"}
 # after outside text also no proposals and no reminders (a page could plant "Ja"-questions or a
 # reminder text that is read out later)
 LOCKED_OUTSIDE = {"home_assistant", "home_assistant_action", "memory_save", "memory_forget", "reminder_cancel",
-                  "reminder_set", "calendar_add", "mail_tidy_propose", "mail_draft", "tasks_add", "tasks_change",
+                  "reminder_set", "calendar_add", "calendar_change", "mail_tidy_propose", "mail_draft", "tasks_add", "tasks_change",
                   "iphone_action"}
 MAX_CALLS = 4          # tool calls the model may make in one round (more are not run)
 # look-up tools: each at most max_searches times per question like the web search (trace 68bf48: archive_search
@@ -1956,6 +1990,8 @@ async def _answer(request, turn):
                     a = taten.act(x["name"], args, result)
                     if a:
                         st["acts"].append(a)
+                        if a["ok"] and who and own_browser:   # „Mach das rückgängig“ (aendern.py)
+                            aendern.note_tool(who["id"], x["name"], args, result)
                     elif not taten.failed(result):
                         st["looked"] = True
                     if tm["rounds"]:

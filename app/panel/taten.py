@@ -20,6 +20,8 @@ KIND = {
     "message_send": "nachricht", "message_announce": "nachricht", "pc_send": "nachricht",
     "memory_save": "merken", "memory_forget": "merken",
     "tasks_add": "aufgabe", "tasks_change": "aufgabe",
+    "calendar_change": "termin", "speaker_volume": "geraet",
+    "agent_change": "aenderung", "home_rule_delete": "aenderung", "proactive_pause": "aenderung", "undo_last": "aenderung",
 }
 # kind -> the tool that knows what was done earlier (R4 "Nein zu eigenem Tun", thread "Einstellungen optimieren")
 STATUS = {"dokument": "document_status", "remarkable": "remarkable_sent", "erinnerung": "reminder_list",
@@ -81,6 +83,8 @@ CLAIMS = {
                  r"verschickt|sent)\b|\b(?:habe|hab)\b[^.!?]{0,40}\b(?:ausgerichtet|durchgesagt)\b",
     "merken": r"\b(?:habe ich mir gemerkt|hab ich mir gemerkt|ich merke mir|merk ich mir|habe ich vergessen|"
               r"i(?:'ll| will) remember|i(?:'ve| have) forgotten)\b",
+    "aenderung": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:pausiert|gelöscht|rückgängig gemacht|wiederhergestellt|"
+                 r"fortgesetzt|paused|deleted|undone|restored)\b",
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
 }
 CLAIMS = {k: re.compile(v, re.I) for k, v in CLAIMS.items()}
@@ -120,7 +124,7 @@ WHAT = {"geraet": ("das Gerät", "the device"), "erinnerung": ("die Erinnerung",
         "termin": ("der Termin", "the appointment"), "mail_entwurf": ("der Mail-Entwurf", "the mail draft"),
         "dokument": ("das Dokument", "the document"), "remarkable": ("das reMarkable", "the reMarkable"),
         "nachricht": ("die Nachricht", "the message"), "merken": ("das Merken", "remembering it"),
-        "aufgabe": ("die Aufgabe", "the task"), "": ("das", "that")}
+        "aufgabe": ("die Aufgabe", "the task"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
 
 
 def sentence(art, status, en=False, what=""):

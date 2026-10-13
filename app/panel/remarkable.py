@@ -1133,6 +1133,8 @@ def offer(ctx):
     more = rmplus.tools_for(who["id"], ctx.get("text"))
     return {"tools": [NOTE_TOOL, SENT_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
             "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sheet"},
+            # offered only when the person's own words name the reMarkable: the Weiche keeps them (werkzeug-abdeckung)
+            "keep": {t["function"]["name"] for t in [NOTE_TOOL, SENT_TOOL] + more},
             # what comes back names the page's title or the mail's file name: outside text, the rest of the answer locked
             "mail": {"remarkable_attachment"}, "outside": {"remarkable_page"},
             "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable."),

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.495** Tools for every service: status by voice, change and delete appointments, jobs and rules, repeating reminders, undo, all after a yes
 - **V01.0.494** Saving admin switches: old presets and settings no longer block it
 - **V01.0.493** Complete logs: every announcement and other action writes a line for every outcome, every tool call too
 - **V01.0.492** Saving admin switches works again, also with removed functions in "for new profiles"
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.488** "Messages" fully moved into chats: fixed group "Alle", announcements and read-aloud on own speakers, old messages carried over; Me → Messages removed, Siri writes into the chat
 - **V01.0.487** Backup to the NAS: accept a certificate that does not fit the address by its fingerprint instead of an error
 - **V01.0.486** Classification with probabilities: measure and choose the threshold, label mass, catalog pick in the settings assistant, background answer check, recognizing complaints
-- **V01.0.485** reMarkable: folders by kind, designed sheets with "Kann weg", morning sheet to tick off, boxes are read back
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -37,6 +37,12 @@ einschalten anschalten anmachen starten starte start aktivieren aktiviere aktivi
 ausschalten ausmachen abschalten beenden beende beendet beend stopp stop stoppe stoppen deaktivieren deaktiviere
 abbrechen spark hey jarvis und mir mit minuten minute min stunde stunden eine einen ein halbe halben zwei drei vier
 eins lass lasse soll sollst zuhören zuhoeren hören dort da bis lang lange für den ganzen mal""".split())
+# a question about it ("Ist der Raummodus im Wohnzimmer an?", "Wo hört der Raummodus gerade zu?") only asks
+# for the state: never a start (V01.0.488 the question became a start proposal for the place „ist wohnzimmer“)
+ASKS_STATE = re.compile(r"^(ist|sind|läuft|laeuft|laufen|wo|wann|welche[rsmn]?|hört|hoert|hören|hoeren|wie lange|"
+                        r"bis wann|gibt es|seit wann)\b")
+STATE_FILL = set("""ist sind läuft laeuft laufen wo wann welche welcher welches welchen welchem hört hoert hören hoeren
+wie lange bis seit gibt es gerade grad aktiv zu noch""".split())
 EVERY = ("alle", "überall", "allen", "allen geräten", "alle geräte")
 NUM = {"eine": 1, "einen": 1, "ein": 1, "eins": 1, "zwei": 2, "drei": 3, "vier": 4}
 
@@ -74,6 +80,9 @@ def parse(text):
     if len(t) > 160 or not ROOM.search(t):
         return None
     t = ROOM.sub("raummodus", t)
+    if ASKS_STATE.match(t):
+        words = [w for w in t.split() if w not in FILL and w not in STATE_FILL and not w.isdigit()]
+        return "status", " ".join(words)[:60], None
     action = "end" if END.search(t) else "start" if START.search(t) else None
     if not action:
         return None
@@ -223,6 +232,19 @@ async def answer(ctx, latest):
     if not got:
         return None
     action, place, mins = got
+    if action == "status":
+        # reading only the profile's own rooms (roomlive.mine): no switch beyond the room mode itself
+        if not roomlive.enabled() or not ctx.get("own"):
+            return None
+        rooms = roomlive.mine(uid)
+        if place and place not in EVERY:
+            areas = {x["id"]: x["area"] for x in _speakers(uid)}
+            rooms = [r for r in rooms if _fits(place, [r["name"], areas.get(r.get("device"), "")])]
+        if not rooms:
+            return _say("room_status", (f"Im Raum-Modus ist gerade kein Gerät „{place}“." if place and place not in EVERY
+                                        else "Gerade hört kein Gerät im Raum-Modus zu."))
+        return _say("room_status", "Im Raum-Modus hören gerade zu: " + ", ".join(
+            f"{r['name']} bis {_clock(r['until'] / 1000, uid)}" for r in rooms[:6]) + ".")
     if action == "end":
         if not roomlive.enabled() or not ctx.get("own"):
             return None

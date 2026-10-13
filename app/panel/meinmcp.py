@@ -405,6 +405,7 @@ def offer(ctx):
         return None
     return {"tools": [as_tool(n, s, t) for n, s, t in reads + acts], "hint": HINT,
             "outside": {n for n, _, _ in reads}, "changes": {n for n, _, _ in acts},
+            "keep": {n for n, sv, _ in reads + acts if mcp.named(ctx.get("text"), sv.get("name"))},
             "filler": {n: ("Ich frage den Dienst.", "Let me ask the service.") for n, _, _ in reads}}
 
 

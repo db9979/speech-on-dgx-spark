@@ -1074,8 +1074,13 @@ def reminders(uid):
         return []
 
 
-def add_reminder(uid, text, due):
+REPEATS = ("daily", "weekdays", "weekly", "monthly")   # „Erinnere mich jeden Montag an den Müll“
+
+
+def add_reminder(uid, text, due, every=""):
     item = {"id": secrets.token_hex(4), "text": re.sub(r"\s+", " ", str(text)).strip()[:200], "due": int(due)}
+    if every in REPEATS:
+        item["every"] = every
     with _lock:
         items = sorted(reminders(uid) + [item], key=lambda x: x["due"])[-MAX_REMINDERS:]
         _write(_path(uid, "reminders.json"), items)
@@ -1089,8 +1094,42 @@ def take_reminder(uid, rid, due_by):
         items = reminders(uid)
         item = next((x for x in items if x.get("id") == rid and x.get("due", 0) <= due_by), None)
         if item is not None:
-            _write(_path(uid, "reminders.json"), [x for x in items if x is not item])
+            keep = [x for x in items if x is not item]
+            nxt = next_due(item, settings(uid).get("tz", "")) if item.get("every") in REPEATS else None
+            if nxt:   # a repeating reminder comes back at its next time (a new id: each ring is taken once)
+                keep = sorted(keep + [dict(item, id=secrets.token_hex(4), due=nxt)], key=lambda x: x["due"])[-MAX_REMINDERS:]
+            _write(_path(uid, "reminders.json"), keep)
     return item
+
+
+def next_due(item, tz=""):
+    """The next time of a repeating reminder (epoch ms), in local time so it stays at its clock time over DST."""
+    import datetime
+    import zoneinfo
+    try:
+        zone = zoneinfo.ZoneInfo(tz) if tz else zoneinfo.ZoneInfo("Europe/Berlin")
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+        zone = zoneinfo.ZoneInfo("Europe/Berlin")
+    at = datetime.datetime.fromtimestamp(item["due"] / 1000, zone)
+    now = time.time() * 1000
+    for _ in range(400):
+        every = item.get("every")
+        if every == "daily":
+            at = at + datetime.timedelta(days=1)
+        elif every == "weekdays":
+            at = at + datetime.timedelta(days=3 if at.weekday() == 4 else 2 if at.weekday() == 5 else 1)
+        elif every == "weekly":
+            at = at + datetime.timedelta(days=7)
+        elif every == "monthly":
+            y, m = (at.year + 1, 1) if at.month == 12 else (at.year, at.month + 1)
+            at = at.replace(year=y, month=m, day=min(at.day, 28))
+        else:
+            return None
+        at = at.replace(tzinfo=zone)
+        due = int(datetime.datetime(at.year, at.month, at.day, at.hour, at.minute, tzinfo=zone).timestamp() * 1000)
+        if due > now:
+            return due
+    return None
 
 
 def remove_reminders(uid, ids):

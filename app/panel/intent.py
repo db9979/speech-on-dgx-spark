@@ -31,6 +31,7 @@ import docmake
 import fixes
 import guard
 import homeassistant
+import zustand_wz
 from common import load_config
 from core import auth
 
@@ -39,11 +40,15 @@ HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermos
                         r"fernseher\w*|tv|rollo\w*|rolll?[aä]den\w*|jalousie\w*|steckdose\w*|pool\w*|whirlpool\w*|"
                         r"staubsauger\w*|saugroboter\w*|klima\w*|lüftung\w*|ventilator\w*|garage\w*|"
                         r"wohnzimmer|küche|schlafzimmer|kinderzimmer|badezimmer|bad\b|flur|keller|garten|terrasse|"
-                        r"smart ?home|home assistant|lights?|heating)\b")
+                        r"smart ?home|home assistant|lights?|heating|"
+                        # doors, windows, appliances and readings (plan werkzeug-abdeckung B2: „Ist die Haustür zu?“
+                        # and „Wann ist die Waschmaschine fertig?“ were „unklar“, with route_model lean without HA tools)
+                        r"\w*tür(en)?|\w*fenster|garagentor\w*|türschloss|waschmaschine\w*|trockner\w*|"
+                        r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?)\b")
 CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
-                            r"mein(en)? tag|was habe ich (heute|morgen)( vor)?)\b)")
+                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin\w*)\b)")
 LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
-                        r"liste\b|\bliste\b|shopping list)")
+                        r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b)")
 MEMORY_WORDS = re.compile(r"(?i)\b(merk dir|merke dir|vergiss|weißt du (noch|was)|was weißt du über mich|"
                           r"erinnerst du dich|haben wir (schon )?(mal )?(darüber )?(gesprochen|geredet)|letztes mal|"
                           r"remember|forget)\b")
@@ -66,25 +71,30 @@ SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|pane
                          r"wie stelle ich|wo stelle ich|wo schalte ich|wo finde ich (die|den|das) (einstellung|schalter)|"
                          r"(beim|im|am|vom|den|dem|der) spark\b|spark-\w+|zweiten? anmeldeschritt\w*|weiche\b|"
                          r"ich-seite|funktionen-seite|zustand-seite|live-übersicht)")
-PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*)\b")
+PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*|"
+                         # calling and navigating (iphone_action): „Ruf Mama an“, „Navigiere nach Hause“
+                         r"(?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|navigier\w*|route nach|bring mich nach|call \w+|navigate)\b")
+# „Räum mein Postfach auf“ is the mailbox (mail_tidy), „Amazon-Bestellung“ a parcel (plan werkzeug-abdeckung B2)
+MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer)\b)")
+PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b\w*bestellung\w*\b)")
 
 GROUPS = {
     "smarthome": ({"home_assistant", "home_assistant_action", "home_assistant_states", "home_assistant_history",
-                   "home_assistant_todo"}, None),   # words: homeassistant's own verbs + HOME_WORDS
-    "kalender": ({"calendar_events", "calendar_add", "daily_briefing"}, CALENDAR_WORDS),
+                   "home_assistant_todo", "camera_describe"}, None),   # words: homeassistant's own verbs + HOME_WORDS
+    "kalender": ({"calendar_events", "calendar_add", "calendar_change", "daily_briefing"}, CALENDAR_WORDS),
     "mail": ({"mail_list", "mail_search", "mail_read", "mail_tidy_overview", "mail_tidy_propose", "mail_draft"},
-             chat.NEED_MAIL),
+             MAIL_WORDS),
     "websuche": ({"web_search"}, chat.NEED_SEARCH),
     "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel"}, REMINDER_WORDS),
     "liste": ({"tasks_show", "tasks_add", "tasks_change", "home_assistant_todo"}, LIST_WORDS),
     "wetter": ({"weather"}, WEATHER_WORDS),
     "bahn": ({"transit"}, dict(chat.NEED_TOOLS)["transit"]),
-    "paket": ({"parcels", "mail_list", "mail_search"}, dict(chat.NEED_TOOLS)["parcels"]),
-    "kontakt": ({"contacts_search"}, CONTACT_WORDS),
+    "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
+    "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
-    "dokument": ({"document_search"}, DOC_WORDS),
+    "dokument": ({"document_search", "document_list"}, DOC_WORDS),
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
-    "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save"}, AGENT_WORDS),
+    "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save", "agent_change"}, AGENT_WORDS),
     "iphone": ({"iphone_action"}, PHONE_WORDS),
     # questions about the Spark itself (hilfe.py): its settings, switches, functions, guides and recommendations
     "spark": ({"spark_hilfe", "spark_vorschlag"}, SPARK_WORDS),
@@ -96,6 +106,8 @@ GROUPS = {
                    "spark_tagebuch"},
                   re.compile(docmake.MAKE_WORDS.pattern + "|" + chat.DONE_WORDS.pattern.removeprefix("(?i)") + "|"
                              + chat.DIARY_WORDS.pattern.removeprefix("(?i)"), re.I)),
+    # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
+    "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
@@ -168,6 +180,11 @@ def classify(text, extra_words="", group_words="", not_words=""):
         h = None
     if h:
         return Route(["spark"], {"spark": h[:40]})
+    # „Schalte die Websuche ein“ is about a function of the Spark, never a web search or switching a device:
+    # only the Spark-Hilfe with its card (the person taps it; plan werkzeug-abdeckung A4)
+    f = feature_switch(text)
+    if f:
+        return Route(["spark"], {"spark": f[:40]})
     own = chat.own_words(extra_words)
     why = {}
     for name, (_, words) in GROUPS.items():
@@ -220,6 +237,9 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # "Schreib einen Brief wegen der Heizung" is a file about the heating, not switching it
     if "erstellen" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
+    # „Wo ist die Anleitung für die Waschmaschine?“ is a document about it, not switching it
+    if "dokument" in why and "smarthome" in why and not homeassistant.is_command(text):
+        why.pop("smarthome")
     # "Wie warm wird es morgen?" is weather, not the thermostat
     if "wetter" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
@@ -230,17 +250,46 @@ def classify(text, extra_words="", group_words="", not_words=""):
     return Route(list(why), why)
 
 
+FEATURE_VERB = re.compile(r"(?i)^\W*(bitte |kannst du |könntest du |spark,? )?(schalt\w*|mach\w*|aktivier\w*|deaktivier\w*|"
+                          r"turn|switch|enable|disable)\b")
+FEATURE_END = re.compile(r"(?i)\b(ein|an|aus|ab|on|off|aktivieren|deaktivieren|einschalten|ausschalten|abschalten)\W*$")
+_FEATURE_NAMES = []
+
+
+def feature_switch(text):
+    """The name of a Spark function in a sentence that switches it („Schalte die Websuche ein“), or "": the whole
+    sentence is a switching command, it names a function from features.FEATURES (de or en, at least 5 letters)
+    or the word „Funktion“, and no device of the home."""
+    text = str(text or "")[:200]
+    if not FEATURE_VERB.search(text) or not FEATURE_END.search(text) or HOME_WORDS.search(text):
+        return ""
+    if not _FEATURE_NAMES:
+        import features
+        _FEATURE_NAMES.extend(sorted({n.lower() for f in features.FEATURES for n in (f.de, f.en) if len(n) >= 5}
+                                     | {"notaus", "emergency stop"},
+                                     key=len, reverse=True))
+    low = text.lower()
+    hit = next((n for n in _FEATURE_NAMES if re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", low)), "")
+    if hit:
+        return hit
+    m = re.search(r"(?i)\b(funktion\w*|feature)\b", text)
+    return m.group(0) if m else ""
+
+
 def classify_cfg(text, ccfg):
     """classify() with the admin's saved words (chat.tool_words, route_words, route_not)."""
     ccfg = ccfg or {}
     return classify(text, ccfg.get("tool_words", ""), ccfg.get("route_words", ""), ccfg.get("route_not", ""))
 
 
-def narrow(route, tools, ccfg=None):
+def narrow(route, tools, ccfg=None, keep=frozenset()):
     """The tools for a clear route: its group (only those already offered) plus NARROW_KEEP, or
     all of them when nothing of the group is offered (never more than before, never an empty list
     when there was something). ccfg: the admin's choices under Funktionen → Weiche: groups that do not
-    narrow (chat.route_off) and tools a group keeps as well (chat.route_extra, only those already offered)."""
+    narrow (chat.route_off) and tools a group keeps as well (chat.route_extra, only those already offered).
+    keep: tools a module offered only because the person's own words named them (extras "keep": „aufs reMarkable“,
+    the name of an own MCP service); they stay, whatever group the rest of the sentence is (plan werkzeug-abdeckung B1:
+    „Leg meine Einkaufsliste aufs reMarkable“ lost the reMarkable to the group liste)."""
     if not route.clear:
         return tools
     ccfg = ccfg or {}
@@ -248,7 +297,7 @@ def narrow(route, tools, ccfg=None):
     if any(n in off for n in route.names):
         return tools
     extra = own_route_extra(ccfg.get("route_extra", ""))
-    want = route.tools() | NARROW_KEEP | {t for n in route.names for t in extra.get(n, ())}
+    want = route.tools() | NARROW_KEEP | set(keep) | {t for n in route.names for t in extra.get(n, ())}
     kept = [t for t in tools if t["function"]["name"] in want]
     if not any(t["function"]["name"] in route.tools() for t in kept):
         return tools
@@ -309,12 +358,12 @@ def direct(text, offered):
     return None
 
 
-def lean(route, tools):
+def lean(route, tools, keep=frozenset()):
     """chat.route_model "lean": for a question no rule recognizes, only the LEAN tools already offered
     (possibly none). Anything a rule recognized stays as narrow() left it."""
     if route.names:
         return tools
-    return [t for t in tools if t["function"]["name"] in LEAN]
+    return [t for t in tools if t["function"]["name"] in LEAN or t["function"]["name"] in keep]
 
 
 def forced(route, need, offered):
@@ -381,6 +430,7 @@ GROUP_SAYS = {
     "agent": "Agent-Aufgaben oder Routinen anlegen, ansehen, planen",
     "iphone": "etwas auf dem iPhone auslösen (Kurzbefehl)",
     "spark": "Fragen zum Spark selbst, seinen Einstellungen und Funktionen",
+    "zustand": "ob beim Spark alles läuft, Dienste erreichbar, Sicherung, Version, Update, Notaus, eigener Zustand",
 }
 
 

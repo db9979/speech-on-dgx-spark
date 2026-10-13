@@ -670,7 +670,8 @@ def _propose(uid, p, src, fresh=False):
 def describe(p):
     if p["kind"] == "announce":
         return f"Durchsage auf {', '.join(p['names'])}: „{p['text']}“"
-    who = "alle (" + short(p["names"]) + ")" if p["kind"] == "all" else short(p["names"])
+    who = "alle (" + short(p["names"]) + ")" if p["kind"] == "all" else \
+        f"die Gruppe „{p['names'][0]}“" if p["kind"] == "group" else short(p["names"])
     return f"Nachricht an {who}: „{p['text']}“"
 
 
@@ -682,8 +683,48 @@ async def carry_out(uid, p):
     if p["kind"] == "announce":
         names, why = await announce(uid, p["to"], p["text"], via="assistant")
         return f"Durchsage gesendet an: {', '.join(names)}." if names else "NICHT gesendet: " + why
+    if p["kind"] == "group":
+        names, why = await send_group(uid, p["cid"], p["text"])
+        return f"Gesendet in die Gruppe „{p['names'][0]}“." if names else "NICHT gesendet: " + why
     names, why = await send(uid, p["to"], p["text"], kind="all" if p["kind"] == "all" else "text")
     return f"Gesendet an {short(names)}." if names else "NICHT gesendet: " + why
+
+
+def my_group(uid, name):
+    """(cid, name) of the profile's own chat group with this name (whole words, case aside), else None. Private
+    groups are not there: the Spark never writes into a chat it cannot read."""
+    import chats
+    want = _norm(name)
+    want = re.sub(r"^(die |der |das |unsere |meine |in die |an die )+", "", want)
+    want = re.sub(r"[\s-]*(gruppe|group|chat)$", "", want).strip()
+    if len(want) < 3 or not chats.groups_on():
+        return None
+    for cid, c in chats.mine(uid).items():
+        if c.get("kind") != "group" or cid == chats.ALL_ID:
+            continue
+        title = chats.unseal(c.get("name"), cid, "name") or ""
+        t = re.sub(r"[\s-]*(gruppe|group|chat)$", "", _norm(title)).strip()
+        if t and want in (t, t + "n", t + "s", t + "en"):   # „Familiengruppe“ for the group „Familie“
+            return cid, title[:60]
+    return None
+
+
+async def send_group(sender, cid, text, now=None):
+    """After the yes: into the profile's own group (chats.send rechecks membership, limits and the Notaus)."""
+    if notaus.refuse("aktion", sender):
+        return [], notaus.why(sender, "keine Nachrichten")
+    import chats
+    text = clean(text)
+    if not text or not usable(sender):
+        return [], "Die Nachricht ist leer." if not text else "Chats sind für dich ausgeschaltet."
+    try:
+        await chats.send(sender, cid, text, via="spark", now=now)
+    except (LookupError, PermissionError, ValueError, OverflowError) as e:
+        return [], str(e)
+    print("messages: into a group from the assistant", flush=True)
+    import tagebuch
+    tagebuch.note(sender, "nachricht", "in eine Gruppe")
+    return ["Gruppe"], ""
 
 
 REPLY = re.compile(r"(?is)^\s*(?:bitte\s+)?(?:antworte|antwort|schreib(?:e)?\s+(?:ihm|ihr)\s+zurück|schreib(?:e)?\s+zurück)"
@@ -895,7 +936,8 @@ TOOLS = [
         "name": "message_send", "description": "Sends a short message to another person of this Spark (or to "
         "everybody). Only proposes it: the user must say yes in the next message, then the panel sends it.",
         "parameters": {"type": "object", "properties": {
-            "to": {"type": "string", "description": "the person's name, or 'alle' for everybody"},
+            "to": {"type": "string", "description": "the person's name, the name of one of the user's chat groups, "
+                                                    "or 'alle' for everybody"},
             "text": {"type": "string", "description": "the message in the user's own words"}},
             "required": ["to", "text"]}}},
     {"type": "function", "function": {
@@ -998,6 +1040,10 @@ async def tool(name, args, ctx):
             if not rs:
                 return "Nicht gesendet: niemand nimmt gerade Nachrichten an alle an."
             p = {"kind": "all", "to": [x["id"] for x in rs], "names": [x["name"] for x in rs], "text": text}
+        elif my_group(uid, to):
+            # one of the profile's own groups („Schreib in die Familiengruppe …“), by its name
+            cid, gname = my_group(uid, to)
+            p = {"kind": "group", "cid": cid, "to": [], "names": [gname], "text": text}
         else:
             r, why, cands = find_all(uid, to)
             if cands:
@@ -1008,11 +1054,12 @@ async def tool(name, args, ctx):
             if not r:
                 return "Nicht gesendet: " + why + " Frag nach, wem die Nachricht gehen soll."
             p = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": text}
-        why = allowed_now(uid, p["to"], p["kind"])
+        why = allowed_now(uid, p["to"], p["kind"]) if p["kind"] != "group" else ""
         if why:
             return "Nicht gesendet: " + why
         _propose(uid, p, src)
-        who = "allen (" + short(p["names"]) + ")" if p["kind"] == "all" else p["names"][0]
+        who = "allen (" + short(p["names"]) + ")" if p["kind"] == "all" else \
+            f"in die Gruppe „{p['names'][0]}“" if p["kind"] == "group" else p["names"][0]
         return (f"Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {who} schreiben: ‚{text}‘?“ Erst sein Ja in "
                 "der nächsten Nachricht sendet es.")
     if name == "message_announce":

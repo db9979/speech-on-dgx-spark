@@ -485,12 +485,12 @@ def ical(item, uid_text):
     return cal.to_ical()
 
 
-async def add_event(uid, item):
+async def add_event(uid, item, out=None):
     """_add_event with one journal line for every outcome (saved, refused by the Notaus, failed); never the
     appointment or the calendar's name."""
     who = profiles.log_name(profiles.by_id(uid))
     try:
-        out = await _add_event(uid, item)
+        res = await _add_event(uid, item, out)
     except notaus.NotausAktiv:
         print(f"calendar: appointment refused, notaus | {who}", flush=True)
         raise
@@ -498,10 +498,10 @@ async def add_event(uid, item):
         print(f"calendar: appointment not saved ({type(e).__name__}) | {who}", flush=True)
         raise
     print(f"calendar: appointment saved | {who}", flush=True)
-    return out
+    return res
 
 
-async def _add_event(uid, item):
+async def _add_event(uid, item, out=None):
     """Writes the appointment to a writable CalDAV calendar: the one named in item "calendar" (its exact name
     first, then a name containing the words, across all connected accounts), else the first one. A named
     calendar that no account has is never swapped for another one: ValueError with the names there are
@@ -536,8 +536,194 @@ async def _add_event(uid, item):
                         headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
         if r.status_code in (200, 201, 204):
             _drop(uid)
+            if out is not None:   # where it went, for „Mach das rückgängig“ (aendern.py)
+                out.update(account=d.get("id"), href=url)
             return pick[1] or d.get("name", "Kalender")
     raise ValueError(f"the calendar server answered {r.status_code}")
+
+
+# ---------------------------------------------------------------- moving and deleting (plan werkzeug-abdeckung C2)
+# calendar_change finds one single appointment in the writable CalDAV calendars by words of its title and its day,
+# proposes the change, and only the person's yes moves or deletes it (chat_turn, like calendar_add). A repeating
+# appointment is never changed (one change would move every date); the server's etag guards against a change made
+# meanwhile elsewhere. The old object is kept in memory for „Mach das rückgängig“ (aendern.py).
+MAX_FOUND = 5
+
+
+def _writable(uid):
+    return [d for d in get(uid)["calendars"]
+            if not re.match(r"webcals?://", d["url"], re.I) and not re.search(r"\.ics(\?|$)", d["url"], re.I)]
+
+
+async def _objects(c, cal, start, end):
+    """[(href, etag, ical text)] of the events overlapping [start, end) in one calendar."""
+    fmt = "%Y%m%dT%H%M%SZ"
+    q = ('<?xml version="1.0"?><c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+         '<d:prop><d:getetag/><c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR">'
+         f'<c:comp-filter name="VEVENT"><c:time-range start="{start.strftime(fmt)}" end="{end.strftime(fmt)}"/>'
+         '</c:comp-filter></c:comp-filter></c:filter></c:calendar-query>')
+    r = await c.request("REPORT", cal, content=q, headers={"Depth": "1", "Content-Type": "application/xml"})
+    if r.status_code != 207:
+        raise ValueError(f"the calendar server answered {r.status_code}")
+    root = _xml(r.content)
+    out = []
+    for resp in (root.findall("d:response", NS) if root is not None else []):
+        href = _href(cal, resp.find("d:href", NS))
+        prop = resp.find("d:propstat/d:prop", NS)
+        text = prop.findtext("c:calendar-data", "", NS) if prop is not None else ""
+        if href and text and "BEGIN:VCALENDAR" in text:
+            out.append((href, (prop.findtext("d:getetag", "", NS) or "").strip(), text))
+    return out
+
+
+def _event_of(text):
+    """(the one VEVENT, its calendar) or (None, None) for a repeating or odd object."""
+    try:
+        cal = icalendar.Calendar.from_ical(text)
+    except Exception:
+        return None, None
+    evs = [x for x in cal.walk("VEVENT")]
+    if len(evs) != 1 or evs[0].get("RRULE") is not None or evs[0].get("RECURRENCE-ID") is not None:
+        return None, None
+    return evs[0], cal
+
+
+def _when(ev, zone):
+    s = ev.get("DTSTART").dt
+    e = ev.get("DTEND").dt if ev.get("DTEND") is not None else s
+    if not isinstance(s, datetime.datetime):
+        return datetime.datetime.combine(s, datetime.time(), zone), \
+            datetime.datetime.combine(e if not isinstance(e, datetime.datetime) else e.date(), datetime.time(), zone), True
+    s = (s if s.tzinfo else s.replace(tzinfo=zone)).astimezone(zone)
+    e = (e if isinstance(e, datetime.datetime) and e.tzinfo else (e.replace(tzinfo=zone) if isinstance(e, datetime.datetime)
+                                                                    else s)).astimezone(zone)
+    return s, e, False
+
+
+async def find_events(uid, words, start, end, zone):
+    """[{"account", "href", "etag", "title", "start", "end", "allday"}] of single appointments in [start, end) whose
+    title holds every word (at least three letters); repeating ones are counted in "repeating"."""
+    want = [w for w in re.findall(r"\w{3,}", str(words or "").lower()) if w not in ("termin", "den", "die", "das", "mit")][:5]
+    found, repeating = [], 0
+    for d in _writable(uid):
+        async with _cal_client(d) as c:
+            for href, _ in (await _calendars(c, d["url"]))[:20]:
+                for ohref, etag, text in await _objects(c, href, start.astimezone(datetime.timezone.utc),
+                                                        end.astimezone(datetime.timezone.utc)):
+                    title = re.search(r"(?m)^SUMMARY[^:]*:(.*)$", text)
+                    title = (title.group(1).strip() if title else "")[:200]
+                    if want and not all(w in title.lower() for w in want):
+                        continue
+                    ev, _cal = _event_of(text)
+                    if ev is None:
+                        repeating += 1
+                        continue
+                    s, e, allday = _when(ev, zone)
+                    found.append({"account": d.get("id"), "href": ohref, "etag": etag, "title": str(ev.get("SUMMARY", "") or title)[:200],
+                                  "start": s.isoformat(), "end": e.isoformat(), "allday": allday})
+    return found, repeating
+
+
+def _old(p):
+    return describe({"title": p["title"], "start": p["start"], "end": p["end"], "allday": p.get("allday")})
+
+
+def _new(p):
+    s = datetime.datetime.fromisoformat(p["new_start"])
+    return f"{WEEKDAYS[s.weekday()]} {s:%d.%m.%Y}" + ("" if p.get("allday") else f" {s:%H:%M}")
+
+
+def describe_change(p):
+    return f"den Termin {_old(p)} löschen" if p["change"] == "delete" else f"den Termin {_old(p)} auf {_new(p)} verschieben"
+
+
+def _account(uid, acc):
+    d = next((x for x in _writable(uid) if x.get("id") == acc), None)
+    if not d:
+        raise ValueError("the calendar account was removed")
+    return d
+
+
+async def change_event(uid, p, out=None):
+    """_change_event with one journal line for every outcome (moved, deleted, refused by the Notaus, failed);
+    never the appointment or the calendar's name."""
+    who = profiles.log_name(profiles.by_id(uid))
+    what = "deleted" if p.get("change") == "delete" else "moved"
+    try:
+        res = await _change_event(uid, p, out)
+    except notaus.NotausAktiv:
+        print(f"calendar: appointment change refused, notaus | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"calendar: appointment not {what} ({type(e).__name__}) | {who}", flush=True)
+        raise
+    print(f"calendar: appointment {what} | {who}", flush=True)
+    return res
+
+
+async def _change_event(uid, p, out=None):
+    """Moves or deletes the appointment after the yes; out gets the old object for undo. Returns the checked result."""
+    notaus.stop("aktion", uid)
+    d = _account(uid, p["account"])
+    async with _cal_client(d) as c:
+        r = await c.get(p["href"])
+        if r.status_code != 200:
+            raise ValueError(f"the calendar server answered {r.status_code}")
+        etag = r.headers.get("etag") or p.get("etag") or ""
+        if p.get("etag") and etag and etag != p["etag"]:
+            raise ValueError("the appointment was changed meanwhile; ask again")
+        old = r.text
+        ev, cal = _event_of(old)
+        if ev is None:
+            raise ValueError("a repeating appointment is not changed by voice")
+        head = {"If-Match": etag} if etag else {}
+        if p["change"] == "delete":
+            r = await c.delete(p["href"], headers=head)
+        else:
+            s0 = datetime.datetime.fromisoformat(p["start"])
+            e0 = datetime.datetime.fromisoformat(p["end"])
+            s1 = datetime.datetime.fromisoformat(p["new_start"])
+            for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP"):
+                ev.pop(k, None)
+            if p.get("allday"):
+                ev.add("dtstart", s1.date())
+                ev.add("dtend", (s1 + (e0 - s0)).date())
+            else:
+                ev.add("dtstart", s1.astimezone(datetime.timezone.utc))
+                ev.add("dtend", (s1 + (e0 - s0)).astimezone(datetime.timezone.utc))
+            ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
+            seq = int(ev.get("SEQUENCE", 0) or 0)
+            ev.pop("SEQUENCE", None)
+            ev.add("sequence", seq + 1)
+            r = await c.put(p["href"], content=cal.to_ical(),
+                            headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
+        if r.status_code not in (200, 201, 204):
+            raise ValueError(f"the calendar server answered {r.status_code}")
+    _drop(uid)
+    if out is not None:
+        out.update(account=p["account"], href=p["href"], ics=old, deleted=p["change"] == "delete")
+    return f"Termin {_old(p)} gelöscht." if p["change"] == "delete" else f"Termin „{p['title']}“ auf {_new(p)} verschoben."
+
+
+async def delete_href(uid, acc, href):
+    """„Mach das rückgängig“ after calendar_add: the appointment the Spark entered goes again."""
+    notaus.stop("aktion", uid)
+    async with _cal_client(_account(uid, acc)) as c:
+        r = await c.delete(href)
+    if r.status_code not in (200, 204, 404):
+        raise ValueError(f"the calendar server answered {r.status_code}")
+    _drop(uid)
+
+
+async def put_ics(uid, acc, href, ics, new=False):
+    """„Mach das rückgängig“ after a move or delete: the old object goes back as it was."""
+    notaus.stop("aktion", uid)
+    async with _cal_client(_account(uid, acc)) as c:
+        r = await c.put(href, content=ics.encode() if isinstance(ics, str) else ics,
+                        headers=dict({"Content-Type": "text/calendar; charset=utf-8"}, **({"If-None-Match": "*"} if new else {})))
+    if r.status_code not in (200, 201, 204):
+        raise ValueError(f"the calendar server answered {r.status_code}")
+    _drop(uid)
 
 
 def _cal_client(d):

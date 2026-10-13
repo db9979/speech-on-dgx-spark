@@ -530,7 +530,7 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages_all", "messages_announce", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "android_live",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",

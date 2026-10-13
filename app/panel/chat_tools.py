@@ -126,6 +126,7 @@ async def run(t, name, args, st):
             ok, answer, targets = await homeassistant.command(
                 t.ha, text, "en" if guess_language(text) == "English" else "de")
         except (httpx.HTTPError, ValueError) as e:
+            ha_log(name, e)
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200]})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": ok, "text": answer, "targets": targets})
@@ -143,9 +144,16 @@ async def run(t, name, args, st):
             n, result = await homeassistant.states(t.ha, query, str(args.get("domain", "") or ""),
                                                    str(args.get("area", "") or ""))
         except (httpx.HTTPError, ValueError) as e:
+            ha_log(name, e)
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Treffer"})
+        return result
+    if name == "camera_describe" and t.ha:
+        import hamelden
+        await t.out.put({"type": "home", "command": "? Kamera"})
+        result = await hamelden.ask_camera(t.who["id"] if t.who else None, t.ha, str(args.get("camera") or ""))
+        await t.out.put({"type": "home_done", "ok": result.startswith("Auf dem Bild"), "text": "Kamerabild"})
         return result
     if name == "home_assistant_history" and t.ha:
         query = str(args.get("query") or args.get("entity_id") or args.get("entity") or "").strip()
@@ -157,6 +165,7 @@ async def run(t, name, args, st):
         try:
             n, result = await homeassistant.history(t.ha, query, hours, chat.user_zone(t.body.get("tz")))
         except (httpx.HTTPError, ValueError) as e:
+            ha_log(name, e)
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Verläufe"})
@@ -178,6 +187,7 @@ async def run(t, name, args, st):
                 await t.out.put({"type": "home_done", "ok": False, "text": "Rückfrage"})
                 return result
         except (httpx.HTTPError, ValueError) as e:
+            ha_log(name, e)
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": ok, "text": result[:200]})
@@ -196,6 +206,7 @@ async def run(t, name, args, st):
         try:
             ok, result = await homeassistant.action(t.ha, eid, service, args.get("data"))
         except (httpx.HTTPError, ValueError) as e:
+            ha_log(name, e)
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
             return f"Home Assistant not reachable: {type(e).__name__}"
         await t.out.put({"type": "home_done", "ok": ok, "text": result[:200]})
@@ -237,6 +248,16 @@ async def run(t, name, args, st):
         return ("\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
                 + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"
                    if dated and hits else "")) or "No matching passages in the documents. Say so; do not guess."
+    if name == "document_list" and t.docs and t.who:
+        import wissen
+        tags = [str(x)[:40] for x in args.get("tags") or [] if isinstance(x, str)][:5] if isinstance(args.get("tags"), list) else []
+        art = str(args.get("art") or "").strip()[:40]
+        found = await asyncio.to_thread(wissen.cards, t.who["id"], tags or None, art or None)
+        if not found:
+            return "No documents" + (" of this kind or with these tags" if tags or art else "") + ". Say so; do not guess."
+        lines = [wissen.card_line(d) for d in found[:chat.DOC_LIST_MAX]]
+        return (f"{len(found)} documents" + (f", the first {len(lines)}" if len(found) > len(lines) else "") + ":\n"
+                + "\n".join("- " + x for x in lines))
     if name == "iphone_action" and t.phone_act:
         kind = args.get("kind")
         target = re.sub(r"[\x00-\x1f\x7f<>\\]", "", str(args.get("target") or "")).strip()[:120]
@@ -254,18 +275,21 @@ async def run(t, name, args, st):
             due = chat.reminder_due(args, t.body.get("tz"))
             if not due:
                 return "Invalid time: give minutes from now or a future 'YYYY-MM-DDTHH:MM'."
-            item = profiles.add_reminder(t.who["id"], text, due) if t.who else \
+            every = args.get("repeat") if args.get("repeat") in profiles.REPEATS else ""
+            item = profiles.add_reminder(t.who["id"], text, due, every) if t.who else \
                 {"id": secrets.token_hex(4), "text": text[:200], "due": due}
             await t.out.put({"type": "reminder", "action": "set", "item": item, "foreign": not t.own_browser})
             if t.who:
                 import tagebuch
                 tagebuch.note(t.who["id"], "erinnerung", f"{item['text']} ({fmt(item)})", ref=item["id"])
-            return f"Set: '{item['text']}' at {fmt(item)}."
+            return f"Set: '{item['text']}' at {fmt(item)}" + (f", then {REPEAT_SAYS[item['every']]}" if item.get("every") else "") + "."
         if name == "reminder_list":
-            return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders. Say so."
+            return "\n".join(f"{fmt(x)}: {x['text']}" + (f" ({REPEAT_SAYS[x['every']]})" if x.get("every") in REPEAT_SAYS else "")
+                             for x in pending) or "No pending reminders. Say so."
         if name == "reminder_cancel":
-            t = str(args.get("text", "")).strip().lower()
-            ids = {x["id"] for x in pending if t in ("alle", "all") or (t and t in x["text"].lower())}
+            # (its own name: `t` is the turn; V01.0.488 overwrote it and every cancel failed)
+            what = str(args.get("text", "")).strip().lower()
+            ids = {x["id"] for x in pending if what in ("alle", "all") or (what and what in x["text"].lower())}
             if t.who and ids:
                 profiles.remove_reminders(t.who["id"], ids)
             if ids:
@@ -299,6 +323,8 @@ async def run(t, name, args, st):
         await t.out.put({"type": "calendar"})
         return ("NOT saved yet. Read this proposal to the user and ask whether to enter it: "
                 + calendars.describe(item) + ". It is saved only if the user says yes in the next message.")
+    if name == "calendar_change" and t.cal_write:
+        return await calendar_change(t, args)
     if name == "daily_briefing" and t.briefing:
         return await briefing_text(t, st)
     if name == "memory_save" and t.prof:
@@ -319,6 +345,62 @@ async def run(t, name, args, st):
             await t.out.put({"type": "memory", "action": "forgotten", "text": text})
         return f"Forgot {n} fact(s)."
     return f"Unknown tool {name}."
+
+
+def ha_log(name, e):
+    """One fixed line when a Home Assistant tool did not get through: the Notaus (notaus.NotausAktiv is a ValueError)
+    or Home Assistant not reachable (thread „Durchsage taucht nicht im Log auf“)."""
+    if isinstance(e, notaus.NotausAktiv):
+        print(f"homeassistant: tool {name} refused, notaus", flush=True)
+    else:
+        print(f"homeassistant: tool {name} not reachable ({type(e).__name__})", flush=True)
+
+
+REPEAT_SAYS = {"daily": "every day", "weekdays": "every weekday", "weekly": "every week", "monthly": "every month"}
+
+
+async def calendar_change(t, args):
+    """Finds the one appointment and proposes the change; the yes in the next message carries it out (chat_turn)."""
+    zone = chat.user_zone(t.body.get("tz"))
+    now = datetime.datetime.now(zone)
+    act = args.get("action")
+    if act not in ("move", "delete"):
+        return "Not proposed: action must be move or delete."
+    try:
+        day = datetime.date.fromisoformat(str(args.get("date") or "")[:10]) if args.get("date") else None
+    except ValueError:
+        day = None
+    start = datetime.datetime.combine(day, datetime.time(), zone) if day else now - datetime.timedelta(hours=2)
+    end = start + datetime.timedelta(days=1 if day else 60)
+    try:
+        found, repeating = await calendars.find_events(t.who["id"], args.get("title"), start, end, zone)
+    except (ValueError, httpx.HTTPError) as e:
+        return f"Not proposed: the calendar is not reachable ({str(e)[:120]})."
+    if not found:
+        return ("Not proposed: " + (f"{repeating} matching appointment(s) repeat; a repeating appointment is changed "
+                "only in the calendar app" if repeating else "no matching appointment found") + ". Say so; do not guess.")
+    if len(found) > 1:
+        return ("Not proposed: several appointments fit: " + "; ".join(calendars.describe(x) for x in found[:calendars.MAX_FOUND])
+                + ". Ask the user which one.")
+    p = dict(found[0], change=act)
+    if act == "move":
+        raw = str(args.get("new_start") or "").strip().replace("Z", "")
+        try:
+            old = datetime.datetime.fromisoformat(p["start"])
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+                new = datetime.datetime.combine(datetime.date.fromisoformat(raw), old.timetz())
+            else:
+                new = datetime.datetime.fromisoformat(raw[:16])
+                new = new.replace(tzinfo=zone) if new.tzinfo is None else new.astimezone(zone)
+        except ValueError:
+            return "Not proposed: give the new start as 'YYYY-MM-DDTHH:MM' or 'YYYY-MM-DD'. Ask the user when."
+        if new < now - datetime.timedelta(hours=1):
+            return "Not proposed: the new time is in the past. Ask the user."
+        p["new_start"] = new.isoformat()
+    calendars.propose(t.who["id"], p, t.src)
+    await t.out.put({"type": "calendar"})
+    return ("NOT changed yet. Ask the user exactly: „Soll ich " + calendars.describe_change(p) + "?“ It is changed "
+            "only if the user says yes in the next message.")
 
 
 async def mail_tool(t, name, args, st):

@@ -96,9 +96,9 @@ NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und
 # the tools whose service the assistant names when it is gone (svc_hint); the rest of chat_tools runs as before
 TOOL_SVC = {"archive_search": "kiwix", "web_search": "web",
             "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",
-            "home_assistant_states": "ha", "home_assistant_todo": "ha",
+            "home_assistant_states": "ha", "home_assistant_todo": "ha", "camera_describe": "ha",
             "mail_list": "mail", "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail",
-            "mail_tidy_propose": "mail", "calendar_events": "cal", "calendar_add": "cal",
+            "mail_tidy_propose": "mail", "calendar_events": "cal", "calendar_add": "cal", "calendar_change": "cal",
             "weather": "inet", "transit": "inet", "parcels": "inet", "wikipedia": "inet", "read_page": "inet"}
 WORD = {"ok": "läuft", "wobble": "wackelt", "down": "antwortet nicht", "inet": "wegen Internet", "off": "nicht geprüft",
         "held": "Notaus: nicht geprüft", "blocked": "vom Wächter nicht erlaubt", "new": "noch nicht geprüft"}

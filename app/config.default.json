@@ -102,6 +102,8 @@
     "spark_drawer": false,
     "feature_tips": false,
     "tagebuch": false,
+    "status_voice": false,
+    "undo_voice": false,
     "berater_why": false,
     "feature_tips_push": false,
     "route_words": "",
