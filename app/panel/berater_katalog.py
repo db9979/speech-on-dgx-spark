@@ -164,7 +164,7 @@ OHNE = {
         "mcp_server_act", "memory", "memory_ask", "memory_check", "memory_stale_months", "memory_topics", "messages_all", "messages_announce", "my_status",
         "new_profile_on", "no_self_echo", "own_style", "parcels", "pebble", "person_priority",
         "person_priority_wait", "prefetch", "presence_penalty", "proactive", "remarkable", "remarkable_fresh",
-        "remarkable_paper", "remarkable_plus", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
+        "remarkable_paper", "remarkable_plus", "remarkable_tasks", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
         "room_remote", "room_voices", "route_off", "routing", "search", "search_url",
         "self_echo_mode", "spark_drawer", "spark_help", "spark_suggest", "speaker_code", "speaker_id",
         "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",

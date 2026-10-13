@@ -400,3 +400,40 @@ class WebAndMail(Plus):
             mail.find, mail.get, mail._Session = real
 
 
+
+
+class SheetOnRequest(Plus):
+    """Dominik 2026-10-13: „Leg mir das Morgenblatt erneut auf den reMarkable“ found no tool. remarkable_sheet makes
+    the named sheet now, offered only when the person's own words name it and its switch is on."""
+    ASK = "Leg mir das Morgenblatt erneut auf den reMarkable"
+
+    def test_offered_only_for_a_named_sheet_with_its_switch(self):
+        c, uid = self.on("Rpsheet", rm_morning=True, rm_guide=True)
+        o = remarkable.offer({"who": {"id": uid}, "own": True, "text": self.ASK})
+        sheet = [t for t in o["tools"] if t["function"]["name"] == "remarkable_sheet"]
+        self.assertEqual(sheet[0]["function"]["parameters"]["properties"]["what"]["enum"], ["morgen"])
+        self.assertIn("remarkable_sheet", o["changes"])
+        self.assertFalse(remarkable.answer_wanted(self.ASK, uid))       # never the model's answer as a document
+        self.assertEqual(rmplus.tools_for(uid, "Leg die Anleitung aufs reMarkable")[0]["function"]["parameters"]
+                         ["properties"]["what"]["enum"], ["anleitung"])
+        self.assertEqual(rmplus.tools_for(uid, "Was ist ein reMarkable?"), [])
+        self.assertEqual(rmplus.sheets_for(uid, "Put the guide on my reMarkable"), ["anleitung"])
+        c.put("/api/profile/settings", json={"rm_morning": False})
+        self.assertEqual(rmplus.tools_for(uid, self.ASK), [])
+        self.assertFalse(remarkable.answer_wanted("Schick das Morgenblatt nochmal aufs reMarkable", uid))  # off: no text
+        self.assertEqual(run(rmplus.sheet_now(uid, "morgen")), "Das ist aus oder gibt es nicht.")
+        self.assertEqual(run(rmplus.sheet_now(uid, "rm -rf")), "Das ist aus oder gibt es nicht.")
+
+    def test_morning_sheet_now(self):
+        c, uid = self.on("Rpsheetnow", rm_morning=True)
+        old = chat.morning_briefing
+
+        async def brief(uid, tz="", markdown=False):
+            return "Heute sonnig."
+        chat.morning_briefing = brief
+        try:
+            said = run(remarkable.tool("remarkable_sheet", {"what": "morgen"}, {"who": {"id": uid}}))
+        finally:
+            chat.morning_briefing = old
+        self.assertTrue(said.startswith("Das Morgenblatt liegt jetzt auf deinem reMarkable"), said)
+        self.assertTrue(books("Morgenblatt"))

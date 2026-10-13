@@ -1781,7 +1781,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " sie zurück; jedes Kästchen wirkt einmal je Zustand. Unter Papier lässt sich beides zurücknehmen (POST /api/profile/remarkable/papier/zurueck). Ein Blatt mit Handschrift wird nie mit neuem Text gefüllt: Es gibt eine neue Fassung, die alte geht ins Archiv. Abgleich: Das Abgleich-Blatt hat vier Kreise; die Kreuze darauf ergeben eine Zuordnung je Modell (kleinste Quadrate, nur wenn jeder Kreis auf 2,5 mm passt). Unter Papier zeigt ein Kontrollbild je Blatt die Kästchen in der Farbe des Gelesenen und die Striche darüber. Endpunkte (Browser-Anmeldung des Profils, CSRF, Rate-Limits rmsend, rmpic, rm, Body 1 KB): GET /api/profile/remarkable/papier, GET …/papier/{id}/{seite}.png, POST …/papier/abgleich, POST …/papier/einsortieren (409, wenn gerade ein Abgleich läuft), POST …/papier/zurueck. Eine Cloud-Arbeit je Profil auf einmal; der Abgleich schreibt nur seine eigenen Felder zurück, damit ein gleichzeitig abgelegtes Blatt nicht verloren geht. Journal nur mit Zahlen („remarkable: sheet read | 2 ticked, 0 unclear, 1 done“), Live-Übersicht „Blatt gelesen: n angekreuzt, n unklar“. Als Nächstes (nach dem Test mit dem Move): das Aufgabenblatt für Admin-Punkte (2b, direkt ausgeführt) und der Pra"
+"text": " sie zurück; jedes Kästchen wirkt einmal je Zustand. Unter Papier lässt sich beides zurücknehmen (POST /api/profile/remarkable/papier/zurueck). Ein Blatt mit Handschrift wird nie mit neuem Text gefüllt: Es gibt eine neue Fassung, die alte geht ins Archiv. Abgleich: Das Abgleich-Blatt hat vier Kreise; die Kreuze darauf ergeben eine Zuordnung je Modell (kleinste Quadrate, nur wenn jeder Kreis auf 2,5 mm passt). Unter Papier zeigt ein Kontrollbild je Blatt die Kästchen in der Farbe des Gelesenen und die Striche darüber. Endpunkte (Browser-Anmeldung des Profils, CSRF, Rate-Limits rmsend, rmpic, rm, Body 1 KB): GET /api/profile/remarkable/papier, GET …/papier/{id}/{seite}.png, POST …/papier/abgleich, POST …/papier/einsortieren (409, wenn gerade ein Abgleich läuft), POST …/papier/zurueck. Eine Cloud-Arbeit je Profil auf einmal; der Abgleich schreibt nur seine eigenen Felder zurück, damit ein gleichzeitig abgelegtes Blatt nicht verloren geht. Journal nur mit Zahlen („remarkable: sheet read | 2 ticked, 0 unclear, 1 done“), Live-Übersicht „Blatt gelesen: n angekreuzt, n unklar“. Auf Wunsch sofort (V01.0.491): „Leg mir das Morgenblatt noch mal aufs reMarkable“ (ebenso Wochenrückblick, Abglei"
 },
 {
 "lang": "de",
@@ -1789,7 +1789,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "xistest auf Papier."
+"text": "ch-Blatt, Anleitung) bietet das Werkzeug remarkable_sheet an, nur wenn die eigenen Worte das Blatt nennen und sein Schalter an ist; vorher fand der Assistent dafür kein Werkzeug. Als Nächstes (nach dem Test mit dem Move): das Aufgabenblatt für Admin-Punkte (2b, direkt ausgeführt) und der Praxistest auf Papier."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b)",
+"text": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b): Admin-Unterschalter „Aufgabenblatt zum Ankreuzen“ unter „Papier fürs reMarkable“ (chat.remarkable_tasks, aus, nie Gäste; code: app/panel/rmaufgaben.py); nach Dominiks Freigaberegel ohne eigenen Profil-Schalter: das erste Blatt holt jedes Profil selbst (Ich → reMarkable → Papier → „Aufgabenblatt schicken“ oder per Sprache), danach erneuert es sich, bis „Kann weg“ darauf angekreuzt oder es auf dem Gerät gelöscht ist. Ein lebendes PDF im Ordner „Spark/Aufgaben“ mit dem, was offen ist, je Punkt Kästchen mit festen Antworten: Aufgaben aus der Handschrift (Erinnern morgen 9 Uhr / Weg / Später, rm_todo), Gedächtnis-Einträge „vielleicht veraltet“ oder „Widerspruch“ (Stimmt / Stimmt nicht / Später, „Gedächtnis prüfen“), Vorschläge für die eigenen Einstellungen (Übernehmen / Nein). Nur für ein Admin-Profil (Rolle Inhaber oder Mit-Admin): offene Vorschläge des Einstellungs-Assistenten außer Stufe C, U, I und P (Übernehmen / Ablehnen / Später, angekreuzt = direkt ausgeführt, Dominik 2b; Rolle und Schalter werden beim Ausführen erneut geprüft) und der Praxistest nach einem Update (die neuen Zeilen aus CHANGELOG.md, Klappt / Klappt ni"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b)",
+"text": "cht; „Klappt nicht“ wird ein Fall unter Zustand → Verbessern). Was jede Antwort tut, legt das Panel beim Bauen fest (rmaufgaben.OPTS, _do); das Papier wählt nur. Ausgewertet wird sofort, wenn „Fertig – bitte auswerten“ angekreuzt ist, sonst nach 15 Minuten ohne Änderung am Blatt; zwei Kreuze in einem Punkt = unklar, nichts passiert, der Punkt kommt wieder; jeder Punkt wirkt einmal. Der Notaus hält alles an. Danach eine neue Version mit „Erledigt seit Version N“ (frühestens nach 10 Minuten, sonst täglich ab der Morgenblatt-Zeit, wenn sich Offenes geändert hat); die alte mit den Kreuzen geht ins Archiv. „Zurücknehmen“ unter Papier für Erinnerung, gelöschten Gedächtnis-Eintrag, Einstellung und Assistent-Vorschlag (POST /api/profile/remarkable/papier/aufgaben/zurueck, Body 1 KB, Rate-Limit rm); „Aufgabenblatt schicken“ POST /api/profile/remarkable/papier/aufgaben (Rate-Limit rmsend), beide Browser-Anmeldung des Profils, CSRF, guard.log. Auch per Sprache: „Leg mir das Aufgabenblatt aufs reMarkable“ (remarkable_sheet). Journal nur Zahlen („remarkable: task sheet read | 1 done, 0 unclear“), Live „Aufgabenblatt“ als Hintergrund-Arbeit."
 },
 {
 "lang": "de",
@@ -5205,7 +5221,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "lled with new text: a new version is made and the old one goes to the archive. Calibration: the calibration sheet has four circles; the crosses give a mapping per model (least squares, kept only when every circle fits within 2.5 mm). Under Paper a control picture per sheet shows the boxes in the colour of what was read and the strokes on top. Endpoints (profile browser login, CSRF, rate limits rmsend, rmpic, rm, body 1 KB): GET /api/profile/remarkable/papier, GET …/papier/{id}/{page}.png, POST …/papier/abgleich, POST …/papier/einsortieren (409 while a sync runs), POST …/papier/zurueck. One cloud job per profile at a time; the sync writes back only its own fields so a sheet placed meanwhile is not lost. Journal with numbers only (\"remarkable: sheet read | 2 ticked, 0 unclear, 1 done\"), live overview \"Blatt gelesen: n angekreuzt, n unklar\". Next (after the test with the Move): the task sheet for admin points (2b, executed directly) and the field test on paper."
+"text": "lled with new text: a new version is made and the old one goes to the archive. Calibration: the calibration sheet has four circles; the crosses give a mapping per model (least squares, kept only when every circle fits within 2.5 mm). Under Paper a control picture per sheet shows the boxes in the colour of what was read and the strokes on top. Endpoints (profile browser login, CSRF, rate limits rmsend, rmpic, rm, body 1 KB): GET /api/profile/remarkable/papier, GET …/papier/{id}/{page}.png, POST …/papier/abgleich, POST …/papier/einsortieren (409 while a sync runs), POST …/papier/zurueck. One cloud job per profile at a time; the sync writes back only its own fields so a sheet placed meanwhile is not lost. Journal with numbers only (\"remarkable: sheet read | 2 ticked, 0 unclear, 1 done\"), live overview \"Blatt gelesen: n angekreuzt, n unklar\". On request right away (V01.0.491): \"Leg mir das Morgenblatt noch mal aufs reMarkable\" (also week review, calibration sheet, guide) offers the tool remarkable_sheet, only when the person's own words name the sheet and its switch is on; before, the assistant had no tool for it. Next (after the test with the Move): the task sheet for admin points (2b"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": ", executed directly) and the field test on paper."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Task sheet to tick (V01.0.491, package D, Dominik 2b)",
+"text": "Task sheet to tick (V01.0.491, package D, Dominik 2b): admin sub-switch \"Task sheet to tick\" below \"Paper for the reMarkable\" (chat.remarkable_tasks, off, never guests; code: app/panel/rmaufgaben.py); following Dominik's release rule there is no profile switch of its own: each profile fetches its first sheet itself (Me → reMarkable → Paper → \"Send task sheet\" or by voice), after that it renews itself until \"Kann weg\" is ticked on it or it is deleted on the device. A living PDF in the folder \"Spark/Aufgaben\" with what is open, each point with boxes for fixed answers: tasks from the handwriting (remind tomorrow 9:00 / remove / later, rm_todo), memory entries \"maybe outdated\" or \"contradiction\" (true / not true / later, \"Check memory\"), proposals for the profile's own settings (take / no). Only for an admin profile (role owner or co-admin): open proposals of the settings assistant except stages C, U, I and P (take / reject / later, ticked = done directly, Dominik 2b; role and switches are checked again when acting) and the field test after an update (the new lines from CHANGELOG.md, works / does not work; \"does not work\" becomes a case under Status → Improve). The panel fixes what eac"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Task sheet to tick (V01.0.491, package D, Dominik 2b)",
+"text": "h answer does when it builds the sheet (rmaufgaben.OPTS, _do); the paper only picks. It is evaluated at once when \"Fertig – bitte auswerten\" is ticked, else after 15 minutes without a change on the sheet; two ticks in one point = unclear, nothing happens, the point comes again; each point acts once. The emergency stop holds everything. Then a new version with \"Erledigt seit Version N\" (at the earliest after 10 minutes, else daily from the morning sheet's time when what is open changed); the old one with the ticks goes to the archive. \"Take back\" under Paper for a reminder, a deleted memory entry, a setting and an assistant proposal (POST /api/profile/remarkable/papier/aufgaben/zurueck, body 1 KB, rate limit rm); \"Send task sheet\" POST /api/profile/remarkable/papier/aufgaben (rate limit rmsend), both with the profile's browser login, CSRF, guard.log. Also by voice: \"Leg mir das Aufgabenblatt aufs reMarkable\" (remarkable_sheet). Journal numbers only (\"remarkable: task sheet read | 1 done, 0 unclear\"), live \"Aufgabenblatt\" as background work."
 },
 {
 "lang": "en",

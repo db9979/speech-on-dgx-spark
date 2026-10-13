@@ -448,3 +448,186 @@ class Guide(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipIf(si is None, "rmscene missing")
+class Tasks(Paper):
+    """Das Aufgabenblatt (rmaufgaben.py, Paket D): the panel fixes what each answer does, the paper only picks."""
+    TODO = {"id": "a1b2c3d4e5f6a7b8", "text": "Steuer abgeben", "doc": "Küche", "page": 1, "at": 1_760_000_000}
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(remarkable_tasks=True, remarkable_plus=True)
+
+    def tearDown(self):
+        super().tearDown()
+        helpers.set_config(remarkable_tasks=False, remarkable_plus=False)
+
+    def prepared(self, name):
+        c, uid = self.on(name)
+        c.put("/api/profile/settings", json={"rm_todo": True})
+        import rmplus
+        rmplus._mut(uid, lambda p: p.update(todos=[dict(self.TODO)]))
+        return c, uid
+
+    def sheet(self, c, uid):
+        r = c.post("/api/profile/remarkable/papier/aufgaben")
+        self.assertEqual(r.status_code, 200, r.text)
+        did = next(p["id"] for p in r.json()["papers"] if p["kind"] == "aufgaben" and not p["gone"])
+        return did, remarkable.load(uid)["papers"][did]
+
+    def box(self, pp, n):
+        return next(f for f in pp["f"] if f["n"] == n)
+
+    def test_off_by_default_admin_releases_it_for_all_never_guests(self):
+        import features
+        import rmaufgaben
+        with open(helpers.APP + "/config.default.json") as f:
+            self.assertIs(json.load(f)["chat"]["remarkable_tasks"], False)
+        self.assertNotIn("rm_tasks", profiles.SETTINGS)          # Dominik's rule: the admin's release is enough
+        self.assertEqual(features.BY_KEY["rmaufgaben"].profile, "")
+        c, uid = self.on("Ptoff")
+        self.assertTrue(rmaufgaben.on(uid))
+        self.assertFalse(rmaufgaben.due(uid, 2_000_000_000))       # nothing comes by itself before the first sheet
+        helpers.set_config(remarkable_tasks=False)
+        self.assertFalse(rmaufgaben.on(uid))
+        self.assertEqual(c.post("/api/profile/remarkable/papier/aufgaben").status_code, 403)
+        g = TestClient(panel.app)
+        for path in ("/api/profile/remarkable/papier/aufgaben", "/api/profile/remarkable/papier/aufgaben/zurueck"):
+            self.assertIn(g.post(path, json={}).status_code, (401, 403), path)
+
+    def test_tick_and_done_makes_the_reminder_and_takes_it_back(self):
+        c, uid = self.prepared("Pttick")
+        did, pp = self.sheet(c, uid)
+        key = "todo:" + self.TODO["id"]
+        self.assertEqual(pp["items"][key]["text"], "Steuer abgeben")
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, key + "|ja")) + tick(self.box(pp, "fertig")))])
+        run(rmpapier.check(uid))
+        rem = [x for x in profiles.reminders(uid) if x["text"] == "Steuer abgeben"]
+        self.assertEqual(len(rem), 1)
+        import rmplus
+        self.assertEqual(rmplus.plus(uid).get("todos"), [])
+        t = remarkable.load(uid)["tasks"]
+        self.assertEqual(t["receipt"], [{"text": "Steuer abgeben", "res": "erledigt"}])
+        self.assertTrue(t["renew"])
+        run(rmpapier.check(uid))                                    # the same sheet does not act twice
+        self.assertEqual(len([x for x in profiles.reminders(uid) if x["text"] == "Steuer abgeben"]), 1)
+        i = c.get("/api/profile/remarkable/papier").json()["tasks"]["undo"][0]["i"]
+        r = c.post("/api/profile/remarkable/papier/aufgaben/zurueck", json={"i": i})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([x for x in profiles.reminders(uid) if x["text"] == "Steuer abgeben"], [])
+        self.assertEqual([x["id"] for x in rmplus.plus(uid)["todos"]], [self.TODO["id"]])
+        self.assertEqual(c.post("/api/profile/remarkable/papier/aufgaben/zurueck", json={"i": i}).status_code, 404)
+        self.assertEqual(c.post("/api/profile/remarkable/papier/aufgaben/zurueck", json={"i": "x; rm"}).status_code, 400)
+
+    def test_two_ticks_in_one_point_do_nothing(self):
+        c, uid = self.prepared("Pttwo")
+        did, pp = self.sheet(c, uid)
+        key = "todo:" + self.TODO["id"]
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, key + "|ja")) + tick(self.box(pp, key + "|nein")) + tick(self.box(pp, "fertig")))])
+        run(rmpapier.check(uid))
+        import rmplus
+        self.assertEqual(len(rmplus.plus(uid)["todos"]), 1)
+        self.assertEqual(remarkable.load(uid)["tasks"]["receipt"], [{"text": "Steuer abgeben", "res": "unklar"}])
+
+    def test_without_done_it_waits_for_quiet(self):
+        import rmaufgaben
+        c, uid = self.prepared("Ptquiet")
+        did, pp = self.sheet(c, uid)
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, "todo:" + self.TODO["id"] + "|nein")))])
+        t0 = 1_800_000_000
+        run(rmpapier.check(uid, now=t0))
+        import rmplus
+        self.assertEqual(len(rmplus.plus(uid)["todos"]), 1)                 # still writing, maybe
+        run(rmpapier.check(uid, now=t0 + rmaufgaben.QUIET - 1))
+        self.assertEqual(len(rmplus.plus(uid)["todos"]), 1)
+        run(rmpapier.check(uid, now=t0 + rmaufgaben.QUIET + 1))
+        self.assertEqual(rmplus.plus(uid)["todos"], [])
+        self.assertEqual(remarkable.load(uid)["tasks"]["receipt"][0]["res"], "abgelehnt")
+
+    def test_new_version_with_receipt_old_one_to_the_archive(self):
+        import rmaufgaben
+        c, uid = self.prepared("Ptnew")
+        did, pp = self.sheet(c, uid)
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, "todo:" + self.TODO["id"] + "|ja")) + tick(self.box(pp, "fertig")))])
+        run(rmpapier.check(uid))
+        last = remarkable.load(uid)["tasks"]["last"]
+        self.assertFalse(rmaufgaben.due(uid, last + 60))
+        self.assertTrue(rmaufgaben.due(uid, last + rmaufgaben.RENEW_GAP + 1))
+        r = run(rmaufgaben.send(uid, last + rmaufgaben.RENEW_GAP + 1))
+        self.assertNotEqual(r["id"], did)
+        self.assertEqual(where(uid, did), "Spark/Archiv")
+        self.assertEqual(where(uid, r["id"]), "Spark/Aufgaben")
+        t = remarkable.load(uid)["tasks"]
+        self.assertEqual((t["v"], t["receipt"], t["renew"]), (2, [], False))
+        self.assertEqual(remarkable.load(uid)["papers"][r["id"]]["items"], {})        # nothing open: "Alles erledigt"
+
+    def test_kann_weg_stops_the_renewing_until_asked_again(self):
+        import rmaufgaben
+        c, uid = self.prepared("Ptweg")
+        did, pp = self.sheet(c, uid)
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, "weg")))])
+        run(rmpapier.check(uid))
+        self.assertTrue(rmaufgaben.thrown_away(uid))
+        self.assertFalse(rmaufgaben.due(uid, 2_000_000_000))
+        did2, _ = self.sheet(c, uid)                               # the person asks again: it renews again
+        self.assertNotEqual(did2, did)
+        self.assertFalse(rmaufgaben.thrown_away(uid))
+
+    def test_admin_points_only_for_an_admin_profile(self):
+        import berater
+        import rmaufgaben
+        c, uid = self.prepared("Ptadm")
+        old = berater.props
+        berater.props = lambda status=None: [{"id": "abcd1234", "title": ["Schneller antworten", "Faster"], "stufe": "A",
+                                              "status": "offen"}]
+        try:
+            helpers.set_config(berater=True)
+            self.assertFalse(any(x["src"] == "berater" for x in rmaufgaben.items(uid)))     # not an admin
+            self.assertFalse(any(x["src"] == "praxis" for x in rmaufgaben.items(uid)))
+            self.assertEqual(rmaufgaben._do(uid, {"src": "berater", "id": "abcd1234", "text": "x"}, "ja", 1), ("aus", None))
+        finally:
+            berater.props = old
+            helpers.set_config(berater=False)
+
+    def test_notaus_holds_every_point(self):
+        import notaus
+        c, uid = self.prepared("Ptstop")
+        did, pp = self.sheet(c, uid)
+        m = rmpapier.model("move")
+        ink(did, [page_mm(m, tick(self.box(pp, "todo:" + self.TODO["id"] + "|ja")) + tick(self.box(pp, "fertig")))])
+        old = notaus.stop
+
+        def stop(kind, uid=None):
+            raise notaus.NotausAktiv("Notaus")
+        notaus.stop = stop
+        try:
+            run(rmpapier.check(uid))
+        finally:
+            notaus.stop = old
+        import rmplus
+        self.assertEqual(len(rmplus.plus(uid)["todos"]), 1)
+        self.assertEqual(remarkable.load(uid)["tasks"]["receipt"][0]["res"], "angehalten")
+
+    def test_answers_sit_apart_on_every_model(self):
+        import rmaufgaben
+        its = [{"key": f"todo:{i:016x}", "src": "todo", "id": f"{i:016x}", "text": f"Punkt {i} " + "lang " * i, "sub": ""}
+               for i in range(8)]
+        for key in rmpapier.MODELS:
+            m = rmpapier.model(key)
+            pdf, fields, pages = rmaufgaben.build(m, its, 3, [{"text": "Alt", "res": "erledigt"}], "13.10.2026")
+            boxes = [f for f in fields if f["k"] == "wahl"]
+            self.assertEqual(len(boxes), 24, key)
+            for f in fields:
+                self.assertTrue(0 < f["x"] and f["x"] + f["w"] < m["mm"][0] and 0 < f["y"] and f["y"] + f["h"] < m["mm"][1], (key, f))
+            for a in boxes:
+                for b in boxes:
+                    if a is not b and a["p"] == b["p"]:
+                        far = abs(a["x"] - b["x"]) >= rmpapier.BOX + 2 * rmpapier.TOL or abs(a["y"] - b["y"]) >= rmpapier.BOX + 2 * rmpapier.TOL
+                        self.assertTrue(far, (key, a["n"], b["n"]))
+            self.assertIn("fertig", [f["n"] for f in fields])

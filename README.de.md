@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.491** reMarkable: Blätter auf Wunsch per Sprache, Aufgabenblatt zum Ankreuzen, das der Spark abarbeitet
 - **V01.0.490** Live-Bild: „Von selbst“ über einen internen Bus im Spark; Eingang-Text passt; Werkzeuge mit verständlichem Namen
 - **V01.0.489** Fenster am Kopf lässt sich mit × oder Escape einklappen und deckt auf kleinen Bildschirmen höchstens die halbe Höhe ab
 - **V01.0.488** „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.484** Taten prüfen und Fehlerschleife stoppen stehen als eingebaute Regeln unter Verbessern → Regeln
 - **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
-- **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

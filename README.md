@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.491** reMarkable: sheets on request by voice, task sheet to tick that the Spark works through
 - **V01.0.490** Live picture: "Von selbst" runs on an internal bus inside the Spark; entrance text fits; Tools stage with a readable name
 - **V01.0.489** The face's window folds in with × or Escape and covers at most half of a small screen
 - **V01.0.488** "Messages" fully moved into chats: fixed group "Alle", announcements and read-aloud on own speakers, old messages carried over; Me → Messages removed, Siri writes into the chat
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.484** Check deeds and stop error loops show as built-in rules under Improve → Rules
 - **V01.0.483** Spark diary: switched devices are noted (device and action only, never the code word)
 - **V01.0.482** Switch "Pictures from the Kiwix" now also under Me → Documents
-- **V01.0.481** Daily briefing in the history sorted with lists, the push stays plain text
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

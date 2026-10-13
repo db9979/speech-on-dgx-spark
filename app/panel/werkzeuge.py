@@ -47,6 +47,7 @@ NAMES = {
     "local_search": ("Erst in eigenen Quellen", "Own sources first"), "remarkable": ("reMarkable", "reMarkable"),
     "remarkable_note": ("Notiz aufs reMarkable", "Note to the reMarkable"),
     "remarkable_page": ("Webseite aufs reMarkable", "Web page to the reMarkable"),
+    "remarkable_sheet": ("Blatt aufs reMarkable", "Sheet to the reMarkable"),
     "remarkable_attachment": ("Mail-Anhang aufs reMarkable", "Mail attachment to the reMarkable"),
     "document_write": ("Dokument schreiben", "Write document"), "document_build": ("Datei bauen", "Build file"),
     "document_sources": ("Quellen fürs Dokument", "Sources for the document"),

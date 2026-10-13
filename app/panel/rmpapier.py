@@ -57,7 +57,7 @@ MODELS = {
 }
 CHOICES = ("auto",) + tuple(MODELS)
 # folders below the base folder, one per kind (rm_folders); "" = the base folder itself
-ARTEN = {"morgen": "Morgenblatt", "woche": "Wochenrückblick", "besprechung": "Besprechungen", "antwort": "Antworten",
+ARTEN = {"aufgaben": "Aufgaben", "morgen": "Morgenblatt", "woche": "Wochenrückblick", "besprechung": "Besprechungen", "antwort": "Antworten",
          "web": "Web und Anhänge", "eingang": "Eingang", "archiv": "Archiv"}
 # the Spark's own loose documents from before the folders, by their title ("Jetzt einsortieren")
 OLD_NAMES = ((re.compile(r"^Morgenblatt\b"), "morgen"), (re.compile(r"^Wochenrückblick\b"), "woche"),
@@ -349,6 +349,49 @@ class Sheet:
             d.set_x(self.M + BOX + 3)
             d.cell(tw, 4, self.tx(sub)[:90], new_x="LMARGIN", new_y="NEXT")
         d.set_y(y + h)
+
+    def choice(self, text, item, options, sub=""):
+        """A point with its answers side by side: [(key, label)], each a box "item|key" (kind "wahl"); the panel
+        decided beforehand what each answer does (rmaufgaben.py), the paper only picks one of them."""
+        d = self.doc
+        self.font(9.5, True)
+        lh = 9.5 * self.s * 0.47
+        lines = d.multi_cell(self.width, lh, self.tx(text), dry_run=True, output="LINES")[:3]
+        gap = 2 * TOL + 3          # from a label to the next box: more than the box's margin
+        self.font(8.5)
+        widths = [BOX + 1.5 + d.get_string_width(self.tx(lab)) for _, lab in options]
+        rows, row, w = [], [], 0.0
+        for (k, lab), wd in zip(options, widths):
+            if row and w + wd + gap > self.width:
+                rows.append(row)
+                row, w = [], 0.0
+            row.append((k, lab, wd))
+            w += wd + gap
+        rows.append(row)
+        h = len(lines) * lh + (4 if sub else 0) + len(rows) * (BOX + 2 * TOL + 1) + 3
+        self.need(h)
+        y = d.get_y()
+        self.font(9.5, True)
+        d.set_xy(self.M, y)
+        d.multi_cell(self.width, lh, "\n".join(lines), new_x="LMARGIN", new_y="NEXT")
+        if sub:
+            self.font(7.5, color="mut")
+            d.set_x(self.M)
+            d.cell(self.width, 4, self.tx(sub)[:110], new_x="LMARGIN", new_y="NEXT")
+        y = d.get_y() + TOL
+        for row in rows:
+            x = self.M + TOL
+            for k, lab, wd in row:
+                self.box(x, y, f"{item}|{k}", "wahl", f"{text[:40]}: {lab}")
+                self.font(8.5)
+                d.set_xy(x + BOX + 1.5, y + (BOX - 4) / 2)
+                d.cell(wd - BOX - 1.5, 4, self.tx(lab))
+                x += wd + gap
+            y += BOX + 2 * TOL + 1
+        d.set_draw_color(*self.c["line"])
+        d.set_line_width(0.2)
+        d.line(self.M, y + 0.5, self.W - self.M, y + 0.5)
+        d.set_y(y + 2.5)
 
     def lines(self, title="Notizen", n=None, pitch=8.0):
         """Ruled lines for writing, to the bottom of the page (or n)."""
@@ -835,9 +878,21 @@ async def check(uid, now=None):
     papers = d.get("papers") or {}
     if not papers:
         return 0
+    import rmaufgaben
+    quiet = [did for did, pp in papers.items() if rmaufgaben.pending(pp, now)]
+    if quiet and rmaufgaben.on(uid):           # an Aufgabenblatt left alone long enough: its ticks count now
+        for did in quiet:
+            rmaufgaben.act(uid, papers[did], now)
+        d = remarkable.load(uid)
+        cur = d.get("papers") or {}
+        for did in quiet:
+            if did in cur:
+                cur[did] = papers[did]
+        d["papers"] = cur
+        remarkable.save(uid, d)
     rh, _ = await remarkable.root(uid)
     if rh == d.get("paper_root"):
-        return 0
+        return len(quiet)
     items = await remarkable.refresh_library(uid)
     read, new, swap_changes, gone = 0, [], {}, []
     calib = dict(d.get("calib") or {})
@@ -869,6 +924,10 @@ async def check(uid, now=None):
         states, ink = evaluate(pp["f"], mm)
         pp["r"], pp["ink"], pp["read"] = states, round(ink, 1), int(now)
         done = await _act(uid, did, it, pp, states, ink, items, new, swap_changes)
+        if pp.get("k") == "aufgaben":
+            pp["changed"] = int(now)
+            if rmaufgaben.on(uid) and rmaufgaben.ready(pp, now):
+                done += rmaufgaben.act(uid, pp, now)
         n_on = sum(1 for v in states.values() if v == "an")
         n_q = sum(1 for v in states.values() if v == "unklar")
         print(f"remarkable: sheet read | {n_on} ticked, {n_q} unclear, {done} done", flush=True)
@@ -961,14 +1020,19 @@ def public(uid):
                     "gone": bool(pp.get("gone")), "ink": bool(pp.get("ink", 0) >= NOTES_MM),
                     "calib": (res.get("kalib") or "") if pp.get("k") == "kalib" else "",
                     "undo": sorted(k for k in (pp.get("u") or {}) if k.startswith("rem:") or k == "weg")})
-    return {"on": {"rmordner": features.allowed("rmordner", uid), "rmaufraeumen": features.allowed("rmaufraeumen", uid),
-                   "rmpapier": features.allowed("rmpapier", uid)},
-            "spark": {k: features.admin_on(k) for k in ("rmordner", "rmaufraeumen", "rmpapier")},
+    return {"on": {k: features.allowed(k, uid) for k in ("rmordner", "rmaufraeumen", "rmpapier", "rmaufgaben")},
+            "spark": {k: features.admin_on(k) for k in ("rmordner", "rmaufraeumen", "rmpapier", "rmaufgaben")},
             "model": s.get("rm_model") or "auto", "used": key, "seen": seen or "",
             "models": [{"k": k, "de": m["de"], "en": m["en"], "mm": list(model(k)["mm"]), "color": m["color"]}
                        for k, m in MODELS.items()],
             "calibrated": sorted((d.get("calib") or {}).keys()), "folders": ARTEN, "papers": out,
-            "tidied": d.get("tidied", ""), "archive_days": ARCHIVE_DAYS, "trash_days": TRASH_DAYS}
+            "tidied": d.get("tidied", ""), "archive_days": ARCHIVE_DAYS, "trash_days": TRASH_DAYS,
+            "tasks": _tasks_public(uid)}
+
+
+def _tasks_public(uid):
+    import rmaufgaben
+    return rmaufgaben.public(uid)
 
 
 def _need(uid, key, what):
@@ -1091,4 +1155,48 @@ async def undo_route(request: Request, prof=Depends(browser_profile)):
         pp["did"] = ""
     remarkable.save(uid, d)
     guard.log("remarkable_undo", ip=guard.client_ip(request), profile=uid)
+    return public(uid)
+
+
+@router.post("/api/profile/remarkable/papier/aufgaben", dependencies=[Depends(assistant)])
+async def tasks_route(request: Request, prof=Depends(browser_profile)):
+    """Puts a new version of the Aufgabenblatt there now (rmaufgaben.py)."""
+    import rmaufgaben
+    uid = prof["id"]
+    _need(uid, "rmaufgaben", "Das Aufgabenblatt")
+    guard.limit(request, "rmsend", uid)
+    if uid in remarkable._busy:
+        raise HTTPException(409, "der Abgleich läuft gerade; gleich noch einmal")
+    try:
+        r = await rmaufgaben.send(uid)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except CLOUD as e:
+        _cloud_error(e, "task sheet")
+    guard.log("remarkable_tasks", ip=guard.client_ip(request), profile=uid)
+    return dict(public(uid), where=r["where"])
+
+
+@router.post("/api/profile/remarkable/papier/aufgaben/zurueck", dependencies=[Depends(assistant)])
+async def tasks_undo_route(request: Request, prof=Depends(browser_profile)):
+    """{"i": …}: takes back one point the Aufgabenblatt did (a reminder, a memory entry, a setting, a proposal)."""
+    import rmaufgaben
+    uid = prof["id"]
+    _need(uid, "rmaufgaben", "Das Aufgabenblatt")
+    guard.limit(request, "rm", uid)
+    import iphone
+    body = await iphone._json(request, 1024)
+    i = body.get("i")
+    if not isinstance(i, str) or not re.fullmatch(r"[0-9]{1,14}", i):
+        raise HTTPException(400, "i")
+    try:
+        ok = rmaufgaben.undo(uid, i)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("remarkable: taking back a task point failed:", type(e).__name__, flush=True)
+        raise HTTPException(409, "ging nicht")
+    if not ok:
+        raise HTTPException(404, "hier gibt es nichts zurückzunehmen")
+    guard.log("remarkable_task_undo", ip=guard.client_ip(request), profile=uid)
     return public(uid)

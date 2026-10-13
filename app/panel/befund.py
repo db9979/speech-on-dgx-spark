@@ -39,7 +39,7 @@ KLASSEN = {
 ORDER = list(KLASSEN)
 # tools of no group of their own: offered next to every group (memory, own documents, the computer, help)
 ALLGEMEIN = {"memory_save", "memory_forget", "history_search", "document_search", "pc_action", "pc_send",
-             "remarkable_note", "remarkable_page", "remarkable_attachment", "local_search", "spark_hilfe",
+             "remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sheet", "local_search", "spark_hilfe",
              "spark_vorschlag", "article_more", "routine_save"}
 # tool definitions that never reach the chat's model (the health check's own test call, the agent's page reader)
 NICHT_IM_CHAT = {"get_time", "read_page"}

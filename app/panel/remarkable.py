@@ -1064,7 +1064,7 @@ INSIDE = {"remarkable_sent"}
 
 
 # after the web search (outside text), and the destination is fixed anyway (a new document in "Spark").
-ANSWER_ASK = re.compile(r"\b(?:aufs|auf(?:\s+(?:das|dem|mein(?:em|en)?|dein(?:em)?))?|ins|an(?:s|\s+(?:das|mein(?:en)?))?|on(?:to)?|to)"
+ANSWER_ASK = re.compile(r"\b(?:aufs|auf(?:\s+(?:das|dem|den|mein(?:em|en)?|dein(?:em)?))?|ins|an(?:s|\s+(?:das|mein(?:en)?))?|on(?:to)?|to)"
                         r"\s+(?:(?:my|the)\s+)?re\s?markable\b", re.I)
 ANSWER_VERB = re.compile(r"\b(?:leg|ableg|abzuleg|speicher|schick|send|pack|tu|stell|kopier|übertrag|bring|put|sav|stor)\w*"
                          r"|\bschreib\w*\s+(?:es|das|sie|die\s+\w+)\b", re.I)
@@ -1080,7 +1080,9 @@ def answer_wanted(text, uid=None):
     import chat
     if chat.DONE_WORDS.search(text) and "?" in text:
         return False      # „Hast du mir was aufs reMarkable geschickt?“ asks about the past, it sends nothing
-    import rmplus
+    import rmplus     # one of the Spark's own sheets is never the model's text (remarkable_sheet, even when off)
+    if any(rx.search(text) for rx, _ in rmplus.SHEETS.values()):
+        return False
     return not (uid and rmplus.tools_for(uid, text))
 
 
@@ -1130,23 +1132,27 @@ def offer(ctx):
     import rmplus     # a web page or a mail attachment (rmplus.py, rm_web), only with an address / attachment named
     more = rmplus.tools_for(who["id"], ctx.get("text"))
     return {"tools": [NOTE_TOOL, SENT_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
-            "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment"},
+            "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sheet"},
             # what comes back names the page's title or the mail's file name: outside text, the rest of the answer locked
             "mail": {"remarkable_attachment"}, "outside": {"remarkable_page"},
             "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable."),
                        "remarkable_page": ("Ich hole die Seite.", "Fetching the page."),
+                       "remarkable_sheet": ("Ich lege das Blatt hin.", "Putting the sheet there."),
                        "remarkable_attachment": ("Ich suche den Anhang.", "Looking for the attachment."),
                        "remarkable_sent": ("Ich schaue nach.", "Let me check.")}}
 
 
 async def tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
-    if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sent") or not send_allowed(uid):
+    if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sent", "remarkable_sheet") \
+            or not send_allowed(uid):
         return "Aufs reMarkable schicken ist aus."
     if name == "remarkable_sent":       # reading only: what the Spark already put there
         return recent_text(uid)
     import rmplus
     try:
+        if name == "remarkable_sheet":       # one of the Spark's own sheets, by its own switch (rmplus.sheet_now)
+            return await rmplus.tool(name, args, uid)
         if name != "remarkable_note":
             if not rmplus.on("rmweb", uid):
                 return "Webseiten und Anhänge aufs reMarkable sind aus."

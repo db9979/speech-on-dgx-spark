@@ -40,6 +40,7 @@ import guard
 import hintergrund
 import profiles
 import remarkable
+import rmaufgaben
 import rmpapier
 import vorrang
 from core import assistant, browser_profile
@@ -479,7 +480,8 @@ GUIDE = (
      "„Was habe ich heute / gestern / diese Woche notiert?“ zeigt deine zuletzt geänderten Seiten."),
     ("rmmorning", "Morgenblatt",
      "Jeden Morgen zur gewählten Zeit liegt hier ein Blatt mit deinen Terminen, Erinnerungen, dem Wetter und "
-     "den Nachrichten, darunter Linien für deine Notizen. Die Uhrzeit stellst du unter Ich → reMarkable ein."),
+     "den Nachrichten, darunter Linien für deine Notizen. Die Uhrzeit stellst du unter Ich → reMarkable ein. „Leg mir das Morgenblatt noch mal "
+     "aufs reMarkable“ macht es sofort neu."),
     ("rmask", "@Spark: Fragen auf Papier",
      "Schreib in ein gelesenes Notizbuch „@Spark“ und dahinter deine Frage, zum Beispiel „@Spark Wie lange hält "
      "Sauerteig im Kühlschrank?“. Nach dem nächsten Abgleich liegt die Antwort als „Antwort: …“ neben deinen "
@@ -516,6 +518,12 @@ GUIDE = (
      "Papierkorb (mit deiner Handschrift darauf ins Archiv). Auf dem Morgenblatt hakst du Erinnerungen ab; ganz "
      "ausmalen nimmt es zurück. Liegen die Kreuze daneben, schick dir unter Ich → reMarkable → Papier das "
      "Abgleich-Blatt und kreuz die vier Kreise an."),
+    ("rmaufgaben", "Aufgabenblatt zum Ankreuzen",
+     "Im Ordner „Aufgaben“ liegt ein Blatt mit dem, was offen ist: Aufgaben aus deinen Notizen, Einträge im "
+     "Gedächtnis, die vielleicht nicht mehr stimmen, und Vorschläge für deine Einstellungen (als Admin auch die des "
+     "Einstellungs-Assistenten und der Praxistest nach einem Update). Kreuz je Punkt eine Antwort an und dann "
+     "„Fertig“; der Spark erledigt es und legt eine neue Version mit der Quittung hin, die alte kommt ins Archiv. "
+     "Zurücknehmen geht unter Ich → reMarkable → Papier."),
     ("rmguide", "Diese Anleitung",
      "Der Spark hält diese Anleitung selbst aktuell: Kommt eine Funktion dazu oder schaltest du etwas um, ersetzt er "
      "sie. Deine Markierungen darin bleiben, wenn sich nur der Text ändert."),
@@ -571,10 +579,10 @@ async def guide(uid, force=False):
 # ---------------------------------------------------------------- background
 _last = {}
 LIVE_WHY = {"guide": "reMarkable-Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "reMarkable-Seiten",
-            "paper": "reMarkable-Blätter", "tidy": "reMarkable aufräumen"}
+            "paper": "reMarkable-Blätter", "tidy": "reMarkable aufräumen", "tasks": "Aufgabenblatt"}
 # Zustand → Live (live.py): each job on the list of background work while it runs, its end as an event; fixed words
 SHOWN = {"guide": "Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "Seiten prüfen",
-         "paper": "Blätter lesen", "tidy": "Aufräumen",
+         "paper": "Blätter lesen", "tidy": "Aufräumen", "tasks": "Aufgabenblatt",
          "ask": "@Spark-Antwort", "meet": "Besprechung"}
 
 
@@ -618,6 +626,8 @@ async def due_once(idle=True, now=None, uids=None):
             jobs.append(("pages", lambda: from_pages(uid, now)))
         if on("rmpapier", uid) and now - _last.get((uid, "paper"), 0) >= remarkable.PEEK:
             jobs.append(("paper", lambda: rmpapier.check(uid, now)))
+        if rmaufgaben.on(uid) and now - _last.get((uid, "tasks"), 0) >= 60 and rmaufgaben.due(uid, now):
+            jobs.append(("tasks", lambda: rmaufgaben.send(uid, now)))
         if on("rmaufraeumen", uid) and remarkable.load(uid).get("tidied") != local.strftime("%Y-%m-%d") \
                 and now - _last.get((uid, "tidy"), 0) >= 3600:
             jobs.append(("tidy", lambda: _tidy(uid, now)))
@@ -665,25 +675,78 @@ ATTACH_TOOL = {"type": "function", "function": {
     "parameters": {"type": "object", "properties": {
         "query": {"type": "string", "description": "Sender or subject words the user named, e.g. 'Bank' or 'Rechnung'"}},
         "required": []}}}
+SHEET_TOOL = {"type": "function", "function": {
+    "name": "remarkable_sheet",
+    "description": "Puts one of the Spark's own sheets onto the user's reMarkable right now: today's morning sheet, "
+                   "this week's review, the calibration sheet or the guide. Only when the user asks for it in this "
+                   "message.",
+    "parameters": {"type": "object", "properties": {
+        "what": {"type": "string", "enum": [], "description": "Which sheet"}}, "required": ["what"]}}}
 HINT = ("remarkable_page puts a web page the user names onto the reMarkable; remarkable_attachment puts the newest PDF "
-        "or EPUB from the user's mails there. Use them only when the user asks for exactly that.")
+        "or EPUB from the user's mails there; remarkable_sheet makes one of the Spark's own sheets (morning sheet, "
+        "week review, calibration sheet, guide) now. Use them only when the user asks for exactly that.")
+# "Leg mir das Morgenblatt noch mal aufs reMarkable" (Dominik 2026-10-13): the sheet the person names, by its switch
+SHEETS = {"morgen": (re.compile(r"morgen\s?blatt|tages\s?blatt|morning\s+sheet", re.I), "rmmorning"),
+          "woche": (re.compile(r"wochen\s?rückblick|wochen\s?blatt|week(?:ly)?\s+review", re.I), "rmweek"),
+          "abgleich": (re.compile(r"abgleich\w*[\s-]?blatt|kalibrier\w*|calibration\s+sheet", re.I), "rmpapier"),
+          "anleitung": (re.compile(r"anleitung|\bguide\b", re.I), "rmguide"),
+          "aufgaben": (re.compile(r"aufgaben\s?blatt|aufgabenliste\b|task\s+sheet", re.I), "rmaufgaben")}
+SHEET_DONE = {"aufgaben": "Das Aufgabenblatt", "morgen": "Das Morgenblatt", "woche": "Der Wochenrückblick",
+              "abgleich": "Das Abgleich-Blatt",
+              "anleitung": "Die Anleitung"}
+
+
+def sheets_for(uid, text):
+    """The sheets the person's own words name and may have (each by its own switch)."""
+    return [k for k, (rx, key) in SHEETS.items() if rx.search(text) and on(key, uid)]
 URL = re.compile(r"https?://\S+", re.I)
 ATTACH_WORDS = re.compile(r"anhang|anhängen|attachment|pdf|epub|mail", re.I)
 
 
 def tools_for(uid, text):
-    """The two tools, only when the person's own words also name a page address or an attachment."""
-    if not on("rmweb", uid):
-        return []
+    """The tools, only when the person's own words also name a page address, an attachment or one of the sheets."""
     text = str(text or "")
-    out = [PAGE_TOOL] if URL.search(text) else []
+    out = []
+    names = sheets_for(uid, text)
+    if names:
+        t = json.loads(json.dumps(SHEET_TOOL))
+        t["function"]["parameters"]["properties"]["what"]["enum"] = names
+        out.append(t)
+    if not on("rmweb", uid):
+        return out
+    out += [PAGE_TOOL] if URL.search(text) else []
     import mail
     if ATTACH_WORDS.search(text) and features.chat_cfg().get("mail", False) and mail.get(uid)["accounts"]:
         out.append(ATTACH_TOOL)
     return out
 
 
+async def sheet_now(uid, what):
+    """remarkable_sheet: makes the named sheet now (the same as the background would), returns the sentence."""
+    if what not in SHEETS or not on(SHEETS[what][1], uid):
+        return "Das ist aus oder gibt es nicht."
+    local = datetime.datetime.now(_zone(uid))
+    if what == "morgen":
+        r = await morning(uid, local)
+    elif what == "woche":
+        r = await week(uid, local)
+    elif what == "aufgaben":
+        r = await rmaufgaben.send(uid) if rmaufgaben.on(uid) else None
+    elif what == "abgleich":
+        r = await rmpapier.place(uid, "", "Abgleich für dein reMarkable",
+                                 rmpapier.build_calibration(rmpapier.model(rmpapier.model_key(uid))), "kalib", auto=False)
+    else:
+        r = await guide(uid, force=True)
+    print(f"remarkable: sheet on request | {what}", flush=True)
+    if not r:
+        return {"morgen": "Für das Morgenblatt gab es gerade nichts (kein Überblick).",
+                "woche": "Diese Woche gibt es keine geänderten Seiten für einen Rückblick."}.get(what, "Nichts geschickt.")
+    return SHEET_DONE[what] + " liegt jetzt auf deinem reMarkable " + remarkable._told(r)
+
+
 async def tool(name, args, uid):
+    if name == "remarkable_sheet":
+        return await sheet_now(uid, str(args.get("what") or ""))
     if name == "remarkable_page":
         return await web_page(uid, args.get("url"), args.get("title"))
     return await attachment(uid, str(args.get("query") or "")[:120])

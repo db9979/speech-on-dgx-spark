@@ -140,6 +140,8 @@ FEATURES = (
       guide="rmpapier"),
     F("rmaufraeumen", "Selbst aufräumen", "Tidy up by itself", "data", ("remarkable_paper",), "rm_tidy", parent="rmordner",
       me="rmbox", guide="rmpapier"),
+    F("rmaufgaben", "Aufgabenblatt zum Ankreuzen", "Task sheet to tick", "data", ("remarkable_tasks",), "",
+      parent="rmpapier", me="rmbox", guide="rmaufgaben"),
     # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
     F("erstellen", "Dokumente erstellen", "Creating documents", "data", ("doc_make",), "doc_make",
       parent="documents", me="docbox", guide="erstellen"),

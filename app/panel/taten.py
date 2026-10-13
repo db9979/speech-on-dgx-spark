@@ -16,7 +16,7 @@ KIND = {
     "calendar_add": "termin",
     "mail_draft": "mail_entwurf",
     "document_plan": "dokument", "document_change": "dokument", "document_send": "dokument",
-    "remarkable_note": "remarkable", "remarkable_attachment": "remarkable", "remarkable_page": "remarkable",
+    "remarkable_note": "remarkable", "remarkable_attachment": "remarkable", "remarkable_page": "remarkable", "remarkable_sheet": "remarkable",
     "message_send": "nachricht", "message_announce": "nachricht", "pc_send": "nachricht",
     "memory_save": "merken", "memory_forget": "merken",
     "tasks_add": "aufgabe", "tasks_change": "aufgabe",

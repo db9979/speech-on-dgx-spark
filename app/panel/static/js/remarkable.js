@@ -1,7 +1,7 @@
 // Ich → reMarkable (remarkable.py): connect the own my.remarkable account with a one-time code, pick
 // notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers (rm_send).
 // Names from the cloud are put in with esc()/textContent only.
-let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RMPAPER_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
+let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RMPAPER_ON=false,RMTASKS_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
 const rmWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const RMKIND={folder:['Ordner','folder'],notebook:['Notizbuch','notebook'],pdf:['PDF','PDF'],epub:['E-Book','e-book']};
 async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer);if(!PROFILE||!RM_ON){box.innerHTML='';return}
@@ -163,6 +163,14 @@ function rmPaper(p){const E=icEl,w=E('div');
     if(p.on.rmordner){const so=E('button','b',t('Jetzt einsortieren','Sort in now'));so.type='button';so.id='rmsortin';
       so.onclick=async()=>{so.disabled=true;try{const r=await (await api('/api/profile/remarkable/papier/einsortieren',{method:'POST'})).json();xmsg('rmmsg',t(`${r.moved} Dokument(e) einsortiert.`,`${r.moved} document(s) sorted in.`))}catch(e){xmsg('rmmsg',e.message,true)}so.disabled=false};row.appendChild(so)}
     w.appendChild(row);
+    if(p.on.rmaufgaben&&p.tasks){const tk=p.tasks;w.appendChild(E('h4','ic-h4',t('Aufgabenblatt','Task sheet')));
+      w.appendChild(E('div','fh',(tk.version?t(`Version ${tk.version} · `,`Version ${tk.version} · `):'')+t(`${tk.open} Punkt(e) offen`,`${tk.open} point(s) open`)+t(' · erneuert sich, bis du „Kann weg“ ankreuzst',' · renews itself until you tick "Kann weg"')));
+      const tb=E('button','b',tk.version?t('Neue Version jetzt','New version now'):t('Aufgabenblatt schicken','Send task sheet'));tb.type='button';tb.id='rmtasks';
+      tb.onclick=async()=>{tb.disabled=true;try{const r=await (await api('/api/profile/remarkable/papier/aufgaben',{method:'POST'})).json();xmsg('rmmsg',t('Liegt in „','It is in "')+r.where+'“.');showRm()}catch(e){xmsg('rmmsg',e.message,true)}tb.disabled=false};
+      const tr=E('div','row');tr.appendChild(tb);w.appendChild(tr);
+      if(tk.undo.length)w.appendChild(icList(tk.undo.map(u=>{const b=E('button','b',t('Zurücknehmen','Take back'));b.type='button';
+        b.onclick=async()=>{b.disabled=true;try{await api('/api/profile/remarkable/papier/aufgaben/zurueck',xjson('POST',{i:u.i}));showRm()}catch(e){b.disabled=false;xmsg('rmmsg',e.message,true)}};
+        return icRow(u.text,t('vom Aufgabenblatt erledigt','done from the task sheet'),[b],[],true)})))}
     w.appendChild(E('h4','ic-h4',t('Gelesene Blätter','Sheets read')));
     if(!p.papers.length){w.appendChild(icList([icEmpty(t('Noch keine Blätter. Das nächste Morgenblatt oder eine Antwort kommt als Blatt.','No sheets yet. The next morning sheet or answer comes as a sheet.'))]));return w}
     const pic=E('div');pic.id='rmpic';

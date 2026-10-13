@@ -439,6 +439,8 @@ LIVE_WORDS = {
     "storage_remove": ("Speicher", "eigenen Speicher getrennt"), "remarkable_send": ("Geräte", "aufs reMarkable geschickt"),
     "remarkable_calibration": ("Geräte", "Abgleich-Blatt aufs reMarkable gelegt"), "remarkable_sort": ("Geräte", "reMarkable eingeräumt"),
     "remarkable_undo": ("Geräte", "reMarkable-Kästchen zurückgenommen"),
+    "remarkable_tasks": ("Geräte", "Aufgabenblatt aufs reMarkable gelegt"),
+    "remarkable_task_undo": ("Geräte", "Punkt vom Aufgabenblatt zurückgenommen"),
     "doc_quota": ("Dokumente", "Platz für Dokumente geändert"), "doc_unshare": ("Dokumente", "Freigabe beendet"),
     "join_settings": ("Einstellungen", "Einladungen eingestellt"), "join_packs": ("Einstellungen", "Einladungspakete geändert"),
     "setup_remind": ("Einstellungen", "Erinnerung an die Einrichtung geschickt"), "quality_case": ("Hilfe", "Korrektur in den Qualitätstest"),
