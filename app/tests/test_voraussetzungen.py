@@ -73,18 +73,28 @@ class Chain(Base):
         _, uid = profile("VorausText")
         t = features.missing_text("erstellen", uid)
         self.assertIn("Funktionen → Eigene Dokumente, Funktionen → Dokumente erstellen", t)
-        self.assertIn("Ich → Dokumente „Dokumente erstellen“", t)
+        self.assertNotIn("Ich →", t)                       # a profile switches nothing on (Freigabe vereinfachen)
         en = features.missing_text("erstellen", uid, "en")
         self.assertIn("Features → Own documents", en)
         helpers.set_config(documents=True, doc_make=True)
-        profiles.save_settings(uid, {"doc_make": True})
-        self.assertEqual(features.missing_text("erstellen", uid), "")
+        self.assertEqual(features.missing_text("erstellen", uid), "")   # released: nothing missing for the profile
+        # blocked for this profile by the admin (also through the chain): the way to Wer darf was
+        r = ADMIN.put(f"/api/admin/features/documents/profiles/{uid}", json={"on": False})
+        self.assertEqual(r.status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/documents/profiles/{uid}", json={"on": True})
+        self.assertIn("Der Admin hat es für dich gesperrt (Funktionen → Wer darf was)", features.missing_text("erstellen", uid))
         # the chat's fixed sentence for a file wish while it is off
-        profiles.save_settings(uid, {"doc_make": False})
-        self.assertIn("Ich → Dokumente „Dokumente erstellen“", docmake.off_hint(uid))
+        self.assertIn("Funktionen → Wer darf was", docmake.off_hint(uid))
+        self.assertNotIn("Ich →", docmake.off_hint(uid))
+        ADMIN.put(f"/api/admin/features/documents/profiles/{uid}", json={"on": True})
         helpers.set_config(documents=False)
         self.assertIn("Funktionen → Eigene Dokumente", docmake.off_hint(uid))
         self.assertIn("Fehlt im Spark: Eigene Dokumente", hilfe.state_line("erstellen", uid, "profile"))
+        # a preference the profile switched off: the way to its own page
+        helpers.set_config(proactive=True)
+        self.addCleanup(helpers.set_config, proactive=False)
+        profiles.save_settings(uid, {"pro_on": False})
+        self.assertIn("Du hast es ausgeschaltet: Ich →", features.missing_text("proactive", uid))
 
 
 class Enable(Base):
@@ -102,21 +112,18 @@ class Enable(Base):
         self.assertTrue(c["documents"] and c["doc_make"] and c["doc_make_templates"])
         self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json={}).json()["switched"], [])
 
-    def test_enable_for_a_profile(self):
+    def test_enable_holds_for_every_profile(self):
+        """Switching on is for the whole Spark: no profile to name, and what is released works for each profile."""
         _, uid = profile("VorausProfil")
-        profiles.save_settings(uid, {"doc_make": False})
         r = ADMIN.post("/api/admin/features/erstellen/enable", json={"uid": uid})
         self.assertEqual(r.status_code, 200, r.text)
-        self.assertTrue(profiles.settings(uid).get("doc_make"))
+        self.assertNotIn("doc_make", profiles.settings(uid))
         self.assertTrue(features.allowed("erstellen", uid))
 
     def test_refusals(self):
-        _, uid = profile("VorausNein")
         self.assertEqual(ADMIN.post("/api/admin/features/nope/enable", json={}).status_code, 404)
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json={"uid": "u_000000000000"}).status_code, 404)
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json={"uid": "../x"}).status_code, 404)
-        # a function without an own profile switch cannot be switched for a profile
-        self.assertEqual(ADMIN.post("/api/admin/features/documents/enable", json={"uid": uid}).status_code, 404)
+        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json=["x"]).status_code, 400)
+        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", content=b"{nope").status_code, 400)
         self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", content=b"x" * 300).status_code, 413)
         # only the admin
         c, _ = profile("VorausGast")

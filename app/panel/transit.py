@@ -307,7 +307,7 @@ def _on():
 
 @router.get("/api/profile/transit", dependencies=[Depends(assistant)])
 def api_get(prof=Depends(own_profile)):
-    return dict(get(prof["id"]), on=bool(profiles.settings(prof["id"]).get("transit_on")))
+    return dict(get(prof["id"]), on=features.allowed("transit", prof["id"]))
 
 
 @router.put("/api/profile/transit", dependencies=[Depends(assistant), Depends(_on)])

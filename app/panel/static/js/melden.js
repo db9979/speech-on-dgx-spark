@@ -16,9 +16,8 @@ async function rpLoad(){const r=await fetch('/api/report',{cache:'no-store'});
   RP.d=await r.json();return RP.d}
 // ---------------------------------------------------------------- the list and the form
 async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
-  const sw=PROFILE&&root.id==='rpbox'?xsw('report_on',t('Probleme melden für mich','Report problems for me'),t('Aus: Du kannst keine Meldungen anlegen oder senden; was schon gesendet ist, bleibt auf GitHub.','Off: you cannot make or send reports; what was sent stays on GitHub.')):'';
   const intro=`<div class="intro">${t('Beschreib kurz, was nicht geklappt hat. Der Spark legt einen Entwurf an, ersetzt Namen, Mail-Adressen, Adressen und Inhalte durch Platzhalter und zeigt dir genau, was rausgehen würde. Erst nach deinem Blick geht es als Meldung (Issue) an GitHub.','Describe briefly what went wrong. The Spark makes a draft, replaces names, mail addresses, addresses and contents with placeholders and shows you exactly what would go out. Only after your look does it go to GitHub as a report (issue).')}</div>`;
-  let d;try{d=await rpLoad()}catch(e){root.innerHTML=intro+sw+`<div class="fh${e.status===403&&sw?'':' err'}">${esc(e.status===403&&sw?t('Schalte es oben für dich ein.','Switch it on for you above.'):e.message)}</div>`;if(sw)xbind(root,()=>rpList(root));return}
+  let d;try{d=await rpLoad()}catch(e){root.innerHTML=intro+`<div class="fh err">${esc(e.message)}</div>`;return}
   const opts=(xs,f)=>xs.map(f).join('');
   const item=x=>{const st=RP_ST[x.status]||[x.status,x.status],gh=x.gh?` · ${esc(x.gh.state==='erledigt'?t('erledigt','done'):t('offen','open'))}${x.gh.comments?' · '+x.gh.comments+' '+esc(t(x.gh.comments===1?'Antwort':'Antworten',x.gh.comments===1?'answer':'answers')):''}`:'';
     return `<li><span><b>${esc(rpArea(x.area))}</b> <em class="pill${x.status==='gesendet'?' ok':''}">${esc(t(st[0],st[1]))}</em>${gh}<br>
@@ -29,7 +28,7 @@ async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
       ${x.issue&&x.issue.url?`<a class="b" href="${esc(x.issue.url)}" target="_blank" rel="noopener noreferrer">GitHub</a>`:''}
       <button class="b" type="button" data-rpdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></span></li>`};
   const nsw=PROFILE&&root.id==='rpbox'&&d.notify?xsw('report_notify',t('Mich über neue Meldungen informieren','Tell me about new reports'),t('Als Admin sagt dir der Assistent, wenn ein Profil eine Meldung sendet oder ablegt: wer, Bereich und Weg, nie der Text. Aus: keine Nachricht an dich.','As an admin the assistant tells you when a profile sends or keeps a report: who, area and way, never the text. Off: no note to you.')):'';
-  root.innerHTML=intro+sw+nsw+`
+  root.innerHTML=intro+nsw+`
     <label for="rp_text_${root.id}">${esc(t('Was ist passiert?','What happened?'))}</label>
     <textarea id="rp_text_${root.id}" class="rptext" rows="4" maxlength="${d.max_text||2000}" placeholder="${esc(t('z. B. „Der Lautsprecher in der Küche hat um 7 Uhr nicht geantwortet.“','e.g. "The kitchen speaker did not answer at 7."'))}"></textarea>
     <div class="rowin rpsel"><select class="rparea" aria-label="${esc(t('Bereich','Area'))}">${opts(d.areas,a=>`<option value="${esc(a.key)}"${a.key==='sonstiges'?' selected':''}>${esc(t(a.name[0],a.name[1]))}</option>`)}</select>
@@ -42,7 +41,7 @@ async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
     <div class="fh rpmsg" role="status"></div>
     <h3 style="margin:14px 0 4px">${esc(d.staff?t('Alle Meldungen','All reports'):t('Meine Meldungen','My reports'))}</h3>
     <ul class="facts rplist">${d.items.map(item).join('')||`<li class="mut"><span>${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>`;
-  if(sw)xbind(root,()=>rpList(root));
+  if(nsw)xbind(root,()=>rpList(root));
   root.querySelector('[data-rpmake]').onclick=async e=>{const b=e.currentTarget;if(RP.busy)return;RP.busy=true;b.disabled=true;rpMsg(t('Lege an und anonymisiere …','Making and anonymizing …'));
     const q=s=>root.querySelector(s);
     try{const r=await (await api('/api/report/draft',xjson('POST',{text:q('.rptext').value,area:q('.rparea').value,minutes:+q('.rpmin').value,

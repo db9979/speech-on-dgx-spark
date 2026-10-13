@@ -36,11 +36,13 @@ FAR = "fremd.example.org"
 
 
 def profile(name, pin="2468", chats=True):
+    """A profile; chats=False: the admin blocked Chats for it (Funktionen → Wer darf was), the only way off now."""
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = TestClient(panel.app)
     assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
-    assert c.put("/api/profile/settings", json={"chats_on": chats}).status_code == 200
+    r = ADMIN.put(f"/api/admin/features/chats/profiles/{uid_of(c)}", json={"on": chats})
+    assert r.status_code == 200, r.text
     return c
 
 
@@ -216,6 +218,7 @@ class Inbox(Base):
         r1 = self.other.send(type="ask", **{"from": "vbfremd", "to": verbund.handle(uid_of(a)), "name": "F"})
         r2 = self.other.send(type="ask", **{"from": "vbfremd", "to": "niemand.hier", "name": "F"})
         b = profile("Vbelse", chats=False)                 # exists, but does not use Chats
+        self.addCleanup(ADMIN.put, f"/api/admin/features/chats/profiles/{uid_of(b)}", json={"on": True})
         r3 = self.other.send(type="ask", **{"from": "vbfremd", "to": verbund.handle(uid_of(b)), "name": "F"})
         self.assertEqual((r1.status_code, r1.json()), (r2.status_code, r2.json()))
         self.assertEqual(r2.json(), r3.json())

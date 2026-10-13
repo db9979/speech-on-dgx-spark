@@ -13,8 +13,8 @@ this turn offered the profile (the same rights), at most MAX_JOBS, each at most 
 not behind "Vorrang für Sprache" (vorrang.py): that would wait until the speaking is over, and these are
 network calls to the profile's own services, nothing that loads the graphics card.
 
-Off until the admin allows it (chat.prefetch, below Gezielte Werkzeugwahl) and the profile switches it on
-(setting prefetch). Guests never, a voice not recognised at a shared speaker never, a question from another
+Off until the admin allows it (chat.prefetch, below Gezielte Werkzeugwahl); then on for every profile unless the
+admin blocks one (Funktionen → Wer darf was). Guests never, a voice not recognised at a shared speaker never, a question from another
 program over MCP never.
 """
 import asyncio
@@ -48,7 +48,7 @@ def admin_on(cfg=None):
 
 
 def on(cfg, who):
-    return bool(who and admin_on(cfg) and profiles.settings(who["id"]).get("prefetch") is True)
+    return bool(who and admin_on(cfg) and features.allowed("vorab", who["id"]))
 
 
 def asks_back(said):

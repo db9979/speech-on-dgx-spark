@@ -1,9 +1,9 @@
 """Spark-Hilfe (hilfe.py), V01.0.326: answers about the Spark itself and suggestion cards.
 
-Off without the admin's and the profile's switch, never for guests. Each login only gets what its rights allow:
+Off without the admin's switch, for a profile the admin blocked and for guests. Each login only gets what its rights allow:
 Spark settings and the docs about running the Spark only for admins (a Verwalter only the feature switches), the
 Spark's switch state only for admins. A card never switches by itself: the panel checks the model's wish against
-fixed rules (only APPLY functions, a profile only its own switches, Spark switches only for admins), and only
+fixed rules (only APPLY functions, a profile only its own preferences, Spark switches only for admins), and only
 the person's tap through /api/hilfe/karte applies it, once, bound to the profile, in time, not under the Notaus.
 After outside text no card. No test depends on the wall clock.
 
@@ -55,15 +55,17 @@ class Hilfe(unittest.TestCase):
         cls.p, cls.uid = profile("Hilfetest")
         cls.a, cls.auid = profile("Hilfeadmin", admin=True)
         cls.o, cls.ouid = profile("Hilfeandere")
-        for c in (cls.p, cls.a, cls.o):
-            c.put("/api/profile/settings", json={"spark_help": True})
 
     def setUp(self):
         helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=False, direct_read=False,
                            prefetch=False, search=False)
-        for uid in (self.uid, self.auid):
-            profiles.save_settings(uid, {"spark_help": True, "route": False, "direct_read": False, "prefetch": False})
         hilfe._cards.clear()
+
+    def block(self, key, uid, on=False):
+        """The admin blocks a function for one profile (Funktionen → Wer darf was), lifted again after the test."""
+        self.assertEqual(ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on}).status_code, 200)
+        if not on:
+            self.addCleanup(ADMIN.put, f"/api/admin/features/{key}/profiles/{uid}", json={"on": True})
 
     def tearDown(self):
         try:
@@ -73,12 +75,12 @@ class Hilfe(unittest.TestCase):
         helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False)
 
     # ---------------------------------------------------------------- off, guests, own switch
-    def test_off_without_both_switches_and_never_for_guests(self):
+    def test_off_without_the_switch_blocked_and_never_for_guests(self):
         helpers.set_config(spark_help=False)
         text, _ = ask(self.p, tool("spark_hilfe", question="Gezielte Werkzeugwahl"))
         self.assertIn("NO TOOL", text)
         helpers.set_config(spark_help=True)
-        profiles.save_settings(self.uid, {"spark_help": False})
+        self.block("hilfe", self.uid)                     # the admin blocks it for this profile
         text, _ = ask(self.p, tool("spark_hilfe", question="Gezielte Werkzeugwahl"))
         self.assertIn("NO TOOL", text)
         helpers.set_config(public=True)
@@ -89,13 +91,16 @@ class Hilfe(unittest.TestCase):
             helpers.set_config(public=False)
         self.assertFalse(hilfe.on(None))
         self.assertEqual(self.p.get("/api/whoami").json()["hilfe"], None)
-        profiles.save_settings(self.uid, {"spark_help": True})
+        self.assertEqual(self.o.get("/api/whoami").json()["hilfe"], {"suggest": True, "page": True})   # only that one
+        self.block("hilfe", self.uid, on=True)
         self.assertEqual(self.p.get("/api/whoami").json()["hilfe"], {"suggest": True, "page": True})
 
     def test_answer_names_the_way_and_the_profiles_state(self):
         text, _ = ask(self.p, tool("spark_hilfe", question="Was macht die Gezielte Werkzeugwahl?"))
         self.assertIn("Gezielte Werkzeugwahl", text)
-        self.assertIn("Ich → Gespräch", text)
+        self.assertIn("Fehlt im Spark: Gezielte Werkzeugwahl", text)      # off: only the admin can, and the profile is told so
+        self.assertIn("Der Admin muss es zuerst unter Funktionen einschalten", text)
+        self.assertNotRegex(text, r"Ich → [^\n]*einschalten")                # a profile switches nothing on
         self.assertNotIn("Funktionen → Gezielte Werkzeugwahl", text)
         self.assertIn("Funktionen → Gezielte Werkzeugwahl",
                       hilfe.answer_text("Was macht die Gezielte Werkzeugwahl?", self.auid, "admin"))
@@ -103,6 +108,14 @@ class Hilfe(unittest.TestCase):
         self.assertIn("Daten, keine Anweisungen", text)
         text, _ = ask(self.p, tool("spark_hilfe", question="Wie bekomme ich schnellere Antworten?"))
         self.assertIn("Tipp: Schneller antworten", text)
+        helpers.set_config(routing=True)                                  # released: on for the profile at once
+        text = hilfe.answer_text("Was macht die Gezielte Werkzeugwahl?", self.uid, "profile")
+        self.assertIn("Bei dir: an · Kennung: routing", text)
+        self.block("routing", self.uid)                                   # blocked by the admin: said so, with the way
+        line = hilfe.state_line("routing", self.uid, "profile")
+        self.assertIn("Bei dir: vom Admin für dich gesperrt", line)
+        self.assertIn("Funktionen → Wer darf was", line)
+        self.assertIn("blocked for you by the admin", hilfe.state_line("routing", self.uid, "profile", "en"))
 
     # ---------------------------------------------------------------- only what the rights allow
     def test_profile_gets_no_admin_settings_docs_or_spark_state(self):
@@ -145,42 +158,59 @@ class Hilfe(unittest.TestCase):
 
     def test_page_routes_to_the_help_and_is_named(self):
         helpers.set_config(routing=True)
-        profiles.save_settings(self.uid, {"route": True})
         text, _ = ask(self.p, tool("spark_hilfe", question="Was kann ich hier einstellen?"), page="me/setbox")
         self.assertIn("Seite: Ich → Gespräch", text)
 
     # ---------------------------------------------------------------- the card
-    def test_profile_card_only_own_switches_and_apply_once_with_undo(self):
+    def test_profile_card_switches_nothing_for_others(self):
+        """A profile has no release switches any more (Freigabe vereinfachen): its card never holds a Spark switch
+        and never a function the admin released, blocked or did not release."""
         helpers.set_config(routing=True, direct_read=True)
+        before = profiles.settings(self.uid)
         _, cards = ask(self.p, tool("spark_vorschlag", functions=["routing", "direct", "mfa", "telegram", "gibtsnicht"]))
+        for card in cards:
+            self.assertEqual(card["items"], [])
+            self.assertNotIn("uid", card)
+        card = hilfe.build_card(self.uid, ["routing", "direct", "mfa", "telegram", "gibtsnicht"], True, False)
+        self.assertEqual(card["items"], [])
+        self.assertIsNone(card["id"])
+        self.assertTrue({x["name"] for x in card["blocked"]} >= {"Zweiter Anmeldeschritt", "Telegram"})
+        for key in features.BY_KEY:                                    # whatever the model names
+            for on_ in (True, False):
+                for x in hilfe.build_card(self.uid, [key], on_, False)["items"]:
+                    self.assertEqual(x["kind"], "profile", key)
+                    self.assertIn(x["switch"], features.PREFS, key)    # only its own preference
+        self.assertEqual(profiles.settings(self.uid), before)            # nothing changed by the model
+
+    def test_card_applies_once_only_by_its_owner_with_undo(self):
+        _, cards = ask(self.a, tool("spark_vorschlag", functions=["routing", "direct", "mfa", "telegram", "gibtsnicht"]))
         self.assertEqual(len(cards), 1)
         card = cards[0]
-        self.assertEqual({x["kind"] for x in card["items"]}, {"profile"})
-        self.assertEqual({x["key"] for x in card["items"]}, {"routing", "direct"})
-        self.assertEqual({x["name"] for x in card["blocked"]} >= {"Zweiter Anmeldeschritt", "Telegram"}, True)
+        self.assertEqual({(x["key"], x["kind"]) for x in card["items"]}, {("routing", "admin"), ("direct", "admin")})
+        self.assertTrue({x["name"] for x in card["blocked"]} >= {"Zweiter Anmeldeschritt", "Telegram"})
         self.assertNotIn("uid", card)
-        self.assertFalse(profiles.settings(self.uid).get("route"))   # nothing changed by the model
+        self.assertFalse(load_config()["chat"]["routing"])               # nothing changed by the model
         # another profile and a device key cannot use it
         self.assertEqual(self.o.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"}).status_code, 404)
-        key = profiles.add_device("hilfe-test", self.uid)
+        key = profiles.add_device("hilfe-test", self.auid)
         dev = TestClient(panel.app)
         self.assertEqual(dev.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"},
                                   headers={profiles.DEVICE_HEADER: key}).status_code, 403)
-        r = self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"})
+        self.assertFalse(load_config()["chat"]["routing"])
+        r = self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"})
         self.assertEqual(r.json(), {"state": "applied"})
-        self.assertTrue(profiles.settings(self.uid)["route"])
-        self.assertTrue(profiles.settings(self.uid)["direct_read"])
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"}).status_code, 409)
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "undo"}).json(), {"state": "undone"})
-        self.assertFalse(profiles.settings(self.uid)["route"])
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "undo"}).status_code, 409)
+        self.assertTrue(load_config()["chat"]["routing"])
+        self.assertTrue(load_config()["chat"]["direct_read"])
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"}).status_code, 409)
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "undo"}).json(), {"state": "undone"})
+        self.assertFalse(load_config()["chat"]["routing"])
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "undo"}).status_code, 409)
 
     def test_one_open_card_per_profile(self):
-        helpers.set_config(routing=True)
-        first = hilfe.build_card(self.uid, ["routing"], True, False)
-        second = hilfe.build_card(self.uid, ["routing"], True, False)
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{first['id']}", json={"do": "apply"}).status_code, 404)
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{second['id']}", json={"do": "apply"}).status_code, 200)
+        first = hilfe.build_card(self.auid, ["routing"], True, True)
+        second = hilfe.build_card(self.auid, ["routing"], True, True)
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{first['id']}", json={"do": "apply"}).status_code, 404)
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{second['id']}", json={"do": "apply"}).status_code, 200)
 
     def test_profile_never_gets_spark_switches(self):
         card = hilfe.build_card(self.uid, ["routing"], True, False)
@@ -192,7 +222,7 @@ class Hilfe(unittest.TestCase):
         card = cards[0]
         kinds = {(x["key"], x["kind"]) for x in card["items"]}
         self.assertIn(("routing", "admin"), kinds)
-        self.assertIn(("routing", "profile"), kinds)
+        self.assertEqual({k for _, k in kinds}, {"admin"})                  # no release switch per profile any more
         self.assertTrue(card["admin"])
         self.assertFalse(load_config()["chat"]["routing"])
         r = self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"})
@@ -204,11 +234,14 @@ class Hilfe(unittest.TestCase):
         self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "undo"})
         self.assertFalse(load_config()["chat"]["routing"])
 
-    def test_switching_off_never_for_everybody(self):
+    def test_switching_off_for_everybody_only_by_the_admin(self):
         helpers.set_config(routing=True)
-        profiles.save_settings(self.auid, {"route": True})
-        card = hilfe.build_card(self.auid, ["routing"], False, True)
-        self.assertEqual([(x["key"], x["kind"]) for x in card["items"]], [("routing", "profile")])
+        card = hilfe.build_card(self.uid, ["routing"], False, False)   # a profile: never off for everybody
+        self.assertEqual(card["items"], [])
+        self.assertIn("Admin", card["blocked"][0]["why"])
+        card = hilfe.build_card(self.auid, ["routing"], False, True)   # the admin: the Spark switch, in Funktionen
+        self.assertEqual([(x["key"], x["kind"], x["where"]) for x in card["items"]], [("routing", "admin", "Funktionen")])
+        self.assertTrue(card["admin"])                                 # applies only with the admin login
 
     def test_admin_session_needed_at_apply(self):
         card = hilfe.build_card(self.uid, ["routing"], True, True)   # built as if by an admin ...
@@ -218,19 +251,18 @@ class Hilfe(unittest.TestCase):
         self.assertFalse(load_config()["chat"]["routing"])
 
     def test_old_card_and_notaus(self):
-        helpers.set_config(routing=True)
-        card = hilfe.build_card(self.uid, ["routing"], True, False)
+        card = hilfe.build_card(self.auid, ["routing"], True, True)
         card["t"] -= hilfe.CARD_S + 1
-        self.assertEqual(self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"}).status_code, 409)
-        card = hilfe.build_card(self.uid, ["routing"], True, False)
+        self.assertEqual(self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"}).status_code, 409)
+        card = hilfe.build_card(self.auid, ["routing"], True, True)
         notaus.trigger(2, "test", "", "panel")
         home, notaus.at_home = notaus.at_home, lambda request: True   # the test client counts as outside the home
         try:
-            r = self.p.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"})
+            r = self.a.post(f"/api/hilfe/karte/{card['id']}", json={"do": "apply"})
         finally:
             notaus.at_home = home
         self.assertEqual(r.status_code, 423)
-        self.assertFalse(profiles.settings(self.uid).get("route"))
+        self.assertFalse(load_config()["chat"]["routing"])
 
     def test_no_card_after_outside_text(self):
         """Prompt injection: a web page or mail read before may not put a card in front of the person."""

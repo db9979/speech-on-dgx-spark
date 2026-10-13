@@ -122,9 +122,12 @@ class Off(Base):
         for key in ("berater", "beratererklaeren", "beraterchat", "beraterhinweis", "beraterissue", "beraterauto",
                     "berateru", "beratermich", "bewerten", "bewertenzurueck"):
             self.assertIn(key, features.BY_KEY)
-            self.assertFalse(features.BY_KEY[key].guests, key)
-        for k in ("rate_on", "rate_back", "berater_note", "berater_ask", "berater_me"):
-            self.assertIs(profiles.SETTINGS[k][0], False, k)
+            self.assertFalse(features.allowed(key, None), key)
+        for k in ("rate_on", "berater_ask", "berater_me"):       # no release switch per profile (Freigabe vereinfachen)
+            self.assertNotIn(k, profiles.SETTINGS, k)
+        for k in ("rate_back", "berater_note"):                  # what comes unasked: a preference, on unless off
+            self.assertIs(profiles.SETTINGS[k][0], True, k)
+            self.assertIn(k, features.PREFS, k)
         self.on(berater_issue=True, report=False)
         self.assertFalse(features.admin_on("beraterissue"))   # a case as a report needs „Probleme melden“
 
@@ -192,7 +195,12 @@ class Rating(Base):
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
         self.assertNotIn("rate", [e["type"] for e in helpers.events(r)])
         helpers.set_config(bewerten=True)
-        profiles.save_settings(uid, {"rate_on": True})
+        # the admin blocks it for this profile: no rating
+        self.assertEqual(ADMIN.put(f"/api/admin/features/bewerten/profiles/{uid}", json={"on": False}).status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/bewerten/profiles/{uid}", json={"on": True})
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
+        self.assertNotIn("rate", [e["type"] for e in helpers.events(r)])
+        self.assertEqual(ADMIN.put(f"/api/admin/features/bewerten/profiles/{uid}", json={"on": True}).status_code, 200)
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
         ev = [e for e in helpers.events(r) if e["type"] == "rate"]
         self.assertEqual(len(ev), 1)
@@ -215,7 +223,6 @@ class Rating(Base):
         # someone else's answer, a guest, rubbish
         other, oid = profile("FaeCora")
         helpers.set_config(bewerten=True)
-        profiles.save_settings(oid, {"rate_on": True})
         self.assertEqual(other.post("/api/chat/rate", json={"id": rid, "good": False}).status_code, 404)
         self.assertIn(TestClient(panel.app).post("/api/chat/rate", json={"id": rid, "good": True}).status_code, (401, 403))
         self.assertEqual(c.post("/api/chat/rate", json={"id": "nope", "good": True}).status_code, 400)
@@ -226,7 +233,6 @@ class Rating(Base):
     def test_question_goes_along_only_when_ticked_and_ten_a_day(self):
         self.on(bewerten=True)
         _, uid = profile("FaeDora")
-        profiles.save_settings(uid, {"rate_on": True})
         rid = faelle.turn_end(trace(), {"id": uid, "name": "FaeDora"}, "Wie heißt der Mond", "x", now=T0)
         res = faelle.rate(rid, uid, False, "antwort", "", with_q=True, now=T0 + 5)
         self.assertEqual(faelle.get(res["case"])["examples"][-1]["q"], "Wie heißt der Mond")
@@ -239,7 +245,6 @@ class Rating(Base):
     def test_spoken_rating(self):
         self.on(bewerten=True)
         c, uid = profile("FaeEmil")
-        profiles.save_settings(uid, {"rate_on": True})
         self.assertEqual(faelle.phrase("Das war falsch."), "schlecht")
         self.assertEqual(faelle.phrase("Gut so!"), "gut")
         self.assertIsNone(faelle.phrase("Das war falsch, sag mir das Wetter"))
@@ -254,7 +259,6 @@ class Rating(Base):
     def test_good_sentences_need_consent(self):
         self.on(bewerten=True)
         _, uid = profile("FaeFrida")
-        profiles.save_settings(uid, {"rate_on": True})
         rid = faelle.turn_end(trace("wetter"), {"id": uid, "name": "FaeFrida"}, "Regnet es morgen", "x", now=T0)
         faelle.rate(rid, uid, True, now=T0 + 1)
         self.assertEqual(faelle.good_sentences(), [])
@@ -426,7 +430,7 @@ class Proposals(Base):
     def test_helped_tells_the_reporter(self):
         self.on(bewerten=True, bewerten_back=True)
         _, uid = profile("FaeGerd")
-        profiles.save_settings(uid, {"rate_on": True, "rate_back": True})
+        profiles.save_settings(uid, {"rate_back": True})
         case = faelle.add("schlecht", {"group": "", "who": uid}, grund="langsam", now=T0)
         p = run(berater.propose(case, T0))
         berater.take(p["id"], "main", now=T0 + 10)
@@ -457,8 +461,11 @@ class Profile(Base):
     def test_own_proposals_after_two_slow_answers(self):
         self.on(berater_me=True, instant_ack=True)
         c, uid = profile("FaeHanna")
-        self.assertEqual(c.get("/api/me/berater").json()["on"], False)
-        profiles.save_settings(uid, {"berater_me": True})
+        self.assertEqual(c.get("/api/me/berater").json()["on"], True)        # released: on for the profile at once
+        self.assertEqual(ADMIN.put(f"/api/admin/features/beratermich/profiles/{uid}", json={"on": False}).status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/beratermich/profiles/{uid}", json={"on": True})
+        self.assertEqual(c.get("/api/me/berater").json()["on"], False)       # blocked by the admin
+        self.assertEqual(ADMIN.put(f"/api/admin/features/beratermich/profiles/{uid}", json={"on": True}).status_code, 200)
         faelle.add("schlecht", {"group": "", "who": uid}, grund="langsam")
         faelle.add("schlecht", {"group": "", "who": uid}, grund="langsam")
         d = c.get("/api/me/berater").json()
@@ -497,7 +504,6 @@ class Explain(Base):
         self.assertTrue(berater.phrase("Was schlägt der Einstellungs-Assistent vor?"))
         self.assertFalse(berater.phrase("Was schlägt der Wetterbericht vor?"))
         self.assertIn("aus", berater.by_phrase(uid))
-        profiles.save_settings(uid, {"berater_ask": True})
         with mock.patch("notaus.admin_uids", return_value=[uid]):
             self.assertIn("kein Vorschlag", berater.by_phrase(uid))
             faelle.add("melder", {}, melder="langsam", title="x", now=T0)
@@ -674,7 +680,7 @@ class Gaps(Base):
     def test_issue_closed_tells_the_reporter(self):
         self.on(bewerten=True, bewerten_back=True, berater_issue=True, report=True)
         _, uid = profile("FaeIssue")
-        profiles.save_settings(uid, {"rate_on": True, "rate_back": True})
+        profiles.save_settings(uid, {"rate_back": True})
         case = faelle.add("schlecht", {"group": "", "who": uid, "tools": [("mail_list", False)], "offered": ["mail_list"]},
                           grund="antwort", now=T0)          # Befund „Werkzeug gescheitert“: a report is the way
         p = run(berater.propose(case, T0))
@@ -703,7 +709,6 @@ class Gaps(Base):
         self.assertEqual(faelle.cases()[-1]["code"], "search")
         self.assertTrue(ADMIN.get("/api/logfilter?format=json&minutes=60&lines=100").json()["explain"])
         _, uid = profile("FaeFrag")
-        profiles.save_settings(uid, {"berater_ask": True})
         q = "Warum hast du eben im Web gesucht?"
         self.assertFalse(berater.takes(q, uid))                       # not an admin: stays a normal question
         self.assertFalse(berater.takes("Warum ist der Himmel blau?", uid))
@@ -749,10 +754,12 @@ class Ideas(Base):
     def test_off_by_default_and_admins_only(self):
         self.on()
         self.assertFalse(features.admin_on("beraterideen"))
-        self.assertFalse(features.BY_KEY["beraterideen"].profile)          # no profile switch: never for profiles
+        self.assertFalse(features.BY_KEY["beraterideen"].pref)             # nothing a profile sets: admins only
         p, case = self._issue_prop()
         self.assertNotIn("idea", p)
         self.assertEqual(ADMIN.post(f"/api/admin/berater/{p['id']}/idee").status_code, 403)
+        c, _ = profile("FaeIdee")
+        self.assertIn(c.post(f"/api/admin/berater/{p['id']}/idee").status_code, (401, 403))   # never a profile
         self.assertIsNone(run(berater.idea(case)))
 
     def test_secrets_and_access_are_never_offered(self):

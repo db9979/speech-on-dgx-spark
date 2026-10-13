@@ -127,6 +127,14 @@ def profile(name, pin="1234"):
     return c
 
 
+def block(tc, uid, key, on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
+
+
 def uid_of(name):
     return next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == name)
 
@@ -320,9 +328,8 @@ class Telegram(unittest.TestCase):
         try:
             photo("Was ist das?")
             self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])
-            a.put("/api/profile/settings", json={"images_on": True})
             photo("Was ist das?")
-            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])   # tg_images too
+            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])   # tg_images still off
             a.put("/api/profile/settings", json={"tg_images": True})
             helpers.LLM_CALLS.clear()
             photo('TOOL reminder_set {"text": "Tee", "minutes": 5}')
@@ -333,9 +340,17 @@ class Telegram(unittest.TestCase):
             self.assertEqual(images._store, {})                                  # not kept after the answer
             photo(reply=True)                                                     # a follow-up: reply to the photo
             self.assertEqual(poll(), ["Ich sehe 1 Bild."])
+            block(self, uid_of("Tilda"), "images")                               # the admin blocked it for Tilda
+            photo()
+            said = poll()[0]
+            self.assertIn("Funktionen → Wer darf was", said)
+            self.assertNotIn("Ich → Gespräch", said)                              # no profile switch to point to
+            block(self, uid_of("Tilda"), "images", on=True)
             helpers.set_config(images=False)
             photo()
-            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])
+            said = poll()[0]
+            self.assertIn("Der Admin muss einschalten: Funktionen → Bilder erkennen", said)   # the admin's switch
+            self.assertNotIn("Ich → Gespräch", said)
             self.assertTrue(telegram.owner(4701))
         finally:
             helpers.set_config(images=False)
@@ -349,8 +364,9 @@ class Telegram(unittest.TestCase):
         with open(helpers.APP + "/config.default.json") as f:
             d = json.load(f)["chat"]
         self.assertEqual((d["telegram"], d["tasks"]), (False, False))
-        for k in ("tg_voice", "tg_private", "tg_ha", "tg_push", "tg_images", "tasks_on"):
+        for k in ("tg_voice", "tg_private", "tg_ha", "tg_push", "tg_images"):
             self.assertIs(profiles.SETTINGS[k][0], False)
+        self.assertNotIn("tasks_on", profiles.SETTINGS)   # no profile switch: the admin's release counts
 
 
 class Tasks(unittest.TestCase):
@@ -362,8 +378,11 @@ class Tasks(unittest.TestCase):
 
     def test_spark_list_yes_before_ticking_off_and_the_shortcut(self):
         a = profile("Lisa")
+        block(self, uid_of("Lisa"), "tasks")                     # the admin blocked lists for Lisa
         self.assertIn("NO TOOL tasks_add", ask(a, 'TOOL tasks_add {"list": "einkauf", "items": ["Milch"]}'))
-        a.put("/api/profile/settings", json={"tasks_on": True})
+        a.put("/api/profile/settings", json={"tasks_on": True})  # the profile cannot lift it
+        self.assertIn("NO TOOL tasks_add", ask(a, 'TOOL tasks_add {"list": "einkauf", "items": ["Milch"]}'))
+        block(self, uid_of("Lisa"), "tasks", on=True)            # released: at once
         self.assertIn("Auf die Liste Einkaufsliste gesetzt: Milch, Brot.",
                       ask(a, 'TOOL tasks_add {"list": "einkauf", "items": ["Milch", "Brot", "milch "]}'))
         self.assertIn("Auf der Liste Einkaufsliste steht: Milch, Brot.", ask(a, 'TOOL tasks_show {"list": "einkauf"}'))
@@ -393,7 +412,6 @@ class Tasks(unittest.TestCase):
 
     def test_caldav_list_and_outside_text(self):
         a = profile("Nina")
-        a.put("/api/profile/settings", json={"tasks_on": True})
         r = a.post("/api/profile/calendar", json={"url": f"http://127.0.0.1:{DAV_PORT}/cal/", "user": "nc", "password": "pw-nc"})
         self.assertEqual(r.status_code, 200, r.text)
         found = a.get("/api/profile/tasks/collections").json()["collections"]

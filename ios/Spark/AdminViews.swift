@@ -616,8 +616,9 @@ struct AdminProfileView: View {
     @State private var note: String?
     @State private var role = ""
     @State private var sessions: [(id: String, agent: String, last: Date?)] = []
-    /// the functions with an own switch the Spark allows, and whether this profile has them on (Wer darf was)
-    @State private var funcs: [(key: String, name: String, on: Bool)] = []
+    /// the functions on on the Spark and whether this profile may use them (Wer darf was): on for every profile at
+    /// once, the admin only blocks one here; "via" marks a block through a function it builds on
+    @State private var funcs: [(key: String, name: String, on: Bool, via: Bool)] = []
 
     var body: some View {
         Form {
@@ -628,11 +629,15 @@ struct AdminProfileView: View {
             }
             Section {
                 ForEach(funcs, id: \.key) { f in
-                    Toggle(isOn: Binding(get: { f.on }, set: { v in Task { await setFunc(f.key, v) } })) { Text(verbatim: f.name) }
+                    Toggle(isOn: Binding(get: { f.on && !f.via }, set: { v in Task { await setFunc(f.key, v) } })) {
+                        Text(verbatim: f.name)
+                        if f.via { Text("Gesperrt über eine Funktion, auf der sie aufbaut") }
+                    }
+                    .disabled(f.via)
                 }
-                if funcs.isEmpty { Text("Keine Funktion mit eigenem Schalter an.").foregroundStyle(.secondary) }
-            } header: { Text("Funktionen: \(funcsOn) von \(funcs.count) an") } footer: {
-                Text("Die eigenen Schalter dieses Profils. Das Profil sieht und ändert sie selbst unter Ich.")
+                if funcs.isEmpty { Text("Keine Funktion auf dem Spark an.").foregroundStyle(.secondary) }
+            } header: { Text("Funktionen: \(funcsOn) von \(funcs.count) freigegeben") } footer: {
+                Text("Was auf dem Spark an ist, gilt sofort für jedes Profil. Aus sperrt eine Funktion nur für dieses Profil; das Profil kann die Sperre nicht selbst aufheben.")
             }
             Section {
                 ForEach(sessions, id: \.id) { x in
@@ -688,12 +693,13 @@ struct AdminProfileView: View {
                 guard let key = f["key"] as? String, key.range(of: #"^[a-z0-9_]{1,40}$"#, options: .regularExpression) != nil,
                       f["spark"] as? Bool == true, let cells = f["cells"] as? [String: Any],
                       let name = FeaturesView.pick(f["name"]) else { return nil }
-                return (key, name, cells[user.id] as? Bool ?? false)
+                let via = (f["inherited"] as? [String: Any])?[user.id] as? Bool ?? false
+                return (key, name, cells[user.id] as? Bool ?? true, via)
             }
         } catch { self.error = error.localizedDescription }
     }
 
-    private var funcsOn: Int { funcs.filter { $0.on }.count }
+    private var funcsOn: Int { funcs.filter { $0.on && !$0.via }.count }
 
     private func setFunc(_ key: String, _ on: Bool) async {
         do { _ = try await s.call("PUT", "api/admin/features/\(key)/profiles/\(user.id)", body: ["on": on]); error = nil }

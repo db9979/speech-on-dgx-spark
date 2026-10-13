@@ -1,7 +1,7 @@
 """Knowledge from one's own uploads (V01.0.223, plan plaene/wissen-aus-uploads.md).
 
-Builds on documents.py (one SQLite file per profile) with three switches, each off until the admin
-(Funktionen) and the profile (Ich → Dokumente) switch it on; guests never:
+Builds on documents.py (one SQLite file per profile) with these functions, each off until the admin switches it on
+(Funktionen); released, it works for every profile the admin did not block; guests never:
 
 - doc_pictures  "Bilder und Scans lesen": photos and PDF pages without a text layer wait as cleaned
                 JPEGs until the language model has read them, one page at a time, only while nobody
@@ -17,7 +17,7 @@ Builds on documents.py (one SQLite file per profile) with three switches, each o
                 tags belong together; doc_due (profile only) offers a reminder before a deadline, which
                 is set only on the owner's click;
 - doc_shared    "Gemeinsame Dokumente" (V01.0.236): a profile marks one of its documents "Für alle"; every
-                profile with the switch on then finds it in its search and can look at it. The document
+                profile it is released for then finds it in its search and can look at it. The document
                 stays in the owner's database: only the owner (or the admin) takes it back or deletes it,
                 guests and voices the speaker does not recognize never get it (chat_turn private_ok), and
                 its text stays outside text like any document.
@@ -83,7 +83,7 @@ def _chat():
 # the switch words used here -> the functions in features.py
 DOC_FEATURE = {"pictures": "docpics", "semantic": "docmeaning", "originals": "docfiles", "night": "docnight",
                "shared": "docshared", "brief": "docbrief", "make": "erstellen", "make_templates": "erstellenvorlagen",
-               "make_wikipics": "erstellenbilder"}
+               "make_wikipics": "erstellenbilder", "docling": "docling"}
 
 
 def admin_on(what):
@@ -91,7 +91,7 @@ def admin_on(what):
 
 
 def on(uid, what):
-    """The admin's and the profile's own switch (never a default from the admin's presets)."""
+    """Released by the admin for this profile (features.py: block, second step)."""
     return features.allowed(DOC_FEATURE[what], uid)
 
 
@@ -552,13 +552,11 @@ def info(prof=Depends(own_profile)):
     uid = prof["id"]
     s = profiles.settings(uid)
     have, total = documents.vector_state(uid)
-    import doclingdienst
-    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates", "make_wikipics")}
-            | {"docling": doclingdienst.admin_on()},   # features.py
-            "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared", "brief", "due", "make", "make_templates",
-                                                    "make_wikipics")}
-            # "Mit Docling lesen" is a preference: on unless the profile turned it off
-            | {"docling": s.get(doclingdienst.PREF, True) is not False},
+    kinds = ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates", "make_wikipics", "docling")
+    # released by the admin and not blocked for this profile (features.py); "on": usable now (also the second step)
+    return {"allow": {k: admin_on(k) and not features.blocked(DOC_FEATURE[k], uid) for k in kinds},
+            # "Mit Docling lesen" is a preference: on unless the profile turned it off (doclingdienst.PREF)
+            "on": dict({k: on(uid, k) for k in kinds}, due=s.get("doc_due") is True, docling=s.get("doc_docling", True) is not False),
             "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
             "used": documents.usage_total(uid), "space": quota_bytes(uid),

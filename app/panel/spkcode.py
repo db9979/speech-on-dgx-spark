@@ -21,7 +21,8 @@ or two misheard is fine). The sentence that carries it reaches no model, history
 journal. Three wrong ones in FAIL_WINDOW: this speaker stops asking that profile for LOCK seconds and the
 profile gets a notification. Waiting questions, open windows, failures and locks live in memory only.
 
-Off until the admin (chat.speaker_code) and the profile (spk_code) switch it on (features.py "spkcode").
+Off until the admin switches it on (chat.speaker_code, features.py "spkcode"); then for every profile the admin
+did not block.
 """
 import json
 import re

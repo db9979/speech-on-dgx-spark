@@ -136,7 +136,6 @@ class Watch(unittest.TestCase):
 
     def test_watch_questions_are_kept_in_the_profile(self):
         a = profile("Vsuhrmacherin")
-        a.put("/api/profile/settings", json={"pebble_on": True})
         _, code = a.post("/api/profile/pebble/pair", json={"base": "http://tars:31080"}).json()["setup"].split("#pebble=")
         with TestClient(panel.app) as w:
             h = {"X-Speech-Device": w.post("/api/pebble/pair", json={"code": code}).json()["token"]}
@@ -161,12 +160,17 @@ class Watch(unittest.TestCase):
 
 
 def switched(client, **on):
-    """The admin switches of the three functions and the profile's own (the rest off)."""
+    """The admin switches of the three functions (the rest off); released, they hold for every profile at once."""
     helpers.set_config(history_live=bool(on.get("live")), history_one=bool(on.get("one")),
                        history_offline=bool(on.get("offline")))
-    r = client.put("/api/profile/settings", json={"sync_live": bool(on.get("live")), "sync_one": bool(on.get("one")),
-                                                    "sync_offline": bool(on.get("offline"))})
+
+
+def block(tc, uid, key, on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
     assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
 
 
 def uid_of(client):
@@ -179,11 +183,15 @@ class Stream(unittest.TestCase):
         verlauf._subs.clear()
         verlauf._busy.clear()
 
-    def test_off_until_admin_and_profile_switch_it_on(self):
+    def test_off_until_admin_switches_it_on_and_admin_block(self):
         a, g = profile("Vsstella"), TestClient(panel.app)
         switched(a)
         self.assertEqual(a.get("/api/profile/convos/stream").status_code, 403)
-        helpers.set_config(history_live=True)        # the admin alone is not enough
+        helpers.set_config(history_live=True)        # released: at once for every profile
+        self.assertTrue(verlauf.live_on(uid_of(a)))
+        block(self, uid_of(a), "verlaufsync")        # the admin blocked it for this profile
+        self.assertEqual(a.get("/api/profile/convos/stream").status_code, 403)
+        a.put("/api/profile/settings", json={"sync_live": True})   # the profile cannot lift it
         self.assertEqual(a.get("/api/profile/convos/stream").status_code, 403)
         self.assertIn(g.get("/api/profile/convos/stream").status_code, (401, 403))   # guests never
 
@@ -280,6 +288,16 @@ class OneConversation(unittest.TestCase):
         # an unknown channel mark is dropped
         a.put("/api/profile/convos", json={"id": "web1", "title": "Garten", "add": [dict(m("user", "X"), via="evil")]})
         self.assertNotIn("via", next(x for x in a.get("/api/profile/convos").json() if x["id"] == "web1")["msgs"][-1])
+
+
+    def test_admin_block_keeps_the_channels_apart(self):
+        a = profile("Vsoleblock")
+        uid, now = uid_of(a), datetime.datetime.now()
+        switched(a, one=True)
+        block(self, uid, "eingespraech")              # the admin blocked it for this profile
+        verlauf.keep(uid, "tg-2", "Telegram", now, "telegram", [m("user", "F1"), m("assistant", "A1")])
+        self.assertEqual(texts(a, "tg-2"), ["F1", "A1"])
+        self.assertFalse(any(x["id"] == "tag-" + now.strftime("%Y%m%d") for x in a.get("/api/profile/convos").json()))
 
 
 class Cards(unittest.TestCase):

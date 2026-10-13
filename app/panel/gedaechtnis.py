@@ -10,7 +10,7 @@ with fixed rules, never with a model, and marks the ones that may be out of date
                            the older one is marked
 
 The model gets the facts in three blocks (sure, learned, maybe out of date: never as a fact). Which fact goes into
-which block, the panel decides. Admin switch chat.memory_check and the profile's mem_check, both off; never guests.
+which block, the panel decides. Admin switch chat.memory_check, off; released for every profile the admin did not block; never guests.
 
 The evidence is kept on every fact even while the switch is off (src, convo, confirmed), so it is there when it is
 switched on. A fact of an older version without src counts as "auto" when it was learned, else as "said".
@@ -69,7 +69,7 @@ LIVE_S = 30
 
 
 def on(uid, c=None):
-    """The admin's chat.memory_check and the profile's mem_check (features.py); never guests."""
+    """The admin's chat.memory_check, unless the admin blocked this profile (features.py); never guests."""
     return bool(uid) and features.allowed("gedpruefen", uid, c)
 
 
@@ -343,7 +343,7 @@ ASK = {"de": "Kurz nachgefragt: Stimmt das noch: „{text}“?", "en": "Quick ch
 
 
 def ask_on(uid, c=None):
-    """The question in a conversation: admin chat.memory_ask and the profile's mem_ask, below Gedächtnis prüfen."""
+    """The question in a conversation: admin chat.memory_ask (below Gedächtnis prüfen), unless the admin blocked this profile."""
     return bool(uid) and on(uid, c) and features.allowed("gedfragen", uid, c)
 
 
@@ -455,7 +455,7 @@ _topic_tried = {}
 
 
 def topics_on(uid, c=None):
-    """Themen: admin chat.memory_topics and the profile's mem_topics, below Gedächtnis prüfen."""
+    """Themen: admin chat.memory_topics (below Gedächtnis prüfen), unless the admin blocked this profile."""
     return bool(uid) and on(uid, c) and features.allowed("gedthemen", uid, c)
 
 

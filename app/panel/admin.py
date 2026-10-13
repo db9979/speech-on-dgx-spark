@@ -114,7 +114,6 @@ async def admin_add_profile(request: Request):
         uid = profiles.add_user(name, pin)
     except ValueError as e:
         raise HTTPException(409, str(e))
-    features.new_profile(uid)   # the functions the admin switches on for every new profile (Wer darf was)
     return {"id": uid}
 
 
@@ -476,9 +475,11 @@ def _tidy(cfg, known):
         if isinstance(cfg.get(sec), dict):
             cfg[sec] = {k: v for k, v in cfg[sec].items() if k in keys}
     ch = cfg.get("chat", {})
-    if isinstance(ch.get("new_profile_on"), list):   # a function removed or without an own switch by now
-        ch["new_profile_on"] = list(dict.fromkeys(k for k in ch["new_profile_on"] if isinstance(k, str)
-                                                  and k in features.BY_KEY and features.BY_KEY[k].profile))
+    # gone with "Freigabe vereinfachen" (Dominik 2026-10-13): what a new profile got switched on; every profile now
+    # gets what the admin releases
+    ch.pop("new_profile_on", None)
+    if "chat" in cfg:   # a removed function or a deleted profile in Wer darf was never blocks saving
+        ch["deny"] = features.clean_deny(ch.get("deny"))
     if isinstance(ch.get("defaults"), dict):        # a preset whose setting is gone or takes other values now
         ch["defaults"] = profiles.clean_settings(ch["defaults"])
     if isinstance(ch.get("berater_off"), list):     # a Melder of the Einstellungs-Assistent that is gone
@@ -568,10 +569,12 @@ def validate(new):
         raise HTTPException(400, "telegram_panel_url: https://name or https://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
         raise HTTPException(400, "esp32_repo: owner/name")
-    npo = ch.get("new_profile_on", [])
-    if not (isinstance(npo, list) and len(npo) <= len(features.FEATURES) and len(set(npo)) == len(npo)
-            and all(isinstance(k, str) and k in features.BY_KEY and features.BY_KEY[k].profile for k in npo)):
-        raise HTTPException(400, "new_profile_on: functions with an own switch, each once")
+    # Wer darf was: the functions the admin blocked for single profiles (features.blocked); only the admin writes it
+    deny = ch.get("deny", {})
+    if not (isinstance(deny, dict) and len(deny) <= len(features.FEATURES)
+            and all(k in features.BY_KEY and isinstance(v, list) and 0 < len(v) <= features.MAX_DENY and len(set(v)) == len(v)
+                    and all(isinstance(u, str) and re.fullmatch(r"u_[0-9a-f]{12}", u) for u in v) for k, v in deny.items())):
+        raise HTTPException(400, "deny: function → list of profile ids")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
         raise HTTPException(400, "chat defaults: invalid value")
     if ch.get("speaker_strictness") not in speakers.STRICTNESS:

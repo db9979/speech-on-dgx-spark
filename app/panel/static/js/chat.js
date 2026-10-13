@@ -238,7 +238,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[];let rateId='';
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
+      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -291,7 +291,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
   if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
     b.textContent=t('Bild in „Meine Dokumente“','Picture to "My documents"');const ids=pids.slice();b.onclick=()=>picKeep(ids,b);el.appendChild(b)}
-  if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&S.rm_send&&typeof rmSend==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // only on a click
+  if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&typeof rmSend==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // only on a click
     b.textContent=t('Aufs reMarkable','To the reMarkable');const said=full.trim();b.onclick=()=>rmSend(said,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
@@ -328,12 +328,13 @@ function choiceCard(c){const d=document.createElement('div');d.className='choice
 // "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): asked for a function this answer could not
 // use, the reason under it comes from the panel's rules (intent.explain), never from the model; with a way to change it.
 function whyNote(w){const d=document.createElement('div');d.className='mem whynote';const n='„'+(w.name||[])[L==='en'?1:0]+'“';
-  const txt={spark:t(n+' ist auf dem Spark ausgeschaltet.',n+' is switched off on the Spark.'),profile:t(n+' ist für dich aus.',n+' is off for you.'),
+  const txt={spark:t(n+' ist auf dem Spark ausgeschaltet.',n+' is switched off on the Spark.'),profile:t(n+' hast du ausgeschaltet.','You switched '+n+' off.'),
+    blocked:t(n+' hat der Admin für dich gesperrt.',n+' is blocked for you by the admin.'),
     guest:t(n+' gibt es nur mit Profil.',n+' needs a profile.'),mfa:t(n+' braucht zuerst den zweiten Anmeldeschritt.',n+' needs the second login step first.'),
-    voice:t('Am geteilten Lautsprecher gibt es Persönliches nur, wenn er deine Stimme erkennt.','At a shared speaker personal things need your recognized voice.')}[w.why];
+    voice:t('Am geteilten Lautsprecher gibt es Funktionen nur, wenn er deine Stimme erkennt.','At a shared speaker functions need your recognized voice.')}[w.why];
   if(!txt)return d;d.textContent='ℹ '+txt;const go=(l,f)=>{const b=document.createElement('button');b.type='button';b.className='mlink';b.textContent=l;b.onclick=f;d.append(' ',b)};
   if(w.why==='spark'&&document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&typeof goSec==='function')go(t('Wer darf was','Who may do what'),()=>goSec('who'));
-  else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich einschalten','Switch on under Me'),()=>openMe(w.me));
+  else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich ändern','Change under Me'),()=>openMe(w.me));   // a preference the person switched off (blocked: no button, only the admin lifts it)
   else if(w.why==='guest'&&typeof openMe==='function')go(t('Anmelden','Sign in'),()=>openMe('loginbox'));
   else if(w.why==='mfa'&&typeof openMe==='function')go(t('Einrichten','Set up'),()=>openMe('secbox'));
   // the admin's own chat: the question to the Weiche page (Funktionen → Weiche, „Falsch zugeordnet“)

@@ -1,4 +1,5 @@
-"""Instant acknowledgement (ack.py, admin chat.instant_ack + profile instant_ack, both off, never guests):
+"""Instant acknowledgement (ack.py, admin chat.instant_ack, off; then on for every profile unless the admin blocks
+one under Funktionen → Wer darf was; never guests):
 a ready-made sentence of what the Spark does now, chosen by fixed rules and played from a recording made once per
 voice; kept apart from the answer's first sound. No model, no clock."""
 import asyncio
@@ -169,7 +170,7 @@ class InTheAnswer(unittest.TestCase):
         return [base64.b64decode(e["audio"]) for e in evs if e["type"] == "audio"]
 
     def test_sentence_comes_first_and_apart(self):
-        p = profile("Ack1", route=True, instant_ack=True)
+        p = profile("Ack1")
         evs = ask(p, "Welche Termine habe ich morgen?")
         sound = self.audio(evs)
         self.assertTrue(sound and sound[0] == CLIP[:ack.CHUNK])            # the recording before anything else
@@ -177,15 +178,18 @@ class InTheAnswer(unittest.TestCase):
         self.assertFalse(any(e["type"] == "text" and "Kalender" in e.get("delta", "") for e in evs))   # not in the text
 
     def test_small_talk_gets_none(self):
-        p = profile("Ack2", route=True, instant_ack=True)
+        p = profile("Ack2")
         evs = ask(p, "Hallo, wie geht's?")
         self.assertNotIn(CLIP[:ack.CHUNK], self.audio(evs))
 
-    def test_off_for_the_profile_or_the_spark(self):
-        p = profile("Ack3", route=True)
+    def test_off_for_a_blocked_profile_or_the_spark(self):
+        p = profile("Ack3")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(deny={"ack": [uid]})                 # the admin blocks this one profile
+        self.addCleanup(helpers.set_config, deny={})
         self.assertNotIn(CLIP[:ack.CHUNK], self.audio(ask(p, "Welche Termine habe ich morgen?")))
-        helpers.set_config(instant_ack=False)
-        q = profile("Ack4", route=True, instant_ack=True)
+        helpers.set_config(deny={}, instant_ack=False)
+        q = profile("Ack4")
         self.assertNotIn(CLIP[:ack.CHUNK], self.audio(ask(q, "Welche Termine habe ich morgen?")))
 
     def test_never_guests(self):

@@ -1,6 +1,6 @@
 """Präsentationen professionell (Dominik 2026-10-12, plan plaene/praesentationen-professionell.md, "alle punkte
 umsetzen 1-6"): slide types with the variety rules, little text per slide, charts only with real numbers, symbols
-from the repository, pictures from the own Kiwix (own switch, off), numbers only with a source. All fixed rules on
+from the repository, pictures from the own Kiwix (own admin switch, off), numbers only with a source. All fixed rules on
 the model's JSON (folien.py); the model, the Kiwix and the clock are faked."""
 import asyncio
 import io
@@ -22,7 +22,7 @@ import folien  # noqa: E402
 import kiwix  # noqa: E402
 import profiles  # noqa: E402
 import symbole  # noqa: E402
-from tests.test_docmake import profile  # noqa: E402
+from tests.test_docmake import block, profile  # noqa: E402
 
 docmake.BACKGROUND = False
 
@@ -342,15 +342,21 @@ class KiwixPictures(unittest.TestCase):
         docmake.drop_pictures(uid, "abcdefabcdef")
         self.assertIsNone(docmake._pic_path(uid, pid))
 
-    def test_switch_is_off_by_default_and_needs_both(self):
+    def test_switch_is_off_by_default_and_admin_can_block(self):
         self.assertIn("erstellenbilder", features.BY_KEY)
         self.assertEqual(features.BY_KEY["erstellenbilder"].parent, "erstellen")
         _, uid = profile("FolienSchalter")
         helpers.set_config(documents=True, doc_make=True, doc_make_wikipics=False)
         self.assertFalse(docmake.pictures_on(uid))
         helpers.set_config(doc_make_wikipics=True)
-        self.assertFalse(docmake.pictures_on(uid))             # the profile's own switch is still off
-        profiles.save_settings(uid, {"doc_make_wikipics": True})
+        self.assertTrue(docmake.pictures_on(uid))              # released by the admin: on for the profile at once
+        block(uid, "erstellenbilder")                          # the admin blocks it for this one profile
+        self.addCleanup(helpers.set_config, deny={})
+        self.assertFalse(docmake.pictures_on(uid))
+        block(uid, "erstellenbilder", False)
+        block(uid, "erstellen")                                # ... or Dokumente erstellen it builds on
+        self.assertFalse(docmake.pictures_on(uid))
+        block(uid, "erstellen", False)
         self.assertTrue(docmake.pictures_on(uid))
         # with both on but no Kiwix for the profile nothing is fetched; a "Bild und Text" slide becomes another type
         plan = {"kind": "praesentation", "format": "pptx", "title": "T", "lang": "de",
@@ -365,7 +371,6 @@ class KiwixPictures(unittest.TestCase):
         from PIL import Image
         _, uid = profile("FolienKiwix")
         helpers.set_config(documents=True, doc_make=True, doc_make_wikipics=True)
-        profiles.save_settings(uid, {"doc_make_wikipics": True})
         b = io.BytesIO()
         Image.new("RGB", (900, 600), (200, 100, 50)).save(b, "JPEG")
         usable, pic = kiwix.usable, kiwix.picture_of

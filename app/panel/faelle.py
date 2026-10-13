@@ -551,7 +551,7 @@ def by_phrase(uid, verdict, now=None):
     (German)."""
     now = time.time() if now is None else now
     if not can_rate(uid):
-        return "Bewerten ist für dich aus. Einschalten unter Ich → Gespräch → Bewerten."
+        return "Bewerten geht für dich gerade nicht. " + features.missing_text("bewerten", uid)
     with _lock:
         last = _last_of(uid, now, within=PHRASE_S)
     if not last:

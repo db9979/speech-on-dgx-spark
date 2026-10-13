@@ -230,11 +230,11 @@ FAQ = (
       "up; lifting only as admin in the browser at home with a fresh code. Normal profiles do not see the big button, they have "
       "\"My kill switch\" under Me → Security.")),
     ("einladen", "admin", "prof", ("Jemanden einladen (neue Person)", "Unter Personen und Geräte → Neue Personen erstellt der Admin eine "
-     "Einladung (Name als Vorschlag, Startpaket, gültig 1, 7 oder 30 Tage) und bekommt Link, QR-Code und eine Karte zum Drucken; "
+     "Einladung (Name als Vorschlag, gültig 1, 7 oder 30 Tage) und bekommt Link, QR-Code und eine Karte zum Drucken; "
      "der Link braucht die https-Adresse des Panels. Empfohlen: „Neue Personen“ auf „Nur mit Einladung“. Danach führt Ich → "
      "Los geht's die neue Person durch das Einrichten."),
      ("Inviting someone (new person)", "Under People and devices → New people the admin creates an invitation (suggested name, "
-      "starter pack, valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https "
+      "valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https "
       "address. Recommended: \"New people\" set to \"Only by invitation\". Then Me → Let's go guides the new person.")),
     ("sicherung", "admin", "cfg/bak", ("Sicherung (Backup)", "Einstellungen → Sicherung: „Jetzt sichern“ legt eine "
      "Sicherung an; „Sicherung nach außen“ schickt einmal am Tag eine verschlüsselte Sicherung per WebDAV auf ein NAS oder eine "
@@ -965,7 +965,8 @@ def snippet(text, words, limit):
 
 
 # ---------------------------------------------------------------- the state of this profile
-WHY = {"spark": ("vom Admin ausgeschaltet", "switched off by the admin"), "profile": ("bei dir aus", "off for you"),
+WHY = {"spark": ("vom Admin ausgeschaltet", "switched off by the admin"), "profile": ("von dir ausgeschaltet", "switched off by you"),
+       "blocked": ("vom Admin für dich gesperrt", "blocked for you by the admin"),
        "mfa": ("braucht erst den zweiten Anmeldeschritt", "needs the second sign-in step first"),
        "guest": ("nur mit Profil", "only with a profile")}
 
@@ -980,7 +981,7 @@ def state_line(key, uid, level, lang="de", c=None):
     if _lvl(level) != "profile":
         line += (" · Spark-Schalter: " if li == 0 else " · Spark switch: ") + (
             ("an", "on")[li] if features.admin_on(key, c) else ("aus", "off")[li])
-    if why in ("spark", "profile"):
+    if why in ("spark", "profile", "blocked"):
         need = features.missing_text(key, uid, lang, c)
         if _lvl(level) == "profile" and why == "spark":
             need = (("Fehlt im Spark: " if li == 0 else "Missing on the Spark: ")
@@ -1104,9 +1105,9 @@ def answer_text(question, uid, level="profile", page=None, lang="de", request=No
         mine = [(f.de, f.en)[li] for f in features.FEATURES if not f.parent and features.reason(f.key, uid, c) is None]
         lines.append(("Bei dir an: " if li == 0 else "On for you: ") + (", ".join(mine[:40]) or "-"))
         if level == "profile":
-            ask = [(f.de, f.en)[li] for f in features.FEATURES if not f.parent and f.profile and features.reason(f.key, uid, c) == "profile"]
+            ask = [(f.de, f.en)[li] for f in features.FEATURES if f.pref and features.reason(f.key, uid, c) == "profile"]
             if ask:
-                lines.append(("Kannst du selbst unter Ich einschalten: " if li == 0 else "You can switch on under Me: ") + ", ".join(ask[:30]))
+                lines.append(("Von dir ausgeschaltet, unter Ich wieder einschaltbar: " if li == 0 else "Switched off by you, back on under Me: ") + ", ".join(ask[:30]))
         else:
             off = [(f.de, f.en)[li] for f in features.FEATURES if not f.parent and not features.admin_on(f.key, c)]
             if off:
@@ -1217,20 +1218,20 @@ def build_card(uid, wanted, on_, admin, lang="de", recipe=None, c=None):
         # the Spark's switch: on only when it is off (admins only); off only for a function without an own
         # switch (switching it off for everybody because one profile does not want it is never on a card)
         spark_item = None
-        if sw and admin and key in APPLY_ADMIN and _cfg_value(c, sw) != on_ and (on_ or not f.profile):
+        if sw and admin and key in APPLY_ADMIN and _cfg_value(c, sw) != on_ and (on_ or not f.pref):
             spark_item = {"key": key, "name": name(f), "kind": "admin", "switch": sw, "old": _cfg_value(c, sw),
                           "new": on_, "where": ("Funktionen", "Features")[li]}
         if on_ and not features.admin_on(key, c) and not spark_item and not any(x["key"] == f.parent for x in items):
             blocked.append({"name": name(f), "why": ("erst muss der Admin es einschalten", "the admin has to switch it on first")[li]})
             return
-        if not on_ and not f.profile and not spark_item:
+        if not on_ and not f.pref and not spark_item:
             if _cfg_value(c, sw or ""):
                 blocked.append({"name": name(f), "why": ("nur der Admin schaltet es aus", "only the admin switches it off")[li]})
             return
         if spark_item:
             items.append(spark_item)
-        if f.profile and (s.get(f.profile) is True) != on_:
-            items.append({"key": key, "name": name(f), "kind": "profile", "switch": f.profile, "old": s.get(f.profile) is True,
+        if f.pref and features.pref_on(key, uid, s) != on_:
+            items.append({"key": key, "name": name(f), "kind": "profile", "switch": f.pref, "old": features.pref_on(key, uid, s),
                           "new": on_, "where": (("Ich → Gespräch", "Me → Conversation") if f.me == "setbox" else ("Ich", "Me"))[li], "me": f.me or "setbox"})
 
     for k in keys:

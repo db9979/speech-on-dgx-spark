@@ -4,7 +4,7 @@ Fixed rules here, never the model and never Home Assistant (the model used to lo
 in the smart home and ask for the code word). The panel reads the place from the person's own words
 and matches it against the profile's own speakers (name or the room set at the speaker):
 
-- starting needs the admin's chat.room_remote and the profile's room_remote (both off by default), the
+- starting needs the admin's chat.room_remote (off by default, the profile not blocked by the admin), the
   profile's own login, app or speaker (never Telegram or Siri alone, never a guest or a voice taken for
   someone else), a speaker that is connected right now, and a plain "Ja" to the question in the next
   message of the same conversation (15 minutes). The speaker says who started it.
@@ -159,10 +159,10 @@ def why_not(ctx):
         return "Über " + ("Telegram" if ctx.get("client") == "telegram" else "Siri") + \
             " startet der Raum-Modus nicht aus der Ferne. Im Panel, in der iPhone-App oder am Lautsprecher geht es."
     if not esp32.admin_on() or not esp32.profile_on(who["id"]):
-        return "Für dein Profil sind Lautsprecher ausgeschaltet (Ich → Lautsprecher)."
+        return "Der Admin hat Lautsprecher für dein Profil gesperrt (Funktionen → Wer darf was)."
     if not profile_on(who["id"]):
-        return ("Für dein Profil ist das ausgeschaltet (Ich → Raum-Modus → „Raum-Modus an einem anderen Gerät "
-                "starten“). Am Gerät selbst geht „Raummodus an“.")
+        return ("Der Admin hat das für dein Profil gesperrt (Funktionen → Wer darf was). Am Gerät selbst geht "
+                "„Raummodus an“.")
     return ""
 
 

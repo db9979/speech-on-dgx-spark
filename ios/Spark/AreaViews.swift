@@ -100,24 +100,6 @@ extension View {
     func codeAlert(_ request: Binding<CodeRequest?>) -> some View { modifier(CodeAlert(request: request)) }
 }
 
-/// A switch of the profile's own settings (PUT /api/iphone/settings; the Spark decides which the app may set).
-struct SettingToggle: View {
-    let title: LocalizedStringKey
-    let key: String
-    @Binding var settings: [String: Bool]
-    @Binding var error: String?
-
-    var body: some View {
-        Toggle(title, isOn: Binding(get: { settings[key] ?? false }, set: { v in
-            settings[key] = v
-            Task {
-                do { _ = try await SparkAPI.current?.call("PUT", "api/iphone/settings", body: [key: v]); error = nil }
-                catch { self.error = error.localizedDescription; settings[key] = !v }
-            }
-        }))
-    }
-}
-
 // MARK: - Stimme einlernen
 
 /// Speaker recognition: the profile's voice through the iPhone's microphone, and "Stimme hier anlernen" at
@@ -313,7 +295,8 @@ struct Job: Identifiable, Hashable {
 
 @MainActor
 final class AutoModel: ObservableObject {
-    @Published var settings: [String: Bool] = [:]
+    /// what the admin released for this profile (weather, parcels, transit): on for every profile at once
+    @Published var services: [String: Bool] = [:]
     @Published var place = ""
     @Published var placeInput = ""
     @Published var choices: [[String: Any]] = []
@@ -331,7 +314,7 @@ final class AutoModel: ObservableObject {
     func load() async {
         guard let api = SparkAPI.current else { return }
         if let s = try? await api.object("GET", "api/iphone/settings") {
-            settings = ((s["settings"] as? [String: Any]) ?? [:]).compactMapValues { $0 as? Bool }
+            services = (s["services"] as? [String: Any] ?? [:]).compactMapValues { $0 as? Bool }
         }
         if let w = try? await api.object("GET", "api/profile/weather") {
             place = (w["place"] as? [String: Any])?["name"] as? String ?? ""
@@ -437,8 +420,10 @@ struct AutoView: View {
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let s = m.sample { Section { Text(verbatim: s) } header: { Text("Antwort des Spark") } }
             Section {
-                SettingToggle(title: "Wetter", key: "wx_on", settings: $m.settings, error: $m.error)
-                if m.settings["wx_on"] == true {
+                if m.services["wx_on"] == false {
+                    Text(SparkAPI.way(String(localized: "Der Admin hat das Wetter noch nicht freigegeben (Funktionen → Wetter).")))
+                        .foregroundStyle(.secondary)
+                } else if m.services["wx_on"] == true {
                     if !m.place.isEmpty { LabeledContent("Ort", value: m.place) }
                     HStack {
                         TextField("Ort, z. B. Freiburg", text: $m.placeInput)
@@ -451,16 +436,20 @@ struct AutoView: View {
                 }
             } header: { Text("Wetter") }
             Section {
-                SettingToggle(title: "Pakete aus E-Mails", key: "par_on", settings: $m.settings, error: $m.error)
-                if m.settings["par_on"] == true {
+                if m.services["par_on"] == false {
+                    Text(SparkAPI.way(String(localized: "Der Admin hat die Pakete noch nicht freigegeben (Funktionen → E-Mail lesen und Pakete).")))
+                        .foregroundStyle(.secondary)
+                } else if m.services["par_on"] == true {
                     if m.parcels.isEmpty && m.parcelNote == nil { Text("Keine Pakete unterwegs.").foregroundStyle(.secondary) }
                     ForEach(m.parcels, id: \.self) { Text(verbatim: $0).font(.callout) }
                     if let n = m.parcelNote { Text(verbatim: n).font(.caption).foregroundStyle(.secondary) }
                 }
             } header: { Text("Pakete") }
             Section {
-                SettingToggle(title: "Bus und Bahn", key: "transit_on", settings: $m.settings, error: $m.error)
-                if m.settings["transit_on"] == true {
+                if m.services["transit_on"] == false {
+                    Text(SparkAPI.way(String(localized: "Der Admin hat Bus und Bahn noch nicht freigegeben (Funktionen → Bus und Bahn).")))
+                        .foregroundStyle(.secondary)
+                } else if m.services["transit_on"] == true {
                     if !m.home.isEmpty { LabeledContent("Haltestelle", value: m.home) }
                     HStack {
                         TextField("Haltestelle suchen", text: $m.stopInput)
@@ -473,7 +462,6 @@ struct AutoView: View {
                 }
             } header: { Text("Bus und Bahn") }
             Section {
-                SettingToggle(title: "Aufträge", key: "agent_on", settings: $m.settings, error: $m.error)
                 ForEach(m.jobs) { j in
                     NavigationLink { JobView(job: j) } label: {
                         VStack(alignment: .leading, spacing: 2) {

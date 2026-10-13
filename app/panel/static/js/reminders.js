@@ -1,17 +1,18 @@
 // Timers and reminders that ring while the page is open.
 // ---------------------------------------------------------------- timers and reminders
 // The assistant sets them with a tool; profiles keep them on the Spark (the first device of the
-// profile that plays one takes it, the others stay silent), guests in this browser. A due reminder
+// profile that plays one takes it, the others stay silent). Guests have none (only questions and answers). A due reminder
 // chimes, shows a bubble and is spoken; a notification appears when the page is in the background.
 let REM_ON=true;
 // Reminders set by a recognized speaker other than this browser's profile live on that profile
 // and also ring here ("local": kept in this browser only, not deleted on the Spark).
 const rem={list:[],rung:new Set(),
-  key(){return PROFILE?'reminders:'+PROFILE.id:'reminders'},
+  key(){return 'reminders:'+(PROFILE?PROFILE.id:'')},
   stored(){try{return JSON.parse(localStorage.getItem(this.key())||'[]')}catch{return []}},
-  async load(){if(PROFILE){let l=[];try{l=await this.fetchList()}catch{}this.list=[...l,...this.stored()].sort((a,b)=>a.due-b.due)}
-    else this.list=this.stored();this.show()},
-  keep(){try{localStorage.setItem(this.key(),JSON.stringify(PROFILE?this.list.filter(x=>x.local):this.list))}catch{}this.show()},
+  async load(){try{localStorage.removeItem('reminders')}catch{}   // what guests kept here before they lost every tool
+    if(PROFILE){let l=[];try{l=await this.fetchList()}catch{}this.list=[...l,...this.stored()].sort((a,b)=>a.due-b.due)}
+    else this.list=[];this.show()},
+  keep(){if(PROFILE)try{localStorage.setItem(this.key(),JSON.stringify(this.list.filter(x=>x.local)))}catch{}this.show()},
   event(ev){if(ev.action==='set'){const it={...ev.item,...(ev.foreign&&PROFILE?{local:true}:{})};
       this.list=[...this.list.filter(x=>x.id!==it.id),it].sort((a,b)=>a.due-b.due);
       try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission()}catch{}}

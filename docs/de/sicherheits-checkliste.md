@@ -9,7 +9,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
   - „Frisch“ heißt seit V01.0.289 (Plan „Zweiten Anmeldeschritt seltener“): ein richtiger Code derselben Anmeldung (Admin-Login, Profil-Browser-Sitzung oder App-Schlüssel) aus den letzten 10 Minuten zählt (`core.CONFIRM_WINDOW`). Wirklich jedes Mal fragen (`admin_code_fresh`, `secret_profile_fresh`, `confirm_code(..., fresh=True)`): zweiter Schritt selbst, Admin-Passwort, Rollen, Sicherungen einspielen/hochladen/herunterladen/umziehen, Codewort, Admin-Modus öffnen, Spark-Update aus der App. Neue Endpunkte dieser Art gehören in diese Liste. Raw `fetch` an solche Endpunkte zeigt nur „code required“: im Browser immer `api()`/`apiTry()` nehmen. Ein Passkey (seit V01.0.295, `passkey.py`, Header `X-Speech-Passkey`) zählt überall wie ein frischer Code; neue Code-Abfragen laufen deshalb immer über `confirm_code`, nie über eigenes `mfa.verify`. In der iPhone-App (seit V01.0.357) laufen Anfragen mit Code über `SparkAPI.confirmed(...)`, nie mit eigenem `X-Speech-Code`-Header, damit „Mit Passkey“ überall geht; Passkeys anlegen bleibt im Browser. Seit V01.0.427 (Plan `plaene/zweiter-faktor-einheitlich.md`) steht jeder Endpunkt mit Code mit Stufe (Bestätigen oder Schutz ändern), Bereich und Text (de/en) in `app/panel/stufen.py` LIST; `test_stufen` schlägt sonst fehl. Die Liste entscheidet, ob die 10 Minuten zählen; neue Knöpfe mit Code bekommen das Schloss (`CODE_LOCKS` in `mfa.js`). Den zweiten Schritt des Notzugangs nie direkt über die Datei lesen, immer `mfa._path(ADMIN)` (verbunden mit dem Haupt-Admin-Profil).
 - [ ] Ändert sich die Adresse, muss das Token neu eingegeben werden.
 - [ ] Zustandsänderungen nur per POST/PUT/DELETE, nie per GET. (`?take=true`)
-- [ ] Gäste bekommen keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes.
+- [ ] Gäste bekommen nur Frage und Antwort: keine Werkzeuge, keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes.
 - [ ] Eine fremde erkannte Stimme bekommt nur nicht-persönliche Werkzeuge.
 - [ ] Geteilte Geräte (Lautsprecher im Raum): Der Geräteschlüssel allein zählt nicht als Inhaber. Persönliches nur, wenn die Sprechererkennung in derselben Aufnahme die Inhaberstimme sicher erkennt; sonst Gastrechte, früherer Verlauf geht nicht mit. Wessen Stimme es war, setzt nur das Panel (Request-Scope), nie die Anfrage. (V01.0.226: fremde Stimme bekam die Mails des Inhabers.)
 - [ ] Gesprochenes Codewort (Lautsprecher, V01.0.297): nur für eine Stimme, die schon fast sicher der Inhaber ist, nie für eine fremde; eigenes Codewort, nicht das Smart-Home-Codewort; der Satz damit geht nie ans Modell, in Verlauf, Diagnose, Anzeige oder Log; Sperre nach Fehlversuchen mit Mitteilung.
@@ -66,7 +66,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Nichts aus der Konfiguration landet ungeprüft in einem root-Skript.
 
 ## Vor dem Commit
-- [ ] Neue Schalter stehen standardmäßig auf aus: Admin-Schalter plus Profil-Schalter.
+- [ ] Neue Schalter stehen standardmäßig auf aus: ein Admin-Schalter, kein neuer Profilschalter; eine Sperre für einzelne Profile setzt nur der Admin.
 - [ ] Jede neue Schutzregel hat einen Selbsttest.
 - [ ] Alle Selbsttests sind grün.
 

@@ -62,22 +62,23 @@ class Images(unittest.TestCase):
             guard._rate.pop(k, None)
 
     def tearDown(self):
-        helpers.set_config(images=False, iphone=False)
+        helpers.set_config(images=False, iphone=False, deny={})
 
     def on(self, name):
-        c = profile(name)
-        self.assertEqual(c.put("/api/profile/settings", json={"images_on": True}).status_code, 200)
-        return c
+        return profile(name)       # released by the admin (setUp): on for every profile at once
 
-    def test_off_by_default_and_both_switches_needed(self):
+    def test_off_by_default_and_blocked_profiles_never(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["images"], False)
-        for k in ("images_on", "app_images", "tg_images"):
+        for k in ("app_images", "tg_images"):
             self.assertIs(profiles.SETTINGS[k][0], False)
+        self.assertNotIn("images_on", profiles.SETTINGS)              # no profile switch of its own any more
         c = profile("Bea")
+        helpers.set_config(deny={"images": [uid_of("Bea")]})         # the admin blocks this one profile
         self.assertFalse(c.get("/api/chat/image").json()["on"])
-        self.assertEqual(upload(c, jpeg()).status_code, 403)        # profile switch off
-        c.put("/api/profile/settings", json={"images_on": True})
+        self.assertEqual(upload(c, jpeg()).status_code, 403)
+        self.assertEqual(ask(c, "Was ist das?", ["A" * 22]).status_code, 403)
+        helpers.set_config(deny={})                                   # released: works at once
         self.assertTrue(c.get("/api/chat/image").json()["on"])
         self.assertTrue(c.get("/api/profile/settings").json()["allow"]["images"])
         helpers.set_config(images=False)                            # admin switch off
@@ -214,7 +215,6 @@ class Images(unittest.TestCase):
         # the iPhone app: its own switch on top
         helpers.set_config(iphone=True)
         iphone._pending.clear()
-        c.put("/api/profile/settings", json={"app_on": True})
         link = c.post("/api/profile/iphone/pair", json={"base": "https://speech.example.de"}).json()["link"]
         import urllib.parse
         code = urllib.parse.parse_qs(urllib.parse.urlparse(link).query)["code"][0]

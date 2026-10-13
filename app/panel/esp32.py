@@ -10,7 +10,7 @@ Setting one up:
 
 Each speaker is a device key of its profile (profiles.add_device), so the profile's voice, memory,
 Home Assistant (with code word) and the device's room apply. Off until the admin allows it
-(chat.esp32) and the profile switches it on (esp_on).
+(chat.esp32); then for every profile the admin did not block.
 
 Room mode (room.py, when the admin allows it with chat.room): "Raummodus an" after the wake word, or
 the switch "Raum" in "Ich" → Lautsprecher (applies at once when the speaker is connected, else at its

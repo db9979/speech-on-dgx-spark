@@ -1,15 +1,14 @@
 // Ich → reMarkable (remarkable.py): connect the own my.remarkable account with a one-time code, pick
-// notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers (rm_send).
+// notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers. What the admin releases works at
+// once (Dominik 2026-10-13); only the sheets that come by themselves (Morgenblatt, Wochenrückblick, Eingang, Aufräumen)
+// keep a switch to turn them off.
 // Names from the cloud are put in with esc()/textContent only.
 let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RMPAPER_ON=false,RMTASKS_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
 const rmWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const RMKIND={folder:['Ordner','folder'],notebook:['Notizbuch','notebook'],pdf:['PDF','PDF'],epub:['E-Book','e-book']};
 async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer);if(!PROFILE||!RM_ON){box.innerHTML='';return}
-  let d=null;if(S.rm_on){try{d=await (await api('/api/profile/remarkable')).json()}catch{}}RM=d;
-  const head=`<div class="intro">${t('Verbinde dein my.remarkable-Konto (reMarkable 2, Paper Pro, Paper Pro Move). Der Assistent liest die Notizbücher, die du unten auswählst: getippten Text und Markierungen direkt, Handschrift liest das Sprachmodell auf dem Spark in Gesprächspausen ab. Danach findest du sie in der Dokumentensuche. Der Spark ändert dort nichts; nur „Aufs reMarkable schicken“ legt neue Dokumente im Ordner „Spark“ an.','Connect your my.remarkable account (reMarkable 2, Paper Pro, Paper Pro Move). The assistant reads the notebooks you pick below: typed text and highlights directly, handwriting is read by the language model on the Spark in quiet moments. The document search then finds them. The Spark changes nothing there; only "Send to the reMarkable" adds new documents in the folder "Spark".')}</div>
-    ${xsw('rm_on',t('reMarkable für mich','reMarkable for me'),t('Aus: Es wird nichts mehr abgeglichen; die gelesenen Notizbücher bleiben, bis du trennst.','Off: nothing is compared any more; notebooks already read stay until you disconnect.'))}
-    ${RMSEND_ON?xsw('rm_send',t('Aufs reMarkable schicken','Send to the reMarkable'),t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.')):''}
-    ${RMFRESH_ON?xsw('rm_fresh',t('Neueste zuerst','Newest first'),t('Bei ähnlich guten Treffern nimmt der Assistent die neuere Notiz und nennt ihr Datum; „Was habe ich zuletzt notiert?“ (auch heute, gestern, diese Woche) nennt die neuesten Seiten. Gilt für alle deine Dokumente.','With similar hits the assistant takes the newer note and names its date; "What did I note last?" (also today, yesterday, this week) names the newest pages. Applies to all your documents.')):''}`;
+  let d=null;try{d=await (await api('/api/profile/remarkable')).json()}catch{}RM=d;
+  const head=`<div class="intro">${t('Verbinde dein my.remarkable-Konto (reMarkable 2, Paper Pro, Paper Pro Move). Der Assistent liest die Notizbücher, die du unten auswählst: getippten Text und Markierungen direkt, Handschrift liest das Sprachmodell auf dem Spark in Gesprächspausen ab. Danach findest du sie in der Dokumentensuche. Der Spark ändert dort nichts; nur „Aufs reMarkable schicken“ legt neue Dokumente im Ordner „Spark“ an.','Connect your my.remarkable account (reMarkable 2, Paper Pro, Paper Pro Move). The assistant reads the notebooks you pick below: typed text and highlights directly, handwriting is read by the language model on the Spark in quiet moments. The document search then finds them. The Spark changes nothing there; only "Send to the reMarkable" adds new documents in the folder "Spark".')}</div>`;
   if(!d){box.innerHTML=head+`<div class="fh" id="rmmsg"></div>`;xbind(box,showRm);return}
   const conn=d.connected;
   let body='';
@@ -50,9 +49,6 @@ function rmDraw(box,d){const E=icEl,lib=d.library||[];
   if(RMSEND_ON)tabs.push({k:'send',label:t('Schicken','Send'),n:'',body:()=>rmSendTab(d,lib)});
   if(d.send&&RMPLUS_ON&&d.plus)tabs.push({k:'plus',label:t('Mehr','More'),n:d.plus.on&&d.plus.on.rmtodo&&d.plus.todos.length?d.plus.todos.length:'',body:()=>{const w=E('div');w.innerHTML=rmPlus(d.plus);xbind(w,showRm);rmBind(w);return w}});
   if(d.send&&RMPAPER_ON&&d.paper)tabs.push({k:'paper',label:t('Papier','Paper'),n:d.paper.papers.filter(x=>x.boxes.some(b=>b.state==='unklar')).length||'',body:()=>rmPaper(d.paper)});
-  tabs.push({k:'set',label:t('Einstellungen','Settings'),n:'',body:()=>{const w=E('div');w.innerHTML=xsw('rm_on',t('reMarkable für mich','reMarkable for me'),t('Aus: Es wird nichts mehr abgeglichen; die gelesenen Notizbücher bleiben, bis du trennst.','Off: nothing is compared any more; notebooks already read stay until you disconnect.'))+
-    (RMFRESH_ON?xsw('rm_fresh',t('Neueste zuerst','Newest first'),t('Bei ähnlich guten Treffern nimmt der Assistent die neuere Notiz und nennt ihr Datum; „Was habe ich zuletzt notiert?“ (auch heute, gestern, diese Woche) nennt die neuesten Seiten. Gilt für alle deine Dokumente.','With similar hits the assistant takes the newer note and names its date; "What did I note last?" (also today, yesterday, this week) names the newest pages. Applies to all your documents.')):'');
-    xbind(w,showRm);if(typeof pageGroup==='function')pageGroup(w);return w}});
   box.appendChild(icTabs('rm',tabs));
   if(changes){const bar=E('div','ic-save'),m=E('div','ic-mid');m.append(E('b','',t(`${changes} Änderung${changes>1?'en':''}`,`${changes} change${changes>1?'s':''}`)),E('span','',t('an der Auswahl, was der Assistent lesen darf','to what the assistant may read')));
     const no=E('button','b',t('Verwerfen','Discard')),ok=E('button','b p',t('Auswahl speichern','Save choice'));no.type=ok.type='button';ok.id='rmsave';
@@ -100,7 +96,7 @@ function rmRead(d,lib,byPath,state,up){const E=icEl,w=E('div');
     list.appendChild(l)}
   fill();return w}
 function rmSendTab(d,lib){const E=icEl,w=E('div');
-  w.innerHTML=xsw('rm_send',t('Aufs reMarkable schicken','Send to the reMarkable'),t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.'))+
+  w.innerHTML=`<div class="fh">${esc(t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.'))}</div>`+
     (d.send?`<h4 class="ic-h4">${esc(t('Ablegen in','Put into'))}</h4><select id="rmtarget" aria-label="${esc(t('Ablegen in','Put into'))}"><option value="">${esc(t('Spark (Standard)','Spark (default)'))}</option>${lib.filter(x=>x.folder).map(x=>`<option value="${esc(x.id)}"${x.id===d.target?' selected':''}>${esc(x.path)}</option>`).join('')}</select>
     <div class="fh">${esc(t('Dorthin legt der Spark neue Dokumente; Bestehendes ändert er nie. Fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es dir.','New documents go there; the Spark never changes anything that exists. If the folder is gone later, it takes "Spark" again and tells you.'))}</div>
     <div class="fh">${esc(t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: '))}${d.sent_today} / ${d.send_day}</div>`:'');
@@ -127,7 +123,10 @@ async function rmDisconnect(){if(!confirm(t('reMarkable trennen? Alle gelesenen 
 async function rmSend(text,b){b.disabled=true;const first=(text.split('\n').find(x=>x.trim())||'').replace(/[#*_`>]/g,'').trim();
   try{const r=await (await api('/api/profile/remarkable/send',xjson('POST',{title:first.slice(0,60)||t('Vom Spark','From the Spark'),text}))).json();b.textContent=t('Auf dem reMarkable: ','On the reMarkable: ')+r.where+' / '+r.title+(r.lost?t(' (gewählter Ordner fehlt)',' (chosen folder is gone)'):'')}
   catch(e){b.disabled=false;b.textContent=e.message}}
-// more with the reMarkable (rmplus.py): one switch per part, the Morgenblatt's time, the tasks found on paper
+// more with the reMarkable (rmplus.py): what each part does, a switch only for the sheets that come by themselves
+// (RMPREF, on unless the profile turns it off), the Morgenblatt's time, the tasks found on paper
+const RMPREF=['rm_morning','rm_week','rm_inbox','rm_tidy'];
+const rmPart=x=>RMPREF.includes(x[1])?xsw(x[1],t(...x[2]),t(...x[3])):xinfo(t(...x[2]),t(...x[3]));
 const RMPARTS=[['rmmorning','rm_morning',['Morgenblatt','Morning sheet'],['Jeden Morgen ein Blatt mit Terminen, Erinnerungen, Wetter und Nachrichten, darunter Linien für Notizen.','Every morning a sheet with appointments, reminders, weather and news, with lines for notes below.']],
   ['rmask','rm_ask',['@Spark auf Papier','@Spark on paper'],['Schreib „@Spark“ und eine Frage in ein gelesenes Notizbuch; die Antwort liegt nach dem nächsten Abgleich daneben.','Write "@Spark" and a question in a notebook that is read; the answer lies next to it after the next comparison.']],
   ['rmtodo','rm_todo',['Aufgaben vom reMarkable','Tasks from the reMarkable'],['Zeilen mit ☐, [ ], „TODO“ oder „Aufgabe:“ erscheinen hier; eine Erinnerung erst auf deinen Klick.','Lines with ☐, [ ], "TODO" or "Aufgabe:" show up here; a reminder only on your click.']],
@@ -138,7 +137,7 @@ const RMPARTS=[['rmmorning','rm_morning',['Morgenblatt','Morning sheet'],['Jeden
   ['rmguide','rm_guide',['Spark-Anleitung','Spark guide'],['Eine Anleitung zu allen reMarkable-Funktionen und zum Dienst; der Spark hält sie selbst aktuell.','A guide to all reMarkable functions and the service; the Spark keeps it up to date itself.']]];
 function rmPlus(p){const at=new Date(Date.now()+864e5);at.setHours(9,0,0,0);const dflt=new Date(at-at.getTimezoneOffset()*6e4).toISOString().slice(0,16);
   return `<h3>${t('Mehr mit dem reMarkable','More with the reMarkable')}</h3>
-  ${RMPARTS.filter(x=>p.spark[x[0]]).map(x=>xsw(x[1],t(...x[2]),t(...x[3]))).join('')}
+  ${RMPARTS.filter(x=>p.spark[x[0]]).map(rmPart).join('')}
   ${p.on.rmmorning?`<div class="rowin"><span>${t('Morgenblatt um','Morning sheet at')}</span><input type="time" id="rmat" value="${esc(p.morning_at)}"></div>`:''}
   ${p.on.rmguide?`<div class="row"><button class="b" type="button" id="rmguide">${t('Anleitung jetzt ablegen','Put the guide there now')}</button></div>`:''}
   ${p.on.rmtodo?`<h3>${t('Aufgaben vom Papier','Tasks from paper')}</h3>${p.todos.length?`<ul class="facts small">${p.todos.map(x=>`<li><span style="flex:1"><b>${esc(x.text)}</b><br><small class="mut">${esc(x.doc)}${x.page?', '+t('Seite ','page ')+x.page:''}</small><br><input type="datetime-local" id="rmdue-${esc(x.id)}" value="${dflt}"></span><button class="b p" type="button" data-rmtodo="${esc(x.id)}" data-do="remind">${t('Erinnern','Remind')}</button><button class="b" type="button" data-rmtodo="${esc(x.id)}" data-do="drop">${t('Weg','Remove')}</button></li>`).join('')}</ul>`:`<div class="fh">${t('Noch keine gefunden.','None found yet.')}</div>`}`:''}`}
@@ -150,7 +149,7 @@ function rmPaper(p){const E=icEl,w=E('div');
   const sw=[['rmpapier','rm_paper',['Gestaltete Blätter','Designed sheets'],['Morgenblatt, Rückblick, Zusammenfassungen, Antworten, Eingang und Anleitung als Blatt im Format deines Geräts, mit „Kann weg“ oben rechts; auf dem Morgenblatt Erinnerungen zum Abhaken.','Morning sheet, review, summaries, answers, inbox and guide as a sheet in your device’s format, with "Kann weg" at the top right; reminders to tick off on the morning sheet.']],
     ['rmordner','rm_folders',['Ordner nach Art','Folders by kind'],['Ein Ordner je Art unter „Spark“: Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. Die Anleitung liegt oben als Favorit.','One folder per kind below "Spark": Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. The guide lies on top as a favourite.']],
     ['rmaufraeumen','rm_tidy',['Selbst aufräumen','Tidy up by itself'],[`Morgenblätter und Wochenrückblicke ohne deine Handschrift nach ${p.archive_days} Tagen ins Archiv, von dort nach ${p.trash_days} Tagen in den Papierkorb des reMarkable (dort wiederherstellbar).`,`Morning sheets and week reviews without your handwriting go to the archive after ${p.archive_days} days, from there into the reMarkable’s trash after ${p.trash_days} days (restorable there).`]]];
-  const head=E('div');head.innerHTML=sw.filter(x=>p.spark[x[0]]).map(x=>xsw(x[1],t(...x[2]),t(...x[3]))).join('');xbind(head,showRm);w.appendChild(head);
+  const head=E('div');head.innerHTML=sw.filter(x=>p.spark[x[0]]).map(rmPart).join('');xbind(head,showRm);w.appendChild(head);
   if(p.on.rmpapier){const name=k=>{const m=p.models.find(x=>x.k===k);return m?t(m.de,m.en):''};
     w.appendChild(E('h4','ic-h4',t('Mein reMarkable','My reMarkable')));
     const sel=document.createElement('select');sel.id='rmmodel';sel.setAttribute('aria-label',t('Mein reMarkable','My reMarkable'));

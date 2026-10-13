@@ -3,12 +3,13 @@
 Nachrichten?", "Antworte ihm: komme gleich", "Sag allen …", "Durchsage im Wohnzimmer: …", who may write to me, the
 own Rufname, reading new chat messages on the own speaker and announcements on speakers.
 
-Everything builds on Chats (chat.chats and the profile's chats_on). Sending to everybody (chat.messages_all, the
-fixed group "Alle", each profile takes part with msg_all) and announcements on speakers (chat.messages_announce,
-each speaker's owner agrees with msg_announce) each have their own admin switch, all off. Guests get nothing.
+Everything builds on Chats (chat.chats; released, it holds for every profile). Sending to everybody (chat.messages_all, the
+fixed group "Alle", each profile takes part unless it switched msg_all off) and announcements on speakers
+(chat.messages_announce, on every speaker whose owner may use them) each have their own admin switch, all off. Only
+the admin blocks a single profile (Funktionen → Wer darf was). Guests get nothing.
 
 Who may write to whom (fixed rules here, never the model):
-    both have chats on, the recipient has not blocked the sender, and the recipient takes messages from every
+    both may use chats (not blocked by the admin), the recipient has not blocked the sender, and the recipient takes messages from every
     profile (msg_from "all") or picked the sender (msg_from "chosen"). "An alle" reaches the profiles that take part.
 
 The assistant only proposes: the panel finds the recipient in that list by name, reads the message back and sends
@@ -19,8 +20,7 @@ the person's own words (the sender is the one just read).
 
 On the own speaker (msg_speaker: "hint" says only who wrote, "text" also the text; a private chat only who): at once
 when no page of the profile is open and the speaker is connected, else at its next wake word within SPEAKER_KEEP;
-never in the profile's quiet hours or for a muted chat. Announcements: on the speakers whose owner allows them
-(msg_announce), at once when connected, else at the next wake word within ANNOUNCE_KEEP.
+never in the profile's quiet hours or for a muted chat. Announcements: on the speakers whose owner may use them, at once when connected, else at the next wake word within ANNOUNCE_KEEP.
 
     USERS_DIR/<uid>/messages.json          {"allow": [uid], "block": [uid], "spoken": t (speaker read up to)}
     USERS_DIR/<uid>/messages-pending.json  the proposal waiting for "Ja"
@@ -78,13 +78,13 @@ def announce_on():
     return features.admin_on("messages_announce")
 
 
-def usable(uid):
-    return bool(uid and features.allowed("chats", uid) and profiles.by_id(uid))
+def usable(uid, c=None):
+    return bool(uid and features.allowed("chats", uid, c) and profiles.by_id(uid))
 
 
-def takes_all(uid):
+def takes_all(uid, c=None):
     """The profile takes part in "an alle" (the fixed group Alle): Spark switch, Chats and its own msg_all."""
-    return bool(uid and features.allowed("messages_all", uid) and profiles.by_id(uid))
+    return bool(uid and features.allowed("messages_all", uid, c) and profiles.by_id(uid))
 
 
 def clean(text, n=MAX_TEXT):
@@ -226,31 +226,23 @@ def migrate_all():
             write_json(CONFIG_PATH, raw, indent=2)
     except (OSError, ValueError) as e:
         print("messages: config carry-over failed", type(e).__name__, flush=True)
-    n = profs = 0
+    n = 0
     for uid in profiles.user_ids():
-        try:   # msg_on is no setting any more: read from the file as it is
-            with open(profiles._path(uid, "settings.json")) as f:
-                s = json.load(f)
-        except (OSError, ValueError):
-            s = {}
-        if isinstance(s, dict) and s.get("msg_on") is True and s.get("chats_on") is not True:
-            profiles.save_settings(uid, {"chats_on": True})
-            profs += 1
         if _raw(uid).get("items") is not None:
             n += migrate(uid)
-    if n or profs:
-        print(f"messages: moved {n} old message(s) into chats, chats on for {profs} profile(s)", flush=True)
+    if n:
+        print(f"messages: moved {n} old message(s) into chats", flush=True)
     return n
 
 
 # ---------------------------------------------------------------- who may write to whom
-def takes_from(rcpt, sender, everybody=False):
+def takes_from(rcpt, sender, everybody=False, c=None):
     """True when the profile rcpt takes a message from sender (fixed rules, see the top); everybody: both take part
-    in "an alle"."""
-    if not rcpt or not sender or rcpt == sender or not usable(rcpt) or not usable(sender):
+    in "an alle". c: the chat settings read once by a caller that asks for many profiles."""
+    if not rcpt or not sender or rcpt == sender or not usable(rcpt, c) or not usable(sender, c):
         return False
     if everybody:   # the fixed group Alle: everybody who takes part reads everything there
-        return takes_all(rcpt) and takes_all(sender)
+        return takes_all(rcpt, c) and takes_all(sender, c)
     p = profiles.settings(rcpt)
     d = _load(rcpt)
     if sender in d["block"]:
@@ -262,7 +254,8 @@ def recipients(sender, everybody=False):
     """[{"id", "name", "call"}] the sender may write to, by name."""
     if not usable(sender):
         return []
-    out = [x for x in profiles.names() if takes_from(x["id"], sender, everybody)]
+    c = features.chat_cfg()   # once for all profiles
+    out = [x for x in profiles.names() if takes_from(x["id"], sender, everybody, c)]
     return sorted(out, key=lambda x: x["name"].lower())
 
 
@@ -358,7 +351,7 @@ def _named(n, want):
 def reach_why(rcpt, sender):
     """Why the sender cannot write to rcpt (said to the sender: only "switched off", never who blocked whom)."""
     if not usable(rcpt):
-        return f"{name_of(rcpt)} hat Chats nicht eingeschaltet (Ich → Gespräch → „Chats mit anderen“)."
+        return f"{name_of(rcpt)} kann Chats gerade nicht nutzen."
     return f"{name_of(rcpt)} nimmt gerade keine Nachrichten von dir an."
 
 
@@ -676,10 +669,6 @@ def describe(p):
 
 
 async def carry_out(uid, p):
-    if p["kind"] == "enable":
-        profiles.save_settings(uid, {"chats_on": True})
-        print("messages: chats switched on by the profile's own yes", flush=True)
-        return "Chats sind für dich jetzt eingeschaltet."
     if p["kind"] == "announce":
         names, why = await announce(uid, p["to"], p["text"], via="assistant")
         return f"Durchsage gesendet an: {', '.join(names)}." if names else "NICHT gesendet: " + why
@@ -738,19 +727,7 @@ async def answer(ctx, latest):
     if not who or not ctx.get("own") or not ctx.get("private", True) or not admin_on():
         return None
     uid, src = who["id"], ctx.get("src", "")
-    if not usable(uid):
-        p = pending(uid)
-        if p and p.get("kind") == "enable" and p.get("src", src) == src:
-            return await _answer_enable(uid, p, latest, src)
-        got = parse_send(latest)
-        if asks_send(latest) or (got and _profile_named(uid, got[0])):
-            # the person's own request while their switch is off: ask once to switch it on
-            q = {"kind": "enable", "to": [], "names": [], "text": "", "then": clean(latest, 600)}
-            _propose(uid, q, src, fresh=True)
-            return {"call": {"name": "message_send (Chats aus)", "args": "", "result": "Frage: einschalten?"},
-                    "system": "Nachrichten: Für dieses Profil sind Chats noch ausgeschaltet. Frag den Nutzer genau: "
-                              "„Chats sind für dich noch aus. Soll ich sie einschalten?“ Erst sein Ja in der nächsten "
-                              "Nachricht schaltet sie ein."}
+    if not usable(uid):   # Chats not released for this profile: nothing to propose (the Weiche says why)
         return None
     p = pending(uid)
     if p and p.get("src", src) == src:
@@ -832,23 +809,6 @@ def _answer_which(uid, p, latest, src):
     return {"call": {"name": "message_send (Vorschlag)", "args": describe(q), "result": "wartet auf Ja"},
             "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {r['name']} schreiben: "
                       f"‚{q['text']}‘?“ Erst sein Ja in der nächsten Nachricht sendet es."}
-
-
-async def _answer_enable(uid, p, latest, src):
-    import calendars
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
-    if not calendars.confirms(latest):
-        return {"call": {"name": "message_send (nicht eingeschaltet)", "args": "", "result": "bleibt aus"},
-                "system": "Nachrichten: Chats bleiben ausgeschaltet, weil der Nutzer nicht zugestimmt hat. Sag das kurz."}
-    note = await carry_out(uid, p)
-    then = _direct(uid, p.get("then", ""), src) if p.get("then") else None
-    if then and then["call"]["result"] == "wartet auf Ja":
-        return {"call": then["call"], "system": "Nachrichten: " + note + " " + then["system"].split(": ", 1)[1]}
-    return {"call": {"name": "message_send (eingeschaltet)", "args": "", "result": note},
-            "system": "Nachrichten: " + note + " Sag dem Nutzer das und frag, was er wem schreiben möchte."}
 
 
 # "Schreib sb, dass ich später komme", "Sag Anna, das Essen ist fertig", "Nachricht an Ben: komme gleich",
@@ -985,7 +945,7 @@ def why_not(ctx):
     if not ctx.get("private", True):
         return "Über Telegram gehen Nachrichten nur, wenn dein Profil dort persönliche Daten erlaubt (Ich → Telegram)."
     if not usable(who["id"]):
-        return "Für dein Profil sind Chats aus (Ich → Gespräch → „Chats mit anderen“)."
+        return ("Für dein Profil sind Chats aus. " + features.missing_text("chats", who["id"])).strip()
     return ""
 
 
@@ -1035,7 +995,10 @@ async def tool(name, args, ctx):
             if not all_on():
                 return "Nicht gesendet: Nachrichten an alle sind ausgeschaltet (Admin)."
             if not takes_all(uid):
-                return "Nicht gesendet: " + ALL_OFF
+                if features.reason("messages_all", uid) == "profile":
+                    return "Nicht gesendet: " + ALL_OFF
+                return ("Nicht gesendet: Nachrichten an alle gehen für dich gerade nicht. "
+                        + features.missing_text("messages_all", uid)).strip()
             rs = recipients(uid, everybody=True)
             if not rs:
                 return "Nicht gesendet: niemand nimmt gerade Nachrichten an alle an."
@@ -1119,7 +1082,7 @@ def _setting(request, prof):
     if not admin_on():
         raise HTTPException(403, "chats are turned off")
     if not usable(prof["id"]):
-        raise HTTPException(403, "switch chats on for your profile first (Ich → Gespräch → Chats)")
+        raise HTTPException(403, ("Chats gehen für dich gerade nicht. " + features.missing_text("chats", prof["id"])).strip())
     guard.limit(request, "chats", prof["id"])
     return prof
 

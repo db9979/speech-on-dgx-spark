@@ -2,9 +2,9 @@
 reports, minutes, notes, presentations and tables for a profile, as Word, PowerPoint, Excel, PDF, Markdown,
 text or CSV.
 
-Off until the admin switches chat.doc_make on (Funktionen → Eigene Dokumente → Dokumente erstellen) and the
-profile its own doc_make (Ich → Dokumente); guests never. Own templates are a second pair of switches
-(chat.doc_make_templates, doc_make_templates).
+Off until the admin switches chat.doc_make on (Funktionen → Eigene Dokumente → Dokumente erstellen); then on for
+every profile unless the admin blocks one (Funktionen → Wer darf was); guests never. Own templates have a second
+admin switch (chat.doc_make_templates).
 
 How it works (fixed rules, the panel decides, never the model):
 1. The person asks in their own words (panel, voice, apps, Telegram, Begleiter). The model only proposes an
@@ -1346,8 +1346,10 @@ def _send_ok(uid):
 
 
 def off_hint(uid):
-    """The fixed sentence for a wish to make a file while the function is off: where to switch it on."""
-    where = features.missing_text("erstellen", uid) or "Du kannst es unter Ich → Dokumente „Dokumente erstellen“ einschalten."
+    """The fixed sentence for a wish to make a file while the function is off: what is missing, with its way."""
+    where = features.missing_text("erstellen", uid) or (
+        features.WHY["mfa"][0] + "." if features.reason("erstellen", uid) == "mfa"
+        else "Frag den Admin danach (" + features.admin_way("erstellen") + ").")
     return ("Der Nutzer möchte, dass der Spark eine Datei erstellt (Dokument, Brief, Präsentation oder Tabelle), aber "
             "„Dokumente erstellen“ ist für ihn aus. Sag ihm das kurz und nenne alles, was fehlt, mit genau diesen Wegen: " + where + " Schreib den "
             "Inhalt nicht stattdessen als Text ins Gespräch und such nichts dafür; nur wenn er danach ausdrücklich "
@@ -1763,7 +1765,7 @@ def check_template(name, data):
 # ---------------------------------------------------------------- routes
 def _prof(request, prof):
     if not on(prof["id"]):
-        raise HTTPException(403, "Dokumente erstellen ist aus (Funktionen → Eigene Dokumente und Ich → Dokumente)")
+        raise HTTPException(403, "Dokumente erstellen ist aus (Funktionen → Eigene Dokumente → Dokumente erstellen)")
     return prof
 
 

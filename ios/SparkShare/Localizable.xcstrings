@@ -211,16 +211,6 @@
         }
       }
     },
-    "Die Schreibhilfe ist im Panel aus.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The writing help is switched off in the panel."
-          }
-        }
-      }
-    },
     "Die Seite antwortet nicht.": {
       "localizations": {
         "en": {
@@ -507,6 +497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "My emergency stop is on. Lift it in the browser under Me → Security with the PIN."
+          }
+        }
+      }
+    },
+    "Der Admin hat die Schreibhilfe noch nicht freigegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released the writing help yet."
           }
         }
       }

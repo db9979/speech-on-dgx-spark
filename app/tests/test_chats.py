@@ -1,5 +1,5 @@
-"""Chats between the people of this Spark (chats.py, plan plaene/messenger.md): off until the admin and the profile
-switch them on, the rules of who may write to whom, groups, ticks, changing and taking back, the event stream and
+"""Chats between the people of this Spark (chats.py, plan plaene/messenger.md): off until the admin switches them on
+(then for every profile at once, unless the admin blocks one), the rules of who may write to whom, groups, ticks, changing and taking back, the event stream and
 notifications without text, sealed texts at rest, and Live, journal and events with numbers only."""
 import asyncio
 import contextlib
@@ -29,14 +29,18 @@ def read(path):
         return f.read()
 
 
-def profile(name, pin="2468", on=True):
+def profile(name, pin="2468"):
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = TestClient(panel.app)
     assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
-    if on:
-        assert c.put("/api/profile/settings", json={"chats_on": True}).status_code == 200
     return c
+
+
+def block(client, key="chats", on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid_of(client)}", json={"on": on})
+    assert r.status_code == 200, r.text
 
 
 def uid_of(client):
@@ -68,15 +72,23 @@ class Base(unittest.TestCase):
 
 
 class Off(Base):
-    def test_off_until_admin_and_profile_switch_it_on(self):
+    def test_off_until_admin_switches_it_on_and_admin_block(self):
         a, b = profile("Channa"), profile("Chben")
         switch(chats_on=False)
         self.assertEqual(a.post("/api/chats/open", json={"to": uid_of(b)}).status_code, 403)
         self.assertFalse(a.get("/api/chats").json()["enabled"])
         switch()
-        c = profile("Chcarl", on=False)                     # the admin alone is not enough
+        c = profile("Chcarl")                               # released by the admin: works at once for every profile
+        self.assertTrue(c.get("/api/chats").json()["on"])
+        block(c)                                            # the admin blocks this one profile
+        self.addCleanup(block, c, "chats", True)
         self.assertFalse(c.get("/api/chats").json()["on"])
         self.assertEqual(c.post("/api/chats/open", json={"to": uid_of(a)}).status_code, 403)
+        self.assertEqual(a.post("/api/chats/open", json={"to": uid_of(c)}).status_code, 403)   # nor can anyone reach it
+        self.assertEqual(c.put("/api/profile/settings", json={"chats_on": True}).status_code, 200)
+        self.assertFalse(c.get("/api/chats").json()["on"])  # the profile cannot lift the block itself
+        block(c, on=True)
+        self.assertTrue(c.get("/api/chats").json()["on"])
         g = TestClient(panel.app)                          # guests never
         self.assertIn(g.get("/api/chats").status_code, (401, 403))
         self.assertIn(g.post("/api/chats/send", json={"id": "c" + "0" * 12, "text": "x"}).status_code, (401, 403))
@@ -85,7 +97,7 @@ class Off(Base):
         d = json.loads(read(os.path.join(helpers.APP, "config.default.json")))["chat"]
         self.assertIs(d["chats"], False)
         self.assertIs(d["chats_groups"], False)
-        self.assertIs(profiles.SETTINGS["chats_on"][0], False)
+        self.assertNotIn("chats_on", profiles.SETTINGS)   # no profile switch: the admin's release counts
         self.assertIs(profiles.SETTINGS["chat_push_text"][0], False)
 
     def test_only_browser_or_app_keys(self):
@@ -631,7 +643,8 @@ class Invite(Base):
         helpers.set_config(chats_invite=False)
         self.assertEqual(n.post("/api/join", json={"code": codes[1][1], "name": "Chweg", "pin": "135791"}).status_code, 400)
         helpers.set_config(chats_invite=True)
-        a.put("/api/profile/settings", json={"chats_on": False})   # the inviter turned chats off: the link ends
+        block(a)                                            # the admin blocked chats for the inviter: the link ends
+        self.addCleanup(block, a, "chats", True)
         self.assertEqual(n.post("/api/join", json={"code": codes[1][1], "name": "Chweg", "pin": "135791"}).status_code, 400)
         self.assertFalse(any(u["name"] == "Chweg" for u in profiles._load()["users"]))
 

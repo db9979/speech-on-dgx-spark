@@ -94,7 +94,7 @@ Den Agenten nicht auf der Spark selbst installieren: Er führt Befehle aus und k
 
 Andere Programme nutzen den Spark über das [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, Adresse `/mcp` des Panels, z. B. `http://SPARK:31080/mcp`). Standardmäßig aus.
 
-**Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Profil: Ich → *Dienste per MCP* → „Spark als MCP-Server für mich“, dann „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
+**Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Das gilt für jedes Profil; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was). Einrichten im Profil: Ich → *Dienste per MCP* → „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
 
 | Gruppe | Werkzeuge |
 |---|---|
@@ -120,7 +120,7 @@ Andere Programme nutzen den Spark über das [Model Context Protocol](https://mod
 
 Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.
 
-**Einschalten:** Admin: Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Profil: Ich → *Meine MCP-Dienste* → „Eigene MCP-Dienste für mich“ (`mymcp_on`), dann Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
+**Einschalten:** Admin: Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin. Einrichten im Profil: Ich → *Meine MCP-Dienste*, Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
 
 **Regeln (fest):**
 - Höchstens 5 Dienste pro Profil, je höchstens 30 Werkzeuge. Jedes Werkzeug steht auf „Aus“, bis das Profil es auf „Lesen“ oder „Handeln mit Ja“ stellt. Ändert der Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abrufen“ wieder auf „Aus“.
@@ -165,7 +165,7 @@ Für das Profil (Browser oder iPhone-App, Schalter wie oben): `GET /api/verbund`
 
 Die Watch-App „Spark“ (`app/pebble/speech-spark.pbw`, Quellcode in `pebble/`) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170).
 
-1. Kopplung per Einrichtungscode (neu in V01.0.230, aus): Admin schaltet *Funktionen → Pebble-Uhr koppeln* ein, das Profil unter *Ich → Pebble-Uhr* „Pebble-Uhr für mich“, dann „Pebble koppeln“ und die Zeile kopieren (gilt 10 Minuten, einmal). Die Uhr bekommt einen eigenen Schlüssel, der nur `/api/watch/` erreicht und mit einem der beiden Schalter sofort gesperrt ist. Ohne Kopplung geht weiter: unter **Personen und Geräte** ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.
+1. Kopplung per Einrichtungscode (neu in V01.0.230, aus): Admin schaltet *Funktionen → Pebble-Uhr koppeln* ein (gilt für jedes Profil), das Profil wählt unter *Ich → Pebble-Uhr* „Pebble koppeln“ und kopiert die Zeile (gilt 10 Minuten, einmal). Die Uhr bekommt einen eigenen Schlüssel, der nur `/api/watch/` erreicht und sofort gesperrt ist, wenn der Admin die Funktion ausschaltet oder das Profil sperrt. Ohne Kopplung geht weiter: unter **Personen und Geräte** ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.
 2. Auf dem gekoppelten Handy `http://SPARK:31080/pebble/speech-spark.pbw` laden und mit der Pebble-App öffnen. Einfacher: *Ich → Pebble-Uhr* zeigt dafür einen QR-Code, den man mit der Handy-Kamera scannt. Gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort; die Kopplung bleibt beim Neuinstallieren erhalten.
 3. In der Pebble-App bei „Spark“ die Einstellungen öffnen: den Einrichtungscode einfügen, oder Spark-Adresse (`http://SPARK:31080`) und Geräteschlüssel eintragen. Einstellungen und „Start App“ bleiben grau, solange die Pebble-App die Uhr nicht als verbunden sieht (Tab Devices).
 4. Auf der Uhr: SELECT fragt (Diktat über das Handy), nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter, Comic oder Comic (Frau), *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. Die Uhr-Einstellung Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann.

@@ -452,7 +452,7 @@ async def get_lists(prof=Depends(_on)):
     for k, (de, en) in LISTS.items():
         tgt = d["targets"].get(k)
         try:
-            have, err = (await items(prof["id"], k)) if profiles.settings(prof["id"]).get("tasks_on") else [], ""
+            have, err = (await items(prof["id"], k)) if features.allowed("tasks", prof["id"]) else [], ""
         except (httpx.HTTPError, ValueError) as e:
             have, err = [], str(e)[:200]
         out[k] = {"name": de, "name_en": en, "items": [{"id": x["id"], "text": x["text"]} for x in have],

@@ -221,7 +221,7 @@ struct ChatsView: View {
                     ProgressView()
                 } else if !m.state.on {
                     Text(SparkAPI.way(m.state.enabled
-                        ? String(localized: "Chats sind für dich aus. Einschalten im Panel unter Ich → Gespräch → Chats.")
+                        ? String(localized: "Chats hat der Admin für dich gesperrt.")
                         : String(localized: "Chats sind auf dem Spark aus. Der Admin schaltet sie unter Funktionen → Chats ein.")))
                 } else if m.state.chats.isEmpty {
                     Text("Noch keine Chats. Mit ＋ schreibst du jemandem.").foregroundStyle(.secondary)
@@ -260,7 +260,7 @@ struct ChatsView: View {
                 NavigationStack {
                     List {
                         if m.state.contacts.isEmpty {
-                            Text(SparkAPI.way(String(localized: "Niemand nimmt gerade Nachrichten von dir an. Jede Person schaltet das unter Ich → Gespräch → Chats selbst ein.")))
+                            Text(SparkAPI.way(String(localized: "Niemand nimmt gerade Nachrichten von dir an. Jede Person legt unter Ich → Gespräch → Chats fest, wer ihr schreiben darf.")))
                                 .foregroundStyle(.secondary)
                         }
                         ForEach(m.state.contacts) { p in

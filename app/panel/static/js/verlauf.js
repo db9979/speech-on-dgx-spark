@@ -8,7 +8,7 @@ const vsync={es:null,busy:{},t:null,keepT:null};
 const OFFL='offl:',OFFQ='offq:',SHELL='spark-shell';
 
 // ---------------------------------------------------------------- Sofort-Abgleich
-function syncSettings(){const want=!!(PROFILE&&typeof ALLOW!=='undefined'&&ALLOW.sync_live&&S.sync_live&&typeof EventSource!=='undefined');
+function syncSettings(){const want=!!(PROFILE&&typeof ALLOW!=='undefined'&&ALLOW.sync_live&&typeof EventSource!=='undefined');
   if(want&&!vsync.es)syncStart();else if(!want&&vsync.es)syncStop();offlineKeep()}
 function syncStart(){const es=new EventSource('/api/profile/convos/stream');vsync.es=es;
   es.onmessage=e=>{let ev;try{ev=JSON.parse(e.data)}catch{return}if(!ev||typeof ev!=='object')return;

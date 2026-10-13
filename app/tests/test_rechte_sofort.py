@@ -1,8 +1,8 @@
 """Rights arrive at once (V01.0.388): what the admin sets under Funktionen → Wer darf was reaches the profile
 on every way without reloading by hand: the pages see a new fingerprint (features.stamp in /api/whoami and
 /api/features) and reload, the iPhone app asks again on coming to the front and every minute, a device key
-whose function is off answers "not now" (503) and keeps its pairing, and new profiles by invitation get the
-functions chosen for new profiles. Speakers, the Begleiter and MCP have their own tests (test_esp32,
+whose function is off answers "not now" (503) and keeps its pairing, and new profiles by invitation may use what
+the admin released at once (Freigabe vereinfachen, Dominik 2026-10-13). Speakers, the Begleiter and MCP have their own tests (test_esp32,
 test_begleiter, test_mcpserver)."""
 import os
 import re
@@ -50,15 +50,25 @@ class Stamp(unittest.TestCase):
             self.assertRegex(first, r"^[0-9a-f]{16}$")
             self.assertEqual(c.get("/api/features").json()["stamp"], first)    # one fingerprint for page and app
             self.assertEqual(c.get("/api/whoami").json()["rights"], first)     # stable while nothing changes
-            # the admin turns the profile's own switch on under Wer darf was
-            self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, 200)
+            # the admin blocks the function for this profile under Wer darf was
+            self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": False}).status_code, 200)
             second = c.get("/api/whoami").json()["rights"]
             self.assertNotEqual(second, first)
+            # and allows it again
+            self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, 200)
+            self.assertEqual(c.get("/api/whoami").json()["rights"], first)
+            # the profile switches a preference off
+            helpers.set_config(proactive=True)
+            third = c.get("/api/whoami").json()["rights"]
+            profiles.save_settings(uid, {"pro_on": False})
+            self.assertNotEqual(c.get("/api/whoami").json()["rights"], third)
+            second = c.get("/api/whoami").json()["rights"]
             # the admin turns the function off for the whole Spark
             helpers.set_config(weather=False)
             self.assertNotEqual(c.get("/api/whoami").json()["rights"], second)
         finally:
-            helpers.set_config(weather=False)
+            ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True})
+            helpers.set_config(weather=False, proactive=False)
 
     def test_one_profile_does_not_change_the_other(self):
         helpers.set_config(weather=True)
@@ -66,9 +76,10 @@ class Stamp(unittest.TestCase):
             a, _ = profile("RsBert")
             _, uid_b = profile("RsCora")
             before = a.get("/api/whoami").json()["rights"]
-            ADMIN.put(f"/api/admin/features/weather/profiles/{uid_b}", json={"on": True})
+            ADMIN.put(f"/api/admin/features/weather/profiles/{uid_b}", json={"on": False})
             self.assertEqual(a.get("/api/whoami").json()["rights"], before)
         finally:
+            ADMIN.put(f"/api/admin/features/weather/profiles/{uid_b}", json={"on": True})
             helpers.set_config(weather=False)
 
     def test_fingerprint_shows_no_content(self):
@@ -124,20 +135,18 @@ class DeviceKeys(unittest.TestCase):
 
 
 class NewProfiles(unittest.TestCase):
-    def test_invited_profiles_get_the_functions_for_new_profiles(self):
+    def test_invited_profiles_get_what_is_released_at_once(self):
         import join
         helpers.set_config(weather=True, mfa=False)
-        self.assertEqual(ADMIN.put("/api/admin/features/weather/new", json={"on": True}).status_code, 200)
         try:
             self.assertEqual(ADMIN.put("/api/admin/join", json={"mode": "invite", "mfa": "off"}).status_code, 200)
-            r = ADMIN.post("/api/admin/join/invites", json={"name": "", "pack": "", "days": 7, "base": "https://spark.example"})
+            r = ADMIN.post("/api/admin/join/invites", json={"name": "", "days": 7, "base": "https://spark.example"})
             self.assertEqual(r.status_code, 200, r.text)
             code = r.json()["link"].split("#join=", 1)[1]
-            uid, _, on = join.create_profile(code, "Rs Neu", "123456")
-            self.assertIs(profiles.settings(uid).get("wx_on"), True)
-            self.assertIn("weather", on)
+            uid, _ = join.create_profile(code, "Rs Neu", "123456")
+            self.assertTrue(features.allowed("weather", uid))      # nothing to switch on for the new profile
+            self.assertNotIn("wx_on", profiles.settings(uid))
         finally:
-            ADMIN.put("/api/admin/features/weather/new", json={"on": False})
             ADMIN.put("/api/admin/join", json={"mode": "off"})
             helpers.set_config(weather=False)
 

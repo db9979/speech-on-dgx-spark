@@ -143,8 +143,8 @@ class Connection(Base):
         helpers.set_config(nas_on=True)
         self.assertTrue(c.get("/api/whoami").json().get("nas"))
         self.assertTrue(c.get("/api/profile/nas").json()["on"])     # no profile switch: the admin's is enough
-        self.assertEqual(features.BY_KEY["nas"].profile, "")
-        self.assertFalse(features.BY_KEY["nas"].guests)
+        self.assertEqual(features.BY_KEY["nas"].pref, "")
+        self.assertFalse(features.allowed("nas", None))
         helpers.set_config(public=True)
         try:
             self.assertIn(TestClient(panel.app).get("/api/profile/nas").status_code, (401, 403))
@@ -261,7 +261,6 @@ class Uses(Base):
 
     def test_own_storage_on_a_connection(self):
         c, uid = profile("NasSpeicher")
-        self.assertEqual(c.put("/api/profile/settings", json={"storage_on": True}).status_code, 200)
         nid = self.connect(c)
         r = c.post("/api/profile/speicher", json={"name": "Kopie", "nas": nid, "path": "/home/spark"})
         self.assertEqual(r.status_code, 200, r.text)

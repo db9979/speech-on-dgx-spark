@@ -1,6 +1,6 @@
 """New people by invitation and "Los geht's" (join.py, onboard.py, V01.0.269): off unless the admin
-switches it on, one-time codes kept only as hashes, lockout for wrong codes, packs switch on only what the
-Spark has on and never a role, the second step before mail, documents and jobs, the setup list checked by
+switches it on, one-time codes kept only as hashes, lockout for wrong codes, no starter packs (what the
+admin has on works at once, plan freigabe-vereinfachen) and never a role, the second step before mail, documents and jobs, the setup list checked by
 the panel, and "Am Handy weitermachen" only after the matching number on the computer."""
 import json
 import time
@@ -39,8 +39,8 @@ def switch(**kw):
     assert r.status_code == 200, r.text
 
 
-def invite(name="", pack="", days=7, uid=None):
-    body = {"name": name, "pack": pack, "days": days, "base": BASE}
+def invite(name="", days=7, uid=None):
+    body = {"name": name, "days": days, "base": BASE}
     if uid:
         body["uid"] = uid
     r = ADMIN.post("/api/admin/join/invites", json=body)
@@ -81,7 +81,6 @@ class Off(unittest.TestCase):
         self.assertEqual(c.post("/api/join/check", json={"code": code}).status_code, 404)   # no PIN link open: dark again
 
     def test_default_is_off(self):
-        self.assertEqual(join.PACKS[0]["id"], "familie")
         with open(join.FILE + ".missing", "w"):
             pass
         real = join.FILE
@@ -137,7 +136,7 @@ class Invite(unittest.TestCase):
         self.assertEqual(c.post("/api/join/check", content=big, headers={"content-type": "application/json"}).status_code, 413)
 
     def test_join_makes_a_profile_signs_in_and_uses_the_code_up(self):
-        code, made = invite("Ina Neu", pack="familie")
+        code, made = invite("Ina Neu")
         self.assertIn("<svg", made["qr"])
         c = TestClient(panel.app)
         d = c.post("/api/join/check", json={"code": code}).json()
@@ -148,8 +147,7 @@ class Invite(unittest.TestCase):
         self.assertEqual(c.get("/api/whoami").json()["profile"]["name"], "Ina Neu")
         uid = uid_of("Ina Neu")
         s = profiles.settings(uid)
-        self.assertIs(s.get("wx_on"), True)          # in the pack and on for the Spark
-        self.assertNotIn("tasks_on", s)              # in the pack, but off for the Spark: stays off
+        self.assertNotIn("wx_on", s)                 # nothing is switched on per profile any more
         self.assertEqual(TestClient(panel.app).post("/api/join", json={"code": code, "name": "Ina Zwei", "pin": "123456"}).status_code, 400)
         self.assertTrue(onboard.state(uid)["fresh"])
         import coadmin
@@ -193,7 +191,6 @@ class Invite(unittest.TestCase):
     def test_invitations_need_https_and_a_limit(self):
         self.assertEqual(ADMIN.post("/api/admin/join/invites", json={"name": "X", "base": "http://spark.example"}).status_code, 400)
         self.assertEqual(ADMIN.post("/api/admin/join/invites", json={"name": "X", "base": BASE, "days": 3}).status_code, 400)
-        self.assertEqual(ADMIN.post("/api/admin/join/invites", json={"name": "X", "base": BASE, "pack": "nope"}).status_code, 400)
         real = join.MAX_OPEN
         join.MAX_OPEN = len([i for i in join.listing() if i["state"] == "open"])
         try:
@@ -201,13 +198,37 @@ class Invite(unittest.TestCase):
         finally:
             join.MAX_OPEN = real
 
-    def test_packs_keep_only_known_functions(self):
-        r = ADMIN.put("/api/admin/join/packs", json={"packs": [
-            {"id": "kind", "name": "Kind <b>", "keys": ["weather", "nonsense", "iphoneupdate", "iphonepanel"]},
-            {"id": "BAD ID", "name": "x", "keys": []}]})
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["packs"], [{"id": "kind", "name": "Kind b", "keys": ["weather"]}])
-        ADMIN.put("/api/admin/join/packs", json={"packs": [dict(p) for p in join.PACKS]})
+    def test_old_packs_are_ignored_and_dropped(self):
+        """An old join.json with "packs" and invitations with "pack" is read without a word, written without them."""
+        code, made = invite("Old Pack")
+        with join._lock:
+            with open(join.FILE) as f:
+                raw = json.load(f)
+            raw["packs"] = [{"id": "familie", "name": "Familie", "keys": ["weather"]}, "junk"]
+            raw["invites"][made["id"]]["pack"] = "familie"
+            join._write(raw)
+        self.assertNotIn("packs", join._read())
+        self.assertNotIn("pack", join._read()["invites"][made["id"]])
+        a = ADMIN.get("/api/admin/join")
+        self.assertEqual(a.status_code, 200)
+        self.assertFalse({"packs", "packable"} & set(a.json()))
+        self.assertTrue(all("pack" not in i for i in a.json()["invites"]))
+        self.assertIn(ADMIN.put("/api/admin/join/packs", json={"packs": []}).status_code, (404, 405))   # the route is gone
+        c = TestClient(panel.app)
+        d = c.post("/api/join/check", json={"code": code}).json()
+        self.assertNotIn("pack", d)
+        r = c.post("/api/join", json={"code": code, "name": "Old Pack", "pin": "123456"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertNotIn("on", r.json())
+        self.assertNotIn("wx_on", profiles.settings(uid_of("Old Pack")))
+        with open(join.FILE) as f:
+            after = json.load(f)
+        self.assertNotIn("packs", after)
+        self.assertTrue(all("pack" not in v for v in after["invites"].values()))
+        # a "pack" sent by an old page is ignored, never stored
+        r = ADMIN.post("/api/admin/join/invites", json={"name": "X Pack", "base": BASE, "pack": "familie"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertNotIn("pack", join._read()["invites"][r.json()["id"]])
 
     def test_pin_link_sets_a_new_pin_and_ends_old_logins(self):
         ADMIN.post("/api/admin/profiles", json={"name": "Pia Pin", "pin": "1234"})
@@ -248,7 +269,7 @@ class Invite(unittest.TestCase):
             uid = uid_of("App Anna")
             dev = next(x for x in profiles._load()["devices"] if x["user"] == uid)
             self.assertEqual(dev["scope"], "app")
-            self.assertIs(profiles.settings(uid)["app_on"], True)
+            self.assertNotIn("app_on", profiles.settings(uid))   # no per-profile switch: the hello below works
             h = TestClient(panel.app, headers={profiles.DEVICE_HEADER: r.json()["token"]}).get("/api/iphone/hello")
             self.assertEqual(h.json()["profile"], "App Anna")
         finally:
@@ -270,9 +291,7 @@ class SecondStep(unittest.TestCase):
         self.assertEqual(c.post("/api/join", json={"code": code, "name": "Duty Dora", "pin": "123456"}).status_code, 200)
         uid = uid_of("Duty Dora")
         self.assertTrue(join.mfa_due(uid))
-        self.assertEqual(features.reason("docpics", uid), "profile")   # own switch still off: that comes first
-        profiles.save_settings(uid, {"doc_pictures": True})
-        self.assertEqual(features.reason("docpics", uid), "mfa")
+        self.assertEqual(features.reason("docpics", uid), "mfa")   # released by the admin, but the second step comes first
         self.assertFalse(join._duty(uid, "weather"))   # only mail, documents and jobs wait
         r = c.post("/api/profile/mail", json={"host": "imap.example", "user": "x", "password": "y"})
         self.assertEqual(r.status_code, 403)

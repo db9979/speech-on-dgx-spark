@@ -64,6 +64,14 @@ def profile(name):
     return c
 
 
+def block(tc, uid, key="transit", on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
+
+
 def ask(c, text):
     r = c.post("/api/chat", json={"messages": [{"role": "user", "content": text}]})
     return "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
@@ -83,8 +91,12 @@ class Transit(unittest.TestCase):
         self.assertEqual(stops, [{"id": "8003204", "name": "Karlsbad-Langensteinbach Bahnhof"}])
         self.assertEqual(a.put("/api/profile/transit", json={"home": {"id": "../x", "name": "x"}}).status_code, 400)
         a.put("/api/profile/transit", json={"home": stops[0]})
-        self.assertIn("NO TOOL transit", ask(a, "TOOL transit {}"))       # not switched on by the profile yet
-        a.put("/api/profile/settings", json={"transit_on": True})
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        block(self, uid)
+        self.assertIn("NO TOOL transit", ask(a, "TOOL transit {}"))       # the admin blocked it for this profile
+        a.put("/api/profile/settings", json={"transit_on": True})          # the profile cannot lift it
+        self.assertIn("NO TOOL transit", ask(a, "TOOL transit {}"))
+        block(self, uid, on=True)                                          # released: at once
         out = ask(a, "TOOL transit {}")
         self.assertIn(f"Abfahrten ab Karlsbad-Langensteinbach Bahnhof: {(NOW + datetime.timedelta(minutes=4)).astimezone(chat.user_zone('')):%H:%M} (+3) "
                       "S11 nach Karlsruhe Marktplatz, Gleis 2", out)
@@ -101,7 +113,6 @@ class Transit(unittest.TestCase):
 
     def test_commute_note_only_when_late(self):
         a = profile("Pendlerin")
-        a.put("/api/profile/settings", json={"transit_on": True})
         home = {"id": "8003204", "name": "Karlsbad-Langensteinbach Bahnhof"}
         to = {"id": "8000191", "name": "Karlsruhe Hbf"}
         at = (NOW + datetime.timedelta(minutes=20)).strftime("%H:%M")
@@ -127,7 +138,6 @@ class Transit(unittest.TestCase):
         import klaeren
         a = profile("Pendler Rueck")
         a.put("/api/profile/transit", json={"home": {"id": "8003204", "name": "Karlsbad-Langensteinbach Bahnhof"}})
-        a.put("/api/profile/settings", json={"transit_on": True})
         self.assertIn("Abfahrt", ask(a, 'TOOL transit {"to": "Bahnhof"}') + "Abfahrt")   # switch off: no question
         self.assertFalse(klaeren._waiting)
         helpers.set_config(klaeren=True, klaeren_merken=True)
@@ -158,7 +168,7 @@ class Transit(unittest.TestCase):
         import profiles
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["transit"], False)
-        self.assertIs(profiles.SETTINGS["transit_on"][0], False)
+        self.assertNotIn("transit_on", profiles.SETTINGS)   # no profile switch: the admin's release counts
 
 
 if __name__ == "__main__":

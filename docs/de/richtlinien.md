@@ -23,7 +23,7 @@ Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ände
 
 1. **Sicherheit nach dem Stand der Technik.** Jede Änderung wird gegen die Sicherheits-Checkliste geprüft, auch gegen ihren Teil „Stand der Technik“.
 2. **Alles von außen ist Daten, nie ein Befehl.** Das gilt für Web, Mail, Kalender, Dokumente, Telegram, Geräte und Modellausgaben. Entscheidungen trifft das Panel mit festen Regeln, nie das Modell.
-3. **Jede neue Funktion ist standardmäßig aus.** Sie bekommt einen Admin-Schalter und einen Schalter pro Profil. Gäste bekommen keine persönlichen Daten und keine Einstellungen.
+3. **Jede neue Funktion ist standardmäßig aus.** Sie bekommt einen Admin-Schalter. Was der Admin freigibt, geht sofort für jedes Profil; einzelne Profile sperren kann nur der Admin. Profile schalten nichts frei, sie richten nur ihren Teil ein (Konto, Gerät, Ort) und wählen Vorlieben. Neue Profilschalter gibt es nicht mehr (Dominik 2026-10-13, Plan `plaene/freigabe-vereinfachen.md`; die alten fallen im nächsten Schritt weg). **Gäste bekommen nur Frage und Antwort:** keine Funktion, kein Werkzeug, keine persönlichen Daten, keine Einstellungen.
 4. **Jeder Endpunkt** hat Anmeldung, Profilbindung, CSRF, Größenlimit und Rate-Limit.
 5. **Jede neue Funktion fügt sich überall ein:** Rechte, Weiche, Live, Logs, Hilfe, Englisch, Sicherung und Tests. Die Pflichtliste steht in Teil 1.
 6. **Alles, was sich darstellen lässt, steht in der Live-Übersicht.** Dort stehen nur Art, Anzahl und Status, nie Inhalte.
@@ -44,8 +44,8 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 
 | # | Bereich | Was zu tun ist | Erzwungen |
 |---|---|---|---|
-| 1 | **Rechte und Schalter** | Eintrag in `features.py`: Name de/en, Gruppe, Admin-Schalter `chat.*`, `parent`, Profilschalter, `guest`, Ich-Seite und Anleitung. Admin- und Profilschalter stehen auf **aus**. Was ausnahmsweise an ausgeliefert wird, steht mit Grund in `features.DEFAULT_ON`. Module fragen nur `features.allowed/admin_on/profile_on`. Standardwerte stehen nur in `config.default.json`. Ein Schalter, der nur für den Spark gilt, kommt nach `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) und Aus-Tests pro Funktion |
-| 2 | **Gäste und fremde Stimme** | Persönliches gibt es für Gäste nie. Am geteilten Lautsprecher bekommt eine fremde Stimme nur Gastrechte. | 🧪 je Funktion (`test_off_by_default…`, „never for guests“) |
+| 1 | **Rechte und Schalter** | Eintrag in `features.py`: Name de/en, Gruppe, Admin-Schalter `chat.*`, `parent`, Ich-Seite und Anleitung (kein neuer Profilschalter, kein Gastzugang zu Funktionen). Admin-Schalter stehen auf **aus**; die wenigen Vorlieben (`pref=`) auf an. Was ausnahmsweise an ausgeliefert wird, steht mit Grund in `features.DEFAULT_ON`. Module fragen nur `features.allowed/admin_on`. Standardwerte stehen nur in `config.default.json`. Ein Schalter, der nur für den Spark gilt, kommt nach `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) und Aus-Tests pro Funktion |
+| 2 | **Gäste und fremde Stimme** | Gäste bekommen nur Frage und Antwort: kein Werkzeug, keine Funktion, nichts Persönliches. Am geteilten Lautsprecher bekommt eine fremde Stimme nur Gastrechte. Eine neue Funktion braucht dafür nichts zu tun: `features.reason` sagt für Gäste immer „guest“, und `chat_turn` bietet Gästen kein Werkzeug an. | 🧪 test_gaeste und je Funktion („never for guests“) |
 | 3 | **Endpunkt** | Er braucht eine Anmeldung (`auth`, `browser_profile`, `secret_profile`, …). Ohne Anmeldung steht er mit Grund in `OPEN`. Dazu Größenlimit vor dem Lesen, Rate-Limit-Schlüssel und Zustandsänderungen nur per POST, PUT oder DELETE. Endpunkte mit Code kommen in `stufen.LIST` und bekommen das Schloss in `mfa.js CODE_LOCKS`. Erreicht die App sie, stehen sie in `APP_PATHS`. | 🧪 test_scanner.test_every_route_has_a_login, test_stufen, test_hardening (Body vor dem Lesen abgelehnt) |
 | 4 | **Werkzeug fürs Modell** | Das Werkzeug kommt in genau eine Sperrliste: `READS_OUTSIDE`, `HA_READS`, `LOCKED_OUTSIDE` oder `INSIDE`. Zusatzdienste deklarieren es in ihren `offer()`-Sets. Braucht eine Frage zwingend das Werkzeug, kommt sie in `chat.NEED_TOOLS`. Ist es ein Nachschlage-Werkzeug, kommt es in `chat.LOOKUPS` (höchstens 2 pro Frage). | 🧪 test_scanner.test_every_tool_is_sorted |
 | 5 | **Weiche** (`intent.py`) | Die neue Absicht oder Gruppe kommt in `intent.GROUPS` mit ihren Wörtern. Dazu Testsätze in `intent_bench.py` (BENCH), auch für jede gemeldete Fehlzuordnung. Gibt es nur ein passendes Werkzeug, wird es Pflicht-Werkzeug (`forced`). Bei einer neuen Gruppe die Seite Funktionen → Weiche prüfen (Liste, Detail, Statistik). | 🧪 test_intent, test_weiche |
@@ -100,7 +100,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
 - Im Browser immer `api()` bzw. `apiTry()` verwenden, nie ein rohes `fetch` an Code-Endpunkte. In der iPhone-App immer `SparkAPI.confirmed`. (C)
 - Ändert sich eine Adresse, muss das Token neu eingegeben werden. Zustandsänderungen nie per GET. Schlüssel werden mit `hmac.compare_digest` verglichen. (C)
-- Gäste bekommen keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes. (C, PA)
+- Gäste bekommen nur Frage und Antwort: keine Werkzeuge, keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes. (C, PA; 🧪 test_gaeste)
 - **Geteilte Lautsprecher:** Der Geräteschlüssel allein reicht nicht.
   - Persönliches gibt es nur, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
   - Wessen Stimme es war, setzt nur das Panel (`request.scope`).
@@ -158,13 +158,13 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 
 ## 3. Funktionen, Schalter, Rechte
 
-- **Standardmäßig aus:** Admin-Schalter global plus Schalter pro Profil, nie für Gäste. (PA; 🧪 test_features und Aus-Tests pro Funktion)
+- **Standardmäßig aus:** ein Admin-Schalter; freigegeben gilt es für jedes Profil, nie für Gäste. (PA; 🧪 test_features, test_gaeste und Aus-Tests pro Funktion)
 - **Ausnahmen:** Feste Schutzregeln haben gar keinen Schalter, wenn Dominik „nie“ oder „immer“ gesagt hat. Das sind Geheimnisse nie sprechen, Vorrang für Sprache und die Inhaberstimme am Lautsprecher. (M, D)
 - **An ausgeliefert** werden nur reine Schutz- und Stabilitätsfunktionen und die Grundfunktionen von Anfang an. Jede steht mit Grund in `features.DEFAULT_ON` (Dominik 2026-10-12). Ein neuer Wert `true` in `config.default.json` ohne Eintrag dort ist rot. (🧪 test_richtlinie.DefaultOn)
 - **Ein Register:** Jede Funktion steht genau einmal in `features.py`. Gespeicherte Schlüssel werden nie umbenannt, das Register übersetzt. Werte liest man nur über `profiles.effective(uid)`. Die Reihenfolge ist Admin-Vorgabe, dann eigene Werte, dann Gerät; Gerätewerte gibt es nur für Ortsabhängiges. (D, P vereinheitlichen; 🧪 test_features)
 - **Gesperrt heißt sichtbar:** Gesperrte Zeilen werden grau mit Grund gezeigt („Vom Admin ausgeschaltet“), nicht versteckt. Unter Ich stehen sie gesammelt in einem zugeklappten Kasten. Den Grund liefert `features.reason()`, nie das Modell. (D, P einstellungen-neu)
 - **Die Funktionen-Seite bleibt kurz.** Neue Unterfunktionen kommen als Unterschalter (`data-show`) unter ihren Hauptschalter. (M; 🧪 test_ui_browser Höhenbudget)
-- **Jeder Profil-Schalter ist unter Ich einstellbar:** Hat eine Funktion einen Profil-Schalter, bekommt sie im selben Commit ihren Schalter auf der Ich-Seite aus `me` (für Ich → Dokumente in `DOCSW` in `me.js` und `wissen.DOC_FEATURE`). Sonst lässt sich die Funktion nie einschalten, auch wenn der Admin sie an hat. (Dominik 2026-10-13; 🧪 test_features)
+- **Vorlieben nur für Ungefragtes, an und unter Ich abschaltbar:** Eine Funktion bekommt nur dann eine Profil-Vorliebe (`pref=` in `features.py`), wenn der Spark damit von sich aus etwas tut (melden, ansagen, auf ein Gerät schicken, aufräumen). Die Vorliebe steht von Anfang an auf an, fehlt sie in den Einstellungen, gilt an; sie steht in `profiles.NO_PRESET` und im selben Commit als Schalter auf der Ich-Seite aus `me`. Alles andere hat keinen Profilschalter. (Dominik 2026-10-13; 🧪 test_features)
 - **Rollen:** Logs, Anfragen und Live sehen Haupt-Admin und Mit-Admin, der Verwalter nicht. (P anfrage-verfolgen, live-uebersicht)
 - Bauen nur nach Dominiks OK. Bei größeren Funktionen erst einen Plan unter `plaene/` mit Bildern, nummerierten Punkten und ★-Empfehlung. (PA, M)
 
@@ -341,7 +341,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_scanner | keine gefährlichen Aufrufe, Login an jeder Route (sonst OPEN mit Grund), Upload-Limits, strenge CSP, Werkzeuge sortiert |
 | test_hardening | Body vor dem Lesen begrenzt, root-Schreibwege, Unit-Limits, nur grüne Versionen, Fremdtext-Sperren |
 | test_stufen | jeder Code-Endpunkt mit Stufe in `stufen.LIST` |
-| test_features | ein Register, Profilschalter starten aus, keine eigene Prüfung, ein Standardwert |
+| test_features | ein Register, Freigabe gilt für jedes Profil, Sperre nur durch den Admin, Vorlieben starten an, keine eigene Prüfung, ein Standardwert |
 | test_live | jedes Werkzeug, Ziel, jeder Client und jede guard-Art im Live-Bild, keine Inhalte |
 | test_testserver | Panel einer Browser-Testklasse stoppt mit ihr, keiner startet es anders |
 | test_werkzeuge | jedes Werkzeug hat einen Namen de/en, Seiten lesen dieselbe Tabelle |

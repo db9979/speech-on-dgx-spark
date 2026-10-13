@@ -858,7 +858,7 @@ async def answer(ctx, latest):
     got = parse(latest)
     if not got:
         return None
-    if not features.allowed("havoice", uid) or not _p(uid).get("pro_ha_voice"):
+    if not features.allowed("havoice", uid):
         return None    # off: the question goes on as usual (e.g. a reminder)
     if not proactive.enabled() or not _p(uid).get("pro_on"):
         return _say("Regel per Sprache (nicht möglich)", "Von selbst melden ist bei dir aus (Ich → Von selbst).")

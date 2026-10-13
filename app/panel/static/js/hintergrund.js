@@ -42,17 +42,15 @@ async function bgCard(el,d){if(!el)return;
     try{await api(BGACT[b.dataset.bgact][0],{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch(e){alert(e.message)}setTimeout(()=>bgCard(el),800)})}
 async function showBg(){const box=$('bgbox');if(!box)return;clearTimeout(bgTimer);if(!PROFILE||!MYST_ON){box.innerHTML='';return}
   box.innerHTML=`<div class="intro">${esc(t('Was der Spark gerade für dich erledigt, worauf es wartet und ob deine verbundenen Dienste antworten. Nur deine eigenen Sachen, nur Namen und Zahlen.','What the Spark is doing for you right now, what it waits for and whether your connected services answer. Only your own things, only names and numbers.'))}</div>
-    ${xsw('my_status',t('Mein Zustand anzeigen','Show my status'),t('Aus: Die Seite bleibt leer und der Punkt bei „Ich“ kommt nicht.','Off: the page stays empty and the dot at "Me" does not come.'))}<div id="bgcard"></div>`;
-  xbind(box,showBg);
-  if(!S.my_status){bgDotSet(null);return}
+    <div id="bgcard"></div>`;
   await bgCard($('bgcard'));bgFollow()}
 // while the page is open it follows the work every 10 seconds; only the card is redrawn (V01.0.293: the whole
 // page was rebuilt before, which threw the page back to the top)
 function bgFollow(){clearTimeout(bgTimer);bgTimer=setTimeout(async()=>{const box=$('bgbox'),card=$('bgcard');
   if(!box||!card||!box.classList.contains('on')||!$('profmodal')||$('profmodal').style.display==='none')return;
-  if(!document.hidden&&S.my_status)await bgCard(card);bgFollow()},10e3)}
+  if(!document.hidden)await bgCard(card);bgFollow()},10e3)}
 function bgDotSet(s){document.querySelectorAll('.medot').forEach(e=>e.hidden=!(s&&s.need))}
-async function bgDot(){if(!PROFILE||!MYST_ON||!S.my_status||document.hidden){if(!MYST_ON||!S.my_status)bgDotSet(null);return}
+async function bgDot(){if(!PROFILE||!MYST_ON||document.hidden){if(!MYST_ON)bgDotSet(null);return}
   try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});if(r.ok)bgDotSet((await r.json()).sum)}catch{}}
 setInterval(bgDot,60e3);setTimeout(bgDot,3e3);
 // Zustand → Monitoring "Mein Zustand aller Profile" (admin): counts only, shown while the admin switch is on

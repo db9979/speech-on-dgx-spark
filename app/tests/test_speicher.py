@@ -92,17 +92,15 @@ def objects():
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(storage_own=True, storage_lan=True, storage_folder=False, storage_root="")
+        helpers.set_config(storage_own=True, storage_lan=True, storage_folder=False, storage_root="", deny={})
         DAV.update(files={}, dirs=set(), mode="", calls=[], pw="nas-pass-4711")
         speicher._running.clear()
 
     def tearDown(self):
-        helpers.set_config(storage_own=False, storage_lan=False, storage_folder=False, storage_root="")
+        helpers.set_config(storage_own=False, storage_lan=False, storage_folder=False, storage_root="", deny={})
 
     def ready(self, name):
-        c, uid = profile(name)
-        self.assertEqual(c.put("/api/profile/settings", json={"storage_on": True}).status_code, 200)
-        return c, uid
+        return profile(name)   # released by the admin: works at once, nothing to switch on
 
     def add(self, c, **kw):
         body = dict(dict(name="NAS Keller", kind="webdav", url=BASE, user="spark", password="nas-pass-4711"), **kw)
@@ -129,17 +127,19 @@ class Switches(Base):
         helpers.set_config(storage_own=False)
         self.assertEqual(c.get("/api/profile/speicher").status_code, 403)
         self.assertFalse(c.get("/api/whoami").json().get("storage"))
-        helpers.set_config(storage_own=True)
-        self.assertTrue(c.get("/api/whoami").json().get("storage"))       # the Ich page shows, the own switch is off
+        helpers.set_config(storage_own=True, deny={"speicher": [uid]})    # released, but the admin blocks this profile
         self.assertFalse(c.get("/api/profile/speicher").json()["on"])
         r = c.post("/api/profile/speicher", json={"name": "N", "kind": "webdav", "url": BASE, "user": "spark", "password": "x"})
         self.assertEqual(r.status_code, 403)
         helpers.set_config(public=True)
         self.assertIn(TestClient(panel.app).get("/api/profile/speicher").status_code, (401, 403))
         helpers.set_config(public=False)
-        # nothing runs for a profile whose switch is off
+        # nothing runs for a profile the admin blocked
         with mock.patch.object(speicher, "spawn", lambda coro: coro.close()):
             self.assertNotIn(uid, [u for u, _ in run(speicher.round_once(now=speicher.STARTED + 10 ** 6))])
+        helpers.set_config(deny={})                                       # released: works at once
+        self.assertTrue(c.get("/api/whoami").json().get("storage"))
+        self.assertTrue(c.get("/api/profile/speicher").json()["on"])
 
     def test_home_network_only_with_its_switch(self):
         c, uid = self.ready("SpLan")
@@ -432,16 +432,19 @@ class Shown(Base):
         for k in ("storage_add", "storage_change", "storage_remove"):
             self.assertIn(k, guard.LIVE_WORDS)
         self.assertIn("speicher", dict(logfilter.AREAS))
-        helpers.set_config(svc_watch=True)
+        # targets other tests left behind count too now (released for everybody): their profiles are kept out here
+        others = [u for u in profiles.user_ids() if u != uid]
+        helpers.set_config(svc_watch=True, deny={"speicher": others} if others else {})
         try:
             act = dienstwacht.active()
             self.assertIn("store", act)
             self.assertTrue(all(p["url"] == f"http://127.0.0.1:{PORT}/" for p in act["store"].values() if not p.get("tcp")))
             self.assertNotIn("password", json.dumps(act["store"]))
         finally:
-            helpers.set_config(svc_watch=False)
-        # the profile switch off: no probe for its targets
-        c.put("/api/profile/settings", json={"storage_on": False})
+            helpers.set_config(svc_watch=False, deny={})
+        self.assertTrue(any(uid in p["uids"] for p in speicher.probes().values()))
+        # the admin blocks the profile: no probe for its targets
+        helpers.set_config(deny={"speicher": [uid]})
         self.assertFalse(any(uid in p["uids"] for p in speicher.probes().values()))
 
 

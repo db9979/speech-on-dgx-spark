@@ -170,9 +170,12 @@ class Version4(Base):
         q = "Warum hast du eben im Web gesucht?"
         self.assertFalse(berater.takes(q, uid))
         helpers.set_config(berater_why=True)
-        self.assertFalse(berater.takes(q, uid))                  # the profile's own switch too
-        import profiles
-        profiles.save_settings(uid, {"why_on": True})
+        self.assertTrue(berater.takes(q, uid))                   # released: for every profile at once
+        # the admin blocks it for this profile (Funktionen → Wer darf was)
+        self.assertEqual(ADMIN.put(f"/api/admin/features/beraterwarum/profiles/{uid}", json={"on": False}).status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/beraterwarum/profiles/{uid}", json={"on": True})
+        self.assertFalse(berater.takes(q, uid))
+        self.assertEqual(ADMIN.put(f"/api/admin/features/beraterwarum/profiles/{uid}", json={"on": True}).status_code, 200)
         self.assertTrue(berater.takes(q, uid))
         with mock.patch.object(notaus, "admin_uids", return_value=[]):     # the proposals stay for admins
             self.assertIn("aus", berater.by_phrase(uid, "Was schlägt der Einstellungs-Assistent vor?"))

@@ -78,7 +78,7 @@ STATE_FILES = {
     "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
     "admins.json": "json",          # profiles as admins: roles, the switch, who hears of admin modes (coadmin.py)
     "features-seen.json": "json",   # when each function was first on ("Neu, noch nie an", features.py)
-    "join.json": "json",            # new people by invitation: the switch, invitations (code hashes), packs (join.py)
+    "join.json": "json",            # new people by invitation: the switch, invitations (code hashes) (join.py)
 }
 # every other file or folder in state/, with the reason it stays out of a backup (Zustand → Technik, technik.py;
 # test_technik finds each name the code writes there and wants it here or in STATE_FILES)

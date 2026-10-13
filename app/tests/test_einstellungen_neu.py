@@ -262,8 +262,8 @@ class Frame(unittest.TestCase):
         asyncio.run(go())
 
     def test_me_is_a_page_with_sections(self):
-        """Ich → Gespräch: no tabs, the groups one below the other in boxes, "Tempo und Genauigkeit" folded, what the
-        admin switched off collected at the bottom; symbols in the column, no "Schließen" beside the menu."""
+        """Ich → Gespräch: no tabs, the groups one below the other in boxes, no switch for what the admin releases (it
+        works at once), what the admin switched off collected at the bottom; symbols in the column, no "Schließen"."""
         helpers.set_config(routing=True, transit=False, wiki=False)
         async def go():
             async with async_playwright() as p:
@@ -276,12 +276,14 @@ class Frame(unittest.TestCase):
                     self.assertEqual(heads[:2], ["Zuhören", "Antwort"])
                     loose = await pg.evaluate("[...document.querySelectorAll('#setform .setrow')].filter(r=>!r.closest('.sgrp')).length")
                     self.assertEqual(loose, 0)
-                    # Gezielte Werkzeugwahl is allowed: in the folded box, closed
-                    fold = await pg.evaluate("(()=>{const r=$('set_setform_route').closest('details');return r&&r.classList.contains('mefold')&&!r.open})()")
-                    self.assertTrue(fold)
-                    # Wikipedia is off: locked, in the box at the bottom, still with its reason
-                    locked = await pg.evaluate("(()=>{const r=$('set_setform_wiki_on').closest('.setrow');return [r.classList.contains('locked'),!!r.closest('details.melockrows'),$('set_setform_wiki_on').disabled]})()")
-                    self.assertEqual(locked, [True, True, True])
+                    # Freigabe vereinfachen (Dominik 2026-10-13): what the admin releases works at once, so Ich has
+                    # no switch for it any more (Gezielte Werkzeugwahl, Wikipedia direkt); an empty group stays hidden
+                    gone = await pg.evaluate("[!!$('set_setform_route'),!!$('set_setform_wiki_on'),!!$('set_setform_chats_on')]")
+                    self.assertEqual(gone, [False, False, False])
+                    self.assertFalse(await pg.evaluate("[...document.querySelectorAll('#setform details.mefold')].some(d=>!d.hidden&&!d.querySelector('.setrow'))"))
+                    # what the admin switched off stays visible, locked, in the box at the bottom, with its reason
+                    locked = await pg.evaluate("[...document.querySelectorAll('#setform .setrow.locked')].map(r=>[!!r.closest('details.melockrows'),!!r.querySelector('em.why'),[...r.querySelectorAll('input,select,textarea')].every(e=>e.disabled)])")
+                    self.assertTrue(all(x == [True, True, True] for x in locked), locked)
                     self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#ptabs button[data-t]')].every(b=>b.querySelector('.cic'))"))
                     self.assertFalse(await pg.is_visible("#profclose"))
                     self.assertEqual(await pg.text_content("#mepage"), "Gespräch")

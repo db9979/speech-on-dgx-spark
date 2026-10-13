@@ -1,10 +1,15 @@
 """One description per function (plan „Vereinheitlichen“, V01.0.267).
 
 Every function the admin can switch is written down here once: its name on every page, its group,
-the admin switches it needs (and the functions it builds on), the profile's own switch, whether
-guests may ever use it and the Ich page it belongs to. The modules ask `admin_on`, `profile_on` and
-`allowed` here instead of each building "admin on and profile on" itself, and the panel, the iPhone
-app and the search read `/api/features` instead of keeping their own lists.
+the admin switches it needs (and the functions it builds on), a personal preference where the Spark does
+something unasked, and the Ich page it belongs to. The modules ask `admin_on` and `allowed` here instead of
+each building their own check, and the panel, the iPhone app and the search read `/api/features` instead of
+keeping their own lists.
+
+What the admin releases works at once for every profile (Dominik 2026-10-13, plan plaene/freigabe-vereinfachen.md):
+profiles switch nothing on, they only set up their part (an account, a device, a place) and choose preferences.
+Only the admin can block a function for one profile (chat.deny). Guests (no profile) never get a function: they
+only ask and get answers.
 
 The stored names stay as they are (config.json chat.*, users/<id>/settings.json), so nothing has to
 move: this table only knows both. The fixed protection rules (secrets never spoken, voice priority,
@@ -40,8 +45,8 @@ class Feature(NamedTuple):
     en: str
     group: str
     admin: tuple            # chat.* switches that must all be on
-    profile: str = ""       # the profile's own switch in settings.json ("" = none: the admin's switch is enough)
-    guests: bool = False    # may guests (no profile) ever use it
+    pref: str = ""          # a preference in settings.json, on unless the profile switched it off: only where the
+                            # Spark does something unasked (speaking up, push, sheets at night ...); never a release
     parent: str = ""        # the function it builds on (its switch must be on too)
     me: str = ""            # the Ich page (tab id) where the profile sets it up
     guide: str = ""         # guides.js id
@@ -50,145 +55,142 @@ class Feature(NamedTuple):
 F = Feature
 FEATURES = (
     # conversation
-    F("search", "Websuche", "Web search", "talk", ("search",), guests=True, guide="search"),
-    F("wiki", "Wikipedia direkt", "Wikipedia straight away", "talk", ("wiki",), "wiki_on", me="setbox", guide="wiki"),
-    F("kiwix", "Eigenes Kiwix-Archiv", "Own Kiwix archive", "talk", ("kiwix",), "kiwix_on", me="setbox", guide="kiwix"),
-    F("lokal", "Erst lokal suchen", "Look locally first", "talk", ("local_first",), "local_first", me="setbox", guide="lokal"),
-    F("roles", "Rollen per Sprache", "Roles by voice", "talk", ("roles",), "roles_on", me="setbox", guide="roles"),
+    F("search", "Websuche", "Web search", "talk", ("search",), guide="search"),
+    F("wiki", "Wikipedia direkt", "Wikipedia straight away", "talk", ("wiki",), me="setbox", guide="wiki"),
+    F("kiwix", "Eigenes Kiwix-Archiv", "Own Kiwix archive", "talk", ("kiwix",), me="setbox", guide="kiwix"),
+    F("lokal", "Erst lokal suchen", "Look locally first", "talk", ("local_first",), me="setbox", guide="lokal"),
+    F("roles", "Rollen per Sprache", "Roles by voice", "talk", ("roles",), me="setbox", guide="roles"),
     F("style", "Eigener Gesprächsstil", "Own conversation style", "talk", ("own_style",), me="setbox", guide="style"),
     F("follow", "Rückfrage ohne Weckwort", "Follow-up without wake word", "talk", ("follow_up",), me="setbox", guide="follow"),
     F("selfecho", "Eigene Stimme überhören", "Ignore my own voice", "talk", ("no_self_echo",), me="setbox", guide="selfecho"),
-    F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",), "fix_learn",
+    F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",),
       parent="memory", me="setbox", guide="fixes"),
-    F("klaeren", "Rückfrage statt Raten", "Ask instead of guessing", "talk", ("klaeren",), "klaeren", me="setbox",
+    F("klaeren", "Rückfrage statt Raten", "Ask instead of guessing", "talk", ("klaeren",), me="setbox",
       guide="klaeren"),
-    F("klaerenmerken", "Auswahl merken", "Remember the choice", "talk", ("klaeren_merken",), "klaeren_merken",
+    F("klaerenmerken", "Auswahl merken", "Remember the choice", "talk", ("klaeren_merken",),
       parent="klaeren", me="setbox", guide="klaerenmerken"),
-    F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), "images_on", me="setbox", guide="images"),
-    F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "speed", ("tool_thinking",), "tool_think",
+    F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), me="setbox", guide="images"),
+    F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "speed", ("tool_thinking",),
       me="setbox", guide="toolthink"),
-    F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "speed", ("routing",), "route", me="setbox", guide="routing"),
-    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "speed", ("direct_read",), "direct_read",
+    F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "speed", ("routing",), me="setbox", guide="routing"),
+    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "speed", ("direct_read",),
       me="setbox", guide="direct"),
-    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",), "instant_ack",
+    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),
-    F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",), "prefetch",
+    F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",),
       parent="routing", me="setbox", guide="vorab"),
-    F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), "spark_help", me="setbox", guide="hilfe"),
-    F("hilfevorschlag", "Einstellungen vorschlagen", "Suggesting settings", "talk", ("spark_suggest",), "spark_help",
+    F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), me="setbox", guide="hilfe"),
+    F("hilfevorschlag", "Einstellungen vorschlagen", "Suggesting settings", "talk", ("spark_suggest",),
       parent="hilfe", me="setbox", guide="hilfevorschlag"),
-    F("hilfeseite", "Frag Spark auf jeder Seite", "Ask Spark on every page", "talk", ("spark_drawer",), "spark_help",
+    F("hilfeseite", "Frag Spark auf jeder Seite", "Ask Spark on every page", "talk", ("spark_drawer",),
       parent="hilfe", me="setbox", guide="hilfeseite"),
     # tipps.py: the assistant points out a function that would help and helps setting it up
-    F("tipps", "Funktionen vorschlagen", "Suggesting functions", "talk", ("feature_tips",), "tips_on",
+    F("tipps", "Funktionen vorschlagen", "Suggesting functions", "talk", ("feature_tips",),
       parent="hilfe", me="setbox", guide="tipps"),
     F("tippspush", "Funktionen vorschlagen von selbst", "Suggesting functions by itself", "day",
-      ("feature_tips_push", "feature_tips"), "pro_tips", parent="proactive", me="probox", guide="tippspush"),
+      ("feature_tips_push", "feature_tips"), pref="pro_tips", parent="proactive", me="probox", guide="tippspush"),
     # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
-    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",),
-      "systemone_on", me="setbox", guide="einordnung"),
+    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",), me="setbox", guide="einordnung"),
     F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "speed",
-      ("systemone_tidy", "mail_tidy", "mail"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungpost"),
+      ("systemone_tidy", "mail_tidy", "mail"), parent="einordnung", me="setbox", guide="einordnungpost"),
     F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "speed", ("systemone_quality",),
       parent="einordnung", guide="einordnungtest"),
     F("einordnungrat", "Einordnung im Einstellungs-Assistenten", "Classification in the settings assistant", "speed",
       ("systemone_berater", "berater"), parent="einordnung", guide="einordnungrat"),
     F("einordnungcheck", "Antworten im Hintergrund prüfen", "Check answers in the background", "speed",
-      ("systemone_check", "berater"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungcheck"),
-    F("einordnungklage", "Beschwerde erkennen", "Recognize complaints", "speed", ("systemone_klage", "loop_stop"),
-      "systemone_on", parent="einordnung", me="setbox", guide="einordnungklage"),
+      ("systemone_check", "berater"), parent="einordnung", me="setbox", guide="einordnungcheck"),
+    F("einordnungklage", "Beschwerde erkennen", "Recognize complaints", "speed", ("systemone_klage", "loop_stop"), parent="einordnung", me="setbox", guide="einordnungklage"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
     # gedaechtnis.py (plan gedaechtnis-pruefen/plan.md): evidence per fact, fixed rules mark what may be out of date
-    F("gedpruefen", "Gedächtnis prüfen", "Memory check", "data", ("memory_check",), "mem_check", parent="memory",
+    F("gedpruefen", "Gedächtnis prüfen", "Memory check", "data", ("memory_check",), parent="memory",
       me="factbox", guide="gedpruefen"),
-    F("gedfragen", "Nachfrage zum Gedächtnis", "Memory check-back", "data", ("memory_ask",), "mem_ask",
+    F("gedfragen", "Nachfrage zum Gedächtnis", "Memory check-back", "data", ("memory_ask",),
       parent="gedpruefen", me="setbox", guide="gedfragen"),
-    F("gedthemen", "Themen im Gedächtnis", "Memory topics", "data", ("memory_topics",), "mem_topics",
+    F("gedthemen", "Themen im Gedächtnis", "Memory topics", "data", ("memory_topics",),
       parent="gedpruefen", me="factbox", guide="gedthemen"),
     F("history", "Frühere Gespräche", "Past conversations", "data", ("history",), me="setbox", guide="history"),
     F("documents", "Eigene Dokumente", "Own documents", "data", ("documents",), me="docbox", guide="documents"),
-    F("docpics", "Bilder und Scans lesen", "Read pictures and scans", "data", ("doc_pictures",), "doc_pictures",
+    F("docpics", "Bilder und Scans lesen", "Read pictures and scans", "data", ("doc_pictures",),
       parent="documents", me="docbox", guide="docpics"),
-    F("docmeaning", "Bedeutungssuche", "Meaning search", "data", ("doc_semantic",), "doc_semantic",
+    F("docmeaning", "Bedeutungssuche", "Meaning search", "data", ("doc_semantic",),
       parent="documents", me="docbox", guide="docmeaning"),
-    F("docfiles", "Originale aufbewahren", "Keep originals", "data", ("doc_originals",), "doc_originals",
+    F("docfiles", "Originale aufbewahren", "Keep originals", "data", ("doc_originals",),
       parent="documents", me="docbox", guide="docfiles"),
     F("docnight", "Lange Dokumente nachts lesen", "Read long documents at night", "data", ("doc_night",),
       parent="documents", me="docbox", guide="docnight"),
-    F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",), "doc_shared",
+    F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",),
       parent="documents", me="docbox", guide="docshared"),
     # Docling-Server (doclingdienst.py): for all profiles once the admin sets it up; each may say "not my files"
     # (preference doc_docling, on by default) because the files leave the Spark for the server in the home network
-    F("docling", "Docling-Server", "Docling server", "data", ("docling",), parent="documents", me="docbox",
-      guide="docling"),
-    F("remarkable", "reMarkable-Notizen", "reMarkable notes", "data", ("remarkable",), "rm_on",
+    F("docling", "Docling-Server", "Docling server", "data", ("docling",), pref="doc_docling", parent="documents",
+      me="docbox", guide="docling"),
+    F("remarkable", "reMarkable-Notizen", "reMarkable notes", "data", ("remarkable",),
       parent="docpics", me="rmbox", guide="remarkable"),
-    F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",), "rm_send",
+    F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",),
       parent="remarkable", me="rmbox", guide="rmsend"),
-    F("rmfresh", "Neueste zuerst", "Newest first", "data", ("remarkable_fresh",), "rm_fresh",
+    F("rmfresh", "Neueste zuerst", "Newest first", "data", ("remarkable_fresh",),
       parent="remarkable", me="rmbox", guide="rmfresh"),
-    F("rmmorning", "Morgenblatt", "Morning sheet", "data", ("remarkable_plus",), "rm_morning", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmask", "@Spark auf Papier", "@Spark on paper", "data", ("remarkable_plus",), "rm_ask", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmtodo", "Aufgaben vom reMarkable", "Tasks from the reMarkable", "data", ("remarkable_plus",), "rm_todo", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmmeet", "Besprechungen zusammenfassen", "Meeting summaries", "data", ("remarkable_plus",), "rm_meet", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmweek", "Wochenrückblick", "Week in review", "data", ("remarkable_plus",), "rm_week", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmweb", "Webseiten und Anhänge aufs reMarkable", "Web pages and attachments to the reMarkable", "data", ("remarkable_plus",), "rm_web", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rminbox", "Eingang pro Tag", "Daily inbox", "data", ("remarkable_plus",), "rm_inbox", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmguide", "Spark-Anleitung auf dem reMarkable", "Spark guide on the reMarkable", "data", ("remarkable_plus",), "rm_guide", parent="rmsend", me="rmbox", guide="rmplus"),
-    # paper for the reMarkable (rmpapier.py): one admin switch, three profile switches
-    F("rmpapier", "Gestaltete Blätter zum Ankreuzen", "Designed sheets to tick", "data", ("remarkable_paper",), "rm_paper",
+    F("rmmorning", "Morgenblatt", "Morning sheet", "data", ("remarkable_plus",), pref="rm_morning", parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmask", "@Spark auf Papier", "@Spark on paper", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmtodo", "Aufgaben vom reMarkable", "Tasks from the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmmeet", "Besprechungen zusammenfassen", "Meeting summaries", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmweek", "Wochenrückblick", "Week in review", "data", ("remarkable_plus",), pref="rm_week", parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmweb", "Webseiten und Anhänge aufs reMarkable", "Web pages and attachments to the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rminbox", "Eingang pro Tag", "Daily inbox", "data", ("remarkable_plus",), pref="rm_inbox", parent="rmsend", me="rmbox", guide="rmplus"),
+    F("rmguide", "Spark-Anleitung auf dem reMarkable", "Spark guide on the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    # paper for the reMarkable (rmpapier.py): one admin switch for three functions
+    F("rmpapier", "Gestaltete Blätter zum Ankreuzen", "Designed sheets to tick", "data", ("remarkable_paper",),
       parent="rmsend", me="rmbox", guide="rmpapier"),
-    F("rmordner", "Ordner nach Art", "Folders by kind", "data", ("remarkable_paper",), "rm_folders", parent="rmsend", me="rmbox",
+    F("rmordner", "Ordner nach Art", "Folders by kind", "data", ("remarkable_paper",), parent="rmsend", me="rmbox",
       guide="rmpapier"),
-    F("rmaufraeumen", "Selbst aufräumen", "Tidy up by itself", "data", ("remarkable_paper",), "rm_tidy", parent="rmordner",
+    F("rmaufraeumen", "Selbst aufräumen", "Tidy up by itself", "data", ("remarkable_paper",), pref="rm_tidy", parent="rmordner",
       me="rmbox", guide="rmpapier"),
     F("rmaufgaben", "Aufgabenblatt zum Ankreuzen", "Task sheet to tick", "data", ("remarkable_tasks",), "",
       parent="rmpapier", me="rmbox", guide="rmaufgaben"),
     # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
-    F("erstellen", "Dokumente erstellen", "Creating documents", "data", ("doc_make",), "doc_make",
+    F("erstellen", "Dokumente erstellen", "Creating documents", "data", ("doc_make",),
       parent="documents", me="docbox", guide="erstellen"),
-    F("erstellenvorlagen", "Eigene Vorlagen", "Own templates", "data", ("doc_make_templates",), "doc_make_templates",
+    F("erstellenvorlagen", "Eigene Vorlagen", "Own templates", "data", ("doc_make_templates",),
       parent="erstellen", me="docbox", guide="erstellenvorlagen"),
     # pictures for slides from the own Kiwix (docmake.wiki_pictures; Präsentationen professionell, point 5)
-    F("erstellenbilder", "Bilder aus dem Kiwix", "Pictures from the Kiwix", "data", ("doc_make_wikipics",), "doc_make_wikipics",
+    F("erstellenbilder", "Bilder aus dem Kiwix", "Pictures from the Kiwix", "data", ("doc_make_wikipics",),
       parent="erstellen", me="docbox", guide="erstellenbilder"),
-    F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",), "doc_brief",
+    F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # everyday
-    F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), "pro_on", me="probox", guide="proactive"),
+    F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), pref="pro_on", me="probox", guide="proactive"),
     # Home Assistant tells the Spark (hamelden.py): each part below "Von selbst melden"
     F("halive", "Sofort-Meldungen aus Home Assistant", "Instant notes from Home Assistant", "day", ("ha_live", "homeassistant"),
-      "pro_ha_live", parent="proactive", me="probox", guide="halive"),
+      pref="pro_ha_live", parent="proactive", me="probox", guide="halive"),
     F("haloud", "Haus-Meldungen über Lautsprecher", "House notes on speakers", "day",
-      ("ha_loud", "homeassistant", "messages_announce", "chats"), "pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
+      ("ha_loud", "homeassistant", "messages_announce", "chats"), pref="pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
     F("haevent", "Home Assistant meldet an Spark", "Home Assistant tells the Spark", "day", ("ha_events", "homeassistant"),
-      "pro_ha_events", parent="proactive", me="probox", guide="haevent"),
-    F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"),
-      "pro_ha_voice", parent="proactive", me="probox", guide="havoice"),
+      pref="pro_ha_events", parent="proactive", me="probox", guide="haevent"),
+    F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"), parent="proactive", me="probox", guide="havoice"),
     F("mailwichtig", "Wichtige Mails erkennen", "Recognize important mail", "day", ("systemone_mail", "systemone", "mail"),
-      "pro_mail_smart", parent="proactive", me="probox", guide="mailwichtig"),
+      pref="pro_mail_smart", parent="proactive", me="probox", guide="mailwichtig"),
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
-      "pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
-    F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guests=True, guide="reminders"),
-    F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), "tasks_on", me="taskbox", guide="tasks"),
-    F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), "my_status", me="bgbox", guide="mystatus"),
-    F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), "agent_on", me="agentbox", guide="agent"),
+      pref="pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
+    F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),
+    F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), me="taskbox", guide="tasks"),
+    F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
+    F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests
     F("beobachten", "Beobachten", "Watching", "day", ("agent_watch",), parent="agent", me="agentbox", guide="beobachten"),
     F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
     # each profile its own MCP services (meinmcp.py); needs no agent level, only the switches
-    F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), "mymcp_on", parent="mcp", me="mymcpbox",
+    F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), parent="mcp", me="mymcpbox",
       guide="mymcp"),
-    F("mymcpjobs", "Eigene MCP-Dienste in Aufträgen", "Own MCP services in jobs", "day", ("mcp_own_jobs",), "mymcp_on",
+    F("mymcpjobs", "Eigene MCP-Dienste in Aufträgen", "Own MCP services in jobs", "day", ("mcp_own_jobs",),
       parent="mymcp", me="mymcpbox", guide="mymcpjobs"),
-    F("mymcpoauth", "Eigene MCP-Dienste mit Anmeldung", "Own MCP services with sign-in", "day", ("mcp_own_oauth",), "mymcp_on",
+    F("mymcpoauth", "Eigene MCP-Dienste mit Anmeldung", "Own MCP services with sign-in", "day", ("mcp_own_oauth",),
       parent="mymcp", me="mymcpbox", guide="mymcpoauth"),
     # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger; since V01.0.488
     # also what "Nachrichten an andere" did (plan plaene/nachrichten-in-chats.md): "Sag Anna …", "an alle", Durchsagen
-    F("chats", "Chats", "Chats", "day", ("chats",), "chats_on", me="setbox", guide="chats"),
-    F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), "msg_all", parent="chats",
+    F("chats", "Chats", "Chats", "day", ("chats",), me="setbox", guide="chats"),
+    F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), pref="msg_all", parent="chats",
       me="setbox", guide="messages_all"),
     F("chatgroups", "Gruppen-Chats", "Group chats", "day", ("chats_groups",), parent="chats", me="setbox", guide="chatgroups"),
     F("chatmedia", "Fotos, Dateien und Sprache in Chats", "Photos, files and voice in chats", "day", ("chats_media",),
@@ -201,55 +203,53 @@ FEATURES = (
     F("verbund", "Chats mit anderen Sparks", "Chats with other Sparks", "day", ("chats_verbund",), parent="chats",
       guide="verbund"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
-    F("weather", "Wetter", "Weather", "day", ("weather",), "wx_on", me="wxbox", guide="weather"),
+    F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
-    F("parcels", "Pakete", "Parcels", "post", ("parcels",), "par_on", parent="mail", me="parbox", guide="parcels"),
-    F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), "write_on", me="writebox", guide="schreib"),
-    F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",),
-      "write_apps", parent="schreib", me="writebox", guide="schreibapps"),
-    F("contacts", "Kontakte", "Contacts", "post", ("contacts",), "con_on", me="conbox", guide="contacts"),
+    F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="parbox", guide="parcels"),
+    F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
+    F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),
+    F("contacts", "Kontakte", "Contacts", "post", ("contacts",), me="conbox", guide="contacts"),
     # home
     F("ha", "Home Assistant", "Home Assistant", "home", ("homeassistant",), me="habox", guide="ha"),
     F("room", "Raum-Modus", "Room mode", "home", ("room",), me="roombox", guide="room"),
     F("roomtv", "Fernsehstimmen überhören", "Ignore TV voices", "home", ("room_voices",), parent="room", me="roombox", guide="roomtv"),
     F("roomha", "Raum-Modus für Home Assistant", "Room mode for Home Assistant", "home", ("room_ha",), parent="room",
       me="roombox", guide="roomha"),
-    F("esp32", "Eigene Lautsprecher (ESP32)", "Own speakers (ESP32)", "home", ("esp32",), "esp_on", me="espbox", guide="esp32"),
-    F("espstopp", "Stopp beim Vorlesen", "Stop while it speaks", "home", ("esp32_stop", "esp32"), "esp_stop",
+    F("esp32", "Eigene Lautsprecher (ESP32)", "Own speakers (ESP32)", "home", ("esp32",), me="espbox", guide="esp32"),
+    F("espstopp", "Stopp beim Vorlesen", "Stop while it speaks", "home", ("esp32_stop", "esp32"),
       parent="esp32", me="espbox", guide="espstopp"),
-    F("roomfar", "Raum-Modus aus der Ferne starten", "Start room mode from afar", "home", ("room_remote", "esp32"), "room_remote",
+    F("roomfar", "Raum-Modus aus der Ferne starten", "Start room mode from afar", "home", ("room_remote", "esp32"),
       parent="room", me="roombox", guide="roomfar"),
-    F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",),
-      "msg_announce", parent="chats", me="setbox", guide="messages_announce"),
+    F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",), parent="chats", me="setbox", guide="messages_announce"),
     F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
     # on the go and devices
-    F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), "transit_on", me="trbox", guide="transit"),
+    F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
-    F("android", "Android-App", "Android app", "go", ("android",), "android_on", me="andbox", guide="android"),
-    F("androidlive", "Android: Mitteilungen sofort", "Android: notes at once", "go", ("android_live",), "android_live",
+    F("android", "Android-App", "Android app", "go", ("android",), me="andbox", guide="android"),
+    F("androidlive", "Android: Mitteilungen sofort", "Android: notes at once", "go", ("android_live",), pref="android_live",
       parent="android", me="andbox", guide="androidlive"),
-    F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",), "desk_on",
+    F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",),
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
       parent="begleiter", me="deskbox", guide="begleitertun"),
     F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
       parent="begleiter", me="deskbox", guide="begleitermeeting"),
-    F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
+    F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), me="pebbox", guide="pebblepair"),
     # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi
-    F("geraeteupdate", "Geräte-Updates", "Device updates", "go", ("dev_updates",), "devup_on", me="setbox", guide="geraeteupdate"),
+    F("geraeteupdate", "Geräte-Updates", "Device updates", "go", ("dev_updates",), me="setbox", guide="geraeteupdate"),
     F("geraetenacht", "Lautsprecher nachts aktualisieren", "Update speakers at night", "go", ("dev_updates_night", "esp32"),
-      "devup_night", parent="geraeteupdate", me="setbox", guide="geraetenacht"),
+      pref="devup_night", parent="geraeteupdate", me="setbox", guide="geraetenacht"),
     F("xiaozhihinweis", "Hinweis auf neue XiaoZhi-Version", "Note on a new XiaoZhi version", "go", ("dev_updates_upstream",),
       parent="geraeteupdate", guide="xiaozhihinweis"),
-    F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
+    F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),
       parent="mcpserver", me="mcpbox", guide="mcpextern"),
     F("mcpact", "MCP: Handeln mit Bestätigung", "MCP: acting with confirmation", "go", ("mcp_server_act",),
       parent="mcpserver", me="mcpbox", guide="mcpact"),
-    F("iphone", "iPhone-App", "iPhone app", "go", ("iphone",), "app_on", me="appbox", guide="iphone"),
-    F("iphonepush", "Push an die iPhone-App", "Push to the iPhone app", "go", ("iphone_push",), "app_push", parent="iphone",
+    F("iphone", "iPhone-App", "iPhone app", "go", ("iphone",), me="appbox", guide="iphone"),
+    F("iphonepush", "Push an die iPhone-App", "Push to the iPhone app", "go", ("iphone_push",), pref="app_push", parent="iphone",
       me="appbox", guide="iphonepush"),
     F("iphonepanel", "Panel-Bereiche in der iPhone-App", "Panel areas in the iPhone app", "go", ("iphone_panel",),
       parent="iphone", me="appbox", guide="iphonepanel"),
@@ -257,17 +257,17 @@ FEATURES = (
       parent="iphone", guide="iphoneupdate"),
     # security
     F("speaker", "Sprechererkennung", "Speaker recognition", "sec", ("speaker_id",), me="voicebox", guide="speaker"),
-    F("spkcode", "Codewort am Lautsprecher", "Code word at a speaker", "sec", ("speaker_code", "esp32"), "spk_code",
+    F("spkcode", "Codewort am Lautsprecher", "Code word at a speaker", "sec", ("speaker_code", "esp32"),
       parent="speaker", me="espbox", guide="spkcode"),
     F("mfa", "Zweiter Anmeldeschritt", "Second sign-in step", "sec", ("mfa",), me="secbox", guide="mfa"),
     # reports as GitHub issues with anonymized log lines (meldung.py); what goes out is shown before
-    F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), "report_on", me="rpbox", guide="melden"),
+    F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), me="rpbox", guide="melden"),
     F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
       parent="melden", me="rpbox", guide="meldenadmin"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
-    F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), "svc_note", me="setbox", guide="dienstwacht"),
+    F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
     # speicher.py: a copy of the profile's data on its own NAS (WebDAV, SFTP, SMB) or a folder the admin mounted
-    F("speicher", "Eigener Speicher", "Own storage", "data", ("storage_own",), "storage_on", me="storebox", guide="speicher"),
+    F("speicher", "Eigener Speicher", "Own storage", "data", ("storage_own",), me="storebox", guide="speicher"),
     F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
       me="storebox", guide="speicherlan"),
     F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
@@ -276,23 +276,22 @@ FEATURES = (
       me="storebox", guide="speicherauslagern"),
     # nas.py (plan plaene/synology-bauplan.md, S1): one connection to the own NAS for everything that uses it
     F("nas", "NAS verbinden", "Connect a NAS", "data", ("nas_on",), me="storebox", guide="nas"),
-    F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",),
-      "svc_hint", parent="dienstwacht", me="setbox", guide="dienstnutzer"),
+    F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",), parent="dienstwacht", me="setbox", guide="dienstnutzer"),
     # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile
-    F("verlaufsync", "Verlauf sofort abgleichen", "Instant history sync", "talk", ("history_live",), "sync_live",
+    F("verlaufsync", "Verlauf sofort abgleichen", "Instant history sync", "talk", ("history_live",),
       me="setbox", guide="verlaufsync"),
-    F("eingespraech", "Ein Gespräch für alle Kanäle", "One conversation for all channels", "talk", ("history_one",), "sync_one",
+    F("eingespraech", "Ein Gespräch für alle Kanäle", "One conversation for all channels", "talk", ("history_one",),
       me="setbox", guide="eingespraech"),
-    F("offlinelesen", "Verlauf offline lesen", "Read history offline", "talk", ("history_offline",), "sync_offline",
+    F("offlinelesen", "Verlauf offline lesen", "Read history offline", "talk", ("history_offline",),
       me="setbox", guide="offlinelesen"),
     # Einstellungs-Assistent (faelle.py, berater.py): problems become cases, cases proposals from a fixed catalog
     F("berater", "Einstellungs-Assistent", "Settings assistant", "talk", ("berater",), guide="berater"),
     F("beratererklaeren", "Anfragen erklären", "Explain requests", "talk", ("berater_explain",), parent="berater",
       guide="beratererklaeren"),
     F("beraterchat", "Den Assistenten nach Vorschlägen fragen", "Ask the assistant for proposals", "talk",
-      ("berater_chat",), "berater_ask", parent="berater", me="setbox", guide="beraterchat"),
+      ("berater_chat",), parent="berater", me="setbox", guide="beraterchat"),
     F("beraterhinweis", "Hinweis bei neuem Vorschlag", "Note on a new proposal", "talk", ("berater_notify",),
-      "berater_note", parent="berater", me="setbox", guide="beraterhinweis"),
+      pref="berater_note", parent="berater", me="setbox", guide="beraterhinweis"),
     F("beraterissue", "Fälle als Meldung vorbereiten", "Prepare cases as reports", "talk", ("berater_issue",),
       parent="berater", guide="beraterissue"),
     F("beraterauto", "Autopilot für kleine Änderungen", "Autopilot for small changes", "talk", ("berater_auto",),
@@ -305,13 +304,13 @@ FEATURES = (
       parent="berater", guide="beraterundo"),
     F("berateru", "Schritte für die Umgebung", "Steps for the environment", "talk", ("berater_env",), parent="berater",
       guide="berateru"),
-    F("beratermich", "Vorschläge für mein Profil", "Proposals for my profile", "talk", ("berater_me",), "berater_me",
+    F("beratermich", "Vorschläge für mein Profil", "Proposals for my profile", "talk", ("berater_me",),
       parent="berater", me="setbox", guide="beratermich"),
-    F("bewerten", "👍/👎 unter Antworten", "👍/👎 under answers", "talk", ("bewerten",), "rate_on", parent="berater",
+    F("bewerten", "👍/👎 unter Antworten", "👍/👎 under answers", "talk", ("bewerten",), parent="berater",
       me="setbox", guide="bewerten"),
-    F("beraterwarum", "„Warum?“ für alle Profile", "\"Why?\" for every profile", "talk", ("berater_why",), "why_on",
+    F("beraterwarum", "„Warum?“ für alle Profile", "\"Why?\" for every profile", "talk", ("berater_why",),
       me="setbox", guide="beraterwarum", parent="berater"),
-    F("tagebuch", "Spark-Tagebuch", "Spark diary", "talk", ("tagebuch",), "tagebuch_on", me="setbox", guide="tagebuch"),
+    F("tagebuch", "Spark-Tagebuch", "Spark diary", "talk", ("tagebuch",), me="setbox", guide="tagebuch"),
     # Zustand per Sprache (zustand_wz.py, plan werkzeug-abdeckung Paket 4): „Läuft alles?“, „Wann wurde gesichert?“
     F("sparkzustand", "Zustand per Sprache", "Status by voice", "talk", ("status_voice",),
       guide="sparkzustand"),
@@ -319,10 +318,11 @@ FEATURES = (
     F("rueckgaengig", "Rückgängig per Sprache", "Undo by voice", "talk", ("undo_voice",),
       guide="rueckgaengig"),
     F("bewertenzurueck", "Rückmeldung, wenn es behoben ist", "Feedback when it is fixed", "talk", ("bewerten_back",),
-      "rate_back", parent="bewerten", me="setbox", guide="bewertenzurueck"),
+      pref="rate_back", parent="bewerten", me="setbox", guide="bewertenzurueck"),
 )
 BY_KEY = {f.key: f for f in FEATURES}
-profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)
+profiles.NO_PRESET.update(f.pref for f in FEATURES if f.pref)
+PREFS = {f.pref for f in FEATURES if f.pref}
 
 # Spark-wide conditions besides the switches (an address that must be set), registered by the module
 # that knows them, so this file imports none of them: key -> function(chat config) -> bool
@@ -419,27 +419,60 @@ def admin_on(key, c=None):
     return bool(ready(c)) if ready else True
 
 
-def profile_on(key, uid, s=None):
-    """The profile's own switch (True when the function has none). Never from the admin's presets."""
+def pref_on(key, uid, s=None):
+    """The profile's own preference for something the Spark does unasked (True when the function has none, and
+    unless the profile switched it off). Never from the admin's presets."""
     f = BY_KEY[key]
-    if not uid:
+    if not f.pref:
+        return True
+    s = profiles.settings(uid) if s is None else s
+    return s.get(f.pref, profiles.SETTINGS[f.pref][0]) is not False
+
+
+def blocked(key, uid, c=None):
+    """The admin blocked the function for this profile (chat.deny, Funktionen → Wer darf was): the function or
+    one it builds on. A profile can never change this itself, it is not in its settings."""
+    c = chat_cfg() if c is None else c
+    deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
+    return any(uid in (deny.get(k) or ()) for k in chain(key))
+
+
+MAX_DENY = 2000   # blocked profiles per function (Wer darf was): the whole household, a bound for the config
+
+
+def clean_deny(deny):
+    """chat.deny without what is gone (a removed function, a deleted profile, doubles): an old entry never blocks
+    saving the admin settings."""
+    deny = deny if isinstance(deny, dict) else {}
+    have = set(profiles.user_ids())
+    out = {}
+    for k, v in deny.items():
+        if k in BY_KEY and isinstance(v, list):
+            ids = list(dict.fromkeys(u for u in v if isinstance(u, str) and u in have))[:MAX_DENY]
+            if ids:
+                out[k] = ids
+    return out
+
+
+def profile_on(key, uid, s=None, c=None):
+    """What holds for this profile besides the Spark's switches: not blocked by the admin, its preference (where
+    there is one) and what the admin granted it (the agent level)."""
+    if not uid or blocked(key, uid, c) or not pref_on(key, uid, s):
         return False
-    if f.profile:
-        s = profiles.settings(uid) if s is None else s
-        if s.get(f.profile) is not True:
-            return False
     grant = GRANTED.get(key)
     return bool(grant(uid)) if grant else True
 
 
 def reason(key, uid, c=None, s=None):
-    """Why it cannot be used: "spark" (admin switch), "guest", "profile" (own switch), "mfa" (the second
-    step first, join.py) or None."""
+    """Why it cannot be used: "spark" (admin switch), "guest", "blocked" (the admin blocked it for this profile),
+    "profile" (the profile switched its preference off), "mfa" (the second step first, join.py) or None."""
     if not admin_on(key, c):
         return "spark"
-    if not uid:
-        return None if BY_KEY[key].guests else "guest"
-    if not profile_on(key, uid, s):
+    if not uid:   # guests only get questions and answers, no function at all (Dominik 2026-10-13)
+        return "guest"
+    if blocked(key, uid, c):
+        return "blocked"
+    if not profile_on(key, uid, s, c):
         return "profile"
     return "mfa" if DUTY and DUTY(uid, key) else None
 
@@ -449,38 +482,40 @@ def allowed(key, uid, c=None, s=None):
 
 
 def count(uid, c=None):
-    """(on, of) for Personen und Geräte: of the functions with an own switch the Spark allows, how many are on for uid."""
+    """(on, of) for Personen und Geräte: of the functions the Spark allows, how many this profile may use."""
     c = chat_cfg() if c is None else c
     s = profiles.settings(uid)
-    mine = [f for f in FEATURES if f.profile and admin_on(f.key, c)]
-    return sum(1 for f in mine if s.get(f.profile) is True), len(mine)
+    mine = [f for f in FEATURES if admin_on(f.key, c)]
+    return sum(1 for f in mine if profile_on(f.key, uid, s, c)), len(mine)
 
 
 def guests(c=None):
-    """What guests get: the guest access switch and how many functions they could use with it."""
+    """What guests get: the guest access switch. With it they only ask and get answers, never a function or a tool
+    (Dominik 2026-10-13: "einfach bloß Frage, Antwort")."""
     c = chat_cfg() if c is None else c
-    return {"public": _switch(c, "public"), "features": sum(1 for f in FEATURES if f.guests and admin_on(f.key, c))}
+    return {"public": _switch(c, "public")}
 
 
 WHY = {"spark": ("Vom Admin ausgeschaltet", "Switched off by the admin"),
        "guest": ("Nur mit Profil", "Only with a profile"),
-       "profile": ("Bei dir aus", "Off for you"),
+       "blocked": ("Vom Admin für dich gesperrt", "Blocked for you by the admin"),
+       "profile": ("Von dir ausgeschaltet", "Switched off by you"),
        "mfa": ("Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit)", "Set up the second sign-in step first (Me → Security)")}
 
 
 def state(uid, c=None):
-    """Every function with what the Spark, the profile and guests may: for Ich, the app and the search.
-    Guests see only the functions guests can use."""
+    """Every function with what the Spark and the profile may: for Ich, the app and the search.
+    Guests get none: they only ask and get answers."""
     c = chat_cfg() if c is None else c
     s = profiles.settings(uid) if uid else {}
     out = []
     for f in FEATURES:
-        if not uid and not f.guests:
-            continue
+        if not uid:
+            break
         why = reason(f.key, uid, c, s)
         out.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "spark": admin_on(f.key, c),
-                    "own": f.profile or None, "mine": (s.get(f.profile) is True) if uid and f.profile else None,
-                    "can": why is None, "why": why, "guests": f.guests, "parent": f.parent or None,
+                    "own": f.pref or None, "mine": pref_on(f.key, uid, s) if f.pref else None,
+                    "can": why is None, "why": why, "parent": f.parent or None,
                     "me": f.me or None, "guide": f.guide or None})
     return out
 
@@ -560,7 +595,7 @@ def switch_way(sw, lang="de"):
 
 
 def me_way(key, lang="de"):
-    """Where the profile switches it on: Ich → <page> „<name>“ (way.js marks the row)."""
+    """Where the profile sets it up or changes its preference: Ich → <page> „<name>“ (way.js marks the row)."""
     f = BY_KEY[key]
     import hilfe
     head = hilfe.page_name("me/" + (f.me or "setbox"), lang) or hilfe.page_name("me/setbox", lang)
@@ -580,8 +615,11 @@ def missing_text(key, uid, lang="de", c=None):
     setup = [k for k in unready(key, c) if not any(sw in missing(k, c) for sw in BY_KEY[k].admin)]
     if setup:
         out.append(("Noch einzurichten: " if li == 0 else "Still to set up: ") + ", ".join(admin_way(k, lang) for k in setup) + ".")
-    if uid and f.profile and profiles.settings(uid).get(f.profile) is not True:
-        out.append(("Du selbst: " if li == 0 else "You yourself: ") + me_way(key, lang) + (" einschalten." if li == 0 else " on."))
+    if uid and blocked(key, uid, c):
+        out.append("Der Admin hat es für dich gesperrt (Funktionen → Wer darf was)." if li == 0
+                   else "The admin blocked it for you (Features → Who may do what).")
+    elif uid and f.pref and not pref_on(key, uid):
+        out.append(("Du hast es ausgeschaltet: " if li == 0 else "You switched it off: ") + me_way(key, lang) + ".")
     return " ".join(out)
 
 
@@ -620,28 +658,22 @@ def _seen(c):
     return d
 
 
-def new_profile(uid):
-    """A new profile gets the functions the admin chose for new profiles (chat.new_profile_on)."""
-    keys = [k for k in chat_cfg().get("new_profile_on", []) if k in BY_KEY and BY_KEY[k].profile]
-    if keys:
-        profiles.save_settings(uid, {BY_KEY[k].profile: True for k in keys})
-    return keys
-
-
 def matrix():
     c = chat_cfg()
     seen = _seen(c)
     users = profiles.names()
-    s = {u["id"]: profiles.settings(u["id"]) for u in users}
     import admin
     import coadmin
     switchable = set(admin.app_switches())   # what /api/admin/switches may change (not public, mfa, iphone …)
-    rows, new = [], set(c.get("new_profile_on", []))
+    deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
+    rows = []
     for f in FEATURES:
         rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
-                     "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None, "guests": f.guests, "seen": f.key in seen,
-                     "profile": f.profile or None, "guide": f.guide, "new": f.key in new if f.profile else None,
-                     "cells": {u["id"]: s[u["id"]].get(f.profile) is True for u in users} if f.profile else None,
+                     "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None,
+                     "seen": f.key in seen, "guide": f.guide,
+                     # per profile: may it use it (True), blocked here by the admin (False) or through a function it builds on
+                     "cells": {u["id"]: u["id"] not in (deny.get(f.key) or ()) for u in users},
+                     "inherited": {u["id"]: blocked(f.key, u["id"], c) and u["id"] not in (deny.get(f.key) or ()) for u in users},
                      "chain": chain_switches(f.key), "setup": [admin_way(k) for k in unready(f.key, c)]})
     every = sorted({sw for f in FEATURES for sw in f.admin})
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
@@ -659,10 +691,11 @@ def admin_features(request: Request):
 
 @router.put("/api/admin/features/{key}/profiles/{uid}", dependencies=[Depends(auth)])
 async def admin_feature_profile(key: str, uid: str, request: Request):
-    """The admin switches a function for one profile (its own switch, which the profile sees under Ich)."""
+    """The admin blocks a function for one profile, or lifts the block ({"on": false} blocks, {"on": true} allows
+    again). Stored in config.json chat.deny, which only the admin writes: the profile cannot lift it itself."""
     guard.limit(request, "features", admin=True)
     f = BY_KEY.get(key)
-    if not f or not f.profile or not _UID.fullmatch(uid) or not profiles.by_id(uid):
+    if not f or not _UID.fullmatch(uid) or not profiles.by_id(uid):
         raise HTTPException(404, "no such function or profile")
     raw = await request.body()
     if len(raw) > 256:
@@ -676,48 +709,25 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
         raise HTTPException(400, "on: true or false")
     import admin
     admin._no_admin_profile(request, uid)
-    profiles.save_settings(uid, {f.profile: on})
-    elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
-    by = "main" if not elev else elev["id"]
-    guard.log("feature_profile", uid=uid, by=by,
-              detail=f"{f.de} für {profiles.by_id(uid)['name']} {'an' if on else 'aus'}")
-    return {"key": key, "uid": uid, "on": on}
-
-
-@router.put("/api/admin/features/{key}/new", dependencies=[Depends(auth)])
-async def admin_feature_new(key: str, request: Request):
-    """On for every new profile (chat.new_profile_on); profiles that exist keep their own switch."""
-    guard.limit(request, "features", admin=True)
-    f = BY_KEY.get(key)
-    if not f or not f.profile:
-        raise HTTPException(404, "no such function with an own switch")
-    raw = await request.body()
-    if len(raw) > 256:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    on = body.get("on") if isinstance(body, dict) else None
-    if not isinstance(on, bool):
-        raise HTTPException(400, "on: true or false")
-    import admin
     with admin._save_lock:   # one config write at a time (admin._save)
         new = admin.get_config()
-        keys = [k for k in new["chat"].get("new_profile_on", []) if k != key] + ([key] if on else [])
-        new["chat"]["new_profile_on"] = [k for k in BY_KEY if k in keys]
-        admin.validate(new)
+        deny = {k: [u for u in v if not (k == key and u == uid)] for k, v in (new["chat"].get("deny") or {}).items()}
+        if not on:
+            deny[key] = deny.get(key, []) + [uid]
+        new["chat"]["deny"] = {k: v for k, v in deny.items() if v}
+        old = admin.validate(new)
         write_json(admin.CONFIG_PATH, new, indent=2)
+    admin.undo.record(old, new, admin._by(request), admin.SENSITIVE)
     elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
-    guard.log("feature_profile", by="main" if not elev else elev["id"], detail=f"{f.de} für neue Profile {'an' if on else 'aus'}")
-    return {"key": key, "on": on}
+    guard.log("feature_profile", uid=uid, by="main" if not elev else elev["id"],
+              detail=f"{f.de} für {profiles.by_id(uid)['name']} {'erlaubt' if on else 'gesperrt'}")
+    return {"key": key, "uid": uid, "on": on}
 
 
 @router.post("/api/admin/features/{key}/enable", dependencies=[Depends(auth)])
 async def admin_feature_enable(key: str, request: Request):
-    """Switch a function on together with everything it builds on (its chain's Spark switches), optionally also
-    for one profile ({"uid": ...}). Switches the app may not change and what still needs setting up come back
-    as ways, they are never switched here."""
+    """Switch a function on together with everything it builds on (its chain's Spark switches). Switches the app
+    may not change and what still needs setting up come back as ways, they are never switched here."""
     guard.limit(request, "features", admin=True)
     f = BY_KEY.get(key)
     if not f:
@@ -729,12 +739,9 @@ async def admin_feature_enable(key: str, request: Request):
         body = json.loads(raw or b"{}")
     except ValueError:
         raise HTTPException(400, "invalid JSON")
-    uid = body.get("uid") if isinstance(body, dict) else None
-    if uid is not None and (not isinstance(uid, str) or not _UID.fullmatch(uid) or not profiles.by_id(uid) or not f.profile):
-        raise HTTPException(404, "no such profile or no own switch")
+    if not isinstance(body, dict):
+        raise HTTPException(400, "invalid JSON")
     import admin
-    if uid:
-        admin._no_admin_profile(request, uid)
     may = set(admin.app_switches())
     todo = missing(key)
     can, manual = [sw for sw in todo if sw in may], [sw for sw in todo if sw not in may]
@@ -747,11 +754,6 @@ async def admin_feature_enable(key: str, request: Request):
             write_json(admin.CONFIG_PATH, new, indent=2)
         admin.undo.record(old, new, admin._by(request), admin.SENSITIVE)
         guard.log("config_switch", detail=", ".join(f"chat.{sw}=on" for sw in can) + f" (für {f.de})")
-    if uid:
-        profiles.save_settings(uid, {f.profile: True})
-        elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
-        guard.log("feature_profile", uid=uid, by="main" if not elev else elev["id"],
-                  detail=f"{f.de} für {profiles.by_id(uid)['name']} an")
     c = chat_cfg()
     return {"key": key, "switched": can, "names": [list(switch_name(sw)) for sw in can],
             "manual": [{"switch": sw, "name": list(switch_name(sw)), "way": [switch_way(sw), switch_way(sw, "en")]} for sw in manual],

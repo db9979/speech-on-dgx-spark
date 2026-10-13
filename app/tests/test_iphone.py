@@ -45,24 +45,26 @@ def pair(c, name="Annas iPhone"):
 
 class IPhone(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(iphone=True)
+        helpers.set_config(iphone=True, deny={})
         iphone._pending.clear()
         for k in [k for k in guard._rate if k[0] == "pair"]:   # every test client shares one address
             guard._rate.pop(k, None)
 
     def tearDown(self):
-        helpers.set_config(iphone=False)
+        helpers.set_config(iphone=False, deny={})
 
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["iphone"], False)
-        for k in ("app_on", "app_ha", "app_listen", "app_act"):
+        for k in ("app_ha", "app_listen", "app_act"):
             self.assertIs(profiles.SETTINGS[k][0], False)
+        self.assertNotIn("app_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
 
     def test_pairing_needs_both_switches_and_works_once(self):
         a = profile("Iris")
+        helpers.set_config(deny={"iphone": [uid_of("Iris")]})   # the admin blocks this profile
         self.assertEqual(a.post("/api/profile/iphone/pair", json={"base": BASE}).status_code, 403)
-        a.put("/api/profile/settings", json={"app_on": True})
+        helpers.set_config(deny={})
         helpers.set_config(iphone=False)
         self.assertEqual(a.post("/api/profile/iphone/pair", json={"base": BASE}).status_code, 403)
         helpers.set_config(iphone=True)
@@ -99,7 +101,6 @@ class IPhone(unittest.TestCase):
 
     def test_key_only_asks_and_listens(self):
         a = profile("Ina")
-        a.put("/api/profile/settings", json={"app_on": True})
         token = pair(a).json()["token"]
         app = TestClient(panel.app)
         h = {"X-Speech-Device": token}
@@ -113,10 +114,10 @@ class IPhone(unittest.TestCase):
         self.assertEqual(app.get("/api/profile/iphone", headers=h).status_code, 401)
         self.assertEqual(app.post("/api/profile/iphone/pair", json={"base": BASE}, headers=h).status_code, 401)
         self.assertIn(app.get("/api/tasks/inbox?list=einkauf", headers=h).status_code, (401, 403))   # only with app_ios
-        # switched off: the key stops at once (profile switch, then admin switch)
-        a.put("/api/profile/settings", json={"app_on": False})
+        # switched off: the key stops at once (the admin blocks the profile, then the admin switch)
+        helpers.set_config(deny={"iphone": [uid_of("Ina")]})
         self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 503)   # "not now", pairing stays (V01.0.388)
-        a.put("/api/profile/settings", json={"app_on": True})
+        helpers.set_config(deny={})
         self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 200)
         helpers.set_config(iphone=False)
         self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 503)
@@ -125,7 +126,6 @@ class IPhone(unittest.TestCase):
 
     def test_remove_and_admin_cannot_move_it(self):
         a, b = profile("Ilse"), profile("Ivo")
-        a.put("/api/profile/settings", json={"app_on": True})
         token = pair(a).json()["token"]
         did = a.get("/api/profile/iphone").json()["phones"][0]["id"]
         self.assertEqual(ADMIN.put(f"/api/admin/devices/{did}", json={"user": uid_of("Ivo")}).status_code, 400)
@@ -141,7 +141,6 @@ class IPhone(unittest.TestCase):
         url = f"http://127.0.0.1:{helpers.HA_PORT}"
         try:
             self.assertEqual(a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN}).status_code, 200)
-            a.put("/api/profile/settings", json={"app_on": True})
             h = {"X-Speech-Device": pair(a).json()["token"]}
             app = TestClient(panel.app)
 
@@ -160,7 +159,6 @@ class IPhone(unittest.TestCase):
 
     def test_phone_actions_only_from_the_app_and_when_allowed(self):
         a = profile("Irma")
-        a.put("/api/profile/settings", json={"app_on": True})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         cmd = 'TOOL iphone_action {"kind": "navigate", "target": "Karlsruhe Hbf"}'
@@ -185,7 +183,6 @@ class IPhone(unittest.TestCase):
 
     def test_hello_tells_what_the_profile_allows(self):
         a = profile("Inge")
-        a.put("/api/profile/settings", json={"app_on": True})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         d = app.get("/api/iphone/hello", headers=h).json()
@@ -233,7 +230,6 @@ class IPhone(unittest.TestCase):
 
     def test_app_sees_and_saves_only_its_own_history(self):
         a = profile("Ilka")
-        a.put("/api/profile/settings", json={"app_on": True})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         convo = {"id": "app-1", "title": "Wetter", "updated": 1000,
@@ -251,14 +247,12 @@ class IPhone(unittest.TestCase):
         self.assertEqual(app.put("/api/profile/convos", content=big, headers=dict(h, **{"Content-Type": "application/json"})).status_code, 413)
         # another profile's app sees none of it
         b = profile("Ilona")
-        b.put("/api/profile/settings", json={"app_on": True})
         hb = {"X-Speech-Device": pair(b).json()["token"]}
         self.assertEqual(app.get("/api/profile/convos", headers=hb).json(), [])
 
     def test_documents_from_the_app_only_when_allowed(self):
         import documents
         a = profile("Ivana")
-        a.put("/api/profile/settings", json={"app_on": True})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         doc = {"name": "Brief/../<x>.pdf", "text": "Mietvertrag\x00 Seite 1"}
@@ -291,7 +285,6 @@ class IPhone(unittest.TestCase):
         """Vereinheitlichen Phase 6: the app reads the same function list as the panel (read only) and Freihändig /
         Ins Wort fallen are the profile's values, the same in browser and app."""
         a = profile("Ivo")
-        a.put("/api/profile/settings", json={"app_on": True})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         r = app.get("/api/features", headers=h)
@@ -305,7 +298,7 @@ class IPhone(unittest.TestCase):
 
     def test_app_changes_only_its_list_of_settings(self):
         a = profile("Ivy")
-        a.put("/api/profile/settings", json={"app_on": True, "style": "kurz und frech"})
+        a.put("/api/profile/settings", json={"style": "kurz und frech"})
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         got = app.get("/api/iphone/settings", headers=h).json()
@@ -333,7 +326,6 @@ class IPhone(unittest.TestCase):
                                  headers=dict(h, **{"Content-Type": "application/json"})).status_code, 413)
         # another profile's app sees its own values only
         b = profile("Ivette")
-        b.put("/api/profile/settings", json={"app_on": True})
         hb = {"X-Speech-Device": pair(b).json()["token"]}
         self.assertNotEqual(app.get("/api/iphone/settings", headers=hb).json()["settings"]["voice"], "Anna")
 
@@ -341,7 +333,6 @@ class IPhone(unittest.TestCase):
         a = profile("Ilsa")
         helpers.set_config(tasks=True)
         try:
-            a.put("/api/profile/settings", json={"app_on": True, "tasks_on": True})
             h = {"X-Speech-Device": pair(a).json()["token"]}
             app = TestClient(panel.app)
             self.assertEqual(a.post("/api/profile/tasks/einkauf", json={"text": "Milch"}).status_code, 200)

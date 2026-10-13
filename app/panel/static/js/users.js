@@ -29,7 +29,7 @@ async function loadProf(){profFilter();let d;
     ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
   // Gäste as the first row: who talks without a profile, and what they get (Wer darf was has the details)
   if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span><div class="intro sm">${d.guests.public
-      ?d.guests.features+' '+t('Funktionen ohne Anmeldung, nie persönliche Daten','functions without signing in, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></td>
+      ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></td>
     <td style="text-align:right;white-space:nowrap"><button class="b" type="button" id="pguests">${t('Wer darf was','Who may do what')}</button></td></tr>`);
   if($('pguests'))$('pguests').onclick=()=>goSec('who');
   const pages=Math.max(1,Math.ceil(d.total/d.per));
@@ -80,7 +80,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
   let rights='';
   if(r){const off=t('Auf dem Spark aus','Off on the Spark');
     rights=h3(t('Rechte','Rights'))
-    +setRow(esc(t('Aufträge im Hintergrund','Background jobs')),esc(t('Was der Assistent für dieses Profil allein erledigen darf. Das Profil schaltet es dann unter Ich ein.','What the assistant may do alone for this profile. The profile then switches it on under Me.')),
+    +setRow(esc(t('Aufträge im Hintergrund','Background jobs')),esc(t('Was der Assistent für dieses Profil allein erledigen darf. Gilt sofort, ohne eigenen Schalter.','What the assistant may do alone for this profile. Applies at once, without an own switch.')),
       `<select id="pagent" aria-label="${esc(t('Aufträge','Jobs'))}">${sel('',r.agent.level,t('aus','off'))}${sel('read',r.agent.level,t('nur lesen und berichten','read and report only'))}${sel('act',r.agent.level,t('auch handeln mit „Ja“','also act after "Yes"'))}</select>`,{why:r.agent.spark?'':off})
     +(r.vorrang?setRow(esc(t('Vorrang','Priority')),esc(t('Reden mehrere gleichzeitig, kommt dieses Profil mit Sprachausgabe, Spracherkennung und Sprachmodell zuerst dran. Höchstens ','When several people talk at once, this profile goes first for speech output, recognition and the language model. At most ')+r.vorrang.max+t(' Profile.',' profiles.')),
       `<select id="pvor" aria-label="${esc(t('Vorrang','Priority'))}">${sel('',r.vorrang.level,t('normal','normal'))}${sel('vorrang',r.vorrang.level,t('Vorrang','priority'))}${sel('hinten',r.vorrang.level,t('hinten anstellen','last in line'))}</select>`,{why:r.vorrang.spark?'':off}):'')
@@ -102,7 +102,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     <div class="fh">${t('So können andere ihn in Nachrichten nennen, wenn Namen sich ähneln. Muss eindeutig sein.','How others can name this profile in messages when names are alike. Must be unique.')}</div>
     ${h3(t('Geräte','Devices'))}<ul class="facts">${u.devices.map(x=>`<li><span>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''} <small class="mut">${x.speaker?t('Lautsprecher','speaker'):x.app?t('iPhone-App','iPhone app'):t('Schlüssel','key')} · ${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t)):t('noch nie','never')}</small></span></li>`).join('')||`<li class="mut">${t('Keine.','None.')}</li>`}</ul>
     ${h3(t('Funktionen','Functions'))}
-    ${setRow(esc(u.features.on+' '+t('von','of')+' '+u.features.of+' '+t('an','on')),esc(t('Funktionen mit eigenem Schalter, die der Spark erlaubt. Das Profil schaltet sie unter Ich, du unter Wer darf was.','Functions with an own switch the Spark allows. The profile switches them under Me, you under Who may do what.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
+    ${setRow(esc(t(`darf ${u.features.on} von ${u.features.of} freigegebenen Funktionen`,`may use ${u.features.on} of ${u.features.of} released functions`)),esc(t('Was im Spark an ist, gilt sofort für jedes Profil; unter Wer darf was sperrst du einzelne Funktionen für dieses Profil.','What is switched on in the Spark works at once for every profile; under Who may do what you block single functions for this profile.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
     ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}

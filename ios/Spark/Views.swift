@@ -848,7 +848,7 @@ struct SettingsView: View {
                     if talk.allowed.proactive {
                         Text("Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist.")
                     } else {
-                        Text("Dafür im Panel „Von selbst“ für dein Profil einschalten.")
+                        Text(SparkAPI.way(String(localized: "Der Admin hat „Von selbst melden“ noch nicht freigegeben, oder du hast es unter Ich → Von selbst ausgeschaltet.")))
                     }
                 }
                 Section {

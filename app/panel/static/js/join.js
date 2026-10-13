@@ -1,7 +1,7 @@
 // New people and "Los geht's" (join.py, onboard.py; plan plaene/registrierung-onboarding.md, V01.0.269).
 // - #join=<code>: the welcome page of an invitation (name and PIN, or a new PIN for an existing profile)
 // - #hand=<code>: a phone continues where the computer is ("Am Handy weitermachen")
-// - Personen und Geräte → "Neue Personen": the switch, invitations, packs (admin)
+// - Personen und Geräte → "Neue Personen": the switch, invitations (admin)
 // - Ich → "Los geht's": the profile's own setup list, step by step; opens the Ich page of each item
 let SETUP=null;
 const GO={step:null,data:null,from:false,hand:null,timer:null};
@@ -57,12 +57,11 @@ async function handPhone(code){const box=joinModal();box.innerHTML=jhead()+`<div
     setTimeout(poll,1500)};
   setTimeout(poll,1500)}
 // ---------------------------------------------------------------- admin: Personen und Geräte → Neue Personen
-const JA={d:null,made:null,edit:false,t:0};
+const JA={d:null,made:null,t:0};
 const jwhen=s=>s?new Date(s*1000).toLocaleDateString():'';
 async function joinAdmin(force){const box=$('joinadmin');if(!box)return;if(!force&&Date.now()-JA.t<3000)return;JA.t=Date.now();
   try{JA.d=await (await api('/api/admin/join')).json()}catch(e){box.innerHTML=`<h2>${t('Neue Personen','New people')}</h2><div class="err">${esc(e.message)}</div>`;return}
   const d=JA.d,on=d.mode==='invite',https=location.protocol==='https:';
-  const packName=id=>(d.packs.find(p=>p.id===id)||{}).name||'';
   const st={open:['ok',t('offen','open')],used:['',t('benutzt','used')],gone:['',t('abgelaufen','expired')]};
   box.innerHTML=`<div class="row"><h2 class="sp">${t('Neue Personen','New people')}</h2><div class="lseg" role="group" aria-label="${esc(t('Neue Personen','New people'))}">
       <button type="button" data-jmode="off" class="${on?'':'on'}">${t('Aus','Off')}</button><button type="button" data-jmode="invite" class="${on?'on':''}">${t('Nur mit Einladung','Invitation only')}</button></div></div>
@@ -72,12 +71,10 @@ async function joinAdmin(force){const box=$('joinadmin');if(!box)return;if(!forc
       <div class="jline"><label class="chk sp"><input type="checkbox" id="jhand"${d.handoff?' checked':''}> ${t('„Am Handy weitermachen“ anbieten','Offer "Continue on the phone"')}</label></div>
       <div class="fh">${t('Ein QR-Code am Rechner meldet das Handy im selben Profil an, erst nach Antippen der passenden Zahl am Rechner.','A QR code on the computer signs the phone in to the same profile, only after tapping the matching number on the computer.')}</div>
       ${d.iphone_on?`<label for="jappl">${t('Link zum Laden der iPhone-App (App Store oder TestFlight)','Link to get the iPhone app (App Store or TestFlight)')}</label><div class="rowin"><input id="jappl" maxlength="300" placeholder="https://testflight.apple.com/join/…" value="${esc(d.app_link)}"><button class="b" type="button" id="japplsave">${t('Speichern','Save')}</button></div>`:''}
-      <div class="jline"><span class="sp"><b>${t('Startpakete','Starter packs')}</b> ${d.packs.map(p=>`<span class="chip">${esc(p.name)}</span>`).join(' ')}</span><button class="b" type="button" id="jpackedit">${JA.edit?t('Schließen','Close'):t('Bearbeiten','Edit')}</button></div>
-      <div id="jpacks"></div>
       <div class="jline"><span class="sp"><b>${t('Einladungen','Invitations')}</b></span><button class="b p" type="button" id="jnew"${https?'':' disabled'}>+ ${t('Einladen','Invite')}</button></div>
       ${https?'':`<div class="fh">${t('Einladungen brauchen die https-Adresse des Panels. Diese Seite über https öffnen.','Invitations need the panel\'s https address. Open this page over https.')}</div>`}
       <div id="jform"></div>`:''}
-    <ul class="facts jlist">${d.invites.map(i=>`<li><span><b>${esc(i.kind==='pin'?t('Neue PIN: ','New PIN: ')+(i.profile||'?'):i.name||t('ohne Namen','without a name'))}</b>${i.pack?` <span class="chip hi">${esc(packName(i.pack)||i.pack)}</span>`:''}
+    <ul class="facts jlist">${d.invites.map(i=>`<li><span><b>${esc(i.kind==='pin'?t('Neue PIN: ','New PIN: ')+(i.profile||'?'):i.name||t('ohne Namen','without a name'))}</b>
       <br><small class="mut">${esc(st[i.state][1])} · ${i.state==='used'?t('am ','on ')+esc(jwhen(i.used)):t('bis ','until ')+esc(jwhen(i.until))} · ${t('von ','by ')}${esc(i.by)}</small></span>
       ${i.state==='open'?`<button class="b" type="button" data-jrev="${esc(i.id)}">${t('Zurückziehen','Revoke')}</button>`:''}</li>`).join('')||(on?`<li class="mut"><span>${t('Noch keine Einladungen.','No invitations yet.')}</span></li>`:'')}</ul>
     <div class="fh" id="jmsg"></div>`;
@@ -87,18 +84,15 @@ async function joinAdmin(force){const box=$('joinadmin');if(!box)return;if(!forc
   if($('jmfa'))$('jmfa').onchange=()=>put({mfa:$('jmfa').value});
   if($('jhand'))$('jhand').onchange=()=>put({handoff:$('jhand').checked});
   if($('japplsave'))$('japplsave').onclick=()=>put({app_link:$('jappl').value.trim()});
-  if($('jpackedit'))$('jpackedit').onclick=()=>{JA.edit=!JA.edit;joinAdmin(true)};
-  if(JA.edit&&$('jpacks'))joinPacks();
   if($('jnew'))$('jnew').onclick=()=>joinForm();
   box.querySelectorAll('[data-jrev]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Einladung zurückziehen? Der Link geht dann nicht mehr.','Revoke the invitation? The link stops working.')))return;
     try{await api('/api/admin/join/invites/'+encodeURIComponent(b.dataset.jrev),{method:'DELETE'});joinAdmin(true)}catch(e){msg(e.message,true)}});
   if(JA.made)joinShow(JA.made)}
-function joinForm(){const d=JA.d;$('jform').innerHTML=`<div class="jform"><div class="two2"><div><label for="jname">${t('Name (die Person darf ihn ändern)','Name (the person may change it)')}</label><input id="jname" maxlength="40"></div>
-    <div><label for="jpack">${t('Startpaket','Starter pack')}</label><select id="jpack"><option value="">${t('keins','none')}</option>${d.packs.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></div></div>
+function joinForm(){const d=JA.d;$('jform').innerHTML=`<div class="jform"><label for="jname">${t('Name (die Person darf ihn ändern)','Name (the person may change it)')}</label><input id="jname" maxlength="40">
     <label for="jdays">${t('Gültig','Valid')}</label><select id="jdays">${d.days.map(n=>`<option value="${n}"${n===7?' selected':''}>${n===1?t('1 Tag','1 day'):n+t(' Tage',' days')}</option>`).join('')}</select>
     <div class="row joinfoot"><button class="b p" type="button" id="jmake">${t('Einladung erstellen','Create the invitation')}</button><button class="b" type="button" id="jcancel">${t('Abbrechen','Cancel')}</button></div></div>`;
   $('jcancel').onclick=()=>{$('jform').innerHTML=''};
-  $('jmake').onclick=async()=>{try{const r=await (await api('/api/admin/join/invites',xjson('POST',{name:$('jname').value.trim(),pack:$('jpack').value,days:+$('jdays').value,base:location.origin}))).json();
+  $('jmake').onclick=async()=>{try{const r=await (await api('/api/admin/join/invites',xjson('POST',{name:$('jname').value.trim(),days:+$('jdays').value,base:location.origin}))).json();
     JA.made=Object.assign(r,{who:$('jname').value.trim()});joinAdmin(true)}catch(e){$('jmsg').className='fh err';$('jmsg').textContent=e.message}}}
 // the link and its QR code are shown only right after making it (only the code's hash is kept)
 function joinShow(r,target){const box=target||$('jform');if(!box)return;
@@ -115,17 +109,6 @@ function joinPrint(r){let p=$('joinprint');if(!p){p=document.createElement('div'
     <ol><li>${t('Mit der Handy-Kamera den Code scannen.','Scan the code with the phone camera.')}</li><li>${t('Name und eigene PIN wählen.','Pick a name and your own PIN.')}</li><li>${t('Den Schritten unter „Los geht\'s“ folgen.','Follow the steps under "Let\'s go".')}</li></ol>
     <p class="mut">${t('Gilt einmal.','Works once.')}</p></div>`;
   document.body.classList.add('printjoin');window.print();setTimeout(()=>document.body.classList.remove('printjoin'),500)}
-function joinPacks(){const d=JA.d;let packs=JSON.parse(JSON.stringify(d.packs));
-  const draw=()=>{$('jpacks').innerHTML=packs.map((p,i)=>`<div class="jpack"><div class="rowin"><input data-jpn="${i}" maxlength="30" value="${esc(p.name)}" aria-label="${esc(t('Name des Pakets','Name of the pack'))}"><button class="b" type="button" data-jpdel="${i}">${t('Entfernen','Remove')}</button></div>
-      <div class="jkeys">${d.packable.map(f=>`<label class="chk"><input type="checkbox" data-jpk="${i}" value="${esc(f.key)}"${p.keys.includes(f.key)?' checked':''}> ${esc(t(f.name[0],f.name[1]))}${f.on?'':` <small class="mut">(${t('Spark aus','Spark off')})</small>`}</label>`).join('')}</div></div>`).join('')
-      +`<div class="row">${packs.length<10?`<button class="b" type="button" id="jpadd">+ ${t('Paket','Pack')}</button>`:''}<button class="b p" type="button" id="jpsave">${t('Pakete speichern','Save the packs')}</button></div>
-      <div class="fh">${t('Ein Paket schaltet beim neuen Profil die eigenen Schalter dieser Funktionen ein, nur wenn sie für den Spark an sind. Rollen gibt es nie über ein Paket.','A pack switches on the new profile\'s own switches of these functions, only while they are on for the Spark. Roles never come with a pack.')}</div>`;
-    $('jpacks').querySelectorAll('[data-jpn]').forEach(x=>x.oninput=()=>{packs[+x.dataset.jpn].name=x.value});
-    $('jpacks').querySelectorAll('[data-jpk]').forEach(x=>x.onchange=()=>{const p=packs[+x.dataset.jpk];p.keys=x.checked?[...new Set(p.keys.concat(x.value))]:p.keys.filter(k=>k!==x.value)});
-    $('jpacks').querySelectorAll('[data-jpdel]').forEach(x=>x.onclick=()=>{packs.splice(+x.dataset.jpdel,1);draw()});
-    if($('jpadd'))$('jpadd').onclick=()=>{let n=1;while(packs.some(p=>p.id==='p'+n))n++;packs.push({id:'p'+n,name:t('Neues Paket','New pack'),keys:[]});draw()};
-    $('jpsave').onclick=async()=>{try{await api('/api/admin/join/packs',xjson('PUT',{packs}));JA.edit=false;joinAdmin(true)}catch(e){$('jmsg').className='fh err';$('jmsg').textContent=e.message}}};
-  draw()}
 // in a profile's details: a one-time link to pick a new PIN, and the setup state with "Erinnern"
 async function joinPinLink(id,name,box){try{const r=await (await api('/api/admin/join/invites',xjson('POST',{uid:id,days:1,base:location.origin}))).json();
     joinShow(Object.assign(r,{who:name}),box)}catch(e){box.innerHTML=`<span class="err">${esc(e.message)}</span>`}}
@@ -141,7 +124,7 @@ async function goShow(){const box=$('gobox');if(!box||!PROFILE)return;
   const card=x=>{const why=x.why==='mfa'?t('Erst den zweiten Anmeldeschritt (Schritt „Absichern“).','First the second sign-in step (step "Secure").'):'';
     return `<div class="gocard${x.done?' done':''}"><div class="row"><b class="sp">${esc(t(x.name[0],x.name[1]))}${x.required?` <span class="pill warn">${t('Pflicht','required')}</span>`:''}</b>
       ${x.done?`<span class="pill ok">✓ ${t('erledigt','done')}</span>`:x.later?`<button class="b" type="button" data-golater="${esc(x.key)}" data-v="0">${t('Doch anzeigen','Show again')}</button>`
-        :why?'':`<button class="b p" type="button" data-gogo="${esc(x.key)}">${x.mine?t('Einrichten','Set up'):t('Einschalten und einrichten','Switch on and set up')}</button>${x.required?'':`<button class="b" type="button" data-golater="${esc(x.key)}" data-v="1">${t('Später','Later')}</button>`}`}</div>
+        :why?'':`<button class="b p" type="button" data-gogo="${esc(x.key)}">${t('Einrichten','Set up')}</button>${x.required?'':`<button class="b" type="button" data-golater="${esc(x.key)}" data-v="1">${t('Später','Later')}</button>`}`}</div>
       ${why?`<div class="fh">${esc(why)}</div>`:''}
       ${x.key==='iphone'&&!x.done&&d.app_link?`<div class="goapp"><div class="jqr">${d.app_qr||''}</div><div class="fh">${t('1. App laden: mit der iPhone-Kamera scannen oder ','1. Get the app: scan with the iPhone camera or ')}<a href="${esc(d.app_link)}" target="_blank" rel="noopener">${t('hier antippen','tap here')}</a>. ${t('2. „Einrichten“ zeigt den Code zum Koppeln.','2. "Set up" shows the pairing code.')}</div></div>`:''}</div>`};
   let body='';
@@ -167,10 +150,9 @@ async function goShow(){const box=$('gobox');if(!box||!PROFILE)return;
   if($('gohandgo'))$('gohandgo').onclick=handPc;
   if(cur.key==='done')goSay()}
 async function goPut(b){try{const r=await (await api('/api/profile/setup',xjson('PUT',b))).json();if(SETUP)Object.assign(SETUP,{done:r.summary.done,total:r.summary.total,open:r.summary.open.length});return r}catch(e){if($('gomsg'))$('gomsg').textContent=e.message}}
-// one item: switch the profile's own switch on when it is still off, then open its Ich page with a way back
+// one item: open its Ich page with a way back (what the admin has on works at once, nothing to switch on here)
 async function goItem(x){if(!x)return;
-  try{if(!x.mine&&x.own){await api('/api/profile/settings',xjson('PUT',{[x.own]:true}));if(typeof loadSettings==='function')await loadSettings().catch(()=>{})}
-    if(x.key==='welcome')await goPut({welcome:true})}catch(e){$('gomsg').textContent=e.message;return}
+  try{if(x.key==='welcome')await goPut({welcome:true})}catch(e){$('gomsg').textContent=e.message;return}
   GO.from=true;if(typeof meTabs==='function')meTabs();if(typeof showExtras==='function')await showExtras();
   if(!$(x.me)){$('gomsg').textContent=t('Diese Seite ist gerade nicht da. Seite neu laden.','This page is not there right now. Reload the page.');return}
   meLast=x.me;ptab(x.me);goBar(true)}

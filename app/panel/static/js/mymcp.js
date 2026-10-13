@@ -26,7 +26,6 @@ async function showMyMcp(){const box=$('mymcpbox');if(!box)return;if(!PROFILE||!
         <div class="row"><button class="b" type="button" data-mymnew="${esc(s.id)}">${t('Übernehmen','Apply')}</button></div></details></span>
       <button class="b" type="button" data-mymdel="${esc(s.id)}" data-mymname="${esc(s.name)}">${t('Entfernen','Remove')}</button></li>`;
   box.innerHTML=`<div class="intro">${t('Binde eigene Dienste an, die das Model Context Protocol sprechen (z. B. dein Paperless, Nextcloud oder ein eigener Dienst). Nur du siehst und nutzt sie. Jedes Werkzeug ist aus, bis du es auf „Lesen“ oder „Handeln mit Ja“ stellst; handelnde Werkzeuge schlägt der Assistent nur vor und führt sie erst nach deinem Ja aus.','Connect your own services that speak the Model Context Protocol (e.g. your Paperless, Nextcloud or a service of your own). Only you see and use them. Every tool is off until you set it to "Read" or "Act after yes"; acting tools are only proposed and run after your yes.')}</div>
-    ${xsw('mymcp_on',t('Eigene MCP-Dienste für mich','Own MCP services for me'),t('Aus: Der Assistent fragt keinen deiner Dienste mehr, sofort.','Off: the assistant asks none of your services any more, at once.'))}
     <div class="fh" id="mymback" role="status"></div>
     ${d.on?`<div class="fh err">${esc(MYM_WARN())}</div>
     <h3 style="margin:14px 0 4px">${t('Meine Dienste','My services')}</h3><ul class="facts">${d.services.map(svc).join('')||`<li class="mut"><span>${t('Noch kein Dienst angebunden.','No service connected yet.')}</span></li>`}</ul>

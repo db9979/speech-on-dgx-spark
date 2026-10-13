@@ -96,7 +96,7 @@ struct ReportView: View {
         do {
             let (data, response) = try await URLSession.shared.data(for: api.request("api/report"))
             if let http = response as? HTTPURLResponse, http.statusCode == 404 || http.statusCode == 403 {
-                note = String(localized: "Probleme melden ist für dich aus. Im Panel unter Ich → Probleme melden einschalten (der Admin muss es erlauben).")
+                note = String(localized: "Probleme melden ist für dich aus. Der Admin hat es noch nicht freigegeben (Funktionen → Probleme melden).")
                 return
             }
             try SparkAPI.check(data, response)

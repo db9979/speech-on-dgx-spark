@@ -444,7 +444,7 @@ LIVE_WORDS = {
     "admin_password_changed": ("Sicherheit", "Admin-Passwort geändert"),
     "admin_logout_everywhere": ("Sicherheit", "Admin überall abgemeldet"), "admin_role": ("Sicherheit", "Rolle geändert"),
     "config_switch": ("Einstellungen", "Schalter geändert"), "config_weiche": ("Einstellungen", "Weiche geändert"), "config_sensitive": ("Einstellungen", "Sicherheitseinstellung geändert"),
-    "config_undo": ("Einstellungen", "Änderung zurückgenommen"), "feature_profile": ("Einstellungen", "Funktion für ein Profil geändert"),
+    "config_undo": ("Einstellungen", "Änderung zurückgenommen"), "feature_profile": ("Einstellungen", "Funktion für ein Profil gesperrt oder erlaubt"),
     "backup": ("Sicherung", "Sicherung erstellt"), "backup_failed": ("Sicherung", "Sicherung fehlgeschlagen"),
     "backup_download": ("Sicherung", "Sicherung heruntergeladen"), "restore": ("Sicherung", "Sicherung eingespielt"),
     "offsite_backup": ("Sicherung", "Sicherung nach außen übertragen"), "offsite_failed": ("Sicherung", "Sicherung nach außen fehlgeschlagen"),

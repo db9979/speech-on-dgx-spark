@@ -5,11 +5,11 @@ Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die 
 ## Im Panel einschalten
 
 1. Admin: **Funktionen → iPhone-App** an, speichern.
-2. Profil: **Ich → iPhone-App → „iPhone-App für mich“** an.
+2. Das gilt sofort für jedes Profil. Einzelne Profile sperrt nur der Admin (**Funktionen → Wer darf was**).
 3. Wer aus der App Licht und Geräte schalten will: **„Smart Home aus der App“** an. Das Codewort gilt wie überall.
 4. Wer das Weckwort und den Ständer-Modus will: **„Dauerhaft zuhören erlauben“** an.
 5. Wer Route und Anrufe per Sprache starten will: **„Route und Anrufe auf dem iPhone“** an.
-6. Hinweise von selbst (Morgenrunde, Erinnerungen) kommen, wenn für das Profil **„Von selbst“** an ist. Erinnerungen und Timer klingeln als Mitteilung auf dem iPhone, auch wenn die App zu ist.
+6. Hinweise von selbst (Morgenrunde, Erinnerungen) kommen von Anfang an; abschalten lässt sich das unter **Ich → Von selbst**. Erinnerungen und Timer klingeln als Mitteilung auf dem iPhone, auch wenn die App zu ist.
 
 ## App auf das iPhone bringen (am Mac, einmalig etwa 15 Minuten)
 
@@ -59,7 +59,7 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 - **Schnellstart:** „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“.
 - **Verlauf:** Das Uhr-Symbol oben links zeigt deine früheren Gespräche, dieselbe Liste wie das Protokoll im Panel. Antippen setzt das Gespräch fort. Gespräche aus der App landen auch dort. Löschen geht nur im Panel.
 - **Heute** (seit V01.0.286): Die Sonne oben rechts zeigt, was heute dran ist, wie *Ich → Heute* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen.
-- **Foto oder Dokument fragen:** Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spark geht nur der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. **Fotos ansehen lassen:** Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an (dazu der Admin-Schalter für Bilder und der Profilschalter), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text.
+- **Foto oder Dokument fragen:** Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spark geht nur der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. **Fotos ansehen lassen:** Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an (dazu der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text.
 - **In „Meine Dokumente“ speichern:** Ist im Panel unter Ich → iPhone-App „Dokumente aus der App ablegen“ an, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel.
 - **Ohne Netz:** Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt.
 - **Englisch:** Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“).
@@ -121,7 +121,7 @@ Braucht das Apple Developer Program. Einmalig:
 
 1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → Name z. B. „Spark Push“, **Apple Push Notifications service (APNs)** anhaken → **Continue → Register → Download**. Die `.p8`-Datei gibt es nur dieses eine Mal; gut aufheben. Die **Key ID** steht daneben, die **Team ID** unter **Membership**.
 2. Panel als Admin: **Funktionen → Push an die iPhone-App** an. Darunter `.p8`, Key ID, Team ID und die Bundle-ID der App eintragen. **Art der App**: „Entwicklung“, solange du die App direkt aus Xcode aufspielst, „Produktion“ für TestFlight und App Store. Speichern.
-3. Profil: **Ich → iPhone-App → „Meldungen aufs iPhone“** an.
+3. Profil: nichts zu tun, „Meldungen aufs iPhone“ ist von Anfang an an. Abschalten lässt es sich unter **Ich → iPhone-App → „Meldungen aufs iPhone“**.
 4. App einmal öffnen und Mitteilungen erlauben. Dann im Panel **„Test-Meldung schicken“**.
 
 Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil.
@@ -153,7 +153,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 
 - Jedes iPhone bekommt beim Koppeln einen eigenen Schlüssel. Er liegt nur im Schlüsselbund dieses iPhones und auf dem Spark nur als Hash.
 - Der Schlüssel darf nur fragen und hören (Chat, Spracherkennung, Siri-Frage). Einstellungen, Gedächtnis, Geräte, Verbindungen und weitere Kopplungen gehen damit nicht.
-- Der eigene Schalter aus sperrt sofort alle iPhones des Profils, der Admin-Schalter alle. Ein verlorenes iPhone unter **Ich → iPhone-App → Entfernen**.
+- Sperrt der Admin ein Profil (Funktionen → Wer darf was), sind sofort alle iPhones dieses Profils gesperrt, der Admin-Schalter sperrt alle. Ein verlorenes iPhone unter **Ich → iPhone-App → Entfernen**.
 - Smart Home aus der App nur mit eigenem Schalter und Codewort. Was die App als Absender angibt, zählt nicht; das Panel entscheidet am Schlüssel.
 - Weckwort, Ständer-Modus, Route und Anrufe nur mit eigenem Schalter im Panel. Der Spark schlägt Route und Anruf nur vor, das Werkzeug gibt es nur für den App-Schlüssel mit Schalter; starten tut erst dein „Ja“ auf dem iPhone. Ein Hinweis von außen (Mail, Webseite) kann keine Route und keinen Anruf auslösen.
 - Vor dem Weckwort geht kein Ton an den Spark. Im Hintergrund hört die App nur mit eingeschaltetem Weckwort zu.

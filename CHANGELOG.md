@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.509** · 2026-10-13 · Freigabe vereinfacht: Was der Admin unter Funktionen freigibt, gilt sofort für jedes Profil, ohne eigenen Schalter unter Ich; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was), unter Ich bleiben nur Einrichten und das Abschalten von Dingen, die der Spark von selbst tut; Gäste bekommen nur Frage und Antwort ohne Werkzeuge; Startpakete und „Neue Profile“ entfallen; auch iPhone-App, Doku und Richtlinie
 - **V01.0.508** · 2026-10-13 · Eigene Aufgaben: Beobachten („Sag mir Bescheid, wenn es eine neue Firmware gibt“) meldet nur, was das Panel als neu geprüft hat; Ich → Aufträge zeigt alle eigenen Aufgaben (Beobachtungen, Pläne, Erinnerungen, Regeln, Absender) zum Ändern, Pausieren und Löschen; per Sprache nach Ja; iPhone-App; Admin-Schalter aus
 - **V01.0.507** · 2026-10-13 · Pebble-Uhr-App mit der Comic-Frau: das Panel liefert die neu gebaute App aus (aus V01.0.497)
 - **V01.0.506** · 2026-10-13 · Technik-Doku: neue Seite Zustand → Technik (nur Admin) zum Durchklicken mit Bild der Teile, Weg einer Anfrage in 8 Schritten und allen Speicherorten mit Inhalt, Sicherung und Schutz; dazu docs/de/architektur.md und docs/en/architecture.md mit Mermaid-Bild, beides aus dem Code erzeugt; test_technik hält alles bei jeder Änderung aktuell, neue Regel 30 und Grundsatz 12 in der Richtlinie

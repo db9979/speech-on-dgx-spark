@@ -25,15 +25,23 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 NOW = 1_800_000_000.0
 
 
-def profile(name, pin="1234", on=True):
+def profile(name, pin="1234"):
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = TestClient(panel.app)
     assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
     uid = c.get("/api/whoami").json()["profile"]["id"]
     # quiet hours off: no test may depend on the time of day it runs at
-    c.put("/api/profile/settings", json={"chats_on": on, "pro_quiet": ""})
+    c.put("/api/profile/settings", json={"pro_quiet": ""})
     return c, uid
+
+
+def block(tc, uid, key="chats", on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny). tc: the test."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
 
 
 def ask(client, text, convo="m1"):
@@ -81,7 +89,7 @@ class Base(unittest.TestCase):
 
 
 class Access(Base):
-    def test_off_until_admin_and_own_switch(self):
+    def test_off_until_admin_and_admin_block(self):
         helpers.set_config(chats=False)
         a, ua = profile("Merle")
         b, ub = profile("Ben")
@@ -91,13 +99,15 @@ class Access(Base):
         self.assertEqual(a.get("/api/chats/who").status_code, 403)
         helpers.set_config(chats=True)
         self.assertTrue(a.get("/api/whoami").json()["chats"])
-        b.put("/api/profile/settings", json={"chats_on": False})
-        self.assertIn("Nicht gesendet", ask(a, send))      # Ben has chats off
-        b.put("/api/profile/settings", json={"chats_on": True})
-        a.put("/api/profile/settings", json={"chats_on": False})
-        self.assertIn("NO TOOL message_send", ask(a, send))   # the sender's own switch
+        block(self, ub)
+        self.assertIn("Nicht gesendet", ask(a, send))      # the admin blocked chats for Ben
+        block(self, ub, on=True)
+        block(self, ua)
+        self.assertIn("NO TOOL message_send", ask(a, send))   # blocked for the sender
         self.assertEqual(a.get("/api/chats/who").status_code, 403)
-        a.put("/api/profile/settings", json={"chats_on": True})
+        a.put("/api/profile/settings", json={"chats_on": True})   # no profile switch: it cannot lift the block
+        self.assertIn("NO TOOL message_send", ask(a, send))
+        block(self, ua, on=True)
         self.assertIn("Noch NICHT gesendet", ask(a, send))
         # guests: nothing, even with the assistant open to everybody
         helpers.set_config(public=True)
@@ -125,8 +135,9 @@ class Access(Base):
         self.assertNotIn("messages_voice", d)
         self.assertIs(d["messages_all"], False)
         self.assertIs(d["messages_announce"], False)
-        self.assertIs(profiles.SETTINGS["msg_all"][0], False)       # each profile takes part in "an alle" itself
-        self.assertIs(profiles.SETTINGS["msg_announce"][0], False)
+        self.assertIs(profiles.SETTINGS["msg_all"][0], True)        # in "an alle" unless the profile leaves it
+        self.assertNotIn("msg_announce", profiles.SETTINGS)          # announcements: the admin's release counts
+        self.assertNotIn("chats_on", profiles.SETTINGS)
         self.assertEqual(profiles.SETTINGS["msg_speaker"][0], "off")
 
     def test_device_keys_never_change_who_may_write(self):
@@ -190,7 +201,8 @@ class Access(Base):
         self.assertEqual(messages.find(ua, "gustav")[0]["name"], "Gustav Groß")
         self.assertEqual(messages.find(ua, "Ottilies")[0]["name"], "Ottilie")
         self.assertEqual(messages.find(ua, "Ottilia")[0]["name"], "Ottilie")
-        self.assertIsNone(messages.find(ua, "Niemand")[0])
+        self.assertFalse(any(x["name"].startswith("Zebul") for x in profiles.names()))   # other tests leave profiles
+        self.assertIsNone(messages.find(ua, "Zebulon")[0])
         self.assertIsNone(messages.find(ua, "")[0])
 
 
@@ -228,9 +240,13 @@ class Sending(Base):
         all_ = 'TOOL message_send {"to": "alle", "text": "Wer hat den Schlüssel?"}'
         self.assertIn("ausgeschaltet", ask(a, all_))
         helpers.set_config(messages_all=True)
-        self.assertIn("für dich aus", ask(a, all_))                   # Gabi herself does not take part yet
+        c.put("/api/profile/settings", json={"msg_all": False})      # Gina leaves "an alle"
+        a.put("/api/profile/settings", json={"msg_all": False})
+        self.assertIn("für dich aus", ask(a, all_))                   # Gabi left it herself
         a.put("/api/profile/settings", json={"msg_all": True})
-        b.put("/api/profile/settings", json={"msg_all": True})
+        block(self, ua, "messages_all")
+        self.assertIn("gesperrt", ask(a, all_))                       # the admin blocked it for Gabi
+        block(self, ua, "messages_all", on=True)
         self.assertIn("Soll ich allen", ask(a, all_))
         ask(a, "Ja")
         self.assertEqual(got(ub, chats.ALL_ID), [("Gabi", "Wer hat den Schlüssel?")])
@@ -330,11 +346,17 @@ class Speakers(Base):
         b, ub = profile("Mathis")
         b.put("/api/profile/settings", json={"esp_on": True})
         did = self.speaker(ub, "Wohnzimmer")
+        # profiles other tests left behind take announcements too now (released for everybody): kept out here
+        others = [u for u in profiles.user_ids() if u not in (ua, ub)]
+        if others:
+            helpers.set_config(deny={"messages_announce": others})
+            self.addCleanup(helpers.set_config, deny={})
         self.assertEqual(messages.speakers_for(ua), [])          # admin switch off
         self.assertEqual(a.post("/api/chats/announce", json={"speakers": [did], "text": "x"}).status_code, 403)
         helpers.set_config(messages_announce=True)
-        self.assertEqual(messages.speakers_for(ua), [])          # Mathis does not allow announcements
-        b.put("/api/profile/settings", json={"msg_announce": True})
+        block(self, ub, "messages_announce")
+        self.assertEqual(messages.speakers_for(ua), [])          # the admin blocked announcements for Mathis
+        block(self, ub, "messages_announce", on=True)
         self.assertEqual([x["name"] for x in messages.speakers_for(ua)], ["Wohnzimmer"])
         self.assertEqual([x["name"] for x in a.get("/api/chats").json()["speakers"]], ["Wohnzimmer"])
         out = ask(a, 'TOOL message_announce {"where": "im Wohnzimmer", "text": "Essen ist fertig"}')
@@ -371,7 +393,6 @@ class Speakers(Base):
         helpers.set_config(esp32=True)
         a, ua = profile("Ansage-Lea")
         b, ub = profile("Ansage-Lars")
-        b.put("/api/profile/settings", json={"esp_on": True})
         did = self.speaker(ub, "Flurlautsprecher")
 
         def lines(do):
@@ -387,10 +408,10 @@ class Speakers(Base):
         off = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza"}))
         self.assertTrue(any("refused switched off" in x and "via chats" in x for x in off), off)
         helpers.set_config(messages_announce=True)
+        block(self, ub, "messages_announce")
         none = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza"}))
-        self.assertTrue(any("refused no speaker allowed" in x for x in none), none)   # Lars does not allow it yet
-        b.put("/api/profile/settings", json={"msg_announce": True})
-        self.addCleanup(b.put, "/api/profile/settings", json={"msg_announce": False})
+        self.assertTrue(any("refused no speaker allowed" in x for x in none), none)   # the admin blocked Lars
+        block(self, ub, "messages_announce", on=True)
         empty = lines(lambda: a.post("/api/chats/announce", json={"speakers": [], "text": "Pizza"}))
         self.assertTrue(any("refused no speaker picked" in x for x in empty), empty)
         sent = lines(lambda: a.post("/api/chats/announce", json={"speakers": [did], "text": "Pizza ist da"}))
@@ -472,7 +493,7 @@ class Backup(Base):
 class Migration(Base):
     def test_old_mailbox_moves_into_the_chats_once(self):
         a, ua = profile("Ulla")
-        b, ub = profile("Udo", on=False)
+        b, ub = profile("Udo")
         old = [{"id": "a1" * 6, "from": ua, "name": "Ulla", "text": vault.seal("Erste"), "t": NOW, "read": True, "kind": "text"},
                {"id": "a2" * 6, "from": ua, "name": "Ulla", "text": vault.seal("Wer kommt mit?"), "t": NOW + 5,
                 "read": False, "kind": "all"},
@@ -494,7 +515,7 @@ class Migration(Base):
         self.assertIs(c["chats"], True)                            # the Spark switch carried over
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             self.assertNotIn("messages_voice", json.load(f)["chat"])
-        self.assertIs(profiles.settings(ub).get("chats_on"), True)
+        self.assertTrue(messages.usable(ub))                       # released for every profile
         cid = chats.one_id(ua, ub)
         self.assertEqual(got(ub, cid), [("Ulla", "Erste"), ("Ulla", "an alle: Wer kommt mit?"), ("Ulla", "🎤 Bring Brot")])
         items = chats._chat(cid)["items"]
@@ -534,11 +555,15 @@ class Unlock(Base):
             self.assertFalse(messages.wants_send(no), no)
 
     def test_says_why_not(self):
-        a, ua = profile("Quasimir", on=False)
+        a, ua = profile("Quasimir")
         profile("Quintus")
+        block(self, ua)
         out = ask(a, 'TOOL message_send {"to": "Quintus", "text": "Nachricht an Quintus: hallo"}')
         self.assertIn("NO TOOL message_send", out)
-        self.assertIn("Für dein Profil sind Chats aus", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
+        said = json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False)
+        self.assertIn("Für dein Profil sind Chats aus", said)
+        self.assertIn("Funktionen → Wer darf was", said)
+        self.assertNotIn("Ich → ", said.split("Für dein Profil sind Chats aus", 1)[1][:200])
         helpers.set_config(public=True)
         ask(TestClient(panel.app), "Schreib Quintus eine Nachricht")
         self.assertIn("nicht für Gäste", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
@@ -548,7 +573,7 @@ class Unlock(Base):
 
 
 class Simple(Base):
-    """V01.0.200: the panel reads "Schreib X, dass …" itself, names the real reason, switches on with a yes."""
+    """V01.0.200: the panel reads "Schreib X, dass …" itself and names the real reason (no "switch on?" any more)."""
     def test_parse_send(self):
         self.assertEqual(messages.parse_send("Schreib sb, dass ich später komme"), ("sb", "Ich komme später"))
         self.assertEqual(messages.parse_send("Sag Anna, das Essen ist fertig"), ("Anna", "Das Essen ist fertig"))
@@ -578,29 +603,31 @@ class Simple(Base):
 
     def test_says_who_has_chats_off(self):
         a, ua = profile("Zelda")
-        profile("Zoltan", on=False)
+        _, uz = profile("Zoltan")
+        block(self, uz)
         ask(a, "Schreib Zoltan, dass es regnet")
-        self.assertIn("Zoltan hat Chats nicht eingeschaltet", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
+        said = json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False)
+        self.assertIn("Zoltan kann Chats gerade nicht nutzen", said)
+        self.assertNotIn("gesperrt", said)                          # never who blocked whom
         self.assertIsNone(messages.pending(ua))
 
-    def test_switch_on_with_yes_then_send(self):
-        a, ua = profile("Zita", on=False)
+    def test_released_works_at_once_never_asks_to_switch_on(self):
+        a, ua = profile("Zita")                                     # no profile switch: released by the admin
         _, ub = profile("Zeno")
         ask(a, "Schreib Zeno: bin gleich da", convo="z3")
-        self.assertEqual(messages.pending(ua)["kind"], "enable")
-        self.assertIn("Soll ich sie einschalten", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
-        self.assertFalse(profiles.settings(ua).get("chats_on"))     # nothing switched before the yes
-        ask(a, "Ja", convo="z3")
-        self.assertTrue(profiles.settings(ua).get("chats_on"))
         p = messages.pending(ua)
         self.assertEqual((p["kind"], p["to"], p["text"]), ("text", [ub], "Bin gleich da"))
+        self.assertNotIn("Soll ich sie einschalten", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
         ask(a, "Ja", convo="z3")
         self.assertEqual(got(ub), [("Zita", "Bin gleich da")])
-        # a no leaves it off
-        c, uc = profile("Zita Zwei", on=False)
+        # blocked by the admin: no proposal, and a yes switches nothing on
+        c, uc = profile("Zita Zwei")
+        block(self, uc)
         ask(c, "Schreib Zeno: hallo", convo="z4")
-        ask(c, "Nein", convo="z4")
-        self.assertFalse(profiles.settings(uc).get("chats_on"))
+        self.assertIsNone(messages.pending(uc))
+        ask(c, "Ja", convo="z4")
+        self.assertFalse(messages.usable(uc))
+        self.assertEqual(got(ub), [("Zita", "Bin gleich da")])
 
     def test_admin_switch_off_says_why(self):
         a, ua = profile("Zenobia")

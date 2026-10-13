@@ -3,7 +3,7 @@ n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Conte
 
 The other direction (the Spark uses outside MCP servers) is mcp.py.
 
-Who may: the admin switch chat.mcp_server and the profile's own switch mcps_on (features.py "mcpserver"),
+Who may: the admin switch chat.mcp_server (features.py "mcpserver"), every profile the admin did not block,
 never guests. A profile connects a program under Ich → Dienste per MCP; every connection belongs to that
 profile, has its own token and its own list of tools, and ends after DAYS days without use or when it is
 removed. Connections are made only in the profile's own browser login (with a code when it has the second

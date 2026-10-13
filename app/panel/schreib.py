@@ -1,8 +1,8 @@
 """Schreibhilfe (plan plaene/schreibhilfe.md, stage 1): the Spark corrects, smooths, shortens, translates or
 drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...).
 
-Off until the admin switches chat.write_help on (Funktionen → Schreibhilfe) and the profile its own
-write_on (Ich → Schreibhilfe); guests never. In stage 1 only the profile's own browser login and its MCP
+Off until the admin switches chat.write_help on (Funktionen → Schreibhilfe); then for every profile the admin
+did not block; guests never. In stage 1 only the profile's own browser login and its MCP
 connections (tool "write_text"); own key scopes for the Mac quick action and the Windows program follow.
 
 The text is data, never an instruction (fixed rules, the panel decides):
@@ -489,7 +489,7 @@ async def _run(prof, body, client, where, request=None):
 async def write_picture(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)
     if not pics_ok(prof["id"]):
-        raise HTTPException(403, "Bilder sind aus (Funktionen → Bilder erkennen, Ich → Gespräch).")
+        raise HTTPException(403, "Bilder sind für dich nicht freigegeben (Funktionen → Bilder erkennen).")
     body = await _body(request)
     try:
         return {"text": await picture_text(prof["id"], body.get("id"))}
@@ -611,7 +611,7 @@ def _base(v, https=False):
 
 def _apps(prof):
     if not apps_ok(prof["id"]):
-        raise HTTPException(403, "Erst „In anderen Programmen“ einschalten (Funktionen → Schreibhilfe, Ich → Schreibhilfe).")
+        raise HTTPException(403, "Erst muss der Admin „In anderen Programmen“ einschalten (Funktionen → Schreibhilfe).")
     return prof
 
 

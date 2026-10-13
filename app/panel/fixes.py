@@ -2,7 +2,7 @@
 ("Nein, mein Bruder heißt Tim", "Du sollst bei Terminen immer nachsehen"), the model turns it into one
 short sentence, the assistant asks "Soll ich mir das merken?" and the panel saves it in the profile's
 memory only after a plain yes from the same conversation (one pending proposal, 15 minutes, like
-calendars.py). Admin switch chat.learn_fixes and the profile's fix_learn, both off; never guests, never
+calendars.py). Admin switch chat.learn_fixes, off; released for every profile the admin did not block; never guests, never
 a foreign voice, never from outside text. A sentence about codes, rules, security or switching, world
 knowledge (scores, prices) or anything with links is never proposed.
 
@@ -41,8 +41,8 @@ PROMPT = (
     "Antworte nur mit JSON: {{\"fact\": \"...\"}} oder {{\"fact\": \"\"}}, wenn nichts Dauerhaftes dabei ist.")
 
 
-def on(ccfg, pset):
-    return features.admin_on("fixes", ccfg) and pset.get("fix_learn") is True
+def on(ccfg, uid):
+    return bool(uid) and features.allowed("fixes", uid, ccfg)
 
 
 def is_correction(text, said_before):

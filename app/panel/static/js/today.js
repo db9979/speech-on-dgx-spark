@@ -31,8 +31,8 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
   if(c.messages)cards.appendChild(tdCard(t('Chats','Chats'),String(c.messages.unread),c.messages.unread?t('ungelesen','unread'):t('Alles gelesen','All read'),'chats'));
   if(c.documents)cards.appendChild(tdCard(t('Dokumente','Documents'),String(c.documents.count),c.documents.waiting?c.documents.waiting+t(' Seiten warten aufs Lesen',' pages waiting to be read'):'','docbox'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
-  // Mein Zustand (hintergrund.js, own switch my_status): the short line here, the whole card under Ich → Mein Zustand
-  if(typeof MYST_ON!=='undefined'&&MYST_ON&&typeof S!=='undefined'&&S&&S.my_status){try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});
+  // Mein Zustand (hintergrund.js): the short line here, the whole card under Ich → Mein Zustand
+  if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});
     if(r.ok){const s=(await r.json()).sum||{};cards.appendChild(tdCard(t('Im Hintergrund','In the background'),
       s.need?t(`${s.need} brauchen dich`,`${s.need} need you`):s.run?t('läuft','running'):t('in Ordnung','fine'),bgLine(s)||t('Für dich läuft nichts.','Nothing runs for you.'),'bgbox'))}}catch{}}
   if(cards.children.length){box.append(tdEl('div','mgrp',t('Heute','Today')),cards)}

@@ -27,7 +27,6 @@ class Areas(unittest.TestCase):
 
     def app(self, name):
         c = profile(name)
-        c.put("/api/profile/settings", json={"app_on": True})
         r = pair(c)
         self.assertEqual(r.status_code, 200, r.text)
         from fastapi.testclient import TestClient

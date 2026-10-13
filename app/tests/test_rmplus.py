@@ -24,7 +24,6 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 T = 1_760_000_000            # a fixed "now"
 ZONE = datetime.timezone.utc
-ALL = {k: True for k in rmplus.PARTS.values()}
 
 
 def books(name_part=""):
@@ -56,11 +55,27 @@ class Plus(Base):
         super().tearDown()
         helpers.set_config(remarkable_plus=False)
 
-    def on(self, name, **parts):
+    def on(self, name, *parts):
+        """A paired profile with these parts (all without a name): released by the admin they work at once."""
         c, uid = self.paired(name)
-        r = c.put("/api/profile/settings", json=dict({"rm_send": True}, **(parts or ALL)))
-        self.assertEqual(r.status_code, 200, r.text)
+        self.only(c, uid, parts or rmplus.PARTS)
         return c, uid
+
+    def only(self, c, uid, parts):
+        """Only these parts for this profile: the others the admin blocked for it (chat.deny), or, where the Spark
+        acts unasked (morning sheet, week, inbox), the profile switched its preference off."""
+        deny = dict(features.chat_cfg().get("deny") or {})
+        prefs = {}
+        for k in rmplus.PARTS:
+            f = features.BY_KEY[k]
+            deny[k] = [u for u in deny.get(k, []) if u != uid]
+            if f.pref:
+                prefs[f.pref] = k in parts
+            elif k not in parts:
+                deny[k].append(uid)
+        helpers.set_config(deny={k: v for k, v in deny.items() if v})
+        r = c.put("/api/profile/settings", json=prefs)
+        self.assertEqual(r.status_code, 200, r.text)
 
     def notebook(self, c, uid, pages, name="Küche", times=None, did=NB):
         CLOUD[0].doc(did, name, pages, times=times)
@@ -69,15 +84,28 @@ class Plus(Base):
 
 
 class Switches(Plus):
-    def test_off_by_default_admin_and_profile_needed_never_guests(self):
+    def test_off_by_default_admin_releases_admin_blocks_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["remarkable_plus"], False)
-        for p in rmplus.PARTS.values():
-            self.assertIs(profiles.SETTINGS[p][0], False, p)
+        for old in ("rm_ask", "rm_todo", "rm_meet", "rm_web", "rm_guide"):
+            self.assertNotIn(old, profiles.SETTINGS)                        # no release switch of its own any more
+        prefs = {k: features.BY_KEY[k].pref for k in rmplus.PARTS if features.BY_KEY[k].pref}
+        self.assertEqual(prefs, {"rmmorning": "rm_morning", "rmweek": "rm_week", "rminbox": "rm_inbox"})
+        for p in prefs.values():
+            self.assertIs(profiles.SETTINGS[p][0], True, p)                 # unasked, but on unless switched off
         c, uid = self.paired("Rpoff")
-        c.put("/api/profile/settings", json={"rm_send": True})
+        self.assertTrue(all(rmplus.on(k, uid) for k in rmplus.PARTS))     # released: works at once
+        for k in rmplus.PARTS:                                              # the admin blocks each for this profile
+            self.block(k, uid)
+            self.assertFalse(rmplus.on(k, uid), k)
+            self.block(k, uid, on=True)
+            self.assertTrue(rmplus.on(k, uid), k)
+        self.block("rmsend", uid)                                           # or what they build on
         self.assertFalse(any(rmplus.on(k, uid) for k in rmplus.PARTS))
-        c.put("/api/profile/settings", json=ALL)
+        self.block("rmsend", uid, on=True)
+        c.put("/api/profile/settings", json={p: False for p in prefs.values()})
+        self.assertEqual({k for k in rmplus.PARTS if not rmplus.on(k, uid)}, set(prefs))   # its preference off
+        c.put("/api/profile/settings", json={p: True for p in prefs.values()})
         self.assertTrue(all(rmplus.on(k, uid) for k in rmplus.PARTS))
         helpers.set_config(remarkable_send=False)                  # builds on "Aufs reMarkable schicken"
         self.assertFalse(any(rmplus.on(k, uid) for k in rmplus.PARTS))
@@ -149,7 +177,7 @@ class FromPaper(Plus):
         cfg.setdefault("logs", {})["live"] = True
         helpers.write_config(cfg)
         try:
-            c, uid = self.on("Rplive", rm_ask=True)
+            c, uid = self.on("Rplive", "rmask")
             self.notebook(c, uid, [(P1, page_file("@Spark Wie lange hält Sauerteig im Kühlschrank?"))],
                           times={P1: (T - 60) * 1000})
             self.assertEqual(run(PLUS_DUE(idle=True, now=T, uids=[uid])), "pages")
@@ -183,7 +211,7 @@ class FromPaper(Plus):
         self.assertEqual(c.post("/api/profile/remarkable/todo", json={"id": other["id"], "do": "drop"}).status_code, 404)
 
     def test_meeting_summarized_after_quiet_time_once(self):
-        c, uid = self.on("Rpmeet", rm_meet=True)
+        c, uid = self.on("Rpmeet", "rmmeet")
         self.notebook(c, uid, [(P1, page_file("Besprechung Heizung\nBrenner tauschen, Müller fragt Angebot an"))],
                       name="Besprechung Heizung", times={P1: (T - 600) * 1000})
         self.assertIsNone(run(rmplus.from_pages(uid, T)))                  # still being written
@@ -194,14 +222,14 @@ class FromPaper(Plus):
         self.assertIsNone(run(rmplus.from_pages(uid, T + rmplus.QUIET + 60)))   # the same notes: not again
 
     def test_other_notebooks_are_no_meeting(self):
-        c, uid = self.on("Rpnomeet", rm_meet=True)
+        c, uid = self.on("Rpnomeet", "rmmeet")
         self.notebook(c, uid, [(P1, page_file("Einkaufsliste\nMilch"))], name="Einkauf", times={P1: (T - 7200) * 1000})
         self.assertIsNone(run(rmplus.from_pages(uid, T)))
 
 
 class Sheets(Plus):
     def test_morning_sheet_once_a_day_from_its_time(self):
-        c, uid = self.on("Rpmorning", rm_morning=True)
+        c, uid = self.on("Rpmorning", "rmmorning")
         c.put("/api/profile/settings", json={"rm_morning_at": "07:15"})
         day = lambda h, m: datetime.datetime(2026, 10, 10, h, m, tzinfo=ZONE)   # noqa: E731
         p = rmplus.plus(uid)
@@ -217,7 +245,7 @@ class Sheets(Plus):
         self.assertEqual(profiles.settings(uid)["rm_morning_at"], "07:15")
 
     def test_week_on_friday_evening_once(self):
-        c, uid = self.on("Rpweek", rm_week=True)
+        c, uid = self.on("Rpweek", "rmweek")
         fri = datetime.datetime(2025, 10, 10, 17, 30, tzinfo=ZONE)          # T is on that Thursday
         p = rmplus.plus(uid)
         self.assertFalse(rmplus.week_due(fri.replace(hour=16), p))
@@ -243,19 +271,21 @@ class Guide(Plus):
         self.assertEqual({k for k, _, _ in rmplus.GUIDE} - rm, set())
 
     def test_only_remarkable_and_the_service_marked_on_or_off(self):
-        c, uid = self.on("Rpguidetext", rm_guide=True, rm_ask=True)
+        c, uid = self.on("Rpguidetext", "rmguide", "rmask")
         text = rmplus.guide_text(uid)
         self.assertIn("## @Spark: Fragen auf Papier (an)", text)
         self.assertIn("## Morgenblatt (aus)", text)
         self.assertIn("## So arbeitet der Dienst", text)
         self.assertNotIn("Neueste zuerst", text)                             # the Spark does not offer it now
         helpers.set_config(remarkable_fresh=True)
-        self.assertIn("## Neueste zuerst (aus)", rmplus.guide_text(uid))
+        self.assertIn("## Neueste zuerst (an)", rmplus.guide_text(uid))      # released: on at once
+        self.block("rmfresh", uid)
+        self.assertIn("## Neueste zuerst (aus)", rmplus.guide_text(uid))     # blocked for this profile
         for word in ("Home Assistant", "Kalender verbinden", "Telegram einrichten"):
             self.assertNotIn(word, text)
 
     def test_guide_is_renewed_in_place_when_its_text_changes(self):
-        c, uid = self.on("Rpguide", rm_guide=True)
+        c, uid = self.on("Rpguide", "rmguide")
         self.assertEqual(run(PLUS_DUE(idle=True, now=T, uids=[uid])), "guide")
         first = remarkable.load(uid)["own"]["guide"]
         self.assertIn("Spark-Anleitung", books("Spark-Anleitung"))
@@ -272,7 +302,7 @@ class Guide(Plus):
         CLOUD[0].commit()
         n = len(CLOUD[0].entries)
         self.assertIsNone(run(rmplus.guide(uid)))                            # same text: nothing written
-        c.put("/api/profile/settings", json={"rm_ask": True})               # a switch changes the text
+        self.only(c, uid, ("rmguide", "rmask"))                            # a change of what it may changes the text
         r = run(rmplus.guide(uid))
         self.assertTrue(r["renewed"])
         self.assertEqual(remarkable.load(uid)["own"]["guide"], first)
@@ -283,13 +313,13 @@ class Guide(Plus):
         self.assertIn("@Spark: Fragen auf Papier (an)", epub_text(books("Spark-Anleitung")["Spark-Anleitung"][1]))
         # deleted on the tablet: a new one, never a write to something that is not there
         CLOUD[0].drop(first)
-        c.put("/api/profile/settings", json={"rm_todo": True})
+        self.only(c, uid, ("rmguide", "rmask", "rmtodo"))
         r = run(rmplus.guide(uid))
         self.assertFalse(r["renewed"])
         self.assertNotEqual(remarkable.load(uid)["own"]["guide"], first)
 
     def test_only_own_documents_are_renewed(self):
-        c, uid = self.on("Rpown", rm_guide=True)
+        c, uid = self.on("Rpown", "rmguide")
         CLOUD[0].doc(NB2, "Mein Buch", [(P1, page_file("Eigenes"))])
         d = remarkable.load(uid)
         d["own"] = {"guide": NB2.replace("0", "1", 1)}                     # an id the Spark never made: not there
@@ -301,7 +331,7 @@ class Guide(Plus):
             run(remarkable._add_to_root(uid, [], {"0" * 8 + NB[8:]: {"hash": "0" * 64, "id": "x", "subfiles": 0, "size": 0}}))
 
     def test_button_puts_it_there_now(self):
-        c, uid = self.on("Rpguidebtn", rm_guide=True)
+        c, uid = self.on("Rpguidebtn", "rmguide")
         r = c.post("/api/profile/remarkable/guide")
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(r.json()["where"], "Spark")
@@ -309,7 +339,7 @@ class Guide(Plus):
 
 class Inbox(Plus):
     def test_dictated_notes_gather_in_one_document_a_day(self):
-        c, uid = self.on("Rpinbox", rm_inbox=True)
+        c, uid = self.on("Rpinbox", "rminbox")
         ctx = {"who": {"id": uid}, "own": True, "text": "Notier auf dem reMarkable: Milch"}
         out = run(remarkable.tool("remarkable_note", {"title": "Milch", "text": "Milch kaufen"}, ctx))
         self.assertIn("Eingang", out)
@@ -319,27 +349,27 @@ class Inbox(Plus):
         text = epub_text(list(got.values())[0][1])
         self.assertIn("Milch kaufen", text)
         self.assertIn("Brot backen", text)
-        c.put("/api/profile/settings", json={"rm_inbox": False})            # off: one document each again
+        c.put("/api/profile/settings", json={"rm_inbox": False})            # preference off: one document each again
         run(remarkable.tool("remarkable_note", {"title": "Käse", "text": "Käse"}, ctx))
         self.assertIn("Käse", books("Käse"))
 
 
 class WebAndMail(Plus):
     def test_tools_only_on_own_words_with_address_or_attachment(self):
-        c, uid = self.on("Rpweb", rm_web=True)
+        c, uid = self.on("Rpweb", "rmweb")
         self.assertEqual(rmplus.tools_for(uid, "Leg die Seite aufs reMarkable"), [])
         self.assertEqual([t["function"]["name"] for t in rmplus.tools_for(uid, "Leg https://example.org/a aufs reMarkable")],
                          ["remarkable_page"])
-        c.put("/api/profile/settings", json={"rm_web": False})
+        self.block("rmweb", uid)
         self.assertEqual(rmplus.tools_for(uid, "Leg https://example.org/a aufs reMarkable"), [])
         self.assertTrue(remarkable.answer_wanted("Leg https://example.org/a aufs reMarkable", uid))   # off: the answer goes
-        c.put("/api/profile/settings", json={"rm_web": True})
+        self.block("rmweb", uid, on=True)
         self.assertFalse(remarkable.answer_wanted("Leg https://example.org/a aufs reMarkable", uid))  # on: the page itself
         o = remarkable.offer({"who": {"id": uid}, "own": True, "text": "Leg https://example.org/a aufs reMarkable"})
         self.assertEqual([t["function"]["name"] for t in o["tools"]], ["remarkable_note", "remarkable_sent", "remarkable_page"])
 
     def test_page_as_ebook(self):
-        c, uid = self.on("Rppage", rm_web=True)
+        c, uid = self.on("Rppage", "rmweb")
         real = chat.page_text
 
         async def page(cl, url, limit=3000):
@@ -356,7 +386,7 @@ class WebAndMail(Plus):
         self.assertIn("Quelle: https://example.org/lang", epub_text(books("Sauerteig")["Sauerteig"][1]))
 
     def test_mail_attachment_pdf(self):
-        c, uid = self.on("Rpattach", rm_web=True)
+        c, uid = self.on("Rpattach", "rmweb")
         real_get, real_att = mail.get, mail.attachment
         mail.get = lambda u: {"accounts": [{"id": "m1"}]}
         pdf = rmplus.sheet("Rechnung", "Betrag 12 €", ruled=False)
@@ -408,7 +438,7 @@ class SheetOnRequest(Plus):
     ASK = "Leg mir das Morgenblatt erneut auf den reMarkable"
 
     def test_offered_only_for_a_named_sheet_with_its_switch(self):
-        c, uid = self.on("Rpsheet", rm_morning=True, rm_guide=True)
+        c, uid = self.on("Rpsheet", "rmmorning", "rmguide")
         o = remarkable.offer({"who": {"id": uid}, "own": True, "text": self.ASK})
         sheet = [t for t in o["tools"] if t["function"]["name"] == "remarkable_sheet"]
         self.assertEqual(sheet[0]["function"]["parameters"]["properties"]["what"]["enum"], ["morgen"])
@@ -425,7 +455,7 @@ class SheetOnRequest(Plus):
         self.assertEqual(run(rmplus.sheet_now(uid, "rm -rf")), "Das ist aus oder gibt es nicht.")
 
     def test_morning_sheet_now(self):
-        c, uid = self.on("Rpsheetnow", rm_morning=True)
+        c, uid = self.on("Rpsheetnow", "rmmorning")
         old = chat.morning_briefing
 
         async def brief(uid, tz="", markdown=False):

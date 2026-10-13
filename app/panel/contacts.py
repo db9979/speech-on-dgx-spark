@@ -95,7 +95,7 @@ def public(uid):
     return {"accounts": [{"id": x["id"], "name": x.get("name", ""), "url": x["url"], "user": x.get("user", "")}
                          for x in accounts(uid)],
             "count": len(cards(uid)), "fetched": d.get("fetched"), "errors": d.get("errors") or [],
-            "on": bool(profiles.settings(uid).get("con_on"))}
+            "on": features.allowed("contacts", uid)}
 
 
 def entry(body):

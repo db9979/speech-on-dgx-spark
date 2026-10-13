@@ -1,7 +1,7 @@
 """Einordnung mit Wahrscheinlichkeit (systemone.py), V01.0.340.
 
 qwen38's POST /v1/systemone answers fixed questions with probabilities; the panel decides with fixed thresholds.
-Off without the admin's switches and the profile's own, never guests. The questions are the panel's own; the
+Off without the admin's switches (then on for every profile the admin did not block), never guests. The questions are the panel's own; the
 text being judged goes only into "state". Busy (529), missing (404) or slow: everything goes on as without it.
 Logs and Zustand → Live carry numbers and fixed words only. No real qwen38, no clock.
 
@@ -65,6 +65,14 @@ def profile(name, **settings):
     return uid
 
 
+def block(tc, uid, key="einordnung", on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         SEEN.clear()
@@ -90,12 +98,17 @@ class Contract(Base):
         for k in ("einordnung", "einordnungpost", "einordnungtest", "mailwichtig", "einordnungrat", "einordnungcheck",
                   "einordnungklage"):
             self.assertFalse(features.admin_on(k), k)
-            self.assertFalse(features.BY_KEY[k].guests, k)
+            self.assertFalse(features.allowed(k, None), k)
         helpers.set_config(systemone=True)
         self.assertEqual(features.reason("einordnung", None), "guest")
         uid = profile("EinoAnna")
-        self.assertEqual(features.reason("einordnung", uid), "profile")      # off until the profile says so
-        profiles.save_settings(uid, {"systemone_on": True})
+        self.assertIsNone(features.reason("einordnung", uid))                # released: at once for every profile
+        block(self, uid)
+        self.assertEqual(features.reason("einordnung", uid), "blocked")      # the admin blocked this profile
+        self.assertTrue(features.blocked("einordnungpost", uid))             # and what builds on it
+        profiles.save_settings(uid, {"systemone_on": True})                  # the profile cannot lift it
+        self.assertEqual(features.reason("einordnung", uid), "blocked")
+        block(self, uid, on=True)
         self.assertIsNone(features.reason("einordnung", uid))
 
     def test_questions_are_checked_and_the_text_is_only_state(self):
@@ -165,15 +178,16 @@ class Contract(Base):
 
 class Weiche(Base):
     def test_only_with_switches_and_only_from_80_percent(self):
-        uid = profile("EinoBert", route=True)
+        uid = profile("EinoBert")
         cc = dict(features.chat_cfg(), route_model="systemone")
         # admin switch off: no call at all
         self.assertIsNone(asyncio.run(intent.ask_model(cc, "Erzähl mir was über Bienen", {}, uid)))
         self.assertEqual(SEEN, [])
         cc["systemone"] = True
-        self.assertIsNone(asyncio.run(intent.ask_model(cc, "Erzähl mir was über Bienen", {}, uid)))   # profile off
+        cc["deny"] = {"einordnung": [uid]}
+        self.assertIsNone(asyncio.run(intent.ask_model(cc, "Erzähl mir was über Bienen", {}, uid)))   # blocked by the admin
         self.assertEqual(SEEN, [])
-        profiles.save_settings(uid, {"systemone_on": True})
+        cc["deny"] = {}                                                     # released: at once
         info = {}
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(asyncio.run(intent.ask_model(cc, "Brauche ich morgen einen Schirm", info, uid)), "wetter")
@@ -198,7 +212,7 @@ class Weiche(Base):
 
     def test_outside_words_in_the_message_stay_data(self):
         """The message is the state; whatever it says, the options stay the panel's own and the pick one of them."""
-        uid = profile("EinoCarl", route=True, systemone_on=True)
+        uid = profile("EinoCarl")
         cc = dict(features.chat_cfg(), route_model="systemone", systemone=True)
         REPLY[0] = lambda b: answer(absicht={"smarthome": 0.99, "unklar": 0.01})
         with contextlib.redirect_stdout(io.StringIO()):
@@ -230,7 +244,7 @@ class Postfach(Base):
     H = {"name": "Shop", "sender": "news@shop.de", "subject": "Nur heute 50 %"}
 
     def test_real_probability_moves_only_from_90(self):
-        uid = profile("EinoDora", systemone_on=True)
+        uid = profile("EinoDora")
         old = tidy.classify
         tidy.classify = lambda h, text: ("werbung", 99)
         try:
@@ -253,8 +267,8 @@ class Postfach(Base):
             REPLY[0] = lambda b: httpx.Response(529)
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(tidy.classify_for(uid, self.H, "x"), ("werbung", 99, tidy.SURE, "Modell"))
-            # the profile's own switch off: the old way
-            profiles.save_settings(uid, {"systemone_on": False})
+            # the admin blocked it for the profile: the old way
+            block(self, uid)
             n = len(SEEN)
             self.assertEqual(tidy.classify_for(uid, self.H, "x")[3], "Modell")
             self.assertEqual(len(SEEN), n)
@@ -409,7 +423,7 @@ class Schwelle(Base):
         self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 200)
 
     def test_the_switch_uses_the_chosen_threshold(self):
-        uid = profile("EinoDora", route=True, systemone_on=True)
+        uid = profile("EinoDora")
         cc = dict(features.chat_cfg(), route_model="systemone", systemone=True, systemone_min=0.7)
         REPLY[0] = lambda b: answer(absicht={"wetter": 0.74, "unklar": 0.26})
         with contextlib.redirect_stdout(io.StringIO()):
@@ -478,7 +492,7 @@ class AntwortPruefen(Base):
     def test_made_up_answer_becomes_a_case_only_from_90(self):
         import types
         import faelle
-        uid = profile("EinoEmil", systemone_on=True)
+        uid = profile("EinoEmil")
         who = {"id": uid, "name": "EinoEmil"}
         cc = dict(features.chat_cfg(), llm_url="http://127.0.0.1:1/v1")
         calls = [{"name": "calendar_events", "args": "{}", "result": "Zahnarzt 09:00"},
@@ -535,7 +549,7 @@ class Beschwerde(Base):
 
     def test_in_a_conversation_only_looking(self):
         import taten
-        uid = profile("EinoFrida", systemone_on=True)
+        uid = profile("EinoFrida")
         c = TestClient(panel.app)
         self.assertEqual(c.post("/api/profile/login", json={"name": "EinoFrida", "pin": "1234"}).status_code, 200)
 

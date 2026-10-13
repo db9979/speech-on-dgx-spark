@@ -1,6 +1,6 @@
 """The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge
 source that works without the internet. Off until the admin allows it (chat.kiwix with an address in
-chat.kiwix_url) and a profile switches it on for itself (setting kiwix_on). Guests never.
+chat.kiwix_url); then on for every profile unless the admin blocks one (Funktionen → Wer darf was). Guests never.
 
 Used by wiki.py: the wikipedia tool asks the Wikipedia books of the Kiwix first (online Wikipedia only
 when nothing fits or the Kiwix does not answer), archive_search searches the full text of the chosen
@@ -79,8 +79,8 @@ def why_not(who, own=True):
         return "der Admin-Schalter ist aus (Funktionen → Websuche → Eigenes Kiwix-Archiv)"
     if not base():
         return "keine Kiwix-Adresse eingetragen (Funktionen → Eigenes Kiwix-Archiv)"
-    if not profiles.settings(who["id"]).get("kiwix_on"):
-        return "der Profil-Schalter ist aus (Ich → Gespräch → Antwort → Eigenes Archiv (Kiwix))"
+    if not features.allowed("kiwix", who["id"]):
+        return "für dieses Profil vom Admin gesperrt (Funktionen → Eigenes Kiwix-Archiv)"
     return ""
 
 

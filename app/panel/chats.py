@@ -3,7 +3,7 @@
 A chat is two profiles or a group. Everybody in it sees the same messages, kept until they are deleted (or the
 chat's own rule "selbst löschen" takes them), in the Spark's backup like the profiles, never anywhere else.
 
-Off until the admin allows it (chat.chats) and the profile switches it on (chats_on, Ich → Gespräch → Chats). Groups
+Off until the admin allows it (chat.chats); then every profile has it (Freigabe vereinfachen, 2026-10-13). Groups
 have their own admin switch (chat.chats_groups). Guests get nothing. Since V01.0.488 the old "Nachrichten" live here
 (plan plaene/nachrichten-in-chats.md): the assistant's "Sag Anna …" (messages.py), the fixed group "Alle"
 (chat.messages_all, each profile's msg_all), new messages on the own speaker (msg_speaker) and announcements.
@@ -530,7 +530,9 @@ def contacts(uid):
     """[{"id", "name", "call"}] the profile can start a chat with (who takes messages from it)."""
     if not usable(uid):
         return []
-    return sorted([x for x in profiles.names() if takes(x["id"], uid)], key=lambda x: x["name"].lower())
+    import messages
+    c = features.chat_cfg()   # once for all profiles, not once per profile and question
+    return sorted([x for x in profiles.names() if messages.takes_from(x["id"], uid, c=c)], key=lambda x: x["name"].lower())
 
 
 def _muted_until(c, uid, now):
@@ -815,7 +817,6 @@ def joined_by_invite(uid, inviter, now=None):
     now = time.time() if now is None else now
     if not invite_on() or not usable(inviter) or not profiles.by_id(uid):
         return ""
-    profiles.save_settings(uid, {"chats_on": True})
     import messages
     messages.allow_each_other(inviter, uid)   # only matters with "nur ausgewählte"; never past a block
     try:
@@ -837,7 +838,8 @@ def all_sync(now=None):
     anew at every look; made the first time. Returns its id, or "" while nobody takes part."""
     import messages
     now = time.time() if now is None else now
-    want = [u for u in profiles.user_ids() if messages.takes_all(u)] if messages.all_on() else []
+    cc = features.chat_cfg()   # once for all profiles
+    want = [u for u in profiles.user_ids() if messages.takes_all(u, cc)] if messages.all_on() else []
     with _lock:
         chats = _index()
         c = chats.get(ALL_ID)
@@ -1722,7 +1724,7 @@ def _on(request: Request, prof=Depends(own_profile)):
     if not admin_on():
         raise HTTPException(403, "chats are turned off")
     if not usable(prof["id"]):
-        raise HTTPException(403, "switch chats on for your profile first (Ich → Gespräch → Chats)")
+        raise HTTPException(403, ("Chats gehen für dich gerade nicht. " + features.missing_text("chats", prof["id"])).strip())
     guard.limit(request, "chats", prof["id"])
     return prof
 
@@ -2080,7 +2082,7 @@ async def api_invite(request: Request, prof=Depends(_on)):
     body = await _json(request, 2048)
     base = join._base(body)
     name = re.sub(r"[\x00-\x1f<>\"\\]", "", str(body.get("name") or "")).strip()[:MAX_NAME]
-    iid, code = join.make(name, "", INVITE_DAYS, by=prof["name"], chat=prof["id"])
+    iid, code = join.make(name, INVITE_DAYS, by=prof["name"], chat=prof["id"])
     link = f"{base}/#join={code}"
     guard.log("invite_made", by=prof["name"], invite=iid, kind="chat", days=INVITE_DAYS)
     _log("invite made")

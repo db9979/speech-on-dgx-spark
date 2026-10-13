@@ -2,7 +2,8 @@
 // right (its sentence, who may use it, its settings, its guide), the list on the left stays one line per function. On a
 // narrow page it opens below its line as before. The rows are moved, not copied: ids, loading, saving, "braucht dich"
 // and the search work unchanged, and closing puts them back into the item. "Wer darf es" uses the same endpoints as
-// the table "Wer darf was" (/api/admin/features, …/profiles/<id>, …/new) and works at once, without the save bar.
+// the table "Wer darf was" (/api/admin/features, …/profiles/<id>) and works at once, without the save bar. What the
+// Spark allows works for every profile at once (Dominik 2026-10-13); a chip only blocks one profile (on = may use it).
 (()=>{
 const pane=$('pane-feat');if(!pane)return;
 const side=document.createElement('aside');side.id='fdet';side.className='fdet';
@@ -42,22 +43,21 @@ async function who(it){let box=[...it.children].find(x=>x.classList.contains('fw
   for(const f of fs){const r=document.createElement('div');r.className='fwrow';
     if(fs.length>1){const n=document.createElement('div');n.className='fwname';n.textContent=f.name[L==='en'?1:0];r.appendChild(n)}
     const chips=document.createElement('div');chips.className='fwchips';
-    if(!f.profile){const s=document.createElement('span');s.className='mut';s.textContent=f.spark?t('Gilt für alle Profile.','Applies to every profile.'):t('Gilt für alle Profile, sobald der Spark-Schalter an ist.','Applies to every profile once the Spark switch is on.');chips.appendChild(s)}
-    else{for(const p of d.profiles){const on=!!f.cells[p.id];chips.appendChild(chip(p.name,on,f.spark,`${f.name[L==='en'?1:0]} – ${p.name}`,async()=>{
-          await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(p.id)}`,xjson('PUT',{on:!on}));f.cells[p.id]=!on}))}
-      chips.appendChild(chip(t('Neue Profile','New profiles'),!!f.new,true,`${f.name[L==='en'?1:0]} – ${t('neue Profile','new profiles')}`,async()=>{
-        await api(`/api/admin/features/${encodeURIComponent(f.key)}/new`,xjson('PUT',{on:!f.new}));f.new=!f.new},'new'))}
-    r.appendChild(chips);const g=document.createElement('div');g.className='mut fwg';
-    g.textContent=t('Gäste: ','Guests: ')+(f.guests?(d.public?t('ja','yes'):t('mit Gastzugang','with guest access')):t('nie','never'));r.appendChild(g);
-    box.appendChild(r)}
-  if(fs.some(f=>f.profile&&!f.spark)){const n=document.createElement('div');n.className='mut fwg';
-    n.textContent=t('Profile wählen geht, sobald der Schalter der Funktion an und gespeichert ist.','Choosing profiles works once the function\'s switch is on and saved.');box.appendChild(n)}
+    const nm=f.name[L==='en'?1:0];
+    for(const p of d.profiles){const inh=!!(f.inherited&&f.inherited[p.id]),on=!!f.cells[p.id];
+      chips.appendChild(chip(p.name,on&&!inh,f.spark&&!inh,`${nm} – ${p.name}`,async()=>{
+        await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(p.id)}`,xjson('PUT',{on:!on}));f.cells[p.id]=!on}))}
+    r.appendChild(chips);box.appendChild(r)}
+  const n=document.createElement('div');n.className='mut fwg';
+  n.textContent=fs.some(f=>!f.spark)?t('Gilt für alle Profile, sobald der Schalter der Funktion an und gespeichert ist; hier sperrst du dann einzelne Profile.','Applies to every profile once the function\'s switch is on and saved; here you then block single profiles.')
+    :t('Gilt sofort für alle Profile; hier sperrst du einzelne Profile.','Applies to every profile at once; here you block single profiles.');box.appendChild(n)
+  const g=document.createElement('div');g.className='mut fwg';g.textContent=t('Gäste: nie (nur Fragen und Antworten)','Guests: never (questions and answers only)');box.appendChild(g)
   // a jump from Wer darf was scrolled to its row before this box was filled and pushed the row down: scroll again
   // (until the user moves himself, so a later refresh by a chip does not move the page; the flash alone was too
   // short on a slow device with many profiles)
   const j=typeof WHO_LAST!=='undefined'&&WHO_LAST;if(j&&typeof whoKeepJump==='function'&&whoKeepJump()&&inItem(it,j))j.scrollIntoView({block:'center'})
-  function chip(label,on,can,aria,act,cls){const b=document.createElement('button');b.type='button';b.className='fwc'+(on?' on':'')+(cls?' '+cls:'');
-    b.textContent=label;b.disabled=!can;b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',`${aria}: ${on?t('an','on'):t('aus','off')}`);
+  function chip(label,on,can,aria,act,cls){if(can&&!on)cls=(cls?cls+' ':'')+'blk';const b=document.createElement('button');b.type='button';b.className='fwc'+(on?' on':'')+(cls?' '+cls:'');
+    b.textContent=label;b.disabled=!can;b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',`${aria}: ${on?t('darf es','may use it'):can?t('gesperrt','blocked'):t('geht nicht','not possible')}`);
     b.onclick=async()=>{b.disabled=true;try{await act();who(it)}catch(e){alert(e.message);b.disabled=false}};return b}}
 // ---------------------------------------------------------------- open, close, wide or narrow
 window.featSide=(it,on)=>{if(on){if(split){if(cur&&cur!==it)featOpen(cur,false);out(it)}WD=null;who(it)}else if(cur===it)back()};

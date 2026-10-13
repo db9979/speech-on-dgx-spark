@@ -4,6 +4,7 @@ the Ich window starts with its overview. Skipped where Playwright or Chromium is
 self-test on the Spark); runs in the container and in the GitHub "Tests" workflow."""
 import asyncio
 import glob
+import json
 import os
 import sys
 import unittest
@@ -185,19 +186,20 @@ class Browser(unittest.TestCase):
 
     def test_frag_spark_in_the_face(self):
         """Spark-Hilfe (hilfe.js): "Frag Spark" lives in the face at the bottom right, names the page (also over Ich),
-        a typed question there carries the page and gets the card, "Übernehmen" switches only after the tap; no
-        sideways scrolling on a phone, with the strict CSP on. Ich asks again what the admin allows (V01.0.335)."""
+        a typed question there carries the page and gets the card, "Übernehmen" switches only after the tap (here the
+        admin's Spark switch: a profile switches no function on itself any more); no sideways scrolling on a phone,
+        with the strict CSP on. Ich asks again what the admin allows (V01.0.335)."""
         import hilfe
-        import profiles
-        helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=True, prefetch=False)
-        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
-        profiles.save_settings(uid, {"spark_help": True, "route": False})
+        helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=False, follow_up=False)
+
+        def routing():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                return json.load(f)["chat"].get("routing")
 
         async def go():
             async with async_playwright() as p:
                 for w, h in ((1280, 900), (390, 844)):
-                    profiles.save_settings(uid, {"route": False})
-                    helpers.set_config(prefetch=False)
+                    helpers.set_config(routing=False, follow_up=False)
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         self.assertEqual(await pg.locator("#hilfefab").count(), 0)   # no button of its own
@@ -208,26 +210,25 @@ class Browser(unittest.TestCase):
                         await pg.fill("#fabq", 'TOOL spark_vorschlag {"functions": ["routing"]}')
                         await pg.click("#fabask button[type=submit]")
                         await pg.wait_for_selector("#fabcards .hcard [data-hdo=apply]", timeout=20000)
-                        self.assertFalse(profiles.settings(uid).get("route"))   # nothing before the tap
+                        self.assertFalse(routing())                           # nothing before the tap
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
                         await pg.click("#fabcards .hcard [data-hdo=apply]")
                         await pg.wait_for_selector("#fabcards .hcard [data-hdo=undo]", timeout=20000)
-                        self.assertTrue(profiles.settings(uid).get("route"))
+                        self.assertTrue(routing())
                         # Ich over the chat: the face shows above it and knows the page; the admin switches
-                        # "Vorab holen" on meanwhile: Ich shows it unlocked without reloading
+                        # "Rückfrage ohne Weckwort" on meanwhile: Ich shows it unlocked without reloading
                         await pg.evaluate("goSec('chat')")
                         await pg.evaluate("openMe('setbox')")
                         await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=20000)
                         self.assertIn("Ich", await pg.text_content("#fabpage"))
                         self.assertTrue(await pg.is_visible("#fabface"))
                         await pg.evaluate("$('profclose').click()")
-                        helpers.set_config(prefetch=True)
+                        helpers.set_config(follow_up=True)
                         await pg.evaluate("openMe('setbox')")
-                        await pg.wait_for_function("ALLOW.prefetch===true", timeout=20000)
-                        await pg.wait_for_function("[...document.querySelectorAll('#setform .setrow')].some(r=>"
-                                                   "r.textContent.includes('Vorab holen')&&!r.textContent.includes('Vom Admin ausgeschaltet'))",
-                                                   timeout=20000)
+                        await self.until(pg, "ALLOW.follow===true")
+                        await self.until(pg, "[...document.querySelectorAll('#setform .setrow')].some(r=>"
+                                             "r.textContent.includes('Rückfrage ohne Weckwort')&&!r.textContent.includes('Vom Admin ausgeschaltet'))")
                         # the "?" at a switch (V01.0.343): asks about exactly that switch, the focus goes along
                         sent = []
                         pg.on("request", lambda r: sent.append(r.post_data or "") if r.url.endswith("/api/chat") else None)
@@ -249,8 +250,7 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             hilfe._cards.clear()
-            helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False, prefetch=False)
-            profiles.save_settings(uid, {"spark_help": False, "route": False})
+            helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False, follow_up=False)
 
     def test_face_starts_everywhere_with_one_tap(self):
         """The face at the bottom right (face.js, V01.0.359): on every page, over Ich and on a phone, also without
@@ -259,7 +259,6 @@ class Browser(unittest.TestCase):
         import profiles
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
         helpers.set_config(spark_help=False, spark_drawer=False)
-        profiles.save_settings(uid, {"spark_help": False})
 
         async def go():
             async with async_playwright() as p:
@@ -329,36 +328,44 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_feature_hint_card_and_guided_setup(self):
-        """Funktionen vorschlagen (tipps.js): asked for something that is off for this profile, the answer carries the
-        hint with "Einrichten"; that opens the guided setup in the face's window and the Ich page, the card there
-        switches only on the tap, a click on the page keeps the window open, "Fertig" closes it; Ich → Überblick lists
-        "Für dich vorgeschlagen". No sideways scrolling on a phone, with the strict CSP on."""
+        """Funktionen vorschlagen (tipps.js): asked for something that is off, the answer carries the hint with
+        "Einrichten"; that opens the guided setup in the face's window (here the admin's: off on the Spark, with the way
+        under Funktionen), nothing switches by itself, "Prüfen" asks the panel again, a click on the page keeps the
+        window open, "Fertig" closes it; Ich → Überblick lists "Für dich vorgeschlagen". No sideways scrolling on a
+        phone, with the strict CSP on. (Freigabe vereinfachen: a profile switches no function on any more, so what is
+        off is off on the Spark; released there it works at once for the profile.)"""
         from unittest import mock
         import profiles
         import tipps
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
-        helpers.set_config(spark_help=True, feature_tips=True, tasks=True, routing=False, direct_read=False)
+        helpers.set_config(spark_help=True, feature_tips=True, tasks=False, routing=False, direct_read=False, deny={})
 
         async def go():
             async with async_playwright() as p:
                 for w, h in ((1280, 900), (390, 844)):
                     tipps.forget(uid)
-                    profiles.save_settings(uid, {"tips_on": True, "tasks_on": False, "spark_help": True})
+                    helpers.set_config(tasks=False)
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         await self.until(pg, "TIPS_ON===true", 20)
+                        # the admin switching it on below must not reload the page (that is test_rights_changed_...)
+                        await pg.evaluate("sparkBusy=()=>true")
                         await pg.evaluate("ask('Setz Milch auf die Einkaufsliste')")
                         await pg.wait_for_selector(".whynote .tipnote .tiprow .b.p", timeout=20000)
                         await pg.click(".whynote .tipnote .tiprow .b.p")
-                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=apply]", timeout=20000)
-                        await self.until(pg, "$('profmodal').style.display==='grid'&&$('fab').classList.contains('open')", 20)
-                        self.assertFalse(profiles.settings(uid).get("tasks_on"))   # nothing before the tap
+                        await pg.wait_for_selector("#tipsetup .row .b.p", timeout=20000)
+                        await self.until(pg, "$('fab').classList.contains('open')", 20)
+                        self.assertIn("Funktionen → Aufgaben und Einkaufsliste", await pg.text_content("#tipsetup"))
+                        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                            self.assertFalse(json.load(f)["chat"]["tasks"])   # nothing switches by itself
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
-                        await pg.click("#tipsetup .hcard [data-hdo=apply]")
-                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=undo]", timeout=20000)
-                        self.assertTrue(profiles.settings(uid).get("tasks_on"))
-                        await pg.mouse.click(5, h // 2)    # a click on the page keeps the setup open
+                        await pg.evaluate("$('fab').classList.add('open')")
+                        await pg.locator("#tipsetup .row .b.p").click()   # Prüfen: still off
+                        await self.until(pg, "$('tipsetup').querySelector(':scope>.tipmsg').textContent.length>0", 20)
+                        self.assertIn("Vom Admin ausgeschaltet", await pg.text_content("#tipsetup>.tipmsg"))
+                        helpers.set_config(tasks=True)                    # the admin switches it on: works at once
+                        await pg.mouse.click(w // 2, 8)    # a click on the page keeps the setup open
                         await pg.wait_for_timeout(200)
                         self.assertTrue(await pg.evaluate("$('fab').classList.contains('open')&&!!$('tipsetup')"))
                         # the window never covers more than half of a small screen, × and Escape fold it in, the
@@ -402,7 +409,6 @@ class Browser(unittest.TestCase):
         finally:
             tipps.forget(uid)
             helpers.set_config(spark_help=False, feature_tips=False, tasks=False)
-            profiles.save_settings(uid, {"tips_on": False, "tasks_on": False, "spark_help": False})
 
     def test_notaus_button_band_and_lifting(self):
         """Notaus (notaus.py): the red button opens the stages, triggering shows the band and Zustand's card on every
@@ -565,7 +571,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_rights_changed_elsewhere_arrive_without_f5(self):
-        """V01.0.388: the admin switches a function for this profile under Wer darf was (another browser): the
+        """V01.0.388: the admin blocks a function for this profile under Wer darf was (another browser): the
         open page sees the new fingerprint at its next look (every minute, on coming back) and reloads when calm,
         with a note; in a conversation only a bar."""
         import profiles
@@ -573,11 +579,10 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
-                was = profiles.settings(uid).get("wx_on") is True
-                helpers.set_config(weather=True)
+                helpers.set_config(weather=True, deny={})
                 try:
                     # busy (a conversation): no reload, a bar instead
-                    profiles.save_settings(uid, {"wx_on": not was})
+                    helpers.set_config(deny={"weather": [uid]})
                     await pg.evaluate("window.sparkBusyWas=sparkBusy;sparkBusy=()=>true;verWatch.back=Date.now();verCheck()")
                     await pg.wait_for_selector("#verbanner", timeout=20000)
                     self.assertIn("Funktionen wurden geändert", await pg.text_content("#verbanner"))
@@ -589,8 +594,7 @@ class Browser(unittest.TestCase):
                     self.assertIn("Funktionen wurden geändert", await pg.evaluate("$('updtoast').textContent"))
                     self.assertEqual(errors, [])
                 finally:
-                    profiles.save_settings(uid, {"wx_on": was})
-                    helpers.set_config(weather=False)
+                    helpers.set_config(weather=False, deny={})
                     await br.close()
         self.run_async(go())
 
@@ -625,9 +629,13 @@ class Browser(unittest.TestCase):
                 await pg.wait_for_timeout(300)
                 self.assertTrue(await pg.evaluate("$('ztech').open"))
                 # B4: the reason under an answer comes from the panel, with a way to change it
-                note = await pg.evaluate("whyNote({key:'weather',name:['Wetter','Weather'],why:'profile',me:'wxbox'}).textContent")
-                self.assertIn("„Wetter“ ist für dich aus.", note)
-                self.assertIn("Unter Ich einschalten", note)
+                # (Freigabe vereinfachen: "profile" is a preference the person switched off, "blocked" only the admin lifts)
+                note = await pg.evaluate("whyNote({key:'proactive',name:['Von selbst melden','Speaking up'],why:'profile',me:'probox'}).textContent")
+                self.assertIn("„Von selbst melden“ hast du ausgeschaltet.", note)
+                self.assertIn("Unter Ich ändern", note)
+                note = await pg.evaluate("whyNote({key:'weather',name:['Wetter','Weather'],why:'blocked',me:'wxbox'}).textContent")
+                self.assertIn("„Wetter“ hat der Admin für dich gesperrt.", note)
+                self.assertNotIn("Unter Ich", note)                           # the profile cannot lift a block
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
@@ -738,7 +746,6 @@ class Browser(unittest.TestCase):
         import profiles
         helpers.set_config(mcp_server=True)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"mcps_on": True})
 
         async def go():
             async with async_playwright() as p:
@@ -767,7 +774,6 @@ class Browser(unittest.TestCase):
         import profiles
         helpers.set_config(write_help=True)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"write_on": True})
 
         async def go():
             async with async_playwright() as p:
@@ -793,18 +799,17 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(write_help=False)
-            profiles.save_settings(me, {"write_on": False})
 
     def test_voraussetzungen_mit_einschalten(self):
         """Dominik 2026-10-12: switching on a function that builds on others asks to switch those on too; switching
         off says what goes off with it. Funktionen (the page's switches, saved with the page) and Wer darf was
-        (the Spark column and a profile's box while the Spark is off)."""
+        (the Spark column; a profile's cell while the Spark is off is a disabled dash, since what the Spark allows works
+        for every profile and a cell only blocks)."""
         import json as _json
         import os as _os
         import profiles
         helpers.set_config(documents=False, doc_make=False, doc_make_templates=False, doc_semantic=False)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"doc_make": False})
 
         def cfg():
             with open(_os.environ["SPEECH_SPARK_CONFIG"]) as f:
@@ -857,21 +862,19 @@ class Browser(unittest.TestCase):
                 c = cfg()
                 self.assertTrue(c["documents"] and c["doc_make"] and c["doc_make_templates"], c)
                 self.assertIn("„Eigene Vorlagen“ braucht auch „Eigene Dokumente“ und „Dokumente erstellen“", said[-1])
-                # a profile's box while the Spark is off: the Spark side goes on too
+                # a profile's cell while the Spark is off: a disabled dash that says why, nothing to switch there
                 helpers.set_config(documents=False, doc_make=False)
-                await pg.evaluate("goSec('who')")
-                await self.until(pg, "typeof WHO!=='undefined'&&!!WHO&&WHO.features.find(f=>f.key==='erstellen').spark===false")
-                answers = [True]
-                await pg.evaluate(f"setTimeout(()=>whoSet(WHO.features.find(f=>f.key==='erstellen'),'{me}',true),0)")
-                await until_server(lambda: cfg()["doc_make"] and profiles.settings(me).get("doc_make") is True)
-                self.assertIn("Im Spark ist „Eigene Dokumente“ und „Dokumente erstellen“ aus", said[-1])
+                # (the page may load itself again for the change of what Uitest may use: open Wer darf was until it shows it)
+                cell = f"#whobox button.wcell[data-uid='{me}'][aria-label^='Dokumente erstellen – ']"
+                await self.until(pg, f"(document.querySelector(\"{cell}\")||{{}}).disabled===true"
+                                     "||((window._wl=(window._wl||0)+1)%20===1&&goSec('who'),false)")
+                self.assertIn("Spark aus", await pg.get_attribute(cell, "aria-label"))
                 self.assertEqual(errors, [])
                 await br.close()
         try:
             self.run_async(go())
         finally:
             helpers.set_config(**kept)
-            profiles.save_settings(me, {"doc_make": False})
 
     def test_dokumente_erstellen_card_and_list(self):
         """Dokumente erstellen (erstellen.js): the outline card under an answer starts the job, which ends with a
@@ -881,9 +884,8 @@ class Browser(unittest.TestCase):
         import docmake
         import profiles
         import push
-        helpers.set_config(doc_make=True)
+        helpers.set_config(doc_make=True, deny={})
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"doc_make": True})
         real_part, real_push, real_bg = docmake.write_part, push.send, docmake.BACKGROUND
         docmake.BACKGROUND = True      # test_docmake runs its jobs itself; here the panel runs them
 
@@ -912,13 +914,10 @@ class Browser(unittest.TestCase):
                     card = _json.dumps(docmake.plan_public(docmake._pending[me]))
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
-                        if name == "pc":   # off for the profile: the block says so and switches it on itself
-                            profiles.save_settings(me, {"doc_make": False})
+                        if name == "pc":   # released by the admin: the block is there at once, nothing to switch on
                             await pg.evaluate("openMe('docbox')")
-                            await pg.wait_for_selector("#mkbox [data-mkdo=on]", state="visible", timeout=8000)
-                            await pg.click("#mkbox [data-mkdo=on]")
                             await pg.wait_for_selector("#mklist", state="visible", timeout=8000)
-                            self.assertIs(profiles.settings(me).get("doc_make"), True)
+                            self.assertEqual(await pg.locator("#mkbox [data-mkdo=on]").count(), 0)
                             await self.loaded(pg)      # Ich has loaded all its boxes before the page changes
                         await pg.evaluate(f"goSec('chat');$('chatlog').appendChild(mkCard({card}))")
                         await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=20000)
@@ -960,7 +959,6 @@ class Browser(unittest.TestCase):
             for d in docmake.all_docs(me):
                 docmake.delete(me, d["id"])
             helpers.set_config(doc_make=False)
-            profiles.save_settings(me, {"doc_make": False})
 
     def test_documents_list_search_details_and_select(self):
         """Ich → Dokumente with many documents (V01.0.413): compact rows, 50 at a time, the search field filters at
@@ -1030,7 +1028,6 @@ class Browser(unittest.TestCase):
         import profiles
         helpers.set_config(desk=True)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"desk_on": True})
         profiles.add_device("Begleiter Windows · Uitest-PC", me, scope="desk")
         did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Begleiter Windows · Uitest-PC")
         begleiter._save_cfg(did, me, begleiter.DEFAULT)
@@ -1063,7 +1060,6 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(desk=False)
-            profiles.save_settings(me, {"desk_on": False})
             profiles.delete_device(did)
 
     def test_begleiter_two_devices(self):
@@ -1073,7 +1069,6 @@ class Browser(unittest.TestCase):
         import profiles
         helpers.set_config(desk=True)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"desk_on": True})
         ids = []
         for n in ("Begleiter Windows · Büro-PC", "Begleiter Mac · MacBook"):
             profiles.add_device(n, me, scope="desk")
@@ -1108,7 +1103,6 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(desk=False)
-            profiles.save_settings(me, {"desk_on": False})
             for i in ids:
                 profiles.delete_device(i)
 
@@ -1125,8 +1119,7 @@ class Browser(unittest.TestCase):
             pass
         other = next(u for u in profiles._load()["users"] if u["name"] == "Uitest2")["id"]
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(other, {"chats_on": True})
-        profiles.save_settings(me, {"chats_on": True, "msg_from": "chosen"})
+        profiles.save_settings(me, {"msg_from": "chosen"})
 
         async def go():
             async with async_playwright() as p:
@@ -1157,7 +1150,7 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(chats=False)
-            profiles.save_settings(me, {"chats_on": False, "msg_from": "all"})
+            profiles.save_settings(me, {"msg_from": "all"})
             messages.mutate(me, lambda d: d.update(allow=[], block=[]))
 
     def test_speakers_list_and_one_speaker(self):
@@ -1174,7 +1167,6 @@ class Browser(unittest.TestCase):
         with open(os.path.join(esp32.FW_DIR, "current.json"), "w") as f:
             json.dump({"version": "9.9.9"}, f)
         uid = next(u["id"] for u in profiles.admin_list()["users"] if u["name"] == "Uitest")
-        profiles.save_settings(uid, {"esp_on": True})
         did = esp32.device_for_token(profiles.add_device("Uiflur", uid))["id"]
         esp32._update(lambda d: d["clients"].__setitem__("ui-flur", {"device": did, "uid": uid, "variant": "bread-compact-wifi",
                                                                      "fw": "9.9.8", "auto": True, "seen": 1}))
@@ -1339,7 +1331,6 @@ class Browser(unittest.TestCase):
         Image.new("RGB", (900, 600), (20, 160, 90)).save(out, "JPEG")
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
         helpers.set_config(images=True)
-        profiles.save_settings(uid, {"images_on": True})
 
         async def go():
             async with async_playwright() as p:
@@ -1373,7 +1364,6 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(images=False)
-            profiles.save_settings(uid, {"images_on": False})
 
     def test_choice_card_list_and_mappings(self):
         """Rückfrage statt Raten (klaeren.py): several devices fit, so the answer carries buttons; "Keins davon"
@@ -1382,7 +1372,6 @@ class Browser(unittest.TestCase):
         import profiles
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
         helpers.set_config(klaeren=True, klaeren_merken=True)
-        profiles.save_settings(uid, {"klaeren": True, "klaeren_merken": True})
         saved = {x["entity_id"]: x["state"] for x in helpers.HA_STATES}
         base = f"http://127.0.0.1:{self.port}"
 
@@ -1428,7 +1417,6 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(klaeren=False, klaeren_merken=False)
-            profiles.save_settings(uid, {"klaeren": False, "klaeren_merken": False})
             import homeassistant
             homeassistant.remove(uid)   # the next tests start without this profile's Home Assistant
             for x in helpers.HA_STATES:
@@ -2182,7 +2170,7 @@ class Browser(unittest.TestCase):
 
     def test_who_may_do_what(self):
         """Plan „Vereinheitlichen“ Phase 3 (V01.0.269): Funktionen → Wer darf was. A table on computers, cards with
-        chips on phones; a profile box switches only that profile, Spark off makes the boxes dashed."""
+        chips on phones; a profile cell blocks or allows only that profile (✓/⊘), Spark off makes the cells dashes."""
         helpers.set_config(weather=True, transit=False)
         async def go():
             async with async_playwright() as p:
@@ -2202,8 +2190,8 @@ class Browser(unittest.TestCase):
                     before = await pg.get_attribute(sel, "aria-pressed")
                     await pg.click(sel)
                     await pg.wait_for_function(f"document.querySelector(\"{sel}\").getAttribute('aria-pressed')!=='{before}'")
-                    # transit is off on the Spark: its profile boxes are dashed; switching one on asks to switch the
-                    # Spark side on too (V01.0.4xx, test_voraussetzungen_mit_einschalten)
+                    # transit is off on the Spark: its profile cells are disabled dashes (what the Spark allows works
+                    # for every profile, a cell only blocks; test_voraussetzungen_mit_einschalten)
                     off = "table.who button[aria-label^='Bus und Bahn – Uitest']" if name == "pc" else \
                         "#whobox button.chip[aria-label^='Bus und Bahn – Uitest']"
                     self.assertTrue(await pg.evaluate(f"document.querySelector(\"{off}\").classList.contains('woff')"))
@@ -2221,7 +2209,7 @@ class Browser(unittest.TestCase):
 
     def test_one_profile_detail(self):
         """Phase 5: Personen und Geräte – the Gäste row, role badges, "+ Neu" opens the fields, and one detail per
-        profile with Zugang, Geräte, Funktionen „n von m an“ (jumps to Wer darf was), Rechte and Daten."""
+        profile with Zugang, Geräte, Funktionen „darf n von m freigegebenen Funktionen“ (jumps to Wer darf was), Rechte and Daten."""
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
@@ -2237,7 +2225,7 @@ class Browser(unittest.TestCase):
                     self.assertEqual(heads, ["Zugang", "Rufname", "Geräte", "Funktionen", "Rechte", "Daten"])
                     for sel in ("#ppinnew", "#prole", "#pagent", "#pupdn", "#pquota", "#pdel", "#psess"):
                         self.assertTrue(await pg.query_selector(sel), (name, sel))
-                    self.assertRegex(await pg.text_content("#pdetail"), r"\d+ von \d+ an")
+                    self.assertRegex(await pg.text_content("#pdetail"), r"darf \d+ von \d+ freigegebenen Funktionen")
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, name)
                     await pg.click("#pfeat")
@@ -2412,7 +2400,7 @@ class Browser(unittest.TestCase):
                                          data={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
                     await pg.request.put(base + "/api/profile/settings", data={
                         "pro_on": True, "pro_ha": True, "pro_ha_live": True, "pro_ha_loud": True, "pro_ha_events": True,
-                        "pro_ha_voice": True, "pro_ha_cam": True})
+                        "pro_ha_cam": True})
                     r = await pg.request.post(base + "/api/proactive/rules", data={
                         "conds": [{"entity": "binary_sensor.ui_lineup", "op": "changes", "when": "on"}], "pause": 10,
                         "text": "Besucher vor Haustür"})
@@ -2655,7 +2643,8 @@ class Browser(unittest.TestCase):
     def test_locked_shows_why(self):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
         names the functions the admin has not switched on."""
-        helpers.set_config(routing=False, transit=False)
+        # (the profile's own manner of a function, here "Rückfrage ohne Weckwort"; release switches per profile are gone)
+        helpers.set_config(follow_up=False, transit=False)
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
@@ -2663,7 +2652,7 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("openMe('setbox')")
                     await pg.wait_for_selector("#setbox .melocked")
                     rows = await pg.evaluate("[...document.querySelectorAll('#setform .setrow.locked')].map(r=>r.querySelector('b').textContent+'|'+(r.querySelector('.why')||{}).textContent+'|'+r.querySelector('input,select,textarea').disabled)")
-                    self.assertIn("Gezielte Werkzeugwahl|Vom Admin ausgeschaltet|true", rows, name)
+                    self.assertIn("Rückfrage ohne Weckwort|Vom Admin ausgeschaltet|true", rows, name)
                     self.assertIn("Bus und Bahn", await pg.inner_text("#setbox .melocked"), name)
                     self.assertTrue(await pg.is_visible("#setbox .melocked button"), name)   # this browser is admin too
                     self.assertEqual(errors, [], name)

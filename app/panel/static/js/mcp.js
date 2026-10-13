@@ -11,7 +11,7 @@ function mcpLan(port){const h=location.hostname;
   return `http://${lan?h:t('SPARK-IP','SPARK-IP')}:${port||31080}/mcp`}
 function mcpTools(list,have,pre){const by={};list.forEach(x=>(by[x.group]=by[x.group]||[]).push(x));
   return Object.keys(MCPGRP).filter(g=>by[g]).map(g=>`<div class="fh" style="margin-top:8px"><b>${esc(t(...MCPGRP[g]))}</b></div>`+
-    by[g].map(x=>`<label class="chk"${x.ok?'':' title="'+esc(t('Für dich gerade aus (Funktionen bzw. Ich)','Off for you right now (Features or Me)'))+'"'}><input type="checkbox" data-${pre}="${esc(x.name)}"${have.includes(x.name)?' checked':''}${x.ok?'':' disabled'}> ${esc(L==='en'&&x.label_en||x.label)}</label>`).join('')).join('')}
+    by[g].map(x=>`<label class="chk"${x.ok?'':' title="'+esc(t('Für dich gerade aus (vom Admin ausgeschaltet oder gesperrt)','Off for you right now (switched off or blocked by the admin)'))+'"'}><input type="checkbox" data-${pre}="${esc(x.name)}"${have.includes(x.name)?' checked':''}${x.ok?'':' disabled'}> ${esc(L==='en'&&x.label_en||x.label)}</label>`).join('')).join('')}
 const mcpPicked=(box,pre)=>[...box.querySelectorAll(`[data-${pre}]`)].filter(x=>x.checked).map(x=>x.getAttribute('data-'+pre));
 const MCP_WARN=()=>t('Von außen: Alles, was dieses Programm über den Spark liest, geht an das Programm und dessen Anbieter (bei claude.ai oder ChatGPT in deren Cloud) und verlässt dein Heimnetz. Gib nur die Werkzeuge frei, die es wirklich braucht.',
   'From outside: everything this program reads through the Spark goes to the program and its provider (with claude.ai or ChatGPT into their cloud) and leaves your home network. Only give it the tools it really needs.');
@@ -26,7 +26,6 @@ async function showMcp(){const box=$('mcpbox');if(!box)return;if(!PROFILE||!MCPS
         <div class="row"><button class="b" type="button" data-mcsave="${esc(c.id)}">${t('Speichern','Save')}</button></div></details></span>
       <button class="b" type="button" data-mcdel="${esc(c.id)}" data-mcname="${esc(c.name)}">${t('Entfernen','Remove')}</button></li>`;
   box.innerHTML=`<div class="intro">${t('Andere Programme (Open WebUI, n8n, Home Assistant, Claude …) nutzen den Spark über das Model Context Protocol: hören, sprechen, nachlesen, ihn fragen. Jedes Programm bekommt einen eigenen Zugang mit genau den Werkzeugen, die du ihm gibst. Schalten, Termine und Erinnerungen schlägt ein Programm nur vor; ausgeführt wird erst nach deinem Ja hier.','Other programs (Open WebUI, n8n, Home Assistant, Claude …) use the Spark over the Model Context Protocol: listen, speak, look things up, ask it. Each program gets its own access with exactly the tools you give it. Switching, appointments and reminders are only proposed by a program; they run only after your yes here.')}</div>
-    ${xsw('mcps_on',t('Spark als MCP-Server für mich','Spark as MCP server for me'),t('Aus: Alle deine Programme bekommen sofort keine Antwort mehr.','Off: all your programs get no answer any more, at once.'))}
     <div id="mcpauth"></div>
     ${d.on&&wait.length?`<h3 style="margin:14px 0 4px">${t('Wartet auf dich','Waiting for you')}</h3><ul class="facts">${wait.map(x=>`<li><span><b>${esc(x.by)}</b> ${t('möchte','wants')}: ${esc(x.what)}<br><small class="mut">${esc(mcpWhen(x.t))}</small></span>
       <span class="row"><button class="b p" type="button" data-mcyes="${esc(x.id)}">${t('Ja, ausführen','Yes, do it')}</button><button class="b" type="button" data-mcno="${esc(x.id)}">${t('Nein','No')}</button></span></li>`).join('')}</ul>`:''}
@@ -79,7 +78,7 @@ function mcpKeyShow(){const k=$('mcpbox').querySelector('#mcpkey'),r=MCP_NEW;MCP
 function mcpAuthStart(){let id='';try{id=sessionStorage.getItem('mcpauth')||''}catch{}if(id&&PROFILE&&MCPS_ON&&typeof openMe==='function')openMe('mcpbox')}
 async function mcpAuthShow(d){const el=$('mcpauth');if(!el)return;let id='';try{id=sessionStorage.getItem('mcpauth')||''}catch{}
   if(!id||!/^[A-Za-z0-9_-]{20,48}$/.test(id)){el.innerHTML='';return}
-  if(!d.on){el.innerHTML=`<div class="fh err">${t('Ein Programm möchte sich verbinden. Erst „Spark als MCP-Server für mich“ einschalten.','A program wants to connect. First switch on "Spark as MCP server for me".')}</div>`;return}
+  if(!d.on){el.innerHTML=`<div class="fh err">${t('Ein Programm möchte sich verbinden, aber „Spark als MCP-Server“ ist für dich gerade aus (vom Admin ausgeschaltet oder gesperrt).','A program wants to connect, but "Spark as MCP server" is off for you right now (switched off or blocked by the admin).')}</div>`;return}
   let a;try{a=await (await api('/api/profile/mcp/oauth/'+encodeURIComponent(id))).json()}catch(e){try{sessionStorage.removeItem('mcpauth')}catch{}el.innerHTML=`<div class="fh err">${esc(e.message)}</div>`;return}
   el.innerHTML=`<div class="card" style="margin:10px 0"><h3 style="margin:0 0 6px">${t('Programm verbinden','Connect a program')}</h3>
     <div class="fh"><b>${esc(a.name)}</b> (${esc(a.host||'')}) ${t('möchte deinen Spark nutzen.','wants to use your Spark.')}</div>

@@ -691,32 +691,12 @@
         }
       }
     },
-    "Aus Korrekturen lernen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Learn from corrections"
-          }
-        }
-      }
-    },
     "Ausführlich": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Detailed"
-          }
-        }
-      }
-    },
-    "Ausgegraute Themen schaltest du zuerst im Panel ein.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch on greyed-out topics in the panel first."
           }
         }
       }
@@ -757,16 +737,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Greeting"
-          }
-        }
-      }
-    },
-    "Bei Werkzeugen nachdenken": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Think when choosing tools"
           }
         }
       }
@@ -937,16 +907,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "For this, turn on “Documents from the app” in the panel under Me → iPhone app."
-          }
-        }
-      }
-    },
-    "Dafür im Panel „Von selbst“ für dein Profil einschalten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "For this, switch on “By itself” for your profile in the panel."
           }
         }
       }
@@ -1137,16 +1097,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thinking …"
-          }
-        }
-      }
-    },
-    "Der Admin hat keine dieser Funktionen eingeschaltet.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The admin has turned none of these functions on."
           }
         }
       }
@@ -1491,16 +1441,6 @@
         }
       }
     },
-    "Die Schreibhilfe ist im Panel aus.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The writing help is switched off in the panel."
-          }
-        }
-      }
-    },
     "Die Spracherkennung auf dem iPhone kann diese Sprache nicht ohne Internet. Das Weckwort bleibt aus (Einstellungen → Allgemein → Tastatur → Diktat).": {
       "localizations": {
         "en": {
@@ -1547,16 +1487,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The two PINs differ."
-          }
-        }
-      }
-    },
-    "Die eigenen Schalter dieses Profils. Das Profil sieht und ändert sie selbst unter Ich.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This profile's own switches. The profile sees and changes them itself under Me."
           }
         }
       }
@@ -2291,16 +2221,6 @@
         }
       }
     },
-    "Funktionen: %lld von %lld an": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Functions: %lld of %lld on"
-          }
-        }
-      }
-    },
     "Funktionsprüfung": {
       "localizations": {
         "en": {
@@ -2577,16 +2497,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conversation"
-          }
-        }
-      }
-    },
-    "Gezielte Werkzeugwahl": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Targeted tool choice"
           }
         }
       }
@@ -3067,16 +2977,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No answer from the Spark."
-          }
-        }
-      }
-    },
-    "Keine Funktion mit eigenem Schalter an.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No function with an own switch is on."
           }
         }
       }
@@ -6631,16 +6531,6 @@
         }
       }
     },
-    "Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switch on \"Create documents\" in the panel under Me → Documents."
-          }
-        }
-      }
-    },
     "Noch nichts erstellt. Sag zum Beispiel „Mach eine Präsentation über unseren Urlaub“.": {
       "localizations": {
         "en": {
@@ -6851,16 +6741,6 @@
         }
       }
     },
-    "Chats sind für dich aus. Einschalten im Panel unter Ich → Gespräch → Chats.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chats are off for you. Switch them on in the panel under Me → Conversation → Chats."
-          }
-        }
-      }
-    },
     "Chats, %lld ungelesen": {
       "localizations": {
         "en": {
@@ -6967,16 +6847,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "New chat"
-          }
-        }
-      }
-    },
-    "Niemand nimmt gerade Nachrichten von dir an. Jede Person schaltet das unter Ich → Gespräch → Chats selbst ein.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nobody takes messages from you right now. Each person switches that on under Me → Conversation → Chats."
           }
         }
       }
@@ -7267,6 +7137,156 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off = paused, stays saved. Change it and see all reminders: Me → Jobs"
+          }
+        }
+      }
+    },
+    "Ausgegraute Themen hat der Admin noch nicht freigegeben. Was er freigibt, gilt sofort für dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released the greyed-out topics yet. What the admin releases applies to you at once."
+          }
+        }
+      }
+    },
+    "Chats hat der Admin für dich gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has blocked chats for you."
+          }
+        }
+      }
+    },
+    "Der Admin hat Bus und Bahn noch nicht freigegeben (Funktionen → Bus und Bahn).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released bus and train yet (Features → Bus and train)."
+          }
+        }
+      }
+    },
+    "Der Admin hat das Wetter noch nicht freigegeben (Funktionen → Wetter).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released the weather yet (Features → Weather)."
+          }
+        }
+      }
+    },
+    "Der Admin hat das noch nicht freigegeben (Funktionen → Eigene Dokumente). Was er freigibt, gilt sofort für dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released this yet (Features → Own documents). What the admin releases applies to you at once."
+          }
+        }
+      }
+    },
+    "Der Admin hat die Pakete noch nicht freigegeben (Funktionen → E-Mail lesen und Pakete).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released parcels yet (Features → Reading e-mail and Parcels)."
+          }
+        }
+      }
+    },
+    "Der Admin hat die Schreibhilfe noch nicht freigegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released the writing help yet."
+          }
+        }
+      }
+    },
+    "Der Admin hat „Dokumente erstellen“ noch nicht freigegeben (Funktionen → Eigene Dokumente → Dokumente erstellen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released “Creating documents” yet (Features → Own documents → Creating documents)."
+          }
+        }
+      }
+    },
+    "Der Admin hat „Von selbst melden“ noch nicht freigegeben, oder du hast es unter Ich → Von selbst ausgeschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released “Speaking up by itself” yet, or you switched it off under Me → Proactive."
+          }
+        }
+      }
+    },
+    "Funktionen: %lld von %lld freigegeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Functions: %lld of %lld allowed"
+          }
+        }
+      }
+    },
+    "Gesperrt über eine Funktion, auf der sie aufbaut": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocked through a function it builds on"
+          }
+        }
+      }
+    },
+    "Keine Funktion auf dem Spark an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No function is on on the Spark."
+          }
+        }
+      }
+    },
+    "Niemand nimmt gerade Nachrichten von dir an. Jede Person legt unter Ich → Gespräch → Chats fest, wer ihr schreiben darf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody takes messages from you right now. Each person sets under Me → Conversation → Chats who may write to them."
+          }
+        }
+      }
+    },
+    "Probleme melden ist für dich aus. Der Admin hat es noch nicht freigegeben (Funktionen → Probleme melden).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reporting problems is off for you. The admin has not released it yet (Features → Reporting problems)."
+          }
+        }
+      }
+    },
+    "Was auf dem Spark an ist, gilt sofort für jedes Profil. Aus sperrt eine Funktion nur für dieses Profil; das Profil kann die Sperre nicht selbst aufheben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is on on the Spark applies to every profile at once. Off blocks a function for this profile only; the profile cannot lift the block itself."
           }
         }
       }

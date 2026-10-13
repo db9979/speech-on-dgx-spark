@@ -6,7 +6,7 @@ sends the code to /api/pebble/pair and gets its own device key with scope "watch
 (144 bits), works once and for CODE_SECONDS; only its hash is kept, in memory.
 
 A key with scope "watch" only asks (profiles.WATCH_PREFIX: /api/watch/...) and only while the admin
-switch chat.pebble and the profile's pebble_on are on. Removing the watch in the panel stops its key.
+switch chat.pebble is on and the profile is not blocked. Removing the watch in the panel stops its key.
 Keys made by hand in the admin's device list keep working as before.
 """
 import hashlib

@@ -48,7 +48,7 @@ extension SparkAPI {
     /// as much text as the Spark takes at once (schreib.MAX_TEXT)
     static let writeMax = 20000
 
-    static var writeOff: String { String(localized: "Die Schreibhilfe ist im Panel aus.") }
+    static var writeOff: String { String(localized: "Der Admin hat die Schreibhilfe noch nicht freigegeben.") }
 
     /// Is the writing help on for this profile (admin and profile switches)? false also on 403.
     func writeOn() async throws -> Bool {

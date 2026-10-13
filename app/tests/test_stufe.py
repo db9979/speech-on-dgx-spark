@@ -184,7 +184,7 @@ class Admin(unittest.TestCase):
         with open(features.DEFAULTS) as f:
             self.assertIs(json.load(f)["chat"]["person_priority"], False)
         self.assertIn("vorrang", features.BY_KEY)
-        self.assertFalse(features.BY_KEY["vorrang"].guests)
+        self.assertFalse(features.allowed("vorrang", None))
 
     def test_only_the_admin_sets_a_stage(self):
         c, uid = profile("StufeAnna")

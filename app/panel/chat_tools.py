@@ -5,7 +5,6 @@ import asyncio
 import datetime
 import os
 import re
-import secrets
 import sys
 
 import httpx
@@ -266,8 +265,8 @@ async def run(t, name, args, st):
         await t.out.put({"type": "iphone", "kind": kind, "target": target})
         return (f"Sent to the iPhone, which now asks the user before it "
                 f"{'opens the route to' if kind == 'navigate' else 'calls'} '{target}'. Say so in one short sentence.")
-    if name.startswith("reminder_") and t.timers:
-        pending = profiles.reminders(t.who["id"]) if t.who else t.guest_rem
+    if name.startswith("reminder_") and t.timers and t.who:   # never for guests (they get no tools at all)
+        pending = profiles.reminders(t.who["id"])
         zone = chat.user_zone(t.body.get("tz"))
         fmt = lambda x: datetime.datetime.fromtimestamp(x["due"] / 1000, zone).strftime("%d.%m. %H:%M")  # noqa: E731
         if name == "reminder_set":
@@ -276,12 +275,10 @@ async def run(t, name, args, st):
             if not due:
                 return "Invalid time: give minutes from now or a future 'YYYY-MM-DDTHH:MM'."
             every = args.get("repeat") if args.get("repeat") in profiles.REPEATS else ""
-            item = profiles.add_reminder(t.who["id"], text, due, every) if t.who else \
-                {"id": secrets.token_hex(4), "text": text[:200], "due": due}
+            item = profiles.add_reminder(t.who["id"], text, due, every)
             await t.out.put({"type": "reminder", "action": "set", "item": item, "foreign": not t.own_browser})
-            if t.who:
-                import tagebuch
-                tagebuch.note(t.who["id"], "erinnerung", f"{item['text']} ({fmt(item)})", ref=item["id"])
+            import tagebuch
+            tagebuch.note(t.who["id"], "erinnerung", f"{item['text']} ({fmt(item)})", ref=item["id"])
             return f"Set: '{item['text']}' at {fmt(item)}" + (f", then {REPEAT_SAYS[item['every']]}" if item.get("every") else "") + "."
         if name == "reminder_list":
             return "\n".join(f"{fmt(x)}: {x['text']}" + (f" ({REPEAT_SAYS[x['every']]})" if x.get("every") in REPEAT_SAYS else "")
@@ -502,7 +499,7 @@ async def briefing_text(t, st):
     res = await asyncio.gather(*jobs, return_exceptions=True)
     parts = [chat.now_line(t.body.get("tz")).split(" Nutze")[0]]
     if not t.cal["calendars"]:
-        parts.append("Calendar: none connected" + ("" if t.who else " (guests have none)") + ".")
+        parts.append("Calendar: none connected.")
     elif isinstance(res[0], Exception):
         parts.append(f"Calendar not reachable: {res[0]}")
     else:
@@ -514,7 +511,7 @@ async def briefing_text(t, st):
             parts.append(f"{label}'s appointments:\n" + ("\n".join(calendars.line(x, now) for x in evs) or "none"))
     if t.timers:
         end = (today + datetime.timedelta(days=1)).timestamp() * 1000
-        pend = [x for x in (profiles.reminders(t.who["id"]) if t.who else t.guest_rem) if x["due"] < end]
+        pend = [x for x in (profiles.reminders(t.who["id"]) if t.who else []) if x["due"] < end]
         parts.append("Reminders today:\n" + ("\n".join(
             f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
     if t.who:   # weather, birthdays, parcels (parcels come from mail: then the answer counts as mail)

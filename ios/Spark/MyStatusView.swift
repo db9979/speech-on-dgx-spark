@@ -28,7 +28,7 @@ extension SparkAPI {
         return String(a[(Locale.preferredLanguages.first?.hasPrefix("en") ?? false) ? 1 : 0].prefix(max))
     }
 
-    /// /api/features: whether this profile may use a function (Spark and own switch on)
+    /// /api/features: whether this profile may use a function (on on the Spark, not blocked, own preference on)
     func can(_ key: String) async -> Bool {
         guard let d = try? await object("GET", "api/features"), let list = d["features"] as? [[String: Any]] else { return false }
         return list.prefix(200).contains { $0["key"] as? String == key && $0["can"] as? Bool == true }

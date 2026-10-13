@@ -48,7 +48,7 @@ def call(client, token, name, args=None):
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(mcp_server=True, mcp_server_extern=False, mcp_server_act=False, reminders=True)
+        helpers.set_config(mcp_server=True, mcp_server_extern=False, mcp_server_act=False, reminders=True, deny={})
         guard.reset()
         for k in [k for k in guard._rate if str(k[0]).startswith("mcp") or k[0] == "features"]:
             guard._rate.pop(k, None)
@@ -62,7 +62,7 @@ class Base(unittest.TestCase):
     def tearDown(self):
         mfa.enabled, mfa.verify = self.real
         core._windows.clear()
-        helpers.set_config(mcp_server=False, mcp_server_extern=False, mcp_server_act=False)
+        helpers.set_config(mcp_server=False, mcp_server_extern=False, mcp_server_act=False, deny={})
 
     def key(self, c, tools, where="lokal", name="Open WebUI"):
         r = c.post("/api/profile/mcp/keys", json={"name": name, "tools": tools, "where": where}, headers=CODE)
@@ -76,7 +76,7 @@ class OffAndKeys(Base):
             d = json.load(f)["chat"]
         for k in ("mcp_server", "mcp_server_extern", "mcp_server_act"):
             self.assertIs(d[k], False, k)
-        self.assertIs(profiles.SETTINGS["mcps_on"][0], False)
+        self.assertNotIn("mcps_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
         helpers.set_config(mcp_server=False)
         self.assertEqual(rpc(self.lan, "x" * 30, "ping").status_code, 404)
         for path in ("/.well-known/oauth-authorization-server", "/.well-known/oauth-protected-resource"):
@@ -84,8 +84,9 @@ class OffAndKeys(Base):
 
     def test_key_needs_switches_and_the_browser_login(self):
         c, uid = profile("McpMia")
+        helpers.set_config(deny={"mcpserver": [uid]})   # the admin blocks this profile
         self.assertEqual(c.post("/api/profile/mcp/keys", json={"name": "X", "tools": ["voices"]}).status_code, 403)
-        c.put("/api/profile/settings", json={"mcps_on": True})
+        helpers.set_config(deny={})                      # released: works at once
         for bad in ({"name": "", "tools": []}, {"name": "x" * 61, "tools": []}, {"name": "A", "tools": ["mail_read"]},
                     {"name": "A", "tools": ["voices"], "where": "anywhere"}, {"name": "A<b>", "tools": []}):
             self.assertIn(c.post("/api/profile/mcp/keys", json=bad).status_code, (400, 403), bad)
@@ -103,7 +104,6 @@ class OffAndKeys(Base):
 
     def test_home_network_only(self):
         c, _ = profile("McpLeo")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         token = self.key(c, ["voices"])
         self.assertEqual(rpc(self.lan, token, "ping").status_code, 200)
         self.assertEqual(rpc(TestClient(panel.app, client=("8.8.8.8", 1)), token, "ping").status_code, 403)
@@ -122,16 +122,16 @@ class OffAndKeys(Base):
             helpers.write_config(cfg)
 
     def test_token_origin_and_switches(self):
-        c, _ = profile("McpTom")
-        c.put("/api/profile/settings", json={"mcps_on": True})
+        c, uid = profile("McpTom")
         token = self.key(c, ["voices"])
         r = rpc(self.lan, "spk_mcp_" + "a" * 43, "ping")
         self.assertEqual(r.status_code, 401)
         self.assertIn("Bearer", r.headers["www-authenticate"])
         self.assertEqual(rpc(self.lan, token, "ping", headers={"Origin": "https://evil.example"}).status_code, 403)
-        c.put("/api/profile/settings", json={"mcps_on": False})
+        helpers.set_config(deny={"mcpserver": [uid]})   # the admin blocks this profile: the token stops at once
         self.assertEqual(rpc(self.lan, token, "ping").status_code, 403)
-        c.put("/api/profile/settings", json={"mcps_on": True})
+        helpers.set_config(deny={})
+        self.assertEqual(rpc(self.lan, token, "ping").status_code, 200)
         helpers.set_config(mcp_server=False)
         self.assertEqual(rpc(self.lan, token, "ping").status_code, 404)
         helpers.set_config(mcp_server=True)
@@ -142,7 +142,6 @@ class OffAndKeys(Base):
 
     def test_protocol_and_only_given_tools(self):
         c, _ = profile("McpUli")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         token = self.key(c, ["voices", "speak", "calendar_events"])
         r = rpc(self.lan, token, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {}})
         self.assertEqual(r.json()["result"]["protocolVersion"], "2025-06-18")
@@ -185,7 +184,6 @@ class OnTheLivePage(Base):
         _live(True)
         try:
             c, uid = profile("McpLiva")
-            c.put("/api/profile/settings", json={"mcps_on": True})
             token = self.key(c, ["voices", "speak", "today", "reminder_set"], name="Claude Desktop")
             with live._lock:
                 live._run.clear()
@@ -221,7 +219,6 @@ class Never(unittest.TestCase):
 class AskOnlyReads(Base):
     def test_ask_spark_reads_only(self):
         c, uid = profile("McpAnna")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         profiles.remember(uid, "Mein Geheimfach ist im Keller")
         token = self.key(c, ["ask_spark", "reminder_list"])
         n = len(helpers.LLM_CALLS)
@@ -254,7 +251,6 @@ class AskOnlyReads(Base):
 class Acting(Base):
     def test_actions_wait_for_the_profiles_yes(self):
         c, uid = profile("McpCarl")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         self.assertEqual(c.post("/api/profile/mcp/keys", json={"name": "n8n", "tools": ["reminder_set"]}, headers=CODE).status_code, 403)
         helpers.set_config(mcp_server_act=True)
         token = self.key(c, ["reminder_set"], name="n8n")
@@ -293,7 +289,6 @@ class Acting(Base):
         """Rights arrive at once (V01.0.388): a proposal made earlier is not carried out once the admin turned
         the profile's MCP switch off under Wer darf was."""
         c, uid = profile("McpRolf")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         helpers.set_config(mcp_server_act=True)
         token = self.key(c, ["reminder_set"], name="n8n")
         before = len(profiles.reminders(uid))
@@ -309,7 +304,6 @@ class Acting(Base):
 class Outside(Base):
     def test_extern_needs_switch_second_step_and_fresh_code(self):
         c, uid = profile("McpEva")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         r = c.post("/api/profile/mcp/keys", json={"name": "Cloud", "tools": ["voices"], "where": "extern"}, headers=CODE)
         self.assertEqual(r.status_code, 403)   # admin switch off
         helpers.set_config(mcp_server_extern=True)
@@ -326,7 +320,6 @@ class Outside(Base):
     def test_oauth_flow(self):
         helpers.set_config(mcp_server_extern=True)
         c, uid = profile("McpFinn")
-        c.put("/api/profile/settings", json={"mcps_on": True})
         net = TestClient(panel.app, client=("8.8.8.8", 1), follow_redirects=False)
         meta = net.get("/.well-known/oauth-authorization-server").json()
         self.assertEqual(meta["code_challenge_methods_supported"], ["S256"])

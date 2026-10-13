@@ -2,7 +2,7 @@
 
 When an answer asks back, the panel warms the caches of calendar, mail, weather and parcels by fixed rules
 while the question is spoken. Only reading jobs, only tools the turn offered, the groups from the person's own
-words (from the question back only when nothing outside was read), never guests, off without both switches.
+words (from the question back only when nothing outside was read), never guests, off without the admin's switch (on for every profile then, unless the admin blocks one).
 A longer calendar period in the cache serves a shorter one. No test depends on the wall clock.
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
@@ -104,10 +104,9 @@ class Rules(unittest.TestCase):
 
     def setUp(self):
         helpers.set_config(routing=True, prefetch=True)
-        profiles.save_settings(self.uid, {"route": True, "prefetch": True})
 
     def tearDown(self):
-        helpers.set_config(prefetch=False)
+        helpers.set_config(prefetch=False, deny={})
 
     def test_asks_back(self):
         self.assertTrue(vorab.asks_back("Gern. Für welchen Tag?"))
@@ -169,7 +168,11 @@ class Rules(unittest.TestCase):
             helpers.set_config(prefetch=False)
             self.assertIsNone(run_after(Turn(self.uid, "Habe ich einen Termin?"), "Wann?")[0])
             helpers.set_config(prefetch=True)
-            self.assertIsNone(run_after(Turn(self.other, "Habe ich einen Termin?"), "Wann?")[0])   # profile switch off
+            helpers.set_config(deny={"vorab": [self.other]})       # the admin blocks this one profile
+            self.assertIsNone(run_after(Turn(self.other, "Habe ich einen Termin?"), "Wann?")[0])
+            helpers.set_config(deny={"routing": [self.other]})     # ... or the function it builds on
+            self.assertIsNone(run_after(Turn(self.other, "Habe ich einen Termin?"), "Wann?")[0])
+            helpers.set_config(deny={})
             self.assertIsNone(run_after(Turn(None, "Habe ich einen Termin?"), "Wann?")[0])          # guest
             self.assertIsNone(run_after(Turn(self.uid, "Habe ich einen Termin?", own_browser=False), "Wann?")[0])
             self.assertIsNone(run_after(Turn(self.uid, "Habe ich einen Termin?", private_ok=False), "Wann?")[0])
@@ -264,7 +267,6 @@ class EndToEnd(unittest.TestCase):
     def test_the_answer_hands_over_what_it_said(self):
         c, uid = profile("VorabEmil")
         helpers.set_config(routing=True, prefetch=True)
-        profiles.save_settings(uid, {"route": True, "prefetch": True})
         seen = []
         saved = vorab.after
         vorab.after = lambda turn, said, st, calls, tr=None: seen.append((turn.who["id"], said, st["outside"]))
@@ -303,7 +305,6 @@ class RouteModelBeside(unittest.TestCase):
     def test_turn_still_uses_the_pick(self):
         c, uid = profile("VorabRita")
         helpers.set_config(routing=True, route_model="on")
-        profiles.save_settings(uid, {"route": True})
         try:
             with contextlib.redirect_stdout(io.StringIO()) as out:
                 r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "ROUTE gedaechtnis quux"}]})

@@ -64,21 +64,29 @@ class MyStatus(unittest.TestCase):
 
     def on(self, name):
         c = profile(name)
-        uid = uid_of(name)
-        profiles.save_settings(uid, {"my_status": True})
-        return c, uid
+        return c, uid_of(name)
+
+    def block(self, uid, on=False):
+        """The admin blocks (on=False) or allows again "Mein Zustand" for one profile (chat.deny)."""
+        r = ADMIN.put(f"/api/admin/features/mystatus/profiles/{uid}", json={"on": on})
+        self.assertEqual(r.status_code, 200, r.text)
+        if not on:
+            self.addCleanup(self.block, uid, True)
 
     def test_off_by_default_and_never_for_guests(self):
         helpers.set_config(my_status=False)
-        self.assertIs(profiles.SETTINGS["my_status"][0], False)
+        self.assertNotIn("my_status", profiles.SETTINGS)       # no profile switch: the admin's release counts
         c = profile("Hbert")
         self.assertEqual(c.get("/api/profile/hintergrund").status_code, 403)          # admin switch off
         helpers.set_config(my_status=True)
-        self.assertEqual(c.get("/api/profile/hintergrund").status_code, 403)          # own switch still off
+        self.block(uid_of("Hbert"))
+        self.assertEqual(c.get("/api/profile/hintergrund").status_code, 403)          # blocked by the admin
+        profiles.save_settings(uid_of("Hbert"), {"my_status": True})                  # the profile cannot lift it
+        self.assertEqual(c.get("/api/profile/hintergrund").status_code, 403)
         self.assertEqual(TestClient(panel.app).get("/api/profile/hintergrund").status_code, 401)   # guests
         self.assertEqual(TestClient(panel.app).get("/api/admin/hintergrund").status_code, 401)
         self.assertIn(c.get("/api/admin/hintergrund").status_code, (401, 403))
-        profiles.save_settings(uid_of("Hbert"), {"my_status": True})
+        self.block(uid_of("Hbert"), True)                                            # released: at once
         d = c.get("/api/profile/hintergrund").json()
         self.assertEqual(d["sum"]["need"], 0)
         self.assertTrue(all(r["state"] in hintergrund.STATES for r in d["rows"]))
@@ -203,7 +211,7 @@ class MyStatus(unittest.TestCase):
         self.assertNotIn("unknown", hintergrund._hist(uid))
         # nothing is written for a profile that does not use the page
         _, other = self.on("Hgreta")
-        profiles.save_settings(other, {"my_status": False})
+        self.block(other)
         hintergrund.note(other, "tidy", True, now=t0)
         self.assertEqual(hintergrund._hist(other), {})
 

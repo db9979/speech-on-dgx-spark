@@ -39,14 +39,23 @@ def admin():
 
 
 def profile(name, pin="1234", on=True):
+    """A logged-in profile; on=False: the admin blocks Dokumente erstellen for it (chat.deny)."""
     a = admin()
     r = a.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = client()
     assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
     uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
-    profiles.save_settings(uid, {"doc_make": on})
+    block(uid, "erstellen", not on)
     return c, uid
+
+
+def block(uid, key, yes=True):
+    """The admin blocks (or allows again) one function for one profile: Funktionen → Wer darf was (chat.deny)."""
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        deny = dict(json.load(f)["chat"].get("deny") or {})
+    deny[key] = [u for u in deny.get(key, []) if u != uid] + ([uid] if yes else [])
+    helpers.set_config(deny=deny)
 
 
 SAMPLE = {"kind": "praesentation", "title": "Pool-Saison 2026", "subtitle": "Familientreffen", "lang": "de",
@@ -111,7 +120,7 @@ class Base(unittest.TestCase):
         docmake.write_part = self.real_part
         docmake.start_job = self.real_start
         push.send = self.real_push
-        helpers.set_config(doc_make=False, doc_make_templates=False)
+        helpers.set_config(doc_make=False, doc_make_templates=False, deny={})
 
 
 def ctx(uid, text="", src="web:c1", out=None):
@@ -137,14 +146,16 @@ class Switches(Base):
             chat = json.load(f)["chat"]
         self.assertIs(chat["doc_make"], False)
         self.assertIs(chat["doc_make_templates"], False)
-        self.assertIs(profiles.SETTINGS["doc_make"][0], False)
-        c, uid = profile("DmOff", on=False)
+        self.assertNotIn("doc_make", profiles.SETTINGS)       # no profile switch: released means for everybody
+        c, uid = profile("DmOff", on=False)                   # blocked by the admin for this one profile
         self.assertEqual(c.get("/api/make").status_code, 403)
-        o = docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung"))   # off: no tools, only where to switch
+        o = docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung"))   # off: no tools, only why
         self.assertEqual(o["tools"], [])
-        self.assertIn("Ich → Dokumente „Dokumente erstellen“", o["hint"])
+        self.assertIn("Funktionen → Wer darf was", o["hint"])
+        self.assertNotIn("Ich →", o["hint"])
         self.assertIsNone(docmake.offer(ctx(uid, "Wie wird das Wetter?")))
-        profiles.save_settings(uid, {"doc_make": True})
+        block(uid, "erstellen", False)                         # released: works at once
+        self.assertEqual(c.get("/api/make").status_code, 200)
         helpers.set_config(doc_make=False)
         self.assertEqual(c.get("/api/make").status_code, 403)
         helpers.set_config(doc_make=True)
@@ -183,18 +194,17 @@ class Switches(Base):
                                                    "sections": ["Vorher", "9. November", "Folgen"]}, ctx(uid, "x")))
         docmake._pending.clear()
         self.assertIsNone(docmake.offer(dict(ctx(uid, "Danke"), before="Passt das so?")))
-        # switched off: the answer gets the sentence where to switch it on, not slides
-        profiles.save_settings(uid, {"doc_make": False})
+        # blocked by the admin: the answer gets the sentence why, not slides
+        block(uid, "erstellen")
         docmake.offer(ctx(uid, "Mach eine Präsentation über die der eine Folie."))
         o = docmake.offer(dict(ctx(uid, "den mauer fall, gerne kurz"), before=ask))
         self.assertEqual(o["tools"], [])
-        self.assertIn("Ich → Dokumente „Dokumente erstellen“", o["hint"])
+        self.assertIn("Funktionen → Wer darf was", o["hint"])
 
     def test_answer_in_the_chat_offers_the_tools(self):
         """The same through /api/chat: the second turn's model call carries document_plan and the hint."""
         import extras
         c, uid = profile("DmFollowChat")
-        c.put("/api/profile/settings", json={"route": True})
         helpers.set_config(routing=True, route_model="off")
         try:
             msgs = [{"role": "user", "content": "Mach eine Präsentation über die der eine Folie."}]
@@ -555,8 +565,13 @@ class Delivery(Base):
         token = url.split("t=", 1)[1]
         self.assertIsNone(docmake.use_link(token, now=10 ** 12))
         url = c.post(f"/api/make/doc/{d['id']}/link", json={}).json()["url"]
-        profiles.save_settings(uid, {"doc_make": False})
+        block(uid, "erstellen")                                         # the admin blocks it for this profile
         self.assertEqual(stranger.get(url).status_code, 404)
+        block(uid, "erstellen", False)
+        url = c.post(f"/api/make/doc/{d['id']}/link", json={}).json()["url"]
+        helpers.set_config(doc_make=False)                              # ... or switches it off for all
+        self.assertEqual(stranger.get(url).status_code, 404)
+        helpers.set_config(doc_make=True)
         self.assertFalse(any(k in docmake._link_hash(token) for k in ("uid", uid)))
 
     def test_links_per_profile_are_capped(self):
@@ -682,12 +697,14 @@ class Templates(Base):
         with self.assertRaises(ValueError):
             docmake.check_template("t.docx", bomb.getvalue())
 
-    def test_upload_needs_both_switches(self):
+    def test_upload_needs_the_switch_and_no_block(self):
         c, uid = profile("DmTmpl")
         f = {"file": ("Firma.docx", self._docx(), "application/octet-stream")}
-        self.assertEqual(c.post("/api/make/templates", files=f).status_code, 403)
+        self.assertEqual(c.post("/api/make/templates", files=f).status_code, 403)   # admin switch off
         helpers.set_config(doc_make_templates=True)
-        profiles.save_settings(uid, {"doc_make_templates": True})
+        block(uid, "erstellenvorlagen")                                            # blocked for this profile
+        self.assertEqual(c.post("/api/make/templates", files=f).status_code, 403)
+        block(uid, "erstellenvorlagen", False)                                     # released: at once
         r = c.post("/api/make/templates", files=f)
         self.assertEqual(r.status_code, 200, r.text)
         tid = r.json()["templates"][0]["id"]

@@ -85,7 +85,14 @@ def allow(client, uid, lv="read"):
     helpers.set_config(agent=True)
     cur = {u["id"]: u["level"] for u in ADMIN.get("/api/admin/agent").json()["users"] if u["level"]}
     levels(**dict(cur, **{uid: lv}))
-    client.put("/api/profile/settings", json={"agent_on": True})
+
+
+def block(tc, uid, on=False):
+    """The admin blocks (on=False) or allows again (on=True) the agent functions for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/agent/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, True)
 
 
 class Script:
@@ -125,7 +132,7 @@ class Base(unittest.TestCase):
 
 
 class Access(Base):
-    def test_off_until_admin_level_and_own_switch(self):
+    def test_off_until_admin_level_and_admin_block(self):
         a, uid = profile("Agnes")
         task = 'TOOL agent_task {"task": "Recherchiere Wärmepumpen für den Pool"}'
         # everything off by default
@@ -139,9 +146,12 @@ class Access(Base):
         levels(**{uid: "read", "nobody": "act"})
         self.assertNotIn("nobody", agent.admin_state()["levels"])
         self.assertTrue(a.get("/api/whoami").json()["agent"])
-        self.assertIn("NO TOOL agent_task", ask(a, task))         # the profile has not switched it on
+        block(self, uid)
+        self.assertIn("NO TOOL agent_task", ask(a, task))         # the admin blocked it for this profile
         self.assertEqual(a.post("/api/profile/agent/jobs", json={"task": "x"}).status_code, 403)
-        a.put("/api/profile/settings", json={"agent_on": True})
+        a.put("/api/profile/settings", json={"agent_on": True})   # the profile cannot lift it
+        self.assertIn("NO TOOL agent_task", ask(a, task))
+        block(self, uid, on=True)                                 # level and release: at once
         self.assertEqual(agent.level(uid), "read")
         self.assertIn("Auftrag angenommen", ask(a, task))
         self.assertEqual(agent.load(uid)["jobs"][-1]["task"], "Recherchiere Wärmepumpen für den Pool")

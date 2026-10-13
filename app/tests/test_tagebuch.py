@@ -1,5 +1,5 @@
 """Spark-Tagebuch (tagebuch.py, plan plaene/vorschlaege-besser.md Version 3): what the Spark did for a profile, noted
-with fixed words, read back only through spark_tagebuch. Off by default (admin and profile), nothing noted while off;
+with fixed words, read back only through spark_tagebuch. Off by default (admin; then for every profile the admin did not block), nothing noted while off;
 outside titles (web, mail) are never repeated to the model; 7 days, 200 entries; a small `before` for undoing.
 No test depends on the time of day."""
 import asyncio
@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from tests import helpers
-from tests.test_eigenes_tun import profile
+from tests.test_eigenes_tun import block, profile
 
 import chat  # noqa: E402
 import intent  # noqa: E402
@@ -26,7 +26,6 @@ WISHES = ["Mach das Licht an", "Was hast du für ein Lieblingsessen?", "Stell mi
 def on(name):
     _, uid = profile(name)
     helpers.set_config(tagebuch=True)
-    profiles.save_settings(uid, {"tagebuch_on": True})
     return uid
 
 
@@ -39,9 +38,14 @@ class Diary(unittest.TestCase):
         helpers.set_config(tagebuch=False)
         self.assertFalse(tagebuch.note(uid, "dokument", "Brief", now=T0))
         self.assertEqual(tagebuch.recent(uid, now=T0), [])
-        helpers.set_config(tagebuch=True)       # the admin's switch alone is not enough
+        helpers.set_config(tagebuch=True)
+        block(self, uid, "tagebuch")            # the admin blocked it for this profile
         self.assertFalse(tagebuch.note(uid, "dokument", "Brief", now=T0))
         self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "text": ASKS[0]}))
+        profiles.save_settings(uid, {"tagebuch_on": True})   # the profile cannot lift it
+        self.assertFalse(tagebuch.note(uid, "dokument", "Brief", now=T0))
+        block(self, uid, "tagebuch", on=True)   # released: at once
+        self.assertTrue(tagebuch.note(uid, "dokument", "Brief", now=T0))
         self.assertFalse(tagebuch.note(None, "dokument", "Brief", now=T0))     # guests never
 
     def test_note_keep_and_hide_outside_titles(self):

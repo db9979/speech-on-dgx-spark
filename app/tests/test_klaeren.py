@@ -41,16 +41,14 @@ class Klaeren(unittest.TestCase):
         helpers.HA_STATES.remove(self.box)
         for x in helpers.HA_STATES:
             x["state"] = self.saved.get(x["entity_id"], x["state"])
-        helpers.set_config(klaeren=False, klaeren_merken=False)
+        helpers.set_config(klaeren=False, klaeren_merken=False, deny={})
         klaeren._waiting.clear()
         klaeren._last.clear()
 
-    def person(self, name, on=True):
+    def person(self, name):
         a = profile(name)
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
         a.put("/api/profile/homeassistant/code", json={"code": CODE})
-        if on:
-            a.put("/api/profile/settings", json={"klaeren": True, "klaeren_merken": True})
         return a, a.get("/api/whoami").json()["profile"]["id"]
 
     def test_off_by_default_and_never_for_guests(self):
@@ -62,8 +60,14 @@ class Klaeren(unittest.TestCase):
         self.assertNotIn(uid, klaeren._waiting)
         self.assertEqual(a.get("/api/profile/zuordnungen").status_code, 403)
         helpers.set_config(klaeren=True)
-        b, uid_b = self.person("Kla Profil aus", on=False)   # the admin allows it, the profile has not switched it on
+        b, uid_b = self.person("Kla Profil aus")
+        helpers.set_config(deny={"klaeren": [uid_b]})   # the admin allows it, but blocks it for this one profile
+        self.assertFalse(b.get("/api/profile/settings").json()["allow"]["klaeren"])
         self.assertEqual(choices(ask(b, f"Schalte den Fernseher aus Codewort {CODE}")), [])
+        self.assertNotIn(uid_b, klaeren._waiting)
+        self.assertEqual(b.get("/api/profile/zuordnungen").status_code, 403)
+        helpers.set_config(deny={})                      # released: it asks back at once
+        self.assertTrue(b.get("/api/profile/settings").json()["allow"]["klaeren"])
         guest = TestClient(panel.app)   # no profile: no mappings
         self.assertIn(guest.get("/api/profile/zuordnungen").status_code, (401, 403))
 

@@ -131,18 +131,17 @@ def set_panel(**kw):
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(agent=True, agent_mcp=True, mcp_own=True, mcp_own_jobs=False, mcp_own_oauth=False)
+        helpers.set_config(agent=True, agent_mcp=True, mcp_own=True, mcp_own_jobs=False, mcp_own_oauth=False, deny={})
         ANSWER["text"] = "Rechnung März"
         TOOLS[0]["description"] = "Find documents"
 
     def tearDown(self):
-        helpers.set_config(agent=False, agent_mcp=False, mcp_own=False, mcp_own_jobs=False, mcp_own_oauth=False)
+        helpers.set_config(agent=False, agent_mcp=False, mcp_own=False, mcp_own_jobs=False, mcp_own_oauth=False, deny={})
         meinmcp.save_admin_state({"hosts": [], "blocked": []})
         set_panel(panel={"allow_lan": True})
 
     def ready(self, name):
         c, uid = profile(name)
-        c.put("/api/profile/settings", json={"mymcp_on": True})
         return c, uid
 
     def add(self, c, url=BASE + "/mcp", key=KEY, name="Docs"):
@@ -161,12 +160,13 @@ class Switches(Base):
         helpers.set_config(mcp_own=False)
         self.assertEqual(c.get("/api/profile/mymcp").status_code, 403)
         self.assertFalse(c.get("/api/whoami").json().get("my_mcp"))
-        helpers.set_config(mcp_own=True)
-        self.assertTrue(c.get("/api/whoami").json().get("my_mcp"))        # the Ich page shows, with the own switch off
+        helpers.set_config(mcp_own=True, deny={"mymcp": [uid]})          # released, but the admin blocks this profile
         self.assertFalse(c.get("/api/profile/mymcp").json()["on"])
         r = c.post("/api/profile/mymcp", json={"name": "Docs", "url": BASE + "/mcp", "token": KEY})
         self.assertEqual(r.status_code, 403)
-        c.put("/api/profile/settings", json={"mymcp_on": True})
+        helpers.set_config(deny={})                                       # released: works at once
+        self.assertTrue(c.get("/api/whoami").json().get("my_mcp"))
+        self.assertTrue(c.get("/api/profile/mymcp").json()["on"])
         sid = self.add(c)
         self.release(c, sid, search_docs="read")
         name = meinmcp.exposed(sid, "search_docs")
@@ -175,7 +175,7 @@ class Switches(Base):
         helpers.set_config(agent_mcp=False)
         self.assertIn("NO TOOL " + name, said(ask(c, f'TOOL {name} {{"q": "Strom"}}')))
         helpers.set_config(agent_mcp=True)
-        c.put("/api/profile/settings", json={"mymcp_on": False})
+        helpers.set_config(deny={"mymcp": [uid]})                        # the admin blocks the profile: gone at once
         self.assertIn("NO TOOL " + name, said(ask(c, f'TOOL {name} {{"q": "Strom"}}')))
 
     def test_guest_never_and_other_profiles_never(self):

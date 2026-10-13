@@ -4,7 +4,8 @@
   turn; what holds for one turn only (time, locks, fewer tools for this question, results of a yes) goes with the
   question, and the panel still runs only the tools the rules left (chat_tools.run). The kept conversation
   starts at an anchor question (chat.trim_history), so the LLM server can keep it in its cache.
-- "Eindeutiges direkt abrufen" (chat.direct_read + profile direct_read): a short, plain reading question gets
+- "Eindeutiges direkt abrufen" (chat.direct_read; on for every profile unless the admin
+  blocks one under Funktionen → Wer darf was): a short, plain reading question gets
   its tool called by the panel (intent.DIRECT), the model's first round is saved.
 - Logs → Anfragen: the parts of each call in characters (chat.prompt_sizes).
 No model, no clock.
@@ -65,7 +66,7 @@ class StableStart(unittest.TestCase):
         helpers.set_config(prompt_cache=False, routing=False, direct_read=False, public=False)
 
     def test_same_start_for_different_questions(self):
-        p = profile("Anfang1", route=True)
+        p = profile("Anfang1")
         ask(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])
         a = streamed()[0]
         helpers.LLM_CALLS.clear()
@@ -80,7 +81,7 @@ class StableStart(unittest.TestCase):
         self.assertNotIn("history_search", last.split(chat.TOOLS_NOW, 1)[1])
 
     def test_panel_still_runs_only_what_the_rules_left(self):
-        p = profile("Anfang2", route=True)
+        p = profile("Anfang2")
         evs = ask(p, [{"role": "user", "content": "TOOL history_search {} Erinnere mich in 10 Minuten an den Herd"}])
         self.assertIn("history_search", names(streamed()[0]))      # visible to the model ...
         self.assertIn("Not done: this tool is not available", text_of(evs))   # ... but not run
@@ -88,14 +89,14 @@ class StableStart(unittest.TestCase):
     def test_smalltalk_gets_the_short_request(self):
         """V01.0.349: a turn without any tool sends no tool list (the full list only pays off when qwen38 takes
         it from its cache; a miss made every short answer slower after V01.0.304)."""
-        p = profile("Anfang3", route=True)
+        p = profile("Anfang3")
         ask(p, [{"role": "user", "content": "Hallo"}])
         call = streamed()[0]
         self.assertFalse(names(call))
         self.assertNotIn("tool_choice", call)
 
     def test_lock_line_goes_with_the_question(self):
-        p = profile("Anfang4", route=True)
+        p = profile("Anfang4")
         ask(p, [{"role": "user", "content": "Erzähl mir einen Witz"}])
         plain = system_of(streamed()[0])
         helpers.LLM_CALLS.clear()
@@ -108,14 +109,14 @@ class StableStart(unittest.TestCase):
 
     def test_off_everything_in_the_system_prompt(self):
         helpers.set_config(prompt_cache=False)
-        p = profile("Anfang5", route=True)
+        p = profile("Anfang5")
         ask(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])
         call = streamed()[0]
         self.assertEqual(set(names(call)), {"memory_save", "reminder_set", "reminder_list", "reminder_cancel"})
         self.assertEqual(call["messages"][-1]["content"], "Erinnere mich in 10 Minuten an den Herd")
 
     def test_notes_never_in_the_history(self):
-        p = profile("Anfang6", route=True)
+        p = profile("Anfang6")
         ask(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])
         log = json.dumps(p.get("/api/profile/toollog").json(), ensure_ascii=False)
         self.assertNotIn(chat.TOOLS_NOW, log)
@@ -157,7 +158,7 @@ class Direct(unittest.TestCase):
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):
-        helpers.set_config(direct_read=False, public=False)
+        helpers.set_config(direct_read=False, public=False, deny={})
 
     def test_rules(self):
         offered = {"mail_list", "reminder_list", "weather", "parcels"}
@@ -201,7 +202,7 @@ class Direct(unittest.TestCase):
         self.assertIsNone(intent.direct("Welche Termine habe ich heute?", {"daily_briefing"}))
 
     def test_panel_calls_the_tool_and_saves_a_round(self):
-        p = profile("Direkt1", direct_read=True)
+        p = profile("Direkt1")
         evs = ask(p, [{"role": "user", "content": "Welche Erinnerungen habe ich?"}])
         calls = streamed()
         self.assertEqual(len(calls), 1)                            # only the answer round
@@ -210,14 +211,15 @@ class Direct(unittest.TestCase):
         self.assertEqual(msgs[-1]["role"], "tool")
         self.assertTrue(text_of(evs).startswith("Ergebnis:"))
 
-    def test_off_for_the_profile_or_the_spark(self):
-        p = profile("Direkt2", direct_read=False)
+    def test_off_for_a_blocked_profile_or_the_spark(self):
+        p = profile("Direkt2")
+        helpers.set_config(deny={"direct": [p.get("/api/whoami").json()["profile"]["id"]]})   # the admin blocks it
         ask(p, [{"role": "user", "content": "Welche Erinnerungen habe ich?"}])
         self.assertEqual(streamed()[0]["messages"][-1]["role"], "user")
         self.assertFalse(p.get("/api/profile/settings").json()["allow"].get("direct_read") is None)
-        helpers.set_config(direct_read=False)
+        helpers.set_config(direct_read=False, deny={})
         helpers.LLM_CALLS.clear()
-        q = profile("Direkt3", direct_read=True)
+        q = profile("Direkt3")
         ask(q, [{"role": "user", "content": "Welche Erinnerungen habe ich?"}])
         self.assertEqual(streamed()[0]["messages"][-1]["role"], "user")
 

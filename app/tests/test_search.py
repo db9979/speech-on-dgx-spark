@@ -57,12 +57,17 @@ class Search(unittest.TestCase):
         helpers.set_config(search=False, search_url="", public=False, mail=False)
 
     def test_offered_when_switched_on(self):
-        for client in (profile("Suchi"), TestClient(panel.app)):   # a profile and a guest
-            for q in ("Wie hat Bayern gespielt?", "Wann hat der Baumarkt heute offen?"):
-                helpers.LLM_CALLS.clear()
-                chat_with(client, [{"role": "user", "content": q}])
-                self.assertIn("web_search", offered(helpers.LLM_CALLS[0]), q)
-                self.assertIn(chat.SEARCH_HINT, system_of(helpers.LLM_CALLS[0]))
+        for q in ("Wie hat Bayern gespielt?", "Wann hat der Baumarkt heute offen?"):
+            helpers.LLM_CALLS.clear()
+            chat_with(profile("Suchi"), [{"role": "user", "content": q}])
+            self.assertIn("web_search", offered(helpers.LLM_CALLS[0]), q)
+            self.assertIn(chat.SEARCH_HINT, system_of(helpers.LLM_CALLS[0]))
+        # a guest only asks and gets answers (Dominik 2026-10-13): no search, and the model is told why
+        helpers.LLM_CALLS.clear()
+        chat_with(TestClient(panel.app), [{"role": "user", "content": "Wie hat Bayern gespielt?"}])
+        self.assertNotIn("web_search", offered(helpers.LLM_CALLS[0]))
+        self.assertIn(chat.GUEST_HINT, system_of(helpers.LLM_CALLS[0]))
+        self.assertNotIn(chat.SEARCH_HINT, system_of(helpers.LLM_CALLS[0]))
 
     def test_asked_in_so_many_words_must_search(self):
         p = profile("Suchi")

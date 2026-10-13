@@ -34,8 +34,17 @@ def profile(name):
     c = TestClient(panel.app, client=HOME)
     assert c.post("/api/profile/login", json={"name": name, "pin": "1234"}).status_code == 200
     uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
-    profiles.save_settings(uid, {"doc_make": True})
     return c, uid
+
+
+def block(tc, uid, key, on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    a = TestClient(panel.app, client=HOME)
+    assert a.post("/api/login", json={"password": "secret-admin"}).status_code == 200
+    r = a.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
 
 
 class Rule(unittest.TestCase):

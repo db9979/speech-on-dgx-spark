@@ -1,4 +1,4 @@
-"""Instant acknowledgement (admin chat.instant_ack under "Gezielte Werkzeugwahl", profile "instant_ack"; both off,
+"""Instant acknowledgement (admin chat.instant_ack under "Gezielte Werkzeugwahl", off, released for every profile at once,
 never guests; plan plaene/schnellere-antwort.md "Sofortige Rückmeldung").
 
 Right after the question, before the model has read a word, the Spark says in a short ready-made sentence what it

@@ -6,7 +6,7 @@ STATE/apns.json, only changed with the admin login plus the second step, and nev
 
 Each paired iPhone hands over its push address (device token) with its own app key
 (POST /api/iphone/push-token); it is kept per device and dropped with the device. A profile gets
-pushes only with its own switch app_push.
+pushes unless it switched app_push off (a preference, on by default).
 
 What Apple sees: only "Neue Nachricht vom Spark" and a random id. The text stays on the Spark in a
 short inbox (INBOX_SECONDS, INBOX_MAX per profile); the app's notification extension fetches it with
@@ -139,8 +139,8 @@ def profile_tokens(uid):
 
 
 def on_for(uid):
-    import iphone
-    return ready() and iphone.allowed(uid) and bool(profiles.settings(uid).get("app_push"))
+    import features
+    return ready() and features.allowed("iphonepush", uid)
 
 
 def reachable(uid):

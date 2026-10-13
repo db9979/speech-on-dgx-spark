@@ -6,8 +6,8 @@ since V01.0.296) and adds only what a page cannot do:
 - **Notes while the app is closed:** the app asks the Spark itself every 15 minutes (`/api/android/notes`), no
   Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no
   other way (iPhone app) is set up.
-- **Notes at once** (1.2.0 and later, V01.0.473): admin: Features → Android app → "Android: notes at once" (off);
-  profile: Me → Android app → "Notes at once" (off), then open the app once. The app then keeps a connection to the
+- **Notes at once** (1.2.0 and later, V01.0.473): admin: Features → Android app → "Android: notes at once" (off).
+  On for every profile at once; it can be switched off under Me → Android app → "Notes at once". Then open the app once. The app then keeps a connection to the
   Spark open (`/api/android/wait`: the Spark answers at once when a notification is there, otherwise empty after
   50 seconds, and the app asks again). Chat messages, reminders and notes come without delay, without a Google
   service. Android shows a quiet lasting notice "Mit dem Spark verbunden" for it (a foreground service). So Android
@@ -32,7 +32,7 @@ since V01.0.296) and adds only what a page cannot do:
    `spark.apk`, `spark.apk.sha256` and `android.json`.
 3. **Spark:** Features → Android app on, save, "Fetch the app now" (otherwise it fetches once a day).
    It checks size and SHA-256 and keeps it under `STATE/android`.
-4. **Profile:** Me → Android app → "Android app for me" on, "Get a download link", scan the QR code with the
+4. **Profile:** Me → Android app → "Get a download link", scan the QR code with the
    Android phone's camera, install the APK (the phone asks once whether the browser may install apps). The link
    is valid for 30 minutes.
 5. **In the app:** enter the Spark's address (https with a real certificate, e.g. the reverse proxy), sign in with
@@ -41,7 +41,7 @@ since V01.0.296) and adds only what a page cannot do:
 
 ## Security
 
-- Admin switch `chat.android` and profile switch `android_on`, both off; never guests.
+- Admin switch `chat.android`, off. Once released it works for every profile; only the admin blocks single profiles (Features → Who may do what). Never guests.
 - The app has no key of its own: it uses its page's login (cookie). Signing out in the page ends it.
 - The app only loads pages of its own Spark (same address and port), everything else opens in the browser; https
   only, system certificates. Microphone only for the own Spark page.

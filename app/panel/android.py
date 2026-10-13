@@ -12,11 +12,13 @@ token (TOKEN_SECONDS, at most TOKEN_USES downloads, only its hash in memory), as
 camera. Notes: the app asks /api/android/notes every 15 minutes; push.send picks it like the iPhone app when
 the app asked lately. The notes wait in memory only (NOTE_SECONDS, NOTE_MAX per profile).
 
-"Mitteilungen sofort" (chat.android_live and the profile's android_live, both off; plan messenger.md): the app keeps
-one connection open (a foreground service with a quiet lasting notification) and asks /api/android/wait, which
-answers as soon as a note is there or after WAIT_SECONDS with nothing; then it asks again. No Google service.
+"Mitteilungen sofort" (chat.android_live, off; the profile's preference android_live, on unless switched off;
+plan messenger.md): the app keeps one connection open (a foreground service with a quiet lasting notification)
+and asks /api/android/wait, which answers as soon as a note is there or after WAIT_SECONDS with nothing; then it asks
+again. No Google service.
 
-Admin switch chat.android and the profile's android_on, both off at first; never guests.
+Admin switch chat.android, off at first; released it works for every profile the admin did not block (chat.deny);
+never guests.
 """
 import asyncio
 import hashlib
@@ -83,7 +85,7 @@ def allowed(uid):
 
 
 def live_ok(uid):
-    """Notes at once over a lasting connection (admin switch and the profile's own)."""
+    """Notes at once over a lasting connection (admin switch, not blocked, the profile's preference)."""
     return features.allowed("androidlive", uid)
 
 

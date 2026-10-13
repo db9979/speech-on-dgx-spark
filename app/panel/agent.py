@@ -7,7 +7,7 @@ Who may use it is decided per profile by the admin (Funktionen → Agent-Funktio
     "read"  "nur lesen und berichten": background jobs, scheduled jobs, MCP tools that only read
     "act"   "auch handeln mit Ja": also routines and MCP tools that change something, each after "Ja"
 
-On top the admin switch (chat.agent, MCP: chat.agent_mcp) and the profile's own switch (agent_on).
+On top the admin switch (chat.agent, MCP: chat.agent_mcp); released, it works for every profile the admin did not block.
 Never for a voice recognized at someone else's device, never from an ESP32 speaker.
 
 Background jobs (proposal 1): agent_task puts a job in a queue; ONE job runs on the Spark at a time,
@@ -110,7 +110,7 @@ def _granted(uid):
     return bool(granted(uid))
 
 
-features.GRANTED["agent"] = _granted   # the admin gives the level, the profile switches it on itself
+features.GRANTED["agent"] = _granted   # the admin gives the level; it holds at once unless the admin blocks the profile
 
 
 def mcp_on():
@@ -133,9 +133,9 @@ def granted(uid):
 
 
 def level(uid):
-    """The level in use: the admin's level, once the profile switched it on itself."""
-    lv = granted(uid)
-    return lv if lv and profiles.settings(uid).get("agent_on") else ""
+    """The level in use: the one the admin granted (no switch of the profile's own since „Freigabe vereinfachen“),
+    none while the admin blocked the agent functions for this profile (Funktionen → Wer darf was)."""
+    return "" if uid and features.blocked("agent", uid) else granted(uid)
 
 
 def may(uid, need):
@@ -271,7 +271,7 @@ async def worker():
         if not nxt:
             return
         uid, item = nxt
-        if not level(uid):   # the admin or the profile switched it off meanwhile
+        if not level(uid):   # the admin switched it off or blocked the profile meanwhile
             _set_job(uid, item["id"], state="cancelled", finished=int(time.time()), error="Agent-Funktionen sind aus.")
             continue
         # each job is its own task, so "Abbrechen" stops the job and not the worker
@@ -1632,7 +1632,7 @@ def _public_job(x, full=False):
 def _view(uid):
     d = load(uid)
     import homeassistant
-    return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(profiles.settings(uid).get("agent_on")),
+    return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(level(uid)),
             "watch": watch_on(uid), "max_watch": beobachten.MAX_WATCH, "own": own_tasks(uid, d),
             "ha": bool(ccfg().get("homeassistant", False) and homeassistant.get(uid)),
             "jobs": [_public_job(x) for x in reversed(d["jobs"])],
@@ -2004,7 +2004,7 @@ async def profile_mail_senders(request: Request, prof=Depends(_on)):
 def _admin_view():
     st = admin_state()
     users = [{"id": u["id"], "name": u["name"], "level": st["levels"].get(u["id"], ""),
-              "on": bool(profiles.settings(u["id"]).get("agent_on"))} for u in profiles._load()["users"]]
+              "on": bool(st["levels"].get(u["id"]))} for u in profiles._load()["users"]]
     cur = _worker["current"]
     return {"users": users, "servers": [mcp.public(s) for s in st["mcp"]], "running": bool(cur),
             "mcp": bool(ccfg().get("agent_mcp", False))}

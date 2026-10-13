@@ -273,7 +273,7 @@
     "tool_words": "",
     "tool_hints": "",
     "own_style": false,
-    "new_profile_on": [],
+    "deny": {},
     "face": "robot",
     "face_life": false
   },

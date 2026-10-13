@@ -299,7 +299,7 @@ def _on(request: Request, prof=Depends(own_profile)):
     if not admin_on():
         raise HTTPException(403, "private chats are turned off")
     if not usable(prof["id"]):
-        raise HTTPException(403, "switch chats on for your profile first (Ich → Gespräch → Chats)")
+        raise HTTPException(403, "Chats gehen für dich gerade nicht. " + features.missing_text("chats", prof["id"]))
     guard.limit(request, "chatskeys", prof["id"])
     return prof
 

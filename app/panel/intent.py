@@ -6,7 +6,7 @@ the locks in chat_turn.prepare() come first, and the intent can only narrow what
 
 Used for (chat_turn.prepare()):
   1. one journal line per turn, "weiche: ...", why the question went where it went (always);
-  2. which tools the model sees: with the admin's switch chat.routing and the profile's "route" on,
+  2. which tools the model sees: with the admin's switch chat.routing on (released for the profile),
      a clear intent offers only its own group (plus NARROW_KEEP), so the model picks from a few;
   3. which tool the first round must call: one clear intent with one needed tool (chat.NEED_TOOLS)
      is named in tool_choice, the model only fills in its arguments;
@@ -652,7 +652,7 @@ def explain(route, offered, who, stranger, c=None):
         if not key or GROUPS[name][0] & set(offered):
             continue
         f = features.BY_KEY[key]
-        if stranger and not f.guests:
+        if stranger:   # a voice the shared speaker did not recognize gets what a guest gets: no function
             why = "voice"
         else:
             why = features.reason(key, who and who["id"], c)

@@ -386,7 +386,7 @@ def _on():
 
 @router.get("/api/profile/weather", dependencies=[Depends(assistant)])
 def api_get(prof=Depends(own_profile)):
-    return {"place": get(prof["id"]), "on": bool(profiles.settings(prof["id"]).get("wx_on"))}
+    return {"place": get(prof["id"]), "on": features.allowed("weather", prof["id"])}
 
 
 @router.put("/api/profile/weather", dependencies=[Depends(assistant), Depends(_on)])

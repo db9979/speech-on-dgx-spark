@@ -191,7 +191,6 @@ class Speakers(unittest.TestCase):
         self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"challenge": 5}).status_code, 403)
         self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"challenge": act["challenge"]}).status_code, 202)
         a = profile("Esp Nora")
-        a.put("/api/profile/settings", json={"esp_on": True})
         self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Flur"}).status_code, 200)
         self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"algorithm": "hmac-sha256",
                                                                             "challenge": act["challenge"]}).status_code, 200)
@@ -215,7 +214,6 @@ class Speakers(unittest.TestCase):
         act = ota(cid, fw="2.5.1.1").json()["activation"]
         helpers.set_config(esp32_ota_http=False)   # on by default (speakers on http keep updating)
         a = profile("Esp Paul")
-        a.put("/api/profile/settings", json={"esp_on": True})
         self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Bad"}).status_code, 200)
         plain = ota(cid, fw="2.5.1.1", base="http://192.168.1.5:31080").json()
         self.assertTrue(plain["websocket"]["token"].startswith("sd_"))
@@ -278,9 +276,11 @@ class Speakers(unittest.TestCase):
         h = {"Client-Id": cid}
         self.assertEqual(TestClient(panel.app).post("/api/esp32/ota/activate", headers=h, json={}).status_code, 202)
         a = profile("Esp Anna")
-        # off for the profile until it switches it on
+        # the admin blocks the profile: no pairing; released: works at once
+        self.addCleanup(helpers.set_config, deny={})
+        helpers.set_config(deny={"esp32": [a.get("/api/whoami").json()["profile"]["id"]]})
         self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Küche"}).status_code, 403)
-        a.put("/api/profile/settings", json={"esp_on": True})
+        helpers.set_config(deny={})
         self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": "000000" if act["code"] != "000000" else "111111",
                                                                  "name": "Küche"}).status_code, 400)
         r = a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Küche"})
@@ -315,7 +315,6 @@ class Speakers(unittest.TestCase):
         """Rights arrive at once (V01.0.388): an open speaker connection looks at the switches again and ends
         when the admin turns the profile's speakers off, not only at the next connect."""
         a = profile("Esp Rita")
-        a.put("/api/profile/settings", json={"esp_on": True})
         uid = next(u["id"] for u in esp32.profiles._load()["users"] if u["name"] == "Esp Rita")
         s = a.post("/api/profile/esp32/setup", json={"name": "Keller", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
@@ -347,7 +346,6 @@ class Speakers(unittest.TestCase):
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_setup_over_usb_and_talk(self):
         a = profile("Esp Carla")
-        a.put("/api/profile/settings", json={"esp_on": True})
         r = a.post("/api/profile/esp32/setup", json={"name": "Bad", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"})
         self.assertEqual(r.status_code, 200, r.text)
@@ -411,15 +409,15 @@ class Speakers(unittest.TestCase):
             esp32.transcribe = old
         convo = [x for x in a.get("/api/profile/convos").json() if str(x.get("id", "")).startswith("esp-")]
         self.assertTrue(convo and convo[0]["title"].startswith("Bad "), convo)
-        # switched off for the profile: the key no longer connects
-        a.put("/api/profile/settings", json={"esp_on": False})
+        # blocked for the profile by the admin: the key no longer connects
+        self.addCleanup(helpers.set_config, deny={})
+        helpers.set_config(deny={"esp32": [a.get("/api/whoami").json()["profile"]["id"]]})
         with self.assertRaises(WebSocketDisconnect):
             with c.websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"]}) as ws:
                 ws.receive_text()
 
     def test_diagnosis(self):
         a = profile("Esp Dora")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
                                                      "base": "https://192.168.1.5:31443"}).json()
         did = s["device"]
@@ -471,7 +469,6 @@ class Speakers(unittest.TestCase):
         """A board rewritten over USB with another variant gets that variant's updates; a board without
         display (reports its base build) keeps its own."""
         a = profile("Esp Greta")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Bad2", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         real = esp32.manifest()
@@ -495,7 +492,6 @@ class Speakers(unittest.TestCase):
 
     def test_volume_and_microphone(self):
         a = profile("Esp Hanna")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Garten", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         did = s["device"]
@@ -547,7 +543,6 @@ class Speakers(unittest.TestCase):
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_speaker_test(self):
         a = profile("Esp Frieda")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Keller", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         did = s["device"]
@@ -597,7 +592,6 @@ class Speakers(unittest.TestCase):
         """"Stopp" (also "Jarvis, stopp" after the wake word interrupted it) ends: nothing goes to the language
         model, nothing is said, the board goes back to its wake word. A real question still gets its answer."""
         a = profile("Esp Stella")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         for said in ("Stopp", "Jarvis, stopp!", "Danke, das reicht", "Hör auf"):
@@ -643,10 +637,9 @@ class Speakers(unittest.TestCase):
         self.assertTrue(any(e.startswith("Stopp gehört") for e in ev), ev)
 
     def test_stop_while_speaking_needs_both_switches(self):
-        """"Stopp beim Vorlesen" (espstopp) is off: no word to the board, nothing heard while it speaks. With the admin
-        and the profile switch the board is asked at every connection, and told "off" again once switched off."""
+        """"Stopp beim Vorlesen" (espstopp) is off: no word to the board, nothing heard while it speaks. Released by the
+        admin the board is asked at every connection, and told "off" again once the admin blocks the profile."""
         a = profile("Esp Selma")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Diele", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         hdr = {"Authorization": "Bearer " + s["token"], "Client-Id": s["uuid"]}
@@ -671,17 +664,15 @@ class Speakers(unittest.TestCase):
         try:
             self.assertFalse(features.admin_on("espstopp"))
             self.assertEqual((stop_calls(), sent), ([False], []))           # off: as before, nothing sent
-            helpers.set_config(esp32_stop=True)
-            self.assertEqual((stop_calls(), sent), ([False], []))           # the profile's switch is still off
-            a.put("/api/profile/settings", json={"esp_stop": True})
+            helpers.set_config(esp32_stop=True)                             # released: works at once
             self.assertTrue(a.get("/api/profile/esp32").json()["stop"]["enabled"])
             self.assertEqual((stop_calls(), sent), ([True], [True]))
-            a.put("/api/profile/settings", json={"esp_stop": False})
+            helpers.set_config(deny={"espstopp": [a.get("/api/whoami").json()["profile"]["id"]]})   # admin blocks
             self.assertEqual((stop_calls(), sent), ([False], [True, False]))   # told off once
             self.assertEqual((stop_calls(), sent), ([False], [True, False]))   # then nothing again
         finally:
             esp32.Session.send_stop_word = real
-            helpers.set_config(esp32_stop=False)
+            helpers.set_config(esp32_stop=False, deny={})
 
     def test_stop_heard_while_speaking(self):
         """Only a stop phrase ends the answer: the board gets "tts stop" with spark_quiet (drops its queue) and the
@@ -780,7 +771,6 @@ class Speakers(unittest.TestCase):
         import room
         helpers.set_config(room=True)
         a = profile("Esp Rosa")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         did = s["device"]
@@ -911,7 +901,6 @@ class Speakers(unittest.TestCase):
         import speakers
         helpers.set_config(speaker_id=True)
         a = profile("Esp Vera")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         did, uid = s["device"], a.get("/api/whoami").json()["profile"]["id"]
@@ -994,7 +983,6 @@ class Speakers(unittest.TestCase):
         """Ich → Lautsprecher, one speaker's page: what the room mode may offer (checked and passed on to room
         mode), the readable board name, and the speaker's key marked (and not moved) elsewhere."""
         a = profile("Esp Lotte")
-        a.put("/api/profile/settings", json={"esp_on": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         did = s["device"]
@@ -1132,7 +1120,6 @@ class SharedSpeaker(unittest.TestCase):
 
     def speaker(self, name):
         a = profile(name)
-        a.put("/api/profile/settings", json={"esp_on": True})
         r = a.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
         self.assertEqual(r.status_code, 200, r.text)
         r = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
@@ -1277,11 +1264,10 @@ class SpeakerCode(unittest.TestCase):
         helpers.set_config(esp32=True, speaker_id=True, speaker_code=True)
 
     def tearDown(self):
-        helpers.set_config(speaker_id=False, speaker_code=False)
+        helpers.set_config(speaker_id=False, speaker_code=False, deny={})
 
     def owner(self, name):
         a = profile(name)
-        a.put("/api/profile/settings", json={"esp_on": True, "spk_code": True})
         s = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         uid = a.get("/api/whoami").json()["profile"]["id"]
@@ -1402,9 +1388,9 @@ class SpeakerCode(unittest.TestCase):
         a, s, uid = self.owner("Code Dirk")
         spkcode.set_code(uid, self.CODE)
         se = self.session(uid, s["device"])
-        for cfg, prof in (({"speaker_code": False}, {"spk_code": True}), ({"speaker_code": True}, {"spk_code": False})):
+        # admin switch off, or on but the admin blocked this profile
+        for cfg in ({"speaker_code": False, "deny": {}}, {"speaker_code": True, "deny": {"spkcode": [uid]}}):
             helpers.set_config(**cfg)
-            a.put("/api/profile/settings", json=prof)
             self.assertFalse(spkcode.on(uid))
             # grey zone: guest rights as before, never asked
             self.assertEqual(asyncio.run(se.code_gate("Meine Mails?", "", "x", self.v(0.70))), ("", "x", False))

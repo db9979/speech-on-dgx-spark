@@ -441,7 +441,6 @@ class Browser(unittest.TestCase):
         agent.mutate(uid, lambda d: d.update(plans=[], jobs=[], rem_paused=[]))
         r = ADMIN().put("/api/admin/agent/levels", json={"levels": dict(agent.admin_state()["levels"], **{uid: "read"})})
         self.assertEqual(r.status_code, 200, r.text)
-        profiles.save_settings(uid, {"agent_on": True})
         pid = watch_plan(uid)["id"]
         agent.mutate(uid, lambda d: [x.update(known=[{"v": "FRITZ!OS 8.10", "src": PAGE + "/" + "a" * 120, "t": 1}],
                                               hist=[{"t": 1, "r": "neu", "n": 1, "what": "FRITZ!OS 8.10"}])

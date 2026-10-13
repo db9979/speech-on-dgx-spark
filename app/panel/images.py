@@ -2,8 +2,9 @@
 language model looks at it itself. qwen38's Qwen3.8 is a vision model; the admin checks once with
 "Bilderkennung prüfen" that the running lane accepts pictures (POST /api/admin/vision-test).
 
-Off until the admin switches it on (chat.images) and the profile switches it on (images_on); from the
-iPhone app also app_images, over Telegram also tg_images. Guests and other device keys never.
+Off until the admin switches it on (chat.images); then on for every profile unless the admin blocks one
+(Funktionen → Wer darf was); from the iPhone app also app_images, over Telegram also tg_images. Guests and
+other device keys never.
 
 A picture is data, never an instruction:
 - it is decoded (Pillow, at most MAX_PIXELS, off the event loop with a time limit), turned upright,
@@ -90,9 +91,9 @@ def allowed(uid, where):
     """May this profile send pictures from there? The panel decides, never the request."""
     if not uid or not admin_on():
         return False
-    s = profiles.settings(uid)
-    if not s.get("images_on"):
+    if not features.allowed("images", uid):
         return False
+    s = profiles.settings(uid)
     if where == "tg":
         return bool(s.get("tg_images"))
     if where.startswith("app:"):
@@ -224,7 +225,7 @@ def for_turn(request, body, who):
         return []
     where = channel(request)
     if not who or not allowed(who["id"], where):
-        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen, Ich → Gespräch)")
+        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen)")
     try:
         pics = take(ids, who["id"], where)
     except KeyError:
@@ -265,7 +266,7 @@ def image_info(request: Request):
 async def image_add(request: Request, prof=Depends(own_profile)):
     where = channel(request)
     if not allowed(prof["id"], where):
-        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen, Ich → Gespräch)")
+        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen)")
     guard.limit(request, "image", prof["id"], False)
     data = await _read(request, MAX_BYTES)
     try:

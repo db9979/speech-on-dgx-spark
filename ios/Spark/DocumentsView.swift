@@ -155,32 +155,42 @@ struct DocumentsView: View {
     }
 }
 
-/// The switches under Ich → Dokumente (each also needs the admin's switch; the Spark says which).
+/// The document functions under Ich → Dokumente: what the admin released is on for every profile at once (no own
+/// switch per profile); only the reminder before a deadline stays the profile's own choice ("Fristen").
 struct DocSwitchesView: View {
-    @State private var on: [String: Bool] = [:]
+    @State private var due = false
     @State private var allow: [String: Bool] = [:]
     @State private var error: String?
 
-    static let rows: [(String, String, LocalizedStringKey, LocalizedStringKey)] = [
-        ("doc_pictures", "pictures", LocalizedStringKey("Bilder und Scans lesen"), LocalizedStringKey("Das Sprachmodell liest Fotos und gescannte Seiten, wenn der Spark Zeit hat.")),
-        ("doc_semantic", "semantic", LocalizedStringKey("Nach Bedeutung suchen"), LocalizedStringKey("Findet auch Stellen mit anderen Worten.")),
-        ("doc_originals", "originals", LocalizedStringKey("Originale aufheben"), LocalizedStringKey("Die Datei selbst bleibt auf dem Spark, zum Ansehen und Neu einlesen.")),
-        ("doc_shared", "shared", LocalizedStringKey("Gemeinsame Dokumente"), LocalizedStringKey("Du darfst Dokumente für alle freigeben und siehst die der anderen.")),
-        ("doc_brief", "brief", LocalizedStringKey("Steckbrief und Tags"), LocalizedStringKey("Titel, Absender, Datum, Frist und Tags zu jedem Dokument.")),
-        ("doc_due", "brief", LocalizedStringKey("Fristen"), LocalizedStringKey("Erinnerung vor einer Frist, erst nach deinem Tippen.")),
+    static let rows: [(String, LocalizedStringKey, LocalizedStringKey)] = [
+        ("pictures", LocalizedStringKey("Bilder und Scans lesen"), LocalizedStringKey("Das Sprachmodell liest Fotos und gescannte Seiten, wenn der Spark Zeit hat.")),
+        ("semantic", LocalizedStringKey("Nach Bedeutung suchen"), LocalizedStringKey("Findet auch Stellen mit anderen Worten.")),
+        ("originals", LocalizedStringKey("Originale aufheben"), LocalizedStringKey("Die Datei selbst bleibt auf dem Spark, zum Ansehen und Neu einlesen.")),
+        ("shared", LocalizedStringKey("Gemeinsame Dokumente"), LocalizedStringKey("Du darfst Dokumente für alle freigeben und siehst die der anderen.")),
+        ("brief", LocalizedStringKey("Steckbrief und Tags"), LocalizedStringKey("Titel, Absender, Datum, Frist und Tags zu jedem Dokument.")),
     ]
 
     var body: some View {
         Form {
-            ForEach(Self.rows, id: \.0) { r in
-                if allow[r.1] ?? false {
-                    Section {
-                        Toggle(r.2, isOn: Binding(get: { on[r.0] ?? false }, set: { v in on[r.0] = v; Task { await save(r.0, v) } }))
-                    } footer: { Text(r.3) }
-                }
+            if allow["brief"] ?? false {
+                Section {
+                    Toggle("Fristen", isOn: Binding(get: { due }, set: { v in due = v; Task { await save(v) } }))
+                } footer: { Text("Erinnerung vor einer Frist, erst nach deinem Tippen.") }
             }
-            if allow.values.allSatisfy({ !$0 }) && !allow.isEmpty {
-                Text("Der Admin hat keine dieser Funktionen eingeschaltet.").foregroundStyle(.secondary)
+            Section {
+                ForEach(Self.rows, id: \.0) { r in
+                    LabeledContent {
+                        Image(systemName: allow[r.0] == true ? "checkmark.circle.fill" : "xmark.circle")
+                            .foregroundStyle(allow[r.0] == true ? .green : .secondary)
+                    } label: {
+                        Text(r.1)
+                        Text(r.2)
+                    }
+                }
+            } header: { Text("Funktionen") } footer: {
+                if !allow.isEmpty && Self.rows.contains(where: { allow[$0.0] != true }) {
+                    Text(SparkAPI.way(String(localized: "Der Admin hat das noch nicht freigegeben (Funktionen → Eigene Dokumente). Was er freigibt, gilt sofort für dich.")))
+                }
             }
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
@@ -193,18 +203,17 @@ struct DocSwitchesView: View {
         do {
             let w = try await api.object("GET", "api/profile/wissen")
             allow = (w["allow"] as? [String: Bool]) ?? [:]
-            let s = try await api.object("GET", "api/iphone/settings")
-            on = ((s["settings"] as? [String: Any]) ?? [:]).compactMapValues { $0 as? Bool }
+            due = (w["on"] as? [String: Any])?["due"] as? Bool ?? false
         } catch { self.error = error.localizedDescription }
     }
 
-    private func save(_ key: String, _ value: Bool) async {
+    private func save(_ value: Bool) async {
         do {
-            _ = try await SparkAPI.current?.call("PUT", "api/iphone/settings", body: [key: value])
+            _ = try await SparkAPI.current?.call("PUT", "api/iphone/settings", body: ["doc_due": value])
             error = nil
         } catch {
             self.error = error.localizedDescription
-            on[key] = !value
+            due = !value
         }
     }
 }
@@ -348,7 +357,7 @@ struct MadeDocsView: View {
             if m.loading {
                 ProgressView()
             } else if m.off {
-                Text(SparkAPI.way(String(localized: "Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.")))
+                Text(SparkAPI.way(String(localized: "Der Admin hat „Dokumente erstellen“ noch nicht freigegeben (Funktionen → Eigene Dokumente → Dokumente erstellen).")))
             } else if m.docs.isEmpty {
                 Text("Noch nichts erstellt. Sag zum Beispiel „Mach eine Präsentation über unseren Urlaub“.")
                     .foregroundStyle(.secondary)

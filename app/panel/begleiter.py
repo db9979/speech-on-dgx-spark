@@ -8,8 +8,8 @@ and the Mac menu bar (tools/begleiter/windows, tools/begleiter/mac) with these p
     status   the icon shows whether the Spark answers and whether a Notaus holds
     notaus   the profile's own Notaus (notaus.post_mine), never lifting it
 
-Off until the admin switches chat.desk on (Funktionen → Spark-Begleiter) and the profile its own desk_on
-(Ich → Begleiter); guests never. Which parts a device has is set centrally in the panel (Ich → Begleiter),
+Off until the admin switches chat.desk on (Funktionen → Spark-Begleiter); then it works for every profile the
+admin did not block (chat.deny); guests never. Which parts a device has is set centrally in the panel (Ich → Begleiter),
 per device, and reaches the program with its next poll (rev). Hotkeys are the program's own business.
 
 The program gets its own device key (scope "desk", profiles.DESK_PATHS) through a one-time code
@@ -626,7 +626,7 @@ def program_office(app: str, request: Request):
     if not base:
         raise HTTPException(409, "Das Panel einmal über seine https-Adresse öffnen und unter Ich → Begleiter speichern.")
     if not schreib.apps_ok(prof["id"]):
-        raise HTTPException(403, "Erst „In anderen Programmen“ einschalten (Funktionen → Schreibhilfe, Ich → Schreibhilfe).")
+        raise HTTPException(403, "Erst muss der Admin „In anderen Programmen“ einschalten (Funktionen → Schreibhilfe).")
     with open(os.path.join(schreib.FILES, "office", f"manifest-{app}.xml"), encoding="utf-8") as f:
         xml = f.read().replace("{{BASE}}", base)
     _live("Office-Add-in eingerichtet")

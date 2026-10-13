@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.509** Freigabe vereinfacht: Freigegebenes gilt sofort für jedes Profil, nur der Admin sperrt einzelne Profile; Gäste nur Frage und Antwort
 - **V01.0.508** Eigene Aufgaben: Beobachten meldet nur Neues (Firmware, Folge, Preis), alle eigenen Aufgaben unter Ich → Aufträge zum Ändern und Pausieren
 - **V01.0.507** Pebble-Uhr-App zeigt die Comic-Frau
 - **V01.0.506** Neue Seite Zustand → Technik: Aufbau, Weg einer Anfrage und alle Speicherorte zum Durchklicken, immer aus dem Code
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.502** Tests auf GitHub in vier Teilen gleichzeitig: ein Lauf dauert etwa ein Viertel so lange; Sammel-Push in Richtlinie und CLAUDE.md
 - **V01.0.501** NAS einmal verbinden (Synology und andere): Eigener Speicher und Sicherung nehmen Adresse, Passwort und Zertifikat von dort
 - **V01.0.500** reMarkable: Kreuze treffen wieder, Liste aufgeräumt, Cloud-Fehler mit Grund im Log
-- **V01.0.499** Docling-Server im Heimnetz liest Dokumente und Scans noch einmal, mit Tabellen (Admin, ab Werk aus)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

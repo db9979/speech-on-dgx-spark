@@ -1,17 +1,17 @@
 """Paper for the reMarkable: folders by kind, designed sheets in the device's own page format, ticked boxes read
 back (plan remarkable-aufwerten/plan.md, packages A, B and C; Dominik 2026-10-13 „1a 2b 3a 4a 5 umsetzen“).
 
-Three parts, each off: the admin switch chat.remarkable_paper (below "Aufs reMarkable schicken") plus one profile
-switch each under Ich → reMarkable → Papier; guests never.
+Three parts, each off: the admin switch chat.remarkable_paper (below "Aufs reMarkable schicken"); released, each works
+for every profile the admin did not block (chat.deny); "Selbst aufräumen" keeps a preference (rm_tidy); guests never.
 
-rm_folders  "Ordner nach Art": what the Spark puts on the reMarkable goes into one folder per kind below "Spark" (or
+rmordner    "Ordner nach Art": what the Spark puts on the reMarkable goes into one folder per kind below "Spark" (or
             the chosen folder): Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang,
             Archiv. The guide lies on top as a favourite. The Spark keeps a folder's id, not its name, so renaming or
             moving it is fine; a folder gone is made again. "Jetzt einsortieren" moves the Spark's own loose documents.
-rm_tidy     "Selbst aufräumen": once a day Morgenblatt and Wochenrückblick without handwriting go to "Archiv" after
+rmaufraeumen "Selbst aufräumen": once a day Morgenblatt and Wochenrückblick without handwriting go to "Archiv" after
             ARCHIVE_DAYS, and from there into the reMarkable's trash (still restorable there) after TRASH_DAYS. A
             document with handwriting is never moved by itself. Only documents the Spark made (remarkable.load()["made"]).
-rm_paper    "Gestaltete Blätter": Morgenblatt, Wochenrückblick, summaries, answers, the inbox and the guide become PDFs
+rmpapier    "Gestaltete Blätter": Morgenblatt, Wochenrückblick, summaries, answers, the inbox and the guide become PDFs
             in the page format of the person's model (MODELS; the page is the screen, so nothing is scaled or shifted),
             with a header band, numbered sections, cards and ruled lines, colour only where the device shows colour.
             Each sheet has a box "Kann weg" (top right): ticked, the Spark puts the document into the trash (into
@@ -56,7 +56,7 @@ MODELS = {
     "move": {"de": "Paper Pro Move", "en": "Paper Pro Move", "px": (954, 1696), "ppi": 264, "color": True},
 }
 CHOICES = ("auto",) + tuple(MODELS)
-# folders below the base folder, one per kind (rm_folders); "" = the base folder itself
+# folders below the base folder, one per kind (rmordner); "" = the base folder itself
 ARTEN = {"aufgaben": "Aufgaben", "morgen": "Morgenblatt", "woche": "Wochenrückblick", "besprechung": "Besprechungen", "antwort": "Antworten",
          "web": "Web und Anhänge", "eingang": "Eingang", "archiv": "Archiv"}
 # the Spark's own loose documents from before the folders, by their title ("Jetzt einsortieren")
@@ -1152,7 +1152,7 @@ def _tasks_public(uid):
 
 def _need(uid, key, what):
     if not features.allowed(key, uid):
-        raise HTTPException(403, f"{what} ist aus (Funktionen und Ich → reMarkable → Papier)")
+        raise HTTPException(403, f"{what} ist aus ({features.admin_way(key)})")
     if not remarkable.load(uid).get("token"):
         raise HTTPException(400, "nicht verbunden")
 

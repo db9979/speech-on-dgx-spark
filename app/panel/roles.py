@@ -5,8 +5,8 @@ Butler", "Wechsle zur Rolle Erklärbär", "Sei wieder normal", "Welche Rollen ha
 The panel recognizes these sentences with fixed rules in the person's own latest message (never in
 outside text or in what the model wrote) and only for a name the profile saved itself; the model
 then only says the result. A role changes the tone like the own style, never the rules for tools,
-smart home, code word and data. Off until the admin allows it (chat.roles) and the profile switches
-it on (setting roles_on). Guests and a voice that is not the profile's own never.
+smart home, code word and data. Off until the admin allows it (chat.roles); then on for every
+profile unless the admin blocks one (Funktionen → Wer darf was). Guests and a voice that is not the profile's own never.
 
     settings "roles"  text, one role per line "Name: what it should be like" (at most MAX_ROLES)
     settings "role"   the name of the active role ("" = none)
@@ -97,8 +97,8 @@ def command(text, roles):
 
 
 def on(ccfg, who, pset, own_browser):
-    """Roles may be used in this turn: admin switch, a profile's own voice and browser, its own switch."""
-    return bool(admin_on(ccfg) and who and own_browser and pset.get("roles_on"))
+    """Roles may be used in this turn: released by the admin for this profile, its own voice and browser."""
+    return bool(admin_on(ccfg) and who and own_browser and features.allowed("roles", who["id"]))
 
 
 def active(pset):

@@ -10,7 +10,7 @@ only version numbers that match VERSION.
 
 - Overview: Zustand (admin, all devices), Mein Zustand (own devices, hintergrund.py), Live (kinds, counts, state).
 - Note per new version (kind "devup" in push.py): once per version and profile, only to profiles with such a
-  device and their own switch devup_on, plus the admin's note profile (coadmin.notify_uid). The first version a
+  device (unless the admin blocked them), plus the admin's note profile (coadmin.notify_uid). The first version a
   Spark sees is only remembered, so switching this on does not send old news.
 - Speakers at night (admin chat.dev_updates_night, profile devup_night, per speaker "Updates von selbst"): in the
   window from chat.dev_updates_night_at for NIGHT_LEN the Spark restarts one connected, idle speaker; it fetches
@@ -22,8 +22,8 @@ only version numbers that match VERSION.
 - XiaoZhi (admin chat.dev_updates_upstream): the newest release of github.com/78/xiaozhi-esp32 compared with
   the version our firmware builds on; one note to the admin per new version. Nothing is built by itself.
 
-Off until the admin switches chat.dev_updates on (Funktionen → Geräte-Updates) and the profile devup_on;
-guests never. The language model has no tool for any of this.
+Off until the admin switches chat.dev_updates on (Funktionen → Geräte-Updates); then for every profile the
+admin did not block; guests never. The language model has no tool for any of this.
 
     STATE/geraete-updates.json  {"seen": {kind: version}, "due": {kind: {"v", "uids", "admin"}}, "checked": t,
                                  "night": {...}, "upstream": {"version", "told", "checked", "error"}}

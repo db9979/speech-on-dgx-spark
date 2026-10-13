@@ -9,7 +9,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
   - "Fresh" means since V01.0.289 (plan "Second login step less often"): a correct code of the same login (admin login, profile browser session or app key) from the last 10 minutes counts (`core.CONFIRM_WINDOW`). Really ask every time (`admin_code_fresh`, `secret_profile_fresh`, `confirm_code(..., fresh=True)`): the second step itself, admin password, roles, restoring/uploading/downloading/moving backups, code word, opening admin mode, Spark update from the app. New endpoints of this kind belong in this list. A raw `fetch` to such endpoints only shows "code required": in the browser always use `api()`/`apiTry()`. A passkey (since V01.0.295, `passkey.py`, header `X-Speech-Passkey`) counts everywhere like a fresh code; new code prompts therefore always run via `confirm_code`, never via a separate `mfa.verify`. In the iPhone app (since V01.0.357) requests with a code run via `SparkAPI.confirmed(...)`, never with a separate `X-Speech-Code` header, so that "With passkey" ("Mit Passkey") works everywhere; creating passkeys stays in the browser. Since V01.0.427 (plan `plaene/zweiter-faktor-einheitlich.md`) every endpoint with a code is listed with level (confirm or change protection), area and text (de/en) in `app/panel/stufen.py` LIST; otherwise `test_stufen` fails. The list decides whether the 10 minutes count; new buttons with a code get the lock (`CODE_LOCKS` in `mfa.js`). Never read the second step of the emergency access directly from the file, always `mfa._path(ADMIN)` (linked to the main admin profile).
 - [ ] If the address changes, the token must be entered again.
 - [ ] State changes only via POST/PUT/DELETE, never via GET. (`?take=true`)
-- [ ] Guests get no personal data, no actions and no error texts, only error codes.
+- [ ] Guests only get questions and answers: no tools, no personal data, no actions and no error texts, only error codes.
 - [ ] An unknown recognised voice only gets non-personal tools.
 - [ ] Shared devices (speakers in the room): the device key alone does not count as the owner. Personal things only when speaker recognition reliably recognises the owner's voice in the same recording; otherwise guest rights, and earlier history does not carry over. Whose voice it was is set only by the panel (request scope), never by the request. (V01.0.226: an unknown voice got the owner's mails.)
 - [ ] Spoken code word (speaker, V01.0.297): only for a voice that is already almost certainly the owner, never for an unknown one; a code word of its own, not the smart-home code word; the sentence containing it never goes to the model, into history, diagnostics, display or log; lockout after failed attempts with a notification.
@@ -66,7 +66,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Nothing from the configuration ends up unchecked in a root script.
 
 ## Before the commit
-- [ ] New switches are off by default: admin switch plus profile switch.
+- [ ] New switches are off by default: one admin switch, no new profile switch; only the admin blocks single profiles.
 - [ ] Every new protection rule has a self-test.
 - [ ] All self-tests are green.
 

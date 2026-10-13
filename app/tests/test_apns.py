@@ -42,7 +42,7 @@ class Dummy:
 
 class Apns(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(iphone=True, iphone_push=True)
+        helpers.set_config(iphone=True, iphone_push=True, deny={})
         apns._sent.clear()
         apns._inbox.clear()
         self.posted = []
@@ -58,18 +58,17 @@ class Apns(unittest.TestCase):
     def tearDown(self):
         apns._post, apns._client = self._post, self._client
         apns.forget()
-        helpers.set_config(iphone=False, iphone_push=False)
+        helpers.set_config(iphone=False, iphone_push=False, deny={})
 
     def phone(self, name):
         c = profile(name)
-        c.put("/api/profile/settings", json={"app_on": True})
         return c, {"X-Speech-Device": pair(c).json()["token"]}
 
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["iphone_push"], False)
-        for k in ("app_push", "app_car_ha"):
-            self.assertIs(profiles.SETTINGS[k][0], False)
+        self.assertIs(profiles.SETTINGS["app_car_ha"][0], False)
+        self.assertIs(profiles.SETTINGS["app_push"][0], True)   # a preference: on unless the profile opts out
         self.assertFalse(apns.ready())
 
     def test_key_only_for_the_admin_sealed_and_never_returned(self):
@@ -100,13 +99,19 @@ class Apns(unittest.TestCase):
             self.assertEqual(app.post("/api/iphone/push-token", json={"token": bad}, headers=h).status_code, 400, bad)
         r = app.post("/api/iphone/push-token", json={"token": T1.upper()}, headers=h)
         self.assertEqual(r.status_code, 200, r.text)
-        self.assertFalse(r.json()["push"])                 # the profile has not switched it on
+        self.assertTrue(r.json()["push"])                  # released by the admin: works at once
         uid = uid_of("Paula")
         self.assertEqual(apns.profile_tokens(uid)[0][1], T1)
-        self.assertFalse(apns.reachable(uid))
-        c.put("/api/profile/settings", json={"app_push": True})
         self.assertTrue(apns.reachable(uid))
         self.assertTrue(app.get("/api/iphone/hello", headers=h).json()["push"])
+        c.put("/api/profile/settings", json={"app_push": False})   # the profile opts out
+        self.assertFalse(apns.reachable(uid))
+        self.assertFalse(app.get("/api/iphone/hello", headers=h).json()["push"])
+        c.put("/api/profile/settings", json={"app_push": True})
+        helpers.set_config(deny={"iphonepush": [uid]})              # the admin blocks this profile
+        self.assertFalse(apns.reachable(uid))
+        helpers.set_config(deny={})
+        self.assertTrue(apns.reachable(uid))
         # admin switch off: nothing goes out
         helpers.set_config(iphone_push=False)
         self.assertFalse(apns.reachable(uid))
@@ -167,7 +172,7 @@ class Apns(unittest.TestCase):
         url = f"http://127.0.0.1:{helpers.HA_PORT}"
         try:
             self.assertEqual(a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN}).status_code, 200)
-            a.put("/api/profile/settings", json={"app_on": True, "app_ha": True})
+            a.put("/api/profile/settings", json={"app_ha": True})
             h = {"X-Speech-Device": pair(a).json()["token"]}
             app = TestClient(panel.app)
             cmd = 'TOOL home_assistant {"command": "Licht in der Küche an"}'

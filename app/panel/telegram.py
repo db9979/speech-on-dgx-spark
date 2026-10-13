@@ -498,8 +498,7 @@ async def photo_keep(c, uid, cid, photo):
         await call(c, "sendMessage", chat_id=cid, text="Antworte mit /merken auf ein Foto, dann lege ich es in deine Dokumente.")
         return
     if not images.allowed(uid, "tg") or not wissen.on(uid, "pictures"):
-        await call(c, "sendMessage", chat_id=cid, text="Fotos lege ich nur ab, wenn du es im Panel erlaubst: Ich → Telegram → "
-                   "Fotos über Telegram und Ich → Dokumente → Bilder und Scans lesen lassen.")
+        await call(c, "sendMessage", chat_id=cid, text=_photo_why("Fotos lege ich nur ab", uid, ("images", "docpics")))
         return
     try:
         data = await photo_bytes(c, photo)
@@ -513,12 +512,23 @@ async def photo_keep(c, uid, cid, photo):
                "danach kannst du danach fragen.")
 
 
+def _photo_why(head, uid, keys):
+    """Why a photo is not taken: the profile's own Telegram switch, and what the admin has not released or blocked
+    (features.missing_text, with its way). No profile switch for the functions themselves any more."""
+    out = [head + ", wenn du es im Panel erlaubst: Ich → Telegram → Fotos über Telegram."] \
+        if not profiles.settings(uid).get("tg_images") else ["Das geht gerade nicht."]
+    for k in keys:
+        why = features.missing_text(k, uid)
+        if why:
+            out.append(features.BY_KEY[k].de + ": " + why)
+    return " ".join(out)
+
+
 async def photo_question(c, uid, cid, m, photo, text):
     import images
     if not images.allowed(uid, "tg"):
         if m.get("photo"):
-            await call(c, "sendMessage", chat_id=cid, text="Fotos schaue ich mir nur an, wenn du es im Panel erlaubst: "
-                       "Ich → Gespräch → Bilder an den Assistenten und Ich → Telegram → Fotos über Telegram.")
+            await call(c, "sendMessage", chat_id=cid, text=_photo_why("Fotos schaue ich mir nur an", uid, ("images",)))
         return
     await call(c, "sendChatAction", chat_id=cid, action="typing")
     try:

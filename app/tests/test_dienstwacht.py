@@ -63,6 +63,10 @@ def local(h, m, day=12):
 class Base(unittest.TestCase):
     SERVICES = ("inet", "kiwix", "ha", "mail")
 
+    def hint(self, uid, on):
+        r = ADMIN.put(f"/api/admin/features/dienstnutzer/profiles/{uid}", json={"on": on})
+        self.assertEqual(r.status_code, 200, r.text)
+
     def setUp(self):
         helpers.set_config(svc_watch=True, svc_watch_users=True)
         dw.reset()
@@ -70,8 +74,10 @@ class Base(unittest.TestCase):
             guard._rate.pop(k, None)
         self.anna_c, self.ben_c = profile("Anna"), profile("Ben")
         self.anna, self.ben = uid_of("Anna"), uid_of("Ben")
-        profiles.save_settings(self.anna, {"svc_note": True, "svc_hint": True, "svc_night": False, "svc_device": ""})
-        profiles.save_settings(self.ben, {"svc_note": True, "svc_hint": False})
+        profiles.save_settings(self.anna, {"svc_note": True, "svc_night": False, "svc_device": ""})
+        profiles.save_settings(self.ben, {"svc_note": True})
+        self.hint(self.ben, False)        # the admin blocked "Hinweis, wenn ein Dienst fehlt" for Ben
+        self.addCleanup(self.hint, self.ben, True)
         self.sent, self.reached = [], True
         self.up = {s: True for s in self.SERVICES}          # what the fake probes answer
         self.public = {"inet": True, "kiwix": False, "ha": False, "mail": True}
@@ -126,8 +132,9 @@ class Off(Base):
             chat = json.load(f)["chat"]
         self.assertIs(chat["svc_watch"], False)
         self.assertIs(chat["svc_watch_users"], False)
-        for k in ("svc_note", "svc_hint", "svc_night"):
-            self.assertIs(profiles.SETTINGS[k][0], False, k)
+        self.assertIs(profiles.SETTINGS["svc_night"][0], False)
+        self.assertIs(profiles.SETTINGS["svc_note"][0], True)    # a preference, on unless switched off (admins only)
+        self.assertNotIn("svc_hint", profiles.SETTINGS)          # no profile switch: the admin's release counts
         self.assertEqual(profiles.SETTINGS["svc_device"][0], "")
 
 
@@ -463,7 +470,7 @@ class Assistant(Base):
         out = self.call("archive_search", self.anna)
         self.assertTrue(out.startswith("Not done: the service Archive (Kiwix) is not reachable"), out)
         self.assertIn("Archiv (Kiwix) ist gerade nicht erreichbar (seit 10:00).", out)
-        self.assertEqual(dw.tool_down("archive_search", self.ben), "")          # Ben's own switch is off
+        self.assertEqual(dw.tool_down("archive_search", self.ben), "")          # the admin blocked it for Ben
         self.assertEqual(dw.tool_down("archive_search", ""), "")                # guests never
         helpers.set_config(svc_watch_users=False)
         self.assertEqual(dw.tool_down("archive_search", self.anna), "")
@@ -480,7 +487,7 @@ class Assistant(Base):
 
     def test_only_the_profile_s_own_mail_server(self):
         self.public["mail"] = False               # a mail server at home: not behind the internet
-        profiles.save_settings(self.ben, {"svc_hint": True})
+        self.hint(self.ben, True)
         self.up["mail"] = False
         with mock.patch.object(dw, "_mail_parts", lambda: {"m1": {"host": "imap.example", "port": 993, "uids": [self.anna]}}):
             self.rounds(local(10, 0), 4)

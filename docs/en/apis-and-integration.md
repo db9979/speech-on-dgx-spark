@@ -94,7 +94,7 @@ Do not install the agent on the Spark itself: it runs commands and could reach s
 
 Other programs use the Spark over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, the panel's address `/mcp`, e.g. `http://SPARK:31080/mcp`). Off by default.
 
-**Switching on:** admin: Features → *Spark as MCP server*. Profile: Me → *Services over MCP* → "Spark as MCP server for me", then "Connect a program with a key": name, tools, "Create key". The key is shown once; enter it in the program as the header `Authorization: Bearer <key>`.
+**Switching on:** admin: Features → *Spark as MCP server*. This works for every profile; only the admin blocks single profiles (Features → Who may do what). Setup in the profile: Me → *Services over MCP* → "Connect a program with a key": name, tools, "Create key". The key is shown once; enter it in the program as the header `Authorization: Bearer <key>`.
 
 | Group | Tools |
 |---|---|
@@ -120,7 +120,7 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 
 Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them.
 
-**Switching on:** Admin: Features → Agent functions → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Profile: Me → *My MCP services* → "Own MCP services for me" (`mymcp_on`), then enter name, address and key and "Connect service". The profile needs no agent level for this.
+**Switching on:** Admin: Features → Agent functions → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Once released it works for every profile; only the admin blocks single profiles. Setup in the profile: Me → *My MCP services*, enter name, address and key and "Connect service". The profile needs no agent level for this.
 
 **Rules (fixed):**
 - At most 5 services per profile, each with at most 30 tools. Every tool is "Off" until the profile sets it to "Read" or "Act after yes". If the service changes a tool's description or inputs, it is "Off" again after "Fetch tools again".
@@ -164,7 +164,7 @@ For the profile (browser or iPhone app, switches as above): `GET /api/verbund` (
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).
 
-1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch*, the profile "Pebble watch for me" under *Me → Pebble watch*, then "Pair a Pebble" and copy the line (valid 10 minutes, once). The watch gets its own key, which only reaches `/api/watch/` and is locked at once by either switch. Without pairing it still works: add a device "Pebble" under **People and devices** and copy its key.
+1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch* (works for every profile), the profile picks "Pair a Pebble" under *Me → Pebble watch* and copies the line (valid 10 minutes, once). The watch gets its own key, which only reaches `/api/watch/` and is locked at once when the admin switches the feature off or blocks the profile. Without pairing it still works: add a device "Pebble" under **People and devices** and copy its key.
 2. On the paired phone, download `http://SPARK:31080/pebble/speech-spark.pbw` and open it with the Pebble app. Easier: *Me → Pebble watch* shows a QR code for it to scan with the phone camera. When the Spark has a newer watch app, "Neue Uhr-App" shows under an answer at most once a day; reinstalling keeps the pairing.
 3. In the Pebble app, open the settings of "Spark": paste the setup code, or enter the Spark address (`http://SPARK:31080`) and device key. Settings and "Start App" stay grey while the Pebble app does not see the watch as connected (tab Devices).
 4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; its mouth follows the speech. The watch setting Settings → Sounds & Haptics → Volume caps how loud the app can get.

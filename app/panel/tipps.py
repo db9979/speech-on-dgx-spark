@@ -152,7 +152,7 @@ def _how(key, uid, admin, c=None):
     if why == "spark":
         return "admin" if admin else "ask"
     f = features.BY_KEY[key]
-    if why == "profile" and key in hilfe.APPLY_PROFILE and f.profile:
+    if why == "profile" and key in hilfe.APPLY_PROFILE and f.pref:
         return "apply"
     return "setup"
 
@@ -335,7 +335,8 @@ def candidates(uid, admin=False, c=None, now=None):
     since = st.get("since") or now
     for f in features.FEATURES:
         tid = "f:" + f.key
-        if f.profile and seen.get(f.key, 0) > since and features.reason(f.key, uid, c) == "profile" \
+        # newly released by the admin: works for this profile at once, the tip only says so (Freigabe vereinfachen)
+        if not f.parent and seen.get(f.key, 0) > since and features.reason(f.key, uid, c) is None \
                 and tid not in st["never"] and not any(x["key"] == f.key for x in out):
             out.append(_tip("new", tid, f.key, uid, admin, ["neu bei dir verfügbar", "newly available for you"], c=c))
     return out

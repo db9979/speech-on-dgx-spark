@@ -6,8 +6,8 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Mitteilungen bei geschlossener App:** Die App fragt alle 15 Minuten selbst beim Spark nach (`/api/android/notes`),
   ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät
   ist oder kein anderer Weg (iPhone-App) eingerichtet ist.
-- **Mitteilungen sofort** (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus);
-  Profil: Ich → Android-App → „Mitteilungen sofort“ (aus), dann die App einmal öffnen. Die App hält dann eine Verbindung
+- **Mitteilungen sofort** (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus).
+  Für jedes Profil gleich an; abschalten lässt es sich unter Ich → Android-App → „Mitteilungen sofort“. Dann die App einmal öffnen. Die App hält dann eine Verbindung
   zum Spark offen (`/api/android/wait`: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 50 Sekunden
   leer, und die App fragt wieder). Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne
   Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark verbunden“ (Dienst im Vordergrund). Damit
@@ -33,7 +33,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
    `spark.apk`, `spark.apk.sha256` und `android.json`.
 3. **Spark:** Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag).
    Er prüft Größe und SHA-256 und behält sie unter `STATE/android`.
-4. **Profil:** Ich → Android-App → „Android-App für mich“ an, „Download-Link holen“, den QR-Code mit der Kamera des
+4. **Profil:** Ich → Android-App → „Download-Link holen“, den QR-Code mit der Kamera des
    Android-Handys scannen, die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf).
    Der Link gilt 30 Minuten.
 5. **In der App:** Adresse des Spark eintragen (https mit echtem Zertifikat, z. B. der Reverse Proxy), dann wie im
@@ -42,7 +42,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 
 ## Sicherheit
 
-- Admin-Schalter `chat.android` und Profilschalter `android_on`, beide aus; Gäste nie.
+- Admin-Schalter `chat.android`, aus. Freigegeben gilt er für jedes Profil; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was). Gäste nie.
 - Die App hat keinen eigenen Schlüssel: Sie nutzt die Anmeldung ihrer Seite (Cookie). Abmelden in der Seite beendet sie.
 - Die App lädt nur Seiten ihres eigenen Spark (gleiche Adresse und Port), alles andere öffnet der Browser; nur https,
   System-Zertifikate. Mikrofon nur für die eigene Spark-Seite.

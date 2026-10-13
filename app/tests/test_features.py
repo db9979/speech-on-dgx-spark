@@ -28,6 +28,15 @@ def profile(name, pin="1234"):
     return c, next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
 
 
+def block(test, key, uid, on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile: Funktionen → Wer darf was."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    test.assertEqual(r.status_code, 200, r.text)
+    if not on:
+        test.addCleanup(ADMIN.put, f"/api/admin/features/{key}/profiles/{uid}", json={"on": True})
+    return r
+
+
 class Registry(unittest.TestCase):
     def test_every_admin_switch_belongs_to_one_function(self):
         with open(features.DEFAULTS) as f:
@@ -39,17 +48,25 @@ class Registry(unittest.TestCase):
         for k in used:
             self.assertIsInstance(chat.get(k), bool, k)
 
-    def test_profile_switches_exist_and_start_off(self):
+    def test_preferences_exist_start_on_and_are_no_preset(self):
+        """Freigabe vereinfachen (Dominik 2026-10-13): a profile switches nothing on. Only where the Spark does
+        something unasked it keeps a preference: in profiles.SETTINGS, on unless the profile switched it off, and
+        never set by the admin's presets."""
+        prefs = [f for f in features.FEATURES if f.pref]
+        self.assertTrue(prefs)
+        for f in prefs:
+            self.assertIn(f.pref, profiles.SETTINGS, f.key)
+            self.assertIs(profiles.SETTINGS[f.pref][0], True, f.key)          # missing = on
+            self.assertIn(f.pref, profiles.NO_PRESET, f.key)
+        self.assertEqual(features.PREFS, {f.pref for f in prefs})
         for f in features.FEATURES:
-            if f.profile:
-                self.assertIn(f.profile, profiles.SETTINGS, f.key)
-                self.assertIs(profiles.SETTINGS[f.profile][0], False, f.key)   # every function off until the profile says so
+            self.assertFalse(hasattr(f, "profile"), "no per-profile release switch any more")
             if f.parent:
                 self.assertIn(f.parent, features.BY_KEY, f.key)
 
-    def test_every_profile_switch_can_be_set_in_ich(self):
+    def test_every_preference_can_be_set_in_ich(self):
         """Dominik 2026-10-13: "Bilder aus dem Kiwix" was on for the admin but missing in Ich → Dokumente. Every
-        profile switch of a function has a toggle on the Ich pages; Ich → Dokumente names it in DOCSW (me.js),
+        preference of a function has a toggle on the Ich pages; Ich → Dokumente names it in DOCSW (me.js),
         and /api/profile/wissen reports it."""
         import wissen
         js = os.path.join(PANEL, "static", "js")
@@ -59,14 +76,14 @@ class Registry(unittest.TestCase):
         me = open(os.path.join(js, "me.js"), encoding="utf-8").read()
         doc = set(re.findall(r"\['(\w+)',t\(", me[me.index("const DOCSW"):me.index("const DOCSRC")]))
         for f in features.FEATURES:
-            if not f.profile:
+            if not f.pref:
                 continue
             if f.me == "docbox":
-                word = f.profile[4:]
+                word = f.pref[4:]
                 self.assertIn(word, doc, f"{f.key}: add '{word}' to DOCSW in me.js")
                 self.assertEqual(wissen.DOC_FEATURE.get(word), f.key, f"{f.key}: add '{word}' to wissen.DOC_FEATURE")
             else:
-                self.assertTrue(f'"{f.profile}"' in src or f"'{f.profile}'" in src, f"{f.key}: no toggle for {f.profile}")
+                self.assertTrue(f'"{f.pref}"' in src or f"'{f.pref}'" in src, f"{f.key}: no toggle for {f.pref}")
 
     def test_every_switch_guide_has_a_function(self):
         with open(os.path.join(PANEL, "static", "js", "guides.js")) as f:
@@ -106,16 +123,18 @@ class Check(unittest.TestCase):
         helpers.set_config(weather=False)
         self.assertEqual(features.reason("weather", uid), "spark")
         helpers.set_config(weather=True)
-        self.assertEqual(features.reason("weather", uid), "profile")   # off until the profile says so
-        profiles.save_settings(uid, {"wx_on": True})
+        self.assertIsNone(features.reason("weather", uid))               # released by the admin: works at once
+        block(self, "weather", uid)
+        self.assertEqual(features.reason("weather", uid), "blocked")     # the admin blocked it for this profile
+        self.assertFalse(features.allowed("weather", uid))
+        block(self, "weather", uid, on=True)
         self.assertIsNone(features.reason("weather", uid))
         self.assertEqual(features.reason("weather", None), "guest")
         helpers.set_config(search=True)
-        self.assertIsNone(features.reason("search", None))             # guests may search the web
+        self.assertEqual(features.reason("search", None), "guest")      # guests get no function, not even the search
 
     def test_what_a_function_builds_on(self):
         _, uid = profile("FeaXaver")
-        profiles.save_settings(uid, {"par_on": True, "fix_learn": True, "room_remote": True, "app_push": True, "app_on": True})
         helpers.set_config(mail=False, parcels=True)
         self.assertFalse(features.allowed("parcels", uid))
         helpers.set_config(mail=True)
@@ -124,9 +143,10 @@ class Check(unittest.TestCase):
         helpers.set_config(learn_fixes=True, memory=False)
         self.assertFalse(features.allowed("fixes", uid))
         import fixes
-        self.assertFalse(fixes.on(features.chat_cfg(), profiles.settings(uid)))
+        self.assertFalse(fixes.on(features.chat_cfg(), uid))
         helpers.set_config(memory=True)
-        self.assertTrue(fixes.on(features.chat_cfg(), profiles.settings(uid)))
+        self.assertTrue(fixes.on(features.chat_cfg(), uid))
+        self.assertFalse(fixes.on(features.chat_cfg(), None))            # never for guests
         # room mode from afar needs own speakers; push needs the app
         helpers.set_config(room=True, room_remote=True, esp32=False)
         self.assertFalse(features.admin_on("roomfar"))
@@ -144,25 +164,35 @@ class Check(unittest.TestCase):
 class Api(unittest.TestCase):
     def test_profile_sees_why(self):
         c, uid = profile("FeaYvonne")
-        helpers.set_config(weather=True, transit=False)
+        helpers.set_config(weather=True, transit=False, proactive=True, search=True)
+        self.addCleanup(helpers.set_config, weather=False, proactive=False, search=False)
+        block(self, "search", uid)
         d = c.get("/api/features").json()
         f = {x["key"]: x for x in d["features"]}
-        self.assertEqual(f["weather"]["why"], "profile")
+        self.assertIsNone(f["weather"]["why"])                          # released: works at once
+        self.assertIs(f["weather"]["can"], True)
+        self.assertIsNone(f["weather"]["mine"])                         # no preference of its own
         self.assertEqual(f["transit"]["why"], "spark")
-        self.assertIs(f["weather"]["mine"], False)
+        self.assertEqual(f["search"]["why"], "blocked")
+        self.assertIs(f["proactive"]["mine"], True)                     # a preference: on unless switched off
+        profiles.save_settings(uid, {"pro_on": False})
+        f = {x["key"]: x for x in c.get("/api/features").json()["features"]}
+        self.assertEqual(f["proactive"]["why"], "profile")
+        self.assertIs(f["proactive"]["mine"], False)
         self.assertEqual(d["why"]["spark"][0], "Vom Admin ausgeschaltet")
+        self.assertEqual(d["why"]["blocked"][0], "Vom Admin für dich gesperrt")
         self.assertEqual(len(d["groups"]), 8)
-        helpers.set_config(weather=False)
 
-    def test_guests_see_only_guest_functions(self):
-        helpers.set_config(public=True)
+    def test_guests_see_no_functions(self):
+        helpers.set_config(public=True, search=True, reminders=True)
         try:
             d = TestClient(panel.app).get("/api/features").json()
-            self.assertTrue(d["features"])
-            self.assertTrue(all(x["guests"] for x in d["features"]))
-            self.assertTrue(all(x["mine"] is None for x in d["features"]))
+            self.assertEqual(d["features"], [])                          # only questions and answers
+            self.assertTrue(d["groups"])
+            self.assertFalse(any(f.key for f in features.FEATURES if features.allowed(f.key, None)))
+            self.assertFalse(hasattr(features.FEATURES[0], "guests"))     # no function may open itself to guests
         finally:
-            helpers.set_config(public=False)
+            helpers.set_config(public=False, search=False, reminders=True)
         self.assertEqual(TestClient(panel.app).get("/api/features").status_code, 401)
 
     def test_whoami_flags_come_from_here(self):
@@ -226,36 +256,40 @@ class Matrix(unittest.TestCase):
     def test_matrix_and_switching_a_profile(self):
         _, uid = profile("FeaAnton")
         helpers.set_config(weather=True)
+        self.addCleanup(helpers.set_config, weather=False)
         d = ADMIN.get("/api/admin/features").json()
         row = next(f for f in d["features"] if f["key"] == "weather")
-        self.assertIs(row["cells"][uid], False)
+        self.assertIs(row["cells"][uid], True)                          # released: every profile may use it
         self.assertTrue(row["switchable"])
         self.assertTrue(row["seen"])                                    # on now, so no longer "new"
         self.assertTrue(any(p["id"] == uid for p in d["profiles"]))
-        self.assertIsNone(next(f for f in d["features"] if f["key"] == "memory")["cells"])   # no own switch
-        r = ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True})
-        self.assertEqual(r.status_code, 200)
-        self.assertIs(profiles.settings(uid)["wx_on"], True)
+        self.assertIs(next(f for f in d["features"] if f["key"] == "memory")["cells"][uid], True)
+        block(self, "weather", uid)
+        self.assertNotIn("wx_on", profiles.settings(uid))               # stored with the admin, not the profile
+        self.assertIn(uid, features.chat_cfg()["deny"]["weather"])
+        row = next(f for f in ADMIN.get("/api/admin/features").json()["features"] if f["key"] == "weather")
+        self.assertIs(row["cells"][uid], False)
         prot = ADMIN.get("/api/admin/protocol?limit=50").json()["events"]
         self.assertTrue(any(x.get("event") == "feature_profile" and "FeaAnton" in x.get("detail", "") for x in prot))
-        helpers.set_config(weather=False)
 
     def test_refuses_what_is_not_there(self):
         _, uid = profile("FeaBerta")
-        for path, body, code in ((f"/api/admin/features/memory/profiles/{uid}", {"on": True}, 404),      # no own switch
-                                 ("/api/admin/features/weather/profiles/u_000000000000", {"on": True}, 404),
+        for path, body, code in (("/api/admin/features/weather/profiles/u_000000000000", {"on": True}, 404),
+                                 ("/api/admin/features/weather/profiles/nobody", {"on": True}, 404),
                                  (f"/api/admin/features/nothing/profiles/{uid}", {"on": True}, 404),
                                  (f"/api/admin/features/weather/profiles/{uid}", {"on": "yes"}, 400),
+                                 (f"/api/admin/features/weather/profiles/{uid}", {}, 400),
                                  (f"/api/admin/features/weather/profiles/{uid}", "x" * 300, 413)):
             r = ADMIN.put(path, content=body) if isinstance(body, str) else ADMIN.put(path, json=body)
             self.assertEqual(r.status_code, code, path)
+        self.assertNotIn(uid, json.dumps(features.chat_cfg().get("deny") or {}))
 
     def test_only_admins(self):
         c, uid = profile("FeaCarl")
         self.assertEqual(TestClient(panel.app).get("/api/admin/features").status_code, 401)
         self.assertIn(c.get("/api/admin/features").status_code, (401, 403))
-        self.assertIn(c.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, (401, 403))
-        self.assertNotEqual(profiles.settings(uid).get("wx_on"), True)
+        self.assertIn(c.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": False}).status_code, (401, 403))
+        self.assertNotIn(uid, json.dumps(features.chat_cfg().get("deny") or {}))
 
     def test_new_until_first_on(self):
         helpers.set_config(transit=False)
@@ -271,41 +305,49 @@ class Matrix(unittest.TestCase):
 
 
 class Presets(unittest.TestCase):
-    """Phase 4 (V01.0.270): presets for new profiles, never a preset that fakes a function switch."""
-    def test_new_profiles_get_what_the_admin_chose(self):
-        self.assertEqual(ADMIN.put("/api/admin/features/weather/new", json={"on": True}).status_code, 200)
-        try:
-            _, uid = profile("FeaDora")
-            self.assertIs(profiles.settings(uid).get("wx_on"), True)
-            row = next(f for f in ADMIN.get("/api/admin/features").json()["features"] if f["key"] == "weather")
-            self.assertIs(row["new"], True)
-        finally:
-            ADMIN.put("/api/admin/features/weather/new", json={"on": False})
-        _, uid = profile("FeaEmil")
-        self.assertIsNone(profiles.settings(uid).get("wx_on"))
-        self.assertEqual(ADMIN.put("/api/admin/features/memory/new", json={"on": True}).status_code, 404)   # no own switch
-        self.assertEqual(TestClient(panel.app).put("/api/admin/features/weather/new", json={"on": True}).status_code, 401)
+    """Phase 4 (V01.0.270), since Freigabe vereinfachen (Dominik 2026-10-13): no presets for new profiles any more,
+    what the admin releases holds for every profile, old and new; never a preset that fakes a function."""
+    def test_new_profiles_get_what_the_admin_released(self):
+        self.assertIn(ADMIN.put("/api/admin/features/weather/new", json={"on": True}).status_code, (404, 405))
+        self.assertFalse(hasattr(features, "new_profile"))
+        helpers.set_config(weather=True)
+        self.addCleanup(helpers.set_config, weather=False)
+        _, uid = profile("FeaDora")
+        self.assertTrue(features.allowed("weather", uid))               # no switch of its own needed
+        self.assertEqual(profiles.settings(uid), {})                    # nothing written for it
+        self.assertNotIn("new", next(f for f in ADMIN.get("/api/admin/features").json()["features"]
+                                     if f["key"] == "weather"))
 
     def test_config_check(self):
         cfg = ADMIN.get("/api/config").json()
-        for bad in (["nothing"], ["memory"], ["weather", "weather"], "weather"):
-            cfg["chat"]["new_profile_on"] = bad
-            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
+        self.assertNotIn("new_profile_on", cfg["chat"])
+        for bad in (["weather"], ["nothing"], "weather"):             # the removed key is refused, whatever it holds
+            c = json.loads(json.dumps(cfg))
+            c["chat"]["new_profile_on"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=c).status_code, 400, bad)
+        for bad in ({"weather": ["nobody"]}, {"weather": "u_000000000000"}, ["weather"]):
+            c = json.loads(json.dumps(cfg))
+            c["chat"]["deny"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=c).status_code, 400, bad)
 
     def test_a_removed_function_in_the_list_never_blocks_saving(self):
         """V01.0.491: "messages" (removed in .488) or one without an own switch any more stayed in new_profile_on,
-        and every admin switch failed with "new_profile_on: functions with an own switch, each once"."""
+        and every admin switch failed with "new_profile_on: functions with an own switch, each once". With
+        "Freigabe vereinfachen" new_profile_on is gone altogether: an old entry is dropped, saving works."""
         helpers.set_config(new_profile_on=["messages", "rmaufgaben", "weather"])
         try:
-            self.assertEqual(ADMIN.get("/api/config").json()["chat"]["new_profile_on"], ["weather"])
+            self.assertNotIn("new_profile_on", ADMIN.get("/api/config").json()["chat"])
             r = ADMIN.put("/api/admin/switches", json={"key": "weather", "on": False})
             self.assertEqual(r.status_code, 200, r.text)
             cfg = ADMIN.get("/api/config").json()
             self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 200)
             with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
-                self.assertEqual(json.load(f)["chat"]["new_profile_on"], ["weather"])
+                self.assertNotIn("new_profile_on", json.load(f)["chat"])
         finally:
-            helpers.set_config(new_profile_on=[])
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                left = json.load(f)
+            left["chat"].pop("new_profile_on", None)
+            helpers.write_config(left)
 
     def test_a_gone_setting_in_the_presets_never_blocks_saving(self):
         """V01.0.494: a preset whose setting no longer exists (or no longer takes that value) stayed in chat.defaults,
@@ -334,12 +376,121 @@ class Presets(unittest.TestCase):
 
     def test_presets_never_switch_a_function_on(self):
         _, uid = profile("FeaFrida")
-        chat = {"defaults": {"route": True, "wx_on": True, "length": "short", "echo": False}}
+        chat = {"defaults": {"route": True, "wx_on": True, "pro_on": False, "length": "short", "echo": False}}
         eff = profiles.effective(uid, chat)
-        self.assertIs(eff["route"], False)          # the Wer-darf-was switch, not a preset
-        self.assertIs(eff["wx_on"], False)
+        self.assertNotIn("route", eff)               # removed release switches: no preset either
+        self.assertNotIn("wx_on", eff)
+        self.assertIs(eff["pro_on"], True)           # a preference stays the profile's own, never a preset
         self.assertEqual(eff["length"], "short")
-        self.assertIs(eff["echo"], False)           # no function switch of its own: a preset is fine
+        self.assertIs(eff["echo"], False)            # no function switch of its own: a preset is fine
+
+
+class Release(unittest.TestCase):
+    """Freigabe vereinfachen (Dominik 2026-10-13): the admin releases a function for every profile at once and
+    only blocks single profiles; profiles keep a preference only where the Spark does something unasked."""
+    def tearDown(self):
+        helpers.set_config(weather=False, mail=False, parcels=False, proactive=False)
+
+    def test_release_works_for_every_profile_at_once(self):
+        _, a = profile("RelAda")
+        _, b = profile("RelBen")
+        sa, sb = profiles.settings(a), profiles.settings(b)
+        helpers.set_config(weather=False)
+        self.assertFalse(features.allowed("weather", a))
+        self.assertFalse(features.allowed("weather", b))
+        helpers.set_config(weather=True)
+        self.assertTrue(features.allowed("weather", a))
+        self.assertTrue(features.allowed("weather", b))
+        self.assertEqual((profiles.settings(a), profiles.settings(b)), (sa, sb))   # nothing touched at the profiles
+
+    def test_admin_blocks_one_profile_and_the_chain(self):
+        c, uid = profile("RelCleo")
+        _, other = profile("RelDirk")
+        helpers.set_config(mail=True, parcels=True)
+        self.assertTrue(features.allowed("parcels", uid))
+        block(self, "mail", uid)
+        self.assertEqual(features.reason("mail", uid), "blocked")
+        self.assertEqual(features.reason("parcels", uid), "blocked")    # builds on mail: blocked through the chain
+        self.assertTrue(features.allowed("parcels", other))             # only this profile
+        row = next(f for f in ADMIN.get("/api/admin/features").json()["features"] if f["key"] == "parcels")
+        self.assertIs(row["cells"][uid], True)                          # not blocked itself ...
+        self.assertIs(row["inherited"][uid], True)                      # ... but through mail
+        # the profile cannot lift it: not through the admin route, not through its settings, not through the config
+        self.assertIn(c.put(f"/api/admin/features/mail/profiles/{uid}", json={"on": True}).status_code, (401, 403))
+        c.put("/api/profile/settings", json={"deny": {}, "mail": True})
+        self.assertIn(c.put("/api/config", json={"chat": {"deny": {}}}).status_code, (401, 403))
+        self.assertEqual(features.reason("parcels", uid), "blocked")
+        self.assertNotIn("deny", profiles.settings(uid))
+        block(self, "mail", uid, on=True)
+        self.assertIsNone(features.reason("mail", uid))
+        self.assertIsNone(features.reason("parcels", uid))
+        self.assertNotIn("mail", features.chat_cfg().get("deny") or {})
+
+    def test_blocking_a_second_function_keeps_the_first(self):
+        _, uid = profile("RelEmil")
+        helpers.set_config(weather=True, mail=True)
+        block(self, "weather", uid)
+        block(self, "mail", uid)
+        self.assertEqual((features.reason("weather", uid), features.reason("mail", uid)), ("blocked", "blocked"))
+        block(self, "mail", uid, on=True)                              # lifting one leaves the other
+        self.assertEqual((features.reason("weather", uid), features.reason("mail", uid)), ("blocked", None))
+
+    def test_preference_off_turns_only_that_off(self):
+        _, uid = profile("RelEmma")
+        _, other = profile("RelFred")
+        helpers.set_config(proactive=True, weather=True)
+        self.assertNotIn("pro_on", profiles.settings(uid))
+        self.assertTrue(features.allowed("proactive", uid))             # missing = on
+        profiles.save_settings(uid, {"pro_on": False})
+        self.assertEqual(features.reason("proactive", uid), "profile")
+        self.assertTrue(features.allowed("weather", uid))               # nothing else goes off
+        self.assertTrue(features.allowed("proactive", other))           # and nobody else's
+        self.assertIn("Du hast es ausgeschaltet", features.missing_text("proactive", uid))
+        profiles.save_settings(uid, {"pro_on": True})
+        self.assertTrue(features.allowed("proactive", uid))
+
+    def test_old_deny_entries_never_block_saving(self):
+        """chat.deny cleaned on reading (features.clean_deny): a removed function, a deleted or unknown profile,
+        doubles and empty lists go; the valid block stays and still works."""
+        _, uid = profile("RelHanno")
+        _, gone_uid = profile("RelIrma")
+        self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{gone_uid}").status_code, 200)
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            saved = f.read()
+        self.addCleanup(helpers.write_config, json.loads(saved))
+        c = json.loads(saved)
+        c["chat"]["deny"] = {"wx_gone": [uid], "weather": [uid, uid, gone_uid, "u_000000000000"], "mail": [],
+                             "search": [gone_uid]}
+        helpers.write_config(c)
+        cfg = ADMIN.get("/api/config").json()
+        self.assertEqual(cfg["chat"]["deny"], {"weather": [uid]})
+        self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 200)
+        self.assertTrue(features.blocked("weather", uid))
+        self.assertFalse(features.blocked("search", uid))
+        self.assertEqual(features.clean_deny(features.chat_cfg().get("deny")), {"weather": [uid]})
+        self.assertEqual(features.clean_deny(["weather"]), {})
+
+    def test_removed_keys_are_not_stored(self):
+        c, uid = profile("RelGina")
+        # the release switches that were removed with Freigabe vereinfachen
+        gone = """
+        agent_on android_on app_on berater_ask berater_me chats_on con_on desk_on devup_on
+        direct_read doc_brief doc_make doc_make_templates doc_make_wikipics doc_originals
+        doc_pictures doc_semantic doc_shared esp_on esp_stop fix_learn images_on instant_ack
+        kiwix_on klaeren klaeren_merken local_first mcps_on mem_ask mem_check mem_topics
+        msg_announce my_status mymcp_on par_on pebble_on prefetch pro_ha_voice rate_on report_on
+        rm_ask rm_folders rm_fresh rm_guide rm_meet rm_on rm_paper rm_send rm_todo rm_web roles_on
+        room_remote route spark_help spk_code storage_on svc_hint sync_live sync_offline sync_one
+        systemone_on tagebuch_on tasks_on tips_on tool_think transit_on why_on wiki_on write_apps
+        write_on wx_on""".split()
+        r = c.put("/api/profile/settings", json=dict({k: True for k in gone}, pro_on=False))
+        self.assertEqual(r.status_code, 200)
+        stored = profiles.settings(uid)
+        for k in gone:
+            self.assertNotIn(k, profiles.SETTINGS, k)
+            self.assertNotIn(k, stored, k)
+            self.assertNotIn(k, r.json()["settings"], k)
+        self.assertIs(stored["pro_on"], False)                          # a known preference is still kept
 
 
 if __name__ == "__main__":
@@ -352,26 +503,28 @@ class Detail(unittest.TestCase):
         c, uid = profile("DetaEva")
         d = ADMIN.get(f"/api/admin/profiles/{uid}").json()
         self.assertEqual(set(d["features"]), {"on", "of"})
-        self.assertEqual(d["features"]["on"], 0)            # everything off for a new profile
+        self.assertEqual(d["features"]["on"], d["features"]["of"])   # a new profile may use all that is released
         self.assertTrue(d["main"])
         self.assertEqual(set(d["rights"]), {"agent", "update", "quota", "vorrang"})
         self.assertEqual(d["rights"]["agent"]["level"], "")
         self.assertIsInstance(d["sessions"], list)
         self.assertEqual(len(d["sessions"]), 1)              # the login above
         lst = ADMIN.get("/api/admin/profiles").json()
-        self.assertEqual(set(lst["guests"]), {"public", "features"})
+        self.assertEqual(set(lst["guests"]), {"public"})
         self.assertIn("role", next(u for u in lst["users"] if u["id"] == uid))
 
     def test_function_count_follows_the_switches(self):
         c, uid = profile("DetaFin")
         helpers.set_config(weather=True)
+        self.addCleanup(helpers.set_config, weather=False)
         on, of = features.count(uid)
-        self.assertEqual(on, 0)
         self.assertGreaterEqual(of, 1)
-        self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, 200)
-        self.assertEqual(features.count(uid), (1, of))
+        block(self, "weather", uid)
+        self.assertEqual(features.count(uid), (on - 1, of))
         helpers.set_config(weather=False)
-        self.assertEqual(features.count(uid), (0, of - 1))   # what the Spark switched off does not count
+        self.assertEqual(features.count(uid), (on - 1, of - 1))   # what the Spark switched off does not count
+        block(self, "weather", uid, on=True)
+        self.assertEqual(features.count(uid), (on - 1, of - 1))
 
     def test_agent_level_per_profile(self):
         c, uid = profile("DetaGus")

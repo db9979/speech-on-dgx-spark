@@ -114,7 +114,11 @@ async def prepare(request):
     marked = [i for i, m in enumerate(messages) if m.get("mark")]
     carry = messages[marked[-1]]["mark"] if marked and marked[-1] >= len(messages) - 3 else None
     came_from = carry   # what the answer right before rested on (for learning from corrections)
-    search = bool(ccfg.get("search") and ccfg.get("search_url"))
+    # Guests (no profile) and a voice the shared speaker did not recognize only ask and get answers: no tool, no
+    # memory, no history, no timers, no web search (Dominik 2026-10-13: "einfach bloß Frage, Antwort"). Fixed rule.
+    me0 = profiles.current(request)
+    guest = not me0 or bool(shared_stranger(request, body, me0))
+    search = bool(ccfg.get("search") and ccfg.get("search_url")) and not guest
     # The answer before came from mail (also a mail note the assistant made by itself): kept in this
     # turn it would lock the web search too (its text could carry the mail away). So it is kept only
     # when the new question goes on about it ("Was schreibt sie noch?"); any other question (or one
@@ -137,13 +141,12 @@ async def prepare(request):
             print("chat: answer from outside text before; this message asks to write to someone - that answer "
                   "is left out, messages offered", flush=True)
     # the switch (intent.py): what the person's own latest message asks for, by fixed rules only.
-    # With the admin's chat.routing and the profile's "route" on, it narrows the tools (further down)
+    # With the admin's chat.routing on (released for the profile), it narrows the tools (further down)
     # and a new request of the person's own that does not point back at an answer made from outside
     # text leaves that answer out, and with it its lock ("Setz das auf die Liste" keeps it locked).
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     route = intent.classify_cfg(ask0, ccfg)
-    me0 = profiles.current(request)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     # "Frag Spark" (hilfe.py): asked from a page of the panel, the question is about the Spark itself (a fixed
     # rule on where it was asked, never the model); the admin's own login only counts for the Spark's switches
@@ -210,15 +213,16 @@ async def prepare(request):
         else:
             system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
     # why the search is (not) offered, for the journal and for the model (never silently missing)
-    print("chat: web search", "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
+    print("chat: web search", "NOT offered: guest, only questions and answers" if guest
+          else "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
           else "NOT offered: no SearXNG address" if not search
           else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
     if cache_on and search and carry == "mail":   # the usual hint stays, the lock goes with the question
         system = (system + "\n\n" + chat.SEARCH_HINT).strip()
         turn_notes.append(chat.SEARCH_LOCKED_HINT)
     else:
-        system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search
-                                      else chat.SEARCH_OFF_HINT)).strip()
+        system = (system + "\n\n" + (chat.GUEST_HINT if guest else chat.SEARCH_LOCKED_HINT if search and carry == "mail"
+                                      else chat.SEARCH_HINT if search else chat.SEARCH_OFF_HINT)).strip()
     who = profiles.current(request)
     # A shared device (an own speaker in a room, see esp32.py): anyone in the room can talk to it, so
     # the device key alone is nobody's word. Personal things (mail, calendar, memory, documents,
@@ -481,14 +485,9 @@ async def prepare(request):
         system = per_turn(system, chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
                                                  wissen.on(who["id"], "brief")))
     docs = docs + shared_docs
-    timers = bool(ccfg.get("reminders", True))
+    timers = bool(ccfg.get("reminders", True)) and not guest
     if timers:
         system = (system + "\n\n" + chat.REMINDER_HINT).strip()
-    # guests keep their reminders in the browser, which sends them along; profiles keep them on the Spark
-    guest_rem = [{"id": x["id"][:16], "text": str(x.get("text", ""))[:200], "due": x["due"]}
-                 for x in (body.get("reminders") if isinstance(body.get("reminders"), list) else [])
-                 if isinstance(x, dict) and isinstance(x.get("id"), str)
-                 and isinstance(x.get("due"), (int, float))][:50] if not who else []
     # e-mail like Home Assistant: only for the profile's own login or device key
     mailbox = bool(who and own_browser and private_ok and not mcp and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
     if mailbox:
@@ -503,7 +502,7 @@ async def prepare(request):
         system = (system + "\n\n" + chat.TIDY_HINT).strip()
     if drafts_on:
         system = (system + "\n\n" + chat.DRAFT_HINT).strip()
-    briefing = bool(ccfg.get("calendar", True))
+    briefing = bool(ccfg.get("calendar", True)) and not guest
     cal_note = list(kl_note)
     if role_cmd:   # shown in the tool log like a tool the panel ran itself
         cal_note.append({"name": {"notaus": "Notaus (Panel)", "meldung": "Meldung (Panel)", "bewertung": "Bewertung (Panel)",
@@ -616,7 +615,7 @@ async def prepare(request):
             cal_note.append(basis[1])
             system = per_turn(system, basis[0])
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
-    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
+    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, who["id"])
                   and messages[-1]["role"] == "user" and not mcp and not act_held)
     fix_fix, fix_prev = False, ""
     if fix_ok and not prop and not mprop and not xprop and not pro and not kl_took:
@@ -705,6 +704,9 @@ async def prepare(request):
     if mcp:   # only what the connection was given (mcpserver.ASK_TOOLS), never more than the rights above left
         tools = [t for t in tools if t["function"]["name"] in mcp["tools"]]
     if pics or role_cmd:
+        tools = []
+    if guest and tools:   # the fixed rule above, once more as a net: whatever offered something, a guest gets no tool
+        print(f"chat: guest - {len(tools)} tools withheld, only questions and answers", flush=True)
         tools = []
     if room_far:
         if not xprop:   # a guest or a voice of another profile: the fixed answer, nothing else
@@ -898,8 +900,8 @@ async def prepare(request):
         weiche.count(route, len(tools), all_tools, direct)
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
-    # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
-    think_tools = bool(who and own_browser and features.admin_on("toolthink", ccfg) and pset.get("tool_think") is True)
+    # thinking only while choosing the tool: released by the admin for this profile (never guests)
+    think_tools = bool(who and own_browser and features.allowed("toolthink", who["id"], ccfg))
     small = bool(chat.SMALLTALK.fullmatch(ask_text))
     if tools_stable is not None and tools_stable:
         names = [t["function"]["name"] for t in tools]

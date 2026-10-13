@@ -133,7 +133,7 @@ def running(uid):
 async def stream(request: Request, prof=Depends(own_profile)):
     uid = prof["id"]
     if not live_on(uid):
-        raise HTTPException(403, "Sofort-Abgleich ist aus (Ich → Gespräch → Verlauf)")
+        raise HTTPException(403, ("Sofort-Abgleich geht für dich gerade nicht. " + features.missing_text("verlaufsync", uid)).strip())
     guard.limit(request, "convostream", uid)
     loop, q, sid = asyncio.get_running_loop(), asyncio.Queue(maxsize=QUEUE), secrets.token_hex(6)
     with _lock:

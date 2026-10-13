@@ -104,9 +104,9 @@ struct Allowed: Equatable {
     var areas: Set<String> = []
     /// the profile's own admin role ("coadmin" or "manager", V01.0.255): "Mit meinem Profil anmelden" in Spark verwalten
     var adminRole = ""
-    /// "Problem melden" (meldung.py): admin switch chat.report and the profile's switch report_on
+    /// "Problem melden" (meldung.py): admin switch chat.report, not blocked for this profile
     var report = false
-    /// "Vom Spark erstellt" (docmake.py): admin switch chat.doc_make and the profile's doc_make
+    /// "Vom Spark erstellt" (docmake.py): admin switch chat.doc_make, not blocked for this profile
     var make = false
 }
 

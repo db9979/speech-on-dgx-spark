@@ -33,23 +33,25 @@ def code_of(setup):
 
 class Pebble(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(pebble=True)
+        helpers.set_config(pebble=True, deny={})
         pebblewatch._pending.clear()
         for k in [k for k in guard._rate if k[0] == "pair"]:   # every test client shares one address
             guard._rate.pop(k, None)
 
     def tearDown(self):
-        helpers.set_config(pebble=False, face="robot")
+        helpers.set_config(pebble=False, face="robot", deny={})
 
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["pebble"], False)
-        self.assertIs(profiles.SETTINGS["pebble_on"][0], False)
+        self.assertNotIn("pebble_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
 
     def test_pairing_needs_both_switches_and_works_once(self):
         a = profile("Paula")
+        uid = next(u["id"] for u in profiles.names() if u["name"] == "Paula")
+        helpers.set_config(deny={"pebble": [uid]})   # the admin blocks this profile
         self.assertEqual(a.post("/api/profile/pebble/pair", json={"base": BASE}).status_code, 403)
-        a.put("/api/profile/settings", json={"pebble_on": True})
+        helpers.set_config(deny={})
         helpers.set_config(pebble=False)
         self.assertEqual(a.post("/api/profile/pebble/pair", json={"base": BASE}).status_code, 403)
         helpers.set_config(pebble=True, face="comic")
@@ -69,7 +71,6 @@ class Pebble(unittest.TestCase):
 
     def test_admin_sees_it_fixed_and_cannot_move_it(self):
         a, _ = profile("Pius"), profile("Pia")
-        a.put("/api/profile/settings", json={"pebble_on": True})
         code = code_of(a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])
         self.assertEqual(TestClient(panel.app).post("/api/pebble/pair", json={"code": code}).status_code, 200)
         uid = next(u["id"] for u in profiles.names() if u["name"] == "Pius")
@@ -96,7 +97,6 @@ class Pebble(unittest.TestCase):
 
     def test_key_only_reaches_the_watch_paths(self):
         a = profile("Pepe")
-        a.put("/api/profile/settings", json={"pebble_on": True})
         code = code_of(a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])
         app = TestClient(panel.app)
         h = {"X-Speech-Device": app.post("/api/pebble/pair", json={"code": code}).json()["token"]}
@@ -108,10 +108,12 @@ class Pebble(unittest.TestCase):
             self.assertEqual(app.post("/api/siri/ask", json={"text": "Hi"}, headers=h).status_code, 401)
             self.assertEqual(app.get("/api/profile/settings", headers=h).status_code, 401)
             self.assertEqual(app.post("/api/profile/pebble/pair", json={"base": BASE}, headers=h).status_code, 401)
-            # switched off: the key stops at once (profile switch, then admin switch)
-            a.put("/api/profile/settings", json={"pebble_on": False})
+            # switched off: the key stops at once (the admin blocks the profile, then the admin switch)
+            uid = next(u["id"] for u in profiles.names() if u["name"] == "Pepe")
+            helpers.set_config(deny={"pebble": [uid]})
             self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 503)   # "not now", pairing stays (V01.0.388)
-            a.put("/api/profile/settings", json={"pebble_on": True})
+            helpers.set_config(deny={})
+            self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 404)   # released: back at once
             helpers.set_config(pebble=False)
             self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 503)
         finally:

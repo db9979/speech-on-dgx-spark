@@ -118,7 +118,7 @@ def caller(request):
     if not prof:
         raise HTTPException(401, "login required")
     if not features.allowed("melden", prof["id"]):
-        raise HTTPException(403, "Probleme melden ist für dich aus (Ich → Probleme melden).")
+        raise HTTPException(403, "Probleme melden geht für dich gerade nicht. " + features.missing_text("melden", prof["id"]))
     return {"uid": prof["id"], "name": prof["name"], "channel": _channel(request, dev), "logs": False, "staff": False}
 
 
@@ -880,7 +880,7 @@ async def by_phrase(uid, name, text, channel="sprache"):
     if not admin_on():
         return "Probleme melden ist auf diesem Spark ausgeschaltet."
     if not features.allowed("melden", uid):
-        return "Probleme melden ist für dich aus. Einschalten unter Ich → Probleme melden."
+        return "Probleme melden geht für dich gerade nicht. " + features.missing_text("melden", uid)
     try:
         create(uid, name, channel, text, "sonstiges", 30)
     except HTTPException as e:

@@ -1,5 +1,5 @@
 """The switch (intent.py): which group a question belongs to, by fixed rules from the person's own words;
-with the admin's and the profile's switch on, the model sees only that group's tools, a group with one
+with the admin's switch on (and the profile not blocked by the admin), the model sees only that group's tools, a group with one
 tool must call it, and a new request in the person's own words lifts the lock after outside text.
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
@@ -33,11 +33,17 @@ def tool(name):
 
 
 def profile(name, route=True):
+    """A logged-in profile; route=False: the admin blocks the Weiche for it (chat.deny, Funktionen → Wer darf was).
+    The Turns tests clear chat.deny again in tearDown."""
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": "1234"})
     assert r.status_code in (200, 409), r.text
     c = TestClient(panel.app)
     assert c.post("/api/profile/login", json={"name": name, "pin": "1234"}).status_code == 200
-    c.put("/api/profile/settings", json={"route": route})
+    uid = c.get("/api/whoami").json()["profile"]["id"]
+    with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        deny = dict(json.load(f)["chat"].get("deny") or {})
+    deny["routing"] = [u for u in deny.get("routing", []) if u != uid] + ([] if route else [uid])
+    helpers.set_config(deny=deny)
     return c
 
 
@@ -113,7 +119,7 @@ class Turns(unittest.TestCase):
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):
-        helpers.set_config(routing=False, route_model="off", public=False)
+        helpers.set_config(routing=False, route_model="off", public=False, deny={})
 
     def test_off_by_default_and_per_profile(self):
         with open(helpers.os.path.join(helpers.APP, "config.default.json")) as f:
@@ -126,7 +132,7 @@ class Turns(unittest.TestCase):
             helpers.set_config(routing=cfg)
             helpers.LLM_CALLS.clear()
             p = profile("Weiche1", route=prof)
-            self.assertEqual(p.get("/api/profile/settings").json()["allow"]["route"], cfg)
+            self.assertEqual(p.get("/api/profile/settings").json()["allow"]["route"], cfg and prof)
             chat_with(p, q)
             self.assertTrue(full <= offered(streamed()[0]), (cfg, prof))
             self.assertEqual(streamed()[0].get("tool_choice"), "required")
@@ -202,7 +208,7 @@ class Turns(unittest.TestCase):
         helpers.LLM_CALLS.clear()
         chat_with(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])   # a rule: its group
         self.assertEqual(offered(streamed()[0]), {"memory_save", "reminder_set", "reminder_list", "reminder_cancel"})
-        # the profile's switch off: everything as before, also with "lean"
+        # the admin blocked the Weiche for this profile: everything as before, also with "lean"
         helpers.LLM_CALLS.clear()
         q = profile("Weiche7", route=False)
         chat_with(q, [{"role": "user", "content": "Erzähl mir einen Witz"}])
@@ -226,7 +232,7 @@ class Explain(unittest.TestCase):
     """B4 „Erklären statt Schweigen“ (V01.0.286): asked for a function the turn does not offer, the reason comes from
     the panel's rules, never from the model; nothing when the function is offered or the question is unclear."""
     def tearDown(self):
-        helpers.set_config(weather=False)
+        helpers.set_config(weather=False, deny={})
 
     def test_reason_from_the_rules(self):
         wx = intent.classify("Wie wird das Wetter morgen?")
@@ -246,9 +252,11 @@ class Explain(unittest.TestCase):
         self.assertEqual([(e["key"], e["why"]) for e in ev], [("weather", "spark")])
         self.assertEqual(ev[0]["name"], ["Wetter", "Weather"])
         helpers.set_config(weather=True)
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(deny={"weather": [uid]})          # the admin blocks weather for this one profile
         ev = [e for e in chat_with(p, [{"role": "user", "content": "Wie wird das Wetter morgen?"}]) if e["type"] == "why"]
-        self.assertEqual([(e["why"], e["me"]) for e in ev], [("profile", "wxbox")])
-        p.put("/api/profile/settings", json={"wx_on": True})
+        self.assertEqual([(e["why"], e["me"]) for e in ev], [("blocked", "")])
+        helpers.set_config(deny={})                           # released: works at once, nothing to explain
         ev = [e for e in chat_with(p, [{"role": "user", "content": "Wie wird das Wetter morgen?"}]) if e["type"] == "why"]
         self.assertEqual(ev, [])
 
@@ -292,7 +300,7 @@ class OwnWords(unittest.TestCase):
         # admin only: not for a profile or a guest
         helpers.set_config(public=True)
         try:
-            for c in (profile("Weiche6", route=True), TestClient(panel.app)):
+            for c in (profile("Weiche6"), TestClient(panel.app)):
                 self.assertIn(c.get("/api/admin/routing").status_code, (401, 403))
                 self.assertIn(c.post("/api/admin/routing/test", json={"text": "Licht an"}).status_code, (401, 403))
         finally:

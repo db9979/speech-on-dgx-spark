@@ -7,7 +7,7 @@ open on. The link opens the app (spark-app://pair?url=...&code=...); the app sen
 once and for CODE_SECONDS; only its hash is kept, in memory.
 
 A key with scope "app" only asks and listens (profiles.APP_PATHS: chat, speech recognition, the Siri
-question, hello). It works only while the admin switch chat.iphone and the profile's app_on are on.
+question, hello). It works only while the admin switch chat.iphone is on and the admin has not blocked the profile.
 Switching the smart home from the app needs the profile's app_ha as well (chat.py), plus the code word
 as everywhere. Removing the iPhone in the panel stops its key at once.
 """
@@ -106,10 +106,13 @@ AREAS = {
 }
 RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts", "app_admin")
 # conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
-MINE_FIELDS = ("daily", "learn", "fix_learn", "tool_think", "route")
-# document switches (Ich -> Dokumente) with "Dokumente verwalten", services with "Von selbst"
-DOC_FIELDS = ("doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_due")
-AUTO_FIELDS = ("wx_on", "par_on", "transit_on", "agent_on")
+MINE_FIELDS = ("daily", "learn")
+# document settings (Ich -> Dokumente) with "Dokumente verwalten"; the functions themselves follow the admin release
+DOC_FIELDS = ("doc_due",)
+AUTO_FIELDS = ()
+# switches older apps still send although the admin release alone decides now (Freigabe vereinfachen): ignored
+GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
+                  "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on"))
 
 
 def panel_on():
@@ -304,7 +307,7 @@ def app_hello(prof=Depends(own_profile)):
     return {"profile": prof["name"], "version": app_version(), "language": _language(),
             # what the profile allows the app (the panel decides; the app only shows and follows it)
             "listen": bool(s.get("app_listen")), "act": bool(s.get("app_act")),
-            "proactive": bool(proactive.enabled() and s.get("pro_on")),
+            "proactive": bool(proactive.enabled() and features.allowed("proactive", prof["id"])),
             "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
             # the face the admin picked for everybody (Einstellungen → Vorgaben), only names from the fixed list
             "face": face if face in FACES else "robot",
@@ -403,15 +406,17 @@ def app_settings(request: Request, prof=Depends(own_profile)):
             "style": p.get("style", "") if features.admin_on("style", chat) else None,
             "rights": {k: bool(p.get(k)) for k in RIGHTS},
             "allow": {"proactive": proactive.enabled(), "documents": features.admin_on("documents", chat)},
-            # services the profile switched on in the panel ("Von selbst" can only use those)
-            "services": {k: bool(p.get(k)) for k in ("wx_on", "par_on", "con_on", "transit_on")}}
+            # services the admin released for this profile ("Von selbst" can only use those)
+            "services": {k: features.allowed(f, prof["id"], chat)
+                         for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("con_on", "contacts"),
+                                      ("transit_on", "transit"))}}
 
 
 @router.put("/api/iphone/settings", dependencies=[Depends(assistant)])
 async def app_settings_save(request: Request, prof=Depends(own_profile)):
     _app_only(request)
     guard.limit(request, "chat", prof["id"], False)
-    body = await _json(request, SETTINGS_BODY)
+    body = {k: v for k, v in (await _json(request, SETTINGS_BODY)).items() if k not in GONE}
     fields = _fields(prof["id"])
     wrong = [k for k in body if k not in fields]
     if wrong:

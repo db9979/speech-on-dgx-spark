@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.509** Simpler release: what the admin releases works at once for every profile, only the admin blocks single profiles; guests only get questions and answers
 - **V01.0.508** Own tasks: watching reports only what is new (firmware, episode, price), all own tasks under Me → Jobs to change and pause
 - **V01.0.507** Pebble watch app shows the comic woman
 - **V01.0.506** New page Status → Architecture: parts, the way of a request and every storage place to click through, always from the code
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.502** GitHub tests run in four parts at the same time: a run takes about a quarter as long; batched push in the guideline and CLAUDE.md
 - **V01.0.501** Connect a NAS once (Synology and others): own storage and the backup take address, password and certificate from there
 - **V01.0.500** reMarkable: ticks hit their boxes again, list tidied, cloud errors with their reason in the log
-- **V01.0.499** Docling server in the home network reads documents and scans again with tables (admin, off by default)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

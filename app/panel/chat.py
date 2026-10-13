@@ -261,6 +261,11 @@ SEARCH_TOOL = {"type": "function", "function": {
 SEARCH_OFF_HINT = ("Eine Websuche hast du gerade nicht: Sie ist im Panel nicht eingeschaltet oder es fehlt die "
                    "SearXNG-Adresse (Funktionen → Websuche). Will der Nutzer etwas im Internet "
                    "nachsehen, sag ihm genau das und antworte nicht aus Vermutungen.")
+# guests and a voice a shared speaker did not recognize only ask and get answers (Dominik 2026-10-13)
+GUEST_HINT = ("Du sprichst mit einem Gast ohne Profil. Du hast keine Werkzeuge: kein Internet, keine Timer oder "
+              "Erinnerungen, keine Termine, kein Gedächtnis, kein Smart Home. Beantworte Fragen aus deinem eigenen Wissen. "
+              "Braucht eine Frage etwas Aktuelles oder eine dieser Funktionen, sag ehrlich in einem Satz, dass das als Gast "
+              "nicht geht und mit einem eigenen Profil möglich ist; erfinde nichts.")
 SEARCH_LOCKED_HINT = ("Die Websuche ist in dieser Antwort gesperrt, weil die Antwort davor aus E-Mails stammt (eine Mail "
                       "könnte sonst Inhalte ins Internet tragen). Will der Nutzer etwas im Internet nachsehen, sag ihm "
                       "das kurz und bitte ihn, die Frage gleich noch einmal zu stellen; dann geht die Suche wieder.")

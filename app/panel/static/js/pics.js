@@ -1,9 +1,9 @@
 // Pictures for the assistant (images.py): attach a photo, then ask by typing or speaking. Only for
-// profiles with the admin's and their own switch (ALLOW.images, S.images_on). The browser makes the
+// profiles the admin allows it for (ALLOW.images). The browser makes the
 // picture smaller first; the Spark cleans it again and keeps it in memory only, 10 minutes after its
 // last use, so follow-up questions about it work. Removing the chip (✕) or a new conversation drops it.
 const pics={list:[],max:3,side:1280,keep:600};
-function picsOn(){return !!(PROFILE&&ALLOW.images&&S.images_on)}
+function picsOn(){return !!(PROFILE&&ALLOW.images)}
 function picsShow(){const on=picsOn();$('chatpic').hidden=!on;$('mpic').hidden=!on;if(!on&&pics.list.length)picsClear();picsRender()}
 function picsRender(){const box=$('chatpics');picsPrune();box.hidden=!pics.list.length;
   document.querySelector('.composer').classList.toggle('haspic',!!pics.list.length);

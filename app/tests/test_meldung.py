@@ -2,6 +2,7 @@
 text the person saw in the preview, only with the admin's and the profile's switch, never for guests, never with a
 name, a mail address, an address of the home network or a secret in it. GitHub is faked here; no test depends on
 the time of day."""
+import asyncio
 import json
 import os
 import time
@@ -56,15 +57,22 @@ def admin():
     return c
 
 
-def profile(name, pin="1234", on=True):
+def profile(name, pin="1234"):
     a = admin()
     r = a.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = client()
     assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
     uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
-    profiles.save_settings(uid, {"report_on": on})
     return c, uid
+
+
+def block(tc, uid, on=False):
+    """The admin blocks (on=False) or allows again (on=True) "Probleme melden" for one profile (chat.deny)."""
+    r = admin().put(f"/api/admin/features/melden/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, True)
 
 
 class Base(unittest.TestCase):
@@ -132,7 +140,7 @@ class Switches(Base):
     def test_off_by_default_and_never_for_guests(self):
         with open(meldung.features.DEFAULTS) as f:
             self.assertIs(json.load(f)["chat"]["report"], False)
-        self.assertIs(profiles.SETTINGS["report_on"][0], False)
+        self.assertNotIn("report_on", profiles.SETTINGS)    # no profile switch: the admin's release counts
         helpers.set_config(report=False)
         c, _ = profile("RpRudi")
         self.assertEqual(c.get("/api/report").status_code, 404)
@@ -143,8 +151,20 @@ class Switches(Base):
             self.assertEqual(client().get("/api/report").status_code, 401)        # guests never
         finally:
             helpers.set_config(public=False)
-        q, _ = profile("RpRita", on=False)
-        self.assertEqual(q.get("/api/report").status_code, 403)                   # the profile's own switch
+        q, uq = profile("RpRita")
+        self.assertEqual(q.get("/api/report").status_code, 200)                   # released: at once for every profile
+        block(self, uq)
+        r = q.get("/api/report")
+        self.assertEqual(r.status_code, 403)                                       # the admin blocked this profile
+        self.assertIn("Funktionen → Wer darf was", r.json()["detail"])
+        self.assertNotIn("Ich →", r.json()["detail"])                              # no profile switch to point to
+        said = asyncio.run(meldung.by_phrase(uq, "RpRita", "Problem melden: geht nicht", "telegram"))
+        self.assertIn("geht für dich gerade nicht", said)
+        self.assertIn("Funktionen → Wer darf was", said)
+        self.assertNotIn("Ich →", said)
+        self.assertEqual(q.get("/api/report").status_code, 403)
+        block(self, uq, True)
+        self.assertEqual(q.get("/api/report").status_code, 200)
 
     def test_profile_sees_only_its_own_and_no_diagnose_lines(self):
         c, uid = profile("RpPaula")
@@ -292,7 +312,7 @@ class AdminNote(Base):
         import notaus
         import proactive
         meldung.token_save(TOKEN)
-        _, boss = profile("RpChefin", on=False)
+        _, boss = profile("RpChefin")
         c, uid = profile("RpSven")
         real = notaus.admin_uids
         notaus.admin_uids = lambda: [boss, uid]

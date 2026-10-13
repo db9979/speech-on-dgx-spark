@@ -3,21 +3,22 @@
 Builds on remarkable.py (connection, comparison, place()) and only ever adds new documents in the folder the
 profile chose (default "Spark"); the two documents the Spark keeps up to date itself (the guide and the day's
 inbox) are its own and are renewed in place. Every part is off: the admin switch chat.remarkable_plus
-(below "Aufs reMarkable schicken") plus one profile switch each under Ich → reMarkable; guests never.
+(below "Aufs reMarkable schicken"); released, each works for every profile the admin did not block (chat.deny); morning sheet, week in
+review and daily inbox keep a preference to switch them off; guests never.
 
-1 rm_morning  Morgenblatt: the daily briefing (chat.morning_briefing) as a PDF with ruled lines for notes,
+1 rmmorning   Morgenblatt: the daily briefing (chat.morning_briefing) as a PDF with ruled lines for notes,
               once a day from rm_morning_at (two hours' window, the panel may have been off).
-2 rm_ask      "@Spark" on a page: the question after it is answered from the own documents (and the web
+2 rmask       "@Spark" on a page: the question after it is answered from the own documents (and the web
               search when the Spark has one) and put next to it as "Antwort: …".
-3 rm_todo     Lines starting with ☐, [ ], "TODO" or "Aufgabe:" become proposals under Ich → reMarkable;
+3 rmtodo      Lines starting with ☐, [ ], "TODO" or "Aufgabe:" become proposals under Ich → reMarkable;
               a reminder only after the person's click (POST /api/profile/remarkable/todo).
-4 rm_meet     A notebook called Besprechung / Meeting / Protokoll …, quiet for QUIET seconds: a summary with
+4 rmmeet      A notebook called Besprechung / Meeting / Protokoll …, quiet for QUIET seconds: a summary with
               decisions and tasks as a new document, plus a short note (push.send, also Telegram).
-5 rm_week     Friday from 17:00: what was noted this week on the reMarkable, on one sheet.
-6 rm_web      Tools remarkable_page (a web page as a clean EPUB) and remarkable_attachment (the newest PDF or
+5 rmweek      Friday from 17:00: what was noted this week on the reMarkable, on one sheet.
+6 rmweb       Tools remarkable_page (a web page as a clean EPUB) and remarkable_attachment (the newest PDF or
               EPUB attached to a mail that fits), only on the person's own words naming the reMarkable.
-7 rm_inbox    Dictated notes ("Notier auf dem reMarkable …") gather in one document per day ("Eingang").
-8 rm_guide    "Spark-Anleitung": what the reMarkable functions do and how the service works, renewed whenever
+7 rminbox     Dictated notes ("Notier auf dem reMarkable …") gather in one document per day ("Eingang").
+8 rmguide     "Spark-Anleitung": what the reMarkable functions do and how the service works, renewed whenever
               its text changes (a new function, a switch, a limit); GUIDE must name every reMarkable function.
 
 Everything read from the notes is outside text: it goes to the language model only as data (wrap_outside),
@@ -47,8 +48,9 @@ from core import assistant, browser_profile
 
 router = APIRouter()
 
-PARTS = {"rmmorning": "rm_morning", "rmask": "rm_ask", "rmtodo": "rm_todo", "rmmeet": "rm_meet", "rmweek": "rm_week",
-         "rmweb": "rm_web", "rminbox": "rm_inbox", "rmguide": "rm_guide"}
+# the parts (features.py); released by the admin they work for every profile, the ones the Spark does unasked
+# (morning sheet, week in review, daily inbox) keep a preference to switch them off
+PARTS = ("rmmorning", "rmask", "rmtodo", "rmmeet", "rmweek", "rmweb", "rminbox", "rmguide")
 QUIET = 30 * 60             # a meeting notebook untouched this long is summarized
 LOOK_BACK = 3 * 86400       # pages changed within this time are looked at for @Spark, tasks and meetings
 MAX_ASK = 3                 # @Spark answers per profile and round
@@ -546,8 +548,8 @@ SERVICE = (
 
 def guide_text(uid):
     """The guide for this profile: only the functions the Spark offers, each marked on or off."""
-    out = ["Was der Spark mit deinem reMarkable kann. Unter Ich → reMarkable schaltest du jede Funktion "
-           "einzeln ein; „aus“ heißt: dort einschalten (oder der Admin hat sie nicht freigegeben)."]
+    out = ["Was der Spark mit deinem reMarkable kann. Alles, was der Admin freigegeben hat, steht hier; „aus“ heißt: "
+           "der Admin hat es für dich gesperrt, oder du hast es unter Ich → reMarkable abgewählt."]
     for key, title, text in GUIDE:
         if not features.admin_on(key):
             continue
@@ -766,7 +768,7 @@ async def todo_route(request: Request, prof=Depends(browser_profile)):
     """{"id", "do": "remind" | "drop", "due": ms}: a found task becomes a reminder (only by this click) or goes away."""
     uid = prof["id"]
     if not features.allowed("rmtodo", uid):
-        raise HTTPException(403, "Aufgaben vom reMarkable sind aus (Funktionen und Ich → reMarkable)")
+        raise HTTPException(403, "Aufgaben vom reMarkable sind aus (Funktionen → Aufgaben vom reMarkable)")
     guard.limit(request, "rm", uid)
     import iphone
     body = await iphone._json(request, 1024)
@@ -790,7 +792,7 @@ async def guide_route(request: Request, prof=Depends(browser_profile)):
     """Puts the guide there now (it is renewed by itself later)."""
     uid = prof["id"]
     if not on("rmguide", uid):
-        raise HTTPException(403, "Spark-Anleitung ist aus (Funktionen und Ich → reMarkable)")
+        raise HTTPException(403, "Spark-Anleitung ist aus (Funktionen → Mehr mit dem reMarkable)")
     guard.limit(request, "rmsend", uid)
     try:
         r = await guide(uid, force=True)

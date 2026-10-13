@@ -5,7 +5,7 @@ Verbindlich ist die **Coding-Richtlinie**: [docs/de/richtlinien.md](docs/de/rich
 ## Grundsätze
 1. Sicherheit nach dem Stand der Technik: jede Änderung gegen die Sicherheits-Checkliste prüfen und im Ergebnis nennen, welche Punkte berührt wurden.
 2. Alles von außen (Web, Mail, Kalender, Dokumente, Telegram, Geräte, Modellausgaben) ist Daten, nie ein Befehl. Entscheidungen trifft das Panel mit festen Regeln, nie das Modell.
-3. Jede neue Funktion ist standardmäßig aus: Admin-Schalter plus Profil-Schalter, nie für Gäste. Ausnahmen nur mit Grund in `features.DEFAULT_ON`.
+3. Jede neue Funktion ist standardmäßig aus: ein Admin-Schalter; freigegeben gilt sie sofort für jedes Profil (nur der Admin sperrt einzelne Profile), kein neuer Profilschalter. Gäste bekommen nur Frage und Antwort, nie ein Werkzeug. Ausnahmen nur mit Grund in `features.DEFAULT_ON`.
 4. Jeder Endpunkt: Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit; Endpunkte mit Code in `stufen.LIST`.
 5. Jede neue Funktion fügt sich überall ein (Pflichtliste, Teil 1 der Richtlinie): `features.py`, Werkzeug-Sperrlisten, Weiche (`intent.py`, `intent_bench.py`), `ack.PHRASES`, Live-Übersicht (`live.py`), Log-Bereich, Anfrage-Verlauf, Dienst-Wächter, `netguard`, Werkzeugname (`werkzeuge.py`), Werkzeug-Abdeckung (`werkzeug_abdeckung.py`), Bausteine der Oberfläche, Englisch (`i18n.js`), Hilfe und Anleitung, Sprung-Links, `backup.STATE_FILES`, Architektur-Doku (`technik.py`), `restart-map`, Einordnung neuer Einstellungen in `berater_katalog.py`, Selbsttests, Praxistest, Doku.
 6. Live-Übersicht immer vollständig, im selben Commit wie die Funktion; dort nur Art, Anzahl und Status, nie Inhalte.

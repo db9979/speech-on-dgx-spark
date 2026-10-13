@@ -122,7 +122,7 @@ class Prompt(unittest.TestCase):
 
 class Panel(unittest.TestCase):
     def tearDown(self):
-        helpers.set_config(memory_check=False)
+        helpers.set_config(memory_check=False, deny={})
 
     def test_off_by_default_and_never_for_guests(self):
         self.assertFalse(features.admin_on("gedpruefen"))
@@ -131,8 +131,14 @@ class Panel(unittest.TestCase):
         d = c.get("/api/profile/memory").json()
         self.assertFalse(d["check"])
         helpers.set_config(memory_check=True)
-        self.assertFalse(g.on(uid))                                   # the profile has not switched it on
+        self.assertTrue(g.on(uid))                                    # released by the admin: on for the profile at once
         self.assertTrue(c.get("/api/profile/settings").json()["allow"]["mem_check"])
+        helpers.set_config(deny={"gedpruefen": [uid]})                # the admin blocks this one profile
+        self.assertFalse(g.on(uid))
+        self.assertFalse(c.get("/api/profile/memory").json()["check"])
+        self.assertFalse(c.get("/api/profile/settings").json()["allow"]["mem_check"])
+        helpers.set_config(deny={"memory": [uid]})                    # ... or the Gedächtnis it builds on
+        self.assertFalse(g.on(uid))
         self.assertEqual(TestClient(panel.app).get("/api/profile/memory").status_code, 401)
         self.assertEqual(TestClient(panel.app).post("/api/profile/memory/x/confirm", json={}).status_code, 401)
         self.assertFalse(g.on(None))
@@ -155,7 +161,6 @@ class Panel(unittest.TestCase):
     def test_marks_and_confirm(self):
         c, uid = profile("Gedc")
         helpers.set_config(memory=True, memory_check=True)
-        self.assertEqual(c.put("/api/profile/settings", json={"mem_check": True}).status_code, 200)
         with profiles._lock:
             profiles._write(profiles._path(uid, "memory.json"), [
                 {"id": "f1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True},
@@ -189,7 +194,6 @@ class Panel(unittest.TestCase):
     def test_model_gets_blocks_only_with_the_switches(self):
         c, uid = profile("Gedd")
         helpers.set_config(memory=True, memory_check=True)
-        c.put("/api/profile/settings", json={"mem_check": True})
         with profiles._lock:
             profiles._write(profiles._path(uid, "memory.json"), [
                 {"id": "f1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True}])
@@ -201,7 +205,7 @@ class Panel(unittest.TestCase):
             helpers.events(r)
             return next(x for x in helpers.LLM_CALLS if x.get("stream"))["messages"][0]["content"]
         self.assertIn("Vielleicht veraltet", system())
-        c.put("/api/profile/settings", json={"mem_check": False})
+        helpers.set_config(deny={"gedpruefen": [uid]})               # the admin blocks it for this profile
         s = system()
         self.assertNotIn("Vielleicht veraltet", s)
         self.assertIn("Fährt einen VW Golf.", s)
@@ -211,7 +215,7 @@ class Versions(unittest.TestCase):
     """Fassungen: a correction about the same thing replaces the wording and keeps the old one (at most 5), the
     person can bring an earlier one back; with the switch off a correction is a new fact as before."""
     def tearDown(self):
-        helpers.set_config(memory_check=False)
+        helpers.set_config(memory_check=False, deny={})
 
     def test_correction_becomes_a_version(self):
         c, uid = profile("Gedv")
@@ -221,7 +225,6 @@ class Versions(unittest.TestCase):
         with profiles._lock:
             profiles._write(profiles._path(uid, "memory.json"), [])
         helpers.set_config(memory=True, memory_check=True)
-        c.put("/api/profile/settings", json={"mem_check": True})
         profiles.remember(uid, "Wohnt in Pforzheim.", src="said")
         profiles.remember(uid, "Mag Tee.", src="said")
         for town in ("Karlsruhe", "Ulm", "Bonn", "Kiel", "Jena", "Gera"):
@@ -246,7 +249,12 @@ class Versions(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post(f"/api/profile/memory/{f['id']}/restore", json={"i": 0}).status_code, 401)
         # another profile never reaches this fact
         c2, _ = profile("Gedw")
-        self.assertEqual(c2.post(f"/api/profile/memory/{f['id']}/restore", json={"i": 0}).status_code, 403)
+        self.assertEqual(c2.post(f"/api/profile/memory/{f['id']}/restore", json={"i": 0}).status_code, 404)
+        self.assertEqual(next(x for x in profiles.memory(uid) if x["id"] == f["id"])["text"], "Wohnt in Bonn.")
+        # blocked by the admin for this profile: no bringing back
+        helpers.set_config(deny={"gedpruefen": [uid]})
+        self.assertEqual(c.post(f"/api/profile/memory/{f['id']}/restore", json={"i": 0}).status_code, 403)
+        helpers.set_config(deny={})
         # changing by hand keeps the old wording too
         profiles.change_fact(uid, f["id"], "Wohnt in Bonn-Ost.")
         f = next(x for x in profiles.memory(uid) if x["id"] == f["id"])
@@ -257,7 +265,6 @@ class Versions(unittest.TestCase):
     def test_without_a_key_a_correction_stays_a_new_fact(self):
         c, uid = profile("Gedx")
         helpers.set_config(memory=True, memory_check=True)
-        c.put("/api/profile/settings", json={"mem_check": True})
         profiles.remember(uid, "Mag Tee.", src="said")
         profiles.remember(uid, "Mag Kaffee.", src="fix", version="fix")
         self.assertEqual(len(profiles.memory(uid)), 2)
@@ -267,12 +274,11 @@ class Ask(unittest.TestCase):
     """Nachfrage im Gespräch: the panel asks after the answer about a maybe outdated fact that fits the question,
     by fixed rules; once per conversation, three times a day, a yes confirms, „vergiss das“ forgets."""
     def tearDown(self):
-        helpers.set_config(memory_check=False, memory_ask=False)
+        helpers.set_config(memory_check=False, memory_ask=False, deny={})
 
     def setup_profile(self, name):
         c, uid = profile(name)
         helpers.set_config(memory=True, memory_check=True, memory_ask=True)
-        self.assertEqual(c.put("/api/profile/settings", json={"mem_check": True, "mem_ask": True}).status_code, 200)
         with profiles._lock:
             profiles._write(profiles._path(uid, "memory.json"), [
                 {"id": "g1", "text": "Fährt einen VW Golf.", "created": int(time.time()) - 400 * DAY, "auto": True},
@@ -323,7 +329,6 @@ class Ask(unittest.TestCase):
     def test_a_correction_becomes_a_version(self):
         c, uid = self.setup_profile("Gedk")
         helpers.set_config(learn_fixes=True)
-        c.put("/api/profile/settings", json={"fix_learn": True})
         try:
             self.assertIn("Stimmt das noch", self.say(c, "Mein Golf?", "k1"))
             said = self.say(c, "Nein, ich fahre jetzt einen Skoda. FACT Fährt einen Skoda Octavia.", "k1")
@@ -337,9 +342,10 @@ class Ask(unittest.TestCase):
 
     def test_never_without_the_switches_or_as_guest(self):
         c, uid = self.setup_profile("Gedg")
-        c.put("/api/profile/settings", json={"mem_ask": False})
+        helpers.set_config(deny={"gedfragen": [uid]})               # the admin blocks it for this profile
         self.assertNotIn("Stimmt das noch", self.say(c, "Mein Golf?", "n1"))
-        c.put("/api/profile/settings", json={"mem_ask": True})
+        self.assertFalse(g.ask_on(uid))
+        helpers.set_config(deny={})
         helpers.set_config(memory_check=False)
         self.assertNotIn("Stimmt das noch", self.say(c, "Mein Golf?", "n2"))
         self.assertFalse(g.ask_on(None))
@@ -349,7 +355,7 @@ class Ask(unittest.TestCase):
 class Topics(unittest.TestCase):
     """Themen: only from the fixed list, anything else is "sonstiges", the person's own pick stays."""
     def tearDown(self):
-        helpers.set_config(memory_check=False, memory_topics=False)
+        helpers.set_config(memory_check=False, memory_topics=False, deny={})
 
     def test_only_fixed_topics(self):
         got = g.parse_topics('<think>x</think> {"a": "arbeit", "b": "Hacker", "c": 3, "z": "person"}', ["a", "b", "c", "d"])
@@ -360,7 +366,6 @@ class Topics(unittest.TestCase):
         import asyncio
         c, uid = profile("Gedt")
         helpers.set_config(memory=True, memory_check=True, memory_topics=True)
-        self.assertEqual(c.put("/api/profile/settings", json={"mem_check": True, "mem_topics": True}).status_code, 200)
         with profiles._lock:
             profiles._write(profiles._path(uid, "memory.json"), [
                 {"id": "t1", "text": "Arbeitet bei Bosch.", "created": int(time.time())},
@@ -380,7 +385,7 @@ class Topics(unittest.TestCase):
         self.assertEqual(asyncio.run(g.assign_topics(uid)), 0)    # nothing without a topic, no call within the hour
         d = c.get("/api/profile/memory").json()
         self.assertIn("arbeit", d["topics"])
-        c.put("/api/profile/settings", json={"mem_topics": False})
+        helpers.set_config(deny={"gedthemen": [uid]})               # the admin blocks it for this profile
         self.assertIsNone(c.get("/api/profile/memory").json()["topics"])
         self.assertEqual(c.post("/api/profile/memory/t1/topic", json={"topic": "arbeit"}).status_code, 403)
 

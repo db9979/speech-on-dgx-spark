@@ -5,8 +5,8 @@ code from my.remarkable.com, like reMarkable's desktop app does. There is no off
 uses the same sync protocol ("sync15") as rmapi, the Obsidian plugin and remarkable-mcp (MIT, used as a
 model). reMarkable can change it; "Verbindung prüfen" then says so, uploading a PDF stays as a way.
 
-- Off until the admin allows it (Funktionen: chat.remarkable below "Bilder und Scans lesen") and the
-  profile switches it on (rm_on); guests never. The long-lived device token is sealed in the vault
+- Off until the admin allows it (Funktionen: chat.remarkable below "Bilder und Scans lesen"); released, it works
+  for every profile the admin did not block (chat.deny); guests never. The long-lived device token is sealed in the vault
   (users/<p>/remarkable.json), the short-lived user token lives in memory only; neither is ever logged.
 - Only what the person picks (notebooks or folders; nothing by default) is read: typed text and text
   highlights come straight from the page files, handwriting is drawn from the strokes as a picture and
@@ -17,7 +17,7 @@ model). reMarkable can change it; "Verbindung prüfen" then says so, uploading a
   pages are kept (hash per page), changed ones are read again, notebooks gone from the cloud or no
   longer picked disappear from the Spark.
 - Reading never changes the cloud. Writing happens only for "Aufs reMarkable schicken" (chat.remarkable_send,
-  profile rm_send, also off): an answer or a dictated note as a new EPUB in the folder "Spark"; existing
+  also off): an answer or a dictated note as a new EPUB in the folder "Spark"; existing
   documents are never changed, moved or deleted.
 
 Connections go through netguard (PUBLIC) to the fixed reMarkable hosts only (ALLOWED); redirects are
@@ -29,7 +29,7 @@ Answers have a byte cap, page files a size cap, parsing runs off the event loop.
     DELETE /api/profile/remarkable          disconnect: token and all notebooks gone from the Spark
     PUT    /api/profile/remarkable/pick     {"ids": [...], "all": bool}  what is read
     POST   /api/profile/remarkable/sync     compare now (also refreshes the library)
-    POST   /api/profile/remarkable/send     {"title", "text"}  an answer onto the reMarkable (rm_send)
+    POST   /api/profile/remarkable/send     {"title", "text"}  an answer onto the reMarkable (rmsend)
 """
 import asyncio
 import base64
@@ -1210,7 +1210,7 @@ async def briefing(uid, zone=None):
 # ---------------------------------------------------------------- routes
 def _on(prof=Depends(browser_profile)):
     if not allowed(prof["id"]):
-        raise HTTPException(403, "reMarkable ist aus (Funktionen und Ich → reMarkable)")
+        raise HTTPException(403, "reMarkable ist aus (Funktionen → reMarkable-Notizen)")
     return prof
 
 
@@ -1333,7 +1333,7 @@ async def target(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     _on(prof)
     if not send_allowed(uid):
-        raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen und Ich → reMarkable)")
+        raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rm", uid)
     import iphone
     body = await iphone._json(request, 1024)
@@ -1381,7 +1381,7 @@ def _live_job(uid, t0, ok):
 async def send_route(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     if not send_allowed(uid):
-        raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen und Ich → reMarkable)")
+        raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rmsend", uid)
     import iphone
     body = await iphone._json(request, 4 * MAX_SEND + 4096)

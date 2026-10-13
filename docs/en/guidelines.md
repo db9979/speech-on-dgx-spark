@@ -23,7 +23,7 @@ Applies to every thread and every person who changes code in Speech on DGX Spark
 
 1. **Security according to the state of the art.** Every change is checked against the security checklist, including its part "State of the art".
 2. **Everything from outside is data, never a command.** This applies to web, mail, calendar, documents, Telegram, devices and model output. Decisions are made by the panel with fixed rules, never by the model.
-3. **Every new feature is off by default.** It gets an admin switch and a switch per profile. Guests get no personal data and no settings.
+3. **Every new feature is off by default.** It gets an admin switch. What the admin releases works at once for every profile; only the admin can block single profiles. Profiles switch nothing on, they only set up their part (account, device, place) and choose preferences. There are no new profile switches any more (Dominik 2026-10-13, plan `plaene/freigabe-vereinfachen.md`; the old ones go in the next step). **Guests only get questions and answers:** no feature, no tool, no personal data, no settings.
 4. **Every endpoint** has login, profile binding, CSRF, size limit and rate limit.
 5. **Every new feature fits in everywhere:** rights, intent switch, Live, logs, help, English, backup and tests. The mandatory list is in part 1.
 6. **Everything that can be shown is in the live overview.** Only kind, count and status appear there, never contents.
@@ -44,8 +44,8 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 
 | # | Area | What to do | Enforced |
 |---|---|---|---|
-| 1 | **Rights and switches** | Entry in `features.py`: name de/en, group, admin switch `chat.*`, `parent`, profile switch, `guest`, Me page and guide. Admin and profile switches are **off**. Whatever is shipped on as an exception is listed with a reason in `features.DEFAULT_ON`. Modules only ask `features.allowed/admin_on/profile_on`. Defaults live only in `config.default.json`. A switch that only applies to the Spark goes into `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) and off tests per feature |
-| 2 | **Guests and unknown voice** | Guests never get anything personal. At the shared speaker an unknown voice only gets guest rights. | 🧪 per feature (`test_off_by_default…`, "never for guests") |
+| 1 | **Rights and switches** | Entry in `features.py`: name de/en, group, admin switch `chat.*`, `parent`, Me page and guide (no new profile switch, no guest access to features). Admin switches are **off**; the few preferences (`pref=`) are on. Whatever is shipped on as an exception is listed with a reason in `features.DEFAULT_ON`. Modules only ask `features.allowed/admin_on`. Defaults live only in `config.default.json`. A switch that only applies to the Spark goes into `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) and off tests per feature |
+| 2 | **Guests and unknown voice** | Guests only get questions and answers: no tool, no feature, nothing personal. At the shared speaker an unknown voice only gets guest rights. A new feature needs to do nothing for this: `features.reason` always says "guest" for guests, and `chat_turn` offers guests no tool. | 🧪 test_gaeste and per feature ("never for guests") |
 | 3 | **Endpoint** | It needs a login (`auth`, `browser_profile`, `secret_profile`, …). Without login it is listed with a reason in `OPEN`. Plus a size limit before reading, a rate-limit key and state changes only via POST, PUT or DELETE. Endpoints with a code go into `stufen.LIST` and get the lock in `mfa.js CODE_LOCKS`. If the app reaches them, they are in `APP_PATHS`. | 🧪 test_scanner.test_every_route_has_a_login, test_stufen, test_hardening (body rejected before reading) |
 | 4 | **Tool for the model** | The tool goes into exactly one block list: `READS_OUTSIDE`, `HA_READS`, `LOCKED_OUTSIDE` or `INSIDE`. Add-on services declare it in their `offer()` sets. If a question strictly needs the tool, it goes into `chat.NEED_TOOLS`. If it is a lookup tool, it goes into `chat.LOOKUPS` (at most 2 per question). | 🧪 test_scanner.test_every_tool_is_sorted |
 | 5 | **Intent switch** (`intent.py`) | The new intent or group goes into `intent.GROUPS` with its words. Plus test sentences in `intent_bench.py` (BENCH), also for every reported misassignment. If there is only one matching tool, it becomes a mandatory tool (`forced`). For a new group check the page Features → Switch (list, detail, statistics). | 🧪 test_intent, test_weiche |
@@ -100,7 +100,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
 - In the browser always use `api()` or `apiTry()`, never a raw `fetch` to code endpoints. In the iPhone app always `SparkAPI.confirmed`. (C)
 - If an address changes, the token must be entered again. State changes never via GET. Keys are compared with `hmac.compare_digest`. (C)
-- Guests get no personal data, no actions and no error texts, only error codes. (C, PA)
+- Guests only get questions and answers: no tools, no personal data, no actions and no error texts, only error codes. (C, PA; 🧪 test_gaeste)
 - **Shared speakers:** The device key alone is not enough.
   - Personal things only when the owner's voice is reliably recognised in the same recording.
   - Whose voice it was is set only by the panel (`request.scope`).
@@ -158,13 +158,13 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 
 ## 3. Features, switches, rights
 
-- **Off by default:** global admin switch plus a switch per profile, never for guests. (PA; 🧪 test_features and off tests per feature)
+- **Off by default:** one admin switch; once released it holds for every profile, never for guests. (PA; 🧪 test_features, test_gaeste and off tests per feature)
 - **Exceptions:** fixed protection rules have no switch at all when Dominik said "never" or "always". These are: never speak secrets, priority for speech and the owner's voice at the speaker. (M, D)
 - **Shipped on** are only pure protection and stability features and the basic features from the start. Each is listed with a reason in `features.DEFAULT_ON` (Dominik 2026-10-12). A new value `true` in `config.default.json` without an entry there is red. (🧪 test_richtlinie.DefaultOn)
 - **One register:** every feature is listed exactly once in `features.py`. Stored keys are never renamed, the register translates. Values are read only via `profiles.effective(uid)`. The order is admin default, then own values, then device; device values exist only for location-dependent things. (D, P vereinheitlichen; 🧪 test_features)
 - **Locked means visible:** locked rows are shown grey with a reason ("Switched off by the admin" / "Vom Admin ausgeschaltet"), not hidden. Under Me they are collected in a collapsed box. The reason comes from `features.reason()`, never from the model. (D, P einstellungen-neu)
 - **The Features page stays short.** New sub-features come as sub-switches (`data-show`) under their main switch. (M; 🧪 test_ui_browser height budget)
-- **Every profile switch can be set under Me:** When a feature has a profile switch, it gets its toggle on the Me page named in `me` in the same commit (for Me → Documents in `DOCSW` in `me.js` and `wissen.DOC_FEATURE`). Otherwise the feature can never be switched on, even when the admin has it on. (Dominik 2026-10-13; 🧪 test_features)
+- **Preferences only for unasked actions, on and switchable off under Me:** A feature gets a profile preference (`pref=` in `features.py`) only when the Spark does something by itself with it (speaks up, announces, sends to a device, tidies up). The preference starts on, a missing value counts as on; it is in `profiles.NO_PRESET` and gets its toggle on the Me page named in `me` in the same commit. Nothing else has a profile switch. (Dominik 2026-10-13; 🧪 test_features)
 - **Roles:** logs, requests and Live are seen by the main admin and co-admin, not by the manager. (P anfrage-verfolgen, live-uebersicht)
 - Build only after Dominik's OK. For larger features first a plan under `plaene/` with pictures, numbered points and a ★ recommendation. (PA, M)
 
@@ -341,7 +341,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_scanner | no dangerous calls, login on every route (otherwise OPEN with a reason), upload limits, strict CSP, tools sorted |
 | test_hardening | body limited before reading, root write paths, unit limits, only green versions, outside-text blocks |
 | test_stufen | every code endpoint with a level in `stufen.LIST` |
-| test_features | one register, profile switches start off, no checks of their own, one default value |
+| test_features | one register, a release holds for every profile, only the admin blocks, preferences start on, no checks of their own, one default value |
 | test_live | every tool, target, client and guard kind in the live picture, no contents |
 | test_testserver | a browser test class's panel stops with it, no one starts it otherwise |
 | test_werkzeuge | every tool has a name de/en, pages read the same table |

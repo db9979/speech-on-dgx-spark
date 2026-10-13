@@ -828,7 +828,7 @@ async def profile_confirm_fact(fact_id: str, request: Request, prof=Depends(brow
     guard.limit(request, "memory", uid=prof["id"])
     await _capped_body(request, 256)
     if not gedaechtnis.on(prof["id"]):
-        raise HTTPException(403, "Gedächtnis prüfen ist aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+        raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     if not gedaechtnis.confirm(prof["id"], str(fact_id)[:40]):
         raise HTTPException(404, "Eintrag nicht gefunden")
     return {"facts": gedaechtnis.view(prof["id"])}
@@ -840,7 +840,7 @@ async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(brow
     guard.limit(request, "memory", uid=prof["id"])
     body = await _capped_body(request, 256)
     if not gedaechtnis.on(prof["id"]):
-        raise HTTPException(403, "Gedächtnis prüfen ist aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+        raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     i = body.get("i") if isinstance(body, dict) else None
     if not isinstance(i, int) or isinstance(i, bool) or not 0 <= i < profiles.MAX_PREV:
         raise HTTPException(400, "i fehlt")
@@ -856,7 +856,7 @@ async def profile_fact_topic(fact_id: str, request: Request, prof=Depends(browse
     guard.limit(request, "memory", uid=prof["id"])
     body = await _capped_body(request, 256)
     if not gedaechtnis.topics_on(prof["id"]):
-        raise HTTPException(403, "Themen sind aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+        raise HTTPException(403, "Themen sind für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     topic = body.get("topic")
     if topic not in gedaechtnis.TOPICS:
         raise HTTPException(400, "unbekanntes Thema")
@@ -1267,7 +1267,7 @@ def profile_settings(request: Request):
             "offline_here": verlauf.offline_here(prof, request)}
 
 
-# which conversation switches the admin allows (features.py), only for a signed-in profile
+# which functions the admin released for this profile (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
@@ -1282,7 +1282,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
 
 
 def _allow(prof, chat):
-    out = {k: bool(prof and features.admin_on(f, chat)) for k, f in ALLOW.items()}
+    out = {k: bool(prof and features.admin_on(f, chat) and not features.blocked(f, prof["id"], chat)) for k, f in ALLOW.items()}
     out["trace"] = bool(prof and load_config().get("logs", {}).get("trace", False) is True)
     # "Bild in Meine Dokumente" under an answer to a picture (wissen.py)
     out["docpics"] = bool(prof and out["images"] and wissen.on(prof["id"], "pictures"))

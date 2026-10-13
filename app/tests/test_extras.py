@@ -129,7 +129,7 @@ class Weather(unittest.TestCase):
                            geocode_url=f"http://127.0.0.1:{WX_PORT}/v1/search")
 
     def tearDown(self):
-        helpers.set_config(weather=False)
+        helpers.set_config(weather=False, deny={})
 
     def test_place_tool_and_switches(self):
         a = profile("Wetterfrosch")
@@ -138,9 +138,11 @@ class Weather(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(r.json()["place"]["name"], "Ulm, Baden-Württemberg")
         self.assertIn("Jetzt in Ulm, Baden-Württemberg: 12 Grad, bedeckt.", r.json()["sample"])
-        # place set, but the profile has not switched it on: no tool
+        # place set, but the admin blocked weather for this profile: no tool
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(deny={"weather": [uid]})
         self.assertIn("NO TOOL weather", ask(a, "TOOL weather {}"))
-        a.put("/api/profile/settings", json={"wx_on": True})
+        helpers.set_config(deny={})                      # released: works at once
         out = ask(a, "TOOL weather {}")
         self.assertIn("Heute in Ulm, Baden-Württemberg: leichter Regen, 9 bis 16 Grad, Regenrisiko 80 Prozent (etwa 4 Liter)", out)
         self.assertIn("Regen wahrscheinlich ab 14 Uhr", out)
@@ -176,11 +178,9 @@ class Weather(unittest.TestCase):
         import klaeren
         a = profile("Wetter Rueck")
         a.put("/api/profile/weather", json={"place": "ulm"})
-        a.put("/api/profile/settings", json={"wx_on": True})
         self.assertIn("Karlsbad, Baden-Württemberg", ask(a, 'TOOL weather {"place": "Karlsbad"}'))
         helpers.set_config(klaeren=True, klaeren_merken=True)
         try:
-            a.put("/api/profile/settings", json={"klaeren": True, "klaeren_merken": True})
             r = a.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL weather {"place": "Karlsbad"}'}]})
             evs = helpers.events(r)
             ch = [e for e in evs if e["type"] == "choice"]
@@ -212,7 +212,7 @@ class Contacts(unittest.TestCase):
         helpers.set_config(contacts=True)
 
     def tearDown(self):
-        helpers.set_config(contacts=False, mail=False)
+        helpers.set_config(contacts=False, mail=False, deny={})
 
     def test_address_book_lookup_and_birthdays(self):
         import contacts
@@ -230,8 +230,9 @@ class Contacts(unittest.TestCase):
         self.assertNotIn("pw-1", raw)
         self.assertNotIn("Anna", raw)            # the cards are stored encrypted
         self.assertIn(vault.PREFIX, raw)
+        helpers.set_config(deny={"contacts": [uid]})     # the admin blocks contacts for this profile
         self.assertIn("NO TOOL contacts_search", ask(a, 'TOOL contacts_search {"name": "Anna"}'))
-        a.put("/api/profile/settings", json={"con_on": True})
+        helpers.set_config(deny={})                      # released: works at once
         out = ask(a, 'TOOL contacts_search {"name": "anna"}')
         self.assertIn("Anna Alt; Handy +49 170 1234567; E-Mail anna.alt@example.de", out)
         self.assertIn("Bert Brot; Handy 0731 98765", ask(a, 'TOOL contacts_search {"name": "Bert Brott"}'))   # misheard
@@ -303,14 +304,18 @@ class Parcels(unittest.TestCase):
             a = profile("Paketbote")
             self.assertEqual(a.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER,
                                                                "password": helpers.MAIL_PW}).status_code, 200)
+            uid = a.get("/api/whoami").json()["profile"]["id"]
+            helpers.set_config(deny={"parcels": [uid]})  # the admin blocks parcels for this profile
             self.assertIn("NO TOOL parcels", ask(a, "TOOL parcels {}"))
-            a.put("/api/profile/settings", json={"par_on": True})
+            helpers.set_config(deny={"mail": [uid]})     # ... or the mail it builds on
+            self.assertIn("NO TOOL parcels", ask(a, "TOOL parcels {}"))
+            helpers.set_config(deny={})                  # released: works at once
             parcels._cache.clear()
             self.assertIn("DHL-Paket von Thalia: kommt heute.", ask(a, "TOOL parcels {}"))
             self.assertEqual(a.get("/api/profile/parcels").json()["lines"], ["DHL-Paket von Thalia: kommt heute."])
         finally:
             helpers.MAILS[:] = keep
-            helpers.set_config(mail=False, parcels=False)
+            helpers.set_config(mail=False, parcels=False, deny={})
 
 
 class Guides(unittest.TestCase):
@@ -319,8 +324,8 @@ class Guides(unittest.TestCase):
         import os
         d = json.load(open(os.path.join(helpers.APP, "config.default.json")))["chat"]
         self.assertEqual((d["weather"], d["contacts"], d["parcels"]), (False, False, False))
-        for k in ("wx_on", "con_on", "par_on"):
-            self.assertIs(profiles.SETTINGS[k][0], False)
+        for k in ("wx_on", "con_on", "par_on"):     # released by the admin they work for every profile at once
+            self.assertNotIn(k, profiles.SETTINGS)
 
 
 if __name__ == "__main__":

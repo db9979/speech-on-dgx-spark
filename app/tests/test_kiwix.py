@@ -115,6 +115,12 @@ def profile(name):
     return c
 
 
+def block(c, *keys):
+    """The admin blocks these functions for this one profile (chat.deny, Funktionen → Wer darf was)."""
+    uid = c.get("/api/whoami").json()["profile"]["id"]
+    helpers.set_config(deny={k: [uid] for k in keys})
+
+
 def ask(c, text):
     r = c.post("/api/chat", json={"messages": [{"role": "user", "content": text}]})
     assert r.status_code == 200, r.text
@@ -211,14 +217,16 @@ class Tools(unittest.TestCase):
 
     def tearDown(self):
         helpers.set_config(kiwix=False, kiwix_url="", kiwix_books=[], wiki=False, wiki_url="", public=False,
-                           search=False, search_url="")
+                           search=False, search_url="", deny={})
 
-    def test_needs_both_switches_never_guests(self):
+    def test_needs_the_admin_switch_never_blocked_or_guests(self):
         a = profile("Archiv1")
-        self.assertIn("NO TOOL wikipedia", ask(a, "TOOL wikipedia {\"query\": \"Quasar\"}"))   # profile switch off
-        self.assertFalse(a.get("/api/profile/settings").json()["settings"].get("kiwix_on"))
+        block(a, "kiwix")
+        self.assertIn("NO TOOL wikipedia", ask(a, "TOOL wikipedia {\"query\": \"Quasar\"}"))   # blocked by the admin
+        self.assertIn("NO TOOL archive_search", ask(a, "TOOL archive_search {\"query\": \"Sauerteig\"}"))
+        self.assertFalse(a.get("/api/profile/settings").json()["allow"]["kiwix"])
+        helpers.set_config(deny={})                                               # released: at once
         self.assertTrue(a.get("/api/profile/settings").json()["allow"]["kiwix"])
-        a.put("/api/profile/settings", json={"kiwix_on": True})
         helpers.set_config(kiwix=False)
         self.assertFalse(a.get("/api/profile/settings").json()["allow"]["kiwix"])
         self.assertIn("NO TOOL archive_search", ask(a, "TOOL archive_search {\"query\": \"Sauerteig\"}"))
@@ -229,7 +237,7 @@ class Tools(unittest.TestCase):
 
     def test_wikipedia_from_the_kiwix_without_internet(self):
         a = profile("Archiv2")
-        a.put("/api/profile/settings", json={"kiwix_on": True})                  # online Wikipedia stays off
+        # online Wikipedia stays off (chat.wiki)
         helpers.LLM_CALLS.clear()
         out = ask(a, "TOOL wikipedia {\"query\": \"Quasar\"}")
         self.assertIn("aktive Kern einer Galaxie", out)
@@ -245,7 +253,6 @@ class Tools(unittest.TestCase):
     def test_kiwix_first_then_online(self):
         helpers.set_config(wiki=True, wiki_url=f"http://127.0.0.1:{WIKI_PORT}")
         a = profile("Archiv3")
-        a.put("/api/profile/settings", json={"kiwix_on": True, "wiki_on": True})
         ask(a, "TOOL wikipedia {\"query\": \"Quasar\"}")
         self.assertEqual(WIKI_CALLS, [])                                        # the Kiwix had it
         out = ask(a, "TOOL wikipedia {\"query\": \"Pulsar\"}")
@@ -259,7 +266,6 @@ class Tools(unittest.TestCase):
     def test_archive_search_and_reading_on(self):
         helpers.set_config(kiwix_books=["wikipedia_de_all_maxi_2025-01", "wikivoyage_de_all_maxi_2024-11"])
         a = profile("Archiv4")
-        a.put("/api/profile/settings", json={"kiwix_on": True})
         helpers.LLM_CALLS.clear()
         ask(a, "TOOL archive_search {\"query\": \"Sauerteig\"}")
         msg = tool_msg()
@@ -277,15 +283,16 @@ class Tools(unittest.TestCase):
         self.assertIn("kenne ich nicht", tool_msg())
 
     def test_archive_means_kiwix_not_documents(self):
-        # V01.0.261: "Schau in meinem Archiv" with the archive off for the profile: the model hears why and
+        # V01.0.261: "Schau in meinem Archiv" with the archive blocked for the profile: the model hears why and
         # that the uploaded documents are something else; with it on, archive_search is required
         a = profile("Archiv6")
+        block(a, "kiwix")
         helpers.LLM_CALLS.clear()
         ask(a, "Schaue in meinem Archiv nach, was du über Albert Einstein weisst.")
         sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
-        self.assertIn("Kiwix-Archiv, das ist hier nicht verfügbar: der Profil-Schalter ist aus", sys_)
+        self.assertIn("Kiwix-Archiv, das ist hier nicht verfügbar: für dieses Profil vom Admin gesperrt", sys_)
         self.assertIn("durchsuche die Dokumente nicht stattdessen", sys_)
-        a.put("/api/profile/settings", json={"kiwix_on": True})
+        helpers.set_config(deny={})
         helpers.LLM_CALLS.clear()
         ask(a, "Schaue in deinem Archiv nach, was du über Albert Einstein")
         sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
@@ -311,7 +318,6 @@ class Tools(unittest.TestCase):
         self.assertEqual(kiwix.key("wikivoyage_de_all_maxi_2024-11"), "wikivoyage_de_all_maxi")
         self.assertEqual(kiwix.key("ted_x_2026-07-01"), "ted_x")
         a = profile("Archiv7")
-        a.put("/api/profile/settings", json={"kiwix_on": True})
         helpers.LLM_CALLS.clear()
         ask(a, "TOOL archive_search {\"query\": \"Sauerteig\"}")
         ref = tool_msg().split("[article: ", 1)[1].split("]", 1)[0]
@@ -351,10 +357,11 @@ class Tools(unittest.TestCase):
         helpers.set_config(search=True, search_url=f"http://127.0.0.1:{DEAD_PORT}",
                            kiwix_books=["wikivoyage_de_all_maxi_2024-11"])
         a = profile("Archiv5")
+        block(a, "kiwix")
         helpers.LLM_CALLS.clear()
         ask(a, "TOOL web_search {\"query\": \"Sauerteig\"}")
-        self.assertIn("Search failed", tool_msg())                             # without the profile switch
-        a.put("/api/profile/settings", json={"kiwix_on": True})
+        self.assertIn("Search failed", tool_msg())                             # the Kiwix blocked for the profile
+        helpers.set_config(deny={})
         ask(a, "TOOL web_search {\"query\": \"Sauerteig\"}")
         msg = tool_msg()
         self.assertIn("Offline-Archiv Kiwix", msg)

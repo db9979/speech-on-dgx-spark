@@ -7,7 +7,7 @@ shared speaker only when the speech recognition clearly heard the profile's own 
 
 Switches (features.py, all off): Funktionen → Agent-Funktionen → Dienste per MCP → "Eigene MCP-Dienste für
 Profile" (chat.mcp_own) with the sub-switches "… in Hintergrundaufträgen" (chat.mcp_own_jobs) and
-"… mit Anmeldung (OAuth)" (chat.mcp_own_oauth), and the profile's own switch mymcp_on.
+"… mit Anmeldung (OAuth)" (chat.mcp_own_oauth); released, it works for every profile the admin did not block.
 
 Rules (fixed, not decided by the model):
 - at most MAX_SERVICES services per profile, each with at most MAX_TOOLS tools; every tool is "off" until the

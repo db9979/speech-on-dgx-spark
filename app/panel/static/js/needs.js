@@ -37,16 +37,6 @@ async function needsSpark(f,on,isOn){
     const d=await (await api(`/api/admin/features/${encodeURIComponent(f.key)}/enable`,xjson('POST',{}))).json();
     needsNote(d);return false}
   const aff=needsAffected(f.switch,isOn);return !aff.length||needsAskOff(f.switch,aff)}
-// Wer darf was: a profile's box while the function is off on the Spark
-async function needsProfile(f,uid){
-  if(f.spark)return false;
-  await needsLoad();
-  const miss=needsMissing(f,sw=>!!(NEEDS&&NEEDS.states&&NEEDS.states[sw]),'');
-  if(!miss.length)return false;
-  if(!confirm(t(`Im Spark ist ${needsList(miss.map(needsName))} aus. Gleich mit einschalten? (Abbrechen: nur für dieses Profil)`,
-                `${needsList(miss.map(needsName))} is off on the Spark. Switch it on too? (Cancel: only for this profile)`)))return false;
-  const d=await (await api(`/api/admin/features/${encodeURIComponent(f.key)}/enable`,xjson('POST',{uid}))).json();
-  needsNote(d);return true}
 // Funktionen: a switch on the page changed
 async function needsCfg(el){
   if(NEEDS_QUIET||!el||!el.id||!el.id.startsWith('chat.')||el.type!=='checkbox')return;
@@ -65,4 +55,4 @@ async function needsCfg(el){
     const aff=needsAffected(sw,s=>s===sw||isOn(s));if(!aff.length)return;
     if(!needsAskOff(sw,aff))set([sw],true)}}
 document.addEventListener('change',e=>{const el=e.target;if(el&&el.id&&el.id.startsWith('chat.')&&el.closest&&el.closest('#pane-feat'))needsCfg(el)});
-window.needsSet=needsSet;window.needsSpark=needsSpark;window.needsProfile=needsProfile;window.needsLoad=needsLoad;
+window.needsSet=needsSet;window.needsSpark=needsSpark;window.needsLoad=needsLoad;

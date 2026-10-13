@@ -12,7 +12,9 @@ document.addEventListener('pointerdown',()=>verWatch.seen=Date.now(),true);
 document.addEventListener('keydown',()=>verWatch.seen=Date.now(),true);
 document.addEventListener('input',e=>{if(e.target.type!=='checkbox'&&e.target.id!=='findq'&&e.target.id!=='palq')verWatch.edit=Date.now()},true);
 function sparkBusy(){try{return !!(chat.rec||chat.resumeMic||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
-function verReload(){try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
+// the page is going away (reload, new version): a request it cut off is no error worth an alert
+let LEAVING=false;addEventListener('pagehide',()=>{LEAVING=true});
+function verReload(){LEAVING=true;try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
 function verBar(text){let b=$('verbanner');if(b)return;
   b=document.createElement('div');b.id='verbanner';b.className='updbanner';
   const sp=document.createElement('span');sp.textContent=text;

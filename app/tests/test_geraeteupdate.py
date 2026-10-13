@@ -83,8 +83,9 @@ class Base(unittest.TestCase):
         profile("Anna")
         profile("Ben")
         self.anna, self.ben = uid_of("Anna"), uid_of("Ben")
-        profiles.save_settings(self.anna, {"devup_on": True, "esp_on": True, "devup_night": True})
-        profiles.save_settings(self.ben, {"devup_on": False, "esp_on": True, "devup_night": False})
+        profiles.save_settings(self.anna, {"devup_night": True})
+        profiles.save_settings(self.ben, {"devup_night": False})
+        helpers.set_config(deny={"geraeteupdate": [self.ben]})   # the admin blocked Ben
         self.version = "2.5.1.6"
         self.spk = [{"id": "d_a1", "name": "Küche", "user": self.anna, "fw": "2.5.1.6", "auto": True, "online": True},
                     {"id": "d_a2", "name": "Bad", "user": self.anna, "fw": "2.5.1.6", "auto": True, "online": True},
@@ -118,7 +119,7 @@ class Base(unittest.TestCase):
         for p in self.patches:
             p.stop()
         live.bg("Lautsprecher-Update", None)
-        helpers.set_config(dev_updates=False, dev_updates_night=False, dev_updates_upstream=False, esp32=False)
+        helpers.set_config(dev_updates=False, dev_updates_night=False, dev_updates_upstream=False, esp32=False, deny={})
 
 
 class Switches(Base):
@@ -130,9 +131,9 @@ class Switches(Base):
         self.assertEqual(chat["dev_updates_night_at"], "05:15")
         self.assertEqual(features.BY_KEY["geraetenacht"].parent, "geraeteupdate")
         self.assertEqual(features.BY_KEY["xiaozhihinweis"].parent, "geraeteupdate")
-        self.assertFalse(features.BY_KEY["geraeteupdate"].guests)
-        self.assertIs(profiles.SETTINGS["devup_on"][0], False)
-        self.assertIs(profiles.SETTINGS["devup_night"][0], False)
+        self.assertFalse(features.allowed("geraeteupdate", None))
+        self.assertNotIn("devup_on", profiles.SETTINGS)          # no profile switch: released by the admin, it works
+        self.assertIs(profiles.SETTINGS["devup_night"][0], True)   # a preference: on unless the profile opts out
         helpers.set_config(dev_updates=False)
         self.assertFalse(gu.admin_on())
         self.assertFalse(gu.allowed(self.anna))
@@ -161,7 +162,7 @@ class Notes(Base):
         self.assertEqual(self.notes, [])       # what the Spark had when this was switched on is no news
         self.version = "2.5.1.7"
         run(gu.notes())
-        self.assertEqual([n[0] for n in self.notes], [self.anna])   # Ben has a speaker but his switch is off
+        self.assertEqual([n[0] for n in self.notes], [self.anna])   # Ben has a speaker but the admin blocked him
         uid, title, body, tag = self.notes[0]
         self.assertEqual(tag, "devup")
         self.assertIn("2.5.1.7", title)
@@ -172,7 +173,7 @@ class Notes(Base):
 
     def test_profile_without_a_device_gets_none_and_the_admin_gets_one(self):
         self.spk = [s for s in self.spk if s["user"] == self.ben]
-        profiles.save_settings(self.ben, {"devup_on": True})
+        helpers.set_config(deny={})   # released for Ben too
         run(gu.notes())
         self.version = "2.5.1.7"
         with mock.patch.object(gu, "_admin_uid", lambda: self.anna):
@@ -191,8 +192,7 @@ class Notes(Base):
         self.assertEqual([n[0] for n in self.notes], [self.anna])
 
     def test_android_and_pebble(self):
-        helpers.set_config(android=True, pebble=True)
-        profiles.save_settings(self.ben, {"devup_on": True, "android_on": True, "pebble_on": True})
+        helpers.set_config(android=True, pebble=True, deny={})
         meta = {"version": "1.1.0", "code": 3}
         watch = {"v": "1.6.0"}
         with mock.patch.object(android, "meta", lambda: meta), \
@@ -216,7 +216,7 @@ class Notes(Base):
 class Night(Base):
     def setUp(self):
         super().setUp()
-        helpers.set_config(dev_updates_night=True)
+        helpers.set_config(dev_updates_night=True, deny={})   # Ben released, but his preference devup_night is off
         self.version = "2.5.1.7"
 
     def test_outside_the_window_nothing(self):
@@ -239,7 +239,7 @@ class Night(Base):
         self.assertEqual(run(gu.night_step(t + 180)), "")          # the others only REST_GAP later
         self.assertEqual(run(gu.night_step(t + 120 + gu.REST_GAP + 1)), "restart")
         self.assertEqual(self.sessions["d_a1"].sent[-1]["command"], "reboot")
-        self.assertFalse(self.sessions["d_b1"].sent)                # Ben did not switch it on for himself
+        self.assertFalse(self.sessions["d_b1"].sent)                # Ben switched his preference off
         self.spk[0]["fw"] = "2.5.1.7"
         self.assertEqual(run(gu.night_step(t + gu.REST_GAP + 200)), "back")
         self.assertEqual(run(gu.night_step(t + gu.REST_GAP + 260)), "")
@@ -353,12 +353,11 @@ class Views(Base):
         self.assertIn("Lautsprecher 2/3 aktuell", tgt["sub"])
         self.assertIn("Geräte-Updates", live.TOOLS)
         helpers.set_config(my_status=True)
-        profiles.save_settings(self.anna, {"my_status": True})
         rows = [r for r in hintergrund.rows(self.anna, now=local(12, 0)) if r["key"].startswith("devup:")]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["why"], "update_start")            # night off for the Spark
         self.assertEqual(rows[0]["detail"][0], "2.5.1.6 · 1 von 2 aktuell")
-        profiles.save_settings(self.anna, {"devup_on": False})
+        helpers.set_config(deny={"geraeteupdate": [self.anna]})   # the admin blocks Anna
         self.assertEqual([r for r in hintergrund.rows(self.anna) if r["key"].startswith("devup:")], [])
         helpers.set_config(my_status=False)
 

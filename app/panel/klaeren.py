@@ -13,7 +13,7 @@ a fixed sentence, the model never picks and never writes a mapping. A choice cou
 conversation, from the same profile's own login or recognized voice, within two minutes; it carries the
 code word of the command it answers and nothing else. Remembering needs a plain yes within 15 minutes. A
 mapping is checked against the tool's data each time it is used. Never for guests; admin switch
-chat.klaeren plus the profile's own, both off; remembering has its own pair (chat.klaeren_merken). The
+chat.klaeren, off, then for every profile the admin did not block; remembering has its own (chat.klaeren_merken). The
 journal has fixed words and numbers only, never names of devices, contacts or words people said.
 """
 import json

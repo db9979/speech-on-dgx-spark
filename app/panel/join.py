@@ -3,9 +3,9 @@
 The admin switches "Neue Personen" from "aus" (default) to "nur mit Einladung" and makes an invitation:
 a one-time link with a QR code (https://<panel>/#join=<code>). The code stands after the "#", so it never
 reaches a proxy log, the panel log or a Referer. The person opens it, picks name and PIN (at least six
-characters) and is signed in; a "Startpaket" switches on the profile's own switches of a few functions
-(only those the admin has on). The same kind of link sets a new PIN for an existing profile ("PIN selbst
-wählen" / "PIN vergessen"); a profile with its second step still has to give its code.
+characters) and is signed in; it can use at once every function the admin has on (plan
+plaene/freigabe-vereinfachen.md: no per-profile release, so no "Startpakete" any more). The same kind of link
+sets a new PIN for an existing profile ("PIN selbst wählen" / "PIN vergessen"); a profile with its second step still has to give its code.
 
 Rules: while the switch is off every /api/join route answers 404. Codes are random (128 bits), only their
 hash is kept, each works once and until its day; wrong codes count like wrong PINs (guard.py lockout per
@@ -21,9 +21,10 @@ straight into a chat with itself. The same kind of invitation, "chat" names the 
 "Neue Personen: nur mit Einladung", counts toward MAX_OPEN and the admin sees and can withdraw it like his own.
 
     STATE/join.json  {"mode": "off"|"invite", "mfa": "off"|"data", "handoff": bool, "app_link": "https://...",
-                      "invites": {id: {"h", "name", "pack", "kind": "new"|"pin", "uid", "t", "until", "used", "by", "made",
+                      "invites": {id: {"h", "name", "kind": "new"|"pin", "uid", "t", "until", "used", "by", "made",
                                        "chat": uid of the inviting profile | absent}},
-                      "joined": {uid: {"t", "invite", "mfa": bool, "chat": cid | absent}}, "packs": [{"id", "name", "keys"}] | absent}
+                      "joined": {uid: {"t", "invite", "mfa": bool, "chat": cid | absent}}}
+    Older files may still hold "packs" and invitations with "pack": read without a word, dropped at the next write.
 """
 import asyncio
 import hashlib
@@ -56,7 +57,6 @@ MAX_OPEN = 50
 CHAT_OPEN = 3             # open chat invitations per profile (chats.py)
 KEEP_DAYS = 30            # expired invitations stay visible this long
 KEEP_USED_DAYS = 7        # used ones this long after use; with the profile deleted they go at once (forget)
-MAX_PACKS, MAX_PACK_KEYS = 10, 40
 MAX_BODY = 4096
 PIN_MIN = profiles.STRONG_PIN
 CODE = re.compile(r"[A-Za-z0-9_\-]{20,40}")
@@ -65,11 +65,6 @@ _UID = re.compile(r"u_[0-9a-f]{12}")
 LINK = re.compile(r"https://[A-Za-z0-9.\-]+(?::\d{1,5})?(?:/[A-Za-z0-9._~%!$&'()*+,;=:@/\-]*)?(?:\?[A-Za-z0-9._~%!$&'()*+,;=:@/?\-]*)?")
 JOIN_KEY = "\0join"       # one lockout entry for every wrong code from one address (guard.py)
 DATA_KEYS = ("mail", "documents", "agent")   # what waits for the second step ("mfa": "data")
-
-# the functions a pack may switch on: those with their own profile switch, never a role
-PACKS = ({"id": "familie", "name": "Familie", "keys": ["weather", "tasks", "chats", "iphone", "iphonepush", "contacts",
-                                                        "esp32", "transit"]},
-         {"id": "gast", "name": "Gast plus", "keys": ["weather"]})
 
 
 # ---------------------------------------------------------------- the file
@@ -84,9 +79,15 @@ def _read():
             "mfa": d.get("mfa") if d.get("mfa") in MFA_MODES else "data",
             "handoff": d.get("handoff") is True,
             "app_link": d.get("app_link") if isinstance(d.get("app_link"), str) and LINK.fullmatch(d["app_link"]) else "",
-            "invites": d.get("invites") if isinstance(d.get("invites"), dict) else {},
-            "joined": d.get("joined") if isinstance(d.get("joined"), dict) else {},
-            "packs": _clean_packs(d["packs"]) if isinstance(d.get("packs"), list) else None}
+            "invites": _invites(d.get("invites")),
+            "joined": d.get("joined") if isinstance(d.get("joined"), dict) else {}}
+
+
+def _invites(raw):
+    """The invitations; an old "pack" field (the starter packs are gone) is left out."""
+    if not isinstance(raw, dict):
+        return {}
+    return {k: {f: x for f, x in v.items() if f != "pack"} if isinstance(v, dict) else v for k, v in raw.items()}
 
 
 def _write(d):
@@ -129,45 +130,6 @@ def _hash(code):
     return hashlib.sha256(code.encode()).hexdigest()
 
 
-# ---------------------------------------------------------------- packs
-def packable():
-    """Functions a pack can switch on: an own profile switch, not the admin-mode ones."""
-    return [f for f in features.FEATURES if f.profile and f.key not in ("iphonepanel", "iphoneupdate")]
-
-
-def _clean_packs(raw):
-    keys = {f.key for f in packable()}
-    out = []
-    for p in raw[:MAX_PACKS]:
-        if not isinstance(p, dict):
-            continue
-        name = re.sub(r"[\x00-\x1f<>\"\\]", "", str(p.get("name") or "")).strip()[:30]
-        pid = str(p.get("id") or "")
-        if not name or not re.fullmatch(r"[a-z0-9]{1,16}", pid):
-            continue
-        ks = [k for k in p.get("keys", []) if k in keys][:MAX_PACK_KEYS] if isinstance(p.get("keys"), list) else []
-        if not any(x["id"] == pid for x in out):
-            out.append({"id": pid, "name": name, "keys": sorted(set(ks))})
-    return out
-
-
-def packs():
-    d = _read()
-    return d["packs"] if d["packs"] is not None else _clean_packs([dict(p) for p in PACKS])
-
-
-def apply_pack(uid, pack_id):
-    """Switches on the profile's own switches of the pack's functions that the Spark has on. Returns the keys."""
-    p = next((x for x in packs() if x["id"] == pack_id), None)
-    if not p:
-        return []
-    c = features.chat_cfg()
-    on = [k for k in p["keys"] if k in features.BY_KEY and features.BY_KEY[k].profile and features.admin_on(k, c)]
-    if on:
-        profiles.save_settings(uid, {features.BY_KEY[k].profile: True for k in on})
-    return on
-
-
 # ---------------------------------------------------------------- the second step for new profiles
 def mfa_due(uid):
     """True while this profile came in by invitation with the duty and has no second step (and can set one up)."""
@@ -205,7 +167,7 @@ features.DUTY = _duty   # features.reason asks it: "mfa" (erst den zweiten Anmel
 def _public(i, v, now):
     state = "used" if v.get("used") else "gone" if v.get("until", 0) < now else "open"
     who = profiles.by_id(v.get("uid")) if v.get("uid") else None
-    return {"id": i, "name": v.get("name", ""), "pack": v.get("pack", ""), "kind": v.get("kind", "new"),
+    return {"id": i, "name": v.get("name", ""), "kind": v.get("kind", "new"),
             "profile": (who or {}).get("name"), "made": v.get("t"), "until": v.get("until"), "used": v.get("used"),
             "by": v.get("by", ""), "state": state, "chat": bool(v.get("chat"))}
 
@@ -230,7 +192,7 @@ def listing(now=None):
     return sorted(out, key=lambda x: (x["state"] != "open", -(x["made"] or 0)))
 
 
-def make(name, pack, days, uid=None, by="", now=None, chat=""):
+def make(name, days, uid=None, by="", now=None, chat=""):
     """A new invitation. Returns (id, code); the code is shown only now. chat: the profile inviting into a chat with
     itself (chats.py), at most CHAT_OPEN open ones per profile."""
     now = int(now if now is not None else time.time())
@@ -243,7 +205,7 @@ def make(name, pack, days, uid=None, by="", now=None, chat=""):
         if chat and len(open_chats(chat, now, d)) >= CHAT_OPEN:
             raise HTTPException(409, f"Du hast schon {CHAT_OPEN} offene Einladungen. Erst eine zurückziehen.")
         iid = "i_" + secrets.token_hex(6)
-        d["invites"][iid] = {"h": _hash(code), "name": name, "pack": pack, "kind": "pin" if uid else "new",
+        d["invites"][iid] = {"h": _hash(code), "name": name, "kind": "pin" if uid else "new",
                              "uid": uid or "", "t": now, "until": now + days * 86400, "used": None, "by": by}
         if chat:
             d["invites"][iid]["chat"] = chat
@@ -327,7 +289,7 @@ def chat_of(uid):
 
 
 def create_profile(code, name, pin, now=None):
-    """The person's own profile from a "new" invitation: (uid, name, pack keys switched on).
+    """The person's own profile from a "new" invitation: (uid, name). What it may use is what the admin has on.
     Raises HTTPException for a bad code, name or PIN."""
     now = int(now if now is not None else time.time())
     iid, v = find(code, now)
@@ -356,14 +318,10 @@ def create_profile(code, name, pin, now=None):
         except Exception as e:
             print("join: chat invitation failed:", type(e).__name__, flush=True)
     _joined(uid, iid, now, cid)
-    # the functions the admin switches on for every new profile (Wer darf was → Neue Profile), then the invitation's pack
-    first = [k for k in features.new_profile(uid) if features.admin_on(k)]
-    on = apply_pack(uid, v.get("pack", ""))
-    on = first + [k for k in on if k not in first]
     import onboard
     onboard.save_state(uid, fresh=not cid)   # "Los geht's" opens at the first sign-in (a chat invitation opens the chat)
-    guard.log("invite_used", uid=uid, name=name, invite=iid, pack=v.get("pack") or None, chat=bool(cid) or None)
-    return uid, name, on
+    guard.log("invite_used", uid=uid, name=name, invite=iid, chat=bool(cid) or None)
+    return uid, name
 
 
 async def _json(request):
@@ -402,9 +360,8 @@ def _by(request):
 @router.get("/api/admin/join", dependencies=[Depends(auth)])
 def admin_get():
     c = features.chat_cfg()
-    return dict(settings(), invites=listing(), packs=packs(), max_open=MAX_OPEN, days=list(DAYS), pin_min=PIN_MIN,
-                mfa_on=features.admin_on("mfa", c), iphone_on=features.admin_on("iphone", c),
-                packable=[{"key": f.key, "name": [f.de, f.en], "on": features.admin_on(f.key, c)} for f in packable()])
+    return dict(settings(), invites=listing(), max_open=MAX_OPEN, days=list(DAYS), pin_min=PIN_MIN,
+                mfa_on=features.admin_on("mfa", c), iphone_on=features.admin_on("iphone", c))
 
 
 @router.put("/api/admin/join", dependencies=[Depends(auth), Depends(admin_code)])
@@ -431,26 +388,9 @@ async def admin_put(request: Request):
     with _lock:
         d = _read()
         d.update(new)
-        if d["packs"] is None:
-            d.pop("packs")
         _write(d)
     guard.log("join_settings", by=_by(request), mode=new["mode"], mfa=new["mfa"], handoff=new["handoff"])
     return settings()
-
-
-@router.put("/api/admin/join/packs", dependencies=[Depends(auth)])
-async def admin_packs(request: Request):
-    body = await _json(request)
-    raw = body.get("packs")
-    if not isinstance(raw, list) or len(raw) > MAX_PACKS:
-        raise HTTPException(400, f"packs: a list of at most {MAX_PACKS}")
-    clean = _clean_packs(raw)
-    with _lock:
-        d = _read()
-        d["packs"] = clean
-        _write(d)
-    guard.log("join_packs", by=_by(request), packs=len(clean))
-    return {"packs": clean}
 
 
 def _qr(text):
@@ -478,15 +418,12 @@ async def admin_invite(request: Request):
         import coadmin
         if acting_profile(request) and coadmin.role(uid):
             raise HTTPException(403, "Profile mit Admin-Rolle ändert nur der Hauptadmin.")
-        name, pack = profiles.by_id(uid)["name"], ""
+        name = profiles.by_id(uid)["name"]
     else:
         if mode() != "invite":
             raise HTTPException(409, "Erst „Neue Personen: nur mit Einladung“ einschalten.")
         name = re.sub(r"[\x00-\x1f<>\"\\]", "", str(body.get("name") or "")).strip()[:40]
-        pack = str(body.get("pack") or "")
-        if pack and not any(p["id"] == pack for p in packs()):
-            raise HTTPException(400, "unknown pack")
-    iid, code = make(name, pack, days, uid=uid or None, by=_by(request))
+    iid, code = make(name, days, uid=uid or None, by=_by(request))
     link = f"{base}/#join={code}"
     guard.log("invite_made", by=_by(request), invite=iid, name=name or None, kind="pin" if uid else "new", days=days)
     out = {"id": iid, "link": link, "qr": _qr(link), "days": days}
@@ -536,11 +473,10 @@ async def join_check(request: Request):
     body = await _json(request)
     iid, v = _peek(request, body.get("code"))
     c = features.chat_cfg()
-    pack = next((p for p in packs() if p["id"] == v.get("pack")), None)
     uid = v.get("uid") or ""
     return {"kind": v.get("kind", "new"), "name": (profiles.by_id(uid) or {}).get("name") if uid else v.get("name", ""),
             "until": v.get("until"), "pin_min": PIN_MIN, "code": bool(uid and mfa.enabled(uid)),
-            "pack": pack["name"] if pack else "", "mfa": _read()["mfa"] == "data" and features.admin_on("mfa", c),
+            "mfa": _read()["mfa"] == "data" and features.admin_on("mfa", c),
             "app": features.admin_on("iphone", c) and v.get("kind") == "new"}
 
 
@@ -582,8 +518,8 @@ async def join(request: Request):
         _cookie(r, uid, request)
         guard.succeeded(request, name, r)
         return r
-    uid, name, on = create_profile(code, body.get("name"), body.get("pin"), now)
-    r = Response(json.dumps({"ok": True, "name": name, "kind": "new", "on": on, "chat": chat_of(uid)}),
+    uid, name = create_profile(code, body.get("name"), body.get("pin"), now)
+    r = Response(json.dumps({"ok": True, "name": name, "kind": "new", "chat": chat_of(uid)}),
                  media_type="application/json")
     _cookie(r, uid, request)
     guard.succeeded(request, name, r)
@@ -613,10 +549,9 @@ async def app_join(request: Request):
         raise HTTPException(403, "Die iPhone-App ist auf diesem Spark aus.")
     body = await _json(request)
     _peek(request, body.get("code"))
-    uid, name, on = create_profile(body.get("code"), body.get("name"), body.get("pin"))
-    profiles.save_settings(uid, {"app_on": True})
+    uid, name = create_profile(body.get("code"), body.get("name"), body.get("pin"))
     token = profiles.add_device(iphone._name(body.get("device")), uid, scope="app")
     guard.log("invite_app", uid=uid, name=name)
     _tell_admin(name)
-    return {"token": token, "profile": name, "version": iphone.app_version(), "language": iphone._language(), "on": on,
+    return {"token": token, "profile": name, "version": iphone.app_version(), "language": iphone._language(),
             "chat": chat_of(uid)}

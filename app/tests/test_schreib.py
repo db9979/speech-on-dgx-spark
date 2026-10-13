@@ -50,7 +50,7 @@ def notaus_off():
 
 class Schreib(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(write_help=True)
+        helpers.set_config(write_help=True, deny={})
         for k in [k for k in guard._rate if k[0] in ("write", "image", "pair")]:   # every test client shares one address
             guard._rate.pop(k, None)
         schreib._busy.clear()
@@ -58,22 +58,22 @@ class Schreib(unittest.TestCase):
         notaus_off()
 
     def tearDown(self):
-        helpers.set_config(write_help=False, write_apps=False, images=False, mail=False, mail_tidy=False, public=False)
+        helpers.set_config(write_help=False, write_apps=False, images=False, mail=False, mail_tidy=False, public=False,
+                           deny={})
         notaus_off()
 
     def on(self, name):
-        c = profile(name)
-        self.assertEqual(c.put("/api/profile/settings", json={"write_on": True}).status_code, 200)
-        return c
+        return profile(name)   # released by the admin: works at once, nothing to switch on
 
     def test_off_by_default_both_switches_and_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["write_help"], False)
-        self.assertIs(profiles.SETTINGS["write_on"][0], False)
+        self.assertNotIn("write_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
         c = profile("Sina")
+        helpers.set_config(deny={"schreib": [uid_of("Sina")]})                                  # the admin blocks Sina
         self.assertFalse(c.get("/api/write").json()["on"])
-        self.assertEqual(c.post("/api/write/assist", json={"text": "Hallo"}).status_code, 403)   # profile switch off
-        c.put("/api/profile/settings", json={"write_on": True})
+        self.assertEqual(c.post("/api/write/assist", json={"text": "Hallo"}).status_code, 403)
+        helpers.set_config(deny={})                                                             # released: at once
         self.assertTrue(c.get("/api/write").json()["on"])
         self.assertEqual(c.post("/api/write/assist", json={"text": "Hallo"}).status_code, 200)
         helpers.set_config(write_help=False)                                                    # admin switch off
@@ -171,7 +171,6 @@ class Schreib(unittest.TestCase):
         from tests.test_images import jpeg
         self.assertEqual(c.post("/api/write/picture", json={"id": "A" * 22}).status_code, 403)
         helpers.set_config(images=True)
-        c.put("/api/profile/settings", json={"images_on": True})
         self.assertTrue(c.get("/api/write").json()["pics"])
         up = c.post("/api/chat/image", content=jpeg(), headers={"Content-Type": "image/jpeg"}).json()
         r = c.post("/api/write/picture", json={"id": up["id"]})
@@ -217,9 +216,7 @@ class Schreib(unittest.TestCase):
 
     def apps_on(self, name):
         helpers.set_config(write_help=True, write_apps=True)
-        c = self.on(name)
-        self.assertEqual(c.put("/api/profile/settings", json={"write_on": True, "write_apps": True}).status_code, 200)
-        return c
+        return self.on(name)
 
     def pair(self, c, kind="windows", name="Laptop"):
         r = c.post("/api/profile/write/pair", json={"base": "https://spark.example.de"})
@@ -253,11 +250,10 @@ class Schreib(unittest.TestCase):
         # the program shows in the profile's list and only with its kind in logs
         devs = c.get("/api/profile/write/devices").json()["devices"]
         self.assertEqual([d["name"] for d in devs], ["Schreibhilfe Windows · Laptop"])
-        # switching "In anderen Programmen" off stops the key, the browser goes on
-        c.put("/api/profile/settings", json={"write_apps": False})
+        # the admin blocking "In anderen Programmen" for the profile stops the key, the browser goes on
+        helpers.set_config(deny={"schreibapps": [uid_of("Bert")]})
         self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 503)   # pairing stays (V01.0.388)
         self.assertEqual(c.post("/api/write/assist", json={"text": "x"}).status_code, 200)
-        c.put("/api/profile/settings", json={"write_apps": True})
         # removing it in the panel cuts it off at once
         self.assertEqual(c.delete("/api/profile/write/devices/" + devs[0]["id"]).status_code, 200)
         self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 401)

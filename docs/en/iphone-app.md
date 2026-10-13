@@ -5,11 +5,11 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 ## Switch it on in the panel
 
 1. Admin: **Features → iPhone app** on, save.
-2. Profile: **Me → iPhone app → "iPhone app for me"** on.
+2. This works at once for every profile. Only the admin blocks single profiles (**Features → Who may do what**).
 3. To switch lights and devices from the app: **"Smart home from the app"** on. The code word applies as everywhere.
 4. For the wake word and stand mode: **"Allow listening all the time"** on.
 5. To start routes and calls by voice: **"Routes and calls on the iPhone"** on.
-6. Notes on its own (morning briefing, reminders) come when **"On its own"** is on for the profile. Reminders and timers ring as iPhone notifications, also with the app closed.
+6. Notes on its own (morning briefing, reminders) come from the start; they can be switched off under **Me → Proactive**. Reminders and timers ring as iPhone notifications, also with the app closed.
 
 ## Getting the app onto the iPhone (on a Mac, about 15 minutes once)
 
@@ -58,7 +58,7 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 - **Quick start:** "Talk to Spark" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → "Talk to Spark". In Control Center (iOS 18 and later) via "Add a Control", on the lock screen as a widget. With Siri: "Hey Siri, Start Spark".
 - **History:** The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel.
 - **Today** (since V01.0.286): the sun at the top right shows what is due today, like *Me → Today* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh.
-- **Ask about a photo or document:** The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. **Let the Spark look at photos:** with "Let the model look at photos from the app" on under Me → iPhone app (plus the admin and profile switches for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text.
+- **Ask about a photo or document:** The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. **Let the Spark look at photos:** with "Let the model look at photos from the app" on under Me → iPhone app (plus the admin switch for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text.
 - **Save to "My documents":** With "Store documents from the app" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel.
 - **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.
 - **English:** On an iPhone set to English the app is in English, including the wake word and Siri ("Ask Spark", "Start Spark").
@@ -120,7 +120,7 @@ Needs the Apple Developer Program. Once:
 
 1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → tick **Apple Push Notifications service (APNs)** → **Continue → Register → Download**. The `.p8` file can be downloaded only once. The **Key ID** is shown next to it, the **Team ID** under **Membership**.
 2. Panel as admin: **Features → Push to the iPhone app** on, enter `.p8`, Key ID, Team ID and the app's bundle ID. **Kind of app**: "Development" while you install from Xcode, "Production" for TestFlight and the App Store. Save.
-3. Profile: **Me → iPhone app → "Notifications to the iPhone"** on.
+3. Profile: nothing to do, "Notifications to the iPhone" is on from the start. It can be switched off under **Me → iPhone app → "Notifications to the iPhone"**.
 4. Open the app once and allow notifications, then **"Send a test message"** in the panel.
 
 Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only "Neue Nachricht vom Spark" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. With push, reminders no longer ring twice. At most 30 notifications per hour and profile.
@@ -139,7 +139,7 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 
 - Each iPhone gets its own key when pairing, kept only in that iPhone's keychain and on the Spark only as a hash.
 - The key may only ask and listen (chat, speech recognition, Siri question). Settings, memory, devices, connections and further pairings are refused.
-- The profile's switch off locks all its iPhones at once, the admin switch all of them. Remove a lost iPhone under **Me → iPhone app → Remove**.
+- When the admin blocks a profile (Features → Who may do what), all its iPhones are locked at once, the admin switch locks all of them. Remove a lost iPhone under **Me → iPhone app → Remove**.
 - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key.
 - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your "yes" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call.
 - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on.

@@ -1454,9 +1454,13 @@ class Fixes(unittest.TestCase):
         uid = a.get("/api/whoami").json()["profile"]["id"]
         helpers.set_config(learn_fixes=True, memory=True)
         self.assertTrue(a.get("/api/profile/settings").json()["allow"]["fix_learn"])
+        # the admin blocks it for this profile (Funktionen → Wer darf was): no question
+        self.assertEqual(ADMIN.put(f"/api/admin/features/fixes/profiles/{uid}", json={"on": False}).status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/fixes/profiles/{uid}", json={"on": True})
+        self.assertFalse(a.get("/api/profile/settings").json()["allow"]["fix_learn"])
         said = self._chat(a, "Wie heißt mein Bruder?", "Er heißt Max.", "Nein, das stimmt nicht, er heißt Tim. FACT Lias Bruder heißt Tim.")
-        self.assertNotIn("Soll ich mir merken", said)              # the profile has not switched it on
-        a.put("/api/profile/settings", json={"fix_learn": True})
+        self.assertNotIn("Soll ich mir merken", said)
+        self.assertEqual(ADMIN.put(f"/api/admin/features/fixes/profiles/{uid}", json={"on": True}).status_code, 200)
         said = self._chat(a, "Wie heißt mein Bruder?", "Er heißt Max.", "Nein, das stimmt nicht, er heißt Tim. FACT Lias Bruder heißt Tim.")
         self.assertIn("Soll ich mir merken: Lias Bruder heißt Tim?", said)
         self.assertNotIn("Lias Bruder heißt Tim.", [x["text"] for x in profiles.memory(uid)])
@@ -1701,9 +1705,15 @@ class Proactive(unittest.TestCase):
         import proactive
         a = profile("Pina")
         uid = a.get("/api/whoami").json()["profile"]["id"]
-        self.assertIsNone(self.say(uid))                       # the profile has not switched it on
+        a.put("/api/profile/settings", json={"pro_on": False, "pro_quiet": ""})
+        self.assertIsNone(self.say(uid, "events", "x"))        # the profile switched its preference off
         a.put("/api/profile/settings", json={"pro_on": True, "pro_quiet": "", "pro_greet": False})
         self.assertIsNone(self.say(uid))                       # this kind is off
+        # the admin blocks it for this profile (Funktionen → Wer darf was)
+        self.assertEqual(ADMIN.put(f"/api/admin/features/proactive/profiles/{uid}", json={"on": False}).status_code, 200)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/proactive/profiles/{uid}", json={"on": True})
+        self.assertIsNone(self.say(uid, "events", "x"))
+        self.assertEqual(ADMIN.put(f"/api/admin/features/proactive/profiles/{uid}", json={"on": True}).status_code, 200)
         self.assertTrue(self.say(uid, "events", "In 20 Minuten: Zahnarzt."))
         helpers.set_config(proactive=False)
         self.assertIsNone(self.say(uid, "events", "x"))        # the admin turned it off
@@ -1920,7 +1930,7 @@ class Proactive(unittest.TestCase):
         s = a.put("/api/profile/settings", json={"pro_quiet": "25:00-07:00", "pro_max": 0, "pro_lead": 7,
                                                  "pro_place": "<b>", "pro_on": "ja"}).json()["settings"]
         self.assertFalse(any(k in s for k in ("pro_quiet", "pro_max", "pro_lead", "pro_place", "pro_on")))
-        self.assertFalse(a.get("/api/profile/settings").json()["settings"]["pro_on"])    # off by default
+        self.assertIs(a.get("/api/profile/settings").json()["settings"]["pro_on"], True)  # a preference: on unless switched off
 
 
 class Room(unittest.TestCase):

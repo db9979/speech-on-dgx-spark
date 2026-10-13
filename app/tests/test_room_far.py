@@ -63,7 +63,7 @@ def ctx(uid, src="web:v1", **kw):
 
 class RoomFar(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(room=True, room_remote=True, esp32=True, public=False)
+        helpers.set_config(room=True, room_remote=True, esp32=True, public=False, deny={})
         roomlive.ACTIVE.clear()
         roomfar._PENDING.clear()
         guard._rate.clear()
@@ -74,7 +74,7 @@ class RoomFar(unittest.TestCase):
                 s.room["task"].cancel()
         esp32._live.clear()
         roomfar._PENDING.clear()
-        helpers.set_config(room=False, room_remote=False, esp32=False)
+        helpers.set_config(room=False, room_remote=False, esp32=False, deny={})
 
     def test_sentences(self):
         p = roomfar.parse
@@ -92,17 +92,18 @@ class RoomFar(unittest.TestCase):
     def test_off_by_default_and_fixed_answer(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["room_remote"], False)
-        self.assertIs(profiles.SETTINGS["room_remote"][0], False)
+        self.assertNotIn("room_remote", profiles.SETTINGS)   # no profile switch: released by the admin, it works
         a, uid = profile("Rf Aus")
-        a.put("/api/profile/settings", json={"esp_on": True})
         speaker(uid, "Wohnzimmer")
+        helpers.set_config(deny={"roomfar": [uid]})            # the admin blocks this profile
         helpers.HA_CALLS.clear()
         r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Kannst du den Raummodus für den "
                                                    "Lautsprecher im Wohnzimmer aktivieren?"}], "convo": "f1"})
         self.assertEqual(r.status_code, 200)
         call = helpers.LLM_CALLS[-1]
         said = json.dumps(call, ensure_ascii=False)
-        self.assertIn("Ich → Raum-Modus", said)     # the profile switch is still off: says where
+        self.assertIn("Funktionen → Wer darf was", said)   # blocked by the admin: says where
+        self.assertNotIn("Ich →", said)
         self.assertFalse(call.get("tools"))           # no smart home, no other tools in this turn
         self.assertEqual(helpers.HA_CALLS, [])
         self.assertEqual(roomfar._PENDING, {})
@@ -114,7 +115,6 @@ class RoomFar(unittest.TestCase):
 
     def test_start_after_yes_only(self):
         a, uid = profile("Rf Jana")
-        a.put("/api/profile/settings", json={"esp_on": True, "room_remote": True})
         did = speaker(uid, "Lautsprecher 2", area="Wohnzimmer")
 
         async def run():
@@ -151,8 +151,6 @@ class RoomFar(unittest.TestCase):
     def test_only_own_connected_speakers(self):
         a, uid = profile("Rf Ben")
         b, other = profile("Rf Ida")
-        for c in (a, b):
-            c.put("/api/profile/settings", json={"esp_on": True, "room_remote": True})
         mine = speaker(uid, "Küche")
         theirs = speaker(other, "Wohnzimmer")
 
@@ -170,7 +168,6 @@ class RoomFar(unittest.TestCase):
 
     def test_who_may_start(self):
         a, uid = profile("Rf Kai")
-        a.put("/api/profile/settings", json={"esp_on": True, "room_remote": True})
         did = speaker(uid, "Bad")
 
         async def run():
@@ -183,14 +180,13 @@ class RoomFar(unittest.TestCase):
             self.assertIn("angemeldete", roomfar.why_not({"who": None, "own": True}))
             # the switch going off between question and "Ja" stops it
             await roomfar.answer(ctx(uid), "Raummodus im Bad an")
-            a.put("/api/profile/settings", json={"room_remote": False})
+            helpers.set_config(deny={"roomfar": [uid]})   # the admin blocks the profile in between
             await roomfar.answer(ctx(uid), "Ja")
             self.assertIsNone(s.room)
         asyncio.run(run())
 
     def test_several_fit_ask_again(self):
         a, uid = profile("Rf Lea")
-        a.put("/api/profile/settings", json={"esp_on": True, "room_remote": True})
         for n in ("Küche oben", "Küche unten"):
             speaker(uid, n)
 

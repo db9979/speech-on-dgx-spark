@@ -1,6 +1,6 @@
 """Erst lokal suchen (V01.0.264, plan plaene/erst-lokal.md): before anything goes outside, the panel looks in
-the person's own sources itself. Off until the admin allows it (chat.local_first) and the profile switches it
-on for itself (setting local_first). Guests never (they have no own sources).
+the person's own sources itself. Off until the admin allows it (chat.local_first); then
+on for every profile unless the admin blocks one (Funktionen → Wer darf was). Guests never (they have no own sources).
 
 A fixed rule (classify) sorts the person's own latest message, never the model:
 - "extern": asks for the web in so many words, weather, trains, parcels, news, prices, anything current.
@@ -93,8 +93,8 @@ def admin_on(cfg=None):
 
 
 def on(cfg, who):
-    """The admin's and the profile's own switch (never for guests, never from the admin's presets)."""
-    return bool(who and admin_on(cfg) and profiles.settings(who["id"]).get("local_first") is True)
+    """Released by the admin for this profile (never for guests)."""
+    return bool(who and admin_on(cfg) and features.allowed("lokal", who["id"]))
 
 
 def budget(cfg):

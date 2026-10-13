@@ -50,6 +50,14 @@ def profile(name, pin="1234", **settings):
     return c, uid
 
 
+def block(tc, uid, key, on=False):
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile (chat.deny)."""
+    r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+    assert r.status_code == 200, r.text
+    if not on:
+        tc.addCleanup(block, tc, uid, key, True)
+
+
 def _uid(client):
     return client.get("/api/whoami").json()["profile"]["id"]
 
@@ -273,6 +281,12 @@ class Live(Base):
 
     def test_live_connection_sees_short_motion(self):
         a, uid = profile("Lino", pro_ha_live=True)
+        # live notes are on for every profile with rules unless switched off: only Lino's stream here, so the
+        # test's events reach his connection and no other profile's
+        from unittest import mock
+        p = mock.patch.object(profiles, "user_ids", lambda: [uid])
+        p.start()
+        self.addCleanup(p.stop)
         r = a.post("/api/proactive/rules", json={"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}],
                                                  "text": "Bewegung im Flur."})
         self.assertEqual(r.status_code, 200, r.text)
@@ -309,8 +323,14 @@ class Live(Base):
     def test_live_off_without_switches_and_refused_token(self):
         a, uid = profile("Lorna")
         a.post("/api/proactive/rules", json={"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}]})
-        self.assertFalse(hamelden.live_wanted(uid))                     # the profile has not switched it on
+        self.assertTrue(hamelden.live_wanted(uid))                      # a preference, on unless switched off
+        a.put("/api/profile/settings", json={"pro_ha_live": False})
+        self.assertFalse(hamelden.live_wanted(uid))                     # the profile switched it off
         a.put("/api/profile/settings", json={"pro_ha_live": True})
+        self.assertTrue(hamelden.live_wanted(uid))
+        block(self, uid, "halive")
+        self.assertFalse(hamelden.live_wanted(uid))                     # the admin blocked it for this profile
+        block(self, uid, "halive", on=True)
         self.assertTrue(hamelden.live_wanted(uid))
         helpers.set_config(ha_live=False)
         self.assertFalse(hamelden.live_wanted(uid))                     # the admin has not
@@ -438,9 +458,12 @@ class Loud(Base):
 
 class Events(Base):
     def test_events_with_their_own_key(self):
-        a, uid = profile("Elfi")
+        a, uid = profile("Elfi", pro_ha_events=False)
         self.assertEqual(a.put("/api/profile/ha-events", json={"events": []}).status_code, 403)   # profile off
         a.put("/api/profile/settings", json={"pro_ha_events": True})
+        block(self, uid, "haevent")
+        self.assertEqual(a.put("/api/profile/ha-events", json={"events": []}).status_code, 403)   # blocked by the admin
+        block(self, uid, "haevent", on=True)
         self.assertEqual(a.put("/api/profile/ha-events", json={"events": [{"name": "klingel", "text": "Es hat geklingelt."}]}).status_code, 200)
         token = a.post("/api/profile/ha-events/key", json={}).json()["token"]
         ha = TestClient(panel.app)
@@ -521,7 +544,7 @@ class Voice(Base):
         return {"who": {"id": uid}, "own": True, "src": src}
 
     def test_proposal_then_yes(self):
-        a, uid = profile("Verena", pro_ha_voice=True)
+        a, uid = profile("Verena")
         res = asyncio.run(hamelden.answer(self.ctx(uid), "Gib mir Bescheid, wenn Bewegung im Garten erkannt wird"))
         self.assertIn("Noch NICHT angelegt", res["system"])
         self.assertIn("Garten Bewegung", res["system"])                 # the sensor, not the garden lamp
@@ -541,7 +564,7 @@ class Voice(Base):
         self.assertEqual(len(a.get("/api/proactive/status").json()["rules"]), 1)
 
     def test_person_and_doorbell(self):
-        _, uid = profile("Vito", pro_ha_voice=True)
+        _, uid = profile("Vito")
         res = asyncio.run(hamelden.answer(self.ctx(uid), "Melde dich, wenn Anna heimkommt"))
         self.assertIn("Anna ist zu Hause", res["system"])
         hamelden._PENDING.clear()
@@ -550,11 +573,12 @@ class Voice(Base):
 
     def test_off_and_not_for_others(self):
         _, uid = profile("Vivi")
-        self.assertIsNone(asyncio.run(hamelden.answer(self.ctx(uid), "Melde dich, wenn Anna heimkommt")))   # profile off
+        block(self, uid, "havoice")
+        self.assertIsNone(asyncio.run(hamelden.answer(self.ctx(uid), "Melde dich, wenn Anna heimkommt")))   # blocked by the admin
         self.assertIsNone(asyncio.run(hamelden.answer({"who": {"id": uid}, "own": False, "src": "x"},
                                                       "Melde dich, wenn Anna heimkommt")))
         self.assertIsNone(asyncio.run(hamelden.answer({"who": None, "own": False}, "Melde dich, wenn Anna heimkommt")))
-        _, uid2 = profile("Volker", pro_ha_voice=True)
+        _, uid2 = profile("Volker")                     # released by the admin: works at once
         helpers.set_config(ha_voice_rules=False)
         self.assertIsNone(asyncio.run(hamelden.answer(self.ctx(uid2), "Melde dich, wenn Anna heimkommt")))
         helpers.set_config(ha_voice_rules=True)
@@ -565,7 +589,7 @@ class Voice(Base):
 
 class Camera(Base):
     def test_described_only_when_on(self):
-        a, uid = profile("Kaja")
+        a, uid = profile("Kaja", pro_ha_cam=False)
         body = {"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}], "camera": "Kamera Haustür"}
         self.assertIn("aus", a.post("/api/proactive/rules", json=body).json()["detail"])
         a.put("/api/profile/settings", json={"pro_ha_cam": True})
@@ -585,9 +609,13 @@ class Camera(Base):
         for key in ("halive", "haloud", "haevent", "havoice", "hacam"):
             f = features.BY_KEY[key]
             self.assertEqual(f.parent, "proactive")
-            self.assertFalse(f.guests)
-            self.assertTrue(f.profile.startswith("pro_ha_"))
-            self.assertIs(profiles.SETTINGS[f.profile][0], False)
+            self.assertFalse(features.allowed(f.key, None))
+            if key == "havoice":                       # asked for by voice: no preference, the admin's release counts
+                self.assertEqual(f.pref, "")
+                self.assertNotIn("pro_ha_voice", profiles.SETTINGS)
+                continue
+            self.assertTrue(f.pref.startswith("pro_ha_"))   # done unasked: a preference, on unless switched off
+            self.assertIs(profiles.SETTINGS[f.pref][0], True)
 
 
 if __name__ == "__main__":

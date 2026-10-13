@@ -5,7 +5,7 @@ the boxes are read back from the strokes geometrically (ticked, filled in = take
 only ever read when the Spark made it and recorded its boxes, "Kann weg" puts it into the trash (into "Archiv" when
 there is handwriting on it), a reminder's box marks it done and filling it in brings it back, a sheet with marks is
 never filled with new text, folders by kind, sorting in and tidying up after 7 / 30 days. All off by default
-(admin switch plus profile switch), never guests. No test depends on the clock: times are passed in.
+(admin switch); released, it works at once for every profile the admin did not block, never guests. No test depends on the clock: times are passed in.
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
@@ -122,9 +122,10 @@ class Paper(Base):
 
     def on(self, name, model="move", folders=True, tidy=False):
         c, uid = self.paired(name)
-        r = c.put("/api/profile/settings", json={"rm_send": True, "rm_paper": True, "rm_folders": folders,
-                                                 "rm_tidy": tidy, "rm_model": model})
+        r = c.put("/api/profile/settings", json={"rm_tidy": tidy, "rm_model": model})
         self.assertEqual(r.status_code, 200, r.text)
+        if not folders:
+            self.block("rmordner", uid)          # the admin blocked "Ordner nach Art" for this profile
         return c, uid
 
     def sheet(self, uid, todo=(), art="morgen"):
@@ -136,21 +137,34 @@ class Paper(Base):
 
 @unittest.skipIf(si is None, "rmscene missing")
 class Switches(Paper):
-    def test_off_by_default_admin_and_profile_needed_never_guests(self):
+    def test_off_by_default_admin_releases_admin_blocks_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["remarkable_paper"], False)
-        for k in ("rm_paper", "rm_folders", "rm_tidy"):
-            self.assertIs(profiles.SETTINGS[k][0], False, k)
+        for k in ("rm_paper", "rm_folders"):
+            self.assertNotIn(k, profiles.SETTINGS)                 # no release switch of its own any more
         self.assertEqual(profiles.SETTINGS["rm_model"][0], "auto")
         self.assertNotIn("rmpapier", features.DEFAULT_ON)
         self.assertIn("remarkable_send", features.chain_switches("rmpapier"))
         c, uid = self.paired("Ppoff")
-        c.put("/api/profile/settings", json={"rm_send": True})
+        self.assertTrue(rmpapier.paper_on(uid) and rmpapier.folders_on(uid))   # released: works at once
+        for key, on, path, name in (("rmpapier", rmpapier.paper_on, "abgleich", "rm_paper"),
+                                    ("rmordner", rmpapier.folders_on, "einsortieren", "rm_folders")):
+            self.block(key, uid)
+            self.assertFalse(on(uid), key)                                      # the admin blocked this profile
+            self.assertEqual(c.post(f"/api/profile/remarkable/papier/{path}").status_code, 403)
+            c.put("/api/profile/settings", json={name: True})
+            self.assertFalse(on(uid), key)                                      # the profile cannot lift it
+            self.block(key, uid, on=True)
+            self.assertTrue(on(uid), key)
+        self.block("rmsend", uid)                                               # blocked what it builds on
         self.assertFalse(rmpapier.paper_on(uid) or rmpapier.folders_on(uid))
-        self.assertEqual(c.post("/api/profile/remarkable/papier/abgleich").status_code, 403)
-        self.assertEqual(c.post("/api/profile/remarkable/papier/einsortieren").status_code, 403)
-        c.put("/api/profile/settings", json={"rm_paper": True, "rm_folders": True})
-        self.assertTrue(rmpapier.paper_on(uid) and rmpapier.folders_on(uid))
+        self.block("rmsend", uid, on=True)
+        # "Selbst aufräumen" does something unasked: a preference, on unless the profile switches it off
+        self.assertIs(profiles.SETTINGS["rm_tidy"][0], True)
+        self.assertEqual(features.BY_KEY["rmaufraeumen"].pref, "rm_tidy")
+        self.assertTrue(features.allowed("rmaufraeumen", uid))
+        c.put("/api/profile/settings", json={"rm_tidy": False})
+        self.assertFalse(features.allowed("rmaufraeumen", uid))
         helpers.set_config(remarkable_paper=False)
         self.assertFalse(rmpapier.paper_on(uid))
         self.assertEqual(c.post("/api/profile/remarkable/papier/abgleich").status_code, 403)
@@ -419,7 +433,7 @@ class Folders(Paper):
         old, mine = str(uuid.UUID(int=601)), str(uuid.UUID(int=602))
         CLOUD[0].doc(old, "Wochenrückblick KW 40", [], parent=base, kind="epub")
         CLOUD[0].doc(mine, "Morgenblatt Notizen", [(str(uuid.UUID(int=603)), page_mm(m, writing(m)))], parent=base)  # a notebook
-        c.put("/api/profile/settings", json={"rm_folders": True})
+        self.block("rmordner", uid, on=True)
         r = c.post("/api/profile/remarkable/papier/einsortieren")
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(r.json()["moved"], 2)
@@ -465,7 +479,7 @@ class Guide(unittest.TestCase):
         for k in ("rmpapier", "rmordner", "rmaufraeumen"):
             self.assertIn(k, features.BY_KEY)
             self.assertIn(k, [g[0] for g in rmplus.GUIDE])
-        for k in ("rm_paper", "rm_folders", "rm_tidy", "rm_model"):
+        for k in ("rm_tidy", "rm_model"):
             self.assertIn(k, berater_katalog.OHNE_PROFIL)
 
 
@@ -508,7 +522,7 @@ class Tasks(Paper):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["remarkable_tasks"], False)
         self.assertNotIn("rm_tasks", profiles.SETTINGS)          # Dominik's rule: the admin's release is enough
-        self.assertEqual(features.BY_KEY["rmaufgaben"].profile, "")
+        self.assertEqual(features.BY_KEY["rmaufgaben"].pref, "")
         c, uid = self.on("Ptoff")
         self.assertTrue(rmaufgaben.on(uid))
         self.assertFalse(rmaufgaben.due(uid, 2_000_000_000))       # nothing comes by itself before the first sheet

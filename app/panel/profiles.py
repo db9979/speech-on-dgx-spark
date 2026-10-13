@@ -729,90 +729,47 @@ SETTINGS = {
     "speak": (True, lambda v: isinstance(v, bool)),
     "timing": (True, lambda v: isinstance(v, bool)),
     "learn": (True, lambda v: isinstance(v, bool)),
-    "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)
-    "route": (False, lambda v: isinstance(v, bool)),        # targeted tool choice (intent.py, admin chat.routing)
-    "direct_read": (False, lambda v: isinstance(v, bool)),  # the panel fetches clear questions itself (intent.direct)
-    "systemone_on": (False, lambda v: isinstance(v, bool)), # Einordnung mit Wahrscheinlichkeit (systemone.py, chat.systemone)
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
-    "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
-    "mem_check": (False, lambda v: isinstance(v, bool)),    # Gedächtnis prüfen (gedaechtnis.py, admin chat.memory_check)
-    "mem_ask": (False, lambda v: isinstance(v, bool)),      # Nachfrage zum Gedächtnis (gedaechtnis.py, chat.memory_ask)
-    "mem_topics": (False, lambda v: isinstance(v, bool)),   # Themen im Gedächtnis (gedaechtnis.py, chat.memory_topics)
-    "klaeren": (False, lambda v: isinstance(v, bool)),      # Rückfrage statt Raten (klaeren.py, admin chat.klaeren)
-    "klaeren_merken": (False, lambda v: isinstance(v, bool)),  # remember the choice after a yes (admin chat.klaeren_merken)
-    "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
-    "doc_pictures": (False, lambda v: isinstance(v, bool)),
-    "doc_semantic": (False, lambda v: isinstance(v, bool)),
-    "doc_originals": (False, lambda v: isinstance(v, bool)),
-    "doc_shared": (False, lambda v: isinstance(v, bool)),
-    "doc_brief": (False, lambda v: isinstance(v, bool)),
     "doc_due": (False, lambda v: isinstance(v, bool)),
     # "Mit Docling lesen" (doclingdienst.py): a preference, on unless the profile says no (its files leave the Spark)
     "doc_docling": (True, lambda v: isinstance(v, bool)),
     # Dokumente erstellen (docmake.py): the profile's own switch, own templates, the sender lines of a letter
-    "doc_make": (False, lambda v: isinstance(v, bool)),
-    "doc_make_templates": (False, lambda v: isinstance(v, bool)),
-    "doc_make_wikipics": (False, lambda v: isinstance(v, bool)),
     "doc_sender": ("", lambda v: isinstance(v, str) and len(v) <= 300 and v.count("\n") <= 5
                    and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]", v)),
     # where a finished document also goes on its own (docmake.deliver_of; only a target that is set up counts)
     "doc_deliver": ("", lambda v: v in ("", "pc", "rm", "tg", "mail", "box")),
-    "rm_on": (False, lambda v: isinstance(v, bool)),        # reMarkable notebooks (remarkable.py, admin chat.remarkable)
-    "rm_send": (False, lambda v: isinstance(v, bool)),
-    "rm_fresh": (False, lambda v: isinstance(v, bool)),
     # more with the reMarkable (rmplus.py, admin chat.remarkable_plus)
-    "rm_morning": (False, lambda v: isinstance(v, bool)),
+    "rm_morning": (True, lambda v: isinstance(v, bool)),
     "rm_morning_at": ("06:30", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
-    "rm_ask": (False, lambda v: isinstance(v, bool)),
-    "rm_todo": (False, lambda v: isinstance(v, bool)),
-    "rm_meet": (False, lambda v: isinstance(v, bool)),
-    "rm_week": (False, lambda v: isinstance(v, bool)),
-    "rm_web": (False, lambda v: isinstance(v, bool)),
-    "rm_inbox": (False, lambda v: isinstance(v, bool)),
-    "rm_guide": (False, lambda v: isinstance(v, bool)),
+    "rm_week": (True, lambda v: isinstance(v, bool)),
+    "rm_inbox": (True, lambda v: isinstance(v, bool)),
     # paper for the reMarkable (rmpapier.py, admin chat.remarkable_paper)
-    "rm_paper": (False, lambda v: isinstance(v, bool)),
-    "rm_folders": (False, lambda v: isinstance(v, bool)),
-    "rm_tidy": (False, lambda v: isinstance(v, bool)),
+    "rm_tidy": (True, lambda v: isinstance(v, bool)),
     "rm_model": ("auto", lambda v: v in ("auto", "rm2", "pro", "move")),     # newer notes first in the document search (chat.remarkable_fresh)      # answers onto the reMarkable (admin chat.remarkable_send)
-    "my_status": (False, lambda v: isinstance(v, bool)),    # Ich → Mein Zustand (hintergrund.py, admin chat.my_status)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name
-    "roles_on": (False, lambda v: isinstance(v, bool)),
     "roles": ("", lambda v: isinstance(v, str) and len(v) <= 1500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     "role": ("", lambda v: isinstance(v, str) and len(v) <= 30 and re.fullmatch(r"[\w äöüÄÖÜß\-]*", v)),
-    "wiki_on": (False, lambda v: isinstance(v, bool)),      # Wikipedia straight away (wiki.py, admin chat.wiki)
-    "kiwix_on": (False, lambda v: isinstance(v, bool)),     # own Kiwix archive (kiwix.py, admin chat.kiwix)
-    "local_first": (False, lambda v: isinstance(v, bool)),  # own sources before the web (lokal.py, admin chat.local_first)
-    "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
-    "instant_ack": (False, lambda v: isinstance(v, bool)),  # a ready-made sentence right away (ack.py, admin chat.instant_ack)
-    "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
-    "tagebuch_on": (False, lambda v: isinstance(v, bool)),
-    "why_on": (False, lambda v: isinstance(v, bool)),       # „Warum hast du eben …?“ in plain words (berater.why_simple)  # Spark-Tagebuch: what the Spark did for me (tagebuch.py)
-    "tips_on": (False, lambda v: isinstance(v, bool)),      # hints on functions that would help (tipps.py, chat.feature_tips)
-    "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
-    "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
-    "desk_on": (False, lambda v: isinstance(v, bool)),      # the Spark-Begleiter on PC and Mac (chat.desk, begleiter.py)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),
     # speaking up by itself (see proactive.py): off until the person switches it on, each kind on its own
-    "pro_on": (False, lambda v: isinstance(v, bool)),
+    "pro_on": (True, lambda v: isinstance(v, bool)),
+    "msg_all": (True, lambda v: isinstance(v, bool)),    # in the fixed group "Alle" (chats.py); leaving it switches it off
     "pro_quiet": ("22:00-07:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)?", v)),
     "pro_max": (6, lambda v: isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 30),
     "pro_events": (True, lambda v: isinstance(v, bool)),
     "pro_lead": (20, lambda v: v in (5, 10, 15, 20, 30, 45, 60)),
     "pro_ha": (True, lambda v: isinstance(v, bool)),
     # Home Assistant tells the Spark (hamelden.py, each behind its own admin switch)
-    "pro_ha_live": (False, lambda v: isinstance(v, bool)),     # live connection instead of the minute check
-    "pro_ha_loud": (False, lambda v: isinstance(v, bool)),     # rules may also speak on speakers
-    "pro_ha_events": (False, lambda v: isinstance(v, bool)),   # Home Assistant sends events with its own key
-    "pro_ha_voice": (False, lambda v: isinstance(v, bool)),    # "Sag mir Bescheid, wenn …" makes a rule after a yes
-    "pro_ha_cam": (False, lambda v: isinstance(v, bool)),      # a camera's still picture in a few words
+    "pro_ha_live": (True, lambda v: isinstance(v, bool)),     # live connection instead of the minute check
+    "pro_ha_loud": (True, lambda v: isinstance(v, bool)),     # rules may also speak on speakers
+    "pro_ha_events": (True, lambda v: isinstance(v, bool)),   # Home Assistant sends events with its own key
+    "pro_ha_cam": (True, lambda v: isinstance(v, bool)),      # a camera's still picture in a few words
     "pro_ha_me": ("", lambda v: isinstance(v, str) and (v == "" or re.fullmatch(r"person\.[a-z0-9_]{1,80}", v) is not None)),
-    "pro_mail_smart": (False, lambda v: isinstance(v, bool)),  # important mail recognized by systemone (chat.systemone_mail)
+    "pro_mail_smart": (True, lambda v: isinstance(v, bool)),  # important mail recognized by systemone (chat.systemone_mail)
     "pro_greet": (True, lambda v: isinstance(v, bool)),
     "pro_follow": (True, lambda v: isinstance(v, bool)),
     "pro_mail": (True, lambda v: isinstance(v, bool)),
@@ -823,57 +780,34 @@ SETTINGS = {
     "pro_weather_at": ("18:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
     "pro_learn": (True, lambda v: isinstance(v, bool)),
     # weather, contacts, parcels (see weather.py, contacts.py, parcels.py): each profile switches them on itself
-    "wx_on": (False, lambda v: isinstance(v, bool)),
-    "con_on": (False, lambda v: isinstance(v, bool)),
     "con_bday": (True, lambda v: isinstance(v, bool)),
-    "par_on": (False, lambda v: isinstance(v, bool)),
     "pro_bday": (True, lambda v: isinstance(v, bool)),
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
-    "tasks_on": (False, lambda v: isinstance(v, bool)),
-    "transit_on": (False, lambda v: isinstance(v, bool)),   # Bus und Bahn (transit.py)
     "pro_transit": (True, lambda v: isinstance(v, bool)),
-    "pro_tips": (False, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)   # shopping and to-do list (tasks.py)
+    "pro_tips": (True, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so
     "tg_voice": (False, lambda v: isinstance(v, bool)),
     "tg_private": (False, lambda v: isinstance(v, bool)),
     "tg_ha": (False, lambda v: isinstance(v, bool)),
     "tg_push": (False, lambda v: isinstance(v, bool)),
     "tg_images": (False, lambda v: isinstance(v, bool)),    # photos sent to the bot go to the model (images.py)
-    "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
-    "esp_stop": (False, lambda v: isinstance(v, bool)), # "Stopp beim Vorlesen" at own speakers (esp32.py)
-    "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
-    "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
-    "devup_on": (False, lambda v: isinstance(v, bool)),    # notes on new firmware and app versions (geraeteupdate.py)
-    "devup_night": (False, lambda v: isinstance(v, bool)), # own speakers updated at night (geraeteupdate.py)
-    "svc_note": (False, lambda v: isinstance(v, bool)),    # an admin profile hears when a service is gone (dienstwacht.py)
+    "devup_night": (True, lambda v: isinstance(v, bool)), # own speakers updated at night (geraeteupdate.py)
+    "svc_note": (True, lambda v: isinstance(v, bool)),    # an admin profile hears when a service is gone (dienstwacht.py)
     "svc_night": (False, lambda v: isinstance(v, bool)),   # ... at night only one summary at 7 o'clock
     "svc_device": ("", lambda v: v in ("", "app", "and", "desk", "tg", "web", "all")),   # ... on this way (push.send to=)
-    "svc_hint": (False, lambda v: isinstance(v, bool)),    # a tool whose service is gone answers at once (dienstwacht.tool_down)
     # Verlauf auf allen Geräten (verlauf.py): instant sync, one conversation for all channels, offline reading
-    "sync_live": (False, lambda v: isinstance(v, bool)),
-    "sync_one": (False, lambda v: isinstance(v, bool)),
-    "sync_offline": (False, lambda v: isinstance(v, bool)),
     # Einstellungs-Assistent (faelle.py, berater.py): 👍/👎 under answers, hearing when a report helped, admin notes,
     # asking it in the chat, proposals for the own settings (and the ones the profile put aside)
-    "rate_on": (False, lambda v: isinstance(v, bool)),
-    "rate_back": (False, lambda v: isinstance(v, bool)),
-    "berater_note": (False, lambda v: isinstance(v, bool)),
-    "berater_ask": (False, lambda v: isinstance(v, bool)),
-    "berater_me": (False, lambda v: isinstance(v, bool)),
+    "rate_back": (True, lambda v: isinstance(v, bool)),
+    "berater_note": (True, lambda v: isinstance(v, bool)),
     "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
-    "storage_on": (False, lambda v: isinstance(v, bool)),  # own storage: a copy of the profile's data there (speicher.py)
-    "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
-    "android_live": (False, lambda v: isinstance(v, bool)),  # ... with a lasting connection: notes at once
-    "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
-    "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
-    "report_on": (False, lambda v: isinstance(v, bool)),   # Probleme melden: reports as GitHub issues (meldung.py)
+    "android_live": (True, lambda v: isinstance(v, bool)),  # ... with a lasting connection: notes at once
     "report_notify": (True, lambda v: isinstance(v, bool)),   # an admin profile hears of a new report (meldung.tell_admins)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
-    "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),
     "app_listen": (False, lambda v: isinstance(v, bool)),   # listening all the time for the wake word
     "app_act": (False, lambda v: isinstance(v, bool)),      # routes and calls on the iPhone (iphone_action)
-    "app_push": (False, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
+    "app_push": (True, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
@@ -888,18 +822,13 @@ SETTINGS = {
     "app_security": (False, lambda v: isinstance(v, bool)),
     "app_accounts": (False, lambda v: isinstance(v, bool)),
     "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice
-    "room_remote": (False, lambda v: isinstance(v, bool)),  # start room mode on an own speaker from another device (roomfar.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
-    "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"
     # what the chats brought along from "Nachrichten" (messages.py, V01.0.488): who may write to me, the group Alle,
     # new chat messages read on my speakers, announcements of others on my speakers
     "msg_from": ("all", lambda v: v in ("all", "chosen")),   # every profile, or only the ones picked
-    "msg_all": (False, lambda v: isinstance(v, bool)),       # in the group Alle („Nachricht an alle“)
     "msg_speaker": ("off", lambda v: v in ("off", "hint", "text")),   # say new ones on my speakers
-    "msg_announce": (False, lambda v: isinstance(v, bool)),  # announcements of others on my speakers
     # chats (chats.py): off until the profile switches them on; "gelesen" shown both ways, the text in notifications
-    "chats_on": (False, lambda v: isinstance(v, bool)),
     "chat_receipts": (True, lambda v: isinstance(v, bool)),
     "chat_push_text": (False, lambda v: isinstance(v, bool)),
 }
@@ -907,8 +836,8 @@ SETTINGS = {
 
 # what only the profile itself writes, never the admin's defaults: its tone and its roles
 OWN_ONLY = ("style", "roles", "role")
-# the profiles' own function switches (features.py fills it): never from the presets either, they are set per
-# profile (by the profile, or the admin under Funktionen → Wer darf was, also for new profiles)
+# the profiles' own preferences for what the Spark does unasked (features.py fills it, Feature.pref) and a few
+# settings of single modules: never from the admin's presets, each profile sets them itself
 NO_PRESET = set()
 
 

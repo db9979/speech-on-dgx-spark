@@ -78,7 +78,7 @@ def asr_port(port):
 
 class Begleiter(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(desk=True, write_help=True)
+        helpers.set_config(desk=True, write_help=True, deny={})
         for k in [k for k in guard._rate if k[0] in ("desk", "deskask", "pair", "write", "asr", "notausset")]:
             guard._rate.pop(k, None)
         schreib._busy.clear()
@@ -86,12 +86,15 @@ class Begleiter(unittest.TestCase):
         notaus_off()
 
     def tearDown(self):
-        helpers.set_config(desk=False, write_help=False, write_apps=False)
+        helpers.set_config(desk=False, write_help=False, write_apps=False, deny={})
         notaus_off()
 
     def on(self, name, write=True):
+        """A profile; write=False: the admin blocks the writing help for it (chat.deny)."""
         c = profile(name)
-        self.assertEqual(c.put("/api/profile/settings", json={"desk_on": True, "write_on": write}).status_code, 200)
+        if not write:
+            r = ADMIN.put(f"/api/admin/features/schreib/profiles/{uid_of(name)}", json={"on": False})
+            self.assertEqual(r.status_code, 200, r.text)
         return c
 
     def pair(self, c, kind="windows", name="Laptop"):
@@ -118,22 +121,25 @@ class Begleiter(unittest.TestCase):
     def test_off_by_default_both_switches_and_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["desk"], False)
-        self.assertIs(profiles.SETTINGS["desk_on"][0], False)
+        self.assertNotIn("desk_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
         c = profile("DkAnna")
+        uid = uid_of("DkAnna")
+        helpers.set_config(deny={"begleiter": [uid]})   # the admin blocks this profile
         self.assertFalse(c.get("/api/profile/desk").json()["on"])
         self.assertEqual(c.post("/api/profile/desk/pair", json={"base": "https://x.de"}).status_code, 403)
         guest = TestClient(panel.app, client=HOME)
         self.assertIn(guest.get("/api/profile/desk").status_code, (401, 403))
-        c = self.on("DkAnna")
+        helpers.set_config(deny={})                      # released: works at once
+        self.assertTrue(c.get("/api/profile/desk").json()["on"])
         code, prog = self.pair(c)
         self.assertEqual(prog.get("/api/desk/config").status_code, 200)
         helpers.set_config(desk=False)                       # the admin switch stops every key at once
         self.assertEqual(prog.get("/api/desk/config").status_code, 503)   # "not now": the program keeps its key (V01.0.388)
         helpers.set_config(desk=True)
         self.assertEqual(prog.get("/api/desk/config").status_code, 200)   # and works again as soon as it is back on
-        c.put("/api/profile/settings", json={"desk_on": False})   # so does the profile's own
+        helpers.set_config(deny={"begleiter": [uid]})   # so does the admin's block for this profile
         self.assertEqual(prog.get("/api/desk/poll").status_code, 503)
-        c.put("/api/profile/settings", json={"desk_on": True})
+        helpers.set_config(deny={})
         self.assertEqual(prog.get("/api/desk/poll").status_code, 200)
         bad = TestClient(panel.app, client=HOME, headers={profiles.DEVICE_HEADER: "sd_unknown"})
         self.assertEqual(bad.get("/api/desk/poll").status_code, 401)   # an unknown key still means: pair again
@@ -210,7 +216,7 @@ class Begleiter(unittest.TestCase):
         c = self.on("DkCarla", write=False)
         _, prog = self.pair(c)
         cfg = prog.get("/api/desk/config").json()
-        self.assertFalse(cfg["allowed"]["write"])                 # the writing help is off for the profile
+        self.assertFalse(cfg["allowed"]["write"])                 # the admin blocked the writing help for the profile
         self.assertFalse(cfg["parts"]["write"])
         self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}).status_code, 403)
         self.assertEqual(prog.post("/api/desk/dictate", files={"file": ("w.wav", WAV, "audio/wav")}).status_code, 403)
@@ -226,7 +232,7 @@ class Begleiter(unittest.TestCase):
         self.assertEqual(cfg["write"], {"art": "kuerzer", "sprache": "fr", "wunsch": "mit Du", "arts": ["kuerzer"],
                                         "preview": False})
         self.assertEqual((cfg["dictate"]["sprache"], cfg["autostart"]), ("auto", True))   # bad values: defaults
-        self.assertFalse(cfg["parts"]["write"])                    # on for the device, still off for the profile
+        self.assertFalse(cfg["parts"]["write"])                    # on for the device, still blocked for the profile
         self.assertEqual(prog.post("/api/desk/ask", json={"text": "Hallo?"}).status_code, 403)
         old = asr_port(ASR_PORT)
         try:
@@ -234,8 +240,8 @@ class Begleiter(unittest.TestCase):
         finally:
             asr_port(old)
         self.assertEqual((r.status_code, r.json()), (200, {"text": "Hallo aus dem Diktat"}), r.text)
-        # the switch of the writing help opens the part again
-        c.put("/api/profile/settings", json={"write_on": True})
+        # the admin lifting the block opens the part again
+        helpers.set_config(deny={})
         self.assertTrue(prog.get("/api/desk/config").json()["parts"]["write"])
 
     def test_ask_answers_as_text(self):
@@ -384,7 +390,6 @@ class Updates(unittest.TestCase):
         files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
         asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.350"), files)))
         c = profile("DkUwe")
-        c.put("/api/profile/settings", json={"desk_on": True})
         r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
         prog = TestClient(panel.app, client=HOME)
         key = prog.post("/api/desk/pair", json={"code": r.json()["code"], "kind": "windows", "name": "PC"}).json()["key"]
@@ -416,7 +421,6 @@ class Updates(unittest.TestCase):
         begleiter._upd["checked"]["windows"] = time.time() - 3600       # the daily check ran an hour ago
         begleiter._upd["running"].pop("windows", None)
         c = profile("DkLook")
-        c.put("/api/profile/settings", json={"desk_on": True})
         r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
         prog = TestClient(panel.app, client=HOME)
         prog.headers[profiles.DEVICE_HEADER] = prog.post("/api/desk/pair", json={
@@ -1195,8 +1199,7 @@ class Office(unittest.TestCase):
         self.assertEqual(save("https://speech.example.org/"), "https://speech.example.org")
         self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 403)              # other programs off
         self.assertFalse(prog.get("/api/desk/config").json()["office"]["web"])
-        helpers.set_config(write_apps=True)
-        self.assertEqual(c.put("/api/profile/settings", json={"write_apps": True}).status_code, 200)
+        helpers.set_config(write_apps=True)                                                   # released: works at once
         self.assertTrue(prog.get("/api/desk/config").json()["office"]["web"])
         for app in ("word", "excel", "outlook"):
             r = prog.get(f"/api/desk/office/{app}.xml")
@@ -1206,8 +1209,8 @@ class Office(unittest.TestCase):
         self.assertIn(prog.get("/api/desk/office/powerpoint.xml").status_code, (401, 404))
         # never without the device key, and the browser cannot fetch it this way
         self.assertEqual(TestClient(panel.app, client=HOME).get("/api/desk/office/word.xml").status_code, 401)
-        # the writing help off: the part goes with it
-        self.assertEqual(c.put("/api/profile/settings", json={"write_on": False}).status_code, 200)
+        # the admin blocks the writing help for the profile: the part goes with it
+        helpers.set_config(deny={"schreib": [uid_of("DoOffice")]})
         cfg = prog.get("/api/desk/config").json()
         self.assertEqual((cfg["parts"]["office"], cfg["office"]["web"]), (False, False))
         self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 403)

@@ -283,7 +283,7 @@ router = APIRouter()
 @router.get("/api/profile/parcels", dependencies=[Depends(assistant)])
 async def api_get(fresh: bool = False, prof=Depends(own_profile)):
     import asyncio
-    on = bool(profiles.settings(prof["id"]).get("par_on"))
+    on = features.allowed("parcels", prof["id"])
     if not admin_on():
         raise HTTPException(403, "parcels are turned off")
     if not on or not mail.get(prof["id"])["accounts"]:

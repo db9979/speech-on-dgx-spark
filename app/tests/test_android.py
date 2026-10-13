@@ -62,7 +62,7 @@ class Android(unittest.TestCase):
     def setUp(self):
         self.gh = os.environ.get("SPEECH_SPARK_GITHUB_API")   # other tests run their own fake GitHub
         os.environ["SPEECH_SPARK_GITHUB_API"] = GH
-        helpers.set_config(android=True)
+        helpers.set_config(android=True, deny={})
         android._tokens.clear()
         android._notes.clear()
         android._polled.clear()
@@ -73,7 +73,7 @@ class Android(unittest.TestCase):
                 os.remove(f)
 
     def tearDown(self):
-        helpers.set_config(android=False)
+        helpers.set_config(android=False, deny={})
         if self.gh is None:
             os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
         else:
@@ -88,7 +88,7 @@ class Android(unittest.TestCase):
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["android"], False)
-        self.assertIs(profiles.SETTINGS["android_on"][0], False)
+        self.assertNotIn("android_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
 
     def test_apk_only_with_matching_checksum_from_github(self):
         self.assertEqual(self.fetch(good()), "1.0.0")
@@ -111,8 +111,9 @@ class Android(unittest.TestCase):
     def test_download_link_needs_both_switches_and_expires(self):
         self.fetch(good())
         a = profile("Anja")
+        helpers.set_config(deny={"android": [uid_of("Anja")]})   # the admin blocks this profile
         self.assertEqual(a.post("/api/profile/android/link", json={"base": BASE}).status_code, 403)
-        a.put("/api/profile/settings", json={"android_on": True})
+        helpers.set_config(deny={})                                # released: works at once
         for bad in ("spark", "https://spark/x", "javascript:alert(1)"):
             self.assertEqual(a.post("/api/profile/android/link", json={"base": bad}).status_code, 400, bad)
         self.assertEqual(a.post("/api/profile/android/link", content="x" * 2000).status_code, 413)
@@ -152,8 +153,9 @@ class Android(unittest.TestCase):
     def test_notes_for_the_app_and_push_picks_it(self):
         a = profile("Alma")
         uid = uid_of("Alma")
-        self.assertEqual(a.get("/api/android/notes").status_code, 403)   # own switch off
-        a.put("/api/profile/settings", json={"android_on": True})
+        helpers.set_config(deny={"android": [uid]})
+        self.assertEqual(a.get("/api/android/notes").status_code, 403)   # blocked by the admin
+        helpers.set_config(deny={})
         self.assertFalse(android.reachable(uid))
         r = a.get("/api/android/notes")
         self.assertEqual(r.json()["notes"], [])
@@ -165,7 +167,6 @@ class Android(unittest.TestCase):
         self.assertEqual(a.get("/api/android/notes", params={"after": r["last"]}).json()["notes"], [])
         # another profile never sees it
         b = profile("Bodo")
-        b.put("/api/profile/settings", json={"android_on": True})
         self.assertEqual(b.get("/api/android/notes").json()["notes"], [])
         # old notes and quiet apps drop out (without the wall clock)
         android.keep(uid, "x", "y", now=0.0)
@@ -178,7 +179,6 @@ class Android(unittest.TestCase):
     def test_page_inside_the_app_gets_the_notes(self):
         a = profile("Ali")
         uid = uid_of("Ali")
-        a.put("/api/profile/settings", json={"android_on": True})
         a.get("/api/android/notes")
         a.get("/api/profile/reminders", params={"page": 1}, headers={"user-agent": "Mozilla/5.0 SparkAndroid/1.0.0"})
         self.assertEqual(profiles.LAST_USED[uid][0], "and")
@@ -203,16 +203,25 @@ class Live(unittest.TestCase):
     def test_off_by_default_and_needs_both_switches(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["android_live"], False)
-        self.assertIs(profiles.SETTINGS["android_live"][0], False)
+        self.assertIs(profiles.SETTINGS["android_live"][0], True)   # a preference: on unless the profile opts out
         a = profile("Lina")
-        a.put("/api/profile/settings", json={"android_on": True})
+        uid = uid_of("Lina")
+        self.addCleanup(profiles.save_settings, uid, {"android_live": True})
+        self.assertFalse(a.get("/api/android/notes").json()["live"])
+        self.assertEqual(a.get("/api/android/wait").status_code, 403)          # the admin's switch is off
+        helpers.set_config(android_live=True)
+        self.assertTrue(a.get("/api/android/notes").json()["live"])            # released: works at once
+        self.assertTrue(a.get("/api/profile/android").json()["live_enabled"])
+        a.put("/api/profile/settings", json={"android_live": False})           # the profile opts out
         self.assertFalse(a.get("/api/android/notes").json()["live"])
         self.assertEqual(a.get("/api/android/wait").status_code, 403)
         a.put("/api/profile/settings", json={"android_live": True})
-        self.assertEqual(a.get("/api/android/wait").status_code, 403)          # the admin's switch is off
-        helpers.set_config(android_live=True)
-        self.assertTrue(a.get("/api/android/notes").json()["live"])
-        self.assertTrue(a.get("/api/profile/android").json()["live_enabled"])
+        helpers.set_config(deny={"androidlive": [uid]})                       # the admin blocks this profile
+        self.assertEqual(a.get("/api/android/wait").status_code, 403)
+        helpers.set_config(deny={"android": [uid]})                           # ... or the app it builds on
+        r = a.get("/api/profile/android").json()
+        self.assertEqual((r["on"], r["live"]), (False, False))
+        helpers.set_config(deny={})
         self.assertEqual(TestClient(panel.app).get("/api/android/wait").status_code, 401)   # guests never
 
     def test_a_note_wakes_the_waiting_app_at_once(self):
@@ -221,7 +230,6 @@ class Live(unittest.TestCase):
         helpers.set_config(android_live=True)
         a = profile("Luka")
         uid = uid_of("Luka")
-        a.put("/api/profile/settings", json={"android_on": True, "android_live": True})
         last = a.get("/api/android/notes").json()["last"]
         android.WAIT_SECONDS = 10
         got = {}

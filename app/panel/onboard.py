@@ -163,7 +163,7 @@ def items(uid, c=None):
         f = features.BY_KEY.get(feat) if feat else None
         why = features.reason(feat, uid, c, s) if feat else None
         out.append({"key": key, "step": step, "name": [de, en], "me": me, "done": _done(key, uid),
-                    "own": f.profile if f and f.profile else None, "mine": why != "profile",
+                    "own": f.pref if f and f.pref else None, "mine": why != "profile",
                     "why": why, "required": key == "mfa" and join.mfa_kept(uid), "later": key in st["later"]})
     return out
 

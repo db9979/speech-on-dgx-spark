@@ -4,7 +4,8 @@ Against a fake reMarkable cloud in memory (the real hosts are fixed and public, 
 answered by replacing remarkable._request): pairing with a one-time code seals the device token, only
 picked notebooks are read, typed text comes at once, handwriting waits for the language model like a
 scan, an unchanged page is never fetched again, notebooks gone from the cloud or no longer picked
-disappear, writing only adds a new EPUB in the folder "Spark". Off without both switches, never guests;
+disappear, writing only adds a new EPUB in the folder "Spark". Off without the admin switches, works at once for
+every profile once released, the admin can block a single profile (chat.deny), never guests;
 the note tool only when the person's own words name the reMarkable, and it is locked after outside text.
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
@@ -212,16 +213,21 @@ class Base(unittest.TestCase):
     def tearDown(self):
         remarkable.due_once = DUE
         remarkable._request = REAL_REQUEST
-        helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False, remarkable_fresh=False)
+        helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False, remarkable_fresh=False, deny={})
 
-    def ready(self, name, pictures=True):
+    def block(self, key, uid, on=False):
+        """The admin blocks a function for one profile (Funktionen → Wer darf was, chat.deny), or lifts it again."""
+        r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
+        self.assertEqual(r.status_code, 200, r.text)
+
+    def ready(self, name):
         c = profile(name)
-        r = c.put("/api/profile/settings", json={"rm_on": True, "doc_pictures": pictures})
+        r = c.get("/api/profile/remarkable")       # released by the admin: works at once, nothing to switch on
         self.assertEqual(r.status_code, 200, r.text)
         return c, uid_of(name)
 
-    def paired(self, name, pictures=True):
-        c, uid = self.ready(name, pictures)
+    def paired(self, name):
+        c, uid = self.ready(name)
         r = c.post("/api/profile/remarkable/pair", json={"code": "abcdefgh"})
         self.assertEqual(r.status_code, 200, r.text)
         run(remarkable.refresh_library(uid))        # after pairing it runs in the background
@@ -233,17 +239,26 @@ class Base(unittest.TestCase):
 
 
 class Switches(Base):
-    def test_off_by_default_both_switches_needed_never_guests(self):
+    def test_off_by_default_admin_releases_admin_blocks_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             ch = json.load(f)["chat"]
         self.assertIs(ch["remarkable"], False)
         self.assertIs(ch["remarkable_send"], False)
-        self.assertIs(profiles.SETTINGS["rm_on"][0], False)
-        self.assertIs(profiles.SETTINGS["rm_send"][0], False)
+        self.assertNotIn("rm_on", profiles.SETTINGS)                                # no release switch of its own
+        self.assertNotIn("rm_send", profiles.SETTINGS)
         c = profile("Rmoff")
-        self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # profile switch off
-        c.put("/api/profile/settings", json={"rm_on": True})
+        uid = uid_of("Rmoff")
+        self.assertEqual(c.get("/api/profile/remarkable").status_code, 200)        # released: works at once
+        self.block("remarkable", uid)
+        self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # the admin blocked this profile
+        c.put("/api/profile/settings", json={"rm_on": True, "deny": {}})
+        self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # the profile cannot lift it
+        self.assertFalse(remarkable.allowed(uid))
+        self.block("remarkable", uid, on=True)
         self.assertEqual(c.get("/api/profile/remarkable").status_code, 200)
+        self.block("docpics", uid)
+        self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # blocked what it builds on
+        self.block("docpics", uid, on=True)
         helpers.set_config(remarkable=False)
         self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # admin switch off
         helpers.set_config(remarkable=True, doc_pictures=False)
@@ -377,14 +392,15 @@ class Reading(Base):
         self.assertEqual(len(self.docs(uid)), 1)                      # picked again on purpose
 
     def test_handwriting_waits_while_pictures_are_off(self):
-        c, uid = self.paired("Rmnopic", pictures=False)
+        c, uid = self.paired("Rmnopic")
         CLOUD[0].doc(NB, "Skizzen", [(P1, page_file("Titel", strokes=2))])
         c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        self.block("docpics", uid)                   # "Bilder und Scans lesen" blocked for this profile by the admin
         run(remarkable.sync(uid))
         d = self.docs(uid)[0]
         self.assertEqual((d["state"], d["todo"]), ("ready", 0))
         self.assertIn("Handschrift nicht gelesen", d["note"])
-        c.put("/api/profile/settings", json={"doc_pictures": True})
+        self.block("docpics", uid, on=True)
         run(remarkable.sync(uid))
         self.assertEqual(self.docs(uid)[0]["todo"], 1)               # now it waits for the model
 
@@ -408,8 +424,9 @@ class Writing(Base):
         before = dict(CLOUD[0].entries)
         self.assertEqual(c.post("/api/profile/remarkable/send", json={"title": "x", "text": "y"}).status_code, 403)
         helpers.set_config(remarkable_send=True)
+        self.block("rmsend", uid)
         self.assertEqual(c.post("/api/profile/remarkable/send", json={"title": "x", "text": "y"}).status_code, 403)
-        c.put("/api/profile/settings", json={"rm_send": True})
+        self.block("rmsend", uid, on=True)                           # released and not blocked: works at once
         r = c.post("/api/profile/remarkable/send", json={"title": "Rezept <Brot>", "text": "Mehl\n\nWasser & Salz"})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(r.json()["title"], "Rezept Brot")
@@ -435,7 +452,6 @@ class Writing(Base):
     def test_note_tool_only_on_own_words_and_locked_after_outside_text(self):
         c, uid = self.paired("Rmtool")
         helpers.set_config(remarkable_send=True)
-        c.put("/api/profile/settings", json={"rm_send": True})
         who = {"id": uid, "name": "Rmtool"}
         self.assertIsNone(remarkable.offer({"who": who, "own": True, "text": "Wie wird das Wetter?"}))
         self.assertIsNone(remarkable.offer({"who": who, "own": False, "text": "Schreib aufs reMarkable: Milch"}))
@@ -461,7 +477,6 @@ class Target(Base):
         run(remarkable.refresh_library(uid))
         self.assertEqual(c.put("/api/profile/remarkable/target", json={"id": FOLDER}).status_code, 403)   # sending off
         helpers.set_config(remarkable_send=True)
-        c.put("/api/profile/settings", json={"rm_send": True})
         self.assertEqual(c.get("/api/profile/remarkable").json()["target_path"], "Spark")
         for bad in (NB, str(uuid.UUID(int=999)), "../x", 5):      # a notebook, unknown, no id
             self.assertEqual(c.put("/api/profile/remarkable/target", json={"id": bad}).status_code, 400, bad)
@@ -494,7 +509,6 @@ class SendErrors(Base):
     def ready_send(self, name):
         c, uid = self.paired(name)
         helpers.set_config(remarkable_send=True)
-        c.put("/api/profile/settings", json={"rm_send": True})
         return c, uid
 
     def test_refused_upload_is_explained(self):
@@ -546,12 +560,13 @@ class AnswerToRemarkable(Base):
     def test_panel_sends_the_answer_never_the_model(self):
         c, uid = self.paired("Rmanswer")
         helpers.set_config(remarkable_send=True)
+        self.block("rmsend", uid)
         helpers.LLM_CALLS.clear()
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
         said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
-        self.assertNotIn("liegt jetzt", said)                                  # profile switch rm_send off: nothing
+        self.assertNotIn("liegt jetzt", said)                                  # blocked by the admin: nothing
         self.assertNotIn(remarkable.ANSWER_HINT, json.dumps(helpers.LLM_CALLS, ensure_ascii=False))
-        c.put("/api/profile/settings", json={"rm_send": True})
+        self.block("rmsend", uid, on=True)
         helpers.LLM_CALLS.clear()
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
         said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
@@ -574,7 +589,6 @@ class AnswerToRemarkable(Base):
     def test_failure_is_said(self):
         c, uid = self.paired("Rmanswerfail")
         helpers.set_config(remarkable_send=True)
-        c.put("/api/profile/settings", json={"rm_send": True})
         d = remarkable.load(uid)
         d["sent"] = {"day": __import__("time").strftime("%Y-%m-%d"), "n": remarkable.SEND_DAY}
         remarkable.save(uid, d)
@@ -592,18 +606,21 @@ class Fresh(Base):
     def fresh(self, name):
         c, uid = self.paired(name)
         helpers.set_config(remarkable_fresh=True)
-        self.assertEqual(c.put("/api/profile/settings", json={"rm_fresh": True}).status_code, 200)
         return c, uid
 
-    def test_off_by_default_both_switches_never_guests(self):
+    def test_off_by_default_admin_releases_admin_blocks_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["remarkable_fresh"], False)
-        self.assertIs(profiles.SETTINGS["rm_fresh"][0], False)
+        self.assertNotIn("rm_fresh", profiles.SETTINGS)                      # no release switch of its own
         c, uid = self.paired("Rmfreshoff")
         self.assertFalse(wissen.fresh_on(uid))
         helpers.set_config(remarkable_fresh=True)
-        self.assertFalse(wissen.fresh_on(uid))                               # profile switch still off
+        self.assertTrue(wissen.fresh_on(uid))                                # released: works at once
+        self.block("rmfresh", uid)
+        self.assertFalse(wissen.fresh_on(uid))                               # the admin blocked this profile
         c.put("/api/profile/settings", json={"rm_fresh": True})
+        self.assertFalse(wissen.fresh_on(uid))                               # the profile cannot lift it
+        self.block("rmfresh", uid, on=True)
         self.assertTrue(wissen.fresh_on(uid))
         helpers.set_config(remarkable=False)
         self.assertFalse(wissen.fresh_on(uid))                               # sits under "reMarkable-Notizen"
@@ -677,7 +694,7 @@ class Fresh(Base):
         self.assertIn("Gartenschlauch", said)
         self.assertLess(said.index("Gartenschlauch"), said.index("Milch"))   # newest first
         self.assertIn("geändert am", said)
-        c.put("/api/profile/settings", json={"rm_fresh": False})            # switch off: the model decides, no dates
+        self.block("rmfresh", uid)                                          # blocked: the model decides, no dates
         helpers.LLM_CALLS.clear()
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "SAY | Was habe ich zuletzt notiert?"}], "convo": "neu"})
         self.assertNotEqual(helpers.LLM_CALLS[0].get("tool_choice"), {"type": "function", "function": {"name": "document_search"}})

@@ -1,7 +1,7 @@
 // "Ich" → Aufträge and the admin's part (agent.py, beobachten.py, mcp.py). Plan „Eigene Aufgaben“: one list of everything
 // the Spark does again and again for the profile (watches, scheduled jobs, repeating reminders, smart home rules, mail
 // senders, routines) as "Liste mit Detailbereich" (ld-…): a row each with its on/off switch, a tap opens the details
-// (change, check now, history, delete); narrow, the details become a page of their own. Off until the admin allows it.
+// (change, check now, history, delete); narrow, the details become a page of their own. Off until the admin allows it; then it works at once (Dominik 2026-10-13).
 let AGENT_ON=false;
 const AG_ST={queued:['wartet','waiting'],running:['läuft','running'],done:['fertig','done'],failed:['ging nicht','failed'],cancelled:['abgebrochen','cancelled']};
 const AG_REP=[['daily','jeden Tag','every day'],['weekdays','werktags','on weekdays'],['weekly','jede Woche','every week'],['monthly','jeden Monat','every month'],['once','einmal','once']];
@@ -87,7 +87,7 @@ function agNewForm(d){const o=d.own||{};
 async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(agTimer);if(!PROFILE||!AGENT_ON){box.innerHTML='';return}
   let d;try{d=agData=await (await api('/api/profile/agent')).json()}catch{box.innerHTML='';return}
   const lvl={read:t('nur lesen und berichten','read and report only'),act:t('auch handeln mit „Ja“','also act after "Yes"')}[d.granted]||t('nichts','nothing');
-  const on=!!S.agent_on,act=d.granted==='act';
+  const on=d.granted==='read'||d.granted==='act',act=d.granted==='act';
   const rows=agRows(d),cnt=k=>rows.filter(r=>r.k===k).length;
   const shown=rows.filter(r=>(agChip==='all'||r.k===agChip)&&(!agFind||(r.title+' '+r.meta).toLowerCase().includes(agFind.toLowerCase())));
   const sel=agSel==='new'?null:rows.find(r=>r.k+':'+r.id===agSel);if(agSel&&agSel!=='new'&&!sel)agSel=null;
@@ -104,7 +104,6 @@ async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(a
       ${j.state==='done'&&!j.doc_name?`<button class="b" type="button" data-agdoc="${esc(j.id)}">${t('Als Dokument','As document')}</button>`:''}
       ${j.state==='queued'||j.state==='running'?`<button class="b" type="button" data-agstop="${esc(j.id)}">${t('Abbrechen','Cancel')}</button>`:`<button class="b" type="button" data-agdel="${esc(j.id)}">${t('Löschen','Delete')}</button>`}</span></li>`;
   box.innerHTML=`<div class="intro">${t('Was der Spark dauerhaft für dich im Blick behält, plant oder auf Zuruf erledigt. Er liest nur und meldet sich per Mitteilung und Telegram (wie unter Ich → Mitteilungen eingestellt). Ein Auftrag läuft nach dem anderen; Gespräche mit dir haben Vorrang. Der Admin hat dir freigegeben: ','What the Spark keeps an eye on for you, plans or does when asked. It only reads and tells you by notification and Telegram (as set under Me → Notifications). One job runs after the other; talking to you comes first. The admin allowed you: ')}<b>${esc(lvl)}</b>.</div>
-    ${xsw('agent_on',t('Agent-Funktionen für mich nutzen','Use agent functions for me'),act?t('Aufträge, Beobachten, geplante Aufträge, Abläufe und freigegebene Dienste.','Jobs, watching, scheduled jobs, routines and allowed services.'):t('Aufträge, Beobachten, geplante Aufträge und freigegebene Dienste (nur lesend).','Jobs, watching, scheduled jobs and allowed services (read only).'))}
     ${on?`<div class="ag-stats">${[[rows.length+' / '+rows.filter(r=>r.on).length+t(' an',' on'),t('eigene Aufgaben','own tasks'),0],[fresh,t('neue Funde heute','new finds today'),fresh],[nxt?agTime(nxt):'–',t('nächster Lauf','next run'),0]].map(([v,l,h])=>`<div class="ag-stat${h?' hot':''}"><b>${esc(String(v))}</b><span>${esc(l)}</span></div>`).join('')}</div>
     <h3>${t('Eigene Aufgaben','Own tasks')}</h3>
     <div class="ld-box${agSel?' ld-sel':''}" id="agld" data-tabcount="${rows.length}"><div class="ld-tools"><input type="search" id="agfind" maxlength="80" value="${esc(agFind)}" placeholder="${esc(t('Aufgaben suchen …','Search tasks …'))}" aria-label="${esc(t('Aufgaben suchen','Search tasks'))}"><button class="b p" type="button" id="agnew">+ ${esc(t('Neu','New'))}</button></div>
@@ -174,7 +173,7 @@ function agBind(box,d){
 const AG_LV=[['','aus','off'],['read','nur lesen und berichten','read and report only'],['act','auch handeln mit „Ja“','also act after "Yes"']];
 const AG_MODE=[['off','aus','off'],['read','lesen','read'],['act','handeln (mit „Ja“)','act (after "Yes")']];
 async function agentAdmin(){const box=$('agentadmin');if(!box)return;let d;try{d=await (await api('/api/admin/agent')).json()}catch{return}
-  box.innerHTML=`<div class="fh">${t('Pro Profil, was es darf. Das Profil schaltet es danach selbst ein (Ich → Aufträge). Gäste nie.','Per profile, what it may do. The profile then switches it on itself (Me → Jobs). Never guests.')}</div>
+  box.innerHTML=`<div class="fh">${t('Pro Profil, was es darf. Das gilt sofort, ohne eigenen Schalter (Ich → Aufträge). Gäste nie.','Per profile, what it may do. It applies at once, without an own switch (Me → Jobs). Never guests.')}</div>
     <table><tbody>${d.users.map(u=>`<tr><td>${esc(u.name)}${u.on?` <small class="mut">${t('(eingeschaltet)','(switched on)')}</small>`:''}</td>
       <td><select data-aglv="${esc(u.id)}">${AG_LV.map(([k,de,en])=>`<option value="${k}"${u.level===k?' selected':''}>${esc(t(de,en))}</option>`).join('')}</select></td></tr>`).join('')
       ||`<tr><td class="mut">${t('Noch keine Profile.','No profiles yet.')}</td></tr>`}</tbody></table>

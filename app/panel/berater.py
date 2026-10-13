@@ -2023,7 +2023,8 @@ async def _tell_admins(text):
 
 # ---------------------------------------------------------------- Profil-Vorschläge (Punkt 10)
 def profile_props(uid, now=None):
-    """Proposals for one profile's own settings from its own 👎 of the last 14 days (fixed rules)."""
+    """Proposals for one profile's own settings from its own 👎 of the last 14 days (fixed rules). Functions are
+    not among them: the admin's release alone decides those (Freigabe vereinfachen)."""
     now = time.time() if now is None else now
     if not features.allowed("beratermich", uid):
         return []
@@ -2044,12 +2045,7 @@ def profile_props(uid, now=None):
                     "why": ["Aus deinen 👎 der letzten zwei Wochen", "From your 👎 of the last two weeks"]})
 
     if count("langsam") >= 2:
-        add("p_sofort", True, "Sofortige Rückmeldung einschalten", "Switch on the instant reply")
         add("p_laenge", "short", "Kürzere Antworten", "Shorter answers")
-    if count("werkzeug") >= 2:
-        add("p_gezielt", True, "Gezielte Werkzeugwahl einschalten", "Switch on the targeted tool choice")
-    if count("antwort") >= 2:
-        add("p_lokal", True, "Erst in eigenen Quellen suchen", "Look in own sources first")
     if count("verstanden") >= 2:
         speed = s.get("speed", 1.0)
         if isinstance(speed, (int, float)) and speed > 0.8:

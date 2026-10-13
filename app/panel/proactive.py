@@ -124,6 +124,8 @@ def blocked(uid, kind, p=None, local=None, st=None):
     import notaus
     if notaus.refuse("auto", uid):     # the Notaus from stage 2, or the profile's own (notaus.py)
         return "Notaus"
+    if features.blocked("proactive", uid):    # the admin blocked it for this profile (Funktionen → Wer darf was)
+        return "blocked by the admin"
     if not p.get("pro_on"):
         return "turned off in the profile"
     if not p.get(KINDS[kind][2], True):
@@ -1062,7 +1064,7 @@ async def due_once(now=None):
         return
     for uid in profiles.user_ids():
         p = prefs(uid)
-        if not p.get("pro_on"):
+        if not p.get("pro_on") or features.blocked("proactive", uid):
             continue
         local = now.astimezone(_zone(p)) if now else datetime.datetime.now(_zone(p))
         for name, fn in (("events", lambda: check_events(uid, p, local) if p.get("pro_events") else None),

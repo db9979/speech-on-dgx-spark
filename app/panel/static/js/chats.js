@@ -218,7 +218,7 @@ function cxPane(k){CX.pane=k;const p=cxEl('cxpane');p.hidden=!k;if(!k){p.innerHT
 const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<label class="cx-pp">${sel?`<input type="checkbox" data-pp="${esc(p.id)}"${CX.pick.has(p.id)?' checked':''}>`:''}`+
   `${cxAva(p.id,p.name)}<span>${esc(p.name)}</span>${sel?'':`<button type="button" class="b" data-cxn="one" data-to="${esc(p.id)}">${esc(t('Schreiben','Write'))}</button>`+
   (CX.S&&CX.S.private?`<button type="button" class="b" data-cxn="priv" data-to="${esc(p.id)}" title="${esc(t('Privat: Ende-zu-Ende verschlüsselt','Private: end-to-end encrypted'))}">🔒 ${esc(t('Privat','Private'))}</button>`:'')}</label>`).join('')}</div>`
-  :`<div class="cx-none mut">${esc(t('Niemand nimmt gerade Nachrichten von dir an. Jede Person schaltet das unter Ich → Gespräch → Chats selbst ein.','Nobody takes messages from you right now. Each person switches that on under Me → Conversation → Chats.'))}</div>`;
+  :`<div class="cx-none mut">${esc(t('Niemand nimmt gerade Nachrichten von dir an. Jede Person legt unter Ich → Gespräch → Chats fest, wer ihr schreiben darf.','Nobody takes messages from you right now. Each person sets under Me → Conversation → Chats who may write to them.'))}</div>`;
 function cxNew(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');
   p.innerHTML=(S.groups?`<button type="button" class="cx-bigrow" data-cxn="group">${cxAva('g','',true)}<b>${esc(t('Neue Gruppe','New group'))}</b></button>`:'')+
     (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="cx-ava inv">✉️</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+

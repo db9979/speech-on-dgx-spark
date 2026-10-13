@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------- Spark-Begleiter (begleiter.py, tools/begleiter)
-// Ich → Begleiter: the own switch, the programs for Windows and Mac, "Gerät koppeln" (setup line), and per paired
+// Ich → Begleiter: the programs for Windows and Mac, "Gerät koppeln" (setup line), and per paired
 // device which parts it has (writing help, questions, dictation, notes, state, Notaus button) plus the writing
 // help's defaults. A change reaches the program with its next poll. Hotkeys are set in the program itself.
 let DESK_ON=false;
@@ -85,7 +85,6 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
       <div class="row"><button class="b p" type="button" data-dsave="${esc(x.id)}">${esc(t('Speichern','Save'))}</button><button class="b" type="button" data-ddel="${esc(x.id)}">${esc(t('Entfernen','Remove'))}</button></div>
       <div class="fh" data-dmsg="${esc(x.id)}"></div></div></div>`};
   box.innerHTML=`<div class="intro">${esc(t('Ein kleines Programm in der Windows-Taskleiste und der Mac-Menüleiste: Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustand und dein Notaus, jedes mit eigenem Tastenkürzel. Was ein Gerät darf, stellst du hier ein; es gilt beim nächsten Abruf (spätestens nach einer halben Minute).','A small program in the Windows taskbar and the Mac menu bar: writing help, Ask Spark, dictation, notes, state and your kill switch, each with its own hotkey. What a device may do is set here; it applies with its next check (within half a minute).'))}</div>
-    ${xsw('desk_on',t('Spark-Begleiter für mich','Spark companion for me'),t('Aus: alle gekoppelten Geräte ruhen.','Off: all paired devices rest.'))}
     ${d.on?`<ul class="facts">
       <li><span><b>Windows (x64 und ARM)</b><br><small class="mut">${esc(t('Nicht signiert: beim ersten Start „Weitere Informationen“ → „Trotzdem ausführen“.','Not signed: at first start "More info" → "Run anyway".'))}</small></span><a class="b" href="${esc(d.downloads.windows||'')}" target="_blank" rel="noopener">${esc(t('Zur Seite','Open page'))}</a></li>
       <li><span><b>Mac</b><br><small class="mut">${esc(t('Beim ersten Start Rechtsklick → Öffnen. Für Tastenkürzel mit Markieren fragt der Mac einmal nach „Bedienungshilfen“.','At first start right-click → Open. For hotkeys that mark text the Mac asks once for "Accessibility".'))}</small></span><a class="b" href="${esc(d.downloads.mac||'')}" target="_blank" rel="noopener">${esc(t('Zur Seite','Open page'))}</a></li></ul>

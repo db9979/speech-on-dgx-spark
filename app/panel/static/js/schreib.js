@@ -7,7 +7,6 @@ async function showWrite(){const box=$('writebox');if(!box)return;if(!PROFILE||!
   WR.info=d;const on=!!(d&&d.on);
   const arts=d?d.arts:[],langs=d?d.langs:[];
   box.innerHTML=`<div class="intro">${t('Text hineinkopieren, Art wählen, fertig: korrigieren, glätten, kürzen, freundlicher oder förmlicher machen, übersetzen oder eine Antwort auf eine Mail entwerfen. Der Spark liest den Text nur, speichert nichts und sendet nie etwas.','Paste a text, pick what to do, done: correct, smooth, shorten, make friendlier or more formal, translate, or draft a reply to a mail. The Spark only reads the text, stores nothing and never sends anything.')}</div>
-    ${xsw('write_on',t('Schreibhilfe für mich nutzen','Use the writing help for me'),t('Auch über „Dienste per MCP“ (Werkzeug „Text verbessern“), wenn du es dort einer Verbindung gibst.','Also over "Services over MCP" (tool "Improve text") when you give it to a connection there.'))}
     ${on?`<label for="wrart">${t('Was soll passieren?','What should happen?')}</label>
     <div class="two2"><div><select id="wrart">${arts.map(a=>`<option value="${esc(a.id)}">${esc(L==='en'?a.en:a.de)}</option>`).join('')}</select></div>
       <div id="wrlangbox" hidden><select id="wrlang" aria-label="${t('Sprache','Language')}"></select></div></div>
@@ -33,7 +32,6 @@ async function showWrite(){const box=$('writebox');if(!box)return;if(!PROFILE||!
     </div>
     <input type="file" id="wrfile" accept="image/*" hidden>`:''}
     ${on&&d.apps_spark?`<h3 style="margin:18px 0 4px">${t('In anderen Programmen','In other programs')}</h3>
-    ${xsw('write_apps',t('In anderen Programmen nutzen','Use in other programs'),t('Mac-Schnellaktion, Windows-Programm, Office-Add-in, Browser-Erweiterung und iPhone-Kurzbefehl. Jedes Programm bekommt einen eigenen Schlüssel, der nur Texte verbessern darf.','Mac quick action, Windows program, Office add-in, browser extension and iPhone shortcut. Each program gets its own key that may only improve texts.'))}
     <div id="wrapps"></div>`:''}`;
   xbind(box,showWrite);
   if(!on)return;

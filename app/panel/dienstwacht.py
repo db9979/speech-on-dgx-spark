@@ -22,12 +22,12 @@ No flood of notes:
 - nothing while the Spark updates, while it starts, or just after the watchdog restarted Hören or Sprechen.
 
 Who hears it: the admin profiles (notaus.admin_uids: the one chosen for admin notes, owners, Mit-Admins) whose own
-switch svc_note is on, on the device they chose (svc_device, push.send to=...). The words are fixed: the
+preference svc_note is not switched off, on the device they chose (svc_device, push.send to=...). The words are fixed: the
 service's name, times and what does not work; never an address, a host, a profile's name or an error text.
 
 The admin pages show a banner (health.alerts, also in the iPhone app's "Spark verwalten"), Zustand → Dienste the
-list with the outages of 7 days, the Live page a dot per service. With "Hinweis, wenn ein Dienst fehlt" (profile
-switch svc_hint) a tool whose service is gone answers with a fixed sentence at once instead of waiting for it.
+list with the outages of 7 days, the Live page a dot per service. With "Hinweis, wenn ein Dienst fehlt" (admin
+switch, for every profile the admin did not block) a tool whose service is gone answers with a fixed sentence at once instead of waiting for it.
 Admin switch chat.svc_watch (off), below it chat.svc_watch_users (off).
 """
 import asyncio
@@ -98,7 +98,7 @@ SVC = {
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
              ("wiki", "Wikipedia"), ("remarkable", "reMarkable"), ("iphonepush", "Push ans iPhone"),
              ("chats", "Mitteilungen zu Chats"), ("verbund", "Chats mit anderen Sparks"))
-# the tools whose service the assistant names when it is gone (svc_hint); the rest of chat_tools runs as before
+# the tools whose service the assistant names when it is gone (dienstnutzer); the rest of chat_tools runs as before
 TOOL_SVC = {"archive_search": "kiwix", "web_search": "web",
             "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",
             "home_assistant_states": "ha", "home_assistant_todo": "ha", "camera_describe": "ha",
@@ -806,7 +806,7 @@ def active_all(c):
         d["skip"] = skip
 
 
-# ---------------------------------------------------------------- the assistant (svc_hint)
+# ---------------------------------------------------------------- the assistant (Hinweis, wenn ein Dienst fehlt)
 class Down(RuntimeError):
     pass
 

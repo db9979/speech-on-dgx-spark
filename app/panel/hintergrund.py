@@ -528,7 +528,7 @@ def profile_state(request: Request, brief: bool = False, prof=Depends(own_profil
     uid = prof["id"]
     guard.limit(request, "bg", uid)
     if not on(uid):
-        raise HTTPException(403, "Mein Zustand ist aus (Funktionen, Ich → Mein Zustand)")
+        raise HTTPException(403, ("Mein Zustand geht für dich gerade nicht. " + features.missing_text("mystatus", uid)).strip())
     rs = rows(uid)
     if brief:   # the dot at "Ich": only how many need the person
         return {"sum": summary(rs)}

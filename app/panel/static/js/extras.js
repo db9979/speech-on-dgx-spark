@@ -1,16 +1,17 @@
-// "Ich" → Wetter, Kontakte, Pakete (weather.py, contacts.py, parcels.py). Each one stays off until the
-// profile switches it on here; the admin only allows it.
+// "Ich" → Wetter, Kontakte, Pakete (weather.py, contacts.py, parcels.py). What the admin allows works for every
+// profile at once (Dominik 2026-10-13); here the profile only sets up its part (place, address book …).
 let WX_ON=false,CON_ON=false,PAR_ON=false;
 const xjson=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
 const xmsg=(id,x,err)=>{const m=$(id);if(m){m.textContent=x||'';m.className='fh'+(err?' err':'')}};
 const xsw=(k,l,h)=>setRow(esc(l),esc(h),tglIn(`data-xk="${k}"`,S[k]));
+// a part that works once the admin releases it, without an own switch (Dominik 2026-10-13): name and sentence only
+const xinfo=(l,h)=>setRow(esc(l),esc(h),'');
 function xbind(box,after){box.querySelectorAll('[data-xk]').forEach(e=>e.onchange=()=>{saveSet(e.dataset.xk,e.checked);if(after)setTimeout(after,400)})}
 // ---------------------------------------------------------------- weather
 async function showWx(){const box=$('wxbox');if(!PROFILE||!WX_ON){box.innerHTML='';return}
   let d={place:{}};try{d=await (await api('/api/profile/weather')).json()}catch{}
   const p=d.place||{};
   box.innerHTML=`<div class="intro">${t('Frag „Wie wird das Wetter morgen?“ oder „Regnet es heute noch?“. Die Vorhersage kommt von Open-Meteo, der Assistent liest sie als feste Sätze vor. Nach draußen gehen nur die Koordinaten deines Orts.','Ask "What is the weather tomorrow?" or "Will it rain today?". The forecast comes from Open-Meteo and is read as fixed sentences. Only your place\'s coordinates leave the house.')}</div>
-    ${xsw('wx_on',t('Wetter für mich nutzen','Use weather for me'),t('Auch im Tagesbriefing und beim Wetterhinweis unter „Von selbst“.','Also in the daily briefing and the weather note under "Proactive".'))}
     <label>${t('Dein Ort','Your place')}</label><div class="rowin"><input id="wxplace" value="${esc(p.place||'')}" placeholder="${t('z. B. Ulm','e.g. Ulm')}" autocomplete="off"><button class="b" type="button" id="wxsave">${t('Speichern','Save')}</button></div>
     <div class="fh" id="wxname">${p.name?t('Gefunden: ','Found: ')+esc(p.name):t('Ortsname, gern mit Postleitzahl („76307 Karlsbad“), oder Koordinaten („48.87, 8.50“).','Place name, with postcode if you like ("76307 Karlsbad"), or coordinates ("48.87, 8.50").')}</div>
     <div id="wxchoices"></div>
@@ -34,7 +35,6 @@ async function showCon(){const box=$('conbox');if(!PROFILE||!CON_ON){box.innerHT
   let d={accounts:[],count:0,errors:[]};try{d=await (await api('/api/profile/contacts')).json()}catch{}
   const when=d.fetched?new Date(d.fetched*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   box.innerHTML=`<div class="intro">${t('Frag „Wie ist die Nummer von Anna?“ oder „Wann hat Bert Geburtstag?“. Der Assistent liest dein Adressbuch nur; einmal am Tag holt er es neu und speichert es verschlüsselt auf dem Spark.','Ask "What is Anna\'s number?" or "When is Bert\'s birthday?". The assistant only reads your address book; it fetches it once a day and keeps it encrypted on the Spark.')}</div>
-    ${xsw('con_on',t('Kontakte für mich nutzen','Use contacts for me'),t('Nummern, E-Mail-Adressen und Geburtstage; in Mails stehen Namen statt Adressen.','Numbers, e-mail addresses and birthdays; mails show names instead of addresses.'))}
     ${xsw('con_bday',t('Geburtstage im Tagesbriefing','Birthdays in the daily briefing'),t('Wer heute und morgen Geburtstag hat.','Who has a birthday today and tomorrow.'))}
     <ul class="facts">${d.accounts.map(a=>`<li><span><b>${esc(a.name)}</b><br><small class="mut">${esc(a.url.replace(/^\w+:\/\//,'').slice(0,48))}</small></span><button class="b" type="button" data-cdel="${esc(a.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Adressbuch verbunden.','No address book connected yet.')}</li>`}</ul>
     ${d.accounts.length?`<div class="fh">${d.count} ${t('Kontakte','contacts')}${when?t(', zuletzt geholt ',', last fetched ')+when:''}${d.errors.length?' · ⚠ '+esc(d.errors.join('; ')):''}</div>`:''}
@@ -61,7 +61,6 @@ async function showCon(){const box=$('conbox');if(!PROFILE||!CON_ON){box.innerHT
 async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.innerHTML='';return}
   let d={on:false,lines:[],errors:[]};try{d=await (await api('/api/profile/parcels'+(fresh?'?fresh=true':''))).json()}catch{}
   box.innerHTML=`<div class="intro">${t('Frag „Kommt heute ein Paket?“. Der Assistent liest dazu die Versandmails von DHL, Hermes, DPD, GLS, UPS und Amazon der letzten 14 Tage in deinem Postfach. Er fragt keine Paketfirma und ändert nichts.','Ask "Is a parcel coming today?". The assistant reads the shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon of the last 14 days in your mailbox. It asks no carrier and changes nothing.')}</div>
-    ${xsw('par_on',t('Pakete für mich erkennen','Recognise parcels for me'),t('Auch im Tagesbriefing und unter „Von selbst“ („Paket kommt heute“).','Also in the daily briefing and under "Proactive" ("parcel comes today").'))}
     ${d.on?`<ul class="facts">${d.lines.map(x=>`<li><span>${esc(x)}</span></li>`).join('')||`<li class="mut">${t('Kein offenes Paket in den Mails.','No open parcel in the mails.')}</li>`}</ul>
     ${d.errors.length?`<div class="fh err">${esc(d.errors.join('; '))}</div>`:''}
     <div class="row" style="margin-top:8px"><button class="b" type="button" id="parrun">${t('Jetzt prüfen','Check now')}</button></div>`:''}`;
@@ -71,7 +70,7 @@ async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.in
 let TASK_ON=false,TG_ON=false,APP_ON=false,APP_PANEL=false,PEB_ON=false,AND_ON=false;
 async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.innerHTML='';return}
   let d={lists:{}};try{d=await (await api('/api/profile/tasks')).json()}catch{}
-  const on=!!S.tasks_on,base=location.origin;
+  const base=location.origin;
   const list=(k,l)=>{const tg=l.target;return `<h3 style="margin:14px 0 4px">${esc(L==='en'?l.name_en:l.name)}</h3>
     <div class="fh" style="margin-top:0">${tg?t('Liegt in der CalDAV-Liste ','Lives in the CalDAV list ')+'<b>'+esc(tg.name)+'</b>':t('Liegt auf dem Spark.','Lives on the Spark.')}${l.sent?' · '+l.sent+t(' ans iPhone übergeben',' handed to the iPhone'):''}</div>
     ${l.error?`<div class="fh err">${esc(l.error)}</div>`:''}
@@ -80,14 +79,13 @@ async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.inn
     <div class="row" style="margin-top:6px"><select data-ttgt="${k}"><option value="">${t('Auf dem Spark (Kurzbefehl fürs iPhone)','On the Spark (shortcut for the iPhone)')}</option>${tg?`<option value="${esc(tg.acc+'|'+tg.url)}" selected>${esc(tg.name)}</option>`:''}</select>
       <button class="b" type="button" data-tfind="${k}">${t('CalDAV-Listen suchen','Find CalDAV lists')}</button></div>`};
   box.innerHTML=`<div class="intro">${t('Sag „Setz Milch auf die Einkaufsliste“ oder „Was steht auf meiner Aufgabenliste?“. Hinzufügen geht sofort; Abhaken und Löschen per Sprache erst nach deinem „Ja“.','Say "Put milk on the shopping list" or "What is on my to-do list?". Adding happens at once; ticking off and deleting by voice only after your "Yes".')}</div>
-    ${xsw('tasks_on',t('Listen für mich nutzen','Use lists for me'),t('Einkaufsliste und Aufgaben. Offene Aufgaben kommen ins Tagesbriefing.','Shopping list and tasks. Open tasks go into the daily briefing.'))}
-    ${on?Object.entries(d.lists).map(([k,l])=>list(k,l)).join(''):''}
-    ${on?`<details style="margin-top:12px"><summary>${t('iPhone-Kurzbefehl für die Erinnerungen-App','iPhone shortcut for the Reminders app')}</summary><ol class="fh">
+    ${Object.entries(d.lists).map(([k,l])=>list(k,l)).join('')}
+    <details style="margin-top:12px"><summary>${t('iPhone-Kurzbefehl für die Erinnerungen-App','iPhone shortcut for the Reminders app')}</summary><ol class="fh">
       <li>${t('Unter Personen und Geräte bei deinem Profil ein Gerät „iPhone Listen“ anlegen und den Schlüssel kopieren (der Siri-Schlüssel geht auch).','Under People and devices add a device "iPhone lists" to your profile and copy the key (the Siri key works too).')}</li>
       <li>${t('Kurzbefehle-App → neuer Kurzbefehl → „Inhalte von URL abrufen“: ','Shortcuts app → new shortcut → "Get contents of URL": ')}<code>${esc(base)}/api/tasks/inbox?list=einkauf</code>${t(', Methode POST, Header ',', method POST, header ')}<code>X-Speech-Device</code>${t(' = dein Schlüssel.',' = your key.')}</li>
       <li>${t('„Text teilen“ nach „Neue Zeilen“, dann „Wiederholen mit jedem“ → „Erinnerung hinzufügen“ (Liste „Einkauf“ wählen).','"Split text" by "New lines", then "Repeat with each" → "Add new reminder" (pick your shopping list).')}</li>
       <li>${t('Automation: z. B. „Wenn ich die Erinnerungen-App öffne“ oder stündlich, ohne Nachfrage ausführen. Für Aufgaben dasselbe mit list=aufgaben.','Automation: e.g. "When I open Reminders" or hourly, run without asking. For tasks the same with list=aufgaben.')}</li>
-      <li>${t('Übergebene Einträge verschwinden hier aus der Liste; ab dann ist die Erinnerungen-App zuständig.','Handed-over entries leave this list; from then on the Reminders app is in charge.')}</li></ol></details>`:''}
+      <li>${t('Übergebene Einträge verschwinden hier aus der Liste; ab dann ist die Erinnerungen-App zuständig.','Handed-over entries leave this list; from then on the Reminders app is in charge.')}</li></ol></details>
     <div class="fh" id="taskmsg"></div>`;
   xbind(box,showTasks);
   box.querySelectorAll('[data-tadd]').forEach(b=>b.onclick=async()=>{const k=b.dataset.tadd,inp=box.querySelector(`[data-tnew="${k}"]`);if(!inp.value.trim())return;
@@ -110,7 +108,7 @@ async function showTg(){const box=$('tgbox');if(!PROFILE||!TG_ON){box.innerHTML=
     ${xsw('tg_voice',t('Antworten auch als Sprachnachricht','Answers also as voice messages'),t('In der Spark-Stimme. Umschalten geht auch mit /stimme.','In the Spark voice. Also with /stimme.'))}
     ${xsw('tg_push',t('Mitteilungen auch über Telegram','Notifications also over Telegram'),t('Erinnerungen, Tagesbriefing und „Von selbst“-Hinweise (Termine und Mails nur mit dem nächsten Schalter).','Reminders, daily briefing and proactive notes (appointments and mail only with the next switch).'))}
     ${xsw('tg_private',t('Persönliches über Telegram erlauben','Allow personal data over Telegram'),t('Kalender, E-Mail, Kontakte, Pakete und Dokumente. Die Nachrichten laufen über die Server von Telegram.','Calendar, e-mail, contacts, parcels and documents. The messages pass Telegram\'s servers.'))}
-    ${ALLOW.images&&S.images_on?xsw('tg_images',t('Fotos über Telegram','Photos over Telegram'),t('Schickst du dem Bot ein Foto, sieht es sich das Sprachmodell an; die Bildunterschrift ist die Frage. Für eine Rückfrage auf das Foto antworten. Fotos laufen über die Server von Telegram.','Send the bot a photo and the language model looks at it; the caption is the question. Reply to the photo for a follow-up. Photos pass Telegram\'s servers.')):''}
+    ${ALLOW.images?xsw('tg_images',t('Fotos über Telegram','Photos over Telegram'),t('Schickst du dem Bot ein Foto, sieht es sich das Sprachmodell an; die Bildunterschrift ist die Frage. Für eine Rückfrage auf das Foto antworten. Fotos laufen über die Server von Telegram.','Send the bot a photo and the language model looks at it; the caption is the question. Reply to the photo for a follow-up. Photos pass Telegram\'s servers.')):''}
     ${xsw('tg_ha',t('Smart Home über Telegram schalten','Switch the smart home over Telegram'),t('Nur mit deinem Codewort (Ich → Smart Home). Ohne Codewort schaltet Telegram nie.','Only with your code word (Me → Smart home). Without a code word Telegram never switches.'))}
     <div class="fh" id="tgmsg"></div>`;
   xbind(box);
@@ -145,13 +143,12 @@ async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_
   let d={phones:[],on:false,minutes:10};try{d=await (await api('/api/profile/iphone')).json()}catch{}
   const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
   box.innerHTML=`<div class="intro">${t('Die App „Spark“ fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme. „Hey Siri, Frag Spark“ geht dann auch ohne Kurzbefehl. Jedes iPhone bekommt einen eigenen Schlüssel, der nur fragen und hören darf.','The "Spark" app for the iPhone: press the button, ask, the answer comes in the Spark voice. "Hey Siri, Ask Spark" then works without a shortcut. Each iPhone gets its own key that may only ask and listen.')}</div>
-    ${xsw('app_on',t('iPhone-App für mich','iPhone app for me'),t('Aus: Deine gekoppelten iPhones bekommen sofort keine Antwort mehr.','Off: your paired iPhones get no answer any more, at once.'))}
     ${xsw('app_listen',t('Dauerhaft zuhören erlauben','Allow listening all the time'),t('Die App darf auf das Weckwort lauschen (in der App einschalten). Das Weckwort erkennt das iPhone selbst, erst danach geht Ton an den Spark.','The app may listen for the wake word (switch it on in the app). The iPhone itself recognises the wake word; only then does sound go to the Spark.'))}
     ${xsw('app_act',t('Route und Anrufe auf dem iPhone','Routes and calls on the iPhone'),t('Der Assistent darf eine Route in Karten öffnen oder einen Kontakt anrufen. Das iPhone fragt jedes Mal vorher.','The assistant may open a route in Maps or call a contact. The iPhone asks every time first.'))}
     ${xsw('app_ha',t('Smart Home aus der App','Smart home from the app'),t('Schalten und Abfragen wie im Panel, mit deinem Codewort. Aus: Die App fragt dein Zuhause gar nicht.','Switching and asking as in the panel, with your code word. Off: the app does not touch your home at all.'))}
     ${xsw('app_ios',t('Apple Erinnerungen auf dem iPhone','Apple Reminders on the iPhone'),t('Die App trägt Erinnerungen des Spark nach deinem „Ja“ in die Erinnerungen-App ein (Liste „Spark“) und holt neue Einträge der Einkaufs- und Aufgabenliste dorthin. Kurzbefehle dürfen etwas auf deine Listen setzen.','After your "yes" the app puts the Spark\'s reminders into the Reminders app (list "Spark") and brings new shopping and to-do entries there. Shortcuts may add to your lists.'))}
     ${xsw('app_docs',t('Dokumente aus der App ablegen','Store documents from the app'),t('In der App ein PDF, eine Textdatei oder ein Foto mit Text unter „Meine Dokumente“ speichern. Das iPhone liest den Text selbst, auch von gescannten Seiten.','Store a PDF, a text file or a photo with text from the app under "My documents". The iPhone reads the text itself, scanned pages too.'))}
-    ${ALLOW.images&&S.images_on?xsw('app_images',t('Fotos aus der App ansehen lassen','Let the model look at photos from the app'),t('Fotos aus der App gehen als Bild an das Sprachmodell auf dem Spark, nicht nur ihr Text. Aus: Das iPhone liest wie bisher nur die Schrift selbst.','Photos from the app go to the language model on the Spark as pictures, not only their text. Off: the iPhone reads only the writing itself, as before.')):''}
+    ${ALLOW.images?xsw('app_images',t('Fotos aus der App ansehen lassen','Let the model look at photos from the app'),t('Fotos aus der App gehen als Bild an das Sprachmodell auf dem Spark, nicht nur ihr Text. Aus: Das iPhone liest wie bisher nur die Schrift selbst.','Photos from the app go to the language model on the Spark as pictures, not only their text. Off: the iPhone reads only the writing itself, as before.')):''}
     ${ROOM_ON?xsw('app_room',t('Raum-Modus in der App zeigen','Show room mode in the app'),t('Zeigt im Chat, im Widget und auf dem Sperrbildschirm, welches Gerät gerade zuhört, mit „Beenden“. Starten geht dort nicht.','Shows in the chat, the widget and on the lock screen which device listens right now, with "Stop". Starting is not possible there.')):''}
     ${APP_PANEL?`<div class="fh"><b>${t('Panel-Bereiche in der App','Panel areas in the app')}</b></div>`+xsw('app_mine',t('Mein Alltag in der App','My day in the app'),t('Gedächtnis ansehen und löschen, die nächsten Termine, die Erinnerungen des Spark und Gesprächseinstellungen.','Look at and delete memory, the next appointments, the Spark\'s reminders and conversation settings.'))
       +xsw('app_docs_edit',t('Dokumente verwalten in der App','Manage documents in the app'),t('Löschen, neu einlesen, „Für alle“, Tags, Frist-Erinnerung und die Schalter unter Ich → Dokumente.','Delete, read again, "For everyone", tags, deadline reminder and the switches under Me → Documents.'))
@@ -181,7 +178,6 @@ async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_
   let d={watches:[],on:false,minutes:10};try{d=await (await api('/api/profile/pebble')).json()}catch{}
   const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
   box.innerHTML=`<div class="intro">${t('Die Uhr-App „Spark“ für Pebble: Knopf drücken, fragen, die Antwort kommt als Text und über den Lautsprecher der Uhr. Jede Uhr bekommt einen eigenen Schlüssel, der nur fragen darf.','The "Spark" watch app for Pebble: press the button, ask, the answer comes as text and through the watch speaker. Each watch gets its own key that may only ask.')}</div>
-    ${xsw('pebble_on',t('Pebble-Uhr für mich','Pebble watch for me'),t('Aus: Deine gekoppelten Uhren bekommen sofort keine Antwort mehr.','Off: your paired watches get no answer any more, at once.'))}
     <ul class="facts">${d.watches.map(p=>`<li><span><b>${esc(p.name)}</b><br><small class="mut">${t('zuletzt','last used')}: ${esc(when(p.last))}</small></span><button class="b" type="button" data-pebdel="${esc(p.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch keine Uhr gekoppelt.','No watch paired yet.')}</span></li>`}</ul>
     ${d.on?`<label>${t('Adresse, unter der das Handy den Spark erreicht','Address the phone reaches the Spark at')}</label><input id="pebbase" value="${esc(pebBase())}" autocomplete="off">
       <div class="fh"><b>1. ${t('App auf die Uhr','App onto the watch')}</b> ${t('Mit der Kamera des Handys scannen, das mit der Uhr verbunden ist, die Datei laden und mit der Pebble-App öffnen.','Scan with the camera of the phone paired with the watch, load the file and open it with the Pebble app.')}${d.app?' '+t('Version','Version')+' '+esc(d.app)+'.':''}</div>
@@ -211,7 +207,6 @@ async function showTr(){const box=$('trbox');if(!PROFILE||!TR_ON){box.innerHTML=
   let d={};try{d=await (await api('/api/profile/transit')).json()}catch{}
   const h=d.home,c=d.commute;
   box.innerHTML=`<div class="intro">${t('Frag „Wann fährt der nächste Bus?“ oder „Wie komme ich nach Karlsruhe?“. Die Zeiten kommen aus dem Fahrplandienst und werden als feste Sätze vorgelesen, (+3) heißt drei Minuten Verspätung.','Ask "When does the next bus leave?" or "How do I get to Karlsruhe?". Times come from the timetable service and are read as fixed sentences, (+3) means three minutes late.')}</div>
-    ${xsw('transit_on',t('Bus und Bahn für mich nutzen','Use bus and train for me'),t('Braucht deine Haltestelle.','Needs your stop.'))}
     <label>${t('Deine Haltestelle','Your stop')}</label><div class="rowin"><input id="trq" value="${esc(h?h.name:'')}" placeholder="${t('z. B. Karlsbad Bahnhof','e.g. Ulm Hbf')}" autocomplete="off"><button class="b" type="button" id="trfind">${t('Suchen','Search')}</button></div>
     <div id="trhits"></div>
     <h3 style="margin:14px 0 4px">${t('Pendelstrecke (für Verspätungshinweise)','Commute (for delay notes)')}</h3>
