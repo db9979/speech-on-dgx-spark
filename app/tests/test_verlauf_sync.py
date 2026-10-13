@@ -339,7 +339,7 @@ class InTheBrowser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.port = helpers._port()
-        helpers._serve(panel.app, cls.port)
+        helpers.serve_panel(cls, cls.port)
 
     def tearDown(self):
         helpers.set_config(history_live=False, history_one=False, history_offline=False)

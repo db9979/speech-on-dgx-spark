@@ -255,6 +255,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **`app/`-only copy:** tests that read files outside `app/` (`install.sh`, `update.sh`, `.github`, `docs`, `ios`) call `skipTest` when the file is missing. So run new tests once like this: `cp -r app /tmp/x/ && cd /tmp/x/app && python selftest.py discover -s tests`. (M [[selftest-app-only]])
 - **Browser tests** wait for a state, never for a fixed time. Contexts with `bypass_csp=True`. Widths 320, 390 and 1280 px. (M)
 - **Tests write no unknown config keys**, write the configuration atomically (`helpers.write_config`) and in `tearDown` switch off loops they switched on. (M)
+- **One panel per test class, and it stops with it:** browser tests start the panel only with `helpers.serve_panel(cls, port)`, which stops it after the class. Otherwise its background loops keep running for the rest of the run, every class adds a copy, the panel gets slower and slower and takes the work later tests wait for. Tests leave no devices, connections or profiles behind that disturb later tests; pairs like `python -m unittest tests.test_chats tests.test_meldung` find such leaks. (2026-10-13, main red after V01.0.473; 🧪 test_testserver)
 - **A second attempt** (Dominik 2026-10-11): a red test gets exactly one second attempt (`app/selftest.py`).
   - Red twice means red. With more than 5 failures there is no second attempt.
   - Green only in the second attempt gives a visible WARNING, and the test must still be repaired.
@@ -326,6 +327,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_stufen | every code endpoint with a level in `stufen.LIST` |
 | test_features | one register, profile switches start off, no checks of their own, one default value |
 | test_live | every tool, target, client and guard kind in the live picture, no contents |
+| test_testserver | a browser test class's panel stops with it, no one starts it otherwise |
 | test_ack | every intent-switch group has ≥ 5 bridge sentences |
 | test_intent, test_weiche | intent-switch rules and BENCH sentences |
 | test_tracelog, test_logfilter | logs and requests only fixed words and numbers, filter safe |

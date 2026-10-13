@@ -701,14 +701,41 @@ def fake_caldav():
 
 
 def _serve(app, port):
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error"))
+    """Serve app on port in its own thread; returns stop(). A panel served for a browser class must be stopped in
+    its tearDownClass (serve_panel does it): else its background loops (learning, tidying, briefs, update checks)
+    keep running for the rest of the self-test, every class adds another copy, the panel gets slower and slower
+    and takes the work later tests wait for (main red after V01.0.473: 12 browser and wissen tests)."""
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error",
+                                          timeout_graceful_shutdown=5))   # open streams end with it
     server.install_signal_handlers = lambda: None
-    threading.Thread(target=lambda: asyncio.run(server.serve()), daemon=True).start()
+    th = threading.Thread(target=lambda: asyncio.run(server.serve()), daemon=True)
+    th.start()
+
+    def stop():
+        server.should_exit = True
+        th.join(30)
+        _panels.discard(stop)
     for _ in range(1200):   # 60 s: late in the run (600 profiles) the panel's start took over 5 s on a busy machine
         if server.started:
-            return
+            return stop
         time.sleep(0.05)
     raise RuntimeError(f"fake server on {port} did not start")
+
+
+_panels = set()   # stop() of every panel served right now (serve_panel)
+
+
+def serve_panel(cls, port):
+    """The panel for a browser test class on port, stopped again when the class is done (one at a time)."""
+    import panel
+    stop = _serve(panel.app, port)
+    _panels.add(stop)
+    cls.addClassCleanup(stop)
+    return stop
+
+
+def panels_running():
+    return len(_panels)
 
 
 _started = False

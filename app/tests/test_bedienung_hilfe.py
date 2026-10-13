@@ -312,7 +312,7 @@ class InTheBrowser(unittest.TestCase):
             raise unittest.SkipTest("no Playwright/Chromium here")
         cls.ui = ui
         cls.port = helpers._port()
-        helpers._serve(panel.app, cls.port)
+        helpers.serve_panel(cls, cls.port)
         r = ADMIN.post("/api/admin/profiles", json={"name": "Bedientest", "pin": "4712"})
         assert r.status_code in (200, 409), r.text
         cls.uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Bedientest")

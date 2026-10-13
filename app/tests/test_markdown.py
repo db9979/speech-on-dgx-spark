@@ -119,7 +119,7 @@ class Browser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.port = helpers._port()
-        helpers._serve(panel.app, cls.port)
+        helpers.serve_panel(cls, cls.port)
 
     def test_render_is_safe_and_formatted(self):
         async_playwright, chromium = _browser()

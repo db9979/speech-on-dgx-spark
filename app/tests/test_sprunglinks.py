@@ -270,7 +270,7 @@ class Browser(unittest.TestCase):
         import panel
         import profiles
         cls.port = helpers._port()
-        helpers._serve(panel.app, cls.port)
+        helpers.serve_panel(cls, cls.port)
         try:
             profiles.add_user("Wegtest", "4711")
         except Exception:

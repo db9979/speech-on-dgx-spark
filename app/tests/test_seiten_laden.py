@@ -152,7 +152,7 @@ class Browser(unittest.TestCase):
     def setUpClass(cls):
         helpers.set_config(memory=True)
         cls.port = helpers._port()
-        helpers._serve(panel.app, cls.port)
+        helpers.serve_panel(cls, cls.port)
         try:
             profiles.add_user("Ladeseite", "4711")
         except Exception:

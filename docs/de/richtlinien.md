@@ -255,6 +255,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Nur-`app/`-Kopie:** Tests, die Dateien außerhalb von `app/` lesen (`install.sh`, `update.sh`, `.github`, `docs`, `ios`), rufen `skipTest` auf, wenn die Datei fehlt. Neue Tests deshalb einmal so laufen lassen: `cp -r app /tmp/x/ && cd /tmp/x/app && python selftest.py discover -s tests`. (M [[selftest-app-only]])
 - **Browser-Tests** warten auf einen Zustand, nie auf eine feste Zeit. Kontexte mit `bypass_csp=True`. Breiten 320, 390 und 1280 px. (M)
 - **Tests schreiben keine unbekannten Konfig-Schlüssel**, schreiben die Konfiguration atomar (`helpers.write_config`) und schalten in `tearDown` Schleifen ab, die sie eingeschaltet haben. (M)
+- **Ein Panel pro Testklasse, und es hört mit ihr auf:** Browser-Tests starten das Panel nur mit `helpers.serve_panel(cls, port)`, das es nach der Klasse wieder stoppt. Sonst laufen seine Hintergrund-Schleifen für den Rest des Laufs weiter, jede Klasse fügt eine Kopie hinzu, das Panel wird immer langsamer und nimmt späteren Tests die Arbeit weg. Tests hinterlassen keine Geräte, Verbindungen oder Profile, die spätere Tests stören; Paare wie `python -m unittest tests.test_chats tests.test_meldung` finden solche Lecks. (2026-10-13, main rot nach V01.0.473; 🧪 test_testserver)
 - **Ein zweiter Versuch** (Dominik 2026-10-11): Ein roter Test bekommt genau einen zweiten Versuch (`app/selftest.py`).
   - Zweimal rot heißt rot. Bei mehr als 5 Fehlern gibt es keinen zweiten Versuch.
   - Grün erst im zweiten Versuch gibt eine sichtbare WARNUNG, und der Test muss trotzdem repariert werden.
@@ -326,6 +327,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_stufen | jeder Code-Endpunkt mit Stufe in `stufen.LIST` |
 | test_features | ein Register, Profilschalter starten aus, keine eigene Prüfung, ein Standardwert |
 | test_live | jedes Werkzeug, Ziel, jeder Client und jede guard-Art im Live-Bild, keine Inhalte |
+| test_testserver | Panel einer Browser-Testklasse stoppt mit ihr, keiner startet es anders |
 | test_ack | jede Weiche-Gruppe hat ≥ 5 Brückensätze |
 | test_intent, test_weiche | Weiche-Regeln und BENCH-Sätze |
 | test_tracelog, test_logfilter | Logs und Anfragen nur feste Wörter und Zahlen, Filter sicher |
