@@ -1812,6 +1812,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Für neue Profile (V01.0.492)",
+"text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Antwort aufs reMarkable (V01.0.279)",
 "text": "Antwort aufs reMarkable (V01.0.279): „Fass die politische Lage zusammen und leg es aufs reMarkable“ legt die ganze Antwort als neues Dokument in den Ordner „Spark“. Das entscheidet eine feste Regel auf den eigenen Worten der Frage (ablegen, schicken, speichern … plus „aufs/auf dem/meinem reMarkable“, ohne Doppelpunkt), nicht das Sprachmodell: Das Modell schreibt nur die Antwort, danach schickt das Panel sie und sagt „Die Antwort liegt jetzt auf deinem reMarkable …“ (oder warum nicht). So geht es auch nach einer Websuche, nach der das Werkzeug remarkable_note gesperrt ist; das Ziel ist fest, fremder Text kann nur den Inhalt der Antwort prägen, nie wohin sie geht. Gleiche Schalter und Tagesgrenze wie oben, nur im eigenen Browser bzw. am Lautsprecher mit erkannter Stimme, nie Gäste. Logs → Anfragen zeigt „remarkable (Panel)“."
 },
@@ -5246,6 +5254,14 @@
 "head": "Voice chat",
 "title": "Task sheet to tick (V01.0.491, package D, Dominik 2b)",
 "text": "h answer does when it builds the sheet (rmaufgaben.OPTS, _do); the paper only picks. It is evaluated at once when \"Fertig – bitte auswerten\" is ticked, else after 15 minutes without a change on the sheet; two ticks in one point = unclear, nothing happens, the point comes again; each point acts once. The emergency stop holds everything. Then a new version with \"Erledigt seit Version N\" (at the earliest after 10 minutes, else daily from the morning sheet's time when what is open changed); the old one with the ticks goes to the archive. \"Take back\" under Paper for a reminder, a deleted memory entry, a setting and an assistant proposal (POST /api/profile/remarkable/papier/aufgaben/zurueck, body 1 KB, rate limit rm); \"Send task sheet\" POST /api/profile/remarkable/papier/aufgaben (rate limit rmsend), both with the profile's browser login, CSRF, guard.log. Also by voice: \"Leg mir das Aufgabenblatt aufs reMarkable\" (remarkable_sheet). Journal numbers only (\"remarkable: task sheet read | 1 done, 0 unclear\"), live \"Aufgabenblatt\" as background work."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "For new profiles (V01.0.492)",
+"text": "For new profiles (V01.0.492): when chat.new_profile_on names a function that no longer exists or no longer has its own profile switch (such as the old \"Nachrichten\" from V01.0.488), admin.get_config drops it; before, every save of an admin switch failed with \"new_profile_on: functions with an own switch, each once\". Self-test test_features."
 },
 {
 "lang": "en",

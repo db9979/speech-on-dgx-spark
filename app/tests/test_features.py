@@ -292,6 +292,21 @@ class Presets(unittest.TestCase):
             cfg["chat"]["new_profile_on"] = bad
             self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
 
+    def test_a_removed_function_in_the_list_never_blocks_saving(self):
+        """V01.0.491: "messages" (removed in .488) or one without an own switch any more stayed in new_profile_on,
+        and every admin switch failed with "new_profile_on: functions with an own switch, each once"."""
+        helpers.set_config(new_profile_on=["messages", "rmaufgaben", "weather"])
+        try:
+            self.assertEqual(ADMIN.get("/api/config").json()["chat"]["new_profile_on"], ["weather"])
+            r = ADMIN.put("/api/admin/switches", json={"key": "weather", "on": False})
+            self.assertEqual(r.status_code, 200, r.text)
+            cfg = ADMIN.get("/api/config").json()
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 200)
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                self.assertEqual(json.load(f)["chat"]["new_profile_on"], ["weather"])
+        finally:
+            helpers.set_config(new_profile_on=[])
+
     def test_presets_never_switch_a_function_on(self):
         _, uid = profile("FeaFrida")
         chat = {"defaults": {"route": True, "wx_on": True, "length": "short", "echo": False}}

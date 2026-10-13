@@ -463,6 +463,10 @@ def get_config():
         cfg = json.load(f)
     for sec, vals in load_config().items():  # fill keys added by newer versions
         cfg.setdefault(sec, {}).update(vals)
+    npo = cfg.get("chat", {}).get("new_profile_on")
+    if isinstance(npo, list):   # a function removed or without an own switch by now must not block every save
+        cfg["chat"]["new_profile_on"] = [k for k in npo if isinstance(k, str) and k in features.BY_KEY
+                                         and features.BY_KEY[k].profile]
     return cfg
 
 
