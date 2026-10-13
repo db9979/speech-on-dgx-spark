@@ -200,7 +200,7 @@ class Echo(unittest.TestCase):
         with open(os.path.join(JS, "chat.js"), encoding="utf-8") as f:
             js = f.read()
         self.assertIn("ignored:d.ignored||''", js)
-        self.assertIn("r.ignored?t('Eigene Stimme überhört.'", js)
+        self.assertIn("/own|pause/.test(r.ignored)?t('Eigene Stimme überhört.'", js)
         with open(os.path.join(JS, "me.js"), encoding="utf-8") as f:
             self.assertIn("{k:'echo',type:'bool',prof:1,need:'echo'", f.read())
 

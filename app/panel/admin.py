@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import backup  # noqa: E402
 import undo  # noqa: E402
 import echo  # noqa: E402
+import stille  # noqa: E402
 import guard  # noqa: E402
 import kiwix  # noqa: E402
 import health  # noqa: E402
@@ -988,6 +989,8 @@ async def _test_asr(request, file, language, wake, room):
         room_mode.set_voice(me["id"], room, None)
         if room_mode.needs_voice(me["id"], room):
             rv = _quiet(asyncio.create_task(asyncio.to_thread(speakers.identify, data, th)))
+    # silence never becomes words (stille.py): how much of the recording is voice, measured while the GPU listens
+    quiet = _quiet(asyncio.create_task(asyncio.to_thread(stille.measure, data)))
     try:
         async with httpx.AsyncClient(timeout=600) as c:
             import stufe   # priority for people: the profile's own recording goes first (not at shared speakers)
@@ -995,10 +998,26 @@ async def _test_asr(request, file, language, wake, room):
                              files={"file": (file.filename or "audio.wav", data)},
                              data=form, headers=dict(api_headers(), **stufe.headers(stufe.asr_level(request))))
     except (httpx.ConnectError, httpx.ConnectTimeout):
-        for task in (spk, rv):
+        for task in (spk, rv, quiet):
             if task is not None:
                 task.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
+    # a click, the chime or the room after an answer comes back as "Ja" or "Okay": no question (fixed rule)
+    if r.status_code == 200:
+        try:
+            got = r.json()
+        except ValueError:
+            got = {}
+        got = got if isinstance(got, dict) else {}
+        why = stille.check(str(got.get("text") or ""), await quiet)
+        if why:
+            for task in (spk, rv):
+                if task is not None:
+                    task.cancel()
+            stille.note(why, echo.device_of(request).split(":")[0])
+            return {"text": "", "ignored": why}
+    else:
+        quiet.cancel()
     # the Spark's own voice from another device (or leaking through this one) is no question: the
     # recording counts as silence (echo.py; profiles only)
     if me and r.status_code == 200:

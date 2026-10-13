@@ -178,7 +178,8 @@ async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Trans
   clearLive();
   if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
   // the Spark's own voice (another device answering, echo.py) counts as silence
-  if(!r.text){chatSay(r.ignored?t('Eigene Stimme überhört.','Ignored my own voice.'):t('Nichts verstanden.','Did not catch that.'));return}
+  // silence, a click or the chime that came back as "Ja"/"Okay" (stille.py) is no question either
+  if(!r.text){chatSay(/own|pause/.test(r.ignored)?t('Eigene Stimme überhört.','Ignored my own voice.'):r.ignored?t('Nichts gehört.','Heard nothing.'):t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
 // bubble. requestData() flushes the recorder first so the snapshot holds the last moments too.

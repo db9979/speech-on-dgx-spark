@@ -61,6 +61,10 @@ final class Conversation: ObservableObject {
     static let endSilence: TimeInterval = 0.8   // quiet after speech that ends a question
     static let giveUp: TimeInterval = 8         // nothing said: the microphone goes off (as in the panel)
     static let maxQuestion: TimeInterval = 30
+    /// voice needed before a recording counts as a question: a click, a cough or the room never reach the Spark
+    static let minSpeech: TimeInterval = 0.15
+    /// after the chime the microphone ignores this long (the tone and the end of the answer still ring in it)
+    static let afterChime: TimeInterval = 0.25
 
     @Published var messages: [Message] = []
     @Published var phase: Phase = .idle
@@ -103,6 +107,8 @@ final class Conversation: ObservableObject {
     private var fromWake = false
     private var startedAt = Date()
     private var lastLoud = Date()
+    private var loud: TimeInterval = 0
+    private var deafUntil = Date.distantPast
     private var loudSince: Date?
     private var floor: Float = 0.02
     private var streamDone = true
@@ -428,12 +434,18 @@ final class Conversation: ObservableObject {
             phase = .idle
             return
         }
-        if preroll == 0 && !fromWake { audio.chime() }
+        if preroll == 0 && !fromWake {
+            audio.chime()
+            deafUntil = Date().addingTimeInterval(Self.afterChime)
+        } else {
+            deafUntil = .distantPast
+        }
         // priority for people: the Spark frees itself for a profile with Vorrang before the question arrives
         // (it answers the same for every profile, so nothing to check here)
         if let api = SparkAPI.current { Task { _ = try? await api.post("api/vorrang/spricht", [:]) } }
         pcm = preroll > 0 ? Array(ring.suffix(Int(AudioEngine.rate * preroll))) : []
         heard = preroll > 0
+        loud = 0
         self.fromWake = fromWake
         startedAt = Date()
         lastLoud = Date()
@@ -449,8 +461,14 @@ final class Conversation: ObservableObject {
         let now = Date()
         switch phase {
         case .listening:
+            // the chime is no question: neither recorded nor counted (it came back as "Ja" or "Okay")
+            guard now >= deafUntil else { return }
             pcm.append(contentsOf: samples)
-            if lvl > threshold { heard = true; lastLoud = now }
+            if lvl > threshold {
+                lastLoud = now
+                loud += Double(samples.count) / AudioEngine.rate
+                if loud >= Self.minSpeech { heard = true }
+            }
             if heard && now.timeIntervalSince(lastLoud) > Self.endSilence { finish() }
             else if !heard && now.timeIntervalSince(startedAt) > Self.giveUp {
                 pcm = []
@@ -488,7 +506,11 @@ final class Conversation: ObservableObject {
                 guard !Task.isCancelled else { return }
                 if woke { text = wake.strip(text) }
                 if text.isEmpty {
-                    if woke { listen(preroll: 0, fromWake: false) } else { error = String(localized: "Nichts verstanden."); base() }
+                    // the Spark heard only silence or a click (it says so instead of "Ja"/"Okay"): hands-free
+                    // ends quietly as when nothing was said
+                    if woke { listen(preroll: 0, fromWake: false) }
+                    else if Prefs.handsFree || inCar { notice = String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen."); base() }
+                    else { error = String(localized: "Nichts verstanden."); base() }
                     return
                 }
                 // a route or a call waits for "Ja": decided here on the iPhone, nothing else counts as yes

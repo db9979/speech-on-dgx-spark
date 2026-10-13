@@ -140,6 +140,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 ### 2.7 Geheimnisse und Logs
 - Geheimnisse liegen nur im vault und werden nie zurückgegeben. Nie in Logs oder Fehlertexten, nie `str(e)` mit Token. (C, PA)
 - Passwörter, Codes, PINs und Schlüssel werden **nie gesprochen** (`textnorm.hide_secrets`). Das ist eine feste Regel ohne Schalter. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
+- **Stille wird nie zu Wörtern:** Was die Spracherkennung aus einer Aufnahme ohne Stimme, aus einem typischen Stille-Satz („Untertitel im Auftrag des ZDF“) oder als einzelnes kurzes Wort aus fast stimmloser Aufnahme macht, ist keine Frage (`stille.check` in `/api/test/asr`). Ein neuer Weg, der Aufnahmen in Text verwandelt und weitergibt, nutzt `stille.measure`/`stille.check`. Feste Regel ohne Schalter. (Dominik 2026-10-13; 🧪 test_stille)
 - Codewörter gehen nie ans Modell, nie in den Verlauf, die Diagnose oder das Journal. (C)
 - Passwörter und Schlüssel werden nur ins Formular getippt, nie in den Chat. (P funktionen-entdecken)
 

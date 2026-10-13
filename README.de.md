@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.480** Keine erfundenen „Ja“ oder „Okay“ mehr nach Antworten: Stille, Klicks und der Signalton werden nicht zur Frage
 - **V01.0.479** Private Chats mit Ende-zu-Ende (Schlüssel je Gerät, Sicherheitsnummer, aus); alter Umschlag im Assistenten entfernt
 - **V01.0.478** Einstellungs-Assistent mit Admin-Regeln statt Code, Spark-Tagebuch, Monatsbericht, Daumen in Logs → Anfragen
 - **V01.0.477** Taten prüfen und Fehlerschleife stoppen (an wie die Antwort-Prüfung): „ist jetzt an“ nur, wenn das Werkzeug geklappt hat, sonst ein ehrlicher Satz; zweimal gleicher Fehler sperrt das Werkzeug
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.473** Chats (aus): mit den anderen Personen deines Sparks schreiben wie im Messenger, auch in Gruppen, mit Fotos, Dateien, Sprachnachrichten und Einladung per QR; verschlüsselt auf dem Spark; Android-App 1.2.0 mit Mitteilungen sofort, iPhone-App mit Chats
 - **V01.0.472** Eigene Lautsprecher: „Jarvis“ beim Sprechen macht sofort still, „Stopp“ danach endet ohne Antwort; neuer Schalter „Stopp beim Vorlesen“ für „Stopp“ ohne Weckwort
 - **V01.0.471** Sprachausgabe verstummt nicht mehr nach einem Stück ohne Sprechbares (tts_http_400); Fehler in Logs → Anfragen als Satz
-- **V01.0.470** Rückfrage statt Raten (aus): passen mehrere Geräte, Haltestellen, Orte oder Listen, fragt der Spark mit Knöpfen und merkt sich die Wahl
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

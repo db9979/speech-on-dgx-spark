@@ -140,6 +140,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 ### 2.7 Secrets and logs
 - Secrets live only in the vault and are never returned. Never in logs or error texts, never `str(e)` with a token. (C, PA)
 - Passwords, codes, PINs and keys are **never spoken** (`textnorm.hide_secrets`). This is a fixed rule without a switch. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
+- **Silence never becomes words:** whatever the speech recognition makes of a recording without voice, of a typical silence sentence ("Untertitel im Auftrag des ZDF") or as a lone short word from an almost voiceless recording is no question (`stille.check` in `/api/test/asr`). A new path that turns recordings into text and passes it on uses `stille.measure`/`stille.check`. Fixed rule without a switch. (Dominik 2026-10-13; 🧪 test_stille)
 - Code words never go to the model, never into the history, the diagnostics or the journal. (C)
 - Passwords and keys are only typed into the form, never into the chat. (P funktionen-entdecken)
 

@@ -44,7 +44,7 @@ In der App unter **Einstellungen (Zahnrad)**:
 
 | Schalter | Was er tut |
 |---|---|
-| Freihändig | Nach jeder Antwort hört die App wieder zu. 8 Sekunden Stille: Mikrofon aus. Seit V01.0.272 ein Wert deines Profils: Browser und App zeigen denselben (wie „Ins Wort fallen“). |
+| Freihändig | Nach jeder Antwort hört die App wieder zu (ihr Signalton und Klicks zählen nicht als Frage, siehe „Stille wird nie zu Wörtern“ in assistent.md). 8 Sekunden Stille: Mikrofon aus. Seit V01.0.272 ein Wert deines Profils: Browser und App zeigen denselben (wie „Ins Wort fallen“). |
 | Ins Wort fallen | Einfach losreden hält die Antwort an und hört zu. Das iPhone filtert die eigene Spark-Stimme aus dem Mikrofon. |
 | Antworten vorlesen | Aus: Antworten nur als Text. Der Schalter gehört zum Profil (wie im Browser, alle Geräte). „Auf diesem iPhone vorlesen“ gilt nur für dieses iPhone. In CarPlay spricht die App immer (seit V01.0.409). |
 | Weckwort | „Hey Spark“, „Jarvis“ oder „Computer“. Das iPhone erkennt das Wort selbst, ohne Internet und ohne Apple-Server; erst danach geht etwas an deinen Spark. Kann das iPhone kein Deutsch ohne Internet, bleibt es aus (Einstellungen → Allgemein → Tastatur → Diktat). |
