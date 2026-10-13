@@ -85,17 +85,28 @@ function kpis(d){const s=d.sys||{},h=s.hist||{},run=d.reqs.filter(r=>!r.done);
 const BUSX=440,BUS=[['rule',()=>tt('Regeln und Home-Assistant-Ereignisse','rules and Home Assistant events')],['timer',()=>tt('eigener Zeitplan: Hinweise, Begrüßung, Termine','own schedule: notes, greetings, appointments')],
   ['job',()=>tt('Aufträge und Wartung: Update-Prüfung, Sicherung …','jobs and upkeep: update check, backup …')],['note',()=>tt('Benachrichtigungen','notifications')]];
 const portX=i=>300+i*36;
-function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort((a,b)=>(b.done?1:0)-(a.done?1:0)),run=on.filter(r=>!r.done),day=d.bus||{},bot=H-50;
+// each input of the bus has its own colour: the port, its ball and its way (Dominik 2026-10-13)
+const BCOL={rule:'#f59e0b',timer:'#3b82f6',job:'#a855f7',note:'#14b8a6'},bcol=r=>BCOL[r.src]||BCOL.job;
+// every event of the bus runs once as a coloured ball from its port down to its stage, also one that was done
+// before the next poll (Dominik 2026-10-13: most rules, jobs and notes end within a second)
+const BUSDUR=2600;
+function busNew(reqs){const now=Date.now(),seen=LV.busSeen||(LV.busSeen={});
+  reqs.forEach(r=>{if(r.auto&&!r.net&&!(r.id in seen))seen[r.id]=r.done&&r.ago!=null&&r.ago>15?0:now});
+  Object.keys(seen).forEach(id=>{if(!reqs.some(r=>r.id===id)&&now-seen[id]>60000)delete seen[id]})}
+function busFly(r){const t=(LV.busSeen||{})[r.id];return t?Math.max(0,Date.now()-t)<BUSDUR?Date.now()-t:-1:-1}
+function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort((a,b)=>(b.done?1:0)-(a.done?1:0)),run=on.filter(r=>!r.done),fly=on.filter(r=>r.done&&busFly(r)>=0),lit=[...run,...fly],chips={},day=d.bus||{},bot=H-50;
   let o=`<g class="bus"><path class="bline" d="M${BUSX} 46 L${BUSX} ${bot}"/>`;
   STAGES.forEach(x=>{const p=pos[x[0]];if(p)o+=`<line class="btap" x1="${BUSX-6}" x2="${BUSX+6}" y1="${p.y+p.h/2}" y2="${p.y+p.h/2}"/>`});
-  BUS.forEach(([k,tip],i)=>{const r=run.find(q=>q.src===k),x=portX(i),c=r?col(r.id):'';
-    o+=`<g class="bport${r?' on':''}" data-tip="${lvE(k+' · '+tip()+' · '+tt('heute ','today ')+(day[k]||0))}"><path class="bwire" d="M${x} 41 C${x} 46 ${BUSX-12} 44 ${BUSX} 50" ${c?`style="stroke:${c}"`:''}/><circle cx="${x}" cy="36" r="5" ${c?`style="fill:${c};stroke:${c}"`:''}/><text class="bmono" x="${x}" y="26" text-anchor="middle">${k}</text></g>`});
-  on.forEach((r,j)=>{const t=pos['r'+r.id],st=pos[entry(r)||'llm']||pos.llm,i=Math.max(0,BUS.findIndex(b=>b[0]===r.src)),x=portX(i),y=t.y+6,c=r.done?'var(--mut)':col(r.id);
+  BUS.forEach(([k,tip],i)=>{const r=lit.find(q=>q.src===k),x=portX(i),c=BCOL[k];
+    o+=`<g class="bport${r?' on':''}" data-tip="${lvE(k+' · '+tip()+' · '+tt('heute ','today ')+(day[k]||0))}"><path class="bwire" d="M${x} 41 C${x} 46 ${BUSX-12} 44 ${BUSX} 50" ${r?`style="stroke:${c}"`:''}/><circle cx="${x}" cy="36" r="5" style="stroke:${c}${r?';fill:'+c:''}"/><text class="bmono" x="${x}" y="26" text-anchor="middle" style="fill:${c}">${k}</text></g>`});
+  on.forEach((r,j)=>{const t=pos['r'+r.id],st=pos[entry(r)||'llm']||pos.llm,i=Math.max(0,BUS.findIndex(b=>b[0]===r.src)),x=portX(i),y=t.y+6,f=r.done?busFly(r):-1,c=r.done&&f<0?'var(--mut)':bcol(r);
     const way=`M${x} 41 C${x} 46 ${BUSX-12} 44 ${BUSX} 50 L${BUSX} ${y} L${st.x} ${y}`;
-    o+=`<path id="lvb${j}" class="bway" d="${way}" style="stroke:${c}${r.done?';stroke-width:2;opacity:'+op(r,d)*.6:''}" data-req="${lvE(r.id)}" data-tip="${lvE(r.id+' · '+(r.src||'job')+' → '+(SNAME[entry(r)]||'')+(r.intent?' · '+r.intent:'')+' · '+(r.done?tt('fertig','done'):secs(r.age*1000)))}"/>
-      <circle cx="${BUSX}" cy="${y}" r="6" fill="${c}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}/>`;
-    if(!r.done){o+=[0,1,2].map(k=>`<circle r="4.5" fill="${c}"><animateMotion dur="1.6s" begin="${-k*.53}s" repeatCount="indefinite"><mpath href="#lvb${j}"/></animateMotion></circle>`).join('');
-      const w=`IRQ ${r.src||'job'}→${entry(r)||'llm'}`;o+=`<g data-req="${lvE(r.id)}"><rect x="${BUSX-8-w.length*6.4-10}" y="${y-22}" width="${w.length*6.4+10}" height="18" rx="3" fill="${c}"/><text class="bmono" x="${BUSX-8-w.length*6.4-5}" y="${y-9}" style="fill:#fff">${lvE(w)}</text></g>`}});
+    o+=`<path id="lvb${j}" class="bway" d="${way}" style="stroke:${c}${r.done&&f<0?';stroke-width:2;opacity:'+op(r,d)*.6:''}" data-req="${lvE(r.id)}" data-tip="${lvE(r.id+' · '+(r.src||'job')+' → '+(SNAME[entry(r)]||'')+(r.intent?' · '+r.intent:'')+' · '+(r.done?tt('fertig','done'):secs(r.age*1000)))}"/>
+      <circle cx="${BUSX}" cy="${y}" r="6" fill="${c}" data-req="${lvE(r.id)}" ${r.done&&f<0?`style="opacity:${op(r,d)}"`:''}/>`;
+    // one ball per finished event: it starts where it stood at the last redraw and stays at its stage at the end
+    if(f>=0){const dur=(BUSDUR-400)/1000,b=-(f/1000).toFixed(2);o+=`<g class="bball" data-req="${lvE(r.id)}"><circle r="9" fill="${c}" opacity=".3"><animateMotion dur="${dur}s" begin="${b}s" fill="freeze"><mpath href="#lvb${j}"/></animateMotion></circle><circle r="5.5" fill="${c}"><animateMotion dur="${dur}s" begin="${b}s" fill="freeze"><mpath href="#lvb${j}"/></animateMotion></circle></g>`}
+    if(!r.done||f>=0){if(!r.done)o+=[0,1,2].map(k=>`<circle r="4.5" fill="${c}"><animateMotion dur="1.6s" begin="${-k*.53}s" repeatCount="indefinite"><mpath href="#lvb${j}"/></animateMotion></circle>`).join('');
+      const w=`IRQ ${r.src||'job'}→${entry(r)||'llm'}`,cy=y-22-20*(chips[y]=(chips[y]||0)+1)+20;o+=`<g data-req="${lvE(r.id)}"><rect x="${BUSX-8-w.length*6.4-10}" y="${cy}" width="${w.length*6.4+10}" height="18" rx="3" fill="${c}"/><text class="bmono" x="${BUSX-8-w.length*6.4-5}" y="${cy+13}" style="fill:#fff">${lvE(w)}</text></g>`}});
   const today=BUS.reduce((a,[k])=>a+(day[k]||0),0);
   o+=`<text class="bmono" x="${BUSX-6}" y="${bot+12}" text-anchor="end">sched-bus · ${run.length} ${tt('aktiv','active')} · ${tt('heute','today')} ${today}</text></g>`;
   return o}
@@ -181,7 +192,7 @@ function times(r,pos,dir){const ms={},n={};r.steps.forEach(s=>{const k=s.k==='to
   Object.keys(pos).forEach(k=>{const p=pos[k];if(!p||!p.w||(ms[k]==null&&!(k==='tts'&&ack)))return;const calls=tgt(k)?(dir['tool>'+k]||0)+(dir['guard>'+k]||0):0,t=(calls>1?calls+'× · ':'')+(ms[k]!=null?secs(ms[k]):'')+(k==='tts'&&ack?(ms[k]!=null?' · ':'')+'⚡ '+ack:'');
     if(tgt(k))o+=`<text class="tm" x="${p.x-6}" y="${p.y+14}" text-anchor="end">${lvE(t)}</text>`;
     else o+=`<text class="tm" x="${p.x+p.w+6}" y="${p.y+14}">${lvE(t)}</text>`});return o}
-function route(r,pos,W,H,ph){const c0=col(r.id);let o='',lab='',call='',cl='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
+function route(r,pos,W,H,ph){const c0=(pos['r'+r.id]||{}).bus?bcol(r):col(r.id);let o='',lab='',call='',cl='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
   // the phone picture has no Eingang and no Wächter: the way goes straight past them, so "ist jetzt" still shows
   const via=n=>n==='guard'&&!pos.guard?'tool':n==='door'&&!pos.door?'r'+r.id:n;
   // Dominik 2026-10-12 (pick A): each stretch drawn once; rounds and repeats as one badge ("↻ 3 Runden", "×2"),
@@ -209,8 +220,8 @@ function route(r,pos,W,H,ph){const c0=col(r.id);let o='',lab='',call='',cl='';co
   return ph?`<g>${cl}</g>`:`<g>${o}${lab}${cl}</g>`}
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
-function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,LV.unfold?1:0,blockedKey(d),ph,NL,glowKey(),LV.node,LV.rew!=null?Math.round(LV.rew):'',(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
+function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);busNew(d.reqs||[]);
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,LV.unfold?1:0,reqs.filter(r=>r.auto&&busFly(r)>=0).map(r=>'f'+r.id).join(','),blockedKey(d),ph,NL,glowKey(),LV.node,LV.rew!=null?Math.round(LV.rew):'',(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
   if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still

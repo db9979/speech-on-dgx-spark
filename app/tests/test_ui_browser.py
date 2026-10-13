@@ -7,6 +7,7 @@ import glob
 import json
 import os
 import sys
+import time
 import unittest
 
 from tests import helpers
@@ -1709,6 +1710,49 @@ class Browser(unittest.TestCase):
                         await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-bus.png"))
                     self.assertEqual(errors, [])
                     await br.close()
+        self.run_async(go())
+
+    def test_live_bus_ball_for_done_event(self):
+        """Dominik 2026-10-13: a rule, timer, job or note that ended before the next poll still runs once as a
+        coloured ball from its port down to its stage; afterwards its way turns grey again."""
+        import json as _json
+        import live
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = _json.load(f)
+        was = dict(c.get("logs", {}))
+        c.setdefault("logs", {}).update(live=True)
+        helpers.write_config(c)
+
+        def undo():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                cb = _json.load(f)
+            cb["logs"] = was
+            helpers.write_config(cb)
+            live._run.clear()
+        self.addCleanup(undo)
+        live._run.clear()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                await pg.evaluate("goSec('live')")
+                await pg.wait_for_selector("#lvflow svg .node", timeout=20000)
+                live.job("Test", "remarkable", time.time())      # begins and ends at once, done before the poll
+                rid = next(iter(live._run))
+                await pg.wait_for_selector(f"#lvflow .bus .bball[data-req='{rid}'] animateMotion", state="attached", timeout=5000)
+                self.assertGreaterEqual(await pg.locator("#lvflow .bus .bport.on").count(), 1)
+                self.assertIn("IRQ job→", await pg.text_content("#lvflow .bus"))
+                fill = await pg.evaluate("(id)=>document.querySelector('#lvflow .bus .bball[data-req=\"'+id+'\"] circle:last-child').getAttribute('fill')", rid)
+                self.assertEqual(fill, "#a855f7")                     # in the colour of its port "job", not grey
+                ports = await pg.evaluate("[...document.querySelectorAll('#lvflow .bus .bport circle')].map(c=>c.style.stroke)")
+                self.assertEqual(len(set(ports)), 4)                  # every port in its own colour
+                await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-bus-ball.png"))
+                # once it arrived the ball is gone and its way stays as a grey trace
+                await pg.wait_for_selector(f"#lvflow .bus .bball[data-req='{rid}']", state="detached", timeout=6000)
+                way = await pg.get_attribute(f"#lvflow .bus .bway[data-req='{rid}']", "style")
+                self.assertIn("--mut", way)
+                self.assertEqual(errors, [])
+                await br.close()
         self.run_async(go())
 
     def test_live_each_stretch_once(self):
