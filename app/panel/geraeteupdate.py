@@ -279,22 +279,27 @@ async def check_all(c=None, now=None):
         return {"ok": False, "why": "notaus"}
     async with _busy:
         t0 = time.time()
-        errs = []
+        bad = []    # which part failed, in fixed words (the request's line on Logs → Anfragen names them)
         if features.admin_on("esp32"):
             import esp32
-            errs.append(await esp32.check())
+            if await esp32.check():
+                bad.append("esp32")
         if features.admin_on("android"):
             import android
-            errs.append(await android._check())
+            err, none = await android._check()   # (error, only "no release yet"): that one is no failure here
+            if err and not none:
+                bad.append("android")
         if features.admin_on("begleiter"):
             import begleiter
             for p in begleiter.platforms():
                 await begleiter.check(p)    # "noch keine Version" is no failure here
-        if upstream_on():
-            errs.append(await check_upstream(c))
-        ok = not any(errs)
+        if upstream_on() and await check_upstream(c):
+            bad.append("xiaozhi")
+        ok = not bad
         _change(lambda d: d.update(checked=now or time.time()))
-        live.job("Geräte-Updates", "Geräte-Updates", t0, ok)
+        if bad:
+            print("geraeteupdate: check failed for", ", ".join(bad), flush=True)
+        live.job("Geräte-Updates", "Geräte-Updates", t0, ok, code="_".join(bad)[:30])
         return {"ok": ok}
 
 
@@ -325,7 +330,7 @@ async def check_upstream(c=None):
         ver = m.group(1)
     except Exception as e:
         err = type(e).__name__
-        print("geraeteupdate: XiaoZhi check", err, flush=True)
+        print("geraeteupdate: XiaoZhi check failed:", err, flush=True)
 
     def keep(d):
         d["upstream"].update(checked=time.time(), error=err)

@@ -277,7 +277,9 @@ async def run(reason="daily"):
         _update(last=last)
         guard.log("offsite_failed", detail="Zertifikat passt nicht" if cert else msg)
         import live
-        live.job("Sicherung nach außen", "NAS-Sicherung", t0, ok=False)
+        http = re.match(r"HTTP (\d{3}) ", str(e))
+        live.job("Sicherung nach außen", "NAS-Sicherung", t0, ok=False,
+                 code="zertifikat" if cert else f"http_{http.group(1)}" if http else type(e).__name__.lower()[:30])
         print("offsite: failed -", "certificate refused" if cert else msg, flush=True)
         return last
     finally:

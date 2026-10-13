@@ -393,7 +393,7 @@ async def check():
         await fetch_firmware()
     except Exception as e:
         err = public_error(e)
-        print("esp32: firmware check", type(e).__name__, str(e)[:200], flush=True)
+        print("esp32: firmware check failed:", type(e).__name__, str(e)[:200], flush=True)
     _update(lambda d: d.update(checked=time.time(), error=err))
     return err
 

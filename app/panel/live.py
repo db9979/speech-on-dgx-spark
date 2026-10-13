@@ -471,17 +471,19 @@ def mark(area, text, now=None):
         pass
 
 
-def job(why, tool, t0, ok=True, uid=None, now=None):
+def job(why, tool, t0, ok=True, uid=None, now=None, code=""):
     """Something the Spark did by itself with a service (update check, NAS backup, reMarkable sheet): a request
-    of "Von selbst" with one step to the tool's target, shown like the others. never raises."""
+    of "Von selbst" with one step to the tool's target, shown like the others. code: a fixed word for why it
+    failed (http_401, github_limit, …), shown in the request's line instead of a bare "error". never raises."""
     try:
         rec = begin("auto", "", t=t0, uid=uid, auto=True, why=why, src="job")
         if rec is None or not getattr(rec, "persist", False):   # no "anfrage:" line from Logs → Anfragen: one here
-            _journal("Von selbst", f"{why} · {tool} {'ok' if ok else 'nicht ok'}")
+            grund = f" ({code})" if not ok and re.fullmatch(r"[a-z0-9_]{1,30}", str(code or "")) else ""
+            _journal("Von selbst", f"{why} · {tool} {'ok' if ok else 'nicht ok'}{grund}")
         if rec is not None:
             rec.step("in", "Von selbst", t0)
             rec.step("tool", tool, t0, now or time.time(), ok=bool(ok))
-            end(rec, bool(ok))
+            end(rec, bool(ok), code)
     except Exception:
         pass
 
@@ -492,8 +494,12 @@ def update_checked(data, t0):
         if not on():
             return
         err, behind, head = data.get("error"), data.get("behind"), data.get("head_state")
-        job("Update-Prüfung", "GitHub", t0, ok=not err)
+        why = data.get("why") or ""
+        job("Update-Prüfung", "GitHub", t0, ok=not err, code=why)
         word = ("keine Version mit bestandenen Tests, nichts wird installiert" if err and data.get("no_green") else
+                "GitHub-Grenze von 60 Abfragen pro Stunde erreicht, nichts wird installiert" if err and why == "github_limit" else
+                "ohne git installiert, install.sh einmal aus einem git-Klon starten" if err and why == "ohne_git" else
+                f"GitHub lehnt ab (HTTP {why[12:]}), nichts wird installiert" if err and why.startswith("github_http_") else
                 "GitHub nicht erreichbar, nichts wird installiert" if err else
                 "aktuell" if behind == 0 else
                 f"neuere getestete Version {data.get('version') or ''}".strip() + (f" ({behind} Änderungen)" if isinstance(behind, int) and behind > 0 else ""))
@@ -550,12 +556,12 @@ def note(uid, kind, t0, n, why=""):
         pass
 
 
-def end(rec, ok=True):
+def end(rec, ok=True, code=""):
     try:
         import tracelog
         if rec is not None:
             if not ok:
-                rec.fail("error")
+                rec.fail(code if re.fullmatch(r"[a-z0-9_]{1,30}", str(code or "")) else "error")
             tracelog.finish(rec)
     except Exception:
         pass

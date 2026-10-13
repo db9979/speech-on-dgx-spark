@@ -3316,6 +3316,22 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
+"title": "Fehler mit Grund statt „error“",
+"text": "Fehler mit Grund statt „error“ (ab V01.0.505, Dominik: Auszug aus den Logs): Anfragen „Von selbst“ (Update-Prüfung, Sicherung nach außen, Geräte-Updates) nennen in ihrer Zeile auf *Logs → Anfragen* einen festen Grund statt nur error: github_limit (60 Abfragen pro Stunde), github_http_401 (GitHub lehnt ab, z. B. der Lese-Token), git_ls_remote (GitHub nicht erreichbar), keine_gruenen_tests, ohne_git; bei der Sicherung http_401 (Benutzer oder Passwort des WebDAV-Ordners falsch), zertifikat oder die Fehlerart; bei Geräte-Updates der Teil, der scheiterte (esp32, android, xiaozhi). Die Zeilen update check failed: …, esp32: firmware check failed, android: app check failed und geraeteupdate: XiaoZhi check failed erscheinen jetzt auch unter „Nur Fehler“. - Geräte-Updates meldeten bei eingeschalteter Android-App jede Prüfung als „nicht ok“, auch wenn alles klappte (die Android-Prüfung gibt ein Paar zurück, das immer als Fehler galt). Behoben; „noch keine App im Repo“ ist kein Fehler. - Einstellungs-Assistent: Ein Befund, der sich nicht ändert (z. B. „5 Fehler in den letzten 24 Stunden“), zählt nicht mehr alle 30 Minuten hoch (faelle: melder | - | fehler | 9×); erst ein geänderter Befund ist "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
+"title": "Fehler mit Grund statt „error“",
+"text": "wieder ein Eintrag. - Bedeutungssuche: docembed: no vector for the question: nennt einen festen Grund (not running, not enough free memory, model did not start, model files changed, timeout (model busy or slow) …) statt nur RuntimeError. Eine Mitfahrt ohne Wecken (Erst lokal suchen, Dokumente erstellen), während das Modell schläft, ist kein Fehler: dann steht docembed: question without meaning search (model asleep …) im Journal, gesucht wird im Volltext."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
 "title": "Telegram: nur ein Abruf",
 "text": "Telegram: nur ein Abruf (ab V01.0.214): Telegram gibt neue Nachrichten immer nur an einen Abruf (getUpdates) gleichzeitig. Bis V01.0.213 liefen die Startaufgaben des Panels doppelt (der https-Server führte sie ein zweites Mal aus), und die zwei Telegram-Abrufe warfen sich alle 15 s gegenseitig raus („Conflict: terminated by other getUpdates request“). Jetzt startet der https-Server ohne eigene Startaufgaben, und ein zweiter Abruf im selben Prozess wird nicht gestartet. Meldet Telegram trotzdem einen Konflikt, nutzt ein anderes Programm denselben Bot-Token: Der Spark wartet dann 5 s, 30 s, 1, 2, 5 und höchstens 10 min, schreibt nur die zweite und jede 20. Meldung ins Log (ohne Token) und zeigt unter Zustand und bei Funktionen → Telegram den Hinweis, den Token nur an einer Stelle zu nutzen oder bei @BotFather einen neuen zu holen. Ein einzelner Konflikt direkt nach einem Neustart ist normal (der alte Abruf läuft noch bis zu 25 s)."
 },
@@ -6822,6 +6838,22 @@
 "head": "Logs",
 "title": "A log for everything, checked by tests",
 "text": "ver: confirmed action <tool> done|fail|no. - Three self-tests turn a new gap red: every line needs a word of logfilter.AREAS; every function behind a Notaus gate writes a line or names where its line comes from; every exception of the admin log has a reason (guard.QUIET_WHY)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Errors with a reason instead of \"error\"",
+"text": "Errors with a reason instead of \"error\" (since V01.0.505, Dominik: log excerpt): requests \"by itself\" (update check, offsite backup, device updates) name a fixed reason in their line on *Logs → Requests* instead of a bare error: github_limit (60 questions per hour), github_http_401 (GitHub refuses, e.g. the read token), git_ls_remote (GitHub not reachable), keine_gruenen_tests, ohne_git; for the backup http_401 (user or password of the WebDAV folder wrong), zertifikat or the kind of error; for device updates the part that failed (esp32, android, xiaozhi). The lines update check failed: …, esp32: firmware check failed, android: app check failed and geraeteupdate: XiaoZhi check failed now also show under \"Errors only\". - Device updates reported every check as \"not ok\" while the Android app was on, even when everything worked (the Android check returns a pair that always counted as an error). Fixed; \"no app in the repo yet\" is no error. - Settings assistant: a finding that does not change (e.g. \"5 errors in the last 24 hours\") is no longer counted up every 30 minutes (faelle: melder | - | fehler | 9×); only a changed finding is a new entry. - Meaning search: docembed: no vector for th"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Errors with a reason instead of \"error\"",
+"text": "e question: names a fixed reason (not running, not enough free memory, model did not start, model files changed, timeout (model busy or slow) …) instead of a bare RuntimeError. A ride along without waking (search locally first, creating documents) while the model sleeps is no error: the journal then says docembed: question without meaning search (model asleep …) and the full text search answers."
 },
 {
 "lang": "en",

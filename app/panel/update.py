@@ -147,6 +147,7 @@ async def _remote_state(force=False):
     data = {"checked": time.time(), "latest": None, "behind": None, "commits": [], "error": None}
     if not remote:
         data["error"] = "installed without git: run install.sh from a git clone once"
+        data["why"] = "ohne_git"
         return data
     # the service account has no usable home: no git config, no credential prompt, a safe HOME
     env = dict(os.environ, GIT_TERMINAL_PROMPT="0", HOME=os.environ.get("SPEECH_SPARK_STATE", "/tmp"),
@@ -155,15 +156,16 @@ async def _remote_state(force=False):
     code, out = await asyncio.to_thread(run, ["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=30, env=env)
     sha = re.search(r"^([0-9a-f]{40})\s+refs/heads/", out or "", re.M)
     if code != 0 or not sha:
-        print(f"update check: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
+        print(f"update check failed: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
         data["error"] = f"could not reach {remote}: {out[-200:] or 'no answer'}"
+        data["why"] = "git_ls_remote"
         return data
     data["latest"] = data["head"] = sha.group(1)
     # Only versions that passed GitHub's tests are offered (update.sh checks the same as root): the
     # newest commit of main can be red for a while when several changes land at once.
     repo = github_repo(remote)
     if repo:
-        until, limited, answered = now + _FAIL_PAUSE, False, False
+        until, limited, answered, why = now + _FAIL_PAUSE, False, False, "github_unreadable"
         try:
             green, data["head_state"] = pick_green(await green_runs(repo, branch), branch, data["head"])
             if not green:
@@ -172,13 +174,14 @@ async def _remote_state(force=False):
         except GitHubRefused as e:
             green, limited = None, e.until is not None
             until = e.until or until
+            why = "github_limit" if limited else f"github_http_{int(e.status)}"
             if limited:
                 print(f"update check: GitHub rate limit reached (HTTP {e.status}), next check after "
                       f"{time.strftime('%H:%M', time.localtime(until))}", flush=True)
             else:
-                print(f"update check: GitHub test results not readable: HTTP {e.status}", flush=True)
+                print(f"update check failed: GitHub test results not readable: HTTP {e.status}", flush=True)
         except (httpx.HTTPError, ValueError) as e:
-            print(f"update check: GitHub test results not readable: {type(e).__name__}", flush=True)
+            print(f"update check failed: GitHub test results not readable: {type(e).__name__}", flush=True)
             green = None
         if not green:
             if limited:
@@ -186,12 +189,14 @@ async def _remote_state(force=False):
                                  f"Nächste Prüfung ab {time.strftime('%H:%M', time.localtime(until))}; "
                                  "solange wird nichts installiert.")
             elif answered:
+                why = "keine_gruenen_tests"
                 data["no_green"] = True
                 data["error"] = ("Auf GitHub hat noch keine Version die Tests bestanden; "
                                  "ohne bestandene Tests wird nichts installiert")
             else:
                 data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
             data["latest"] = None
+            data["why"] = why
             return _remember_failure(data, until, limited)
         data["latest"] = green
     if data["latest"] == ver.get("commit"):

@@ -132,6 +132,21 @@ class Upload(unittest.TestCase):
         after = set(os.listdir(backup.BACKUP_DIR))
         self.assertEqual({x for x in after - before if "offsite" in x}, set())   # no local copy left
 
+    def test_refusal_names_the_http_status(self):
+        """A wrong WebDAV login: the request's line on Logs → Anfragen says http_401, not a bare error."""
+        import live
+        jobs, real = [], live.job
+        offsite.netguard.client = lambda level, origin=None, **kw: httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda request: httpx.Response(401)))
+        live.job = lambda *a, **k: jobs.append(k.get("code"))
+        try:
+            last = asyncio.run(offsite.run("manual"))
+        finally:
+            live.job = real
+        self.assertFalse(last["ok"])
+        self.assertIn("HTTP 401", last["error"])
+        self.assertEqual(jobs, ["http_401"])
+
     def test_restore_needs_the_password(self):
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w:gz") as tar:

@@ -224,8 +224,14 @@ def melders(now=None, c=None):
             continue
         if hit:
             group, title, tool = (hit + ("",))[:3]
-            faelle.add("melder", {"group": group}, tool=tool, melder=key, title=title, now=now)
             found.append(key)
+            # the same finding as last round is no new case: it was counted up every 30 minutes and wrote
+            # "faelle: melder | - | fehler | 9×" to the journal for one unchanged finding
+            if any(x.get("kind") == "melder" and x.get("melder") == key and x.get("title") == title[:120]
+                   and x.get("status") in ("neu", "vorschlag") and now - float(x.get("last", 0)) < 86400
+                   for x in faelle.cases(now)):
+                continue
+            faelle.add("melder", {"group": group}, tool=tool, melder=key, title=title, now=now)
     return found
 
 

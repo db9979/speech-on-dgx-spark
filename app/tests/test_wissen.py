@@ -540,6 +540,27 @@ class Meaning(Base):
         finally:
             docembed.embed = real
 
+    def test_no_vector_names_a_fixed_reason(self):
+        """V01.0.499 logged "docembed: no vector for the question: RuntimeError" without a reason; a ride along
+        (keep=False) while the model sleeps is no error at all."""
+        import contextlib
+        say = docembed.reason
+        self.assertEqual(say(RuntimeError("not running")), "not running")
+        self.assertEqual(say(RuntimeError("not enough free memory for the embedding model")), "not enough free memory")
+        self.assertEqual(say(RuntimeError("worker says: /secret/path broke")), "RuntimeError: model error")
+        self.assertEqual(say(asyncio.TimeoutError()), "timeout (model busy or slow)")
+        self.assertEqual(say(ValueError("x")), "ValueError")
+        real = docembed._proc
+        docembed._proc = None
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                self.assertIsNone(run(docembed.query("Frage", keep=False)))
+        finally:
+            docembed._proc = real
+        self.assertIn("model asleep", out.getvalue())
+        self.assertNotIn("no vector", out.getvalue())
+
     def test_model_files_are_pinned_on_first_use(self):
         if os.path.exists(docembed.PINS):
             os.remove(docembed.PINS)

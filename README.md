@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.505** Errors with a reason in the logs; device updates no longer wrongly report "not ok" with the Android app
 - **V01.0.504** A log for everything: Live events are in the journal too, every line has a filter area, tests turn red when a new action writes no line
 - **V01.0.503** Tests green again: features page with "NAS verbinden", guest tests pass on their own too
 - **V01.0.502** GitHub tests run in four parts at the same time: a run takes about a quarter as long; batched push in the guideline and CLAUDE.md
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.498** Self-tests: test server ports stay reserved, no more 45 minute hang on a busy port
 - **V01.0.497** Assistant's face: third choice "Comic (woman)" under Settings → Defaults, also in the iPhone app, companions and Pebble
 - **V01.0.496** Chats with other Sparks (Spark network V1): own Spark address, contact requests, pairing by code or open, signed messages with a queue; text first
-- **V01.0.495** Tools for every service: status by voice, change and delete appointments, jobs and rules, repeating reminders, undo, all after a yes
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

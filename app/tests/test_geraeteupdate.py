@@ -384,6 +384,27 @@ class Views(Base):
             self.assertEqual(ADMIN.post("/api/admin/devup/check").status_code, 429)
         self.assertEqual(calls, ["esp"])
 
+    def test_android_without_error_is_no_failure(self):
+        """android._check returns (error, only "no release yet"): the pair itself is no error (V01.0.492 showed
+        "Geräte-Updates nicht ok" on every check), and the request's line names the part that failed."""
+        jobs = []
+
+        async def esp_ok():
+            return ""
+        for answer, ok, code in ((("", False), True, ""), (("noch keine App", True), True, ""),
+                                 (("HTTP 500", False), False, "android")):
+            async def andro(answer=answer):
+                return answer
+            jobs.clear()
+            with mock.patch.object(features, "admin_on", lambda k: k in ("esp32", "android")), \
+                    mock.patch.object(gu, "upstream_on", lambda: False), mock.patch.object(esp32, "check", esp_ok), \
+                    mock.patch.object(android, "_check", andro), \
+                    mock.patch.object(live, "job", lambda *a, **k: jobs.append((a, k))):
+                self.assertEqual(run(gu.check_all()), {"ok": ok})
+            self.assertEqual(len(jobs), 1)
+            self.assertEqual(jobs[0][0][3], ok)
+            self.assertEqual(jobs[0][1].get("code"), code)
+
     def test_notaus_holds_the_check(self):
         with mock.patch.object(notaus, "blocks", lambda kind, uid=None: kind == "internet"):
             self.assertEqual(run(gu.check_all()), {"ok": False, "why": "notaus"})

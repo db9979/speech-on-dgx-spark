@@ -195,5 +195,26 @@ async def query(text, keep=True):
         v = (await (embed([text], "query") if keep else embed([text], "query", keep=False)))[0]
         return np.frombuffer(v, dtype=np.float16).astype(float).tolist()
     except Exception as e:
-        print("docembed: no vector for the question:", type(e).__name__, flush=True)
+        why = reason(e)
+        if why == "not running" and not keep:   # a ride along while the model sleeps: full text only, no error
+            print("docembed: question without meaning search (model asleep, not woken for a ride along)", flush=True)
+        else:
+            print("docembed: no vector for the question:", why, flush=True)
         return None
+
+
+# the journal names why a question got no vector in fixed words (never a text from the worker or the model)
+REASONS = (("not running", "not running"), ("not enough free memory", "not enough free memory"),
+           ("did not start", "model did not start"), ("differ from the ones first downloaded", "model files changed"),
+           ("unexpected vector size", "unexpected vector size"), ("no answer", "no answer from the model"))
+
+
+def reason(e):
+    """A fixed reason for a failed call: the known RuntimeError texts above, a timeout (the model busy with
+    a batch, or slow), else the kind of error and "model error"."""
+    if isinstance(e, asyncio.TimeoutError):
+        return "timeout (model busy or slow)"
+    if isinstance(e, RuntimeError):
+        text = str(e)
+        return next((say for key, say in REASONS if key in text), "RuntimeError: model error")
+    return type(e).__name__

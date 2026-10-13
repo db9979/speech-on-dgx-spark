@@ -522,6 +522,21 @@ class Melders(Base):
         helpers.set_config(berater_off=["quote", "unklar", "langsam", "fehler", "qualitaet", "dienst", "speicher"])
         self.assertEqual(berater.melders(T0), [])
 
+    def test_same_finding_is_not_counted_again(self):
+        """V01.0.492 wrote "faelle: melder | - | fehler | 9×" every 30 minutes for one unchanged finding."""
+        self.on()
+        helpers.set_config(berater_off=["quote", "unklar", "langsam", "qualitaet", "dienst", "speicher"])
+        for i in range(5):
+            faelle.add("fehler", {}, code=f"bereich{i}", now=T0)
+        for k in range(3):
+            self.assertEqual(berater.melders(T0 + 1800 * k), ["fehler"])
+        found = [x for x in faelle.cases(T0 + 3600) if x["kind"] == "melder"]
+        self.assertEqual([(x["n"], x["title"]) for x in found], [(1, "5 Fehler in den letzten 24 Stunden")])
+        faelle.add("fehler", {}, code="bereich9", now=T0 + 3700)     # the finding changed: counted again
+        berater.melders(T0 + 3800)
+        found = [x for x in faelle.cases(T0 + 3800) if x["kind"] == "melder"]
+        self.assertEqual([(x["n"], x["title"]) for x in found], [(2, "6 Fehler in den letzten 24 Stunden")])
+
     def test_quiet_minute_before_proposals(self):
         self.on()
         faelle.add("melder", {}, melder="langsam", title="x", now=T0)

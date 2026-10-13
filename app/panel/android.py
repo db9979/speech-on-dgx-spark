@@ -189,7 +189,7 @@ async def _check():
         err, none = str(e)[:200], True
     except Exception as e:
         err = str(e)[:200]
-        print("android: app check", type(e).__name__, err, flush=True)
+        print("android: app check failed:", type(e).__name__, err, flush=True)
     _state.update(checked=time.time(), error=err)
     return err, none
 

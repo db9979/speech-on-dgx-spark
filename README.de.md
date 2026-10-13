@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.505** Fehler mit Grund in den Logs; Geräte-Updates melden mit Android-App nicht mehr fälschlich „nicht ok“
 - **V01.0.504** Log für alles: Live-Ereignisse stehen auch im Journal, jede Zeile hat einen Filterbereich, Tests werden rot, wenn eine neue Aktion keine Zeile schreibt
 - **V01.0.503** Tests wieder grün: Funktionen-Seite mit „NAS verbinden“, Gast-Tests laufen auch allein
 - **V01.0.502** Tests auf GitHub in vier Teilen gleichzeitig: ein Lauf dauert etwa ein Viertel so lange; Sammel-Push in Richtlinie und CLAUDE.md
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.498** Selbsttests: Ports der Test-Server bleiben reserviert, kein 45-Minuten-Hänger mehr bei belegtem Port
 - **V01.0.497** Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben
 - **V01.0.496** Chats mit anderen Sparks (Spark-Verbund V1): eigene Spark-Adresse, Kontaktanfragen, Kopplung per Code oder offen, unterschriebene Nachrichten mit Warteschlange; zuerst Text
-- **V01.0.495** Werkzeuge für alle Dienste: Zustand per Sprache, Termine, Pläne und Regeln ändern, wiederholte Erinnerungen, Rückgängig, alles nach Ja
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

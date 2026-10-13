@@ -124,6 +124,28 @@ class Check(unittest.TestCase):
         self.assertIn("keine Version mit bestandenen Tests", seen[0])
         self.assertIn("nicht erreichbar", seen[1])
 
+    def test_failure_names_its_reason(self):
+        """Logs → Anfragen showed only "GitHub nicht ok | error": every failure now carries a fixed reason word."""
+        import live
+        jobs, seen, real = [], [], (live.on, live.job, live.event)
+        live.on, live.event = (lambda: True), (lambda kind, text: seen.append(text))
+        live.job = lambda *a, **k: jobs.append(k.get("code"))
+        try:
+            self.refuse(403, NOW + 1200)
+            self.assertEqual(asyncio.run(update.remote_state(force=True))["why"], "github_limit")
+            update._failed.update(until=0.0, data=None, limited=False)
+            self.refuse(401, None)
+            self.assertEqual(asyncio.run(update.remote_state(force=True))["why"], "github_http_401")
+            update._failed.update(until=0.0, data=None, limited=False)
+            update.run = lambda *a, **k: (128, "fatal: unable to access")
+            self.assertEqual(asyncio.run(update.remote_state(force=True))["why"], "git_ls_remote")
+        finally:
+            live.on, live.job, live.event = real
+        self.assertEqual(jobs, ["github_limit", "github_http_401", "git_ls_remote"])
+        self.assertIn("60 Abfragen", seen[0])
+        self.assertIn("HTTP 401", seen[1])
+        self.assertIn("nicht erreichbar", seen[2])
+
     def test_by_itself_github_is_asked_every_three_hours(self):
         self.answer([{"head_branch": "main", "conclusion": "success", "head_sha": "e" * 40}], [])
         asyncio.run(update.remote_state())
