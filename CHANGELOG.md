@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.490** · 2026-10-13 · Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben, lange Haare mit Seitenscheitel, Lippen bewegen sich mit der Stimme, Ausdrücke wie beim Comic; auch in iPhone-App, Begleitern und Pebble; Tests für jedes Gesicht
 - **V01.0.489** · 2026-10-13 · Fenster am Kopf unten rechts: × und Escape klappen es ein, auch während „Einrichten“ darin läuft; auf schmalen Bildschirmen und in der iPhone-App höchstens die halbe Höhe, rollt innen, × bleibt sichtbar; Browser-Test
 - **V01.0.488** · 2026-10-13 · „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
 - **V01.0.487** · 2026-10-13 · Sicherung nach außen: NAS mit Zertifikat, das nicht zur Adresse passt (z. B. IP statt Name), über „Zertifikat prüfen“ annehmen (Fingerabdruck vergleichen, genau dieses Zertifikat, Prüfung bleibt an); verständliche Meldung mit Weg; Dienst-Wächter prüft mit demselben Zertifikat

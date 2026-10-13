@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.490** Gesicht des Assistenten: dritte Wahl „Comic (Frau)“ unter Einstellungen → Vorgaben, lange Haare mit Seitenscheitel, Lippen bewegen sich mit der Stimme, Ausdrücke wie beim Comic; Browser-Test für jedes Gesicht
 - **V01.0.489** Fenster am Kopf lässt sich mit × oder Escape einklappen und deckt auf kleinen Bildschirmen höchstens die halbe Höhe ab
 - **V01.0.488** „Nachrichten“ ganz in Chats: feste Gruppe „Alle“, Durchsagen und Vorlesen auf eigenen Lautsprechern, alte Nachrichten übernommen; Ich → Nachrichten entfernt, Siri schreibt in den Chat
 - **V01.0.487** Sicherung aufs NAS: Zertifikat, das nicht zur Adresse passt, per Fingerabdruck annehmen statt Fehler
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.483** Spark-Tagebuch: geschaltete Geräte stehen drin (nur Gerät und Aktion, nie das Codewort)
 - **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
 - **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
-- **V01.0.480** Keine erfundenen „Ja“ oder „Okay“ mehr nach Antworten: Stille, Klicks und der Signalton werden nicht zur Frage
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

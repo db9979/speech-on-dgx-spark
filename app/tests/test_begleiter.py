@@ -149,6 +149,10 @@ class Begleiter(unittest.TestCase):
             helpers.set_config(face="comic")
             self.assertGreater(prog.get("/api/desk/poll").json()["rev"], rev)
             self.assertEqual(prog.get("/api/desk/config").json()["face"], "comic")
+            rev = prog.get("/api/desk/poll").json()["rev"]
+            helpers.set_config(face="comic_woman")   # V01.0.490
+            self.assertGreater(prog.get("/api/desk/poll").json()["rev"], rev)
+            self.assertEqual(prog.get("/api/desk/config").json()["face"], "comic_woman")
             helpers.set_config(face="<b>")
             self.assertEqual(prog.get("/api/desk/config").json()["face"], "robot")
         finally:

@@ -299,7 +299,7 @@ function pair(line, done) {
 }
 
 // The face the admin picked in the panel; the watch keeps it, so it is only sent when it changes.
-var FACES = {robot: 0, comic: 1};
+var FACES = {robot: 0, comic: 1, comic_woman: 2};
 
 function setFace(name, always) {
   if (!Object.prototype.hasOwnProperty.call(FACES, name)) return;

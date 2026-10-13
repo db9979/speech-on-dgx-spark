@@ -251,6 +251,12 @@ struct SparkAPI {
         }
     }
 
+    /// the faces the app can draw (core.FACES); anything else stays the robot
+    static func knownFace(_ v: Any?) -> String {
+        let f = v as? String ?? ""
+        return ["comic", "comic_woman"].contains(f) ? f : "robot"
+    }
+
     static func object(_ data: Data) -> [String: Any] {
         (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
     }
@@ -298,7 +304,7 @@ struct SparkAPI {
         return Allowed(profile: d["profile"] as? String ?? "", language: d["language"] as? String ?? "auto",
                        listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
-                       face: d["face"] as? String == "comic" ? "comic" : "robot",
+                       face: Self.knownFace(d["face"]),
                        faceLife: d["face_life"] as? Bool ?? false,
                        push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
                        docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false,

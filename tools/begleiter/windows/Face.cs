@@ -15,8 +15,17 @@ internal static class Face
     /// <summary>Das Panel hat das Comic-Gesicht gewählt (config.face); gilt für alle Fenster und das Symbol.</summary>
     public static bool Comic { get; set; }
 
+    /// <summary>Das Panel hat die Comic-Frau gewählt (config.face "comic_woman", V01.0.490).</summary>
+    public static bool ComicWoman { get; set; }
+
     public static void Draw(Graphics g, RectangleF r, Palette p, bool tight = false)
     {
+        if (ComicWoman)
+        {
+            ComicWomanFace.Draw(g, r);
+            return;
+        }
+
         if (Comic)
         {
             ComicFace.Draw(g, r);

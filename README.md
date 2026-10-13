@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.490** Assistant's face: third choice "Comic (woman)" under Settings → Defaults, long hair with a side parting, lips move with the voice, expressions like the comic face; also in the iPhone app, companions and Pebble; tests for every face
 - **V01.0.489** The face's window folds in with × or Escape and covers at most half of a small screen
 - **V01.0.488** "Messages" fully moved into chats: fixed group "Alle", announcements and read-aloud on own speakers, old messages carried over; Me → Messages removed, Siri writes into the chat
 - **V01.0.487** Backup to the NAS: accept a certificate that does not fit the address by its fingerprint instead of an error
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.483** Spark diary: switched devices are noted (device and action only, never the code word)
 - **V01.0.482** Switch "Pictures from the Kiwix" now also under Me → Documents
 - **V01.0.481** Daily briefing in the history sorted with lists, the push stays plain text
-- **V01.0.480** No more made-up "Ja" or "Okay" after answers: silence, clicks and the chime never become a question
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

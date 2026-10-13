@@ -41,6 +41,9 @@ class Face(unittest.TestCase):
             new["chat"]["face"] = bad
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
         new = json.loads(json.dumps(cfg))
+        new["chat"]["face"] = "comic_woman"
+        self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 200)
+        self.assertEqual(TestClient(panel.app).get("/api/whoami").json()["face"], "comic_woman")
         new["chat"]["face"] = "comic"
         self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 200)
         self.assertEqual(TestClient(panel.app).get("/api/whoami").json()["face"], "comic")
@@ -57,7 +60,10 @@ class Face(unittest.TestCase):
 
     def test_browser_draws_only_known_faces(self):
         js = read("js", "face.js")
-        self.assertIn("window.setFaceKind=k=>{k=k==='comic'?'comic':'robot';", js)
+        self.assertIn("window.setFaceKind=k=>{k=k==='comic'||k==='comic_woman'?k:'robot';", js)
+        # every face the admin can pick has a drawing, and only fixed drawings are mounted
+        self.assertIn("const COMICS={comic:[COMIC,comicSvg],comic_woman:[COMIC_W,comicWSvg]};", js)
+        self.assertEqual(set(FACES), {"robot", "comic", "comic_woman"})
         self.assertNotIn("innerHTML=k", js)
         self.assertIn("setFaceKind(who.face)", read("js", "start.js"))
 
@@ -66,12 +72,54 @@ class Face(unittest.TestCase):
         js, css = read("js", "face.js"), read("app.css")
         self.assertIn("function faceIcon(){document.body.dataset.face=FACE_KIND;", js)
         self.assertIn("mountAll();faceIcon()};", js)
-        self.assertIn("body[data-face=comic] .av{background:var(--avface)", css)
-        self.assertIn("body[data-face=comic] .av i{display:none}", css)
+        for kind in FACES[1:]:
+            self.assertIn(f"body[data-face={kind}] .av", css)
+            self.assertIn(f"body[data-face={kind}] .av i", css)
+        self.assertIn("{background:var(--avface) center/cover no-repeat}", css)
         # the still is drawn from the face's own fixed drawing, never from outside text
         fn = js[js.index("function comicIcon()"):js.index("function faceIcon()")]
-        self.assertIn("comicSvg('I')", fn)
+        self.assertIn("draw('I')", fn)
+        self.assertIn("COMICS[FACE_KIND]", fn)
         self.assertIn("encodeURIComponent(", fn)
+
+
+class FacesInTheApps(unittest.TestCase):
+    """V01.0.490: every face the admin can pick is drawn by every app (iPhone, companions, Pebble), so a choice
+    never shows the robot there by mistake; only the fixed names are taken. (The app folders are not in an
+    app/-only copy, then this is skipped.)"""
+    ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    def src(self, *p):
+        path = os.path.join(self.ROOT, *p)
+        if not os.path.exists(path):
+            self.skipTest("the app folders are not in an app/-only copy")
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_iphone_app(self):
+        self.assertIn('["comic", "comic_woman"].contains(f) ? f : "robot"', self.src("ios", "Shared", "SparkAPI.swift"))
+        face = self.src("ios", "Spark", "Face.swift")
+        for kind in FACES[1:]:
+            self.assertIn(f'case "{kind}": return', face)
+        self.assertIn("ComicFace(woman: true)", face)
+
+    def test_companions(self):
+        mac = self.src("tools", "begleiter", "mac", "Sources", "ComicFace.swift")
+        self.assertIn('case comicWoman = "comic_woman"', mac)
+        self.assertIn("FaceKind(rawValue: any as? String ?? \"\") ?? .robot", mac)
+        win = self.src("tools", "begleiter", "windows", "DeskConfig.cs")
+        self.assertIn('config.Face = face is "comic" or "comic_woman" ? face : "robot";', win)
+        tray = self.src("tools", "begleiter", "windows", "TrayContext.cs")
+        self.assertEqual(tray.count('Face.ComicWoman = '), 2)
+
+    def test_pebble(self):
+        self.assertIn("var FACES = {robot: 0, comic: 1, comic_woman: 2};", self.src("pebble", "src", "pkjs", "index.js"))
+        face = self.src("pebble", "src", "c", "face.c")
+        self.assertIn("s_kind = kind == 1 || kind == 2 ? kind : 0;", face)
+        # the woman's shapes come from the same generator as the comic face
+        shapes = self.src("pebble", "src", "c", "comic_shapes.h")
+        for name in ("COMIC_W_FACE", "COMIC_W_FRONT", "COMIC_W_BACK"):
+            self.assertIn(f"static const GPoint {name}[]", shapes)
 
 
 class FaceLife(unittest.TestCase):

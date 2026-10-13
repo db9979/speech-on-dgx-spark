@@ -69,6 +69,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _fileBridge = FileBridge.Start(request => EnqueueFile(request), word => _ = OnOfficeButtonAsync(word));
         _desk = _config.IsPaired ? _config.Desk : null;
         Face.Comic = _desk?.Face == "comic";
+        Face.ComicWoman = _desk?.Face == "comic_woman";
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;
         _updater = new Updater(Credentials);
         _updater.Changed += (_, _) => OnUpdaterChanged();
@@ -348,6 +349,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _desk = desk;
         _config.Desk = desk;
         Face.Comic = desk.Face == "comic";
+        Face.ComicWoman = desk.Face == "comic_woman";
         if (!string.IsNullOrEmpty(desk.Profile))
         {
             _config.Profile = desk.Profile;
