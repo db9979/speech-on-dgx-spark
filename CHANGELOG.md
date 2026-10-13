@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.469** · 2026-10-13 · Rot-Fix: Dienst-Wächter-Test zählte „heute“ mit der echten Uhr und war seit Mitternacht rot; jetzt mit festem Tag
 - **V01.0.468** · 2026-10-13 · Rot-Fix nach V01.0.467: Live-Test prüft auf den ganzen Gedächtnis-Satz statt auf „Tim“ (stand auch in „Timer“ der Weiche); Gedächtnis-Themen und Live-Zählung lesen die Einstellungen nur einmal und nichts, solange der Schalter aus ist
 - **V01.0.467** · 2026-10-12 · Gedächtnis prüfen (alles aus, nie Gäste): jeder Eintrag behält, woher er kommt; feste Regeln markieren, was veraltet sein könnte (Datum vorbei, „zurzeit“ zu alt, gelernt und 6 Monate nicht bestätigt, Widerspruch), das Modell nennt das nie als Tatsache, gelöscht wird nichts; „Stimmt noch“, frühere Fassungen mit Zurückholen, Nachfrage im Gespräch („Stimmt das noch?“, einmal pro Gespräch), Themen zur Anzeige, Live, Logs, Qualitätsfälle
 - **V01.0.466** · 2026-10-12 · Mail-Uhrzeiten in deiner Zeitzone: eine Mail von 20:30 wurde nicht mehr als 18:30 vorgelesen (auch Paket-Tag aus Versandmails)

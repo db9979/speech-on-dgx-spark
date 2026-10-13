@@ -422,7 +422,9 @@ class Shown(Base):
         self.assertTrue(any(e["area"] == "Dienste" and "Archiv (Kiwix) antwortet nicht" in e["text"] for e in snap["events"]))
         o = ADMIN.get("/api/admin/svcwatch").json()
         row = next(x for x in o["services"] if x["id"] == "kiwix")
-        self.assertEqual((row["st"], row["since"], row["today"]), ("down", t0, 1))
+        self.assertEqual((row["st"], row["since"]), ("down", t0))
+        # "today" counts the outages of the day of now: asked for t0's day, so the test runs on any date
+        self.assertEqual(next(x for x in dw.overview(t0 + 200)["services"] if x["id"] == "kiwix")["today"], 1)
         self.assertEqual(o["admins"], 2)
         self.assertNotIn("example", json.dumps(o))
         self.assertNotIn("example", json.dumps(snap))
