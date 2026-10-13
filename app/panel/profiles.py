@@ -832,6 +832,7 @@ SETTINGS = {
     "tg_push": (False, lambda v: isinstance(v, bool)),
     "tg_images": (False, lambda v: isinstance(v, bool)),    # photos sent to the bot go to the model (images.py)
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
+    "esp_stop": (False, lambda v: isinstance(v, bool)), # "Stopp beim Vorlesen" at own speakers (esp32.py)
     "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     "devup_on": (False, lambda v: isinstance(v, bool)),    # notes on new firmware and app versions (geraeteupdate.py)

@@ -7,6 +7,7 @@ import json
 import os
 import time
 import unittest
+import unittest.mock
 
 import numpy as np
 
@@ -15,6 +16,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402
 import esp32  # noqa: E402
+import features  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -589,6 +591,189 @@ class Speakers(unittest.TestCase):
         self.assertTrue(any(e.startswith("Mikrofon: ") and "Sprache gehört" in e for e in ev), ev)
         self.assertIn("Test: Mikrofon geht", ev)
         self.assertFalse(a.get(f"/api/profile/esp32/{did}/diag").json()["test"])   # only once
+
+    @unittest.skipUnless(_has_opus(), "libopus missing")
+    def test_stop_word_ends_without_an_answer(self):
+        """"Stopp" (also "Jarvis, stopp" after the wake word interrupted it) ends: nothing goes to the language
+        model, nothing is said, the board goes back to its wake word. A real question still gets its answer."""
+        a = profile("Esp Stella")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        for said in ("Stopp", "Jarvis, stopp!", "Danke, das reicht", "Hör auf"):
+            self.assertTrue(esp32.STOP_WORDS.match(said), said)
+        for said in ("Stopp die Musik", "Halt, wie spät ist es?", "Danke", "Wie spät ist es?"):
+            self.assertFalse(esp32.STOP_WORDS.match(said), said)
+        spoken = []
+
+        async def tts(uid, text):
+            spoken.append(text)
+            yield np.zeros(2400, dtype="<i2").tobytes()
+
+        async def heard(pcm):
+            return "Stopp."
+        old = esp32.tts_stream, esp32.transcribe
+        esp32.tts_stream, esp32.transcribe = tts, heard
+        try:
+            with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"],
+                                                                                 "Client-Id": s["uuid"]}) as ws:
+                ws.send_text(json.dumps({"type": "hello", "audio_params": {"format": "opus", "sample_rate": 16000}}))
+                ws.receive_text()
+                ws.send_text(json.dumps({"type": "listen", "state": "start", "mode": "auto"}))
+                t = np.arange(16000 * 1.2) / 16000
+                voice = (np.sin(2 * np.pi * 220 * t) * 8000).astype("<i2").tobytes()
+                quiet = np.zeros(16000, dtype="<i2").tobytes()
+                for fr in opus16k_frames(quiet[:9600] + voice + quiet):
+                    ws.send_bytes(fr)
+                kinds = []
+                with self.assertRaises(WebSocketDisconnect):
+                    while True:
+                        m = ws.receive()
+                        if m.get("type") == "websocket.close":
+                            raise WebSocketDisconnect(m.get("code", 1000))
+                        if m.get("text") is not None:
+                            kinds.append(json.loads(m["text"])["type"])
+                self.assertNotIn("stt", kinds)
+                self.assertNotIn("llm", kinds)
+                self.assertNotIn("tts", kinds)
+        finally:
+            esp32.tts_stream, esp32.transcribe = old
+        self.assertEqual(spoken, [])
+        ev = [e["text"] for e in a.get(f"/api/profile/esp32/{s['device']}/diag").json()["events"]]
+        self.assertTrue(any(e.startswith("Stopp gehört") for e in ev), ev)
+
+    def test_stop_while_speaking_needs_both_switches(self):
+        """"Stopp beim Vorlesen" (espstopp) is off: no word to the board, nothing heard while it speaks. With the admin
+        and the profile switch the board is asked at every connection, and told "off" again once switched off."""
+        a = profile("Esp Selma")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Diele", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        hdr = {"Authorization": "Bearer " + s["token"], "Client-Id": s["uuid"]}
+
+        def stop_calls():
+            calls = []
+            with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers=hdr) as ws:
+                ws.send_text(json.dumps({"type": "hello", "audio_params": {"format": "opus", "sample_rate": 16000}}))
+                ws.receive_text()
+                ws.send_text(json.dumps({"type": "listen", "state": "detect", "text": "jarvis"}))
+                time.sleep(0.3)   # the hello's MCP calls go out after its answer
+                s_ = esp32._live.get(s["device"])
+                calls.append(s_.stop_on if s_ else None)
+            return calls
+        sent = []
+        real = esp32.Session.send_stop_word
+
+        async def spy(self, on):
+            sent.append(on)
+            await real(self, on)
+        esp32.Session.send_stop_word = spy
+        try:
+            self.assertFalse(features.admin_on("espstopp"))
+            self.assertEqual((stop_calls(), sent), ([False], []))           # off: as before, nothing sent
+            helpers.set_config(esp32_stop=True)
+            self.assertEqual((stop_calls(), sent), ([False], []))           # the profile's switch is still off
+            a.put("/api/profile/settings", json={"esp_stop": True})
+            self.assertTrue(a.get("/api/profile/esp32").json()["stop"]["enabled"])
+            self.assertEqual((stop_calls(), sent), ([True], [True]))
+            a.put("/api/profile/settings", json={"esp_stop": False})
+            self.assertEqual((stop_calls(), sent), ([False], [True, False]))   # told off once
+            self.assertEqual((stop_calls(), sent), ([False], [True, False]))   # then nothing again
+        finally:
+            esp32.Session.send_stop_word = real
+            helpers.set_config(esp32_stop=False)
+
+    def test_stop_heard_while_speaking(self):
+        """Only a stop phrase ends the answer: the board gets "tts stop" with spark_quiet (drops its queue) and the
+        Spark listens again. The phrase in its own sentence is its echo; other words never stop it."""
+        sent = []
+
+        class WS:
+            async def send_text(self, t):
+                sent.append(json.loads(t))
+
+            async def send_bytes(self, b):
+                pass
+        dev = {"id": "d_stop", "user": "u_stop", "name": "Test"}
+        heard = {"text": ""}
+
+        async def asr(pcm):
+            return heard["text"]
+
+        async def run(text, spoken=()):
+            sent.clear()
+            heard["text"] = text
+            ses = esp32.Session(WS(), "t", dev, "c_stop")
+            ses.stop_on = True
+            for x in spoken:
+                await ses.send({"type": "tts", "state": "sentence_start", "text": x})
+            sent.clear()
+            ses.answer = asyncio.ensure_future(asyncio.sleep(30))
+            await ses.check_stop(b"\0" * 32000)
+            stopped = ses.answer.cancelled()
+            ses.answer.cancel()
+            return stopped, ses.ear is not None, sent
+        old = esp32.transcribe
+        esp32.transcribe = asr
+        try:
+            stopped, listens, out = asyncio.run(run("Stopp!"))
+            self.assertTrue(stopped and listens)
+            self.assertEqual(out, [{"type": "tts", "state": "stop", "spark_quiet": True, "session_id": out[0]["session_id"]}])
+            self.assertEqual(asyncio.run(run("Hör auf, bitte."))[:2], (True, True))
+            self.assertEqual(asyncio.run(run("Wie spät ist es?"))[:2], (False, False))     # no stop phrase
+            self.assertEqual(asyncio.run(run("Stopp die Musik"))[:2], (False, False))
+            self.assertEqual(asyncio.run(run("Halt", ["Das ist halt so."]))[:2], (False, False))   # its own echo
+            self.assertEqual(asyncio.run(run("Halt", ["Morgen wird es sonnig."]))[:2], (True, True))
+            self.assertEqual(asyncio.run(run(""))[:2], (False, False))
+        finally:
+            esp32.transcribe = old
+
+    def test_stop_ear_cuts_short_pieces(self):
+        """Sound while it speaks: quiet before a word is kept to half a second, a piece is at most STOP_PIECE long."""
+        ses = esp32.Session(None, "t", {"id": "d_ear", "user": "u", "name": "T"}, "c_ear")
+        jobs = []
+
+        async def fake(seg):
+            jobs.append(len(seg))
+        ses.check_stop = fake
+
+        async def go():
+            quiet = np.zeros(960, dtype="<i2").tobytes()
+            loud = (np.sin(np.arange(960) / 3) * 8000).astype("<i2").tobytes()
+            for _ in range(60):
+                ses.hear_stop(quiet)
+            self.assertLessEqual(len(ses.stop_ear.pcm), 32000 + 1920)
+            for _ in range(10):
+                ses.hear_stop(loud)
+            for _ in range(15):
+                ses.hear_stop(quiet)
+            await asyncio.sleep(0)
+            for _ in range(120):
+                ses.hear_stop(loud)
+            await asyncio.sleep(0)
+        asyncio.run(go())
+        self.assertEqual(len(jobs), 2, jobs)
+        self.assertLess(jobs[0], 1.8 * 32000)
+        self.assertLessEqual(jobs[1], (esp32.STOP_PIECE + 0.1) * 32000)
+
+    def test_live_counts_speakers_listening_for_stop(self):
+        import live
+
+        class S:
+            stop_on, answer = True, None
+        a, b = S(), S()
+
+        async def go():
+            a.answer = asyncio.ensure_future(asyncio.sleep(5))
+            b.stop_on = False
+            b.answer = asyncio.ensure_future(asyncio.sleep(5))
+            with unittest.mock.patch.object(esp32, "_live", {"x": a, "y": b}):
+                n = {c["name"]: c["n"] for c in live._conns(time.time())}
+            a.answer.cancel()
+            b.answer.cancel()
+            return n
+        n = asyncio.run(go())
+        self.assertEqual((n.get("Lautsprecher"), n.get("Lautsprecher hört auf „Stopp“")), (2, 1))
 
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_room_mode_on_a_speaker(self):

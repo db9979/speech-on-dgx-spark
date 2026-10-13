@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.472** Eigene Lautsprecher: „Jarvis“ beim Sprechen macht sofort still, „Stopp“ danach endet ohne Antwort; neuer Schalter „Stopp beim Vorlesen“ für „Stopp“ ohne Weckwort
 - **V01.0.471** Sprachausgabe verstummt nicht mehr nach einem Stück ohne Sprechbares (tts_http_400); Fehler in Logs → Anfragen als Satz
 - **V01.0.470** Rückfrage statt Raten (aus): passen mehrere Geräte, Haltestellen, Orte oder Listen, fragt der Spark mit Knöpfen und merkt sich die Wahl
 - **V01.0.469** Rot-Fix: Dienst-Wächter-Test zählt „heute“ mit festem Tag statt mit der echten Uhr
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.465** Präsentationen mit zehn Folientypen, Symbolen, Bildern aus dem Kiwix und geprüften Zahlen
 - **V01.0.464** Einstellungs-Assistent: Lücken geschlossen, Codewort-Sätze nie als Fall, Ideen außerhalb des Katalogs (aus)
 - **V01.0.463** Browser-Tests warten, bis eine Seite geladen ist (behebt wackelnden Test)
-- **V01.0.462** Eigener Speicher: alte Originale von Dokumenten können nur noch auf dem eigenen Speicher liegen und kommen beim Öffnen zurück
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

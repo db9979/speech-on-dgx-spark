@@ -149,3 +149,77 @@ class SignManifest(unittest.TestCase):
             env.pop("UPDATE_SIGNING_KEY")
             self.assertNotEqual(subprocess.run(["bash", script, man], env=env, capture_output=True).returncode, 0)
 
+
+
+class SpeakerFirmware(unittest.TestCase):
+    def test_wake_word_while_speaking_is_quiet_at_once(self):
+        """The firmware build drops the play queue when the wake word interrupts (firmware/patch_unterbrechen.py),
+        instead of speaking on for up to 1.2 s; the patch fails the build when upstream moved the place."""
+        import importlib.util
+        import tempfile
+        path = os.path.join(ROOT, "firmware", "patch_unterbrechen.py")
+        wf = os.path.join(WFS, "firmware.yml")
+        if not (os.path.exists(path) and os.path.exists(wf)):
+            raise unittest.SkipTest("firmware is not part of this copy")
+        self.assertIn("python3 firmware/patch_unterbrechen.py xz", open(wf, encoding="utf-8").read())
+        spec = importlib.util.spec_from_file_location("patch_unterbrechen", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "main"))
+            cc = os.path.join(d, "main", "application.cc")
+            with open(cc, "w", encoding="utf-8") as f:
+                f.write("    if (a) {\n" + mod.OLD + "            SetListeningMode(GetDefaultListeningMode());\n        }\n")
+            mod.main(d)
+            mod.main(d)   # twice is the same
+            s = open(cc, encoding="utf-8").read()
+            self.assertEqual(s.count("audio_service_.ResetDecoder();"), 1)
+            self.assertLess(s.index("ResetDecoder"), s.index("play_popup_on_listening_ = true"))
+            with open(cc, "w", encoding="utf-8") as f:
+                f.write("moved upstream\n")
+            with self.assertRaises(AssertionError):
+                mod.main(d)
+
+    def test_stop_word_patch(self):
+        """"Stopp beim Vorlesen" (firmware/patch_stoppwort.py): the MCP tool, the microphone kept on while speaking
+        only on the Spark's word and with a reference channel, and spark_quiet dropping the play queue."""
+        import importlib.util
+        import tempfile
+        path = os.path.join(ROOT, "firmware", "patch_stoppwort.py")
+        wf = os.path.join(WFS, "firmware.yml")
+        if not (os.path.exists(path) and os.path.exists(wf)):
+            raise unittest.SkipTest("firmware is not part of this copy")
+        self.assertIn("python3 firmware/patch_stoppwort.py xz", open(wf, encoding="utf-8").read())
+        spec = importlib.util.spec_from_file_location("patch_stoppwort", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "main"))
+            files = {
+                "application.h": "    void SetAecMode(AecMode mode);\n    bool aborted_ = false;\n",
+                "application.cc": "            } else if (strcmp(state->valuestring, \"stop\") == 0) {\n"
+                                  "                Schedule([this]() {\n"
+                                  "                    if (GetDeviceState() == kDeviceStateSpeaking) {\n"
+                                  "                    }\n                });\n"
+                                  "        case kDeviceStateSpeaking:\n"
+                                  "            if (listening_mode_ != kListeningModeRealtime) {\n"
+                                  "                audio_service_.EnableVoiceProcessing(false);\n            }\n",
+                "mcp_server.cc": "    auto backlight = board.GetBacklight();\n"}
+            for name, text in files.items():
+                with open(os.path.join(d, "main", name), "w", encoding="utf-8") as f:
+                    f.write(text)
+            mod.main(d)
+            mod.main(d)   # twice is the same
+            read = {n: open(os.path.join(d, "main", n), encoding="utf-8").read() for n in files}
+            self.assertEqual(read["mcp_server.cc"].count("self.spark.stop_word"), 1)
+            self.assertIn("bool spark_stop_word_ = false;", read["application.h"])
+            cc = read["application.cc"]
+            self.assertEqual(cc.count("void Application::SetSparkStopWord("), 1)
+            self.assertIn("spark_stop_word_ &&", cc)
+            self.assertIn("input_reference()", cc)   # boards without echo cancelling keep the mic off
+            self.assertIn("cJSON_GetObjectItem(root, \"spark_quiet\")", cc)
+            self.assertLess(cc.index("spark_quiet && GetDeviceState()"), cc.index("ResetDecoder"))
+            with open(os.path.join(d, "main", "mcp_server.cc"), "w", encoding="utf-8") as f:
+                f.write("moved upstream\n")
+            with self.assertRaises(AssertionError):
+                mod.main(d)

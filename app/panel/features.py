@@ -186,6 +186,8 @@ FEATURES = (
     F("roomha", "Raum-Modus für Home Assistant", "Room mode for Home Assistant", "home", ("room_ha",), parent="room",
       me="roombox", guide="roomha"),
     F("esp32", "Eigene Lautsprecher (ESP32)", "Own speakers (ESP32)", "home", ("esp32",), "esp_on", me="espbox", guide="esp32"),
+    F("espstopp", "Stopp beim Vorlesen", "Stop while it speaks", "home", ("esp32_stop", "esp32"), "esp_stop",
+      parent="esp32", me="espbox", guide="espstopp"),
     F("roomfar", "Raum-Modus aus der Ferne starten", "Start room mode from afar", "home", ("room_remote", "esp32"), "room_remote",
       parent="room", me="roombox", guide="roomfar"),
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",),

@@ -624,6 +624,11 @@ def _conns(now):
         n = len(getattr(esp32, "_live", {}) or {})
         if n:
             out.append({"name": "Lautsprecher", "proto": "WebSocket", "dir": "ein", "n": n})
+        # "Stopp beim Vorlesen": speakers that speak right now with their microphone on (only the count)
+        n = sum(1 for x in list(getattr(esp32, "_live", {}).values())
+                if getattr(x, "stop_on", False) and x.answer and not x.answer.done())
+        if n:
+            out.append({"name": "Lautsprecher hört auf „Stopp“", "proto": "Mikrofon beim Sprechen", "dir": "ein", "n": n})
     except Exception:
         pass
     try:

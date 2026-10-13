@@ -540,6 +540,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Unterbrechen am Lautsprecher (V01.0.472)",
+"text": "Unterbrechen am Lautsprecher (V01.0.472): Während ein eigener Lautsprecher spricht, hört das Board nur auf sein Weckwort „Jarvis“ (mit Echo-Filter, wo das Board einen Referenzkanal hat, etwa das Waveshare-Board) oder den Knopf. Seit Firmware 2.5.1.7 ist er dann sofort still: Die Firmware verwirft den Rest ihres Wiedergabe-Puffers (firmware/patch_unterbrechen.py), statt ihn noch bis zu 1,2 s abzuspielen, und hört zu. Sagt man dann nur „Stopp“, „Halt“, „Ruhe“, „Hör auf“ oder „Danke, das reicht“ (feste Wortliste esp32.STOP_WORDS, der ganze Satz), geht nichts ans Sprachmodell: Der Lautsprecher bleibt still und wartet wieder aufs Weckwort; Prüfen zeigt „Stopp gehört“. Jede andere Frage wird wie immer beantwortet. Stopp beim Vorlesen (Admin: Funktionen → Eigene Lautsprecher → Stopp beim Vorlesen, Profil: Ich → Lautsprecher, beide zuerst aus): Dann geht es ganz ohne Weckwort. Bei jeder Verbindung bittet der Spark das Board über das MCP-Werkzeug self.spark.stop_word (firmware/patch_stoppwort.py), sein Mikrofon beim Sprechen anzulassen; nur Boards mit Referenzkanal tun das, ihr Echo-Filter nimmt die eigene Stimme heraus (Steckbrett-Boards lassen es aus). Was beim Sprechen ankommt, schneidet"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Unterbrechen am Lautsprecher (V01.0.472)",
+"text": " der Spark in kurze Stücke (höchstens STOP_PIECE = 3 s, eine Erkennung zur Zeit) und lässt sie durch die Spracherkennung; nur ein ganzer Satz aus STOP_WORDS zählt, und nicht, wenn er in den letzten vier gesagten Sätzen steht (ein „halt“ im eigenen Satz ist Echo). Dann bricht er die Antwort ab, schickt tts stop mit spark_quiet, das Board verwirft seinen Puffer, und der Spark hört zu. Nichts davon wird gespeichert; das Log sagt nur „stop word while speaking“, die Live-Übersicht zählt unter Verbindungen „Lautsprecher hört auf „Stopp““. Wird der Schalter aus, bekommt ein vorher gebetenes Board bei der nächsten Verbindung einmal „aus“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Lautsprecher prüfen (V01.0.131)",
 "text": "Lautsprecher prüfen (V01.0.131): Unter Ich → Lautsprecher hat jeder Lautsprecher den Knopf *Prüfen*. Er zeigt, ob Admin- und Profil-Schalter an sind, ob Firmware für die Board-Variante da ist, ob sich das Board je gemeldet hat, welche Adresse im Board steht (mit Warnung bei https://<IP> oder Port 31443, deren selbst signiertes Zertifikat das Board ablehnt, bei localhost und bei fehlender Adresse) und was der Lautsprecher zuletzt gemacht hat: Start-Prüfung, Verbindung, abgelehnte Verbindung mit Grund, Weckwort, Mikrofon (Dauer, lautester Moment und Mittel in dB, ob Sprache drin war), was verstanden wurde und wie viel Ton zurückging. Diese Zeilen liegen nur im Arbeitsspeicher (40 pro Lautsprecher, weg nach einem Neustart des Panels). *Netz prüfen* fragt die Adresse vom Spark aus ab wie das Board: GET /api/esp32/ping (antwortet mit einer Kennung dieses Spark) und einen WebSocket mit x-spark-probe: 1; so zeigt sich, ob die Adresse zu diesem Spark führt, ob das Zertifikat anerkannt wird, ob der Reverse Proxy weiterleitet oder WebSockets nicht durchlässt. Erlaubt wie bei Home Assistant (Heimnetz ja, eigene Dienste-Ports auf dem Spark nein), nur diese beiden Pfade, Antwort höchstens 4 KB,"
 },
@@ -3854,6 +3870,22 @@
 "head": "Voice chat",
 "title": "Device updates (V01.0.381)",
 "text": "ark update) the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Interrupting a speaker (V01.0.472)",
+"text": "Interrupting a speaker (V01.0.472): while an own speaker talks, the board only listens for its wake word \"Jarvis\" (with echo cancelling where the board has a reference channel, such as the Waveshare board) or the button. Since firmware 2.5.1.7 it is then quiet at once: the firmware drops the rest of its play queue (firmware/patch_unterbrechen.py) instead of playing it for up to 1.2 s, and listens. Saying only \"Stopp\", \"Halt\", \"Ruhe\", \"Hör auf\" or \"Danke, das reicht\" then (fixed word list esp32.STOP_WORDS, the whole sentence) sends nothing to the language model: the speaker stays quiet and waits for its wake word again; Check shows \"Stopp gehört\". Any other question is answered as always. Stop while it speaks (admin: Features → Own speakers → Stop while it speaks, profile: Me → Speakers, both off at first): then it works without the wake word at all. At every connection the Spark asks the board through the MCP tool self.spark.stop_word (firmware/patch_stoppwort.py) to keep its microphone on while speaking; only boards with a reference channel do so, their echo cancelling takes out the own voice (breadboard boards keep it off). The Spark cuts what arrives while speaking into short pi"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Interrupting a speaker (V01.0.472)",
+"text": "eces (at most STOP_PIECE = 3 s, one recognition at a time) and runs them through the speech recognition; only a whole sentence from STOP_WORDS counts, and not when it is in the last four sentences said (a \"halt\" in its own sentence is echo). It then ends the answer, sends tts stop with spark_quiet, the board drops its queue and the Spark listens. Nothing of it is stored; the log only says \"stop word while speaking\", the live overview counts \"Lautsprecher hört auf „Stopp““ under connections. When the switch goes off, a board asked before is told \"off\" once at its next connection."
 },
 {
 "lang": "en",

@@ -96,6 +96,7 @@ _pending = {}              # client id -> {"code", "t", "challenge", "variant", 
 _fails = {}                # uid -> [times of wrong codes]
 _history = {}              # device id -> (time, messages)
 _live = {}                 # device id -> Session
+_stop_told = set()         # client ids asked to keep the microphone on while speaking ("Stopp beim Vorlesen")
 _diag = {}                 # device id -> deque of (time, text): what the speaker did lately (memory only)
 _net_tries = {}            # uid -> [times of "Netz prüfen"]
 DIAG_MAX = 40
@@ -112,6 +113,13 @@ MIC_LEVELS = {"low": 300.0, "normal": 150.0, "high": 70.0}   # "Mikrofon" per sp
 # "Raummodus an", "Raum-Modus einschalten", "starte den Raummodus"
 ROOM_START = re.compile(r"(?i)^\W*(?:(?:hey )?(?:spark|jarvis),? )?(?:(?:den )?raum[- ]?modus (?:an|ein|einschalten|anschalten|starten)|"
                         r"(?:starte|schalte?) (?:den )?raum[- ]?modus(?: an| ein)?)\b")
+# "Stopp", "Halt", "Ruhe", "Danke, reicht" as the whole sentence (also after "Jarvis" while it spoke): the answer
+# ends, nothing goes to the language model, the board goes back to its wake word
+STOP_WORDS = re.compile(r"(?i)^\W*(?:(?:hey |ok |okay )?(?:jarvis|spark)\W*)?"
+                        r"(?:stopp?|halt|ruhe|sei (?:jetzt )?still|psst+|hör (?:jetzt )?auf|aufhören|abbrechen|schon gut|genug|"
+                        r"(?:danke,? )?(?:das )?(?:reicht|genügt)|nicht jetzt|jetzt nicht|(?:halt die )?klappe)"
+                        r"(?:\W+(?:bitte|jetzt|danke|jarvis|spark|stopp?))*\W*$")
+STOP_PIECE = 3.0           # "Stopp beim Vorlesen": seconds of sound per piece heard while it speaks
 
 
 def admin_on():
@@ -684,6 +692,10 @@ class Session:
         self.testing = False     # "Test": the next sentence only checks the microphone
         self.enrolling = None    # "Stimme hier anlernen": {"n": recordings taken, "tries": pieces heard}
         self.enroll_q = None
+        self.stop_on = False     # "Stopp beim Vorlesen" (espstopp): the board keeps its microphone on while speaking
+        self.stop_ear = None     # what is heard while it speaks
+        self.stop_job = None     # one recognition of such a piece at a time
+        self.spoken = collections.deque(maxlen=4)   # its last sentences: a "Stopp" in them is its own echo
 
     def note(self, text):
         diag(self.dev["id"], text)
@@ -705,6 +717,57 @@ class Session:
             "jsonrpc": "2.0", "id": secrets.randbelow(10 ** 6), "method": "tools/call",
             "params": {"name": "self.audio_speaker.set_volume", "arguments": {"volume": int(volume)}}}}))
 
+    async def send_stop_word(self, on):
+        """"Stopp beim Vorlesen": asks the board to keep its echo-cancelled microphone on while speaking
+        (firmware/patch_stoppwort.py; older firmware and boards without a reference channel ignore it)."""
+        await self.ws.send_text(json.dumps({"type": "mcp", "payload": {
+            "jsonrpc": "2.0", "id": secrets.randbelow(10 ** 6), "method": "tools/call",
+            "params": {"name": "self.spark.stop_word", "arguments": {"on": bool(on)}}}}))
+
+    def hear_stop(self, pcm):
+        """Sound while it speaks: short pieces go to the speech recognition; only a whole sentence from
+        STOP_WORDS that it did not just say itself ends the answer (fixed rule, no model, check_stop)."""
+        if not pcm:
+            return
+        if self.stop_ear is None:
+            self.stop_ear = self.new_ear()
+            self.stop_ear.MAX_LEN = STOP_PIECE
+        ear = self.stop_ear
+        r = ear.feed(pcm)
+        if not ear.heard and len(ear.pcm) > 32000:
+            del ear.pcm[:-16000]   # quiet before the word: keep half a second
+        if r == "nothing":
+            self.stop_ear = None
+        elif r == "done":
+            seg, self.stop_ear = bytes(ear.pcm), None
+            if self.stop_job is None or self.stop_job.done():
+                self.stop_job = asyncio.ensure_future(self.check_stop(seg))
+
+    def own_echo(self, text):
+        """The stop phrase is in what it just said ("das ist halt so"): its own voice came through."""
+        said = " ".join(re.findall(r"\w+", " ".join(self.spoken).lower()))
+        phrase = " ".join(re.findall(r"\w+", text.lower()))
+        return bool(phrase) and re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", said) is not None
+
+    async def check_stop(self, pcm):
+        try:
+            text = await transcribe(pcm)
+        except Exception as e:
+            print("esp32: speech recognition while speaking", type(e).__name__, flush=True)
+            return
+        task = self.answer
+        if not text or not STOP_WORDS.match(text) or not task or task.done():
+            return
+        if self.own_echo(text):
+            logfilter.detail("esp32", "stop word ignored while speaking, it was in its own sentence")
+            return
+        print("esp32: stop word while speaking, answer ended", flush=True)
+        self.note("Stopp beim Vorlesen gehört: still, hört zu")
+        task.cancel()
+        await asyncio.wait({task}, timeout=2)
+        await self.send({"type": "tts", "state": "stop", "spark_quiet": True})   # the board drops its queue
+        self.listen(self.mode)
+
     def mic_report(self, heard):
         """One diagnosis line about the sound the board sent for this question."""
         m, self.mic = self.mic, None
@@ -721,6 +784,8 @@ class Session:
                   + ("Sprache gehört" if heard else "keine Sprache erkannt") + (" (zu leise oder nur Rauschen)" if peak < -40 else ""))
 
     async def send(self, obj):
+        if obj.get("type") == "tts" and obj.get("state") == "sentence_start":
+            self.spoken.append(str(obj.get("text") or ""))
         async with self.send_lock:
             await self.ws.send_text(json.dumps(dict(obj, session_id=self.sid), ensure_ascii=False))
 
@@ -791,6 +856,10 @@ class Session:
             c = clients().get(self.client) or by_device(self.dev["id"])[1] or {}
             if isinstance(c.get("volume"), int):
                 await self.set_volume(c["volume"])   # the volume set in the panel, at every connection
+            self.stop_on = features.allowed("espstopp", self.dev["user"])
+            if self.stop_on or self.client in _stop_told:   # off only to boards told "on" before: else as without it
+                await self.send_stop_word(self.stop_on)
+                (_stop_told.add if self.stop_on else _stop_told.discard)(self.client)
         elif kind == "listen":
             st = m.get("state")
             if st == "start":
@@ -842,7 +911,11 @@ class Session:
         # mcp, iot and the rest: not used yet
 
     async def on_audio(self, packet):
-        if not self.ear or (self.answer and not self.answer.done()):
+        if self.answer and not self.answer.done():
+            if self.stop_on and self.room is None and self.enrolling is None and not self.testing and self.dec:
+                self.hear_stop(self.dec.decode(packet))   # "Stopp beim Vorlesen"
+            return
+        if not self.ear:
             return
         pcm = self.dec.decode(packet)
         if self.mic is not None and pcm:
@@ -924,6 +997,11 @@ class Session:
             if text and not self.testing and self.own_voice(text, pcm, ended):
                 text = ""
             self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
+            if text and not self.testing and STOP_WORDS.match(text):
+                print("esp32: stop word, answer ended", flush=True)
+                self.note("Stopp gehört: keine Antwort, Lautsprecher wartet wieder aufs Weckwort")
+                await self.ws.close(1000)
+                return
             if self.testing:
                 self.testing = False
                 self.note("Test: Mikrofon " + ("geht" if text else "liefert keine verständlichen Wörter"))
@@ -1783,7 +1861,8 @@ def profile_get(request: Request, prof=Depends(own_profile)):
             "room": bool(load_config().get("chat", {}).get("room", False)),
             "speaker_id": bool(load_config().get("chat", {}).get("speaker_id", False)),
             "code": dict(spkcode.public(prof["id"]), enabled=features.admin_on("spkcode"),
-                         on=features.profile_on("spkcode", prof["id"]))}
+                         on=features.profile_on("spkcode", prof["id"])),
+            "stop": {"enabled": features.admin_on("espstopp")}}
 
 
 @router.put("/api/profile/speaker-code", dependencies=[Depends(assistant)])

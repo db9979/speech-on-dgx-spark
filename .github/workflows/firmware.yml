@@ -94,6 +94,12 @@ jobs:
           # the Spark's Notaus button: hold BOOT for 5 s (firmware/patch_notaus.py; the Spark decides in esp32.py)
           python3 firmware/patch_notaus.py xz "${{ matrix.board }}"
           grep -q 'SparkNotaus' xz/main/application.cc
+          # the wake word while speaking: quiet at once instead of playing the queue empty (firmware/patch_unterbrechen.py)
+          python3 firmware/patch_unterbrechen.py xz
+          grep -q 'firmware/patch_unterbrechen.py' xz/main/application.cc
+          # "Stopp beim Vorlesen": the Spark may ask a board with echo cancelling to keep its microphone on while speaking
+          python3 firmware/patch_stoppwort.py xz
+          grep -q 'self.spark.stop_word' xz/main/mcp_server.cc
           grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
           cd xz
           python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"
