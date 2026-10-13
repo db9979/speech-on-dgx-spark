@@ -127,6 +127,14 @@ async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let 
       :t('nicht geladen, startet, wenn etwas zu tun ist','not loaded, starts when there is work');
     const v=d.vectors;tx+=' · '+v[0]+'/'+v[1]+t(' Stücke mit Bedeutung',' pieces with meaning');
     row(st[0],st[1],t('Bedeutungssuche (CPU-Modell)','Meaning search (CPU model)'),tx)}
+  if(d.rank){const m=d.rank,mins=s=>Math.max(1,Math.round((s||0)/60));   // Treffer nachsortieren (nachsortieren.py)
+    const st=m.running&&m.busy?['ok',t('arbeitet','working')]:{ready:['ok',t('Standby','standby')],starting:['warn',t('startet','starting')],waiting:['warn',t('wartet','waiting')],error:['bad',t('Fehler','error')],off:['ok',t('Standby','standby')]}[m.state]||['',m.state];
+    const tx=(m.state==='ready'?t('geladen','loaded')+(m.mib?' · '+m.mib+' MiB':'')+(typeof m.stop_in==='number'?' · '+(L==='en'?'stops in '+mins(m.stop_in)+' min without work':'stoppt in '+mins(m.stop_in)+' Min. ohne Arbeit'):'')
+      :m.state==='waiting'?t('braucht ','needs ')+m.need_gib+t(' GiB freien Arbeitsspeicher',' GiB free memory')
+      :m.state==='error'?(m.error||''):m.state==='starting'?t('lädt das Modell (beim ersten Mal von Hugging Face)','loading the model (from Hugging Face the first time)')
+      :t('nicht geladen, startet bei der nächsten Dokumentensuche','not loaded, starts with the next document search'))
+      +' · '+t('Modell ','model ')+(m.size==='gross'?t('groß','large'):t('klein','small'))+(m.ms?' · '+t('zuletzt ','last ')+m.ms+' ms':'')+' · '+t('höchstens ','at most ')+m.budget+' ms';
+    row(st[0],st[1],t('Treffer nachsortieren (CPU-Modell)','Re-rank hits (CPU model)'),tx)}
   if(d.pictures){row(d.waiting?'warn':'ok',d.waiting?d.waiting+t(' Seiten',' pages'):t('nichts offen','nothing open'),t('Bilder und Scans lesen','Read pictures and scans'),
     d.today+t(' heute gelesen (höchstens ',' read today (at most ')+d.day_pages+t(' je Profil)',' per profile)')+' · '+t('zuletzt ','last ')+ago(d.last.read)+(d.waiting&&!d.quiet?' · '+t('wartet auf eine ruhige Minute','waits for a quiet minute'):''))}
   for(const x of d.usage||[]){const r=document.createElement('div');r.className='zrow';const pct=Math.min(100,Math.round(100*x.used/(x.quota_mb*1048576)));

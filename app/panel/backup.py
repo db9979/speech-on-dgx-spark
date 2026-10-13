@@ -105,6 +105,7 @@ STATE_LOCAL = {
     "iphone-update.json": "Hinweise zum Update, entstehen neu",
     "vision.json": "Ergebnisse von Bildfragen, 10 Minuten",
     "doc-embed.json": "Zustand des Vektormodells",
+    "doc-rank.json": "Prüfsummen des Nachsortier-Modells, entstehen neu",
     "notaus.json": "Notaus gilt nur auf diesem Gerät",
     "notaus-mine.json": "Notaus gilt nur auf diesem Gerät",
     "notaus-keys.json": "Auslöser gelten nur auf diesem Gerät",

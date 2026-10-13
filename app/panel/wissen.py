@@ -182,12 +182,16 @@ def fresh_on(uid):
     return bool(uid) and features.allowed("rmfresh", uid)
 
 
-async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True):
+async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True, trace=None):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
     only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
     (lokal.py's quick look before the answer does not wait for the meaning model). The one place both
     document_search and "Erst lokal suchen" rank in, so "Neueste zuerst" (fresh_on) works for both.
-    keep=False: the meaning model is used only if it runs anyway and is not held awake by it."""
+    keep=False: the meaning model is used only if it runs anyway and is not held awake by it. With "Treffer
+    nachsortieren" (nachsortieren.py, Stufe 3) the mix hands over its 30 best and the cross-encoder picks k."""
+    import nachsortieren
+    rerank = nachsortieren.allowed(uid)
+    want, k = k, (nachsortieren.CANDIDATES if rerank else k)
     qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
     fresh = fresh_on(uid)
@@ -198,7 +202,10 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True)
         keep = documents.match_docs(o, tags, art, shared_only=True) if narrow else None
         theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True, keep, fresh)
         hits += [dict(h, owner=owner, shared=True) for h in theirs]
-    return sorted(hits, key=lambda h: -h.get("score", 0))[:k]
+    hits = sorted(hits, key=lambda h: -h.get("score", 0))[:k]
+    if rerank:
+        hits, _ = await nachsortieren.rank(query, hits, want, keep, trace)
+    return hits[:want]
 
 
 def cards(uid, tags=None, art=None):
@@ -498,12 +505,15 @@ def admin_state():
     usage = [{"owner": uid, "who": (profiles.by_id(uid) or {}).get("name", "?"), "used": documents.usage_total(uid),
               "quota_mb": quota_bytes(uid) // 1024**2, "own": uid in own}
              for uid in profiles.user_ids() if os.path.exists(documents.db_path(uid)) or uid in own]
+    import nachsortieren
+    rank = nachsortieren.status() if nachsortieren.admin_on(c) else None
     if not any(on_.values()):
-        return {"on": True, "pictures": False, "semantic": False, "usage": usage, "default_mb": quota_bytes("") // 1024**2}
+        return {"on": True, "pictures": False, "semantic": False, "usage": usage, "default_mb": quota_bytes("") // 1024**2,
+                "rank": rank}
     out = {"on": True, "pictures": on_["pictures"], "semantic": on_["semantic"], "profiles": 0, "usage": usage,
            "default_mb": quota_bytes("") // 1024**2,
            "waiting": 0, "today": 0, "day_pages": DAY_PAGES, "vectors": [0, 0],
-           "last": {k: int(v) for k, v in _last.items()}, "quiet": quiet()}
+           "last": {k: int(v) for k, v in _last.items()}, "quiet": quiet(), "rank": rank}
     day = today(time.time())
     for uid in profiles.user_ids():
         p, m = on(uid, "pictures"), on(uid, "semantic")

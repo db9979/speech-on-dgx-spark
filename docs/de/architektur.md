@@ -183,6 +183,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
+| `app/panel/nachsortieren.py` | Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten |
 | `app/panel/recall.py` | Suche in früheren Gesprächen, gelernte Fakten |
 | `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
 | `app/panel/symbole.py` | Feste Symbole für Folien und Dokumente |
@@ -418,6 +419,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dienstwacht.json` | Dienst-Wächter | – | ja |
 | `state/doc-embed.json` | Vektormodell | – | nein |
 | `state/doc-quotas.json` | Dokument-Kontingente | – | ja |
+| `state/doc-rank.json` | Nachsortier-Modell | – | nein |
 | `state/docling.json` | Docling-Server: Adresse, Zertifikat, Zahlen | Schlüssel versiegelt | ja |
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
 | `state/faelle.json` | Fälle | – | ja |

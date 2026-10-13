@@ -54,7 +54,7 @@ RUN_GAP = 20 * 3600    # at most one run by itself per night
 NIGHT = (2, 5)         # local hours for the run by itself
 COOLDOWN = 600         # "Jetzt prüfen" at most every 10 minutes (per profile, and once for the admin's run)
 OVERLAP = 0.75         # at most this share of a model question's words may come from its piece
-MODES = ("wort", "bedeutung", "gemischt")
+MODES = ("wort", "bedeutung", "gemischt", "nachsortiert")
 SOURCES = ("spark", "eigen", "antwort")
 _running = set()       # profiles being measured right now
 _last_click = {}       # uid or "admin" -> when "Jetzt prüfen" ran last
@@ -223,8 +223,9 @@ def _place(hits, doc):
     return next((i + 1 for i, h in enumerate(hits) if h["id"] == doc), 0)
 
 
-def _measure(uid, qs, vecs, fresh, embed_ms):
-    """Every question through documents.search once per kind. Returns ({question id: result}, summary)."""
+def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
+    """Every question through documents.search once per kind. Returns ({question id: result}, summary).
+    mixed: a dict that gets the mixed hits per question (for the re-ranking afterwards)."""
     out, ms = {}, []
     modes = MODES if vecs is not None else ("wort", "gemischt")
     for i, q in enumerate(qs):
@@ -236,6 +237,8 @@ def _measure(uid, qs, vecs, fresh, embed_ms):
                                     False, None, fresh)
             took = (time.perf_counter() - t0) * 1000
             res[m] = _place(hits, q["doc"])
+            if m == "gemischt" and mixed is not None:
+                mixed[q["id"]] = hits
             if m == "gemischt":
                 ms.append(took + (embed_ms if vec is not None else 0))
                 if q.get("page"):
@@ -283,7 +286,9 @@ async def run(uid, now=None, why="nacht"):
             except Exception as e:
                 vecs = None
                 print("wissen: suchpruefung ohne bedeutung |", docembed.reason(e), flush=True)
-        res, summary = await vorrang.in_thread("Suchprüfung", _measure, uid, qs, vecs, wissen.fresh_on(uid), embed_ms)
+        mixed = {}
+        res, summary = await vorrang.in_thread("Suchprüfung", _measure, uid, qs, vecs, wissen.fresh_on(uid), embed_ms, mixed)
+        await _reranked(uid, qs, mixed, res, summary)
         summary["at"], summary["why"] = int(now), why
 
         def keep():
@@ -303,6 +308,30 @@ async def run(uid, now=None, why="nacht"):
         return None
     finally:
         _running.discard(uid)
+
+
+async def _reranked(uid, qs, mixed, res, summary):
+    """With "Treffer nachsortieren" (Stufe 3): the mixed hits once more through the cross-encoder, as the assistant
+    gets them. Only when every question was re-ranked in time; else this kind is left out of the run."""
+    import nachsortieren
+    if not nachsortieren.allowed(uid):
+        return
+    if not nachsortieren.running():
+        await nachsortieren._start()
+    places, ms = {}, []
+    for q in qs:
+        t0 = time.perf_counter()
+        ranked, word = await nachsortieren.rank(q["q"], mixed.get(q["id"]) or [], 5)
+        if word not in ("ok", "leer"):
+            print(f"wissen: suchpruefung ohne nachsortieren | {word}", flush=True)
+            return
+        ms.append((time.perf_counter() - t0) * 1000)
+        places[q["id"]] = _place(ranked, q["doc"])
+    for qid, p in places.items():
+        res[qid]["nachsortiert"] = p
+    summary["modes"]["nachsortiert"] = {"top5": _pct(sum(1 for p in places.values() if p), len(places)),
+                                        "top1": _pct(sum(1 for p in places.values() if p == 1), len(places))}
+    summary["rank_ms"] = int(statistics.median(ms)) if ms else 0
 
 
 def _night(now):
@@ -340,7 +369,7 @@ async def due_once(now=None):
 
 # ---------------------------------------------------------------- views
 def _last_runs(d, most=10):
-    return [{k: r.get(k) for k in ("at", "n", "modes", "seite", "ms", "p90", "why")} for r in d["laeufe"][-most:]]
+    return [{k: r.get(k) for k in ("at", "n", "modes", "seite", "ms", "p90", "rank_ms", "why")} for r in d["laeufe"][-most:]]
 
 
 def for_live():

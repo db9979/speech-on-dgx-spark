@@ -1449,10 +1449,10 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
-            "SELECT c.id, c.doc, c.page, c.text, c.part, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
+            "SELECT c.id, c.doc, c.page, c.text, c.part, c.head, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
     return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
-                  "part": got[i]["part"] or "",
+                  "part": got[i]["part"] or "", "head": got[i]["head"] or "",
                   "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]},
                  **({"changed": when.get(i, 0)} if fresh else {})) for i in best if i in got]
 

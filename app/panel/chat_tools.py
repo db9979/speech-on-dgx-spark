@@ -227,7 +227,7 @@ async def run(t, name, args, st):
         art = str(args.get("art") or "")[:30]
         if not wissen.on(t.who["id"], "brief"):
             tags, art = [], ""
-        hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None)
+        hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None, trace=getattr(t, "tr", None))
         win = getattr(t, "recent_ask", None)
         if win is not None:      # "Was habe ich zuletzt notiert?": the newest pages first, then what fits the words
             newest = await wissen.recent(t.who["id"], win[0], win[1])

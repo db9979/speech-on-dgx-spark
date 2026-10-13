@@ -1,7 +1,7 @@
 // Ich → Dokumente → Suchprüfung (suchpruefung.py, plan plaene/suche-schaerfen.md, Stufe 1): test questions with a
 // known right place measure how well the document search finds it. Only numbers and the person's own questions;
 // nothing changes by itself. "Richtige Stelle angeben" under an answer fills the form here.
-const SPRMODE=[['wort',['Wörter','Words']],['bedeutung',['Bedeutung','Meaning']],['gemischt',['Gemischt (wie der Assistent)','Mixed (like the assistant)']]];
+const SPRMODE=[['wort',['Wörter','Words']],['bedeutung',['Bedeutung','Meaning']],['gemischt',['Gemischt','Mixed']],['nachsortiert',['Nachsortiert','Re-ranked']]];
 const SPRSRC={spark:['vom Spark','by the Spark'],eigen:['eigene','own'],antwort:['aus einer Antwort','from an answer']};
 let SPR=null,SPRPRE=null;
 const sprWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}):'';
@@ -30,7 +30,7 @@ function sprDraw(){const box=$('sprin'),S=SPR;if(!box||!S)return;
   const pre=SPRPRE||{};
   box.innerHTML=`<div class="intro">${esc(t('Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet. Der Spark misst nachts; geändert wird dabei nichts.','Test questions with a known right place show how often the search in your documents finds the right thing. The Spark measures at night; nothing is changed by it.'))}</div>
     <div class="mut">${esc(t(`${qs.length} Prüffragen (höchstens ${S.max})`,`${qs.length} test questions (at most ${S.max})`))}${S.auto?esc(t(' · der Spark schreibt neue in ruhigen Minuten',' · the Spark writes new ones in quiet minutes')):''}${last?' · '+esc(t('letzte Prüfung ','last check ')+sprWhen(last.at)):''}</div>
-    ${last?`<div class="sprbars">${sprBars(last)}</div>${last.seite!=null?`<div class="mut">${esc(t(`Richtige Seite unter den ersten 5: ${last.seite} %`,`Right page among the first 5: ${last.seite} %`))}</div>`:''}<div class="mut">${esc(t(`Suche dauert im Mittel ${last.ms} ms, langsamste ${last.p90} ms`,`Search takes ${last.ms} ms on average, slowest ${last.p90} ms`))}</div>`:`<div class="mut">${esc(t('Noch keine Prüfung.','No check yet.'))}</div>`}
+    ${last?`<div class="sprbars">${sprBars(last)}</div>${last.seite!=null?`<div class="mut">${esc(t(`Richtige Seite unter den ersten 5: ${last.seite} %`,`Right page among the first 5: ${last.seite} %`))}</div>`:''}<div class="mut">${esc(t(`Suche dauert im Mittel ${last.ms} ms, langsamste ${last.p90} ms`,`Search takes ${last.ms} ms on average, slowest ${last.p90} ms`))}${last.rank_ms?esc(t(` · Nachsortieren ${last.rank_ms} ms`,` · re-ranking ${last.rank_ms} ms`)):''}</div>`:`<div class="mut">${esc(t('Noch keine Prüfung.','No check yet.'))}</div>`}
     ${runs.length>1?`<details class="mkmore"><summary>${esc(t('Verlauf','History'))}</summary><ul class="facts small">${runs.slice().reverse().map(x=>`<li><span>${esc(sprWhen(x.at))} · ${esc(t(`${x.n} Fragen`,`${x.n} questions`))}</span><b>${+((x.modes||{}).gemischt||{}).top5||0} %</b></li>`).join('')}</ul></details>`:''}
     <div class="row"><button type="button" class="b p" data-sprdo="run"${S.running||S.wait?' disabled':''}>${esc(S.running?t('Prüft gerade …','Checking …'):S.wait?t(`Wieder in ${Math.ceil(S.wait/60)} min`,`Again in ${Math.ceil(S.wait/60)} min`):t('Jetzt prüfen','Check now'))}</button></div>
     ${bad.length?`<h3>${esc(t(`Schlecht gefunden (${bad.length})`,`Found badly (${bad.length})`))}</h3><ul class="facts">${bad.slice(0,20).map(sprQ).join('')}</ul>`:''}

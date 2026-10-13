@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.520** Re-rank hits: a small model on the CPU puts the best-matching passages first
 - **V01.0.519** Document search: cut at headings, a context line per section, the section in the source note
 - **V01.0.518** Tests green again: the Markdown test waits until the chat page is shown
 - **V01.0.517** Architecture page with a large picture and full-screen zoom; the voiceprint is now sealed
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.513** Logs without contents: no spoken commands, server answers or raw profile ids in log lines any more, a test turns new ones red
 - **V01.0.512** reMarkable: the note on the task sheet is read and comes back as a point to tick, also as a job
 - **V01.0.511** Live: every event the Spark starts by itself runs once as a coloured ball down the bus to its stage, inputs in fixed colours
-- **V01.0.510** Browser: TV and other voices no longer become a question after an answer (voice check on the open microphone, room level for barge-in, iPhone app)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

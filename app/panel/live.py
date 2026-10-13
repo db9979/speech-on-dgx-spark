@@ -77,7 +77,7 @@ TOOLS = {
     "Docling": "docling",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
-    "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
+    "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem", "Nachsortieren": "mem",
     # Probleme melden (meldung.py): a draft stays on the Spark, sending goes to GitHub
     "Meldung": "mem", "GitHub-Meldung": "issues",
     # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
@@ -795,6 +795,12 @@ def _bg_now(now):
         import docembed
         if docembed._busy():
             out.append({"job": "Bedeutungssuche", "st": "run", "secs": 0})
+    except Exception:
+        pass
+    try:   # the re-ranking model (nachsortieren.py) while it reads question and passages
+        import nachsortieren
+        if nachsortieren.busy():
+            out.append({"job": "Nachsortieren", "st": "run", "secs": 0})
     except Exception:
         pass
     return out

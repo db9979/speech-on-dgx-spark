@@ -113,6 +113,7 @@ WITHOUT = {
     "docling": "wirkt beim Einlesen (liest im Hintergrund)",
     "suchpruefung": "misst im Hintergrund, wie gut die Suche trifft (Ich → Dokumente)",
     "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",
+    "nachsortieren": "wirkt beim Suchen in den Dokumenten",
     "rmfresh": "wirkt beim Abgleich",
     # what the Spark does by itself
     "tippspush": "meldet sich von selbst",

@@ -183,6 +183,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
+| `app/panel/nachsortieren.py` | Treffer nachsortieren: a cross-encoder reads the question and each of the mixed search's candidates together and gives a score; the best come first, the ones … |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
 | `app/panel/symbole.py` | Symbols for slides and documents. |
@@ -418,6 +419,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dienstwacht.json` | Service watcher | – | yes |
 | `state/doc-embed.json` | Vector model | – | no |
 | `state/doc-quotas.json` | Document quotas | – | yes |
+| `state/doc-rank.json` | Re-ranking model | – | no |
 | `state/docling.json` | Docling server: address, certificate, counts | key sealed | yes |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/faelle.json` | Cases | – | yes |
