@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.481** · 2026-10-13 · Tagesbriefing im Verlauf gegliedert (Termine, Erinnerungen, Mails, Themen als Listen), der Push bekommt denselben Text ohne Zeichen; im Chat darf das Briefing auch nach Bereichen gegliedert sein
 - **V01.0.480** · 2026-10-13 · Stille wird nie zu Wörtern: Klicks, Signalton oder Raumgeräusch nach einer Antwort kommen nicht mehr als „Ja“/„Okay“ beim Assistenten an (Spark sofort, iPhone-App ab dem nächsten TestFlight-Build)
 - **V01.0.479** · 2026-10-13 · Private Chats mit Ende-zu-Ende-Verschlüsselung (Schlüssel je Gerät im Browser, Sicherheitsnummer, Fotos/Dateien/Sprache verschlüsselt, aus); alter Umschlag im Assistenten entfernt; Chat-Eingabe frei vom Gesicht des Assistenten
 - **V01.0.478** · 2026-10-13 · Einstellungs-Assistent ohne Code-Änderungen: Pflicht-Werkzeug für jede Frage nach eigenem Tun (Befund, Lücken, Vorschlags-Chips), Werkzeug-Hinweise und Weiche-Extras als Admin-Regeln, „Fall analysieren“ und „Nachstellen“ vorher/nachher, Tab Regeln mit Fassungen, Export/Import, Aufräumen, Nachprüfung nach Update oder Modellwechsel und automatischem Zurücknehmen; Spark-Tagebuch („Was hast du heute für mich gemacht?“), Monatsbericht, „Warum?“ für alle Profile, Vorschläge auch englisch; Daumen 👍/👎 in Zustand → Logs → Anfragen (alles aus)

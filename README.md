@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.481** Daily briefing in the history sorted with lists, the push stays plain text
 - **V01.0.480** No more made-up "Ja" or "Okay" after answers: silence, clicks and the chime never become a question
 - **V01.0.479** Private chats end-to-end (a key per device, safety number, off); old envelope removed from the assistant
 - **V01.0.478** Settings assistant with admin rules instead of code, Spark diary, monthly report, thumbs in Logs → Requests
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.474** Test fix after V01.0.473: two tests no longer leave a device or a Home Assistant connection behind
 - **V01.0.473** Chats (off): write with the other people of your Spark like in a messenger, in groups too, with photos, files, voice messages and invitations by QR; encrypted on the Spark; Android app 1.2.0 with notes at once, iPhone app with chats
 - **V01.0.472** Own speakers: "Jarvis" while speaking makes them quiet at once, "Stopp" then ends without an answer; new switch "Stop while it speaks" for "Stopp" without the wake word
-- **V01.0.471** Speech output no longer goes silent after a piece with nothing to say (tts_http_400); errors in Logs → Requests as a plain sentence
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

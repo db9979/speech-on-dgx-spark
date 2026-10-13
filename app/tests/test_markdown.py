@@ -104,6 +104,43 @@ class Channels(unittest.TestCase):
         self.assertIn("**Fertig:**", json.dumps(profiles.convos(uid), ensure_ascii=False))   # the history keeps it
 
 
+class Briefing(unittest.TestCase):
+    def test_daily_briefing_sorted_in_the_history_plain_in_the_push(self):
+        """Dominik 2026-10-13: the briefing of 07:45 was one block of text in the chat. The history keeps a version
+        with Markdown lists (BRIEF_MD_SYSTEM), the push gets it without the signs; the chat tool may list too."""
+        import datetime
+        import push
+        a = profile("Morgenliste")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        a.put("/api/profile/settings", json={"briefing_at": "07:30", "tz": "Europe/Berlin"})
+        text = "Guten Morgen.\n**Termine**\n- 10:00 Webinar\n- 12:00 deBug & Coffee\n**Mails**\n- db9979: Test fehlgeschlagen"
+        sent, asked = [], []
+
+        async def fake_brief(u, tz="", markdown=False):
+            asked.append(markdown)
+            return text
+
+        async def fake_send(u, title, body, tag="", private=True, why=""):
+            sent.append(body)
+            return 1
+        old = chat.morning_briefing, push.send, push.subs
+        chat.morning_briefing, push.send = fake_brief, fake_send
+        push.subs = lambda u: [{"endpoint": "x"}] if u == uid else []
+        try:
+            zone = chat.user_zone("Europe/Berlin")
+            asyncio.run(chat.due_briefings(datetime.datetime(2026, 10, 13, 7, 45, tzinfo=zone)))
+        finally:
+            chat.morning_briefing, push.send, push.subs = old
+        self.assertEqual(asked, [True])
+        self.assertEqual(sent, ["Guten Morgen.\nTermine\n• 10:00 Webinar\n• 12:00 deBug & Coffee\nMails\n• db9979: Test fehlgeschlagen"])
+        c = [x for x in profiles.convos(uid) if x["id"] == "brief-20261013"][0]
+        self.assertEqual(c["msgs"][-1]["content"], text)
+        self.assertIn("Markdown", chat.BRIEF_MD_SYSTEM)
+        self.assertIn("ohne Listen, Markdown", chat.BRIEF_SYSTEM)      # the push, reMarkable and Begleiter text stays plain
+        self.assertIn("already over", chat.BRIEF_MD_SYSTEM)
+        self.assertNotIn("Keine Aufzählungszeichen, keine Links", chat.BRIEFING_HINT)
+
+
 def _browser():
     try:
         from tests.test_ui_browser import async_playwright, browser_ok, chromium
