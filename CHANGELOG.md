@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.513** · 2026-10-13 · Logs ohne Inhalte: Home Assistant schreibt statt des gesprochenen Befehls und der Server-Antwort nur Länge, Zahl der Gerätewörter und HTTP-Code, nicht gesagte Meldungen von selbst nur Grund und Länge, „hamelden“ das Profil über log_name statt der rohen ID und bei Regeln per Sprache nur die Art der Bedingung; test_log_luecken.Structure macht jede neue Logzeile mit Gesagtem, Server-Antwort oder roher Profil-ID rot
 - **V01.0.512** · 2026-10-13 · reMarkable: Was auf dem Aufgabenblatt unter „Anmerkung“ steht, liest der Spark und legt es auf der nächsten Version zum Ankreuzen vor (Erinnern, Als Auftrag bei „Sag mir Bescheid, wenn …“, Weg, Später); Kreuze zählen nur noch Striche, die im Kästchen liegen
 - **V01.0.511** · 2026-10-13 · Live: jedes Von-selbst-Ereignis läuft einmal als farbige Kugel vom Bus-Eingang bis zu seiner Stufe, auch wenn es schon fertig war; Eingänge rule, timer, job und note in fester Farbe
 - **V01.0.510** · 2026-10-13 · Browser: Fernseher und fremde Stimmen werden nach einer Antwort keine Frage mehr: ein von selbst geöffnetes Mikrofon (Ins-Wort-Fallen, Rückfrage, Freihändig) nimmt mit angelernter Stimme nur bekannte Stimmen (fremdstimme.py), ohne Abdruck nur Stimmen über dem gelernten Raumpegel; die iPhone-App sagt es ab dem nächsten Build genauso

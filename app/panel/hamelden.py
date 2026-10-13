@@ -210,19 +210,19 @@ async def _run(s, item, eids):
             raise
         except PermissionError as e:
             s.error, s.synced = str(e), False
-            print(f"hamelden: live for {s.uid} stopped: {e}", flush=True)
+            print(f"hamelden: live stopped, token refused | {_who(s.uid)}", flush=True)
             _live("Live-Verbindung: Token abgelehnt, nächster Versuch in 30 min")
             await asyncio.sleep(AUTH_WAIT)
             continue
         except OverflowError as e:
             s.error, s.synced = str(e), False
             s.rest_until = time.time() + RESTING
-            print(f"hamelden: live for {s.uid} rests: {e}", flush=True)
+            print(f"hamelden: live rests, more than {MAX_EVENTS_MIN} changes a minute | {_who(s.uid)}", flush=True)
             _live(f"Live-Verbindung ruht 10 min: mehr als {MAX_EVENTS_MIN} Änderungen pro Minute")
             return
         except Exception as e:
             s.error, s.synced = f"{type(e).__name__}: {str(e)[:120]}", False
-            print(f"hamelden: live for {s.uid} dropped: {s.error}", flush=True)
+            print(f"hamelden: live dropped ({type(e).__name__}) | {_who(s.uid)}", flush=True)
             _live("Live-Verbindung getrennt: " + type(e).__name__)
         await asyncio.sleep(BACKOFF[min(tries, len(BACKOFF) - 1)])
         tries += 1
@@ -242,7 +242,7 @@ async def _session(s, item, eids):
             raise PermissionError("Home Assistant hat den Token abgelehnt")
         await ws.send(json.dumps({"id": 1, "type": "subscribe_entities", "entity_ids": eids}))
         s.error, s.since = "", time.time()
-        print(f"hamelden: live for {s.uid}, {len(eids)} device(s)", flush=True)
+        print(f"hamelden: live connected, {len(eids)} device(s) | {_who(s.uid)}", flush=True)
         _live(f"Live-Verbindung steht · {len(eids)} Gerät(e)")
         async for raw in ws:
             msg = json.loads(raw)
@@ -367,6 +367,12 @@ def _loud_may(uid, reason):
         features.allowed("haloud", uid) and bool(_p(uid).get("pro_ha_loud"))
 
 
+def _who(uid):
+    """The profile for a journal line, only as profiles.log_name gives it."""
+    import profiles
+    return profiles.log_name(profiles.by_id(uid))
+
+
 async def loud(uid, rule, reason=""):
     """Says the rule's own sentence on its speakers. Returns the speaker names reached."""
     import messages
@@ -375,7 +381,7 @@ async def loud(uid, rule, reason=""):
     now = time.time()
     q = _loud[uid]
     if len(q) >= LOUD_PER_HOUR and now - q[0] < 3600:
-        print(f"hamelden: loud for {uid} NOT said, {LOUD_PER_HOUR} in the last hour", flush=True)
+        print(f"hamelden: loud NOT said, {LOUD_PER_HOUR} in the last hour | {_who(uid)}", flush=True)
         return []
     q.append(now)
     mine = {x["id"] for x in speakers(uid)}
@@ -881,7 +887,7 @@ async def answer(ctx, latest):
     body = {"conds": [cond], "pause": 10 if guess.get("kind") in ("motion", "ring") else 0}
     line = proactive.rule_line({"conds": [dict(cond, name=name)], "pause": body["pause"]})
     _PENDING[uid] = {"body": body, "line": line, "src": src, "t": time.time(), "fresh": True}
-    print(f"hamelden: rule by voice proposed: {line}", flush=True)
+    print(f"hamelden: rule by voice proposed | {op} | {_who(uid)}", flush=True)
     return {"call": {"name": "Regel per Sprache (Vorschlag)", "args": line, "result": "wartet auf Ja"},
             "system": f"Smart-Home-Meldung: Noch NICHT angelegt. Frag den Nutzer genau: „Soll ich mich melden, wenn "
                       f"{line}?“ Erst sein Ja in der nächsten Nachricht legt die Regel an. Schalte nichts, such nicht "

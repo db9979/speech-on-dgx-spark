@@ -150,7 +150,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
     text = re.sub(r"\s+", " ", str(text)).strip()[:400]
     reason = "" if force else blocked(uid, kind, p, local)
     if reason or not text:
-        print(f"proactive: {kind} not said ({reason or 'empty'}): {text[:80]!r}", flush=True)
+        print(f"proactive: {kind} not said ({reason or 'empty'}) | {len(text)} chars", flush=True)
         return None
     import push
     now = time.time()

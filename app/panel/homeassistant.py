@@ -303,7 +303,7 @@ async def command(item, text, language="de", panel=False, out=None):
         ids = [x["entity_id"] for x in all_states if isinstance(x, dict)
                and (x.get("attributes") or {}).get("friendly_name") in targets][:10]
     if not ids:
-        _log("assist: success without entity ids, cannot verify", repr(text[:80]))
+        _log("assist: success without entity ids, cannot verify")
         return False, ("Assist answered '" + speech + "' but named no device, so the result could not be checked. "
                        + ("Say that it could not be checked." if panel else
                           "Look the device up with home_assistant_states and use home_assistant_action.")), targets
@@ -415,7 +415,7 @@ async def _assist(item, text, language):
         _log("assist: token rejected (401)")
         return False, "Home Assistant rejected the token.", [], False, []
     if r.status_code != 200:
-        _log("assist: HTTP", r.status_code, r.text[:200])
+        _log("assist: HTTP", r.status_code)
     r.raise_for_status()
     res = (r.json() or {}).get("response") or {}
     speech = ((res.get("speech") or {}).get("plain") or {}).get("speech", "")
@@ -428,7 +428,7 @@ async def _assist(item, text, language):
     # Assist knows only exposed entities and its own sentence patterns
     unknown = res.get("response_type") == "error" and data.get("code") in ("no_valid_targets", "no_intent_match")
     ids = [x["id"] for x in (data.get("success") or []) if x.get("type") == "entity" and "." in str(x.get("id", ""))]
-    _log("assist:", repr(str(text)[:80]), "->", res.get("response_type"), data.get("code") or "", ids or targets[:5])
+    _log("assist:", len(str(text)), "chars ->", res.get("response_type"), data.get("code") or "", ids or targets[:5])
     return ok, speech.strip() or ("Done." if ok else "Home Assistant could not do that."), targets[:10], unknown, ids[:10]
 
 
@@ -639,7 +639,7 @@ async def states(item, text="", domain="", area="", limit=60):
                    "call without words for an overview.")
     keep = [x[2] for x in scored if x[0] == scored[0][0]]  # the most words; all words when any does
     lines = [_line(s, names, areas.get(s["entity_id"], "")) for s in keep[:limit]]
-    _log("states:", repr(str(text)[:60]), domain or "", area or "", "->", len(keep), [x["entity_id"] for x in keep[:5]])
+    _log("states:", len(str(text)), "chars", domain or "", area or "", "->", len(keep), [x["entity_id"] for x in keep[:5]])
     if len(keep) > limit:
         lines.append(f"... and {len(keep) - limit} more; narrow the search.")
     return len(keep), "\n".join(lines)
@@ -747,7 +747,7 @@ async def fallback(item, text, panel=False, out=None):
     every = any(w in ("alle", "alles", "saemtliche", "all") for w in words)
     words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
     if not words:
-        _log("fallback: no device words in", repr(text[:80]))
+        _log("fallback: no device words in the command")
         return False, ""
     all_states, areas, names = await _switchable(item)
     if every and service:  # "Alle Lichter im Wohnzimmer aus"
@@ -756,7 +756,7 @@ async def fallback(item, text, panel=False, out=None):
         return done, res or "Nothing switched: not every word of the command fits a device in Home Assistant."
     scored = _score(all_states, areas, names, words)
     chosen, full = _pick(all_states, areas, names, words)
-    _log("fallback:", repr(text[:80]), "words", words, "service", service, "areas", len(set(areas.values())),
+    _log("fallback:", len(words), "device word(s)", "service", service, "areas", len(set(areas.values())),
          "candidates", [x[2]["entity_id"] for x in (full or scored)[:8]], "chosen", chosen and chosen["entity_id"])
     out["cands"] = [_cand(x[2], names, areas) for x in (full or scored)[:8]]
     hays = [_hay(x, names, areas.get(x["entity_id"], "")) for x in all_states]
@@ -859,8 +859,7 @@ async def action(item, entity_id, service, data=None):
         t0 = time.time()
         r = await c.post(f"{item['url']}/api/services/{domain}/{service}", json=dict(extra, entity_id=eid))
         logfilter.detail("ha", f"{domain}.{service} answered HTTP {r.status_code} after {(time.time() - t0) * 1000:.0f} ms")
-        _log("action:", f"{domain}.{service}", eid, extra or "", "-> HTTP", r.status_code,
-             "" if r.status_code == 200 else r.text[:200])
+        _log("action:", f"{domain}.{service}", eid, extra or "", "-> HTTP", r.status_code)
         if r.status_code in (400, 404):
             return False, f"Home Assistant does not accept {domain}.{service} for {name} (HTTP {r.status_code}). Nothing was switched."
         if r.status_code in (401, 403):
@@ -1036,7 +1035,7 @@ async def todo(item, list_name="", act="show", text="", ctx=None):
             r = await c.post(f"{item['url']}/api/services/todo/get_items?return_response",
                              json={"entity_id": eid})
             if r.status_code != 200:
-                _log("todo: get_items HTTP", r.status_code, r.text[:200])
+                _log("todo: get_items HTTP", r.status_code)
                 return None
             resp = (r.json() or {}).get("service_response") or {}
             return [(x.get("summary", ""), x.get("status", "")) for x in (resp.get(eid) or {}).get("items") or []]
@@ -1116,7 +1115,7 @@ async def lookup(item, text, limit=12):
     if missing and about_home:  # "Temperatur vom Gartenteich", "und vom Whirlpool?"  # a thing Home Assistant has no entity for: never answer with another device's values
         near = [x["entity_id"] for x, h in zip(all_states, labels)
                 if any(w[i:i + 4] in h for w in missing for i in range(len(w) - 3))]
-        _log("lookup:", repr(str(text)[:60]), "nothing named", missing, "- similar:", near[:10])
+        _log("lookup:", len(missing), "word(s) name nothing - similar:", near[:10])
         return ("Read from Home Assistant just now: no entity, device or room in Home Assistant is called "
                 + ", ".join(repr(w) for w in missing) + ". Say exactly that it was not found in Home Assistant; "
                 "give no value of any other device instead.")
@@ -1135,7 +1134,7 @@ async def lookup(item, text, limit=12):
         narrow = [x for x in cands if any(_hit(w, hays[x["entity_id"]]) for w in generic
                                           if w not in _GENERIC_ONLY)]
         cands = narrow or cands
-    _log("lookup:", repr(str(text)[:60]), "words", specific, generic, "->", [x["entity_id"] for x in cands[:8]])
+    _log("lookup:", len(specific), "device word(s),", len(generic), "general ->", [x["entity_id"] for x in cands[:8]])
     lines = [_line(x, names, areas.get(x["entity_id"], "")) for x in cands[:limit]]
     more = f"\n... and {len(cands) - limit} more" if len(cands) > limit else ""
     return ("Read from Home Assistant just now (answer only from these values; if the asked value is not "

@@ -222,6 +222,44 @@ def _lead(a):
     return None
 
 
+# What people say or write, what a foreign server answers, a raw profile id: never in a journal line (only how long it
+# is, via len, or the profile via profiles.log_name). A print may name such a variable only with a reason here.
+CONTENT = {"text", "msg", "message", "line", "title", "query", "prompt", "answer", "reply", "body", "content", "command",
+           "words", "said", "q", "utterance", "transcript", "latest", "uid"}
+CONTENT_SAFE = {"len", "log_name", "_log_name", "_who", "type", "bool", "int", "round", "sum", "_word"}
+CONTENT_OK = {
+    ("chat.py", "body"): "watch.report_line schreibt aus body nur Zahlen und feste Wörter (OUTCOMES)",
+    ("faelle.py", "said"): "Titel des Melders aus festen Regeln, auf Buchstaben und Zahlen gekürzt, höchstens 100 Zeichen",
+    ("live.py", "text"): "Live-Ereignisse tragen nur Art, Anzahl und Status (Grundsatz 6), nie Inhalte",
+    ("logfilter.py", "text"): "Ausführliches Log, nur nach Einschalten durch den Admin und durch redact gefiltert",
+    ("offsite.py", "msg"): "eigene Fehlertexte der Sicherung (HTTP-Code, Ordner), kein Inhalt",
+    ("panel.py", "line"): "slow_read baut die Zeile aus Methode, Route und Zeit",
+    ("tasks.py", "uid"): "tasks._log macht daraus profiles.log_name",
+    ("tracelog.py", "line"): "line() baut die Anfrage-Zeile aus festen Feldern",
+}
+
+
+def _content(x):
+    """The first content variable a log argument shows as it is, or None."""
+    if isinstance(x, ast.Call):
+        f = x.func
+        if (f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else "") in CONTENT_SAFE:
+            return None
+    if isinstance(x, ast.Compare):     # only yes or no ends up in the line
+        return None
+    if isinstance(x, ast.IfExp):       # the condition picks a fixed word; what is shown are the two branches
+        return _content(x.body) or _content(x.orelse)
+    if isinstance(x, ast.Name) and x.id in CONTENT:
+        return x.id
+    if isinstance(x, ast.Attribute) and x.attr in ("text", "uid"):
+        return x.attr
+    for c in ast.iter_child_nodes(x):
+        got = _content(c)
+        if got:
+            return got
+    return None
+
+
 def _files():
     for path in sorted(glob.glob(os.path.join(PANEL, "*.py"))):
         with open(path, encoding="utf-8") as f:
@@ -292,6 +330,23 @@ class Structure(unittest.TestCase):
         for path, why in guard.QUIET_WHY.items():
             self.assertTrue(path.startswith("/api/") and len(why) > 5, path)
         self.assertTrue(guard.logged("/api/chats/announce", "POST"))
+
+    def test_no_content_in_journal_lines(self):
+        """Logs only with fixed words and numbers (Grundsatz 7): no print, and no _log helper that prints, shows what
+        was said, a foreign server's answer or a raw profile id; a new one turns this red."""
+        bad = []
+        for name, tree in _files():
+            helpers_ = {"print"} | {fn.name for fn in ast.walk(tree) if isinstance(fn, ast.FunctionDef)
+                                    and fn.name.startswith("_log") and any(isinstance(n, ast.Call) and
+                                    isinstance(n.func, ast.Name) and n.func.id == "print" for n in ast.walk(fn))}
+            for n in ast.walk(tree):
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in helpers_:
+                    hit = next(filter(None, (_content(a) for a in n.args)), None)
+                    if hit and (name, hit) not in CONTENT_OK:
+                        bad.append(f"{name}:{n.lineno} {hit}")
+        self.assertEqual(bad, [], "Logzeilen mit Inhalt statt festen Wörtern (oder Grund in CONTENT_OK)")
+        for (name, _), why in CONTENT_OK.items():
+            self.assertTrue(os.path.exists(os.path.join(PANEL, name)) and why, name)
 
     def test_live_events_are_in_the_journal(self):
         """What Zustand → Live shows under Ereignisse is in the journal too, whether Live is on or not."""

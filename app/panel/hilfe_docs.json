@@ -3532,6 +3532,14 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
+"title": "Logs ohne Inhalte",
+"text": "Logs ohne Inhalte (ab V01.0.513): Alte Zeilen, die noch Text enthielten, nennen jetzt nur feste Wörter und Zahlen. Home Assistant schreibt statt des gesprochenen Befehls nur seine Länge und die Zahl der Gerätewörter, statt der Antwort des Servers nur den HTTP-Code (Geräte-IDs wie light.wohnzimmer bleiben, damit sich ein falsch geschaltetes Gerät finden lässt). Eine nicht gesagte Meldung von selbst nennt Grund und Länge statt ihres Textes, „hamelden“ das Profil über log_name statt der rohen ID und bei einer Regel per Sprache nur die Art der Bedingung. Ein vierter Selbsttest macht jede neue Logzeile rot, die Gesagtes, Geschriebenes, die Antwort eines fremden Servers oder eine rohe Profil-ID zeigt."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
 "title": "Fehler mit Grund statt „error“",
 "text": "Fehler mit Grund statt „error“ (ab V01.0.505, Dominik: Auszug aus den Logs): Anfragen „Von selbst“ (Update-Prüfung, Sicherung nach außen, Geräte-Updates) nennen in ihrer Zeile auf *Logs → Anfragen* einen festen Grund statt nur error: github_limit (60 Abfragen pro Stunde), github_http_401 (GitHub lehnt ab, z. B. der Lese-Token), git_ls_remote (GitHub nicht erreichbar), keine_gruenen_tests, ohne_git; bei der Sicherung http_401 (Benutzer oder Passwort des WebDAV-Ordners falsch), zertifikat oder die Fehlerart; bei Geräte-Updates der Teil, der scheiterte (esp32, android, xiaozhi). Die Zeilen update check failed: …, esp32: firmware check failed, android: app check failed und geraeteupdate: XiaoZhi check failed erscheinen jetzt auch unter „Nur Fehler“. - Geräte-Updates meldeten bei eingeschalteter Android-App jede Prüfung als „nicht ok“, auch wenn alles klappte (die Android-Prüfung gibt ein Paar zurück, das immer als Fehler galt). Behoben; „noch keine App im Repo“ ist kein Fehler. - Einstellungs-Assistent: Ein Befund, der sich nicht ändert (z. B. „5 Fehler in den letzten 24 Stunden“), zählt nicht mehr alle 30 Minuten hoch (faelle: melder | - | fehler | 9×); erst ein geänderter Befund ist "
 },
@@ -7270,6 +7278,14 @@
 "head": "Logs",
 "title": "A log for everything, checked by tests",
 "text": "ver: confirmed action <tool> done|fail|no. - Three self-tests turn a new gap red: every line needs a word of logfilter.AREAS; every function behind a Notaus gate writes a line or names where its line comes from; every exception of the admin log has a reason (guard.QUIET_WHY)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Logs without contents",
+"text": "Logs without contents (since V01.0.513): old lines that still held text now name only fixed words and numbers. Home Assistant writes the length of the spoken command and the number of device words instead of the command, and only the HTTP code instead of the server's answer (device ids like light.wohnzimmer stay, so a wrongly switched device can be found). A note the Spark did not say by itself names its reason and length instead of its text, \"hamelden\" names the profile via log_name instead of the raw id and, for a rule by voice, only the kind of condition. A fourth self-test turns every new log line red that shows what was said or written, a foreign server's answer or a raw profile id."
 },
 {
 "lang": "en",
