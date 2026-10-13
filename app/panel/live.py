@@ -141,6 +141,8 @@ TARGETS = {
     "chats": ("Chats", "Nachrichten zwischen Personen · auf dem Spark", "spark", False),
     # Taten prüfen, Fehlerschleife stoppen (taten.py): shown while one is on, how often they stepped in today
     "taten": ("Taten-Prüfung", "zurückgehalten und gestoppt · auf dem Spark", "spark", False),
+    # Suchprüfung (suchpruefung.py): shown while it is on, test questions and the share found in the first five
+    "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -1101,6 +1103,13 @@ def snapshot(view="admin", now=None):
     if cht.get("on"):
         used.add("chats")
     try:
+        import suchpruefung
+        spr = suchpruefung.for_live()
+    except Exception:
+        spr = {"on": False}
+    if spr.get("on"):
+        used.add("pruef")
+    try:
         import doclingdienst
         dlg = doclingdienst.for_live()
     except Exception:
@@ -1160,6 +1169,10 @@ def snapshot(view="admin", now=None):
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))
+        if x["id"] == "pruef":     # Suchprüfung: questions and the share found, numbers only (never a question)
+            x["sub"] = (f"{spr.get('fragen', 0)} Prüffragen · {spr.get('profile', 0)} Profile"
+                        + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
+                        + (" · prüft gerade" if spr.get("running") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

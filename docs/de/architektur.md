@@ -184,6 +184,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/recall.py` | Suche in früheren Gesprächen, gelernte Fakten |
+| `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
 | `app/panel/symbole.py` | Feste Symbole für Folien und Dokumente |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: was der Spark selbst getan hat |
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
@@ -348,6 +349,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/wissen.db` | Dokumente: Text, Suche, Vektoren (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |
 | `users/ID/settings.json` | Einstellungen | Einstellungen | – | ja | – |
 | `users/ID/setup.json` | Einrichtung | Einstellungen | – | ja | – |

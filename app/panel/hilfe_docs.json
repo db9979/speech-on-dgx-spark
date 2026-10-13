@@ -1180,6 +1180,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Suchprüfung (V01.0.516, Plan *suche-schaerfen*, Stufe 1)",
+"text": "Suchprüfung (V01.0.516, Plan *suche-schaerfen*, Stufe 1): Admin-Schalter *Funktionen → Eigene Dokumente → Suchprüfung* (chat.search_check, aus), darunter *Prüffragen vom Spark* (chat.search_check_auto, aus) und *Prüffragen pro Tag und Profil* (chat.search_check_day, 5 bis 100, Standard 20); kein Profil-Schalter, nie für Gäste. Jedes Profil hat bis zu 300 Prüffragen mit bekannter richtiger Stelle (users/<id>/suchpruefung.json, in der Sicherung): selbst angelegt unter *Ich → Dokumente → Suchprüfung → Prüffrage hinzufügen*, aus einer Antwort mit „Richtige Stelle angeben“ unter der Quellenzeile, oder vom Sprachmodell in ruhigen Minuten (vorrang, höchstens 3 pro Dokument). Eine Frage des Modells ist Text von außen und muss feste Regeln einhalten (eine Zeile, 8 bis 160 Zeichen, Fragezeichen, keine Links, keine Befehlswörter, nie vier Wörter am Stück aus der Stelle, höchstens 75 % ihrer Wörter aus der Stelle), sonst wird sie verworfen. Einmal pro Nacht (2 bis 5 Uhr, ab 5 Fragen) oder mit „Jetzt prüfen“ (höchstens alle 10 Minuten) geht jede Frage durch dieselbe Suche wie beim Assistenten (documents.search), einmal nur Wörter, einmal nur Bedeutung (nur mit Bedeutungssuche) und einmal gemisc"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Suchprüfung (V01.0.516, Plan *suche-schaerfen*, Stufe 1)",
+"text": "ht; notiert werden der Platz des richtigen Dokuments unter den ersten 30, ob die richtige Seite unter den ersten 5 war, und die Zeit (Mittel und langsamste 10 %). Das Profil sieht die Anteile unter den ersten 5 und als Erstes, den Verlauf der letzten Läufe und „Schlecht gefunden“ mit „Ausprobieren“ (die ersten 5 Treffer jetzt). Der Admin sieht unter *Zustand → Prüfen → Suche prüfen* nur Summen über alle Profile, die Live-Übersicht die Zahl der Fragen und den Anteil; das Protokoll nur feste Wörter und Zahlen. Die feste Prüfbank app/tests/data/suchbank.json (15 erfundene Unterlagen, 45 Fragen) hält in test_suchpruefung die Wortsuche bei mindestens 80 % unter den ersten 5 (gemessen 84 %)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Dokumentliste für viele Dateien (V01.0.413, Plan /mnt/project-files/dateiliste/plan.md): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearb"
 },
@@ -5078,6 +5094,22 @@
 "head": "Voice chat",
 "title": "Document card and tags (V01.0.245)",
 "text": "on (six weeks before at 9:00, else the day before); the assistant never sets a reminder from a deadline in a document by itself. Also document_search now always stays offered in a narrowed tool set, and more words (insurance, policy, warranty, manual, notice, cancellation period, tax, doctor's letter, findings, receipt, certificate …) count as a question about documents."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Search check (V01.0.516, plan *suche-schaerfen*, stage 1)",
+"text": "Search check (V01.0.516, plan *suche-schaerfen*, stage 1): admin switch *Features → Own documents → Search check* (chat.search_check, off), below it *Test questions by the Spark* (chat.search_check_auto, off) and *Test questions per day and profile* (chat.search_check_day, 5 to 100, default 20); no profile switch, never for guests. Each profile keeps up to 300 test questions with a known right place (users/<id>/suchpruefung.json, in the backup): added by hand under *Me → Documents → Search check → Add a test question*, from an answer with \"Name the right place\" below its sources line, or by the language model in quiet minutes (vorrang, at most 3 per document). A question by the model is outside text and must keep fixed rules (one line, 8 to 160 characters, a question mark, no links, no command words, never four words in a row from the piece, at most 75 % of its words from the piece), else it is dropped. Once a night (2 to 5 o'clock, from 5 questions) or with \"Check now\" (at most every 10 minutes) every question goes through the same search the assistant uses (documents.search), once words only, once meaning only (only with meaning search) and once mixed; noted are the place of the "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Search check (V01.0.516, plan *suche-schaerfen*, stage 1)",
+"text": "right document among the first 30, whether the right page was among the first 5, and the time (median and slowest 10 %). The profile sees the shares among the first 5 and first, the history of the last runs and \"Found badly\" with \"Try\" (the first 5 hits now). The admin sees only sums over all profiles under *Status → Checks → Check the search*, the live overview the number of questions and the share; the journal fixed words and numbers only. The fixed test bank app/tests/data/suchbank.json (15 invented papers, 45 questions) keeps the word search at no less than 80 % among the first 5 in test_suchpruefung (measured 84 %)."
 },
 {
 "lang": "en",

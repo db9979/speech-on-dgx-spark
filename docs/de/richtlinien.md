@@ -279,6 +279,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Rauchtest** (`test_rauchtest`) bleibt schnell. Er ist der einzige Test, den tars bei bereits geprüften Versionen ausführt. (M [[schonende-updates]])
 - **Qualitätstest** (echtes Modell): Ein roter Fall wird zuerst darauf geprüft, ob die Regex zu streng ist, und erst dann als Modellfehler behandelt. (M)
 - **Praxistest:** Jede Funktion bekommt einen Prüfpunkt unten in `pruefung/praxistest-tars-2.md`. (M; 📝)
+- **Prüfbank der Dokumentensuche:** Wer an der Dokumentensuche (`documents.py` Zerlegen, Suche, Mischen, später Nachsortieren) etwas ändert, lässt `test_suchpruefung` laufen. Die feste Prüfbank `tests/data/suchbank.json` muss mit der Wortsuche mindestens `FLOOR` Prozent unter den ersten 5 finden. Die Untergrenze wird nur angehoben, wenn die Suche besser geworden ist, nie gesenkt, um grün zu werden; neue Fragen kommen nur mit ehrlich gemessener Zahl dazu. (2026-10-13, Plan suche-schaerfen; 🧪 test_suchpruefung)
 
 ---
 

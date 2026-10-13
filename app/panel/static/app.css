@@ -1463,3 +1463,6 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .place-h .b{flex:none}.uselbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:12px 0 2px}
 .use{border-top:1px solid var(--line);padding:9px 0}.use-h{display:flex;justify-content:space-between;align-items:center;gap:10px}.use-h>span{min-width:0;overflow-wrap:anywhere}.use-h .tgl{flex:none}
 .useform{margin-top:6px}.addplace{border:1.5px dashed var(--line);border-radius:14px;padding:10px 14px}.addplace>summary{color:var(--acc);font-weight:600;cursor:pointer}
+/* Ich → Dokumente → Suchprüfung (suchpruefung.js) */
+.sprbars{margin:8px 0}.sprrow{display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0;flex-wrap:wrap}.sprrow>span:first-child{min-width:150px}.sprrow .qbar{max-width:200px}
+.sprtop{margin:4px 0 0 18px;padding:0;font-size:12.5px}.sprtop li.ok{font-weight:600;color:var(--ok)}

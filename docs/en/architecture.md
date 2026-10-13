@@ -184,6 +184,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
+| `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
 | `app/panel/symbole.py` | Symbols for slides and documents. |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: what the Spark itself did for a profile. |
 | `app/panel/wiki.py` | Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best matching article and hands its short intro to the model, … |
@@ -348,6 +349,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, search, vectors (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
+| `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
 | `users/ID/settings.json` | Settings | Settings | – | yes | – |
 | `users/ID/setup.json` | Setup | Settings | – | yes | – |

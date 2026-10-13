@@ -517,6 +517,10 @@ function attRender(el,att,live,via){
     // the sources: a kept original opens as a download, otherwise Ich → Dokumente
     else if(a.k==='doc'&&a.l&&a.l.length){const d=document.createElement('div');d.className='mem';
       d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+a.l.map(r=>`<button type="button" class="mlink" data-docopen="${esc(r.id||'')}">${esc(r.n+(r.p?' · '+t('S. ','p. ')+r.p:''))}</button>`).join(' · ');
+      // Suchprüfung (suchpruefung.js): wrong passage? the question and the first document go into a test question
+      if(typeof sprCan==='function'&&sprCan()){const ask=el.closest('.msg')?.previousElementSibling;
+        d.insertAdjacentHTML('beforeend',` · <button type="button" class="mlink" data-sprfix>${esc(t('Richtige Stelle angeben','Name the right place'))}</button>`);
+        d.querySelector('[data-sprfix]').onclick=()=>sprFromAnswer(ask&&ask.classList.contains('user')?ask.textContent:'',a.l[0].id)}
       d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
     else if(a.k==='mk'&&!live){const d=document.createElement('div');d.className='mem';
       d.innerHTML=`📄 ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;

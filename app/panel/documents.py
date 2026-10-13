@@ -1302,6 +1302,18 @@ def recent(uid, since=0, until=None, k=8, shared_only=False):
              "source": r["source"], "changed": int(r["w"] or 0)} for r in rows]
 
 
+def sample_pieces(uid, skip=(), most=20, least=200):
+    """Suchprüfung (suchpruefung.py): up to `most` random pieces [(doc id, page, text)] of ready documents in use,
+    at least `least` characters long, never from the documents in skip (those have enough test questions)."""
+    if not os.path.exists(db_path(uid)):
+        return []
+    with _Db(uid) as con:
+        rows = con.execute("SELECT c.doc, c.page, c.text FROM chunks c JOIN docs d ON d.id=c.doc WHERE d.use=1 "
+                           "AND d.state='ready' AND length(c.text)>=? ORDER BY random() LIMIT ?",
+                           (int(least), int(most) * 3)).fetchall()
+    return [(r[0], r[1], r[2]) for r in rows if r[0] not in skip][:most]
+
+
 def notebook_pages(uid, since=0, doc=None, most=400):
     """The reMarkable pages changed since then (rmplus.py: @Spark, tasks, meetings, the week), newest first:
     [{"doc", "name", "page", "text", "done", "changed"}]; done False while the handwriting is not read yet.

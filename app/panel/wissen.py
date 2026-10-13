@@ -462,6 +462,10 @@ async def due_once(idle=True, now=None):
         _last["vectors"] = time.time()
         hintergrund.note(uid, "meaning", True, len(vecs), per_day=True)
         return "vectors"
+    import suchpruefung     # Suchprüfung (plan suche-schaerfen): the night's run, else one test question
+    got = await suchpruefung.due_once(now)
+    if got:
+        return got
     docembed.idle_stop(now)
     return None
 

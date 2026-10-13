@@ -731,7 +731,7 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "docling", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
+              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "docling", "search_check", "search_check_auto", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
               "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
               "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
               "systemone_klage"):
@@ -751,6 +751,9 @@ def validate(new):
     m = ch.get("doc_max_mb", 100)
     if not isinstance(m, int) or isinstance(m, bool) or not 20 <= m <= 300:
         raise HTTPException(400, "doc_max_mb: 20 to 300")
+    d = ch.get("search_check_day", 20)
+    if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 100:
+        raise HTTPException(400, "search_check_day: 5 to 100")
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")

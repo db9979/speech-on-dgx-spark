@@ -148,6 +148,9 @@
         <div class="fh" id="dlout" hidden></div>
       </div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Steckbrief und Tags</b><span>Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter jedes Dokuments; der Assistent sucht damit gezielter.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_brief"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Suchprüfung</b><span>Prüffragen mit bekannter richtiger Stelle messen nachts, wie gut die Dokumentensuche trifft; nur Zahlen, nichts ändert sich von selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.search_check"><i></i></label></div>
+      <div class="setrow" data-show="chat.search_check" style="margin-left:36px"><div class="lbl"><b>Prüffragen vom Spark</b><span>Das Sprachmodell schreibt in ruhigen Minuten zu zufälligen Stellen der Dokumente eine Frage; das Panel prüft sie nach festen Regeln.</span></div><label class="tgl"><input type="checkbox" id="chat.search_check_auto"><i></i></label></div>
+      <div data-show="chat.search_check_auto" style="margin-left:36px"><label>Prüffragen pro Tag und Profil</label><input class="num" id="chat.search_check_day" type="number" min="5" max="100"><div class="fh">5 bis 100, Standard 20. Höchstens 300 Prüffragen pro Profil, 3 pro Dokument.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Eigene Vorlagen</b><span>Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (ohne Makros, höchstens 10 MB); der Spark füllt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_templates"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Bilder aus dem Kiwix</b><span>Titelfolie und „Bild und Text“-Folien bekommen ein Bild aus der Wikipedia im eigenen Kiwix, mit Quelle. Braucht das Kiwix-Archiv.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_wikipics"><i></i></label></div>
@@ -669,6 +672,10 @@
     <div class="intro sm">Zeigt für einen Satz, ob er erst lokal gesucht wird, und was Dokumente, Kiwix-Archiv und frühere Gespräche finden, mit Zeiten. Gesucht wird in den Unterlagen des Profils, das in diesem Browser angemeldet ist. Schalter unter Funktionen → Websuche.</div>
     <div class="row" style="margin-top:12px"><input id="lktext" maxlength="500" placeholder="z. B. Wer war Albert Einstein?" autocomplete="off"><button class="b" id="lkgo">Testen</button></div>
     <div id="lkout"></div></div>
+  <div class="card" id="sprcard" hidden><h2>Suche prüfen</h2>
+    <div class="intro sm">Wie oft die Dokumentensuche bei den Prüffragen aller Profile die richtige Stelle unter den ersten 5 findet, nach Suchart. Nur Summen, nie eine Frage oder ein Dokument. Schalter unter Funktionen → Eigene Dokumente.</div>
+    <div class="row" style="margin-top:12px"><button class="b" id="sprgo">Jetzt prüfen</button><span id="sprgomsg" class="mut"></span></div>
+    <div id="sprout"></div></div>
   <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">
@@ -931,6 +938,7 @@
       <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docview" class="docview" hidden></div></div></div>
       <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
+      <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
       <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>
     <div id="voicebox" class="ptab"><div class="intro">Lies drei kurze Sätze vor. Danach erkennt der Assistent dich an der Stimme, auch an anderen Geräten, und antwortet mit deinem Gedächtnis, deinen Dokumenten und Einstellungen.</div>
       <div id="voicestate" class="mut" style="margin-top:8px"></div><div id="voicesay" class="voicesay" style="display:none"></div>
@@ -1073,6 +1081,7 @@
 <script src="/static/js/notaus.js"></script>
 <script src="/static/js/hilfe.js"></script>
 <script src="/static/js/erstellen.js"></script>
+<script src="/static/js/suchpruefung.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/schreib.js"></script>
 <script src="/static/js/begleiter.js"></script>

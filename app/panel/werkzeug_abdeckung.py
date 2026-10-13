@@ -111,6 +111,8 @@ WITHOUT = {
     "docfiles": "wirkt beim Einlesen",
     "docnight": "wirkt beim Einlesen",
     "docling": "wirkt beim Einlesen (liest im Hintergrund)",
+    "suchpruefung": "misst im Hintergrund, wie gut die Suche trifft (Ich → Dokumente)",
+    "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",
     "rmfresh": "wirkt beim Abgleich",
     # what the Spark does by itself
     "tippspush": "meldet sich von selbst",

@@ -279,6 +279,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Smoke test** (`test_rauchtest`) stays fast. It is the only test that tars runs for versions already checked. (M [[schonende-updates]])
 - **Quality test** (real model): a red case is first checked for whether the regex is too strict, and only then treated as a model error. (M)
 - **Field test:** every feature gets a check item at the bottom of `pruefung/praxistest-tars-2.md`. (M; 📝)
+- **Test bank of the document search:** whoever changes the document search (`documents.py` splitting, search, merging, later re-ranking) runs `test_suchpruefung`. The fixed test bank `tests/data/suchbank.json` must find at least `FLOOR` percent among the first 5 with the word search. The floor is only raised when the search got better, never lowered to turn green; new questions only come with an honestly measured number. (2026-10-13, plan suche-schaerfen; 🧪 test_suchpruefung)
 
 ---
 

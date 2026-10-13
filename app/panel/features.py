@@ -159,6 +159,12 @@ FEATURES = (
       parent="erstellen", me="docbox", guide="erstellenbilder"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
+    # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
+    # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
+    F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",
+      guide="suchpruefung"),
+    F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
+      parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday
     F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), pref="pro_on", me="probox", guide="proactive"),
     # Home Assistant tells the Spark (hamelden.py): each part below "Von selbst melden"

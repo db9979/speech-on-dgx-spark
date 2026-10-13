@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.516** Suchprüfung: Prüffragen messen nachts, wie oft die Dokumentensuche die richtige Stelle findet
 - **V01.0.515** Postfach aufräumen: eigenen Ordner direkt aus der Frage anlegen, wenn keiner passt
 - **V01.0.514** Speicher aufgeräumt: Ich → Speicher zeigt Orte (NAS, Cloud, Ordner) und darunter, wofür sie da sind; Funktionen → „Speicher und NAS“ mit „Kopie meiner Daten“ darunter
 - **V01.0.513** Logs ohne Inhalte: keine gesprochenen Befehle, Server-Antworten oder rohen Profil-IDs mehr in Logzeilen, ein Test macht neue rot
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.509** Freigabe vereinfacht: Freigegebenes gilt sofort für jedes Profil, nur der Admin sperrt einzelne Profile; Gäste nur Frage und Antwort
 - **V01.0.508** Eigene Aufgaben: Beobachten meldet nur Neues (Firmware, Folge, Preis), alle eigenen Aufgaben unter Ich → Aufträge zum Ändern und Pausieren
 - **V01.0.507** Pebble-Uhr-App zeigt die Comic-Frau
-- **V01.0.506** Neue Seite Zustand → Technik: Aufbau, Weg einer Anfrage und alle Speicherorte zum Durchklicken, immer aus dem Code
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
