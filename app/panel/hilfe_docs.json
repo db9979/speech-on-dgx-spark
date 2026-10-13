@@ -1013,7 +1013,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Präsentationen professionell (seit V01.0.465)",
-"text": "B), mit Quelle und Lizenzhinweis auf der Folie. Vor dem Schreiben schlägt der Spark den Titel in deinem Kiwix und deinen Dokumenten nach; jede Zahl im Text muss dort, in deinen Worten oder in den Fakten des Gesprächs stehen, sonst lässt er sie weg (kleine Anzahlen bis 10 ohne Einheit ausgenommen). Die Fertig-Meldung sagt, wie viel er weggelassen hat. Word und PDF zeigen Symbole, Zeitstrahl und Vergleich als eigene Blöcke, Markdown und eigene Vorlagen als Stichpunkte. Alles läuft ohne Internet."
+"text": "B), mit Quelle und Lizenzhinweis auf der Folie. Vor dem Schreiben schlägt der Spark den Titel in deinem Kiwix und deinen Dokumenten nach; jede Zahl im Text muss dort, in deinen Worten oder in den Fakten des Gesprächs stehen, sonst lässt er sie weg (kleine Anzahlen bis 10 ohne Einheit ausgenommen). Die Fertig-Meldung sagt, wie viel er weggelassen hat. Word und PDF zeigen Symbole, Zeitstrahl und Vergleich als eigene Blöcke, Markdown und eigene Vorlagen als Stichpunkte. Alles läuft ohne Internet. Den eigenen Schalter dafür gibt es seit V01.0.482 unter Ich → Dokumente → Einstellungen für Dokumente."
 },
 {
 "lang": "de",
@@ -4445,7 +4445,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Professional presentations (since V01.0.465)",
-"text": " Before writing the Spark looks the title up in your Kiwix and your documents; every number in the text must be there, in your words or in the facts of the conversation, otherwise it is left out (small counts up to 10 without a unit excepted). The ready note says how much was left out. Word and PDF show icons, timeline and comparison as blocks of their own, Markdown and own templates as bullet points. Everything works without the internet."
+"text": " Before writing the Spark looks the title up in your Kiwix and your documents; every number in the text must be there, in your words or in the facts of the conversation, otherwise it is left out (small counts up to 10 without a unit excepted). The ready note says how much was left out. Word and PDF show icons, timeline and comparison as blocks of their own, Markdown and own templates as bullet points. Everything works without the internet. The profile's own switch for it is under Me → Documents → Settings for documents since V01.0.482."
 },
 {
 "lang": "en",

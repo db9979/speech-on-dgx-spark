@@ -82,7 +82,8 @@ def _chat():
 
 # the switch words used here -> the functions in features.py
 DOC_FEATURE = {"pictures": "docpics", "semantic": "docmeaning", "originals": "docfiles", "night": "docnight",
-               "shared": "docshared", "brief": "docbrief", "make": "erstellen", "make_templates": "erstellenvorlagen"}
+               "shared": "docshared", "brief": "docbrief", "make": "erstellen", "make_templates": "erstellenvorlagen",
+               "make_wikipics": "erstellenbilder"}
 
 
 def admin_on(what):
@@ -547,8 +548,9 @@ def info(prof=Depends(own_profile)):
     uid = prof["id"]
     s = profiles.settings(uid)
     have, total = documents.vector_state(uid)
-    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates")},   # features.py
-            "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared", "brief", "due", "make", "make_templates")},
+    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief", "make", "make_templates", "make_wikipics")},   # features.py
+            "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared", "brief", "due", "make", "make_templates",
+                                                    "make_wikipics")},
             "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
             "used": documents.usage_total(uid), "space": quota_bytes(uid),

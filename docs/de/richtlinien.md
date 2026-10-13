@@ -160,6 +160,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Ein Register:** Jede Funktion steht genau einmal in `features.py`. Gespeicherte Schlüssel werden nie umbenannt, das Register übersetzt. Werte liest man nur über `profiles.effective(uid)`. Die Reihenfolge ist Admin-Vorgabe, dann eigene Werte, dann Gerät; Gerätewerte gibt es nur für Ortsabhängiges. (D, P vereinheitlichen; 🧪 test_features)
 - **Gesperrt heißt sichtbar:** Gesperrte Zeilen werden grau mit Grund gezeigt („Vom Admin ausgeschaltet“), nicht versteckt. Unter Ich stehen sie gesammelt in einem zugeklappten Kasten. Den Grund liefert `features.reason()`, nie das Modell. (D, P einstellungen-neu)
 - **Die Funktionen-Seite bleibt kurz.** Neue Unterfunktionen kommen als Unterschalter (`data-show`) unter ihren Hauptschalter. (M; 🧪 test_ui_browser Höhenbudget)
+- **Jeder Profil-Schalter ist unter Ich einstellbar:** Hat eine Funktion einen Profil-Schalter, bekommt sie im selben Commit ihren Schalter auf der Ich-Seite aus `me` (für Ich → Dokumente in `DOCSW` in `me.js` und `wissen.DOC_FEATURE`). Sonst lässt sich die Funktion nie einschalten, auch wenn der Admin sie an hat. (Dominik 2026-10-13; 🧪 test_features)
 - **Rollen:** Logs, Anfragen und Live sehen Haupt-Admin und Mit-Admin, der Verwalter nicht. (P anfrage-verfolgen, live-uebersicht)
 - Bauen nur nach Dominiks OK. Bei größeren Funktionen erst einen Plan unter `plaene/` mit Bildern, nummerierten Punkten und ★-Empfehlung. (PA, M)
 

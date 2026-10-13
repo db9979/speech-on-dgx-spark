@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.482** Schalter „Bilder aus dem Kiwix“ jetzt auch unter Ich → Dokumente
 - **V01.0.481** Tagesbriefing im Verlauf gegliedert mit Listen, Push weiter als schlichter Text
 - **V01.0.480** Keine erfundenen „Ja“ oder „Okay“ mehr nach Antworten: Stille, Klicks und der Signalton werden nicht zur Frage
 - **V01.0.479** Private Chats mit Ende-zu-Ende (Schlüssel je Gerät, Sicherheitsnummer, aus); alter Umschlag im Assistenten entfernt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.475** Rot-Fix: Selbsttests werden nicht mehr immer langsamer (Test-Panels hören nach ihrer Klasse auf)
 - **V01.0.474** Test-Fix nach V01.0.473: zwei Tests lassen kein Gerät und kein Home Assistant mehr zurück
 - **V01.0.473** Chats (aus): mit den anderen Personen deines Sparks schreiben wie im Messenger, auch in Gruppen, mit Fotos, Dateien, Sprachnachrichten und Einladung per QR; verschlüsselt auf dem Spark; Android-App 1.2.0 mit Mitteilungen sofort, iPhone-App mit Chats
-- **V01.0.472** Eigene Lautsprecher: „Jarvis“ beim Sprechen macht sofort still, „Stopp“ danach endet ohne Antwort; neuer Schalter „Stopp beim Vorlesen“ für „Stopp“ ohne Weckwort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

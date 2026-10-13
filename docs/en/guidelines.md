@@ -160,6 +160,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **One register:** every feature is listed exactly once in `features.py`. Stored keys are never renamed, the register translates. Values are read only via `profiles.effective(uid)`. The order is admin default, then own values, then device; device values exist only for location-dependent things. (D, P vereinheitlichen; 🧪 test_features)
 - **Locked means visible:** locked rows are shown grey with a reason ("Switched off by the admin" / "Vom Admin ausgeschaltet"), not hidden. Under Me they are collected in a collapsed box. The reason comes from `features.reason()`, never from the model. (D, P einstellungen-neu)
 - **The Features page stays short.** New sub-features come as sub-switches (`data-show`) under their main switch. (M; 🧪 test_ui_browser height budget)
+- **Every profile switch can be set under Me:** When a feature has a profile switch, it gets its toggle on the Me page named in `me` in the same commit (for Me → Documents in `DOCSW` in `me.js` and `wissen.DOC_FEATURE`). Otherwise the feature can never be switched on, even when the admin has it on. (Dominik 2026-10-13; 🧪 test_features)
 - **Roles:** logs, requests and Live are seen by the main admin and co-admin, not by the manager. (P anfrage-verfolgen, live-uebersicht)
 - Build only after Dominik's OK. For larger features first a plan under `plaene/` with pictures, numbered points and a ★ recommendation. (PA, M)
 

@@ -47,6 +47,27 @@ class Registry(unittest.TestCase):
             if f.parent:
                 self.assertIn(f.parent, features.BY_KEY, f.key)
 
+    def test_every_profile_switch_can_be_set_in_ich(self):
+        """Dominik 2026-10-13: "Bilder aus dem Kiwix" was on for the admin but missing in Ich → Dokumente. Every
+        profile switch of a function has a toggle on the Ich pages; Ich → Dokumente names it in DOCSW (me.js),
+        and /api/profile/wissen reports it."""
+        import wissen
+        js = os.path.join(PANEL, "static", "js")
+        src = "".join(open(os.path.join(js, n), encoding="utf-8").read() for n in os.listdir(js)
+                      if n.endswith(".js") and n not in ("i18n.js", "guides.js"))
+        src += open(os.path.join(PANEL, "static", "index.html"), encoding="utf-8").read()
+        me = open(os.path.join(js, "me.js"), encoding="utf-8").read()
+        doc = set(re.findall(r"\['(\w+)',t\(", me[me.index("const DOCSW"):me.index("const DOCSRC")]))
+        for f in features.FEATURES:
+            if not f.profile:
+                continue
+            if f.me == "docbox":
+                word = f.profile[4:]
+                self.assertIn(word, doc, f"{f.key}: add '{word}' to DOCSW in me.js")
+                self.assertEqual(wissen.DOC_FEATURE.get(word), f.key, f"{f.key}: add '{word}' to wissen.DOC_FEATURE")
+            else:
+                self.assertTrue(f'"{f.profile}"' in src or f"'{f.profile}'" in src, f"{f.key}: no toggle for {f.profile}")
+
     def test_every_switch_guide_has_a_function(self):
         with open(os.path.join(PANEL, "static", "js", "guides.js")) as f:
             js = f.read()
