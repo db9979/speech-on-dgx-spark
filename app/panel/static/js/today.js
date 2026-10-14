@@ -32,8 +32,8 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
   if(c.documents)cards.appendChild(tdCard(t('Dokumente','Documents'),String(c.documents.count),c.documents.waiting?c.documents.waiting+t(' Seiten warten aufs Lesen',' pages waiting to be read'):'','docbox'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
   // Mein Zustand (hintergrund.js): the short line here, the whole card under Ich → Mein Zustand
-  if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});
-    if(r.ok){const s=(await r.json()).sum||{};cards.appendChild(tdCard(t('Im Hintergrund','In the background'),
+  if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await api('/api/profile/hintergrund?brief=1',{cache:'no-store'});
+    {const s=(await r.json()).sum||{};cards.appendChild(tdCard(t('Im Hintergrund','In the background'),
       s.need?t(`${s.need} brauchen dich`,`${s.need} need you`):s.run?t('läuft','running'):t('in Ordnung','fine'),bgLine(s)||t('Für dich läuft nichts.','Nothing runs for you.'),'bgbox'))}}catch{}}
   if(cards.children.length){box.append(tdEl('div','mgrp',t('Heute','Today')),cards)}
   const tr=tdTry();if(tr.length){const tb=tdEl('div','ttry');tb.appendChild(tdEl('div','mgrp',t('Probier mal','Try saying')));

@@ -6,9 +6,9 @@ let HILFE=null;   // from /api/whoami: {suggest, page} for this profile, null = 
 function hilfeStart(h){HILFE=h&&typeof h==='object'?h:null;hilfeFab();if(HILFE&&HILFE.page&&!(HQIDS&&HQIDS.size))hilfeIds()}
 // the rows the help has an entry for (B3): a "?" stands only there, never one that would fall back to a general search
 let HQIDS=null,HQLOAD=null;
-function hilfeIds(){if(!HQLOAD)HQLOAD=fetch('/api/hilfe/ids').then(r=>r.ok?r.json():{ids:[]}).then(d=>{HQIDS=new Set(d.ids||[]);if(!HQIDS.size)HQLOAD=null;hilfeFab()}).catch(()=>{HQLOAD=null})}
+function hilfeIds(){if(!HQLOAD)HQLOAD=api('/api/hilfe/ids').then(r=>r.json()).catch(()=>({ids:[]})).then(d=>{HQIDS=new Set(d.ids||[]);if(!HQIDS.size)HQLOAD=null;hilfeFab()}).catch(()=>{HQLOAD=null})}
 // after the admin saved or Ich opened: what /api/whoami says now (the switches can have changed meanwhile)
-async function hilfeRefresh(){try{const w=await (await fetch('/api/whoami')).json();if(PROFILE||w.profile)hilfeStart(w.hilfe)}catch{}}
+async function hilfeRefresh(){try{const w=await (await api('/api/whoami')).json();if(PROFILE||w.profile)hilfeStart(w.hilfe)}catch{}}
 const HON=v=>v?t('an','on'):t('aus','off');
 function hilfeShow(x){   // "Zeig mir wo": the switch on its page
   $('fab').classList.remove('open');

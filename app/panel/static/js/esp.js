@@ -49,7 +49,7 @@ async function espConnect(){
   return {port,transport,loader,chip,mac,flashMB:flashKB?flashKB/1024:0}}
 async function espParts(parts){const out=[];let i=0;
   for(const p of parts){espLog(t('Lade Firmware vom Spark … ','Loading firmware from the Spark … ')+(++i)+'/'+parts.length);
-    const r=await fetch(p.url);if(!r.ok)throw new Error(p.file+': '+r.status);const u8=new Uint8Array(await r.arrayBuffer());
+    const r=await api(p.url).catch(e=>{throw new Error(p.file+': '+e.message)});const u8=new Uint8Array(await r.arrayBuffer());
     if(await sha256hex(u8)!==p.sha256)throw new Error(p.file+t(': Prüfsumme passt nicht.',': checksum does not match.'));out.push({address:p.address,u8,file:p.file})}
   return out}
 async function espWrite(c,files){espBar(0);

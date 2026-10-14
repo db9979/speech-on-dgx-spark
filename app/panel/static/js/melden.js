@@ -11,9 +11,7 @@ const RP_PART={requests:['Anfrage','request'],lines:['Logzeile','log line'],appl
 const rpWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):'';
 const rpArea=k=>{const a=((RP.d||{}).areas||[]).find(x=>x.key===k);return a?t(a.name[0],a.name[1]):k};
 function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.textContent=x||'';m.className='fh rpmsg'+(err?' err':'')}}
-async function rpLoad(){const r=await fetch('/api/report',{cache:'no-store'});
-  if(!r.ok){let x='';try{x=(await r.json()).detail}catch{}throw Object.assign(new Error(x||t('Gerade nicht erreichbar.','Not reachable right now.')),{status:r.status})}
-  RP.d=await r.json();return RP.d}
+async function rpLoad(){const r=await api('/api/report',{cache:'no-store'});RP.d=await r.json();return RP.d}
 // ---------------------------------------------------------------- the list and the form
 async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
   const intro=`<div class="intro">${t('Beschreib kurz, was nicht geklappt hat. Der Spark legt einen Entwurf an, ersetzt Namen, Mail-Adressen, Adressen und Inhalte durch Platzhalter und zeigt dir genau, was rausgehen würde. Erst nach deinem Blick geht es als Meldung (Issue) an GitHub.','Describe briefly what went wrong. The Spark makes a draft, replaces names, mail addresses, addresses and contents with placeholders and shows you exactly what would go out. Only after your look does it go to GitHub as a report (issue).')}</div>`;

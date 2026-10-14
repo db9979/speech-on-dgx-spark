@@ -13,7 +13,7 @@ function naWhen(ts){if(!ts)return '';const d=new Date(ts*1000),now=new Date();
   return d.toDateString()===now.toDateString()?hm:d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'numeric'})+' '+hm}
 function naLine(s){return [t('seit ','since ')+naWhen(s.since),s.by?t('von ','by ')+s.by:'',s.channel?t('über ','via ')+naChan(s.channel):''].filter(Boolean).join(' · ')
   +(s.reason?' · „'+s.reason+'“':'')}
-async function notausLoad(){try{const r=await fetch('/api/notaus',{cache:'no-store'});if(r.status===429)setTimeout(notausLoad,5000);if(!r.ok)return;NA.s=await r.json();naRender()}catch{}}
+async function notausLoad(){try{const r=await /*raw: api() calls notausLoad on a 503 (recursion)*/fetch('/api/notaus',{cache:'no-store'});if(r.status===429)setTimeout(notausLoad,5000);if(!r.ok)return;NA.s=await r.json();naRender()}catch{}}
 window.notausLoad=notausLoad;
 function naRender(){const s=NA.s,l=s.level||0,may=!!s.may,lift=s.lift||'';
   const btn=$('notausbtn');btn.hidden=!may;btn.querySelector('span').textContent=l?t('Stufe ändern','Change stage'):t('Notaus','Kill switch');
@@ -96,7 +96,8 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 // Home Assistant keys (notaus.py key_new): only the admin, made with a fresh code, shown once with a ready snippet
 async function naKeys(){const box=$('nakeys');if(!box||!NA.s.may)return;
-  try{const r=await fetch('/api/admin/notaus/keys',{cache:'no-store'});if(!r.ok){$('nakeysec').hidden=true;return}const d=await r.json();
+  let d;try{d=await (await api('/api/admin/notaus/keys',{cache:'no-store'})).json()}catch{$('nakeysec').hidden=true;return}
+  try{
     $('nakeysec').hidden=false;
     box.innerHTML=d.keys.length?d.keys.map(k=>`<li><span>${esc(k.name)}</span><span class="mut">${esc(t('angelegt ','made ')+naWhen(k.created))}${k.used?esc(' · '+t('zuletzt ','last ')+naWhen(k.used)):''}</span><button class="b" type="button" data-nakeydel="${esc(k.id)}">${esc(t('Löschen','Delete'))}</button></li>`).join('')
       :`<li class="mut">${esc(t('Noch kein Schlüssel.','No key yet.'))}</li>`;

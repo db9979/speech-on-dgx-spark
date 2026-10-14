@@ -69,7 +69,7 @@ function spBind(box,d,after,say){
     go('/api/profile/speicher/'+encodeURIComponent(c.dataset.spoffcopy),{method:'DELETE'},()=>t('Ausgeschaltet.','Switched off.'))})}
 // Zustand → Kopie meiner Daten (admin)
 async function zStore(){const box=$('zstore');if(!box||document.hidden)return;let d;
-  try{const r=await fetch('/api/admin/speicher',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/admin/speicher',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;const s=d.sum||{};
   $('zstorelist').innerHTML=`<div class="mut" style="margin-bottom:6px">${esc(t(`${s.targets} Speicher · ${spSize(s.bytes)} abgelegt · ${s.failing} mit Fehler · ${s.errors_today} Fehlversuche heute`,`${s.targets} targets · ${spSize(s.bytes)} stored · ${s.failing} failing · ${s.errors_today} failed tries today`))}</div>`+
     ((d.rows||[]).map(x=>{const [cls,word]=spState(x);return `<div class="zrow"><span class="pill ${cls}">${esc(word)}</span><span><b>${esc(x.profile)}</b> · ${esc(x.name)} · ${esc(t(...SP_KIND[x.kind]||SP_KIND.webdav))} · ${esc(t(...(SP_ZONE[x.zone]||SP_ZONE.net)))}<div class="mut">${esc(t(`${x.files} Dateien`,`${x.files} files`))} · ${esc(spSize(x.bytes))}${spFree(x.free)?' · '+esc(spFree(x.free)):''} · ${esc(t('zuletzt','last'))} ${esc(spWhen(x.last&&x.last.t))}${x.pending?' · '+esc(t(`${x.pending} warten`,`${x.pending} waiting`)):''}${x.away?' · '+esc(t(`${x.away} Originale nur dort`,`${x.away} originals only there`)):''}</div></span></div>`}).join('')

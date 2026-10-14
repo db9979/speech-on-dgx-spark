@@ -109,7 +109,7 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
     try{await api('/api/profile/nas/'+encodeURIComponent(b.dataset.nasdel),{method:'DELETE'});await after(t('Entfernt.','Removed.'))}catch(e){say('nasmsg',e.message,true)}})}
 // Zustand → Speicher und NAS (admin): per profile only name, kind, zone, state and uses (never an address or a password)
 async function zNas(){const box=$('znas');if(!box||document.hidden)return;let d;
-  try{const r=await fetch('/api/admin/nas',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/admin/nas',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;
   const row=(who,x)=>{const [cls,word]=nasState(x);return `<div class="zrow"><span class="pill ${cls}">${esc(word)}</span><span><b>${esc(who)}</b> · ${esc(x.name)} · ${esc(t(...NAS_KIND[x.kind]||NAS_KIND.webdav))} · ${esc(x.zone==='lan'?t('Heimnetz','home network'):t('Internet','internet'))}<div class="mut">${esc(Object.keys(x.uses||{}).map(k=>t(...(NAS_USE[k]||[k,k]))).join(', ')||t('noch nicht genutzt','not used yet'))}</div></span></div>`};
   $('znaslist').innerHTML=(d.rows||[]).map(x=>row(x.profile,x)).join('')+(d.spark||[]).map(x=>row('Spark',x)).join('')

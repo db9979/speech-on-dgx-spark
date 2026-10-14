@@ -4,10 +4,10 @@ let PRO_ON=false,S1MAIL_ON=false,HALIVE_ON=false,HALOUD_ON=false,HAEV_ON=false,H
 const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
   on(){return PRO_ON&&!!PROFILE&&!!S.pro_on},
   async poll(){if(!this.on()||document.hidden||this.busy)return;this.busy=true;
-    try{const r=await fetch('/api/proactive?since='+this.since);if(r.ok)for(const x of (await r.json()).items)this.show(x)}catch{}
+    try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/proactive?since='+this.since);if(r.ok)for(const x of (await r.json()).items)this.show(x)}catch{}
     this.busy=false},
   async greet(){if(!this.on()||document.hidden||Date.now()-this.greeted<10*60e3)return;this.greeted=Date.now();
-    try{const r=await fetch('/api/proactive/greet',{method:'POST'});const d=r.ok?await r.json():{};if(d.item)this.show(d.item)}catch{}},
+    try{const r=await /*raw: timer greeting, a 401/503 must stay silent*/fetch('/api/proactive/greet',{method:'POST'});const d=r.ok?await r.json():{};if(d.item)this.show(d.item)}catch{}},
   // a note is said on one device only: the first that plays it takes it on the Spark, the others stay silent
   async show(x){if(this.seen.has(x.id))return;this.seen.add(x.id);this.since=Math.max(this.since,x.t);
     try{const r=await api('/api/proactive/played',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
@@ -120,8 +120,8 @@ const PROBIND={
     if($('procam')&&$('procam').value.trim())body.camera=$('procam').value.trim();
     if($('proloud')&&$('proloud').checked){body.loud=true;body.speakers=[...document.querySelectorAll('#prospk input[data-spk]:checked')].map(x=>x.dataset.spk)}
     const ed=PRODEV.edit;
-    const r=await fetch('/api/proactive/rules'+(ed?'/'+encodeURIComponent(ed):''),{method:ed?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=errSay(r.status,d.detail,"");return}PRODEV.edit='';showPro()};
+    try{await api('/api/proactive/rules'+(ed?'/'+encodeURIComponent(ed):''),{method:ed?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}catch(e){m.className='fh err';m.textContent=e.message;return}
+    PRODEV.edit='';showPro()};
     $('proedno').onclick=()=>{PRODEV.edit='';showPro()}},
   haev(){if($('haevbox'))haEvents()}};
 // Picking devices for a rule (GET /api/proactive/ha-devices): a list to choose from, the last changed ones,

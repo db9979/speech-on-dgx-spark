@@ -13,7 +13,7 @@ function devKind(k){const n=t(k.name[0],k.name[1]),devs=k.devices||[];
     d.newer?' · <b>'+esc(d.auto===false?t('Update von Hand','update by hand'):t('Update ausstehend','update waiting'))+'</b>':d.newer===false?' · '+esc(t('aktuell','up to date')):''}${d.online===false?' · '+esc(t('nicht verbunden','not connected')):''}</li>`).join('');
   return `<div class="zrow"><span class="pill ${pill}">${ver}</span><span><b>${esc(n)}</b> · ${esc(cnt)} · ${esc(t('geprüft ','checked '))}${esc(DEVW(k.checked))}${k.error?' · '+esc(t('letzte Prüfung fehlgeschlagen','last check failed')):''}${list?`<ul class="bghist">${list}</ul>`:''}</span></div>`}
 async function zDev(d){const box=$('zdev');if(!box||document.hidden)return;
-  if(!d){try{const r=await fetch('/api/admin/devup',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}}
+  if(!d){try{d=await (await api('/api/admin/devup',{cache:'no-store'})).json()}catch{return}}
   box.hidden=!d.on;if(!d.on)return;
   const N=d.night||{},U=d.upstream||{};
   let night='';

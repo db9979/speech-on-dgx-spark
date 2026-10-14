@@ -18,7 +18,7 @@ function clRender(){const list=$('cllist'),info=$('clinfo'),more=$('clmore'),d=C
     (words.length?t(` · ${hits.length} gefunden`,` · ${hits.length} found`):'')}
 async function clOpen(){if(typeof closeSheet==='function')closeSheet();$('clmodal').style.display='grid';$('clq').value='';CL.shown=60;
   if(!CL.data){$('cllist').innerHTML=`<li class="mut">${esc(t('Lädt …','Loading …'))}</li>`;$('clinfo').textContent='';$('clmore').hidden=true;
-    try{const r=await fetch('/api/changelog',{cache:'no-store'});   // not api(): a guest gets a hint here, not the admin login
+    try{const r=await /*raw: a guest gets a hint here, not the login*/fetch('/api/changelog',{cache:'no-store'});
       if(r.status===401||r.status===403)throw new Error(t('Zum Ansehen bitte mit deinem Profil anmelden.','Please sign in with your profile to see it.'));
       if(!r.ok)throw new Error(t('Changelog gerade nicht abrufbar.','Changelog not available right now.'));
       const d=await r.json();if(!d||!Array.isArray(d.entries))throw new Error(t('Changelog nicht lesbar.','Changelog not readable.'));CL.data=d}

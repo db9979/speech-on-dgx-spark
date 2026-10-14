@@ -6,7 +6,7 @@
 let SETUP=null;
 const GO={step:null,data:null,from:false,hand:null,timer:null};
 // the public routes answer with their own codes; api() would open the admin login on a 401
-async function jpub(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
+async function jpub(p,b){const r=await /*raw: public route, api() would open the login on a 401*/fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
   let d={};try{d=await r.json()}catch{}
   if(!r.ok){const e=new Error(typeof d.detail==='string'?d.detail:'');e.status=r.status;throw e}return d}
 const jerr=e=>e.status===404?t('Einladungen sind auf diesem Spark gerade aus.','Invitations are switched off on this Spark right now.')

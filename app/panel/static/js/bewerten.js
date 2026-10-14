@@ -32,7 +32,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('.ratebar button'
     rateSend(bar,{good:false,grund:w?w.dataset.why:'',soll:so?so.dataset.soll:'',text:bar.querySelector('.rtext').value.trim().slice(0,200),frage:bar.querySelector('.rwith').checked})}});
 // Ich → Gespräch: proposals for the profile's own settings
 async function meBerater(){const box=$('mebvbox');if(!box)return;
-  let d;try{const r=await fetch('/api/me/berater',{cache:'no-store'});if(!r.ok){box.hidden=true;return}d=await r.json()}catch{box.hidden=true;return}
+  let d;try{d=await (await api('/api/me/berater',{cache:'no-store'})).json()}catch{box.hidden=true;return}
   box.hidden=!d.on||!(d.props||[]).length;if(box.hidden)return;
   $('mebvlist').innerHTML=d.props.map(p=>`<div class="zrow"><span><b>${esc(t(p.title[0],p.title[1]))}</b><div class="mut">${esc(t(p.why[0],p.why[1]))}</div></span>`+
     `<span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="b p" data-mebv="take" data-id="${esc(p.id)}">${esc(t('Übernehmen','Take'))}</button><button type="button" class="b" data-mebv="skip" data-id="${esc(p.id)}">${esc(t('Nein danke','No thanks'))}</button></span></div>`).join('')}

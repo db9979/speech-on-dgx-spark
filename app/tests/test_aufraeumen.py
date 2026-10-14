@@ -180,10 +180,7 @@ class OwnBodyReader(Ratchet, unittest.TestCase):
 
 class RawFetch(Ratchet, unittest.TestCase):
     WHAT = "a raw fetch( in a panel script, use api()/apiTry() from base.js"
-    ALT = {"admin.js": 4, "bewerten.js": 1, "changelog.js": 1, "coadmin.js": 1, "dienste.js": 1, "esp.js": 1,
-           "geraete.js": 1, "hilfe.js": 2, "hintergrund.js": 2, "join.js": 1, "laden.js": 2, "me.js": 8,
-           "melden.js": 1, "mfa.js": 2, "nas.js": 1, "nasquelle.js": 1, "notaus.js": 2, "proactive.js": 3,
-           "room.js": 6, "speicher.js": 1, "start.js": 2, "today.js": 1, "zuordnungen.js": 1}
+    ALT = {}   # all through api() or marked /*raw: why*/ since the big cleanup step 5
     OWN = {"base.js": "api() itself", "live.js": "live.html loads without base.js",
            "esptool.js": "the vendored flasher"}
 
@@ -194,7 +191,10 @@ class RawFetch(Ratchet, unittest.TestCase):
             if name in self.OWN:
                 continue
             with open(path, encoding="utf-8") as f:
-                n = len(re.findall(r"(?<![\w.$])fetch\(", f.read()))
+                src = f.read()
+            # a raw fetch with its reason right before it, /*raw: why*/fetch(, is a decided exception
+            n = sum(1 for m in re.finditer(r"(?<![\w.$])fetch\(", src)
+                    if not re.search(r"/\*raw: [^*]{3,}\*/\s*$", src[max(0, m.start() - 160):m.start()]))
             if n:
                 out[name] = n
         return out

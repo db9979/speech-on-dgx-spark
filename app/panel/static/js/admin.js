@@ -131,7 +131,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};
-  try{const r=await fetch('/api/admin/rooms',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{d=await (await api('/api/admin/rooms',{cache:'no-store'})).json()}catch{return}
   const all=d.rooms.concat(d.waiting.map(w=>Object.assign({wait:true},w)));box.hidden=!all.length;
   const hm=ms=>new Date(ms).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
   const L2=$('zrooms');L2.textContent='';
@@ -146,7 +146,7 @@ $('zroomall').onclick=async()=>{if(!confirm(t('Raum-Modus an allen Geräten been
 // Zustand → "Eigene Dokumente" (wissen.py): meaning model state and memory, pages waiting for the language
 // model, pieces with a meaning vector. Counts over all profiles only; shown while a switch is on.
 async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let d={on:false};
-  try{const r=await fetch('/api/admin/wissen',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{d=await (await api('/api/admin/wissen',{cache:'no-store'})).json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;const L2=$('zdoclist');L2.textContent='';
   const ago=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.')};
   const row=(cls,pill,title,text)=>{const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+cls;sp.textContent=pill;
@@ -731,7 +731,7 @@ function ulFail(head,text,log,cancel){ulStop();$('updlock').className='modal upd
   $('ulnote').textContent=t('Schlägt ein Schritt vor dem Umschalten fehl, läuft die bisherige Version weiter; danach wird sie wieder eingespielt. Die Zeile oben sagt, was passiert ist.','If a step before the switch fails, the previous version keeps running; after it, the previous version is installed again. The line above says what happened.');
   if(log&&log.length){$('ullog').textContent=log.join('\n');$('ullog').style.display='block'}
   $('ulbtns').style.display='flex';$('ulcancel').style.display=cancel?'':'none'}
-async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();if(ul.miss){ul.miss=0;$('ulnote').textContent=ulNote()}}
+async function ulPoll(){let p;try{const r=await /*raw: panel restarts during the update; 401/503 stay silent*/fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();if(ul.miss){ul.miss=0;$('ulnote').textContent=ulNote()}}
   catch{ul.miss++;$('ulnote').textContent=t('Das Panel startet gerade neu, das gehört dazu. Das Fenster wartet und macht von selbst weiter.','The panel is restarting right now, that is part of it. The window waits and carries on by itself.');return}
   const fresh=p.started&&p.started*1000>=ul.clicked-60000;
   if(p.done&&fresh){if(p.ok){ulStop();ul.said=0;ulSay(t('Fertig, lade neu …','Done, reloading …'),100);
@@ -745,7 +745,7 @@ async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if
 $('ulreload').onclick=()=>verReload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
 $('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}verReload()};
-async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await fetch('/api/update/progress?log=false')).json();if(p.running){ul.clicked=(p.started||0)*1000;ulShow()}}catch{}}
+async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await api('/api/update/progress?log=false')).json();if(p.running){ul.clicked=(p.started||0)*1000;ulShow()}}catch{}}
 setInterval(()=>{if(ADMIN)ulWatch()},8000);   // an update started from another tab or device locks this one too
 async function ulCheck(){await ulWatch();
   let v=null;try{v=sessionStorage.getItem('upddone');sessionStorage.removeItem('upddone')}catch{}

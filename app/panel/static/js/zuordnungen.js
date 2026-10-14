@@ -4,7 +4,7 @@
 // and asks "Wie sagst du dazu?". Shown only while "Rückfrage statt Raten" is on for the profile.
 let MAPS=null,MAPAREA='all',MAPEDIT=null,MAPNEW=null;
 window.meMaps=async function(){const box=$('mapbox');if(!box)return;
-  let d=null;try{const r=await fetch('/api/profile/zuordnungen');if(r.ok)d=await r.json()}catch{}
+  let d=null;try{d=await (await api('/api/profile/zuordnungen')).json()}catch{}
   box.hidden=!d;if(!d)return;MAPS=d;mapDraw()};
 function mapDraw(){const E=icEl,box=$('maplist'),tools=$('maptools');if(!box||!MAPS)return;tools.textContent='';box.textContent='';
   const areas=MAPS.areas||{},items=MAPS.items||[],an=k=>(areas[k]||[k,k])[L==='en'?1:0];

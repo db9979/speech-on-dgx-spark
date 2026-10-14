@@ -51,11 +51,11 @@ function bgFollow(){clearTimeout(bgTimer);bgTimer=setTimeout(async()=>{const box
   if(!document.hidden)await bgCard(card);bgFollow()},10e3)}
 function bgDotSet(s){document.querySelectorAll('.medot').forEach(e=>e.hidden=!(s&&s.need))}
 async function bgDot(){if(!PROFILE||!MYST_ON||document.hidden){if(!MYST_ON)bgDotSet(null);return}
-  try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});if(r.ok)bgDotSet((await r.json()).sum)}catch{}}
+  try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});if(r.ok)bgDotSet((await r.json()).sum)}catch{}}
 setInterval(bgDot,60e3);setTimeout(bgDot,3e3);
 // Zustand → Monitoring "Mein Zustand aller Profile" (admin): counts only, shown while the admin switch is on
 async function zBg(){const box=$('zbg');if(!box||document.hidden)return;let d={on:false};
-  try{const r=await fetch('/api/admin/hintergrund',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/admin/hintergrund',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;
   // each row opens its place (way.js): the profiles under Personen und Geräte, the parts on the own page Mein Zustand
   const part=(x,de,en)=>`<div class="zrow" data-way="${esc(t('Ich → Mein Zustand','Me → My status'))}"><span class="pill ${x.bad?'bad':x.wait?'warn':'ok'}">${esc(t(de,en))}</span><span>${esc(bgLine(x)||t('nichts','nothing'))}</span></div>`;

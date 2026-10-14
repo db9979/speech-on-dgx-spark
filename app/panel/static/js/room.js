@@ -23,13 +23,13 @@ window.room={on:false,speaking:false,id:'',key:'',until:0,lastAlive:0,lastPing:0
     if(!wake.on){this.on=false;$('chatroom').checked=false;return}
     // the Spark lists this page (Ich → Raum-Modus „Gerade aktiv“, the strip on every page, the admin, the app)
     const c=this.cfg();this.lastAlive=this.lastPing=Date.now();this.key='';
-    try{const r=await fetch('/api/room/start',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({room:this.id,mins:c.mins,name:c.name||roomDevName(),voices:RV_ON?c.voices:'all',probe:c.probe!==false})});
-      if(r.ok){const d=await r.json();this.key=d.key||'';if(d.until)this.until=d.until}}catch{}
+    try{const d=await (await api('/api/room/start',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({room:this.id,mins:c.mins,name:c.name||roomDevName(),voices:RV_ON?c.voices:'all',probe:c.probe!==false})})).json();
+      this.key=d.key||'';if(d.until)this.until=d.until}catch{}
     $('chatroom').checked=true;this.badge();roomLive.poll()},
   // why: how it ended, for the profile's history (time, voice, lost or here)
   stop(why){if(!this.on)return;this.on=false;this.wait=false;
-    fetch('/api/room/stop',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({room:this.id,why:['time','voice','lost'].includes(why)?why:'here'})})
+    /*raw: keepalive stop, also on page leave and when the room times out*/fetch('/api/room/stop',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({room:this.id,why:['time','voice','lost'].includes(why)?why:'here'})})
       .then(r=>r.json()).then(d=>this.recap(d.summary||[])).catch(()=>{});
     if(!$('chatwake').checked)stopWake();$('chatroom').checked=false;this.key='';this.badge();setTimeout(()=>roomLive.poll(),500)},
   badge(){const w=$('wakeind');w.classList.toggle('room',this.on);roomMark(this.on);
@@ -45,13 +45,13 @@ window.room={on:false,speaking:false,id:'',key:'',until:0,lastAlive:0,lastPing:0
     tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),...o})},
   async heard(text){if(!this.on)return;
     if(this.speaking&&/^\W*(stopp?|halt|ruhe|still|sei still|psst|nicht jetzt|jetzt nicht|schon gut|genug|aufhören|hör auf)\b/i.test(text))stopAnswer();
-    try{const r=await fetch('/api/room/heard',{method:'POST',headers:{'Content-Type':'application/json'},body:this.body({text})});if(!r.ok)return;
+    try{const r=await /*raw: hands-free in the background, no login or code prompt*/fetch('/api/room/heard',{method:'POST',headers:{'Content-Type':'application/json'},body:this.body({text})});if(!r.ok)return;
       const d=await r.json();if(d.stop)stopAnswer();if(d.reminder&&window.rem)rem.event({action:'set',item:d.reminder});if(d.say)this.say(d.say,d.silent);
       if(d.end){this.stop('voice');return}this.wait=!!d.wait;this.need=2.5}catch{}},
   // every minute a sign of life: the Spark keeps the page in its list and says when it was ended elsewhere
   // (Ich → Raum-Modus, the iPhone app, Home Assistant, the admin) or extended
   async alive(){const c=this.cfg();
-    try{const r=await fetch('/api/room/alive',{method:'POST',headers:{'Content-Type':'application/json'},
+    try{const r=await /*raw: background sign of life every minute, stays silent*/fetch('/api/room/alive',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({room:this.id,left:Math.max(60,(this.until-Date.now())/1000),name:c.name||roomDevName(),voices:RV_ON?c.voices:'all',probe:c.probe!==false})});
       if(!r.ok)return;const d=await r.json();if(!this.on)return;
       if(d.end){this.stop();chatLog('assistant',t('Raum-Modus wurde an einem anderen Ort beendet.','Room mode was ended elsewhere.')).classList.add('pro');return}
@@ -62,7 +62,7 @@ window.room={on:false,speaking:false,id:'',key:'',until:0,lastAlive:0,lastPing:0
     if(this.cfg().ping&&!this.quiet&&Date.now()-this.lastPing>15*60e3&&this.idle()&&!this.speaking&&!wake.seg){this.lastPing=Date.now();this.tone()}
     if(!this.wait||this.asking||wake.seg||!this.idle()||Date.now()-this.lastSpeech<this.need*1000)return;
     this.wait=false;this.asking=true;
-    try{const r=await fetch('/api/room/pause',{method:'POST',headers:{'Content-Type':'application/json'},body:this.body({quiet:(Date.now()-this.lastSpeech)/1000})});
+    try{const r=await /*raw: hands-free in the background, no login or code prompt*/fetch('/api/room/pause',{method:'POST',headers:{'Content-Type':'application/json'},body:this.body({quiet:(Date.now()-this.lastSpeech)/1000})});
       const d=r.ok?await r.json():{};if(d.end){this.asking=false;this.stop();return}if(d.again){this.need=d.again;this.wait=true}if(d.say)this.say(d.say,d.silent)}catch{}
     this.asking=false},
   // in the background or with the phone locked the microphone stops: after two minutes room mode ends
@@ -84,7 +84,7 @@ const roomHM=ms=>new Date(ms).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:
 const ROOM_VOICES={all:['hört allen zu','listens to everybody'],tv:['bekannte Stimmen, wenn TV läuft','known voices while the TV is on'],known:['nur bekannte Stimmen','known voices only']};
 window.roomLive={rooms:[],waiting:[],busy:false,
   async poll(){if(!PROFILE||!ROOM_ON){this.rooms=[];this.waiting=[];this.show();return}if(document.hidden||this.busy)return;this.busy=true;
-    try{const r=await fetch('/api/room/active',{cache:'no-store'});if(r.ok){const d=await r.json();this.rooms=d.rooms||[];this.waiting=d.waiting||[]}}catch{}
+    try{const d=await (await api('/api/room/active',{cache:'no-store'})).json();this.rooms=d.rooms||[];this.waiting=d.waiting||[]}catch{}
     this.busy=false;this.show()},
   name(x){return x.key===room.key&&room.on?t('Dieses Gerät','This device'):x.name},
   show(){const rs=this.rooms,b=$('roomlive');

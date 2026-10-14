@@ -12,7 +12,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_ROLE=who.admin_role||nu
     // Funktionen: only "Wer darf was" (the blocks, to lift them), not the settings form
     GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route');lastSec.feat='who'}
   // signing out is the profile's own sign-out: the admin rights end with it
-  const b=$('logoutbtn');b.onclick=async()=>{try{await fetch('/api/profile/logout',{method:'POST'})}catch{}location.reload()}}
+  const b=$('logoutbtn');b.onclick=async()=>{try{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'})}catch{}location.reload()}}
 // Ich → Sicherheit: the profile's own role, and why it rests when it does
 function coadmMe(){const box=$('coadmbox');if(!box)return;box.replaceChildren();if(!ADMIN_ROLE)return;
   const r=ADMIN_ROLE,lbl=document.createElement('label');lbl.textContent=t('Admin-Rechte','Admin rights');

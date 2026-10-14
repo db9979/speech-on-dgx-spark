@@ -29,7 +29,7 @@ const lzTimeout=()=>new Error(t('Keine Antwort nach 30 Sekunden. Der Spark arbei
 // fetch for api(): the bar, and what the band needs to know. Nothing is cut off here: a box gives up waiting by itself
 // after 30 s (ladeBox) and still shows the answer if it comes later.
 window.lzFetch=async(p,o={})=>{const end=lzBegin(false);
-  try{const r=await fetch(p,o);lzNet(r.status);return r}
+  try{const r=await /*raw: lzFetch is the loading bar api() itself uses*/fetch(p,o);lzNet(r.status);return r}
   catch(e){if(!(e&&e.name==='AbortError'))lzNet(0);throw e}
   finally{if(end)end()}};
 // ---------------------------------------------------------------- the band: the Spark does not answer
@@ -48,7 +48,7 @@ function lzCount(){const left=Math.ceil((LZ.next-Date.now())/1000);
   if(left<=0){lzPing();return}
   const m=$('lzbandmsg');if(m)m.textContent=t(`Neuer Versuch in ${left} s …`,`Trying again in ${left} s …`)}
 async function lzPing(){LZ.next=Date.now()+5e3;const m=$('lzbandmsg');if(m)m.textContent=t('Versuche …','Trying …');
-  try{const r=await fetch('/api/whoami',{cache:'no-store'});if(r.ok||r.status===401||r.status===403){LZ.fails=0;lzUp()}}catch{}}
+  try{const r=await /*raw: the is-the-Spark-back probe of the band api() uses*/fetch('/api/whoami',{cache:'no-store'});if(r.ok||r.status===401||r.status===403){LZ.fails=0;lzUp()}}catch{}}
 ON.lzPing=()=>lzPing();
 // back: the band goes, and the open page loads what it shows again (never the settings form: unsaved changes stay)
 function lzUp(){clearInterval(LZ.tick);LZ.tick=0;if(LZ.band)LZ.band.hidden=true;

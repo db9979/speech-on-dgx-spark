@@ -63,12 +63,12 @@ function confirmShow(until){CONF_UNTIL=until||0;let bar=$('confbar');
   if(CONF_UNTIL*1000<=Date.now()){if(bar)bar.remove();clearInterval(CONF_T);CONF_T=null;return}
   if(!bar){bar=document.createElement('div');bar.id='confbar';bar.className='updbanner';const sp=document.createElement('span');sp.id='conftext';
     const end=document.createElement('button');end.type='button';end.className='b';end.textContent=t('Beenden','End');
-    end.onclick=async()=>{try{await fetch('/api/confirm/end',{method:'POST'})}catch{}confirmShow(0)};
+    end.onclick=async()=>{try{await api('/api/confirm/end',{method:'POST'})}catch{}confirmShow(0)};
     bar.append(sp,end);$('updbanner').before(bar)}
   const tick=()=>{const left=Math.ceil((CONF_UNTIL*1000-Date.now())/60000);if(left<=0)return confirmShow(0);
     $('conftext').textContent=t(`Code bestätigt: wichtige Änderungen noch ${left} min ohne neuen Code.`,`Code confirmed: important changes need no new code for ${left} more min.`)};
   tick();clearInterval(CONF_T);CONF_T=setInterval(tick,20e3)}
-async function confirmRefresh(){try{const w=await (await fetch('/api/whoami',{cache:'no-store'})).json();confirmShow(w.confirm_until||0)}catch{}}
+async function confirmRefresh(){try{const w=await (await /*raw: called from inside api() after a code, kept out of it*/fetch('/api/whoami',{cache:'no-store'})).json();confirmShow(w.confirm_until||0)}catch{}}
 window.trustUi=trustUi;window.confirmShow=confirmShow;window.confirmRefresh=confirmRefresh;
 // Passkeys (Face ID, Touch ID, Windows Hello; passkey.py, V01.0.295): wherever a code is asked, the browser may sign
 // the panel's challenge instead. Only over the address with a name (https), never over an IP address.

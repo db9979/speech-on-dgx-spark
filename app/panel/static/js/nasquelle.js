@@ -74,7 +74,7 @@ function nqBind(box,after,say){if(!NQ)return;
     go('/api/profile/nasquelle/'+encodeURIComponent(b.dataset.nqdel),{method:'DELETE'},r=>t(`Entfernt, ${r.removed} Dokumente aus der Suche.`,`Removed, ${r.removed} documents out of the search.`))})}
 // Zustand → Speicher und NAS (admin): per profile numbers and state, never a path or a name of a file
 async function zNasquelle(){const box=$('znasquelle');if(!box||document.hidden)return;let d;
-  try{const r=await fetch('/api/admin/nasquelle',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/admin/nasquelle',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;
   $('znasquellelist').innerHTML=d.rows.length?d.rows.map(x=>`<div class="zrow"><span class="pill ${x.fail?(x.fail==='offline'?'warn':'bad'):'ok'}">${esc(x.fail?t(...(NAS_WHY[x.fail]||NAS_WHY.other)):t('aktuell','up to date'))}</span><span><b>${esc(x.haus?t('Haushalt','Household'):x.profile)}</b><div class="mut">${esc(t(`${x.files} Dokumente`,`${x.files} documents`))}${x.left?' · '+esc(t(`${x.left} warten`,`${x.left} waiting`)):''} · ${esc(t('zuletzt','last'))} ${esc(spWhen(x.last))}</div></span></div>`).join('')
     :`<div class="mut">${esc(t('Noch kein Profil liest einen Ordner.','No profile reads a folder yet.'))}</div>`}

@@ -430,8 +430,7 @@ $('calsave').onclick=async()=>{calMsg(t('Prüfe den Kalender …','Checking the 
   calMsg(t('Hinzugefügt. ','Added. ')+(d.check.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.')),false,d.check.events)};
 $('caltopsave').onclick=async()=>{const d=await (await api('/api/profile/calendar/topics',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({topics:$('caltopics').value.split(',').map(x=>x.trim()).filter(Boolean)})})).json();calRender(d);calMsg(t('Themen gespeichert.','Topics saved.'))};
 $('caltest').onclick=async()=>{calMsg(t('Lese die Kalender …','Reading the calendars …'));
-  const r=await fetch('/api/profile/calendar/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tz:TZ()})});const d=await r.json();
-  if(!r.ok){calMsg(errSay(r.status,d.detail,""),true);return}
+  let d;try{d=await (await api('/api/profile/calendar/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tz:TZ()})})).json()}catch(e){calMsg(e.message,true);return}
   calMsg(d.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.'),d.errors.length>0,[...d.events,...d.errors.map(e=>'⚠ '+e)])};
 // E-mail per profile, read only; the password is never sent back.
 const MAILKIND={icloud:t('Benutzer: deine iCloud-Mailadresse. Passwort: ein neues app-spezifisches Passwort von appleid.apple.com.','User: your iCloud mail address. Password: a new app-specific password from appleid.apple.com.'),
@@ -452,7 +451,7 @@ $('mailsave').onclick=async()=>{mailMsg(t('Prüfe das Postfach …','Checking th
   ['mailname','mailhost','mailuser','mailpw'].forEach(i=>$(i).value='');mailRender(d);
   mailMsg(t('Hinzugefügt. ','Added. ')+d.check.unread+t(' ungelesen, ',' unread, ')+d.check.total+t(' Mails in den letzten ',' mails in the last ')+d.check.days+t(' Tagen.',' days.'))};
 $('mailtest').onclick=async()=>{mailMsg(t('Lese die Postfächer …','Reading the mailboxes …'));
-  const r=await fetch('/api/profile/mail/test',{method:'POST'});const d=await r.json();if(!r.ok){mailMsg(errSay(r.status,d.detail,""),true);return}
+  let d;try{d=await (await api('/api/profile/mail/test',{method:'POST'})).json()}catch(e){mailMsg(e.message,true);return}
   mailMsg('',d.accounts.some(a=>!a.ok),d.accounts.map(a=>a.name+': '+(a.ok?a.unread+t(' ungelesen',' unread'):'⚠ '+a.error)))};
 // Home Assistant per profile; the token is never sent back, only whether one is stored.
 const haMsg=(x,err)=>{$('hamsg').textContent=x;$('hamsg').className='fh'+(err?' err':'')};
@@ -468,8 +467,7 @@ $('hadel').onclick=async()=>{if(!confirm(t('Home Assistant trennen?','Disconnect
 $('hacodesave').onclick=async()=>{const {r,d}=await apiTry('/api/profile/homeassistant/code',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:$('hacode').value})});
   if(!r.ok){haMsg(errSay(r.status,d.detail,""),true);return}haRender(d);haMsg(d.has_code?t('Codewort gespeichert.','Code word saved.'):t('Codewort entfernt.','Code word removed.'))};
 $('hatrygo').onclick=async()=>{const text=$('hatry').value.trim();if(!text)return;haMsg(t('Frage Home Assistant …','Asking Home Assistant …'));
-  const r=await fetch('/api/profile/homeassistant/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});const d=await r.json();
-  if(!r.ok){haMsg(errSay(r.status,d.detail,""),true);return}haMsg((d.targets&&d.targets.length?d.targets.join(', ')+': ':'')+d.answer,!d.ok)};
+  let d;try{d=await (await api('/api/profile/homeassistant/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json()}catch(e){haMsg(e.message,true);return}haMsg((d.targets&&d.targets.length?d.targets.join(', ')+': ':'')+d.answer,!d.ok)};
 // Voice enrollment for speaker identification: three sentences, each recorded and sent as WAV.
 const ENROLL=[['Der Herbstwind treibt bunte Blätter über die stille Straße, und irgendwo bellt ein Hund.','The autumn wind drives colourful leaves across the quiet street, and somewhere a dog barks.'],
   ['Kannst du mir bitte sagen, wie das Wetter morgen wird und ob ich einen Schirm brauche?','Could you please tell me what the weather will be like tomorrow and whether I need an umbrella?'],
@@ -613,9 +611,9 @@ $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/logi
         catch(e){$('profmsg').textContent=t('Passkey nicht angenommen.','Passkey not accepted.')}});return}
     $('profcode').value='';$('profcodebox').style.display='none';
     if(GATE||r.admin){location.reload();return}   // an admin profile: the page loads again with the admin menu
-    const who=await (await fetch('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
+    const who=await (await api('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
   catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
-$('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
+$('proflogout').onclick=async()=>{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
 // ---------------------------------------------------------------- conversation settings
@@ -660,8 +658,7 @@ const SETF=[
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
 // asked again each time the settings open: an empty answer (TTS still loading) must not stick for the page's life,
 // and the admin's list is not the profile's
-async function voiceList(admin){if(!PROFILE&&!admin)return [];try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');
-  return r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{return []}}
+async function voiceList(admin){if(!PROFILE&&!admin)return [];try{return ((await (await api(admin?'/api/tts/voices':'/api/assistant/voices')).json()).voices||[]).filter(x=>typeof x==='string')}catch{return []}}
 // Builds the settings rows into el; onchange(key, value) after each change. Returns a getter.
 async function renderSet(el,vals,onchange){const admin=!onchange,voices=await voiceList(admin);const v={...vals};
   // guests: default voice, nothing learned. need: a switch of the admin; switched off it stays visible, locked with
@@ -705,10 +702,10 @@ function meLayout(el){const panes=[...el.querySelectorAll(':scope>.setpane')];
   panes.forEach(p=>{const empty=!p.querySelector('.setrow');p.hidden=empty;const d=p.closest('details.mefold');if(d)d.hidden=empty});
   if(window.pageGroup)el.querySelectorAll('.setpane').forEach(window.pageGroup);if(window.pageSeg)window.pageSeg(el)}
 function applySet(){$('chathands').checked=!!S.hands;if(window.faceApply)faceApply();if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();syncSettings()}
-async function refreshAllow(){const d=await (await fetch('/api/profile/settings')).json();
+async function refreshAllow(){const d=await (await api('/api/profile/settings')).json();
   const a=d&&d.allow||{};if(JSON.stringify(a)===JSON.stringify(ALLOW))return;ALLOW=a;
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}
-async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
+async function loadSettings(){let d=null;try{d=await (await api('/api/profile/settings')).json()}catch{}
   SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};ALLOW=(d&&d.allow)||{};if(d)OFFLINE_HERE=!!d.offline_here;
   if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
   applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)}

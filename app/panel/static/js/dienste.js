@@ -15,7 +15,7 @@ function svRow(x){const name=t(x.name[0],x.name[1]);
   return `<div class="zrow"><span class="pill ${SVCP[x.watched&&x.set?x.st:'off']||''}">${esc(SVCW[x.watched&&x.set?x.st:'off']||x.st)}</span><span><b>${esc(name)}</b>${what?' · '+esc(what):''}${esc(parts)}${esc(today)}${
     x.set?'':' · '+esc(t('nicht eingerichtet','not set up'))}${x.st==='down'?`<div class="mut">${esc(x.what)}</div>`:''}</span>${box}</div>`}
 async function zWatch(d){const box=$('zsvc');if(!box||document.hidden)return;
-  if(!d){try{const r=await fetch('/api/admin/svcwatch',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}}
+  if(!d){try{d=await (await api('/api/admin/svcwatch',{cache:'no-store'})).json()}catch{return}}
   box.hidden=!d.on;if(!d.on)return;
   const log=(d.log||[]).map(x=>`<li>${esc(t(x.name[0],x.name[1]))} · ${esc(svDay(x.a))}${x.b?' – '+esc(svHM(x.b))+' ('+esc(svDur(x.a,x.b))+')':' · '+esc(t('noch weg','still gone'))}</li>`).join('');
   $('zsvclist').innerHTML=(d.paused?`<div class="note">${esc(t('Pausiert: der Spark startet oder spielt ein Update ein.','Paused: the Spark is starting or updating.'))}</div>`:'')+
