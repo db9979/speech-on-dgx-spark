@@ -136,9 +136,13 @@ fi
 # while the admin switch is on. The distribution's coturn.service is masked before installing, so it never starts
 # with its defaults; missing coturn only means calls stay at home (never stops an update).
 if [ "$MODE" = full ]; then
-  systemctl mask coturn.service >/dev/null 2>&1 || true
+  # mask --now: also stops one that already runs (coturn installed by hand before the mask: it holds port 3478)
+  systemctl mask --now coturn.service >/dev/null 2>&1 || true
   if ! command -v turnserver >/dev/null 2>&1; then
-    apt_wait install -y -q --no-install-recommends coturn || warn "coturn not installed: calls only work at home for now"
+    # an update skips "apt update" above, so the package lists may be too old to know coturn: fresh lists first
+    { apt-get -o DPkg::Lock::Timeout=120 update -q && \
+      apt-get -o DPkg::Lock::Timeout=120 install -y -q --no-install-recommends coturn; } \
+      || warn "coturn not installed: calls only work at home for now (sudo apt install coturn, then sudo speech-spark update)"
   fi
 fi
 PY=$(command -v python3)
@@ -894,6 +898,7 @@ cat >/etc/systemd/system/speech-spark-turn.service <<EOF
 Description=Speech on DGX Spark: relay for calls (TURN)
 After=network-online.target
 ConditionPathExists=$VAR/state/turn.conf
+ConditionPathExists=/usr/bin/turnserver
 
 [Service]
 LogNamespace=speech-spark
@@ -911,7 +916,8 @@ ReadWritePaths=$VAR/state
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
-RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# AF_NETLINK: coturn reads the own addresses (getifaddrs) and stops at once without it
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 CapabilityBoundingSet=
 LockPersonality=yes
 EOF

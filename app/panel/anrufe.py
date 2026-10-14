@@ -43,6 +43,7 @@ CRED_SECS = 3600         # how long the Vermittler's access for a call works
 TURN_PORT = 3478
 RELAY_MIN, RELAY_MAX = 49160, 49200
 TURN_UNIT = "speech-spark-turn"
+TURN_BIN = "/usr/bin/turnserver"   # from the coturn package (install.sh); its unit only starts when it is there
 CALL_ID = re.compile(r"[0-9a-f]{16}")
 DEV = re.compile(r"[0-9a-f]{12}")
 HOST = re.compile(r"(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
@@ -402,7 +403,7 @@ def turn_conf(host, ip, state):
     lines = [f"listening-port={TURN_PORT}", f"min-port={RELAY_MIN}", f"max-port={RELAY_MAX}", "fingerprint",
              "use-auth-secret", f"static-auth-secret={_secret()}", f"realm={host}", f"external-ip={ip}",
              "no-tls", "no-dtls", "no-cli", "no-multicast-peers", "no-tcp-relay", "user-quota=4", "total-quota=40",
-             "max-bps=4000000", "stale-nonce=600", "log-file=/dev/null", "no-stdout-log",
+             "max-bps=4000000", "stale-nonce=600", "log-file=/dev/null", "simple-log", "no-stdout-log",
              f"pidfile={os.path.join(state, 'turn.pid')}"]
     lines += [f"denied-peer-ip={r}" for r in DENIED]
     # the Spark's own addresses too (its public IPv6 address and the address from outside are not in DENIED)
@@ -423,6 +424,10 @@ def _systemctl(action):
     from core import run
     code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, TURN_UNIT], timeout=60)
     return code == 0
+
+
+def _installed():
+    return os.path.exists(TURN_BIN)
 
 
 def _active():
@@ -450,6 +455,11 @@ def apply_turn():
             _turn.update(conf="", ip="")
             _log("relay stopped")
         return "off"
+    if not _installed():     # coturn missing (an update could not install it): say so, never start a unit in vain
+        if _turn["why"] != "coturn fehlt":
+            _log("relay refused", why="not installed")
+        _turn.update(on=False, why="coturn fehlt")
+        return "missing"
     host = turn_host()
     try:
         ip = netguard.resolve(host, TURN_PORT, netguard.PUBLIC)

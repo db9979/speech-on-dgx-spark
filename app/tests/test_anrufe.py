@@ -251,6 +251,7 @@ class Vermittler(Base):
 
     def test_the_unit_follows_the_switch(self):
         with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \
+                mock.patch.object(anrufe, "_installed", return_value=True), \
                 mock.patch.object(anrufe, "_state_dir", return_value=tempfile.mkdtemp()), \
                 mock.patch("netguard.resolve", return_value="203.0.113.9"):
             self.assertEqual(anrufe.apply_turn(), "off")
@@ -269,10 +270,28 @@ class Vermittler(Base):
             sc.assert_called_with("stop")
             self.assertFalse(os.path.exists(path))
 
+    def test_without_coturn_nothing_starts_and_the_reason_shows(self):
+        with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \
+                mock.patch.object(anrufe, "_installed", return_value=False), \
+                mock.patch.object(anrufe, "_state_dir", return_value=tempfile.mkdtemp()):
+            helpers.set_config(calls_turn=True, calls_turn_host="spark.example.de")
+            try:
+                self.assertEqual(anrufe.apply_turn(), "missing")
+            finally:
+                helpers.set_config(calls_turn=False)
+            sc.assert_not_called()
+            self.assertEqual(anrufe._turn["why"], "coturn fehlt")
+            self.assertFalse(anrufe.relay_ok())
+            anrufe.apply_turn()
+        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
+            ins = f.read()
+        self.assertIn("ConditionPathExists=/usr/bin/turnserver", ins)   # no restart loop without the program
+        self.assertIn("RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK", ins)   # coturn reads its addresses
+
     def test_installed_as_its_own_unit_and_the_distribution_service_never_runs(self):
         with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
             ins = f.read()
-        self.assertIn("systemctl mask coturn.service", ins)
+        self.assertIn("systemctl mask --now coturn.service", ins)   # stopped too when it already ran
         self.assertIn("speech-spark-turn.service", ins)
         self.assertIn("tts-design turn; do", ins)                           # sudoers: start/stop/restart only
         self.assertNotIn("enable speech-spark-turn", ins)

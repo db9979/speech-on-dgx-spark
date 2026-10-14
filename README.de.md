@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.559** Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es
 - **V01.0.558** Ruhigere Seiten: Speichern lädt nicht mehr neu und springt nicht nach oben, das Update zeigt nur noch ein ruhiges Fenster
 - **V01.0.556** Anrufe mit Sprache und Video in Chats zu zweit, direkt von Gerät zu Gerät verschlüsselt; eigener Vermittler auf tars für unterwegs (Router: UDP 3478 und 49160–49200); Android-App 1.3.1 mit Kamera
 - **V01.0.555** Verbessern verständlicher: Karte mit Was, Woher, Warum, Was hilft, gebündelte Vorschläge, Ampel und Ganzer Weg
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.551** „Wer darf was“ zeigt nur noch Sperren; der Verwalter hebt nur Sperren auf, Funktionen schaltet nur der Admin
 - **V01.0.550** Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
 - **V01.0.549** Begleiter: Schalter „Mikrofon offen/zu“ (Windows und Mac), Ich → Begleiter zeigt ihn je Gerät
-- **V01.0.548** Wartungspause, während Sprachmodell, Spracherkennung oder Sprachausgabe aktualisiert werden
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

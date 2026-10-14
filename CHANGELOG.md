@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.559** · 2026-10-14 · Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es
 - **V01.0.558** · 2026-10-14 · Ruhigere Seiten: Speichern lädt nicht mehr neu, offene Funktion, Person und Scroll bleiben; nötiges Neuladen kommt an dieselbe Stelle; Update in einem ruhigen Fenster ohne Band, Balken nur vorwärts; Aufgeklapptes bleibt offen; Zustand fragt nur sichtbar alle 3 s
 - **V01.0.557** · 2026-10-14 · Verbrauchszähler: Tokens und Sekunden je Modell, Aufgabe und Profil unter Zustand → Verbrauch und Ich → Verbrauch, dazu ein Tageskontingent je Profil
 - **V01.0.556** · 2026-10-14 · Anrufe mit Sprache und Video in Chats zu zweit, direkt von Gerät zu Gerät verschlüsselt; eigener Vermittler auf tars für unterwegs (Router: UDP 3478 und 49160–49200); Android-App 1.3.1 mit Kamera
