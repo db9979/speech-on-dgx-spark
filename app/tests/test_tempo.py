@@ -243,13 +243,17 @@ class SpeechRefusal(unittest.TestCase):
         self.assertEqual("".join(e.get("delta", "") for e in evs if e["type"] == "text"), "Hallo.")
 
     def test_error_codes_are_explained_in_the_page(self):
-        """Logs → Anfragen shows a sentence for each error code (de and en), the code stays small beside it."""
+        """Logs → Anfragen shows a sentence for each error code (de and en), the code stays small beside it.
+        The sentences have one source (klartext.CODES); the page reads them from the traces answer."""
         import os
+        import klartext
         with open(os.path.join(os.path.dirname(chat.__file__), "static", "js", "logs.js"), encoding="utf-8") as f:
             js = f.read()
         for code in ("tts_http", "tts_voice", "tts_long", "tts_error", "tts_down", "llm_down", "llm_slow", "llm_auth",
                      "llm_model", "llm_error", "docmake", "error"):
-            self.assertRegex(js, code + r":\['[^']+','[^']+'\]", code)
+            de, en = klartext.code_text(code)
+            self.assertTrue(de and en and de != en, code)
+        self.assertIn(".codes", js)
         self.assertIn("'lcode'", js)
 
 
