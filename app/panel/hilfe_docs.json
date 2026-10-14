@@ -6213,7 +6213,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Live-Übersicht aktuell halten (live.py)",
 "title": "Live-Übersicht aktuell halten (live.py)",
-"text": ".outgoing; neue Wörter dort ergänzen. - Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über live._who."
+"text": ".outgoing; neue Wörter dort ergänzen. - Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über live._who. - Viele Ziele: Das Bild am Rechner wird mit der Zahl der Ziele höher (LV_ROW = 46 je Kasten in live.js layout), statt die Kästen zu stauchen; Name und Zustand bleiben im Kasten, lange Wörter enden mit „…“. tests/test_seitenrahmen.py (LiveBoxes) prüft das mit 16 Zielen bei 1280 und 1920 px."
 },
 {
 "lang": "de",
@@ -12189,7 +12189,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Keeping the live overview current (live.py)",
 "title": "Keeping the live overview current (live.py)",
-"text": "re. - Only fixed words and numbers, never contents; names only through live._who."
+"text": "re. - Only fixed words and numbers, never contents; names only through live._who. - Many targets: the computer picture grows with the number of targets (LV_ROW = 46 per box in live.js layout) instead of squeezing the boxes; name and state stay inside the box, long words end in \"…\". tests/test_seitenrahmen.py (LiveBoxes) checks it with 16 targets at 1280 and 1920 px."
 },
 {
 "lang": "en",

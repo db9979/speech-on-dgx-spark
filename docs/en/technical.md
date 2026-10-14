@@ -171,6 +171,7 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 - **Background work** runs through `vorrang.run`/`post`/`in_thread`/`quiet`/`hold` with a fixed name; that reports it to `live.bg` itself (no contents in the name).
 - **New entry check or guard level:** `guard.failed` and `netguard.resolve` already report to `live.refused` and `live.outgoing`; add new words there.
 - Only fixed words and numbers, never contents; names only through `live._who`.
+- **Many targets:** the computer picture grows with the number of targets (`LV_ROW` = 46 per box in `live.js layout`) instead of squeezing the boxes; name and state stay inside the box, long words end in "…". `tests/test_seitenrahmen.py` (LiveBoxes) checks it with 16 targets at 1280 and 1920 px.
 
 ## Tests
 

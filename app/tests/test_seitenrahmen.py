@@ -53,8 +53,8 @@ const r=e=>{const b=e.getBoundingClientRect();return[Math.round(b.left),Math.rou
 WIDE = "document.documentElement.scrollWidth<=document.documentElement.clientWidth"
 
 
-@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
-class Browser(unittest.TestCase):
+class Page:
+    """Signs in as admin and opens pages; the browser classes below share it."""
     @classmethod
     def setUpClass(cls):
         cls.port = helpers._port()
@@ -98,6 +98,10 @@ class Browser(unittest.TestCase):
             await self._until(pg, f"!!document.querySelector('main>section#{'cfg' if s == 'feat' else s}.on')")
         await self._until(pg, "!!window.lzIdle&&lzIdle()")
 
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Browser(Page, unittest.TestCase):
     async def _computer(self, w):
         async with async_playwright() as p:
             br, pg = await self._open(p, w, 900)
@@ -143,3 +147,63 @@ class Browser(unittest.TestCase):
     def test_nothing_wider_than_a_phone(self):
         for w, h in ((390, 844), (320, 700)):
             asyncio.run(self._phone(w, h))
+
+
+# every target box of the Live picture: its rect and whether its two lines stay inside it (and do not touch the next box)
+BOXES = """(()=>{const out=[];document.querySelectorAll('#lvflow svg g.node[data-node]').forEach(g=>{const id=g.dataset.node;
+if(!id.startsWith('t_'))return;const r=g.querySelector('rect').getBBox(),a=g.querySelector('text.a').getBBox(),b=g.querySelector('text.b').getBBox();
+out.push({id,h:r.height,y:r.y,top:a.y-r.y,bottom:r.y+r.height-(b.y+b.height),right:Math.max(r.x+r.width-(a.x+a.width),r.x+r.width-(b.x+b.width))})});return out})()"""
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class LiveBoxes(Page, unittest.TestCase):
+    """Dominik 2026-10-14: in Zustand → Live the boxes under „Dienste und Ziele“ were 22 high once there were 16 of
+    them (NAS, Wissensordner …): name and state spilled over the edges, only fullscreen fitted. Now the picture grows
+    with the number of targets, every box keeps its two lines inside, long words end in „…“."""
+
+    async def _run(self, w, h):
+        async with async_playwright() as p:
+            br, pg = await self._open(p, w, h)
+            try:
+                async def many(route):
+                    r = await route.fetch()
+                    d = await r.json()
+                    # home network ones: quiet internet targets would fold into „+ N ruhig“ depending on what else runs
+                    lan = [{"id": f"t_l{i}", "name": f"Dienst im Heimnetz {i} mit einem langen Namen", "sub": "3 Verbindungen · 2 Profile · Sicherung heute fertig", "zone": "lan"} for i in range(14)]
+                    d["targets"] = lan + d.get("targets", [])
+                    await route.fulfill(response=r, json=d)
+                await pg.route("**/api/admin/live", many)
+                await self._go(pg, "live")
+                await self._until(pg, "document.querySelectorAll('#lvflow svg g.node[data-node^=t_]').length>=14")
+                boxes = await pg.evaluate(BOXES)
+                self.assertGreaterEqual(len(boxes), 14)
+                ys = sorted(b["y"] + b["h"] for b in boxes)
+                for b in boxes:
+                    self.assertGreaterEqual(b["h"], 40, b)
+                    self.assertGreaterEqual(b["top"], 0, b)       # the name starts inside the box
+                    self.assertGreaterEqual(b["bottom"], 0, b)    # the state ends inside the box
+                    self.assertGreaterEqual(b["right"], 4, b)     # long words end in „…“ before the edge
+                tops = sorted(b["y"] for b in boxes)
+                self.assertTrue(all(tops[i + 1] >= ys[i] for i in range(len(tops) - 1)), "boxes overlap")
+                self.assertTrue(await pg.evaluate(WIDE), f"{w}: Live")
+                await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"live-ziele-{w}.png"), full_page=True)
+                self.assertEqual(self.errors, [])
+            finally:
+                await br.close()
+
+    def test_target_boxes_keep_their_text(self):
+        import json as _json
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = _json.load(f)
+        was = dict(c.get("logs", {}))
+        c.setdefault("logs", {}).update(live=True)
+        helpers.write_config(c)
+
+        def undo():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                cb = _json.load(f)
+            cb["logs"] = was
+            helpers.write_config(cb)
+        self.addCleanup(undo)
+        for w, h in ((1280, 900), (1920, 1000)):
+            asyncio.run(self._run(w, h))

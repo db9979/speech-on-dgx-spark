@@ -171,6 +171,7 @@ Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der
 - **Hintergrundarbeit** läuft über `vorrang.run`/`post`/`in_thread`/`quiet`/`hold` mit einem festen Namen; das meldet sie selbst an `live.bg` (kein Inhalt im Namen).
 - **Neue Prüfung am Eingang oder neue Wächter-Stufe:** `guard.failed` und `netguard.resolve` melden schon selbst an `live.refused` bzw. `live.outgoing`; neue Wörter dort ergänzen.
 - Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über `live._who`.
+- **Viele Ziele:** Das Bild am Rechner wird mit der Zahl der Ziele höher (`LV_ROW` = 46 je Kasten in `live.js layout`), statt die Kästen zu stauchen; Name und Zustand bleiben im Kasten, lange Wörter enden mit „…“. `tests/test_seitenrahmen.py` (LiveBoxes) prüft das mit 16 Zielen bei 1280 und 1920 px.
 
 ## Tests
 

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.561** Live: boxes under "Services and targets" keep their text in the normal view too
 - **V01.0.560** Maintenance pause by itself when a model restarts; speakers play the maintenance sentence; page in the iPhone app
 - **V01.0.559** Security fix for calls: the system's coturn service is masked and stopped on every update, coturn is installed reliably, the relay starts again (AF_NETLINK), the panel says when coturn is missing
 - **V01.0.558** Calmer pages: saving no longer reloads or jumps to the top, the update shows one calm window only
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.553** Maintenance pause: `sudo speech-spark pause` works again (could not find common.py)
 - **V01.0.552** Household folder: an admin picks a NAS folder for everyone, every profile finds its documents
 - **V01.0.551** "Who may do what" only shows blocks; the manager only lifts blocks, only the admin switches functions
-- **V01.0.550** Private chats: history from an old device to a new one; the new device shows a code, the old one wraps the keys once more after "Transfer", the Spark reads nothing
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

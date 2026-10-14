@@ -110,9 +110,13 @@ function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort
   const today=BUS.reduce((a,[k])=>a+(day[k]||0),0);
   o+=`<text class="bmono" x="${BUSX-6}" y="${bot+12}" text-anchor="end">sched-bus · ${run.length} ${tt('aktiv','active')} · ${tt('heute','today')} ${today}</text></g>`;
   return o}
+const LV_ROW=46;   // the smallest step between two target boxes in the computer picture
 function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.filter(r=>!r.net).slice(-4),net=reqs.filter(r=>r.net).slice(-3);
   const T=d.targets,order=[...T.filter(x=>x.zone!=='net'),...folded(d,T.filter(x=>x.zone==='net'))];let H;
-  if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));const NETY=Math.round(H*.58);
+  if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));
+    // every target box keeps room for its two lines (40 high, 46 apart): with many targets the picture grows instead of
+    // squeezing the boxes until name and state spill over their edges (Dominik 2026-10-14, NAS and Wissensordner made it 16)
+    H=Math.max(H,40+(order.some(x=>x.zone==='net')?24:0)+order.length*LV_ROW);const NETY=Math.round(H*.58);
     lan.filter(r=>!r.auto).forEach((r,i)=>pos['r'+r.id]={x:10,y:34+i*54,w:190,h:44});net.forEach((r,i)=>pos['r'+r.id]={x:10,y:NETY+14+i*54,w:190,h:44});
     STAGES.forEach((s,i)=>{const step=(H-40)/5;pos[s[0]]={x:470,y:34+step*i+(step-58)/2,w:200,h:58}});
     // a gap between home and internet targets: the INTERNET line runs in it, never across a box

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.561** Live: Kästen unter „Dienste und Ziele“ behalten ihren Text auch in der normalen Ansicht
 - **V01.0.560** Wartungspause von selbst, wenn ein Modell neu startet; Lautsprecher spielen den Wartungssatz; Seite in der iPhone-App
 - **V01.0.559** Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es
 - **V01.0.558** Ruhigere Seiten: Speichern lädt nicht mehr neu und springt nicht nach oben, das Update zeigt nur noch ein ruhiges Fenster
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.553** Wartungspause: `sudo speech-spark pause` läuft wieder (fand common.py nicht)
 - **V01.0.552** Haushaltsordner: ein Admin wählt einen NAS-Ordner für alle, jedes Profil findet die Dokumente
 - **V01.0.551** „Wer darf was“ zeigt nur noch Sperren; der Verwalter hebt nur Sperren auf, Funktionen schaltet nur der Admin
-- **V01.0.550** Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
