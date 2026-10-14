@@ -1066,6 +1066,15 @@ internal sealed partial class TrayContext
         }
     }
 
+    /// <summary>„Mikrofon zu“ während einer Besprechung: sie endet wie über „Beenden“.</summary>
+    private void EndMeetingForMic()
+    {
+        if (_meeting is { Ending: false } session)
+        {
+            _ = EndMeetingAsync(session);
+        }
+    }
+
     private async Task EndMeetingAsync(MeetingSession session)
     {
         if (session.Ending || session.Aborted)

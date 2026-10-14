@@ -246,7 +246,8 @@ final class AppModel: ObservableObject {
             if config == nil {
                 try await loadConfig(client)
             }
-            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)&\(versionQuery)")
+            let mic = MicSwitch.shared.closed ? "closed" : "open"   // only this state, never sound
+            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)&mic=\(mic)&\(versionQuery)")
             guard client === self.client else { return 1 }
             let pollUpdate = d["update"] as? String          // null or "1.0.350"
             if let rev = (d["rev"] as? NSNumber)?.intValue, rev != config?.rev {
@@ -584,7 +585,13 @@ final class AppModel: ObservableObject {
     /// The face in the menu bar: a template silhouette when all is well, with a coloured dot otherwise
     /// (grey not reachable, red Notaus, accent when an update is there).
     var menuIcon: NSImage {
-        MenuIcon.image(dot: menuDot, moon: paired && part("quiet") && Quiet.shared.busy, face: face)
+        MenuIcon.image(dot: menuDot, moon: paired && part("quiet") && Quiet.shared.busy, face: face,
+                       micClosed: paired && usesMic && MicSwitch.shared.closed)
+    }
+
+    /// parts that can open the microphone (the mic buttons in the windows belong to "dictate")
+    var usesMic: Bool {
+        part("dictate") || part("ask") || part("wake") || part("meeting")
     }
 
     /// the face for every window and the menu bar: the Spark's choice, before the first config the last one

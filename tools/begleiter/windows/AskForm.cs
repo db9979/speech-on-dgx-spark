@@ -518,7 +518,7 @@ internal sealed class AskForm : ThemedForm
 
         if (wav is null)
         {
-            SetStatus("Die Aufnahme war zu kurz.", error: true);
+            SetStatus(Recorder.NothingText, error: true);
             _send.Enabled = !_busy;
             RefreshParts();
             return;

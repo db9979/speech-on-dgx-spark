@@ -82,8 +82,8 @@ internal sealed partial class TrayContext
             _folder = null;
         }
 
-        // wake
-        if (IsOn(Parts.Wake))
+        // wake (nie bei „Mikrofon zu“)
+        if (IsOn(Parts.Wake) && !MicSwitch.Closed)
         {
             if (_wake is null)
             {
@@ -186,7 +186,13 @@ internal sealed partial class TrayContext
             any = true;
         }
 
-        if (IsOn(Parts.Wake))
+        if (UsesMic())
+        {
+            _menu.Items.Add(new ToolStripMenuItem(MicItemText(), null, (_, _) => ToggleMic()));
+            any = true;
+        }
+
+        if (IsOn(Parts.Wake) && !MicSwitch.Closed)
         {
             _menu.Items.Add(new ToolStripMenuItem(WakeItemText(), null, (_, _) => ToggleWakePause()) { Enabled = _wake is not null });
             any = true;
@@ -219,7 +225,12 @@ internal sealed partial class TrayContext
             items.Add(new PanelItem("Wissen-Ordner öffnen", Glyph.Folder, null, OpenWissenFolder));
         }
 
-        if (IsOn(Parts.Wake))
+        if (UsesMic())
+        {
+            items.Add(new PanelItem(MicItemText(), MicSwitch.Closed ? Glyph.MicOff : Glyph.Mic, null, ToggleMic));
+        }
+
+        if (IsOn(Parts.Wake) && !MicSwitch.Closed)
         {
             items.Add(new PanelItem(WakeItemText(), Glyph.Wave, null, ToggleWakePause, Enabled: _wake is not null));
         }
@@ -230,6 +241,35 @@ internal sealed partial class TrayContext
         }
 
         AddPanelItems4(items);
+    }
+
+    /// <summary>Teile, die das Mikrofon öffnen können (Mikrofon-Knöpfe in den Fenstern hängen an „Diktieren“).</summary>
+    private bool UsesMic() => IsOn(Parts.Dictate) || IsOn(Parts.Ask) || IsOn(Parts.Wake) || IsOn(Parts.Meeting);
+
+    private static string MicItemText() => MicSwitch.Closed ? "Mikrofon öffnen (ist zu)" : "Mikrofon schließen (ist offen)";
+
+    /// <summary>
+    /// „Mikrofon offen/zu“ (Dominik 2026-10-14): zu schließt wirklich – Weckwort aus, laufende Aufnahmen verworfen,
+    /// eine Besprechung endet (das bisher Mitgeschriebene wird wie beim Beenden ausgewertet). Bleibt nach Neustart.
+    /// </summary>
+    private void ToggleMic()
+    {
+        bool closed = !MicSwitch.Closed;
+        MicSwitch.Set(closed);
+        _config.MicClosed = closed;
+        TrySave();
+        if (closed)
+        {
+            StopWake();
+            Recorder.DiscardActive();
+            EndMeetingForMic();
+        }
+
+        SyncParts();
+        BuildMenu();
+        RefreshPanel();
+        Notify(closed ? "Mikrofon zu: der Begleiter hört nichts, bis du es wieder öffnest." : "Mikrofon offen.", ToolTipIcon.Info);
+        _ = PollAsync(); // das Panel erfährt den neuen Zustand gleich
     }
 
     private string WakeItemText()

@@ -144,6 +144,38 @@ class Begleiter(unittest.TestCase):
         bad = TestClient(panel.app, client=HOME, headers={profiles.DEVICE_HEADER: "sd_unknown"})
         self.assertEqual(bad.get("/api/desk/poll").status_code, 401)   # an unknown key still means: pair again
 
+    def test_mic_switch_shows_per_device_and_counts_in_live(self):
+        """Dominik 2026-10-14 ("1-3"): the program's switch "Mikrofon offen/zu" travels with the poll (only the state,
+        never sound); Ich → Begleiter shows it per device, Live only the count; one log line per change."""
+        import io
+        import contextlib
+        import time
+        import begleiter
+        import live
+        c = self.on("DkMic")
+        _, prog = self.pair(c)
+        did = c.get("/api/profile/desk").json()["devices"][0]["id"]
+        try:
+            self.assertEqual(prog.get("/api/desk/poll").status_code, 200)   # older programs send nothing: open
+            self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["mic"], "open")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(prog.get("/api/desk/poll?mic=closed").status_code, 200)
+                self.assertEqual(prog.get("/api/desk/poll?mic=closed").status_code, 200)
+            self.assertEqual(out.getvalue().count("begleiter: Mikrofon zu"), 1)
+            self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["mic"], "closed")
+            rows = [x for x in live._conns(time.time()) if x["name"] == "Begleiter mit Mikrofon zu"]
+            self.assertEqual([x["n"] for x in rows], [1])
+            self.assertEqual(prog.get("/api/desk/poll?mic=bogus").status_code, 200)     # unknown words change nothing
+            self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["mic"], "closed")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                prog.get("/api/desk/poll?mic=open")
+            self.assertIn("begleiter: Mikrofon offen", out.getvalue())
+            self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["mic"], "open")
+        finally:
+            begleiter._mic.pop(did, None)
+
     def test_program_gets_the_face_the_admin_picked(self):
         """V01.0.395: config names the face (robot or comic) like whoami; another face raises rev, so the
         program draws it with its next poll. Unknown names stay the robot."""
@@ -1358,6 +1390,60 @@ class FieldMics(unittest.TestCase):
             text = self.src("mac", "Sources", f)
             for i in ids:
                 self.assertIn(f'"{i}"', text, f)
+
+
+class MicSwitch(unittest.TestCase):
+    """Dominik 2026-10-14 ("1-3"): one switch "Mikrofon offen/zu" in the companion. Closed really closes: every way
+    that opens the microphone asks it first (wake word, dictation and mic buttons, "Frag Spark", meeting), a running
+    recording is discarded, a meeting ends; the state stays after a restart and the icon shows a struck-through mic."""
+    ROOT = Office.ROOT
+
+    def src(self, *path):
+        return Office.src(self, *path)
+
+    def test_windows_every_mic_asks_the_switch(self):
+        for name, start in (("Recorder.cs", "public static Recorder? TryStart"),
+                            ("WakeListener.cs", "public static WakeListener? TryStart"),
+                            ("MeetingRecorder.cs", "public static MeetingRecorder? TryStart")):
+            code = self.src("windows", name)
+            body = code[code.index(start):]
+            self.assertLess(body.index("MicSwitch.Closed"), body.index("waveInOpen"), name)
+        rec = self.src("windows", "Recorder.cs")
+        self.assertIn("return _discard || pcm.Length < MinBytes ? null", rec)    # discarded: nothing goes out
+        for name in ("DictateMic.cs", "AskForm.cs", "TrayContext.cs"):
+            self.assertNotIn("Die Aufnahme war zu kurz.", self.src("windows", name), name)
+        parts = self.src("windows", "TrayContext.Parts.cs")
+        toggle = parts[parts.index("private void ToggleMic()"):parts.index("private string WakeItemText()")]
+        for step in ("_config.MicClosed = closed;", "TrySave();", "StopWake();", "Recorder.DiscardActive();", "EndMeetingForMic();"):
+            self.assertIn(step, toggle)
+        self.assertIn("IsOn(Parts.Wake) && !MicSwitch.Closed", parts)
+        tray = self.src("windows", "TrayContext.cs")
+        self.assertIn("MicSwitch.Set(_config.MicClosed);", tray)
+        self.assertIn("micClosed: MicSwitch.Closed && UsesMic()", tray)
+        self.assertIn('"&mic=" + (micClosed ? "closed" : "open")', self.src("windows", "SparkClient.cs"))
+
+    def test_mac_every_mic_asks_the_switch(self):
+        rec = self.src("mac", "Sources", "Recorder.swift")
+        self.assertIn("UserDefaults.standard.set(closed, forKey: Self.key)", rec)
+        self.assertIn("Dictation.shared.discard()", rec)
+        self.assertIn("await Meeting.shared.end()", rec)
+        dic = self.src("mac", "Sources", "Dictation.swift")
+        self.assertLess(dic.index("MicSwitch.shared.closed"), dic.index("try recorder.start()"))
+        wake = self.src("mac", "Sources", "Wake.swift")
+        self.assertIn("if wanted && !paused && !MicSwitch.shared.closed", wake)
+        self.assertIn("guard wanted, !paused, !MicSwitch.shared.closed, engine == nil", wake)
+        meet = self.src("mac", "Sources", "Meeting.swift")
+        start = meet[meet.index("func start() async"):]
+        self.assertLess(start.index("MicSwitch.shared.closed"), start.index("startMic()") if "startMic()" in start else len(start))
+        model = self.src("mac", "Sources", "Model.swift")
+        self.assertIn('&mic=\\(mic)&', model)
+        self.assertIn("micClosed: paired && usesMic && MicSwitch.shared.closed", model)
+        self.assertIn("mic.toggle()", self.src("mac", "Sources", "TrayPanel.swift"))
+
+    def test_panel_shows_the_state_only_when_connected(self):
+        with open(os.path.join(os.path.dirname(__file__), "..", "panel", "static", "js", "begleiter.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("x.online?' · '+(x.mic==='closed'", js)
 
 
 class Labels(unittest.TestCase):

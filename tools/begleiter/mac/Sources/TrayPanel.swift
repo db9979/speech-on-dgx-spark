@@ -37,6 +37,7 @@ struct TrayPanel: View {
     @ObservedObject var speaker = Speaker.shared
     @ObservedObject var meeting = Meeting.shared
     @ObservedObject var quiet = Quiet.shared
+    @ObservedObject var mic = MicSwitch.shared
     @ObservedObject var agenda = AgendaCenter.shared
     @ObservedObject var home = HomeCenter.shared
     @State private var holder = PanelWindow()
@@ -171,6 +172,24 @@ struct TrayPanel: View {
             partRow("quiet", "Nicht stören erkennen", symbol: quiet.busy ? "moon.fill" : "moon", hotkey: nil,
                     note: quiet.text) {
                 quiet.check()
+            }
+            if model.usesMic {
+                Button {
+                    go { mic.toggle() }
+                } label: {
+                    HStack(spacing: 10) {
+                        IconTile(symbol: mic.closed ? "mic.slash" : "mic", color: mic.closed ? Theme.bad : Theme.accent)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(verbatim: mic.closed ? "Mikrofon öffnen" : "Mikrofon schließen")
+                                .font(.system(size: 13))
+                            Text(verbatim: mic.closed ? "ist zu: nichts hört mit" : "ist offen")
+                                .font(.system(size: 11))
+                                .foregroundColor(mic.closed ? Theme.bad : Theme.muted)
+                        }
+                        Spacer()
+                    }
+                }
+                .buttonStyle(RowButtonStyle())
             }
             partRow("wake", wake.paused ? "Weckwort fortsetzen" : "Weckwort pausieren",
                     symbol: wake.paused ? "ear" : "pause.circle", hotkey: nil, note: wakeNote) {
@@ -309,6 +328,7 @@ struct TrayPanel: View {
     }
 
     private var wakeNote: String {
+        if mic.closed { return "Mikrofon zu" }
         if !wake.problem.isEmpty { return wake.problem }
         if wake.paused { return "pausiert" }
         if wake.question { return "hört deine Frage …" }

@@ -147,6 +147,7 @@ internal enum Glyph
     Bell,
     Speaker,
     Record,
+    MicOff,
 }
 
 internal static class Glyphs
@@ -176,6 +177,7 @@ internal static class Glyphs
                     g.DrawPolygon(pen, new PointF[] { new(3, 4), new(13, 4), new(13, 10), new(7, 10), new(4, 13), new(4, 10), new(3, 10) });
                     break;
                 case Glyph.Mic:
+                case Glyph.MicOff:
                     using (GraphicsPath capsule = SparkBegleiter.Draw.Round(new RectangleF(6, 2, 4, 8), 2))
                     {
                         g.DrawPath(pen, capsule);
@@ -183,6 +185,11 @@ internal static class Glyphs
 
                     g.DrawArc(pen, 4, 4, 8, 8, 180, -180);
                     g.DrawLine(pen, 8, 12, 8, 14);
+                    if (glyph == Glyph.MicOff)
+                    {
+                        g.DrawLine(pen, 3, 2, 13, 14); // durchgestrichen: zu
+                    }
+
                     break;
                 case Glyph.Octagon:
                     g.DrawPolygon(pen, new PointF[] { new(5.5f, 2), new(10.5f, 2), new(14, 5.5f), new(14, 10.5f), new(10.5f, 14), new(5.5f, 14), new(2, 10.5f), new(2, 5.5f) });

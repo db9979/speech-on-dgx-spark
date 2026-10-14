@@ -141,6 +141,10 @@ final class Meeting: ObservableObject {
             return
         }
         guard phase == .idle else { return }
+        guard !MicSwitch.shared.closed else {
+            HUD.show(MicSwitch.closedText, symbol: "mic.slash")
+            return
+        }
         guard consent() else { return }
         guard await Recorder.micAllowed() else {
             NSApp.activate(ignoringOtherApps: true)

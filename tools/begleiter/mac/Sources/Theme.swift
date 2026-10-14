@@ -389,7 +389,8 @@ enum MenuIcon {
     /// other icons); with a dot it is drawn in colour, the dot bottom right.
     /// `moon`: part "quiet" found the person busy (a call, a presentation): a small crescent top left.
     /// `face` "comic" or "comic_woman": the comic still in colour (a silhouette of it would only be a disc), dot and moon as usual.
-    static func image(dot: Dot, moon: Bool = false, face: FaceKind = .robot) -> NSImage {
+    /// `micClosed`: "Mikrofon zu": a struck-through microphone bottom left.
+    static func image(dot: Dot, moon: Bool = false, face: FaceKind = .robot, micClosed: Bool = false) -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let comic = face != .robot
         let img = NSImage(size: size, flipped: true) { rect in
@@ -400,11 +401,31 @@ enum MenuIcon {
                 draw(in: rect, coloured: dot != .plain, dot: dot)
             }
             if moon { drawMoon(in: rect, coloured: comic || dot != .plain) }
+            if micClosed { drawMicClosed(in: rect, coloured: comic || dot != .plain) }
             return true
         }
         img.isTemplate = !comic && dot == .plain
         img.accessibilityDescription = "Spark-Begleiter"
         return img
+    }
+
+    /// a struck-through microphone in the bottom-left corner, with a clear ring like the moon
+    private static func drawMicClosed(in rect: NSRect, coloured: Bool) {
+        let d: CGFloat = 9
+        let disc = NSRect(x: rect.minX, y: rect.maxY - d, width: d, height: d)
+        guard let ctx = NSGraphicsContext.current,
+              let symbol = NSImage(systemSymbolName: "mic.slash.fill", accessibilityDescription: "Mikrofon zu") else { return }
+        ctx.saveGraphicsState()
+        ctx.compositingOperation = .clear
+        NSBezierPath(ovalIn: disc.insetBy(dx: -1.2, dy: -1.2)).fill()
+        ctx.restoreGraphicsState()
+        let tinted = NSImage(size: disc.size, flipped: false) { r in
+            symbol.draw(in: r)
+            (coloured ? NSColor(hex: 0xc0392b) : NSColor.black).set()
+            r.fill(using: .sourceAtop)
+            return true
+        }
+        tinted.draw(in: disc, from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
     }
 
     /// a crescent in the top-left corner, with a clear ring so it stands apart from the face

@@ -12,6 +12,7 @@ struct SparkBegleiterApp: App {
     @ObservedObject private var wake: Wake
     @ObservedObject private var quiet: Quiet
     @ObservedObject private var meeting: Meeting
+    @ObservedObject private var mic = MicSwitch.shared
 
     init() {
         _model = ObservedObject(wrappedValue: AppModel.shared)
@@ -36,6 +37,7 @@ struct SparkBegleiterApp: App {
         _ = updater.phase
         _ = wake.listening
         _ = quiet.busy
+        _ = mic.closed
         return model.menuIcon
     }
 }

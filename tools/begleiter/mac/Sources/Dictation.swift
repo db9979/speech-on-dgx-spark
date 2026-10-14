@@ -53,6 +53,10 @@ final class Dictation: ObservableObject {
             HUD.show("Das letzte Diktat wird noch umgewandelt.")
             return
         }
+        guard !MicSwitch.shared.closed else {
+            HUD.show(MicSwitch.closedText, symbol: "mic.slash")
+            return
+        }
         guard await Recorder.micAllowed() else {
             micDenied()
             return

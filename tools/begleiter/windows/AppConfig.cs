@@ -58,6 +58,9 @@ internal sealed class AppConfig
     /// <summary>Teil "meeting": der Hinweis „Alle Beteiligten müssen einverstanden sein“ wurde einmal bestätigt.</summary>
     public bool MeetingConsent { get; set; }
 
+    /// <summary>„Mikrofon zu“: kein Teil öffnet das Mikrofon (siehe <see cref="MicSwitch"/>). Lokal, bleibt nach Neustart.</summary>
+    public bool MicClosed { get; set; }
+
     /// <summary>Teil "daily": Tagesstart an (lokal).</summary>
     public bool DailyMorningOn { get; set; } = true;
 

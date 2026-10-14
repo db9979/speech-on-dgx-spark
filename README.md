@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.549** Companion: switch "Mikrofon offen/zu" (Windows and Mac), Me → Begleiter shows it per device
 - **V01.0.548** Maintenance pause while the language model, ASR or TTS is updated
 - **V01.0.547** Every page with a side menu in the same frame: switching tabs no longer jumps, the content uses the full width
 - **V01.0.546** Counts with a target: every row of a card under Status and every number of "Today" jumps to its place
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.542** Inbox tidying: a mode line explains Off, Preview, Safe and Full; switching works again with the second login step
 - **V01.0.541** Admin without a second stage: a profile with a role is admin at once, "Confirm" no longer asks admins
 - **V01.0.540** Architecture pages: clicking a bubble shows its text at once, rules, numbers and code lead to their step
-- **V01.0.539** The switch now has its page under Status → Architecture too: groups, hint words, follow-ups, narrowing
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

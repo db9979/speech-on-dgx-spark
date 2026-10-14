@@ -139,10 +139,11 @@ internal static class SparkClient
     }
 
     /// <summary>GET /api/desk/poll – Herzschlag, neue Meldungen, Notaus-Stufe.</summary>
-    public static async Task<PollResult> PollAsync(string baseUrl, string key, int after, CancellationToken ct)
+    /// <param name="micClosed">„Mikrofon zu“ – das Panel zeigt es unter Ich → Begleiter (nur dieser Zustand, nie Ton).</param>
+    public static async Task<PollResult> PollAsync(string baseUrl, string key, int after, bool micClosed, CancellationToken ct)
     {
         string url = baseUrl + "/api/desk/poll?after=" + Math.Max(0, after).ToString(System.Globalization.CultureInfo.InvariantCulture)
-                     + "&" + VersionQuery;
+                     + "&mic=" + (micClosed ? "closed" : "open") + "&" + VersionQuery;
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
 

@@ -691,6 +691,11 @@ def _conns(now):
         n = sum(1 for t in list(getattr(begleiter, "_seen", {}).values()) if now - t < 3 * getattr(begleiter, "POLL", 30))
         if n:
             out.append({"name": "Spark-Begleiter (PC/Mac)", "proto": "fragt alle 30 s nach", "dir": "ein", "n": n})
+        # "Mikrofon zu" at the companion (only the count of online programs with the switch closed)
+        seen = getattr(begleiter, "_seen", {})
+        n = sum(1 for d in list(getattr(begleiter, "_mic", {})) if now - seen.get(d, -1e12) < 3 * getattr(begleiter, "POLL", 30))
+        if n:
+            out.append({"name": "Begleiter mit Mikrofon zu", "proto": "Schalter am PC/Mac", "dir": "aus", "n": n})
     except Exception:
         pass
     try:

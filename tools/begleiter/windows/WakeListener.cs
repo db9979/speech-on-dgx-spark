@@ -109,6 +109,12 @@ internal sealed class WakeListener : IDisposable
     public static WakeListener? TryStart(out string error)
     {
         error = "";
+        if (MicSwitch.Closed)
+        {
+            error = MicSwitch.ClosedText;
+            return null;
+        }
+
         try
         {
             if (waveInGetNumDevs() == 0)

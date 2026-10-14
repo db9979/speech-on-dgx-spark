@@ -72,6 +72,12 @@ internal sealed class MeetingRecorder : IDisposable
     public static MeetingRecorder? TryStart(out string error)
     {
         error = "";
+        if (MicSwitch.Closed)
+        {
+            error = MicSwitch.ClosedText;
+            return null;
+        }
+
         if (Recorder.AnyActive)
         {
             error = "Es läuft gerade ein Diktat. Erst beenden, dann die Besprechung starten.";

@@ -60,6 +60,34 @@ private final class Fed {
     var done = false
 }
 
+/// "Mikrofon zu" (Dominik 2026-10-14): one switch for every microphone of the Begleiter. Closed means closed: nothing
+/// opens the microphone (wake word, dictation, mic buttons, "Frag Spark", meeting); a running recording is
+/// discarded, a meeting ends. Kept in UserDefaults (stays after a restart); the poll tells the panel open/closed.
+@MainActor
+final class MicSwitch: ObservableObject {
+    static let shared = MicSwitch()
+    static let key = "mic.closed"
+    static let closedText = "Das Mikrofon ist zu. In der Menüleiste „Mikrofon öffnen“ wählen."
+
+    @Published private(set) var closed: Bool
+
+    init() {
+        closed = UserDefaults.standard.bool(forKey: Self.key)
+    }
+
+    func toggle() {
+        closed.toggle()
+        UserDefaults.standard.set(closed, forKey: Self.key)
+        if closed {
+            Dictation.shared.discard()
+            Task { await Meeting.shared.end() }
+        }
+        Wake.shared.micChanged()
+        HUD.show(closed ? "Mikrofon zu: der Begleiter hört nichts, bis du es wieder öffnest." : "Mikrofon offen.",
+                 symbol: closed ? "mic.slash" : "mic")
+    }
+}
+
 enum RecorderError: Error {
     case noInput
 }

@@ -24,7 +24,8 @@ data: nothing here acts on them; the answers come from the normal assistant with
     program:
     POST   /api/desk/pair {code, name, kind}    -> {"key", "profile"}
     GET    /api/desk/config                     -> parts, write defaults, rev
-    GET    /api/desk/poll?after=n               -> rev, notes, Notaus stage (also the "online" mark)
+    GET    /api/desk/poll?after=n&mic=open|closed -> rev, notes, Notaus stage (also the "online" mark; mic: the
+                                                   program's switch "Mikrofon offen/zu", shown under Ich → Begleiter)
     POST   /api/desk/ask {text, tz?}            -> {"answer"}
     POST   /api/desk/dictate (multipart file)   -> {"text"}
     POST   /api/desk/notaus {}                  -> {"on": true}
@@ -128,6 +129,7 @@ _lock = threading.Lock()
 _info = {}                 # device id -> {"version", "arch"} as the program last said
 _upd = {"checked": {}, "error": {}, "running": {}}
 _seen = {}                 # device id -> last poll
+_mic = {}                  # device id -> True while the program says "Mikrofon zu" (memory only, never sound)
 _notes = {}                # uid -> [{"n", "t", "title", "body", "tag"}]
 _seq = {}
 
@@ -463,6 +465,7 @@ def profile_get(prof=Depends(browser_profile)):
         cfg, rev = device_cfg(x["id"])
         out.append({"id": x["id"], "name": x["name"], "created": x.get("created"),
                     "online": now - _seen.get(x["id"], -1e12) < ONLINE, "cfg": cfg,
+                    "mic": "closed" if _mic.get(x["id"]) else "open",
                     "version": (_info.get(x["id"]) or {}).get("version", ""), "installed": installed(x["id"]),
                     "kind": "mac" if x["name"].startswith("Begleiter Mac") else "windows",
                     "last": int(_seen[x["id"]]) if x["id"] in _seen else (x.get("last") or {}).get("t"),
@@ -521,6 +524,7 @@ def _unpair(did):
         if d.pop(did, None) is not None:
             profiles._write(_file(), d)
     _seen.pop(did, None)
+    _mic.pop(did, None)
     _live("Gerät entkoppelt")
     print("begleiter: Gerät entkoppelt", flush=True)
 
@@ -647,9 +651,10 @@ def program_office(app: str, request: Request):
 
 
 @router.get("/api/desk/poll", dependencies=[Depends(assistant)])
-async def program_poll(request: Request, after: int = 0, version: str = "", arch: str = ""):
+async def program_poll(request: Request, after: int = 0, version: str = "", arch: str = "", mic: str = ""):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
+    _mic_said(dev["id"], mic)
     held = lapsed(prof["id"])        # "Nicht stören" ran out without a word from the program: the summary now
     if held:
         await release(prof["id"], held)
@@ -2150,6 +2155,23 @@ async def program_daily(request: Request, kind: str = "morning"):
 # ---------------------------------------------------------------- updates (begleiter.json from GitHub Actions)
 def _vt(v):
     return tuple(int(x) for x in v.split("."))
+
+
+def _mic_said(did, mic):
+    """The program's switch "Mikrofon offen/zu" (older programs send nothing: open). One log line per change."""
+    if mic not in ("open", "closed"):
+        return
+    closed = mic == "closed"
+    if bool(_mic.get(did)) == closed:
+        return
+    if closed:
+        if len(_mic) > 1000:
+            _mic.clear()
+        _mic[did] = True
+    else:
+        _mic.pop(did, None)
+    print(f"begleiter: Mikrofon {'zu' if closed else 'offen'}", flush=True)
+    _live("Mikrofon zu" if closed else "Mikrofon offen")
 
 
 def _tell(did, version, arch):

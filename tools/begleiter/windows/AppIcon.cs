@@ -25,7 +25,7 @@ internal static class AppIcon
 {
     private static readonly int[] WindowSizes = { 16, 20, 24, 32, 40, 48, 64, 256 };
 
-    private static readonly Dictionary<(StatusDot Dot, int Size, bool Dark, bool Listening, bool Moon), Icon> TrayCache = new();
+    private static readonly Dictionary<(StatusDot Dot, int Size, bool Dark, bool Listening, bool Moon, bool MicClosed), Icon> TrayCache = new();
     private static Icon? _windowIcon;
 
     /// <summary>Fenster-Symbol mit allen Größen; Windows wählt die passende.</summary>
@@ -34,14 +34,14 @@ internal static class AppIcon
     /// <summary>Das Symbol für den Infobereich in der Größe und den Farben der Taskleiste.</summary>
     /// <param name="listening">Teil "wake" hört zu: Ring in der Akzentfarbe um das Gesicht.</param>
     /// <param name="moon">Teil "quiet": gerade „Nicht stören“ (Telefonat/Präsentation) – kleiner Mond oben rechts.</param>
-    public static Icon ForTray(StatusDot dot, bool listening = false, bool moon = false)
+    public static Icon ForTray(StatusDot dot, bool listening = false, bool moon = false, bool micClosed = false)
     {
         int size = TrayIconSize();
         Palette palette = Theme.Taskbar;
-        var key = (dot, size, palette.Dark, listening, moon);
+        var key = (dot, size, palette.Dark, listening, moon, micClosed);
         if (!TrayCache.TryGetValue(key, out Icon? icon))
         {
-            using Bitmap bitmap = Render(size, palette, dot, listening, moon);
+            using Bitmap bitmap = Render(size, palette, dot, listening, moon, micClosed);
             icon = FromImages(new[] { bitmap });
             TrayCache[key] = icon;
         }
@@ -83,7 +83,7 @@ internal static class AppIcon
     };
 
     /// <summary>Bild in einer Größe: Gesicht, darüber optional der Punkt mit ausgespartem Ring.</summary>
-    public static Bitmap Render(int size, Palette p, StatusDot dot, bool listening = false, bool moon = false)
+    public static Bitmap Render(int size, Palette p, StatusDot dot, bool listening = false, bool moon = false, bool micClosed = false)
     {
         var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
         using Graphics g = Graphics.FromImage(bitmap);
@@ -112,6 +112,11 @@ internal static class AppIcon
             DrawMoon(g, size, p);
         }
 
+        if (micClosed)
+        {
+            DrawMicClosed(g, size, p);
+        }
+
         if (DotColor(dot, p) is { } color)
         {
             float d = Math.Max(5f, size * 0.42f);
@@ -129,6 +134,27 @@ internal static class AppIcon
         }
 
         return bitmap;
+    }
+
+    /// <summary>„Mikrofon zu“: durchgestrichenes Mikrofon unten links auf hellem Grund mit ausgespartem Rand.</summary>
+    private static void DrawMicClosed(Graphics g, int size, Palette p)
+    {
+        float d = Math.Max(7f, size * 0.5f);
+        float ring = Math.Max(1f, size / 16f);
+        var badge = new RectangleF(0, size - d, d, d);
+        g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+        using (var clear = new SolidBrush(Color.Transparent))
+        {
+            g.FillEllipse(clear, RectangleF.Inflate(badge, ring, ring));
+        }
+
+        g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+        using (var fill = new SolidBrush(p.HighContrast ? Palette.Light.Bg : p.Bg))
+        {
+            g.FillEllipse(fill, badge);
+        }
+
+        Glyphs.Draw(g, Glyph.MicOff, RectangleF.Inflate(badge, -d * 0.12f, -d * 0.12f), p.HighContrast ? Palette.Light.Bad : p.Bad);
     }
 
     /// <summary>Mondsichel oben rechts mit ausgespartem Rand (wie der Punkt), in Warnfarbe.</summary>

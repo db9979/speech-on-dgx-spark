@@ -19,6 +19,7 @@ internal sealed class Recorder : IDisposable
     private const int BufferCount = 10;
 
     private static int _active;
+    private static Recorder? _current;
 
     private readonly IntPtr _device;
     private readonly IntPtr[] _headers = new IntPtr[BufferCount];
@@ -30,6 +31,7 @@ internal sealed class Recorder : IDisposable
     private readonly object _lock = new();
     private bool _limitRaised;
     private bool _closed;
+    private volatile bool _discard;
     private volatile float _level;
 
     private Recorder(IntPtr device)
@@ -77,6 +79,12 @@ internal sealed class Recorder : IDisposable
     public static Recorder? TryStart(out string error)
     {
         error = "";
+        if (MicSwitch.Closed)
+        {
+            error = MicSwitch.ClosedText;
+            return null;
+        }
+
         if (Interlocked.CompareExchange(ref _active, 1, 0) != 0)
         {
             error = "Es läuft schon eine Aufnahme.";
@@ -119,6 +127,8 @@ internal sealed class Recorder : IDisposable
                 return null;
             }
 
+            _current = recorder;
+
             return recorder;
         }
         catch (DllNotFoundException)
@@ -129,7 +139,23 @@ internal sealed class Recorder : IDisposable
         }
     }
 
-    /// <summary>Beendet die Aufnahme und gibt die WAV-Datei zurück (<c>null</c>, wenn sie zu kurz war).</summary>
+    /// <summary>Text, wenn <see cref="StopAsync"/> nichts lieferte: zu kurz, oder das Mikrofon wurde zugemacht.</summary>
+    public static string NothingText => MicSwitch.Closed ? MicSwitch.ClosedText : "Die Aufnahme war zu kurz.";
+
+    /// <summary>
+    /// „Mikrofon zu“: die laufende Aufnahme wird verworfen. Ihr Besitzer beendet sie wie bei 60 Sekunden
+    /// (LimitReached), bekommt aber nichts (<c>null</c>) und schickt nichts an den Spark.
+    /// </summary>
+    public static void DiscardActive()
+    {
+        if (_current is { _closed: false } recorder)
+        {
+            recorder._discard = true;
+            recorder.RaiseLimit();
+        }
+    }
+
+    /// <summary>Beendet die Aufnahme und gibt die WAV-Datei zurück (<c>null</c>, wenn sie zu kurz war oder verworfen wurde).</summary>
     public async Task<byte[]?> StopAsync()
     {
         await StopLoopAsync();
@@ -140,7 +166,7 @@ internal sealed class Recorder : IDisposable
         }
 
         Close();
-        return pcm.Length < MinBytes ? null : ToWav(pcm);
+        return _discard || pcm.Length < MinBytes ? null : ToWav(pcm);
     }
 
     /// <summary>Bricht ab und verwirft die Aufnahme.</summary>
@@ -275,6 +301,11 @@ internal sealed class Recorder : IDisposable
         }
 
         _ = waveInClose(_device);
+        if (ReferenceEquals(_current, this))
+        {
+            _current = null;
+        }
+
         Volatile.Write(ref _active, 0);
     }
 

@@ -3636,6 +3636,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Mikrofon offen/zu (V01.0.549)",
+"text": "Mikrofon offen/zu (V01.0.549): Im Begleiter (Windows: Rechtsklick-Menü und Tray-Fenster, Mac: Menüleisten-Fenster) gibt es den Schalter „Mikrofon schließen“ bzw. „Mikrofon öffnen“, sobald ein Teil mit Mikrofon an ist (Diktieren, Frag Spark, Weckwort, Besprechung). Zu heißt wirklich zu: das Weckwort hört auf, eine laufende Aufnahme wird verworfen und nicht geschickt, eine Besprechung endet, und kein Knopf öffnet das Mikrofon, bis du es wieder öffnest. Der Zustand bleibt nach einem Neustart. Das Symbol in Taskleiste bzw. Menüleiste zeigt dann ein durchgestrichenes Mikrofon. Unter Ich → Begleiter steht bei jedem verbundenen Gerät „Mikrofon offen“ oder „Mikrofon zu“, Zustand → Live zählt nur die Geräte mit Mikrofon zu. Zum Spark geht nur dieser Zustand, nie Ton. Braucht den neuen Begleiter-Build."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "„Antwort entwerfen“ hängt nicht mehr (V01.0.545)",
 "text": "„Antwort entwerfen“ hängt nicht mehr (V01.0.545): Fragt Outlook beim Anlegen der Antwort erst etwas (z. B. „Externe Inhalte herunterladen?“), wartet der Begleiter darauf. Diese Frage lag bisher hinter dem Begleiter-Fenster, und alles wirkte eingefroren. Jetzt holt der Begleiter Outlook nach vorn, legt sich selbst nicht mehr darüber und zeigt „Outlook öffnet den Entwurf … bitte dort antworten“. Solange der Spark schreibt, zählen die Sekunden mit, und „Abbrechen“ beendet es."
 },
@@ -9646,6 +9654,14 @@
 "head": "Voice chat",
 "title": "Blocked Spark add-in (V01.0.545)",
 "text": "Blocked Spark add-in (V01.0.545): after a hang Outlook moves an add-in to \"Disabled items\", and its tick under COM add-ins stays empty. \"Office-Add-ins einrichten …\" now lifts that block, for Spark only (Resiliency\\DisabledItems and CrashingAddinList); other add-ins stay as Outlook set them."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Microphone open/closed (V01.0.549)",
+"text": "Microphone open/closed (V01.0.549): the companion (Windows: right-click menu and tray window, Mac: menu bar window) has the switch \"Mikrofon schließen\" or \"Mikrofon öffnen\" as soon as a part with the microphone is on (dictation, Ask Spark, wake word, meeting). Closed really means closed: the wake word stops, a running recording is discarded and not sent, a meeting ends, and no button opens the microphone until you open it again. The state stays after a restart. The icon in the taskbar or menu bar then shows a struck-through microphone. Under Me → Begleiter every connected device shows \"Mikrofon offen\" or \"Mikrofon zu\"; Status → Live only counts the devices with the microphone closed. Only this state goes to the Spark, never sound. Needs the new companion build."
 },
 {
 "lang": "en",

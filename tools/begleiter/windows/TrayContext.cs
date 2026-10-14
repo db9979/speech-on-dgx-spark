@@ -115,6 +115,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _agendaTimer.Tick += async (_, _) => await RefreshAgendaAsync();
         _alertTimer.Tick += (_, _) => CheckAgendaAlerts();
 
+        MicSwitch.Set(_config.MicClosed);
         RegisterHotkeys(notify: false);
         UpdateIcon();
         BuildMenu();
@@ -199,7 +200,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 await RefreshConfigAsync(baseUrl, key);
             }
 
-            PollResult poll = await SparkClient.PollAsync(baseUrl, key, Math.Max(_lastNote, 0), CancellationToken.None);
+            PollResult poll = await SparkClient.PollAsync(baseUrl, key, Math.Max(_lastNote, 0), MicSwitch.Closed, CancellationToken.None);
             if (!IsCurrent(baseUrl, key))
             {
                 return; // inzwischen entkoppelt oder neu gekoppelt
@@ -473,8 +474,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 _ => StatusDot.Grey,
             };
         _traySize = AppIcon.TrayIconSize();
-        _tray.Icon = AppIcon.ForTray(dot, listening: _wake is not null && !_wake.Paused, moon: IsOn(Parts.Quiet) && _quietWhy is not null);
-        _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" ") + (QuietHint() is not null ? " · Nicht stören" : ""), 127);
+        _tray.Icon = AppIcon.ForTray(dot, listening: _wake is not null && !_wake.Paused, moon: IsOn(Parts.Quiet) && _quietWhy is not null, micClosed: MicSwitch.Closed && UsesMic());
+        _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" ") + (QuietHint() is not null ? " · Nicht stören" : "")
+                          + (MicSwitch.Closed && UsesMic() ? " · Mikrofon zu" : ""), 127);
     }
 
     // ------------------------------------------------------------------ Menü
@@ -1227,7 +1229,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
             if (wav is null)
             {
-                Notify("Die Aufnahme war zu kurz.", ToolTipIcon.Info);
+                Notify(Recorder.NothingText, ToolTipIcon.Info);
                 return;
             }
 

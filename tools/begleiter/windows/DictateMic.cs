@@ -123,7 +123,7 @@ internal sealed class DictateMic : IDisposable
 
         if (wav is null)
         {
-            _status("Die Aufnahme war zu kurz.", true);
+            _status(Recorder.NothingText, true);
             return;
         }
 

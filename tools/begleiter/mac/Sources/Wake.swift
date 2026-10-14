@@ -73,8 +73,13 @@ final class Wake: ObservableObject {
         refresh()
     }
 
+    /// "Mikrofon zu" changed: closed stops listening at once, open starts again when wanted.
+    func micChanged() {
+        refresh()
+    }
+
     private func refresh() {
-        if wanted && !paused {
+        if wanted && !paused && !MicSwitch.shared.closed {
             if engine == nil && !starting {
                 starting = true
                 Task { @MainActor in
@@ -94,7 +99,7 @@ final class Wake: ObservableObject {
             problem = "Kein Zugriff aufs Mikrofon (Systemeinstellungen → Datenschutz & Sicherheit → Mikrofon)."
             return
         }
-        guard wanted, !paused, engine == nil else { return }
+        guard wanted, !paused, !MicSwitch.shared.closed, engine == nil else { return }
         let engine = AVAudioEngine()
         let input = engine.inputNode
         let inFormat = input.outputFormat(forBus: 0)
