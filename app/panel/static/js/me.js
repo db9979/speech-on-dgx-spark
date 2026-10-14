@@ -523,7 +523,8 @@ window.tidyDo=async what=>{$('factmsg').textContent=what==='check'?t('Der Assist
 $('facttidy').onclick=()=>tidyDo('check');
 window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent(id),{method:'DELETE'});showFacts()};
 ON.forgetFact=(b,id)=>forgetFact(id);ON.tidyDo=(b,w)=>tidyDo(w);ON.calRemove=(b,id,n)=>calRemove(id,n);ON.mailRemove=(b,id,n)=>mailRemove(id,n);ON.secDrop=(b,id,n,s)=>secDrop(id,n,s);
-async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
+async function openMe(tab){if(typeof whoPendingGo==='function'&&PROFILE&&whoPendingGo({me:tab||''}))return;   // saved functions wait: Ich opens with them
+  $('profmsg').textContent='';$('profmodal').style.display='grid';
   const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;meOwn();ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
   $('setscope').textContent=GATE?'':PROFILE?((k=>ME_SUB[k]?t(...ME_SUB[k]):'')((document.querySelector('#ptabs button.on')||{dataset:{}}).dataset.t)):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');

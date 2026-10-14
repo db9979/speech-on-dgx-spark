@@ -514,7 +514,7 @@ Every box of the picture has its own page (Status → Architecture, click a box,
 
 The page in the browser (static/js/chat.js) is the device: it records the question, sends the sound to speech recognition, sends the text to /api/chat and plays text and sound from one single stream. A profile's conversations live on the Spark, every open page keeps them in step.
 
-**Why:** All the computing happens on the Spark; the page stays thin. Browser, phone browser and the Android app (a WebView) take the same way, so login, limits and rules apply in exactly one place, and a conversation looks the same on every device.
+**Why:** All the computing happens on the Spark; the page stays thin. Browser, phone browser and the Android app (a WebView) take the same way, so login, limits and rules apply in exactly one place, and a conversation looks the same on every device. The page stays calm: saving never reloads it, when it must reload (new version, update finished) it comes back to the same place, and during an update one window alone shows the progress.
 
 #### Way
 

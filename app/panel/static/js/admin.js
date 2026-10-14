@@ -3,7 +3,14 @@ const btns=(n,st)=>`<button class="b" ${onAttr('act',n,'restart')}>${t('Neustart
 async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
 window.act=act;ON.act=(b,n,a)=>act(n,a,b);ON.copyPrev=b=>copyString(b.previousElementSibling.textContent,b);
 
-async function refresh(){
+// every 3 s while Zustand is open, else every 30 s (the dot beside Zustand in the menu); nothing while the update window
+// is open. Tables are written only when their content changed, so marking, focus and hover stay (setHtml, base.js).
+let REFRESH_AT=0;
+// Zustand opened (or the tab back in front): at once, not up to 3 s later
+if($('mon')){let was=false;new MutationObserver(()=>{const on=$('mon').classList.contains('on');if(on&&!was&&ADMIN){REFRESH_AT=0;refresh()}was=on}).observe($('mon'),{attributes:true,attributeFilter:['class']})}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ADMIN&&$('mon')&&$('mon').classList.contains('on')){REFRESH_AT=0;refresh()}});
+async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
+  if(updBusy()||!seen&&Date.now()-REFRESH_AT<30e3)return;REFRESH_AT=Date.now();
   let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}
   const g=s.gpu||{},sy=s.system,H=s.history;
   $('hdr').textContent=(g.name||t('keine GPU','no GPU'))+' · '+new Date(s.time*1000).toLocaleTimeString();
@@ -11,18 +18,18 @@ async function refresh(){
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
   showAlerts(s.alerts);zustand(s);if(typeof loadSecGlance==='function')loadSecGlance();
-  $('memnote').innerHTML=sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
-  $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
+  setHtml($('memnote'),sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'');
+  setHtml($('svc'),Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
     const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">${t('letzter Fehler','last error')}: ${esc(h.last_error.error)}</div>`:'');
     return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':` <span class="pill">${t('deaktiviert','disabled')}</span>`}</td>
     <td>${esc(h.model||'')}<div class="mut">${t('geschätzt','estimated')} ~${v.estimate_gib} GiB${h.load_seconds?` · ${t('geladen in','loaded in')} ${h.load_seconds}s`:''}</div>${err}</td>
     <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} ${t('Fehler','errors')})</span>`:''}${h.busy?` <span class="pill warn">${t('arbeitet','busy')}</span>`:''}</td>
     <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s??h.avg_ttft_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
     <td class="row">${btns(n,v.state)}</td></tr>`+(v.engines||[]).map(e=>`<tr><td class="mut" style="padding-left:20px">↳ ${e.name==='tts-design'?'VoiceDesign-Engine':'Engine'}<div>127.0.0.1:${e.port}</div></td><td>${pill(e.state)}</td>
-    <td>${esc(e.model)}<div class="mut">${e.kind} · ${t('reserviert','reserves')} ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
+    <td>${esc(e.model)}<div class="mut">${e.kind} · ${t('reserviert','reserves')} ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join(''));
   $('q38none').style.display=s.qwen38.length?'none':'block';
-  $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+t(' % des Pools',' % of the pool'):'–'}</td></tr>`).join('');
-  $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
+  setHtml($('q38'),s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+t(' % des Pools',' % of the pool'):'–'}</td></tr>`).join(''));
+  setHtml($('gp'),(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>');
 }
 
 // Zustand (design „Klar“, V01.0.146): one sentence on top (all fine / what is wrong) and "Braucht dich" with
@@ -318,7 +325,8 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
     if(pane.contains($('chat.face'))){setFaceSpark(n.chat.face);faceApply();setFaceLife(n.chat.face_life===true)}
     if(typeof hilfeRefresh==='function')hilfeRefresh();   // Funktionen → Hilfe zum Spark: the face follows at once
-    msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance()}
+    msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance();
+    sayToast(r.errors&&r.errors.length?t('Gespeichert, mit Fehlern (siehe unten).','Saved, with errors (see below).'):t('Gespeichert.','Saved.'),2500)}   // the bar leaves its floating place: say it where the person looks
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});
 
 // the whole prompt as the model gets it (fixed parts marked) and the shipped system prompt
@@ -528,14 +536,16 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
   const pv=u.previous;$('updprevrow').style.display=pv&&!u.running?'flex':'none';
   if(pv)$('updprevtxt').textContent=(pv.version||pv.short||'')+(pv.subject?' · '+pv.subject:'');
   if(u.running){$('updstate').innerHTML=t('<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.','<span class="pill warn">Update running</span> The page reloads when the panel restarts.');$('updgo').disabled=true;$('updstop').style.display='inline-block';
-    if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
+    if(!updPoll)updPoll=setInterval(()=>{if(!updBusy())loadSys()},3000)}   // the update window shows the progress itself
   else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
     $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?`<span class="pill ok">${t('aktuell','up to date')}</span>`:
       `<span class="pill warn">${t('Update verfügbar','Update available')}</span> ${r.behind>0?r.behind+t(' Änderung(en)',' change(s)'):''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">${t('Letztes Update fehlgeschlagen','Last update failed')} (${esc(u.last_result)}), ${t('siehe Protokoll','see log')}.</span>`:'')
       +(r.head&&r.latest&&r.head!==r.latest?` <span class="mut">${r.head_state==='red'?t('Neuere Änderungen sind auf GitHub durch die Tests gefallen und werden nicht angeboten.','Newer changes failed the tests on GitHub and are not offered.'):t('Neuere Änderungen werden auf GitHub noch geprüft und erst danach angeboten.','Newer changes are still being tested on GitHub and are offered once they pass.')}</span>`:'');
     $('updgo').disabled=!(r.behind&&r.behind!==0)}
   $('updcommits').innerHTML=(r.commits||[]).length?'<table>'+r.commits.slice().reverse().map(c=>`<tr><td class="mut" style="width:70px"><code>${esc(c.sha)}</code></td><td>${esc(c.title)}</td></tr>`).join('')+'</table>':'';
-  $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||t('(noch kein Update gelaufen)','(no update has run yet)');$('updlog').scrollTop=1e9}
+  // the log only when it grew, and to its end only when it was at its end (reading further up stays where it is)
+  const lg=$('updlog'),txt=await (await api('/api/logs/update?lines=200')).text()||t('(noch kein Update gelaufen)','(no update has run yet)');
+  if(lg.textContent!==txt){const end=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-30;lg.textContent=txt;if(end)lg.scrollTop=1e9}}
 const kvp=rows=>rows.map(([k,v])=>`<tr><td class="mut" style="width:35%">${k}</td><td>${esc(v)}</td></tr>`).join('');
 // Update notice on top of every page, also the assistant, for the logged-in admin only; "✕" hides
 // it until a newer version appears.
@@ -675,45 +685,60 @@ if($('lkgo'))$('lkgo').onclick=async()=>{const text=$('lktext').value.trim();if(
 $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
   try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-// Update lock: a progress window over the whole page; the server refuses changes meanwhile.
-const ul={iv:null,clicked:0,miss:0};
-function ulShow(){$('updlock').style.display='grid';$('updlock').className='modal updlock busy';$('ulbtns').style.display='none';$('ullog').style.display='none';
-  $('ulhead').textContent=t('Update läuft','Update running');if(!ul.iv){ul.iv=setInterval(ulPoll,2000);ulPoll()}}
+// Update lock: a progress window over the whole page; the server refuses changes meanwhile. One calm window from the
+// question to the end (plaene/ruhige-seiten.md, Dominik 14.10.2026: „schaltet durch zu viele Fenster, wirkt zuckend“):
+// behind it every other poll, band and bar keeps still (base.js updBusy), the bar only moves forward, the line changes
+// at most every 2 s, the panel's restart is one quiet line, and at the end the page loads once, back at the same place.
+const ul={iv:null,clicked:0,miss:0,max:0,said:0,ask:null};
+const ulNote=()=>t('Bitte warten. Bis das Update fertig ist, sind Änderungen gesperrt. Die Seite lädt danach von selbst neu.','Please wait. Until the update is finished, changes are locked. The page reloads by itself afterwards.');
+// the question in the same window (before: the browser's own dialog, then a second window)
+function ulAsk(head,text,yes){return new Promise(res=>{const u=$('updlock');u.style.display='grid';u.className='modal updlock ask';
+  $('ulhead').textContent=head;$('ultext').textContent=text;$('ultime').textContent='';$('ulnote').textContent='';$('ulfill').style.width='0';
+  $('ulbtns').style.display='none';$('ullog').style.display='none';$('ulask').hidden=false;$('ulyes').textContent=yes;$('ulno').textContent=t('Abbrechen','Cancel');
+  const done=ok=>{$('ulask').hidden=true;ul.ask=null;if(!ok)u.style.display='none';res(ok)};ul.ask=done;$('ulyes').focus()})}
+$('ulyes').onclick=()=>ul.ask&&ul.ask(true);$('ulno').onclick=()=>ul.ask&&ul.ask(false);
+$('updlock').addEventListener('keydown',e=>{if(e.key==='Escape'&&ul.ask)ul.ask(false)});
+function ulShow(){$('updlock').style.display='grid';$('updlock').className='modal updlock busy';$('ulbtns').style.display='none';$('ullog').style.display='none';$('ulask').hidden=true;
+  $('ulhead').textContent=t('Update läuft','Update running');$('ulnote').textContent=ulNote();$('ultime').textContent='';if(!ul.iv)$('ultext').textContent=t('Starte …','Starting …');
+  if(!ul.iv){ul.max=0;ul.said=0;$('ulfill').style.width='3%';ul.iv=setInterval(ulPoll,2000);ulPoll()}}
+// the line under the bar: a new text at most every 2 s, the bar never back
+function ulSay(text,pct){const now=Date.now();if(pct!=null){ul.max=Math.max(ul.max,Math.min(100,pct));$('ulfill').style.width=Math.max(3,ul.max)+'%'}
+  if(text&&$('ultext').textContent!==text&&now-ul.said>=2000){$('ultext').textContent=text;ul.said=now}}
 function ulStop(){clearInterval(ul.iv);ul.iv=null}
 function ulFail(head,text,log,cancel){ulStop();$('updlock').className='modal updlock fail';$('ulhead').textContent=head;$('ultext').textContent=text;
   $('ulnote').textContent=t('Schlägt ein Schritt vor dem Umschalten fehl, läuft die bisherige Version weiter; danach wird sie wieder eingespielt. Die Zeile oben sagt, was passiert ist.','If a step before the switch fails, the previous version keeps running; after it, the previous version is installed again. The line above says what happened.');
   if(log&&log.length){$('ullog').textContent=log.join('\n');$('ullog').style.display='block'}
   $('ulbtns').style.display='flex';$('ulcancel').style.display=cancel?'':'none'}
-async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();ul.miss=0}
-  catch{ul.miss++;$('ultext').textContent=t('Verbinde neu … (das Panel startet neu)','Reconnecting … (the panel restarts)');return}
+async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();if(ul.miss){ul.miss=0;$('ulnote').textContent=ulNote()}}
+  catch{ul.miss++;$('ulnote').textContent=t('Das Panel startet gerade neu, das gehört dazu. Das Fenster wartet und macht von selbst weiter.','The panel is restarting right now, that is part of it. The window waits and carries on by itself.');return}
   const fresh=p.started&&p.started*1000>=ul.clicked-60000;
-  if(p.done&&fresh){if(p.ok){ulStop();$('ulfill').style.width='100%';$('ultext').textContent=t('Fertig, lade neu …','Done, reloading …');
-      try{sessionStorage.setItem('upddone',p.version||'1')}catch{}setTimeout(()=>location.reload(),1200)}
+  if(p.done&&fresh){if(p.ok){ulStop();ul.said=0;ulSay(t('Fertig, lade neu …','Done, reloading …'),100);
+      try{sessionStorage.setItem('upddone',p.version||'1')}catch{}setTimeout(()=>verReload(),1200)}
     else ulFail(t('Update fehlgeschlagen','Update failed'),p.text||'',p.log,false);return}
   if(!p.running){if(Date.now()-ul.clicked>15000){ulStop();   // nothing to do (already up to date) or ended without a report
-      if(!fresh){$('updlock').style.display='none';loadSys&&loadSys()}else location.reload()}return}
-  $('ulfill').style.width=(fresh?p.percent:3)+'%';$('ultext').textContent=fresh?p.text:t('Starte …','Starting …');
+      if(!fresh){$('updlock').style.display='none';loadSys&&loadSys()}else verReload()}return}
+  ulSay(fresh?p.text:t('Starte …','Starting …'),fresh?p.percent:null);
   if(p.started){const s=Math.max(0,p.now-p.started);$('ultime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
     if(s>p.timeout)ulFail(t('Update dauert zu lange','Update is taking too long'),t(`Nach ${Math.round(p.timeout/60)} Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; du kannst das Update auch abbrechen.`,`Not finished after ${Math.round(p.timeout/60)} minutes. Reload shows the current state; you can also cancel the update.`),p.log,true)}}
-$('ulreload').onclick=()=>location.reload();
+$('ulreload').onclick=()=>verReload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
-$('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}location.reload()};
-async function ulWatch(){if(ul.iv)return;try{const p=await (await fetch('/api/update/progress?log=false')).json();if(p.running){ul.clicked=(p.started||0)*1000;ulShow()}}catch{}}
+$('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}verReload()};
+async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await fetch('/api/update/progress?log=false')).json();if(p.running){ul.clicked=(p.started||0)*1000;ulShow()}}catch{}}
 setInterval(()=>{if(ADMIN)ulWatch()},8000);   // an update started from another tab or device locks this one too
 async function ulCheck(){await ulWatch();
   let v=null;try{v=sessionStorage.getItem('upddone');sessionStorage.removeItem('upddone')}catch{}
-  if(v){const e=$('updtoast');e.textContent=t('Update fertig','Update finished')+(v!=='1'?': '+v:'')+'.';e.style.display='block';setTimeout(()=>e.style.display='none',6000)}}
+  if(v)sayToast(t('Update fertig','Update finished')+(v!=='1'?': '+v:'')+'.',6000)}
 $('updgo').onclick=async()=>{let tk={};try{tk=(await (await api('/api/update')).json()).talking||{}}catch{}
   // somebody talks with the Spark right now (vorrang.py): the restart would cut that conversation off
   const ask=tk.now?t(`Gerade läuft ein Gespräch mit dem Spark (zuletzt vor ${tk.ago} s gesprochen). Das Update startet die Dienste kurz neu und unterbricht es. Trotzdem jetzt installieren?`,`Somebody is talking with the Spark right now (last speech ${tk.ago} s ago). The update restarts the services briefly and cuts that off. Install anyway?`)
     :t('Update jetzt installieren? Die Dienste starten dabei kurz neu.','Install the update now? The services restart briefly.');
-  if(!confirm(ask))return;
-  try{ul.clicked=Date.now();await api('/api/update',{method:'POST'});ulShow()}
-  catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+  if(!await ulAsk(t('Update installieren?','Install the update?'),ask,t('Installieren','Install')))return;
+  try{ul.clicked=Date.now();ulShow();await api('/api/update',{method:'POST'})}
+  catch(e){ulStop();$('updlock').style.display='none';$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})},600000);
 // ---------------------------------------------------------------- previous version, live check, backups
-$('updprev').onclick=async()=>{if(!confirm(t('Die vorige Version wieder installieren? Vorher wird automatisch gesichert. Gilt die vorige Version vor V01.0.37, müssen Kalender-Passwörter und Home-Assistant-Tokens danach neu eingegeben werden.','Install the previous version again? A backup is made first. If the previous version is older than V01.0.37, calendar passwords and Home Assistant tokens have to be entered again afterwards.')))return;
-  try{ul.clicked=Date.now();await api('/api/update/rollback',{method:'POST'});ulShow()}catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('updprev').onclick=async()=>{if(!await ulAsk(t('Vorige Version einspielen?','Install the previous version?'),t('Die vorige Version wieder installieren? Vorher wird automatisch gesichert. Gilt die vorige Version vor V01.0.37, müssen Kalender-Passwörter und Home-Assistant-Tokens danach neu eingegeben werden.','Install the previous version again? A backup is made first. If the previous version is older than V01.0.37, calendar passwords and Home Assistant tokens have to be entered again afterwards.'),t('Einspielen','Install')))return;
+  try{ul.clicked=Date.now();ulShow();await api('/api/update/rollback',{method:'POST'})}catch(e){ulStop();$('updlock').style.display='none';$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 const LIVE={llm:t('Sprachmodell','Language model'),tools:t('Werkzeugwahl','Tool choice'),search:t('Websuche','Web search'),tts:t('Sprachausgabe','Speech output'),asr:t('Spracherkennung','Speech recognition')};
 function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class="mut">${t('Noch nicht geprüft.','Not checked yet.')}</td></tr>`;$('livemsg').textContent='';return}
   $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${s.ok===true?'✅':s.ok===false?'❌':'➖'} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');

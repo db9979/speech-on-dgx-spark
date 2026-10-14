@@ -12,6 +12,8 @@
 const LZ={n:0,t:0,shown:0,act:0,boot:Date.now(),wait:30e3,slow:8e3,show:150,fails:0,band:null,next:0,tick:0};
 document.addEventListener('pointerdown',()=>LZ.act=Date.now(),true);
 document.addEventListener('keydown',()=>LZ.act=Date.now(),true);
+// scrolling by hand counts as moving too: a box that finished drawing never scrolls the page back then (ladeBox)
+for(const ev of ['wheel','touchmove'])document.addEventListener(ev,()=>LZ.act=Date.now(),{capture:true,passive:true});
 window.addEventListener('hashchange',()=>LZ.act=Date.now());
 function lzBarEl(){let b=$('lzbar');if(!b){b=document.createElement('div');b.id='lzbar';b.hidden=true;b.setAttribute('role','progressbar');
   b.setAttribute('aria-label',t('Seite lädt','Page loading'));b.append(document.createElement('i'));document.body.append(b)}return b}
@@ -33,7 +35,8 @@ window.lzFetch=async(p,o={})=>{const end=lzBegin(false);
 // ---------------------------------------------------------------- the band: the Spark does not answer
 // two failed requests in a row (no network answer, 502 or 504 from a proxy) show it; 503 is the Notaus, not "gone".
 // It sits fixed on top, above Ich and the dialogs.
-function lzNet(st){if(st===0||st===502||st===504){if(++LZ.fails>=2)lzDown();return}
+// While the update window is open the panel restarts on purpose: that window says so, the band stays away.
+function lzNet(st){if(st===0||st===502||st===504){if(++LZ.fails>=2&&!updBusy())lzDown();return}
   LZ.fails=0;if(LZ.band&&!LZ.band.hidden)lzUp()}
 function lzDown(){let b=LZ.band;if(!b){b=LZ.band=document.createElement('div');b.id='lzband';b.className='lzband';b.setAttribute('role','alert');
     const s=document.createElement('b');s.textContent=t('Spark antwortet nicht.','The Spark is not answering.');
@@ -73,7 +76,11 @@ let LZ_SEQ=0,LZ_RUN=0;
 // true while no box is loading: what the browser tests wait for after opening a page (never a fixed pause; a switch
 // flipped before the settings are there would be set back by them)
 window.lzIdle=()=>LZ_RUN===0;
+// Nothing jumps (plaene/ruhige-seiten.md): parts that were open in the box (<details>) open again when the box drew
+// them anew, and the page keeps its scroll when drawing made it shorter for a moment, unless the person moved meanwhile.
+// While the update window is open a box keeps its last content quietly instead of an error.
 async function ladeBox(box,load,o={}){if(!box)return load();
+  const keep=lzKeep(box);
   const id=String(++LZ_SEQ),at=o.at||box,had=box.dataset.lzok==='1',made=[];box.dataset.lz=id;box.classList.add('lz-host');
   box._lzAgain=()=>ladeBox(box,load,o);
   lzErrOff(box);
@@ -86,10 +93,23 @@ async function ladeBox(box,load,o={}){if(!box)return load();
   const t2=setTimeout(()=>{if(!mine())return;box.classList.add('lz-slow');const say=t('dauert länger als sonst …','taking longer than usual …');
     if(chip){chip.textContent=say;chip.classList.add('w')}else{chip=lzChip(say,'w');made.push(lzPut(at,chip,true))}},LZ.slow);
   const t3=setTimeout(()=>{if(!mine())return;made.forEach(x=>x.remove());made.length=0;chip=null;box.classList.remove('lz-slow','lz-stale');lzErr(box,at,o,lzTimeout())},LZ.wait);
-  try{const r=await load();if(mine()){box.dataset.lzok='1';lzErrOff(box)}return r}
-  catch(e){if(o.auth&&e&&e.status===401)throw e;if(mine())lzErr(box,at,o,e)}
+  try{const r=await load();if(mine()){box.dataset.lzok='1';lzErrOff(box);keep()}return r}
+  catch(e){if(o.auth&&e&&e.status===401)throw e;if(mine())lzErr(box,at,updBusy()?{...o,quiet:true}:o,e)}
   finally{LZ_RUN--;clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);made.forEach(x=>x.remove());
     if(mine()){box.classList.remove('lz-stale','lz-slow');box.removeAttribute('aria-busy')}}}
+// what ladeBox (and users.js) put back after drawing: the scroll, when drawing made the page shorter for a moment
+function lzKeep(box){const y=window.scrollY,act=LZ.act;return ()=>{if(LZ.act===act&&window.scrollY<y-2&&box&&box.offsetParent)window.scrollTo(0,y)}}
+// Open stays open, everywhere (plaene/ruhige-seiten.md): a part the person opened or closed (<details>) keeps that
+// state when its box is drawn anew (a save, a poll, a reload of the box), found again by the nearest id and the
+// summary's words (numbers left out: „3 Einstellungen …“ stays the same part). Memory only, never stored.
+const LZ_OPEN=new Map();
+const lzOpenKey=d=>{const s=d.querySelector(':scope>summary'),h=d.parentElement&&d.parentElement.closest('[id]');
+  return s?(h?h.id:'')+'|'+s.textContent.replace(/\d+/g,'#').replace(/\s+/g,' ').trim().slice(0,80):''};
+document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDetailsElement)||!d.isConnected||d._lzSet)return;const k=lzOpenKey(d);if(k)LZ_OPEN.set(k,d.open)},true);
+new MutationObserver(ms=>{if(!LZ_OPEN.size)return;for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;
+    const ds=n.tagName==='DETAILS'?[n]:n.querySelectorAll('details');
+    for(const d of ds){const k=lzOpenKey(d);if(!k||!LZ_OPEN.has(k))continue;const want=LZ_OPEN.get(k);if(d.open!==want){d._lzSet=1;d.open=want;setTimeout(()=>{d._lzSet=0},0)}}}})
+  .observe(document.body,{childList:true,subtree:true});
 const lzErrOff=box=>box.querySelectorAll('.lz-err').forEach(e=>{if(e.closest('.lz-host')===box)(e.closest('.lz-skrow')||e).remove()});
 // the error in the box: the panel's sentence (errSay in api()), „Noch einmal“, and for the admin where to look further
 function lzErr(box,at,o,e){lzErrOff(box);if(o.quiet)return;
@@ -100,7 +120,7 @@ function lzErr(box,at,o,e){lzErrOff(box);if(o.quiet)return;
   // way.js turns the way into a link for the admin; profiles cannot open the logs
   if(typeof ADMIN!=='undefined'&&ADMIN){const w=document.createElement('span');w.className='mut';w.textContent=t('Mehr dazu unter Zustand → Logs → Diagnose.','More under Status → Logs → Diagnosis.');er.append(w)}
   lzPut(at,er,o.top)}
-window.ladeBox=ladeBox;
+window.ladeBox=ladeBox;window.lzKeep=lzKeep;
 ON.lzAgain=b=>{const h=b.closest('.lz-host');if(h&&h._lzAgain)h._lzAgain()};
 // at most `most` loads at the same time (Ich has ~30 boxes; all at once would meet the rate limits)
 async function lzPool(jobs,most){let i=0;const run=async()=>{while(i<jobs.length){const j=jobs[i++];await j()}};

@@ -33,7 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.557** Usage counter: tokens and seconds per model, task and profile under Status → Usage and Me → Usage, plus a daily quota per profile
+- **V01.0.558** Calmer pages: saving no longer reloads or jumps to the top, the update shows one calm window only
 - **V01.0.556** Voice and video calls in chats of two, encrypted straight from device to device; own relay on tars for calls when away (router: UDP 3478 and 49160–49200); Android app 1.3.1 with camera
 - **V01.0.555** Clearer Improve page: card with what, where from, why, what helps, bundled proposals, traffic light and whole way
 - **V01.0.554** Architecture pages: clicking a line shows its bubble right below it, no more scrolling up

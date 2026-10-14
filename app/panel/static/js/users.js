@@ -19,7 +19,7 @@ function profFilter(){if($('pfilter').dataset.done)return;$('pfilter').dataset.d
     <select id="psort" style="width:auto">${o('name',t('nach Name','by name'))}${o('recent',t('zuletzt benutzt zuerst','last used first'))}${o('new',t('neueste zuerst','newest first'))}</select>`;
   $('pq').oninput=()=>{clearTimeout(PL.timer);PL.timer=setTimeout(()=>{PL.q=$('pq').value;PL.page=0;loadProf()},250)};
   $('pshow').onchange=()=>{PL.show=$('pshow').value;PL.page=0;loadProf()};$('psort').onchange=()=>{PL.sort=$('psort').value;PL.page=0;loadProf()}}
-async function loadProf(){profFilter();let d;
+async function loadProf(){profFilter();let d;const keep=window.lzKeep?lzKeep($('prof')):()=>{};   // open parts and the scroll stay (ruhige-seiten.md)
   try{d=await (await api('/api/admin/profiles?'+new URLSearchParams({q:PL.q,show:PL.show,sort:PL.sort,page:PL.page,per:25}))).json()}catch(e){perr('pmsg',e);return}
   PL.page=d.page;PL.names=d.names;const name=id=>(d.names.find(u=>u.id===id)||{}).name||'?';
   $('duser').innerHTML=popts($('duser').value,t('Profil wählen …','Pick a profile …'));
@@ -38,11 +38,12 @@ async function loadProf(){profFilter();let d;
   $('proflist').querySelectorAll('[data-popen]').forEach(b=>b.onclick=()=>{PL.open=PL.open===b.dataset.popen?'':b.dataset.popen;loadProf()});
   // wide: the open profile on the right (Paket 5), the whole line opens it; narrow it opens below its line
   if(side){$('proflist').querySelectorAll('[data-prow]').forEach(r=>r.onclick=e=>{if(e.target.closest('button,a,input,select'))return;PL.open=r.dataset.prow;loadProf()});
-    const ps=$('pside');ps.textContent='';const u=d.users.find(x=>x.id===PL.open);
-    if(u){const h=document.createElement('div');h.className='pdhead';const b=document.createElement('b');b.textContent=u.name;
+    const ps=$('pside'),u=d.users.find(x=>x.id===PL.open);
+    const old=$('pdetail');if(u&&old&&old.dataset.pid===u.id&&ps.contains(old)){}   // the same person stays open: no „…“ in between
+    else if(u){ps.textContent='';const h=document.createElement('div');h.className='pdhead';const b=document.createElement('b');b.textContent=u.name;
       const x=document.createElement('button');x.type='button';x.className='fdx';x.textContent='×';x.setAttribute('aria-label',t('Schließen','Close'));x.onclick=()=>{PL.open='';loadProf()};
-      h.append(b,x);const det=document.createElement('div');det.id='pdetail';det.className='mut';det.textContent='…';ps.append(h,det)}
-    else{const e=document.createElement('div');e.className='fdempty';const b=document.createElement('b');b.textContent=t('Person antippen','Tap a person');
+      h.append(b,x);const det=document.createElement('div');det.id='pdetail';det.dataset.pid=u.id;det.className='mut';det.textContent='…';ps.append(h,det)}
+    else{ps.textContent='';const e=document.createElement('div');e.className='fdempty';const b=document.createElement('b');b.textContent=t('Person antippen','Tap a person');
       const sp=document.createElement('span');sp.textContent=t('Hier stehen dann Zugang, Geräte, Funktionen, Rechte mit dem Platz für Uploads und Löschen.','Access, devices, functions, rights with the space for uploads, and delete then show here.');e.append(b,sp);ps.appendChild(e)}}
   $('dadd').disabled=!d.all;
   const mid='style="vertical-align:middle"';
@@ -53,7 +54,7 @@ async function loadProf(){profFilter();let d;
     ||`<tr><td class="mut">${PL.q||PL.show?t('Keine Geräte bei den gezeigten Profilen.','No devices with the profiles shown.'):t('Noch keine.','None yet.')}</td></tr>`;
   $('devlist').querySelectorAll('[data-dmove]').forEach(i=>i.onchange=()=>devUser(i.dataset.dmove,i.value));
   $('devlist').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>delDev(b.dataset.ddel,b.dataset.dname,b.dataset.dspk));
-  if(PL.open&&$('pdetail'))profDetail(PL.open)}
+  if(PL.open&&$('pdetail'))profDetail(PL.open,keep);else keep()}
 // Personen als Liste + Detail (plaene/einstellungen-neu.md, Paket 5): from about 740 px card width the details sit beside
 // the list; switching between wide and narrow draws the list again
 function pSide(){const c=document.querySelector('#prof .pcard');if(!c)return false;const w=c.getBoundingClientRect().width;
@@ -66,7 +67,7 @@ function pSide(){const c=document.querySelector('#prof .pcard');if(!c)return fal
 const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{admin:t('Admin','Admin'),manager:t('Verwalter','Manager')};
 const pbtn=(id,l,extra='')=>`<button class="b" type="button" id="${id}"${extra}>${esc(l)}</button>`;
 const pmb=b=>b>=1024**2?(b/1024**2).toFixed(b>=10*1024**2?0:1)+' MB':Math.ceil(b/1024)+' KB';
-async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/'+encodeURIComponent(id))).json()}catch(e){perr('pmsg',e);return}
+async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKeep($('pdetail')):null);let u;try{u=await (await api('/api/admin/profiles/'+encodeURIComponent(id))).json()}catch(e){perr('pmsg',e);return}
   const R=PROLE(),r=u.rights,h3=x=>`<h3 class="sec">${esc(x)}</h3>`,sel=(v,cur,l)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
   let role='';
   if(u.main)role=setRow(esc(t('Admin-Rechte','Admin rights')),esc(u.mfa?t('Admin darf alles außer dem Panel-Passwort selbst, Verwalter nur Zustand, Profile und Funktionen. Gilt sofort in seiner Anmeldung.','An admin may do everything but the panel password itself, a manager only status, profiles and functions. In effect at once in their sign-in.')
@@ -106,7 +107,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}
-    ${setRow(esc(t('Profil löschen','Delete profile')),esc(t('Mit Gedächtnis, Gesprächen und Geräten. Geht nicht rückgängig.','With memory, conversations and devices. Cannot be undone.')),pbtn('pdel',t('Löschen','Delete')))}</div>`;
+    ${setRow(esc(t('Profil löschen','Delete profile')),esc(t('Mit Gedächtnis, Gesprächen und Geräten. Geht nicht rückgängig.','With memory, conversations and devices. Cannot be undone.')),pbtn('pdel',t('Löschen','Delete')))}</div>`;if(keep)keep();
   const ok=m=>{$('pmsg').textContent=m},again=()=>profDetail(id);
   $('ppinlink').onclick=()=>joinPinLink(id,u.name,$('ppinout'));
   if($('premind'))$('premind').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/remind',jpost('POST',{}))).json();

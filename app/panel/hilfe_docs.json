@@ -661,7 +661,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Die Kästen im Einzelnen",
 "title": "Warum",
-"text": "Warum: Gerechnet wird nur auf dem Spark; die Seite bleibt dünn. Browser, Handy-Browser und die Android-App (eine WebView) nehmen denselben Weg, deshalb gelten Anmeldung, Grenzen und Regeln an genau einer Stelle, und ein Gespräch sieht auf jedem Gerät gleich aus."
+"text": "Warum: Gerechnet wird nur auf dem Spark; die Seite bleibt dünn. Browser, Handy-Browser und die Android-App (eine WebView) nehmen denselben Weg, deshalb gelten Anmeldung, Grenzen und Regeln an genau einer Stelle, und ein Gespräch sieht auf jedem Gerät gleich aus. Die Seite bleibt ruhig: Speichern lädt sie nie neu, muss sie doch neu laden (neue Version, Update fertig), kommt sie an dieselbe Stelle zurück, und beim Update zeigt nur ein Fenster den Fortschritt."
 },
 {
 "lang": "de",
@@ -4877,7 +4877,15 @@
 "file": "Installation im Detail",
 "head": "Aktualisieren",
 "title": "Aktualisieren",
-"text": "Im Panel unter System: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). Update installieren holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schon installierte Pakete werden dabei nicht aktualisiert; nachgeladen wird nur, was die neue Version braucht. Bevor die neue Version live geht, läuft der Selbsttest. Schlägt er oder ein Schritt davor fehl (Download, Pakete), bricht das Update ab, und die Dienste laufen unverändert mit der alten Version weiter. Geht nach dem Umschalten etwas schief, spielt update.sh die vorige Version wieder ein und sagt das im Protokoll. Während das Update läuft, sperrt ein Fortschrittsfenster das Panel (auch andere Tabs und Handys: der Server nimmt keine Änderungen an, der Assistent antwortet weiter); über den Neustart des Panels verbindet sich die Seite neu und lädt am Ende von selbst. Ist es nach 20 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“."
+"text": "Im Panel unter System: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). Update installieren holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schon installierte Pakete werden dabei nicht aktualisiert; nachgeladen wird nur, was die neue Version braucht. Bevor die neue Version live geht, läuft der Selbsttest. Schlägt er oder ein Schritt davor fehl (Download, Pakete), bricht das Update ab, und die Dienste laufen unverändert mit der alten Version weiter. Geht nach dem Umschalten etwas schief, spielt update.sh die vorige Version wieder ein und sagt das im Protokoll. Während das Update läuft, sperrt ein Fortschrittsfenster das Panel (auch andere Tabs und Handys: der Server nimmt keine Änderungen an, der Assistent antwortet weiter); Frage, Fortschritt und Neustart stehen in diesem einen Fenster: dahinter steht die Seite still (kein Band „Spark antwortet nicht“, keine Versionsleiste), der Balken läuft nur vorwärts, und über den Neustart des Panels wartet das Fenster ruhig. Am Ende lädt die Seite einmal und kommt an dieselbe Stelle zurück (Einstellun"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Aktualisieren",
+"title": "Aktualisieren",
+"text": "gen → Update). Ist es nach 20 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“."
 },
 {
 "lang": "de",
@@ -6877,7 +6885,7 @@
 "file": "Architecture and data flow",
 "head": "The boxes in detail",
 "title": "Why",
-"text": "Why: All the computing happens on the Spark; the page stays thin. Browser, phone browser and the Android app (a WebView) take the same way, so login, limits and rules apply in exactly one place, and a conversation looks the same on every device."
+"text": "Why: All the computing happens on the Spark; the page stays thin. Browser, phone browser and the Android app (a WebView) take the same way, so login, limits and rules apply in exactly one place, and a conversation looks the same on every device. The page stays calm: saving never reloads it, when it must reload (new version, update finished) it comes back to the same place, and during an update one window alone shows the progress."
 },
 {
 "lang": "en",
@@ -10917,7 +10925,7 @@
 "file": "Installation in detail",
 "head": "Updating",
 "title": "Updating",
-"text": "In the panel under System you see the installed version and, when GitHub has a newer one, the list of changes. Update installieren (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. Update abbrechen cancels a running update. Packages that are already installed are not upgraded; only what the new version needs is added. The self-test runs before the new version goes live. If it or an earlier step (download, packages) fails, the update stops and the services keep running the old version unchanged. If something fails after the switch, update.sh installs the previous version again and says so in the log. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); the page reconnects across the panel restart and reloads when done. After 20 minutes without finishing it offers Reload and Cancel."
+"text": "In the panel under System you see the installed version and, when GitHub has a newer one, the list of changes. Update installieren (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. Update abbrechen cancels a running update. Packages that are already installed are not upgraded; only what the new version needs is added. The self-test runs before the new version goes live. If it or an earlier step (download, packages) fails, the update stops and the services keep running the old version unchanged. If something fails after the switch, update.sh installs the previous version again and says so in the log. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); question, progress and restart stand in this one window: behind it the page keeps still (no band \"The Spark is not answering\", no version bar), the bar only moves forward, and the window waits calmly across the panel restart. At the end the page loads once and comes back to the same place (Settings → Update). After 20 minutes without finishing it offers Reload and Cancel."
 },
 {
 "lang": "en",

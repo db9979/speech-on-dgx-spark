@@ -14,13 +14,30 @@ document.addEventListener('input',e=>{if(e.target.type!=='checkbox'&&e.target.id
 function sparkBusy(){try{return !!(chat.rec||chat.resumeMic||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
 // the page is going away (reload, new version): a request it cut off is no error worth an alert
 let LEAVING=false;addEventListener('pagehide',()=>{LEAVING=true});
-function verReload(){LEAVING=true;try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
+// Stelle merken (plaene/ruhige-seiten.md, Dominik 14.10.2026: „nichts soll an den Seitenanfang zurückspringen“): a reload
+// the page does itself (new version, functions changed, update finished) comes back to the same place: the page, the
+// settings page, the open function, person or Ich area and how far it was scrolled (start.js placeBack). Only names of
+// pages and numbers, in this tab's sessionStorage, never contents. `to`: the page a click was going to (then no scroll).
+function placeNow(to){const p={};try{const s=document.querySelector('section.on'),fm=document.querySelector('.cfgwrap.featmode');
+    p.sec=to||(s&&s.id==='cfg'&&fm?'feat':s&&s.id);
+    const pane=document.querySelector('#cfg .pane.on');if(pane&&p.sec==='cfg')p.pane=pane.id.slice(5);
+    const it=document.querySelector('#pane-feat .fitem.open');if(it&&it.dataset.sw&&p.sec==='feat')p.feat=it.dataset.sw;
+    if(typeof PL!=='undefined'&&PL.open&&p.sec==='prof')p.person=PL.open;
+    if(!to&&$('profmodal')&&$('profmodal').style.display==='grid'){const b=document.querySelector('#ptabs button.on'),mb=document.querySelector('#profmodal .mebody');
+      p.me=b?b.dataset.t:'';if(mb)p.mey=Math.round(mb.scrollTop)}
+    if(!to)p.y=Math.round(window.scrollY)}catch{}return p}
+// `to` as an object ({me:'mailbox'}): stay on this page and open that instead
+function verReload(to){LEAVING=true;const o=to&&typeof to==='object';
+  try{sessionStorage.setItem('place',JSON.stringify(o?{...placeNow(),y:undefined,mey:undefined,...to}:placeNow(to)))}catch{}location.reload()}
+// the update window is open (admin.js ulShow): everything else keeps still, it alone says what goes on (no band, no bar,
+// no reload of its own, no polling behind it)
+const updBusy=()=>{const u=$('updlock');return !!u&&u.style.display!=='none'};
 function verBar(text){let b=$('verbanner');if(b)return;
   b=document.createElement('div');b.id='verbanner';b.className='updbanner';
   const sp=document.createElement('span');sp.textContent=text;
   const go=document.createElement('button');go.type='button';go.className='b p';go.textContent=t('Neu laden','Reload');go.onclick=verReload;
   b.append(sp,go);$('updbanner').before(b)}
-function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
+function verTry(){if(updBusy())return;const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
   if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3))return verReload();
   verBar(t('Neue Version ist da: ','A new version is here: ')+verWatch.newer)}
 // Switched a function on or off in the settings: the page reads the switches once at start (start.js), so
@@ -40,15 +57,23 @@ async function whoCheck(){if(WHO_FLAGS===null)return;
     if(whoFlags(w)===WHO_FLAGS)return;
     // only this profile's own switches moved (it switched them here): the page already shows them, no reload
     if(whoFlags(Object.assign({},w,{rights:0}))===whoFlags(Object.assign(JSON.parse(WHO_FLAGS).reduce((o,[k,v])=>(o[k]=v,o),{}),{rights:0}))){WHO_FLAGS=whoFlags(w);return}
-    if(!sparkBusy()){try{sessionStorage.setItem('flagsreload','1')}catch{}return verReload()}
-    verBar(t('Funktionen geändert, neu laden zeigt sie: ','Functions changed, reload shows them: '))}catch{}}
+    // saved here: the open page stays as it is (nothing closes, nothing jumps); the menu takes the new functions
+    // with the next change of page, which then loads itself again right there (whoPendingGo)
+    WHO_FLAGS=whoFlags(w);WHO_PENDING=true}catch{}}
+// a page change while saved functions wait: load the page that was clicked, with the new menu
+let WHO_PENDING=false;
+function whoPendingGo(to){if(!WHO_PENDING||LEAVING||sparkBusy()||updBusy())return false;WHO_PENDING=false;verReload(to);return true}
+document.addEventListener('click',e=>{if(!WHO_PENDING)return;const b=e.target.closest&&e.target.closest('nav button[data-s],.subnav button[data-sub]');if(!b)return;
+  if(typeof dirtyPanes==='function'&&dirtyPanes().length)return;   // unsaved changes: admin.js asks first, the reload waits
+  const to=b.dataset.sub||lastSec[b.dataset.s]||b.dataset.s;if(whoPendingGo(to)){e.stopImmediatePropagation();e.preventDefault()}},true);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')whoPendingGo()});
 const whoSoon=()=>{clearTimeout(whoT);whoT=setTimeout(whoCheck,300)};
 // Changed elsewhere (the admin under Wer darf was, the profile on another device): checked every minute, on
 // coming back and on focus, with the same calm rules as a new version (never mid-conversation or while typing).
 // whoLocal(): this page itself just changed what /api/whoami says (Mein Notaus on or off): for 10 s such a change
 // is taken as seen, not as "changed elsewhere" (the confirm dialog's focus would otherwise reload the page)
 let WHO_LOCAL=0;function whoLocal(){WHO_LOCAL=Date.now()}
-function flagsAway(w){if(WHO_FLAGS===null||whoFlags(w)===WHO_FLAGS)return;
+function flagsAway(w){if(WHO_FLAGS===null||whoFlags(w)===WHO_FLAGS||updBusy())return;
   if(Date.now()-WHO_LOCAL<10e3){WHO_FLAGS=whoFlags(w);return}
   const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
   if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3)){try{sessionStorage.setItem('flagsreload','away')}catch{}return verReload()}
@@ -139,6 +164,10 @@ const GROUPS={chat:[['chat','']],chats:[['chats','']],mon:[['mon',t('Monitoring'
 const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
 // „dauert länger als sonst …“ or its error in the page itself. The settings form keeps its fields (no placeholders).
+// a short line at the bottom of the page (update finished, saved, reloaded); a newer one replaces it
+function sayToast(text,ms){const e=$('updtoast');if(!e)return;e.textContent=text;e.style.display='block';clearTimeout(sayToast.t);sayToast.t=setTimeout(()=>e.style.display='none',ms||4000)}
+// writes HTML only when it differs from what this place shows (polled tables: marking, focus and hover stay)
+function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));

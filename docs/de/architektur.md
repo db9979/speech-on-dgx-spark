@@ -514,7 +514,7 @@ Jeder Kasten im Bild hat eine eigene Seite (Zustand → Technik, Kasten anklicke
 
 Die Seite im Browser (static/js/chat.js) ist das Gerät: sie nimmt die Frage auf, schickt den Ton zur Spracherkennung, schickt den Text an /api/chat und spielt Text und Ton aus einem einzigen Strom ab. Die Gespräche eines Profils liegen auf dem Spark, jede offene Seite gleicht sie ab.
 
-**Warum:** Gerechnet wird nur auf dem Spark; die Seite bleibt dünn. Browser, Handy-Browser und die Android-App (eine WebView) nehmen denselben Weg, deshalb gelten Anmeldung, Grenzen und Regeln an genau einer Stelle, und ein Gespräch sieht auf jedem Gerät gleich aus.
+**Warum:** Gerechnet wird nur auf dem Spark; die Seite bleibt dünn. Browser, Handy-Browser und die Android-App (eine WebView) nehmen denselben Weg, deshalb gelten Anmeldung, Grenzen und Regeln an genau einer Stelle, und ein Gespräch sieht auf jedem Gerät gleich aus. Die Seite bleibt ruhig: Speichern lädt sie nie neu, muss sie doch neu laden (neue Version, Update fertig), kommt sie an dieselbe Stelle zurück, und beim Update zeigt nur ein Fenster den Fortschritt.
 
 #### Ablauf
 

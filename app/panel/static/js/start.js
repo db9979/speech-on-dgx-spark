@@ -22,6 +22,18 @@ $('loginform').onsubmit=async e=>{e.preventDefault();
 $('logoutbtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.reload()};
 $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old:$('pwold').value,new:$('pwnew').value})});
   $('pwold').value=$('pwnew').value='';$('pwmsg').textContent=t('Passwort geändert.','Password changed.')}catch(e){$('pwmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// Stelle merken, the way back (plaene/ruhige-seiten.md): the page, the settings page, the open function, person or Ich
+// area, then the scroll once the boxes are drawn (lzIdle), unless the person already moved by himself
+async function placeBack(){let p=null;try{p=JSON.parse(sessionStorage.getItem('place')||'null');sessionStorage.removeItem('place')}catch{}
+  if(!p||typeof p!=='object')return;const sec=p.sec==='feat'?'cfg':p.sec,act=LZ.act;
+  try{if(p.person&&typeof PL!=='undefined')PL.open=String(p.person);
+    if(sec&&sec!=='chat'&&$(sec)&&$(sec).tagName==='SECTION'){if(sec==='cfg'&&p.pane&&$('pane-'+p.pane))goCfg(p.pane);else goSec(p.sec)}
+    if(p.me!=null&&typeof openMe==='function')openMe(p.me||undefined)}catch{return}
+  for(let i=0;i<50&&!(window.lzIdle&&lzIdle()&&i>2);i++)await new Promise(r=>setTimeout(r,100));
+  if(LZ.act!==act)return;
+  if(p.feat){const it=[...document.querySelectorAll('#pane-feat .fitem')].find(x=>x.dataset.sw===p.feat);if(it&&!it.classList.contains('open')&&typeof featOpen==='function')featOpen(it,true)}
+  if(p.mey){const mb=document.querySelector('#profmodal .mebody');if(mb)mb.scrollTop=p.mey}
+  if(p.y)window.scrollTo(0,p.y)}
 (async()=>{let who=null;try{who=await (await fetch('/api/whoami')).json()}catch{}
   // no answer from the Spark: a browser the profile trusts opens its offline copy to read (verlauf.js), else as before
   if(!who||typeof who!=='object')who=offlineWho()||{admin:true};
@@ -44,7 +56,7 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
-  try{const s=sessionStorage.getItem('versec');sessionStorage.removeItem('versec');if(s&&s!=='chat'&&$(s))goSec(s)}catch{}
+  placeBack();   // a reload the page did itself: back to the same place (base.js placeNow)
   // "Im Panel öffnen" in the iPhone app: #go=<page>, #cfg=<settings page> or #me=<Ich area>, only known names
   try{const h=/^#(go|cfg|me)=([a-z]{2,12})$/.exec(location.hash);if(h){history.replaceState(null,'',location.pathname+location.search);
     if(h[1]==='go'&&ADMIN&&h[2]!=='chat'&&$(h[2])&&$(h[2]).tagName==='SECTION')goSec(h[2]);
@@ -52,7 +64,7 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     else if(h[1]==='me'&&PROFILE&&/box$/.test(h[2])&&$(h[2]))openMe(h[2])}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
-  try{const fr=sessionStorage.getItem('flagsreload');if(fr){sessionStorage.removeItem('flagsreload');const e=$('updtoast');e.textContent=fr==='away'?t('Deine Funktionen wurden geändert, Seite neu geladen.','Your functions were changed, page reloaded.'):t('Gespeichert, Seite mit den neuen Funktionen geladen.','Saved, page loaded with the new functions.');e.style.display='block';setTimeout(()=>e.style.display='none',5000)}}catch{}   // back where the new version was loaded
+  try{const fr=sessionStorage.getItem('flagsreload');if(fr){sessionStorage.removeItem('flagsreload');if(fr==='away')sayToast(t('Deine Funktionen wurden geändert, Seite neu geladen.','Your functions were changed, page reloaded.'),5000)}}catch{}   // back where the new version was loaded
   if(typeof goStart==='function')goStart(who);
   if(typeof mcpAuthStart==='function')mcpAuthStart();
   if(typeof mymBackStart==='function')mymBackStart();

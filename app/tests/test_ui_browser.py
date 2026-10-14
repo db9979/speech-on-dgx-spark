@@ -487,20 +487,24 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_switch_and_update_show_without_f5(self):
-        # a function switched on and saved shows at once (the page loads itself again, V01.0.197), and a new
-        # version on the Spark reloads an idle page with the new files (V01.0.120); api() still answers
+        # a function switched on and saved shows with the next change of page (V01.0.197; since V01.0.558 the
+        # open page itself no longer reloads, ruhige-seiten.md), and a new version on the Spark reloads an idle page
+        # with the new files (V01.0.120); api() still answers
         import account
         import panel
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 self.assertFalse(await pg.evaluate("TR_ON"))
+                await pg.evaluate("window.__same=1")
+                await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.transit=true;
+                  const r=await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+                  window.putOk=!!(r&&r.ok)})()""")
+                await self.until(pg, "WHO_PENDING===true", 20)
+                self.assertEqual(await pg.evaluate("window.__same"), 1)   # the open page stayed
                 async with pg.expect_navigation():
-                    await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.transit=true;
-                      const r=await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
-                      window.putOk=!!(r&&r.ok)})()""")
+                    await pg.evaluate("goSec('prof')")
                 await self.until(pg, "typeof TR_ON!=='undefined'&&TR_ON", 20)   # was a fixed 800 ms (red on GitHub)
-                self.assertIn("Gespeichert", await pg.evaluate("$('updtoast').textContent"))
                 old_p, old_a = panel.app_version, account.app_version
                 panel.app_version = account.app_version = lambda: "V99.0.1"
                 try:
@@ -1205,7 +1209,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4850 if w < 760 else 3850, f"{w}: {tall}px")   # V01.0.501: +1 line "NAS verbinden" (GitHub 3811 px at 1280), V01.0.490: +2 lines "Zustand per Sprache", "Rückgängig per Sprache", V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4950 if w < 760 else 3850, f"{w}: {tall}px")   # V01.0.557: +1 line "Verbrauchszähler" (4876 px at 390), V01.0.501: +1 line "NAS verbinden" (GitHub 3811 px at 1280), V01.0.490: +2 lines "Zustand per Sprache", "Rückgängig per Sprache", V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
