@@ -248,6 +248,7 @@
     "pebble": false,
     "android": false,
     "android_live": false,
+    "android_update": false,
     "desk": false,
     "desk_act": false,
     "desk_meeting": false,

@@ -17,6 +17,12 @@ plan messenger.md): the app keeps one connection open (a foreground service with
 and asks /api/android/wait, which answers as soon as a note is there or after WAIT_SECONDS with nothing; then it asks
 again. No Google service.
 
+"Update in der App" (chat.android_update, off; plan android-update-in-app.md): the app (from 1.3.0) asks
+/api/profile/android which version the Spark keeps, loads it from GET /api/android/apk with its sign-in, checks
+SHA-256, package name, version code and signing certificate itself and hands it to Android's package installer,
+which checks the signature against the installed app once more and asks the person. Only the own Spark, never
+GitHub. The version each profile's app runs (from its user agent) is kept in memory for Zustand → Geräte-Updates.
+
 Admin switch chat.android, off at first; released it works for every profile the admin did not block (chat.deny);
 never guests.
 """
@@ -69,6 +75,8 @@ _notes = {}               # uid -> [{"n", "t", "title", "body", "tag"}]
 _seq = {}                 # uid -> last note number
 _polled = {}              # uid -> time of the app's last question
 _waiters = {}             # uid -> [(loop, asyncio.Event)] of the open waits
+_seen = {}                # uid -> (app version from the user agent, time), for Zustand → Geräte-Updates
+SEEN_KEEP = 14 * 24 * 3600
 _state = {"checked": 0.0, "error": ""}
 
 
@@ -87,6 +95,43 @@ def allowed(uid):
 def live_ok(uid):
     """Notes at once over a lasting connection (admin switch, not blocked, the profile's preference)."""
     return features.allowed("androidlive", uid)
+
+
+def update_ok(uid):
+    """The app may load and install its own update (admin switch android_update, not blocked)."""
+    return features.allowed("androidupdate", uid)
+
+
+def _ver(v):
+    return tuple(int(x) for x in v.split(".")) if v and VERSION.fullmatch(v) else ()
+
+
+def newer(have, kept):
+    """True when the Spark keeps a newer version than `have`, None when one of them is unknown."""
+    a, b = _ver(have), _ver(kept)
+    return (b > a) if a and b else None
+
+
+def saw(request, prof, now=None):
+    """Remembers which app version the profile's app runs (user agent "SparkAndroid/x.y.z"); logs a change."""
+    m = UA.search(request.headers.get("user-agent", ""))
+    if not m:
+        return
+    now = time.time() if now is None else now
+    v = m.group(1)
+    with _lock:
+        old = _seen.get(prof["id"], ("", 0))[0]
+        _seen[prof["id"]] = (v, now)
+    if old != v:
+        print("android: app version", old or "first", "->", v, "for", profiles.log_name(prof), flush=True)
+
+
+def seen(uid, now=None):
+    """The app version the profile's app named lately, "" when it did not ask in SEEN_KEEP."""
+    now = time.time() if now is None else now
+    with _lock:
+        v, t = _seen.get(uid, ("", 0))
+    return v if now - t < SEEN_KEEP else ""
 
 
 def live_count():
@@ -315,13 +360,14 @@ def _on(request: Request, prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/android", dependencies=[Depends(assistant)])
-def profile_get(prof=Depends(own_profile)):
+def profile_get(request: Request, prof=Depends(own_profile)):
     uid = prof["id"]
+    saw(request, prof)
     with _lock:
         waiting = bool(_waiters.get(uid))
     return {"enabled": admin_on(), "on": profile_on(uid), "app": meta() if admin_on() else None,
             "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive") and not features.blocked("androidlive", uid),
-            "live": live_ok(uid), "connected": waiting}
+            "live": live_ok(uid), "connected": waiting, "update": update_ok(uid)}
 
 
 @router.post("/api/profile/android/link", dependencies=[Depends(assistant)])
@@ -350,6 +396,7 @@ def app_notes(request: Request, after: int = 0, prof=Depends(browser_profile)):
     guard.limit(request, "android", prof["id"])
     if not allowed(prof["id"]):
         raise HTTPException(403, "the Android app is turned off")
+    saw(request, prof)
     return _answer(prof["id"], after)
 
 
@@ -357,7 +404,8 @@ def _answer(uid, after):
     items, last = notes(uid, max(0, min(after, 10 ** 9)))
     m = meta()
     return {"notes": [{"n": x["n"], "title": x["title"], "body": x["body"], "tag": x["tag"]} for x in items],
-            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None, "live": live_ok(uid)}
+            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None, "live": live_ok(uid),
+            "update": update_ok(uid)}
 
 
 @router.get("/api/android/wait", dependencies=[Depends(assistant)])
@@ -369,6 +417,7 @@ async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profil
     guard.limit(request, "androidwait", uid)
     if not allowed(uid) or not live_ok(uid):
         raise HTTPException(403, "notes at once are turned off")
+    saw(request, prof)
     after = max(0, min(after, 10 ** 9))
     if _seq.get(uid, 0) > after or _seq.get(uid, 0) < after:   # something new, or the Spark started over
         return _answer(uid, after)
@@ -407,6 +456,25 @@ async def admin_fetch(request: Request):
     if err and not none:   # "no app in the repo yet" is a state the page shows (with 200), not a failed request
         raise HTTPException(502, err)
     return admin_get()
+
+
+@router.get("/api/android/apk", dependencies=[Depends(assistant)])
+def app_apk(request: Request, prof=Depends(browser_profile)):
+    """Update in der App: the APK the Spark keeps, for the profile's own app (its sign-in, never a link). The app
+    checks the file itself before Android installs it; this only hands out what the Spark checked when fetching."""
+    uid = prof["id"]
+    guard.limit(request, "android", uid)
+    if not update_ok(uid):
+        print("android: app update refused for", profiles.log_name(prof), "reason switched off or blocked", flush=True)
+        raise HTTPException(403, "Update in der App hat der Admin nicht freigegeben.")
+    m = meta()
+    if not m:
+        print("android: app update refused for", profiles.log_name(prof), "reason no app on the Spark", flush=True)
+        raise HTTPException(409, "Der Spark hat die App noch nicht geholt.")
+    print("android: app update", m["version"], "sent to", profiles.log_name(prof), flush=True)
+    _live_mark("Eingang", "Android-App: Update geladen")
+    return FileResponse(APK, media_type="application/vnd.android.package-archive",
+                        filename=f"spark-{m['version']}.apk", headers={"Cache-Control": "no-store"})
 
 
 def apk_response(request: Request, t: str = ""):

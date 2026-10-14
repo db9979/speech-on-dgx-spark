@@ -11,6 +11,8 @@
     <!-- "Mitteilungen sofort": one lasting connection to the own Spark (LiveConn), only when switched on -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- "Update in der App": hands the checked new version to Android's installer, which asks the person every time -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="false"
@@ -59,6 +61,18 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Notes from the own home server without a push service" />
         </service>
+
+        <!-- "Update in der App": the installer's answer (only from our own session) and the note after the update -->
+        <receiver
+            android:name=".InstallDone"
+            android:exported="false" />
+        <receiver
+            android:name=".Replaced"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- the Notaus as a quick settings tile (NotausTile): always behind a question, only switching on -->
         <service

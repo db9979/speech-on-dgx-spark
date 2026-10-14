@@ -230,6 +230,12 @@ def devices(uid):
                            "auto": bool(s.get("auto", True)), "online": bool(s.get("online"))})
     for x in _desks(uid):
         out[x["kind"]].append({"id": x["id"], "name": x["name"], "have": x["have"], "newer": x["newer"]})
+    if has_android(uid):
+        import android
+        have = android.seen(uid)
+        if have:   # the version the profile's app named lately (user agent), kept in memory only
+            out["android"].append({"id": "and", "name": "Android-Handy", "have": have,
+                                   "newer": android.newer(have, (android.meta() or {}).get("version"))})
     for x in _watches(uid):
         out["pebble"].append({"id": x["id"], "name": x["name"], "have": "", "newer": None})
     return out
@@ -628,7 +634,7 @@ def for_live(now=None):
     for k in o["kinds"]:
         n = len(k["devices"])
         parts.append({"kind": k["kind"], "name": k["name"][0], "short": SHORT[k["kind"]], "version": k["version"], "n": n,
-                      "current": k["current"], "waiting": k["waiting"], "counted": k["kind"] not in ("android", "pebble")})
+                      "current": k["current"], "waiting": k["waiting"], "counted": k["kind"] != "pebble"})
     out = {"kinds": parts, "night": {"on": o["night"]["on"], "pending": o["night"]["pending"], "stopped": o["night"]["stopped"]}}
     _live_cache[:] = [now, out]
     return out

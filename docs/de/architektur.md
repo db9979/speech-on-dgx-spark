@@ -229,7 +229,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 
 | Modul | Aufgabe |
 |---|---|
-| `app/panel/android.py` | Android-App: Download und Kopplung |
+| `app/panel/android.py` | Android-App: Download, Mitteilungen und Update in der App |
 | `app/panel/apns.py` | Mitteilungen an die iPhone-App |
 | `app/panel/appupdate.py` | Spark-Update aus der iPhone-App |
 | `app/panel/begleiter.py` | Spark-Begleiter für Windows und Mac |

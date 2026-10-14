@@ -3,6 +3,7 @@ package io.github.db9979.spark
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
@@ -28,6 +30,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 
@@ -36,7 +39,8 @@ import android.window.OnBackInvokedDispatcher
  * small native screen for the address. The page signs in like a browser; the app adds the microphone for the
  * page, file upload, the Android back gesture, the assistant button (#talk), text shared from other apps
  * (#ask=…, only into the text field) and notes while closed (NotePoll). Links to other sites open in the
- * browser; the app never loads anything but its own Spark.
+ * browser; the app never loads anything but its own Spark. "Update in der App" (Updater): a strip on top when the
+ * Spark keeps a newer app, the fixed link sparkapp:update on the page and the note "Neue Spark-App" start it.
  */
 class MainActivity : Activity() {
     private lateinit var store: Store
@@ -45,6 +49,11 @@ class MainActivity : Activity() {
     private lateinit var setup: LinearLayout
     private lateinit var address: EditText
     private lateinit var hint: TextView
+    private lateinit var strip: LinearLayout
+    private lateinit var stripText: TextView
+    private var answer: Updater.Answer? = null
+    private var askedAt = 0L
+    private var waitingForPermission = false
     private var pendingMic: PermissionRequest? = null
     private var pendingFiles: ValueCallback<Array<Uri>>? = null
 
@@ -54,7 +63,12 @@ class MainActivity : Activity() {
         root = FrameLayout(this)
         web = makeWeb()
         setup = makeSetup()
-        root.addView(web, FrameLayout.LayoutParams(-1, -1))
+        strip = makeStrip()
+        val page = LinearLayout(this)
+        page.orientation = LinearLayout.VERTICAL
+        page.addView(strip, LinearLayout.LayoutParams(-1, -2))
+        page.addView(web, LinearLayout.LayoutParams(-1, 0, 1f))
+        root.addView(page, FrameLayout.LayoutParams(-1, -1))
         root.addView(setup, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
         // Android 15 draws behind the system bars: keep the page clear of them and of the keyboard
@@ -87,6 +101,15 @@ class MainActivity : Activity() {
         web.saveState(outState)
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (waitingForPermission && packageManager.canRequestPackageInstalls()) {
+            waitingForPermission = false
+            startUpdate()   // back from "Unbekannte Apps installieren" with the permission: go on
+        }
+        askUpdate(false)
+    }
+
     override fun onPause() {
         super.onPause()
         CookieManager.getInstance().flush()
@@ -114,6 +137,10 @@ class MainActivity : Activity() {
         }
         when (intent?.action) {
             Intent.ACTION_ASSIST -> load("$base/#talk")
+            ACTION_UPDATE -> {
+                if (web.url == null) load("$base/") else showWeb()
+                startUpdate()
+            }
             Intent.ACTION_SEND -> {
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty().take(4000)
                 load(if (text.isBlank()) "$base/" else "$base/#ask=" + Uri.encode(text))
@@ -148,6 +175,10 @@ class MainActivity : Activity() {
         CookieManager.getInstance().setAcceptCookie(true)
         w.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
+                if (req.url.scheme == "sparkapp") {   // the page's fixed link: the app does the rest itself
+                    if (req.url.schemeSpecificPart == "update") startUpdate()
+                    return true
+                }
                 val base = store.base ?: return true
                 val url = req.url.toString()
                 if (Store.sameOrigin(base, url)) return false
@@ -225,6 +256,125 @@ class MainActivity : Activity() {
         }
     }
 
+    // ------------------------------------------------------------ update in the app (Updater)
+    private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
+
+    private fun makeStrip(): LinearLayout {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.HORIZONTAL
+        box.gravity = Gravity.CENTER_VERTICAL
+        box.setPadding(dp(14), dp(8), dp(6), dp(8))
+        box.setBackgroundColor(Color.rgb(29, 78, 216))
+        stripText = TextView(this)
+        stripText.setTextColor(Color.WHITE)
+        stripText.textSize = 14f
+        val go = Button(this)
+        go.text = "Jetzt aktualisieren"
+        go.isAllCaps = false
+        go.setOnClickListener { startUpdate() }
+        val close = Button(this)
+        close.text = "✕"
+        close.contentDescription = "Später"
+        close.setTextColor(Color.WHITE)
+        close.setBackgroundColor(Color.TRANSPARENT)
+        close.setOnClickListener {
+            answer?.offer?.let { store.skipCode = it.code }   // back with the next version
+            strip.visibility = View.GONE
+        }
+        box.addView(stripText, LinearLayout.LayoutParams(0, -2, 1f))
+        box.addView(go, LinearLayout.LayoutParams(-2, -2))
+        box.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
+        box.visibility = View.GONE
+        return box
+    }
+
+    /** Asks the own Spark for a newer app (at most every 10 minutes unless [now]) and shows or hides the strip. */
+    private fun askUpdate(now: Boolean) {
+        if (store.base == null || (!now && System.currentTimeMillis() - askedAt < 10 * 60 * 1000L)) return
+        askedAt = System.currentTimeMillis()
+        Thread {
+            val a = Updater.ask(this)
+            runOnUiThread {
+                answer = a
+                showStrip()
+            }
+        }.start()
+    }
+
+    private fun showStrip() {
+        val o = answer?.offer
+        val show = answer?.newer == true && o != null && o.code > store.skipCode && !Updater.busy
+        if (show && o != null) stripText.text = "Neue App-Version ${o.version} · du hast ${BuildConfig.VERSION_NAME}"
+        strip.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    private fun startUpdate() {
+        if (Updater.busy) return
+        if (!packageManager.canRequestPackageInstalls()) {
+            AlertDialog.Builder(this)
+                .setTitle("Einmal erlauben")
+                .setMessage("Damit die Spark-App sich selbst aktualisieren kann, fragt Android einmal: bei „Spark“ „Dieser Quelle vertrauen“ einschalten und zurück zur App.")
+                .setPositiveButton("Weiter") { _, _ ->
+                    waitingForPermission = true
+                    try {
+                        startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                    } catch (_: ActivityNotFoundException) {
+                        waitingForPermission = false
+                    }
+                }
+                .setNegativeButton("Abbrechen", null)
+                .show()
+            return
+        }
+        Updater.busy = true
+        strip.visibility = View.GONE
+        val text = TextView(this)
+        text.text = "Lade die neue Version vom Spark …"
+        val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+        bar.max = 100
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(dp(24), dp(16), dp(24), dp(8))
+        box.addView(text)
+        box.addView(bar)
+        val dlg = AlertDialog.Builder(this).setTitle("App-Update").setView(box).setCancelable(false).show()
+        Thread {
+            try {
+                val a = Updater.ask(this) ?: throw Updater.Fail("Der Spark antwortet gerade nicht. Später noch einmal.")
+                if (!a.allowed) throw Updater.Fail("Update in der App hat der Admin nicht freigegeben.")
+                val o = a.offer
+                if (o == null || !a.newer) throw Updater.Fail("Diese App ist schon aktuell.")
+                var shown = -1
+                val f = Updater.fetch(this, o) { n ->
+                    val pct = (n * 100 / o.size).toInt()
+                    if (pct != shown) {
+                        shown = pct
+                        runOnUiThread { bar.progress = pct }
+                    }
+                }
+                runOnUiThread { text.text = "Prüfe Prüfsumme, Paket, Version und Signatur …" }
+                try {
+                    Updater.check(this, f, o)
+                } catch (e: Exception) {
+                    f.delete()
+                    throw e
+                }
+                runOnUiThread { text.text = "Android fragt gleich: „Aktualisieren“ antippen." }
+                Updater.install(this, f)   // busy stays until the installer answers (InstallDone)
+                runOnUiThread { dlg.dismiss() }
+            } catch (e: Exception) {
+                Updater.busy = false
+                val why = (e as? Updater.Fail)?.message ?: "Laden oder Prüfen ging nicht. Später noch einmal."
+                runOnUiThread {
+                    dlg.dismiss()
+                    AlertDialog.Builder(this).setTitle("Update nicht installiert")
+                        .setMessage("$why Nichts wurde geändert.").setPositiveButton("OK", null).show()
+                    askUpdate(true)
+                }
+            }
+        }.start()
+    }
+
     // ------------------------------------------------------------ the address screen
     private fun makeSetup(): LinearLayout {
         val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -297,5 +447,6 @@ class MainActivity : Activity() {
         private const val REQ_MIC = 1
         private const val REQ_FILES = 2
         private const val REQ_NOTES = 3
+        const val ACTION_UPDATE = "io.github.db9979.spark.UPDATE"
     }
 }

@@ -20,6 +20,20 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Teilen an Spark:** Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst.
 - **Notaus-Kachel** (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe [Sicherheit und Betrieb](sicherheit-und-betrieb.md)).
 - **Neue Version:** Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat.
+- **Update in der App** (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus).
+  Freigegeben zeigt die App oben einen Streifen „Neue App-Version … · Jetzt aktualisieren“ (✕ blendet ihn bis zur
+  nächsten Version aus); auch die Mitteilung „Neue Spark-App“ und der Knopf unter Ich → Android-App starten das Update.
+  Die App fragt nur ihren eigenen Spark (`/api/profile/android`: Version, Größe, SHA-256), nie GitHub, und lädt die APK
+  mit ihrer Anmeldung von `GET /api/android/apk` in ihren Cache. Vor dem Installieren prüft sie selbst: Größe und
+  SHA-256 wie gemeldet, Paketname `io.github.db9979.spark`, höhere Versionsnummer, gleicher Signierschlüssel wie die
+  installierte App. Dann übernimmt der Paket-Installer von Android; er prüft die Signatur noch einmal und fragt
+  „Aktualisieren“. Beim ersten Mal fragt Android einmal, ob die Spark-App Apps installieren darf („Dieser Quelle
+  vertrauen“). Passt etwas nicht, löscht die App die Datei und installiert nichts. Ganz ohne Tipp geht es nicht: Still
+  installieren dürfen nur Store-Apps oder Apps einer Firmen-Geräteverwaltung. Das Update auf 1.3.0 selbst läuft noch
+  einmal über den Download-Link.
+- **Versionen der Handys:** Zustand → Geräte-Updates zeigt für die Android-App, welches Profil welche App-Version hat
+  und wie viele Handys aktuell sind (aus der Kennung „SparkAndroid/x.y.z“ ihrer Anfragen, nur im Speicher, 14 Tage);
+  Live zählt „Android aktuell/alle“. Eine neue Version eines Profils steht als Zeile `android: app version … -> …` im Log.
 
 ## Einrichten
 
@@ -49,6 +63,11 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - `#ask=` legt geteilten Text nur ins Tippfeld, nie wird etwas von selbst geschickt; beide Sprünge gelten nur in der App.
 - Die APK kommt nur von GitHubs Download-Adressen, mit passender Größe und SHA-256. Der Download-Link trägt ein
   Einmal-Token (nur sein Hash im Speicher, 30 Minuten, höchstens 5 Abrufe); ohne gültigen Link 404.
+- Update in der App: eigener Admin-Schalter `chat.android_update` (aus), sperrbar je Profil; `GET /api/android/apk`
+  nur mit Browser-Anmeldung des Profils (kein Geräteschlüssel), Rate-Limit, gibt nur die APK heraus, die der Spark
+  beim Holen geprüft hat. Die App folgt keiner Umleitung und vertraut nur der eigenen Adresse; Android installiert
+  nur über die installierte App, wenn der Signierschlüssel passt. Die Seite gibt der App nichts mit: der Knopf ist der
+  feste Link `sparkapp:update`, den die App abfängt. Log: `android: app update … sent to …` oder `… refused … reason …`.
 - Mitteilungen liegen nur im Speicher (24 Stunden, höchstens 30 pro Profil) und gehen nur an die eigene Anmeldung.
 
 ## Neue Version

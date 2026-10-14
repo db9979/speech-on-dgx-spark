@@ -144,7 +144,7 @@ OHNE = {
     "chat": (
         "action_check", "loop_stop",
         "telegram_panel_url",
-        "agent", "agent_mcp", "agent_watch", "android", "android_live", "berater", "berater_auto", "berater_calls", "berater_chat",
+        "agent", "agent_mcp", "agent_watch", "android", "android_live", "android_update", "berater", "berater_auto", "berater_calls", "berater_chat",
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_issue", "berater_me", "berater_notify",
         "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_mode", "verbund_domain", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",

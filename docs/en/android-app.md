@@ -20,6 +20,19 @@ since V01.0.296) and adds only what a page cannot do:
 - **Share to Spark:** share text in another app → Spark. The text is put into the text field, you send it yourself.
 - **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
+- **Update in the app** (1.3.0 and later, V01.0.533): admin: Features → Android app → "Android: update in the app" (off).
+  Once released the app shows a strip "New app version … · Update now" at the top (✕ hides it until the next
+  version); the note "New Spark app" and the button under Me → Android app start the update too. The app asks only
+  its own Spark (`/api/profile/android`: version, size, SHA-256), never GitHub, and loads the APK with its sign-in from
+  `GET /api/android/apk` into its cache. Before installing it checks itself: size and SHA-256 as reported, package
+  name `io.github.db9979.spark`, a higher version code, the same signing key as the installed app. Then Android's
+  package installer takes over; it checks the signature once more and asks "Update". The first time Android asks
+  once whether the Spark app may install apps ("Allow from this source"). If anything does not match, the app
+  deletes the file and installs nothing. It cannot work without a tap: only store apps or apps of a company device
+  management may install silently. The update to 1.3.0 itself still goes once through the download link.
+- **Versions of the phones:** Status → Device updates shows for the Android app which profile runs which app version
+  and how many phones are up to date (from the "SparkAndroid/x.y.z" tag of their requests, in memory only, 14 days);
+  Live counts "Android current/all". A new version of a profile shows as a line `android: app version … -> …` in the log.
 
 ## Setup
 
@@ -48,6 +61,11 @@ since V01.0.296) and adds only what a page cannot do:
 - `#ask=` only puts shared text into the text field, nothing is ever sent by itself; both jumps only work in the app.
 - The APK only comes from GitHub's download addresses with matching size and SHA-256. The download link carries a
   one-time token (only its hash in memory, 30 minutes, at most 5 downloads); without a valid link 404.
+- Update in the app: its own admin switch `chat.android_update` (off), blockable per profile; `GET /api/android/apk`
+  only with the profile's browser login (no device key), rate limit, hands out only the APK the Spark checked when
+  fetching it. The app follows no redirect and trusts only its own address; Android installs over the installed app
+  only when the signing key matches. The page hands the app nothing: the button is the fixed link `sparkapp:update`
+  the app catches. Log: `android: app update … sent to …` or `… refused … reason …`.
 - Notes stay in memory only (24 hours, at most 30 per profile) and only go to the profile's own login.
 
 ## New version

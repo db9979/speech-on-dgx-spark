@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import os
+import time
 import unittest
 
 from tests import helpers
@@ -270,6 +271,85 @@ class Live(unittest.TestCase):
             kt = f.read()
         self.assertIn("/api/android/wait", kt)
         self.assertIn("code == 401 || code == 403", kt)   # switched off or signed out: the connection ends
+
+class Update(unittest.TestCase):
+    """"Update in der App": the app loads the APK from its own Spark with its sign-in (android.py, Updater.kt)."""
+    def setUp(self):
+        Android.setUp(self)
+        android._seen.clear()
+
+    fetch = Android.fetch
+
+    def tearDown(self):
+        helpers.set_config(android_update=False)
+        android._seen.clear()
+        Android.tearDown(self)
+
+    def test_off_by_default_only_with_the_switch_and_never_blocked_or_for_guests(self):
+        with open(helpers.APP + "/config.default.json") as f:
+            self.assertIs(json.load(f)["chat"]["android_update"], False)
+        self.assertNotIn("android_update", profiles.SETTINGS)   # the admin releases it, no profile switch
+        self.assertEqual(self.fetch(good("1.3.0", 5)), "1.3.0")
+        a = profile("Uwe")
+        uid = uid_of("Uwe")
+        self.assertEqual(a.get("/api/android/apk").status_code, 403)                 # the admin's switch is off
+        self.assertFalse(a.get("/api/android/notes").json()["update"])
+        helpers.set_config(android_update=True)
+        r = a.get("/api/android/apk")
+        self.assertEqual((r.status_code, r.content), (200, APK))                      # released: works at once
+        self.assertEqual(r.headers["content-type"], "application/vnd.android.package-archive")
+        self.assertTrue(a.get("/api/android/notes").json()["update"])
+        p = a.get("/api/profile/android").json()
+        self.assertTrue(p["update"])
+        self.assertEqual((p["app"]["version"], p["app"]["code"], p["app"]["size"]), ("1.3.0", 5, len(APK)))
+        helpers.set_config(deny={"androidupdate": [uid]})                            # the admin blocks this profile
+        self.assertEqual(a.get("/api/android/apk").status_code, 403)
+        self.assertFalse(a.get("/api/profile/android").json()["update"])
+        helpers.set_config(deny={"android": [uid]})                                  # ... or the app it builds on
+        self.assertEqual(a.get("/api/android/apk").status_code, 403)
+        helpers.set_config(deny={})
+        self.assertEqual(TestClient(panel.app).get("/api/android/apk").status_code, 401)   # guests never
+
+    def test_no_app_on_the_spark_and_a_rate_limit(self):
+        helpers.set_config(android_update=True)
+        a = profile("Vera")
+        self.assertEqual(a.get("/api/android/apk").status_code, 409)
+        self.assertEqual(self.fetch(good("1.3.0", 5)), "1.3.0")
+        codes = [a.get("/api/android/apk").status_code for _ in range(25)]
+        self.assertIn(429, codes)
+
+    def test_the_version_each_app_runs_for_device_updates(self):
+        import geraeteupdate
+        self.assertEqual(self.fetch(good("1.3.0", 5)), "1.3.0")
+        a = profile("Wim")
+        uid = uid_of("Wim")
+        a.get("/api/android/notes", headers={"user-agent": "SparkAndroid/1.2.0"})
+        self.assertEqual(android.seen(uid), "1.2.0")
+        self.assertEqual(android.seen(uid, now=time.time() + android.SEEN_KEEP + 1), "")   # old answers fade
+        rows = geraeteupdate.devices(uid)["android"]
+        self.assertEqual([(r["have"], r["newer"]) for r in rows], [("1.2.0", True)])
+        a.get("/api/profile/android", headers={"user-agent": "Mozilla/5.0 SparkAndroid/1.3.0"})   # the page in the app
+        self.assertEqual([(r["have"], r["newer"]) for r in geraeteupdate.devices(uid)["android"]], [("1.3.0", False)])
+        a.get("/api/android/notes", headers={"user-agent": "Mozilla/5.0"})          # a browser names no version
+        self.assertEqual(android.seen(uid), "1.3.0")
+        self.assertEqual((android.newer("1.2.9", "1.10.0"), android.newer("", "1.0.0")), (True, None))
+
+    def test_the_app_checks_before_android_installs(self):
+        root = os.path.join(helpers.APP, "..", "android", "app", "src", "main")
+        if not os.path.isdir(root):   # a copy with only app/
+            return
+        with open(os.path.join(root, "java", "io", "github", "db9979", "spark", "Updater.kt")) as f:
+            kt = f.read()
+        for must in ("/api/android/apk", "instanceFollowRedirects = false", "offer.sha", "info.packageName != ctx.packageName",
+                     "longVersionCode <= BuildConfig.VERSION_CODE", "theirs.containsAll(own)", "PackageInstaller.SessionParams",
+                     "f.delete()"):
+            self.assertIn(must, kt)
+        self.assertNotIn("github.com", kt)   # only the own Spark
+        with open(os.path.join(root, "AndroidManifest.xml")) as f:
+            man = f.read()
+        self.assertIn("REQUEST_INSTALL_PACKAGES", man)
+        self.assertIn('android:name=".InstallDone"\n            android:exported="false"', man)
+
 
 if __name__ == "__main__":
     unittest.main()

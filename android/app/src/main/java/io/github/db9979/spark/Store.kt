@@ -20,6 +20,11 @@ class Store(ctx: Context) {
         get() = prefs.getInt("told_code", 0)
         set(v) = prefs.edit().putInt("told_code", v).apply()
 
+    /** The app version whose update strip the person closed (it comes back with the next version). */
+    var skipCode: Int
+        get() = prefs.getInt("skip_code", 0)
+        set(v) = prefs.edit().putInt("skip_code", v).apply()
+
     companion object {
         private val BASE = Regex("https://[A-Za-z0-9.\\-]+(:\\d{1,5})?")
 

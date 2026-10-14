@@ -38,6 +38,7 @@ OHNE = {
     "tasks": "kein eigener Löschweg: die Listen liegen in Home Assistant, gespeichert ist nur die Zuordnung",
     "android": "kein eigener Löschweg der Funktion: die App-Schlüssel stehen unter Ich → Sicherheit (Geräte)",
     "androidlive": "keine eigenen Daten (Unterschalter der Android-App)",
+    "androidupdate": "keine eigenen Daten: nur die App-Version im Speicher (Unterschalter der Android-App)",
     "iphonepanel": "keine eigenen Daten (Unterschalter der iPhone-App)",
     "schreibapps": "keine eigenen Daten (Unterschalter der Schreibhilfe)",
     "begleitertun": "keine eigenen Daten (Unterschalter des Begleiters)",

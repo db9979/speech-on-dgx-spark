@@ -124,7 +124,9 @@ class NotePoll : JobService() {
                 val code = app.optInt("code")
                 if (code > BuildConfig.VERSION_CODE && code > store.toldCode) {
                     store.toldCode = code
-                    show(ctx, 0, "Neue Spark-App", "Version ${app.optString("version").take(20)} ist da. Antippen zum Laden.", "$base/#me=andbox")
+                    // "Update in der App": a tap starts the update in the app, else the page with the download link
+                    if (d.optBoolean("update", false)) show(ctx, 0, "Neue Spark-App", "Version ${app.optString("version").take(20)} ist da. Antippen zum Aktualisieren.", "$base/", MainActivity.ACTION_UPDATE)
+                    else show(ctx, 0, "Neue Spark-App", "Version ${app.optString("version").take(20)} ist da. Antippen zum Laden.", "$base/#me=andbox")
                 }
             }
         }
@@ -141,10 +143,10 @@ class NotePoll : JobService() {
             return out.toString("UTF-8")
         }
 
-        private fun show(ctx: Context, id: Int, title: String, body: String, open: String) {
+        private fun show(ctx: Context, id: Int, title: String, body: String, open: String, action: String = Intent.ACTION_VIEW) {
             val nm = ctx.getSystemService(NotificationManager::class.java) ?: return
             nm.createNotificationChannel(NotificationChannel(CHANNEL, "Hinweise vom Spark", NotificationManager.IMPORTANCE_HIGH))
-            val tap = Intent(ctx, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(Uri.parse(open))
+            val tap = Intent(ctx, MainActivity::class.java).setAction(action).setData(Uri.parse(open))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val pi = PendingIntent.getActivity(ctx, id, tap, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             val n = Notification.Builder(ctx, CHANNEL)

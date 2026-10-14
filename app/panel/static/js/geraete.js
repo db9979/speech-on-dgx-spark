@@ -6,7 +6,7 @@ const DEVW=s=>{if(!s)return t('noch nie','never');const d=new Date(s*1000);retur
 function devKind(k){const n=t(k.name[0],k.name[1]),devs=k.devices||[];
   const ver=k.version?esc(k.version):esc(t('noch keine','none yet'));
   const pill=k.error?'bad':k.waiting?'warn':'ok';
-  const cnt=k.kind==='android'?t(`${k.profiles||0} Profile mit der App`,`${k.profiles||0} profiles with the app`)
+  const cnt=k.kind==='android'?t(`${k.profiles||0} Profile mit der App · ${k.current} von ${devs.length} Handys aktuell`,`${k.profiles||0} profiles with the app · ${k.current} of ${devs.length} phones up to date`)
     :k.kind==='pebble'?t(`${devs.length} Uhren`,`${devs.length} watches`)
     :t(`${k.current} von ${devs.length} aktuell`,`${k.current} of ${devs.length} up to date`);
   const list=devs.map(d=>`<li>${esc(d.name)}${d.owner?' <span class="mut">('+esc(d.owner)+')</span>':''} · ${d.have?esc(d.have):esc(t('Version unbekannt','version unknown'))}${

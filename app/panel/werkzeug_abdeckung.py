@@ -149,6 +149,7 @@ WITHOUT = {
     "telegram": "Kanal",
     "android": "Kanal",
     "androidlive": "Kanal",
+    "androidupdate": "macht die App selbst",
     "pebble": "Kanal",
     "wyoming": "Kanal für Home Assistant Assist",
     "iphonepush": "Kanal",

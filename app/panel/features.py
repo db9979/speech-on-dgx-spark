@@ -261,6 +261,8 @@ FEATURES = (
     F("android", "Android-App", "Android app", "go", ("android",), me="andbox", guide="android"),
     F("androidlive", "Android: Mitteilungen sofort", "Android: notes at once", "go", ("android_live",), pref="android_live",
       parent="android", me="andbox", guide="androidlive"),
+    F("androidupdate", "Android: Update in der App", "Android: update in the app", "go", ("android_update",),
+      parent="android", me="andbox", guide="androidupdate"),
     F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",),
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
