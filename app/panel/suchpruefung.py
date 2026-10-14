@@ -38,9 +38,10 @@ import docembed
 import documents
 import features
 import guard
+import llm
 import profiles
 import vorrang
-from common import load_config, no_think, write_json
+from common import load_config, write_json
 from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
@@ -164,20 +165,9 @@ def check_question(text, piece):
 
 async def ask_model(piece):
     """The language model's question for one piece (tests replace this)."""
-    import httpx
     import chat
-    ccfg = _chat()
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-        model = await chat.llm_model(c, ccfg, headers)
-        payload = {"model": model, "max_tokens": 120, "temperature": 0.4, "stream": False,
-                   "chat_template_kwargs": {"enable_thinking": False},
-                   "messages": [{"role": "system", "content": PROMPT},
-                                {"role": "user", "content": chat.wrap_outside(piece[:1500])}]}
-        r = await vorrang.post(c, "Prüffrage", ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
-        r.raise_for_status()
-        out = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    return no_think(out)
+    return await llm.complete(PROMPT, chat.wrap_outside(piece[:1500]), "Prüffrage", 120, temperature=0.4,
+                              ccfg=_chat(), stream=False)
 
 
 async def make_one(uid, now):

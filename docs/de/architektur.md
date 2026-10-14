@@ -147,6 +147,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/fremdstimme.py` | Fernseher und fremde Stimmen im von selbst geöffneten Mikrofon werden keine Frage |
 | `app/panel/images.py` | Bilder in der Frage: das Sprachmodell sieht sie selbst |
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken von Zuordnungen |
+| `app/panel/llm.py` | Der eine Weg zum Sprachmodell: Adresse, Schlüssel, Modellname, Aufruf |
 | `app/panel/roles.py` | Rollen: wie der Assistent antworten soll |
 | `app/panel/schreib.py` | Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen |
 | `app/panel/stille.py` | Aus Stille werden nie Wörter |
@@ -2103,7 +2104,7 @@ Selbsttests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`,
 
 ### Sprachmodell
 
-Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt.
+Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete.
 
 **Warum:** Die GPU teilt sich das Modell mit der Sprachausgabe. Wartet eine Person, darf kein Lernen oder Aufräumen im Hintergrund die Antwort bremsen. Und ein hängendes oder fehlendes Modell soll einen klaren Satz ergeben, keine Minuten Stille.
 
@@ -2196,7 +2197,9 @@ flowchart TD
 
 - `app/panel/chat.py` `chat`: setzt „Sprache läuft“ bei jedem Stück ([Schritt 1](#kn-llm-s1))
 - `app/panel/chat.py` `_answer`: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle ([Schritt 3](#kn-llm-s2), [Schritt 5](#kn-llm-s4), [Schritt 7](#kn-llm-s6))
-- `app/panel/chat.py` `llm_model`: Modellname aus Einstellung oder /models ([Schritt 4](#kn-llm-s3))
+- `app/panel/llm.py` `model`: Modellname aus Einstellung oder /models ([Schritt 4](#kn-llm-s3))
+- `app/panel/llm.py` `url`: die eine Adresse des Sprachmodells ([Schritt 1](#kn-llm-s1))
+- `app/panel/llm.py` `complete`: Aufruf jeder Hintergrundaufgabe, wartet in vorrang ([Schritt 1](#kn-llm-s1))
 - `app/panel/chat.py` `sampling`: top_p und presence_penalty ([Schritt 5](#kn-llm-s4))
 - `app/panel/chat.py` `first_within`: die erste Zeile muss rechtzeitig kommen ([Schritt 9](#kn-llm-s8))
 - `app/panel/chat.py` `ContextFull`: Anfrage länger als der Kontext ([Schritt 8](#kn-llm-s7))

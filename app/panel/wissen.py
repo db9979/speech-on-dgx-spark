@@ -51,10 +51,11 @@ import docembed
 import documents
 import guard
 import hintergrund
+import llm
 import profiles
 import vorrang
 import features
-from common import load_config, no_think, write_json
+from common import load_config, write_json
 from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
@@ -348,21 +349,9 @@ HEADS_STEP = 20      # documents whose context lines are built in one quiet step
 async def make_brief(text):
     """The language model's "Steckbrief" of a document's beginning, as a dict (tests replace this)."""
     import json as _json
-    import httpx
     import chat
-    ccfg = _chat()
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(READ_TIMEOUT, connect=5)) as c:
-        model = await chat.llm_model(c, ccfg, headers)
-        payload = {"model": model, "max_tokens": 400, "temperature": 0, "stream": False,
-                   "chat_template_kwargs": {"enable_thinking": False},
-                   "messages": [{"role": "system", "content": BRIEF_PROMPT},
-                                {"role": "user", "content": chat.wrap_outside(text)}]}
-        r = await vorrang.post(c, "Steckbrief", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
-        r.raise_for_status()
-        out = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    out = no_think(out)
+    out = await llm.complete(BRIEF_PROMPT, chat.wrap_outside(text), "Steckbrief", 400, temperature=0,
+                             timeout=READ_TIMEOUT, ccfg=_chat(), stream=False)
     m = re.search(r"\{.*\}", out, re.S)
     if not m:
         raise ValueError("no JSON in the answer")
@@ -377,23 +366,12 @@ def due_on(uid):
 async def read_page(jpeg):
     """The language model's text of one page picture."""
     import base64
-    import httpx
-    import chat
     import images
-    ccfg = _chat()
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(READ_TIMEOUT, connect=5)) as c:
-        model = await chat.llm_model(c, ccfg, headers)
-        pic = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
-        payload = {"model": model, "max_tokens": 2500, "temperature": 0, "stream": False,
-                   "chat_template_kwargs": {"enable_thinking": False},
-                   "messages": [{"role": "system", "content": READ_PROMPT},
-                                images.with_pictures({"content": "Lies diese Seite."}, [pic])]}
-        r = await vorrang.post(c, "Dokument lesen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
-        r.raise_for_status()
-        text = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    text = no_think(text).strip()
+    pic = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
+    text = await llm.complete(None, None, "Dokument lesen", 2500, temperature=0, timeout=READ_TIMEOUT, ccfg=_chat(),
+                              stream=False, messages=[{"role": "system", "content": READ_PROMPT},
+                                                      images.with_pictures({"content": "Lies diese Seite."}, [pic])])
+    text = text.strip()
     if not text:
         raise ValueError("empty answer")
     return text[:40000]

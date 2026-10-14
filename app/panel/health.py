@@ -29,6 +29,7 @@ import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
+import llm  # noqa: E402
 from common import load_config, write_json  # noqa: E402
 from core import UNITS, api_headers, app_version, run  # noqa: E402
 from monitor import service_health  # noqa: E402
@@ -231,10 +232,9 @@ async def livecheck(reason="manual"):
             t0 = time.time()
             ccfg = cfg.get("chat", {})
             try:
-                from chat import llm_model
-                headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-                model = await llm_model(c, ccfg, headers)
-                r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", headers=headers, json={
+                headers = llm.headers(ccfg)
+                model = await llm.model(c, ccfg, headers)
+                r = await c.post(llm.url(ccfg), headers=headers, json={
                     "model": model, "max_tokens": 200, "stream": False,
                     "messages": [{"role": "user", "content": "Antworte nur mit dem Wort OK."}]})
                 verbrauch.response("Dienst prüfen", r)
@@ -250,7 +250,7 @@ async def livecheck(reason="manual"):
             if steps[-1]["ok"]:
                 t0 = time.time()
                 try:
-                    r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", headers=headers, json={
+                    r = await c.post(llm.url(ccfg), headers=headers, json={
                         "model": model, "max_tokens": 300, "stream": False, "temperature": 0.1,
                         "chat_template_kwargs": {"enable_thinking": False},
                         "tools": [CHECK_TOOL], "tool_choice": "auto",

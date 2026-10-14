@@ -23,6 +23,7 @@ import threading
 import time
 
 import features
+import llm
 import profiles
 from common import load_config, no_think
 
@@ -496,8 +497,6 @@ def set_topics(uid, topics, by="model"):
 
 async def assign_topics(uid, now=None):
     """One call to the local model for facts without a topic (at most TOPIC_MAX). Returns how many got one."""
-    import httpx
-    import vorrang
     now = time.time() if now is None else now
     if now - _topic_tried.get(uid, 0) < TOPIC_RETRY_S:
         return 0
@@ -506,19 +505,10 @@ async def assign_topics(uid, now=None):
     ccfg = load_config().get("chat", {})
     if not todo or not ccfg.get("llm_url"):
         return 0
-    from chat import llm_model
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     lines = "\n".join(f"{f['id']}: {str(f.get('text') or '')[:200]}" for f in todo)
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-            payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.1, "max_tokens": 1200,
-                       "messages": [{"role": "system", "content": TOPIC_PROMPT},
-                                    {"role": "user", "content": "<<<FAKTEN\n" + lines.replace("<<<", "") + "\nFAKTEN>>>"}],
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(c, "Gedächtnis-Themen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers, who=uid)
-            r.raise_for_status()
-            text = r.json()["choices"][0]["message"].get("content") or ""
+        text = await llm.complete(TOPIC_PROMPT, "<<<FAKTEN\n" + lines.replace("<<<", "") + "\nFAKTEN>>>",
+                                  "Gedächtnis-Themen", 1200, temperature=0.1, timeout=120, who=uid, ccfg=ccfg)
     except Exception as e:
         print(f"gedaechtnis: themen nicht gesetzt ({type(e).__name__})", flush=True)
         return 0

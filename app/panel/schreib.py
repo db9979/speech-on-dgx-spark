@@ -43,9 +43,9 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response
 
 import features
 import guard
+import llm
 import notaus
 import profiles
-import verbrauch
 from common import load_config, no_think
 from core import assistant, browser_profile, confirm_code
 
@@ -284,24 +284,21 @@ def _trace(uid, client, label, chars, where):
 
 
 async def _model(msgs, temperature, max_tokens, job):
-    import chat
     import stufe
     import wartung
     if wartung.paused("llm"):     # Wartungspause: said at once, never the model's time-out
         print("schreib: wartungspause, nicht gefragt", flush=True)
         raise HTTPException(503, wartung.sentence())
     ccfg = load_config().get("chat", {})
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     async with httpx.AsyncClient(timeout=httpx.Timeout(SECONDS, connect=5)) as c:
-        model = await chat.llm_model(c, ccfg, headers)
+        model = await llm.model(c, ccfg)
         await stufe.wait_turn("", ccfg)    # somebody with Vorrang gets the first sentence first
         payload = {"model": model, "temperature": temperature, "max_tokens": max_tokens, "stream": False,
                    "chat_template_kwargs": {"enable_thinking": False}, "messages": msgs}
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
-    verbrauch.response("Schreibhilfe", r, payload)
+        r = await llm.post(c, ccfg, "Schreibhilfe", payload, speech_first=False)
     if r.status_code != 200:
         raise RuntimeError(f"Sprachmodell: HTTP {r.status_code}")
-    return str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
+    return llm.content(r)
 
 
 class Slot:

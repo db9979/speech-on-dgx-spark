@@ -64,6 +64,7 @@ import docrender
 import features
 import folien
 import guard
+import llm
 import notaus
 import profiles
 import symbole
@@ -635,20 +636,19 @@ def parse_json(raw):
 
 async def _model(msgs, schema, max_tokens):
     """One request to the language model without tools; schema-bound when the server can."""
-    import chat
     import stufe
     ccfg = load_config().get("chat", {})
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    headers = llm.headers(ccfg)
     async with httpx.AsyncClient(timeout=httpx.Timeout(LLM_SECONDS, connect=5)) as c:
-        model = await chat.llm_model(c, ccfg, headers)
+        model = await llm.model(c, ccfg, headers)
         await stufe.wait_turn("", ccfg)
         payload = {"model": model, "temperature": 0.4, "max_tokens": max_tokens, "stream": False,
                    "chat_template_kwargs": {"enable_thinking": False}, "messages": msgs,
                    "response_format": {"type": "json_schema", "json_schema": {"name": "Teil", "schema": schema}}}
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await c.post(llm.url(ccfg), json=payload, headers=headers)
         if r.status_code == 400:      # a server without schemas: the same without
             payload.pop("response_format")
-            r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+            r = await c.post(llm.url(ccfg), json=payload, headers=headers)
     verbrauch.response("Dokument erstellen", r, payload)
     if r.status_code != 200:
         raise RuntimeError(f"Sprachmodell: HTTP {r.status_code}")

@@ -39,6 +39,7 @@ import watch  # noqa: E402
 import chat_tools  # noqa: E402  (the tool calls of one answer)
 import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
+import llm  # noqa: E402  (one way to the language model)
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
 import wartung  # noqa: E402  (Wartungspause: a fixed sentence while the model is updated)
@@ -51,7 +52,7 @@ import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
-from common import load_config, no_think  # noqa: E402
+from common import load_config  # noqa: E402
 from core import admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
@@ -68,7 +69,6 @@ async def learn_once():
     if not (ccfg.get("memory", True) and ccfg.get("history", True) and ccfg.get("llm_url")):
         return 0
     adm = profiles.defaults(ccfg.get("defaults"))
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     saved = 0
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
         for uid in profiles.user_ids():
@@ -80,14 +80,10 @@ async def learn_once():
             for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
                 if vorrang.speaking():
                     return saved  # someone is talking: try again later
-                payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.2, "max_tokens": 400,
-                           "messages": recall.learn_messages(prof, convo),
-                           "chat_template_kwargs": {"enable_thinking": False}}
-                r = await vorrang.post(c, "Lernen aus Gesprächen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                                       json=payload, headers=headers)
-                r.raise_for_status()
+                answer = await llm.complete(None, None, "Lernen aus Gesprächen", 400, temperature=0.2, ccfg=ccfg, c=c,
+                                            messages=recall.learn_messages(prof, convo))
                 known = {x["text"].lower() for x in profiles.memory(uid)}
-                for fact in recall.parse_facts(r.json()["choices"][0]["message"].get("content") or ""):
+                for fact in recall.parse_facts(answer):
                     if fact.lower() not in known:
                         saved += bool(profiles.remember(uid, fact, auto=True, convo=convo.get("id")))
                 recall.mark(uid, convo)
@@ -237,20 +233,6 @@ def trim_piece(text, st):
     body = text.rstrip()
     st["ws"] = text[len(body):]
     return body
-
-
-_llm_models = {}
-
-
-async def llm_model(c, ccfg, headers):
-    if ccfg.get("llm_model"):
-        return ccfg["llm_model"]
-    url = ccfg["llm_url"].rstrip("/")
-    if url not in _llm_models:
-        r = await c.get(url + "/models", headers=headers, timeout=10)
-        r.raise_for_status()
-        _llm_models[url] = r.json()["data"][0]["id"]
-    return _llm_models[url]
 
 
 # Web search through the user's own SearXNG instance, offered to the LLM as a tool. SearXNG must
@@ -1379,17 +1361,9 @@ async def morning_briefing(uid, tz="", markdown=False):
                 parts.append(await asyncio.to_thread(mail.briefing, uid))
             except Exception:
                 pass
-        headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-        payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.2, "max_tokens": 500,
-                   "messages": [{"role": "system", "content": BRIEF_MD_SYSTEM if markdown else BRIEF_SYSTEM},
-                                {"role": "user", "content": "\n\n".join(parts)[:20000]}]}
-        if not ccfg.get("thinking"):
-            payload["chat_template_kwargs"] = {"enable_thinking": False}
-        r = await vorrang.post(c, "Tagesüberblick", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers, who=uid)
-        r.raise_for_status()
-        text = r.json()["choices"][0]["message"]["content"] or ""
-    return no_think(text)
+        return await llm.complete(BRIEF_MD_SYSTEM if markdown else BRIEF_SYSTEM, "\n\n".join(parts)[:20000],
+                                  "Tagesüberblick", 500, temperature=0.2, who=uid, ccfg=ccfg, c=c,
+                                  thinking=None if ccfg.get("thinking") else False)
 
 
 async def due_briefings(now=None):
@@ -1731,7 +1705,7 @@ async def _answer(request, turn):
         turn.search, turn.small, turn.src, turn.think_tools, turn.tool_temp, turn.tools, turn.who)
     logfilter.detail("chat", f"turn: {len(messages)} messages, {sum(len(str(m.get('content') or '')) for m in messages)} "
                              f"chars of history, {len(tools or [])} tools offered, {'locked' if locked else 'not locked'}")
-    lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    lheaders = llm.headers(ccfg)
     tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
     # priority for people (stufe.py): the profile's own turn goes before others in the TTS queue
     turn.stufe = stufe.turn_level(turn)
@@ -1785,7 +1759,7 @@ async def _answer(request, turn):
     turn.c, turn.out, turn.sentences, turn.trace = c, out, sentences, trace
     vip = stufe.begin(turn)   # None unless this is the own turn of a profile with Vorrang  # the tools (chat_tools.py) use them too
 
-    async def llm():
+    async def model_side():
         verbrauch.WHO.set(verbrauch.who_of(who))   # what this answer asks the models counts for this profile
         try:
             if wartung.paused("llm"):
@@ -1801,7 +1775,7 @@ async def _answer(request, turn):
                 return
             if who and verbrauch.over(who["id"]):    # Tageskontingent used up: one fixed sentence, no model
                 raise verbrauch.Quota()
-            model = await llm_model(c, ccfg, lheaders)
+            model = await llm.model(c, ccfg, lheaders)
             fix_task = asyncio.create_task(fixes.extract(
                 ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None
             base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
@@ -2394,8 +2368,7 @@ async def _answer(request, turn):
         held = await stufe.wait_turn(turn.stufe, ccfg)
         rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": [], "held": held}
         tm["rounds"].append(rec)
-        async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                            json=payload, headers=lheaders) as r:
+        async with c.stream("POST", llm.url(ccfg), json=payload, headers=lheaders) as r:
             if r.status_code != 200:
                 detail = (await r.aread()).decode(errors='replace')[:300]
                 if r.status_code == 400 and re.search(r"context|too long|longer than|maximum.*length", detail, re.I):
@@ -2663,7 +2636,7 @@ async def _answer(request, turn):
                         empty=said["empty"] or None)
             await out.put(None)
 
-    tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())] + ([asyncio.create_task(bridge())] if ack_lang else [])
+    tasks = [asyncio.create_task(model_side()), asyncio.create_task(tts())] + ([asyncio.create_task(bridge())] if ack_lang else [])
 
     # guests get the kind of an error, not its text (which can name internal addresses)
     guest = not device_owner and not admin_cookie_ok(request)

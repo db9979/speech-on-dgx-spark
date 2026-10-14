@@ -44,6 +44,7 @@ import httpx
 import beobachten
 import calendars
 import hintergrund
+import llm
 import mcp
 import notaus
 import profiles
@@ -403,17 +404,15 @@ def _defaults():
 
 async def _llm(messages, tools):
     """One round of the language model (no stream); returns its message {"content", "tool_calls"}."""
-    import chat
     cfg = dict(_defaults(), **ccfg())
-    headers = {"Authorization": f"Bearer {cfg['llm_key']}"} if cfg.get("llm_key") else {}
     async with httpx.AsyncClient(timeout=httpx.Timeout(180, connect=5)) as c:
-        payload = {"model": await chat.llm_model(c, cfg, headers), "temperature": 0.2, "max_tokens": 2000,
+        payload = {"model": await llm.model(c, cfg), "temperature": 0.2, "max_tokens": 2000,
                    "messages": messages}
         if tools:
             payload["tools"] = tools
         if not cfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
-        r = await vorrang.post(c, "Agent", cfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await llm.post(c, cfg, "Agent", payload)
         r.raise_for_status()
         return r.json()["choices"][0]["message"]
 

@@ -2005,7 +2005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Sprachmodell",
 "title": "Sprachmodell",
-"text": "Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt."
+"text": "Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete."
 },
 {
 "lang": "de",
@@ -2085,7 +2085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/chat.py llm_model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gefragt (Schritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn qwen38 neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit "
+"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/llm.py model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/llm.py url: die eine Adresse des Sprachmodells (Schritt 1) - app/panel/llm.py complete: Aufruf jeder Hintergrundaufgabe, wartet in vorrang (Schritt 1) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gefragt (S"
 },
 {
 "lang": "de",
@@ -2093,7 +2093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: Tageskontingent erreicht? (Schritt 6)"
+"text": "chritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn qwen38 neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: Tageskontingent erreicht? (Schritt 6)"
 },
 {
 "lang": "de",
@@ -8429,7 +8429,7 @@
 "file": "Architecture and data flow",
 "head": "Language model",
 "title": "Language model",
-"text": "The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work."
+"text": "The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete."
 },
 {
 "lang": "en",
@@ -8501,7 +8501,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/chat.py llm_model: model name from settings or /models (step 4) - app/panel/chat.py sampling: top_p and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py auto_tick: maintenance pause by itself when qwen38 restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts t"
+"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/llm.py model: model name from settings or /models (step 4) - app/panel/llm.py url: the one address of the language model (step 1) - app/panel/llm.py complete: the call of every background job, waits in vorrang (step 1) - app/panel/chat.py sampling: top_p and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py auto_tick: maintenance pause by "
 },
 {
 "lang": "en",
@@ -8509,7 +8509,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "he tokens of a round (step 12) - app/panel/verbrauch.py over: daily quota reached? (step 6)"
+"text": "itself when qwen38 restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: daily quota reached? (step 6)"
 },
 {
 "lang": "en",

@@ -201,9 +201,15 @@ class Panel(Base):
         self.assertEqual(asyncio.run(chat.learn_once()), 0)
 
     def test_background_model_calls_go_through_the_gate(self):
-        for name in ("chat.py", "agent.py", "memtidy.py", "proactive.py", "quality.py", "wissen.py"):
+        # every request goes through llm.py (llm.post / llm.complete), which waits in vorrang unless told otherwise
+        llm_src = _read(os.path.join(helpers.APP, "panel", "llm.py"))
+        self.assertIn("return await vorrang.post(", llm_src)
+        self.assertIn("speech_first=True", llm_src)
+        for name in ("chat.py", "agent.py", "memtidy.py", "proactive.py", "quality.py", "wissen.py", "gedaechtnis.py",
+                     "berater.py", "rmplus.py", "suchpruefung.py", "hamelden.py"):
             src = _read(os.path.join(helpers.APP, "panel", name))
-            self.assertIn("vorrang.post(", src, name)
+            self.assertTrue("llm.post(" in src or "llm.complete(" in src, name)
+            self.assertNotIn("speech_first=False", src, name)
         self.assertIn('vorrang.hold("Mail sortieren", model=True)', _read(os.path.join(helpers.APP, "panel", "tidy.py")))
         self.assertIn('vorrang.in_thread("Sicherung"', _read(os.path.join(helpers.APP, "panel", "panel.py")))
 

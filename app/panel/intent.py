@@ -31,7 +31,7 @@ import bilder
 import docmake
 import guard
 import homeassistant
-import verbrauch
+import llm
 import zustand_wz
 from common import load_config
 from core import auth
@@ -618,21 +618,14 @@ async def ask_model(ccfg, text, info=None, uid=None):
         return await ask_systemone(ccfg, text, info)
     if not ccfg.get("llm_url"):
         return None
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     schema = {"type": "object", "properties": {"absicht": {"type": "string", "enum": INTENT_NAMES + ["unklar"]}},
               "required": ["absicht"], "additionalProperties": False}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(ASK_TIMEOUT, connect=2)) as c:
-            payload = {"model": await chat.llm_model(c, ccfg, headers), "temperature": 0, "max_tokens": 30,
-                       "messages": [{"role": "system", "content": ASK_SYSTEM},
-                                    {"role": "user", "content": str(text or "")[:500]}],
-                       "response_format": {"type": "json_schema",
-                                           "json_schema": {"name": "absicht", "schema": schema}},
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
-            verbrauch.response("Weiche", r, payload)
-            r.raise_for_status()
-            raw = r.json()["choices"][0]["message"].get("content") or ""
+            raw = await llm.complete(ASK_SYSTEM, str(text or "")[:500], "Weiche", 30, temperature=0, ccfg=ccfg,
+                                     speech_first=False, c=c,
+                                     response_format={"type": "json_schema",
+                                                      "json_schema": {"name": "absicht", "schema": schema}})
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as e:
         print("weiche: model not asked:", type(e).__name__, flush=True)
         return None

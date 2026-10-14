@@ -35,16 +35,15 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import documents
-from common import no_think
 import features
 import live
+import llm
 import guard
 import hintergrund
 import profiles
 import remarkable
 import rmaufgaben
 import rmpapier
-import vorrang
 from core import assistant, browser_profile
 
 router = APIRouter()
@@ -178,17 +177,9 @@ def sheet(title, text, ruled=True):
 
 # ---------------------------------------------------------------- the language model (no tools)
 async def _llm(system, user, max_tokens=700, job="reMarkable"):
-    from chat import llm_model
-    cc = features.chat_cfg()
-    headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(180, connect=5)) as c:
-        payload = {"model": await llm_model(c, cc, headers), "temperature": 0.2, "max_tokens": max_tokens,
-                   "messages": [{"role": "system", "content": system}, {"role": "user", "content": user[:24000]}],
-                   "chat_template_kwargs": {"enable_thinking": False}}
-        r = await vorrang.post(c, job, cc["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
-        r.raise_for_status()
-        text = r.json()["choices"][0]["message"].get("content") or ""
-    return no_think(text).strip()
+    text = await llm.complete(system, user[:24000], job, max_tokens, temperature=0.2, timeout=180,
+                              ccfg=features.chat_cfg())
+    return text.strip()
 
 
 def _outside(text):

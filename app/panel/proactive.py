@@ -26,6 +26,7 @@ import time
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import llm
 import profiles
 import vorrang
 import features
@@ -811,17 +812,7 @@ def parse_follow(text, lines):
 
 
 async def _llm(system, user, max_tokens=300):
-    from chat import llm_model
-    cc = ccfg()
-    headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-        payload = {"model": await llm_model(c, cc, headers), "temperature": 0.1, "max_tokens": max_tokens,
-                   "messages": [{"role": "system", "content": system}, {"role": "user", "content": user[:12000]}],
-                   "chat_template_kwargs": {"enable_thinking": False}}
-        r = await vorrang.post(c, "Proaktiver Hinweis", cc["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
-        r.raise_for_status()
-        return r.json()["choices"][0]["message"].get("content") or ""
+    return await llm.complete(system, user[:12000], "Proaktiver Hinweis", max_tokens, ccfg=ccfg())
 
 
 async def check_follow(uid, p, now):

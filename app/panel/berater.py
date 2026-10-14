@@ -43,6 +43,7 @@ import faelle
 import features
 import guard
 import klartext
+import llm
 import profiles
 import taten
 from common import load_config, write_json
@@ -873,7 +874,6 @@ async def replay_model(case, cand, rep, c=None):
     against the day's budget. Returns the tool name, "" (none called) or None (not asked)."""
     import befund
     import chat
-    import vorrang
     c = features.chat_cfg() if c is None else c
     if not rep or rep["after"]["force"] or not features.admin_on("beraterana", c) or not lan_model(c):
         return None
@@ -888,16 +888,14 @@ async def replay_model(case, cand, rep, c=None):
         _write(d)
     hint = chat.hint_lines(_rule_cfg(cand).get("tool_hints", ""), set(rep["after"]["offered"]))
     system = "\n\n".join(x for x in (chat.TOOL_RULES, hint) if x)
-    headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:
-            payload = {"model": await chat.llm_model(cl, c, headers), "max_tokens": 200,
+            payload = {"model": await llm.model(cl, c), "max_tokens": 200,
                        "temperature": float(c.get("tool_temperature", 0.1) or 0), "tools": defs, "tool_choice": "auto",
                        "messages": [{"role": "system", "content": system},
                                     {"role": "user", "content": _last_q(case)[:2000]}],
                        "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(cl, "Verbessern", c["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
+            r = await llm.post(cl, c, "Verbessern", payload)
             r.raise_for_status()
             calls = r.json()["choices"][0]["message"].get("tool_calls") or []
     except Exception as e:
@@ -923,8 +921,6 @@ EN_SYSTEM = ("Übersetze ein einzelnes deutsches Wort, das in Fragen an einen Sp
 async def english_form(word, c=None):
     """Version 4, 7: the English form of a rule word from the language model in the home network (switch „Fall
     analysieren“); a JSON schema with a pattern, the panel checks it again. None when not asked or nothing usable."""
-    import chat
-    import vorrang
     c = features.chat_cfg() if c is None else c
     if not features.admin_on("beraterana", c) or not lan_model(c) or not re.fullmatch(r"[a-zäöüß][a-zäöüß-]{2,39}", word or ""):
         return None
@@ -936,17 +932,10 @@ async def english_form(word, c=None):
         _write(d)
     schema = {"type": "object", "properties": {"wort": {"type": "string", "pattern": "^[a-z][a-z-]{2,39}$"}},
               "required": ["wort"], "additionalProperties": False}
-    headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:
-            payload = {"model": await chat.llm_model(cl, c, headers), "temperature": 0, "max_tokens": 30,
-                       "messages": [{"role": "system", "content": EN_SYSTEM}, {"role": "user", "content": word}],
-                       "response_format": {"type": "json_schema", "json_schema": {"name": "wort", "schema": schema}},
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(cl, "Verbessern", c["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
-            r.raise_for_status()
-            got = json.loads((r.json()["choices"][0]["message"].get("content") or "")[:200])
+            got = json.loads((await llm.complete(EN_SYSTEM, word, "Verbessern", 30, temperature=0,
+                                                ccfg=c, c=cl, response_format={"type": "json_schema", "json_schema": {"name": "wort", "schema": schema}}))[:200])
     except Exception as e:
         print("berater: englische Form nicht geholt", type(e).__name__, flush=True)
         return None
@@ -1036,7 +1025,6 @@ async def analyse(case, c=None, now=None):
     import befund
     import chat
     import intent
-    import vorrang
     now = time.time() if now is None else now
     c = features.chat_cfg() if c is None else c
     if not features.admin_on("beraterana", c) or not lan_model(c):
@@ -1069,17 +1057,10 @@ async def analyse(case, c=None, now=None):
             + "".join(f"\nNotiz: <<<{data(n)}>>>" for n in case.get("notes", [])[-2:])
             + "\n\nVorlagen für hinweis: " + "; ".join(f"{k} = {v[0]}" for k, v in chat.HINT_TPL.items())
             + "\nGruppen: " + ", ".join(intent.GROUPS))
-    headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:
-            payload = {"model": await chat.llm_model(cl, c, headers), "temperature": 0, "max_tokens": 300,
-                       "messages": [{"role": "system", "content": ANA_SYSTEM}, {"role": "user", "content": text[:6000]}],
-                       "response_format": {"type": "json_schema", "json_schema": {"name": "regel", "schema": schema}},
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(cl, "Verbessern", c["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
-            r.raise_for_status()
-            got = json.loads((r.json()["choices"][0]["message"].get("content") or "")[:1500])
+            got = json.loads((await llm.complete(ANA_SYSTEM, text[:6000], "Verbessern", 300, temperature=0,
+                                                ccfg=c, c=cl, response_format={"type": "json_schema", "json_schema": {"name": "regel", "schema": schema}}))[:1500])
     except Exception as e:
         print("berater: Fall nicht analysiert", type(e).__name__, flush=True)
         return None
@@ -1416,8 +1397,7 @@ def _version():
 
 
 def _model_name(c):
-    import chat
-    return str(c.get("llm_model") or next(iter(chat._llm_models.values()), ""))[:80]
+    return str(c.get("llm_model") or llm.known_model())[:80]
 
 
 def recheck_changed(now=None, c=None):
@@ -1509,7 +1489,6 @@ async def pick(case, cands, c):
             return 0, ""
         d["calls"]["n"] += 1
         _write(d)
-    import chat
     import vorrang
     ids = [x["id"] for x in cands]
     schema = {"type": "object", "properties": {"wahl": {"type": "string", "enum": ids},
@@ -1537,17 +1516,10 @@ async def pick(case, cands, c):
         except (systemone.Unavailable, vorrang.Busy, ValueError):
             pass
     text += "\n\nMögliche Änderungen:\n" + "\n".join(f"{x['id']}: {x['title'][0]}" for x in cands)
-    headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:
-            payload = {"model": await chat.llm_model(cl, c, headers), "temperature": 0, "max_tokens": 120,
-                       "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": text[:3000]}],
-                       "response_format": {"type": "json_schema", "json_schema": {"name": "wahl", "schema": schema}},
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(cl, "Verbessern", c["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
-            r.raise_for_status()
-            got = json.loads((r.json()["choices"][0]["message"].get("content") or "")[:600])
+            got = json.loads((await llm.complete(SYSTEM, text[:3000], "Verbessern", 120, temperature=0,
+                                                ccfg=c, c=cl, response_format={"type": "json_schema", "json_schema": {"name": "wahl", "schema": schema}}))[:600])
     except Exception as e:
         print("berater: Modell nicht gefragt", type(e).__name__, flush=True)
         return 0, ""
@@ -1608,8 +1580,6 @@ async def idea(case, c=None, cfg=None):
             return None
         d["calls"]["n"] += 1
         _write(d)
-    import chat
-    import vorrang
     allowed = idea_settings(cfg)
     env = features.admin_on("berateru", c)
     schema = {"type": "object", "properties": {
@@ -1633,17 +1603,10 @@ async def idea(case, c=None, cfg=None):
             + "".join(f"\nNotiz: <<<{data(n)}>>>" for n in case.get("notes", [])[-2:])
             + "\n\nEinstellungen (Schlüssel = Name auf der Seite): "
             + ", ".join(f"{x} = {places[x][0]}" if x in places else x for x in allowed))
-    headers = {"Authorization": f"Bearer {c['llm_key']}"} if c.get("llm_key") else {}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(MODEL_TIMEOUT, connect=3)) as cl:
-            payload = {"model": await chat.llm_model(cl, c, headers), "temperature": 0.2, "max_tokens": 400,
-                       "messages": [{"role": "system", "content": IDEA_SYSTEM}, {"role": "user", "content": text[:9000]}],
-                       "response_format": {"type": "json_schema", "json_schema": {"name": "idee", "schema": schema}},
-                       "chat_template_kwargs": {"enable_thinking": False}}
-            r = await vorrang.post(cl, "Verbessern", c["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
-            r.raise_for_status()
-            got = json.loads((r.json()["choices"][0]["message"].get("content") or "")[:2000])
+            got = json.loads((await llm.complete(IDEA_SYSTEM, text[:9000], "Verbessern", 400, temperature=0.2,
+                                                ccfg=c, c=cl, response_format={"type": "json_schema", "json_schema": {"name": "idee", "schema": schema}}))[:2000])
     except Exception as e:
         print("berater: Idee nicht geholt", type(e).__name__, flush=True)
         return None

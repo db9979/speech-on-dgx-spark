@@ -12,11 +12,9 @@ import os
 import re
 import time
 
-import httpx
-
 import hintergrund
+import llm
 import profiles
-import vorrang
 from common import load_config, no_think
 
 EVERY = 7 * 86400
@@ -104,18 +102,9 @@ async def propose(uid):
         f.write(str(int(time.time())))   # first, so a failing model does not retry every few minutes
     if len(facts) < 2 or not ccfg.get("llm_url"):
         return None
-    from chat import llm_model
     lines = [f"{x['id']} | {datetime.date.fromtimestamp(x.get('created', 0)):%Y-%m-%d} | {x['text']}" for x in facts]
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(180, connect=5)) as c:
-        payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.1, "max_tokens": 1500,
-                   "messages": [{"role": "system", "content": SYSTEM},
-                                {"role": "user", "content": "\n".join(lines)[:24000]}],
-                   "chat_template_kwargs": {"enable_thinking": False}}
-        r = await vorrang.post(c, "Gedächtnis aufräumen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers, who=uid)
-        r.raise_for_status()
-        prop = parse(r.json()["choices"][0]["message"].get("content") or "", facts)
+    prop = parse(await llm.complete(SYSTEM, "\n".join(lines)[:24000], "Gedächtnis aufräumen", 1500, timeout=180,
+                                    who=uid, ccfg=ccfg), facts)
     if not prop["merge"] and not prop["drop"]:
         drop(uid)
         return None

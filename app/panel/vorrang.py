@@ -25,6 +25,7 @@ import os
 import threading
 import time
 
+import llm
 from common import SPEECH_MARK, speech_mark
 
 GRACE = 20          # seconds after the last speech that still count as "speaking" (follow-up question)
@@ -293,7 +294,7 @@ async def _load(c, ccfg, headers, model, started):
     payload = {"model": model, "max_tokens": LOAD_TOKENS, "temperature": 0.7, "stream": True,
                "chat_template_kwargs": {"enable_thinking": False},
                "messages": [{"role": "user", "content": LOAD_PROMPT}]}
-    async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers) as r:
+    async with c.stream("POST", llm.url(ccfg), json=payload, headers=headers) as r:
         r.raise_for_status()
         async for _ in r.aiter_lines():
             started.set()
@@ -373,7 +374,6 @@ async def measure(sleep=asyncio.sleep):
     """Zustand → Prüfen → "Vorrang prüfen": a sentence spoken and heard (a) alone, (b) while a long
     background answer of the language model runs without the rule, (c) the same with the rule."""
     import httpx
-    import chat
     from common import load_config
     from core import api_headers
     cfg = load_config()
@@ -385,8 +385,8 @@ async def measure(sleep=asyncio.sleep):
         question = wav   # stands in for the person's question in (c)
         res["alone"] = {"first": _r(first), "rtf": _r(rtf), "asr": _r(await _hear(c, cfg, h, wav))}
         if ccfg.get("llm_url"):
-            lh = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
-            model = await chat.llm_model(c, ccfg, lh)
+            lh = llm.headers(ccfg)
+            model = await llm.model(c, ccfg, lh)
             # (b) without the rule: the load runs straight on, as it did before V01.0.225
             started = asyncio.Event()
             task = asyncio.ensure_future(_load(c, ccfg, lh, model, started))

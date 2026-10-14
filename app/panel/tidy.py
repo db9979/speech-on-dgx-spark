@@ -45,6 +45,7 @@ import time
 import httpx
 
 import hintergrund
+import llm
 import mail
 import notaus
 import profiles
@@ -493,7 +494,7 @@ def classify(h, text):
     if not cc.get("llm_url"):
         return None, 0
     url = cc["llm_url"].rstrip("/")
-    headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
+    headers = llm.headers(cc)
     vorrang.hold("Mail sortieren", model=True)   # Wartungspause of the language model: the sorting waits
     with httpx.Client(timeout=httpx.Timeout(90, connect=5)) as c:
         model = cc.get("llm_model") or _model.get(url)
@@ -507,7 +508,7 @@ def classify(h, text):
                    "messages": [{"role": "system", "content": CLASSIFY}, {"role": "user", "content": user}],
                    "chat_template_kwargs": {"enable_thinking": False}}
         vorrang.hold("Mail sortieren", model=True)   # a worker thread: waits while somebody speaks
-        r = c.post(url + "/chat/completions", json=payload, headers=headers)
+        r = c.post(llm.url(cc), json=payload, headers=headers)
         verbrauch.response("Postfach aufräumen", r, payload)
         r.raise_for_status()
         return parse_class(r.json()["choices"][0]["message"].get("content") or "")

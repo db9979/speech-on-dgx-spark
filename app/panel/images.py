@@ -35,6 +35,7 @@ from collections import deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
+import llm
 import profiles
 import features
 import verbrauch
@@ -300,19 +301,18 @@ def last_test():
 async def vision_test():
     """Sends TEST_PNG to the chat model and checks that it reads the 42."""
     import httpx
-    import chat
     ccfg = load_config().get("chat", {})
-    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    headers = llm.headers(ccfg)
     t0 = time.time()
     res = {"ok": False, "t": int(t0), "answer": "", "error": ""}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-            model = await chat.llm_model(c, ccfg, headers)
+            model = await llm.model(c, ccfg, headers)
             pic = "data:image/png;base64," + base64.b64encode(TEST_PNG).decode()
             payload = {"model": model, "max_tokens": 20, "temperature": 0, "stream": False,
                        "chat_template_kwargs": {"enable_thinking": False},
                        "messages": [with_pictures({"content": TEST_QUESTION}, [pic])]}
-            r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+            r = await c.post(llm.url(ccfg), json=payload, headers=headers)
             verbrauch.response("Dienst prüfen", r, payload)
             if r.status_code != 200:
                 res["error"] = f"HTTP {r.status_code}: " + re.sub(r"\s+", " ", r.text)[:200]

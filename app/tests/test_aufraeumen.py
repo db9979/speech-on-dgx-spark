@@ -149,14 +149,12 @@ class OwnJsonWrite(Ratchet, unittest.TestCase):
 
 class OwnModelCall(Ratchet, unittest.TestCase):
     WHAT = "an own call of the language model (chat/completions); planned: one shared llm.complete"
-    ALT = {"panel/agent.py": 1, "panel/berater.py": 5, "panel/chat.py": 3, "panel/docmake.py": 2, "panel/fixes.py": 1,
-           "panel/gedaechtnis.py": 1, "panel/hamelden.py": 1, "panel/health.py": 2, "panel/images.py": 1,
-           "panel/intent.py": 1, "panel/memtidy.py": 1, "panel/proactive.py": 1, "panel/quality.py": 1,
-           "panel/rmplus.py": 1, "panel/schreib.py": 1, "panel/suchpruefung.py": 1, "panel/tidy.py": 1,
-           "panel/vorrang.py": 1, "panel/wissen.py": 2}
+    ALT = {}   # all through llm.py since the big cleanup step 3
+    OWN = {"panel/llm.py": "the one way to the language model"}
 
     def hits(self):
-        return count_by_file(py_files(), lambda name, src: src.count("chat/completions"))
+        return {k: v for k, v in count_by_file(py_files(), lambda name, src: src.count("chat/completions")).items()
+                if k not in self.OWN}
 
 
 class RawFetch(Ratchet, unittest.TestCase):

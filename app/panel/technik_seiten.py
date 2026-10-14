@@ -817,7 +817,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "540739c5fd",
+        "stand": "f69ca55fbb",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -1079,7 +1079,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "7b3efb3241",
+        "stand": "679a024d47",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1273,7 +1273,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "fe2e58a6e3",
+        "stand": "24d72511e8",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1444,9 +1444,9 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "5d288683c4",
+        "stand": "8b6932a11a",
         "bezug": {
-            "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
+            "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
             "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
@@ -1455,10 +1455,12 @@ SEITEN_DATEN = {
         },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
-                 "dafür, dass Sprache immer vor Hintergrundarbeit kommt.",
+                 "dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; "
+                 "jede Hintergrundaufgabe fragt über llm.complete.",
                  "The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel "
                  "talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech "
-                 "always comes before background work."),
+                 "always comes before background work. Address, key and model name live only in llm.py; every "
+                 "background job asks through llm.complete."),
         "warum": ("Die GPU teilt sich das Modell mit der Sprachausgabe. Wartet eine Person, darf kein Lernen oder "
                   "Aufräumen im Hintergrund die Antwort bremsen. Und ein hängendes oder fehlendes Modell soll einen "
                   "klaren Satz ergeben, keine Minuten Stille.",
@@ -1633,7 +1635,9 @@ SEITEN_DATEN = {
         "code": [
             ("chat.chat", ("setzt „Sprache läuft“ bei jedem Stück", "sets „speech is running“ with every piece")),
             ("chat._answer", ("Verbindung, Anfrage, Runden (llm_round), Fehlerfälle", "connection, request, rounds (llm_round), errors")),
-            ("chat.llm_model", ("Modellname aus Einstellung oder /models", "model name from settings or /models")),
+            ("llm.model", ("Modellname aus Einstellung oder /models", "model name from settings or /models")),
+            ("llm.url", ("die eine Adresse des Sprachmodells", "the one address of the language model")),
+            ("llm.complete", ("Aufruf jeder Hintergrundaufgabe, wartet in vorrang", "the call of every background job, waits in vorrang")),
             ("chat.sampling", ("top_p und presence_penalty", "top_p and presence_penalty")),
             ("chat.first_within", ("die erste Zeile muss rechtzeitig kommen", "the first line must come in time")),
             ("chat.ContextFull", ("Anfrage länger als der Kontext", "request longer than the context")),

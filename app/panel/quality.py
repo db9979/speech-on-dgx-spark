@@ -17,8 +17,8 @@ import time
 
 import httpx
 
+import llm
 import taten
-import vorrang
 from common import load_config, no_think, write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -257,8 +257,7 @@ async def _run_case(c, ccfg, headers, model, case):
                 payload["temperature"] = float(ccfg.get("tool_temperature", 0.1))
                 if need:
                     payload["tool_choice"] = "required"
-        r = await vorrang.post(c, "Qualitätstest", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
+        r = await llm.post(c, ccfg, "Qualitätstest", payload)
         r.raise_for_status()
         m = r.json()["choices"][0]["message"]
         calls = m.get("tool_calls") or []
@@ -388,17 +387,16 @@ async def run(reason="manual"):
     if _lock.locked():
         return last()
     async with _lock:
-        import chat
         cfg = load_config()
         ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
-        headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+        headers = llm.headers(ccfg)
         out = []
         t0 = time.time()
         todo = cases()
         _progress.update(done=0, total=len(todo), started=int(t0))
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
             try:
-                model = await chat.llm_model(c, ccfg, headers)
+                model = await llm.model(c, ccfg, headers)
             except Exception as e:
                 res = {"t": int(time.time()), "reason": reason, "error": f"LLM nicht erreichbar: {type(e).__name__}",
                        "cases": [], "passed": 0, "total": 0}

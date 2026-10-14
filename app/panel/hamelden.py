@@ -36,6 +36,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import features
 import guard
+import llm
 import netguard
 import profiles
 import proactive
@@ -448,8 +449,6 @@ def clean_desc(text):
 async def describe_camera(uid, item, eid):
     """A few words about the camera's current picture, or "" (the picture is never kept)."""
     import images
-    import vorrang
-    from chat import llm_model
     if not CAMERA_ID.fullmatch(eid or "") or not features.allowed("hacam", uid) or not _p(uid).get("pro_ha_cam"):
         return ""
     now = time.time()
@@ -468,14 +467,12 @@ async def describe_camera(uid, item, eid):
         import base64
         pic = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
         cc = proactive.ccfg()
-        headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
         async with httpx.AsyncClient(timeout=httpx.Timeout(60, connect=5)) as c:
-            payload = {"model": await llm_model(c, cc, headers), "temperature": 0.1, "max_tokens": 60, "stream": False,
+            payload = {"model": await llm.model(c, cc), "temperature": 0.1, "max_tokens": 60, "stream": False,
                        "chat_template_kwargs": {"enable_thinking": False},
                        "messages": [{"role": "system", "content": CAM_SYSTEM},
                                     images.with_pictures({"content": "Was ist auf dem Bild zu sehen?"}, [pic])]}
-            r = await vorrang.post(c, "Kamerabild", cc["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers, who=uid)
+            r = await llm.post(c, cc, "Kamerabild", payload, who=uid)
             r.raise_for_status()
             desc = clean_desc(r.json()["choices"][0]["message"].get("content") or "")
             _live("Kamerabild vom Sprachmodell beschrieben (Bild nicht gespeichert)")

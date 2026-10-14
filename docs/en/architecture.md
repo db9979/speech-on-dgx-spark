@@ -147,6 +147,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/fremdstimme.py` | Background voices never become a question (fixed rule, no switch). |
 | `app/panel/images.py` | Pictures for the assistant: the person attaches a photo (panel, iPhone app, Telegram) and the language model looks at it itself. |
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken. |
+| `app/panel/llm.py` | One way to the language model (Große Aufräumaktion step 3, Richtlinie Teil 17): its address, key, model name and the plain call. |
 | `app/panel/roles.py` | Roles: each profile keeps a few ways the assistant should answer ("Butler: höflich und trocken", "Erklärbär: erklär alles wie für Kinder") and switches betwe … |
 | `app/panel/schreib.py` | Schreibhilfe: the Spark corrects, smooths, shortens, translates or drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...). |
 | `app/panel/stille.py` | Silence never becomes words (fixed rule, no switch). |
@@ -2103,7 +2104,7 @@ Self-tests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, 
 
 ### Language model
 
-The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work.
+The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete.
 
 **Why:** The GPU is shared between the model and speech output. While a person waits, no learning or tidying in the background may slow the answer. And a hanging or missing model should give a clear sentence, not minutes of silence.
 
@@ -2196,7 +2197,9 @@ flowchart TD
 
 - `app/panel/chat.py` `chat`: sets „speech is running“ with every piece ([step 1](#kn-llm-s1))
 - `app/panel/chat.py` `_answer`: connection, request, rounds (llm_round), errors ([step 3](#kn-llm-s2), [step 5](#kn-llm-s4), [step 7](#kn-llm-s6))
-- `app/panel/chat.py` `llm_model`: model name from settings or /models ([step 4](#kn-llm-s3))
+- `app/panel/llm.py` `model`: model name from settings or /models ([step 4](#kn-llm-s3))
+- `app/panel/llm.py` `url`: the one address of the language model ([step 1](#kn-llm-s1))
+- `app/panel/llm.py` `complete`: the call of every background job, waits in vorrang ([step 1](#kn-llm-s1))
 - `app/panel/chat.py` `sampling`: top_p and presence_penalty ([step 5](#kn-llm-s4))
 - `app/panel/chat.py` `first_within`: the first line must come in time ([step 9](#kn-llm-s8))
 - `app/panel/chat.py` `ContextFull`: request longer than the context ([step 8](#kn-llm-s7))
