@@ -110,6 +110,7 @@ UMGEBUNG = {
 # the Dienst-Wächter's services (dienstwacht.SVC) -> steps
 DIENST_ENV = {"qwen": "sprachmodell", "asr": "hoeren", "tts": "sprechen", "inet": "internet", "web": "websuche",
               "kiwix": "kiwix", "ha": "homeassistant", "mail": "mail", "cal": "kalender", "nas": "nas"}
+ENV_DIENST = {v: k for k, v in DIENST_ENV.items()}   # Selbst prüfen: the Dienst-Wächter's service of a step list
 TOOL_SVC = (("web_search", "websuche"), ("read_page", "websuche"), ("home_assistant", "homeassistant"),
             ("archive_search", "kiwix"), ("mail_", "mail"), ("calendar_", "kalender"), ("daily_briefing", "kalender"))
 CODE_SVC = (("llm", "sprachmodell"), ("tts", "sprechen"))
@@ -2598,7 +2599,7 @@ def _pid(pid):
         raise HTTPException(400, "bad id")
 
 
-def _shown(p, by_id, found, cfg):
+def _shown(p, by_id, found, cfg, dienst=None):
     """A proposal for the page: with its case's Klartext-Karte, why it is proposed, its cases and the idea in plain
     words (Plan „Verbessern verständlicher“ 1, 3, 5, 6). Nothing of it is kept."""
     import befund
@@ -2611,6 +2612,11 @@ def _shown(p, by_id, found, cfg):
         out["faelle"].append({"case": cid, "why": w, "was": k["was"] if k else None})
         if x is case and k:
             out["karte"] = k
+    sid = ENV_DIENST.get((p.get("change") or {}).get("svc", "")) if p.get("stufe") == "U" else None
+    if sid and dienst is not None:   # Selbst prüfen (Plan 9): the service as the Dienst-Wächter sees it now
+        row = next((r for r in dienst["services"] if r["id"] == sid), None)
+        if row:
+            out["dienst"] = {k: row[k] for k in ("id", "name", "st", "since", "checked")} | {"on": dienst["on"]}
     if isinstance(p.get("idea"), dict):
         i = dict(p["idea"], text=klartext.readable(p["idea"].get("text", ""), set(idea_settings(cfg))))
         place = klartext.places().get(i.get("setting") or "")
@@ -2631,6 +2637,10 @@ def overview(now=None):
     found = {x["id"]: befund.diagnose(x, cfg) for x in list(reversed(cases))[:200]}
     by_id = {x["id"]: x for x in cases}
     k = befund.karte()
+    dienst = None
+    if any(p.get("status") == "offen" and p.get("stufe") == "U" for p in rows):
+        import dienstwacht
+        dienst = dienstwacht.overview(now)
     return {"on": wanted(c), "model": lan_model(c), "auto": features.admin_on("beraterauto", c),
             "issue": features.admin_on("beraterissue", c), "ideas": features.admin_on("beraterideen", c), "explain": features.admin_on("beratererklaeren", c),
             "cases": [{k: x.get(k) for k in ("id", "t", "last", "kind", "art", "group", "tool", "code", "grund", "melder",
@@ -2645,7 +2655,7 @@ def overview(now=None):
             # Lücken (V5): what no offered tool could answer, counted per expected tool set
             "luecken": _luecken(cases, found),
             "useless": _read().get("useless") or {},
-            "props": [_shown(p, by_id, found, cfg) for p in reversed(rows)][:200],
+            "props": [_shown(p, by_id, found, cfg, dienst) for p in reversed(rows)][:200],
             # Plan „Verbessern verständlicher“ 4 and 6: the kinds of proposal as words, the best one by fixed rules
             "stufen": {k: list(v) for k, v in STUFEN.items()}, "best": best_pick(rows),
             "kinds": {k: [v[0], v[1]] for k, v in faelle.KINDS.items()},

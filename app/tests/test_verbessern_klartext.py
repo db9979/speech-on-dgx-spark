@@ -6,6 +6,9 @@ An automatic case always has a cause of its own (never „Ursache noch unklar“
 The same change for several cases is one proposal („N Fälle“) and every action works on all of its cases. The kinds of
 proposal are words with what they risk; the best pick follows fixed rules. An idea of the model shows settings by
 their name, never by the key. The plain sentences of error codes exist once (klartext.CODES), also for Logs → Anfragen.
+Then (Plan 7–9, „danach 7 bis 9“): the head says what needs the admin with the best pick one tap away and the 👍 share as
+a light; „Ganzer Weg“ shows the request's way and log lines inside the card; „Selbst prüfen“ shows the service as the
+Dienst-Wächter sees it now, „Jetzt prüfen“, and the steps as a checklist that is kept nowhere.
 No test depends on the time of day: times are passed in.
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
@@ -179,6 +182,28 @@ class Words(Base):
         self.assertNotIn("<code>${esc(i.setting)}</code>", js)  # an idea names the setting, never its key
 
 
+class Later(Base):
+    def test_self_check_shows_the_service_as_the_watch_sees_it(self):
+        self.on(berater_env=True)
+        self.assertEqual(berater.ENV_DIENST["sprachmodell"], "qwen")
+        with mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, ""))):
+            p = run(berater.propose(faelle.add("fehler", {}, code="llm_down", now=T0), T0))
+        self.assertEqual((p["stufe"], p["change"]["svc"]), ("U", "sprachmodell"))
+        shown = next(x for x in ADMIN.get("/api/admin/berater").json()["props"] if x["id"] == p["id"])
+        self.assertEqual(shown["dienst"]["id"], "qwen")
+        self.assertEqual(set(shown["dienst"]), {"id", "name", "st", "since", "checked", "on"})
+        self.assertNotIn("dienst", berater.get(p["id"]))          # shown, never kept
+
+    def test_page_has_head_way_and_checklist(self):
+        js = read(JS, "verbessern.js")
+        for part in ("function vbNeed(", "% gut)", "data-vbweg", "'/api/admin/berater/erklaeren/'", "'/api/admin/traces/'",
+                     "function vbSvc(", "data-vbsvc", "'/api/admin/svcwatch/check'", "data-vbtick"):
+            self.assertIn(part, js)
+        self.assertIn('id="vbneed"', read(PANEL, "static", "index.html"))
+        tick = re.search(r"const tk=e\.target\.closest\('\[data-vbtick\]'\).*?return\}", js, re.S).group(0)
+        self.assertNotIn("api(", tick)                            # the checklist is kept nowhere
+
+
 class Idea(Base):
     def test_keys_and_tool_names_become_names(self):
         places = klartext.places()
@@ -270,6 +295,7 @@ class Browser(Base):
                         await pg.wait_for_selector("#vblist [data-vbsel^=p]")
                         rows = await pg.inner_text("#vblist")
                         self.assertIn("2 Fälle", rows)                     # one proposal for both cases
+                        self.assertIn("brauch", await pg.inner_text("#vbneed"))
                         self.assertIn("Selbst prüfen", rows + await pg.inner_text("#vblist details"))
                         await pg.evaluate("document.querySelector('#vblist [data-vbsel^=p]').click()")
                         await pg.wait_for_selector("#vbdetail:not([hidden]) h3")

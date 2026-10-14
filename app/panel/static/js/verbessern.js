@@ -1,7 +1,7 @@
 // Zustand → Verbessern (berater.py, faelle.py, admin): cases, proposals from the fixed catalog, Prüfstand, Übernehmen /
 // Ablehnen / Anders, Nachkontrolle after 24 hours. Every text from the server goes through esc; the model's one short
 // reason is data and shown as such. Stufe C asks for a second step (a code shown here), Umgebung only shows steps to copy.
-const VB={d:null,tab:'props',sel:null,more:10};
+const VB={d:null,tab:'props',sel:null,more:10,weg:{},done:{}};
 const VBST={offen:t('offen','open'),uebernommen:t('übernommen','taken'),abgelehnt:t('abgelehnt','rejected'),zurueck:t('zurückgenommen','undone'),erledigt:t('erledigt','done')};
 const VBCS={neu:t('neu','new'),vorschlag:t('Vorschlag da','proposal ready'),lokal:t('lokal behoben','fixed locally'),issue:t('als Meldung','as a report'),erledigt:t('erledigt','done'),verworfen:t('verworfen','dropped')};
 // the kinds of proposal as words with what they risk (berater.STUFEN, Plan „Verbessern verständlicher“ 4)
@@ -13,7 +13,8 @@ function vbLegend(d){const s=d.stufen||{};return `<details class="adv"><summary>
 function vbKarte(k,rows){if(!k)return '';const w=k.woher||{},src=(rows||[]).map(r=>r.src);
   const chips=[vbT(w.src),...(w.clients||[]).map(c=>typeof RCLIENT!=='undefined'&&RCLIENT[c]||c),w.tool?t('Werkzeug: ','Tool: ')+vbT(w.tool):'',w.group?t('Gruppe: ','Group: ')+w.group:'',
     `${w.n||1}×`+(w.who?' · '+w.who+' '+t(w.who===1?'Person':'Personen',w.who===1?'person':'people'):''),w.first?vbWhen(w.first)+(w.last&&w.last!==w.first?' – '+vbWhen(w.last):''):''].filter(Boolean);
-  const traces=(w.traces||[]).length&&typeof window.openTrace==='function'&&!document.body.classList.contains('mgr')?(w.traces||[]).map(id=>`<button type="button" class="b" data-vbtrace="${esc(id)}">${esc(t('Anfrage ansehen','View request'))} ${esc(id)}</button>`).join(''):'';
+  const traces=(w.traces||[]).length&&typeof window.openTrace==='function'&&!document.body.classList.contains('mgr')?(w.traces||[]).map(id=>`<button type="button" class="b" data-vbtrace="${esc(id)}">${esc(t('Anfrage ansehen','View request'))} ${esc(id)}</button>`+
+    `<button type="button" class="b" data-vbweg="${esc(id)}">${esc(VB.weg[id]?t('Weg zuklappen','Fold the way'):t('Ganzer Weg','Whole way'))}</button>`).join('')+(w.traces||[]).map(id=>vbWeg(id)).join(''):'';
   return `<div class="vbk"><div class="vbk-s vbk-was"><b>${esc(t('Was ist passiert','What happened'))}</b>${esc(vbT(k.was))}</div>`+
     `<div class="vbk-s vbk-woher"><b>${esc(t('Woher','Where from'))}</b><div class="vbk-chips">${chips.map(c=>`<span class="ld-badge">${esc(c)}</span>`).join('')}</div>${traces?`<div class="ld-acts" style="margin-top:4px">${traces}</div>`:''}</div>`+
     ((k.warum||[]).length?`<div class="vbk-s vbk-warum"><b>${esc(t('Warum','Why'))}</b>${k.warum.map((r,i)=>esc(vbT(r))+(src[i]&&VBSRC[src[i]]?` <span class="mut">(${esc(VBSRC[src[i]])})</span>`:'')).join('<br>')}</div>`:'')+
@@ -30,6 +31,7 @@ function vbLists(d){const p=d.props||[];return {
   luecken:d.luecken||[],regeln:d.regeln||[],kat:d.katalog||[]}}
 function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   $('vboff').hidden=d.on;$('vbmain').hidden=!d.on;
+  $('vbneed').innerHTML=d.on?vbNeed(d,L):'';$('vbneed').hidden=!d.on;
   const lv=d.live||{};$('vbsum').textContent=d.on?t(`Heute ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} neue Fälle · ${L.props.length} ${L.props.length===1?'Vorschlag':'Vorschläge'} offen`,
     `Today ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} new cases · ${L.props.length} ${L.props.length===1?'proposal':'proposals'} open`)+(d.model?'':' · '+t('ohne Sprachmodell im Heimnetz: die Regel wählt','no language model at home: the rule picks')):'';
   // the 👍 share per group (7 days): red under 75 % (from 20 ratings on that is a finding of its own)
@@ -47,6 +49,19 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
     check:t('Nichts wartet auf die Nachkontrolle.','Nothing waits for the re-check.'),done:t('Noch nichts erledigt.','Nothing done yet.')}[VB.tab])}</div>`;
   else html=(VB.tab==='props'?vbLegend(d):'')+rows.slice(0,VB.more).map(x=>VB.tab==='cases'?vbCaseRow(x,d):vbPropRow(x)).join('')+(rows.length>VB.more?`<div class="ld-more"><button type="button" class="b" data-vbmore="1">${esc(t('Weitere zeigen','Show more'))}</button></div>`:'');
   $('vblist').innerHTML=html;vbDetail()}
+// „Was braucht dich“ (Plan 7): what waits for the admin in plain words, the best pick one tap away, and the 👍 share of
+// the last 7 days as a light (green from 85 %, yellow from 75 %, red below; a colour only from 20 ratings on)
+function vbNeed(d,L){const take=L.props.filter(x=>'ABC'.includes(x.stufe)&&x.pruef&&x.pruef.ok),self=L.props.filter(x=>x.stufe==='U'),rep=L.props.filter(x=>x.stufe==='I');
+  const n=take.length+self.length+rep.length,cases=rep.reduce((a,x)=>a+Math.max(1,(x.faelle||[]).length),0);
+  const parts=[take.length?t(`${take.length} ${take.length===1?'Empfehlung':'Empfehlungen'} zum Übernehmen`,`${take.length} ${take.length===1?'proposal':'proposals'} to take`):'',
+    self.length?t(`${self.length}-mal selbst prüfen`,`${self.length}× check yourself`):'',
+    rep.length?t(`${rep.length} ${rep.length===1?'Meldung':'Meldungen'} mit ${cases} ${cases===1?'Fall':'Fällen'}`,`${rep.length} ${rep.length===1?'report':'reports'} with ${cases} ${cases===1?'case':'cases'}`):''].filter(Boolean);
+  let g=0,b=0;for(const v of Object.values(d.quota||{})){g+=v[0];b+=v[1]}
+  const pct=g+b?Math.round(100*g/(g+b)):null,cls=pct==null||g+b<20?'':pct>=85?'vbqok':pct>=75?'vbqmid':'vbqbad';
+  const best=d.best&&(d.props||[]).find(x=>x.id===d.best);
+  return `<b>${esc(n?t(`${n} ${n===1?'Ding braucht':'Dinge brauchen'} dich: `,`${n} ${n===1?'thing needs':'things need'} you: `)+parts.join(' · '):t('Nichts braucht dich gerade.','Nothing needs you right now.'))}</b>`+
+    (best?` <button type="button" class="mlink" data-vbsel="p${esc(best.id)}">★ ${esc(vbT(best.title))}</button>`:'')+
+    (pct!=null?`<br><span class="${cls}">${esc(t(`Bewertungen der letzten 7 Tage: ${g} 👍 · ${b} 👎 (${pct} % gut)`,`Ratings of the last 7 days: ${g} 👍 · ${b} 👎 (${pct} % good)`))}</span>`:'')}
 function vbCaseRow(x,d){const k=(d.kinds||{})[x.kind]||[x.kind,x.kind];
   const sub=x.karte?vbT(x.karte.was):[x.title||'',x.tool?wzName(x.tool):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${VB.sel==='c'+x.id?' on':''}" tabindex="0" data-vbsel="c${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(k))}</b><small>${esc(sub||'–')}</small></div>
@@ -125,7 +140,7 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
     else acts=`<button type="button" class="b p" data-vbact="take"${pr.ok?'':' disabled'}>${esc(t('Übernehmen','Take'))}</button>`;
     acts+=`<button type="button" class="b" data-vbact="reject">${esc(t('Ablehnen','Reject'))}</button><button type="button" class="b" data-vbact="nutzlos" title="${esc(t('Passt nicht zur Ursache: der Fall bekommt den nächsten Vorschlag','Does not fit the cause: the case gets the next proposal'))}">${esc(t('Nicht zielführend','Not helpful'))}</button>`}
   else if(x.status==='uebernommen'&&x.stufe!=='U')acts=`<button type="button" class="b" data-vbact="undo">${esc(t('Zurücknehmen','Undo'))}</button>`;
-  const steps=x.stufe==='U'?(ch.steps||[]).map((s,i)=>`<div class="row" style="gap:6px;margin:4px 0"><code style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(s)}</code><button type="button" class="b" data-vbcopy="${i}">${esc(t('Kopieren','Copy'))}</button></div>`).join(''):'';
+  const steps=x.stufe==='U'?vbSvc(x)+(ch.steps||[]).map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;margin:4px 0"><input type="checkbox" data-vbtick="${i}" aria-label="${esc(t('Erledigt','Done'))}"${(VB.done[x.id]||[]).includes(i)?' checked':''} style="flex:none;width:18px;height:18px;margin:0"><code style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(s)}</code><button type="button" class="b" data-vbcopy="${i}">${esc(t('Kopieren','Copy'))}</button></div>`).join(''):'';
   const laut=x.key==='aussprache'&&x.status==='offen'?`<label>${esc(t('So soll es klingen','How it should sound'))} („${esc(ch.word||'')}“)</label><input id="vblaut" maxlength="40" value="${esc(ch.laut||'')}" autocomplete="off">`:'';
   const alts=x.status==='offen'&&(x.alts||[]).length?`<details class="adv"><summary>${esc(t('Anders','Other'))} (${x.alts.length})</summary>`+x.alts.map((a,i)=>`<div class="ld-sw"><span>${esc(vbT(a.title))}${a.pruef&&!a.pruef.ok?' · <span class="danger">'+esc(t('rot','red'))+'</span>':''}</span><button type="button" class="b" data-vbalt="${i}">${esc(t('Diesen','This one'))}</button></div>`).join('')+'</details>':'';
   const idea=vbIdea(x);
@@ -135,6 +150,27 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
     (x.karte?vbKarte(x.karte,x.befund):vbBefund(x.befund))+vbWhy(x)+(x.model?`<div class="ld-note"><span class="mut">${esc(t('Sprachmodell:','Language model:'))}</span> ${esc(x.model)}</div>`:'')+steps+laut+vbReplay(x)+
     `<div class="ld-note"><b class="${pr.ok?'':'danger'}">${esc(pr.ok?t('Prüfstand grün','Test bench green'):t('Prüfstand rot','Test bench red'))}</b>${(pr.red||[]).map(r=>'<br><span class="danger">'+esc(r)+'</span>').join('')}${(pr.notes||[]).map(r=>'<br><span class="mut">'+esc(r)+'</span>').join('')}${(pr.flips||[]).slice(0,5).map(f=>'<br><span class="mut">„'+esc(f.q)+'“ → '+esc(f.got||t('unklar','unclear'))+'</span>').join('')}</div>`+
     idea+alts+`<div class="ld-acts">${acts}</div><div class="ld-note" id="vbdmsg"></div>`}
+// „Selbst prüfen“ (Plan 9): the service as the Dienst-Wächter sees it now, „Jetzt prüfen“ asks it once; the steps are a
+// checklist kept only on this page (nothing is stored, nothing runs)
+function vbSvc(x){const s=x.dienst;if(!s)return '';
+  const st=s.st==='off'?t('Der Dienst-Wächter prüft diesen Dienst nicht.','The service watch does not check this service.'):
+    `${vbT(s.name)}: ${typeof SVCW!=='undefined'&&SVCW[s.st]||s.st}`+(s.since?' '+t('seit','since')+' '+vbWhen(s.since):'')+(s.checked?' · '+t('geprüft','checked')+' '+vbWhen(s.checked):'');
+  return `<div class="ld-note"><span class="mut">${esc(t('Dienst-Wächter jetzt:','Service watch now:'))}</span> <span class="${s.st==='ok'?'':s.st==='off'?'mut':'danger'}">${esc(st)}</span>`+
+    (s.on?` <button type="button" class="b" data-vbsvc="1">${esc(t('Jetzt prüfen','Check now'))}</button>`:'')+'</div>'}
+// „Ganzer Weg“ (Plan 8): the request's way in fixed sentences (Erklären, when on) and its log lines, inside the card;
+// both come from the admin's own endpoints, only fixed words and numbers
+async function vbWegLoad(id){if(VB.weg[id]){delete VB.weg[id];vbDetail();return}
+  const w={lines:[],log:[],err:''};VB.weg[id]=w;vbDetail();
+  try{if(VB.d.explain){const x=await (await api('/api/admin/berater/erklaeren/'+encodeURIComponent(id))).json();w.lines=x.lines||[]}
+    const r=await (await api('/api/admin/traces/'+encodeURIComponent(id))).json();w.log=(r.lines||[]).slice(-30)}
+  catch(e){w.err=e.message}
+  if(VB.weg[id]===w)vbDetail()}
+function vbWeg(id){const w=VB.weg[id];if(!w)return '';
+  if(!w.lines.length&&!w.log.length&&!w.err)return `<div class="ld-note mut">${esc(t('Einen Moment …','One moment …'))}</div>`;
+  return `<div class="ld-note"><b>${esc(t('Weg der Anfrage','Way of the request'))} ${esc(id)}</b>`+(w.err?`<br><span class="danger">${esc(w.err)}</span>`:'')+
+    w.lines.map(l=>'<br>'+esc(l)).join('')+
+    (w.log.length?`<details class="adv"><summary>${esc(t('Logzeilen aus dieser Zeit','Log lines from this time'))} (${w.log.length})</summary>`+
+      w.log.map(r=>`<div class="mut" style="overflow-wrap:anywhere">${esc(new Date(r.t*1000).toTimeString().slice(0,8))} · ${esc(r.area||'')} · ${esc(r.msg||'')}</div>`).join('')+'</details>':'')+'</div>'}
 // „Warum dieser Vorschlag“ (berater._prop_why, best_pick): the cause it fits, what it risks and how it is undone,
 // the cases it stands for (each opens its own card)
 function vbWhy(x){const fs=x.faelle||[];
@@ -168,6 +204,9 @@ if($('vbbox')){
     if(b.dataset.vbback){VB.sel=null;vbRender();return}
     if(b.dataset.vbicopy!=null&&f&&f.p&&f.p.idea){copyString((f.p.idea.steps||[])[+b.dataset.vbicopy]||'',b);return}
     if(b.dataset.vbtrace&&typeof window.openTrace==='function'){window.openTrace(b.dataset.vbtrace);return}
+    if(b.dataset.vbweg){vbWegLoad(b.dataset.vbweg);return}
+    if(b.dataset.vbsvc){$('vbdmsg').textContent=t('Prüfe die Dienste …','Checking the services …');
+      try{await api('/api/admin/svcwatch/check',{method:'POST'});await loadVerb()}catch(err){if($('vbdmsg'))$('vbdmsg').textContent=err.message}return}
     if(b.dataset.vbcopy!=null&&f&&f.p){copyString((f.p.change.steps||[])[+b.dataset.vbcopy]||'',b);return}
     if(b.dataset.vbcase&&f&&f.c){const body=b.dataset.vbcase==='soll'?{tool:($('vbsoll')||{}).value||''}:{};
       const r=await vbPost(`/api/admin/berater/case/${encodeURIComponent(f.c.id)}/${b.dataset.vbcase}`,body);if(r){VB.sel=null;vbRender()}return}
@@ -180,6 +219,8 @@ if($('vbbox')){
         if(!code)return;r=await vbPost(`/api/admin/berater/${encodeURIComponent(f.p.id)}/take`,Object.assign(body,{confirm:code.trim().toUpperCase()}))}
       if(r)vbRender()}});
   $('vbbox').addEventListener('change',async e=>{if(e.target.dataset.vbrx==='import'&&e.target.files[0]){vbImport(e.target.files[0]);e.target.value='';return}
+    const tk=e.target.closest('[data-vbtick]'),f=vbFind();
+    if(tk&&f&&f.p){const i=+tk.dataset.vbtick,l=VB.done[f.p.id]=(VB.done[f.p.id]||[]).filter(n=>n!==i);if(tk.checked)l.push(i);return}
     const c=e.target.closest('[data-vbmelder]');if(!c)return;
     const off=[...document.querySelectorAll('[data-vbmelder]')].filter(x=>!x.checked).map(x=>x.dataset.vbmelder);
     try{VB.d=await (await api('/api/admin/berater/melder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({off})})).json();vbRender()}catch(err){$('vbmsg').textContent=err.message;c.checked=!c.checked}});
