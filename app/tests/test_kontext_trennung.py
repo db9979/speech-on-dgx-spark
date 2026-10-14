@@ -5,15 +5,16 @@ data, the daily briefing's reminders and the Spark diary included. Fixed rule, n
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import contextlib
+import datetime
 import io
 import json
-import time
 import unittest
 from unittest import mock
 
 from tests import helpers
 
 helpers.start()
+import chat  # noqa: E402
 import panel  # noqa: E402
 import profiles  # noqa: E402
 import speakers  # noqa: E402
@@ -52,7 +53,10 @@ class RecognizedVoiceElsewhere(unittest.TestCase):
         x, _ = profile("Xaver")
         y, yid = profile("Yvonne")
         xid = x.get("/api/whoami").json()["profile"]["id"]
-        profiles.add_reminder(yid, "Geheimtermin Zahnarzt", int(time.time() * 1000) + 3600_000)
+        # due later today, whatever the clock says (the briefing reads only today's reminders)
+        now = datetime.datetime.now(chat.user_zone(None))
+        end = (now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)).timestamp()
+        profiles.add_reminder(yid, "Geheimtermin Zahnarzt", int((now.timestamp() + end) / 2 * 1000))
         self.addCleanup(lambda: profiles.remove_reminders(yid, [r["id"] for r in profiles.reminders(yid)]))
         # her own browser: she hears her reminder
         self.assertIn("Geheimtermin Zahnarzt", tool_results("TOOL daily_briefing {}")(y))
