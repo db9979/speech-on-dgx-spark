@@ -162,6 +162,23 @@ class Access(On):
         self.assertIn("bild_malen", notaus.locked_tools(2, o["changes"]))
         self.assertNotIn("bild_malen", notaus.locked_tools(1, o["changes"]))
 
+    def test_a_short_yes_after_a_wish_still_paints(self):
+        """Dominik 2026-10-14: „Erstelle mir ein Bild … mit Putin“ was refused, the assistant asked „fiktiv?“, the
+        answer „ja fiktiv“ then searched the web. A short yes within FOLLOW_SECONDS after the own wish keeps the
+        tool; without a wish before, or later, or a long message, it does not."""
+        _, prof = profile("Malerin Rueckfrage")
+        bilder._recent.pop(prof["id"], None)
+        self.assertIsNone(bilder.offer({"who": prof, "own": True, "text": "ja fiktiv"}))
+        self.assertIsNotNone(bilder.offer({"who": prof, "own": True, "text": "Erstelle mir ein Bild von einem Klassenzimmer"}))
+        for yes in ("ja fiktiv", "Ja, passt", "passt", "ok mach", "yes please"):
+            o = bilder.offer({"who": prof, "own": True, "text": yes})
+            self.assertEqual([t["function"]["name"] for t in o["tools"]], ["bild_malen"], yes)
+        self.assertIn("keine Websuche", o["hint"])
+        self.assertIsNone(bilder.offer({"who": prof, "own": True, "text": "ja " + "und dann " * 20}))   # long: not a yes
+        self.assertIsNone(bilder.offer({"who": prof, "own": True, "text": "Wie wird das Wetter?"}))
+        bilder._recent[prof["id"]] = 0       # the wish is long ago
+        self.assertIsNone(bilder.offer({"who": prof, "own": True, "text": "ja passt"}))
+
     def test_weiche_keeps_painting_apart(self):
         for q in ("Mal mir eine Katze auf einem Skateboard", "Erstell ein Logo für unseren Fußballverein",
                   "Mal mir ein Haus mit Garten", "Zeichne einen Drachen im Comicstil"):

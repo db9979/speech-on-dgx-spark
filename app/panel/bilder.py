@@ -44,7 +44,7 @@ MAX_PICS = 300              # pictures per profile, whatever the space
 NSFW_MAX = 0.5              # the image check's share above which a picture is thrown away (fixed rule)
 WAITING = 10                # open jobs on the whole Spark
 JOB_SECONDS = 12 * 60       # waiting for a pause, loading the model and painting
-FOLLOW_SECONDS = 10 * 60    # after a picture, "noch einmal in Blau" is understood without the words
+FOLLOW_SECONDS = 10 * 60    # after a picture wish, "noch einmal in Blau" or "ja, fiktiv" is understood without the words
 MAX_PNG = 40 * 1024 * 1024
 DAY_S = 24 * 3600
 ID = re.compile(r"[0-9a-f]{12}")
@@ -66,6 +66,11 @@ WORDS = re.compile(
     r"|\b(malvorlage|ausmalbild)\b")
 AGAIN = re.compile(r"(?i)\b(nochmal|noch einmal|noch ein|nochmals|anders|andere[nrs]?|aber|statt|lieber|heller|"
                    r"dunkler|bunter|größer|kleiner|again|another|instead|but)\b")
+# a short yes to the assistant's question after a wish („Ja, fiktiv“, „Passt“; Dominik 2026-10-14: it searched the
+# web instead of painting): only within FOLLOW_SECONDS after the person's own wish, and only a short message
+YES = re.compile(r"(?i)^\W*(ja|jo|jep|jawohl|ok|okay|passt|genau|gern|gerne|mach|los|klar|super|fiktiv\w*|"
+                 r"yes|yep|yeah|sure|fine|fictional)\b")
+YES_MAX = 120
 # fixed word list (Dominik 5a): nothing sexual, no nudity, no gore, no hate symbols, no fakes of people
 BAD = re.compile(
     r"(?i)\b(nackt\w*|nacktheit|nude\w*|naked|nudity|nsfw|porn\w*|sex\w*|erotik\w*|erotisch\w*|erotic\w*|hentai|"
@@ -87,13 +92,15 @@ TOOL = {"type": "function", "function": {
         "format": {"type": "string", "enum": list(FORMATS), "description": "quadrat (default), quer, hoch, breit"}}}}}
 HINT = ("bild_malen malt ein Bild auf dem Spark. Rufe es nur auf, wenn die Person selbst ein Bild, eine Zeichnung, "
         "ein Logo oder eine Malvorlage möchte; schreib prompt_en auf Englisch. Danach ein kurzer Satz, dass das Bild "
-        "gemalt wird und gleich erscheint (im Chat und unter Ich → Bilder).")
+        "gemalt wird und gleich erscheint (im Chat und unter Ich → Bilder). Sagt die Person nach einer Rückfrage zum "
+        "Bild nur „ja“ oder „passt“, male jetzt das besprochene Bild mit bild_malen; keine Websuche, kein anderer "
+        "Bilddienst. Erfundene Personen sind erlaubt, echte bekannte Personen nie.")
 
 _lock = threading.Lock()
 _paint = []                 # [asyncio.Lock] of the running loop: one picture at a time
 _jobs = {}                  # jid -> job
 _tasks = set()
-_recent = {}                # uid -> time of the last picture (FOLLOW_SECONDS)
+_recent = {}                # uid -> time of the last picture or wish, also a refused one (FOLLOW_SECONDS)
 _count = {"day": "", "done": 0, "failed": 0, "refused": 0}
 BACKGROUND = True           # tests run _work themselves
 
@@ -510,9 +517,12 @@ def offer(ctx):
     uid = who["id"]
     words = str(ctx.get("text") or "")
     asked = bool(WORDS.search(words))
-    again = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS and bool(AGAIN.search(words))
+    recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS
+    again = recent and (bool(AGAIN.search(words)) or len(words) <= YES_MAX and bool(YES.search(words)))
     if not asked and not again:
         return None
+    if asked:
+        _recent[uid] = time.time()   # the wish itself: the assistant may ask back, the answer still paints
     if not on(uid):
         return {"tools": [], "hint": off_hint(uid)} if asked else None
     return {"tools": [TOOL], "hint": HINT, "changes": {"bild_malen"}, "keep": {"bild_malen"},

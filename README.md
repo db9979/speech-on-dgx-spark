@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.573** Painting pictures: a short yes after the assistant asks back paints, no web search
 - **V01.0.572** Speakers with code word: short questions of a surely recognised voice no longer come as a guest
 - **V01.0.571** Painted pictures right in the chat: in the iPhone app too, and again after a reload and on every device
 - **V01.0.570** Calm apps: the iPhone shows "not reachable" only after 3 seconds, appends new messages, open pages stay open; Android 1.3.2 waits while the Spark restarts instead of jumping to the address screen
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.566** GitHub token row folds once the token works
 - **V01.0.565** RED FIX mail style 2: the browser test waits for the page to start
 - **V01.0.564** RED FIX mail style: the browser test switches the feature on for real
-- **V01.0.563** Learn mail style: mail drafts by voice and in the Begleiter sound like you, learned from your sent mails (read-only, no mail kept)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

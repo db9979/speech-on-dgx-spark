@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.573** Bilder malen: ein kurzes „ja“ nach der Rückfrage malt, keine Websuche
 - **V01.0.572** Lautsprecher mit Codewort: kurze Fragen der sicher erkannten Stimme kommen nicht mehr als Gast
 - **V01.0.571** Gemalte Bilder direkt im Chat: auch in der iPhone-App, und wieder nach dem Neuladen und auf jedem Gerät
 - **V01.0.570** Ruhige Apps: iPhone zeigt „nicht erreichbar“ erst nach 3 Sekunden, hängt neue Nachrichten an, offene Seiten bleiben offen; Android 1.3.2 wartet beim Spark-Neustart statt zur Adresseingabe zu springen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.566** GitHub-Token-Zeile klappt zu, wenn der Token funktioniert
 - **V01.0.565** ROT-FIX Mailstil 2: Browser-Test wartet auf den Start der Seite
 - **V01.0.564** ROT-FIX Mailstil: Browser-Test schaltet die Funktion wirklich ein
-- **V01.0.563** Mailstil lernen: Mail-Entwürfe per Sprache und im Begleiter klingen nach dir, gelernt aus deinen gesendeten Mails (nur lesend, keine Mail gespeichert)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
