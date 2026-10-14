@@ -271,6 +271,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/ghtoken.py` | Lese-Token für GitHub |
 | `app/panel/health.py` | Stabilität: Wächter für hängende Dienste, Echtprüfung |
 | `app/panel/hilfe.py` | Spark-Hilfe und Index der Doku |
+| `app/panel/klartext.py` | Klartext eines Falls: was, woher, warum, was hilft; Fehlercodes in Worten |
 | `app/panel/latency.py` | Wartezeit bis zum ersten Ton |
 | `app/panel/live.py` | Live-Übersicht: was der Spark gerade tut |
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |

@@ -253,7 +253,10 @@ def traces(request: Request, minutes: int = 60):
     rows = [shown(x) for x in all_traces(now) if x["t"] >= now - minutes * 60]
     import faelle
     import features
+    import klartext
     return {"on": on(), "keep_hours": KEEP_S // 3600, "slow_s": SLOW_S, "items": rows[::-1],
+            # an error code as a plain sentence (klartext.CODES, the one source for Verbessern and Erklären too)
+            "codes": {c: list(klartext.code_text(c)) for c in {e for x in rows for e in x.get("errors") or []}},
             "explain": features.admin_on("beratererklaeren"),
             "reasons": faelle.REASONS}   # the fixed words for a 👎 (vote)   # „Erklären“ of the Einstellungs-Assistent (berater.py)
 

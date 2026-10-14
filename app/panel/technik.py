@@ -190,6 +190,7 @@ MODULE = {
     "wartung": ("betrieb", "Wartungspause: Spark hält an, während ein Modell neu eingespielt wird"),
     "faelle": ("betrieb", "Fälle: jedes Problem wird festgehalten"),
     "befund": ("betrieb", "Befund: die Ursache eines Falls"),
+    "klartext": ("betrieb", "Klartext eines Falls: was, woher, warum, was hilft; Fehlercodes in Worten"),
     "berater": ("betrieb", "Einstellungs-Assistent: Vorschläge aus Fällen"),
     "berater_katalog": ("betrieb", "Was der Einstellungs-Assistent vorschlagen darf"),
     "quality": ("betrieb", "Qualitätstest gegen das echte Sprachmodell"),

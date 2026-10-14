@@ -160,20 +160,8 @@ function rlinesShow(box){box.replaceChildren();
       row.append(badge,el('span','lm',pre?r.msg.slice(pre.length+1).trim():r.msg));row.title=r.raw;out.append(row)}
     if(!RQ.lines.length)out.append(el('div','lempty',t('Keine Logzeilen aus dieser Zeit.','No log lines from this time.')));
     box.append(el('div','rsub',t('Logzeilen aus dieser Zeit (gleichzeitige Anfragen können dazwischen stehen)','Log lines from this time (requests at the same moment may show too)')),out)}
-// an error code of a request (tracelog fail: chat.py tts_refusal, llm_error_code, docmake) as a plain sentence; the code stays small beside it
-const RERR={tts_http:['Die Sprachausgabe hat einen Teil der Antwort abgelehnt, ab da kam die Antwort nur als Text.','The speech output refused part of the answer; from there the answer came as text only.'],
-  tts_voice:['Die Sprachausgabe kennt die eingestellte Stimme nicht, die Antwort kam nur als Text.','The speech output does not know the chosen voice; the answer came as text only.'],
-  tts_long:['Ein Teil der Antwort war zu lang für die Sprachausgabe, ab da kam sie nur als Text.','Part of the answer was too long for the speech output; from there it came as text only.'],
-  tts_error:['Die Sprachausgabe brach mitten in der Antwort ab.','The speech output stopped in the middle of the answer.'],
-  tts_down:['Die Sprachausgabe war nicht erreichbar, die Antwort kam nur als Text.','The speech output could not be reached; the answer came as text only.'],
-  llm_down:['Das Sprachmodell war nicht erreichbar.','The language model could not be reached.'],
-  llm_slow:['Das Sprachmodell hat nicht rechtzeitig geantwortet.','The language model did not answer in time.'],
-  llm_auth:['Das Sprachmodell hat die Anmeldung abgelehnt.','The language model refused the login.'],
-  llm_model:['Das eingestellte Sprachmodell gibt es dort nicht.','The chosen language model does not exist there.'],
-  llm_error:['Das Sprachmodell hat einen Fehler gemeldet.','The language model reported an error.'],
-  docmake:['Ein Dokument wurde nicht fertig.','A document was not finished.'],
-  error:['Im Panel ist ein Fehler aufgetreten.','An error happened in the panel.']};
-function rerr(c){const k=RERR[c]?c:c.startsWith('tts_http')?'tts_http':c.startsWith('tts')?'tts_error':c.startsWith('llm')?'llm_error':'error';return t(...RERR[k])}
+// an error code of a request as a plain sentence (klartext.CODES, sent with the list); the code stays small beside it
+function rerr(c){const x=((RQ.data||{}).codes||{})[c];return x?t(x[0],x[1]):c}
 function rdetail(x){const box=el('div','rdet');
   if(PHONE.matches){const back=el('button','rback',t('‹ Anfragen','‹ Requests'));back.type='button';back.onclick=()=>{RQ.sel=null;RQ.lines=null;rrender()};box.append(back)}
   box.append(el('h3','',t(`Anfrage ${x.id} von ${x.name} · ${rtime(x)}`,`Request ${x.id} from ${x.name} · ${rtime(x)}`)));

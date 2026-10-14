@@ -795,7 +795,10 @@ class Ideas(Base):
     def test_good_twice_becomes_a_catalog_wish(self):
         self.on(berater_ideas=True)
         p1, _ = self._issue_prop("kiwix")
+        # p1 already went out as a report: the next case gets a proposal of its own instead of joining p1 (berater._join)
+        berater._update(p1["id"], status="erledigt")
         p2, _ = self._issue_prop("searxng")
+        self.assertNotEqual(p1["id"], p2["id"])
         self.assertEqual(ADMIN.post(f"/api/admin/berater/{p1['id']}/wunsch").status_code, 403)   # needs the report switch
         self.assertEqual(ADMIN.post(f"/api/admin/berater/{p1['id']}/gut").json()["prop"]["idea"]["count"], 1)
         again = ADMIN.post(f"/api/admin/berater/{p1['id']}/gut").json()["prop"]["idea"]["count"]

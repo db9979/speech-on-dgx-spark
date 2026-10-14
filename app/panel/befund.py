@@ -14,28 +14,65 @@ import re
 
 import faelle
 
-# the causes, in the order the proposals follow them: key -> (German, English, what helps)
+# the causes, in the order the proposals follow them: key -> (German, English, what helps). What helps is a whole
+# sentence for the Klartext-Karte (klartext.card); its ways become jump links on the page.
 KLASSEN = {
     "weiche": ("Weiche hat falsch zugeordnet", "The Weiche sorted it wrongly",
-               ("Eigenes Wort für die richtige Gruppe, Testsatz", "Own word for the right group, test sentence")),
+               ("Ein eigenes Wort für die richtige Gruppe und ein Testsatz unter Funktionen → Weiche.",
+                "An own word for the right group and a test sentence under Features → Switch.")),
     "nicht_gerufen": ("Richtiges Werkzeug war da, wurde aber nicht gerufen", "The right tool was there but not called",
-                      ("Wort, bei dem das Werkzeug Pflicht ist, Testsatz", "Word that makes the tool a must, test sentence")),
+                      ("Ein Wort, bei dem das Werkzeug Pflicht ist, und ein Testsatz.",
+                       "A word that makes the tool a must, and a test sentence.")),
     "fehlt": ("Passendes Werkzeug war nicht angeboten", "No fitting tool was offered",
-              ("Funktion prüfen (aus, gesperrt, nicht eingerichtet), sonst Lücke", "Check the function (off, locked, "
-               "not set up), else a gap")),
-    "fehler": ("Werkzeug ist gescheitert", "A tool failed", ("Dienst prüfen, Meldung", "Check the service, report")),
-    "leer": ("Werkzeug fand nichts", "A tool found nothing", ("Dienst und Quelle prüfen", "Check service and source")),
+              ("Prüfen, ob die Funktion aus, gesperrt oder nicht eingerichtet ist; sonst ist es eine Lücke für eine Meldung.",
+               "Check whether the function is off, locked or not set up; else it is a gap for a report.")),
+    "fehler": ("Werkzeug ist gescheitert", "A tool failed",
+               ("Unter Zustand → Dienste den Dienst des Werkzeugs prüfen; kommt es wieder, als Meldung vorbereiten.",
+                "Check the tool's service under Status → Services; if it comes back, prepare a report.")),
+    "dienst": ("Ein Dienst hat einen Fehler gemeldet", "A service reported an error",
+               ("Kommt es wieder, als Meldung vorbereiten; die Anfrage zeigt den genauen Schritt.",
+                "If it comes back, prepare a report; the request shows the exact step.")),
+    "leer": ("Werkzeug fand nichts", "A tool found nothing",
+             ("Dienst und Quelle prüfen: ist dort etwas zu finden?", "Check service and source: is there anything to find?")),
     "widerspruch": ("Antwort sagt Nein, obwohl ein Werkzeug etwas fand", "The answer says no although a tool found "
-                    "something", ("Antworten prüfen, Temperatur", "Check answers, temperature")),
+                    "something", ("Antworten prüfen lassen oder die Temperatur senken.",
+                                  "Have answers checked or lower the temperature.")),
     "wissen": ("Ohne Nachschlagen geantwortet", "Answered without looking anything up",
-               ("Nachschlagen, Websuche als Pflicht", "Lookups, web search as a must")),
+               ("Öfter nachschlagen lassen oder die Websuche zur Pflicht machen.",
+                "Look things up more often or make the web search a must.")),
     "erfunden": ("Antwort nennt Angaben, die in keinem Ergebnis stehen", "The answer names details that are in no "
-                 "result", ("Antworten prüfen, Temperatur, Qualitätstest", "Check answers, temperature, quality test")),
+                 "result", ("Antworten prüfen lassen, die Temperatur senken, die Frage in den Qualitätstest.",
+                            "Have answers checked, lower the temperature, put the question into the quality test.")),
+    "keine_regel": ("Keine Regel der Weiche erkannte die Frage", "No rule of the Weiche recognised the question",
+                    ("Ein eigenes Wort für die passende Gruppe unter Funktionen → Weiche.",
+                     "An own word for the fitting group under Features → Switch.")),
+    "absage": ("Der Spark sagte, dass er das nicht kann", "The Spark said it cannot do that",
+               ("Prüfen, ob die Funktion aus oder gesperrt ist; sonst ist es ein Wunsch für eine Meldung.",
+                "Check whether the function is off or locked; else it is a wish for a report.")),
+    "doppelt": ("Die Person fragte gleich noch einmal", "The person asked again right away",
+                ("Die Frage in den Qualitätstest aufnehmen und die erste Antwort ansehen.",
+                 "Put the question into the quality test and look at the first answer.")),
+    "pruefung": ("Die Antwortprüfung hielt eine Angabe zurück", "The answer check held back a detail",
+                 ("Unter Zustand → Logs → Anfragen nachsehen, welche Angabe in keinem Ergebnis stand.",
+                  "Look under Status → Logs → Requests which detail was in no result.")),
+    "abbruch": ("Die Person hat die Antwort abgebrochen", "The person stopped the answer",
+                ("Kam der erste Ton spät, hilft schneller antworten; sonst die Frage in den Qualitätstest.",
+                 "If the first sound came late, answering faster helps; else put the question into the quality test.")),
+    "aussetzer": ("Die Sprachausgabe kam nicht hinterher", "The speech output could not keep up",
+                  ("Mehr Vorlauf vor dem ersten Ton geben; der Vorschlag dazu ist ein Feinwert.",
+                   "Give a longer lead before the first sound; the proposal for it is a fine value.")),
+    "melder": ("Ein fester Melder schlug an", "A fixed detector went off",
+               ("Der Vorschlag setzt bei dem an, was der Melder zählt.", "The proposal starts at what the detector counts.")),
     "richtig": ("Das erwartete Werkzeug lief und fand etwas", "The expected tool ran and found something",
-                ("Keine Änderung; Erklären zeigt den Weg", "No change; Explain shows the way")),
+                ("Keine Änderung nötig; „Erklären“ zeigt den Weg der Anfrage.", "No change needed; \"Explain\" shows the "
+                 "request's way.")),
     "unklar": ("Ursache noch unklar", "Cause not clear yet",
-               ("„Was wäre richtig gewesen?“ beantworten", "Answer \"What would have been right?\"")),
+               ("„Was wäre richtig gewesen?“ beantworten, dann folgt ein passender Vorschlag.",
+                "Answer \"What would have been right?\", then a fitting proposal follows.")),
 }
+# a case of a kind with no cause of its own from the facts: its cause by the kind (fixed, never „unklar“)
+BY_KIND = {"unklar": "keine_regel", "absage": "absage", "doppelt": "doppelt", "pruefung": "pruefung",
+           "abbruch": "abbruch", "aussetzer": "aussetzer", "melder": "melder"}
 ORDER = list(KLASSEN)
 # tools of no group of their own: offered next to every group (memory, own documents, the computer, help)
 ALLGEMEIN = {"memory_save", "memory_forget", "history_search", "document_search", "pc_action", "pc_send",
@@ -140,9 +177,9 @@ def diagnose(case, cfg=None):
     want = [t for t, s in exp if s == src]
     out = []
 
-    def add(k, tools=(), group=""):
+    def add(k, tools=(), group="", code=""):
         if not any(o["k"] == k for o in out):
-            out.append({"k": k, "tools": list(tools)[:6], "group": group, "src": src})
+            out.append({"k": k, "tools": list(tools)[:6], "group": group, "src": src} | ({"code": code} if code else {}))
 
     if f.get("x"):
         add("fehler", f["x"])
@@ -179,6 +216,13 @@ def diagnose(case, cfg=None):
             add("leer", sorted(set(f["e"]) & called))
         elif not called and case.get("kind") == "schlecht" and case.get("grund") in ("antwort", ""):
             add("wissen")
+    kind = case.get("kind")
+    if kind == "fehler" and case.get("code"):    # an error code of the request or an area of Logs → Diagnose
+        add("dienst", code=case["code"])
+    elif kind == "tool" and case.get("tool") and not out:
+        add("fehler", [case["tool"]])
+    elif kind in BY_KIND and not out:
+        add(BY_KIND[kind])
     if not out:
         add("unklar")
     out.sort(key=lambda o: ORDER.index(o["k"]))
@@ -187,10 +231,14 @@ def diagnose(case, cfg=None):
 
 def text(b, english=False):
     """One line per cause for the page and the chat: „Richtiges Werkzeug war da … (document_status)“."""
+    import intent
+    import klartext
     import weiche
     i = 1 if english else 0
     rows = []
     for o in b:
         names = ", ".join(weiche.TOOLS.get(t, (t, t))[i] for t in o["tools"])
-        rows.append(KLASSEN[o["k"]][i] + (f" ({names})" if names else "") + (f" → {o['group']}" if o.get("group") else ""))
+        group = ", ".join(intent.LABELS.get(g, g) for g in o.get("group", "").split("+") if g)
+        rows.append(KLASSEN[o["k"]][i] + (f" ({names})" if names else "") + (f" → {group}" if group else "")
+                    + (f": {klartext.code_text(o['code'])[i]}" if o.get("code") else ""))
     return rows

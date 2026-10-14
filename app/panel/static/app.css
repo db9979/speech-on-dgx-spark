@@ -1005,7 +1005,8 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 }
 @container (min-width:660px) and (max-width:879.98px){.ld-split:has(>.ld-detail:not([hidden])) .ld-when{display:none}}
 @container (max-width:659.98px){
-  .ld-box.ld-sel>:not(.ld-split),.ld-box.ld-sel .ld-list{display:none}
+  /* a split one level down (Verbessern: #vbmain) shows too; its neighbours hide like the box's own */
+  .ld-box.ld-sel>:not(.ld-split):not(:has(>.ld-split)),.ld-box.ld-sel>:has(>.ld-split)>:not(.ld-split),.ld-box.ld-sel .ld-list{display:none}
   .ld-back{display:inline-flex}
   .ld-when{display:none}
   .ld-box .ld-tools select{flex:1 1 40%}
@@ -1296,6 +1297,12 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .needcode::after{content:" 🔒";font-size:.85em}body.cfree .needcode::after{content:none}.needcode2::after{content:" 🔒🔒";font-size:.85em}
 /* 👍/👎 under an answer (bewerten.js): never part of copied answer text */
 .vbquote{margin-top:4px;overflow-wrap:anywhere}.vbquote .vbqbad{color:var(--bad)}
+/* Klartext-Karte (klartext.card, Plan „Verbessern verständlicher“): was, woher, warum, was hilft; „Warum dieser Vorschlag“ */
+.vbk{margin:8px 0}.vbk-s{border-left:3px solid var(--line);padding:2px 0 2px 10px;margin:8px 0;font-size:13px;overflow-wrap:anywhere}
+.vbk-s>b{display:block;font-size:12px;color:var(--mut);font-weight:600}.vbk-was{border-color:var(--bad)}.vbk-woher{border-color:var(--acc)}
+.vbk-warum{border-color:var(--warn)}.vbk-hilft{border-color:var(--ok)}.vbk-hilft ol{margin:2px 0;padding-left:18px}
+.vbk-chips{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}.vbk-chips .ld-badge{background:color-mix(in srgb,var(--line) 75%,transparent);white-space:normal}
+.vbk-cases{margin:4px 0;padding-left:18px}.vbk-cases li{margin:2px 0}
 .ratebar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;-webkit-user-select:none;user-select:none}
 .ratebar .rb{padding:3px 10px;font-size:14px;line-height:1.3}.ratebar .rb.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
 .ratebar .rmsg{font-size:12px}

@@ -4,8 +4,20 @@
 const VB={d:null,tab:'props',sel:null,more:10};
 const VBST={offen:t('offen','open'),uebernommen:t('übernommen','taken'),abgelehnt:t('abgelehnt','rejected'),zurueck:t('zurückgenommen','undone'),erledigt:t('erledigt','done')};
 const VBCS={neu:t('neu','new'),vorschlag:t('Vorschlag da','proposal ready'),lokal:t('lokal behoben','fixed locally'),issue:t('als Meldung','as a report'),erledigt:t('erledigt','done'),verworfen:t('verworfen','dropped')};
-const VBSTUFE={A:t('Stufe A · Regeln','Stage A · rules'),B:t('Stufe B · Feinwert','Stage B · fine value'),C:t('Stufe C · zweiter Schritt','Stage C · second step'),
-  U:t('Umgebung · von Hand','Environment · by hand'),I:t('Meldung','Report'),P:t('Profil','Profile')};
+// the kinds of proposal as words with what they risk (berater.STUFEN, Plan „Verbessern verständlicher“ 4)
+const vbStufe=k=>{const s=((VB.d||{}).stufen||{})[k];return s?t(s[0],s[1]):k};
+const vbRisk=k=>{const s=((VB.d||{}).stufen||{})[k];return s?t(s[2],s[3]):''};
+function vbLegend(d){const s=d.stufen||{};return `<details class="adv"><summary>${esc(t('Was die Arten bedeuten','What the kinds mean'))}: ${esc(Object.keys(s).map(vbStufe).join(' · '))}</summary>`+
+  Object.keys(s).map(k=>`<div class="ld-sw"><span><b>${esc(vbStufe(k))}</b><br><small class="mut">${esc(vbRisk(k))}</small></span></div>`).join('')+'</details>'}
+// Klartext-Karte (klartext.card): what happened, where from, why (the Befund, with whose word), what helps
+function vbKarte(k,rows){if(!k)return '';const w=k.woher||{},src=(rows||[]).map(r=>r.src);
+  const chips=[vbT(w.src),...(w.clients||[]).map(c=>typeof RCLIENT!=='undefined'&&RCLIENT[c]||c),w.tool?t('Werkzeug: ','Tool: ')+vbT(w.tool):'',w.group?t('Gruppe: ','Group: ')+w.group:'',
+    `${w.n||1}×`+(w.who?' · '+w.who+' '+t(w.who===1?'Person':'Personen',w.who===1?'person':'people'):''),w.first?vbWhen(w.first)+(w.last&&w.last!==w.first?' – '+vbWhen(w.last):''):''].filter(Boolean);
+  const traces=(w.traces||[]).length&&typeof window.openTrace==='function'&&!document.body.classList.contains('mgr')?(w.traces||[]).map(id=>`<button type="button" class="b" data-vbtrace="${esc(id)}">${esc(t('Anfrage ansehen','View request'))} ${esc(id)}</button>`).join(''):'';
+  return `<div class="vbk"><div class="vbk-s vbk-was"><b>${esc(t('Was ist passiert','What happened'))}</b>${esc(vbT(k.was))}</div>`+
+    `<div class="vbk-s vbk-woher"><b>${esc(t('Woher','Where from'))}</b><div class="vbk-chips">${chips.map(c=>`<span class="ld-badge">${esc(c)}</span>`).join('')}</div>${traces?`<div class="ld-acts" style="margin-top:4px">${traces}</div>`:''}</div>`+
+    ((k.warum||[]).length?`<div class="vbk-s vbk-warum"><b>${esc(t('Warum','Why'))}</b>${k.warum.map((r,i)=>esc(vbT(r))+(src[i]&&VBSRC[src[i]]?` <span class="mut">(${esc(VBSRC[src[i]])})</span>`:'')).join('<br>')}</div>`:'')+
+    ((k.hilft||[]).length?`<div class="vbk-s vbk-hilft"><b>${esc(t('Was hilft','What helps'))}</b><ol>${k.hilft.map(h=>`<li>${esc(vbT(h))}</li>`).join('')}</ol></div>`:'')+'</div>'}
 const VBRES={hilft:t('hilft','helps'),gleich:t('unverändert','unchanged'),schlechter:t('schlechter','worse')};
 const vbT=x=>Array.isArray(x)?t(x[0],x[1]||x[0]):x||'';
 const vbWhen=s=>s?new Date(s*1000).toLocaleString([], {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
@@ -33,18 +45,19 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   else if(VB.tab==='luecken')html=rows.length?vbGaps(rows):`<div class="ld-empty mut">${esc(t('Keine Lücke: für jede Frage war ein passendes Werkzeug da.','No gap: a fitting tool was there for every question.'))}</div>`;
   else if(!rows.length)html=`<div class="ld-empty mut">${esc({cases:t('Kein neuer Fall.','No new case.'),props:t('Kein offener Vorschlag.','No open proposal.'),
     check:t('Nichts wartet auf die Nachkontrolle.','Nothing waits for the re-check.'),done:t('Noch nichts erledigt.','Nothing done yet.')}[VB.tab])}</div>`;
-  else html=rows.slice(0,VB.more).map(x=>VB.tab==='cases'?vbCaseRow(x,d):vbPropRow(x)).join('')+(rows.length>VB.more?`<div class="ld-more"><button type="button" class="b" data-vbmore="1">${esc(t('Weitere zeigen','Show more'))}</button></div>`:'');
+  else html=(VB.tab==='props'?vbLegend(d):'')+rows.slice(0,VB.more).map(x=>VB.tab==='cases'?vbCaseRow(x,d):vbPropRow(x)).join('')+(rows.length>VB.more?`<div class="ld-more"><button type="button" class="b" data-vbmore="1">${esc(t('Weitere zeigen','Show more'))}</button></div>`:'');
   $('vblist').innerHTML=html;vbDetail()}
 function vbCaseRow(x,d){const k=(d.kinds||{})[x.kind]||[x.kind,x.kind];
-  const sub=[x.title||'',x.group||'',x.tool?wzName(x.tool):'',x.code||'',x.grund?vbT((d.reasons||{})[x.grund]):''].filter(Boolean).join(' · ');
+  const sub=x.karte?vbT(x.karte.was):[x.title||'',x.tool?wzName(x.tool):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${VB.sel==='c'+x.id?' on':''}" tabindex="0" data-vbsel="c${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(k))}</b><small>${esc(sub||'–')}</small></div>
     <div class="ld-right"><span class="ld-badge">${x.n}×</span><span class="ld-when">${esc(vbWhen(x.last||x.t))}</span></div></div>`}
 function vbPropRow(x){const st=x.status==='uebernommen'&&x.check?VBRES[x.check.result]||x.check.result:VBST[x.status]||x.status;
   const cls=x.status==='offen'?(x.pruef&&x.pruef.ok?'read':'err'):x.check&&x.check.result==='schlechter'?'err':x.check&&x.check.result==='hilft'?'sh':'off';
-  return `<div class="ld-row${VB.sel==='p'+x.id?' on':''}" tabindex="0" data-vbsel="p${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(x.title))}</b><small>${esc(x.why||'')}</small></div>
-    <div class="ld-right"><span class="ld-badge ${cls}">${esc(st)}</span><span class="ld-badge off">${esc(x.stufe)}</span>${x.auto?`<span class="ld-badge due">${esc(t('Autopilot','autopilot'))}</span>`:''}</div></div>`}
+  const n=(x.faelle||[]).length,sub=(n>1?t(`${n} Fälle · `,`${n} cases · `):'')+(x.karte?vbT(x.karte.was):x.why||'');
+  return `<div class="ld-row${VB.sel==='p'+x.id?' on':''}" tabindex="0" data-vbsel="p${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(x.title))}</b><small>${esc(sub)}</small></div>
+    <div class="ld-right">${VB.d&&VB.d.best===x.id?`<span class="ld-badge sh">★ ${esc(t('beste Empfehlung','best pick'))}</span>`:''}<span class="ld-badge ${cls}">${esc(st)}</span><span class="ld-badge off">${esc(vbStufe(x.stufe))}</span>${x.auto?`<span class="ld-badge due">${esc(t('Autopilot','autopilot'))}</span>`:''}</div></div>`}
 function vbKat(d){const g={A:[],B:[],C:[],P:[]};for(const e of d.katalog||[])(g[e.stufe]||[]).push(e);
-  return Object.entries(g).map(([s,rows])=>`<div class="ld-grp"><span>${esc(VBSTUFE[s])}</span><span>${rows.length}</span></div>`+rows.map(e=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(e.name))}</b><small>${esc(e.way)}${e.range?' · '+esc(e.range[0]+' … '+e.range[1]+', '+t('Schritt','step')+' '+e.range[2]):''}</small></div></div>`).join('')).join('')+
+  return Object.entries(g).map(([s,rows])=>`<div class="ld-grp"><span>${esc(vbStufe(s))}</span><span>${rows.length}</span></div>`+rows.map(e=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(e.name))}</b><small>${esc(e.way)}${e.range?' · '+esc(e.range[0]+' … '+e.range[1]+', '+t('Schritt','step')+' '+e.range[2]):''}</small></div></div>`).join('')).join('')+
     `<div class="ld-grp"><span>${esc(t('Stufe D · nie','Stage D · never'))}</span><span>${(d.never||[]).length}</span></div>`+(d.never||[]).map(x=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(x))}</b></div></div>`).join('')+
     `<div class="ld-grp"><span>${esc(t('Melder','Detectors'))}</span><span></span></div>`+(d.melder||[]).map(m=>`<label class="ld-sw"><span>${esc(vbT(m.name))}</span><input type="checkbox" data-vbmelder="${esc(m.key)}"${m.on?' checked':''}></label>`).join('')}
 // Lücken (plan vorschlaege-besser.md, V5): what no offered tool could answer, counted; a wish goes to Probleme melden
@@ -91,15 +104,17 @@ function vbFind(){const d=VB.d;if(!d||!VB.sel)return null;const id=VB.sel.slice(
   return VB.sel[0]==='c'?{c:(d.cases||[]).find(x=>x.id===id)}:{p:(d.props||[]).find(x=>x.id===id)}}
 function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!f||!(f.c||f.p);box.classList.toggle('ld-sel',!el.hidden);if(el.hidden)return;
   const back=`<button type="button" class="b ld-back" data-vbback="1">← ${esc(t('Zurück','Back'))}</button>`;
-  if(f.c){const x=f.c,d=VB.d;const ex=(x.examples||[]).map(e=>`<li>${esc(vbWhen(e.t))}${e.q?' · „'+esc(e.q)+'“':''}${e.trace?' · '+esc(t('Anfrage','request'))+' '+esc(e.trace):''}</li>`).join('');
+  if(f.c){const x=f.c,d=VB.d;const ex=(x.examples||[]).filter(e=>e.q).map(e=>`<li>${esc(vbWhen(e.t))} · „${esc(e.q)}“</li>`).join('');
+    const p=x.pid&&(d.props||[]).find(y=>y.id===x.pid&&y.status==='offen');
     el.innerHTML=back+`<h3>${esc(vbT((d.kinds||{})[x.kind]||x.kind))}</h3><dl class="ld-facts">`+
-      [[t('Zustand','State'),VBCS[x.status]||x.status],[t('Wie oft','How often'),x.n+'×'+(x.who?' · '+x.who+' '+t('Personen','people'):'')],[t('Gruppe','Group'),x.group],[t('Werkzeug','Tool'),x.tool?wzFull(x.tool):x.tool],
-       [t('Fehler','Error'),x.code],[t('Grund','Reason'),x.grund?vbT((d.reasons||{})[x.grund]):''],[t('Befund','Finding'),x.title],[t('Seit','Since'),vbWhen(x.t)]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')+'</dl>'+
-      (ex?`<div class="mut">${esc(t('Beispiele (Fragen nur mit Zustimmung):','Examples (questions only with consent):'))}</div><ul class="bghist">${ex}</ul>`:'')+
-      ((x.notes||[]).length?`<div class="ld-note">${(x.notes||[]).map(n=>'„'+esc(n)+'“').join('<br>')}</div>`:'')+vbBefund(x.befund)+vbSoll(x,d)+
+      [[t('Zustand','State'),VBCS[x.status]||x.status],[t('Fehlercode','Error code'),x.code],[t('Seit','Since'),vbWhen(x.t)]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')+'</dl>'+
+      (x.karte?vbKarte(x.karte,x.befund):vbBefund(x.befund))+
+      (p?`<div class="ld-note"><span class="mut">${esc(t('Vorschlag dazu:','Proposal for it:'))}</span> <button type="button" class="mlink" data-vbsel="p${esc(p.id)}">${esc(vbT(p.title))}</button></div>`:'')+
+      (ex?`<div class="mut">${esc(t('Fragen (nur mit Zustimmung):','Questions (only with consent):'))}</div><ul class="bghist">${ex}</ul>`:'')+
+      ((x.notes||[]).length?`<div class="ld-note">${(x.notes||[]).map(n=>'„'+esc(n)+'“').join('<br>')}</div>`:'')+vbSoll(x,d)+
       `<div class="ld-acts"><button type="button" class="b p" data-vbcase="propose">${esc(t('Jetzt Vorschlag machen','Make a proposal now'))}</button>${d.analyse&&d.model?`<button type="button" class="b" data-vbcase="analyse">${esc(t('Fall analysieren','Analyse case'))}</button>`:''}<button type="button" class="b danger" data-vbcase="drop">${esc(t('Verwerfen','Drop'))}</button></div><div class="ld-note mut" id="vbdmsg"></div>`;return}
   const x=f.p,pr=x.pruef||{};
-  const ch=x.change||{},facts=[[t('Stufe','Stage'),VBSTUFE[x.stufe]||x.stufe],[t('Fall','Case'),x.why],[t('Zustand','State'),VBST[x.status]||x.status],[t('Seit','Since'),vbWhen(x.t)]];
+  const ch=x.change||{},facts=[[t('Art','Kind'),vbStufe(x.stufe)],[t('Zustand','State'),VBST[x.status]||x.status],[t('Seit','Since'),vbWhen(x.t)]];
   if('old' in ch)facts.push([t('Jetzt','Now'),String(ch.old)],[t('Neu','New'),String(ch.new)]);
   if(x.check)facts.push([t('Nachkontrolle','Re-check'),(VBRES[x.check.result]||x.check.result)+' · '+t(`${x.check.again} neue Meldungen`,`${x.check.again} new reports`)+(x.check.drop!=null?' · 👍 '+(x.check.drop>0?'−':'+')+Math.abs(x.check.drop)+t(' Punkte',' points'):'')]);
   else if(x.check_at&&x.status==='uebernommen')facts.push([t('Nachkontrolle','Re-check'),vbWhen(x.check_at)]);
@@ -117,21 +132,24 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
   el.innerHTML=back+`<h3>${esc(vbT(x.title))}</h3><dl class="ld-facts">${facts.filter(r=>r[1]!=null&&r[1]!=='').map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>`+
     (x.trusted===false?`<div class="ld-note mut">${esc(t('Nur von einer Person gemeldet: der Autopilot übernimmt das nie.','Reported by one person only: the autopilot never takes this.'))}</div>`:'')+
     (x.recheck?`<div class="ld-note"><b class="${x.recheck.ok?'':'danger'}">${esc(x.recheck.why==='update'?t('Nachgeprüft nach Update','Re-checked after update'):t('Nachgeprüft nach Modellwechsel','Re-checked after model change'))}</b><br>${esc(t(x.recheck.de,x.recheck.en))}</div>`:'')+
-    vbBefund(x.befund)+(x.model?`<div class="ld-note"><span class="mut">${esc(t('Sprachmodell:','Language model:'))}</span> ${esc(x.model)}</div>`:'')+steps+laut+vbReplay(x)+
+    (x.karte?vbKarte(x.karte,x.befund):vbBefund(x.befund))+vbWhy(x)+(x.model?`<div class="ld-note"><span class="mut">${esc(t('Sprachmodell:','Language model:'))}</span> ${esc(x.model)}</div>`:'')+steps+laut+vbReplay(x)+
     `<div class="ld-note"><b class="${pr.ok?'':'danger'}">${esc(pr.ok?t('Prüfstand grün','Test bench green'):t('Prüfstand rot','Test bench red'))}</b>${(pr.red||[]).map(r=>'<br><span class="danger">'+esc(r)+'</span>').join('')}${(pr.notes||[]).map(r=>'<br><span class="mut">'+esc(r)+'</span>').join('')}${(pr.flips||[]).slice(0,5).map(f=>'<br><span class="mut">„'+esc(f.q)+'“ → '+esc(f.got||t('unklar','unclear'))+'</span>').join('')}</div>`+
     idea+alts+`<div class="ld-acts">${acts}</div><div class="ld-note" id="vbdmsg"></div>`}
+// „Warum dieser Vorschlag“ (berater._prop_why, best_pick): the cause it fits, what it risks and how it is undone,
+// the cases it stands for (each opens its own card)
+function vbWhy(x){const fs=x.faelle||[];
+  return `<div class="vbk-s"><b>${esc(t('Warum dieser Vorschlag','Why this proposal'))}</b>${VB.d.best===x.id?`<span class="ld-badge sh">★ ${esc(t('beste Empfehlung','best pick'))}</span> `:''}${esc(vbT(x.warum))}`+
+    (vbRisk(x.stufe)?`<br><span class="mut">${esc(t('Risiko und Rückgängig:','Risk and undo:'))}</span> ${esc(vbRisk(x.stufe))}`:'')+
+    (fs.length>1?`<ol class="vbk-cases">${fs.map(c=>`<li><button type="button" class="mlink" data-vbsel="c${esc(c.case)}">${esc(c.was?vbT(c.was):c.why||c.case)}</button></li>`).join('')}</ol>`:'')+'</div>'}
 // Ideen außerhalb des Katalogs: only to read, a way to the named setting, steps to copy; the panel never applies them
 function vbIdea(x){const i=x.idea;if(!VB.d.ideas||(x.stufe!=='I'&&x.stufe!=='U'))return '';
   if(!i)return x.status==='offen'?`<div class="ld-acts"><button type="button" class="b" data-vbact="idee">${esc(t('Idee holen','Get idea'))}</button></div>`:'';
-  const el=i.setting?document.getElementById(i.setting):null;
   const steps=(i.steps||[]).map((s,n)=>`<div class="row" style="gap:6px;margin:4px 0"><code style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(s)}</code><button type="button" class="b" data-vbicopy="${n}">${esc(t('Kopieren','Copy'))}</button></div>`).join('');
   return `<div class="ld-note"><b>${esc(t('Idee, nicht geprüft','Idea, not checked'))}</b><br>${esc(i.text)}`+
-    (i.setting?`<br><span class="mut">${esc(t('Einstellung:','Setting:'))}</span> <code>${esc(i.setting)}</code> `+(el?`<button type="button" class="b" data-vbgo="1">${esc(t('Zur Einstellung','To the setting'))}</button>`:`<span class="mut">${esc(t('(auf keiner Seite)','(on no page)'))}</span>`):'')+
+    (i.where?`<br><span class="mut">${esc(t('Einstellung:','Setting:'))}</span> ${esc(i.where)}`:'')+
     `</div>${steps}<div class="ld-acts">`+(i.good?`<span class="mut">${esc(t(`Gute Idee · ${i.count}×`,`Good idea · ${i.count}×`))}</span>`:`<button type="button" class="b" data-vbact="gut">${esc(t('Gute Idee','Good idea'))}</button>`)+
     (i.good&&i.count>=2&&!i.wish&&VB.d.issue?`<button type="button" class="b p" data-vbact="wunsch">${esc(t('Als Katalog-Wunsch melden','Report as catalog wish'))}</button>`:'')+
     (i.wish?`<span class="mut">${esc(t('Wunsch liegt unter Probleme melden.','The wish is under Reporting problems.'))}</span>`:'')+'</div>'}
-function vbGoSetting(id){const el=document.getElementById(id),pane=el&&el.closest('.pane');if(!pane)return;
-  const p=pane.id.slice(5);if(typeof goCfg==='function')goCfg(p);if(typeof cfgGo==='function')cfgGo({p,el:el.closest('.setrow')||el})}
 async function vbPost(path,body){const m=$('vbdmsg');if(m)m.textContent=t('Einen Moment …','One moment …');
   try{const r=await (await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})).json();
     if(r.view)VB.d=r.view;else if(r.cases)VB.d=r;return r}catch(e){if($('vbdmsg'))$('vbdmsg').textContent=e.message;return null}}
@@ -149,7 +167,7 @@ if($('vbbox')){
     if(b.dataset.vbsel){VB.sel=b.dataset.vbsel;vbRender();return}
     if(b.dataset.vbback){VB.sel=null;vbRender();return}
     if(b.dataset.vbicopy!=null&&f&&f.p&&f.p.idea){copyString((f.p.idea.steps||[])[+b.dataset.vbicopy]||'',b);return}
-    if(b.dataset.vbgo&&f&&f.p&&f.p.idea){vbGoSetting(f.p.idea.setting);return}
+    if(b.dataset.vbtrace&&typeof window.openTrace==='function'){window.openTrace(b.dataset.vbtrace);return}
     if(b.dataset.vbcopy!=null&&f&&f.p){copyString((f.p.change.steps||[])[+b.dataset.vbcopy]||'',b);return}
     if(b.dataset.vbcase&&f&&f.c){const body=b.dataset.vbcase==='soll'?{tool:($('vbsoll')||{}).value||''}:{};
       const r=await vbPost(`/api/admin/berater/case/${encodeURIComponent(f.c.id)}/${b.dataset.vbcase}`,body);if(r){VB.sel=null;vbRender()}return}
