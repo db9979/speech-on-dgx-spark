@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.538** Hints "newly released" only when there is something to set up, gone afterwards; "Set up" jumps right to the setting
 - **V01.0.537** Outlook classic starts again with the Spark add-in
 - **V01.0.536** Tests green again: the model list test starts with a fresh minute of its rate limit
 - **V01.0.535** NAS status: use, RAID, disks and temperature of your Synology, notes to the admins, ask by voice; knowledge folders read documents before pictures
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.531** Blocked, but own data deletable: Me shows a card with "Delete data" for blocked functions
 - **V01.0.530** Smarter switch: hint words keep fitting tools ready, follow-up questions keep their group, an everyday score measures honestly; its settings now live on one page
 - **V01.0.529** Clean-up rule "one source" with guard tests; the iPhone app opens every Me page inside the app, panel areas without a switch per profile
-- **V01.0.528** Ask Spark in the companion shows answers formatted: bold headings, lists with marks and indent, code set apart (needs a new companion build)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

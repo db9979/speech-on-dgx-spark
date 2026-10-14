@@ -1,22 +1,23 @@
 """Funktionen vorschlagen (V01.0.380, plan plaene/funktionen-entdecken.md): the assistant points out a function that
 is not on yet when it would help, and helps setting it up.
 
-Off by default: admin chat.feature_tips (Funktionen → "Funktionen vorschlagen") and the profile's own tips_on
-(Ich → Gespräch); a weekly note under "Von selbst" needs chat.feature_tips_push and the profile's pro_tips too.
+Off by default: admin chat.feature_tips (Funktionen → "Funktionen vorschlagen"), then for every profile the admin
+did not block; a weekly note under "Von selbst" needs chat.feature_tips_push and the profile's pro_tips too.
 Guests never get one.
 
 The panel decides, never the model: which hint comes is fixed rules over what the panel knows itself
 (features.reason, the Weiche's group, the profile's devices, accounts and counts), and nothing switches by itself.
 A switch the profile may set itself goes on a card (hilfe.build_card, the same allowlist and checks as
-"Einstellungen vorschlagen"); everything else is a guided setup: the guide's steps, the right Ich page, and
-"Prüfen" asks features.reason again. Something only the admin can switch on: "Admin fragen" (a push to the
-admin profiles, once a day, only the function's name).
+"Einstellungen vorschlagen"); everything else is a guided setup: the guide's steps, a jump to the row where it is
+set (_way), and "Prüfen" asks features.reason and the panel's own check (onboard.done) again. Something only the
+admin can switch on: "Admin fragen" (a push to the admin profiles, once a day, only the function's name).
 
 Kinds (plan 1-4): "wish" (asked for something whose function is off: intent.explain), "gap" (half set up),
-"repeat" (done often by hand, counted per kind of question only, never the words), "new" (the admin switched
-something on that this profile never used). Sparing: at most one hint per conversation and three a week in the
-chat and as notes; "Nicht mehr zeigen" is for good; none after outside text, under the Notaus, at a speaker, on
-Telegram or over MCP. The list under Ich → Überblick shows at most three and does not count as a hint.
+"repeat" (done often by hand, counted per kind of question only, never the words), "new" (the admin released a
+function this profile still sets up itself, its item under Los geht's in onboard.py; gone once that is done, once
+"Prüfen" said it works, or NEW_DAYS after the release). Sparing: at most one hint per conversation and three a
+week in the chat and as notes; "Nicht mehr zeigen" is for good; none after outside text, under the Notaus, at a
+speaker, on Telegram or over MCP. The list under Ich → Überblick shows at most three and does not count as a hint.
 """
 import json
 import os
@@ -29,6 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import notaus
+import onboard
 import profiles
 from core import assistant, browser_profile
 
@@ -39,11 +41,14 @@ PER_WEEK = 3          # hints in the chat and as notes, per profile and week
 MAX_LIST = 3          # entries under Ich → Überblick
 ASK_GAP = 86400       # "Admin fragen": once a day per profile
 KEEP_DAYS = 14        # the counts per kind of question
+NEW_DAYS = 14         # a "new" hint ends this many days after the admin released the function, set up or not
 MAX_CONVS = 40
 TID = re.compile(r"[fg]:[a-z0-9_]{1,24}")
 QUIET_ORIGINS = {"speaker", "watch", "siri", "telegram", "mcp"}
 
 _lock = threading.RLock()
+# what tipps.json keeps per profile; "done": hints whose "Prüfen" said it works (they do not come again)
+FIELDS = (("never", []), ("done", []), ("shown", []), ("convs", []), ("gaps", {}), ("ask", {}), ("count", {}))
 router = APIRouter()
 
 
@@ -69,9 +74,9 @@ def _st(uid):
     with _lock:
         st = _all().get(uid)
     st = st if isinstance(st, dict) else {}
-    for k, v in (("never", []), ("shown", []), ("convs", []), ("gaps", {}), ("ask", {}), ("count", {})):
+    for k, v in FIELDS:
         if not isinstance(st.get(k), type(v)):
-            st[k] = v
+            st[k] = type(v)()
     return st
 
 
@@ -79,9 +84,9 @@ def _mut(uid, fn):
     with _lock:
         d = _all()
         st = d.get(uid) if isinstance(d.get(uid), dict) else {}
-        for k, v in (("never", []), ("shown", []), ("convs", []), ("gaps", {}), ("ask", {}), ("count", {})):
+        for k, v in FIELDS:
             if not isinstance(st.get(k), type(v)):
-                st[k] = v
+                st[k] = type(v)()
         st.setdefault("since", int(time.time()))
         fn(st)
         d = {u: v for u, v in d.items() if u in set(profiles.user_ids()) or u == uid}
@@ -335,10 +340,15 @@ def candidates(uid, admin=False, c=None, now=None):
     since = st.get("since") or now
     for f in features.FEATURES:
         tid = "f:" + f.key
-        # newly released by the admin: works for this profile at once, the tip only says so (Freigabe vereinfachen)
-        if not f.parent and seen.get(f.key, 0) > since and features.reason(f.key, uid, c) is None \
-                and tid not in st["never"] and not any(x["key"] == f.key for x in out):
-            out.append(_tip("new", tid, f.key, uid, admin, ["neu bei dir verfügbar", "newly available for you"], c=c))
+        # Newly released by the admin. Since Freigabe vereinfachen it works for this profile at once, so only a
+        # function the profile still sets up itself (its item under Los geht's, onboard.py) is a hint, and only
+        # until that is done, "Prüfen" said it works, or NEW_DAYS have passed.
+        own = onboard.own_setup(f.key, c) if not f.parent else None
+        if own and since < seen.get(f.key, 0) and now - seen[f.key] < NEW_DAYS * 86400 \
+                and features.reason(f.key, uid, c) is None and tid not in st["never"] and tid not in st["done"] \
+                and not any(x["key"] == f.key for x in out) and not onboard.done(own[0], uid):
+            out.append(_tip("new", tid, f.key, uid, admin, ["neu freigegeben, noch einzurichten",
+                                                             "newly released, still to set up"], me=own[1], c=c))
     return out
 
 
@@ -380,6 +390,24 @@ def steps(guide_id, lang="de", admin=False):
     if not g:
         return []
     return [s for s in g["sec"].get("setup", ([], []))[li] if s and (admin or not s.startswith("Admin"))][:8]
+
+
+WAY_ME = re.compile(r"(?<![\w-])(Ich|Me) → ")
+
+
+def _way(x, todo, lang="de"):
+    """Where "Seite öffnen" jumps (way.js wayGo): the first way into Ich in the guide's own steps (the row or part
+    the person fills in, „Ich → Kalender → „Kalender hinzufügen““), else the function's row on its Ich page, else
+    the page."""
+    for s in todo:
+        m = WAY_ME.search(s)
+        if m:
+            return s[m.start():][:200]
+    import hilfe
+    f = features.BY_KEY.get(x["key"]) if x["key"] else None
+    if f and f.me == x["me"]:
+        return features.me_way(f.key, lang)
+    return hilfe.page_name("me/" + x["me"], lang) if x["me"] else ""
 
 
 def _find(uid, tid, admin, c=None):
@@ -451,10 +479,17 @@ async def api_do(tid: str, request: Request, prof=Depends(browser_profile)):
             ok = not any(t["id"] == tid for t in candidates(uid, admin))
             return {"ok": ok, "why": "" if ok else ("Noch nicht eingerichtet." if lang == "de" else "Not set up yet.")}
         why = features.reason(key, uid)
-        if why is None:
-            _event("ok")
-            print(f"tipps: eingerichtet {key}", flush=True)
-        return {"ok": why is None, "why": features.WHY[why][0 if lang == "de" else 1] if why else ""}
+        own = onboard.own_setup(key)
+        if why is None and own and not onboard.done(own[0], uid):
+            print(f"tipps: noch nicht eingerichtet {key}", flush=True)
+            return {"ok": False, "why": "Noch nicht eingerichtet." if lang == "de" else "Not set up yet."}
+        if why is not None:
+            print(f"tipps: noch nicht eingerichtet {key} ({why})", flush=True)
+            return {"ok": False, "why": features.WHY[why][0 if lang == "de" else 1]}
+        _mut(uid, lambda st: st["done"].append(tid) if tid not in st["done"] else None)
+        _event("ok")
+        print(f"tipps: eingerichtet {key}", flush=True)
+        return {"ok": True, "why": ""}
     if do == "ask":
         if x["how"] != "ask":
             raise HTTPException(409, "Das kannst du selbst einrichten.")
@@ -479,8 +514,9 @@ async def api_do(tid: str, request: Request, prof=Depends(browser_profile)):
         _event("ask")
         print(f"tipps: Admin gefragt {x['key']} ({n} Geräte)", flush=True)
         return {"state": "asked", "reached": n}
-    # setup: the steps, the page, and for a plain own switch the card to apply it with one tap
-    out = {"name": x["name"], "me": x["me"], "how": x["how"], "steps": steps(x["guide"], lang, x["how"] == "admin"), "card": None,
+    # setup: the steps, the way to the setting, and for a plain own switch the card to apply it with one tap
+    todo = steps(x["guide"], lang, x["how"] == "admin")
+    out = {"name": x["name"], "me": x["me"], "how": x["how"], "steps": todo, "card": None, "way": _way(x, todo, lang),
            "admin_way": ("Funktionen → " if lang == "de" else "Features → ") + x["name"][0 if lang == "de" else 1]
            if x["how"] == "admin" else ""}
     if x["how"] == "apply" and not notaus.refuse("aktion", uid):

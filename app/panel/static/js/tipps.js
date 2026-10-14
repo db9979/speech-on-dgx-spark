@@ -29,12 +29,19 @@ async function tipSetup(x){const d=await tipDo(x.id,'setup');let box=$('tipsetup
   const msg=document.createElement('div');msg.className='hmsg mut tipmsg';msg.setAttribute('role','status');
   const row=document.createElement('div');row.className='row';
   const add=(label,fn,main)=>{const b=document.createElement('button');b.type='button';b.className=main?'b p':'b';b.textContent=label;b.addEventListener('click',e=>{e.stopPropagation();fn()});row.appendChild(b)};
-  const page=()=>{if(d.how==='admin'){if(typeof goCfg==='function')goCfg('feat')}else if(d.me&&typeof openMe==='function')openMe(d.me)};
+  // the jump lands on the setting itself (way.js unfolds and marks the row); without a way the Ich page
+  const way=d.how==='admin'?d.admin_way:d.way;
+  const page=()=>{if(way&&typeof wayGo==='function'&&wayParse(way,0))wayGo(way);
+    else if(d.how==='admin'){if(typeof goCfg==='function')goCfg('feat')}else if(d.me&&typeof openMe==='function')openMe(d.me)};
   if(d.me||d.how==='admin')add(t('Seite öffnen','Open the page'),page);
   add(t('Prüfen','Check'),async()=>{msg.textContent='';try{const r=await tipDo(x.id,'check');
-    msg.textContent=r.ok?t('Eingerichtet, es geht.','Set up, it works.'):(r.why||t('Noch nicht eingerichtet.','Not set up yet.'));if(r.ok&&typeof whoSoon==='function')whoSoon()}catch(e){msg.textContent=e.message}},true);
+    msg.textContent=r.ok?t('Eingerichtet, es geht.','Set up, it works.'):(r.why||t('Noch nicht eingerichtet.','Not set up yet.'));
+    if(r.ok){tipGone(x.id);if(typeof whoSoon==='function')whoSoon()}}catch(e){msg.textContent=e.message}},true);
   add(t('Fertig','Done'),()=>{box.remove();$('fab').classList.remove('open')});
   box.appendChild(row);box.appendChild(msg);$('fab').classList.add('open');page()}
+// set up: its entry under "Für dich vorgeschlagen" goes (the panel does not list it again either)
+function tipGone(id){const sec=$('tipover');if(!sec)return;for(const it of sec.querySelectorAll('.tipitem'))if(it.dataset.tip===id)it.remove();
+  if(!sec.querySelector('.tipitem'))sec.remove()}
 // Ich → Überblick: "Für dich vorgeschlagen", at most three, each with its reason (on a phone, whose Ich has no
 // Überblick page, above the list of Ich pages, like "Heute")
 async function tipOver(box){const old=$('tipover');if(old)old.remove();if(!TIPS_ON||!PROFILE)return;
@@ -42,7 +49,7 @@ async function tipOver(box){const old=$('tipover');if(old)old.remove();if(!TIPS_
   if(!d.on||!d.items||!d.items.length||!box.isConnected)return;if($('tipover'))$('tipover').remove();
   const sec=document.createElement('div');sec.id='tipover';sec.className='tipover';
   const head=document.createElement('div');head.className='mgrp';head.textContent=t('Für dich vorgeschlagen','Suggested for you');sec.appendChild(head);
-  for(const x of d.items){const it=document.createElement('div');it.className='tipitem';
+  for(const x of d.items){const it=document.createElement('div');it.className='tipitem';it.dataset.tip=x.id;
     const b=document.createElement('b');b.textContent=tipName(x);const why=document.createElement('span');why.textContent=(x.why||[])[L==='en'?1:0]||'';
     const msg=document.createElement('small');msg.className='mut';msg.setAttribute('role','status');
     it.append(b,why,tipButtons(x,msg,()=>setTimeout(()=>it.remove(),1500)),msg);sec.appendChild(it)}

@@ -56,6 +56,8 @@ ITEMS = (
     ("ha", "ha", "services", "habox", "Smart Home verbinden", "Connect the smart home"),
 )
 KEYS = tuple(x[0] for x in ITEMS)
+# a function the profile sets up itself (Funktionen vorschlagen, tipps.py): its item and Ich page
+OWN_SETUP = {x[1]: (x[0], x[3]) for x in ITEMS if x[1]}
 STEPS = (("hello", "Willkommen", "Welcome"), ("secure", "Absichern", "Secure"), ("devices", "Geräte", "Devices"),
          ("services", "Dienste", "Services"), ("done", "Fertig", "Done"))
 CACHE_SECS = 20
@@ -85,8 +87,9 @@ def save_state(uid, **change):
     return d
 
 
-def _done(key, uid):
-    """Checked by the panel; a module that is missing or fails counts as not done."""
+def done(key, uid):
+    """Whether this profile has set the item up, checked by the panel; a module that is missing or fails counts
+    as not done."""
     try:
         if key == "welcome":
             return state(uid)["welcome"]
@@ -136,6 +139,15 @@ def _done(key, uid):
     return False
 
 
+def own_setup(feat, c=None):
+    """(item, Ich page) when the profile sets the function up itself and the Spark lets it now, else None
+    (Funktionen vorschlagen, tipps.py: only these get a "new" hint)."""
+    if feat not in OWN_SETUP:
+        return None
+    c = features.chat_cfg() if c is None else c
+    return OWN_SETUP[feat] if _shown(OWN_SETUP[feat][0], feat, c) else None
+
+
 def _shown(key, feat, c):
     """The Spark allows it and it can be set up here."""
     if feat and not features.admin_on(feat, c):
@@ -162,7 +174,7 @@ def items(uid, c=None):
             continue   # (blocked for this profile by the admin: nothing to set up)
         f = features.BY_KEY.get(feat) if feat else None
         why = features.reason(feat, uid, c, s) if feat else None
-        out.append({"key": key, "step": step, "name": [de, en], "me": me, "done": _done(key, uid),
+        out.append({"key": key, "step": step, "name": [de, en], "me": me, "done": done(key, uid),
                     "own": f.pref if f and f.pref else None, "mine": why != "profile",
                     "why": why, "required": key == "mfa" and join.mfa_kept(uid), "later": key in st["later"]})
     return out

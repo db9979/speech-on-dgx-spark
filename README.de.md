@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.538** Hinweise „neu freigegeben“ nur bei echtem Einrichten, verschwinden danach; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** Outlook classic startet mit dem Spark-Add-in wieder
 - **V01.0.536** Tests wieder grün: der Test der Modell-Liste beginnt mit einer frischen Minute ihres Abruflimits
 - **V01.0.535** Zustand der NAS: Belegung, RAID, Festplatten und Temperatur der Synology, Hinweise an die Admins, Frage per Sprache; Wissensordner lesen Dokumente vor Bildern
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.531** Gesperrt, aber eigene Daten löschbar: Ich zeigt für gesperrte Funktionen eine Karte mit „Daten löschen“
 - **V01.0.530** Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, die Alltagsquote misst ehrlich; ihre Einstellungen an einem Ort
 - **V01.0.529** Aufräum-Regel „eine Quelle“ mit Wächter-Tests; iPhone-App öffnet jede Ich-Seite in der App, Panel-Bereiche ohne Schalter je Profil
-- **V01.0.528** Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

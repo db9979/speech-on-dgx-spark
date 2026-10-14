@@ -11,12 +11,15 @@ on Telegram or over MCP. Only kinds and counts are stored, never the question. N
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
+import asyncio
 import json
 import os
+import time
 import unittest
 from unittest import mock
 
 from tests import helpers
+from tests.test_ui_browser import PAGE_READY, async_playwright, browser_ok, chromium
 
 helpers.start()
 import panel  # noqa: E402
@@ -25,6 +28,7 @@ import hilfe  # noqa: E402
 import notaus  # noqa: E402
 import profiles  # noqa: E402
 import proactive  # noqa: E402
+import onboard  # noqa: E402
 import tipps  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -258,17 +262,67 @@ class Tipps(unittest.TestCase):
         self.addCleanup(helpers.set_config, local_first=False)
         self.assertNotIn("f:lokal", [x["id"] for x in tipps.candidates(self.uid, now=T0 + 10)])   # on now: no hint
 
-    def test_new_for_this_profile(self):
-        helpers.set_config(wiki=True)
-        try:
-            tipps._mut(self.uid, lambda st: st.update(since=T0))
-            with mock.patch.object(features, "_seen", return_value={"wiki": T0 + 100}):
-                items = tipps.candidates(self.uid, now=T0 + 200)
-            self.assertIn(("f:wiki", "new"), [(x["id"], x["kind"]) for x in items])
-            with mock.patch.object(features, "_seen", return_value={"wiki": T0 - 100}):   # on before: not new
-                self.assertNotIn("f:wiki", [x["id"] for x in tipps.candidates(self.uid, now=T0 + 200)])
-        finally:
-            helpers.set_config(wiki=False)
+    def test_new_only_what_the_profile_sets_up_itself(self):
+        """Dominik 2026-10-14: a released function works for every profile at once, so "neu" is only a hint where
+        the profile still sets something up itself (its item under Los geht's); „Rückfrage statt Raten“, Chats and
+        the Dienst-Wächter just work and never come."""
+        helpers.set_config(weather=True, wiki=True, chats=True, klaeren=True, svc_watch=True)
+        self.addCleanup(helpers.set_config, weather=False, wiki=False, chats=False, klaeren=False, svc_watch=False)
+        plain = ("wiki", "chats", "klaeren", "dienstwacht")
+        for key in plain:
+            self.assertTrue(features.admin_on(key), key)
+            self.assertIsNone(onboard.own_setup(key), key)
+        self.assertEqual(onboard.own_setup("weather"), ("weather", "wxbox"))
+        tipps._mut(self.uid, lambda st: st.update(since=T0))
+        seen = {k: T0 + 100 for k in plain + ("weather",)}
+        with mock.patch.object(features, "_seen", return_value=seen):
+            new = [x for x in tipps.candidates(self.uid, now=T0 + 200) if x["kind"] == "new"]
+            self.assertEqual([(x["id"], x["me"]) for x in new], [("f:weather", "wxbox")])
+            # NEW_DAYS after the release it ends, set up or not
+            last = T0 + 100 + tipps.NEW_DAYS * 86400
+            self.assertIn("f:weather", [x["id"] for x in tipps.candidates(self.uid, now=last - 1)])
+            self.assertNotIn("f:weather", [x["id"] for x in tipps.candidates(self.uid, now=last)])
+            with mock.patch.object(features, "_seen", return_value={"weather": T0 - 100}):   # on before: not new
+                self.assertNotIn("f:weather", [x["id"] for x in tipps.candidates(self.uid, now=T0 + 200)])
+            # set up (the panel checks it, onboard.done): gone
+            with mock.patch.object(onboard, "done", return_value=True):
+                self.assertNotIn("f:weather", [x["id"] for x in tipps.candidates(self.uid, now=T0 + 200)])
+            # blocked for this profile: no hint either
+            block(self, "weather", self.uid)
+            self.assertNotIn("f:weather", [x["id"] for x in tipps.candidates(self.uid, now=T0 + 200)])
+
+    def test_new_goes_once_check_says_it_works(self):
+        """„Prüfen“ asks the panel whether it is set up; once it is, the hint does not come again."""
+        helpers.set_config(weather=True)
+        self.addCleanup(helpers.set_config, weather=False)
+        now = int(time.time())   # the endpoint uses the clock: release and start relative to it
+        tipps._mut(self.uid, lambda st: st.update(since=now - 1000))
+        with mock.patch.object(features, "_seen", return_value={"weather": now - 900}):
+            self.assertIn("f:weather", [x["id"] for x in self.p.get("/api/profile/tipps").json()["items"]])
+            r = self.p.post("/api/profile/tipps/f:weather", json={"do": "check"}).json()
+            self.assertEqual(r, {"ok": False, "why": "Noch nicht eingerichtet."})
+            self.assertEqual(self.p.post("/api/profile/tipps/f:weather", json={"do": "check", "lang": "en"}).json()["why"],
+                             "Not set up yet.")
+            with mock.patch.object(onboard, "done", return_value=True):
+                self.assertEqual(self.p.post("/api/profile/tipps/f:weather", json={"do": "check"}).json(), {"ok": True, "why": ""})
+            self.assertIn("f:weather", tipps._st(self.uid)["done"])
+            # remembered: it stays away even while the panel would still miss something
+            self.assertNotIn("f:weather", [x["id"] for x in self.p.get("/api/profile/tipps").json()["items"]])
+
+    def test_setup_jumps_to_the_setting(self):
+        """„Seite öffnen“ goes to the row or part the person fills in: the guide's own way into Ich, else the
+        function's row on its Ich page, else the page."""
+        was = features.chat_cfg().get("calendar")
+        helpers.set_config(calendar=True, klaeren=True)
+        self.addCleanup(helpers.set_config, calendar=was, klaeren=False)
+        d = self.p.post("/api/profile/tipps/f:calendar", json={"do": "setup"}).json()
+        self.assertTrue(d["way"].startswith("Ich → Kalender → „Kalender hinzufügen“"), d["way"])
+        d = self.p.post("/api/profile/tipps/f:calendar", json={"do": "setup", "lang": "en"}).json()
+        self.assertTrue(d["way"].startswith('Me → Calendar → "Add calendar"'), d["way"])
+        d = self.p.post("/api/profile/tipps/f:klaeren", json={"do": "setup"}).json()
+        self.assertEqual(d["way"], features.me_way("klaeren"))
+        self.assertEqual(tipps._way({"key": "", "me": "secbox"}, []), "Ich → Sicherheit")
+        self.assertEqual(tipps._way({"key": "", "me": ""}, []), "")
 
     def test_list_holds_at_most_three_and_never_admin_items_for_a_profile(self):
         many = [tipps._tip("new", f"f:{k}", k, self.uid, False, ["", ""]) for k in ("wiki", "kiwix", "lokal", "roles")]
@@ -279,24 +333,24 @@ class Tipps(unittest.TestCase):
 
     # ---------------------------------------------------------------- 7: once a week by itself
     def test_weekly_note_needs_its_switches_and_comes_once_a_week(self):
-        helpers.set_config(proactive=True, wiki=True)
+        helpers.set_config(proactive=True, weather=True)
         try:
             tipps._mut(self.uid, lambda st: st.update(since=T0))
-            with mock.patch.object(features, "_seen", return_value={"wiki": T0 + 100}):
+            with mock.patch.object(features, "_seen", return_value={"weather": T0 + 100}):
                 self.assertEqual(tipps.weekly_text(self.uid, now=T0 + 200), ("", None))   # admin switch off
                 helpers.set_config(feature_tips_push=True)
                 profiles.save_settings(self.uid, {"pro_tips": False})
                 self.assertEqual(tipps.weekly_text(self.uid, now=T0 + 200), ("", None))   # preference off
                 profiles.save_settings(self.uid, {"pro_tips": True})
                 text, tip = tipps.weekly_text(self.uid, now=T0 + 200)
-                self.assertIn("Wikipedia direkt", text)
-                self.assertEqual(tip["id"], "f:wiki")
+                self.assertIn("Wetter", text)
+                self.assertEqual(tip["id"], "f:weather")
                 self.assertEqual(tipps.weekly_text(self.uid, now=T0 + 300), ("", None))
                 self.assertTrue(tipps.weekly_text(self.uid, now=T0 + 200 + tipps.WEEK)[0])
             self.assertIn("tipp", proactive.KINDS)
             self.assertEqual(proactive.KINDS["tipp"][2], "pro_tips")
         finally:
-            helpers.set_config(proactive=False, wiki=False, feature_tips_push=False)
+            helpers.set_config(proactive=False, weather=False, feature_tips_push=False)
 
     # ---------------------------------------------------------------- the rest of the Spark knows it
     def test_registered_everywhere(self):
@@ -318,6 +372,76 @@ class Tipps(unittest.TestCase):
         self.assertIn(uid, tipps._all())
         ADMIN.delete(f"/api/admin/profiles/{uid}")
         self.assertNotIn(uid, tipps._all())
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Browser(unittest.TestCase):
+    """Dominik 2026-10-14: „springt nicht genau auf die Einstellungen“ and „nach erfolgreicher Einrichtung sollten
+    diese Meldungen verschwinden“: the setup lands on the row and marks it, and „Prüfen“ takes the entry away."""
+    @classmethod
+    def setUpClass(cls):
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+        try:
+            profiles.add_user("Tippsprung", "4711")
+        except Exception:
+            pass
+        cls.uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Tippsprung")
+
+    async def until(self, pg, expr, seconds=20):
+        for _ in range(int(seconds * 10)):
+            try:
+                if await pg.evaluate(expr):
+                    return
+            except Exception:
+                pass
+            await pg.wait_for_timeout(100)
+        self.fail(f"never true: {expr}")
+
+    def test_setup_lands_on_the_row_and_check_takes_the_hint_away(self):
+        was = features.chat_cfg().get("calendar")
+        helpers.set_config(spark_help=True, feature_tips=True, calendar=True, weather=True)
+        self.addCleanup(helpers.set_config, spark_help=False, feature_tips=False, calendar=was, weather=False)
+        tipps.forget(self.uid)
+        self.addCleanup(tipps.forget, self.uid)
+        now = int(time.time())
+        tipps._mut(self.uid, lambda st: st.update(since=now - 1000))
+        seen = mock.patch.object(features, "_seen", return_value={"weather": now - 900})
+        seen.start()
+        self.addCleanup(seen.stop)
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE")).new_page()
+                errors = []
+                pg.on("pageerror", lambda e: errors.append(str(e)))
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                r = await pg.request.post(base + "/api/profile/login", data={"name": "Tippsprung", "pin": "4711"})
+                self.assertEqual(r.status, 200)
+                await pg.goto(base + "/")
+                await self.until(pg, PAGE_READY + "&&!!PROFILE&&TIPS_ON")
+                await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                # what way.js marks
+                await pg.evaluate("window.FLASHED=[];const o=sFlash;sFlash=el=>{FLASHED.push(visText(el));o(el)}")
+                # the setup of the calendar lands on „Kalender hinzufügen“ on Ich → Kalender
+                await pg.evaluate("tipSetup({id:'f:calendar'})")
+                await self.until(pg, "$('profmodal').style.display==='grid'&&document.querySelector('#ptabs button.on').dataset.t==='calbox'")
+                await self.until(pg, "FLASHED.some(x=>x.includes('Kalender hinzufügen'))")
+                # Ich → Überblick lists the new weather; „Prüfen“ after it is set up takes it away
+                await pg.evaluate("$('tipsetup')&&$('tipsetup').remove();openMe('overbox')")
+                await self.until(pg, "!!document.querySelector('#tipover .tipitem[data-tip=\"f:weather\"]')")
+                await pg.click("#tipover .tipitem[data-tip='f:weather'] button.p")
+                await self.until(pg, "!!$('tipsetup')&&document.querySelector('#ptabs button.on').dataset.t==='wxbox'")
+                with mock.patch.object(onboard, "done", return_value=True):
+                    await pg.click("#tipsetup .row button.p")
+                    await self.until(pg, "$('tipsetup').textContent.includes('Eingerichtet')")
+                self.assertFalse(await pg.evaluate("!!document.querySelector('#tipover .tipitem[data-tip=\"f:weather\"]')"))
+                self.assertEqual(errors, [])
+                await br.close()
+        asyncio.run(go())
 
 
 if __name__ == "__main__":

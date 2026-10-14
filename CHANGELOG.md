@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.538** · 2026-10-14 · Hinweise „neu freigegeben“ nur noch, wenn das Profil selbst etwas einrichten muss (Los geht's); sie verschwinden, sobald es eingerichtet ist oder „Prüfen“ es bestätigt, spätestens nach 14 Tagen; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** · 2026-10-14 · Outlook classic hing mit dem Spark-Add-in beim Laden: IDTExtensibility2 übergibt custom jetzt als SAFEARRAY wie Extensibility.dll, GetCustomUI fängt Fehler ab, Einrichten-Dialog nennt den Ausweg
 - **V01.0.536** · 2026-10-14 · Tests wieder grün: die Modell-Liste unter Sprachmodell beginnt im Test mit einer frischen Minute, Browser-Tests davor hatten ihr Abruflimit verbraucht
 - **V01.0.535** · 2026-10-14 · Zustand der NAS (Synology S6): der Spark liest über SNMPv3 (nur authPriv) Belegung, RAID, Festplatten, Temperatur und DSM-Update der NAS, zeigt sie unter Zustand → Dienste, meldet den Admins volle Speicherbereiche, beschädigte RAIDs, Festplatten-Warnungen und Hitze einmal und bei Entwarnung, Admins fragen per Sprache („Wie voll ist die NAS?“); Wissensordner lesen über der Grenze zuerst Dokumente, dann Bilder, die neuesten zuerst, und die Vorschau sagt ehrlich, wie viel gelesen wird
