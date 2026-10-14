@@ -441,6 +441,16 @@
         }
       }
     },
+    "Anleitungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guides"
+          }
+        }
+      }
+    },
     "Anlernen": {
       "localizations": {
         "en": {
@@ -4061,6 +4071,16 @@
         }
       }
     },
+    "Personen und Geräte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People and devices"
+          }
+        }
+      }
+    },
     "Postfach aufräumen": {
       "localizations": {
         "en": {
@@ -5131,16 +5151,6 @@
         }
       }
     },
-    "Vom Admin ausgeschaltet": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Turned off by the admin"
-          }
-        }
-      }
-    },
     "Vom Admin erlaubt": {
       "localizations": {
         "en": {
@@ -5931,12 +5941,12 @@
         }
       }
     },
-    "Öffnet das Panel in Safari an dieser Stelle. Dort meldest du dich an wie gewohnt.": {
+    "Öffnet das Panel hier in der App an dieser Stelle. Beim ersten Mal meldest du dich an wie im Browser.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opens the panel in Safari at this place. Sign in there as usual."
+            "value": "Opens the panel here in the app at this place. The first time you sign in as in the browser."
           }
         }
       }

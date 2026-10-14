@@ -33,6 +33,7 @@ Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ände
 10. **Vor jedem Push** über die Push-Warteschlange: wer oben steht, pusht sofort (auch während ein Testlauf läuft), vorher `git pull --rebase`, nächste freie Versionsnummer, Selbsttests grün.
 11. **Jede Version** bekommt eine Zeile in CHANGELOG und README, die Details stehen in `docs/de` und `docs/en`. Die README bleibt kurz.
 12. **Die Doku ist bei jeder Änderung aktuell** (Dominik 2026-10-13). Jede Änderung zieht im selben Commit Doku, Hilfe und Architektur-Doku mit. Was sich aus dem Code ableiten lässt (Bausteine, Weg einer Anfrage, Speicherorte), wird erzeugt und von einem Selbsttest geprüft, nicht von Hand gepflegt.
+13. **Eine Quelle, aufräumen im selben Commit** (Dominik 2026-10-14). Jede Liste, jeder Standardwert, jeder Name und jeder Helfer steht genau einmal; wer etwas ersetzt, löscht das Alte im selben Commit. Siehe Teil 17.
 
 ---
 
@@ -61,7 +62,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 15 | **Sicherung** | Eine neue Datei in `state/` mit Einstellungen kommt in `backup.STATE_FILES`, jede andere mit Grund in `backup.STATE_LOCAL` (bleibt beim Sichern weg). Geheimnisse liegen nur im vault. | 🧪 test_technik.Storage |
 | 16 | **Update und Dienste** | Ein neues Modul, das ASR- oder TTS-Dienste importieren, kommt in `app/restart-map`. Ein neues Paket kommt mit Hash in `requirements-panel.lock`. Eine neue systemd-Unit bekommt `MemoryMax=` und `PrivateTmp=yes`. Eine Seite, die ins Panel gehört, kommt in die Static-Allowlist von `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
 | 17 | **Admin-Protokoll und Rückgängig** | Admin-Änderungen der Konfiguration laufen über `undo.py` (ohne Geheimnisse). Empfindliche Schalter kommen in `SENSITIVE`. | 📝 |
-| 18 | **Apps** | Die iPhone-App liest Namen und Rechte aus `/api/features` und `/api/admin/switches`, nie aus einer eigenen Liste. Android und Begleiter bei Bedarf nachziehen. | 🧪 test_features.test_swift_keeps_no_list |
+| 18 | **Apps** | Jede Funktion mit Ich-Seite oder Einstellung ist in jeder App zu erreichen: einstellen, ansehen, löschen (Dominik 2026-10-14). Android zeigt das Panel selbst (WebView, `appview.js` nimmt die Liste des Panels). Die iPhone-App zeigt eine Seite nativ oder öffnet sie unter „Im Panel öffnen“ in der App; die Liste der Seiten kommt aus `features.ME_PAGES` über `/api/features` (`pages`), nie aus einer Liste in Swift oder Kotlin. Eine neue Ich-Seite kommt nach `ME_PAGES` (und `me.js meAll`, `guides.js ME_NAME`); fehlt sie in der App, steht sie mit Grund in `features.APP_SKIP`. Namen und Rechte liest die App aus `/api/features` und `/api/admin/switches`. Jeder neue Text der App bekommt seine englische Fassung in `Localizable.xcstrings`. Panel-Bereiche öffnet der Admin-Schalter für jedes Profil, kein Schalter je Bereich. | 🧪 test_app_gleichstand, test_features.test_swift_keeps_no_list, test_iphone_panel |
 | 19 | **Tests** | Für jede Schutzregel ein Selbsttest. Ein Browser-Test für jede neue Seite (320, 390 und 1280 px). Ein Prüfpunkt unten in `pruefung/praxistest-tars-2.md` im Projektordner (A = Admin, P = Profil). | 📝 (Praxistest), siehe Teil 9 |
 | 20 | **Doku** | Eine Zeile in CHANGELOG und README (de und en), Details in `docs/de` und `docs/en`. Neue allgemeine Regeln kommen in diese Richtlinie. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Sicherheit nach Stand der Technik** | Die Änderung wird gegen den Teil „Stand der Technik“ der Sicherheits-Checkliste geprüft (Kryptografie, Anmeldung, Header, Lieferkette, LLM-Risiken). | 📝 |
@@ -74,6 +75,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 28 | **Taten** | Jedes Werkzeug, das etwas ändert (schalten, eintragen, senden, erstellen, merken), bekommt in `taten.KIND` seine Art. Nur dann prüft die Handlungs-Prüfung Sätze wie „ist jetzt an“ gegen sein Ergebnis; die Fehlerschleife gilt ohnehin für alle Werkzeuge. Ein Ergebnis, das nicht geklappt hat, beginnt mit einem der festen Wörter aus `taten.FAILED` („Not done“, „Fehler“ …), ein noch zu bestätigender Vorschlag mit „NOT saved yet“ oder „NOT done yet“. | 🧪 test_taten (Werkzeuge mit Art) |
 | 29 | **Werkzeug-Abdeckung** | Jede Funktion aus `features.py` steht im selben Commit in `werkzeug_abdeckung.py`: mit ihren Werkzeugen (`TOOLS`), mit der festen Regel des Panels, die sie beantwortet (`RULES`), oder mit dem Grund, warum es nichts zu fragen gibt (`WITHOUT`). Jedes Werkzeug fürs Modell steht in einer Weiche-Gruppe, in `intent.NARROW_KEEP` oder, wenn das Modul es nur auf das eigene Wort der Person anbietet, in `BY_WORD` mit `keep` in seinem `offer()`; sonst wirft die Weiche es beim Eingrenzen weg. Jedes Werkzeug einer Gruppe hat einen typischen Satz in `SENTENCES`, der dorthin führt, und jedes neue Werkzeug wird in einem Selbsttest einmal wirklich ausgeführt. (Dominik 2026-10-13: „überprüfe ob es für alle Dienste und Infos Werkzeuge gibt“) | 🧪 test_werkzeug_abdeckung |
 | 30 | **Technik-Doku** | Die Architektur-Doku (`docs/de/architektur.md`, `docs/en/architecture.md`, Panel Zustand → Technik) kommt aus `technik.py`. Ein neues Modul bekommt in `technik.MODULE` seine Gruppe und eine Zeile; eine neue Datei in `state/` kommt nach `backup.STATE_FILES` oder `STATE_LOCAL`, eine neue Datei unter `users/` nach `speicher.AREAS`, `LOCAL` oder `technik.USERS_SONST`, jeweils mit einer Zeile in `technik.INHALT`; eine versiegelte Datei kommt nach `technik.VERSCHLUESSELT`. Ändert sich der Weg einer Anfrage, ziehen `KNOTEN`, `KANTEN` und `SCHRITTE` mit. Danach `python3 app/panel/hilfe.py --docs`. | 🧪 test_technik |
+| 31 | **Aufräumen** | Vor einem neuen Helfer, einer Liste, einem Namen oder einer Einstellung suchen, ob es das schon gibt, und das benutzen. Ersetztes und Totes (Schlüssel, Funktionen, Imports, Texte, CSS) im selben Commit löschen. Nie eine Datei aus der Altlastenliste mit mehr Treffern verlassen. Teil 17. | 🧪 test_aufraeumen |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
@@ -363,6 +365,8 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_technik | jedes Modul, jede Datei in `state/` und `users/` in der Architektur-Doku und in Sicherung oder lokaler Liste, Doku-Blöcke aktuell, Seite Technik nur für Admins |
 | test_changelog | CHANGELOG-Format |
 | test_releases_aufraeumen | nur neuestes Release pro Reihe |
+| test_app_gleichstand | eine Liste der Ich-Seiten, jede Seite in den Apps erreichbar (Ausnahmen mit Grund), Seiten folgen der Freigabe, App-Texte mit Englisch |
+| test_aufraeumen | keine neuen Doppel: eigener `<think>`-Filter, doppelter Dict-Schlüssel, ungenutzter Import, eigenes JSON-Schreiben, eigener Modellaufruf, roher `fetch(`, abweichende Namen in features.py und guides.js (Altlastenliste schrumpft nur) |
 | test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
 
 **Nur Absprache (kein Test):**
@@ -407,3 +411,26 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 4. Die Sicherheits-Checkliste liegt im Repo (`docs/de/sicherheits-checkliste.md`, `docs/en/security-checklist.md`) und hat einen Teil „Stand der Technik“, gegen den jede Änderung geprüft wird.
 5. Sprung-Links gelten überall und werden bei jeder Änderung mitgezogen.
 6. Journalzeilen nennen Profile nur mit deren Zustimmung.
+
+---
+
+## 17. Aufräumen: eine Quelle (Dominik 2026-10-14)
+
+„… dass wir keine doppelten Einstellungseinträge haben, doppelte Datenführung, doppelte was weiß ich, dass es einfach immer alles sauber ist.“ Plan und Bestandsaufnahme: `plaene/aufraeumen-und-apps.md` im Projektordner.
+
+1. **Eine Quelle.** Jede Liste, jeder Standardwert, jeder Name, jeder Dateiname und jeder Helfer steht genau einmal. Braucht ihn eine zweite Stelle (JS, Swift, Kotlin, Doku), wird die Kopie erzeugt (wie `werkzeuge.py --js`, `hilfe.py --docs`) oder ein Selbsttest gleicht sie ab.
+2. **Erst suchen, dann bauen.** Vor einem neuen Helfer, einer Liste oder einer Einstellung prüfen, ob es das schon gibt: `common.write_json`, `common.no_think`, `common.load_config`, `features`, `profiles.SETTINGS`, `netguard.client`, `api()`/`apiTry()` in JS, die Bausteine aus Teil 6. Vorhandenes benutzen oder erweitern, nie kopieren.
+3. **Aufräumen im selben Commit.** Wer etwas ersetzt oder entfernt, löscht das Alte mit: Schlüssel (die alten kommen in die Liste entfernter Schlüssel), Funktionen, Imports, Übersetzungen in `i18n.js`, CSS-Regeln, Altnamen und Hüllen.
+4. **Standardwerte nur an einer Stelle:** `config.default.json` für den Spark, `profiles.SETTINGS` für Profile. Kein zweiter Standardwert im Code.
+5. **Keine neuen Doppel, die alten werden weniger.** `test_aufraeumen` führt je Prüfung eine Altlastenliste mit dem Stand vom 14.10.2026. Eine Datei darf nie mehr Treffer haben als ihr Eintrag; hat sie weniger, wird ihr Eintrag im selben Commit gesenkt. Die Liste wird also nur kürzer. Ein Import, der nur für seine Nebenwirkung da ist, bekommt `# noqa: F401`.
+6. **Die große Aufräumaktion** (Abbau der Altlastenliste) startet erst, wenn kein anderer Thread mehr auf main baut (Dominik 2026-10-14), damit der ganze Code einmal einen sauberen Stand bekommt. Bis dahin räumt niemand Altlasten in Dateien auf, an denen ein anderer Thread arbeitet.
+
+| Prüfung in test_aufraeumen | Gemeinsame Stelle |
+|---|---|
+| OwnThinkFilter | `common.no_think` |
+| DoubleDictKey | ein Schlüssel einmal |
+| UnusedImport | löschen oder `# noqa: F401` mit Grund |
+| OwnJsonWrite | `common.write_json` (frischer Name statt festem `.tmp`) |
+| OwnModelCall | geplant: ein gemeinsames `llm.complete` |
+| RawFetch | `api()`/`apiTry()` aus base.js (Anmeldung, Code-Dialog, Notaus, Ladeleiste) |
+| SameNames | Gruppen und Namen aus `features.py` |

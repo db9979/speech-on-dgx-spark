@@ -33,6 +33,7 @@ Applies to every thread and every person who changes code in Speech on DGX Spark
 10. **Every push** goes through the push queue: whoever is on top pushes at once (even while a test run is running), first `git pull --rebase`, next free version number, self-tests green.
 11. **Every version** gets a line in CHANGELOG and README, the details are in `docs/de` and `docs/en`. The README stays short.
 12. **The docs are current with every change** (Dominik 2026-10-13). Every change updates docs, help and architecture docs in the same commit. Whatever can be derived from the code (parts, the way of a request, storage places) is generated and checked by a self-test, not kept by hand.
+13. **One source, clean up in the same commit** (Dominik 2026-10-14). Every list, default, name and helper exists exactly once; whoever replaces something deletes the old in the same commit. See part 17.
 
 ---
 
@@ -61,7 +62,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 15 | **Backup** | A new file in `state/` with settings goes into `backup.STATE_FILES`, any other with its reason into `backup.STATE_LOCAL` (left out of the backup). Secrets live only in the vault. | 🧪 test_technik.Storage |
 | 16 | **Update and services** | A new module that ASR or TTS services import goes into `app/restart-map`. A new package goes with hash into `requirements-panel.lock`. A new systemd unit gets `MemoryMax=` and `PrivateTmp=yes`. A page that belongs in the panel goes into the static allowlist of `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
 | 17 | **Admin log and undo** | Admin changes to the configuration run via `undo.py` (without secrets). Sensitive switches go into `SENSITIVE`. | 📝 |
-| 18 | **Apps** | The iPhone app reads names and rights from `/api/features` and `/api/admin/switches`, never from a list of its own. Update Android and the companion as needed. | 🧪 test_features.test_swift_keeps_no_list |
+| 18 | **Apps** | Every function with an Ich page or a setting can be reached in every app: set up, look at, delete (Dominik 2026-10-14). Android shows the panel itself (WebView, `appview.js` takes the panel's list). The iPhone app shows a page natively or opens it under "Open in the panel" inside the app; the list of pages comes from `features.ME_PAGES` through `/api/features` (`pages`), never from a list in Swift or Kotlin. A new Ich page goes into `ME_PAGES` (and `me.js meAll`, `guides.js ME_NAME`); if it is missing in the app, it stands with a reason in `features.APP_SKIP`. The app reads names and rights from `/api/features` and `/api/admin/switches`. Every new text of the app gets its English version in `Localizable.xcstrings`. Panel areas are opened by the admin switch for every profile, no switch per area. | 🧪 test_app_gleichstand, test_features.test_swift_keeps_no_list, test_iphone_panel |
 | 19 | **Tests** | A self-test for every protection rule. A browser test for every new page (320, 390 and 1280 px). A check item at the bottom of `pruefung/praxistest-tars-2.md` in the project folder (A = admin, P = profile). | 📝 (field test), see part 9 |
 | 20 | **Docs** | A line in CHANGELOG and README (de and en), details in `docs/de` and `docs/en`. New general rules go into this guideline. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
@@ -74,6 +75,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 28 | **Deeds** | Every tool that changes something (switching, entering, sending, creating, remembering) gets its kind in `taten.KIND`. Only then does the action check test sentences like "is on now" against its result; the error loop stop holds for every tool anyway. A result that did not work starts with one of the fixed words in `taten.FAILED` ("Not done", "Fehler" …), a proposal still to be confirmed with "NOT saved yet" or "NOT done yet". | 🧪 test_taten (tools with a kind) |
 | 29 | **Tool coverage** | Every function in `features.py` stands in `werkzeug_abdeckung.py` in the same commit: with its tools (`TOOLS`), with the panel's fixed rule that answers it (`RULES`), or with the reason there is nothing to ask for (`WITHOUT`). Every tool for the model sits in a Weiche group, in `intent.NARROW_KEEP` or, when its module offers it only on the person's own word, in `BY_WORD` with `keep` in its `offer()`; otherwise the Weiche drops it when narrowing. Every tool of a group has a typical sentence in `SENTENCES` that leads there, and every new tool runs once for real in a self-test. (Dominik 2026-10-13: "check whether there are tools for all services and information") | 🧪 test_werkzeug_abdeckung |
 | 30 | **Architecture docs** | The architecture docs (`docs/de/architektur.md`, `docs/en/architecture.md`, panel Status → Architecture) come from `technik.py`. A new module gets its group and a line in `technik.MODULE`; a new file in `state/` goes into `backup.STATE_FILES` or `STATE_LOCAL`, a new file under `users/` into `speicher.AREAS`, `LOCAL` or `technik.USERS_SONST`, each with a line in `technik.INHALT`; a sealed file goes into `technik.VERSCHLUESSELT`. If the way of a request changes, `KNOTEN`, `KANTEN` and `SCHRITTE` follow. Then `python3 app/panel/hilfe.py --docs`. | 🧪 test_technik |
+| 31 | **Clean up** | Before a new helper, list, name or setting, look whether it already exists and use that. Delete what was replaced or is dead (keys, functions, imports, texts, CSS) in the same commit. Never leave a file on the legacy list with more hits. Part 17. | 🧪 test_aufraeumen |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
@@ -363,6 +365,8 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_technik | every module, every file in `state/` and `users/` in the architecture docs and in the backup or local list, doc blocks current, Architecture page admin only |
 | test_changelog | CHANGELOG format |
 | test_releases_aufraeumen | only the newest release per series |
+| test_app_gleichstand | one list of Ich pages, every page reachable in the apps (exceptions with a reason), pages follow the release, app texts with English |
+| test_aufraeumen | no new duplicates: own `<think>` filter, a dict key twice, unused import, own JSON write, own model call, raw `fetch(`, names differing between features.py and guides.js (the legacy list only shrinks) |
 | test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
 
 **Agreement only (no test):**
@@ -407,3 +411,26 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 4. The security checklist lives in the repo (`docs/de/sicherheits-checkliste.md`, `docs/en/security-checklist.md`) and has a part "State of the art" against which every change is checked.
 5. Jump links apply everywhere and are updated along with every change.
 6. Journal lines name profiles only with their consent.
+
+---
+
+## 17. Clean up: one source (Dominik 2026-10-14)
+
+"… that we have no duplicate settings entries, duplicate data keeping, duplicate whatever, that everything is simply always clean." Plan and inventory: `plaene/aufraeumen-und-apps.md` in the project folder.
+
+1. **One source.** Every list, default, name, file name and helper exists exactly once. If a second place needs it (JS, Swift, Kotlin, docs), the copy is generated (like `werkzeuge.py --js`, `hilfe.py --docs`) or a self-test keeps it equal.
+2. **Look first, then build.** Before a new helper, list or setting, check whether it already exists: `common.write_json`, `common.no_think`, `common.load_config`, `features`, `profiles.SETTINGS`, `netguard.client`, `api()`/`apiTry()` in JS, the building blocks of part 6. Use or extend what exists, never copy it.
+3. **Clean up in the same commit.** Whoever replaces or removes something deletes the old with it: keys (old ones go to the list of removed keys), functions, imports, translations in `i18n.js`, CSS rules, old names and wrappers.
+4. **Defaults in one place only:** `config.default.json` for the Spark, `profiles.SETTINGS` for profiles. No second default in the code.
+5. **No new duplicates, the old ones get fewer.** `test_aufraeumen` keeps a legacy list per check with the state of 14.10.2026. A file may never have more hits than its entry; if it has fewer, its entry is lowered in the same commit. So the list only gets shorter. An import kept only for its side effect gets `# noqa: F401`.
+6. **The big cleanup** (working off the legacy list) starts only when no other thread builds on main anymore (Dominik 2026-10-14), so the whole code gets one clean state. Until then nobody cleans up legacy in files another thread is working on.
+
+| Check in test_aufraeumen | Shared place |
+|---|---|
+| OwnThinkFilter | `common.no_think` |
+| DoubleDictKey | a key once |
+| UnusedImport | delete, or `# noqa: F401` with a reason |
+| OwnJsonWrite | `common.write_json` (fresh name instead of a fixed `.tmp`) |
+| OwnModelCall | planned: one shared `llm.complete` |
+| RawFetch | `api()`/`apiTry()` from base.js (sign-in, code dialog, Notaus, loading bar) |
+| SameNames | groups and names from `features.py` |

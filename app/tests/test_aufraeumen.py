@@ -1,0 +1,237 @@
+"""Aufräumen: eine Quelle (docs/de/richtlinien.md Teil 17, Dominik 2026-10-14 „dass wir keine doppelten
+Einstellungseinträge haben, doppelte Datenführung … dass es einfach immer alles sauber ist“).
+
+Every list, default, name and helper lives in one place. These tests stop new duplicates. What was already
+doubled on 2026-10-14 (V01.0.526) stands in an Altlastenliste per test: a file may never get more hits than
+its entry, and when a file gets fewer, its entry must shrink with it (the list only gets shorter). A new file
+starts at zero.
+
+- a  no own "<think>" filter: common.no_think
+- b  no key twice in one dict literal (the second silently wins)
+- c  no unused import
+- d  no own atomic JSON write (json.dump + os.replace): common.write_json
+- e  no own call of the language model's chat/completions
+- f  no raw fetch( in the panel's scripts: api()/apiTry() in base.js (sign-in, code dialog, Notaus, loading bar)
+- g  group and function names the same in features.py and guides.js
+
+Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
+
+Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
+"""
+import ast
+import glob
+import os
+import re
+import unittest
+
+APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PANEL = os.path.join(APP, "panel")
+JS = os.path.join(PANEL, "static", "js")
+
+
+def py_files():
+    """Every Python file of the app outside the tests, by its path below app/."""
+    out = {}
+    for path in sorted(glob.glob(os.path.join(APP, "*.py")) + glob.glob(os.path.join(PANEL, "*.py"))):
+        with open(path, encoding="utf-8") as f:
+            out[os.path.relpath(path, APP)] = f.read()
+    return out
+
+
+def count_by_file(files, count):
+    found = {}
+    for name, src in files.items():
+        n = count(name, src)
+        if n:
+            found[name] = n
+    return found
+
+
+class Ratchet:
+    """A test of this kind compares today's hits per file with its Altlastenliste ALT."""
+    ALT = {}
+    WHAT = ""
+
+    def hits(self):
+        raise NotImplementedError
+
+    def test_no_new_and_the_list_shrinks(self):
+        now = self.hits()
+        more = {f: f"{n} > {self.ALT.get(f, 0)}" for f, n in now.items() if n > self.ALT.get(f, 0)}
+        self.assertEqual(more, {}, f"new duplicate ({self.WHAT}); use the one shared place instead")
+        less = {f: f"{now.get(f, 0)} < {n}" for f, n in self.ALT.items() if now.get(f, 0) < n}
+        self.assertEqual(less, {}, f"cleaned up, thank you: lower these entries in {type(self).__name__}.ALT")
+
+
+THINK = re.compile(r"re\.(?:sub|compile|split)\([^\n]*</?think>")
+
+
+class OwnThinkFilter(Ratchet, unittest.TestCase):
+    WHAT = "an own <think> filter, use common.no_think"
+    ALT = {"panel/begleiter.py": 1, "panel/docmake.py": 2, "panel/fixes.py": 1, "panel/gedaechtnis.py": 1,
+           "panel/memtidy.py": 1, "panel/proactive.py": 2, "panel/rmplus.py": 1, "panel/room.py": 3,
+           "panel/schreib.py": 2, "panel/wissen.py": 2}
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: 0 if name == "common.py" else len(THINK.findall(src)))
+
+
+class DoubleDictKey(Ratchet, unittest.TestCase):
+    WHAT = "a key twice in one dict literal, the second one silently wins"
+    ALT = {"panel/live.py": 2}
+
+    def hits(self):
+        def count(name, src):
+            n = 0
+            for node in ast.walk(ast.parse(src)):
+                if isinstance(node, ast.Dict):
+                    keys = [k.value for k in node.keys if isinstance(k, ast.Constant)]
+                    n += len(keys) - len(set(keys))
+            return n
+        return count_by_file(py_files(), count)
+
+
+class UnusedImport(Ratchet, unittest.TestCase):
+    WHAT = "an import nothing uses; an import kept for its side effect gets the comment '# noqa: F401'"
+    ALT = {"panel/intent.py": 1, "panel/kiwix.py": 1, "panel/meinmcp.py": 1, "panel/onboard.py": 1,
+           "panel/parcels.py": 1, "panel/rmpapier.py": 2, "panel/roomlive.py": 1, "panel/speicher.py": 1,
+           "panel/vorab.py": 1}
+
+    @staticmethod
+    def unused(src):
+        tree = ast.parse(src)
+        lines = src.splitlines()
+        imported = []
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+                    continue
+                if "noqa" in lines[node.lineno - 1]:
+                    continue
+                for a in node.names:
+                    if a.name == "*":
+                        continue
+                    imported.append((a.asname or a.name).split(".")[0])
+        used = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                used.add(node.id)
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.isidentifier():
+                used.add(node.value)    # __all__ and getattr(module, "name")
+        return [n for n in imported if n not in used]
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: len(self.unused(src)))
+
+    def test_the_scan_sees_an_unused_import(self):
+        self.assertEqual(self.unused("import os\nimport re\nre.sub('a', 'b', 'c')\n"), ["os"])
+        self.assertEqual(self.unused("import os  # noqa: F401\n"), [])
+        self.assertEqual(self.unused("import os.path\nos.path.join('a')\n"), [])
+
+
+class OwnJsonWrite(Ratchet, unittest.TestCase):
+    WHAT = "an own atomic JSON write (json.dump + os.replace), use common.write_json"
+    ALT = {"bench.py": 2, "panel/agent.py": 1, "panel/android.py": 1, "panel/apns.py": 1, "panel/backup.py": 1,
+           "panel/begleiter.py": 1, "panel/coadmin.py": 1, "panel/docembed.py": 1,
+           "panel/doclingdienst.py": 1, "panel/esp32.py": 2, "panel/geraeteupdate.py": 1,
+           "panel/ghtoken.py": 1, "panel/guard.py": 3, "panel/health.py": 1, "panel/hintergrund.py": 1,
+           "panel/images.py": 1, "panel/join.py": 1, "panel/latency.py": 2, "panel/live.py": 1,
+           "panel/mcpserver.py": 1, "panel/meinmcp.py": 1, "panel/meldung.py": 2, "panel/mfa.py": 1,
+           "panel/nachsortieren.py": 1, "panel/nas.py": 1, "panel/notaus.py": 3, "panel/offsite.py": 1,
+           "panel/profiles.py": 1, "panel/quality.py": 3, "panel/stufe.py": 1, "panel/telegram.py": 1,
+           "panel/tipps.py": 2, "panel/undo.py": 1, "panel/update.py": 1, "panel/wissen.py": 1}
+
+    def hits(self):
+        def count(name, src):
+            if name == "common.py":
+                return 0
+            n = 0
+            for node in ast.walk(ast.parse(src)):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    body = ast.unparse(node)
+                    inner = sum(1 for sub in ast.walk(node) if sub is not node
+                                and isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)))
+                    if not inner and "json.dump(" in body and ("os.replace(" in body or "os.rename(" in body):
+                        n += 1
+            return n
+        return count_by_file(py_files(), count)
+
+
+class OwnModelCall(Ratchet, unittest.TestCase):
+    WHAT = "an own call of the language model (chat/completions); planned: one shared llm.complete"
+    ALT = {"panel/agent.py": 1, "panel/berater.py": 5, "panel/chat.py": 3, "panel/docmake.py": 2, "panel/fixes.py": 1,
+           "panel/gedaechtnis.py": 1, "panel/hamelden.py": 1, "panel/health.py": 2, "panel/images.py": 1,
+           "panel/intent.py": 1, "panel/memtidy.py": 1, "panel/proactive.py": 1, "panel/quality.py": 1,
+           "panel/rmplus.py": 1, "panel/schreib.py": 1, "panel/suchpruefung.py": 1, "panel/tidy.py": 1,
+           "panel/vorrang.py": 1, "panel/wissen.py": 2}
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: src.count("chat/completions"))
+
+
+class RawFetch(Ratchet, unittest.TestCase):
+    WHAT = "a raw fetch( in a panel script, use api()/apiTry() from base.js"
+    ALT = {"admin.js": 4, "bewerten.js": 1, "changelog.js": 1, "coadmin.js": 1, "dienste.js": 1, "esp.js": 1,
+           "geraete.js": 1, "hilfe.js": 2, "hintergrund.js": 2, "join.js": 1, "laden.js": 2, "me.js": 8,
+           "melden.js": 1, "mfa.js": 2, "nas.js": 1, "nasquelle.js": 1, "notaus.js": 2, "proactive.js": 3,
+           "room.js": 6, "speicher.js": 1, "start.js": 2, "tidy.js": 1, "today.js": 1, "zuordnungen.js": 1}
+    OWN = {"base.js": "api() itself", "live.js": "live.html loads without base.js",
+           "esptool.js": "the vendored flasher"}
+
+    def hits(self):
+        out = {}
+        for path in sorted(glob.glob(os.path.join(JS, "*.js"))):
+            name = os.path.basename(path)
+            if name in self.OWN:
+                continue
+            with open(path, encoding="utf-8") as f:
+                n = len(re.findall(r"(?<![\w.$])fetch\(", f.read()))
+            if n:
+                out[name] = n
+        return out
+
+
+class SameNames(unittest.TestCase):
+    """features.py is the one source of groups and function names; guides.js keeps a copy for the page."""
+    # differences on 2026-10-14; this list only gets shorter
+    ALT_GROUPS = {"data", "day", "sec"}
+    ALT_NAMES = {"android", "beraterchat", "beratermich", "bewertenzurueck", "iphone", "pebble", "rmfresh"}
+
+    def setUp(self):
+        with open(os.path.join(JS, "guides.js"), encoding="utf-8") as f:
+            self.js = f.read()
+        with open(os.path.join(PANEL, "features.py"), encoding="utf-8") as f:
+            self.py = f.read()
+
+    def py_groups(self):
+        block = self.py[self.py.index("GROUPS = ("):]
+        block = block[:block.index("\n\n")]
+        return {k: (de, en) for k, de, en in re.findall(r'\("(\w+)", "([^"]+)", "([^"]+)"\)', block)}
+
+    def test_group_names(self):
+        js = {k: (de, en) for k, de, en in re.findall(
+            r"\['(\w+)','([^']+)','([^']+)'\]", self.js[self.js.index("const GGROUPS"):self.js.index("const GSECT")])}
+        py = self.py_groups()
+        self.assertEqual(sorted(js), sorted(py))
+        differ = {k for k in py if py[k] != js[k]}
+        self.assertEqual(sorted(differ - self.ALT_GROUPS), [], "group names: take them from features.GROUPS")
+        self.assertEqual(sorted(self.ALT_GROUPS - differ), [], "cleaned up, thank you: shrink ALT_GROUPS")
+
+    def test_function_names(self):
+        from tests import helpers
+        helpers.start()
+        import features
+        guide = {m.group(1): (m.group(2), m.group(3)) for m in re.finditer(
+            r"\{id:'(\w+)'[^\n]*?\bt:\['([^']+)','([^']+)'\]", self.js)}
+        uses = {}
+        for f in features.FEATURES:
+            uses.setdefault(f.guide, []).append(f)
+        # a guide for one function carries that function's name; a guide for several has its own title
+        differ = {f.key for g, fs in uses.items() if len(fs) == 1 and g in guide
+                  for f in fs if guide[g] != (f.de, f.en)}
+        self.assertEqual(sorted(differ - self.ALT_NAMES), [], "function names: one name in features.py and guides.js")
+        self.assertEqual(sorted(self.ALT_NAMES - differ), [], "cleaned up, thank you: shrink ALT_NAMES")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -135,7 +135,7 @@ class Pages(Base):
         helpers.set_config(deny={"reminders": [self.ua], "room": [self.ua], "iphonepanel": [self.ua]})
         try:
             for uid, want in ((self.ua, False), (self.ub, True)):
-                profiles.save_settings(uid, {"app_room": True, "app_mine": True})
+                profiles.save_settings(uid, {"app_room": True})
                 hello = iphone.app_hello(prof=profiles.by_id(uid))
                 self.assertIs(hello["reminders"], want, uid)
                 self.assertIs(hello["rooms"], want, uid)

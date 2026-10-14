@@ -1,6 +1,7 @@
-"""Panel areas in the iPhone app (iphone.AREAS, V01.0.246): each area needs the admin switch
-chat.iphone_panel and the profile's own switch; the app's key reaches only that area's paths; the rights
-are set in the browser only, never from the app; a hidden area opens nothing."""
+"""Panel areas in the iPhone app (iphone.AREAS, V01.0.246): the admin switch chat.iphone_panel opens every area
+for every profile at once, only the admin blocks single profiles (App-Gleichstand, Dominik 2026-10-14: no switch
+per area any more); the app's key reaches only the areas' paths; "Spark verwalten" stays the profile's own
+choice, set in the browser only, never from the app; a closed area opens nothing."""
 import json
 import unittest
 
@@ -38,49 +39,59 @@ class Areas(unittest.TestCase):
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["iphone_panel"], False)
-        for k in iphone.RIGHTS_PANEL:
-            self.assertIs(profiles.SETTINGS[k][0], False)
-        # every area has its switch in the list the app may not change
+        self.assertIs(profiles.SETTINGS["app_admin"][0], False)
+        # no profile switch per area any more: the admin release decides (Freigabe nur durch Admin)
+        for k in iphone.AREAS:
+            self.assertNotIn(k, profiles.SETTINGS, k)
+            self.assertIn(k, iphone.GONE, k)
+        # hello names every area, so older apps keep finding their keys
         self.assertEqual(set(iphone.AREAS) - set(iphone.RIGHTS_PANEL), set())
 
-    def test_area_needs_both_switches(self):
+    def test_areas_follow_the_admin_release(self):
         c, a = self.app("Pia")
-        self.assertEqual(a.get("/api/profile/memory").status_code, 401)
-        c.put("/api/profile/settings", json={"app_mine": True})
         self.assertEqual(a.get("/api/profile/memory").status_code, 200)
         self.assertTrue(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
+        self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_admin"])   # the profile's own choice
+        # an old switch from the browser or an old app changes nothing
+        c.put("/api/profile/settings", json={"app_mine": False})
+        self.assertNotIn("app_mine", profiles.settings(self.uid("Pia")))
+        self.assertEqual(a.get("/api/profile/memory").status_code, 200)
+        helpers.set_config(deny={"iphonepanel": [self.uid("Pia")]})
+        try:
+            self.assertEqual(a.get("/api/profile/memory").status_code, 401)
+            self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
+        finally:
+            helpers.set_config(deny={})
         helpers.set_config(iphone_panel=False)
         self.assertEqual(a.get("/api/profile/memory").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
         helpers.set_config(iphone_panel=True)
-        c.put("/api/profile/settings", json={"app_mine": False})
-        self.assertEqual(a.get("/api/profile/memory").status_code, 401)
 
     def test_only_the_area_paths_and_methods(self):
         c, a = self.app("Quinn")
-        c.put("/api/profile/settings", json={"app_mine": True})
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Quinn")
         profiles.remember(uid, "Mag Tee")
         fid = profiles.memory(uid)[0]["id"]
         self.assertEqual(a.delete(f"/api/profile/memory/{fid}").json()["removed"], 1)
         # forgetting everything at once stays in the browser, like the rest of the panel
         self.assertEqual(a.delete("/api/profile/memory").status_code, 401)
-        for path in ("/api/profile/settings", "/api/profile/mail", "/api/profile/security", "/api/admin/profiles",
-                     "/api/profile/memory/../settings"):
+        for path in ("/api/profile/settings", "/api/profile/tasks", "/api/admin/profiles", "/api/profile/memory/../settings"):
             self.assertIn(a.get(path).status_code, (401, 403, 404), path)
-        self.assertEqual(a.put("/api/profile/settings", json={"app_mine": True}).status_code, 401)
+        self.assertEqual(a.put("/api/profile/settings", json={"app_admin": True}).status_code, 401)
 
     def test_rights_never_from_the_app(self):
         c, a = self.app("Rosa")
-        c.put("/api/profile/settings", json={"app_mine": True})
-        for k in ("app_mine", "app_admin", "app_on"):
+        for k in ("app_admin", "app_on", "app_ha"):
             self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
         # with "Mein Alltag" the app changes the conversation switches, only those
         self.assertEqual(a.put("/api/iphone/settings", json={"learn": False}).status_code, 200)
         self.assertIs(a.get("/api/iphone/settings").json()["settings"]["learn"], False)
-        c.put("/api/profile/settings", json={"app_mine": False})
-        self.assertEqual(a.put("/api/iphone/settings", json={"learn": True}).status_code, 400)
-        self.assertNotIn("learn", a.get("/api/iphone/settings").json()["settings"])
+        helpers.set_config(iphone_panel=False)
+        try:
+            self.assertEqual(a.put("/api/iphone/settings", json={"learn": True}).status_code, 400)
+            self.assertNotIn("learn", a.get("/api/iphone/settings").json()["settings"])
+        finally:
+            helpers.set_config(iphone_panel=True)
 
     def test_admin_area_opens_no_path(self):
         c, a = self.app("Sami")
@@ -92,28 +103,23 @@ class Areas(unittest.TestCase):
     def uid(self, name):
         return next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
 
-    def test_each_area_opens_its_own_paths_only(self):
+    def test_every_area_opens_with_the_release_and_closes_with_it(self):
         c, a = self.app("Uli")
-        probe = {"app_docs_edit": "/api/profile/wissen", "app_voice": "/api/profile/voice",
-                 "app_auto": "/api/profile/weather", "app_security": "/api/profile/security",
-                 "app_accounts": "/api/profile/calendar"}
-        for right, path in probe.items():
-            self.assertEqual(a.get(path).status_code, 401, path)
-        for right, path in probe.items():
-            c.put("/api/profile/settings", json={right: True})
+        probe = ("/api/profile/wissen", "/api/profile/voice", "/api/profile/weather", "/api/profile/security",
+                 "/api/profile/calendar")
+        for path in probe:
             self.assertEqual(a.get(path).status_code, 200, path)
-            # the other areas stay closed
-            for other, p in probe.items():
-                if not profiles.settings(self.uid("Uli")).get(other):
-                    self.assertEqual(a.get(p).status_code, 401, (right, p))
-            c.put("/api/profile/settings", json={right: False})
-            self.assertEqual(a.get(path).status_code, 401, path)
+        helpers.set_config(iphone_panel=False)
+        try:
+            for path in probe:
+                self.assertEqual(a.get(path).status_code, 401, path)
+        finally:
+            helpers.set_config(iphone_panel=True)
 
     def test_setting_up_the_second_step_stays_in_the_browser(self):
         c, a = self.app("Vera")
         helpers.set_config(mfa=True)
         try:
-            c.put("/api/profile/settings", json={"app_security": True})
             self.assertEqual(a.get("/api/profile/mfa").status_code, 200)
             for path in ("/api/profile/mfa/setup", "/api/profile/mfa/enable"):
                 self.assertEqual(a.post(path, json={"code": "123456"}).status_code, 401, path)
@@ -124,7 +130,6 @@ class Areas(unittest.TestCase):
         import mfa
         c, a = self.app("Wim")
         helpers.set_config(mail=True, speaker_id=True)
-        c.put("/api/profile/settings", json={"app_accounts": True, "app_voice": True})
         body = {"kind": "gmail", "user": "wim@example.org", "password": "pw"}
         real = (mfa.enabled, mfa.verify)
         try:
@@ -149,14 +154,19 @@ class Areas(unittest.TestCase):
         import telegram
         self.assertIn("secret_profile", inspect.signature(telegram.profile_link).parameters["prof"].default.dependency.__name__)
 
-    def test_document_and_service_switches_only_with_their_area(self):
+    def test_document_and_service_switches_with_the_release(self):
         c, a = self.app("Xena")
-        for k in iphone.DOC_FIELDS + iphone.AUTO_FIELDS:
-            self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
-        c.put("/api/profile/settings", json={"app_docs_edit": True, "app_auto": True})
-        for k in iphone.DOC_FIELDS + iphone.AUTO_FIELDS:
+        for k in iphone.MINE_FIELDS + iphone.DOC_FIELDS + iphone.AUTO_FIELDS:
             self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 200, k)
-        self.assertEqual(a.put("/api/iphone/settings", json={"app_docs_edit": False}).status_code, 400)
+        # an old app still sending an area switch: ignored, never stored
+        self.assertEqual(a.put("/api/iphone/settings", json={"app_docs_edit": False}).status_code, 200)
+        self.assertNotIn("app_docs_edit", profiles.settings(self.uid("Xena")))
+        helpers.set_config(iphone_panel=False)
+        try:
+            for k in iphone.MINE_FIELDS + iphone.DOC_FIELDS:
+                self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
+        finally:
+            helpers.set_config(iphone_panel=True)
 
     def test_feature_switches_from_the_app_only_plain_ones(self):
         """Einstellungen → Funktionen in "Spark verwalten": the admin's login; only chat on/off switches,

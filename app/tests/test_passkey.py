@@ -193,7 +193,7 @@ class Passkeys(unittest.TestCase):
         helpers.set_config(iphone=True, iphone_panel=True)
         try:
             a, _ = self.add()
-            self.c.put("/api/profile/settings", json={"app_on": True, "app_security": True})
+            self.c.put("/api/profile/settings", json={"app_on": True})
             iphone._pending.clear()
             r = pair(self.c, "PassPias iPhone")
             self.assertEqual(r.status_code, 200, r.text)

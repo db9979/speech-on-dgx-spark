@@ -1,21 +1,17 @@
+import SafariServices
 import SwiftUI
 
-/// "Im Panel öffnen": every part of the panel the app does not show itself, opened in Safari at the right
-/// place (the profile signs in there as usual). The app takes over more of them bit by bit.
+/// "Im Panel öffnen": every page of Ich the app does not show itself, opened inside the app at the right place
+/// (the profile signs in there once, like in the browser). The list of pages comes from the Spark
+/// (/api/features "pages", features.ME_PAGES), never from a list here: a new page shows up without an app update
+/// (Richtlinie, App-Gleichstand, Dominik 2026-10-14). The app takes over more of them bit by bit.
 struct PanelBridgeView: View {
     let admin: Bool
-    /// the Ich pages whose functions the admin has all switched off (from /api/features, the same list as the panel):
-    /// they stay in the list and say why, instead of leading to an empty page
-    @State private var off: Set<String> = []
+    /// the Ich pages this profile can use now, in the panel's order: (place "me=<page>", name)
+    @State private var pages: [(String, String)] = []
+    @State private var loaded = false
+    @State private var open: PanelPlace?
 
-    static let mine: [(LocalizedStringKey, String)] = [
-        (LocalizedStringKey("Gespräch"), "me=setbox"), (LocalizedStringKey("Gedächtnis"), "me=factbox"), (LocalizedStringKey("Dokumente"), "me=docbox"), (LocalizedStringKey("Werkzeug-Verlauf"), "me=logbox"),
-        (LocalizedStringKey("Kalender"), "me=calbox"), (LocalizedStringKey("Aufgaben"), "me=taskbox"), (LocalizedStringKey("Aufträge"), "me=agentbox"),
-        (LocalizedStringKey("Wetter"), "me=wxbox"), (LocalizedStringKey("Von selbst"), "me=probox"), (LocalizedStringKey("Mitteilungen"), "me=notebox"), (LocalizedStringKey("E-Mail"), "me=mailbox"),
-        (LocalizedStringKey("Pakete"), "me=parbox"), (LocalizedStringKey("Kontakte"), "me=conbox"), (LocalizedStringKey("Smart Home"), "me=habox"), (LocalizedStringKey("Raum-Modus"), "me=roombox"),
-        (LocalizedStringKey("Lautsprecher"), "me=espbox"), (LocalizedStringKey("Bus und Bahn"), "me=trbox"), (LocalizedStringKey("Telegram"), "me=tgbox"), (LocalizedStringKey("iPhone-App"), "me=appbox"),
-        (LocalizedStringKey("Pebble-Uhr"), "me=pebbox"), (LocalizedStringKey("Sicherheit"), "me=secbox"), (LocalizedStringKey("Sprechererkennung"), "me=voicebox"),
-    ]
     static let spark: [(LocalizedStringKey, String)] = [
         (LocalizedStringKey("Monitoring"), "go=mon"), (LocalizedStringKey("Prüfen"), "go=test"), (LocalizedStringKey("Logs"), "go=logs"), (LocalizedStringKey("Einstellungen"), "go=cfg"),
         (LocalizedStringKey("Funktionen"), "cfg=feat"), (LocalizedStringKey("Update und Sicherung"), "cfg=upd"), (LocalizedStringKey("Personen und Geräte"), "go=prof"),
@@ -25,44 +21,63 @@ struct PanelBridgeView: View {
     var body: some View {
         List {
             Section {
-                ForEach(Self.mine, id: \.1) { row($0.0, $0.1) }
+                if !loaded { ProgressView() }
+                ForEach(pages, id: \.0) { p in row(Text(verbatim: p.1), p.0) }
             } header: { Text("Ich") } footer: {
-                Text("Öffnet das Panel in Safari an dieser Stelle. Dort meldest du dich an wie gewohnt.")
+                Text("Öffnet das Panel hier in der App an dieser Stelle. Beim ersten Mal meldest du dich an wie im Browser.")
             }
             if admin {
                 Section("Spark verwalten") {
-                    ForEach(Self.spark, id: \.1) { row($0.0, $0.1) }
+                    ForEach(Self.spark, id: \.1) { row(Text($0.0), $0.1) }
                 }
             }
         }
         .navigationTitle("Im Panel öffnen")
-        .task { await loadOff() }
+        .task { await load() }
+        .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
     }
 
-    @ViewBuilder private func row(_ title: LocalizedStringKey, _ place: String) -> some View {
+    @ViewBuilder private func row(_ title: Text, _ place: String) -> some View {
         if let url = SparkAPI.panelLink(place) {
-            Link(destination: url) {
+            Button { open = PanelPlace(url: url) } label: {
                 LabeledContent {
-                    Image(systemName: "arrow.up.forward.app").foregroundStyle(.secondary)
-                } label: {
-                    Text(title)
-                    if off.contains(place) { Text("Vom Admin ausgeschaltet") }
-                }
+                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                } label: { title }
             }
             .foregroundStyle(.primary)
         }
     }
 
-    private func loadOff() async {
+    private func load() async {
+        defer { loaded = true }
         guard let api = SparkAPI.current, let d = try? await api.object("GET", "api/features"),
-              let list = d["features"] as? [[String: Any]] else { return }
-        var on: [String: Bool] = [:]
-        for f in list.prefix(200) {
-            guard let me = f["me"] as? String, me.range(of: #"^[a-z0-9]{1,20}$"#, options: .regularExpression) != nil else { continue }
-            on["me=" + me] = (on["me=" + me] ?? false) || (f["spark"] as? Bool ?? false)
+              let list = d["pages"] as? [[String: Any]] else { return }
+        pages = list.prefix(60).compactMap { p in
+            guard let id = p["id"] as? String, id.range(of: #"^[a-z]{2,12}$"#, options: .regularExpression) != nil,
+                  let name = FeaturesView.pick(p["name"]) else { return nil }
+            return ("me=" + id, name)
         }
-        off = Set(on.filter { !$0.value }.keys)
     }
+}
+
+/// A page of the panel to open inside the app.
+struct PanelPlace: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+/// The panel inside the app (SFSafariViewController): Safari's protections, the profile's own sign-in, no
+/// access for the app to what is on the page.
+struct PanelPage: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let c = SFSafariViewController(url: url)
+        c.dismissButtonStyle = .done
+        return c
+    }
+
+    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
 /// "Mein Alltag": what the assistant remembers, the next appointments and the Spark's own reminders.

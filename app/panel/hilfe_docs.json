@@ -2845,7 +2845,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "Die App übernimmt das Panel Stück für Stück (Plan „iPhone-App übernimmt das Panel“). Dafür schaltet der Admin unter Funktionen „Panel-Bereiche in der iPhone-App“ ein, und jedes Profil schaltet unter Ich → iPhone-App jeden Bereich einzeln ein. Alles ist zuerst aus, Gäste bekommen nichts davon. Die App selbst kann keinen Bereich einschalten."
+"text": "Die App übernimmt das Panel Stück für Stück (Plan „iPhone-App übernimmt das Panel“). Dafür schaltet der Admin unter Funktionen „Panel-Bereiche in der iPhone-App“ ein; das gilt sofort für jedes Profil mit gekoppeltem iPhone, einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was). Die früheren Schalter je Bereich unter Ich → iPhone-App gibt es seit dem App-Gleichstand (Dominik 2026-10-14) nicht mehr. Alles ist zuerst aus, Gäste bekommen nichts davon. Die App selbst kann keinen Bereich einschalten."
 },
 {
 "lang": "de",
@@ -2853,7 +2853,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "- Im Panel öffnen (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel in Safari an der richtigen Stelle (Gedächtnis, E-Mail, Sicherheit …). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile. Seiten, deren Funktionen der Admin alle ausgeschaltet hat, stehen mit „Vom Admin ausgeschaltet“ da (seit V01.0.276, aus derselben Liste /api/features wie im Panel). - Funktionen und Personen und Geräte unter Spark verwalten (seit V01.0.276): Die Namen und Gruppen der Schalter kommen vom Spark, die App hat keine eigene Liste mehr. Ein Profil zeigt zusätzlich seine Funktionen „n von m an“ zum Schalten, seine Admin-Rolle und die angemeldeten Browser (Wischen meldet ab). - Mein Alltag (Schalter „Mein Alltag in der App“): die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues Gespräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im B"
+"text": "- Im Panel öffnen (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel hier in der App an der richtigen Stelle (beim ersten Mal meldest du dich an wie im Browser). Die Liste zeigt jede Seite von Ich, die dein Profil gerade nutzen kann, auch reMarkable, Speicher, Schreibhilfe, Begleiter und MCP; sie kommt vom Spark (/api/features, Liste pages aus features.ME_PAGES), eine neue Seite steht also ohne App-Update drin. Nur Überblick, Los geht's, Anmelden und Android-App fehlen mit Grund (features.APP_SKIP). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile. - Funktionen und Personen und Geräte unter Spark verwalten (seit V01.0.276): Die Namen und Gruppen der Schalter kommen vom Spark, die App hat keine eigene Liste mehr. Ein Profil zeigt zusätzlich seine Funktionen „n von m an“ zum Schalten, seine Admin-Rolle und die angemeldeten Browser (Wischen meldet ab). - Mein Alltag: die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues G"
 },
 {
 "lang": "de",
@@ -2861,7 +2861,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "rowser. - Spark verwalten (Schalter „Spark verwalten in der App“): Nach Face ID meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser. Ohne zweiten Anmeldeschritt des Admins lässt der Spark diese Anmeldung vom iPhone nicht zu. Die Anmeldung gilt nur, solange die App offen ist. Darin: Monitoring („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter Ändern (V01.0.250): Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; die letzten drei mit Code) und Sicherungen (jetzt sichern, alte löschen; Zurückspielen und Herunterladen im Browser). Hat dein Profil eine Admin-Rolle (Mit-Admin oder Verwalter, V01.0.256), steht dort auch „Mit meinem Profil anmelden“: mit dem Code deines Profils statt Admin-Passwort, endet nach 15 Minuten ohne Bedienung. Ein Verwalter sieht nur Monitoring, Logs, Funktionen und Personen u"
+"text": "espräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im Browser. - Spark verwalten (Schalter „Spark verwalten in der App“): Nach Face ID meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser. Ohne zweiten Anmeldeschritt des Admins lässt der Spark diese Anmeldung vom iPhone nicht zu. Die Anmeldung gilt nur, solange die App offen ist. Darin: Monitoring („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter Ändern (V01.0.250): Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; die letzten drei mit Code) und Sicherungen (jetzt sichern, alte löschen; Zurückspielen und Herunterladen im Browser). Hat dein Profil eine Admin-Rolle (Mit-Admin oder Verwalter, V01.0.256), steht dort auch „Mit meinem Profil a"
 },
 {
 "lang": "de",
@@ -2869,7 +2869,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "nd Geräte; ein Mit-Admin löscht keine Sicherungen. - Dokumente verwalten (Schalter „Dokumente verwalten in der App“, V01.0.250): In „Meine Dokumente“ wischen zum Löschen, lange drücken für „Für alle“, Durchsuchen an/aus, Tags, Neu einlesen und „An die Frist erinnern“. Unten „Schalter für Dokumente“ mit den Schaltern von Ich → Dokumente, soweit der Admin sie erlaubt. - Stimme einlernen (Schalter „Stimme einlernen in der App“): Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst (Schalter „Von selbst in der App“): Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit (Schalter „Sicherheit in der App“): deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit C"
+"text": "nmelden“: mit dem Code deines Profils statt Admin-Passwort, endet nach 15 Minuten ohne Bedienung. Ein Verwalter sieht nur Monitoring, Logs, Funktionen und Personen und Geräte; ein Mit-Admin löscht keine Sicherungen. - Dokumente verwalten (V01.0.250): In „Meine Dokumente“ wischen zum Löschen, lange drücken für „Für alle“, Durchsuchen an/aus, Tags, Neu einlesen und „An die Frist erinnern“. Unten „Schalter für Dokumente“ mit den Schaltern von Ich → Dokumente, soweit der Admin sie erlaubt. - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungsc"
 },
 {
 "lang": "de",
@@ -2877,7 +2877,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "ode). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden (Schalter „Konten verbinden in der App“): E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
+"text": "odes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
 },
 {
 "lang": "de",
@@ -2885,7 +2885,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Dokumente ansehen",
 "title": "Meine Dokumente ansehen",
-"text": "Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → Meine Dokumente die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Lange Texte kommen stückweise: unten „Weiterlesen“ hängt das nächste Stück an. Löschen und mehr geht mit „Dokumente verwalten in der App“ (oben)."
+"text": "Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → Meine Dokumente die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Lange Texte kommen stückweise: unten „Weiterlesen“ hängt das nächste Stück an. Löschen und mehr geht unter „Dokumente verwalten“ (oben)."
 },
 {
 "lang": "de",
@@ -6709,7 +6709,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "The app takes over the panel bit by bit (plan \"iPhone app takes over the panel\"). The admin switches on \"Panel areas in the iPhone app\" under Features, and each profile switches on each area on its own under Me → iPhone app. Everything starts off, guests get none of it. The app itself cannot switch an area on."
+"text": "The app takes over the panel bit by bit (plan \"iPhone app takes over the panel\"). The admin switches on \"Panel areas in the iPhone app\" under Features; that applies at once to every profile with a paired iPhone, only the admin blocks single profiles (Features → Who may do what). The former switches per area under Me → iPhone app are gone since the app parity (Dominik 2026-10-14). Everything starts off, guests get none of it. The app itself cannot switch an area on."
 },
 {
 "lang": "en",
@@ -6717,7 +6717,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "- Open in the panel (Settings): whatever the app does not show itself opens the panel in Safari at the right place (memory, e-mail, security …). With \"Manage the Spark\" also monitoring, logs, features and profiles. Pages whose functions the admin switched off entirely say \"Switched off by the admin\" (since V01.0.276, from the same list /api/features as the panel). - Features and People and devices under Manage the Spark (since V01.0.276): the names and groups of the switches come from the Spark, the app keeps no list of its own. A profile also shows its functions \"n of m on\" to switch, its admin role and the signed-in browsers (swipe to sign out). - My day (switch \"My day in the app\"): the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from corrections, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser. - Manage the Spark (switch \"Manage the Spark in the app\"): after Face ID yo"
+"text": "- Open in the panel (Settings): whatever the app does not show itself opens the panel right here in the app at the right place (the first time you sign in as in the browser). The list shows every page of Me your profile can use now, reMarkable, storage, writing help, companion and MCP too; it comes from the Spark (/api/features, list pages from features.ME_PAGES), so a new page shows up without an app update. Only overview, let's go, sign in and Android app are left out, with a reason (features.APP_SKIP). With \"Manage the Spark\" also monitoring, logs, features and profiles. - Features and People and devices under Manage the Spark (since V01.0.276): the names and groups of the switches come from the Spark, the app keeps no list of its own. A profile also shows its functions \"n of m on\" to switch, its admin role and the signed-in browsers (swipe to sign out). - My day: the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from correct"
 },
 {
 "lang": "en",
@@ -6725,7 +6725,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "u sign in with the admin password and the admin's code, as in the browser. Without the admin's second login step the Spark refuses this sign-in from an iPhone. The sign-in lasts only while the app is open. Inside: Monitoring (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share) and Checks (function check, quality test, priority check). Under Change (V01.0.250): Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; the last three with a code) and Backups (back up now, delete old ones; restoring and downloading in the browser). If your profile has an admin role (co-admin or manager, V01.0.256), there is also \"Sign in with my profile\": with your profile's code instead of the admin password, ending after 15 minutes without use. A manager sees only monitoring, logs, features and profiles and devices; a co-admin does not delete backups. - Manage documents (switch \"Manage documents in the app\", V01.0.250): in \"M"
+"text": "ions, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser. - Manage the Spark (switch \"Manage the Spark in the app\"): after Face ID you sign in with the admin password and the admin's code, as in the browser. Without the admin's second login step the Spark refuses this sign-in from an iPhone. The sign-in lasts only while the app is open. Inside: Monitoring (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share) and Checks (function check, quality test, priority check). Under Change (V01.0.250): Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; the last three with a code) and Backups (back up now, delete old ones; restoring and downloading in the browser). If your profile has an admin role (co-admin or manager, V01.0.256), there is also \"Sign in with my profile\": with your profile's code instead of the admin password, ending after 15 minutes without use."
 },
 {
 "lang": "en",
@@ -6733,7 +6733,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "y documents\" swipe to delete, long-press for \"For everyone\", searching on/off, tags, read again and \"Remind me of the deadline\". At the bottom \"Document switches\" with the switches of Me → Documents, as far as the admin allows them. - Teach your voice (switch \"Teach your voice in the app\"): the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive (switch \"Proactive in the app\"): weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security (switch \"Security in the app\"): your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts (switch \"Connect accounts in the app\"): mail, "
+"text": " A manager sees only monitoring, logs, features and profiles and devices; a co-admin does not delete backups. - Manage documents (V01.0.250): in \"My documents\" swipe to delete, long-press for \"For everyone\", searching on/off, tags, read again and \"Remind me of the deadline\". At the bottom \"Document switches\" with the switches of Me → Documents, as far as the admin allows them. - Teach your voice: the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: "
 },
 {
 "lang": "en",
@@ -6741,7 +6741,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
+"text": "mail, calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
 },
 {
 "lang": "en",
@@ -6749,7 +6749,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Looking at my documents",
 "title": "Looking at my documents",
-"text": "With \"Documents from the app\" (Me → iPhone app), Settings → My documents lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the \"Text\" tab shows the text the Spark stored. Other file types show as text only. Long texts come in parts: \"Read on\" at the bottom adds the next one. Deleting and more work with \"Manage documents in the app\" (above)."
+"text": "With \"Documents from the app\" (Me → iPhone app), Settings → My documents lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the \"Text\" tab shows the text the Spark stored. Other file types show as text only. Long texts come in parts: \"Read on\" at the bottom adds the next one. Deleting and more work under \"Manage documents\" (above)."
 },
 {
 "lang": "en",

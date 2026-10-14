@@ -14,6 +14,8 @@ Verbindlich ist die **Coding-Richtlinie**: [docs/de/richtlinien.md](docs/de/rich
 9. Für jede Schutzregel ein Selbsttest. Tests hängen nicht von der Uhrzeit ab und laufen auch in einer Kopie nur mit `app/`. Nie einen Test überspringen oder abschwächen.
 10. Neue allgemeine Regeln kommen im selben Commit in die Richtlinie (de und en).
 11. Doku bei jeder Änderung aktuell halten, im selben Commit: Doku, Hilfe, Architektur-Doku (`technik.py`, Zustand → Technik; danach `python3 app/panel/hilfe.py --docs`, `test_technik` prüft).
+12. Eine Quelle: jede Liste, jeder Standardwert, jeder Name und Helfer genau einmal; wer etwas ersetzt, löscht das Alte im selben Commit. Keine neuen Doppel (`test_aufraeumen`, Altlastenliste schrumpft nur); die große Aufräumaktion erst, wenn kein anderer Thread mehr baut (Richtlinie Teil 17).
+13. Jede Funktion auch in den Apps: einstellen, ansehen, löschen. Ich-Seiten nur aus `features.ME_PAGES` (iPhone über `/api/features` `pages`, Android über die Panel-Ansicht), Ausnahmen mit Grund in `features.APP_SKIP`, App-Texte mit Englisch (`test_app_gleichstand`).
 
 ## Arbeitsablauf
 - Direkt auf `main`, der Reihe nach über die Push-Warteschlange (Sammel-Push): wer oben steht, pusht sofort, auch während ein „Tests“-Lauf läuft; vorher `git pull --rebase`, nächste freie Nummer in `app/VERSION`, Selbsttests grün. GitHub testet nur den neuesten Stand; wird er rot, gilt PUSH-STOPP und der Koordinator bestimmt den Verursacher.

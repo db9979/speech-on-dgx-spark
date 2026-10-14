@@ -39,6 +39,29 @@ GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkei
           ("sec", "Sicherheit", "Security"))
 
 
+# the pages of Ich, in their order: the one list for the panel (me.js meAll, guides.js ME_NAME) and the apps
+# (/api/features "pages"); test_app_gleichstand keeps the copies equal (Richtlinie Teil 1 Zeile 18, Dominik 2026-10-14)
+ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My status"), ("gobox", "Los geht's", "Let's go"),
+            ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
+            ("docbox", "Dokumente", "Documents"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
+            ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
+            ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"),
+            ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
+            ("parbox", "Pakete", "Parcels"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
+            ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"),
+            ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
+            ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
+            ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
+            ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"))
+# Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
+ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
+# Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
+APP_SKIP = {"overbox": "the app's own start screen shows the overview",
+            "gobox": "first steps in the browser after signing up",
+            "loginbox": "the app is signed in by its own key",
+            "andbox": "the Android app, not for an iPhone"}
+
+
 class Feature(NamedTuple):
     key: str
     de: str
@@ -647,7 +670,26 @@ def features_list(request: Request):
     prof = profiles.current(request)
     guard.limit(request, "features", prof and prof["id"])
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS],
-            "features": state(prof["id"] if prof else None), "why": WHY, "stamp": stamp(prof["id"] if prof else None)}
+            "features": state(prof["id"] if prof else None), "why": WHY, "stamp": stamp(prof["id"] if prof else None),
+            "pages": app_pages(prof["id"] if prof else None)}
+
+
+def app_pages(uid):
+    """The Ich pages an app lists for this profile, in the panel's order: every page but APP_SKIP with at least
+    one function this profile may use, and the pages of ME_ALWAYS.
+    Guests get none: they only ask and get answers."""
+    if not uid:
+        return []
+    c, s = chat_cfg(), profiles.settings(uid)
+    out = []
+    for key, de, en in ME_PAGES:
+        if key in APP_SKIP:
+            continue
+        mine = [f for f in FEATURES if f.me == key]
+        if key not in ME_ALWAYS and not any(reason(f.key, uid, c, s) in (None, "profile", "mfa") for f in mine):
+            continue
+        out.append({"id": key, "name": [de, en]})
+    return out
 
 
 # ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)

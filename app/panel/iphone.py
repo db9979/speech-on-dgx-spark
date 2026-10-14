@@ -60,11 +60,13 @@ profiles.APP_GATE[0] = allowed
 
 
 # ---------------------------------------------------------------- panel areas in the app
-# The app takes over the panel bit by bit (plan plaene/iphone-uebernimmt-panel.md). Each area has its own
-# profile switch (Ich -> iPhone-App, set only in the browser) and all need the admin switch
-# chat.iphone_panel. Only these paths open for the app's key; each keeps its own checks (secret_profile
+# The app takes over the panel bit by bit (plan plaene/iphone-uebernimmt-panel.md). The admin switch
+# chat.iphone_panel opens every area for every profile at once, only the admin blocks single profiles
+# (Freigabe nur durch Admin; the areas' own profile switches are gone since the App-Gleichstand, Dominik
+# 2026-10-14). Only these paths open for the app's key; each keeps its own checks (secret_profile
 # wants a fresh code from the app, so the profile needs its second step). "Spark verwalten" (app_admin)
-# opens no path: the app signs in like the browser, with the admin password and the admin's code.
+# opens no path: the app signs in like the browser, with the admin password and the admin's code, and only
+# where the profile itself chose it for its phone (a guard of its own, like the second step, not a release).
 _ID = r"[0-9a-f]{1,16}"
 _DOC = r"[0-9a-f]{12}"
 _DEV = r"d_[0-9a-f]{12}"
@@ -104,6 +106,7 @@ AREAS = {
                      (("GET", "PUT", "DELETE"), r"/api/profile/homeassistant"),   # the code word stays in the browser
                      (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
 }
+# what hello tells the app (the app shows an area where it is true)
 RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts", "app_admin")
 # conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
 MINE_FIELDS = ("daily", "learn")
@@ -112,11 +115,14 @@ DOC_FIELDS = ("doc_due",)
 AUTO_FIELDS = ()
 # switches older apps still send although the admin release alone decides now (Freigabe vereinfachen): ignored
 GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
-                  "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on"))
+                  "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on",
+                  "app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts"))
 
 
 def area_on(uid, right):
-    return features.allowed("iphonepanel", uid) and bool(profiles.settings(uid).get(right))
+    if not features.allowed("iphonepanel", uid):
+        return False
+    return right != "app_admin" or bool(profiles.settings(uid).get("app_admin"))
 
 
 profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p in rules)
@@ -380,7 +386,7 @@ APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
               "speak")            # Antworten vorlesen: the profile's switch, every device of it follows (chat_turn.quiet)
 RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
-          "app_room") + RIGHTS_PANEL
+          "app_room", "app_admin")
 SETTINGS_BODY = 8192
 
 
