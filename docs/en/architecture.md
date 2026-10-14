@@ -230,6 +230,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | Module | Task |
 |---|---|
 | `app/panel/android.py` | The Android app "Spark": a thin shell around the page. |
+| `app/panel/anrufe.py` | Anrufe: Sprache und Video zwischen zwei Profilen. |
 | `app/panel/apns.py` | Push notifications to the iPhone app over Apple's push service (APNs), also while the app is closed. |
 | `app/panel/appupdate.py` | Spark updates from the iPhone app: a notice when a new tested version is ready, and starting it. |
 | `app/panel/begleiter.py` | Spark-Begleiter: a small program in the Windows notification area and the Mac menu bar (tools/begleiter/windows, tools/begleiter/mac) with these parts, each … |
@@ -1901,7 +1902,7 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 27 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 28 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
@@ -1925,7 +1926,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 | internet only | chat, geraeteupdate, ghtoken, meldung, remarkable, verbund | ✓ | ✕ |
 | user | calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| by target | dienstwacht, nas, nasquelle, speicher, technik_seiten, zertpin | as the target is set | – |
+| by target | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
 
 #### When blocked
@@ -2545,7 +2546,7 @@ flowchart TD
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
-11. <a id="kn-state-s11"></a>**Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read it again.
+11. <a id="kn-state-s11"></a>**Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again.
 
 **Examples:** Enter the Telegram bot token: Stored sealed, goes into every backup. · Lock after failed attempts: Stored plain, stays on this device. · Move to a new Spark: Every secret opens again, nothing to enter.
 

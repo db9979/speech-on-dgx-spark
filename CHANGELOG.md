@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.556** · 2026-10-14 · Anrufe mit Sprache und Video in Chats zu zweit, direkt von Gerät zu Gerät verschlüsselt; eigener Vermittler auf tars für unterwegs (Router: UDP 3478 und 49160–49200); Android-App 1.3.1 mit Kamera
 - **V01.0.555** · 2026-10-14 · Verbessern verständlicher: jeder Fall und Vorschlag zeigt eine Karte „Was ist passiert, Woher, Warum, Was hilft“ in festen Sätzen (klartext.py, eine Quelle für die Fehlercodes), jeder automatische Fall bekommt eine Ursache, gleiche Vorschläge werden gebündelt, Wörter statt Buchstaben mit Legende, Ideen nennen Einstellungen beim Namen, „Warum dieser Vorschlag“ und „★ beste Empfehlung“; oben „Was braucht dich“ mit 👍-Ampel, „Ganzer Weg“ in der Karte, „Selbst prüfen“ als Checkliste mit Dienst-Wächter
 - **V01.0.554** · 2026-10-14 · Knoten-Seiten: ein Klick auf Text, Regel, Zahl oder Code zeigt die Blase direkt unter der Zeile, wenn sie außer Sicht ist; die Seite springt nicht mehr nach oben
 - **V01.0.553** · 2026-10-14 · Wartungspause: `sudo speech-spark pause` und `speech-spark weiter` brachen mit „No module named 'common'“ ab; wartung.py findet app/ jetzt selbst, ein Selbsttest startet die Datei wie die Kommandozeile

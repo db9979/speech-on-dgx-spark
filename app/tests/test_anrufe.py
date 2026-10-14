@@ -1,0 +1,303 @@
+"""Anrufe (anrufe.py, plan plaene/messenger-d-v2.md): off until the admin switches them on, only in a chat of two on
+this Spark, the rules of who may ring whom, one device per side, signals checked for form only, one line per call in
+the chat, short-lived access to the Vermittler that never reaches the home network, and Live and journal with
+numbers only."""
+import asyncio
+import contextlib
+import io
+import json
+import os
+import tempfile
+import unittest
+from unittest import mock
+
+from tests import helpers
+
+helpers.start()
+import anrufe  # noqa: E402
+import chats  # noqa: E402
+import panel  # noqa: E402
+import profiles  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+ADMIN = TestClient(panel.app)
+ADMIN.post("/api/login", json={"password": "secret-admin"})
+DEV_A, DEV_B, DEV_B2 = "a1" * 6, "b2" * 6, "c3" * 6
+SDP = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\ns=-\r\n"
+
+
+def profile(name, pin="2468"):
+    r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
+    assert r.status_code in (200, 409), r.text
+    c = TestClient(panel.app)
+    assert c.post("/api/profile/login", json={"name": name, "pin": pin}).status_code == 200
+    return c
+
+
+def uid_of(client):
+    return client.get("/api/whoami").json()["profile"]["id"]
+
+
+def open_with(a, b):
+    r = a.post("/api/chats/open", json={"to": uid_of(b)})
+    assert r.status_code == 200, r.text
+    return r.json()["id"]
+
+
+class Events:
+    """What the Spark tells each profile's open Chats pages (chats._send_event), kept per profile."""
+    def __init__(self, case):
+        self.got = {}
+        p = mock.patch.object(chats, "_send_event", side_effect=lambda uid, ev: self.got.setdefault(uid, []).append(ev))
+        p.start()
+        case.addCleanup(p.stop)
+
+    def of(self, uid, kind):
+        return [e for e in self.got.get(uid, []) if e.get("type") == kind]
+
+
+class Base(unittest.TestCase):
+    def setUp(self):
+        helpers.set_config(chats=True, chats_calls=True)
+        anrufe._calls.clear()
+        anrufe._started.clear()
+        self.ev = Events(self)
+        q = mock.patch.object(anrufe, "_quiet", return_value=False)   # no quiet hours: the tests never hang on the clock
+        q.start()
+        self.addCleanup(q.stop)
+        p = mock.patch.object(anrufe, "_push", new=mock.AsyncMock())
+        self.push = p.start()
+        self.addCleanup(p.stop)
+
+    def tearDown(self):
+        helpers.set_config(chats=False, chats_calls=False, calls_turn=False, calls_turn_host="", chats_groups=False)
+        anrufe._calls.clear()
+        anrufe._started.clear()
+
+    def call(self, a, cid, video=False, dev=DEV_A):
+        return a.post("/api/anrufe/start", json={"id": cid, "video": video, "dev": dev})
+
+    def lines(self, client, cid):
+        return [x for x in client.get("/api/chats/items", params={"id": cid}).json()["items"] if x["kind"] == "sys"]
+
+
+class Off(Base):
+    def test_off_until_the_admin_switch_and_never_for_guests_or_device_keys(self):
+        import features
+        self.assertEqual(features.BY_KEY["anrufe"].parent, "chats")
+        self.assertEqual(features.BY_KEY["anrufeturn"].parent, "anrufe")
+        with open(os.path.join(helpers.APP, "config.default.json")) as f:
+            c = json.load(f)["chat"]
+        self.assertIs(c["chats_calls"], False)
+        self.assertIs(c["calls_turn"], False)
+        a, b = profile("Analma"), profile("Anbert")
+        cid = open_with(a, b)
+        helpers.set_config(chats_calls=False)
+        self.assertEqual(self.call(a, cid).status_code, 403)
+        self.assertEqual(a.get("/api/anrufe/ice").status_code, 403)
+        self.assertFalse(a.get("/api/chats").json().get("calls"))
+        helpers.set_config(chats_calls=True)
+        self.assertTrue(a.get("/api/chats").json().get("calls"))
+        g = TestClient(panel.app)
+        self.assertIn(g.post("/api/anrufe/start", json={"id": cid, "dev": DEV_A}).status_code, (401, 403))
+        token = profiles.add_device("Antestapp", uid_of(a), scope="app")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Antestapp")
+        self.addCleanup(profiles.delete_device, did)
+        k = TestClient(panel.app)
+        self.assertIn(k.get("/api/anrufe/ice", headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403))
+
+    def test_the_admin_blocks_one_profile_and_switching_off_ends_running_calls(self):
+        a, b = profile("Ancarl"), profile("Andora")
+        cid = open_with(a, b)
+        r = ADMIN.put(f"/api/admin/features/anrufe/profiles/{uid_of(b)}", json={"on": False})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.addCleanup(ADMIN.put, f"/api/admin/features/anrufe/profiles/{uid_of(b)}", json={"on": True})
+        r = self.call(a, cid)
+        self.assertEqual(r.status_code, 403)
+        self.assertIn("nimmt gerade keine Anrufe", r.text)
+        ADMIN.put(f"/api/admin/features/anrufe/profiles/{uid_of(b)}", json={"on": True})
+        self.assertEqual(self.call(a, cid).json()["state"], "ring")
+        self.assertEqual(anrufe.tidy(), [])
+        helpers.set_config(chats_calls=False)
+        self.assertEqual(len(anrufe.tidy()), 1)
+
+
+class Ringing(Base):
+    def test_ring_answer_on_one_device_signal_and_hang_up_leaves_one_line(self):
+        a, b = profile("Anemil"), profile("Anfrida")
+        ua, ub = uid_of(a), uid_of(b)
+        cid = open_with(a, b)
+        r = self.call(a, cid, video=True)
+        self.assertEqual(r.status_code, 200, r.text)
+        call = r.json()["call"]
+        self.assertEqual(r.json()["state"], "ring")
+        ring = self.ev.of(ub, "call")[0]
+        self.assertEqual((ring["call"], ring["id"], ring["video"], ring["name"]), (call, cid, True, "Anemil"))
+        self.push.assert_awaited_once()                     # nobody had the page open: the phone hears of it
+        # only the called person answers, and only once
+        self.assertEqual(a.post("/api/anrufe/answer", json={"call": call, "dev": DEV_A}).status_code, 404)
+        self.assertEqual(b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B}).status_code, 200)
+        self.assertEqual(b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B2}).status_code, 404)
+        self.assertEqual(self.ev.of(ua, "call_ok")[0]["dev"], DEV_B)
+        self.assertEqual(self.ev.of(ub, "call_taken")[0]["dev"], DEV_B)   # the other devices stop ringing
+        # signals go to the one device on the other side, only from the two devices of the call
+        offer = {"sdp": {"type": "offer", "sdp": SDP}}
+        self.assertEqual(a.post("/api/anrufe/signal", json={"call": call, "dev": DEV_A, "data": offer}).status_code, 200)
+        sig = self.ev.of(ub, "call_sig")[0]
+        self.assertEqual((sig["to"], sig["data"]), (DEV_B, offer))
+        self.assertEqual(b.post("/api/anrufe/signal", json={"call": call, "dev": DEV_B2, "data": offer}).status_code, 403)
+        ice = {"ice": {"candidate": "candidate:1 1 udp 1 192.0.2.1 5000 typ host", "sdpMid": "0", "sdpMLineIndex": 0}}
+        self.assertEqual(b.post("/api/anrufe/signal", json={"call": call, "dev": DEV_B, "data": ice}).status_code, 200)
+        self.assertEqual(self.ev.of(ua, "call_sig")[0]["to"], DEV_A)
+        c = profile("Angustav")
+        self.assertEqual(c.post("/api/anrufe/signal", json={"call": call, "dev": DEV_A, "data": offer}).status_code, 404)
+        self.assertEqual(c.post("/api/anrufe/end", json={"call": call, "dev": DEV_A}).status_code, 404)
+        self.assertEqual(b.post("/api/anrufe/end", json={"call": call, "dev": DEV_B}).json()["line"], "call")
+        self.assertEqual(len(self.ev.of(ua, "call_end")), 1)
+        line = self.lines(a, cid)[-1]
+        self.assertEqual((line["sys"], line["video"]), ("call", True))
+        self.assertIsInstance(line["secs"], int)
+        self.assertEqual(b.post("/api/anrufe/end", json={"call": call, "dev": DEV_B}).status_code, 404)
+
+    def test_rejected_missed_and_caller_hung_up(self):
+        a, b = profile("Anhanna"), profile("Anigor")
+        cid = open_with(a, b)
+        call = self.call(a, cid).json()["call"]
+        self.assertEqual(b.post("/api/anrufe/end", json={"call": call, "dev": DEV_B, "why": "reject"}).json()["line"], "call_rejected")
+        call = self.call(a, cid).json()["call"]
+        self.assertEqual(a.post("/api/anrufe/end", json={"call": call, "dev": DEV_A}).json()["line"], "call_missed")
+        call = self.call(a, cid).json()["call"]
+        self.assertEqual(asyncio.run(anrufe.end(uid_of(b), call, "missed")), "call_missed")
+        self.assertEqual([x["sys"] for x in self.lines(b, cid)][-3:], ["call_rejected", "call_missed", "call_missed"])
+
+    def test_busy_quiet_hours_and_one_call_at_a_time(self):
+        a, b, c = profile("Anjana"), profile("Ankurt"), profile("Anlena")
+        ab, cb = open_with(a, b), open_with(c, b)
+        self.assertEqual(self.call(a, ab).json()["state"], "ring")
+        self.assertEqual(self.call(a, ab).status_code, 400)          # the caller is on a call already
+        self.assertEqual(self.call(c, cb).json()["state"], "busy")    # b is: busy, a missed line, no ringing
+        self.assertEqual(len(self.ev.of(uid_of(b), "call")), 1)
+        anrufe._calls.clear()
+        with mock.patch.object(anrufe, "_quiet", return_value=True):
+            self.assertEqual(self.call(c, cb).json()["state"], "missed")
+        self.assertEqual(len(self.ev.of(uid_of(b), "call")), 1)
+
+    def test_only_in_a_chat_of_two_and_only_who_takes_messages_from_the_caller(self):
+        a, b, c = profile("Anmarc"), profile("Annora"), profile("Anotto")
+        helpers.set_config(chats_groups=True)
+        g = a.post("/api/chats/group", json={"name": "Drei", "members": [uid_of(b), uid_of(c)]}).json()["id"]
+        r = self.call(a, g)
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("zu zweit", r.text)
+        cid = open_with(a, b)
+        b.put("/api/profile/settings", json={"msg_from": "chosen"})
+        self.addCleanup(b.put, "/api/profile/settings", json={"msg_from": "all"})
+        self.assertEqual(self.call(a, cid).status_code, 403)
+        self.assertEqual(self.ev.of(uid_of(b), "call"), [])
+        self.assertEqual(self.call(a, "c" + "0" * 12).status_code, 404)   # no such chat
+
+    def test_at_most_per_hour(self):
+        a, b = profile("Anpia"), profile("Anquirin")
+        cid = open_with(a, b)
+        for _ in range(anrufe.PER_HOUR):
+            call = self.call(a, cid).json()["call"]
+            a.post("/api/anrufe/end", json={"call": call, "dev": DEV_A})
+        self.assertEqual(self.call(a, cid).status_code, 429)
+
+    def test_signals_checked_for_form_and_size(self):
+        bad = [None, {}, {"sdp": {"type": "offer", "sdp": "x"}}, {"sdp": {"type": "pranswer", "sdp": SDP}},
+               {"sdp": {"type": "offer", "sdp": SDP, "x": 1}}, {"sdp": {"type": "offer", "sdp": "v=0" + "a" * anrufe.MAX_SIGNAL}},
+               {"ice": {"candidate": "c", "evil": 1}}, {"ice": {"candidate": "c" * 2000}}, {"ice": {"sdpMLineIndex": 99}},
+               {"sdp": {"type": "offer", "sdp": SDP}, "ice": {}}, {"cmd": "x"}]
+        for d in bad:
+            with self.assertRaises(ValueError, msg=repr(d)[:80]):
+                anrufe._check_signal(d)
+        self.assertEqual(anrufe._check_signal({"ice": {"candidate": ""}}), {"ice": {"candidate": ""}})
+        a = profile("Anrosa")
+        self.assertEqual(a.post("/api/anrufe/start", json={"id": "x", "dev": "nicht-hex"}).status_code, 400)
+        self.assertEqual(a.post("/api/anrufe/signal", json={"call": "zz", "dev": DEV_A, "data": {}}).status_code, 400)
+
+
+class Vermittler(Base):
+    def test_short_lived_access_and_the_relay_never_reaches_home(self):
+        import hashlib
+        import hmac
+        import base64
+        a = profile("Ansven")
+        self.assertEqual(a.get("/api/anrufe/ice").json()["servers"], [])   # at home only: no Vermittler
+        helpers.set_config(calls_turn=True, calls_turn_host="")
+        self.assertEqual(anrufe.ice(uid_of(a)), [])                       # no address from outside: nothing
+        helpers.set_config(calls_turn_host="Spark.Example.de")
+        s = anrufe.ice(uid_of(a), now=1000)
+        turn = s[1]
+        self.assertEqual(turn["urls"][0], "turn:spark.example.de:3478?transport=udp")
+        exp, who = turn["username"].split(":")
+        self.assertEqual(int(exp), 1000 + anrufe.CRED_SECS)
+        self.assertNotIn(uid_of(a), turn["username"])
+        want = base64.b64encode(hmac.new(anrufe._secret().encode(), turn["username"].encode(), hashlib.sha1).digest()).decode()
+        self.assertEqual(turn["credential"], want)
+        import ipaddress
+        with mock.patch.object(anrufe, "_own", return_value={ipaddress.ip_address("2001:db8::5")}):
+            conf = anrufe.turn_conf("spark.example.de", "198.51.100.7", "/tmp/x")
+        self.assertIn("denied-peer-ip=2001:db8::5\n", conf)               # the Spark's own public addresses
+        self.assertIn("denied-peer-ip=198.51.100.7\n", conf)
+        for need in ("use-auth-secret", "no-cli", "no-tls", "no-multicast-peers", "no-tcp-relay", "no-stdout-log",
+                     "denied-peer-ip=192.168.0.0-192.168.255.255", "denied-peer-ip=10.0.0.0-10.255.255.255",
+                     "denied-peer-ip=127.0.0.0-127.255.255.255", "denied-peer-ip=172.16.0.0-172.31.255.255",
+                     "denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff", "min-port=49160", "max-port=49200"):
+            self.assertIn(need + "\n", conf)
+        self.assertNotIn("lt-cred-mech", conf)
+        self.assertNotIn("user=", conf)
+
+    def test_the_unit_follows_the_switch(self):
+        with mock.patch.object(anrufe, "_systemctl", return_value=True) as sc, \
+                mock.patch.object(anrufe, "_state_dir", return_value=tempfile.mkdtemp()), \
+                mock.patch("netguard.resolve", return_value="203.0.113.9"):
+            self.assertEqual(anrufe.apply_turn(), "off")
+            sc.assert_not_called()
+            helpers.set_config(calls_turn=True, calls_turn_host="spark.example.de")
+            self.assertEqual(anrufe.apply_turn(), "on")
+            sc.assert_called_with("restart")
+            path = os.path.join(anrufe._state_dir(), "turn.conf")
+            self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
+            sc.reset_mock()
+            with mock.patch.object(anrufe, "_active", return_value=True):
+                self.assertEqual(anrufe.apply_turn(), "on")
+            sc.assert_not_called()                                         # nothing changed: no restart
+            helpers.set_config(calls_turn=False)
+            self.assertEqual(anrufe.apply_turn(), "off")
+            sc.assert_called_with("stop")
+            self.assertFalse(os.path.exists(path))
+
+    def test_installed_as_its_own_unit_and_the_distribution_service_never_runs(self):
+        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
+            ins = f.read()
+        self.assertIn("systemctl mask coturn.service", ins)
+        self.assertIn("speech-spark-turn.service", ins)
+        self.assertIn("tts-design turn; do", ins)                           # sudoers: start/stop/restart only
+        self.assertNotIn("enable speech-spark-turn", ins)
+
+
+class Visible(Base):
+    def test_live_and_journal_numbers_only(self):
+        a, b = profile("Antilda"), profile("Anulf")
+        cid = open_with(a, b)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            call = self.call(a, cid).json()["call"]
+            b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B})
+            a.post("/api/anrufe/signal", json={"call": call, "dev": DEV_A, "data": {"sdp": {"type": "offer", "sdp": SDP}}})
+            a.post("/api/anrufe/end", json={"call": call, "dev": DEV_A})
+        log = out.getvalue()
+        for w in ("chats: call started", "chats: call answered", "chats: call ended"):
+            self.assertIn(w, log)
+        for never in ("Antilda", "Anulf", uid_of(a), cid, call, "127.0.0.1", "v=0"):
+            self.assertNotIn(never, log)
+        lv = anrufe.for_live()
+        self.assertTrue(lv["on"])
+        self.assertGreaterEqual(lv["today"], 1)
+        self.assertNotIn("Antilda", json.dumps(lv))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -421,6 +421,8 @@ ADMIN_ON_OK = {
     "tracelog.py:traces": "admin's request log",
     "transit.py:admin_on": "Spark switch; per profile transit.usable, endpoints add features.blocked",
     "verbund.py:admin_on": "Spark switch; per profile verbund.usable (features.allowed)",
+    "anrufe.py:admin_on": "Spark switch; per profile anrufe.usable (features.allowed)",
+    "anrufe.py:turn_on": "Spark-wide: the Vermittler (coturn) runs for the whole Spark, no profile",
     "vorab.py:admin_on": "Spark switch; per profile vorab.on (features.allowed)",
     "weather.py:admin_on": "Spark switch; per profile weather.usable, endpoints add features.blocked",
     "wiki.py:admin_on": "Spark switch; per profile wiki.usable (features.allowed)",

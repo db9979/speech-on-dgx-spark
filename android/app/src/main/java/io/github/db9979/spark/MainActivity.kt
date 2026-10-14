@@ -192,18 +192,22 @@ class MainActivity : Activity() {
         }
         w.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) {
+                // only the own Spark, only microphone and camera (camera for video calls, Chats → Anrufe)
                 val base = store.base
-                val mic = request.resources.contains(PermissionRequest.RESOURCE_AUDIO_CAPTURE)
-                if (base == null || !mic || !Store.sameOrigin(base, request.origin.toString())) {
+                val wanted = request.resources.filter {
+                    it == PermissionRequest.RESOURCE_AUDIO_CAPTURE || it == PermissionRequest.RESOURCE_VIDEO_CAPTURE
+                }
+                if (base == null || wanted.isEmpty() || !Store.sameOrigin(base, request.origin.toString())) {
                     request.deny()
                     return
                 }
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    request.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE))
+                val missing = wanted.map(::androidPermission).filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+                if (missing.isEmpty()) {
+                    request.grant(wanted.toTypedArray())
                 } else {
                     pendingMic?.deny()
                     pendingMic = request
-                    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQ_MIC)
+                    requestPermissions(missing.toTypedArray(), REQ_MIC)
                 }
             }
 
@@ -223,6 +227,9 @@ class MainActivity : Activity() {
         w.setDownloadListener { url, _, _, _, _ -> outside(Uri.parse(url)) }
         return w
     }
+
+    private fun androidPermission(resource: String) =
+        if (resource == PermissionRequest.RESOURCE_VIDEO_CAPTURE) Manifest.permission.CAMERA else Manifest.permission.RECORD_AUDIO
 
     private fun outside(uri: Uri) {
         if (uri.scheme != "https" && uri.scheme != "http" && uri.scheme != "mailto" && uri.scheme != "tel") return
@@ -244,8 +251,14 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode == REQ_MIC) {
-            val ok = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            pendingMic?.let { if (ok) it.grant(arrayOf(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) else it.deny() }
+            // grant what Android allowed now (a video call without the camera still has sound)
+            pendingMic?.let { req ->
+                val ok = req.resources.filter {
+                    (it == PermissionRequest.RESOURCE_AUDIO_CAPTURE || it == PermissionRequest.RESOURCE_VIDEO_CAPTURE) &&
+                        checkSelfPermission(androidPermission(it)) == PackageManager.PERMISSION_GRANTED
+                }
+                if (ok.isEmpty()) req.deny() else req.grant(ok.toTypedArray())
+            }
             pendingMic = null
         }
     }

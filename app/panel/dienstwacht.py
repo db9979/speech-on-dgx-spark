@@ -102,6 +102,9 @@ SVC = {
     # Chats mit anderen Sparks (verbund.py): the own address as other Sparks see it (its /.well-known/spark-verbund)
     "verbund": ("Erreichbar für andere Sparks", "Reachable for other Sparks",
                 "Andere Sparks erreichen diesen Spark gerade nicht; ihre Nachrichten kommen später.", SLOW, "chats"),
+    # Anrufe von unterwegs (anrufe.py): the Vermittler (coturn) runs with the settings the panel wrote
+    "turn": ("Vermittler für Anrufe", "Relay for calls",
+             "Anrufe von unterwegs kommen gerade nicht durch; im Heimnetz geht es weiter.", SLOW, "chats"),
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
@@ -296,6 +299,12 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import anrufe
+        if anrufe.turn_on(c):
+            out["turn"] = {"relay": {"turn": True, "host": anrufe.turn_host(c)}}
+    except Exception:
+        pass
+    try:
         import speicher
         p = dict(list(speicher.probes().items())[:MAX_PARTS])
         if p:
@@ -433,13 +442,16 @@ async def probe(sid, key, p, cfg):
             return Probe(naszustand.reachable())
         if p.get("tcp"):
             return await _tcp(p)
+        if p.get("turn"):    # Anrufe von unterwegs: the unit runs with the panel's settings (anrufe.relay_ok)
+            import anrufe
+            return Probe(await asyncio.to_thread(anrufe.relay_ok))
         return await _http(p)
     finally:
         netguard.QUIET.reset(token)
 
 
 def _host(sid, p):
-    if sid == "mail" or p.get("tcp") or p.get("snmp"):
+    if sid == "mail" or p.get("tcp") or p.get("snmp") or p.get("turn"):
         return p.get("host", "")
     return urlsplit(p.get("url", "")).hostname or ""
 

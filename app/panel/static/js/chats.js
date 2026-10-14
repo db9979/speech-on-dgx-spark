@@ -63,6 +63,7 @@ function cxStream(){if(CX.es||document.hidden||!CX.shown||typeof EventSource==='
 function cxStreamStop(){if(CX.es){CX.es.close();CX.es=null}}
 let cxLater=0;
 function cxEvent(ev){if(!ev||typeof ev.id!=='string')return;
+  if(typeof ev.type==='string'&&ev.type.startsWith('call')){if(window.anEvent)window.anEvent(ev);if(ev.type!=='call_end')return}
   if(ev.type==='typing'){if(ev.id===CX.cur){CX.typing[ev.id]={name:String(ev.name||''),until:Date.now()+1000*Math.min(10,+ev.secs||6)};cxTop()}return}
   if(ev.type==='gone'&&ev.id===CX.cur){cxClose()}
   if(ev.type==='verbund'&&CX.pane==='far'&&window.vbPane)setTimeout(window.vbPane,150);
@@ -72,6 +73,7 @@ setInterval(()=>{const tp=CX.typing[CX.cur];if(tp&&tp.until<Date.now()){delete C
 // ---------------------------------------------------------------- the list
 function cxPreview(c){const l=c.last;if(!l)return '';
   if(l.gone)return t('Nachricht zurückgenommen','Message taken back');
+  if(l.kind==='sys'&&String(l.sys||'').startsWith('call'))return cxCallLine(l);
   if(l.kind==='sys')return l.sys==='joined'?(l.name||'')+' '+t('ist dazugekommen','joined'):l.sys==='newkey'||l.sys==='keygone'?'🔒 '+t('Geräte geändert','Devices changed'):t('Änderung in der Gruppe','Change in the group');
   if(l.kind==='box')return (l.mine?t('Du: ','You: '):'')+'🔒 '+t('Nachricht','Message');
   const who=l.mine?t('Du: ','You: '):c.kind==='group'&&l.name?l.name+': ':'';
@@ -130,16 +132,22 @@ function cxTop(){const d=CX.data;if(!d)return;cxEl('cxempty').hidden=true;cxEl('
   const tt=cxEl('cxtitle');tt.querySelector('b').textContent=(d.private?'🔒 ':'')+(d.far?'🌐 ':'')+cxTitle(d.title);tt.querySelector('small').textContent=sub;tt.querySelector('small').hidden=!sub;
   const why=cxEl('cxwhy');why.hidden=d.can_send;why.textContent=d.can_send?'':cxTr(d.why||t('Hier kannst du gerade nicht schreiben.','You cannot write here right now.'));
   cxEl('cxcomp').hidden=!d.can_send||!!CX.pane||!!CXR.rec;cxEl('cxreply').hidden=!CX.reply&&!CX.edit||!!CX.pane;
-  const md=!!(CX.S&&CX.S.media)&&!CX.edit&&!d.far;cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md}
+  const md=!!(CX.S&&CX.S.media)&&!CX.edit&&!d.far;cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md;
+  const ca=!!(CX.S&&CX.S.calls)&&(d.kind==='one'||!!d.private)&&!d.far&&d.can_send;cxEl('cxcall').hidden=!ca;cxEl('cxvideo').hidden=!ca}
 const CX_SYS={add:['fügte hinzu: ','added: '],remove:['nahm heraus: ','took out: '],admin:['machte zum Admin: ','made admin: '],leave:['hat die Gruppe verlassen','left the group'],
   name:['nannte die Gruppe ','named the group '],vanish:['',''],made:['hat die Gruppe erstellt','created the group'],
   newkey:['hat ein Gerät für private Chats eingetragen. Vergleicht die Sicherheitsnummer unter ⓘ neu.','added a device for private chats. Compare the safety number under ⓘ again.'],
   keygone:['hat ein Gerät aus den privaten Chats genommen','took a device out of private chats']};
 function cxSysLine(x){const who=x.mine?t('Du','You'):x.name||t('Jemand','Someone');
+  if(x.sys==='call'||x.sys==='call_missed'||x.sys==='call_rejected')return cxCallLine(x);
   if(x.sys==='joined')return x.mine?t('Du bist mit einer Einladung dazugekommen','You joined with an invitation'):who+' '+t('ist mit deiner Einladung dazugekommen','joined with your invitation');
   if(x.sys==='vanish'){const v=CX_VANISH.find(([s])=>s===x.secs);return who+' '+(x.secs?t('stellte ein: Nachrichten verschwinden ','set: messages disappear ')+(v?v[1]:''):t('schaltete „Nachrichten verschwinden“ aus','switched off "messages disappear"'))}
   const s=CX_SYS[x.sys]||['',''];if(x.sys==='name')return who+' '+t(s[0],s[1])+'„'+(x.text||'')+'“';
   if(x.sys==='leave'||x.sys==='newkey'||x.sys==='keygone')return who+' '+t(s[0],s[1]);return who+' '+t(s[0],s[1])+(x.who||[]).join(', ')}
+function cxCallLine(x){const ic=x.video?'🎥 ':'📞 ',v=!!x.video;
+  if(x.sys==='call')return ic+(v?t('Videoanruf','Video call'):t('Anruf','Call'))+(x.secs?' · '+cxDur(x.secs):'');
+  if(x.sys==='call_rejected')return ic+(v?t('Videoanruf abgelehnt','Video call declined'):t('Anruf abgelehnt','Call declined'));
+  return ic+(x.mine?(v?t('Videoanruf nicht angenommen','Video call not answered'):t('Anruf nicht angenommen','Call not answered')):(v?t('Verpasster Videoanruf','Missed video call'):t('Verpasster Anruf','Missed call')))}
 function cxTick(k){return k==='read'?`<i class="cx-tk read" title="${esc(t('gelesen','read'))}">✓✓</i>`:k==='got'?`<i class="cx-tk" title="${esc(t('zugestellt','delivered'))}">✓✓</i>`:`<i class="cx-tk" title="${esc(t('gesendet','sent'))}">✓</i>`}
 function cxLog(){const d=CX.data,log=cxEl('cxlog');log.hidden=!!CX.pane;let html='',day='',prev='';
   if(d.more)html+=`<div class="cx-more"><button type="button" class="b" data-cxa="more">${esc(t('Ältere Nachrichten','Older messages'))}</button></div>`;
@@ -212,6 +220,7 @@ function cxSay(text){const w=cxEl('cxwhy');w.hidden=false;w.textContent=cxTr(tex
 function cxPane(k){CX.pane=k;const p=cxEl('cxpane');p.hidden=!k;if(!k){p.innerHTML='';if(CX.data){cxEl('cxlog').hidden=false;cxTop()}return}
   box().classList.add('sel');cxEl('cxempty').hidden=true;cxEl('cxlog').hidden=true;cxEl('cxcomp').hidden=true;cxEl('cxreply').hidden=true;cxEl('cxwhy').hidden=true;
   cxEl('cxtop').hidden=false;const tt=cxEl('cxtitle');tt.querySelector('small').hidden=true;
+  cxEl('cxcall').hidden=true;cxEl('cxvideo').hidden=true;
   cxEl('cxinfo').hidden=k==='new'||k==='group'||k==='invite'||k==='ann'||k==='far'||!CX.data;
   tt.querySelector('b').textContent=k==='new'?t('Neuer Chat','New chat'):k==='group'?t('Neue Gruppe','New group'):k==='invite'?t('Jemanden einladen','Invite someone'):k==='ann'?t('Durchsage','Announcement'):k==='far'?t('Andere Sparks','Other Sparks'):t('Chat-Info','Chat info');
   if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd();else if(k==='ann')cxAnn();else if(k==='far'&&window.vbPane)window.vbPane()}
@@ -388,3 +397,5 @@ async function cxWhoRows(el){const sel=el.querySelector('select[id$="_msg_from"]
       xmsg('cxwhomsg',d.call?t('Rufname gespeichert: ','Call name saved: ')+d.call:t('Rufname entfernt.','Call name removed.'))}catch(e){xmsg('cxwhomsg',e.message,true)}}};
   sel.addEventListener('change',draw);draw()}
 window.cxWhoRows=cxWhoRows;
+cxEl('cxcall').addEventListener('click',()=>{if(window.anStart)window.anStart(false)});
+cxEl('cxvideo').addEventListener('click',()=>{if(window.anStart)window.anStart(true)});

@@ -1221,7 +1221,13 @@ def snapshot(view="admin", now=None):
                         + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
                         + (f" · 🌐 Verbund: {cht.get('far_sparks', 0)} Sparks · {cht.get('far_contacts', 0)} Kontakte · heute "
                            f"{cht.get('far_in', 0)} rein / {cht.get('far_out', 0)} raus" + (f" · {cht['far_waiting']} wartet" if cht.get("far_waiting") else "")
-                           if cht.get("far_on") else ""))
+                           if cht.get("far_on") else "")
+                        + (f" · 📞 Anrufe: {cht.get('call_talking', 0)} laufen, {cht.get('call_ringing', 0)} klingeln, heute "
+                           f"{cht.get('call_today', 0)} ({cht.get('call_talked', 0)} angenommen, {cht.get('call_missed', 0)} verpasst, "
+                           f"{cht.get('call_minutes', 0)} min)"
+                           + (" · Vermittler " + ("läuft" if cht.get("call_turn_ok") else "aus: " + (cht.get("call_turn_why") or "startet"))
+                              if cht.get("call_turn") else "")
+                           if cht.get("call_on") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))

@@ -247,6 +247,8 @@ def admin_delete_profile(uid: str, request: Request):
     chatsec.forget(uid)   # its device keys for private chats
     import verbund
     verbund.forget(uid)   # its contacts on other Sparks, its address, what still waited to go out from it
+    import anrufe
+    anrufe.forget(uid)    # its calls end
     return {"ok": True}
 
 
@@ -531,6 +533,12 @@ def validate(new):
         raise HTTPException(400, "verbund_domain: the Spark's name from outside, e.g. spark.example.de (no https://, no path)")
     if isinstance(vd, str):
         ch["verbund_domain"] = vd.strip().lower()
+    import anrufe
+    th = ch.get("calls_turn_host", "")
+    if not isinstance(th, str) or th.strip() and not anrufe.HOST.fullmatch(th.strip().lower()):
+        raise HTTPException(400, "calls_turn_host: the Spark's name from outside, e.g. spark.example.de (no https://, no port)")
+    if isinstance(th, str):
+        ch["calls_turn_host"] = th.strip().lower()
     if ch.get("kiwix_url") and not kiwix.URL.fullmatch(str(ch["kiwix_url"]).strip().rstrip("/")):
         raise HTTPException(400, "kiwix_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
     import meldung
@@ -544,7 +552,7 @@ def validate(new):
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
-              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "android_live", "android_update",
+              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "chats_calls", "calls_turn", "android_live", "android_update",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload", "nas_on", "nas_sources", "nas_shared", "nas_drop", "nas_status"):
@@ -785,6 +793,7 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("chat", "chats_verbund"), ("chat", "verbund_mode"), ("chat", "verbund_domain"),
+             ("chat", "calls_turn"), ("chat", "calls_turn_host"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 

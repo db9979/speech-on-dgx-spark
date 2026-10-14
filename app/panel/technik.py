@@ -171,6 +171,7 @@ MODULE = {
     "roomlive": ("geraete", "Wo der Raummodus gerade zuhört"),
     "chats": ("geraete", "Chats zwischen den Profilen, verschlüsselt"),
     "verbund": ("geraete", "Spark-Verbund: Chats mit Menschen auf anderen Sparks, signiert"),
+    "anrufe": ("geraete", "Anrufe mit Sprache und Video in Chats zu zweit, Vermittler (TURN) für unterwegs"),
     "chatsec": ("geraete", "Private Chats mit Ende-zu-Ende-Verschlüsselung"),
     "messages": ("geraete", "Der Weg des Assistenten in die Chats"),
     "verlauf": ("geraete", "Verlauf auf allen Geräten gleich"),

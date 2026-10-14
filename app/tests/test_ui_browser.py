@@ -3009,6 +3009,80 @@ class Browser(unittest.TestCase):
             for u in uids:
                 chatsec.forget(u)
 
+    def test_a_video_call_between_two_pages(self):
+        """Anrufe (anrufe.js): 🎥 in a chat of two rings the other person's open Chats page, "Mit Video" connects the
+        two pages straight (WebRTC, fake camera and microphone, no Vermittler at home), both show the running time,
+        hanging up closes both windows and leaves one line "call" in the chat. Strict CSP, nothing sticks out."""
+        import chats
+        import profiles
+        helpers.set_config(chats=True, chats_calls=True)
+        self.addCleanup(helpers.set_config, chats_calls=False)
+        me = next(x for x in profiles.names() if x["name"] == "Uitest")
+        try:
+            profiles.add_user("Anrufpartner", "2580")
+        except Exception:
+            pass
+        other = next(x for x in profiles.names() if x["name"] == "Anrufpartner")
+        for u in (me["id"], other["id"]):
+            profiles.save_settings(u, dict(profiles.settings(u), chats_on=True))
+        base = f"http://127.0.0.1:{self.port}"
+        # loopback candidates as they are: the mDNS names Chromium uses by default are not resolved in a container
+        args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
+                "--autoplay-policy=no-user-gesture-required", "--disable-features=WebRtcHideLocalIpsWithMdns"]
+
+        async def open_chats(pg, w):
+            if w > 900:
+                await self.until(pg, "!document.querySelector('nav button[data-s=chats]').hidden")
+                await pg.click("nav button[data-s=chats]")
+            else:
+                await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
+                await pg.click("#aptabs [data-tab=chats]")
+            await self.until(pg, "!$('cxsplit').hidden&&!!CX.es")
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
+                pages, errors = [], []
+                for name, pin, (w, h) in (("Uitest", "4711", (1280, 900)), ("Anrufpartner", "2580", (390, 844))):
+                    ctx = await br.new_context(viewport={"width": w, "height": h}, locale="de-DE",
+                                               permissions=["microphone", "camera"], bypass_csp=False)
+                    pg = await ctx.new_page()
+                    pg.on("pageerror", lambda e: errors.append(str(e)))
+                    pg.on("console", lambda m: errors.append(m.text) if "Content Security Policy" in m.text else None)
+                    await pg.goto(base + "/")
+                    r = await pg.request.post(base + "/api/profile/login", data={"name": name, "pin": pin})
+                    self.assertEqual(r.status, 200)
+                    await pg.goto(base + "/")
+                    await self.until(pg, f"typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==={name!r}")
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    await open_chats(pg, w)
+                    pages.append(pg)
+                a, b = pages
+                r = await a.request.post(base + "/api/chats/open", data={"to": other["id"]})
+                cid = (await r.json())["id"]
+                await a.evaluate(f"cxOpen({cid!r})")
+                await self.until(a, "!$('cxcall').hidden&&!$('cxvideo').hidden")
+                await a.click("#cxvideo")
+                await self.until(b, "!$('ancall').hidden&&!$('anincoming').hidden&&!$('anokv').hidden")
+                self.assertIn("Uitest", await b.inner_text("#anname"))
+                over = await b.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                self.assertLessEqual(over, 1, f"handy/anruf: {over}px zu breit")
+                await b.click("#anokv")
+                for pg in (a, b):
+                    await self.until(pg, "AN.t0>0&&/^\\d+:\\d\\d$/.test($('anstate').textContent)&&!$('anctl').hidden", 30)
+                await self.until(b, "$('anremote').videoWidth>0", 20)          # the other's picture arrived
+                await a.click("#anhang")
+                for pg in (a, b):
+                    await self.until(pg, "$('ancall').hidden", 10)
+                self.assertEqual(errors, [])
+                await br.close()
+                return cid
+
+        cid = self.run_async(go())
+        line = [x for x in chats._chat(cid)["items"] if x.get("kind") == "sys"][-1]
+        self.assertEqual((line["sys"], line["video"]), ("call", True))
+
     def test_chat_with_someone_on_another_spark(self):
         """Spark-Verbund V1 (verbund.js): a request from another Spark (played in Python, signed with its own key)
         shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with 🌐, a message goes into the

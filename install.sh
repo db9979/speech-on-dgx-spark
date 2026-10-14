@@ -132,6 +132,15 @@ elif ! { apt_wait update -q && apt_wait install -y -q $PKGS; }; then
     die "apt did not finish (another apt is still running?). Try again in a few minutes."
   fi
 fi
+# Anrufe von unterwegs (app/panel/anrufe.py): coturn as the Vermittler, run only by its own unit below and only
+# while the admin switch is on. The distribution's coturn.service is masked before installing, so it never starts
+# with its defaults; missing coturn only means calls stay at home (never stops an update).
+if [ "$MODE" = full ]; then
+  systemctl mask coturn.service >/dev/null 2>&1 || true
+  if ! command -v turnserver >/dev/null 2>&1; then
+    apt_wait install -y -q --no-install-recommends coturn || warn "coturn not installed: calls only work at home for now"
+  fi
+fi
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs
@@ -686,7 +695,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine tts-design; do
+  for u in asr asr-engine tts tts-engine tts-design turn; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -876,6 +885,35 @@ PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
+EOF
+
+# The Vermittler for calls from outside (coturn): never enabled here, the panel starts and stops it with the switch
+# "Anrufe von unterwegs" and writes its settings (state/turn.conf, 0600: the relay only reaches public addresses).
+cat >/etc/systemd/system/speech-spark-turn.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: relay for calls (TURN)
+After=network-online.target
+ConditionPathExists=$VAR/state/turn.conf
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+ExecStart=/usr/bin/turnserver -c $VAR/state/turn.conf
+Restart=on-failure
+RestartSec=10
+MemoryMax=512M
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=$VAR/state
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+LockPersonality=yes
 EOF
 
 # Runs update.sh from the root-owned clone; started by the panel's update button.

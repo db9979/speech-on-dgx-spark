@@ -233,6 +233,9 @@
       <div data-show="chat.chats_verbund" style="margin-left:36px"><label>Adresse dieses Sparks von außen</label><input id="chat.verbund_domain" placeholder="spark.example.de" autocomplete="off" autocapitalize="off"><div class="fh">Nur der Name, unter dem andere Sparks diesen per https erreichen, ohne https:// und ohne Pfad. Ändern braucht den zweiten Anmeldeschritt.</div>
         <label>Wer darf sich verbinden</label><select id="chat.verbund_mode"><option value="pair">nur gekoppelte Sparks (ein Code zwischen beiden Admins, empfohlen)</option><option value="open">jeder Spark, wie bei E-Mail (sperren geht)</option></select>
         <div id="vbadmin"></div></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:18px"><div class="lbl"><b>Anrufe (Sprache und Video)</b><span>Anrufen und Videoanrufe in Chats zu zweit; Ton und Bild gehen verschlüsselt von Gerät zu Gerät, der Spark vermittelt nur. Braucht https.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_calls"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats_calls" style="margin-left:36px"><div class="lbl"><b>Anrufe von unterwegs</b><span>Ein eigener Vermittler (TURN) auf dem Spark verbindet Anrufe auch aus dem Mobilfunk; er sieht nur verschlüsselte Pakete.</span></div><label class="tgl"><input type="checkbox" id="chat.calls_turn"><i></i></label></div>
+      <div data-show="chat.calls_turn" style="margin-left:54px"><label>Adresse des Sparks von außen</label><input id="chat.calls_turn_host" placeholder="spark.example.de" autocomplete="off" autocapitalize="off"><div class="fh">Nur der Name, ohne https:// und Pfad; leer = die Adresse für andere Sparks. Im Router UDP 3478 und UDP 49160 bis 49200 an den Spark weiterleiten. Ändern braucht den zweiten Anmeldeschritt.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Wikipedia direkt</b><span>Wissensfragen wie „Was ist ein Quasar?“ beantwortet der Assistent aus dem Wikipedia-Artikel, ohne Websuche.</span></div><label class="tgl"><input type="checkbox" id="chat.wiki"><i></i></label></div>
       <div data-show="chat.wiki" style="margin-left:36px"><label>Adresse der Wikipedia</label><input id="chat.wiki_url" placeholder="https://de.wikipedia.org" autocomplete="off"><div class="fh">Leer = de.wikipedia.org, ohne Treffer dort en.wikipedia.org. Nur die Suchwörter verlassen den Spark.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Eigenes Kiwix-Archiv</b><span>Wissen aus deinem kiwix-serve, auch ohne Internet. Fällt die Websuche aus, antwortet der Assistent daraus.</span></div><label class="tgl"><input type="checkbox" id="chat.kiwix"><i></i></label></div>
@@ -646,7 +649,7 @@
     </div>
     <div class="cx-main" id="cxmain">
       <div class="cx-empty mut" id="cxempty">Wähle einen Chat oder starte mit „＋ Neuer Chat“ einen neuen.</div>
-      <div class="cx-top" id="cxtop" hidden><button class="b cx-back" id="cxback" type="button" aria-label="Zurück zu den Chats">‹</button><button type="button" class="cx-title" id="cxtitle"><b></b><small></small></button><button class="ib" id="cxinfo" type="button" title="Chat-Info" aria-label="Chat-Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
+      <div class="cx-top" id="cxtop" hidden><button class="b cx-back" id="cxback" type="button" aria-label="Zurück zu den Chats">‹</button><button type="button" class="cx-title" id="cxtitle"><b></b><small></small></button><button class="ib cx-call" id="cxcall" type="button" hidden title="Anrufen" aria-label="Anrufen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button><button class="ib cx-call" id="cxvideo" type="button" hidden title="Videoanruf" aria-label="Videoanruf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l6-3v10l-6-3"/></svg></button><button class="ib" id="cxinfo" type="button" title="Chat-Info" aria-label="Chat-Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
       <div class="cx-log" id="cxlog" role="log" aria-live="polite" hidden></div>
       <div class="cx-pane" id="cxpane" hidden></div>
       <div class="cx-why" id="cxwhy" hidden></div>
@@ -1051,6 +1054,8 @@
   <form class="fabask" id="fabask" hidden><div class="mut" id="fabpage"></div><div class="fabin"><input id="fabq" maxlength="500" autocomplete="off" placeholder="Frag etwas zu dieser Seite …" aria-label="Frage"><button class="b p" type="submit">Fragen</button></div></form>
   <div class="fabrow"><button class="ib" id="fabopen">Gespräch öffnen</button><button class="ib" id="fabstop">Stopp</button></div></div>
   <div class="face fabface" id="fabface" data-mode="idle" role="button" tabindex="0" aria-label="Sprechen"></div></div>
+<!-- Anrufe (anrufe.js): at body level so no section and no tab bar sits above it -->
+<div class="an-call" id="ancall" role="dialog" aria-modal="true" aria-labelledby="anname" hidden><video id="anremote" class="an-remote" autoplay playsinline></video><video id="anlocal" class="an-local" autoplay playsinline muted></video><div class="an-info"><b id="anname"></b><span id="anstate" aria-live="polite"></span></div><div class="an-row" id="anincoming" hidden><button type="button" class="an-b an-no" id="anno">Ablehnen</button><button type="button" class="an-b an-ok" id="anok">Annehmen</button><button type="button" class="an-b an-ok" id="anokv" hidden>Mit Video</button></div><div class="an-row" id="anctl" hidden><button type="button" class="an-b" id="anmute" aria-pressed="false">Stumm</button><button type="button" class="an-b" id="ancam" aria-pressed="false" hidden>Kamera aus</button><button type="button" class="an-b an-no" id="anhang">Auflegen</button></div></div>
 <script src="/static/js/i18n.js"></script>
 <script src="/static/js/werkzeuge.js"></script>
 <script src="/static/js/base.js"></script>
@@ -1088,6 +1093,7 @@
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>
+<script src="/static/js/anrufe.js"></script>
 <script src="/static/js/verbund.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>

@@ -443,6 +443,8 @@ def _public(x, cid, c, d, uid, names):
             out["text"] = unseal(x.get("text"), cid, x["id"])
         if x.get("sys") == "vanish":
             out["secs"] = int(x.get("secs") or 0)
+        if x.get("sys") in ("call", "call_missed", "call_rejected"):   # anrufe.py: how long, with picture or not
+            out["secs"], out["video"] = int(x.get("secs") or 0), bool(x.get("video"))
     elif x.get("kind") == "box":   # private chat (chatsec.py): the box as the sending device made it
         out["box"] = x.get("box")
         if x.get("blob"):
@@ -1422,7 +1424,7 @@ def for_live(now=None):
             "pushed": c["pushed"], "push_failed": c["push_failed"], "streams": streams(), "media_on": media_on(),
             "private": sum(1 for x in chats.values() if x.get("kind") == "priv"), "private_sent": c.get("private", 0),
             "all": len((chats.get(ALL_ID) or {}).get("members") or []), "spoken": c.get("spoken", 0),
-            **_private_live(), **_far_live(),
+            **_private_live(), **_far_live(), **_call_live(),
             "media": c.get("media", 0), "media_mb": round(sum(sum(int(v or 0) for v in (x.get("bytes") or {}).values())
                                                                for x in chats.values()) / 1024**2)}
 
@@ -1435,6 +1437,16 @@ def _far_live():
         v = {}
     return {"far_on": bool(v.get("on")), "far_sparks": int(v.get("sparks") or 0), "far_contacts": int(v.get("contacts") or 0),
             "far_in": int(v.get("in") or 0), "far_out": int(v.get("out") or 0), "far_waiting": int(v.get("waiting") or 0)}
+
+
+def _call_live():
+    try:
+        import anrufe
+        a = anrufe.for_live()
+    except Exception:
+        a = {}
+    return {"call_on": bool(a.get("on")), **{"call_" + k: a[k] for k in ("talking", "ringing", "today", "talked", "missed",
+                                                                         "minutes", "turn", "turn_ok", "turn_why") if k in a}}
 
 
 def _private_live():
@@ -1786,7 +1798,7 @@ def _state(uid):
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
             "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),
             "invite_switch": features._switch(features.chat_cfg(), "chats_invite"),
-            **_far_state(uid),
+            **_far_state(uid), "calls": _calls_ok(uid),
             "limits": {"photo_mb": MAX_PHOTO_IN // 1024**2, "file_mb": MAX_FILE // 1024**2, "voice_secs": MAX_VOICE_SECS,
                        "used_mb": round(used(uid) / 1024**2), "quota_mb": QUOTA // 1024**2}}
 
@@ -1796,6 +1808,11 @@ def _far_state(uid):
     import verbund
     on = verbund.admin_on() and verbund.usable(uid)
     return {"verbund": on, "far_asks": sum(1 for c in verbund.contacts_of(uid).values() if c.get("state") == "in") if on else 0}
+
+
+def _calls_ok(uid):
+    import anrufe
+    return anrufe.admin_on() and anrufe.usable(uid)
 
 
 def _private_ok(uid):

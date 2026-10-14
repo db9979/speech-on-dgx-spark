@@ -398,7 +398,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "cb41693bf9",
+        "stand": "f448818e49",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -2218,7 +2218,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "d708a41abb",
+        "stand": "fe6023b828",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2943,7 +2943,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "d7cdd7029b",
+        "stand": "9d5a3befbe",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3131,7 +3131,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "3db59e6339",
+        "stand": "7a424e00ad",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3459,7 +3459,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "3b7db705ab",
+        "stand": "6c241e3dd1",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -3555,9 +3555,9 @@ SEITEN_DATEN = {
             S("s11", "ende", ("Schlüssel neu lesen", "Read the keys again"),
               ("kein alter Schlüssel im Speicher", "no old key in memory"),
               ("_forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
-               "verbund), ihn neu lesen.",
-               "_forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read "
-               "it again.")),
+               "verbund, anrufe), ihn neu lesen.",
+               "_forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, "
+               "anrufe) read it again.")),
         ],
         "beispiele": [
             (("Telegram-Bot-Token eintragen", "Enter the Telegram bot token"),

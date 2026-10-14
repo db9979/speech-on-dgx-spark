@@ -20,6 +20,7 @@ since V01.0.296) and adds only what a page cannot do:
 - **Share to Spark:** share text in another app → Spark. The text is put into the text field, you send it yourself.
 - **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
+- **Camera for video calls** (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound.
 - **Update in the app** (1.3.0 and later, V01.0.533): admin: Features → Android app → "Android: update in the app" (off).
   Once released the app shows a strip "New app version … · Update now" at the top (✕ hides it until the next
   version); the note "New Spark app" and the button under Me → Android app start the update too. The app asks only
