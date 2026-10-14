@@ -485,6 +485,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/verbrauch.json` | Verbrauch je Modell, Aufgabe und Profil (nur Zahlen) | – | nein |
 | `state/vision.json` | Bildfragen, 10 min | – | nein |
 | `state/vorrang-key` | Schlüssel Panel ↔ Sprachdienste | ist ein Schlüssel | nein |
+| `state/wartung-satz-de.pcm` | Wartungssatz als Ton | – | nein |
+| `state/wartung-satz-en.pcm` | Wartungssatz als Ton (Englisch) | – | nein |
 | `state/wartung.json` | Wartungspause | – | nein |
 | `state/weiche-history.json` | Weiche-Änderungen | – | nein |
 | `state/weiche-stats.json` | Weiche-Statistik | – | nein |
@@ -880,7 +882,7 @@ flowchart TD
 11. <a id="kn-lautsprecher-s11"></a>**Ton zurück**: Die Antwort geht als Opus mit 24000 Hz im Takt der Wiedergabe zum Board, der Text ohne Markdown für ein Display. Andere Geräte im Haus wissen, dass gerade der Spark spricht (echo.said).
 12. <a id="kn-lautsprecher-s12"></a>**Im Verlauf des Lautsprechers**: Frage und Antwort kommen in das Tagesgespräch des Lautsprechers, das Codewort geschwärzt. Eine Stimme, die nicht sicher die des Profils war, wird als fremder Text markiert: die nächste Frage beginnt gesperrt, und daraus wird nichts über das Profil gelernt.
 
-**Beispiele:** Inhaber fragt nach seinen Terminen: Stimme erkannt: persönliche Antwort, im Tagesgespräch gespeichert. · Neues Board: Code auf dem Display, bis das Profil ihn eintippt. · Kopierte Board-Kennung: Abgelehnt: die MAC-Adresse passt nicht. · Gast fragt nach Mails: Codewort erfragt; ohne richtiges Codewort nichts Persönliches.
+**Beispiele:** Inhaber fragt nach seinen Terminen: Stimme erkannt: persönliche Antwort, im Tagesgespräch gespeichert. · Neues Board: Code auf dem Display, bis das Profil ihn eintippt. · Kopierte Board-Kennung: Abgelehnt: die MAC-Adresse passt nicht. · Gast fragt nach Mails: Codewort erfragt; ohne richtiges Codewort nichts Persönliches. · Wartungspause der Sprachausgabe: Antwort auf dem Display, zu hören der kurze Wartungssatz aus einer Datei (sonst ein Ton); bei pausierter Spracherkennung sagt der Lautsprecher den Satz gleich nach dem Weckwort.
 
 #### Regeln
 
@@ -2136,7 +2138,7 @@ flowchart TD
 ```
 
 1. <a id="kn-llm-s1"></a>**Sprache zuerst**: Mit dem Start einer Antwort und bei jedem gestreamten Stück setzt das Panel die Marke „Sprache läuft“. Hintergrundarbeit am Modell wartet bis 20 Sekunden danach und wird abgebrochen, sobald jemand spricht; nach 3 Abbrüchen gibt sie für diesmal auf.
-2. <a id="kn-llm-s1w"></a>**Wartungspause?**: Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der Zeit endet die Pause erst, wenn das Modell 2-mal hintereinander antwortet.
+2. <a id="kn-llm-s1w"></a>**Wartungspause?**: Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der Zeit endet die Pause erst, wenn das Modell 2-mal hintereinander antwortet. Mit „Automatisch bei Neustart“ pausiert das Panel selbst, sobald ein qwen38-Dienst neu startet oder umschaltet (höchstens 30 min), und macht weiter, sobald das Modell wieder antwortet.
 3. <a id="kn-llm-s2"></a>**Verbindung für diese Antwort**: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter.
 4. <a id="kn-llm-s3"></a>**Modellname**: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse.
 5. <a id="kn-llm-s4"></a>**Anfrage bauen**: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs oder Verbrauchszähler meldet der Server am Ende, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam.
@@ -2161,6 +2163,7 @@ flowchart TD
 - **5 s** längste Wartezeit für Vorrang ([Schritt 6](#kn-llm-s5))
 - **30 s** so lange hält eine Antwort mit Vorrang höchstens auf ([Schritt 6](#kn-llm-s5))
 - **5 bis 240 min** Dauer einer Wartungspause ([Schritt 2](#kn-llm-s1w))
+- **30 min** längste automatische Pause, bevor sie als Ausfall zählt ([Schritt 2](#kn-llm-s1w))
 
 #### Einstellen
 
@@ -2169,6 +2172,7 @@ flowchart TD
 - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst.
 - Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30).
 - Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent je Profil.
+- Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet.
 
 #### Was du siehst
 
@@ -2191,6 +2195,7 @@ flowchart TD
 - `app/panel/vorrang.py` `mark`: Marke „Sprache läuft“ ([Schritt 1](#kn-llm-s1))
 - `app/panel/vorrang.py` `run`: Hintergrundarbeit weicht der Sprache ([Schritt 1](#kn-llm-s1))
 - `app/panel/wartung.py` `paused`: Wartungspause: das Modell wird nicht gefragt ([Schritt 2](#kn-llm-s1w))
+- `app/panel/wartung.py` `auto_tick`: Wartungspause von selbst, wenn qwen38 neu startet ([Schritt 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: der feste Satz mit der Restzeit ([Schritt 2](#kn-llm-s1w))
 - `app/panel/verbrauch.py` `llm`: zählt Tokens einer Runde ([Schritt 12](#kn-llm-s11))
 - `app/panel/verbrauch.py` `over`: Tageskontingent erreicht? ([Schritt 6](#kn-llm-s5))
@@ -2551,7 +2556,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (45, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (47, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2562,7 +2567,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **29** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **45** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **47** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

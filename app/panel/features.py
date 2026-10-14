@@ -313,6 +313,8 @@ FEATURES = (
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
     # wartung.py: while the language model, ASR or TTS is updated the Spark pauses on purpose (fixed sentence, background waits)
     F("wartung", "Wartungspause", "Maintenance pause", "sec", ("wartung",), guide="wartung"),
+    F("wartungauto", "Wartungspause bei Neustart", "Maintenance pause on restart", "sec", ("wartung_auto",), parent="wartung",
+      guide="wartungauto"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
     F("nas", "Speicher und NAS", "Storage and NAS", "data", ("nas_on",), me="storebox", guide="nas"),
     # speicher.py: a copy of the profile's data at one of its places (WebDAV, SFTP, SMB) or a folder the admin mounted
@@ -408,7 +410,7 @@ OWN = {}
 DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.

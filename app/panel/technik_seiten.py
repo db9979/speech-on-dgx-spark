@@ -1428,13 +1428,14 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "31d0a7d211",
+        "stand": "58dcfc98e9",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
             "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
             "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"],
+            "wartung.auto_tick": ["s1w"], "wartung.AUTO_MIN": ["s1w"],
         },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
@@ -1462,11 +1463,15 @@ SEITEN_DATEN = {
               ("Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort "
                "ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. "
                "Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der "
-               "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet.",
+               "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet. Mit „Automatisch bei "
+               "Neustart“ pausiert das Panel selbst, sobald ein qwen38-Dienst neu startet oder umschaltet (höchstens "
+               "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet.",
                "When an admin paused the language model for an update, the panel does not ask it at all: the answer is "
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
-               "time the pause only ends once the model answers {wartung.OK_N} times in a row."),
+               "time the pause only ends once the model answers {wartung.OK_N} times in a row. With “Automatically on "
+               "restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most "
+               "{wartung.AUTO_MIN} min) and goes on once the model answers again."),
               ("stop", "ja", ("„Ich werde gerade aktualisiert …“", "„I am being updated right now …“"))),
             S("s2", "schritt", ("Verbindung für diese Antwort", "Connection for this answer"),
               ("Zeitlimit {chat.TIMEOUT_RANGE.0} bis {chat.TIMEOUT_RANGE.1} s", "time limit {chat.TIMEOUT_RANGE.0} to {chat.TIMEOUT_RANGE.1} s"),
@@ -1581,6 +1586,7 @@ SEITEN_DATEN = {
             ("{stufe.WAIT_RANGE.1} s", ("längste Wartezeit für Vorrang", "longest wait for priority"), "stufe.WAIT_RANGE"),
             ("{stufe.FIRST_MAX} s", ("so lange hält eine Antwort mit Vorrang höchstens auf", "a priority answer holds up at most this long"), "stufe.FIRST_MAX"),
             ("{wartung.MIN_MIN} bis {wartung.MAX_MIN} min", ("Dauer einer Wartungspause", "length of a maintenance pause"), "wartung.MAX_MIN"),
+            ("{wartung.AUTO_MIN} min", ("längste automatische Pause, bevor sie als Ausfall zählt", "longest automatic pause before it counts as an outage"), "wartung.AUTO_MIN"),
         ],
         "einstellen": [
             ("Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge "
@@ -1595,6 +1601,8 @@ SEITEN_DATEN = {
             ("Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent "
              "je Profil.",
              "Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile."),
+            ("Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet.",
+             "Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts."),
         ],
         "sehen": [
             ("Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und "
@@ -1620,6 +1628,7 @@ SEITEN_DATEN = {
             ("vorrang.mark", ("Marke „Sprache läuft“", "mark „speech is running“")),
             ("vorrang.run", ("Hintergrundarbeit weicht der Sprache", "background work gives way to speech")),
             ("wartung.paused", ("Wartungspause: das Modell wird nicht gefragt", "maintenance pause: the model is not asked")),
+            ("wartung.auto_tick", ("Wartungspause von selbst, wenn qwen38 neu startet", "maintenance pause by itself when qwen38 restarts")),
             ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
             ("verbrauch.llm", ("zählt Tokens einer Runde", "counts the tokens of a round")),
             ("verbrauch.over", ("Tageskontingent erreicht?", "daily quota reached?")),
@@ -2773,7 +2782,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "ba4d177dfe",
+        "stand": "0225adf6c5",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -2897,6 +2906,11 @@ SEITEN_DATEN = {
              ("Abgelehnt: die MAC-Adresse passt nicht.", "Refused: the MAC address does not fit.")),
             (("Gast fragt nach Mails", "A guest asks for mail"), ["s5", "s6", "s7", "s8", "s9", "s9!"],
              ("Codewort erfragt; ohne richtiges Codewort nichts Persönliches.", "Code word asked; without the right one nothing personal.")),
+            (("Wartungspause der Sprachausgabe", "Maintenance pause of the speech output"), ["s5", "s10", "s11"],
+             ("Antwort auf dem Display, zu hören der kurze Wartungssatz aus einer Datei (sonst ein Ton); bei pausierter "
+              "Spracherkennung sagt der Lautsprecher den Satz gleich nach dem Weckwort.",
+              "Answer on the display, the short maintenance sentence from a file to hear (else a tone); with the speech "
+              "recognition paused the speaker says the sentence right after the wake word.")),
         ],
         "regeln": [
             [("Weg", "Way"), ("Wer darf", "Who may"), ("Was geht", "What works"), ("Persönliches", "Personal things")],
@@ -3485,7 +3499,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "4aa2f9a9e8",
+        "stand": "e4eb073707",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],

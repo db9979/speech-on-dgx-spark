@@ -8,6 +8,13 @@ An admin starts it under Zustand → Wartungspause (or on the Spark: sudo speech
 - background work that asks the model waits (vorrang.quiet) and runs afterwards, one after the other;
 - the Dienst-Wächter sends no outage note for a paused part and the watchdog (health.watch_once) restarts nothing of it;
 - Zustand and the Live view show the part as "Pause".
+Automatic (chat.wartung_auto, Funktionen → Wartungspause → "Automatisch bei Neustart", off): the loop looks at the
+systemd units of the parts (WATCH); when one restarts or switches (activating, or started anew since the last look)
+and it was not our own watchdog nor our own update, the part pauses for AUTO_MIN minutes, by "automatisch". Such a
+pause ends as soon as the part answers OK_N times in a row, not only at the end of its time.
+Speakers (P2): with the speech output paused an ESP32 speaker and Home Assistant (Wyoming) play the short sentence
+from a file the loop made earlier (esp32.pause_clip, CLIP_DAYS), else a short tone; with the speech recognition
+paused a speaker says the sentence at once instead of listening.
 It ends with "Weiter" (Zustand, sudo speech-spark weiter) or by itself: at the end of its time the panel looks at the
 paused parts; once they answer OK_N times in a row the pause ends. Do they not answer, the pause stays, the admins get
 one push and from then on the Dienst-Wächter counts it as an outage again (overdue).
@@ -38,15 +45,28 @@ MIN_MIN, MAX_MIN = 5, 240
 MORE = 15                      # "+15 min"
 OK_N = 2                       # good checks in a row before the pause ends by itself
 EVERY = 15                     # seconds between two looks of the loop
-CHANNELS = ("panel", "app", "kommandozeile")
+CHANNELS = ("panel", "app", "kommandozeile", "automatisch")
+AUTO_MIN = 30                  # an automatic pause: at most this long before it counts as overdue
+AUTO_GRACE = 180               # a restart by our own watchdog this many seconds ago is no update (health._restarts)
+AUTO_SKIP = ("qwen38-keepalive", "qwen38-dashboard")   # qwen38 units that are no model
+MOVING = ("activating", "deactivating", "reloading")
+CLIP_DAYS = 1                  # the speakers' sentence is made anew once a day (voice or model may have changed)
+# the short sentence (no minutes): when the time is over and for the speakers' file
+SHORT = ("Ich werde gerade aktualisiert und bin gleich wieder da.", "I am being updated right now and will be back shortly.")
 
 _cache = {"key": None, "state": None}
 _seen = {"since": None, "bad": False}   # what the loop already wrote into the journal
 _n = {"asked": 0, "held": 0, "oks": 0}  # this pause: answered with the sentence, background work held, good checks
+_units = {}                             # unit -> (state, entered) at the last look of the automatic
 
 
 def admin_on(c=None):
     return features.admin_on("wartung", c)
+
+
+def auto_on(c=None):
+    """Funktionen → Wartungspause → "Automatisch bei Neustart" (chat.wartung_auto, below chat.wartung)."""
+    return features.admin_on("wartungauto", c)
 
 
 def _empty():
@@ -113,8 +133,7 @@ def sentence(en=False, now=None):
     _n["asked"] += 1
     m = left_min(now)
     if state()["overdue"] or m < 1:
-        return "I am being updated right now and will be back shortly." if en else \
-            "Ich werde gerade aktualisiert und bin gleich wieder da."
+        return SHORT[1 if en else 0]
     if en:
         return f"I am being updated right now and will be back in about {m} minute{'s' if m != 1 else ''}."
     return f"Ich werde gerade aktualisiert und bin in etwa {m} Minute{'n' if m != 1 else ''} wieder da."
@@ -219,7 +238,8 @@ async def tell_admins(title, body):
 
 async def tick(now=None, answers=_answers):
     """One look of the loop: a pause started by the shell command goes into the journal, the switch off ends it, its
-    time over: the parts are looked at, OK_N good looks in a row end it; not answering: the pause stays, one push."""
+    time over (an automatic pause: as soon as its units stopped starting): the parts are looked at, OK_N good looks in a
+    row end it; not answering when the time is over: the pause stays, one push."""
     now = time.time() if now is None else now
     s = state()
     if not s["on"]:
@@ -231,8 +251,11 @@ async def tick(now=None, answers=_answers):
         _seen["since"] = s["since"]
         _n.update(asked=0, held=0, oks=0)
         print(f"wartung: an {_names(s['parts'])} {s['channel']} {max(0, int((s['until'] - s['since']) // 60))} min", flush=True)
-    if now < s["until"]:
+    auto = s["channel"] == "automatisch"
+    if now < s["until"] and not auto:
         return "pause"
+    if auto and now < s["until"] and any((_units.get(u) or ("",))[0] in MOVING for p in s["parts"] for u in watched()[p]):
+        return "pause"   # still starting (as the automatic saw it a moment ago): no check yet
     cfg = load_config()
     good = True
     for p in s["parts"]:
@@ -249,6 +272,8 @@ async def tick(now=None, answers=_answers):
             return "aus"
         return "pruefen"
     _n["oks"] = 0
+    if now < s["until"]:
+        return "pause"
     if not s["overdue"]:
         _write(dict(s, overdue=True, told=True))
         print(f"wartung: zeitlimit {_names(s['parts'])} antwortet nicht, pause bleibt", flush=True)
@@ -259,13 +284,89 @@ async def tick(now=None, answers=_answers):
     return "wartet"
 
 
+# ---------------------------------------------------------------- automatic (P2)
+def watched():
+    """{part: [systemd units]} the automatic looks at."""
+    import core
+    return {"llm": [u for u in core.QWEN38_UNITS if u not in AUTO_SKIP],
+            "asr": [core.UNITS["asr"], core.UNITS["asr-engine"]],
+            "tts": [core.UNITS["tts"], core.UNITS["tts-engine"], core.UNITS["tts-design"]]}
+
+
+def _look(unit):
+    """(ActiveState, when it last became active) of a unit, None when it is not installed."""
+    import core
+    code, out = core.run(["systemctl", "show", unit, "-p", "LoadState,ActiveState,ActiveEnterTimestampMonotonic"])
+    props = dict(x.split("=", 1) for x in out.splitlines() if "=" in x)
+    if code != 0 or props.get("LoadState") != "loaded":
+        return None
+    return props.get("ActiveState", ""), props.get("ActiveEnterTimestampMonotonic", "")
+
+
+def _ours(unit, now):
+    """Did our own watchdog restart it just now (health.py)? Then it is no update but a repair."""
+    try:
+        import health
+        return any(now - t < AUTO_GRACE for t in health._restarts.get(unit, []))
+    except Exception:
+        return False
+
+
+def restarted(look=_look, now=None):
+    """The parts with a unit that restarts or switches since the last look ([] at the first look: only noted)."""
+    now = time.time() if now is None else now
+    hit = []
+    for part, units in watched().items():
+        for u in units:
+            cur, old = look(u), _units.get(u)
+            _units[u] = cur
+            if cur is None or old is None:
+                continue
+            if (cur[0] in MOVING or (cur[0] == "active" and cur[1] != old[1])) and not _ours(u, now):
+                if part not in hit:
+                    hit.append(part)
+    return hit
+
+
+async def auto_tick(now=None, look=_look):
+    """One look of the automatic: a restarting part pauses by itself for AUTO_MIN minutes. Returns the parts paused."""
+    now = time.time() if now is None else now
+    if not auto_on():
+        _units.clear()
+        return []
+    import update
+    hit = await asyncio.to_thread(restarted, look, now)
+    if not hit:
+        return []
+    if update.update_running():
+        print("wartung: automatisch ignoriert eigenes_update", _names(hit), flush=True)
+        return []
+    if state()["on"]:
+        print("wartung: automatisch ignoriert pause_laeuft", _names(hit), flush=True)
+        return []
+    start(hit, AUTO_MIN, "automatisch", "automatisch", now)
+    print(f"wartung: automatisch erkannt {_names(hit)} neustart", flush=True)
+    return hit
+
+
+# ---------------------------------------------------------------- the speakers' sentence (P2)
+async def clips_tick(now=None):
+    """Keeps the speakers' file of the short sentence fresh while the speech output works (esp32.pause_clip)."""
+    c = load_config().get("chat", {})
+    if not admin_on() or paused("tts") or not (c.get("esp32") or c.get("wyoming")):   # only with speakers or Assist
+        return False
+    import esp32
+    return await esp32.make_pause_clips(time.time() if now is None else now)
+
+
 async def loop():
     while True:
         await asyncio.sleep(EVERY)
-        try:
-            await tick()
-        except Exception as e:
-            print("wartung: runde fehlgeschlagen", type(e).__name__, flush=True)
+        for step in (auto_tick, clips_tick, tick):
+            try:
+                await step()
+            except Exception as e:
+                print("wartung: runde fehlgeschlagen", step.__name__, type(e).__name__, flush=True)
 
 
 def view(now=None):
@@ -282,8 +383,8 @@ def view(now=None):
 def _by_name(by):
     if by in ("", "main", "admin"):
         return "Admin" if by else ""
-    if by == "kommandozeile":
-        return "Kommandozeile"
+    if by in ("kommandozeile", "automatisch"):
+        return by.capitalize()
     try:
         import profiles
         prof = profiles.by_id(by)

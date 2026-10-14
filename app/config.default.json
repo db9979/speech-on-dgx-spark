@@ -192,6 +192,7 @@
     "dev_updates": false,
     "svc_watch": false,
     "wartung": false,
+    "wartung_auto": false,
     "memory_check": false,
     "memory_ask": false,
     "memory_topics": false,

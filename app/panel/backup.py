@@ -111,6 +111,8 @@ STATE_LOCAL = {
     "doc-rank.json": "Prüfsummen des Nachsortier-Modells, entstehen neu",
     "notaus.json": "Notaus gilt nur auf diesem Gerät",
     "wartung.json": "Wartungspause gilt nur für das laufende Update",
+    "wartung-satz-de.pcm": "Wartungssatz für Lautsprecher, macht der Spark selbst neu",
+    "wartung-satz-en.pcm": "Wartungssatz für Lautsprecher, macht der Spark selbst neu",
     "nasquelle-tmp": "Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht",
     "notaus-mine.json": "Notaus gilt nur auf diesem Gerät",
     "notaus-keys.json": "Auslöser gelten nur auf diesem Gerät",

@@ -88,6 +88,7 @@ struct AdminView: View {
                     NavigationLink("Logs") { LogsView() }
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                     if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
+                    if s.role != "manager" { NavigationLink("Wartungspause") { WartungView() } }
                 } header: { Text("Zustand") }
                 Section {
                     // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)
@@ -271,6 +272,90 @@ struct UsageView: View {
         case "geloescht": return de ? "Gelöschte Profile" : "Deleted profiles"
         default: return p["name"] as? String ?? ""
         }
+    }
+}
+
+// ---------------------------------------------------------------- Zustand → Wartungspause (wartung.py)
+
+/// The same card as Zustand → Wartungspause in the panel: pick the parts and the longest time, start; while it holds
+/// the time left, "+15 min" and "Weiter". Only admins (the Spark checks it); parts and minutes come from the Spark.
+struct WartungView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var pick: Set<String> = ["llm"]
+    @State private var minutes = 30
+    @State private var error: String?
+
+    var body: some View {
+        Form {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if d["on"] as? Bool == false {
+                Section { Text(SparkAPI.way(String(localized: "Die Wartungspause ist aus. Einschalten unter Funktionen → Wartungspause."))) }
+            } else if d["paused"] as? Bool == true {
+                Section {
+                    Label { Text(verbatim: names(d["parts"] as? [String] ?? [])) } icon: {
+                        Image(systemName: "pause.circle.fill").foregroundStyle(d["overdue"] as? Bool == true ? .orange : .blue)
+                    }
+                    if d["overdue"] as? Bool == true {
+                        Text("Zeit um, wartet auf Antwort")
+                    } else {
+                        LabeledContent("Noch") { Text(verbatim: "\(d["left"] as? Int ?? 0) min") }
+                    }
+                    LabeledContent("Mit dem Wartungssatz beantwortet") { Text(verbatim: "\(d["asked"] as? Int ?? 0)") }
+                    LabeledContent("Hintergrundarbeit wartet") { Text(verbatim: "\(d["held"] as? Int ?? 0)") }
+                } header: { Text("Pause läuft") }
+                Section {
+                    Button("+15 min") { Task { await post("api/admin/wartung", ["more": true]) } }
+                    Button("Weiter") { Task { await post("api/admin/wartung/weiter", [:]) } }
+                }
+            } else {
+                Section {
+                    ForEach(parts(), id: \.0) { key, name in
+                        Toggle(isOn: Binding(get: { pick.contains(key) }, set: { v in if v { pick.insert(key) } else { pick.remove(key) } })) {
+                            Text(verbatim: name)
+                        }
+                    }
+                } header: { Text("Was wird aktualisiert?") }
+                Section {
+                    Picker("Höchstens", selection: $minutes) {
+                        ForEach((d["choices"] as? [String: Any])?["minutes"] as? [Int] ?? [15, 30, 60, 120], id: \.self) {
+                            Text(verbatim: "\($0) min").tag($0)
+                        }
+                    }
+                    Button("Pause starten") {
+                        Task { await post("api/admin/wartung", ["parts": Array(pick), "minutes": minutes, "channel": "app"]) }
+                    }.disabled(pick.isEmpty)
+                } footer: { Text("Solange die Pause läuft, antwortet der Spark sofort mit einem festen Satz; Hintergrundarbeit wartet.") }
+            }
+        }
+        .navigationTitle("Wartungspause")
+        .refreshable { await load() }
+        .task {
+            while !Task.isCancelled {
+                await load()
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
+    }
+
+    private func parts() -> [(String, String)] {
+        ((d["choices"] as? [String: Any])?["parts"] as? [[String]] ?? []).compactMap { p in
+            p.count == 3 ? (p[0], FeaturesView.pick([p[1], p[2]]) ?? p[0]) : nil
+        }
+    }
+
+    private func names(_ keys: [String]) -> String {
+        let all = Dictionary(parts(), uniquingKeysWith: { a, _ in a })
+        return keys.map { all[$0] ?? $0 }.joined(separator: ", ")
+    }
+
+    private func load() async {
+        do { d = try await AdminSession.shared.object("GET", "api/admin/wartung"); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func post(_ path: String, _ body: [String: Any]) async {
+        do { d = try await AdminSession.shared.object("POST", path, body: body); error = nil }
+        catch { self.error = error.localizedDescription }
     }
 }
 

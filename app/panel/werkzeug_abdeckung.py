@@ -138,6 +138,7 @@ WITHOUT = {
     "kontingent": "fester Satz im Gespräch, kein Werkzeug",
     "dienstwacht": "meldet sich von selbst",
     "wartung": "Zustand → Wartungspause; in der Pause sagt das Panel einen festen Satz statt einer Antwort",
+    "wartungauto": "wartung.py: das Panel pausiert selbst, wenn ein Modell neu startet; kein Werkzeug",
     "meldenadmin": "meldet sich von selbst",
     "bewertenzurueck": "meldet sich von selbst",
     "speicher": "läuft im Hintergrund",

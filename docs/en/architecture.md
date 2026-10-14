@@ -485,6 +485,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/verbrauch.json` | Usage per model, task and profile (numbers only) | – | no |
 | `state/vision.json` | Picture questions, 10 min | – | no |
 | `state/vorrang-key` | Key panel ↔ speech services | is a key | no |
+| `state/wartung-satz-de.pcm` | Maintenance sentence as sound | – | no |
+| `state/wartung-satz-en.pcm` | Maintenance sentence as sound (English) | – | no |
 | `state/wartung.json` | Maintenance pause | – | no |
 | `state/weiche-history.json` | Switch changes | – | no |
 | `state/weiche-stats.json` | Switch statistics | – | no |
@@ -880,7 +882,7 @@ flowchart TD
 11. <a id="kn-lautsprecher-s11"></a>**Sound back**: The answer goes to the board as Opus at 24000 Hz at playback pace, the text without Markdown for a display. Other devices in the house know the Spark is speaking right now (echo.said).
 12. <a id="kn-lautsprecher-s12"></a>**In the speaker's history**: Question and answer go into the speaker's conversation of the day, the code word blacked out. A voice that was not surely the profile's is marked as outside text: the next question starts locked, and nothing about the profile is learned from it.
 
-**Examples:** The owner asks for appointments: Voice recognized: personal answer, kept in the day's conversation. · New board: Code on the display until the profile types it in. · Copied board id: Refused: the MAC address does not fit. · A guest asks for mail: Code word asked; without the right one nothing personal.
+**Examples:** The owner asks for appointments: Voice recognized: personal answer, kept in the day's conversation. · New board: Code on the display until the profile types it in. · Copied board id: Refused: the MAC address does not fit. · A guest asks for mail: Code word asked; without the right one nothing personal. · Maintenance pause of the speech output: Answer on the display, the short maintenance sentence from a file to hear (else a tone); with the speech recognition paused the speaker says the sentence right after the wake word.
 
 #### Rules
 
@@ -2136,7 +2138,7 @@ flowchart TD
 ```
 
 1. <a id="kn-llm-s1"></a>**Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
-2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row.
+2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. With “Automatically on restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most 30 min) and goes on once the model answers again.
 3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
 4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
 5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache.
@@ -2161,6 +2163,7 @@ flowchart TD
 - **5 s** longest wait for priority ([step 6](#kn-llm-s5))
 - **30 s** a priority answer holds up at most this long ([step 6](#kn-llm-s5))
 - **5 bis 240 min** length of a maintenance pause ([step 2](#kn-llm-s1w))
+- **30 min** longest automatic pause before it counts as an outage ([step 2](#kn-llm-s1w))
 
 #### Settings
 
@@ -2169,6 +2172,7 @@ flowchart TD
 - Features → Priority for people: chosen profiles get their answer first.
 - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30).
 - Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile.
+- Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts.
 
 #### What you see
 
@@ -2191,6 +2195,7 @@ flowchart TD
 - `app/panel/vorrang.py` `mark`: mark „speech is running“ ([step 1](#kn-llm-s1))
 - `app/panel/vorrang.py` `run`: background work gives way to speech ([step 1](#kn-llm-s1))
 - `app/panel/wartung.py` `paused`: maintenance pause: the model is not asked ([step 2](#kn-llm-s1w))
+- `app/panel/wartung.py` `auto_tick`: maintenance pause by itself when qwen38 restarts ([step 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: the fixed sentence with the time left ([step 2](#kn-llm-s1w))
 - `app/panel/verbrauch.py` `llm`: counts the tokens of a round ([step 12](#kn-llm-s11))
 - `app/panel/verbrauch.py` `over`: daily quota reached? ([step 6](#kn-llm-s5))
@@ -2551,7 +2556,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (45, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (47, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2562,7 +2567,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **29** files in every backup ([step 7](#kn-state-s7))
-- **45** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **47** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

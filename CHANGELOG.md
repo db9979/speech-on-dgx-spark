@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.560** · 2026-10-14 · Wartungspause Paket 2: „Automatisch bei Neustart“ (Funktionen → Wartungspause, aus) pausiert Sprachmodell, Spracherkennung oder Sprachausgabe von selbst, wenn ihr Dienst neu startet oder qwen38 umschaltet, und macht weiter, sobald der Teil wieder antwortet; ESP32-Lautsprecher und Home Assistant spielen in der Pause der Sprachausgabe den kurzen Wartungssatz aus einer vorab gemachten Datei (sonst einen Ton), bei pausierter Spracherkennung sagt der Lautsprecher den Satz gleich nach dem Weckwort; iPhone-App: Seite Wartungspause unter „Spark verwalten“ (neuer TestFlight-Build nötig)
 - **V01.0.559** · 2026-10-14 · Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es
 - **V01.0.558** · 2026-10-14 · Ruhigere Seiten: Speichern lädt nicht mehr neu, offene Funktion, Person und Scroll bleiben; nötiges Neuladen kommt an dieselbe Stelle; Update in einem ruhigen Fenster ohne Band, Balken nur vorwärts; Aufgeklapptes bleibt offen; Zustand fragt nur sichtbar alle 3 s
 - **V01.0.557** · 2026-10-14 · Verbrauchszähler: Tokens und Sekunden je Modell, Aufgabe und Profil unter Zustand → Verbrauch und Ich → Verbrauch, dazu ein Tageskontingent je Profil

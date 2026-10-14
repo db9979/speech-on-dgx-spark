@@ -76,7 +76,7 @@ import spkcode
 import vault
 import features
 from common import load_config
-from textnorm import speech_markdown
+from textnorm import guess_language, speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
 
@@ -591,7 +591,7 @@ async def tts_stream(uid, text):
     import base64
     from core import api_headers
     cfg = load_config()
-    st = profiles.settings(uid)
+    st = profiles.settings(uid) if uid else {}   # no profile: the speech output's own voice (pause_clip)
     body = {"input": text[:600], "response_format": "pcm", "stream": True}
     if st.get("voice"):
         body["voice"] = st["voice"]
@@ -632,6 +632,71 @@ def tone_pcm():
     env = np.minimum(1.0, t / 0.04) * np.exp(-np.maximum(0.0, t - 0.04) * 9)
     x = np.sin(2 * np.pi * 523.25 * t) + np.where(t >= 0.14, np.sin(2 * np.pi * 659.25 * (t - 0.14)), 0)
     return (x * env * 2600).astype("<i2").tobytes()
+
+
+# ---------------------------------------------------------------- Wartungspause (wartung.py)
+# While the speech output pauses, a speaker and Home Assistant (wyoming.py) play the short sentence (wartung.SHORT)
+# from a file made while it still worked, else a short falling tone. No profile voice, nothing personal in it.
+CLIP = {"de": os.path.join(STATE, "wartung-satz-de.pcm"), "en": os.path.join(STATE, "wartung-satz-en.pcm")}   # 16-bit PCM, 24 kHz, mono
+CLIP_MAX = 15 * OUT_RATE * 2
+CLIP_RETRY = 600            # seconds between two tries to make the file when the speech output failed
+_clip_try = {"t": 0.0}
+
+
+def pause_tone():
+    """Two falling notes (0.5 s at 24 kHz): the speech output pauses and there is no file yet."""
+    t = np.arange(int(OUT_RATE * 0.5)) / OUT_RATE
+    env = np.minimum(1.0, t / 0.04) * np.exp(-np.maximum(0.0, t - 0.04) * 7)
+    x = np.sin(2 * np.pi * 659.25 * t) * (t < 0.2) + np.sin(2 * np.pi * 440.0 * (t - 0.2)) * (t >= 0.2)
+    return (x * env * 2600).astype("<i2").tobytes()
+
+
+def pause_clip(en=False):
+    """What a speaker plays while the speech output pauses: the short sentence from its file, else pause_tone."""
+    try:
+        with open(CLIP["en" if en else "de"], "rb") as f:
+            pcm = f.read(CLIP_MAX)
+        if len(pcm) >= OUT_RATE:   # at least half a second
+            return pcm[:len(pcm) // 2 * 2]
+    except OSError:
+        pass
+    return pause_tone()
+
+
+async def make_pause_clips(now):
+    """Makes the files of the short sentence anew when one is missing or older than wartung.CLIP_DAYS (the loop of
+    wartung.py, only while the speech output is not paused). True when it made them."""
+    import wartung
+    paths = [CLIP["de"], CLIP["en"]]
+    try:
+        if all(now - os.path.getmtime(f) < wartung.CLIP_DAYS * 86400 for f in paths):
+            return False
+    except OSError:
+        pass
+    if now - _clip_try["t"] < CLIP_RETRY:
+        return False
+    _clip_try["t"] = now
+    for path, text in zip(paths, wartung.SHORT):
+        pcm = b""
+        try:
+            async for piece in tts_stream("", text):
+                pcm += piece
+        except Exception as e:
+            print("wartung: satzdatei fehlgeschlagen", type(e).__name__, flush=True)
+            return False
+        if len(pcm) < OUT_RATE:
+            print("wartung: satzdatei fehlgeschlagen zu_kurz", flush=True)
+            return False
+        tmp = path + ".part"
+        with open(tmp, "wb") as f:
+            f.write(pcm[:CLIP_MAX])
+        os.replace(tmp, path)
+    print("wartung: satzdatei erneuert 2", flush=True)
+    return True
+
+
+async def _pcm_once(pcm):
+    yield pcm
 
 
 def room_cfg(c):
@@ -987,6 +1052,13 @@ class Session:
                 ask, self.room_ask = self.room_ask, None
                 await self.room_start(**(ask or {}))
                 return
+            import wartung
+            if wartung.paused("asr"):   # Wartungspause of the speech recognition: nothing to understand, the sentence at once
+                print("esp32: wartungspause spracherkennung, fester satz", flush=True)
+                self.note("Wartungspause der Spracherkennung: fester Satz")
+                self.testing = False
+                await self.say(wartung.sentence())
+                return
             ended = time.time()
             vt = None if self.testing else self.voice_check(pcm)
             try:
@@ -1188,7 +1260,11 @@ class Session:
     async def room_heard(self, pcm):
         import room
         import speakers
+        import wartung
         if self.room is None:
+            return
+        if wartung.paused("asr"):   # Wartungspause: room mode hears nothing until it ends
+            print("room: wartungspause spracherkennung, satz nicht gehoert", flush=True)
             return
         uid, rid = self.dev["user"], self.room["rid"]
         rv = None
@@ -1289,7 +1365,10 @@ class Session:
                 await pace.push(frames)
             mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
             try:
-                async for pcm in (tts_stream(self.dev["user"], text) if text else _nothing()):
+                import wartung
+                spoken = (_pcm_once(pause_clip()) if wartung.paused("tts") else tts_stream(self.dev["user"], text)) \
+                    if text else _nothing()
+                async for pcm in spoken:
                     if mine is None:
                         mine, until = echo.said(text, self.dev["user"], "dev:" + self.dev["id"]), time.time()
                     until = max(until, time.time()) + len(pcm) / (OUT_RATE * 2)
@@ -1455,6 +1534,10 @@ class Session:
                         await pace.push(await asyncio.to_thread(enc.feed, base64.b64decode(ev["audio"])))
             if answer[said:].strip():
                 await self.send({"type": "tts", "state": "sentence_start", "text": speech_markdown(answer[said:].strip())})
+            import wartung
+            if not pace.sent and wartung.paused("tts"):   # Wartungspause: the text on the display, the short sentence to hear
+                await pace.push(await asyncio.to_thread(enc.feed, pause_clip(guess_language(text) == "English")))
+                self.note("Wartungspause der Sprachausgabe: kurzer Satz aus der Datei")
             await pace.push(enc.feed(b"", flush=True), final=True)
             await pace.finish()
         finally:

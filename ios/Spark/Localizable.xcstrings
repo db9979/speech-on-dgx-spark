@@ -7380,6 +7380,136 @@
           }
         }
       }
+    },
+    "Wartungspause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintenance pause"
+          }
+        }
+      }
+    },
+    "Die Wartungspause ist aus. Einschalten unter Funktionen → Wartungspause.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The maintenance pause is off. Switch it on under Features → Maintenance pause."
+          }
+        }
+      }
+    },
+    "Zeit um, wartet auf Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time is up, waiting for an answer"
+          }
+        }
+      }
+    },
+    "Noch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
+          }
+        }
+      }
+    },
+    "Mit dem Wartungssatz beantwortet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered with the maintenance sentence"
+          }
+        }
+      }
+    },
+    "Hintergrundarbeit wartet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background work waiting"
+          }
+        }
+      }
+    },
+    "Pause läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause running"
+          }
+        }
+      }
+    },
+    "+15 min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+15 min"
+          }
+        }
+      }
+    },
+    "Weiter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "Was wird aktualisiert?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is being updated?"
+          }
+        }
+      }
+    },
+    "Höchstens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most"
+          }
+        }
+      }
+    },
+    "Pause starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start pause"
+          }
+        }
+      }
+    },
+    "Solange die Pause läuft, antwortet der Spark sofort mit einem festen Satz; Hintergrundarbeit wartet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While the pause runs, the Spark answers at once with a fixed sentence; background work waits."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

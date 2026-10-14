@@ -168,6 +168,10 @@ def pcm_of(wav):
 
 async def transcribe(s, wav, language):
     from core import api_headers
+    import wartung
+    if wartung.paused("asr"):   # Wartungspause of the speech recognition: Home Assistant gets no text
+        print("wyoming: wartungspause spracherkennung, kein text", flush=True)
+        return ""
     lang = language or s["language"]
     async with httpx.AsyncClient(timeout=300) as c:
         r = await c.post(f"http://127.0.0.1:{s['asr_port']}/v1/audio/transcriptions", files={"file": ("ha.wav", wav)},
@@ -179,6 +183,12 @@ async def transcribe(s, wav, language):
 
 async def synthesize(s, text, voice):
     from core import api_headers
+    import wartung
+    if wartung.paused("tts"):   # Wartungspause of the speech output: the short sentence from its file (esp32.pause_clip)
+        import esp32
+        from textnorm import guess_language
+        print("wyoming: wartungspause sprachausgabe, satz aus datei", flush=True)
+        return 24000, 2, 1, esp32.pause_clip(guess_language(text) == "English")
     body = {"input": text[:2000], "response_format": "pcm"}
     v = voice or s["voice"] or s["default_voice"]
     if v:

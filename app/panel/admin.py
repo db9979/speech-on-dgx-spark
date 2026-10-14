@@ -553,7 +553,7 @@ def validate(new):
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "chats_calls", "calls_turn", "android_live", "android_update",
-              "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
+              "svc_watch", "svc_watch_users", "wartung", "wartung_auto", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload", "nas_on", "nas_sources", "nas_shared", "nas_drop", "nas_status"):
         if not isinstance(ch.get(k, False), bool):

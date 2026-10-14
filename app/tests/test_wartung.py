@@ -10,6 +10,7 @@ No test depends on the wall clock: times are passed in or taken relative to now.
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import asyncio
+import json
 import os
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402
 import dienstwacht  # noqa: E402
+import esp32  # noqa: E402
 import guard  # noqa: E402
 import health  # noqa: E402
 import live  # noqa: E402
@@ -239,6 +241,183 @@ class Ending(Base):
         answers["llm"] = True
         run(wartung.tick(T0 + 17 * 60, answers=check))
         self.assertEqual(run(wartung.tick(T0 + 17 * 60 + 15, answers=check)), "aus")
+
+
+class Auto(Base):
+    """Funktionen → Wartungspause → Automatisch bei Neustart: a restarting unit pauses its part by itself."""
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(wartung_auto=True)
+        wartung._units.clear()
+        self.units = {"qwen38-sglang": ("active", "100"), "qwen38-keepalive": ("active", "5"),
+                      "speech-spark-tts-engine": ("active", "200")}
+        self.patches = [mock.patch.object(wartung, "watched", lambda: {
+            "llm": ["qwen38-sglang"], "asr": [], "tts": ["speech-spark-tts-engine"]})]
+        for x in self.patches:
+            x.start()
+
+    def tearDown(self):
+        for x in self.patches:
+            x.stop()
+        wartung._units.clear()
+        helpers.set_config(wartung_auto=False)
+        super().tearDown()
+
+    def look(self, unit):
+        return self.units.get(unit)
+
+    def tick(self, now):
+        return run(wartung.auto_tick(now, look=self.look))
+
+    def test_first_look_only_notes(self):
+        self.units["qwen38-sglang"] = ("activating", "100")
+        self.assertEqual(self.tick(T0), [])
+        self.assertFalse(wartung.state()["on"])
+
+    def test_a_restart_pauses_its_part_and_it_ends_once_it_answers(self):
+        self.tick(T0)
+        self.units["qwen38-sglang"] = ("activating", "100")
+        self.assertEqual(self.tick(T0 + 15), ["llm"])
+        s = wartung.state()
+        self.assertEqual((s["parts"], s["channel"], s["by"]), (["llm"], "automatisch", "automatisch"))
+        self.assertEqual(s["until"] - s["since"], wartung.AUTO_MIN * 60)
+        self.assertTrue(wartung.paused("llm"))
+        self.assertFalse(wartung.paused("tts"))
+
+        async def good(part, cfg):
+            return True
+        # still starting: no check, the pause holds
+        self.assertEqual(run(wartung.tick(T0 + 30, answers=good)), "pause")
+        self.units["qwen38-sglang"] = ("active", "900")   # up again, the model loads
+        self.tick(T0 + 45)
+
+        async def bad(part, cfg):
+            return False
+        self.assertEqual(run(wartung.tick(T0 + 60, answers=bad)), "pause")   # loading: no answer yet, nothing overdue
+        self.assertFalse(wartung.state()["overdue"])
+        self.assertEqual(run(wartung.tick(T0 + 75, answers=good)), "pruefen")
+        self.assertEqual(run(wartung.tick(T0 + 90, answers=good)), "aus")
+        self.assertFalse(wartung.state()["on"])
+
+    def test_a_restart_between_two_looks_counts(self):
+        self.tick(T0)
+        self.units["speech-spark-tts-engine"] = ("active", "999")
+        self.assertEqual(self.tick(T0 + 15), ["tts"])
+
+    def test_not_for_our_watchdog_our_update_a_running_pause_or_the_switch_off(self):
+        self.tick(T0)
+        health._restarts["speech-spark-tts-engine"] = [T0]
+        self.units["speech-spark-tts-engine"] = ("activating", "200")
+        self.assertEqual(self.tick(T0 + 15), [])
+        health._restarts.pop("speech-spark-tts-engine", None)
+        self.units["qwen38-sglang"] = ("activating", "100")
+        with mock.patch("update.update_running", lambda: True):
+            self.assertEqual(self.tick(T0 + 30), [])
+        wartung.start(["tts"], 30, "main", now=T0)
+        self.assertEqual(self.tick(T0 + 45), [])
+        self.assertEqual(wartung.state()["parts"], ["tts"])
+        wartung.end("test")
+        helpers.set_config(wartung_auto=False)
+        self.assertEqual(self.tick(T0 + 60), [])
+        self.assertFalse(wartung.state()["on"])
+
+    def test_the_real_unit_list_leaves_out_what_is_no_model(self):
+        for x in self.patches:
+            x.stop()
+        try:
+            w = wartung.watched()
+            self.assertIn("qwen38-sglang", w["llm"])
+            self.assertNotIn("qwen38-keepalive", w["llm"])
+            self.assertNotIn("qwen38-dashboard", w["llm"])
+            self.assertIn("speech-spark-asr-engine", w["asr"])
+        finally:
+            for x in self.patches:
+                x.start()
+
+
+class Speakers(Base):
+    """With the speech output paused speakers play the short sentence from its file (else a tone); with the speech
+    recognition paused Home Assistant gets no text."""
+    def setUp(self):
+        super().setUp()
+        for f in esp32.CLIP.values():
+            if os.path.exists(f):
+                os.remove(f)
+        esp32._clip_try["t"] = 0.0
+
+    def tearDown(self):
+        for f in esp32.CLIP.values():
+            if os.path.exists(f):
+                os.remove(f)
+        super().tearDown()
+
+    def test_clip_file_or_tone(self):
+        tone = esp32.pause_tone()
+        self.assertEqual(esp32.pause_clip(), tone)
+        made = []
+
+        async def tts(uid, text):
+            made.append((uid, text))
+            yield b"\x01\x00" * esp32.OUT_RATE
+        with mock.patch.object(esp32, "tts_stream", tts):
+            self.assertTrue(run(esp32.make_pause_clips(T0)))
+            self.assertFalse(run(esp32.make_pause_clips(T0 + 60)))   # fresh files are kept
+        self.assertEqual(made, [("", wartung.SHORT[0]), ("", wartung.SHORT[1])])   # no profile, no profile voice
+        self.assertEqual(esp32.pause_clip(), b"\x01\x00" * esp32.OUT_RATE)
+        self.assertEqual(esp32.pause_clip(en=True), b"\x01\x00" * esp32.OUT_RATE)
+
+    def test_a_failing_speech_output_is_tried_again_later_only(self):
+        calls = []
+
+        async def broken(uid, text):
+            calls.append(1)
+            raise RuntimeError("down")
+            yield b""
+        with mock.patch.object(esp32, "tts_stream", broken):
+            self.assertFalse(run(esp32.make_pause_clips(T0)))
+            self.assertFalse(run(esp32.make_pause_clips(T0 + 60)))
+            self.assertEqual(len(calls), 1)
+            run(esp32.make_pause_clips(T0 + esp32.CLIP_RETRY + 1))
+            self.assertEqual(len(calls), 2)
+
+    def test_no_new_file_while_the_speech_output_pauses(self):
+        wartung.start(["tts"], 30, "main")
+        with mock.patch.object(esp32, "make_pause_clips", side_effect=AssertionError("asked the paused TTS")):
+            self.assertFalse(run(wartung.clips_tick()))
+
+    def test_a_speaker_says_the_sentence_without_recognition_or_speech_output(self):
+        try:
+            esp32.Opus.lib()
+        except OSError:
+            self.skipTest("libopus missing")
+        sent, sound = [], []
+
+        class WS:
+            async def send_text(self, t):
+                sent.append(json.loads(t))
+
+            async def send_bytes(self, b):
+                sound.append(len(b))
+
+        async def never(*a, **k):
+            raise AssertionError("asked a paused part")
+            yield b""
+        wartung.start(["asr", "tts"], 30, "main")
+        ses = esp32.Session(WS(), "t", {"id": "d_w", "user": "u_w", "name": "Flur"}, "c_w")
+        with mock.patch.object(esp32, "transcribe", never), mock.patch.object(esp32, "tts_stream", never):
+            run(ses.run_answer(b"\0" * 32000))
+        texts = [m.get("text", "") for m in sent if m.get("state") == "sentence_start"]
+        self.assertEqual(len(texts), 1)
+        self.assertIn("aktualisiert", texts[0])
+        self.assertTrue(sound, "the tone from the file (here: no file, so the tone) reached the board")
+
+    def test_wyoming_plays_the_clip_and_hears_nothing(self):
+        import wyoming
+        wartung.start(["tts", "asr"], 30, "main")
+        s = {"tts_port": 1, "asr_port": 1, "voice": "", "default_voice": "", "language": ""}
+        rate, width, channels, pcm = run(wyoming.synthesize(s, "Das Licht ist an.", ""))
+        self.assertEqual((rate, width, channels, pcm), (24000, 2, 1, esp32.pause_tone()))
+        self.assertEqual(run(wyoming.transcribe(s, b"RIFF", "de")), "")
 
 
 class Shell(Base):
