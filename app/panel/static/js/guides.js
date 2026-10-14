@@ -780,7 +780,7 @@ const GUIDES=[
  out:[['Der Text geht als E-Book in deine reMarkable-Cloud. Sonst ändert der Spark dort nichts, höchstens 20 am Tag.','The text goes into your reMarkable cloud as an e-book. Otherwise the Spark changes nothing there, at most 20 a day.']],
  off:[['Schalter aus. Geschickte Dokumente löschst du auf dem reMarkable.','Switch off. Delete sent documents on the reMarkable.']],
  fix:[['Nach einer Websuche oder dem Lesen von Mails nimmt der Assistent in derselben Antwort keine Notiz an (Schutz vor fremdem Text). Der Knopf unter der Antwort geht immer.','After a web search or reading mail the assistant takes no note in the same answer (protection against outside text). The button below the answer always works.']]},
-{id:'rmfresh',grp:'data',sw:'chat.remarkable_fresh',ng:1,t:['Neueste Notizen zuerst','Newest notes first'],
+{id:'rmfresh',grp:'data',sw:'chat.remarkable_fresh',ng:1,t:['Neueste zuerst','Newest first'],
  what:[['Bei ähnlich guten Treffern in deinen Dokumenten und reMarkable-Notizen nimmt der Assistent die neuere und nennt ihr Datum. „Was habe ich zuletzt notiert?“ nennt die zuletzt geänderten Seiten.','With similar hits in your documents and reMarkable notes the assistant takes the newer one and names its date. "What did I note last?" names the pages changed last.']],
  need:[['reMarkable-Notizen an (wirkt auch für hochgeladene Dokumente).','reMarkable notes on (works for uploaded documents too).']],
  setup:[['Admin: unter reMarkable-Notizen „Neueste zuerst“ an.','Admin: below reMarkable notes "Newest first" on.']],
@@ -989,7 +989,7 @@ const GUIDES=[
  out:[['Nichts. Die App fragt nur deinen Spark, nie GitHub. Vor dem Installieren prüft sie Prüfsumme, Paketname, Versionsnummer und Signierschlüssel; Android prüft die Signatur noch einmal und installiert nur, was mit demselben Schlüssel signiert ist wie die installierte App.','Nothing. The app asks only your Spark, never GitHub. Before installing it checks checksum, package name, version number and signing key; Android checks the signature once more and installs only what is signed with the same key as the installed app.']],
  off:[['Aus: Die App zeigt den Streifen nicht mehr und bleibt beim Hinweis auf den Download-Link (Ich → Android-App).','Off: the app no longer shows the strip and keeps to the hint on the download link (Me → Android app).']],
  fix:[['„Prüfung fehlgeschlagen“: Die Datei passte nicht und wurde gelöscht, nichts ist installiert. Admin: Funktionen → Android-App → „App jetzt holen“, dann noch einmal.','"Check failed": the file did not match and was deleted, nothing was installed. Admin: Features → Android app → "Fetch the app now", then again.'],['Android sagt „App nicht installiert“: Die installierte App ist mit einem anderen Schlüssel signiert (z. B. eine selbst gebaute). Dann einmal deinstallieren und über den Download-Link neu installieren.','Android says "App not installed": the installed app is signed with another key (e.g. a self-built one). Then uninstall once and install again through the download link.']]},
-{id:'android',grp:'go',sw:'chat.android',me:'andbox',ng:1,t:['Android-App „Spark“','Android app "Spark"'],
+{id:'android',grp:'go',sw:'chat.android',me:'andbox',ng:1,t:['Android-App','Android app'],
  what:[['Eine App fürs Android-Handy, ohne Play Store: Sie zeigt den Spark so wie die Seite am Handy und kann zusätzlich Mitteilungen bei geschlossener App zeigen, als Assistenten-App starten und Text aus anderen Apps an Spark teilen.','An app for Android phones, without the Play Store: it shows the Spark like the page on the phone and can also show notes while closed, start as the assistant app and share text from other apps to Spark.']],
  need:[['Ein Android-Handy mit Android 10 oder neuer.','An Android phone with Android 10 or later.'],['Die Seite über https mit echtem Zertifikat (dein Reverse Proxy); das selbst signierte Zertifikat nimmt die App nicht an.','The page over https with a real certificate (your reverse proxy); the app does not take the self-signed certificate.'],['Einmal: Im GitHub-Repo baut die Aktion „Android-App“ die APK; dafür braucht sie den Signierschlüssel als Secret (Anleitung in docs/de/android-app.md).','Once: in the GitHub repo the action "Android app" builds the APK; it needs the signing key as a secret (guide in docs/en/android-app.md).']],
  setup:[['Admin: Funktionen → Android-App an, speichern, dann „App jetzt holen“.','Admin: Features → Android app on, save, then "Fetch the app now".'],['Profil: Ich → Android-App → den QR-Code mit dem Handy scannen und die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf).','Profile: Me → Android app → scan the QR code with the phone and install the APK (the phone asks once whether the browser may install apps).'],['Die App öffnen, die Adresse des Spark eintragen und wie im Browser mit Name und PIN anmelden.','Open the app, enter the Spark address and sign in with name and PIN like in the browser.']],
@@ -1021,7 +1021,7 @@ const GUIDES=[
  out:[['Nichts nach außen. Die Mitschrift liegt nur im Arbeitsspeicher des Spark (höchstens 3 Stunden) und ist eine Stunde nach dem Ende weg; die Zusammenfassung steht in deinem Verlauf.','Nothing goes outside. The transcript is only in the Spark\'s memory (at most 3 hours) and gone one hour after the end; the summary is in your history.']],
  off:[['Schalter aus oder Teil beim Gerät aus: nichts wird aufgenommen. Gesagtes ist für das Sprachmodell nur Inhalt, nie ein Auftrag.','Switch off or the part off for the device: nothing is recorded. What was said is only content for the language model, never an instruction.']],
  fix:[['„Es läuft schon eine Besprechung“: pro Profil eine zur Zeit, auf dem Spark höchstens vier.','"A meeting is already running": one per profile at a time, at most four on the Spark.'],['Ohne Ton der anderen: auf dem Mac braucht der Begleiter die Freigabe „Bildschirmaufnahme“ für den Systemton.','Without the others\' sound: on the Mac the companion needs the "Screen Recording" permission for the system sound.']]},
-{id:'pebblepair',grp:'go',sw:'chat.pebble',me:'pebbox',ng:1,t:['Pebble-Uhr koppeln','Pair the Pebble watch'],
+{id:'pebblepair',grp:'go',sw:'chat.pebble',me:'pebbox',ng:1,t:['Pebble-Uhr','Pebble watch'],
  what:[['Die Uhr-App „Spark“ für Pebble Time 2, Core 2 Duo und Pebble Round 2 bekommt Adresse und Schlüssel über einen Einrichtungscode, statt dass du beides am Handy abtippst. Jede Uhr hat einen eigenen Schlüssel, der nur fragen darf.','The "Spark" watch app for Pebble Time 2, Core 2 Duo and Pebble Round 2 gets address and key from a setup code instead of typing both on the phone. Each watch has its own key that may only ask.']],
  need:[['Die Pebble-App am Handy mit der Uhr verbunden.','The Pebble app on the phone connected to the watch.'],['Das Handy erreicht den Spark: zu Hause im WLAN, unterwegs über ein VPN.','The phone reaches the Spark: at home over Wi-Fi, on the road through a VPN.']],
  setup:[['Admin: Funktionen → Pebble-Uhr koppeln an.','Admin: Features → Pair the Pebble watch on.'],['Profil: Ich → Pebble-Uhr → den QR-Code mit dem Handy scannen und die App-Datei mit der Pebble-App öffnen, dann „Pebble koppeln“ und die Zeile kopieren.','Profile: Me → Pebble watch → scan the QR code with the phone and open the app file with the Pebble app, then "Pair a Pebble" and copy the line.'],['In der Pebble-App bei „Spark“ die Einstellungen öffnen, unter „Einrichtungscode“ einfügen, Speichern. Die Uhr zeigt „Gekoppelt“.','In the Pebble app open the settings of "Spark", paste under "Setup code", Save. The watch shows "Paired".']],
@@ -1077,7 +1077,7 @@ const GUIDES=[
  out:[['Nichts zusätzlich: Die Mitteilung geht an dein Gerät (Browser, iPhone-App oder Telegram, wie bei Erinnerungen).','Nothing extra: the notification goes to your device (browser, iPhone app or Telegram, like reminders).']],
  off:[['Den Schalter aus: Offene Vorschläge werden nicht mehr ausgeführt, Programme sehen die Werkzeuge nicht mehr.','Switch it off: open proposals are no longer carried out, programs no longer see the tools.']],
  fix:[['Keine Mitteilung: Unter Ich → Mitteilungen dieses Gerät einschalten. Ein Vorschlag wartet 15 Minuten.','No notification: switch on this device under Me → Notifications. A proposal waits 15 minutes.']]},
-{id:'iphone',grp:'go',sw:'chat.iphone',me:'appbox',ng:1,t:['iPhone-App „Spark“','iPhone app "Spark"'],
+{id:'iphone',grp:'go',sw:'chat.iphone',me:'appbox',ng:1,t:['iPhone-App','iPhone app'],
  what:[['Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm. „Hey Siri, Frag Spark“ geht auch über die App, ohne Kurzbefehl.','An own app for the iPhone: press the button, ask, the answer comes in the Spark voice, also with the screen locked. "Hey Siri, Ask Spark" works through the app too, without a shortcut.']],
  need:[['Ein Mac mit Xcode und ein iPhone mit iOS 17 oder neuer. Die App baust du selbst aus dem Ordner ios/ im Repo (Anleitung in docs/de/iphone-app.md).','A Mac with Xcode and an iPhone with iOS 17 or later. You build the app yourself from the ios/ folder in the repo (guide in docs/en/iphone-app.md).'],['Die Seite über https mit echtem Zertifikat (dein Reverse Proxy).','The page over https with a real certificate (your reverse proxy).']],
  setup:[['Admin: Funktionen → iPhone-App an.','Admin: Features → iPhone app on.'],['„iPhone koppeln“: auf dem iPhone den Link antippen, am PC den QR-Code mit der Kamera des iPhones scannen. Die App öffnet sich und ist gekoppelt.','"Pair an iPhone": on the iPhone tap the link, on a PC scan the QR code with the iPhone camera. The app opens and is paired.']],
@@ -1269,7 +1269,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Dein Schalter oder der Admin-Schalter aus: keine Hinweise.','Your switch or the admin switch off: no notes.']],
  fix:[['Kein Hinweis: Nur Admin-Profile bekommen ihn, und nicht während Notaus.','No note: only admin profiles get it, and not during Notaus.']]},
-{id:'beraterchat',grp:'talk',sw:'chat.berater_chat',ng:1,t:['Im Chat nach Vorschlägen fragen','Ask for proposals in the chat'],
+{id:'beraterchat',grp:'talk',sw:'chat.berater_chat',ng:1,t:['Den Assistenten nach Vorschlägen fragen','Ask the assistant for proposals'],
  what:[['Admin-Profile fragen „Was schlägt der Einstellungs-Assistent vor?“ und hören die offenen Vorschläge. Übernehmen geht nur unter Zustand → Verbessern.','Admin profiles ask "What does the settings assistant propose?" and hear the open proposals. Taking them works only under Status → Improve.']],
  need:[['Einstellungs-Assistent an.','Settings assistant on.']],
  setup:[['Admin: Funktionen → unter „Einstellungs-Assistent“ „Im Chat nach Vorschlägen fragen“ an.','Admin: Features → below "Settings assistant", "Ask for proposals in the chat" on.']],
@@ -1349,7 +1349,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Schalter aus: keine Umgebungs-Vorschläge.','Switch off: no environment proposals.']],
  fix:[['Kein Vorschlag: Er kommt nur, wenn der Dienst-Wächter den Dienst als weg sieht.','No proposal: it comes only when the service watch sees the service gone.']]},
-{id:'beratermich',grp:'talk',sw:'chat.berater_me',ng:1,t:['Vorschläge für die eigenen Einstellungen','Proposals for your own settings'],
+{id:'beratermich',grp:'talk',sw:'chat.berater_me',ng:1,t:['Vorschläge für mein Profil','Proposals for my profile'],
  what:[['Aus den eigenen 👎 eines Profils kommen Vorschläge für dessen Einstellungen, z. B. kürzere Antworten. Nur das Profil selbst übernimmt sie.','A profile\'s own 👎 lead to proposals for its settings, e.g. shorter answers. Only the profile itself takes them.']],
  need:[['Einstellungs-Assistent an.','Settings assistant on.']],
  setup:[['Admin: Funktionen → unter „Einstellungs-Assistent“ „Vorschläge für die eigenen Einstellungen“ an. Die Vorschläge stehen dann oben unter Ich → Gespräch.','Admin: Features → below "Settings assistant", "Proposals for your own settings" on. The proposals then show at the top of Me → Conversation.']],
@@ -1365,7 +1365,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Schalter aus: kein Autopilot, Übernommenes bleibt, bis du es zurücknimmst.','Switch off: no autopilot, what was taken stays until you undo it.']],
  fix:[['Nichts übernommen: Stufe C nie, und nur mit grünem Prüfstand.','Nothing taken: stage C never, and only with a green test bench.']]},
-{id:'bewertenzurueck',grp:'talk',sw:'chat.bewerten_back',ng:1,mep:'setbox',t:['Sagen, wenn es behoben ist','Tell me when it is fixed'],
+{id:'bewertenzurueck',grp:'talk',sw:'chat.bewerten_back',ng:1,mep:'setbox',t:['Rückmeldung, wenn es behoben ist','Feedback when it is fixed'],
  what:[['Hilft eine Änderung nach deinem 👎, sagt der Assistent dir das einmal.','When a change helps after your 👎, the assistant tells you once.']],
  need:[['👍/👎 unter Antworten an.','👍/👎 under answers on.']],
  setup:[['Admin: Funktionen → unter „👍/👎 unter Antworten“ „Sagen, wenn es behoben ist“ an. Für dich ausschalten: Ich → Gespräch → Verbessern.','Admin: Features → below "👍/👎 under answers", "Tell me when it is fixed" on. Switch it off for you: Me → Conversation → Improve.']],
@@ -1400,7 +1400,6 @@ const GUIDES=[
 ];
 // ---------------------------------------------------------------- rendering
 const gT=p=>Array.isArray(p)?t(p[0],p[1]):p;
-const guideOf=id=>GUIDES.find(g=>g.id===id);
 function guideHTML(g){return GSECT.filter(([k])=>g[k]&&g[k].length).map(([k,de,en])=>{
     const items=g[k].map(x=>`<li>${esc(gT(x))}</li>`).join('');
     return `<div class="gsec"><b>${esc(t(de,en))}</b>${k==='setup'?`<ol>${items}</ol>`:g[k].length>1?`<ul>${items}</ul>`:`<p>${esc(gT(g[k][0]))}</p>`}</div>`}).join('')}

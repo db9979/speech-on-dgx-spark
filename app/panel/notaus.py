@@ -523,7 +523,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 
 from core import admin_code_fresh, auth  # noqa: E402
-from fastapi.security import HTTPBasicCredentials  # noqa: E402
 
 router = APIRouter()
 MAX_BODY = 2048

@@ -13,6 +13,7 @@ starts at zero.
 - e  no own call of the language model's chat/completions
 - f  no raw fetch( in the panel's scripts: api()/apiTry() in base.js (sign-in, code dialog, Notaus, loading bar)
 - g  group and function names the same in features.py and guides.js
+- h  every translation in i18n.js and every class in the style sheets is still used
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -20,6 +21,7 @@ Run:  python -m unittest discover -s app/tests -t app     (from the repository r
 """
 import ast
 import glob
+import json
 import os
 import re
 import unittest
@@ -68,9 +70,7 @@ THINK = re.compile(r"re\.(?:sub|compile|split)\([^\n]*</?think>")
 
 class OwnThinkFilter(Ratchet, unittest.TestCase):
     WHAT = "an own <think> filter, use common.no_think"
-    ALT = {"panel/begleiter.py": 1, "panel/docmake.py": 2, "panel/fixes.py": 1, "panel/gedaechtnis.py": 1,
-           "panel/memtidy.py": 1, "panel/proactive.py": 2, "panel/rmplus.py": 1, "panel/room.py": 3,
-           "panel/schreib.py": 2, "panel/wissen.py": 2}
+    ALT = {}
 
     def hits(self):
         return count_by_file(py_files(), lambda name, src: 0 if name == "common.py" else len(THINK.findall(src)))
@@ -78,7 +78,7 @@ class OwnThinkFilter(Ratchet, unittest.TestCase):
 
 class DoubleDictKey(Ratchet, unittest.TestCase):
     WHAT = "a key twice in one dict literal, the second one silently wins"
-    ALT = {"panel/live.py": 2}
+    ALT = {}
 
     def hits(self):
         def count(name, src):
@@ -93,9 +93,7 @@ class DoubleDictKey(Ratchet, unittest.TestCase):
 
 class UnusedImport(Ratchet, unittest.TestCase):
     WHAT = "an import nothing uses; an import kept for its side effect gets the comment '# noqa: F401'"
-    ALT = {"panel/intent.py": 1, "panel/kiwix.py": 1, "panel/meinmcp.py": 1, "panel/onboard.py": 1,
-           "panel/parcels.py": 1, "panel/rmpapier.py": 2, "panel/roomlive.py": 1, "panel/speicher.py": 1,
-           "panel/vorab.py": 1}
+    ALT = {}
 
     @staticmethod
     def unused(src):
@@ -106,7 +104,7 @@ class UnusedImport(Ratchet, unittest.TestCase):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if isinstance(node, ast.ImportFrom) and node.module == "__future__":
                     continue
-                if "noqa" in lines[node.lineno - 1]:
+                if re.search(r"#\s*noqa(?!:)|#\s*noqa:[^#]*F401", lines[node.lineno - 1]):
                     continue
                 for a in node.names:
                     if a.name == "*":
@@ -191,11 +189,56 @@ class RawFetch(Ratchet, unittest.TestCase):
         return out
 
 
+def panel_text(py=True):
+    """Every page, script and (with py) Python module of the panel as one text, whitespace as single spaces."""
+    import html
+    parts = []
+    for path in glob.glob(os.path.join(PANEL, "static", "**", "*"), recursive=True):
+        if path.endswith((".html", ".js")) and not path.endswith("i18n.js"):
+            with open(path, encoding="utf-8") as f:
+                parts.append(f.read())
+    if py:
+        parts += py_files().values()
+    text = re.sub(r"\s+", " ", "\n".join(parts))
+    return text + " " + html.unescape(text)
+
+
+class UnusedText(unittest.TestCase):
+    """Every English text in i18n.js belongs to a German text some page, script or module still shows. Texts with
+    digits may be built from parts (f-strings) and are left out of the check."""
+    def test_every_translation_is_used(self):
+        with open(os.path.join(JS, "i18n.js"), encoding="utf-8") as f:
+            src = f.read()
+        start = src.index("const EN=") + len("const EN=")
+        table, _ = json.JSONDecoder().raw_decode(src[start:])
+        hay = panel_text()
+        dead = [k for k in table if not re.search(r"\d", k) and k not in hay
+                and k.replace('"', '\\"') not in hay and k.replace("'", "\\'") not in hay]
+        self.assertEqual(dead, [], "a translation nothing shows any more: delete it from i18n.js")
+
+
+class UnusedCss(unittest.TestCase):
+    """Every class in the panel's style sheets is used somewhere. Classes built in code from a prefix stand in DYN."""
+    DYN = ("ag-", "c-", "st-", "lz-", "vb-c", "kn-")
+
+    def test_every_class_is_used(self):
+        hay = panel_text()
+        dead = []
+        for path in sorted(glob.glob(os.path.join(PANEL, "static", "*.css"))):
+            with open(path, encoding="utf-8") as f:
+                css = re.sub(r"/\*.*?\*/", "", f.read(), flags=re.S)
+            css = re.sub(r"url\([^)]*\)|\d+\.\d+", "", css)
+            for c in sorted(set(re.findall(r"\.(-?[a-zA-Z_][\w-]*)", css))):
+                if not c.startswith(self.DYN) and not re.search(r"(?<![\w-])" + re.escape(c) + r"(?![\w-])", hay):
+                    dead.append(f"{os.path.basename(path)}: .{c}")
+        self.assertEqual(dead, [], "a style class nothing uses any more: delete its rule")
+
+
 class SameNames(unittest.TestCase):
     """features.py is the one source of groups and function names; guides.js keeps a copy for the page."""
     # differences on 2026-10-14; this list only gets shorter
-    ALT_GROUPS = {"data", "day", "sec"}
-    ALT_NAMES = {"android", "beraterchat", "beratermich", "bewertenzurueck", "iphone", "pebble", "rmfresh"}
+    ALT_GROUPS = set()
+    ALT_NAMES = set()
 
     def setUp(self):
         with open(os.path.join(JS, "guides.js"), encoding="utf-8") as f:

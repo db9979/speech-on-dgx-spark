@@ -118,8 +118,6 @@ body.inchat #fab{display:none}
 .tgl i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
 .tgl input:checked+i{background:linear-gradient(135deg,var(--acc),var(--acc2))}.tgl input:checked+i::after{transform:translateX(16px)}
 .tgl input:focus-visible+i{outline:2px solid var(--acc);outline-offset:2px}
-.setcard{width:min(460px,100%);max-height:90vh;overflow:auto}
-.setgrp{margin-top:14px}.setgrp h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 4px}
 .setpane:not(.on){display:none}.setpane{min-height:150px}
 .setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
 .setrow .lbl{flex:1;min-width:0}.setrow .lbl b{font-weight:600;font-size:14px;display:block}.setrow .lbl span{font-size:12px;color:var(--mut)}
@@ -563,9 +561,6 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .pics{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px 0;font-size:12px}.pics[hidden],.attach[hidden],.mbar .b[hidden]{display:none}
 .pics .pic{position:relative;flex:none}.pics img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
 .picx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:0;background:var(--bad);color:#fff;cursor:pointer;font-size:11px;line-height:22px;padding:0}
-.rdy{list-style:none;padding:0;margin:6px 0}.rdy li{padding:2px 0}
-.mpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 100%}.mpick[hidden]{display:none}.mpick input{flex:1 1 140px;min-width:0}.mlist{display:flex;flex-wrap:wrap;gap:4px;flex-basis:100%}.mlist:empty{display:none}.mlist .b{padding:4px 10px}
-.mrdy{display:inline}.mrdy summary{display:inline;cursor:pointer;color:var(--acc)}.mrdy input{margin:6px 0 0}
 .attach{flex:none;padding:9px 11px}.attach svg{width:18px;height:18px}
 .picrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.picrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block}
 .picsave{margin-top:8px;font-size:12px;padding:6px 12px;-webkit-user-select:none;user-select:none}   /* buttons under an answer: never part of copied answer text */
@@ -890,21 +885,6 @@ body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-
 .wrdiff{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 8px;line-height:1.5;max-height:340px;overflow:auto}
 .wrdiff del{color:var(--bad);text-decoration:line-through}
 .wrdiff ins{color:var(--ok);text-decoration:none;background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:3px}
-.hilfefab{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;box-shadow:var(--shadow)}
-.hilfedraw{position:fixed;right:16px;top:16px;bottom:16px;width:min(380px,calc(100vw - 32px));z-index:61;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);overflow:hidden;box-sizing:border-box}
-.hilfefab[hidden],.hilfedraw[hidden]{display:none}
-.hilfedraw .hhead{display:flex;justify-content:space-between;align-items:center}
-.hilfedraw .hpage{font-size:12px}
-.hilfedraw .hlog{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
-.hilfedraw .hq{align-self:flex-end;max-width:85%;background:var(--acc);color:#fff;border-radius:14px;padding:8px 12px;overflow-wrap:anywhere}
-.hilfedraw .ha{line-height:1.45;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
-.hilfedraw .ha.typing{color:var(--mut)}
-.hilfedraw .hask{display:flex;gap:6px}.hilfedraw .hask input{flex:1;min-width:0}
-body.inchat .hilfefab{display:none}
-@media (max-width:759px){
-  .hilfefab{bottom:calc(84px + env(safe-area-inset-bottom));right:12px}
-  .hilfedraw{left:0;right:0;bottom:0;top:auto;width:auto;max-height:80vh;height:70vh;border-radius:16px 16px 0 0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-}
 /* Mein Notaus (notaus.py) */
 #mynaoff input{max-width:140px;flex:none}
 #znmine .znrow button{margin-left:auto}

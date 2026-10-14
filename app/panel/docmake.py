@@ -68,7 +68,7 @@ import notaus
 import profiles
 import symbole
 import verbrauch
-from common import load_config
+from common import load_config, no_think
 from core import assistant, browser_profile, own_profile
 
 router = APIRouter()
@@ -620,8 +620,7 @@ def section_messages(plan, i, sources, done=None, wish="", old=None):
 
 def parse_json(raw):
     """The model's JSON (without thinking or code fences around it), or ValueError."""
-    s = re.sub(r"(?s)<think>.*?</think>", "", str(raw or ""))
-    s = re.sub(r"(?s)^.*</think>", "", s).strip()
+    s = no_think(raw)
     m = re.search(r"(?s)```(?:json)?\s*(.*?)```", s)
     if m:
         s = m.group(1).strip()

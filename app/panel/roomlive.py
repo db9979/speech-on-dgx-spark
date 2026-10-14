@@ -22,7 +22,6 @@ voice, i.e. when somebody else in the house may have started it; not in quiet ho
 per hour. The profile's history (users/<id>/room-history.json, last HIST_MAX times within HIST_DAYS days)
 keeps when and where, how it ended and how many sentences it heard, said and overheard; never text.
 """
-import asyncio
 import json
 import re
 import secrets

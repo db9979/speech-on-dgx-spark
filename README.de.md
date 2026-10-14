@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.577** Aufräumen Schritt 1: tote Imports, Funktionen, Texte und CSS weg, eine Liste entfernter Schlüssel, Schalter-Prüfung aus den Vorgaben
 - **V01.0.576** ROT-FIX 2: Briefing-Test hängt nicht mehr an der Uhrzeit
 - **V01.0.575** ROT-FIX: Videoanruf-Test hängt nicht mehr an der Uhrzeit, „Mein Rufname“ speichert wieder zuverlässig
 - **V01.0.574** Drei rote Fragen im Qualitätstest: angekündigte Tat ohne Werkzeug wird nicht gesagt, kein Merken bei einer reinen Frage, ehrliches „keine Möglichkeit“ zählt beim Kontostand
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.570** Ruhige Apps: iPhone zeigt „nicht erreichbar“ erst nach 3 Sekunden, hängt neue Nachrichten an, offene Seiten bleiben offen; Android 1.3.2 wartet beim Spark-Neustart statt zur Adresseingabe zu springen
 - **V01.0.569** Zustand → Monitoring als Kacheln: „Jetzt“ und „Heute“ mit Symbol, großer Zahl und Farbe, jede Heute-Kachel springt zu ihrer Stelle, übrige Karten als „Bereiche“; iPhone mit Abschnitt „Heute“
 - **V01.0.568** Chats mit anderen Sparks V2: Fotos, Dateien und Sprachnachrichten gehen mit (der Empfänger prüft und macht sie neu), und Gruppen können Personen auf anderen Sparks aufnehmen (bisher nur Text); zwei neue Admin-Schalter, beide aus
-- **V01.0.567** Bilder malen mit FLUX.2 klein auf dem Spark: wahlweise bei der Installation (--bild), Ich → Bilder und im Gespräch, feste Regeln, Bildprüfung, jedes Bild als KI-Bild gekennzeichnet
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

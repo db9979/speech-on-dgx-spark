@@ -95,8 +95,6 @@ body.appview .appg.on{display:block;animation:fade .18s ease}
 .apk{font-size:13px;color:var(--aplab)}.apcard b{font-size:17px;line-height:1.25}
 .aps{font-size:13px;color:var(--aplab);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .aprog{display:block;width:100%;height:5px;border-radius:3px;background:var(--apsep);margin-top:8px}.aprog>i{display:block;height:100%;border-radius:3px;background:var(--acc)}
-.apchips{display:flex;flex-wrap:wrap;gap:8px;padding:0 2px 8px}
-.apchip{border:0;border-radius:16px;background:color-mix(in srgb,var(--acc) 12%,var(--apcard));color:var(--acc);font:inherit;font-size:15px;padding:7px 12px;cursor:pointer;text-align:left}
 /* ---- sheet from below (Verlauf) */
 body.appview #apsheet:not([hidden]){display:block;position:fixed;inset:0;z-index:70}
 .apshade{position:absolute;inset:0;background:rgba(0,0,0,.3);animation:fade .2s ease}

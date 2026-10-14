@@ -395,12 +395,6 @@ def drop_count(cid):
         _write(rows)
 
 
-def by_reporter(uid, status=("erledigt",), since=0.0):
-    """Cases a person reported (👎, "Das war falsch") that reached one of `status` after `since` (Rückmeldung)."""
-    return [x for x in cases() if uid in x.get("who", []) and x.get("kind") == "schlecht" and x.get("status") in status
-            and float(x.get("done", 0)) > since]
-
-
 # ---------------------------------------------------------------- 👍 / 👎
 def _days():
     if _counts["days"] is None:

@@ -24,7 +24,7 @@ import time
 
 import features
 import profiles
-from common import load_config
+from common import load_config, no_think
 
 SRC = ("said", "fix", "auto", "hand", "tidy")
 CONFIRMED_SRC = {"said", "fix", "hand", "tidy"}    # said or written by the person: confirmed when it is saved
@@ -467,7 +467,7 @@ def untagged(uid, facts=None):
 def parse_topics(text, ids):
     """{fact id: topic} from the model's answer: only the facts asked about, anything else is "sonstiges"."""
     import json
-    text = re.sub(r"(?s)<think>.*?</think>", "", str(text or ""))
+    text = no_think(str(text or ""))
     m = re.search(r"\{.*\}", text, re.S)
     try:
         d = json.loads(m.group(0)) if m else {}

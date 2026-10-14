@@ -362,7 +362,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/toollog.json` | Tool log |  | – | yes | Conversations |
 | `users/ID/room-history.json` | Room mode history |  | – | yes | Conversations |
 | `users/ID/memory.json` | Memory |  | – | yes | Memory |
-| `users/ID/learned.json` | Learned facts |  | – | yes | Memory |
+| `users/ID/learned.json` | Read marks of learning from conversations |  | – | yes | Memory |
 | `users/ID/zuordnungen.json` | Remembered matches |  | – | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |

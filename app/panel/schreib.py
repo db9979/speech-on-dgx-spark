@@ -46,7 +46,7 @@ import guard
 import notaus
 import profiles
 import verbrauch
-from common import load_config
+from common import load_config, no_think
 from core import assistant, browser_profile, confirm_code
 
 router = APIRouter()
@@ -218,8 +218,7 @@ def messages(art, text, mail, lang, wish, app="", style=("", "")):
 
 def tidy_answer(raw, text):
     """The model's answer without thinking, marks, fences or quotes around it."""
-    s = re.sub(r"(?s)<think>.*?</think>", "", str(raw or ""))
-    s = re.sub(r"(?s)^.*</think>", "", s)
+    s = no_think(raw)
     s = re.sub(r"^\s*(<<<\s*TEXT|TEXT\s*>>>)\s*$", "", s, flags=re.M)
     s = re.sub(r"(?s)^\s*```[a-z]*\n(.*?)\n```\s*$", r"\1", s)
     s = s.strip()

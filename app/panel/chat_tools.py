@@ -11,7 +11,7 @@ import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import calendars  # noqa: E402
-import documents  # noqa: E402
+import documents  # noqa: E402,F401  (loaded before the tools on purpose)
 import extras  # noqa: E402
 from textnorm import guess_language  # noqa: E402
 import homeassistant  # noqa: E402

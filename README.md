@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.577** Cleanup step 1: dead imports, functions, texts and CSS gone, one list of removed keys, switch checks from the defaults
 - **V01.0.576** Red fix 2: the briefing test no longer depends on the clock
 - **V01.0.575** Red fix: the video call test no longer depends on the clock, „Mein Rufname“ saves reliably again
 - **V01.0.574** Three red questions in the quality test: an announced deed without a tool is not said, nothing is remembered from a plain question, an honest „keine Möglichkeit“ counts for the account balance
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.570** Calm apps: the iPhone shows "not reachable" only after 3 seconds, appends new messages, open pages stay open; Android 1.3.2 waits while the Spark restarts instead of jumping to the address screen
 - **V01.0.569** Status → Monitoring as tiles: "Now" and "Today" with icon, large number and colour, every Today tile jumps to its place, the other cards as "Areas"; iPhone with a "Today" section
 - **V01.0.568** Chats with other Sparks V2: photos, files and voice messages go too (the receiver checks them and makes them anew), and groups can take in people on other Sparks (text only for now); two new admin switches, both off
-- **V01.0.567** Painting pictures with FLUX.2 klein on the Spark: optional at install (--bild), Me → Pictures and in the conversation, fixed rules, image check, every picture marked as AI-made
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

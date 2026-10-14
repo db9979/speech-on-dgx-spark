@@ -21,7 +21,7 @@ import profiles  # noqa: E402
 import quality  # noqa: E402
 import vorrang  # noqa: E402
 from common import load_config  # noqa: E402
-from core import spawn, DEFAULTS, admin_code, admin_code_fresh, auth  # noqa: E402
+from core import spawn, DEFAULTS, admin_code_fresh, auth  # noqa: E402
 
 router = APIRouter()
 

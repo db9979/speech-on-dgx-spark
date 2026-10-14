@@ -35,6 +35,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import documents
+from common import no_think
 import features
 import live
 import guard
@@ -187,7 +188,7 @@ async def _llm(system, user, max_tokens=700, job="reMarkable"):
         r = await vorrang.post(c, job, cc["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"].get("content") or ""
-    return re.sub(r"(?s)<think>.*?</think>", "", text).strip()
+    return no_think(text).strip()
 
 
 def _outside(text):

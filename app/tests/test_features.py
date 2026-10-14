@@ -473,17 +473,11 @@ class Release(unittest.TestCase):
 
     def test_removed_keys_are_not_stored(self):
         c, uid = profile("RelGina")
-        # the release switches that were removed with Freigabe vereinfachen
-        gone = """
-        agent_on android_on app_accounts app_admin app_auto app_docs_edit app_mine app_on app_security app_voice berater_ask berater_me chats_on con_on desk_on devup_on
-        direct_read doc_brief doc_make doc_make_templates doc_make_wikipics doc_originals
-        doc_pictures doc_semantic doc_shared esp_on esp_stop fix_learn images_on instant_ack
-        kiwix_on klaeren klaeren_merken local_first mcps_on mem_ask mem_check mem_topics
-        msg_announce my_status mymcp_on par_on pebble_on prefetch pro_ha_voice rate_on report_on
-        rm_ask rm_folders rm_fresh rm_guide rm_meet rm_on rm_paper rm_send rm_todo rm_web roles_on
-        room_remote route spark_help spk_code storage_on svc_hint sync_live sync_offline sync_one
-        systemone_on tagebuch_on tasks_on tips_on tool_think transit_on why_on wiki_on write_apps
-        write_on wx_on""".split()
+        # the release switches that were removed with Freigabe vereinfachen and the App-Gleichstand: one list
+        gone = sorted(profiles.GONE)
+        self.assertIn("app_mine", gone)
+        import iphone
+        self.assertLessEqual(iphone.GONE, profiles.GONE, "iphone.GONE only from profiles.GONE")
         r = c.put("/api/profile/settings", json=dict({k: True for k in gone}, pro_on=False))
         self.assertEqual(r.status_code, 200)
         stored = profiles.settings(uid)

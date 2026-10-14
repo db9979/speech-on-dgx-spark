@@ -115,7 +115,8 @@ MINE_FIELDS = ("daily", "learn")
 # document settings (Ich -> Dokumente) with "Dokumente verwalten"; the functions themselves follow the admin release
 DOC_FIELDS = ("doc_due",)
 AUTO_FIELDS = ()
-# switches older apps still send although the admin release alone decides now (Freigabe vereinfachen): ignored
+# switches older apps still send although the admin release alone decides now: ignored. Only the keys the old
+# apps sent, all out of profiles.GONE (the one list); app_on and the other rights stay refused (400).
 GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
                   "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on",
                   "app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts",

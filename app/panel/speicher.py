@@ -77,7 +77,6 @@ import netguard
 import profiles
 import vault
 import zertpin
-from common import load_config
 from core import auth, browser_profile, secret_profile, spawn
 
 router = APIRouter()
@@ -480,13 +479,6 @@ def _rel_ok(rel):
             elif rel == it:
                 return True
     return False
-
-
-def _area_of(rel):
-    for a, (_, _, items) in AREAS.items():
-        if any(rel == it or it.endswith("/") and rel.startswith(it) for it in items):
-            return a
-    return ""
 
 
 def local_files(uid, areas):
@@ -1137,15 +1129,6 @@ def _pack(path, key, obj):
         raise
     finally:
         _rm(plain)
-
-
-def _sha_of(path):
-    """SHA-256 of a snapshot (a file that only got a new time stamp needs no new object)."""
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        while chunk := f.read(CHUNK):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 async def copy_once(uid, tid, why="auto", now=None):

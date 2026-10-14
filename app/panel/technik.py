@@ -343,7 +343,7 @@ INHALT = {
     # users/<id>/
     "convos.json": ("Gespräche", "Conversations"), "toollog.json": ("Werkzeug-Log", "Tool log"),
     "room-history.json": ("Raummodus-Verlauf", "Room mode history"), "memory.json": ("Gedächtnis", "Memory"),
-    "learned.json": ("Gelernte Fakten", "Learned facts"), "zuordnungen.json": ("Gemerkte Zuordnungen", "Remembered matches"),
+    "learned.json": ("Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations"), "zuordnungen.json": ("Gemerkte Zuordnungen", "Remembered matches"),
     "tasks.json": ("Aufgaben", "Tasks"), "reminders.json": ("Erinnerungen", "Reminders"),
     "wissen.db": ("Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)"),
     "docs/files/": ("Originale der Uploads", "Originals of uploads"), "suchpruefung.json": ("Prüffragen und Läufe der Suchprüfung", "Test questions and runs of the search check"), "erstellt/": ("Erstellte Dokumente", "Created documents"),

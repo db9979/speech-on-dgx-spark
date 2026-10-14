@@ -53,7 +53,7 @@ import logfilter
 import profiles
 import proactive
 import features
-from common import load_config
+from common import load_config, no_think
 from core import assistant, own_profile
 
 router = APIRouter()
@@ -637,7 +637,7 @@ def _may_detect(r, body):
 
 def check_detect(text, lines):
     """The model's finding, only with a quote that was said and items that are in that quote."""
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
+    text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
         d = json.loads(m.group(0)) if m else {}
@@ -683,7 +683,7 @@ ANSWER_PLAIN = ("Im Raum wurde gerade diese Frage gestellt. Beantworte sie in h�
 
 
 def _clean(text):
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "").strip().strip('"„“')
+    text = no_think(text or "").strip().strip('"„“')
     if not text or re.match(r"(?i)^\W*nichts\b", text) or len(text) > 400:
         return None
     return re.sub(r"\s+", " ", text)
@@ -756,7 +756,7 @@ CAL_SYSTEM = ("Unten steht, was gerade im Raum gesagt wurde, und das heutige Dat
 
 def parse_appointment(text, lines, tz):
     from chat import appointment
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
+    text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
         d = json.loads(m.group(0)) if m else {}

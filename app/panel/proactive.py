@@ -29,7 +29,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import profiles
 import vorrang
 import features
-from common import load_config
+from common import load_config, no_think
 from core import assistant, browser_profile, own_profile
 
 router = APIRouter()
@@ -792,7 +792,7 @@ def follow_lines(convos, a, b):
 def parse_follow(text, lines):
     """The model's pick, only when its quote really is in one of the person's sentences and that sentence is
     the person's own plan. Returns {"quote", "line", "question"} (question: the fixed sentence), or None."""
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
+    text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
         d = json.loads(m.group(0)) if m else {}
@@ -933,7 +933,7 @@ WEATHER_SAY = {"rain": ("Regen", "Denk an einen Schirm."), "frost": ("Frost", "E
 
 
 def parse_weather(text, source):
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
+    text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
         d = json.loads(m.group(0)) if m else {}

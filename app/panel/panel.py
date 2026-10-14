@@ -34,7 +34,7 @@ import quality  # noqa: E402
 import update  # noqa: E402
 import system  # noqa: E402
 import backup  # noqa: E402
-import documents  # noqa: E402
+import documents  # noqa: E402,F401  (registers its routes)
 import health  # noqa: E402
 import push  # noqa: E402
 import proactive  # noqa: E402

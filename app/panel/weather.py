@@ -130,12 +130,6 @@ async def candidates(place):
     return found[:6]
 
 
-async def geocode(place):
-    """{"name", "lat", "lon"} of the best match, or ValueError."""
-    best = (await candidates(place))[0]
-    return {"name": best["name"] or _clean(place), "lat": best["lat"], "lon": best["lon"]}
-
-
 def _store(uid, d):
     profiles._write(_file(uid), d)
     return d

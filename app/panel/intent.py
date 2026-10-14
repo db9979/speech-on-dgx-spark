@@ -29,7 +29,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import chat
 import bilder
 import docmake
-import fixes
 import guard
 import homeassistant
 import verbrauch

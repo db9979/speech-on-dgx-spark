@@ -808,10 +808,6 @@ async def fetch(uid, doc_id):
     return tmp, name, documents.CTYPE.get(ext, "application/octet-stream")
 
 
-def is_from_place(uid, doc_id):
-    return _entry(uid, doc_id)[0] is not None
-
-
 def summary(uid):
     """(folders, failing, documents) for Ich → Mein Zustand and others."""
     ss = sources(uid)

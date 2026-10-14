@@ -129,10 +129,6 @@ def _sections(c):
     return c.get("sections") or []
 
 
-def _all_pictures(c, pictures):
-    return [p for s in _sections(c) for p in (pictures(s) if pictures else [])]
-
-
 # ---------------------------------------------------------------- chart as a picture (Word, PDF)
 def _nice(hi):
     """A round step for about 4 to 6 grid lines up to hi."""

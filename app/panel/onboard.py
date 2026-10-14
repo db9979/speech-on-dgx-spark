@@ -17,7 +17,6 @@ the matching one signs the phone in, a wrong one ends the code. Off unless the a
 import hashlib
 import hmac
 import json
-import os
 import random
 import re
 import secrets

@@ -33,10 +33,10 @@ DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "confi
 
 # groups as on the Funktionen page (guides.js GGROUPS)
 GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkeit", "Speed and accuracy"),
-          ("data", "Wissen und Gedächtnis", "Knowledge and memory"),
-          ("day", "Alltag", "Everyday"), ("post", "Post und Kontakte", "Mail and contacts"),
+          ("data", "Meine Daten", "My data"),
+          ("day", "Mein Tag", "My day"), ("post", "Post und Kontakte", "Mail and contacts"),
           ("home", "Zuhause", "Home"), ("go", "Unterwegs und Geräte", "On the go and devices"),
-          ("sec", "Sicherheit", "Security"))
+          ("sec", "Zugang", "Access"))
 
 
 # the pages of Ich, in their order: the one list for the panel (me.js meAll, guides.js ME_NAME) and the apps

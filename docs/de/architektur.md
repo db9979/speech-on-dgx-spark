@@ -362,7 +362,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/toollog.json` | Werkzeug-Log |  | – | ja | Gespräche |
 | `users/ID/room-history.json` | Raummodus-Verlauf |  | – | ja | Gespräche |
 | `users/ID/memory.json` | Gedächtnis |  | – | ja | Gedächtnis |
-| `users/ID/learned.json` | Gelernte Fakten |  | – | ja | Gedächtnis |
+| `users/ID/learned.json` | Lesemarken des Lernens aus Gesprächen |  | – | ja | Gedächtnis |
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | – | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |

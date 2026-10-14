@@ -465,10 +465,6 @@ const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_fai
   invite_app:t('neue Person über Einladung (iPhone-App)','new person by invitation (iPhone app)'),invite_pin:t('neue PIN über Einladungslink','new PIN through an invitation link'),
   invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
   backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog')};
-async function auditText(){const d=await (await api('/api/audit?limit=500')).json();
-  return d.events.slice().reverse().map(e=>{const who=e.who||(e.uid&&d.names[e.uid])||e.name||'';
-    const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(AUDIT[e.event]||e.event)+(e.locked?t(` – gesperrt für ${e.locked} s`,` – locked for ${e.locked} s`):'')+(e.detail?' – '+e.detail:'');
-    return `${new Date(e.t*1000).toLocaleString()}  ${(e.ip||'').padEnd(15)}  ${who?who+': ':''}${what}`}).join('\n')}
 $('tts.model').addEventListener('change',()=>instrHint(true));
 
 

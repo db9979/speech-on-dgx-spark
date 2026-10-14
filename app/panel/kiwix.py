@@ -27,7 +27,6 @@ from urllib.parse import quote, unquote, urljoin, urlsplit
 import httpx
 
 import netguard
-import profiles
 import features
 from common import load_config
 

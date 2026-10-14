@@ -28,7 +28,6 @@ sheets the Spark made itself and recorded are read: a copied or foreign PDF does
 was read (green ticked, amber unclear, grey taken back). Nothing read here goes to the language model.
 """
 import asyncio
-import datetime
 import io
 import json
 import math
@@ -41,7 +40,6 @@ from fastapi.responses import Response
 
 import features
 import guard
-import hintergrund
 import netguard
 import profiles
 import remarkable

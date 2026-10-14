@@ -63,7 +63,6 @@ from core import (  # noqa: E402
     check_password,
     confirm_code,
     ha_on,
-    is_admin,
     is_main_admin,
     mail_on,
     own_profile,

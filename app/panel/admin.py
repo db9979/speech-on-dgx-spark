@@ -517,6 +517,9 @@ def validate(new):
         for k in new[sec]:
             if k not in defaults[sec]:
                 raise HTTPException(400, f"unknown key {sec}.{k}")
+            # every switch: its type comes from config.default.json, the one list (Richtlinie Teil 17)
+            if isinstance(defaults[sec][k], bool) and not isinstance(new[sec][k], bool):
+                raise HTTPException(400, f"{k} must be true or false")
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
     if not new["api"]["key"] and not all(new[s].get("host") in ("127.0.0.1", "::1", "localhost") for s in ("asr", "tts")):
@@ -551,16 +554,6 @@ def validate(new):
     if not isinstance(books, list) or len(books) > kiwix.MAX_BOOKS \
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
-    for k in ("agent", "agent_mcp", "agent_watch", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages_all", "messages_announce", "pebble",
-              "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "tagebuch", "status_voice", "undo_voice", "berater_why", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
-              "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http", "esp32_stop",
-              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_media", "verbund_groups", "chats_calls", "calls_turn", "android_live", "android_update",
-              "svc_watch", "svc_watch_users", "wartung", "wartung_auto", "berater", "berater_explain", "berater_chat", "berater_notify",
-              "berater_issue", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
-              "storage_own", "storage_lan", "storage_folder", "storage_offload", "nas_on", "nas_sources", "nas_shared", "nas_drop", "nas_status"):
-        if not isinstance(ch.get(k, False), bool):
-            raise HTTPException(400, f"{k} must be true or false")
     for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24), ("memory_stale_months", 1, 60, 6),
                          ("nas_max_docs", 100, 20000, 5000), ("nas_sources_every", 15, 1440, 30), ("nas_drop_every", 5, 1440, 15),
                          ("nas_full_pct", 50, 99, 90), ("nas_temp_max", 40, 90, 60)):
@@ -636,15 +629,6 @@ def validate(new):
         ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
         ports += [t["engine_port"], t["voicedesign_port"]]
-    if not isinstance(new["panel"].get("allow_lan", False), bool):
-        raise HTTPException(400, "allow_lan must be true or false")
-    # unused since V01.0.338 (the Notaus is for admins only); kept so saved settings stay valid
-    if not isinstance(new["panel"].get("notaus_profiles", False), bool):
-        raise HTTPException(400, "notaus_profiles must be true or false")
-    if not isinstance(new["panel"].get("notaus_auto", False), bool):
-        raise HTTPException(400, "notaus_auto must be true or false")
-    if not isinstance(new["panel"].get("update_night", False), bool):
-        raise HTTPException(400, "update_night must be true or false")
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
@@ -680,8 +664,6 @@ def validate(new):
     if im["max_side"] % 64:
         raise HTTPException(400, "image max_side: a multiple of 64")
     w = new["watch"]
-    if not isinstance(w.get("watchdog"), bool):
-        raise HTTPException(400, "watch watchdog must be true or false")
     if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
         raise HTTPException(400, "watch warn_gib must be 2..64")
     lg = new["logs"]
@@ -689,11 +671,6 @@ def validate(new):
         raise HTTPException(400, "logs max_mb must be 50..20000")
     if not isinstance(lg["keep_days"], int) or not 1 <= lg["keep_days"] <= 365:
         raise HTTPException(400, "logs keep_days must be 1..365")
-    if not isinstance(lg.get("trace", False), bool):
-        raise HTTPException(400, "logs trace must be true or false")
-    for k in ("live", "live_monitor", "live_names"):   # Zustand → Live and the monitor page (live.py)
-        if not isinstance(lg.get(k, False), bool):
-            raise HTTPException(400, f"logs {k} must be true or false")
     if isinstance(lg.get("live_screens", 3), bool) or not isinstance(lg.get("live_screens", 3), int) or not 1 <= lg.get("live_screens", 3) <= 5:
         raise HTTPException(400, "logs live_screens must be 1..5")
     ch = new["chat"]
@@ -757,18 +734,9 @@ def validate(new):
         raise HTTPException(400, "face: " + " or ".join(FACES))
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
-    for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "bilder", "docling", "search_check", "search_check_auto", "rerank", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
-              "usage_count", "usage_quota", "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
-              "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
-              "systemone_klage"):
-        if not isinstance(ch.get(k, False), bool):
-            raise HTTPException(400, f"chat {k} must be true or false")
     for k in ("doc_night_from", "doc_night_to", "dev_updates_night_at"):
         if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", str(ch.get(k, "01:00"))):
             raise HTTPException(400, f"{k}: HH:MM")
-    if not isinstance(ch.get("doc_night", False), bool):
-        raise HTTPException(400, "chat doc_night must be true or false")
     pw = ch.get("person_priority_wait", 2)
     if isinstance(pw, bool) or not isinstance(pw, (int, float)) or not 0 <= pw <= 5:
         raise HTTPException(400, "person_priority_wait: 0 to 5 seconds")

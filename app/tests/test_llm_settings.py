@@ -13,6 +13,7 @@ helpers.start()
 import panel  # noqa: E402
 import profiles  # noqa: E402
 import chat  # noqa: E402
+import core  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -137,7 +138,7 @@ class Preview(unittest.TestCase):
     def test_admin_only_and_rules_fixed(self):
         self.assertIn(TestClient(panel.app).get("/api/admin/prompt").status_code, (401, 403))
         d = ADMIN.get("/api/admin/prompt").json()
-        self.assertEqual(d["default"], json.load(open(chat.DEFAULTS))["chat"]["system_prompt"])
+        self.assertEqual(d["default"], json.load(open(core.DEFAULTS))["chat"]["system_prompt"])
         rules = [p for p in d["parts"] if p["text"] == chat.TOOL_RULES]
         self.assertEqual(len(rules), 1)
         self.assertTrue(rules[0]["fixed"])

@@ -869,6 +869,21 @@ def face_of(uid, chat):
     return spark if spark in FACES else "robot"
 
 
+# profile keys that are gone (Freigabe vereinfachen, App-Gleichstand …): the one list; never stored again, and what
+# older apps or pages still send is ignored (iphone.py). A key removed from SETTINGS comes here (Richtlinie Teil 17).
+GONE = frozenset((
+    "agent_on", "android_on", "app_accounts", "app_admin", "app_auto", "app_docs_edit", "app_mine", "app_on",
+    "app_security", "app_voice", "berater_ask", "berater_me", "chats_on", "con_on", "desk_on", "devup_on",
+    "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_originals",
+    "doc_pictures", "doc_semantic", "doc_shared", "esp_on", "esp_stop", "fix_learn", "images_on", "instant_ack",
+    "kiwix_on", "klaeren", "klaeren_merken", "local_first", "mcps_on", "mem_ask", "mem_check", "mem_topics",
+    "msg_announce", "my_status", "mymcp_on", "par_on", "pebble_on", "prefetch", "pro_ha_voice", "rate_on",
+    "report_on", "rm_ask", "rm_folders", "rm_fresh", "rm_guide", "rm_meet", "rm_on", "rm_paper", "rm_send",
+    "rm_todo", "rm_web", "roles_on", "room_remote", "route", "spark_help", "spk_code", "storage_on", "svc_hint",
+    "sync_live", "sync_offline", "sync_one", "systemone_on", "tagebuch_on", "tasks_on", "tips_on", "tool_think",
+    "transit_on", "why_on", "wiki_on", "write_apps", "write_on", "wx_on"))
+
+
 def clean_settings(d):
     """Only known keys with valid values."""
     d = d if isinstance(d, dict) else {}

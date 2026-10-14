@@ -169,17 +169,6 @@ def forget(uid):
     shutil.rmtree(profiles._path(uid, "messages"), ignore_errors=True)
 
 
-# ---------------------------------------------------------------- the old mailbox into the chats (once)
-def _open_bytes(data):
-    if not data.startswith(b"enc1:"):
-        return data
-    f = vault._key()
-    try:
-        return f.decrypt(data[5:]) if f else b""
-    except Exception:
-        return b""
-
-
 def migrate(uid):
     """The old mailbox of uid (before V01.0.488) into the chats with each sender: the text with its time, "an alle:"
     in front of a message to everybody, a voice message as 🎤 and the text the speech recognition wrote. Then the

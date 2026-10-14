@@ -17,6 +17,7 @@ import time
 import httpx
 
 import calendars
+from common import no_think
 import profiles
 import features
 import verbrauch
@@ -80,7 +81,7 @@ async def extract(ccfg, model, name, correction, said_before, outside):
     except (httpx.HTTPError, ValueError, KeyError, IndexError) as e:
         print("fixes: no lesson:", type(e).__name__, flush=True)
         return ""
-    text = re.sub(r"(?s)<think>.*?</think>", "", text)
+    text = no_think(text)
     m = re.search(r"\{.*\}", text, re.S)
     try:
         fact = json.loads(m.group(0)).get("fact", "") if m else ""

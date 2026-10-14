@@ -12,7 +12,6 @@ import re
 import time
 
 import mail
-import profiles
 import features
 
 DAYS = 14

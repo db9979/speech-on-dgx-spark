@@ -36,7 +36,6 @@ Rules (fixed, not decided by the model):
     USERS_DIR/<uid>/mcp-dienste-pending.json  the action waiting for a yes (15 minutes)
     STATE/mcp-dienste-admin.json             {"hosts": [allowed host names], "blocked": [{"uid", "host"}]}
 """
-import asyncio
 import base64
 import hashlib
 import hmac

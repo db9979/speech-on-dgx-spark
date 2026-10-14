@@ -72,7 +72,7 @@ import verbrauch
 import profiles
 import schreib
 import signatur
-from common import load_config
+from common import load_config, no_think
 from core import assistant, auth, browser_profile, confirm_code
 
 router = APIRouter()
@@ -1751,7 +1751,7 @@ def meet_start(uid, did, now=None):
 
 def parse_meeting(raw, zone, now):
     """{"summary", "tasks"} from the model's answer, every value checked; a broken answer keeps its text."""
-    s = re.sub(r"(?s)<think>.*?</think>", "", str(raw or "")).strip()
+    s = no_think(str(raw or "")).strip()
     m = re.search(r"(?s)\{.*\}", s)
     d = None
     if m:

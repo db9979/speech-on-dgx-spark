@@ -17,7 +17,7 @@ import httpx
 import hintergrund
 import profiles
 import vorrang
-from common import load_config
+from common import load_config, no_think
 
 EVERY = 7 * 86400
 MIN_FACTS = 6          # fewer facts: nothing worth tidying
@@ -67,7 +67,7 @@ def drop(uid):
 def parse(text, facts):
     """The model's answer checked against the real facts: only known ids, each once, merges of at
     least two facts with a non-empty text. Returns {"merge": [...], "drop": [...]}."""
-    text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
+    text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
         data = json.loads(m.group(0)) if m else {}

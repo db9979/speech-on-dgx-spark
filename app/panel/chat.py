@@ -16,8 +16,8 @@ from fastapi.responses import StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from textnorm import SECRET_HINT, guess_language, hide_secrets, plain_markdown, speakable, speech_markdown  # noqa: E402
-import documents  # noqa: E402
-import speakers  # noqa: E402
+import documents  # noqa: E402,F401  (loaded before chat on purpose)
+import speakers  # noqa: E402,F401  (loaded before chat on purpose)
 import calendars  # noqa: E402
 import logfilter  # noqa: E402
 import profiles  # noqa: E402
@@ -34,7 +34,7 @@ import extras  # noqa: E402
 import guard  # noqa: E402
 import images  # noqa: E402
 import netguard  # noqa: E402
-import proactive  # noqa: E402
+import proactive  # noqa: E402,F401  (loaded before chat on purpose)
 import watch  # noqa: E402
 import chat_tools  # noqa: E402  (the tool calls of one answer)
 import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
@@ -52,7 +52,7 @@ import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
 from common import load_config, no_think  # noqa: E402
-from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
+from core import admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
 

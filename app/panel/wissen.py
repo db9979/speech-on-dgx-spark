@@ -54,7 +54,7 @@ import hintergrund
 import profiles
 import vorrang
 import features
-from common import load_config
+from common import load_config, no_think
 from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
@@ -362,7 +362,7 @@ async def make_brief(text):
                                json=payload, headers=headers)
         r.raise_for_status()
         out = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    out = re.sub(r"<think>.*?</think>", "", out, flags=re.S)
+    out = no_think(out)
     m = re.search(r"\{.*\}", out, re.S)
     if not m:
         raise ValueError("no JSON in the answer")
@@ -393,7 +393,7 @@ async def read_page(jpeg):
                                json=payload, headers=headers)
         r.raise_for_status()
         text = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
-    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
+    text = no_think(text).strip()
     if not text:
         raise ValueError("empty answer")
     return text[:40000]

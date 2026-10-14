@@ -23,7 +23,6 @@ import re
 import time
 
 import features
-import profiles
 
 MAX_JOBS = 3
 JOB_SECONDS = 5
