@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.569** Status → Monitoring as tiles: "Now" and "Today" with icon, large number and colour, every Today tile jumps to its place, the other cards as "Areas"; iPhone with a "Today" section
 - **V01.0.568** Chats with other Sparks V2: photos, files and voice messages go too (the receiver checks them and makes them anew), and groups can take in people on other Sparks (text only for now); two new admin switches, both off
 - **V01.0.567** Painting pictures with FLUX.2 klein on the Spark: optional at install (--bild), Me → Pictures and in the conversation, fixed rules, image check, every picture marked as AI-made
 - **V01.0.566** GitHub token row folds once the token works
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.562** Tests green again: the jump link test and the Features page height budget follow the immediate Status poll and the new "Verbrauchszähler" line
 - **V01.0.561** Live: boxes under "Services and targets" keep their text in the normal view too
 - **V01.0.560** Maintenance pause by itself when a model restarts; speakers play the maintenance sentence; page in the iPhone app
-- **V01.0.559** Security fix for calls: the system's coturn service is masked and stopped on every update, coturn is installed reliably, the relay starts again (AF_NETLINK), the panel says when coturn is missing
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.569** · 2026-10-14 · Zustand → Monitoring als Kacheln: „Jetzt“ und „Heute“ mit Symbol, großer Zahl und Farbe, jede Heute-Kachel springt zu ihrer Stelle, übrige Karten als „Bereiche“; iPhone mit Abschnitt „Heute“
 - **V01.0.568** · 2026-10-14 · Chats mit anderen Sparks V2: Fotos, Dateien und Sprachnachrichten gehen mit (der Empfänger prüft und macht sie neu), und Gruppen können Personen auf anderen Sparks aufnehmen (bisher nur Text); zwei neue Admin-Schalter, beide aus
 - **V01.0.567** · 2026-10-14 · Bilder malen mit FLUX.2 klein (Stufe 0 und 1): Option install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4 baut stable-diffusion.cpp (fester Commit, CUDA) und lädt das Modell mit SHA-256; Dienst speech-spark-bild nur auf 127.0.0.1, lädt beim ersten Bild, entlädt nach Ruhe; Admin-Schalter Funktionen → Bilder malen mit „Bild testen“; Ich → Bilder und Werkzeug bild_malen (Weiche „bild“), Wortliste, keine bekannten Personen, Bildprüfung, KI-Kennzeichnung; Live, Logs, Dienst-Wächter, Wartungspause-Teil „bild“, Verbrauchszähler, Technik-Kasten mit Knoten-Seite
 - **V01.0.566** · 2026-10-14 · GitHub-Token unter Einstellungen → Update: funktioniert er, zeigt die Zeile nur noch „gesetzt, geprüft ✓“ mit Ändern und Entfernen
