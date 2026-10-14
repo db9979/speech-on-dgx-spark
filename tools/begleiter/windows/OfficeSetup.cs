@@ -24,6 +24,7 @@ internal static class OfficeSetup
     private const string Resource = "SparkBegleiter.SparkOutlook.dll";
     private const string OutlookAddins = @"Software\Microsoft\Office\Outlook\Addins\" + ProgId;
     private const string Wef = @"Software\Microsoft\Office\16.0\WEF\Developer";
+    private const string Resiliency = @"Software\Microsoft\Office\16.0\Outlook\Resiliency";
     private const string WefPrefix = "SparkSchreibhilfe";
     public const string SideloadPage = "https://aka.ms/olksideload";
 
@@ -105,10 +106,51 @@ internal static class OfficeSetup
             }
         }
 
+        ForgetOutlookBlock();
         using RegistryKey addin = Registry.CurrentUser.CreateSubKey(OutlookAddins);
         addin.SetValue("FriendlyName", "Spark");
         addin.SetValue("Description", "Knopf „Spark“: verbessern, Antwort entwerfen, übersetzen (über den Spark-Begleiter)");
         addin.SetValue("LoadBehavior", 3, RegistryValueKind.DWord);
+    }
+
+    /// <summary>
+    /// Hat Outlook das Spark-Add-in einmal gesperrt (nach einem Hänger oder Absturz, „Deaktivierte Elemente“), bleibt
+    /// es aus, auch wenn man das Häkchen setzt. Beim Einrichten nur die Sperren für Spark aufheben, andere Add-ins nicht.
+    /// </summary>
+    internal static void ForgetOutlookBlock()
+    {
+        using RegistryKey? res = Registry.CurrentUser.OpenSubKey(Resiliency, writable: true);
+        if (res is null)
+        {
+            return;
+        }
+
+        using (RegistryKey? crashing = res.OpenSubKey("CrashingAddinList", writable: true))
+        {
+            crashing?.DeleteValue(ProgId, throwOnMissingValue: false);
+        }
+
+        using RegistryKey? disabled = res.OpenSubKey("DisabledItems", writable: true);
+        if (disabled is null)
+        {
+            return;
+        }
+
+        foreach (string name in disabled.GetValueNames())
+        {
+            if (disabled.GetValue(name) is byte[] data && IsOurs(data))
+            {
+                disabled.DeleteValue(name, throwOnMissingValue: false);
+            }
+        }
+    }
+
+    /// <summary>Ein Eintrag unter DisabledItems nennt Pfad oder ProgId des Add-ins in UTF-16.</summary>
+    internal static bool IsOurs(byte[] data)
+    {
+        string text = System.Text.Encoding.Unicode.GetString(data);
+        return text.Contains(AddinName + ".dll", StringComparison.OrdinalIgnoreCase)
+            || text.Contains(ProgId, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Word und Excel: die Manifeste ablegen und eintragen (wirkt beim nächsten Start).</summary>

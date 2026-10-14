@@ -1282,6 +1282,34 @@ class Office(unittest.TestCase):
         self.assertIn("catch (Exception)", ui)
         self.assertIn("Startet Outlook danach nicht", self.src("windows", "TrayContext.Office.cs"))
 
+    def test_setup_lifts_only_outlooks_block_on_spark(self):
+        """Dominik 2026-10-14: after the hang Outlook kept Spark disabled; setting up again lifts that block, for
+        Spark only (other add-ins stay as Outlook left them)."""
+        setup = self.src("windows", "OfficeSetup.cs")
+        install = setup[setup.index("public static void InstallClassic"):setup.index("internal static void ForgetOutlookBlock")]
+        self.assertIn("ForgetOutlookBlock();", install)
+        forget = setup[setup.index("internal static void ForgetOutlookBlock"):setup.index("public static void InstallWeb")]
+        self.assertNotIn("DeleteSubKeyTree", forget)
+        self.assertNotIn("DeleteSubKey(", forget)
+        self.assertIn("IsOurs(data)", forget)
+        self.assertIn('crashing?.DeleteValue(ProgId', forget)
+        self.assertIn('AddinName + ".dll"', forget)
+
+    def test_draft_never_hides_outlooks_question(self):
+        """Dominik 2026-10-14: "Antwort entwerfen" looked frozen. Reply() waits for Outlook's own question
+        ("Externe Inhalte herunterladen?"), which lay behind the topmost companion window. Before Reply() the window
+        drops TopMost, says what to do, paints that and brings Outlook forward; while the Spark writes, seconds count."""
+        mail = self.src("windows", "OutlookMail.cs")
+        run = mail[mail.index("private async Task RunAsync()"):mail.index("private void ShowAnswer(")]
+        before = run[:run.index("_outlook.OpenReply(answer);")]
+        tail = before[before.rindex("if (_outlook is not null)"):]
+        for step in ("TopMost = false;", "bitte dort antworten", "Update();", "OutlookMail.BringOutlookForward();"):
+            self.assertIn(step, tail)
+        self.assertIn("StartClock();", run)
+        self.assertIn("StopClock();", run[run.index("finally"):])
+        self.assertIn("SetForegroundWindow", mail[mail.index("public static void BringOutlookForward"):])
+        self.assertIn("_clock.Stop();", mail[mail.index("protected override void OnFormClosing"):])
+
     def test_mac_sets_up_word_and_excel_only_on_request(self):
         office = self.src("mac", "Sources", "Office.swift")
         model = self.src("mac", "Sources", "Model.swift")

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.545** Begleiter hebt Outlooks Sperre fürs Spark-Add-in auf, „Antwort entwerfen“ hängt nicht mehr hinter Outlooks Frage
 - **V01.0.544** Persönliches bleibt beim Profil: Briefing und Spark-Tagebuch nicht für eine erkannte Stimme am fremden Gerät, Lautsprecher liest Nachrichten nur der erkannten Stimme vor, Verwalter sieht nur eigene Meldungs-Entwürfe, Smart-Home-Sätze nicht mehr im Log
 - **V01.0.543** Lizenz jetzt FSL-1.1-MIT: frei für dich, Familie, Freunde, Lehre und Forschung, kein Konkurrenzverkauf; jede Version wird nach zwei Jahren MIT
 - **V01.0.542** Postfach aufräumen: Modus-Zeile erklärt Aus, Vorschau, Sicher und Voll; Umschalten klappt wieder mit zweitem Anmeldeschritt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.538** Hinweise „neu freigegeben“ nur bei echtem Einrichten, verschwinden danach; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** Outlook classic startet mit dem Spark-Add-in wieder
 - **V01.0.536** Tests wieder grün: der Test der Modell-Liste beginnt mit einer frischen Minute ihres Abruflimits
-- **V01.0.535** Zustand der NAS: Belegung, RAID, Festplatten und Temperatur der Synology, Hinweise an die Admins, Frage per Sprache; Wissensordner lesen Dokumente vor Bildern
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

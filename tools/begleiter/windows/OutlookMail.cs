@@ -89,6 +89,32 @@ internal sealed class OutlookMail : IDisposable
     }
 
     /// <summary>Antwort-Entwurf öffnen: Text über das Zitat der Originalmail, dann anzeigen. Nie senden.</summary>
+    /// <summary>
+    /// Outlook nach vorn holen, bevor der Entwurf entsteht: Reply() kann eine Outlook-Frage öffnen
+    /// (z. B. „Externe Inhalte herunterladen?“) und wartet, bis sie beantwortet ist. Ohne das läge die Frage
+    /// hinter dem Begleiter und alles wirkte eingefroren.
+    /// </summary>
+    public static void BringOutlookForward()
+    {
+        foreach (var process in System.Diagnostics.Process.GetProcessesByName("OUTLOOK"))
+        {
+            using (process)
+            {
+                IntPtr window = process.MainWindowHandle;
+                if (window != IntPtr.Zero)
+                {
+                    if (NativeMethods.IsIconic(window))
+                    {
+                        _ = NativeMethods.ShowWindow(window, 9); // SW_RESTORE
+                    }
+
+                    _ = NativeMethods.SetForegroundWindow(window);
+                    return;
+                }
+            }
+        }
+    }
+
     public void OpenReply(string answer)
     {
         if (_item is null)
@@ -277,6 +303,8 @@ internal sealed class MailForm : ThemedForm
     private Rectangle _title;
     private CancellationTokenSource? _cts;
     private bool _done;
+    private readonly System.Windows.Forms.Timer _clock = new() { Interval = 1000 };
+    private DateTime _started;
 
     /// <param name="outlook">Die gelesene Mail aus dem klassischen Outlook, oder <c>null</c> (Ausweichweg).</param>
     /// <param name="selection">Ausweichweg: markierter Text aus dem Programm im Vordergrund.</param>
@@ -331,6 +359,7 @@ internal sealed class MailForm : ThemedForm
 
         _go.Click += async (_, _) => await RunAsync();
         _cancel.Click += (_, _) => Close();
+        _clock.Tick += (_, _) => ShowClock();
         _copy.Click += (_, _) => SetStatus(ClipboardHelper.TrySetText(_answer.Text, keepOutOfHistory: false)
             ? "Kopiert. In die Antwort einfügen (Strg+V)." : "Die Zwischenablage ist gerade gesperrt.", error: false);
 
@@ -453,7 +482,7 @@ internal sealed class MailForm : ThemedForm
         _notes.ReadOnly = true;
         _mail.ReadOnly = true;
         RefreshMics();
-        SetStatus("Der Spark schreibt die Antwort …", error: false);
+        StartClock();
         _cts = new CancellationTokenSource();
         try
         {
@@ -465,6 +494,13 @@ internal sealed class MailForm : ThemedForm
 
             if (_outlook is not null)
             {
+                // Reply() wartet, falls Outlook erst fragt (z. B. „Externe Inhalte herunterladen?“): dann darf
+                // der Begleiter nicht davorliegen, und der Hinweis steht schon da, bevor Outlook antwortet.
+                StopClock();
+                TopMost = false;
+                SetStatus("Outlook öffnet den Entwurf … Fragt Outlook etwas (z. B. „Externe Inhalte herunterladen?“), bitte dort antworten.", error: false);
+                Update();
+                OutlookMail.BringOutlookForward();
                 try
                 {
                     _outlook.OpenReply(answer);
@@ -474,6 +510,7 @@ internal sealed class MailForm : ThemedForm
                 catch (InvalidOperationException ex)
                 {
                     // Outlook wollte nicht: dann wie beim neuen Outlook über die Zwischenablage.
+                    TopMost = true;
                     ShowAnswer(answer, ex.Message + " ");
                     return;
                 }
@@ -487,6 +524,7 @@ internal sealed class MailForm : ThemedForm
         }
         catch (SparkException ex)
         {
+            StopClock();
             if (!IsDisposed)
             {
                 SetStatus(ex.Message, error: true);
@@ -500,9 +538,26 @@ internal sealed class MailForm : ThemedForm
         }
         finally
         {
+            StopClock();
             _cts?.Dispose();
             _cts = null;
         }
+    }
+
+    /// <summary>Sekunden mitzählen, solange der Spark schreibt – das Fenster zeigt, dass es arbeitet.</summary>
+    private void StartClock()
+    {
+        _started = DateTime.UtcNow;
+        ShowClock();
+        _clock.Start();
+    }
+
+    private void StopClock() => _clock.Stop();
+
+    private void ShowClock()
+    {
+        int seconds = (int)(DateTime.UtcNow - _started).TotalSeconds;
+        SetStatus($"Der Spark schreibt die Antwort … {seconds} s · „Abbrechen“ beendet das.", error: false);
     }
 
     private void ShowAnswer(string answer, string prefix)
@@ -561,6 +616,7 @@ internal sealed class MailForm : ThemedForm
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _cts?.Cancel();
+        _clock.Stop();
         _mics.ForEach(m => m.Dispose());
         base.OnFormClosing(e);
     }
@@ -569,6 +625,7 @@ internal sealed class MailForm : ThemedForm
     {
         if (disposing)
         {
+            _clock.Dispose();
             _outlook?.Dispose();
         }
 
