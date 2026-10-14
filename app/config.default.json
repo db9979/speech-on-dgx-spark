@@ -163,6 +163,7 @@
     "calendar": true,
     "mail": false,
     "mail_tidy": false,
+    "mail_style": false,
     "weather": false,
     "weather_url": "https://api.open-meteo.com/v1/forecast",
     "geocode_url": "https://geocoding-api.open-meteo.com/v1/search",

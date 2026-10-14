@@ -207,6 +207,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
+| `app/panel/mailstil.py` | Mailstil: the Spark learns from the profile's own sent mails how it writes (greeting, sign-off, du or Sie, length, tone, typical phrases) and writes mail dra … |
 | `app/panel/mcp.py` | Outside tools over MCP (Model Context Protocol): the admin adds a tool server (Paperless, Nextcloud, GitHub ...) by its address, and the panel offers single … |
 | `app/panel/mcpserver.py` | The Spark as an MCP server: other programs (Open WebUI, n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Context Protocol at /mcp. |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil. |
@@ -379,6 +380,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/nasablage.json` | Filing folder of the profile | Settings | – | yes | – |
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
+| `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/calendar.json` | Calendar account | Login | password sealed | yes | – |
 | `users/ID/homeassistant.json` | Home Assistant account | Login | token sealed | yes | – |
 | `users/ID/telegram.json` | Telegram link | Login | – | yes | – |

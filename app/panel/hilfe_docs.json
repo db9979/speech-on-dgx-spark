@@ -3572,6 +3572,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Mailstil lernen",
+"text": "Mailstil lernen (mailstil.py, Funktionen → Post und Kontakte → „Mailstil lernen“, chat.mail_style, standardmäßig aus; braucht „E-Mail lesen“; freigegeben für jedes Profil, Gäste nie): Unter *Ich → E-Mail → Mein Mailstil* liest „Stil lernen“ den Ordner „Gesendet“ der gewählten Postfächer nur lesend (EXAMINE und BODY.PEEK, nichts wird markiert, verschoben oder gelöscht), höchstens die neuesten 200 Mails der letzten 12 Monate. Das Panel schneidet Zitate, „Am … schrieb“, weitergeleitete Teile, Signaturen und „Gesendet von meinem iPhone“ mit festen Mustern weg und teilt jede Mail nach festen Regeln einer Gruppe zu: „Sehr geehrte“, „Guten Tag“ oder „Sie“ → Beruflich, „du“ oder „Hallo/Hi/Liebe“ → Privat, die erste Mail an jemanden zusätzlich → Unbekannt. Anrede (du, Sie, gemischt) und Länge (Mittelwert der Wörter) zählt das Panel selbst. Das Sprachmodell bekommt je Gruppe höchstens 40 eigene Texte zwischen <<<MAIL und MAIL>>> als Daten, ohne Werkzeuge, im Hintergrund mit Vorrang für Sprache, und füllt nur ein festes Raster: Begrüßung (Namen werden zu {Name}), Gruß, Ton (locker, freundlich, sachlich, förmlich), bis 8 typische Wendungen, bis 4 Eigenheiten. Jedes Feld prüft das Panel; Adress"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Mailstil lernen",
+"text": "en, Zahlen, Links und Marken fallen weg, nichts wird repariert. Gespeichert wird nur diese Zusammenfassung in users/<p>/mailstil.json (bleibt auf dem Spark), Empfänger nur als gesalzene Prüfsumme, nie eine Mail. Jedes Feld lässt sich mit „Ändern“ anpassen und bleibt beim nächsten Lernen stehen; „⋯ → Mailstil löschen“ und „Daten löschen“ entfernen alles. Gelernt wird nur auf Knopfdruck. Wirkt in Mail-Entwürfen: per Sprache und im Chat formt mail_draft den Entwurf nach dem Stil der Gruppe des Empfängers um (bei Fehler bleibt der Entwurf, wie er war), und „Antwort entwerfen“ im Begleiter (Outlook classic, Mac Mail, Outlook-Knopf „Antwort“) bekommt den Stil als <<<STIL … STIL>>> (nur Form und Ton); die Gruppe sucht das Panel über die Zeile „Von:“, unbekannte Absender bekommen „Unbekannt“ und die Anrede, die ihre Mail verwendet. \"stil\": false in /api/write/assist schreibt einmal ohne. Schreibhilfe-Seite, Word, Excel und Browser bleiben ohne. Logs nur mit festen Wörtern: mailstil: gelernt … postfaecher=1 mails=180 gruppen=3, mailstil: abgebrochen grund=kein_gesendet_ordner, mailstil: benutzt weg=begleiter gruppe=beruflich. API (Profil): GET|PUT|DELETE /api/profile/mailstil, POST /api/pro"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Mailstil lernen",
+"text": "file/mailstil/learn. Plan: plaene/mailstil.md."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Schreibhilfe (V01.0.332, `schreib.py`)",
 "text": "Schreibhilfe (V01.0.332, schreib.py): Mails und andere Texte (auch aus Word, Excel, Pages) verbessern. Schalter: Funktionen → Post und Kontakte → „Schreibhilfe“ (Admin, aus); freigegeben gilt sie für jedes Profil, unter Ich → Schreibhilfe steht, was sie kann; Gäste nie. Auf der Seite Ich → Schreibhilfe: Text hineinkopieren, Art wählen (Korrigieren: nur Rechtschreibung, Grammatik, Zeichensetzung; Glätten; Kürzer; Freundlicher; Förmlicher; Übersetzen in Deutsch, Englisch, Französisch, Spanisch, Italienisch oder Niederländisch; Antwort entwerfen aus der erhaltenen Mail und eigenen Stichpunkten, fehlende Angaben kommen als [eckige Klammern]), optional ein freier Wunsch zur Form („mit Du“, Gruß). Beim Korrigieren, Glätten, Kürzen und Umformulieren zeigt das Panel jede Änderung farbig; die Änderungen rechnet das Panel selbst aus (Wortvergleich), nicht das Modell. „Kopieren“, „Als meinen Text übernehmen“ (für eine zweite Runde). Mit „Bilder erkennen“ liest „Aus Bild lesen“ oder ein mit Strg+V eingefügtes Bildschirmfoto den Text aus einem Bild (das Bild wird danach sofort verworfen). Mit „E-Mail lesen“, „Postfach aufräumen“ und dem Postfach-Schalter „Entwürfe“ legt „Als Entwurf ins Postfac"
 },
@@ -9694,6 +9718,22 @@
 "head": "Voice chat",
 "title": "Inbox tidying",
 "text": "nd under \"Folders and exceptions\", where they can also be added, renamed and removed. Only your answers and rules fill them, never the language model; \"Remove\" only takes them off the list and deletes their rules, folder and mail stay in the mailbox. Move a mail back into the inbox and it is not moved again, and the Spark asks. Brakes: at most 200 mails per run, and a run that would move more than half of at least 10 new mails stops and puts everything into the preview. Every move stays in the history for 30 days and can be undone. \"Old mail\" proposes once where the last 90 days belong; nothing moves until you press \"Move\". By voice: \"Tidy my inbox\", \"Move everything from Lidl to advertising\", \"Undo that\"; the assistant reads out a proposal and the panel carries it out only after your plain \"yes\". Reply drafts (per mailbox): \"Write Anna that I'm coming\" saves a draft in the drafts folder after your \"yes\"; you send it yourself in your mail app. Guests and other people's voices get no access."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Learn mail style",
+"text": "Learn mail style (mailstil.py, Features → Mail and contacts → \"Mailstil lernen\", chat.mail_style, off by default; needs reading e-mail; once released for every profile, never guests): under *Me → E-mail → My mail style*, \"Learn style\" reads the \"Sent\" folder of the chosen mailboxes read-only (EXAMINE and BODY.PEEK, nothing is marked, moved or deleted), at most the newest 200 mails of the last 12 months. The panel cuts quotes, \"On … wrote\", forwarded parts, signatures and \"Sent from my iPhone\" with fixed patterns and puts every mail into a group by fixed rules: \"Sehr geehrte\", \"Guten Tag\" or \"Sie\" → Work, \"du\" or \"Hallo/Hi/Liebe\" → Private, the first mail to someone also → Unknown. The panel counts the form of address (du, Sie, mixed) and the length (median of words) itself. The language model gets at most 40 own texts per group between <<<MAIL and MAIL>>> as data, without tools, in the background with speech first, and only fills a fixed form: greeting (names become {Name}), sign-off, tone (casual, friendly, matter-of-fact, formal), up to 8 typical phrases, up to 4 habits. The panel checks every field; addresses, numbers, links and marks are dropped, nothing is repaired. Only this "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Learn mail style",
+"text": "summary is kept in users/<p>/mailstil.json (stays on the Spark), recipients only as a salted hash, never a mail. Every field can be adjusted with \"Change\" and stays when it learns again; \"⋯ → Delete mail style\" and \"Delete data\" remove everything. It learns only when you press the button. It works in mail drafts: by voice and in the chat mail_draft reshapes the draft in the style of the recipient's group (on an error the draft stays as it was), and \"Draft a reply\" in the Begleiter (Outlook classic, Mac Mail, the Outlook button \"Antwort\") gets the style as <<<STIL … STIL>>> (form and tone only); the panel finds the group from the \"Von:\" line, unknown senders get \"Unknown\" and the form of address their mail uses. \"stil\": false in /api/write/assist writes once without it. The writing help page, Word, Excel and the browser stay without it. Logs only with fixed words: mailstil: gelernt … postfaecher=1 mails=180 gruppen=3, mailstil: abgebrochen grund=kein_gesendet_ordner, mailstil: benutzt weg=begleiter gruppe=beruflich. API (profile): GET|PUT|DELETE /api/profile/mailstil, POST /api/profile/mailstil/learn. Plan: plaene/mailstil.md."
 },
 {
 "lang": "en",

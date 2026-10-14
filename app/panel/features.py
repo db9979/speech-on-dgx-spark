@@ -245,6 +245,7 @@ FEATURES = (
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
+    F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="parbox", guide="parcels"),
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
     F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),

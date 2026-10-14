@@ -167,6 +167,7 @@ WITHOUT = {
     "mymcpjobs": "wirkt in Aufträgen",
     "mymcpoauth": "Anmeldung beim Dienst nur in der Oberfläche",
     "schreib": "das Modell formuliert selbst",
+    "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter Ich → E-Mail",
     "schreibapps": "Kanal in anderen Programmen",
     "begleitermeeting": "startet am Begleiter",
     "roomtv": "Verhalten im Raum-Modus",

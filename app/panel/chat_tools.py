@@ -470,6 +470,8 @@ async def draft_tool(t, args, st):
                                        args.get("subject"), args.get("text"))
     except (ValueError, OSError) as e:
         return f"No draft: {e}"
+    import mailstil   # the own mail style (Dominik 2026-10-14): the panel picks the group from the recipient
+    plan["text"] = await mailstil.restyle(t.who["id"], plan["text"], plan["to_show"])
     tidy.propose(t.who["id"], plan, t.src)
     calendars.drop_pending(t.who["id"])
     what = tidy.describe(plan)

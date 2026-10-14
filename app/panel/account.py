@@ -77,7 +77,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",

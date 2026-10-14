@@ -17,7 +17,8 @@ The text is data, never an instruction (fixed rules, the panel decides):
 - Notaus: stage 3 stops it (it is conversation), stage 2 stops the draft (it is an action)
 
     GET  /api/write             may this login use it, and what it offers
-    POST /api/write/assist      {"text", "art", "sprache"?, "mail"?, "wunsch"?} -> {"text", "diff", "changes", "ms"}
+    POST /api/write/assist      {"text", "art", "sprache"?, "mail"?, "wunsch"?, "stil"?} -> {"text", "diff", "changes", "ms"}
+                                ("stil": false = this reply without the own mail style, mailstil.py)
     POST /api/write/picture     {"id"} of a picture from POST /api/chat/image -> {"text"} (needs Bilder erkennen)
     POST /api/write/draft       {"to", "subject", "text"} -> {"folder", "to", "subject"}
 """
@@ -201,13 +202,17 @@ APP_HINT = {"outlook": "eine Mail in Outlook", "mail": "eine Mail", "word": "ein
             "chat": "eine Chat-Nachricht (locker und kurz)", "code": "ein Kommentar oder Text in einem Code-Editor"}
 
 
-def messages(art, text, mail, lang, wish, app=""):
+def messages(art, text, mail, lang, wish, app="", style=("", "")):
+    """style: (task line, <<<STIL block) of the profile's own mail style (mailstil.for_reply), only for the
+    Begleiter's reply draft."""
     task = ARTS[art][2].format(sprache=LANGS[lang][0])
     if app in APP_HINT:
         task += "\nDer Text ist " + APP_HINT[app] + "; passe Form und Ton daran an."
     if wish:
         task += "\nWunsch des Nutzers zur Form (nur Form und Ton, nichts anderes): " + wish
-    user = (f"<<<MAIL\n{unmark(mail)}\nMAIL>>>\n\n" if mail else "") + f"<<<TEXT\n{unmark(text)}\nTEXT>>>"
+    task += style[0]
+    user = (f"{style[1]}\n\n" if style[1] else "") + (f"<<<MAIL\n{unmark(mail)}\nMAIL>>>\n\n" if mail else "") \
+        + f"<<<TEXT\n{unmark(text)}\nTEXT>>>"
     return [{"role": "system", "content": SYSTEM.format(task=task)}, {"role": "user", "content": user}]
 
 
@@ -325,6 +330,10 @@ async def assist(uid, body, client="web", where="Browser", request=None):
     notaus.stop("gespraech")
     art, text, mail, lang, wish = request_of(body)
     app = body.get("_app") if body.get("_app") in APP_HINT else ""
+    style = ("", "")
+    if art == "antwort" and client == "desk":   # Mailstil: only the Begleiter's "Antwort entwerfen" (Dominik 2026-10-14)
+        import mailstil
+        style = mailstil.for_reply(uid, mail, body.get("stil") is not False)
     label, _, _, temperature, show = ARTS[art]
     chars = len(text) + len(mail)
     max_tokens = max(300, min(8000, int(len(text) / 2.2) + (900 if art == "antwort" else 300)))
@@ -336,7 +345,7 @@ async def assist(uid, body, client="web", where="Browser", request=None):
     ok = False
     try:
         with Slot(uid):
-            raw = await asyncio.wait_for(_model(messages(art, text, mail, lang, wish, app), temperature, max_tokens,
+            raw = await asyncio.wait_for(_model(messages(art, text, mail, lang, wish, app, style), temperature, max_tokens,
                                                 "Schreibhilfe"), SECONDS)
         new = tidy_answer(raw, text or mail)
         if not new:

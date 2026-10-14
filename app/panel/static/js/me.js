@@ -442,7 +442,7 @@ const MAILKIND={icloud:t('Benutzer: deine iCloud-Mailadresse. Passwort: ein neue
 function mailKind(){const k=$('mailkind').value;$('mailhint').textContent=MAILKIND[k];$('mailsrv').style.display=k==='other'?'':'none'}
 $('mailkind').onchange=mailKind;
 const mailMsg=(x,err,list)=>{const m=$('mailmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
-function mailRender(d){if(window.showMailTidy&&d&&TIDY&&d.accounts.length!==TIDY.accounts.length)showMailTidy().catch(()=>{});$('maillist').innerHTML=d.accounts.map(a=>`<li><span><b>${esc(a.name)}</b><br><small class="mut">${esc(a.user)} · ${esc(a.host)}</small></span><button class="b" ${onAttr('mailRemove',a.id,a.name)}>${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Postfach verbunden.','No mailbox connected yet.')}</li>`;
+function mailRender(d){if(window.showMailTidy&&d&&TIDY&&d.accounts.length!==TIDY.accounts.length)showMailTidy().catch(()=>{});if(window.showMailStil&&d&&MSTIL&&d.accounts.length!==MSTIL.boxes.length)showMailStil().catch(()=>{});$('maillist').innerHTML=d.accounts.map(a=>`<li><span><b>${esc(a.name)}</b><br><small class="mut">${esc(a.user)} · ${esc(a.host)}</small></span><button class="b" ${onAttr('mailRemove',a.id,a.name)}>${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Postfach verbunden.','No mailbox connected yet.')}</li>`;
   mailKind();$('mailtest').style.display=d.accounts.length?'':'none';$('mailadd').open=!d.accounts.length}
 async function showMail(){if(!MAIL_ON)return;mailRender(await (await api('/api/profile/mail')).json());mailMsg('')}
 async function mailRemove(id,name){if(!confirm(t('Postfach „','Remove mailbox "')+name+t('“ entfernen?','"?')))return;mailRender(await (await api('/api/profile/mail/'+encodeURIComponent(id),{method:'DELETE'})).json())}
@@ -546,7 +546,7 @@ function meLoadOnce(){if(!PROFILE)return;return ME_LOAD.p=meLoad().finally(()=>{
 // the profile's login has ended, still signs out (before: any error looked like being signed out).
 // [box, load, quiet]: quiet boxes stay silent on an error, as they were before
 async function meLoad(){let out=false;
-  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['calbox',showCal],['mailbox',async()=>{await showMail();await showMailTidy().catch(()=>{})}],
+  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['calbox',showCal],['mailbox',async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])}],
     ['habox',showHa],['secbox',showSecurity],['logbox',showToolLog],['probox',showPro,1],['pushbox',showPush,1]].concat(typeof extrasJobs==='function'?extrasJobs():[]);
   await lzPool(jobs.map(([id,f,quiet])=>()=>lzb($(id),f,{auth:true,quiet:!!quiet}).catch(e=>{if(e&&e.status===401)out=true})),4);
   if(out){setProfile(null);openMe('loginbox');return}

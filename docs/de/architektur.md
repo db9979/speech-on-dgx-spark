@@ -207,6 +207,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/mail.py` | Mail lesen per IMAP |
+| `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
 | `app/panel/mcp.py` | Werkzeuge von MCP-Servern, die der Admin einträgt |
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
@@ -379,6 +380,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/nasablage.json` | Ablage-Ordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
+| `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang | Login | Passwort versiegelt | ja | – |
 | `users/ID/homeassistant.json` | Home-Assistant-Zugang | Login | Token versiegelt | ja | – |
 | `users/ID/telegram.json` | Telegram-Kopplung | Login | – | ja | – |
