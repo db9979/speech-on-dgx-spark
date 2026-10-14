@@ -371,6 +371,11 @@ READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report
          "docling": _docling_set_up}                          # the Docling server needs its address
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
+# a profile's own stored data of a function, registered by the module that keeps it: key -> (count(uid) -> int,
+# clear(uid) -> None or an awaitable). While the admin blocks the function for the profile, Ich shows only „Daten
+# löschen“ in place of its page (account.whoami "locked", DELETE /api/profile/owndata/{key}; Dominik 2026-10-14).
+# count is a number of entries, never contents; clear removes exactly what the function's own delete routes remove.
+OWN = {}
 # the second step a profile still owes before using a function (join.py, new profiles by invitation):
 # function(uid, key) -> bool, set by join.py
 DUTY = None

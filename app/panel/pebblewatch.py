@@ -196,10 +196,23 @@ async def profile_pair(request: Request, prof=Depends(_on)):
 def profile_remove(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in watches(prof["id"])):
         raise HTTPException(404, "no such watch")
-    profiles.delete_device(did)
+    _remove(did)
     print("pebble: watch removed for", profiles.log_name(prof), flush=True)
-    _live_mark("Eingang", "Pebble-Uhr entfernt")
     return profile_get(prof)
+
+
+def _remove(did):
+    profiles.delete_device(did)
+    _live_mark("Eingang", "Pebble-Uhr entfernt")
+
+
+def _clear(uid):
+    for x in watches(uid):
+        _remove(x["id"])
+
+
+# own data for Ich while the admin blocks the Pebble watch for the profile (features.OWN): its paired watches
+features.OWN["pebble"] = (lambda uid: len(watches(uid)), _clear)
 
 
 @router.post("/api/pebble/pair")

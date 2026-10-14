@@ -329,11 +329,19 @@ def api_delete(request: Request, prof=Depends(browser_profile)):
     """Removes the profile's stop and commute: its own data, so also while the admin switched it off or blocked it."""
     import guard
     guard.limit(request, "features", prof["id"])
+    forget(prof["id"])
+    return get(prof["id"])
+
+
+def forget(uid):
     try:
-        os.remove(_file(prof["id"]))
+        os.remove(_file(uid))
     except OSError:
         pass
-    return get(prof["id"])
+
+
+# own data for Ich while the admin blocks transit for the profile (features.OWN): stop and commute, 1 or 0
+features.OWN["transit"] = (lambda uid: int(os.path.exists(_file(uid))), forget)
 
 
 @router.post("/api/profile/transit/find", dependencies=[Depends(assistant), Depends(_on)])

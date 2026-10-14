@@ -676,9 +676,17 @@ async def api_key_new(request: Request, prof=Depends(secret_profile)):
 
 @router.delete("/api/profile/ha-events/key", dependencies=[Depends(assistant)])
 def api_key_delete(prof=Depends(browser_profile)):
-    for x in _keys(prof["id"]):
-        profiles.delete_device(x["id"])
+    _clear(prof["id"])
     return {"ok": True}
+
+
+def _clear(uid):
+    for x in _keys(uid):
+        profiles.delete_device(x["id"])
+
+
+# own data for Ich while the admin blocks „Home Assistant meldet an Spark“ for the profile (features.OWN): its keys
+features.OWN["haevent"] = (lambda uid: len(_keys(uid)), _clear)
 
 
 @router.post("/api/profile/ha-events/test", dependencies=[Depends(assistant)])

@@ -298,6 +298,7 @@ ADMIN_ON_OK = {
     "account.py:whoami": "page flags: admin switch and not features.blocked for the profile",
     "account.py:profile_voice": "display flag: admin switch and not features.blocked",
     "account.py:_allow": "display flags: admin switch and not features.blocked",
+    "account.py:_locked": "„Daten löschen“ card: only released functions that are features.blocked for the profile",
     "admin.py:glance": "admin overview",
     "agent.py:admin_on": "Spark switch; per profile agent.level (block and granted level)",
     "android.py:admin_on": "Spark switch; per profile android.allowed / profile_on",

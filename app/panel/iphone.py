@@ -251,10 +251,23 @@ async def profile_pair(request: Request, prof=Depends(_on)):
 def profile_remove(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in phones(prof["id"])):
         raise HTTPException(404, "no such iPhone")
-    profiles.delete_device(did)
+    _remove(did)
     print("iphone: removed for", profiles.log_name(prof), flush=True)
-    _live_mark("Eingang", "iPhone-App entfernt")
     return profile_get(prof)
+
+
+def _remove(did):
+    profiles.delete_device(did)
+    _live_mark("Eingang", "iPhone-App entfernt")
+
+
+def _clear(uid):
+    for x in phones(uid):
+        _remove(x["id"])
+
+
+# own data for Ich while the admin blocks the iPhone app for the profile (features.OWN): its paired iPhones
+features.OWN["iphone"] = (lambda uid: len(phones(uid)), _clear)
 
 
 def app_ids():

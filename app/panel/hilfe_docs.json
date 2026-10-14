@@ -628,6 +628,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Gesperrt, aber eigene Daten (V01.0.531, Dominik 2026-10-14)",
+"text": "Gesperrt, aber eigene Daten (V01.0.531, Dominik 2026-10-14): Sperrt der Admin eine freigegebene Funktion für ein Profil, verschwindet ihre Seite unter Ich; was das Profil dafür gespeichert hat, bleibt seins. Liegt noch etwas da, zeigt Ich an der Stelle der Seite nur eine kurze Karte: „Der Admin hat „Wetter“ für dich gesperrt (Funktionen → Wer darf was). Gespeichert: 1 Eintrag.“ und den Knopf „Daten löschen“ (mit Rückfrage). Gelöscht wird genau das, was auch das Löschen auf der Seite der Funktion entfernt, samt Passwörtern und Schlüsseln (Ort, Haltestelle, Kalender, Postfächer, Adressbücher, Erinnerungen, Stimmproben, Home-Assistant-Verbindung, Telegram-Verknüpfung, gekoppelte Geräte, MCP-Verbindungen und -Dienste, reMarkable mit seinen Dokumenten, Wissensordner, Regeln von „Von selbst“ und vom Aufräumen); danach verschwindet die Karte. Nicht dabei sind alle Dokumente auf einmal und Chats, weil die anderen Personen mitgehören. Technik: Jedes Modul trägt seine Daten in features.OWN ein (Anzahl und Löschen), /api/whoami nennt unter locked nur Funktion, Seite und Anzahl, nie Inhalte; gelöscht wird über DELETE /api/profile/owndata/{key} (nur die eigene Browser-Anmeldung, nie ein Gerätes"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gesperrt, aber eigene Daten (V01.0.531, Dominik 2026-10-14)",
+"text": "chlüssel oder Gast, nur solange gesperrt, Rate-Limit owndata). Journal: „profiles: own data deleted while blocked | weather | 1 entries …“ (Bereich Gedächtnis)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Auf dem Handy",
 "text": "Auf dem Handy: Unter 760 Pixel Breite öffnet die Seite mit dem großen Gesicht (antippen = sprechen) und zwei Knöpfen darunter: „Einstellungen“ öffnet das Fenster „Ich“ (oben „Hey Spark“), „Verlauf“ die Messenger-Ansicht. Die passt genau auf den Bildschirm: oben eine schmale Leiste mit Pfeil zurück zum Gesicht, kleinem Gesicht, Status, Profil und Menü, in der Mitte der Verlauf, unten Textfeld und runder Mikrofonknopf (während der Antwort ein Stopp-Knopf). Der Browser merkt sich, welche der beiden Ansichten zuletzt offen war. Das Menü (☰) enthält neues Gespräch, frühere Gespräche, Gesprächs-Einstellungen, Sprache, Hell/Dunkel und für Admins alle Reiter."
 },
@@ -4654,6 +4670,22 @@
 "head": "Voice chat",
 "title": "Release",
 "text": "Release (since V01.0.509, Dominik 2026-10-13): what the admin switches on under Features works at once for every profile. There is no own switch per profile for it any more. Only the admin blocks single profiles, under Features → Who may do what or in the function's detail. A profile only sets up its part (enter a place, connect an account, pair a device). It can only switch off the few things the Spark does unasked, such as notes on its own, notifications to the phone, the morning sheet or night updates of its speakers; these are on from the start."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Blocked, but own data (V01.0.531, Dominik 2026-10-14)",
+"text": "Blocked, but own data (V01.0.531, Dominik 2026-10-14): when the admin blocks a released function for one profile, its page under Me disappears; what the profile stored for it stays its own. While something is left, Me shows in place of the page only a short card: \"The admin blocked \"Weather\" for you (Features → Who may do what). Stored: 1 entry.\" and the button \"Delete data\" (with a question first). It deletes exactly what deleting on the function's own page removes, passwords and keys included (place, stop, calendars, mailboxes, address books, reminders, voice samples, Home Assistant connection, Telegram link, paired devices, MCP connections and services, the reMarkable with its documents, knowledge folders, rules of \"Proactive\" and of inbox tidying); then the card goes. Not included are all documents at once and chats, because other people belong to them. Technically every module registers its data in features.OWN (count and delete), /api/whoami names under locked only function, page and count, never contents; deleting goes through DELETE /api/profile/owndata/{key} (only the profile's own browser login, never a device key or guest, only while blocked, rate limit owndata). Journal"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Blocked, but own data (V01.0.531, Dominik 2026-10-14)",
+"text": ": \"profiles: own data deleted while blocked | weather | 1 entries …\" (area memory)."
 },
 {
 "lang": "en",

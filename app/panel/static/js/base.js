@@ -32,6 +32,8 @@ let WHO_FLAGS=null,whoT=null;
 // who is signed in, set by start.js; declared here, before the other scripts: a timer or answer of an earlier script
 // could run before start.js on a slow machine ("ADMIN is not defined", GitHub V01.0.421)
 let ADMIN=false,PUBLIC=true,GATE=false;
+// functions the admin blocked for this profile that still hold its own data (whoami "locked"): Ich shows „Daten löschen“
+let ME_OWN=[];
 async function whoCheck(){if(WHO_FLAGS===null)return;
   try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json();
     if(window.confirmShow)confirmShow(w.confirm_until||0);

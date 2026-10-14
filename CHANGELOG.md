@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.531** · 2026-10-14 · Gesperrt, aber eigene Daten löschbar: Sperrt der Admin eine Funktion für ein Profil, zeigt Ich an ihrer Stelle nur noch eine Karte mit der Zahl der gespeicherten Einträge und „Daten löschen“ (22 Funktionen, Liste features.OWN, Route DELETE /api/profile/owndata/…)
 - **V01.0.530** · 2026-10-14 · Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, Alltagsquote misst ehrlich; Pflicht-Wörter, unklare Fragen und Schwelle nur noch unter Funktionen → Weiche
 - **V01.0.529** · 2026-10-14 · Aufräum-Regel „eine Quelle“ (Richtlinie Teil 17, test_aufraeumen mit Altlastenliste, die nur schrumpft) und App-Gleichstand: Ich-Seiten aus features.ME_PAGES, die iPhone-App öffnet jede Seite in der App, Panel-Bereiche ohne Schalter je Profil
 - **V01.0.528** · 2026-10-14 · Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)

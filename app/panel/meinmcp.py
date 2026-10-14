@@ -855,13 +855,26 @@ def remove(sid: str, request: Request, prof=Depends(_on)):
     import guard
     guard.limit(request, "mymcp", prof["id"])
     uid = prof["id"]
+    _remove(uid, sid)
+    return _view(uid)
+
+
+def _remove(uid, sid):
     s = find(uid, sid)
     with _lock:
         profiles._write(_file(uid), {"services": [x for x in load(uid) if x["id"] != sid]})
     drop_pending(uid)
     if s:
         _event(f"Profil hat MCP-Dienst „{s['name']}“ entfernt")
-    return _view(uid)
+
+
+def _clear(uid):
+    for x in load(uid):
+        _remove(uid, x["id"])
+
+
+# own data for Ich while the admin blocks own MCP services for the profile (features.OWN): its services with their keys
+features.OWN["mymcp"] = (lambda uid: len(load(uid)), _clear)
 
 
 @router.post("/api/profile/mymcp/{sid}/oauth/start")

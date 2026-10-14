@@ -376,14 +376,16 @@ function meAll(){return [['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],
     ['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['appbox',t('iPhone-App','iPhone app'),PROFILE&&APP_ON],['andbox',t('Android-App','Android app'),PROFILE&&typeof AND_ON!=='undefined'&&AND_ON],['deskbox',t('Begleiter','Companion'),PROFILE&&typeof DESK_ON!=='undefined'&&DESK_ON],['pebbox',t('Pebble-Uhr','Pebble watch'),PROFILE&&PEB_ON],['mcpbox',t('Dienste per MCP','Services over MCP'),PROFILE&&MCPS_ON],
     ['secbox',t('Sicherheit','Security'),!!PROFILE],['rpbox',t('Probleme melden','Reporting problems'),PROFILE&&typeof RP_ON!=='undefined'&&RP_ON],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON]]}
-function meTabs(){const items=meAll().filter(x=>x[2]);
+function meTabs(){const own=meOwnBoxes();ME_ONLY=new Set();
+  // a page the admin blocked that still holds own data shows only its „Daten löschen“ card (meOwn)
+  const items=meAll().map(x=>{if(!x[2]&&PROFILE&&own.has(x[0])){ME_ONLY.add(x[0]);return [x[0],x[1],true]}return x}).filter(x=>x[2]);
   // pages in the same groups as everywhere else (guides.js), with a small header per group
   let grp=null;$('ptabs').innerHTML=items.map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
     const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
     return head+`<button type="button" data-t="${id}">${esc(l)}<small class="mst" data-st="${id}"></small></button>`}).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});ME_ITEMS=items;
   $('profmodal').classList.toggle('one',items.length<2);if(typeof meSearchMount==='function')meSearchMount();return items.map(x=>x[0])}
-let meLast='overbox',ME_ITEMS=[];
+let meLast='overbox',ME_ITEMS=[],ME_ONLY=new Set();
 // "Überblick": one line per page with its state, read from the pages just loaded (no extra requests)
 function meState(){const n=id=>id==='factlist'?FACTS.length:[...document.querySelectorAll('#'+id+'>li')].filter(x=>!x.classList.contains('mut')&&!x.classList.contains('ic-more')).length;
   const cnt=(k,de1,deN,en1,enN)=>k?t(k+' '+(k===1?de1:deN),k+' '+(k===1?en1:enN)):t('noch nichts','nothing yet');
@@ -522,7 +524,7 @@ $('facttidy').onclick=()=>tidyDo('check');
 window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent(id),{method:'DELETE'});showFacts()};
 ON.forgetFact=(b,id)=>forgetFact(id);ON.tidyDo=(b,w)=>tidyDo(w);ON.calRemove=(b,id,n)=>calRemove(id,n);ON.mailRemove=(b,id,n)=>mailRemove(id,n);ON.secDrop=(b,id,n,s)=>secDrop(id,n,s);
 async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
-  const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
+  const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;meOwn();ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
   $('setscope').textContent=GATE?'':PROFILE?((k=>ME_SUB[k]?t(...ME_SUB[k]):'')((document.querySelector('#ptabs button.on')||{dataset:{}}).dataset.t)):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
@@ -547,7 +549,7 @@ async function meLoad(){let out=false;
     ['habox',showHa],['secbox',showSecurity],['logbox',showToolLog],['probox',showPro,1],['pushbox',showPush,1]].concat(typeof extrasJobs==='function'?extrasJobs():[]);
   await lzPool(jobs.map(([id,f,quiet])=>()=>lzb($(id),f,{auth:true,quiet:!!quiet}).catch(e=>{if(e&&e.status===401)out=true})),4);
   if(out){setProfile(null);openMe('loginbox');return}
-  showRoom();showOver();if(typeof goShow==='function')goShow();if(window.meBerater)meBerater();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()}).catch(()=>{})}
+  showRoom();showOver();meOwn();if(typeof goShow==='function')goShow();if(window.meBerater)meBerater();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()}).catch(()=>{})}
 window.openMe=openMe;
 // Ich says what the admin has not switched on instead of hiding it without a word (plan „Vereinheitlichen“ Phase 4,
 // V01.0.270): the names with the reason, for an admin a jump to Funktionen → Wer darf was. From /api/features.
@@ -566,6 +568,28 @@ function meLocked(box){if(!box)return;let el=box.querySelector(':scope>.melocked
   part(t('Vom Admin für dich gesperrt','Blocked for you by the admin'),blk,ADMIN?'':t('Nur der Admin kann das aufheben.','Only the admin can lift this.'));
   if(ADMIN){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Wer darf was','Who may do what');
     b.onclick=()=>{if(window.closeProf)closeProf();goSec('who')};el.appendChild(b)}}
+// Gesperrt, aber eigene Daten da (whoami "locked", features.OWN; Dominik 2026-10-14 „Auf der Seite nur „Daten
+// löschen“ zeigen“): in place of the page or part of a function the admin blocked for this profile only a short note,
+// the number of stored entries and „Daten löschen“. The page itself stays hidden (class ownonly); after deleting the
+// card goes, and a page that showed only for it leaves the list.
+function meOwnBoxes(){return new Set(ME_OWN.map(x=>x.box).filter(Boolean))}
+function meOwn(){document.querySelectorAll('#profmodal .ptab').forEach(b=>{b.classList.toggle('ownonly',ME_ONLY.has(b.id));
+    b.querySelectorAll(':scope>.meown').forEach(e=>{if(!ME_OWN.some(x=>x.key===e.dataset.own&&x.box===b.id))e.remove()})});
+  for(const x of ME_OWN){const box=x.box&&$(x.box);if(!box)continue;
+    let el=[...box.querySelectorAll(':scope>.meown')].find(e=>e.dataset.own===x.key);
+    if(!el){el=document.createElement('div');el.className='meown';el.dataset.own=x.key;box.prepend(el)}
+    const name=(x.name||[x.key,x.key])[L==='en'?1:0],p=document.createElement('p'),b=document.createElement('button'),msg=document.createElement('p');
+    p.textContent=t(`Der Admin hat „${name}“ für dich gesperrt (Funktionen → Wer darf was). Gespeichert: ${x.n} ${x.n===1?'Eintrag':'Einträge'}.`,
+      `The admin blocked "${name}" for you (Features → Who may do what). Stored: ${x.n} ${x.n===1?'entry':'entries'}.`);
+    b.type='button';b.className='b danger';b.textContent=t('Daten löschen','Delete data');msg.className='fh';
+    b.onclick=()=>meOwnDelete(x,name,el,msg);el.replaceChildren(p,b,msg)}}
+async function meOwnDelete(x,name,el,msg){
+  if(!confirm(t(`Deine gespeicherten Daten zu „${name}“ löschen? Das lässt sich nicht rückgängig machen.`,`Delete your stored data of "${name}"? This cannot be undone.`)))return;
+  msg.textContent=t('Lösche …','Deleting …');msg.className='fh';
+  const {r,d}=await apiTry('/api/profile/owndata/'+encodeURIComponent(x.key),{method:'DELETE'});
+  if(!r.ok){msg.textContent=t('Nicht gelöscht: ','Not deleted: ')+errSay(r.status,d.detail,'');msg.className='fh err';return}
+  ME_OWN=ME_OWN.filter(y=>y.key!==x.key);el.remove();
+  const tabs=meTabs();meOwn();if(!tabs.includes(x.box)&&$('profmodal').style.display==='grid'){meLast=tabs[0];ptab(tabs[0],!PHONE.matches)}}
 // Ich → Überblick: one line how many functions this profile may use now (what the admin released and did not block)
 function meReleased(box,all){let el=box.querySelector(':scope>.mefree');
   if(!all.length){if(el)el.remove();return}

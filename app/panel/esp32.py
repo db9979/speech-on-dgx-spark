@@ -2276,7 +2276,11 @@ async def profile_voice_here(did: str, request: Request, prof=Depends(secret_pro
 
 @router.delete("/api/profile/esp32/{did}", dependencies=[Depends(assistant)])
 async def profile_delete(did: str, prof=Depends(browser_profile)):
-    cid = _mine(did, prof)
+    await _remove(did, _mine(did, prof))
+    return {"devices": _list(prof["id"])}
+
+
+async def _remove(did, cid):
     profiles.delete_device(did)
     _update(lambda d: d["clients"].pop(cid, None))
     _diag.pop(did, None)
@@ -2286,7 +2290,17 @@ async def profile_delete(did: str, prof=Depends(browser_profile)):
             await s.ws.close(1000)
         except Exception:
             pass
-    return {"devices": _list(prof["id"])}
+
+
+async def _clear(uid):
+    for x in _list(uid):
+        cid, c = by_device(x["id"])
+        if c:
+            await _remove(x["id"], cid)
+
+
+# own data for Ich while the admin blocks the speakers for the profile (features.OWN): its speakers
+features.OWN["esp32"] = (lambda uid: len(_list(uid)), _clear)
 
 
 @router.get("/api/admin/esp32", dependencies=[Depends(auth)])

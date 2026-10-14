@@ -1758,6 +1758,15 @@ def api_rule_remove(rid: str, prof=Depends(browser_profile)):
     return remove_rule(prof["id"], rid)
 
 
+def _clear_rules(uid):
+    for r in list(state(uid)["rules"]):
+        remove_rule(uid, r["id"])
+
+
+# own data for Ich while the admin blocks inbox tidying for the profile (features.OWN): its rules
+features.OWN["tidy"] = (lambda uid: len(state(uid)["rules"]), _clear_rules)
+
+
 @router.post("/api/profile/tidy/answer", dependencies=[Depends(assistant), Depends(_on)])
 async def api_answer(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)

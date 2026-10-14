@@ -1,6 +1,7 @@
 """What a browser or device can do for itself: login, whoami and the profile's own data
 (memory, conversations, documents, reminders, calendar, e-mail, Home Assistant, voice, settings)."""
 import asyncio
+import inspect
 import json
 import time
 import os
@@ -87,6 +88,30 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund"}
 
 
+# the Ich page of a function without a page of its own in features.py (me): reminders live under Mitteilungen
+OWN_BOX = {"reminders": "notebox"}
+
+
+def _locked(prof, request, chat):
+    """Functions the admin released but blocked for this profile that still hold its own data (features.OWN): Ich
+    shows only „Daten löschen“ in place of their page. Only numbers, never contents; never guests or device keys."""
+    if not prof or request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile") \
+            or request.scope.get("speech_mcp"):
+        return []
+    out = []
+    for key, (count, _clear) in features.OWN.items():
+        if not features.admin_on(key, chat) or not features.blocked(key, prof["id"], chat):
+            continue
+        try:
+            n = int(count(prof["id"]) or 0)
+        except Exception:   # unreadable data: no card rather than a broken whoami
+            n = 0
+        if n > 0:
+            f = features.BY_KEY[key]
+            out.append({"key": key, "box": f.me or OWN_BOX.get(key, ""), "n": n, "name": [f.de, f.en]})
+    return out
+
+
 def _setup(prof, request):
     if not prof or request.headers.get(profiles.DEVICE_HEADER):
         return None
@@ -129,6 +154,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "tipps": bool(prof and features.allowed("tipps", prof["id"], chat) and not request.headers.get(profiles.DEVICE_HEADER)),
             # "Los geht's" / "Einrichten x von y" (onboard.py): only for the profile's own login
             "setup": _setup(prof, request),
+            # blocked by the admin but own data left (features.OWN): Ich shows only „Daten löschen“ there
+            "locked": _locked(prof, request, chat),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             # Zustand → Live (live.py): the same people
@@ -1204,6 +1231,62 @@ async def profile_voice_add(file: UploadFile = File(...), prof=Depends(secret_pr
 def profile_voice_delete(prof=Depends(browser_profile)):
     speakers.forget(prof["id"])
     return {"samples": 0}
+
+
+# own data of the functions whose delete routes live here (features.OWN): what those routes remove, nothing else
+def _clear_reminders(uid):
+    profiles.remove_reminders(uid, {x.get("id") for x in profiles.reminders(uid)})
+
+
+def _clear_calendars(uid):
+    for x in calendars.get(uid)["calendars"]:
+        calendars.remove(uid, x["id"])
+
+
+def _clear_mail(uid):
+    for x in mail.get(uid)["accounts"]:
+        mail.remove(uid, x["id"])
+
+
+def _voice_count(uid):
+    return len(speakers.samples(uid)) + sum(len(v) for v in speakers.device_samples(uid).values() if isinstance(v, list))
+
+
+features.OWN.update({"reminders": (lambda uid: len(profiles.reminders(uid)), _clear_reminders),
+                     "speaker": (_voice_count, speakers.forget),
+                     "calendar": (lambda uid: len(calendars.get(uid)["calendars"]), _clear_calendars),
+                     "ha": (lambda uid: int(bool(homeassistant.get(uid))), homeassistant.remove),
+                     "mail": (lambda uid: len(mail.get(uid)["accounts"]), _clear_mail)})
+
+
+@router.delete("/api/profile/owndata/{key}", dependencies=[Depends(assistant)])
+async def profile_owndata_delete(key: str, request: Request, prof=Depends(browser_profile)):
+    """„Daten löschen“ on the card under Ich for a function the admin blocked for this profile: removes the
+    profile's own data of it (features.OWN). Only the profile's own browser login, only while blocked; otherwise
+    the function's own page deletes. Never a device key, never a guest."""
+    uid = prof["id"]
+    guard.limit(request, "owndata", uid)
+    if key not in features.OWN:
+        print(f"profiles: own data not deleted | unknown function | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "no such function")
+    if not features.blocked(key, uid):
+        print(f"profiles: own data not deleted | {key} not blocked | {profiles.log_name(prof)}", flush=True)
+        f = features.BY_KEY[key]
+        raise HTTPException(409, f"„{f.de}“ ist für dich nicht gesperrt. Deine Daten löschst du auf der Seite der "
+                                 "Funktion unter Ich.")
+    count, clear = features.OWN[key]
+    try:
+        before = int(count(uid) or 0)
+        res = clear(uid)
+        if inspect.isawaitable(res):
+            await res
+        left = int(count(uid) or 0)
+    except Exception as e:
+        print(f"profiles: own data delete failed | {key} | {type(e).__name__} | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(500, "Die Daten ließen sich nicht ganz löschen. Bitte noch einmal versuchen.")
+    n = max(0, before - left)
+    print(f"profiles: own data deleted while blocked | {key} | {n} entries, {left} left | {profiles.log_name(prof)}", flush=True)
+    return {"ok": True, "n": n}
 
 
 @router.post("/api/assistant/say", dependencies=[Depends(assistant)])

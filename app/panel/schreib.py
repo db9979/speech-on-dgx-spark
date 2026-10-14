@@ -640,10 +640,23 @@ async def profile_pair(request: Request, prof=Depends(browser_profile)):
 def profile_unpair(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in helpers(prof["id"])):
         raise HTTPException(404, "no such program")
+    _unpair(did)
+    return profile_helpers(prof)
+
+
+def _unpair(did):
     profiles.delete_device(did)
     _live("Programm entkoppelt")
     print("schreib: Programm entkoppelt", flush=True)
-    return profile_helpers(prof)
+
+
+def _clear(uid):
+    for x in helpers(uid):
+        _unpair(x["id"])
+
+
+# own data for Ich while the admin blocks the writing help for the profile (features.OWN): its paired programs
+features.OWN["schreib"] = (lambda uid: len(helpers(uid)), _clear)
 
 
 @router.post("/api/write/pair")

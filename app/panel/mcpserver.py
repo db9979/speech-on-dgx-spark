@@ -1199,6 +1199,20 @@ def profile_remove(cid: str, request: Request, prof=Depends(browser_profile)):
     return {"ok": True}
 
 
+def _mine(uid):
+    return [c for c in _load()["conns"] if c.get("uid") == uid]
+
+
+def _clear(uid):
+    for c in _mine(uid):
+        if remove(c["id"], uid):
+            guard.log("mcp_remove", uid=uid, detail=c.get("name", ""))
+
+
+# own data for Ich while the admin blocks the Spark as MCP server for the profile (features.OWN): its connections
+features.OWN["mcpserver"] = (lambda uid: len(_mine(uid)), _clear)
+
+
 @router.post("/api/profile/mcp/actions/{aid}")
 async def profile_decide(aid: str, request: Request, prof=Depends(_on)):
     body = await _json(request)

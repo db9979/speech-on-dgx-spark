@@ -465,6 +465,15 @@ def api_remove(aid: str, prof=Depends(browser_profile)):
     return remove(prof["id"], aid)
 
 
+def _clear(uid):
+    for x in accounts(uid):
+        remove(uid, x["id"])
+
+
+# own data for Ich while the admin blocks contacts for the profile (features.OWN): the address books (their copy goes along)
+features.OWN["contacts"] = (lambda uid: len(accounts(uid)), _clear)
+
+
 @router.post("/api/profile/contacts/refresh", dependencies=[Depends(assistant), Depends(_on)])
 async def api_refresh(prof=Depends(own_profile)):
     return await refresh(prof["id"])

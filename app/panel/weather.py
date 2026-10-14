@@ -415,11 +415,19 @@ def api_delete(request: Request, prof=Depends(browser_profile)):
     """Removes the profile's place: its own data, so also while the admin switched weather off or blocked it."""
     import guard
     guard.limit(request, "features", prof["id"])
+    forget(prof["id"])
+    return {"place": {}}
+
+
+def forget(uid):
     try:
-        os.remove(_file(prof["id"]))
+        os.remove(_file(uid))
     except OSError:
         pass
-    return {"place": {}}
+
+
+# own data for Ich while the admin blocks weather for the profile (features.OWN): the place, 1 or 0
+features.OWN["weather"] = (lambda uid: int(os.path.exists(_file(uid))), forget)
 
 
 @router.post("/api/profile/weather/test", dependencies=[Depends(assistant), Depends(_on)])

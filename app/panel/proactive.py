@@ -1242,6 +1242,16 @@ def api_rule_remove(rid: str, prof=Depends(browser_profile)):
     return status(prof["id"])
 
 
+def _clear_rules(uid):
+    for r in rules(uid):
+        if isinstance(r, dict):
+            remove_rule(uid, r.get("id"))
+
+
+# own data for Ich while the admin blocks „Von selbst melden“ for the profile (features.OWN): its rules
+features.OWN["proactive"] = (lambda uid: len(rules(uid)), _clear_rules)
+
+
 @router.post("/api/proactive/test", dependencies=[Depends(assistant), Depends(_on)])
 async def api_test(prof=Depends(own_profile)):
     """A sample note on the normal way (open page or push), outside every limit."""

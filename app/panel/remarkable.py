@@ -1295,6 +1295,13 @@ def _start(uid, listing_only=False):
 async def unpair(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     guard.limit(request, "rm", uid)
+    forget(uid)
+    guard.log("remarkable_unpair", ip=guard.client_ip(request), profile=uid)
+    return {"ok": True, "hint": "Entferne das Gerät „desktop-linux“ auch auf my.remarkable.com unter Geräte."}
+
+
+def forget(uid):
+    """The connection and what came from the notebooks (their documents) go; the reMarkable keeps its notes."""
     d = load(uid)
     for st in d.get("docs", {}).values():
         documents.delete(uid, st.get("doc", ""))
@@ -1304,8 +1311,15 @@ async def unpair(request: Request, prof=Depends(browser_profile)):
         except OSError:
             pass
     _user.pop(uid, None)
-    guard.log("remarkable_unpair", ip=guard.client_ip(request), profile=uid)
-    return {"ok": True, "hint": "Entferne das Gerät „desktop-linux“ auch auf my.remarkable.com unter Geräte."}
+
+
+def _own_count(uid):
+    have = os.path.exists(_file(uid)) or os.path.exists(_libfile(uid))
+    return int(have) + len(load(uid)["docs"]) if have else 0
+
+
+# own data for Ich while the admin blocks the reMarkable for the profile (features.OWN): the connection and its documents
+features.OWN["remarkable"] = (_own_count, forget)
 
 
 @router.put("/api/profile/remarkable/pick", dependencies=[Depends(assistant)])

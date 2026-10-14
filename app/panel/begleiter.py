@@ -510,6 +510,11 @@ async def profile_set(did: str, request: Request, prof=Depends(browser_profile))
 def profile_unpair(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in devices(prof["id"])):
         raise HTTPException(404, "no such device")
+    _unpair(did)
+    return profile_get(prof)
+
+
+def _unpair(did):
     profiles.delete_device(did)
     with _lock:
         d = _load()
@@ -518,7 +523,15 @@ def profile_unpair(did: str, prof=Depends(browser_profile)):
     _seen.pop(did, None)
     _live("Gerät entkoppelt")
     print("begleiter: Gerät entkoppelt", flush=True)
-    return profile_get(prof)
+
+
+def _clear(uid):
+    for x in devices(uid):
+        _unpair(x["id"])
+
+
+# own data for Ich while the admin blocks the companion for the profile (features.OWN): its paired computers
+features.OWN["begleiter"] = (lambda uid: len(devices(uid)), _clear)
 
 
 # ---------------------------------------------------------------- the program (key scope "desk")

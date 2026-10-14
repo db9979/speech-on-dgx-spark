@@ -1043,6 +1043,16 @@ def remove_source(uid, sid):
     return n
 
 
+def _clear(uid):
+    for s in sources(uid):
+        remove_source(uid, s["id"])
+
+
+# own data for Ich while the admin blocks the knowledge folders for the profile (features.OWN): its folders (their
+# documents leave the search, nothing changes at the place)
+features.OWN["nasquelle"] = (lambda uid: len(sources(uid)), _clear)
+
+
 @router.post("/api/profile/nasquelle/{sid}/now")
 async def now_route(sid: str, request: Request, prof=Depends(_on)):
     guard.limit(request, "storagenow", prof["id"])

@@ -437,9 +437,17 @@ async def api_ha_new(request: Request, prof=Depends(secret_profile)):
 
 @router.delete("/api/profile/room/ha", dependencies=[Depends(assistant)])
 def api_ha_delete(prof=Depends(browser_profile)):
-    for x in _ha_keys(prof["id"]):
-        profiles.delete_device(x["id"])
+    _ha_clear(prof["id"])
     return {"ok": True}
+
+
+def _ha_clear(uid):
+    for x in _ha_keys(uid):
+        profiles.delete_device(x["id"])
+
+
+# own data for Ich while the admin blocks room mode for Home Assistant for the profile (features.OWN): its keys
+features.OWN["roomha"] = (lambda uid: len(_ha_keys(uid)), _ha_clear)
 
 
 # the admin

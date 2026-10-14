@@ -762,3 +762,7 @@ async def profile_link(request: Request, prof=Depends(secret_profile)):
 def profile_unlink(prof=Depends(browser_profile)):
     unlink(prof["id"])
     return profile_get(prof)
+
+
+# own data for Ich while the admin blocks Telegram for the profile (features.OWN): the linked chat, 1 or 0
+features.OWN["telegram"] = (lambda uid: int(link(uid) is not None), unlink)
