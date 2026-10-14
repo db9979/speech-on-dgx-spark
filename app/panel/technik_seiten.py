@@ -3501,7 +3501,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen
     "bild": {
-        "stand": "b25681ed53",
+        "stand": "3b4351b131",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
@@ -3581,12 +3581,12 @@ SEITEN_DATEN = {
                "IPTC entry).")),
             S("s10", "ende", ("Bild abgelegt", "Picture stored"),
               ("users/ID/bilder/, Karte, Push", "users/ID/bilder/, card, push"),
-              ("Das Bild kommt in den Ordner des Profils (bilder.keep), die Karte im Chat zeigt es, über App oder "
-               "Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher "
-               "frei.",
-               "The picture goes into the profile's folder (bilder.keep), the card in the chat shows it, a push goes "
-               "out through the app or Telegram. After a quiet time the picture service stops the engine and frees the "
-               "memory.")),
+              ("Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in "
+               "der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein "
+               "Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei.",
+               "The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in "
+               "the iPhone app shows it, also in a conversation opened again; a push goes out through the app or "
+               "Telegram. After a quiet time the picture service stops the engine and frees the memory.")),
         ],
         "beispiele": [
             (("Katze auf einem Skateboard", "Cat on a skateboard"),

@@ -278,7 +278,7 @@ features.OWN[KEY] = (lambda uid: len(all_pics(uid)), clear)
 def public(x):
     return {"id": x["id"], "t": x.get("t"), "w": x.get("w"), "h": x.get("h"), "prompt": x.get("prompt", ""),
             "wish": x.get("wish", ""), "format": x.get("format", "quadrat"), "seconds": x.get("seconds"),
-            "bytes": x.get("bytes", 0), "src": x.get("src", "")}
+            "bytes": x.get("bytes", 0), "src": x.get("src", ""), "job": x.get("job", "")}
 
 
 # ---------------------------------------------------------------- jobs
@@ -482,7 +482,7 @@ async def _work(j):
             return
     row = keep(j["uid"], png, {"w": d.get("w", j["w"]), "h": d.get("h", j["h"]), "prompt": j["prompt"],
                                "wish": j["wish"], "format": j["format"], "seconds": d.get("seconds"), "src": j["src"],
-                               "model": str(cfg().get("variant") or "")[:10]})
+                               "model": str(cfg().get("variant") or "")[:10], "job": j["id"]})
     j.update(state="done", pic=row, end=time.time())
     _bump("done")
     import verbrauch   # Verbrauchszähler: one picture and its time (does nothing while the counter is off)
@@ -530,7 +530,7 @@ async def tool(name, args, ctx):
     except ValueError as e:
         de = e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "Das ging nicht."
         return f"Not done: {de} Sag das so in einem Satz und beschreibe kein Bild."
-    if client in ("", "web") and ctx.get("out") is not None:
+    if client in ("", "web", "iphone") and ctx.get("out") is not None:   # the panel's chat and the iPhone app show it
         await ctx["out"].put({"type": "bild", "job": j["id"], "prompt": j["prompt"]})
         where = "Es erscheint gleich hier im Chat und unter Ich → Bilder."
     else:
@@ -578,9 +578,15 @@ def bilder_job(jid: str, request: Request, prof=Depends(own_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "bildjob", uid)
     j = _jobs.get(jid)
-    if not j or j["uid"] != uid:
+    if j and j["uid"] == uid:
+        return job_public(j)
+    # a finished job the panel already forgot (an hour later, after a restart): the kept picture names its job, so
+    # an answer in the chat finds its picture again on every device
+    p = next((x for x in all_pics(uid) if ID.fullmatch(jid) and x.get("job") == jid), None)
+    if not p:
         raise HTTPException(404, "kein solcher Auftrag")
-    return job_public(j)
+    return {"id": jid, "state": "done", "error": "", "error_en": "", "pic": public(p), "prompt": p.get("prompt", ""),
+            "t0": int(p.get("t") or 0)}
 
 
 @router.get("/api/bilder/{pid}/datei", dependencies=[Depends(assistant)])

@@ -11,6 +11,7 @@ import io
 import json
 import os
 import unittest
+import urllib.parse
 from unittest import mock
 
 from tests import helpers
@@ -235,6 +236,15 @@ class Jobs(On):
         p = d["pics"][0]
         self.assertEqual((p["prompt"], p["wish"], p["format"]), ("a red apple on a table, oil painting", "Ein roter Apfel", "quer"))
         self.assertEqual(c.get("/api/bilder/job/" + j["id"]).json()["pic"]["id"], p["id"])
+        # the chat finds the picture again by its job (after a reload, on every device): the answer keeps the job id
+        self.assertEqual(p["job"], j["id"])
+        kept = profiles._att([{"k": "bild", "p": "a red apple", "j": j["id"]}, {"k": "bild", "p": "x", "j": "../etc"}])
+        self.assertEqual(kept, [{"k": "bild", "p": "a red apple", "j": j["id"]}, {"k": "bild", "p": "x"}])
+        # an hour later the panel forgot the job; the kept picture still answers for it (only for its own profile)
+        bilder._jobs.pop(j["id"])
+        again = c.get("/api/bilder/job/" + j["id"]).json()
+        self.assertEqual((again["state"], again["pic"]["id"]), ("done", p["id"]))
+        self.assertEqual(c.get("/api/bilder/job/0123456789ab").status_code, 404)
         r = c.get(f"/api/bilder/{p['id']}/datei")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.headers["content-type"], "image/png")
@@ -244,6 +254,7 @@ class Jobs(On):
         # another profile never sees it
         c2, _ = profile("Malerin Fremd")
         self.assertEqual(c2.get(f"/api/bilder/{p['id']}/datei").status_code, 404)
+        self.assertEqual(c2.get("/api/bilder/job/" + j["id"]).status_code, 404)
         self.assertEqual(c2.delete(f"/api/bilder/{p['id']}").status_code, 404)
         # Daten löschen of the Freigabe counts and removes the same
         count, clear = features.OWN["bilder"]
@@ -251,6 +262,40 @@ class Jobs(On):
         self.assertEqual(c.delete(f"/api/bilder/{p['id']}").status_code, 200)
         self.assertEqual(c.get("/api/bilder").json()["pics"], [])
         self.assertEqual(count(uid), 0)
+
+    def test_iphone_app_shows_the_picture_in_its_chat(self):
+        """iOS (Dominik 2026-10-14): the app gets the card's event and may read the job and the picture file of its
+        own profile with its key; nothing else of Ich → Bilder (looking at all, painting, deleting stays an area)."""
+        c, prof = profile("Malerin iPhone")
+        bilder.clear(prof["id"])
+        helpers.set_config(iphone=True)
+        try:
+            r = c.post("/api/profile/iphone/pair", json={"base": "https://spark.example"})
+            self.assertEqual(r.status_code, 200, r.text)
+            code = urllib.parse.parse_qs(urllib.parse.urlparse(r.json()["link"]).query)["code"][0]
+            token = TestClient(panel.app).post("/api/iphone/pair", json={"code": code, "name": "Malerin"}).json()["token"]
+            call, _ = fake()
+            out = asyncio.Queue()
+            with mock.patch.object(bilder, "call", call), contextlib.redirect_stdout(io.StringIO()):
+                said = asyncio.run(bilder.tool("bild_malen", {"prompt_en": "a green frog", "wunsch": "Ein Frosch"},
+                                               {"who": prof, "own": True, "client": "iphone", "out": out}))
+                ev = out.get_nowait()
+                run(bilder._jobs[ev["job"]])
+            self.assertEqual(ev["type"], "bild")
+            self.assertIn("hier im Chat", said)
+            app = TestClient(panel.app)
+            h = {"X-Speech-Device": token}
+            j = app.get("/api/bilder/job/" + ev["job"], headers=h).json()
+            self.assertEqual(j["state"], "done")
+            f = app.get(f"/api/bilder/{j['pic']['id']}/datei", headers=h)
+            self.assertEqual(f.status_code, 200)
+            self.assertTrue(f.content.startswith(bilder.PNG_SIG))
+            self.assertEqual(app.get("/api/bilder", headers=h).status_code, 401)            # the list is an area
+            self.assertEqual(app.delete(f"/api/bilder/{j['pic']['id']}", headers=h).status_code, 401)
+            self.assertEqual(app.post("/api/bilder", json={"wunsch": "x"}, headers=h).status_code, 401)
+        finally:
+            helpers.set_config(iphone=False)
+            bilder.clear(prof["id"])
 
     def test_page_paints_the_persons_own_sentence(self):
         c, prof = profile("Malerin Seite")

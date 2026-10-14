@@ -510,7 +510,7 @@ function attOf(searches,sources,docs,drefs,mkcards,blcards){const a=[];
   if(sources.length)a.push({k:'src',q:searches.join(' · ').slice(0,200),l:sources.slice(0,5).map(x=>({t:String(x.title||'').slice(0,100),u:String(x.url||'').slice(0,500)}))});
   if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0}))});
   for(const c of mkcards.slice(0,3))a.push({k:'mk',t:String(c.title||'').slice(0,120),n:String(c.kind_name||'').slice(0,40)});
-  for(const c of (blcards||[]).slice(0,3))a.push({k:'bild',p:String(c.prompt||'').slice(0,300)});
+  for(const c of (blcards||[]).slice(0,3))a.push({k:'bild',p:String(c.prompt||'').slice(0,300),j:String(c.job||'').slice(0,12)});
   return a}
 const VIA={telegram:'Telegram',siri:'Siri',desk:t('Begleiter','Companion'),watch:t('Uhr','Watch'),speaker:t('Lautsprecher','Speaker')};
 function attRender(el,att,live,via){

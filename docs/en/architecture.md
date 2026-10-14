@@ -2457,7 +2457,7 @@ flowchart TD
 7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
 8. <a id="kn-bild-s8"></a>**Picture harmless?**: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing.
 9. <a id="kn-bild-s9"></a>**Mark as AI picture**: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an IPTC entry).
-10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder (bilder.keep), the card in the chat shows it, a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory.
+10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory.
 
 **Examples:** Cat on a skateboard: Painted, marked, in the gallery. · Picture of the own profile name: Fixed refusal, the model is not asked. · Too little memory free: Nothing loaded, speech keeps running.
 

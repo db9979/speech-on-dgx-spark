@@ -545,7 +545,9 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),
                 # a made document (docmake.py), its preview and its file: reading only, never changing or sending
-                re.compile(r"/api/make/doc/[0-9a-f]{12}(?:/file)?"), re.compile(r"/api/make/job/[0-9a-f]{12}"))
+                re.compile(r"/api/make/doc/[0-9a-f]{12}(?:/file)?"), re.compile(r"/api/make/job/[0-9a-f]{12}"),
+                # a picture painted for an answer (bilder.py, with chat.bilder): its job and its file, reading only
+                re.compile(r"/api/bilder/job/[0-9a-f]{12}"), re.compile(r"/api/bilder/[0-9a-f]{12}/datei"))
 APP_GATE = [lambda uid: False]
 # Panel areas in the app (iphone.py, V01.0.246): with the admin switch chat.iphone_panel and the profile's
 # own switch for an area, the app's key also reaches that area's panel paths. right -> ((methods, pattern), ...);
@@ -961,8 +963,9 @@ def _att(a):
                 out.append({"k": "doc", "l": items})
         elif k == "mk" and x.get("t"):
             out.append({"k": "mk", "t": str(x["t"])[:120], "n": str(x.get("n", ""))[:40]})
-        elif k == "bild" and x.get("p"):   # a picture painted for this answer (bilder.py): its prompt, Ich → Bilder shows it
-            out.append({"k": "bild", "p": str(x["p"])[:300]})
+        elif k == "bild" and x.get("p"):   # a picture painted for this answer (bilder.py): its prompt and its job, so the
+            j = str(x.get("j", ""))     # chat shows the picture again after a reload and on every device
+            out.append({"k": "bild", "p": str(x["p"])[:300], **({"j": j} if re.fullmatch(r"[0-9a-f]{12}", j) else {})})
     return out
 
 

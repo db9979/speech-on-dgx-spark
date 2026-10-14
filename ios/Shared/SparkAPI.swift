@@ -18,6 +18,7 @@ enum ChatEvent {
     case action(kind: String, target: String)   // iphone_action: "navigate" or "call"
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
+    case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
 }
 
 struct Reminder {
@@ -551,6 +552,25 @@ struct SparkAPI {
         return url
     }
 
+    // ---------------------------------------------------------------- pictures painted for an answer (bilder.py)
+    static func isJob(_ s: String) -> Bool { s.count == 12 && s.allSatisfy { $0.isHexDigit && !$0.isUppercase } }
+
+    /// A painted picture's job: "wait", "run", "done" (then the picture's id) or "error" (then the reason).
+    func pictureJob(_ job: String) async throws -> (state: String, pic: String?, error: String) {
+        let (data, response) = try await URLSession.shared.data(for: request("api/bilder/job/\(job)"))
+        try Self.check(data, response)
+        let d = Self.object(data)
+        let pic = (d["pic"] as? [String: Any])?["id"] as? String
+        return (d["state"] as? String ?? "", pic.flatMap { Self.isJob($0) ? $0 : nil }, d["error"] as? String ?? "")
+    }
+
+    /// The picture itself (PNG, only of the own profile).
+    func pictureFile(_ id: String) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(for: request("api/bilder/\(id)/datei"))
+        try Self.check(data, response)
+        return data
+    }
+
     // ---------------------------------------------------------------- documents the Spark made (docmake.py)
     /// The made documents, newest first; nil when "Dokumente erstellen" is off for the profile.
     func madeDocs() async throws -> [MadeDoc]? {
@@ -794,6 +814,11 @@ struct SparkAPI {
                             }
                         case "iphone":
                             if let kind = ev["kind"] as? String, let target = ev["target"] as? String { cont.yield(.action(kind: kind, target: target)) }
+                        case "bild":
+                            // only a job id of 12 hex digits; the prompt is shown as plain text, never as markup
+                            if let j = ev["job"] as? String, Self.isJob(j) {
+                                cont.yield(.picture(job: j, prompt: String((ev["prompt"] as? String ?? "").prefix(300))))
+                            }
                         case "rate":
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),

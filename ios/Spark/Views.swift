@@ -293,6 +293,7 @@ struct ChatView: View {
                         }
                         ForEach(talk.messages) { m in
                             Bubble(message: m).id(m.id)
+                            if m.role != "user", let j = m.picJob { PictureCard(job: j) }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                         }
                     }
@@ -631,6 +632,56 @@ struct Bubble: View {
                     }
                 }
             if !mine { Spacer(minLength: 40) }
+        }
+    }
+}
+
+/// A picture painted for an answer (Bilder malen, bilder.py): waits while the Spark paints, then shows it;
+/// touching and holding saves or shares it. The job leads to the picture also in a conversation opened again.
+struct PictureCard: View {
+    let job: String
+    @State private var image: UIImage?
+    @State private var line: LocalizedStringKey = "Malt …"
+    @State private var gone = false
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFit()
+                    .frame(maxWidth: 420, maxHeight: 420, alignment: .leading)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .accessibilityLabel("Gemaltes Bild")
+                    .contextMenu {
+                        ShareLink(item: Image(uiImage: image), preview: SharePreview("Bild", image: Image(uiImage: image))) {
+                            Label("Sichern oder teilen", systemImage: "square.and.arrow.up")
+                        }
+                    }
+            } else if !gone {
+                HStack(spacing: 8) { ProgressView(); Text(line).font(.footnote).foregroundStyle(.secondary) }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .task(id: job) { await follow() }
+    }
+
+    /// Looks every 2.5 s until the picture is there or the job ended without one.
+    private func follow() async {
+        guard let api = SparkAPI.current else { return }
+        while !Task.isCancelled {
+            do {
+                let j = try await api.pictureJob(job)
+                if j.state == "done", let pic = j.pic {
+                    image = UIImage(data: try await api.pictureFile(pic))
+                    gone = image == nil
+                    return
+                }
+                if j.state == "error" || j.state == "done" { gone = true; return }
+                line = j.state == "wait" ? "Wartet auf eine Gesprächspause …" : "Malt …"
+            } catch {
+                gone = true   // deleted, or the Spark does not paint any more: the answer's text says the rest
+                return
+            }
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
         }
     }
 }

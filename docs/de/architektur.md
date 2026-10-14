@@ -2457,7 +2457,7 @@ flowchart TD
 7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
 8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
 9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als IPTC-Angabe).
-10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt in den Ordner des Profils (bilder.keep), die Karte im Chat zeigt es, über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei.
+10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei.
 
 **Beispiele:** Katze auf einem Skateboard: Gemalt, gekennzeichnet, in der Galerie. · Bild vom eigenen Profilnamen: Feste Absage, das Modell wird nicht gefragt. · Zu wenig Speicher frei: Nichts geladen, Sprache läuft weiter.
 

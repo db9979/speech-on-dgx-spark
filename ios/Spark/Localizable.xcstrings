@@ -7560,6 +7560,56 @@
           }
         }
       }
+    },
+    "Malt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Painting …"
+          }
+        }
+      }
+    },
+    "Wartet auf eine Gesprächspause …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for a pause in the conversation …"
+          }
+        }
+      }
+    },
+    "Gemaltes Bild": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Painted picture"
+          }
+        }
+      }
+    },
+    "Bild": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture"
+          }
+        }
+      }
+    },
+    "Sichern oder teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save or share"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

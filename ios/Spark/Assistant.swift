@@ -18,6 +18,25 @@ final class Conversation: ObservableObject {
         /// 👍/👎 (Einstellungs-Assistent): the id the Spark gave this answer, and the vote once given
         var rateId: String?
         var rated: Bool?
+        /// a picture painted for this answer (bilder.py): its job, and its prompt for the conversation list
+        var picJob: String?
+        var picPrompt: String?
+    }
+
+    /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
+    static func picture(_ d: [String: Any]) -> (job: String, prompt: String)? {
+        guard let att = d["att"] as? [[String: Any]],
+              let a = att.first(where: { $0["k"] as? String == "bild" && SparkAPI.isJob($0["j"] as? String ?? "") }) else { return nil }
+        return (a["j"] as? String ?? "", a["p"] as? String ?? "")
+    }
+
+    static func message(_ d: [String: Any]) -> Message? {
+        guard let role = d["role"] as? String, role == "user" || role == "assistant",
+              let text = d["content"] as? String else { return nil }
+        let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
+        var m = Message(role: role, text: text, mark: mark)
+        if role == "assistant", let p = picture(d) { m.picJob = p.job; m.picPrompt = p.prompt }
+        return m
     }
 
 
@@ -312,12 +331,7 @@ final class Conversation: ObservableObject {
         if !got.ids.contains(id) { fresh(); return }
         guard let c = got.items.first(where: { $0.id == id }) else { return }
         seenAt = max(seenAt, Int(c.updated.timeIntervalSince1970 * 1000))
-        let theirs = c.msgs.compactMap { d -> Message? in
-            guard let role = d["role"] as? String, role == "user" || role == "assistant",
-                  let text = d["content"] as? String else { return nil }
-            let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
-            return Message(role: role, text: text, mark: mark)
-        }
+        let theirs = c.msgs.compactMap { Self.message($0) }
         // only when the Spark has more than the app shows (the app keeps its own labels for what it asked itself)
         guard theirs.count > messages.suffix(60).count else { return }
         // the messages both have keep their identity, label and vote: SwiftUI only adds the new bubbles at the end
@@ -327,6 +341,7 @@ final class Conversation: ObservableObject {
             guard i < mine.count, mine[i].role == m.role else { return m }
             var k = m
             k.id = mine[i].id; k.label = mine[i].label; k.rateId = mine[i].rateId; k.rated = mine[i].rated
+            if k.picJob == nil { k.picJob = mine[i].picJob; k.picPrompt = mine[i].picPrompt }   // the painted picture stays
             return k
         }
         saved = messages.count
@@ -403,12 +418,7 @@ final class Conversation: ObservableObject {
     /// Continue a conversation from the list (also one from the panel).
     func resume(_ c: SavedConvo) {
         stop()
-        messages = c.msgs.compactMap { d in
-            guard let role = d["role"] as? String, role == "user" || role == "assistant",
-                  let text = d["content"] as? String else { return nil }
-            let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
-            return Message(role: role, text: text, mark: mark)
-        }
+        messages = c.msgs.compactMap { Self.message($0) }
         convoId = c.id
         saved = messages.count
         seenAt = Int(c.updated.timeIntervalSince1970 * 1000)
@@ -616,6 +626,7 @@ final class Conversation: ObservableObject {
                     AppleReminders.remove(ids)
                 case .action(let kind, let target): Task { await propose(kind, target) }
                 case .rate(let id): edit { $0.rateId = id }
+                case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 }
             }
             streamDone = true
@@ -644,6 +655,8 @@ final class Conversation: ObservableObject {
             guard !m.text.isEmpty else { return nil }
             var d: [String: Any] = ["role": m.role, "content": m.label.map { $0 + "\n" + m.text } ?? m.text]
             if let mark = m.mark { d[mark] = true }
+            // the picture stays with the answer, so the panel and every device show it again
+            if let j = m.picJob, let p = m.picPrompt, !p.isEmpty { d["att"] = [["k": "bild", "p": p, "j": j]] }
             return d
         }
         guard !msgs.isEmpty, let first = messages.first(where: { $0.role == "user" }) else { return }

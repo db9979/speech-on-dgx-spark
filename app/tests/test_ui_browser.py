@@ -883,7 +883,8 @@ class Browser(unittest.TestCase):
 
     def test_bilder_page(self):
         """Ich → Bilder (bilder.js, Bilder malen): the form, the gallery and a picture's details with download; on a
-        computer and a phone, with the strict CSP, without sideways scrolling."""
+        computer and a phone, with the strict CSP, without sideways scrolling. The chat shows a painted picture under
+        its answer again after a reload (found by its job)."""
         import io as _io
         import bilder
         import profiles
@@ -898,7 +899,7 @@ class Browser(unittest.TestCase):
         Image.new("RGB", (64, 48), (20, 120, 200)).save(b, "PNG")
         bilder.clear(me)
         bilder.keep(me, b.getvalue(), {"w": 64, "h": 48, "prompt": "a blue sky <b>x</b>", "wish": "Blauer Himmel",
-                                       "format": "quer", "seconds": 2.5, "src": "seite"})
+                                       "format": "quer", "seconds": 2.5, "src": "seite", "job": "abcdef123456"})
 
         async def go():
             async with async_playwright() as p:
@@ -917,6 +918,16 @@ class Browser(unittest.TestCase):
                         ok = 0
                         for _ in range(100):
                             ok = await pg.evaluate("(()=>{const i=document.querySelector('#bildbox .ld-detail img');return i&&i.complete?i.naturalWidth:0})()")
+                            if ok:
+                                break
+                            await asyncio.sleep(0.2)
+                        self.assertEqual(ok, 64, name)
+                        # the answer from the history: the picture itself under it, not only its prompt
+                        await pg.evaluate("goSec('chat');const m=chatLog('assistant','Hier ist dein Bild.');"
+                                          "attRender(m,[{k:'bild',p:'a blue sky',j:'abcdef123456'}],false)")
+                        ok = 0
+                        for _ in range(100):
+                            ok = await pg.evaluate("(()=>{const i=document.querySelector('#chatlog .blatt img');return i&&i.complete?i.naturalWidth:0})()")
                             if ok:
                                 break
                             await asyncio.sleep(0.2)

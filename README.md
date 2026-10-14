@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.571** Painted pictures right in the chat: in the iPhone app too, and again after a reload and on every device
 - **V01.0.570** Calm apps: the iPhone shows "not reachable" only after 3 seconds, appends new messages, open pages stay open; Android 1.3.2 waits while the Spark restarts instead of jumping to the address screen
 - **V01.0.569** Status → Monitoring as tiles: "Now" and "Today" with icon, large number and colour, every Today tile jumps to its place, the other cards as "Areas"; iPhone with a "Today" section
 - **V01.0.568** Chats with other Sparks V2: photos, files and voice messages go too (the receiver checks them and makes them anew), and groups can take in people on other Sparks (text only for now); two new admin switches, both off
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.564** RED FIX mail style: the browser test switches the feature on for real
 - **V01.0.563** Learn mail style: mail drafts by voice and in the Begleiter sound like you, learned from your sent mails (read-only, no mail kept)
 - **V01.0.562** Tests green again: the jump link test and the Features page height budget follow the immediate Status poll and the new "Verbrauchszähler" line
-- **V01.0.561** Live: boxes under "Services and targets" keep their text in the normal view too
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
