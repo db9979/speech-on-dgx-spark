@@ -4,7 +4,14 @@ Each person gets a Spark address, handle@domain (domain: chat.verbund_domain, th
 outside). Chats → ＋ Neuer Chat → „Jemand auf einem anderen Spark“ sends a contact request to such an address; the
 other person answers Annehmen, Ablehnen or Sperren. Only after Annehmen does a message get through. Then it is a chat
 of two like any other (kind "far" in chats.py, the other one a member "r_<12 hex>"): ticks, answers, reactions,
-change and take back. V1 is text only; photos, files, voice, private chats and groups across Sparks come later.
+change and take back. Private chats, groups and calls across Sparks come later.
+
+Photos, files and voice (V2, chat.verbund_media, plan plaene/messenger-d-v2.md Teil 3): the file goes first, alone
+and signed, to https://<domain>/api/verbund/blob; its message follows with the file's SHA-256. The receiving Spark
+takes a file only from an allowed, known Spark (key and switch checked before a byte of the body is read), at most
+BLOB_DAY a day per Spark, keeps it sealed until its message comes (at most BLOB_KEEP), then makes it again as if
+uploaded here: a photo drawn anew (no EXIF, no place), a file checked by its content, a voice message decoded and
+written down by this Spark's own speech recognition. Nothing of it goes to the model.
 
 Which Sparks (chat.verbund_mode, the admin picks, Dominik 1c):
     "pair"   only Sparks both admins paired once with a one-time code (Funktionen → Chats → Chats mit anderen Sparks);
@@ -52,6 +59,7 @@ from fastapi.responses import JSONResponse
 
 import features
 import profiles
+import verbundgruppe
 
 VERSION = 1
 MAX_BODY = 32 * 1024     # one request between Sparks
@@ -76,10 +84,16 @@ HANDLE = re.compile(r"[a-z0-9][a-z0-9._-]{0,29}")
 RID = re.compile(r"r_[0-9a-f]{12}")
 NONCE = re.compile(r"[0-9a-f]{32}")
 MID = re.compile(r"[0-9a-f]{12}")
-TYPES = ("pair", "ask", "yes", "msg", "read", "edit", "back", "react")
+TYPES = ("pair", "ask", "yes", "msg", "read", "edit", "back", "react") + verbundgruppe.TYPES
 STATES = ("in", "out", "ok", "no", "block")
 WELL_KNOWN = "/.well-known/spark-verbund"
 INBOX = "/api/verbund/in"
+BLOB_PATH = "/api/verbund/blob"
+BLOB_KEEP = 24 * 3600            # a file waits this long here for its message
+BLOB_DAY = 500 * 1024**2         # bytes of files one Spark may send here per day
+BLOB_WAITING = 2 * 1024**3       # all files waiting here for their message together
+BLOB_TIMEOUT = 120               # one file to another Spark
+SHA = re.compile(r"[0-9a-f]{64}")
 MODES = ("pair", "open")
 
 _lock = threading.RLock()
@@ -122,6 +136,16 @@ def usable(uid):
     """The admin allows it (not blocked for this profile) and Chats work for the person."""
     import chats
     return bool(uid and features.allowed("verbund", uid) and chats.usable(uid))
+
+
+def media_on():
+    return features.admin_on("verbundmedia")
+
+
+def media_ok(uid):
+    """Photos, files and voice to and from other Sparks for this person: the switch, Verbund and chat media."""
+    import chats
+    return bool(usable(uid) and features.allowed("verbundmedia", uid) and chats.media_ok(uid))
 
 
 # ---------------------------------------------------------------- the Spark's own key
@@ -206,7 +230,7 @@ def _save(name, d):
 def _today():
     day = time.strftime("%Y-%m-%d")
     if _count["day"] != day:
-        _count.update(day=day, **{"in": 0, "out": 0, "refused": 0, "failed": 0})
+        _count.update(day=day, **{"in": 0, "out": 0, "refused": 0, "failed": 0, "files_in": 0, "files_out": 0, "bytes": {}})
     return _count
 
 
@@ -329,8 +353,9 @@ def contact(uid, rid):
 
 
 def names():
-    """{rid: shown name} for chats.py: the name the other one sent, with its Spark's domain kept out."""
-    out = {}
+    """{rid: shown name} for chats.py: the name the other one sent, with its Spark's domain kept out (contacts,
+    and people met in groups across Sparks)."""
+    out = {r: x["name"] for r, x in _people().items() if x.get("name")}
     for v in _contacts().values():
         for r, c in v.items():
             if c.get("name"):
@@ -343,7 +368,35 @@ def addr_of(rid):
         c = v.get(rid)
         if c and c.get("addr"):
             return c["addr"]
-    return ""
+    return str(_people().get(rid, {}).get("addr") or "")
+
+
+MAX_PEOPLE = 5000        # people met in groups across Sparks (address and name, the oldest go first)
+
+
+def _people():
+    p = _read("people.json").get("people")
+    return p if isinstance(p, dict) else {}
+
+
+def remember(addr, name):
+    """A person on another Spark met in a group (verbundgruppe.py): address and shown name, for the chat's lines."""
+    try:
+        h, d = split(addr)
+    except ValueError:
+        return ""
+    addr = f"{h}@{d}"
+    rid = rid_of(addr)
+    with _lock:
+        p = _people()
+        if p.get(rid) == {"addr": addr, "name": name, "t": p.get(rid, {}).get("t")}:
+            return rid
+        p[rid] = {"addr": addr, "name": name, "t": time.time()}
+        if len(p) > MAX_PEOPLE:
+            for k in sorted(p, key=lambda k: p[k].get("t") or 0)[:len(p) - MAX_PEOPLE]:
+                p.pop(k, None)
+        _save("people.json", {"people": p})
+    return rid
 
 
 def _set_contact(uid, rid, **kw):
@@ -468,7 +521,8 @@ def remove(uid, rid):
 
 
 def forget(uid):
-    """A deleted profile: its contacts, its address and what still waited to go out from it."""
+    """A deleted profile: its contacts, its address and what still waited to go out from it (but leaving the groups
+    of other Sparks, chats.forget)."""
     with _lock:
         d = _contacts()
         if d.pop(uid, None) is not None:
@@ -478,7 +532,8 @@ def forget(uid):
         if mine is not None:
             _save("handles.json", h)
             q = _read("queue.json")
-            items = [x for x in q.get("items") or [] if (x.get("body") or {}).get("from") != mine]
+            items = [x for x in q.get("items") or [] if (x.get("body") or {}).get("from") != mine
+                     or (x.get("body") or {}).get("type") == "gleave"]   # its groups on other Sparks hear it is gone
             _save("queue.json", {"items": items})
 
 
@@ -572,8 +627,10 @@ async def deliver_once(now=None):
         if now - float(x.get("t") or now) > KEEP or not peer_allowed(dom):
             _done(x, failed=True)
             continue
-        raw, sig = _wire(dom, x["body"], now)
-        status = await _post(dom, raw, sig)
+        status = await _send_one(dom, x, now)
+        if status is None:                 # the file of a message is gone here (taken back, chat cleared)
+            _done(x, failed=True)
+            continue
         if 200 <= status < 300:
             _done(x)
             sent += 1
@@ -582,7 +639,7 @@ async def deliver_once(now=None):
             if x["body"].get("type") == "msg" and x.get("cid") and x.get("mid"):
                 import chats
                 chats.far_seen(x["cid"], x["mid"], "got")
-        elif status in (400, 403, 404, 409, 413):
+        elif status in (400, 401, 403, 404, 409, 413):   # 401: the other Spark takes no files (its gate)
             _done(x, failed=True)          # the other Spark refuses it for good
             _log("refused there", status=status)
         else:                              # away, busy (429), 5xx: later, the rest of that Spark too
@@ -600,6 +657,40 @@ async def deliver_once(now=None):
     if sent:
         _log("sent", n=sent)
     return sent
+
+
+async def _send_one(dom, x, now):
+    """One queued request; a message with a file sends the file first. None: its file is no longer here."""
+    m = x["body"].get("media")
+    if isinstance(m, dict) and m.get("sha"):
+        import chats
+        data = chats.far_blob(x.get("cid", ""), x.get("mid", ""))
+        if data is None or hashlib.sha256(data).hexdigest() != m["sha"]:
+            return None
+        status = await _post_blob(dom, m["sha"], data, now)
+        if not 200 <= status < 300:
+            return status
+        _today()["files_out"] += 1
+    raw, sig = _wire(dom, x["body"], now)
+    return await _post(dom, raw, sig)
+
+
+async def _post_blob(dom, sha, data, now):
+    """The file of a message to the other Spark: the signed head (time, one-time number, hash, size) in a header,
+    the bytes as the body. Its status code, or 0 when it could not be reached."""
+    import httpx
+    import netguard
+    head = json.dumps({"v": VERSION, "t": int(now), "n": secrets.token_hex(16), "sha": sha, "size": len(data)},
+                      separators=(",", ":")).encode()
+    try:
+        async with netguard.client(netguard.PUBLIC, max_bytes=MAX_BODY, follow_redirects=False,
+                                   timeout=httpx.Timeout(BLOB_TIMEOUT, connect=TIMEOUT)) as c:
+            r = await c.post("https://" + dom + BLOB_PATH, content=data,
+                             headers={"Content-Type": "application/octet-stream", "X-Spark-From": domain(),
+                                      "X-Spark-Blob": base64.urlsafe_b64encode(head).decode(), "X-Spark-Sig": sign(dom, head)})
+            return r.status_code
+    except Exception:
+        return 0
 
 
 def _done(x, failed=False):
@@ -625,6 +716,7 @@ async def loop():
             pass
         _kick.clear()
         try:
+            blob_tidy()
             await deliver_once()
         except Exception as e:
             _log("loop failed", error=type(e).__name__)
@@ -775,7 +867,8 @@ def for_live():
     c = _today()
     return {"on": True, "sparks": sum(1 for x in p.values() if x.get("state") != "blocked"),
             "contacts": sum(1 for v in _contacts().values() for x in v.values() if x.get("state") == "ok"),
-            "in": c["in"], "out": c["out"], "waiting": waiting_count()}
+            "in": c["in"], "out": c["out"], "waiting": waiting_count(), "media": media_on(),
+            "files_in": c["files_in"], "files_out": c["files_out"]}
 
 
 # ---------------------------------------------------------------- what comes in
@@ -880,12 +973,17 @@ async def receive(dom, raw, sig, now=None):
             _save_peers(p)
     _touch_peer(dom, "in", now)
     _today()["in"] += 1
-    _handle(dom, body, now)
+    m = await _media_in(dom, body) if kind == "msg" and "media" in body else None
+    _handle(dom, body, now, m)
     return {"ok": True}   # always the same answer: the other Spark never learns who is here
 
 
-def _handle(dom, b, now):
-    """What one request means; anything that does not fit is dropped without a word to the sender."""
+def _handle(dom, b, now, media=None):
+    """What one request means; anything that does not fit is dropped without a word to the sender. media: the
+    message's file as this Spark made it again (_media_in), only for a message that announced one."""
+    if b["type"] in verbundgruppe.TYPES:   # groups across Sparks (verbundgruppe.py)
+        verbundgruppe.handle(dom, b, now)
+        return
     to = uid_of_handle(str(b.get("to") or ""))
     frm = str(b.get("from") or "").lower()
     if not to or not HANDLE.fullmatch(frm) or not usable(to):
@@ -936,15 +1034,154 @@ def _handle(dom, b, now):
         _log("dropped", why=6)
         return
     if kind == "msg":
-        text = b.get("text")
-        if not isinstance(text, str) or not text.strip():
+        text = b.get("text") if isinstance(b.get("text"), str) else ""
+        if "media" in b and not media:
+            _log("dropped", why=7)                # a file announced but not here, not allowed or not readable
+            return
+        if not text.strip() and not media:
             return
         reply = str(b.get("reply") or "")
-        chats.far_in(to, rid, mid, text, reply if MID.fullmatch(reply) else "", now)
+        chats.far_in(to, rid, mid, text, reply if MID.fullmatch(reply) else "", now, media=media)
     elif kind == "read":
         chats.far_mark(to, rid, mid, "read")
     elif kind in ("edit", "back", "react"):
         chats.far_change(to, rid, kind, mid, b.get("text") if kind == "edit" else b.get("emoji") if kind == "react" else None, now)
+
+
+# ---------------------------------------------------------------- files from other Sparks
+def _blob_dir():
+    return os.path.join(_dir(), "blobs")
+
+
+def _blob_file(dom, sha):
+    """Per sending Spark: one Spark can never hand in or take the file another one sent."""
+    return os.path.join(_blob_dir(), hashlib.sha256(dom.encode()).hexdigest()[:16] + "_" + sha)
+
+
+def _blob_waiting():
+    try:
+        return sum(e.stat().st_size for e in os.scandir(_blob_dir()) if e.is_file())
+    except OSError:
+        return 0
+
+
+def blob_tidy(now=None):
+    """Files whose message did not come within BLOB_KEEP go."""
+    now = time.time() if now is None else now
+    n = 0
+    try:
+        for e in os.scandir(_blob_dir()):
+            if e.is_file() and now - e.stat().st_mtime > BLOB_KEEP:
+                os.remove(e.path)
+                n += 1
+    except OSError:
+        pass
+    if n:
+        _log("files dropped", n=n)
+    return n
+
+
+def blob_gate(headers):
+    """Before a byte of a file is read (panel.py BodyLimit): the switches are on and the sender is a Spark that may
+    send here and whose key is known. The full check follows in blob_head."""
+    if not admin_on() or not media_on() or not domain():
+        return False
+    dom = str(headers.get("x-spark-from") or "").strip().lower()
+    x = peers().get(dom) if DOMAIN.fullmatch(dom) else None
+    return bool(x and x.get("key") and peer_allowed(dom))
+
+
+def blob_head(dom, head_b64, sig, now=None):
+    """The signed head of a file: checked like a message (form, time, rate, allowed Spark with a known key,
+    signature, one-time number) and against the day's limit. Returns (domain, sha, size)."""
+    import chats
+    now = time.time() if now is None else now
+    if not admin_on() or not media_on() or not domain():
+        _refuse(404, "file while off")
+    dom = (dom or "").strip().lower()
+    if not DOMAIN.fullmatch(dom) or dom == domain():
+        _refuse(400, "sender")
+    try:
+        raw = base64.urlsafe_b64decode(str(head_b64 or "").encode())
+        head = json.loads(raw)
+    except ValueError:
+        _refuse(400, "form")
+    if not isinstance(head, dict) or head.get("v") != VERSION or not isinstance(head.get("t"), int) \
+            or not NONCE.fullmatch(str(head.get("n") or "")) or not SHA.fullmatch(str(head.get("sha") or "")) \
+            or not isinstance(head.get("size"), int) or not 0 < head["size"] <= chats.MAX_FILE:
+        _refuse(400, "form")
+    if abs(now - head["t"]) > SKEW:
+        _refuse(400, "time")
+    if not _rate_ok(dom, now):
+        _log("refused rate")
+        raise HTTPException(429, "too many", headers={"Retry-After": "60"})
+    x = peers().get(dom)
+    if not x or not x.get("key") or not peer_allowed(dom):
+        _refuse(403, "unknown spark")
+    if not verify(x["key"], domain(), raw, sig):
+        _refuse(403, "signature")
+    if _seen_nonce(dom, head["n"], now):
+        _refuse(409, "replay")
+    day = _today()["bytes"]
+    if int(day.get(dom) or 0) + head["size"] > BLOB_DAY or _blob_waiting() + head["size"] > BLOB_WAITING:
+        _log("refused file limit")
+        raise HTTPException(429, "too much today", headers={"Retry-After": "3600"})
+    return dom, head["sha"], head["size"]
+
+
+def blob_put(dom, sha, size, data):
+    """The bytes of a checked head: exactly its size and hash, kept sealed until the message comes."""
+    import chats
+    if len(data) != size or hashlib.sha256(data).hexdigest() != sha:
+        _refuse(400, "file")
+    os.makedirs(_blob_dir(), mode=0o700, exist_ok=True)
+    path = _blob_file(dom, sha)
+    with open(path + ".tmp", "wb") as f:
+        f.write(chats.seal_bytes(data, "verbund", sha, dom))
+    os.replace(path + ".tmp", path)
+    day = _today()
+    day["bytes"][dom] = int(day["bytes"].get(dom) or 0) + size
+    day["files_in"] += 1
+    _log("file in", kb=size // 1024)
+    return {"ok": True}
+
+
+def _blob_take(dom, sha):
+    import chats
+    path = _blob_file(dom, sha)
+    try:
+        with open(path, "rb") as f:
+            raw = f.read()
+        os.remove(path)
+    except OSError:
+        return None
+    return chats.unseal_bytes(raw, "verbund", sha, dom)
+
+
+async def _media_in(dom, b):
+    """The file a message announces, made again here as if uploaded (chats.photo/a_file/voice); None when it is not
+    here, the person does not take files from other Sparks or it cannot be read. The file goes either way."""
+    import chats
+    m = b.get("media")
+    if not isinstance(m, dict) or m.get("kind") not in chats.MEDIA or not SHA.fullmatch(str(m.get("sha") or "")):
+        return None
+    data = _blob_take(dom, m["sha"])
+    to = uid_of_handle(str(b.get("to") or ""))
+    frm = str(b.get("from") or "").lower()
+    if data is None or not to or not HANDLE.fullmatch(frm) or not media_ok(to):
+        return None
+    c = contact(to, rid_of(f"{frm}@{dom}"))
+    if not c or c.get("state") != "ok":
+        return None
+    try:
+        if m["kind"] == "photo":
+            return await chats.photo(data)
+        if m["kind"] == "voice":
+            return await chats.voice(data)
+        return chats.a_file(data, str(m.get("name") or "")[:300])
+    except ValueError:
+        _log("file unreadable", kind=m["kind"])
+        return None
 
 
 # ---------------------------------------------------------------- endpoints
@@ -972,6 +1209,20 @@ async def api_in(request: Request):
     if len(raw) > MAX_BODY:
         _refuse(413, "size")
     return await receive(request.headers.get("x-spark-from", ""), raw, request.headers.get("x-spark-sig", ""))
+
+
+@router.post(BLOB_PATH)   # open: another Spark's file for a message, proven by the signed head
+async def api_blob(request: Request):
+    import guard
+    guard.limit(request, "verbundin")
+    dom, sha, size = blob_head(request.headers.get("x-spark-from", ""), request.headers.get("x-spark-blob", ""),
+                               request.headers.get("x-spark-sig", ""))
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > size:
+            _refuse(413, "file size")
+    return blob_put(dom, sha, size, bytes(data))
 
 
 def _on(request: Request, prof=Depends(own_profile)):

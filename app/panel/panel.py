@@ -126,6 +126,8 @@ def _may_upload(scope):
     req = Request(scope)
     if req.headers.get("authorization") or admin_cookie_ok(req) or profiles.current(req) or coadmin.session(req):
         return True
+    if scope.get("path") == verbund.BLOB_PATH:   # another Spark's file: only from an allowed Spark with a known key
+        return verbund.blob_gate(req.headers)
     return scope.get("path") == "/api/test/asr" and bool(load_config().get("chat", {}).get("public", False))
 
 
@@ -134,10 +136,10 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/desk/meeting/chunk", begleiter.MEET_CHUNK), ("/api/profile/desk/send", begleiter.INBOX_FILE + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
-    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/verbund", verbund.MAX_BODY + 1024), ("/api/anrufe", anrufe.MAX_SIGNAL + 4096), ("/api/admin/verbund", 16 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
+    ("/api/chats/media", max(chats.MAX_FILE, chatsec.MAX_BLOB) + chatsec.MAX_BOX + 64 * 1024), ("/api/chats", 128 * 1024), ("/api/verbund/blob", lambda: chats.MAX_FILE + 1024), ("/api/verbund", verbund.MAX_BODY + 1024), ("/api/anrufe", anrufe.MAX_SIGNAL + 4096), ("/api/admin/verbund", 16 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/desk/meeting/chunk", "/api/profile/desk/send", "/api/profile/voice", "/api/profile/docs",
-           "/api/chat/image", "/api/chats/media", "/mcp"))
+           "/api/chat/image", "/api/chats/media", "/api/verbund/blob", "/mcp"))
 
 
 # Browser protection on every answer (V01.0.262): no other page may show the panel in a frame (clickjacking),

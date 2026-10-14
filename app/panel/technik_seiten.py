@@ -191,7 +191,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "a2cd582b2b",
+        "stand": "8380709088",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
             "panel.sessions": ["s7", "s11", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
@@ -278,12 +278,14 @@ SEITEN_DATEN = {
             S("s8", "frage", ("Großer Upload ohne Anmeldung?", "Big upload without login?"),
               ("_may_upload", "_may_upload"),
               ("Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer "
-               "überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. "
-               "Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden "
-               "Uploads gelesen wird.",
+               "überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei "
+               "eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein "
+               "erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht "
+               "es nur darum, dass kein Byte eines fremden Uploads gelesen wird.",
                "The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who "
-               "could be logged in at all: admin cookie, profile or an Authorization line. The real check "
-               "comes later in the endpoint; here no byte of a stranger's upload is read."),
+               "could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file "
+               "(/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a "
+               "known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read."),
               ("stop", "ja", ("Anmeldung nötig (401)", "Login required (401)"))),
             S("s9", "frage", ("Zu groß?", "Too large?"),
               ("common.BodyLimit", "common.BodyLimit"),

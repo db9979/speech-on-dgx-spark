@@ -398,7 +398,7 @@ def _tell(members, ev, but=None):
 def _today():
     day = time.strftime("%Y-%m-%d")
     if _count["day"] != day:
-        _count.update(day=day, sent=0, pushed=0, push_failed=0, media=0, private=0, spoken=0)
+        _count.update(day=day, sent=0, pushed=0, push_failed=0, media=0, private=0, spoken=0, far_group_in=0)
     return _count
 
 
@@ -419,7 +419,7 @@ def _live(text):
 def _ticks(x, c, uid):
     """For the own messages: "read" (everybody else read it), "got" (every device of the others has it) or "sent".
     "gelesen" only counts between profiles that both show it (chat_receipts)."""
-    others = [u for u in c["members"] if u != uid]
+    others = [u for u in c["members"] if u != uid and not (c.get("kind") == "group" and RID.fullmatch(u))]
     if not others:
         return "sent"
     mine_on = profiles.settings(uid).get("chat_receipts", True) is not False
@@ -573,18 +573,23 @@ def items(uid, cid, before="", now=None):
         why = "" if messages.all_on() and messages.takes_all(uid) else "Nachrichten an alle sind gerade ausgeschaltet."
     if c.get("kind") == "far":
         why = "" if others and takes(others[0], uid) else why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr."
-    return {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
-            "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
-            "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
-            "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
-            "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
-            "can_send": (not why if c.get("kind") in ("priv", "far") or c.get("fixed") else
-                         takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
-            "why": (why if c.get("kind") in ("priv", "far") or c.get("fixed") else
-                    why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
-                    "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
-            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed")), "far": c.get("kind") == "far",
-            **({"addr": _far_addr(c, uid)} if c.get("kind") == "far" else {})}
+    out = {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
+           "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
+           "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
+           "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
+           "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
+           "can_send": (not why if c.get("kind") in ("priv", "far") or c.get("fixed") else
+                        takes(others[0], uid) if c.get("kind") == "one" and others else usable(uid) and groups_on()),
+           "why": (why if c.get("kind") in ("priv", "far") or c.get("fixed") else
+                   why_not(others[0], uid) if c.get("kind") == "one" and others and not takes(others[0], uid) else
+                   "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
+           "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed")), "far": c.get("kind") == "far",
+           "far_home": bool(c.get("home")), **({"addr": _far_addr(c, uid)} if c.get("kind") == "far" else {})}
+    if spans(c):
+        import verbundgruppe
+        if not (verbundgruppe.admin_on() and verbundgruppe.usable(uid)):
+            out.update(can_send=False, why="Gruppen mit anderen Sparks sind gerade ausgeschaltet.")
+    return out
 
 
 def _far_addr(c, uid):
@@ -690,15 +695,55 @@ def far_tell(uid, ask=False):
             pass
 
 
-def far_in(uid, rid, mid, text, reply="", now=None):
+def _store_media(cid, mid, media, item):
+    """A photo, file or voice message (photo/a_file/voice below) into the item, its parts sealed beside the chat."""
+    info = dict(media["info"])
+    if info.get("name"):
+        info["name"] = seal(info["name"], cid, mid + "/name")
+    item["kind"], item["media"] = media["kind"], info
+    os.makedirs(_media_dir(cid), mode=0o700, exist_ok=True)
+    for part, data in media["parts"].items():
+        tmp = _media_file(cid, mid, part) + ".tmp"
+        with open(tmp, "wb") as f:
+            f.write(seal_bytes(data, cid, mid, part))
+        os.replace(tmp, _media_file(cid, mid, part))
+
+
+def far_blob(cid, mid):
+    """The bytes of an own photo, file or voice message in a chat with another Spark, for verbund.py to send; None
+    when it is no longer there (taken back, chat cleared or gone)."""
+    try:
+        d = _chat(cid)
+    except LookupError:
+        return None
+    x = next((x for x in d.get("items", []) if x["id"] == mid and x.get("kind") in MEDIA and not x.get("gone")), None)
+    if not x:
+        return None
+    try:
+        with open(_media_file(cid, mid, "f"), "rb") as f:
+            return unseal_bytes(f.read(), cid, mid, "f")
+    except OSError:
+        return None
+
+
+def far_in(uid, rid, mid, text, reply="", now=None, media=None):
     """A message from a contact on another Spark (verbund.py checked who and where): stored like any other, its
-    own id kept (a second delivery of the same message changes nothing), then the notification as for a chat."""
+    own id kept (a second delivery of the same message changes nothing), then the notification as for a chat.
+    media: its photo, file or voice message as this Spark made it again (verbund._media_in)."""
     now = time.time() if now is None else now
-    text = clean(text)
-    if not text or not MID.fullmatch(mid or ""):
+    text = clean((media or {}).get("text") or "" if media else text)
+    if not text and not media or not MID.fullmatch(mid or ""):
         return False
     cid = open_far(uid, rid, now)
     item = {"id": mid, "from": rid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
+    if media:
+        size = sum(len(b) for b in media["parts"].values())
+        if used(uid) + size > QUOTA:
+            _log("far in refused", why="quota")
+            return False
+        if any(x["id"] == mid for x in _chat(cid).get("items", [])):
+            return False
+        _store_media(cid, mid, media, item)
 
     def put(meta, d, chats):
         if any(x["id"] == mid for x in d["items"]):
@@ -716,22 +761,199 @@ def far_in(uid, rid, mid, text, reply="", now=None):
     if meta is None:
         return False
     _tell([uid], {"type": "chat", "id": cid})
-    _log("far in", chars=len(text))
+    _log("far in", chars=len(text), **({"media": media["kind"]} if media else {}))
+    _far_notify([uid], cid, meta, rid, text, now, (media or {}).get("kind", ""))
+    return True
 
+
+def _far_notify(uids, cid, meta, sender, text, now, kind=""):
+    """Notification and the own speaker for a message that came from another Spark, as send() does for one here."""
     async def deliver():
-        try:
-            await _notify(uid, cid, meta, rid, text, now)
-            if not listening(uid) and not _muted_until(meta, uid, now):
-                import messages
-                if await messages.speak_now(uid, _names().get(rid) or "Jemand", "", text, now):
-                    _today()["spoken"] = _today().get("spoken", 0) + 1
-        except Exception as e:
-            _log("notify failed", error=type(e).__name__)
+        for u in uids:
+            try:
+                await _notify(u, cid, meta, sender, text or MEDIA_WORD.get(kind, ""), now)
+                if not listening(u) and not _muted_until(meta, u, now):
+                    import messages
+                    if await messages.speak_now(u, _names().get(sender) or "Jemand", "" if meta.get("kind") in TWO else
+                                                _title(cid, meta, u, {}), " ".join(p for p in (MEDIA_WORD.get(kind, ""), text) if p), now):
+                        _today()["spoken"] = _today().get("spoken", 0) + 1
+            except Exception as e:
+                _log("notify failed", error=type(e).__name__)
     try:
         asyncio.get_running_loop().create_task(deliver())
     except RuntimeError:
         pass
+
+
+# ---------------------------------------------------------------- groups across Sparks (verbundgruppe.py)
+def spans(c):
+    """A group with people on other Sparks: of this Spark (members r_…) or of another one (meta "home")."""
+    return c.get("kind") == "group" and bool(c.get("home") or any(RID.fullmatch(u) for u in c["members"]))
+
+
+def _locals(meta):
+    return [u for u in meta["members"] if UID.fullmatch(u)]
+
+
+def _far_rids(rids):
+    return [r for r in dict.fromkeys(rids) if RID.fullmatch(r)][:MAX_MEMBERS]
+
+
+def far_group_in(to, cid, dom, gid, name, rids, adder, now=None):
+    """A group of another Spark (dom) took the profile to in: the chat for it here is made, or to joins it."""
+    now = time.time() if now is None else now
+    with _lock:
+        chats = _index()
+        c = chats.get(cid)
+        if c is None:
+            if sum(1 for x in chats.values() if to in x["members"] and x.get("kind") == "group") >= MAX_GROUPS \
+                    or sum(1 for x in chats.values() if to in x["members"]) >= MAX_CHATS:
+                _log("far group refused", why="full")
+                return False
+            c = chats[cid] = {"kind": "group", "members": [], "admins": [], "by": adder, "t": now, "updated": now,
+                              "vanish": 0, "name": seal(name, cid, "name"), "last": {}, "unread": {}, "home": dom, "gid": gid}
+            d = {"items": []}
+        elif c.get("home") != dom or c.get("gid") != gid:
+            return False
+        else:
+            d = _chat(cid, c, now)
+        if to not in c["members"] and len(c["members"]) < MAX_MEMBERS + 1:
+            c["members"] = _locals(c) + [to] + _far_rids(rids)
+            _sys(d, adder, now, "add", [to])
+        c["updated"] = now
+        c["last"] = _last(cid, d["items"][-1] if d["items"] else None)
+        _save_chat(cid, d)
+        _save_index(chats)
+    _tell([to], {"type": "chat", "id": cid})
+    _log("far group in", members=len(c["members"]))
     return True
+
+
+def far_group_members(to, cid, rids, now=None):
+    """Who is in a group of another Spark now (its home Spark says so); the people of this Spark stay as they are."""
+    def f(meta, d, chats):
+        if not meta.get("home") or to not in meta["members"]:
+            return []
+        meta["members"] = _locals(meta) + _far_rids(rids)
+        return _locals(meta)
+    try:
+        _tell(_mutate(cid, f, now, items=False), {"type": "chat", "id": cid})
+    except LookupError:
+        _log("far group dropped", why="no chat")
+
+
+def far_group_name(to, cid, name, now=None):
+    now = time.time() if now is None else now
+    if not name:
+        return
+
+    def f(meta, d, chats):
+        if not meta.get("home") or to not in meta["members"]:
+            return []
+        meta["name"] = seal(name, cid, "name")
+        mid = _sys(d, meta.get("by", ""), now, "name")
+        d["items"][-1]["text"] = seal(name, cid, mid)
+        meta["updated"] = now
+        return _locals(meta)
+    try:
+        _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
+    except LookupError:
+        _log("far group dropped", why="no chat")
+
+
+def far_group_out(to, cid, now=None):
+    """The home Spark took the profile out of its group; with nobody of this Spark left the chat goes."""
+    now = time.time() if now is None else now
+
+    def f(meta, d, chats):
+        if not meta.get("home") or to not in meta["members"]:
+            return None
+        meta["members"].remove(to)
+        for k in ("unread", "mute", "cleared", "read", "got"):
+            (meta.get(k) or {}).pop(to, None)
+        if not _locals(meta):
+            chats.pop(cid)
+            return []
+        _sys(d, meta.get("by", ""), now, "remove", [to])
+        meta["updated"] = now
+        return _locals(meta)
+    try:
+        rest = _mutate(cid, f, now)
+    except LookupError:
+        return
+    if rest is None:
+        return
+    if not rest:
+        _drop(cid)
+    _tell(rest, {"type": "chat", "id": cid})
+    _send_event(to, {"type": "gone", "id": cid})
+
+
+def _far_put(cid, rid, mid, text, reply, now, need=None):
+    """A message of someone on another Spark into a group chat here, its id kept (a second delivery changes nothing).
+    need(meta): whether it may go in. Returns the chat's meta, or None."""
+    text = clean(text)
+    if not text or not MID.fullmatch(mid or ""):
+        return None
+    item = {"id": mid, "from": rid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
+
+    def put(meta, d, chats):
+        if not need(meta) or any(x["id"] == mid for x in d["items"]):
+            return None
+        if reply and any(x["id"] == reply for x in d["items"]):
+            item["reply"] = reply
+        d["items"].append(item)
+        meta["updated"] = now
+        un = _map(meta, "unread")
+        for u in _locals(meta):
+            un[u] = int(un.get(u) or 0) + 1
+            if listening(u):
+                _map(meta, "got")[u] = now
+        return json.loads(json.dumps(meta))
+    try:
+        meta = _mutate(cid, put, now)
+    except LookupError:
+        return None
+    if meta is None:
+        return None
+    _tell(_locals(meta), {"type": "chat", "id": cid})
+    _far_notify(_locals(meta), cid, meta, rid, text, now)
+    _today()["far_group_in"] = _today().get("far_group_in", 0) + 1
+    _log("far group message", chars=len(text))
+    return meta
+
+
+def far_group_msg(cid, rid, mid, text, reply="", now=None):
+    """A message in a group of another Spark, sent on by its home Spark."""
+    now = time.time() if now is None else now
+    return _far_put(cid, rid, mid, text, reply, now, lambda m: bool(m.get("home") and _locals(m))) is not None
+
+
+def home_group_in(gid, rid, mid, text, reply="", now=None):
+    """A member on another Spark writes into a group of this Spark (verbundgruppe._at_home checked it is in)."""
+    now = time.time() if now is None else now
+    return _far_put(gid, rid, mid, text, reply, now, lambda m: not m.get("home") and rid in m["members"])
+
+
+def far_member_left(gid, rid, now=None):
+    """A member on another Spark left a group of this Spark."""
+    now = time.time() if now is None else now
+
+    def f(meta, d, chats):
+        if meta.get("home") or rid not in meta["members"]:
+            return None
+        meta["members"].remove(rid)
+        _sys(d, rid, now, "leave", [rid])
+        meta["updated"] = now
+        return json.loads(json.dumps(meta))
+    try:
+        meta = _mutate(gid, f, now)
+    except LookupError:
+        return
+    if meta:
+        _tell(_locals(meta), {"type": "chat", "id": gid})
+        import verbundgruppe
+        verbundgruppe.changed(gid, meta)
 
 
 def far_seen(cid, mid, what):
@@ -909,14 +1131,17 @@ def make_group(uid, name, members, now=None):
         raise ValueError("Der Gruppe fehlt ein Name.")
     if not isinstance(members, list) or len(members) > MAX_MEMBERS - 1:
         raise ValueError(f"Höchstens {MAX_MEMBERS} Personen in einer Gruppe.")
+    members = [str(x) for x in members]
     want = [u for u in dict.fromkeys(str(x) for x in members) if UID.fullmatch(u) and u != uid]
     ok = [u for u in want if takes(u, uid)]
+    far, far_out = _far_pick(uid, members, [])
+    ok += far
     if not ok:
         raise PermissionError("Niemand davon nimmt gerade Nachrichten von dir an.")
     cid = "c" + secrets.token_hex(6)
     with _lock:
         chats = _index()
-        for u in [uid] + ok:
+        for u in [uid] + [u for u in ok if UID.fullmatch(u)]:
             if sum(1 for c in chats.values() if u in c["members"] and c.get("kind") == "group") >= MAX_GROUPS:
                 if u == uid:
                     raise OverflowError(f"Höchstens {MAX_GROUPS} Gruppen.")
@@ -932,7 +1157,26 @@ def make_group(uid, name, members, now=None):
     _tell(ok, {"type": "chat", "id": cid})
     _log("new group", members=len(ok) + 1)
     _live(f"Neue Gruppe ({len(ok) + 1} Personen)")
-    return cid, [name_of(u) for u in set(want) - set(ok)]
+    if far:
+        import verbundgruppe
+        verbundgruppe.added(cid, _index()[cid], uid, far)
+    return cid, [name_of(u) for u in set(want) - set(ok)] + far_out
+
+
+def _far_pick(uid, wanted, already):
+    """People on other Sparks an admin of a group here puts in: only its accepted contacts, at most
+    verbundgruppe.MAX_SPARKS other Sparks. Returns (in, names of who stays out)."""
+    rids = [r for r in dict.fromkeys(str(x) for x in wanted) if RID.fullmatch(r) and r not in already]
+    if not rids:
+        return [], []
+    import verbundgruppe
+    names, ok, out = _names(), [], []
+    for r in rids:
+        if verbundgruppe.can_add(uid, r) and len(verbundgruppe.sparks_of(already + ok + [r])) <= verbundgruppe.MAX_SPARKS:
+            ok.append(r)
+        else:
+            out.append(names.get(r) or "Kontakt auf einem anderen Spark")
+    return ok, out
 
 
 async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None, blob=None):
@@ -971,7 +1215,9 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     others = [u for u in c["members"] if u != uid]
     if c.get("kind") in ("one", "far"):
         if c.get("kind") == "far" and media:
-            raise ValueError("Fotos, Dateien und Sprache gehen noch nicht an andere Sparks, Text schon.")
+            import verbund
+            if not verbund.media_on() or not verbund.media_ok(uid):
+                raise PermissionError("Fotos, Dateien und Sprache an andere Sparks sind ausgeschaltet.")
         if not others or not takes(others[0], uid):
             raise PermissionError(why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr.")
     elif c.get("fixed"):
@@ -983,6 +1229,12 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
             raise OverflowError(why)
     elif c.get("kind") == "group" and not groups_on():
         raise PermissionError("Gruppen-Chats sind gerade ausgeschaltet.")
+    if spans(c):
+        import verbundgruppe
+        if not verbundgruppe.admin_on() or not verbundgruppe.usable(uid):
+            raise PermissionError("Gruppen mit anderen Sparks sind gerade ausgeschaltet.")
+        if media:
+            raise PermissionError("In Gruppen mit anderen Sparks gehen bisher nur Textnachrichten.")
     if not _rate(uid, now):
         raise OverflowError(f"Du hast in der letzten Stunde schon {PER_HOUR} Nachrichten geschickt.")
     if c.get("fixed"):
@@ -1009,16 +1261,7 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
         if used(uid) + size > QUOTA:
             raise OverflowError(f"Dein Platz für Fotos, Dateien und Sprache ist voll ({QUOTA // 1024**3} GB). "
                                 "Alte Chats leeren oder Nachrichten zurücknehmen schafft Platz.")
-        info = dict(media["info"])
-        if info.get("name"):
-            info["name"] = seal(info["name"], cid, mid + "/name")
-        item["kind"], item["media"] = media["kind"], info
-        os.makedirs(_media_dir(cid), mode=0o700, exist_ok=True)
-        for part, data in media["parts"].items():
-            tmp = _media_file(cid, mid, part) + ".tmp"
-            with open(tmp, "wb") as f:
-                f.write(seal_bytes(data, cid, mid, part))
-            os.replace(tmp, _media_file(cid, mid, part))
+        _store_media(cid, mid, media, item)
     if reply and MID.fullmatch(reply):
         item["reply"] = reply
     if via in ("spark",):
@@ -1052,9 +1295,23 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     if meta.get("kind") == "far":      # to the other Spark (verbund.py): the queue sends it, the second tick comes from there
         try:
             import verbund
-            verbund.out_event(uid, others[0], "msg", cid, mid, id=mid, text=text, reply=item.get("reply", ""))
+            far_media = None
+            if media:   # the file goes first (verbund.py), the other Spark makes it again; voice: it writes it down itself
+                far_media = {"kind": media["kind"], "sha": hashlib.sha256(media["parts"]["f"]).hexdigest(),
+                             "size": len(media["parts"]["f"]), "name": media["info"].get("name") or None}
+            verbund.out_event(uid, others[0], "msg", cid, mid, id=mid, text="" if media else text,
+                              reply=item.get("reply", ""), media=far_media)
         except Exception as e:
             far_seen(cid, mid, "fail")
+            _log("far failed", error=type(e).__name__)
+    if spans(meta):     # to the members on other Sparks (verbundgruppe.py): from here, or through the group's home
+        try:
+            import verbundgruppe
+            if meta.get("home"):
+                verbundgruppe.member_out(uid, meta, mid, text, item.get("reply", ""))
+            else:
+                verbundgruppe.out(cid, meta, uid, mid, text, item.get("reply", ""))
+        except Exception as e:
             _log("far failed", error=type(e).__name__)
     _log("sent", kind=meta.get("kind", "one"), chars=len(text), **({"media": media["kind"], "kb": size // 1024} if media else
                                                                    {"kb": size // 1024} if blob is not None else {}))
@@ -1146,6 +1403,8 @@ def edit(uid, cid, mid, text, now=None):
     if not text:
         raise ValueError("Die Nachricht ist leer.")
     c = _member(uid, cid)
+    if spans(c):
+        raise PermissionError("In Gruppen mit anderen Sparks geht das noch nicht.")
 
     def f(meta, d, chats):
         x = _own(d, uid, mid)
@@ -1162,6 +1421,8 @@ def take_back(uid, cid, mid, now=None):
     """The own message gone for everybody (only its place stays: "Nachricht zurückgezogen")."""
     now = time.time() if now is None else now
     c = _member(uid, cid)
+    if spans(c):
+        raise PermissionError("In Gruppen mit anderen Sparks geht das noch nicht.")
 
     def f(meta, d, chats):
         x = _own(d, uid, mid)
@@ -1252,8 +1513,12 @@ def options(uid, cid, body, now=None):
             mid = _sys(d, uid, now, "name")
             d["items"][-1]["text"] = seal(name, cid, mid)
         meta["updated"] = max(float(meta.get("updated") or 0), now) if ("vanish" in body or "name" in body) else meta.get("updated")
-        return meta["members"]
-    _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
+        return json.loads(json.dumps(meta))
+    meta = _mutate(cid, f, now)
+    _tell(meta["members"], {"type": "chat", "id": cid})
+    if "name" in body and spans(meta) and not meta.get("home"):
+        import verbundgruppe
+        verbundgruppe.named(cid, meta, clean_name(body["name"]))
 
 
 def members(uid, cid, add=(), remove=(), admin=(), now=None):
@@ -1263,12 +1528,15 @@ def members(uid, cid, add=(), remove=(), admin=(), now=None):
     if c.get("kind") != "group" or c.get("fixed"):
         raise ValueError("only groups have members to change" if not c.get("fixed") else
                          "In „Alle“ ist jeder, der Nachrichten an alle annimmt.")
+    if c.get("home"):
+        raise PermissionError("Diese Gruppe gehört zu einem anderen Spark und wird dort verwaltet.")
     if uid not in (c.get("admins") or []):
         raise PermissionError("Nur die Admins der Gruppe ändern das.")
     if not groups_on():
         raise PermissionError("Gruppen-Chats sind gerade ausgeschaltet.")
+    far, left_out = _far_pick(uid, add, list(c["members"]))
     add = [u for u in dict.fromkeys(str(x) for x in add) if UID.fullmatch(u)]
-    left_out = []
+    far_new, far_gone = [], []
 
     def f(meta, d, chats):
         new = []
@@ -1281,24 +1549,39 @@ def members(uid, cid, add=(), remove=(), admin=(), now=None):
                 continue
             meta["members"].append(u)
             new.append(u)
+        for r in far:
+            if r not in meta["members"] and len(meta["members"]) < MAX_MEMBERS:
+                meta["members"].append(r)
+                new.append(r)
+                far_new.append(r)
         if new:
             _sys(d, uid, now, "add", new)
         gone = [u for u in dict.fromkeys(str(x) for x in remove) if u in meta["members"] and u != uid]
+        far_gone.extend(u for u in gone if RID.fullmatch(u))
         for u in gone:
             meta["members"].remove(u)
             meta["admins"] = [a for a in meta.get("admins") or [] if a != u]
             (meta.get("unread") or {}).pop(u, None)
         if gone:
             _sys(d, uid, now, "remove", gone)
-        made = [u for u in dict.fromkeys(str(x) for x in admin) if u in meta["members"] and u not in meta["admins"]]
+        made = [u for u in dict.fromkeys(str(x) for x in admin) if u in meta["members"] and u not in meta["admins"]
+                and UID.fullmatch(u)]
         if made:
             meta["admins"].extend(made)
             _sys(d, uid, now, "admin", made)
         meta["updated"] = now
         return meta["members"] + gone
     told = _mutate(cid, f, now)
-    _tell(told, {"type": "chat", "id": cid})
-    _log("members changed", members=len(_index().get(cid, {}).get("members", [])))
+    _tell([u for u in told if UID.fullmatch(u)], {"type": "chat", "id": cid})
+    meta = _index().get(cid, {"members": []})
+    _log("members changed", members=len(meta["members"]))
+    if far_new or far_gone or (spans(meta) and (add or remove)):
+        import verbundgruppe
+        if far_gone:
+            verbundgruppe.removed(cid, far_gone)
+        if far_new:
+            verbundgruppe.added(cid, meta, uid, far_new)
+        verbundgruppe.changed(cid, meta, but=far_new)
     return left_out
 
 
@@ -1315,23 +1598,34 @@ def leave(uid, cid, now=None):
         _log("left group", kind="all")
         return
 
+    far = spans(c)
+    if far and c.get("home"):
+        import verbundgruppe
+        verbundgruppe.member_left(uid, c)
+
     def f(meta, d, chats):
         meta["members"].remove(uid)
         meta["admins"] = [a for a in meta.get("admins") or [] if a != uid]
         (meta.get("unread") or {}).pop(uid, None)
-        if not meta["members"]:
+        if not _locals(meta):     # nobody of this Spark left: the group ends here (and for the other Sparks)
             chats.pop(cid)
-            return []
-        if not meta["admins"]:
-            meta["admins"] = [meta["members"][0]]
+            return [], [u for u in meta["members"] if RID.fullmatch(u)] if not meta.get("home") else [], meta
+        if not meta["admins"] and not meta.get("home"):
+            meta["admins"] = [_locals(meta)[0]]
         _sys(d, uid, now, "leave", [uid])
         meta["updated"] = now
-        return list(meta["members"])
-    rest = _mutate(cid, f, now)
+        return _locals(meta), [], json.loads(json.dumps(meta))
+    rest, ended, meta = _mutate(cid, f, now)
     if not rest:
         _drop(cid)
     _tell(rest, {"type": "chat", "id": cid})
     _send_event(uid, {"type": "gone", "id": cid})
+    if far and not c.get("home"):
+        import verbundgruppe
+        if ended:
+            verbundgruppe.removed(cid, ended)
+        elif rest:
+            verbundgruppe.changed(cid, meta)
     _log("left group")
 
 
@@ -1361,11 +1655,16 @@ def forget(uid):
     """A deleted profile: out of every group, its messages gone everywhere (their place stays), chats with only it
     left removed. Called by admin.py when a profile is deleted."""
     now = time.time()
+    ended, left, moved = [], [], []
     with _lock:
         chats = _index()
         for cid, c in list(chats.items()):
             if uid not in c["members"]:
                 continue
+            if c.get("home"):
+                left.append(json.loads(json.dumps(c)))
+            elif spans(c):
+                moved.append(cid)
             d = _chat(cid, c, now)
             for x in d["items"]:
                 if x["from"] == uid and x.get("kind") != "sys":
@@ -1375,17 +1674,29 @@ def forget(uid):
                 (x.get("react") or {}).pop(uid, None)
             c["members"].remove(uid)
             c["admins"] = [a for a in c.get("admins") or [] if a != uid]
-            if c.get("kind") == "group" and c["members"] and not c["admins"]:
-                c["admins"] = [c["members"][0]]
+            if c.get("kind") == "group" and _locals(c) and not c["admins"] and not c.get("home"):
+                c["admins"] = [_locals(c)[0]]
             for k in ("unread", "mute", "cleared", "read", "got", "bytes"):
                 (c.get(k) or {}).pop(uid, None)
             if not [u for u in c["members"] if not RID.fullmatch(u)]:   # nobody of this Spark left in it
+                if spans(c) and not c.get("home"):
+                    ended.append((cid, [u for u in c["members"] if RID.fullmatch(u)]))
                 chats.pop(cid)
                 _drop(cid)
                 continue
             c["last"] = _last(cid, d["items"][-1] if d["items"] else None)
             _save_chat(cid, d)
         _save_index(chats)
+    if ended or left or moved:     # the groups across Sparks hear it (verbundgruppe.py)
+        import verbundgruppe
+        for c in left:
+            verbundgruppe.member_left(uid, c)
+        for cid, rids in ended:
+            verbundgruppe.removed(cid, rids)
+        idx = _index()
+        for cid in moved:
+            if cid in idx:
+                verbundgruppe.changed(cid, idx[cid])
 
 
 def find(uid, q, now=None):
@@ -1436,7 +1747,19 @@ def _far_live():
     except Exception:
         v = {}
     return {"far_on": bool(v.get("on")), "far_sparks": int(v.get("sparks") or 0), "far_contacts": int(v.get("contacts") or 0),
-            "far_in": int(v.get("in") or 0), "far_out": int(v.get("out") or 0), "far_waiting": int(v.get("waiting") or 0)}
+            "far_in": int(v.get("in") or 0), "far_out": int(v.get("out") or 0), "far_waiting": int(v.get("waiting") or 0),
+            "far_media": bool(v.get("media")), "far_files_in": int(v.get("files_in") or 0), "far_files_out": int(v.get("files_out") or 0),
+            **_far_group_live()}
+
+
+def _far_group_live():
+    try:
+        import verbundgruppe
+        g = verbundgruppe.for_live()
+    except Exception:
+        g = {}
+    return {"far_groups": bool(g.get("on")), "far_groups_home": int(g.get("home") or 0),
+            "far_groups_there": int(g.get("there") or 0), "far_group_in": int(_today().get("far_group_in") or 0)}
 
 
 def _call_live():
@@ -1807,7 +2130,18 @@ def _far_state(uid):
     """Chats mit anderen Sparks (verbund.py): whether the page offers it, and how many requests wait."""
     import verbund
     on = verbund.admin_on() and verbund.usable(uid)
-    return {"verbund": on, "far_asks": sum(1 for c in verbund.contacts_of(uid).values() if c.get("state") == "in") if on else 0}
+    return {"verbund": on, "far_asks": sum(1 for c in verbund.contacts_of(uid).values() if c.get("state") == "in") if on else 0,
+            "far_media": bool(on and verbund.media_on() and verbund.media_ok(uid)), "far_people": _far_people(uid)}
+
+
+def _far_people(uid):
+    """The accepted contacts on other Sparks an admin of a group can put into it (verbundgruppe.py), marked 🌐."""
+    import verbundgruppe
+    import verbund
+    if not (verbundgruppe.admin_on() and verbundgruppe.usable(uid)):
+        return []
+    return [{"id": x["id"], "name": "🌐 " + (x["name"] or x["addr"]), "far": True}
+            for x in verbund.listing(uid) if x["state"] == "ok"]
 
 
 def _calls_ok(uid):

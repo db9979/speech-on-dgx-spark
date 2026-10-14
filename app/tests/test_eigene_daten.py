@@ -70,6 +70,8 @@ OHNE = {
     "chatinvite": "geteilt: Einladungen betreffen andere Personen",
     "chatprivate": "geteilt: private Chats gehören beiden Seiten",
     "verbund": "geteilt: Chats mit anderen Sparks",
+    "verbundmedia": "geteilt: Fotos und Dateien gehören zu den Chats mit anderen Sparks (deren Löschen gilt)",
+    "verbundgruppen": "geteilt: Gruppen mit anderen Sparks sind Gruppen-Chats (deren Verlassen und Löschen gilt)",
     "anrufe": "keine eigenen Daten: nur die Zeile im Chat, die zum Chat gehört (dessen Löschen gilt)",
     "anrufeturn": "keine eigenen Daten: der Vermittler merkt sich nichts, sein Zugang läuft nach einer Stunde ab",
 }

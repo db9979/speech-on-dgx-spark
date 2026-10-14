@@ -1239,6 +1239,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
                         + (f" · 🌐 Verbund: {cht.get('far_sparks', 0)} Sparks · {cht.get('far_contacts', 0)} Kontakte · heute "
                            f"{cht.get('far_in', 0)} rein / {cht.get('far_out', 0)} raus" + (f" · {cht['far_waiting']} wartet" if cht.get("far_waiting") else "")
+                           + (f" · Dateien heute {cht.get('far_files_in', 0)} rein / {cht.get('far_files_out', 0)} raus" if cht.get("far_media") else "")
+                           + (f" · Gruppen: {cht.get('far_groups_home', 0)} von hier, {cht.get('far_groups_there', 0)} von anderen, heute "
+                              f"{cht.get('far_group_in', 0)} Nachrichten" if cht.get("far_groups") else "")
                            if cht.get("far_on") else "")
                         + (f" · 📞 Anrufe: {cht.get('call_talking', 0)} laufen, {cht.get('call_ringing', 0)} klingeln, heute "
                            f"{cht.get('call_today', 0)} ({cht.get('call_talked', 0)} angenommen, {cht.get('call_missed', 0)} verpasst, "

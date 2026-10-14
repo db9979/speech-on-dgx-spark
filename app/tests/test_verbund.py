@@ -417,7 +417,7 @@ class Messages(Base):
         self.assertTrue(x.get("fail"))
         self.other.status = 200
 
-    def test_only_text_and_only_while_the_contact_stands(self):
+    def test_only_text_without_the_files_switch_and_only_while_the_contact_stands(self):
         self.paired()
         helpers.set_config(chats_media=True)
         self.addCleanup(helpers.set_config, chats_media=False)
@@ -425,7 +425,7 @@ class Messages(Base):
         cid, rid = self.contact_with(a)
         r = a.post("/api/chats/media", params={"id": cid, "kind": "file"}, content=b"%PDF-1.4 hallo",
                    headers={"Content-Type": "application/octet-stream", "X-Chat-Name": "a.pdf"})
-        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.status_code, 403)   # Fotos und Dateien zu anderen Sparks is off (Files below)
         a.post("/api/verbund/remove", json={"id": rid})
         r = a.post("/api/chats/send", json={"id": cid, "text": "Noch da?"})
         self.assertEqual(r.status_code, 403)
@@ -505,7 +505,7 @@ class Watch(Base):
         for word in (FAR, "vbfremd", "Journalname", "Vbpaula", "Kein Text", "Auch nicht", verbund.handle(uid_of(a))):
             self.assertNotIn(word, joined)
         v = verbund.for_live()
-        self.assertEqual(set(v), {"on", "sparks", "contacts", "in", "out", "waiting"})
+        self.assertEqual(set(v), {"on", "sparks", "contacts", "in", "out", "waiting", "media", "files_in", "files_out"})
         self.assertTrue(all(isinstance(x, (int, bool)) for x in v.values()))
         live = chats.for_live()
         self.assertTrue(live["far_on"])
@@ -536,5 +536,313 @@ class Watch(Base):
                 self.assertNotIn(b"PRIVATE", f.read())
 
 
+def jpeg(w=600, h=400):
+    """A photo as a phone writes it: with a place in its EXIF data."""
+    from PIL import Image
+    im, out, ex = Image.new("RGB", (w, h), (200, 80, 40)), io.BytesIO(), None
+    from PIL import Image as _I
+    ex = _I.Exif()
+    ex[0x8825] = {1: "N", 2: (48.0, 8.0, 0.0)}
+    im.save(out, "JPEG", exif=ex)
+    return out.getvalue()
+
+
+PDF = b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
+
+
+class Files(Base):
+    """Fotos, Dateien und Sprache zu anderen Sparks (V2, chat.verbund_media): the file first, signed, then its message."""
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(chats_media=True, verbund_media=True)
+        self.blobs = []
+        p = mock.patch.object(verbund, "_post_blob", side_effect=self._blob)
+        p.start()
+        self.addCleanup(p.stop)
+        import shutil
+        shutil.rmtree(verbund._blob_dir(), ignore_errors=True)
+        verbund._today()["bytes"].clear()
+
+    def tearDown(self):
+        helpers.set_config(chats_media=False, verbund_media=False)
+        super().tearDown()
+
+    blob_status = 200
+
+    async def _blob(self, dom, sha, data, now):
+        self.blobs.append((dom, sha, data))
+        return self.blob_status
+
+    def give(self, data, sha=None, size=None, client=None, frm=None, dest=HERE, t=None):
+        """The other Spark hands in a file: the signed head in a header, the bytes as the body."""
+        import hashlib
+        head = json.dumps({"v": 1, "t": int(time.time()) if t is None else t, "n": os.urandom(16).hex(),
+                           "sha": sha or hashlib.sha256(data).hexdigest(), "size": len(data) if size is None else size},
+                          separators=(",", ":")).encode()
+        sig = base64.b64encode(self.other.key.sign(b"spark-verbund v1\n" + dest.encode() + b"\n" + head)).decode()
+        return (client or TestClient(panel.app)).post(verbund.BLOB_PATH, content=data, headers={
+            "Content-Type": "application/octet-stream", "X-Spark-From": frm or FAR,
+            "X-Spark-Blob": base64.urlsafe_b64encode(head).decode(), "X-Spark-Sig": sig})
+
+    def up(self, client, cid, kind, data, name=""):
+        from urllib.parse import quote
+        head = {"Content-Type": "application/octet-stream"}
+        if name:
+            head["X-Chat-Name"] = quote(name)
+        return client.post("/api/chats/media", params={"id": cid, "kind": kind}, content=data, headers=head)
+
+    def test_off_until_its_own_switch_on_both_sides(self):
+        import features
+        self.assertEqual(features.BY_KEY["verbundmedia"].parent, "verbund")
+        with open(os.path.join(os.path.dirname(verbund.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["verbund_media"], False)
+        self.paired()
+        a = profile("Vbmedaria")
+        cid, _ = self.contact_with(a, frm="vbmeda")
+        helpers.set_config(verbund_media=False)
+        self.assertFalse(a.get("/api/chats").json()["far_media"])
+        self.assertEqual(self.up(a, cid, "photo", jpeg()).status_code, 403)
+        self.assertEqual(self.give(PDF).status_code, 401)          # refused before a byte of the body is read
+        helpers.set_config(verbund_media=True)
+        self.assertTrue(a.get("/api/chats").json()["far_media"])
+        self.assertEqual(self.up(a, cid, "photo", jpeg()).status_code, 200)
+
+    def test_a_photo_goes_out_without_its_place_file_first_then_the_message(self):
+        import hashlib
+        self.paired()
+        a = profile("Vbmedbert")
+        cid, _ = self.contact_with(a, frm="vbmedb")
+        r = self.up(a, cid, "photo", jpeg())
+        self.assertEqual(r.status_code, 200, r.text)
+        self.deliver()
+        dom, sha, data = self.blobs[-1]
+        self.assertEqual((dom, sha), (FAR, hashlib.sha256(data).hexdigest()))
+        self.assertTrue(data.startswith(b"\xff\xd8"))
+        self.assertNotIn(b"Exif", data[:200])                     # drawn anew here: no place goes out
+        msg = [b for t, b in self.other.got if t == "msg"][-1]
+        self.assertEqual((msg["media"]["kind"], msg["media"]["sha"], msg["text"]), ("photo", sha, ""))
+        # the other Spark takes no files: the message is not delivered, nothing waits for a week
+        self.blob_status = 404
+        self.up(a, cid, "file", PDF, name="plan.pdf")
+        n = len([1 for t, _ in self.other.got if t == "msg"])
+        self.deliver()
+        self.assertEqual(len([1 for t, _ in self.other.got if t == "msg"]), n)
+        self.assertEqual(verbund.waiting_count(), 0)
+        self.assertTrue(a.get("/api/chats/items", params={"id": cid}).json()["items"][-1].get("fail"))
+
+    def test_a_file_from_another_spark_is_made_anew_here(self):
+        import hashlib
+        self.paired()
+        b = profile("Vbmedcora")
+        cid, _ = self.contact_with(b, frm="vbmedc")
+        h = verbund.handle(uid_of(b))
+        photo = jpeg()
+        self.assertEqual(self.give(photo).status_code, 200)
+        r = self.other.send(type="msg", **{"from": "vbmedc", "to": h, "id": "a1b2c3d4e5f6", "text": "",
+                                         "media": {"kind": "photo", "sha": hashlib.sha256(photo).hexdigest(), "size": len(photo)}})
+        self.assertEqual(r.status_code, 200)
+        x = b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]
+        self.assertEqual((x["id"], x["kind"]), ("a1b2c3d4e5f6", "photo"))
+        got = b.get("/api/chats/media", params={"id": cid, "mid": x["id"], "part": "f"})
+        self.assertEqual(got.status_code, 200)
+        self.assertTrue(got.content.startswith(b"\xff\xd8"))
+        self.assertNotIn(b"Exif", got.content[:200])
+        self.assertEqual(os.listdir(verbund._blob_dir()), [])           # taken from where it waited
+        # a file with its name; one that is no file of an allowed kind comes not at all
+        self.give(PDF)
+        self.other.send(type="msg", **{"from": "vbmedc", "to": h, "id": "b1b2c3d4e5f6", "text": "",
+                                        "media": {"kind": "file", "sha": hashlib.sha256(PDF).hexdigest(), "size": len(PDF), "name": "plan.pdf"}})
+        x = b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]
+        self.assertEqual(x["kind"], "file")
+        exe = b"MZ\x90\x00" + os.urandom(200)
+        self.give(exe)
+        self.other.send(type="msg", **{"from": "vbmedc", "to": h, "id": "c1b2c3d4e5f6", "text": "",
+                                        "media": {"kind": "file", "sha": hashlib.sha256(exe).hexdigest(), "size": len(exe), "name": "tool.exe"}})
+        self.assertNotEqual(b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["id"], "c1b2c3d4e5f6")
+        # a message announcing a file that never came: nothing
+        self.other.send(type="msg", **{"from": "vbmedc", "to": h, "id": "d1b2c3d4e5f6", "text": "Hallo",
+                                        "media": {"kind": "photo", "sha": "0" * 64, "size": 5}})
+        self.assertNotEqual(b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["id"], "d1b2c3d4e5f6")
+
+    def test_a_file_needs_a_signed_head_its_exact_bytes_and_stays_within_the_day(self):
+        import hashlib
+        self.paired()
+        self.assertEqual(self.give(PDF, sha="1" * 64).status_code, 400)           # not the bytes the head names
+        self.assertEqual(self.give(PDF, size=len(PDF) + 5).status_code, 400)
+        self.assertEqual(self.give(PDF, dest="anderer.example.net").status_code, 403)   # signed for another Spark
+        self.assertEqual(self.give(PDF, t=int(time.time()) - 3600).status_code, 400)
+        self.assertEqual(self.give(PDF, frm="unbekannt.example.net").status_code, 401)  # no known Spark: never read
+        big = chats.MAX_FILE + 1
+        self.assertIn(self.give(b"x", size=big).status_code, (400, 413))
+        with mock.patch.object(verbund, "BLOB_DAY", len(PDF) * 2 + 1):
+            self.assertEqual(self.give(PDF).status_code, 200)
+            self.assertEqual(self.give(PDF + b"1").status_code, 200)
+            self.assertEqual(self.give(PDF + b"22").status_code, 429)
+        # one Spark cannot take the file of another: kept per sending Spark
+        sha = hashlib.sha256(PDF).hexdigest()
+        self.assertTrue(os.path.exists(verbund._blob_file(FAR, sha)))
+        self.assertFalse(os.path.exists(verbund._blob_file("anderer.example.net", sha)))
+        with open(verbund._blob_file(FAR, sha), "rb") as f:
+            self.assertNotIn(b"%PDF", f.read())                                 # sealed while it waits
+        os.utime(verbund._blob_file(FAR, sha), (time.time() - verbund.BLOB_KEEP - 5,) * 2)
+        self.assertGreaterEqual(verbund.blob_tidy(), 1)
+        self.assertFalse(os.path.exists(verbund._blob_file(FAR, sha)))
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+THIRD = "dritte.example.net"
+
+
+class Groups(Base):
+    """Gruppen mit anderen Sparks (V2 Teil 2, chat.verbund_groups): the group belongs to its home Spark."""
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(chats_groups=True, verbund_groups=True)
+        self.paired()
+
+    def tearDown(self):
+        helpers.set_config(chats_groups=False, verbund_groups=False)
+        super().tearDown()
+
+    def sent(self, kind):
+        return [b for t, b in self.other.got if t == kind]
+
+    def far_group(self, client, gid="c" + "a1" * 6, name="Ausflug", frm="vbfremd"):
+        """The other Spark puts the profile into its group: the chat's id here."""
+        me = verbund.address(uid_of(client))
+        r = self.other.send(type="gadd", gid=gid, name=name, **{"from": frm, "to": verbund.handle(uid_of(client)), "members": [
+            {"addr": f"vbfremd@{FAR}", "name": "Fremde Frieda"}, {"addr": f"drei@{THIRD}", "name": "Dora Dritt"},
+            {"addr": me, "name": "egal"}]})
+        self.assertEqual(r.status_code, 200)
+        import verbundgruppe
+        return verbundgruppe.far_cid(FAR, gid)
+
+    def test_off_by_default_and_only_accepted_contacts_go_in(self):
+        import admin
+        import features
+        self.assertEqual(features.BY_KEY["verbundgruppen"].parent, "verbund")
+        with open(os.path.join(helpers.APP, "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["verbund_groups"], False)
+        self.assertIn(("chat", "verbund_groups"), admin.SENSITIVE)
+        a, b = profile("Vggerd"), profile("Vghanna")
+        _, rid = self.contact_with(a)
+        self.other.send(type="ask", **{"from": "vbfrage", "to": verbund.handle(uid_of(a)), "name": "Nur gefragt"})
+        asked = verbund.rid_of(f"vbfrage@{FAR}")
+        helpers.set_config(verbund_groups=False)
+        self.assertEqual(a.get("/api/chats").json()["far_people"], [])
+        r = a.post("/api/chats/group", json={"name": "Aus", "members": [rid]})
+        self.assertEqual(r.status_code, 403)                          # nobody left who may come in
+        helpers.set_config(verbund_groups=True)
+        self.assertEqual([x["id"] for x in a.get("/api/chats").json()["far_people"]], [rid])   # accepted only
+        r = a.post("/api/chats/group", json={"name": "Wandern", "members": [uid_of(b), rid, asked]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["left_out"], ["Nur gefragt"])
+        cid = r.json()["id"]
+        self.assertEqual(set(chats._index()[cid]["members"]), {uid_of(a), uid_of(b), rid})
+        self.assertNotIn("verbund_groups", a.get("/api/profile/settings").json())   # the admin's switch only
+        r = a.post("/api/chats/members", json={"id": cid, "admin": [rid]})
+        self.assertNotIn(rid, chats._index()[cid]["admins"])           # admins only of this Spark
+        self.assertEqual(r.status_code, 200)
+        g = TestClient(panel.app)                                       # guests never
+        self.assertIn(g.post("/api/chats/group", json={"name": "x", "members": [rid]}).status_code, (401, 403))
+
+    def test_the_home_spark_sends_on_and_takes_what_its_members_there_write(self):
+        a, b = profile("Vgilse"), profile("Vgjana")
+        _, rid = self.contact_with(a)
+        cid = a.post("/api/chats/group", json={"name": "Wandern", "members": [uid_of(b), rid]}).json()["id"]
+        self.deliver()
+        add = self.sent("gadd")
+        self.assertEqual(len(add), 1)
+        self.assertEqual((add[0]["to"], add[0]["gid"], add[0]["name"]), ("vbfremd", cid, "Wandern"))
+        self.assertEqual({m["addr"] for m in add[0]["members"]},
+                         {verbund.address(uid_of(a)), verbund.address(uid_of(b)), f"vbfremd@{FAR}"})
+        r = a.post("/api/chats/send", json={"id": cid, "text": "Treffpunkt acht Uhr"})
+        mid = r.json()["item"]["id"]
+        self.deliver()
+        msg = self.sent("gmsg")[-1]
+        self.assertEqual((msg["id"], msg["text"], msg["by"]), (mid, "Treffpunkt acht Uhr", verbund.address(uid_of(a))))
+        for path, body in (("/api/chats/edit", {"id": cid, "mid": mid, "text": "neu"}), ("/api/chats/back", {"id": cid, "mid": mid})):
+            self.assertEqual(a.post(path, json=body).status_code, 403, path)   # not across Sparks yet
+        n = len(self.sent("gmsg"))
+        self.assertEqual(self.other.send(type="gmsg", gid=cid, id="3" * 12, text="Bin dabei", reply=mid,
+                                         **{"from": "vbfremd", "to": ""}).status_code, 200)
+        items = b.get(f"/api/chats/items?id={cid}").json()["items"]
+        x = next(x for x in items if x["id"] == "3" * 12)
+        self.assertEqual((x["text"], x["from"]), ("Bin dabei", rid))
+        self.other.send(type="gmsg", gid=cid, id="3" * 12, text="Bin dabei", **{"from": "vbfremd", "to": ""})
+        self.assertEqual(sum(1 for x in b.get(f"/api/chats/items?id={cid}").json()["items"] if x["id"] == "3" * 12), 1)
+        self.deliver()
+        self.assertEqual(len(self.sent("gmsg")), n)                    # not back to the Spark it came from
+        self.other.send(type="gmsg", gid=cid, id="4" * 12, text="Fremd", **{"from": "vbanders", "to": ""})
+        self.assertFalse(any(x["id"] == "4" * 12 for x in b.get(f"/api/chats/items?id={cid}").json()["items"]))
+        self.other.send(type="gleave", gid=cid, **{"from": "vbfremd", "to": ""})
+        self.assertNotIn(rid, chats._index()[cid]["members"])
+        a.post("/api/chats/members", json={"id": cid, "add": [rid]})
+        a.post("/api/chats/members", json={"id": cid, "remove": [rid]})
+        self.deliver()
+        self.assertEqual(self.sent("gremove")[-1]["to"], "vbfremd")
+
+    def test_a_group_of_another_spark_only_from_an_accepted_contact_and_managed_there(self):
+        a, b = profile("Vgkarl"), profile("Vglena")
+        self.contact_with(a)
+        cid = self.far_group(a)
+        lst = a.get("/api/chats").json()["chats"]
+        self.assertEqual(next(x for x in lst if x["id"] == cid)["title"], "Ausflug")
+        d = a.get(f"/api/chats/items?id={cid}").json()
+        self.assertTrue(d["far_home"])
+        self.assertIn("Dora Dritt", [m["name"] for m in d["members"]])
+        self.far_group(b)                                              # b never accepted vbfremd: nothing
+        self.assertNotIn(uid_of(b), chats._index()[cid]["members"])
+        self.other.send(type="gmsg", gid="c" + "a1" * 6, id="5" * 12, text="Hallo aus Drittland", by=f"drei@{THIRD}",
+                        byname="Dora Dritt", **{"from": "vbfremd", "to": verbund.handle(uid_of(a))})
+        x = a.get(f"/api/chats/items?id={cid}").json()["items"][-1]
+        self.assertEqual((x["text"], x["from"]), ("Hallo aus Drittland", verbund.rid_of(f"drei@{THIRD}")))
+        mine = a.post("/api/chats/send", json={"id": cid, "text": "Ich komme"}).json()["item"]["id"]
+        self.deliver()
+        up = self.sent("gmsg")[-1]
+        self.assertEqual((up["to"], up["gid"], up["id"], up["from"]), ("", "c" + "a1" * 6, mine, verbund.handle(uid_of(a))))
+        self.assertEqual(a.post("/api/chats/members", json={"id": cid, "add": [uid_of(b)]}).status_code, 403)
+        self.assertEqual(a.post("/api/chats/opts", json={"id": cid, "name": "Meins"}).status_code, 403)
+        self.other.send(type="gname", gid="c" + "a1" * 6, name="Ausflug Mai", **{"from": "vbfremd", "to": verbund.handle(uid_of(a))})
+        self.assertEqual(a.get(f"/api/chats/items?id={cid}").json()["title"], "Ausflug Mai")
+        self.other.send(type="gmembers", gid="c" + "a1" * 6, members=[{"addr": f"vbfremd@{FAR}", "name": "Fremde Frieda"}],
+                        **{"from": "vbfremd", "to": verbund.handle(uid_of(a))})
+        self.assertEqual(chats._index()[cid]["members"], [uid_of(a), verbund.rid_of(f"vbfremd@{FAR}")])
+        self.other.send(type="gremove", gid="c" + "a1" * 6, **{"from": "vbfremd", "to": verbund.handle(uid_of(a))})
+        self.assertNotIn(cid, chats._index())                          # nobody here left: the chat goes
+        helpers.set_config(verbund_groups=False)                       # off: requests of other Sparks are dropped
+        self.assertNotIn(self.far_group(a, gid="c" + "b2" * 6), chats._index())
+
+    def test_leaving_a_group_of_another_spark_tells_it_and_logs_and_live_numbers_only(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            a = profile("Vgmona")
+            self.contact_with(a)
+            cid = self.far_group(a, gid="c" + "c3" * 6, name="Geheimgruppe")
+            a.post("/api/chats/send", json={"id": cid, "text": "Kein Journaltext"})
+            self.assertEqual(a.post("/api/chats/leave", json={"id": cid}).status_code, 200)
+            self.deliver()
+        self.assertEqual(self.sent("gleave")[-1]["from"], verbund.handle(uid_of(a)))
+        self.assertNotIn(cid, chats._index())
+        b = profile("Vgnora")                                          # a deleted profile leaves the group there too
+        self.contact_with(b)
+        self.far_group(b, gid="c" + "d4" * 6)
+        h = verbund.handle(uid_of(b))
+        self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{uid_of(b)}").status_code, 200)
+        self.deliver()
+        self.assertEqual(self.sent("gleave")[-1]["from"], h)
+        joined = "\n".join(x for x in out.getvalue().splitlines() if x.startswith(("verbund:", "chats:")))
+        self.assertIn("verbund: group joined there", joined)
+        for word in (FAR, THIRD, "Geheimgruppe", "Kein Journaltext", "Vgmona", "Dora"):
+            self.assertNotIn(word, joined)
+        import verbundgruppe
+        v = verbundgruppe.for_live()
+        self.assertEqual(set(v), {"on", "home", "there"})
+        live = chats.for_live()
+        self.assertTrue(live["far_groups"])
+        self.assertTrue(all(isinstance(live[k], int) for k in ("far_groups_home", "far_groups_there", "far_group_in")))

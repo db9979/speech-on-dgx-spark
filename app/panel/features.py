@@ -236,6 +236,10 @@ FEATURES = (
     # verbund.py (plan plaene/spark-verbund.md): chats with people on other Sparks; needs the own address from outside
     F("verbund", "Chats mit anderen Sparks", "Chats with other Sparks", "day", ("chats_verbund",), parent="chats",
       guide="verbund"),
+    F("verbundmedia", "Fotos und Dateien zu anderen Sparks", "Photos and files to other Sparks", "day", ("verbund_media",),
+      parent="verbund", guide="verbundmedia"),
+    F("verbundgruppen", "Gruppen mit anderen Sparks", "Groups with other Sparks", "day", ("verbund_groups",),
+      parent="verbund", guide="verbundgruppen"),
     # anrufe.py (plan plaene/messenger-d-v2.md): voice and video calls in a chat of two; from outside through the
     # Vermittler (coturn on tars), which needs the address from outside
     F("anrufe", "Anrufe (Sprache und Video)", "Calls (voice and video)", "day", ("chats_calls",), parent="chats",

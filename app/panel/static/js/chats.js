@@ -132,7 +132,7 @@ function cxTop(){const d=CX.data;if(!d)return;cxEl('cxempty').hidden=true;cxEl('
   const tt=cxEl('cxtitle');tt.querySelector('b').textContent=(d.private?'🔒 ':'')+(d.far?'🌐 ':'')+cxTitle(d.title);tt.querySelector('small').textContent=sub;tt.querySelector('small').hidden=!sub;
   const why=cxEl('cxwhy');why.hidden=d.can_send;why.textContent=d.can_send?'':cxTr(d.why||t('Hier kannst du gerade nicht schreiben.','You cannot write here right now.'));
   cxEl('cxcomp').hidden=!d.can_send||!!CX.pane||!!CXR.rec;cxEl('cxreply').hidden=!CX.reply&&!CX.edit||!!CX.pane;
-  const md=!!(CX.S&&CX.S.media)&&!CX.edit&&!d.far;cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md;
+  const md=!!(CX.S&&CX.S.media)&&!CX.edit&&(!d.far||!!CX.S.far_media)&&!cxSpans(d);cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md;
   const ca=!!(CX.S&&CX.S.calls)&&(d.kind==='one'||!!d.private)&&!d.far&&d.can_send;cxEl('cxcall').hidden=!ca;cxEl('cxvideo').hidden=!ca}
 const CX_SYS={add:['fügte hinzu: ','added: '],remove:['nahm heraus: ','took out: '],admin:['machte zum Admin: ','made admin: '],leave:['hat die Gruppe verlassen','left the group'],
   name:['nannte die Gruppe ','named the group '],vanish:['',''],made:['hat die Gruppe erstellt','created the group'],
@@ -241,24 +241,26 @@ function cxAnn(){const S=CX.S||{speakers:[]},p=cxEl('cxpane');CX.pick.clear();
     `<label class="cx-lbl" for="cxanntext">${esc(t('Was soll gesagt werden?','What should be said?'))}</label><input id="cxanntext" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Essen ist fertig','e.g. Dinner is ready'))}">`+
     `<div class="cx-acts2"><button type="button" class="b p" data-cxn="anngo">${esc(t('Durchsagen','Announce'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
   cxEl('cxanntext').focus()}
+// a group with people on other Sparks (verbundgruppe.py): text only for now, managed on its home Spark
+const cxSpans=d=>!!d&&d.kind==='group'&&(!!d.far_home||(d.members||[]).some(m=>/^r_/.test(m.id)));
 function cxGroup(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');CX.pick.clear();
   p.innerHTML=`<label class="cx-lbl" for="cxgname">${esc(t('Name der Gruppe','Name of the group'))}</label><input id="cxgname" maxlength="40" autocomplete="off" placeholder="${esc(t('z. B. Familie','e.g. Family'))}">`+
-    `<div class="cx-grp">${esc(t('Wer ist dabei?','Who is in?'))}</div>`+cxPeople(S.contacts||[],true)+
+    `<div class="cx-grp">${esc(t('Wer ist dabei?','Who is in?'))}</div>`+cxPeople((S.contacts||[]).concat(S.far_people||[]),true)+
     `<div class="cx-acts2"><button type="button" class="b p" data-cxn="make">${esc(t('Gruppe erstellen','Create group'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
   cxHues(p);cxEl('cxgname').focus()}
 function cxAdd(){const d=CX.data,S=CX.S||{contacts:[]},p=cxEl('cxpane');CX.pick.clear();const inn=new Set(d.members.map(m=>m.id));
-  p.innerHTML=`<div class="cx-grp">${esc(t('Hinzufügen','Add'))}</div>`+cxPeople((S.contacts||[]).filter(x=>!inn.has(x.id)),true)+
+  p.innerHTML=`<div class="cx-grp">${esc(t('Hinzufügen','Add'))}</div>`+cxPeople((S.contacts||[]).concat(S.far_people||[]).filter(x=>!inn.has(x.id)),true)+
     `<div class="cx-acts2"><button type="button" class="b p" data-cxn="addgo">${esc(t('Hinzufügen','Add'))}</button><button type="button" class="b" data-cxn="info">${esc(t('Zurück','Back'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;cxHues(p)}
 function cxInfo(){const d=CX.data,p=cxEl('cxpane');if(!d){cxPane('');return}
   const sel=(id,list,val,dis)=>`<select id="${id}"${dis?' disabled':''}>${list.map(([v,l])=>`<option value="${v}"${v===val?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
   const muteV=d.mute===-1?-1:d.mute?(d.mute-Date.now()/1000>3*3600?28800:3600):0,may=d.kind!=='group'||d.admin;
   let h=`<div class="cx-ihead">${cxAva(d.kind==='group'?d.id:(d.members.find(m=>m.id!==cxMe())||{}).id,cxTitle(d.title),d.kind==='group')}<b>${esc(cxTitle(d.title))}</b>`+
-    `<small class="mut">${esc(d.fixed?d.members.length+' '+t('Personen · alle, die bei „Nachricht an alle“ mitmachen','people · everybody who takes part in "Message to everybody"'):d.kind==='group'?d.members.length+' '+t('Personen','people'):d.private?t('Privater Chat zu zweit, Ende-zu-Ende','Private chat for two, end-to-end'):d.far?t('Chat zu zweit mit einem anderen Spark','Chat for two with another Spark')+(d.addr?' · '+d.addr:''):t('Chat zu zweit','Chat for two'))}</small></div>`;
+    `<small class="mut">${esc(d.fixed?d.members.length+' '+t('Personen · alle, die bei „Nachricht an alle“ mitmachen','people · everybody who takes part in "Message to everybody"'):d.kind==='group'?d.members.length+' '+t('Personen','people')+(d.far_home?' · '+t('verwaltet auf einem anderen Spark','managed on another Spark'):cxSpans(d)?' · '+t('mit anderen Sparks','with other Sparks'):''):d.private?t('Privater Chat zu zweit, Ende-zu-Ende','Private chat for two, end-to-end'):d.far?t('Chat zu zweit mit einem anderen Spark','Chat for two with another Spark')+(d.addr?' · '+d.addr:''):t('Chat zu zweit','Chat for two'))}</small></div>`;
   if(d.kind==='group'&&d.admin)h+=`<div class="cx-sw"><label for="cxname">${esc(t('Name','Name'))}</label><span class="cx-inl"><input id="cxname" maxlength="40" value="${esc(cxTitle(d.title))}"><button type="button" class="b" data-cxn="rename">${esc(t('Speichern','Save'))}</button></span></div>`;
   h+=`<div class="cx-sw"><label for="cxmute">${esc(t('Stumm','Mute'))}<small class="mut">${esc(t('Keine Mitteilungen aufs Handy, nur für dich','No notifications to the phone, only for you'))}</small></label>${sel('cxmute',CX_MUTE,muteV)}</div>`+
     `<div class="cx-sw"><label for="cxvan">${esc(t('Nachrichten verschwinden','Messages disappear'))}<small class="mut">${esc(d.fixed?t('Feste Gruppe ohne Admins','Fixed group without admins'):may?t('Für alle in diesem Chat','For everybody in this chat'):t('Stellen die Admins der Gruppe ein','Set by the group\'s admins'))}</small></label>${sel('cxvan',CX_VANISH,d.vanish,!may)}</div>`;
   if(d.kind==='group'){h+=`<div class="cx-grp">${esc(t('Mitglieder','Members'))}</div><div class="cx-people">`+d.members.map(m=>`<div class="cx-pp">${cxAva(m.id,m.name)}<span>${esc(m.name||t('Gelöschtes Profil','Deleted profile'))}${m.admin?` <small class="mut">${esc(t('Admin','admin'))}</small>`:''}</span>`+
-      (d.admin&&m.id!==cxMe()?`<span class="cx-mact">${m.admin?'':`<button type="button" class="b" data-cxn="mkadm" data-to="${esc(m.id)}">${esc(t('Zum Admin','Make admin'))}</button>`}<button type="button" class="b danger" data-cxn="rm" data-to="${esc(m.id)}">${esc(t('Entfernen','Remove'))}</button></span>`:'')+`</div>`).join('')+`</div>`;
+      (d.admin&&m.id!==cxMe()?`<span class="cx-mact">${m.admin||/^r_/.test(m.id)?'':`<button type="button" class="b" data-cxn="mkadm" data-to="${esc(m.id)}">${esc(t('Zum Admin','Make admin'))}</button>`}<button type="button" class="b danger" data-cxn="rm" data-to="${esc(m.id)}">${esc(t('Entfernen','Remove'))}</button></span>`:'')+`</div>`).join('')+`</div>`;
     if(d.admin)h+=`<div class="cx-acts2"><button type="button" class="b" data-cxn="add">${esc(t('Personen hinzufügen','Add people'))}</button></div>`}
   h+=`<div class="cx-acts2"><button type="button" class="b danger" data-cxn="clear">${esc(t('Chat für mich leeren','Clear chat for me'))}</button>`+
     (d.kind==='group'?`<button type="button" class="b danger" data-cxn="leave">${esc(d.fixed?t('Nicht mehr mitmachen','Stop taking part'):t('Gruppe verlassen','Leave group'))}</button>`:'')+`</div>`+

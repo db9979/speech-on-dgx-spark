@@ -178,6 +178,8 @@ WITHOUT = {
     "chatinvite": "Einladen in der Oberfläche",
     "chatprivate": "Ende-zu-Ende: der Spark kann sie bewusst nicht lesen",
     "verbund": "Nachrichten anderer Sparks sind fremder Text und gehen bewusst nie an das Sprachmodell",
+    "verbundmedia": "Fotos und Dateien anderer Sparks sind fremde Daten und gehen bewusst nie an das Sprachmodell",
+    "verbundgruppen": "Gruppen mit anderen Sparks sind Chats zwischen Menschen; ihre Nachrichten gehen bewusst nie an das Sprachmodell",
     "anrufe": "Anrufen geht nur auf der Seite, mit Kamera und Mikrofon des Geräts",
     "anrufeturn": "Vermittler im Hintergrund",
     "verlaufsync": "Abgleich im Hintergrund",

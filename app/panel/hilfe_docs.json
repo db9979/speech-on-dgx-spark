@@ -381,7 +381,31 @@
 "file": "APIs und Einbinden",
 "head": "Chats mit anderen Sparks (V01.0.496)",
 "title": "Chats mit anderen Sparks (V01.0.496)",
-"text": "Zwischen Sparks (offen, statt einer Anmeldung eine Unterschrift): GET /.well-known/spark-verbund liefert {\"v\": 1, \"key\": \"<Ed25519, Base64>\", \"inbox\": \"/api/verbund/in\"}, nur solange „Chats mit anderen Sparks“ an ist. POST /api/verbund/in nimmt JSON bis 32 KB mit den Kopfzeilen X-Spark-From: <Domain des Absenders> und X-Spark-Sig: <Base64>; unterschrieben wird spark-verbund v1\\n<Domain des Empfängers>\\n<Body>. Body: v, t (Unix-Zeit, ±600 s), n (32 Hex-Zeichen, einmal), type (pair, ask, yes, msg, read, edit, back, react), from/to (der Teil vor dem @), je nach Art name, id, text, reply, emoji, secret. Antwort immer {\"ok\": true}, Ablehnungen 400/403/409/413/429 ohne Grund. Für das Profil (Browser oder iPhone-App, Schalter wie oben): GET /api/verbund (eigene Adresse, QR, Kontakte mit state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (Chat-id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair und /connect {\"code\"} (Code des zweiten Schritts), POST /api/admin/verbund/peer {\"domain\", \"act\": \"allow\"|\"block\"|\"remove\"}."
+"text": "Zwischen Sparks (offen, statt einer Anmeldung eine Unterschrift): GET /.well-known/spark-verbund liefert {\"v\": 1, \"key\": \"<Ed25519, Base64>\", \"inbox\": \"/api/verbund/in\"}, nur solange „Chats mit anderen Sparks“ an ist. POST /api/verbund/in nimmt JSON bis 32 KB mit den Kopfzeilen X-Spark-From: <Domain des Absenders> und X-Spark-Sig: <Base64>; unterschrieben wird spark-verbund v1\\n<Domain des Empfängers>\\n<Body>. Body: v, t (Unix-Zeit, ±600 s), n (32 Hex-Zeichen, einmal), type (pair, ask, yes, msg, read, edit, back, react, für Gruppen gadd, gmsg, gleave, gremove, gname, gmembers), from/to (der Teil vor dem @), je nach Art name, id, text, reply, emoji, secret. Antwort immer {\"ok\": true}, Ablehnungen 400/403/409/413/429 ohne Grund. Für das Profil (Browser oder iPhone-App, Schalter wie oben): GET /api/verbund (eigene Adresse, QR, Kontakte mit state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (Chat-id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair und /connect {\"code\"} (Code des zweiten Schritts), POST /api/admin/verbund/peer {\"domain\", \""
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Chats mit anderen Sparks (V01.0.496)",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "act\": \"allow\"|\"block\"|\"remove\"}."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Chats mit anderen Sparks (V01.0.496)",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "Dateien (V01.0.568, Schalter „Fotos und Dateien zu anderen Sparks“): POST /api/verbund/blob mit dem Inhalt als Body, X-Spark-From, X-Spark-Blob (Base64url von {\"v\": 1, \"t\", \"n\", \"sha\", \"size\"}) und X-Spark-Sig (Unterschrift wie bei Nachrichten über diesen Kopf); danach msg mit \"media\": {\"kind\": \"photo\"|\"file\"|\"voice\", \"sha\", \"size\", \"name\"?}. Antworten: 200, 400 (Form, Zeit, Größe, Hash), 401 (kein bekannter, erlaubter Spark oder aus), 403 (Unterschrift), 409 (wiederholt), 429 (Tageslimit)."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Chats mit anderen Sparks (V01.0.496)",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "Gruppen (V01.0.568, Schalter „Gruppen mit anderen Sparks“): Die Gruppe gehört dem Spark, auf dem sie erstellt wurde; gid ist ihre Chat-Kennung dort. Von ihm: gadd an eine Person (from ist der Admin, der ein angenommener Kontakt der Person sein muss; name, members als Liste von {\"addr\", \"name\"}), gmsg mit id, text, reply, by (Adresse des Verfassers) und byname, einmal pro Spark, gremove an eine Person, gname mit name, gmembers mit members. An ihn, mit to leer: gmsg (from ist das Mitglied, id, text, reply) und gleave. Der Heimat-Spark prüft die Mitgliedschaft und reicht eine Nachricht an alle anderen Sparks weiter, nie an den, von dem sie kam. Bisher nur Text, höchstens 10 andere Sparks pro Gruppe."
 },
 {
 "lang": "de",
@@ -1117,7 +1141,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand. 6. Alles still?: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an. 7. Fremde Seite?: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch. 8. Großer Upload ohne Anmeldung?: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird. 9. Zu groß?: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length"
+"text": ", oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand. 6. Alles still?: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an. 7. Fremde Seite?: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch. 8. Großer Upload ohne Anmeldung?: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte ei"
 },
 {
 "lang": "de",
@@ -1125,7 +1149,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt. 10. Update läuft?: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED). 11. Endpunkt: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil. 12. Antwort mit Schutz: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure."
+"text": "nes fremden Uploads gelesen wird. 9. Zu groß?: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt. 10. Update läuft?: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED). 11. Endpunkt: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil. 12. Antwort mit Schutz: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure."
 },
 {
 "lang": "de",
@@ -3077,7 +3101,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Chats mit anderen Sparks (V01.0.496)",
-"text": "me und Nachricht und bekommt auf jede Anfrage dieselbe Antwort, ob es die Person gibt oder nicht. Live (Kachel Chats): „🌐 Verbund: Sparks, Kontakte, heute rein/raus, wartet“; Logs (Bereich „Nachrichten und Chats“): verbund: sent, verbund: refused signature, verbund: retry, nie Domain, Name oder Text. Der Dienst-Wächter prüft „Erreichbar für andere Sparks“ (die eigene Adresse von außen). Die iPhone-App zeigt solche Chats mit 🌐; anfragen und annehmen geht im Browser."
+"text": "me und Nachricht und bekommt auf jede Anfrage dieselbe Antwort, ob es die Person gibt oder nicht. Live (Kachel Chats): „🌐 Verbund: Sparks, Kontakte, heute rein/raus, wartet“; Logs (Bereich „Nachrichten und Chats“): verbund: sent, verbund: refused signature, verbund: retry, nie Domain, Name oder Text. Der Dienst-Wächter prüft „Erreichbar für andere Sparks“ (die eigene Adresse von außen). Die iPhone-App zeigt solche Chats mit 🌐; anfragen und annehmen geht im Browser. Fotos und Dateien zu anderen Sparks (V01.0.568): Admin: Funktionen → Chats → Chats mit anderen Sparks → „Fotos und Dateien zu anderen Sparks“ (aus, braucht „Fotos, Dateien und Sprache in Chats“). Dann gehen in Chats mit anderen Sparks auch Fotos, Dateien und Sprachnachrichten, mit denselben Knöpfen. Der eigene Spark schickt die Datei zuerst, allein und unterschrieben (Kopf mit Zeit, Einmalnummer, SHA-256 und Größe im Header), an /api/verbund/blob, dann die Nachricht mit dem Hash. Der andere Spark nimmt eine Datei nur von einem erlaubten Spark mit bekanntem Schlüssel an (geprüft, bevor ein Byte gelesen wird), genau mit Größe und Hash aus dem Kopf, höchstens 500 MB pro Spark und Tag und 2 GB wartend, hält sie versiegelt bi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats mit anderen Sparks (V01.0.496)",
+"text": "s zur Nachricht (höchstens einen Tag) und macht sie neu, als wäre sie hier hochgeladen: Foto neu gezeichnet (ohne Ort), Datei an ihrem Inhalt erkannt (sonst kommt nichts an), Sprachnachricht neu kodiert und mit der eigenen Spracherkennung mitgeschrieben. Nichts davon geht an das Sprachmodell. Nimmt der andere Spark keine Dateien an, steht ⚠ an der Nachricht statt einer Woche Warten. Live: Kachel Chats „Dateien heute n rein / n raus“; Logs: „verbund: file in | kb 812“, „verbund: refused file limit“, „verbund: files dropped | n 1“, nur Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gruppen mit anderen Sparks (V01.0.568)",
+"text": "Gruppen mit anderen Sparks (V01.0.568): Admin: Funktionen → Chats → Chats mit anderen Sparks → „Gruppen mit anderen Sparks“ (aus, braucht „Gruppen-Chats“). Dann wählen die Admins einer Gruppe beim Erstellen oder unter „Personen hinzufügen“ auch ihre angenommenen Kontakte auf anderen Sparks (mit 🌐). Die Gruppe gehört dem Spark, auf dem sie erstellt wurde: Nur dort ändern ihre Admins Name und Mitglieder, er reicht jede Nachricht an die anderen Sparks weiter (einmal pro Spark, unterschrieben, mit derselben Warteschlange wie Chats zu zweit). Auf den anderen Sparks steht unter der Gruppe „verwaltet auf einem anderen Spark“; verlassen geht dort, und der Heimat-Spark erfährt es. Bisher nur Text; Fotos, Bearbeiten und Zurücknehmen gehen in diesen Gruppen noch nicht. Höchstens 10 andere Sparks pro Gruppe. Nichts davon geht an das Sprachmodell; Logs nur mit Zahlen („verbund: group …“), Zustand → Live zeigt die Zahl der Gruppen von hier und von anderen."
 },
 {
 "lang": "de",
@@ -6733,7 +6773,23 @@
 "file": "APIs and integration",
 "head": "Chats with other Sparks (V01.0.496)",
 "title": "Chats with other Sparks (V01.0.496)",
-"text": "Between Sparks (open, a signature instead of a login): GET /.well-known/spark-verbund returns {\"v\": 1, \"key\": \"<Ed25519, base64>\", \"inbox\": \"/api/verbund/in\"}, only while \"Chats with other Sparks\" is on. POST /api/verbund/in takes JSON up to 32 KB with the headers X-Spark-From: <sender's domain> and X-Spark-Sig: <base64>; signed is spark-verbund v1\\n<receiver's domain>\\n<body>. Body: v, t (Unix time, ±600 s), n (32 hex characters, once), type (pair, ask, yes, msg, read, edit, back, react), from/to (the part before the @), by type name, id, text, reply, emoji, secret. The answer is always {\"ok\": true}, refusals 400/403/409/413/429 without a reason. For the profile (browser or iPhone app, switches as above): GET /api/verbund (own address, QR, contacts with state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (chat id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair and /connect {\"code\"} (second step's code), POST /api/admin/verbund/peer {\"domain\", \"act\": \"allow\"|\"block\"|\"remove\"}."
+"text": "Between Sparks (open, a signature instead of a login): GET /.well-known/spark-verbund returns {\"v\": 1, \"key\": \"<Ed25519, base64>\", \"inbox\": \"/api/verbund/in\"}, only while \"Chats with other Sparks\" is on. POST /api/verbund/in takes JSON up to 32 KB with the headers X-Spark-From: <sender's domain> and X-Spark-Sig: <base64>; signed is spark-verbund v1\\n<receiver's domain>\\n<body>. Body: v, t (Unix time, ±600 s), n (32 hex characters, once), type (pair, ask, yes, msg, read, edit, back, react, for groups gadd, gmsg, gleave, gremove, gname, gmembers), from/to (the part before the @), by type name, id, text, reply, emoji, secret. The answer is always {\"ok\": true}, refusals 400/403/409/413/429 without a reason. For the profile (browser or iPhone app, switches as above): GET /api/verbund (own address, QR, contacts with state in/out/ok/block), POST /api/verbund/ask {\"addr\"}, POST /api/verbund/answer {\"id\", \"act\": \"ok\"|\"no\"|\"block\"|\"unblock\"}, POST /api/verbund/remove {\"id\"}, POST /api/verbund/open {\"id\"} (chat id). Admin: GET /api/admin/verbund, POST /api/admin/verbund/pair and /connect {\"code\"} (second step's code), POST /api/admin/verbund/peer {\"domain\", \"act\": \"allow\"|\"block\"|\"remove\"}."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Chats with other Sparks (V01.0.496)",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "Files (V01.0.568, switch \"Photos and files to other Sparks\"): POST /api/verbund/blob with the content as body, X-Spark-From, X-Spark-Blob (base64url of {\"v\": 1, \"t\", \"n\", \"sha\", \"size\"}) and X-Spark-Sig (signature as for messages over that head); then msg with \"media\": {\"kind\": \"photo\"|\"file\"|\"voice\", \"sha\", \"size\", \"name\"?}. Answers: 200, 400 (form, time, size, hash), 401 (no known, allowed Spark, or off), 403 (signature), 409 (repeated), 429 (daily limit)."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Chats with other Sparks (V01.0.496)",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "Groups (V01.0.568, switch \"Groups with other Sparks\"): the group belongs to the Spark it was created on; gid is its chat id there. From it: gadd to one person (from is the admin, who must be an accepted contact of that person; name, members as a list of {\"addr\", \"name\"}), gmsg with id, text, reply, by (the author's address) and byname, once per Spark, gremove to one person, gname with name, gmembers with members. To it, with an empty to: gmsg (from is the member, id, text, reply) and gleave. The home Spark checks membership and passes a message on to all other Sparks, never back to the one it came from. Text only for now, at most 10 other Sparks per group."
 },
 {
 "lang": "en",
@@ -7477,7 +7533,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ress. From kill switch stage 1 everything from outside only gets the page and the kill switch state. 6. All quiet?: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down. 7. Foreign page?: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes. 8. Big upload without login?: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read. 9. Too large?: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed. 10. Update running?: While an update runs, changes"
+"text": "ress. From kill switch stage 1 everything from outside only gets the page and the kill switch state. 6. All quiet?: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down. 7. Foreign page?: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes. 8. Big upload without login?: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file (/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read. 9. Too large?: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while "
 },
 {
 "lang": "en",
@@ -7485,7 +7541,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED). 11. Endpoint: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile. 12. Answer with protection: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure."
+"text": "reading, BodyLimit also counts and stops as soon as more arrives than allowed. 10. Update running?: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED). 11. Endpoint: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile. 12. Answer with protection: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure."
 },
 {
 "lang": "en",
@@ -9373,7 +9429,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Chats with other Sparks (V01.0.496)",
-"text": "essages and chats\"): verbund: sent, verbund: refused signature, verbund: retry, never a domain, name or text. The service watch checks \"Reachable for other Sparks\" (the own address from outside). The iPhone app shows such chats with 🌐; asking and accepting work in the browser."
+"text": "essages and chats\"): verbund: sent, verbund: refused signature, verbund: retry, never a domain, name or text. The service watch checks \"Reachable for other Sparks\" (the own address from outside). The iPhone app shows such chats with 🌐; asking and accepting work in the browser. Photos and files to other Sparks (V01.0.568): Admin: Features → Chats → Chats with other Sparks → \"Photos and files to other Sparks\" (off, needs \"Photos, files and voice in chats\"). Then photos, files and voice messages go in chats with other Sparks too, with the same buttons. The own Spark sends the file first, alone and signed (a head with time, one-time number, SHA-256 and size in a header), to /api/verbund/blob, then the message with the hash. The other Spark takes a file only from an allowed Spark with a known key (checked before a byte is read), exactly with the size and hash of the head, at most 500 MB per Spark and day and 2 GB waiting, keeps it sealed until the message comes (at most a day) and makes it anew as if uploaded there: a photo drawn again (without place), a file recognised by its content (else nothing arrives), a voice message encoded again and written down by its own speech recognition. N"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats with other Sparks (V01.0.496)",
+"text": "one of it goes to the language model. When the other Spark takes no files, the message shows ⚠ instead of waiting a week. Live: tile Chats \"files today n in / n out\"; logs: \"verbund: file in | kb 812\", \"verbund: refused file limit\", \"verbund: files dropped | n 1\", numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Groups with other Sparks (V01.0.568)",
+"text": "Groups with other Sparks (V01.0.568): Admin: Features → Chats → Chats with other Sparks → \"Groups with other Sparks\" (off, needs \"Group chats\"). Then a group's admins also pick their accepted contacts on other Sparks (marked 🌐) when creating it or under \"Add people\". The group belongs to the Spark it was created on: only there its admins change name and members, and it passes every message on to the other Sparks (once per Spark, signed, through the same queue as chats for two). On the other Sparks the group reads \"managed on another Spark\"; leaving works there, and the home Spark hears it. Text only for now; photos, editing and taking back do not work in these groups yet. At most 10 other Sparks per group. None of it goes to the language model; logs with numbers only (\"verbund: group …\"), Status → Live shows the number of groups from here and from others."
 },
 {
 "lang": "en",

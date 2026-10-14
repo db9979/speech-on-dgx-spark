@@ -216,6 +216,8 @@
     "chats_invite": false,
     "chats_private": false,
     "chats_verbund": false,
+    "verbund_media": false,
+    "verbund_groups": false,
     "verbund_mode": "pair",
     "verbund_domain": "",
     "chats_calls": false,
