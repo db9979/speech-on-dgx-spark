@@ -269,6 +269,8 @@ class Browser(unittest.TestCase):
     def setUpClass(cls):
         cls.port = helpers._port()
         helpers.serve_panel(cls, cls.port)
+        # switched on for real: a later /api/whoami refresh sets MSTIL_ON from the server again
+        helpers.set_config(mail=True, mail_style=True, deny={})
         try:
             profiles.add_user("Stilseite", "4711")
         except Exception:
@@ -278,6 +280,7 @@ class Browser(unittest.TestCase):
     def tearDownClass(cls):
         with contextlib.suppress(Exception):
             ADMIN.delete("/api/admin/profiles/" + uid_of("Stilseite"))
+        helpers.set_config(mail=False, mail_style=False, deny={})
 
     def test_page_fits_and_saves_one_field(self):
         async def go():

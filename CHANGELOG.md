@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.564** · 2026-10-14 · ROT-FIX Mailstil: der Browser-Test schaltet die Funktion wirklich ein, sonst setzte die späte Anmeldeabfrage den Schalter wieder aus
 - **V01.0.563** · 2026-10-14 · Mailstil lernen: der Spark liest gesendete Mails nur lesend, merkt sich Anrede, Gruß, Länge, Ton und Wendungen je Privat/Beruflich/Unbekannt und schreibt Mail-Entwürfe (Sprache, Chat, Begleiter „Antwort entwerfen“) in diesem Stil; nur die Zusammenfassung wird gespeichert, Funktionen → Mailstil lernen (aus)
 - **V01.0.562** · 2026-10-14 · Tests wieder grün: der Sprung-Link-Test setzt seinen Hinweis erst nach der ersten Zustand-Abfrage (die kommt seit V01.0.558 sofort beim Öffnen), Höhenbudget der Funktionen-Seite um die neue Zeile „Verbrauchszähler“ erweitert
 - **V01.0.561** · 2026-10-14 · Live: die Kästen unter „Dienste und Ziele“ behalten Name und Zustand auch in der normalen Ansicht; das Bild wird mit der Zahl der Ziele höher, statt die Kästen zu stauchen, lange Wörter enden mit „…“ (test_seitenrahmen LiveBoxes)
