@@ -502,7 +502,7 @@ Alle Dienste schreiben in den journald-Namespace `speech-spark` (persistent, hö
 
 ## Die Kästen im Einzelnen
 
-Jeder Kasten im Bild hat eine eigene Seite (Zustand → Technik, Kasten anklicken, dann „Ganz genau“): was er macht und warum, sein Ablauf als Schaubild mit nummerierten Schritten, Regeln, Zahlen, wo man ihn einstellt und sieht, und sein Code. Die Texte stehen in `app/panel/technik_knoten.py`; Zahlen und Listen von Aufrufern werden aus dem Code gelesen.
+Jeder Kasten im Bild hat eine eigene Seite (Zustand → Technik, Kasten anklicken, dann „Ganz genau“): was er macht und warum, sein Ablauf als Schaubild mit nummerierten Schritten, Regeln, Zahlen, wo man ihn einstellt und sieht, und sein Code. Die Texte stehen in `app/panel/technik_knoten.py`; Zahlen und Listen von Aufrufern werden aus dem Code gelesen. Ein Klick auf eine Blase umrandet ihren Text und lässt beide kurz aufblinken (auf dem Handy öffnet er sich als Karte unter der Blase), mit der Maus reicht Darüberfahren. Ein Klick auf den Text, eine Regel, eine Zahl oder eine Code-Zeile markiert umgekehrt die Blase; liegt sie außer Sicht, erscheint sie klein unter der angeklickten Zeile, mit „Im Ablauf zeigen“, und die Seite bleibt stehen. Beim Durchspielen liest die Liste rechts mit. Hier in der Datei führen „(Schritt N)“-Links zum Schritt. Im Datenfluss wählt ein angeklickter Kasten seinen Schritt im Weg einer Frage.
 
 <!-- technik:knoten -->
 ### Browser und Handy

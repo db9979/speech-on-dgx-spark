@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.554** · 2026-10-14 · Knoten-Seiten: ein Klick auf Text, Regel, Zahl oder Code zeigt die Blase direkt unter der Zeile, wenn sie außer Sicht ist; die Seite springt nicht mehr nach oben
 - **V01.0.553** · 2026-10-14 · Wartungspause: `sudo speech-spark pause` und `speech-spark weiter` brachen mit „No module named 'common'“ ab; wartung.py findet app/ jetzt selbst, ein Selbsttest startet die Datei wie die Kommandozeile
 - **V01.0.552** · 2026-10-14 · Haushaltsordner (Synology S5): ein Admin-Profil wählt an seinem Ort einen Ordner „für alle im Haushalt“, der Spark liest ihn nur und jedes freigegebene Profil findet die Dokumente als „geteilt von Haushalt“ und öffnet sie frisch von der NAS; Gäste und fremde Stimmen nie (Funktionen → Speicher und NAS → Haushaltsordner); die iPhone-App zeigt bei Dokumenten von der NAS „NAS · Ordner“ und öffnet sie von dort (S8, neuer TestFlight-Build nötig); Anleitung „Fortgeschritten: MCP-Server auf der NAS“ mit gehärteter Vorlage in docs/vorlagen/nas-mcp (S7)
 - **V01.0.551** · 2026-10-14 · „Wer darf was“ zeigt nur noch gesperrte Funktionen, antippen hebt die Sperre auf; neue Sperren in der Funktion unter „Wer darf es“; der Verwalter hebt nur noch Sperren auf, Funktionen schaltet und sperrt nur der Admin (Panel und iPhone-App, vom Server erzwungen)

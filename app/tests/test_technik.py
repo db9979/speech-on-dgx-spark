@@ -467,8 +467,16 @@ class Page(unittest.TestCase):
                 await pg.click("#tkview .kn-steps li[data-kns='s3']")
                 self.assertTrue(await pg.evaluate("TK.mk==='s3'&&document.querySelector(\"#tkview .kn-svg g.kn-st[data-kns='s3']\").classList.contains('mk')"))
                 first = technik_knoten.seite("waechter")["code"][0]["steps"][0]
-                await pg.click("#tkview [data-knc='0']")
+                # a code line far below its bubble: the page stays, the bubble shows up under the line (Dominik 2026-10-14)
+                at = "document.querySelector(\"#tkview [data-knc='0']\").getBoundingClientRect().top"
+                y = await pg.evaluate("(()=>{document.querySelector(\"#tkview [data-knc='0']\").scrollIntoView({block:'center'});return %s})()" % at)
+                await pg.evaluate("document.querySelector(\"#tkview [data-knc='0']\").dispatchEvent(new MouseEvent('click',{bubbles:true}))")
                 self.assertEqual(await pg.evaluate("TK.mk"), first, f"{w}: a code line marks its bubble")
+                self.assertLessEqual(abs(await pg.evaluate(at) - y), 2, f"{w}: the line stays where it was, no jump up")
+                self.assertTrue(await pg.evaluate("(()=>{const e=document.querySelector(\"#tkview [data-knc='0']\").nextElementSibling;"
+                                                  "return!!e&&e.matches('.kn-inl')&&!!e.querySelector('.kn-mini')})()"), f"{w}: bubble under the line")
+                await pg.click("#tkview .kn-inl [data-knup]")
+                await self._until(pg, f"knSeen(document.querySelector(\"#tkview .kn-svg g.kn-st[data-kns='{first}']\"))")
                 self.assertTrue(await pg.evaluate("document.querySelector(\"#tkview [data-knc='0']\").classList.contains('mk')"))
                 self.assertTrue(await pg.evaluate("!!document.querySelector(\"#tkview .kn-steps li.mk .kn-rel [data-knto='c0']\")"))
                 await pg.keyboard.press("Escape")

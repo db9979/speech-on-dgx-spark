@@ -129,3 +129,22 @@ html.tk-lock{overflow:hidden}
 @keyframes knblinkg{50%{opacity:.3}}
 .blink:not(g){animation:knblink .42s ease-in-out 2}g.blink{animation:knblinkg .42s ease-in-out 2}
 @media (prefers-reduced-motion:reduce){.blink:not(g),g.blink{animation:none}}
+/* the bubble under a clicked line (its bubble is out of sight): small, drawn like in the picture, "Im Ablauf zeigen" */
+.kn-inl{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;padding:10px 12px;border:2px solid var(--acc);
+  border-radius:12px;background:color-mix(in srgb,var(--acc) 6%,var(--card));font-size:13.5px;line-height:1.45;align-items:flex-start;color:var(--fg)}
+.kn-inl1 p{margin:6px 0 0}
+.kn-mini{position:relative;display:inline-flex;flex-direction:column;align-items:center;min-width:200px;max-width:min(100%,420px);
+  padding:7px 22px 7px 34px;border:2px solid var(--acc);border-radius:8px;background:color-mix(in srgb,var(--acc) 14%,var(--card));text-align:center}
+.kn-mini-start,.kn-mini-ende{border-radius:22px}
+.kn-mini-frage{border-radius:4px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%);border:0;
+  background:color-mix(in srgb,var(--acc) 22%,var(--card))}
+.kn-mini i{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--acc);
+  color:var(--bg);font:700 11px/20px var(--font,system-ui);font-style:normal}
+.kn-mini-frage{padding-left:44px;padding-right:30px}.kn-mini-frage i{left:16px}
+.kn-mini b{font-size:13.5px}.kn-mini small{color:var(--mut);font-size:11.5px}
+.kn-up{align-self:flex-start;font-size:13px}
+.kn-inltr td{padding:0 9px 8px;border-bottom:1px solid var(--line)}
+#tkview .kn-inl{padding:10px 12px;border:2px solid var(--acc);border-radius:12px;min-width:0}
+#tkview .kn-inl .kn-inl1{display:block;padding:0;border:0;border-radius:0}
+#tkview .kn-inl .kn-mini{color:var(--fg);font-size:13.5px}
+#tkview .kn-inl .kn-mini b{display:block;font-size:13.5px;color:var(--fg)}#tkview .kn-inl .kn-mini small{color:var(--mut)}

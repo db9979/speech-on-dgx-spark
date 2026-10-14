@@ -629,7 +629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Die Kästen im Einzelnen",
 "title": "Die Kästen im Einzelnen",
-"text": "Jeder Kasten im Bild hat eine eigene Seite (Zustand → Technik, Kasten anklicken, dann „Ganz genau“): was er macht und warum, sein Ablauf als Schaubild mit nummerierten Schritten, Regeln, Zahlen, wo man ihn einstellt und sieht, und sein Code. Die Texte stehen in app/panel/technik_knoten.py; Zahlen und Listen von Aufrufern werden aus dem Code gelesen."
+"text": "Jeder Kasten im Bild hat eine eigene Seite (Zustand → Technik, Kasten anklicken, dann „Ganz genau“): was er macht und warum, sein Ablauf als Schaubild mit nummerierten Schritten, Regeln, Zahlen, wo man ihn einstellt und sieht, und sein Code. Die Texte stehen in app/panel/technik_knoten.py; Zahlen und Listen von Aufrufern werden aus dem Code gelesen. Ein Klick auf eine Blase umrandet ihren Text und lässt beide kurz aufblinken (auf dem Handy öffnet er sich als Karte unter der Blase), mit der Maus reicht Darüberfahren. Ein Klick auf den Text, eine Regel, eine Zahl oder eine Code-Zeile markiert umgekehrt die Blase; liegt sie außer Sicht, erscheint sie klein unter der angeklickten Zeile, mit „Im Ablauf zeigen“, und die Seite bleibt stehen. Beim Durchspielen liest die Liste rechts mit. Hier in der Datei führen „(Schritt N)“-Links zum Schritt. Im Datenfluss wählt ein angeklickter Kasten seinen Schritt im Weg einer Frage."
 },
 {
 "lang": "de",
@@ -6805,7 +6805,7 @@
 "file": "Architecture and data flow",
 "head": "The boxes in detail",
 "title": "The boxes in detail",
-"text": "Every box of the picture has its own page (Status → Architecture, click a box, then „In detail“): what it does and why, its way as a picture with numbered steps, rules, numbers, where to set it and see it, and its code. The texts live in app/panel/technik_knoten.py; numbers and lists of callers are read from the code."
+"text": "Every box of the picture has its own page (Status → Architecture, click a box, then „In detail“): what it does and why, its way as a picture with numbered steps, rules, numbers, where to set it and see it, and its code. The texts live in app/panel/technik_knoten.py; numbers and lists of callers are read from the code. A click on a bubble frames its text and makes both blink briefly (on a phone it opens as a card under the bubble), with a mouse pointing is enough. A click on the text, a rule, a number or a code line marks the bubble the other way round; if it is out of sight, it shows up small under the clicked line, with „Show in the way“, and the page stays put. While an example plays, the list beside follows. In this file, „(step N)“ links lead to the step. In the data flow, a clicked box picks its step of the request's way."
 },
 {
 "lang": "en",

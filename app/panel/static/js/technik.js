@@ -168,8 +168,17 @@ function knRel(p,id){const out=[];p.rules.slice(1).forEach((r,i)=>{if((p.rule_st
   p.code.forEach((c,i)=>{if(c.steps.includes(id))out.push(['c',i,t('Code','Code'),c.ref])});return out}
 function knRelHtml(p,id){const r=knRel(p,id);if(!r.length)return'';
   return`<div class="kn-rel"><span class="mut">${esc(t('Passt dazu:','Belongs to it:'))}</span>${r.map(([k,i,l,x])=>`<button class="ld-chip" type="button" data-knto="${k}${i}"><b>${esc(l)}</b> ${esc(x.length>48?x.slice(0,47)+'…':x)}</button>`).join('')}</div>`}
-function knMarkApply(blink,from){const box=$('tkview'),p=knPd();if(!box||!p)return;const id=TK.mk;
-  box.querySelectorAll('.kn-rel,.kn-pop').forEach(e=>e.remove());
+// the bubble itself, small, under a clicked line whose bubble is out of sight (Dominik 2026-10-14: no scrolling up)
+function knMini(st){return`<span class="kn-mini kn-mini-${esc(st.art)}"><i>${st.n}</i><b>${esc(st.name)}</b>${st.sub?`<small>${esc(st.sub)}</small>`:''}</span>`}
+function knInline(p,src,ids,withText){const sts=ids.map(i=>p.steps.find(s=>s.id===i)).filter(Boolean);if(!sts.length)return null;
+  const html=`<div class="kn-inl">${sts.map(st=>`<div class="kn-inl1">${knMini(st)}${withText?`<p>${esc(st.text)}</p>`:''}</div>`).join('')}`+
+    `<button class="b kn-up" type="button" data-knup="${esc(sts[0].id)}">↑ ${esc(t('Im Ablauf zeigen','Show in the way'))}</button></div>`;
+  if(src.tagName==='TR'){src.insertAdjacentHTML('afterend',`<tr class="kn-inltr"><td colspan="${src.children.length}">${html}</td></tr>`);return src.nextElementSibling}
+  if(src.tagName==='LI'){src.insertAdjacentHTML('beforeend',html);return src.lastElementChild}
+  src.insertAdjacentHTML('afterend',html);return src.nextElementSibling}
+const knSeen=el=>{const r=el.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight};
+function knMarkApply(blink,from,src){const box=$('tkview'),p=knPd();if(!box||!p)return;const id=TK.mk,top=src?src.getBoundingClientRect().top:0;
+  box.querySelectorAll('.kn-rel,.kn-pop,.kn-inl,.kn-inltr').forEach(e=>e.remove());
   box.querySelectorAll('[data-kns]').forEach(e=>{const on=!!id&&knBase(e)===id;e.classList.toggle('mk',on);e.classList.toggle('mdim',!!id&&!on)});
   const items=[['knr',i=>p.rule_steps[i]||[]],['knz',i=>p.numbers[i].steps],['knc',i=>p.code[i].steps]];
   for(const[a,f]of items)box.querySelectorAll(`[data-${a}]`).forEach(e=>e.classList.toggle('mk',!!id&&f(+e.dataset[a]).includes(id)));
@@ -178,10 +187,17 @@ function knMarkApply(blink,from){const box=$('tkview'),p=knPd();if(!box||!p)retu
   if(li)li.insertAdjacentHTML('beforeend',knRelHtml(p,id));
   if(!knWide()&&from==='bild'&&g){const pic=g.closest('.kn-pic'),r=g.getBoundingClientRect(),q=pic.getBoundingClientRect();
     pic.insertAdjacentHTML('beforeend',`<div class="kn-pop" style="top:${Math.round(r.bottom-q.top+pic.scrollTop+6)}px"><button class="b kn-popx" type="button" data-knmk="" aria-label="${esc(t('Schließen','Close'))}">✕</button><b>${esc(st.n+'. '+st.name)}</b> ${esc(st.text)}${knRelHtml(p,id)}</div>`)}
-  if(!blink)return;const pop=box.querySelector('.kn-pop');knBlink([g,pop||li].filter(Boolean));
-  if(from==='bild'){if(pop)knInView(pop);else if(li)knInView(li)}else if(g)knInView(g)}
-function knMark(id,from){if(TK.play){knStop();tkRender()}TK.mk=id&&TK.mk===id&&from!=='item'?null:id||null;knMarkApply(true,from)}
-function knItem(k,i){const p=knPd();if(!p)return;const st=k==='r'?p.rule_steps[i]||[]:k==='z'?p.numbers[i].steps:p.code[i].steps;if(!st.length)return;knMark(st[0],'item')}
+  if(!blink)return;const pop=box.querySelector('.kn-pop');
+  if(from==='bild'){knBlink([g,pop||li].filter(Boolean));if(pop)knInView(pop);else if(li)knInView(li);return}
+  // a line or the text was clicked: the page stays where it is; a bubble out of sight shows up under the line
+  // what was added or removed above the clicked line must not move it (it stays where the eye is)
+  if(src){const d=src.getBoundingClientRect().top-top;if(Math.abs(d)>1)scrollBy(0,d)}
+  const ids=from==='item'&&src?knItemSteps(src):[id],inl=src&&g&&!knSeen(g)?knInline(p,src,ids,from==='item'):null;
+  knBlink([inl||g,from==='item'?li:null].filter(Boolean))}
+function knMark(id,from,src){if(TK.play){knStop();tkRender()}TK.mk=id&&TK.mk===id&&from!=='item'?null:id||null;knMarkApply(true,from,src&&src.isConnected?src:null)}
+function knItemSteps(e){const p=knPd();for(const[a,f]of[['knr',i=>p.rule_steps[i]||[]],['knz',i=>p.numbers[i].steps],['knc',i=>p.code[i].steps]])if(e.dataset[a]!==undefined)return f(+e.dataset[a]);return[]}
+function knItem(k,i){const e=document.querySelector(`#tkview [data-kn${k}="${i}"]`);if(!e)return;const st=knItemSteps(e);if(!st.length)return;knMark(st[0],'item',e)}
+function knUp(id){const g=document.querySelector(`#tkview .kn-svg g.kn-st[data-kns="${id}"]`);if(!g)return;g.scrollIntoView({block:'center',behavior:knSmooth()});knBlink([g])}
 function knGoItem(v){const k=v[0],i=+v.slice(1),e=document.querySelector(`#tkview [data-kn${k}="${i}"]`);if(!e)return;knInView(e);knBlink([e])}
 // with a mouse: pointing at a bubble lights its text and the other way round
 function knHover(e,on){if(TK.view!=='knoten'||!matchMedia('(hover: hover)').matches)return;const x=e.target.closest&&e.target.closest('#tkview [data-kns]');if(!x)return;
@@ -193,9 +209,10 @@ function tkFocusPic(){const pic=document.querySelector('#tkview .tk-pic');if(!pi
 // the data flow: a new step blinks its chip and its boxes (a box clicked there blinks with its step)
 function tkBlinkFlow(){const b=TK.blink;TK.blink=false;if(!b||TK.view!=='fluss')return;const v=$('tkview');if(!v)return;
   const chip=v.querySelector('.tk-steps .ld-chip.on');knBlink([chip,...v.querySelectorAll(typeof b==='string'?`.tk-node[data-tkn="${b}"]`:'.tk-node.lit')].filter(Boolean));if(chip)chip.scrollIntoView({block:'nearest',inline:'nearest'})}
-function tkClick(e){const k=TK.view==='knoten'&&e.target.closest('[data-knto],[data-knmk],[data-kns],[data-knr],[data-knz],[data-knc]');
-  if(k&&!e.target.closest('a,button:not([data-knto]):not([data-knmk])')){if(k.dataset.knto){knGoItem(k.dataset.knto);return}if(k.dataset.knmk!==undefined){knMark(null);return}
-    if(k.dataset.kns){knMark(knBase(k),k.closest('.kn-svg')?'bild':'text');return}
+function tkClick(e){const k=TK.view==='knoten'&&e.target.closest('[data-knto],[data-knmk],[data-knup],[data-kns],[data-knr],[data-knz],[data-knc]');
+  if(k&&!e.target.closest('a,button:not([data-knto]):not([data-knmk]):not([data-knup])')){if(k.dataset.knto){knGoItem(k.dataset.knto);return}if(k.dataset.knmk!==undefined){knMark(null);return}if(k.dataset.knup){knUp(k.dataset.knup);return}
+    if(k.closest('.kn-inl'))return;
+    if(k.dataset.kns){knMark(knBase(k),k.closest('.kn-svg')?'bild':'text',k.closest('.kn-svg')?null:k);return}
     for(const a of['r','z','c'])if(k.dataset['kn'+a]!==undefined){knItem(a,+k.dataset['kn'+a]);return}}
   const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep],[data-tkfilt],[data-tkrow],[data-tkgo],[data-tkback],[data-tkgroup],[data-tkfull],[data-tkzoom],[data-tkclose],[data-tkpage],[data-tkplay]');if(!x||!TK.d)return;
   if(x.dataset.tkpage){knOpen(x.dataset.tkpage);return}

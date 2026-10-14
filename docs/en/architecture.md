@@ -502,7 +502,7 @@ All services write into the journald namespace `speech-spark` (persistent, at mo
 
 ## The boxes in detail
 
-Every box of the picture has its own page (Status → Architecture, click a box, then „In detail“): what it does and why, its way as a picture with numbered steps, rules, numbers, where to set it and see it, and its code. The texts live in `app/panel/technik_knoten.py`; numbers and lists of callers are read from the code.
+Every box of the picture has its own page (Status → Architecture, click a box, then „In detail“): what it does and why, its way as a picture with numbered steps, rules, numbers, where to set it and see it, and its code. The texts live in `app/panel/technik_knoten.py`; numbers and lists of callers are read from the code. A click on a bubble frames its text and makes both blink briefly (on a phone it opens as a card under the bubble), with a mouse pointing is enough. A click on the text, a rule, a number or a code line marks the bubble the other way round; if it is out of sight, it shows up small under the clicked line, with „Show in the way“, and the page stays put. While an example plays, the list beside follows. In this file, „(step N)“ links lead to the step. In the data flow, a clicked box picks its step of the request's way.
 
 <!-- technik:knoten -->
 ### Browser and phone
