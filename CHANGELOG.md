@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.544** · 2026-10-14 · Persönliches bleibt beim Profil: Briefing und Spark-Tagebuch nicht für eine erkannte Stimme am fremden Gerät, Lautsprecher liest Nachrichten nur der erkannten Stimme vor, Verwalter sieht nur eigene Meldungs-Entwürfe, Smart-Home-Sätze nicht mehr im Log
 - **V01.0.543** · 2026-10-14 · Lizenz von MIT auf FSL-1.1-MIT (Functional Source License, MIT als spätere Lizenz): nutzen, lesen, ändern und weitergeben bleibt frei, nur ein kommerzielles Konkurrenzangebot ist nicht erlaubt; jede Version wird zwei Jahre nach Veröffentlichung MIT; Versionen bis V01.0.542 bleiben MIT; fremde Teile behalten ihre Lizenz (LICENSE, beide READMEs)
 - **V01.0.542** · 2026-10-14 · Postfach aufräumen: Modus-Zeile unter Aus / Vorschau / Sicher / Voll sagt, was der Modus tut (auch am Handy, nicht nur als Tooltip); Umschalten fragt jetzt nach dem Code, statt hängen zu bleiben
 - **V01.0.541** · 2026-10-14 · Admin ohne zweite Stufe: Profile mit Rolle Admin oder Verwalter sind in ihrer eigenen Anmeldung (mit zweitem Schritt) gleich Admin, der Admin-Modus fällt weg; „Bestätigen“ fragt Admins nicht mehr, „Schutz ändern“ jedes Mal; Haupt-Admin und Mit-Admin werden zu Admin; Panel-Passwort nur noch als Notzugang im Browser; iPhone-App verwaltet über den App-Schlüssel, Schalter „Spark verwalten in der App“ entfällt; Admin- und Änderungsprotokoll zeigen wieder die neuesten Einträge

@@ -41,7 +41,7 @@ class Diary(unittest.TestCase):
         helpers.set_config(tagebuch=True)
         block(self, uid, "tagebuch")            # the admin blocked it for this profile
         self.assertFalse(tagebuch.note(uid, "dokument", "Brief", now=T0))
-        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "text": ASKS[0]}))
+        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "own": True, "text": ASKS[0]}))
         profiles.save_settings(uid, {"tagebuch_on": True})   # the profile cannot lift it
         self.assertFalse(tagebuch.note(uid, "dokument", "Brief", now=T0))
         block(self, uid, "tagebuch", on=True)   # released: at once
@@ -83,10 +83,10 @@ class Diary(unittest.TestCase):
 
     def test_tool_and_offer(self):
         uid = on("TbTool")
-        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "text": "Mach das Licht an"}))
-        o = tagebuch.offer({"who": {"id": uid}, "text": ASKS[0]})
+        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "own": True, "text": "Mach das Licht an"}))
+        o = tagebuch.offer({"who": {"id": uid}, "own": True, "text": ASKS[0]})
         self.assertEqual([t["function"]["name"] for t in o["tools"]], ["spark_tagebuch"])
-        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "text": ASKS[0], "client": "mcp"}))
+        self.assertIsNone(tagebuch.offer({"who": {"id": uid}, "own": True, "text": ASKS[0], "client": "mcp"}))
         tagebuch.note(uid, "dokument", "Brief an Tim")
         out = asyncio.run(tagebuch.tool("spark_tagebuch", {"art": "dokument", "tage": 99}, {"who": {"id": uid}}))
         self.assertIn("Brief an Tim", out)

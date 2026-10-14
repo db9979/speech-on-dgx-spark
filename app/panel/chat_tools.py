@@ -509,7 +509,9 @@ async def briefing_text(t, st):
         for label, a, b in (("Today", today, tomorrow), ("Tomorrow", tomorrow, tomorrow + datetime.timedelta(days=1))):
             evs = [x for x in res[0] if x["start"] < b and (x["end"] > a or x["start"] >= a)]
             parts.append(f"{label}'s appointments:\n" + ("\n".join(calendars.line(x, now) for x in evs) or "none"))
-    if t.timers:
+    # the reminders are the profile's own words: like the calendar only with private_ok, so a voice recognized at
+    # someone else's browser (it could be a recording) or Telegram without tg_private hears none of them
+    if t.timers and t.private_ok:
         end = (today + datetime.timedelta(days=1)).timestamp() * 1000
         pend = [x for x in (profiles.reminders(t.who["id"]) if t.who else []) if x["due"] < end]
         parts.append("Reminders today:\n" + ("\n".join(

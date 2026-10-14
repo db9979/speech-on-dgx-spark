@@ -140,7 +140,9 @@ INSIDE = {"spark_tagebuch"}
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not on(who["id"]) or ctx.get("client") == "mcp":
+    # like the other personal tools: only the profile's own login or device key (not a voice recognized at someone
+    # else's browser, it could be a recording) and not over Telegram without tg_private
+    if not who or not on(who["id"]) or ctx.get("client") == "mcp" or not ctx.get("own") or ctx.get("private") is False:
         return None
     import chat
     words = str(ctx.get("text") or "")

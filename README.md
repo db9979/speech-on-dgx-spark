@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.544** Personal things stay with the profile: briefing and Spark diary not for a recognized voice at someone else's device, speakers read messages only to the recognized voice, Verwalter sees only own report drafts, smart home sentences no longer in the log
 - **V01.0.543** License now FSL-1.1-MIT: free for you, family, friends, teaching and research, no competing sale; every version turns MIT after two years
 - **V01.0.542** Inbox tidying: a mode line explains Off, Preview, Safe and Full; switching works again with the second login step
 - **V01.0.541** Admin without a second stage: a profile with a role is admin at once, "Confirm" no longer asks admins
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.537** Outlook classic starts again with the Spark add-in
 - **V01.0.536** Tests green again: the model list test starts with a fresh minute of its rate limit
 - **V01.0.535** NAS status: use, RAID, disks and temperature of your Synology, notes to the admins, ask by voice; knowledge folders read documents before pictures
-- **V01.0.534** Channel tag in your own blue bubble (e.g. "Companion") readable again: white like the text, light and dark
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

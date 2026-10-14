@@ -226,7 +226,8 @@ def _lead(a):
 # What people say or write, what a foreign server answers, a raw profile id: never in a journal line (only how long it
 # is, via len, or the profile via profiles.log_name). A print may name such a variable only with a reason here.
 CONTENT = {"text", "msg", "message", "line", "title", "query", "prompt", "answer", "reply", "body", "content", "command",
-           "words", "said", "q", "utterance", "transcript", "latest", "uid"}
+           "words", "said", "q", "utterance", "transcript", "latest", "uid", "ha_direct", "ask", "ask0", "question", "spoken",
+           "heard", "note", "fact", "subject"}
 CONTENT_SAFE = {"len", "log_name", "_log_name", "_who", "type", "bool", "int", "round", "sum", "_word"}
 CONTENT_OK = {
     ("chat.py", "body"): "watch.report_line schreibt aus body nur Zahlen und feste Wörter (OUTCOMES)",

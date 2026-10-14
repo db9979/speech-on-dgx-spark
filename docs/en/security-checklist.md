@@ -10,7 +10,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] If the address changes, the token must be entered again.
 - [ ] State changes only via POST/PUT/DELETE, never via GET. (`?take=true`)
 - [ ] Guests only get questions and answers: no tools, no personal data, no actions and no error texts, only error codes.
-- [ ] An unknown recognised voice only gets non-personal tools.
+- [ ] An unknown recognised voice only gets non-personal tools. This also holds for parts a tool reads out along the way (briefing with reminders, Spark diary): personal parts only with `private_ok` or `ctx["own"]` and `ctx["private"]`. (Review 2026-10-14, 🧪 test_kontext_trennung)
 - [ ] Shared devices (speakers in the room): the device key alone does not count as the owner. Personal things only when speaker recognition reliably recognises the owner's voice in the same recording; otherwise guest rights, and earlier history does not carry over. Whose voice it was is set only by the panel (request scope), never by the request. (V01.0.226: an unknown voice got the owner's mails.)
 - [ ] Spoken code word (speaker, V01.0.297): only for a voice that is already almost certainly the owner, never for an unknown one; a code word of its own, not the smart-home code word; the sentence containing it never goes to the model, into history, diagnostics, display or log; lockout after failed attempts with a notification.
 - [ ] Comparisons of keys and codes run with `hmac.compare_digest`.

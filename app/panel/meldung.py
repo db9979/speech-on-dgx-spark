@@ -87,8 +87,9 @@ def repo():
 
 
 def _staff(request):
-    """(name, uid, logs) for the main admin or an admin profile; logs: may add Diagnose lines
-    (not the Verwalter role, like Logs → Anfragen). None otherwise."""
+    """(name, uid, logs) for the main admin or a profile with the admin role; logs: may add Diagnose
+    lines. The Verwalter role is no staff here (Prüfung 2026-10-14, B): it reports like any profile and never sees,
+    sends or deletes another profile's draft. None otherwise."""
     import coadmin
     import core
     if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
@@ -96,8 +97,8 @@ def _staff(request):
     if core.password_set() and core._admin_cookie_age(request) is not None:
         return "Admin", "", True
     elev = coadmin.session(request)
-    if elev:
-        return elev["name"], elev["id"], elev.get("role") != "manager"
+    if elev and elev.get("role") != "manager":
+        return elev["name"], elev["id"], True
     return None
 
 

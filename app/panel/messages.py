@@ -18,7 +18,8 @@ else's words for the recipient: it comes as data (outside text), locks every cha
 and the next turn and never goes into the memory. "Antworte ihm: …" right after reading is taken by the panel from
 the person's own words (the sender is the one just read).
 
-On the own speaker (msg_speaker: "hint" says only who wrote, "text" also the text; a private chat only who): at once
+On the own speaker (msg_speaker: "hint" says only who wrote, "text" also offers to read it to the owner's recognized
+voice, never into the room before a voice was checked; a private chat only who): at once
 when no page of the profile is open and the speaker is connected, else at its next wake word within SPEAKER_KEEP;
 never in the profile's quiet hours or for a muted chat. Announcements: on the speakers whose owner may use them, at once when connected, else at the next wake word within ANNOUNCE_KEEP.
 
@@ -456,12 +457,26 @@ def speaker_mode(uid):
     return profiles.settings(uid).get("msg_speaker", "off") if usable(uid) else "off"
 
 
+# Said once after the senders for "text": the text itself only comes in an answer to the owner's recognized voice
+# (message_read, chat_turn.shared_stranger), never into the room before anyone was heard (Prüfung 2026-10-14, A)
+READ_OFFER = "Sag „Lies die Nachricht vor“, dann lese ich sie dir vor."
+
+
 def spoken(who, where, text, mode):
-    """What the speaker says for one chat message: who (and the group), with the text only for "text"."""
-    head = f"Nachricht von {who or 'jemandem'}" + (f" in {where}" if where else "")
-    if mode == "hint" or not text:
-        return head + "."
-    return f"{head}: {text}"
+    """What the speaker says for one chat message: who (and the group), never the text. A speaker is shared by the
+    room and says this before any voice was checked, so "text" only offers to read it (read_offer)."""
+    return f"Nachricht von {who or 'jemandem'}" + (f" in {where}" if where else "") + "."
+
+
+def read_offer(uid, mode, texts):
+    """READ_OFFER after the senders when the profile wants the text, one of the messages has one and the speaker
+    could recognize the profile's voice (speaker ID on, voice taught): else nobody could get it read there."""
+    if mode != "text" or not any(texts):
+        return ""
+    import speakers
+    if not load_config().get("chat", {}).get("speaker_id", False) or not speakers.has_voice(uid):
+        return ""
+    return " " + READ_OFFER
 
 
 async def speak_now(uid, who, where, text, now=None):
@@ -473,7 +488,7 @@ async def speak_now(uid, who, where, text, now=None):
     import room
     if room.night(uid):
         return False
-    if await _to_speaker(uid, spoken(who, where, text, mode)):
+    if await _to_speaker(uid, spoken(who, where, text, mode) + read_offer(uid, mode, [text])):
         now = time.time() if now is None else now
         mutate(uid, lambda d: d.update(spoken=max(float(d.get("spoken") or 0), now)))
         print(f"messages: chat message read on speaker at once | {mode} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
@@ -516,7 +531,7 @@ def speaker_waiting(uid, now=None):
         return ""
     mutate(uid, lambda d: d.update(spoken=now))
     print(f"messages: {len(new)} chat message(s) read at wake word | {mode} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
-    return " ".join(spoken(who, where, text, mode) for who, where, text in new)
+    return " ".join(spoken(who, where, text, mode) for who, where, text in new) + read_offer(uid, mode, [x[2] for x in new])
 
 
 # ---------------------------------------------------------------- announcements on speakers

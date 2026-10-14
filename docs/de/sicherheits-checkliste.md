@@ -10,7 +10,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Ändert sich die Adresse, muss das Token neu eingegeben werden.
 - [ ] Zustandsänderungen nur per POST/PUT/DELETE, nie per GET. (`?take=true`)
 - [ ] Gäste bekommen nur Frage und Antwort: keine Werkzeuge, keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes.
-- [ ] Eine fremde erkannte Stimme bekommt nur nicht-persönliche Werkzeuge.
+- [ ] Eine fremde erkannte Stimme bekommt nur nicht-persönliche Werkzeuge. Das gilt auch für Teile, die ein Werkzeug nebenbei vorliest (Briefing mit Erinnerungen, Spark-Tagebuch): persönliche Teile nur mit `private_ok` bzw. `ctx["own"]` und `ctx["private"]`. (Prüfung 2026-10-14, 🧪 test_kontext_trennung)
 - [ ] Geteilte Geräte (Lautsprecher im Raum): Der Geräteschlüssel allein zählt nicht als Inhaber. Persönliches nur, wenn die Sprechererkennung in derselben Aufnahme die Inhaberstimme sicher erkennt; sonst Gastrechte, früherer Verlauf geht nicht mit. Wessen Stimme es war, setzt nur das Panel (Request-Scope), nie die Anfrage. (V01.0.226: fremde Stimme bekam die Mails des Inhabers.)
 - [ ] Gesprochenes Codewort (Lautsprecher, V01.0.297): nur für eine Stimme, die schon fast sicher der Inhaber ist, nie für eine fremde; eigenes Codewort, nicht das Smart-Home-Codewort; der Satz damit geht nie ans Modell, in Verlauf, Diagnose, Anzeige oder Log; Sperre nach Fehlversuchen mit Mitteilung.
 - [ ] Vergleiche von Schlüsseln und Codes laufen mit `hmac.compare_digest`.

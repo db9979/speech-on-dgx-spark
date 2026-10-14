@@ -1809,7 +1809,10 @@ async def _answer(request, turn):
                     ok, targets = False, []   # said out loud: a sentence, never the name of the error (B2)
                     answer = "Home Assistant cannot be reached right now." if guess_language(ha_direct) == "English" \
                         else "Home Assistant ist gerade nicht erreichbar."
-                print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
+                # only how many words, never what was said (Richtlinie: logs hold fixed words and numbers; the journal is
+                # open to the Verwalter role and goes with traces and reports)
+                print("homeassistant: panel ran a command of", len(str(ha_direct).split()), "words ->",
+                      "ok" if ok else "not ok", flush=True)
                 if tr:
                     tr.step("tool", ha_step, t_ha, time.time(), ok=bool(ok), panel=True)
                 await out.put({"type": "home_done", "ok": ok, "text": answer[:300], "targets": targets})

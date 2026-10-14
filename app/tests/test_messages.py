@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 import unittest
+from unittest import mock
 
 from tests import helpers
 
@@ -449,7 +450,24 @@ class Speakers(Base):
         self.assertEqual(esp32._take_said(did), "")               # once
         b.put("/api/profile/settings", json={"msg_speaker": "text"})
         a.post("/api/chats/send", json={"id": cid, "text": "Licht aus bitte"})
-        self.assertIn("Licht aus bitte", esp32._take_said(did))
+        said = esp32._take_said(did)
+        # the speaker is the room's: the text never before a voice was checked (Prüfung 2026-10-14, A); without a
+        # taught voice nobody could get it read there, so no offer either
+        self.assertIn("Nachricht von Nora", said)
+        self.assertNotIn("Licht aus bitte", said)
+        self.assertNotIn(messages.READ_OFFER, said)
+        import speakers
+        helpers.set_config(speaker_id=True)
+        try:
+            with mock.patch.object(speakers, "has_voice", lambda uid: uid == ub):
+                a.post("/api/chats/send", json={"id": cid, "text": "Und die Heizung"})
+                said = esp32._take_said(did)
+        finally:
+            helpers.set_config(speaker_id=False)
+        self.assertNotIn("Heizung", said)
+        self.assertTrue(said.endswith(messages.READ_OFFER), said)
+        import intent
+        self.assertIn("nachricht", intent.classify("Lies die Nachricht vor").names)   # the offer's words find message_read
         # read on a page: nothing left to say; a muted chat: never
         b.post("/api/chats/read", json={"id": cid})
         self.assertEqual(esp32._take_said(did), "")
@@ -461,7 +479,7 @@ class Speakers(Base):
     def test_private_and_hint_never_say_the_text(self):
         self.assertEqual(messages.spoken("Anna", "", "", "text"), "Nachricht von Anna.")
         self.assertEqual(messages.spoken("Anna", "Familie", "Hallo", "hint"), "Nachricht von Anna in Familie.")
-        self.assertEqual(messages.spoken("Anna", "", "Hallo", "text"), "Nachricht von Anna: Hallo")
+        self.assertEqual(messages.spoken("Anna", "", "Hallo", "text"), "Nachricht von Anna.")   # the text: only on request
         a, ua = profile("Pia")
         b, ub = profile("Paul")
         cid = chats.open_one(ua, ub)
