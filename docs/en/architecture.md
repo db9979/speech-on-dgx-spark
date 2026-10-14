@@ -548,22 +548,24 @@ flowchart TD
   s12 -.->|hands-free, follow-up| s3
 ```
 
-1. **„Speak“ tapped**: startListening gets the microphone and remembers how it opened: by hand, after an answer (follow-up), hands-free or by talking over the answer. A microphone the page opened by itself later only takes a known voice.
-2. **Secure connection?**: Browsers only hand out the microphone on a secure page. Without https the page shows a note with the panel's https address and records nothing.
-3. **Record, find the end of the sentence**: MediaRecorder records, a level meter listens for silence. About every second the recording so far goes to speech recognition and shows as a pale bubble. If the sentence ends with a full stop, question or exclamation mark, the question is done at once; if it ends on „and“, „because“, „uhm“ or a comma, the page waits a little longer.
-4. **Sound to /api/test/asr**: The page turns the recording into a plain mono WAV (else the original goes). The Spark checks the rate limit (240 per minute for a profile, guests at most 3 at once), reads at most 50 MB and sends the sound to speech recognition. Alongside it measures on the CPU how much of it is voice and whose voice it is.
-5. **Silence, own or foreign voice?**: Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason.
-6. **Question to /api/chat**: The page sends the last messages of the open conversation, its id, voice, speed and, when the voice was recognized, a signed one-time token. The Spark checks the rate limit (120 per minute for a profile, guests at most 4 at once), lets background work wait (vorrang) and tells the profile's other open pages „answering“ (only the kind of device).
-7. **Text and sound in one stream**: The answer comes as events: pieces of text, pieces of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click.
-8. **Someone talking over it?**: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question.
-9. **Error in the stream?**: An error shows under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text.
-10. **Store the conversation**: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each.
-11. **Sync with other devices**: When the page comes to the front again, and regularly in between, it asks what changed since last time; a conversation deleted elsewhere closes. With instant sync every page keeps an event stream open that only reports „conversation changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each).
-12. **Ready**: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it opens the microphone again.
+1. <a id="kn-geraet-s1"></a>**„Speak“ tapped**: startListening gets the microphone and remembers how it opened: by hand, after an answer (follow-up), hands-free or by talking over the answer. A microphone the page opened by itself later only takes a known voice.
+2. <a id="kn-geraet-s2"></a>**Secure connection?**: Browsers only hand out the microphone on a secure page. Without https the page shows a note with the panel's https address and records nothing.
+3. <a id="kn-geraet-s3"></a>**Record, find the end of the sentence**: MediaRecorder records, a level meter listens for silence. About every second the recording so far goes to speech recognition and shows as a pale bubble. If the sentence ends with a full stop, question or exclamation mark, the question is done at once; if it ends on „and“, „because“, „uhm“ or a comma, the page waits a little longer.
+4. <a id="kn-geraet-s4"></a>**Sound to /api/test/asr**: The page turns the recording into a plain mono WAV (else the original goes). The Spark checks the rate limit (240 per minute for a profile, guests at most 3 at once), reads at most 50 MB and sends the sound to speech recognition. Alongside it measures on the CPU how much of it is voice and whose voice it is.
+5. <a id="kn-geraet-s5"></a>**Silence, own or foreign voice?**: Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason.
+6. <a id="kn-geraet-s6"></a>**Question to /api/chat**: The page sends the last messages of the open conversation, its id, voice, speed and, when the voice was recognized, a signed one-time token. The Spark checks the rate limit (120 per minute for a profile, guests at most 4 at once), lets background work wait (vorrang) and tells the profile's other open pages „answering“ (only the kind of device).
+7. <a id="kn-geraet-s7"></a>**Text and sound in one stream**: The answer comes as events: pieces of text, pieces of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click.
+8. <a id="kn-geraet-s8"></a>**Someone talking over it?**: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question.
+9. <a id="kn-geraet-s9"></a>**Error in the stream?**: An error shows under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text.
+10. <a id="kn-geraet-s10"></a>**Store the conversation**: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each.
+11. <a id="kn-geraet-s11"></a>**Sync with other devices**: When the page comes to the front again, and regularly in between, it asks what changed since last time; a conversation deleted elsewhere closes. With instant sync every page keeps an event stream open that only reports „conversation changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each).
+12. <a id="kn-geraet-s12"></a>**Ready**: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it opens the microphone again.
 
 **Examples:** Spoken question of a profile: Answer heard, stored on the Spark, visible on the other devices. · Panel opened over http: No microphone: the page shows the https address. · TV in the follow-up window: Ignored: a foreign voice, no question goes out. · Talking over the answer: The answer stops, what was said becomes the next question.
 
 #### Rules
+
+Applies at: [step 6](#kn-geraet-s6), [step 10](#kn-geraet-s10)
 
 | Who | Conversations live | Questions per minute | at once |
 |---|---|---|---|
@@ -572,12 +574,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **50 MB** largest recording
-- **120** questions per minute and profile
-- **4** guests in the chat at once
-- **50** conversations per profile
-- **4 MB** largest conversation when storing
-- **8** open pages with instant sync per profile
+- **50 MB** largest recording ([step 4](#kn-geraet-s4))
+- **120** questions per minute and profile ([step 4](#kn-geraet-s4), [step 6](#kn-geraet-s6))
+- **4** guests in the chat at once ([step 4](#kn-geraet-s4), [step 6](#kn-geraet-s6))
+- **50** conversations per profile ([step 10](#kn-geraet-s10))
+- **4 MB** largest conversation when storing ([step 10](#kn-geraet-s10))
+- **8** open pages with instant sync per profile ([step 11](#kn-geraet-s11))
 
 #### Settings
 
@@ -592,18 +594,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/admin.py` `test_asr`: rate limit, guest places, then recognition
-- `app/panel/admin.py` `_test_asr`: recognition with silence, echo and foreign voice checks
-- `app/panel/admin.py` `read_audio`: reads the recording with a size limit
-- `app/panel/stille.py` `check`: silence never becomes words
-- `app/panel/echo.py` `check`: the Spark's own voice is no question
-- `app/panel/chat.py` `chat`: limits, priority, „answering“, then the stream
-- `app/panel/account.py` `profile_save_convo`: stores only the new messages
-- `app/panel/account.py` `profile_convos`: list and changes since ?since=
-- `app/panel/profiles.py` `append_convo`: appends under a lock
-- `app/panel/profiles.py` `_clean_convo`: checks and trims a conversation
-- `app/panel/verlauf.py` `stream`: instant sync per open page
-- `app/panel/verlauf.py` `begin`: „answering“ for the other pages
+- `app/panel/admin.py` `test_asr`: rate limit, guest places, then recognition ([step 4](#kn-geraet-s4))
+- `app/panel/admin.py` `_test_asr`: recognition with silence, echo and foreign voice checks ([step 4](#kn-geraet-s4), [step 5](#kn-geraet-s5))
+- `app/panel/admin.py` `read_audio`: reads the recording with a size limit ([step 4](#kn-geraet-s4))
+- `app/panel/stille.py` `check`: silence never becomes words ([step 5](#kn-geraet-s5))
+- `app/panel/echo.py` `check`: the Spark's own voice is no question ([step 5](#kn-geraet-s5))
+- `app/panel/chat.py` `chat`: limits, priority, „answering“, then the stream ([step 6](#kn-geraet-s6), [step 7](#kn-geraet-s7))
+- `app/panel/account.py` `profile_save_convo`: stores only the new messages ([step 10](#kn-geraet-s10))
+- `app/panel/account.py` `profile_convos`: list and changes since ?since= ([step 11](#kn-geraet-s11))
+- `app/panel/profiles.py` `append_convo`: appends under a lock ([step 10](#kn-geraet-s10))
+- `app/panel/profiles.py` `_clean_convo`: checks and trims a conversation ([step 10](#kn-geraet-s10))
+- `app/panel/verlauf.py` `stream`: instant sync per open page ([step 11](#kn-geraet-s11))
+- `app/panel/verlauf.py` `begin`: „answering“ for the other pages ([step 6](#kn-geraet-s6), [step 11](#kn-geraet-s11))
 
 Self-tests: `test_verlauf_sync`, `test_stille`, `test_echo`, `test_fremdstimme`, `test_follow_up`
 
@@ -652,21 +654,23 @@ flowchart TD
   s10 -->|yes| s10x
 ```
 
-1. **Ask for pairing**: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made.
-2. **App allowed and room left?**: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path.
-3. **One-time link as QR code**: new_code makes a random code; only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code.
-4. **Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits.
-5. **Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
-6. **Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
-7. **Path allowed for the app?**: An app key only works for the 57 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile.
-8. **App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
-9. **Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it.
-10. **Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
-11. **Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
+1. <a id="kn-apps-s1"></a>**Ask for pairing**: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made.
+2. <a id="kn-apps-s2"></a>**App allowed and room left?**: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path.
+3. <a id="kn-apps-s3"></a>**One-time link as QR code**: new_code makes a random code; only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code.
+4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits.
+5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
+6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
+7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 57 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile.
+8. <a id="kn-apps-s8"></a>**App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
+9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it.
+10. <a id="kn-apps-s10"></a>**Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
+11. <a id="kn-apps-s11"></a>**Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
 
 **Examples:** Pair an iPhone and ask: The app has its key and asks like the browser. · Old QR code: Refused: the code was used or has expired. · App wants to change the PIN: Refused: that only works in the own browser. · Admin switches the app off: Not now: the pairing stays for later.
 
 #### Rules
+
+Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 
 | Key scope | Who has it | What it opens |
 |---|---|---|
@@ -678,11 +682,11 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **10** minutes a pairing code is valid
-- **5** iPhones per profile
-- **57** fixed paths for the app key
-- **30** minutes an Android download link is valid
-- **5** downloads per Android link
+- **10** minutes a pairing code is valid ([step 3](#kn-apps-s3))
+- **5** iPhones per profile ([step 2](#kn-apps-s2))
+- **57** fixed paths for the app key ([step 7](#kn-apps-s7))
+- **30** minutes an Android download link is valid ([step 3](#kn-apps-s3))
+- **5** downloads per Android link ([step 3](#kn-apps-s3))
 
 #### Settings
 
@@ -697,17 +701,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/iphone.py` `profile_pair`: pairing link only from the own browser
-- `app/panel/iphone.py` `new_code`: random one-time code, only the hash
-- `app/panel/iphone.py` `take_code`: redeem a code once
-- `app/panel/iphone.py` `app_pair`: the app's first contact
-- `app/panel/iphone.py` `app_hello`: what the app may, the Spark decides
-- `app/panel/profiles.py` `add_device`: make a key, store its hash
-- `app/panel/profiles.py` `current`: profile from key or cookie, scopes, switches, kill switch
-- `app/panel/profiles.py` `_app_path`: the app's fixed path list
-- `app/panel/core.py` `browser_profile`: only the own browser login
-- `app/panel/account.py` `profile_remove_device`: remove a device
-- `app/panel/android.py` `apk_response`: app file only with a valid link
+- `app/panel/iphone.py` `profile_pair`: pairing link only from the own browser ([step 1](#kn-apps-s1), [step 2](#kn-apps-s2))
+- `app/panel/iphone.py` `new_code`: random one-time code, only the hash ([step 3](#kn-apps-s3))
+- `app/panel/iphone.py` `take_code`: redeem a code once ([step 4](#kn-apps-s4))
+- `app/panel/iphone.py` `app_pair`: the app's first contact ([step 4](#kn-apps-s4), [step 5](#kn-apps-s5))
+- `app/panel/iphone.py` `app_hello`: what the app may, the Spark decides ([step 9](#kn-apps-s9))
+- `app/panel/profiles.py` `add_device`: make a key, store its hash ([step 5](#kn-apps-s5))
+- `app/panel/profiles.py` `current`: profile from key or cookie, scopes, switches, kill switch ([step 6](#kn-apps-s6))
+- `app/panel/profiles.py` `_app_path`: the app's fixed path list ([step 7](#kn-apps-s7))
+- `app/panel/core.py` `browser_profile`: only the own browser login ([step 10](#kn-apps-s10))
+- `app/panel/account.py` `profile_remove_device`: remove a device ([step 11](#kn-apps-s11))
+- `app/panel/android.py` `apk_response`: app file only with a valid link ([step 3](#kn-apps-s3))
 
 Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`
 
@@ -750,21 +754,23 @@ flowchart TD
   s4 -->|yes| s4x
 ```
 
-1. **Question through a channel**: Telegram: the panel asks Telegram for new messages itself (long polling), no open port is needed. Siri: a shortcut sends the dictated text with a device key to /api/siri/ask. Watch: the phone sends the question with the watch key to /api/watch/ask.
-2. **Telegram: chat linked?**: Groups and channels are never answered. A chat belongs to a profile once it sent „/start CODE“ with a code from Me → Telegram (valid 10 minutes, at most 5 wrong codes per chat and hour). A stranger's chat gets one fixed sentence at most once a day.
-3. **Blocked or My kill switch?**: The profile's My kill switch, a block by the admin or a channel switched off end the question. Telegram then answers with a fixed sentence; Siri and the watch find no profile for their key.
-4. **Forwarded?**: A message forwarded in Telegram comes from someone else. It is never taken as an order and does not trigger commands like /notaus either.
-5. **Voice message to text**: A Telegram voice message is loaded with a size limit, turned into WAV by ffmpeg (length capped) and read by the Spark's speech recognition. With Siri the iPhone dictates, with the watch the phone.
-6. **Short history**: For follow-ups the last eight messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of).
-7. **Request to /api/chat**: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser.
-8. **Collect the answer**: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer.
-9. **Output per channel**: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets.
-10. **Black out the code word**: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it.
-11. **In the profile's history**: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel.
+1. <a id="kn-kanaele-s1"></a>**Question through a channel**: Telegram: the panel asks Telegram for new messages itself (long polling), no open port is needed. Siri: a shortcut sends the dictated text with a device key to /api/siri/ask. Watch: the phone sends the question with the watch key to /api/watch/ask.
+2. <a id="kn-kanaele-s2"></a>**Telegram: chat linked?**: Groups and channels are never answered. A chat belongs to a profile once it sent „/start CODE“ with a code from Me → Telegram (valid 10 minutes, at most 5 wrong codes per chat and hour). A stranger's chat gets one fixed sentence at most once a day.
+3. <a id="kn-kanaele-s3"></a>**Blocked or My kill switch?**: The profile's My kill switch, a block by the admin or a channel switched off end the question. Telegram then answers with a fixed sentence; Siri and the watch find no profile for their key.
+4. <a id="kn-kanaele-s4"></a>**Forwarded?**: A message forwarded in Telegram comes from someone else. It is never taken as an order and does not trigger commands like /notaus either.
+5. <a id="kn-kanaele-s5"></a>**Voice message to text**: A Telegram voice message is loaded with a size limit, turned into WAV by ffmpeg (length capped) and read by the Spark's speech recognition. With Siri the iPhone dictates, with the watch the phone.
+6. <a id="kn-kanaele-s6"></a>**Short history**: For follow-ups the last eight messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of).
+7. <a id="kn-kanaele-s7"></a>**Request to /api/chat**: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser.
+8. <a id="kn-kanaele-s8"></a>**Collect the answer**: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer.
+9. <a id="kn-kanaele-s9"></a>**Output per channel**: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets.
+10. <a id="kn-kanaele-s10"></a>**Black out the code word**: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it.
+11. <a id="kn-kanaele-s11"></a>**In the profile's history**: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel.
 
 **Examples:** Telegram voice message: Answered and kept in the day's „Telegram“ conversation. · A stranger writes to the bot: One fixed sentence, nothing else. · Forwarded mail with an order: Not carried out: someone else's words are no order. · Siri with My kill switch: No answer: the key finds no profile.
 
 #### Rules
+
+Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-kanaele-s11)
 
 | Channel | How it identifies | History | Output |
 |---|---|---|---|
@@ -774,12 +780,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **10** minutes a Telegram code is valid
-- **5** wrong codes per chat and hour
-- **5 MB** largest voice message
-- **10** minutes earlier questions count for Siri
-- **8** watch answers at once
-- **10** minutes a watch answer stays fetchable
+- **10** minutes a Telegram code is valid ([step 2](#kn-kanaele-s2))
+- **5** wrong codes per chat and hour ([step 2](#kn-kanaele-s2))
+- **5 MB** largest voice message ([step 5](#kn-kanaele-s5))
+- **10** minutes earlier questions count for Siri ([step 6](#kn-kanaele-s6))
+- **8** watch answers at once ([step 9](#kn-kanaele-s9))
+- **10** minutes a watch answer stays fetchable ([step 9](#kn-kanaele-s9))
 
 #### Settings
 
@@ -795,17 +801,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/telegram.py` `loop`: polls Telegram, rests with the kill switch
-- `app/panel/telegram.py` `handle`: one message: link, locks, commands, voice
-- `app/panel/telegram.py` `ask`: question to the chat, collect the answer, store
-- `app/panel/telegram.py` `transcribe`: voice message through ffmpeg to recognition
-- `app/panel/chat.py` `siri_ask`: Siri: profile from the key
-- `app/panel/chat.py` `text_ask`: Siri and companion: question, answer, history
-- `app/panel/chat.py` `watch_ask`: watch: start the answer as a job
-- `app/panel/chat.py` `_watch_run`: watch: the answer into the history
-- `app/panel/watch.py` `run`: reads the stream into the watch job
-- `app/panel/watch.py` `poll`: text and sound piece by piece
-- `app/panel/verlauf.py` `keep`: the channel's day conversation or the main one
+- `app/panel/telegram.py` `loop`: polls Telegram, rests with the kill switch ([step 1](#kn-kanaele-s1))
+- `app/panel/telegram.py` `handle`: one message: link, locks, commands, voice ([step 2](#kn-kanaele-s2), [step 3](#kn-kanaele-s3), [step 4](#kn-kanaele-s4))
+- `app/panel/telegram.py` `ask`: question to the chat, collect the answer, store ([step 7](#kn-kanaele-s7), [step 8](#kn-kanaele-s8), [step 11](#kn-kanaele-s11))
+- `app/panel/telegram.py` `transcribe`: voice message through ffmpeg to recognition ([step 5](#kn-kanaele-s5))
+- `app/panel/chat.py` `siri_ask`: Siri: profile from the key ([step 1](#kn-kanaele-s1), [step 3](#kn-kanaele-s3))
+- `app/panel/chat.py` `text_ask`: Siri and companion: question, answer, history ([step 6](#kn-kanaele-s6), [step 7](#kn-kanaele-s7), [step 11](#kn-kanaele-s11))
+- `app/panel/chat.py` `watch_ask`: watch: start the answer as a job ([step 1](#kn-kanaele-s1), [step 7](#kn-kanaele-s7))
+- `app/panel/chat.py` `_watch_run`: watch: the answer into the history ([step 11](#kn-kanaele-s11))
+- `app/panel/watch.py` `run`: reads the stream into the watch job ([step 8](#kn-kanaele-s8))
+- `app/panel/watch.py` `poll`: text and sound piece by piece ([step 9](#kn-kanaele-s9))
+- `app/panel/verlauf.py` `keep`: the channel's day conversation or the main one ([step 11](#kn-kanaele-s11))
 
 Self-tests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
 
@@ -854,22 +860,24 @@ flowchart TD
   s9 -->|yes| s9x
 ```
 
-1. **Board starts**: At every start the board asks with its id, MAC address and firmware version which server and which firmware to use. If speakers are off in Features, it gets nothing (403).
-2. **Board known?**: An unknown board gets a six-digit code for its display (valid 10 minutes, at most 3 per address and 30 in all). The profile types it in under Me → Speakers.
-3. **Same board?**: Once a MAC address is on record for a board id, it must fit. A copied id from another board gets no key and no firmware.
-4. **Answer of the start check**: The board gets the time and the WebSocket address. The key comes exactly once, right after the code was typed in, and only to the address that showed the code. A newer firmware is only offered over https, over http only with the admin's switch.
-5. **Connection allowed?**: When connecting the Spark checks: kill switch stage 3 off, the key belongs to a speaker (not a watch or another device), speakers on in Features and not blocked for the profile. Then it looks again every 2.0 seconds and ends the connection when something changed.
-6. **Listen**: After the wake word the board sends Opus sound. The Spark finds the end of the sentence itself (0.7 seconds of silence after speech) and takes at most 30 seconds per question.
-7. **Recognize and check the voice**: Speech recognition makes text of it. At the same time speakers.verify checks whether it is the profile's voice, when speaker ID is on and the profile has taught its voice.
-8. **Nothing, stop or own voice?**: No text, a stop word or the Spark's own voice from another device (echo.check) get no answer. The board waits for its wake word again.
-9. **Personal without a sure voice?**: With the speaker code word: an unsure voice asking for personal things is asked for the code word, the question waits. After 3 wrong tries the speaker does not ask for 30 minutes. Without a sure voice there are only general things.
-10. **Like a device to /api/chat**: The Spark calls the chat with the speaker's key; the profile's voice, memory and room apply. Whose voice it was only the panel itself puts into the request; if it was not surely the profile's, the question counts like a guest's.
-11. **Sound back**: The answer goes to the board as Opus at 24000 Hz at playback pace, the text without Markdown for a display. Other devices in the house know the Spark is speaking right now (echo.said).
-12. **In the speaker's history**: Question and answer go into the speaker's conversation of the day, the code word blacked out. A voice that was not surely the profile's is marked as outside text: the next question starts locked, and nothing about the profile is learned from it.
+1. <a id="kn-lautsprecher-s1"></a>**Board starts**: At every start the board asks with its id, MAC address and firmware version which server and which firmware to use. If speakers are off in Features, it gets nothing (403).
+2. <a id="kn-lautsprecher-s2"></a>**Board known?**: An unknown board gets a six-digit code for its display (valid 10 minutes, at most 3 per address and 30 in all). The profile types it in under Me → Speakers.
+3. <a id="kn-lautsprecher-s3"></a>**Same board?**: Once a MAC address is on record for a board id, it must fit. A copied id from another board gets no key and no firmware.
+4. <a id="kn-lautsprecher-s4"></a>**Answer of the start check**: The board gets the time and the WebSocket address. The key comes exactly once, right after the code was typed in, and only to the address that showed the code. A newer firmware is only offered over https, over http only with the admin's switch.
+5. <a id="kn-lautsprecher-s5"></a>**Connection allowed?**: When connecting the Spark checks: kill switch stage 3 off, the key belongs to a speaker (not a watch or another device), speakers on in Features and not blocked for the profile. Then it looks again every 2.0 seconds and ends the connection when something changed.
+6. <a id="kn-lautsprecher-s6"></a>**Listen**: After the wake word the board sends Opus sound. The Spark finds the end of the sentence itself (0.7 seconds of silence after speech) and takes at most 30 seconds per question.
+7. <a id="kn-lautsprecher-s7"></a>**Recognize and check the voice**: Speech recognition makes text of it. At the same time speakers.verify checks whether it is the profile's voice, when speaker ID is on and the profile has taught its voice.
+8. <a id="kn-lautsprecher-s8"></a>**Nothing, stop or own voice?**: No text, a stop word or the Spark's own voice from another device (echo.check) get no answer. The board waits for its wake word again.
+9. <a id="kn-lautsprecher-s9"></a>**Personal without a sure voice?**: With the speaker code word: an unsure voice asking for personal things is asked for the code word, the question waits. After 3 wrong tries the speaker does not ask for 30 minutes. Without a sure voice there are only general things.
+10. <a id="kn-lautsprecher-s10"></a>**Like a device to /api/chat**: The Spark calls the chat with the speaker's key; the profile's voice, memory and room apply. Whose voice it was only the panel itself puts into the request; if it was not surely the profile's, the question counts like a guest's.
+11. <a id="kn-lautsprecher-s11"></a>**Sound back**: The answer goes to the board as Opus at 24000 Hz at playback pace, the text without Markdown for a display. Other devices in the house know the Spark is speaking right now (echo.said).
+12. <a id="kn-lautsprecher-s12"></a>**In the speaker's history**: Question and answer go into the speaker's conversation of the day, the code word blacked out. A voice that was not surely the profile's is marked as outside text: the next question starts locked, and nothing about the profile is learned from it.
 
 **Examples:** The owner asks for appointments: Voice recognized: personal answer, kept in the day's conversation. · New board: Code on the display until the profile types it in. · Copied board id: Refused: the MAC address does not fit. · A guest asks for mail: Code word asked; without the right one nothing personal.
 
 #### Rules
+
+Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 
 | Way | Who may | What works | Personal things |
 |---|---|---|---|
@@ -884,12 +892,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **10** minutes a pairing code is valid
-- **30** seconds of sound per question
-- **2.0** seconds, then the rights are checked again
-- **10** minutes earlier questions count at a speaker
-- **3** wrong code words until the lock
-- **8** Wyoming connections at once
+- **10** minutes a pairing code is valid ([step 2](#kn-lautsprecher-s2))
+- **30** seconds of sound per question ([step 6](#kn-lautsprecher-s6))
+- **2.0** seconds, then the rights are checked again ([step 5](#kn-lautsprecher-s5))
+- **10** minutes earlier questions count at a speaker ([step 12](#kn-lautsprecher-s12))
+- **3** wrong code words until the lock ([step 9](#kn-lautsprecher-s9))
+- **8** Wyoming connections at once ([step 5](#kn-lautsprecher-s5))
 
 #### Settings
 
@@ -904,18 +912,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/esp32.py` `ota`: start check: code, key once, update
-- `app/panel/esp32.py` `_activation`: six-digit code with limits
-- `app/panel/esp32.py` `same_board`: MAC must fit
-- `app/panel/esp32.py` `speaker_ws`: accept the connection and keep checking
-- `app/panel/esp32.py` `still_allowed`: switches and device still valid
-- `app/panel/esp32.py` `Session.run_answer`: recognize, filter, code word, answer
-- `app/panel/esp32.py` `Session.code_gate`: code word for an unsure voice
-- `app/panel/esp32.py` `Session.speak`: chat with the key, sound back
-- `app/panel/esp32.py` `remember`: day conversation, foreign voice marked
-- `app/panel/wyoming.py` `settings`: switch, port, allowed addresses
-- `app/panel/wyoming.py` `handle`: only allowed addresses, at most so many
-- `app/panel/wyoming.py` `_session`: sound to text and text to sound
+- `app/panel/esp32.py` `ota`: start check: code, key once, update ([step 1](#kn-lautsprecher-s1))
+- `app/panel/esp32.py` `_activation`: six-digit code with limits ([step 2](#kn-lautsprecher-s2))
+- `app/panel/esp32.py` `same_board`: MAC must fit ([step 3](#kn-lautsprecher-s3))
+- `app/panel/esp32.py` `speaker_ws`: accept the connection and keep checking ([step 5](#kn-lautsprecher-s5))
+- `app/panel/esp32.py` `still_allowed`: switches and device still valid ([step 5](#kn-lautsprecher-s5))
+- `app/panel/esp32.py` `Session.run_answer`: recognize, filter, code word, answer ([step 10](#kn-lautsprecher-s10))
+- `app/panel/esp32.py` `Session.code_gate`: code word for an unsure voice ([step 9](#kn-lautsprecher-s9))
+- `app/panel/esp32.py` `Session.speak`: chat with the key, sound back ([step 11](#kn-lautsprecher-s11))
+- `app/panel/esp32.py` `remember`: day conversation, foreign voice marked ([step 12](#kn-lautsprecher-s12))
+- `app/panel/wyoming.py` `settings`: switch, port, allowed addresses ([step 5](#kn-lautsprecher-s5))
+- `app/panel/wyoming.py` `handle`: only allowed addresses, at most so many ([step 5](#kn-lautsprecher-s5))
+- `app/panel/wyoming.py` `_session`: sound to text and text to sound ([step 7](#kn-lautsprecher-s7), [step 11](#kn-lautsprecher-s11))
 
 Self-tests: `test_esp32`, `test_wyoming`, `test_notaus`, `test_echo`
 
@@ -968,22 +976,24 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. **A program sends a request**: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404).
-2. **From another web page?**: If a browser sends an Origin, it must be the panel's. So no other page can use the endpoint through DNS rebinding.
-3. **Key valid?**: The bearer key is a fixed key or an OAuth access token (valid 60 minutes). Only hashes are stored. A connection ends after 90 days without use.
-4. **Home network key from outside?**: A „lokal“ key only works when the peer is a private address, no proxy header is in the request and it is none of the listed reverse proxies. „extern“ only works with the admin's switch.
-5. **My kill switch or profile blocked?**: The profile's My kill switch closes every MCP access (503); if the admin blocked the MCP server for the profile, there is nothing (403).
-6. **Rate limit and size**: Every connection may send 60 requests per minute; a request is at most 16 MB. Many refused requests from outside count for „Emergency stop by itself“.
-7. **Tool allowed?**: Only tools from the fixed list (15), only those given to this connection, and only when the profile may use the function right now, checked again on every call. Mail, memory, earlier conversations, settings and code are never among them (31 names in mcpserver.NEVER).
-8. **Too many at once?**: At most 2 calls of one connection and 6 of all connections run at once.
-9. **Speech and reading**: Speech recognition (at most 10 MB) and speech output (at most 2000 characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only read this profile's data.
-10. **Ask the Spark, read only**: ask_spark (10 per minute) runs as one turn of the assistant for the profile, but only with this connection's reading tools. The question counts as outside text from the start: nothing is switched, stored, learned or sent, no memory, nothing of it in the history. Passwords and codes are removed from the answer.
-11. **Should something change?**: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Services over MCP within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing.
-12. **Answer to the program**: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer.
+1. <a id="kn-mcpc-s1"></a>**A program sends a request**: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404).
+2. <a id="kn-mcpc-s2"></a>**From another web page?**: If a browser sends an Origin, it must be the panel's. So no other page can use the endpoint through DNS rebinding.
+3. <a id="kn-mcpc-s3"></a>**Key valid?**: The bearer key is a fixed key or an OAuth access token (valid 60 minutes). Only hashes are stored. A connection ends after 90 days without use.
+4. <a id="kn-mcpc-s4"></a>**Home network key from outside?**: A „lokal“ key only works when the peer is a private address, no proxy header is in the request and it is none of the listed reverse proxies. „extern“ only works with the admin's switch.
+5. <a id="kn-mcpc-s5"></a>**My kill switch or profile blocked?**: The profile's My kill switch closes every MCP access (503); if the admin blocked the MCP server for the profile, there is nothing (403).
+6. <a id="kn-mcpc-s6"></a>**Rate limit and size**: Every connection may send 60 requests per minute; a request is at most 16 MB. Many refused requests from outside count for „Emergency stop by itself“.
+7. <a id="kn-mcpc-s7"></a>**Tool allowed?**: Only tools from the fixed list (15), only those given to this connection, and only when the profile may use the function right now, checked again on every call. Mail, memory, earlier conversations, settings and code are never among them (31 names in mcpserver.NEVER).
+8. <a id="kn-mcpc-s8"></a>**Too many at once?**: At most 2 calls of one connection and 6 of all connections run at once.
+9. <a id="kn-mcpc-s9"></a>**Speech and reading**: Speech recognition (at most 10 MB) and speech output (at most 2000 characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only read this profile's data.
+10. <a id="kn-mcpc-s10"></a>**Ask the Spark, read only**: ask_spark (10 per minute) runs as one turn of the assistant for the profile, but only with this connection's reading tools. The question counts as outside text from the start: nothing is switched, stored, learned or sent, no memory, nothing of it in the history. Passwords and codes are removed from the answer.
+11. <a id="kn-mcpc-s11"></a>**Should something change?**: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Services over MCP within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing.
+12. <a id="kn-mcpc-s12"></a>**Answer to the program**: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer.
 
 **Examples:** Claude reads the appointments: The profile's appointments as text, cut. · Home network key through the proxy: Refused: this key only works at home. · n8n wants to switch the light: Only proposed; it switches after the yes in the browser. · Program wants to read mail: Not allowed: mail is never offered over MCP.
 
 #### Rules
+
+Applies at: [step 9](#kn-mcpc-s9)
 
 | Group | Tools | What happens |
 |---|---|---|
@@ -995,12 +1005,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **90** days without use, then a connection ends
-- **10** connections per profile
-- **60** requests per minute per connection
-- **2** calls at once per connection
-- **12000** characters at most in an answer
-- **15** minutes a proposal waits for the yes
+- **90** days without use, then a connection ends ([step 3](#kn-mcpc-s3))
+- **10** connections per profile ([step 3](#kn-mcpc-s3))
+- **60** requests per minute per connection ([step 6](#kn-mcpc-s6), [step 10](#kn-mcpc-s10))
+- **2** calls at once per connection ([step 8](#kn-mcpc-s8))
+- **12000** characters at most in an answer ([step 12](#kn-mcpc-s12))
+- **15** minutes a proposal waits for the yes ([step 11](#kn-mcpc-s11))
 
 #### Settings
 
@@ -1016,18 +1026,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/mcpserver.py` `mcp_post`: the endpoint: origin, key, limit, method
-- `app/panel/mcpserver.py` `origin_ok`: no other web page
-- `app/panel/mcpserver.py` `check_conn`: key, home network, kill switch, switch
-- `app/panel/mcpserver.py` `is_local`: really from the home network
-- `app/panel/mcpserver.py` `find`: connection for the key's hash
-- `app/panel/mcpserver.py` `tool_ok`: may the profile use this tool now
-- `app/panel/mcpserver.py` `call`: calls at once, journal line
-- `app/panel/mcpserver.py` `run`: hands out to speech, reading, asking, acting
-- `app/panel/mcpserver.py` `ask`: one turn with reading tools only
-- `app/panel/mcpserver.py` `propose`: proposal instead of action
-- `app/panel/mcpserver.py` `decide`: the profile's yes, then carry out
-- `app/panel/mcpserver.py` `carry_out`: carries out confirmed actions only
+- `app/panel/mcpserver.py` `mcp_post`: the endpoint: origin, key, limit, method ([step 1](#kn-mcpc-s1))
+- `app/panel/mcpserver.py` `origin_ok`: no other web page ([step 2](#kn-mcpc-s2))
+- `app/panel/mcpserver.py` `check_conn`: key, home network, kill switch, switch ([step 3](#kn-mcpc-s3))
+- `app/panel/mcpserver.py` `is_local`: really from the home network ([step 4](#kn-mcpc-s4))
+- `app/panel/mcpserver.py` `find`: connection for the key's hash ([step 3](#kn-mcpc-s3))
+- `app/panel/mcpserver.py` `tool_ok`: may the profile use this tool now ([step 7](#kn-mcpc-s7))
+- `app/panel/mcpserver.py` `call`: calls at once, journal line ([step 8](#kn-mcpc-s8))
+- `app/panel/mcpserver.py` `run`: hands out to speech, reading, asking, acting ([step 9](#kn-mcpc-s9), [step 10](#kn-mcpc-s10))
+- `app/panel/mcpserver.py` `ask`: one turn with reading tools only ([step 10](#kn-mcpc-s10))
+- `app/panel/mcpserver.py` `propose`: proposal instead of action ([step 11](#kn-mcpc-s11))
+- `app/panel/mcpserver.py` `decide`: the profile's yes, then carry out ([step 11](#kn-mcpc-s11))
+- `app/panel/mcpserver.py` `carry_out`: carries out confirmed actions only ([step 11](#kn-mcpc-s11))
 
 Self-tests: `test_mcpserver`, `test_notaus`
 
@@ -1081,22 +1091,24 @@ flowchart TD
   s10 -->|yes| s10x
 ```
 
-1. **A request arrives**: Every HTTP request to the panel passes this layer, from the outside in, in the order Starlette stacks the middleware (the one added last is outermost). Telegram, „Ask Spark“ over MCP and the speakers build their question inside the panel and call chat.chat directly; their outer request already passed here.
-2. **Start the clock**: slow_reads times the whole request. A read under /api/ that takes longer than 1.5 s becomes one journal line, per route at most every 60 s; only the route's pattern and the time, never the query or names.
-3. **My kill switch for this key?**: If the request carries a device key and that key's profile has its own kill switch on, it gets nothing but the kill switch state. Otherwise the panel notes which profile this request acts for, so the last line of defence further down knows whose action it would be.
-4. **Kill switch on?**: With the kill switch off the request goes straight on to the origin check. The page itself and its files always pass, so the kill switch can be seen and lifted.
-5. **From outside?**: In the home network is only who has a private address and does not come through a proxy, or comes through a listed proxy that reports a private address. From kill switch stage 1 everything from outside only gets the page and the kill switch state.
-6. **All quiet?**: In stage 3 only logins, the admin mode, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down.
-7. **Foreign page?**: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes.
-8. **Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile, admin mode or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
-9. **Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
-10. **Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
-11. **Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“).
-12. **Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
+1. <a id="kn-middleware-s1"></a>**A request arrives**: Every HTTP request to the panel passes this layer, from the outside in, in the order Starlette stacks the middleware (the one added last is outermost). Telegram, „Ask Spark“ over MCP and the speakers build their question inside the panel and call chat.chat directly; their outer request already passed here.
+2. <a id="kn-middleware-s2"></a>**Start the clock**: slow_reads times the whole request. A read under /api/ that takes longer than 1.5 s becomes one journal line, per route at most every 60 s; only the route's pattern and the time, never the query or names.
+3. <a id="kn-middleware-s3"></a>**My kill switch for this key?**: If the request carries a device key and that key's profile has its own kill switch on, it gets nothing but the kill switch state. Otherwise the panel notes which profile this request acts for, so the last line of defence further down knows whose action it would be.
+4. <a id="kn-middleware-s4"></a>**Kill switch on?**: With the kill switch off the request goes straight on to the origin check. The page itself and its files always pass, so the kill switch can be seen and lifted.
+5. <a id="kn-middleware-s5"></a>**From outside?**: In the home network is only who has a private address and does not come through a proxy, or comes through a listed proxy that reports a private address. From kill switch stage 1 everything from outside only gets the page and the kill switch state.
+6. <a id="kn-middleware-s6"></a>**All quiet?**: In stage 3 only logins, the admin mode, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down.
+7. <a id="kn-middleware-s7"></a>**Foreign page?**: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes.
+8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile, admin mode or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
+9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
+10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
+11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“).
+12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
 
 **Examples:** Setting in the browser at home: Passes: the endpoint checks the login, the change is in the admin log. · Foreign web page sends a form: Refused with 403 before any endpoint acts. · Kill switch stage 1, app on the road: Blocked with 503 and the stage; the app shows the kill switch. · Big upload without login: Refused with 401, not a byte read.
 
 #### Rules
+
+Applies at: [step 4](#kn-middleware-s4), [step 5](#kn-middleware-s5), [step 6](#kn-middleware-s6)
 
 | Kill switch stage | From outside | At home |
 |---|---|---|
@@ -1112,10 +1124,10 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **1** kill switch stage from which nothing from outside passes
-- **3** kill switch stage in which almost everything stops at home too
-- **1.5 s** from here a read counts as slow
-- **60 s** at most one line per route
+- **1** kill switch stage from which nothing from outside passes ([step 5](#kn-middleware-s5), [step 6](#kn-middleware-s6))
+- **3** kill switch stage in which almost everything stops at home too ([step 5](#kn-middleware-s5), [step 6](#kn-middleware-s6))
+- **1.5 s** from here a read counts as slow ([step 2](#kn-middleware-s2))
+- **60 s** at most one line per route ([step 2](#kn-middleware-s2))
 
 #### Settings
 
@@ -1130,17 +1142,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/panel.py` `slow_reads`: times every request
-- `app/panel/panel.py` `emergency`: kill switch before any endpoint
-- `app/panel/notaus.py` `mine_gate`: my kill switch for device keys
-- `app/panel/notaus.py` `gate`: what passes at which stage
-- `app/panel/notaus.py` `at_home`: at home or from outside
-- `app/panel/panel.py` `sessions`: foreign pages, log, renew cookies
-- `app/panel/guard.py` `same_origin`: the origin rule
-- `app/panel/panel.py` `_may_upload`: big uploads only with a login
-- `app/common.py` `BodyLimit`: size limit before reading
-- `app/panel/update.py` `update_lock`: changes during an update
-- `app/panel/panel.py` `protect`: protective headers
+- `app/panel/panel.py` `slow_reads`: times every request ([step 2](#kn-middleware-s2))
+- `app/panel/panel.py` `emergency`: kill switch before any endpoint ([step 3](#kn-middleware-s3), [step 4](#kn-middleware-s4))
+- `app/panel/notaus.py` `mine_gate`: my kill switch for device keys ([step 3](#kn-middleware-s3))
+- `app/panel/notaus.py` `gate`: what passes at which stage ([step 4](#kn-middleware-s4))
+- `app/panel/notaus.py` `at_home`: at home or from outside ([step 5](#kn-middleware-s5))
+- `app/panel/panel.py` `sessions`: foreign pages, log, renew cookies ([step 7](#kn-middleware-s7), [step 12](#kn-middleware-s12))
+- `app/panel/guard.py` `same_origin`: the origin rule ([step 7](#kn-middleware-s7))
+- `app/panel/panel.py` `_may_upload`: big uploads only with a login ([step 8](#kn-middleware-s8))
+- `app/common.py` `BodyLimit`: size limit before reading ([step 9](#kn-middleware-s9))
+- `app/panel/update.py` `update_lock`: changes during an update ([step 10](#kn-middleware-s10))
+- `app/panel/panel.py` `protect`: protective headers ([step 12](#kn-middleware-s12))
 
 Self-tests: `test_hardening`, `test_panel`, `test_notaus`, `test_seiten_laden`
 
@@ -1193,22 +1205,24 @@ flowchart TD
   s10 -->|yes| s10x
 ```
 
-1. **Log in or ask**: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead. Steps 2 to 5 run once when logging in, the steps from 6 on with every request.
-2. **Locked?**: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out.
-3. **Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
-4. **Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
-5. **Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step.
-6. **Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
-7. **Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
-8. **No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
-9. **Too many requests?**: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest.
-10. **Guest, all places taken?**: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes.
-11. **Release per function**: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once.
-12. **On to preparing**: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“.
+1. <a id="kn-zugang-s1"></a>**Log in or ask**: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead. Steps 2 to 5 run once when logging in, the steps from 6 on with every request.
+2. <a id="kn-zugang-s2"></a>**Locked?**: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out.
+3. <a id="kn-zugang-s3"></a>**Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
+4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
+5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step.
+6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
+7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
+8. <a id="kn-zugang-s8"></a>**No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
+9. <a id="kn-zugang-s9"></a>**Too many requests?**: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest.
+10. <a id="kn-zugang-s10"></a>**Guest, all places taken?**: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes.
+11. <a id="kn-zugang-s11"></a>**Release per function**: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once.
+12. <a id="kn-zugang-s12"></a>**On to preparing**: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“.
 
 **Examples:** Login with PIN: Logged in: the browser has a signed cookie. · Stranger guesses a PIN: Refused; after 5 wrong attempts the address is locked. · Question from the iPhone app: Passes: profile from the device key, releases per function. · Guest, guest access off: Refused with 401: no assistant without a profile.
 
 #### Rules
+
+Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 
 | Way in | How checked | What it reaches |
 |---|---|---|
@@ -1228,13 +1242,13 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **5** wrong attempts per address in 15 minutes until the lock
-- **10** wrong attempts per name in 15 minutes until the lock
-- **60 s** first lock, each further one twice as long up to 60 minutes
-- **30** wrong attempts per name in 24 hours at most
-- **120** chat requests per minute for a profile
-- **4** places at once for guests
-- **90** days at most for a sign-in in the browser
+- **5** wrong attempts per address in 15 minutes until the lock ([step 2](#kn-zugang-s2), [step 3](#kn-zugang-s3))
+- **10** wrong attempts per name in 15 minutes until the lock ([step 2](#kn-zugang-s2), [step 3](#kn-zugang-s3))
+- **60 s** first lock, each further one twice as long up to 60 minutes ([step 2](#kn-zugang-s2))
+- **30** wrong attempts per name in 24 hours at most ([step 2](#kn-zugang-s2), [step 3](#kn-zugang-s3))
+- **120** chat requests per minute for a profile ([step 9](#kn-zugang-s9))
+- **4** places at once for guests ([step 10](#kn-zugang-s10))
+- **90** days at most for a sign-in in the browser ([step 5](#kn-zugang-s5))
 
 #### Settings
 
@@ -1251,18 +1265,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/guard.py` `check`: lock before checking
-- `app/panel/guard.py` `failed`: count a wrong attempt, lock
-- `app/panel/guard.py` `succeeded`: clear the counter, remember the browser
-- `app/panel/account.py` `profile_login`: a profile's login
-- `app/panel/account.py` `second_step`: code or passkey
-- `app/panel/core.py` `is_main_admin`: admin by cookie or HTTP Basic
-- `app/panel/profiles.py` `current`: the profile behind a request
-- `app/panel/profiles.py` `_cookie_user`: check a cookie
-- `app/panel/core.py` `assistant`: profile, guest access or admin
-- `app/panel/guard.py` `limit`: rate limit per minute
-- `app/panel/guard.py` `Slot`: places for guests
-- `app/panel/features.py` `reason`: why a function is not available
+- `app/panel/guard.py` `check`: lock before checking ([step 2](#kn-zugang-s2))
+- `app/panel/guard.py` `failed`: count a wrong attempt, lock ([step 3](#kn-zugang-s3))
+- `app/panel/guard.py` `succeeded`: clear the counter, remember the browser ([step 5](#kn-zugang-s5))
+- `app/panel/account.py` `profile_login`: a profile's login ([step 3](#kn-zugang-s3))
+- `app/panel/account.py` `second_step`: code or passkey ([step 4](#kn-zugang-s4))
+- `app/panel/core.py` `is_main_admin`: admin by cookie or HTTP Basic ([step 6](#kn-zugang-s6))
+- `app/panel/profiles.py` `current`: the profile behind a request ([step 6](#kn-zugang-s6))
+- `app/panel/profiles.py` `_cookie_user`: check a cookie ([step 6](#kn-zugang-s6))
+- `app/panel/core.py` `assistant`: profile, guest access or admin ([step 8](#kn-zugang-s8))
+- `app/panel/guard.py` `limit`: rate limit per minute ([step 9](#kn-zugang-s9))
+- `app/panel/guard.py` `Slot`: places for guests ([step 10](#kn-zugang-s10))
+- `app/panel/features.py` `reason`: why a function is not available ([step 11](#kn-zugang-s11))
 
 Self-tests: `test_panel`, `test_features`, `test_rechte_sofort`, `test_passkey`, `test_coadmin`
 
@@ -1315,23 +1329,25 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. **Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark.
-2. **Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all.
-3. **Guest or unknown voice?**: Without a profile, or at an own speaker when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
-4. **The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick.
-5. **Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache.
-6. **Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
-7. **Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
-8. **Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
-9. **Yes to a proposal**: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation.
-10. **Tools by rights**: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal.
-11. **Something takes tools away?**: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it.
-12. **The switch narrows**: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call.
-13. **Turn ready**: The system prompt goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off.
+1. <a id="kn-vorbereiten-s1"></a>**Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark.
+2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all.
+3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
+4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick.
+5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache.
+6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
+7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
+8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
+9. <a id="kn-vorbereiten-s9"></a>**Yes to a proposal**: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation.
+10. <a id="kn-vorbereiten-s10"></a>**Tools by rights**: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal.
+11. <a id="kn-vorbereiten-s11"></a>**Something takes tools away?**: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it.
+12. <a id="kn-vorbereiten-s12"></a>**The switch narrows**: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call.
+13. <a id="kn-vorbereiten-s13"></a>**Turn ready**: The system prompt goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off.
 
 **Examples:** Guest asks for the weather: Answer without a tool: guests only get question and answer. · „The second“ after a question back: The panel switches the chosen device; the model only says the result. · Kill switch stage 2, asking for appointments: Only reading tools; adding appointments is not offered.
 
 #### Rules
+
+Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 
 | Who speaks | Tools | Personal data | Yes to proposals |
 |---|---|---|---|
@@ -1342,11 +1358,11 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **20000** characters at most per message
-- **2** minutes a choice answers a question back
-- **15** minutes „Shall I remember that?“ waits
-- **4** buttons at most for a question back
-- **2** kill switch stage without actions
+- **20000** characters at most per message ([step 1](#kn-vorbereiten-s1))
+- **2** minutes a choice answers a question back ([step 7](#kn-vorbereiten-s7))
+- **15** minutes „Shall I remember that?“ waits ([step 7](#kn-vorbereiten-s7))
+- **4** buttons at most for a question back ([step 7](#kn-vorbereiten-s7))
+- **2** kill switch stage without actions ([step 8](#kn-vorbereiten-s8))
 
 #### Settings
 
@@ -1361,16 +1377,16 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/chat_turn.py` `prepare`: the whole way
-- `app/panel/chat_turn.py` `shared_stranger`: unknown voice at a speaker
-- `app/panel/chat.py` `trim_history`: trim the history
-- `app/panel/chat.py` `left_out`: leave out answers from outside text
-- `app/panel/intent.py` `classify_cfg`: the switch's fixed rules
-- `app/panel/klaeren.py` `answer`: answer to a question back
-- `app/panel/features.py` `allowed`: release per function
-- `app/panel/notaus.py` `locked_tools`: what the kill switch takes away
-- `app/panel/intent.py` `narrow`: narrow the tools
-- `app/panel/chat_turn.py` `notaus_note`: sentence for the model with the kill switch
+- `app/panel/chat_turn.py` `prepare`: the whole way ([step 1](#kn-vorbereiten-s1), [step 13](#kn-vorbereiten-s13))
+- `app/panel/chat_turn.py` `shared_stranger`: unknown voice at a speaker ([step 3](#kn-vorbereiten-s3))
+- `app/panel/chat.py` `trim_history`: trim the history ([step 2](#kn-vorbereiten-s2))
+- `app/panel/chat.py` `left_out`: leave out answers from outside text ([step 2](#kn-vorbereiten-s2), [step 4](#kn-vorbereiten-s4))
+- `app/panel/intent.py` `classify_cfg`: the switch's fixed rules ([step 4](#kn-vorbereiten-s4))
+- `app/panel/klaeren.py` `answer`: answer to a question back ([step 7](#kn-vorbereiten-s7))
+- `app/panel/features.py` `allowed`: release per function ([step 10](#kn-vorbereiten-s10))
+- `app/panel/notaus.py` `locked_tools`: what the kill switch takes away ([step 11](#kn-vorbereiten-s11))
+- `app/panel/intent.py` `narrow`: narrow the tools ([step 12](#kn-vorbereiten-s12))
+- `app/panel/chat_turn.py` `notaus_note`: sentence for the model with the kill switch ([step 8](#kn-vorbereiten-s8), [step 11](#kn-vorbereiten-s11))
 
 Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `test_weiche`
 
@@ -1423,24 +1439,26 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. **Only the own message**: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Switch are added.
-2. **Only small talk?**: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all.
-3. **Question about the Spark?**: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts. When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked.
-4. **Words per group**: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing.
-5. **Priority between groups**: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language or nature is never a device. Last, the admin's „Not with“ words take groups out again.
-6. **Group recognized?**: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays.
-7. **Note hint words**: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later.
-8. **Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“.
-9. **Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
-10. **Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick.
-11. **Narrow**: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
-12. **Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
-13. **Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
-14. **Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer.
+1. <a id="kn-weiche-s1"></a>**Only the own message**: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Switch are added.
+2. <a id="kn-weiche-s2"></a>**Only small talk?**: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all.
+3. <a id="kn-weiche-s3"></a>**Question about the Spark?**: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts. When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked.
+4. <a id="kn-weiche-s4"></a>**Words per group**: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing.
+5. <a id="kn-weiche-s5"></a>**Priority between groups**: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language or nature is never a device. Last, the admin's „Not with“ words take groups out again.
+6. <a id="kn-weiche-s6"></a>**Group recognized?**: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays.
+7. <a id="kn-weiche-s7"></a>**Note hint words**: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later.
+8. <a id="kn-weiche-s8"></a>**Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“.
+9. <a id="kn-weiche-s9"></a>**Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
+10. <a id="kn-weiche-s10"></a>**Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick.
+11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
+12. <a id="kn-weiche-s12"></a>**Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
+13. <a id="kn-weiche-s13"></a>**Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
+14. <a id="kn-weiche-s14"></a>**Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer.
 
 **Examples:** „Turn off the living room light“: Group smarthome (word „Licht“): the model only sees the smart home tools and the fixed ones. · „And tomorrow?“ after a weather question: No rule fits, but the follow-up takes „wetter“: only the weather tool is required. · „Do I need to water the plants?“ with „Lean“: Unclear, hint „gießen“ → weather: short list plus the weather tool. · „Thanks!“: Group small talk: answer without a tool.
 
 #### Rules
+
+Applies at: [step 9](#kn-weiche-s9)
 
 | Questions no rule recognizes | What the model sees | Time |
 |---|---|---|
@@ -1455,19 +1473,19 @@ flowchart TD
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (78 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (79 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **20** groups of the switch
-- **2** groups at most that still narrow
-- **80** characters at most for a follow-up
-- **4** seconds at most for the model's pick
-- **300 ms** waiting with „Fast answer start“
-- **80 %** default threshold of the classification
-- **132** built-in test sentences
-- **183** everyday sentences for measuring
-- **20** versions for undo
+- **20** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
+- **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
+- **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
+- **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
+- **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
+- **132** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **183** everyday sentences for measuring ([step 14](#kn-weiche-s14))
+- **20** versions for undo ([step 4](#kn-weiche-s4))
 
 #### Settings
 
@@ -1483,18 +1501,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/intent.py` `classify`: groups by fixed words and priority
-- `app/panel/intent.py` `Route`: group, reason, hints; when clear
-- `app/panel/intent.py` `hints_of`: hint words
-- `app/panel/intent.py` `follow_up`: follow-up
-- `app/panel/intent.py` `ask_model`: the model's pick from a fixed list
-- `app/panel/intent.py` `pick_in_time`: wait for the pick or stop it
-- `app/panel/intent.py` `narrow`: narrow the tools
-- `app/panel/intent.py` `lean`: short list with „Lean“
-- `app/panel/intent.py` `forced`: required first tool
-- `app/panel/weiche.py` `count`: statistics without content
-- `app/panel/weiche.py` `trace`: try a sentence
-- `app/panel/intent_alltag.py` `measure`: everyday score
+- `app/panel/intent.py` `classify`: groups by fixed words and priority ([step 1](#kn-weiche-s1))
+- `app/panel/intent.py` `Route`: group, reason, hints; when clear ([step 6](#kn-weiche-s6))
+- `app/panel/intent.py` `hints_of`: hint words ([step 7](#kn-weiche-s7))
+- `app/panel/intent.py` `follow_up`: follow-up ([step 8](#kn-weiche-s8))
+- `app/panel/intent.py` `ask_model`: the model's pick from a fixed list ([step 10](#kn-weiche-s10))
+- `app/panel/intent.py` `pick_in_time`: wait for the pick or stop it ([step 10](#kn-weiche-s10))
+- `app/panel/intent.py` `narrow`: narrow the tools ([step 11](#kn-weiche-s11))
+- `app/panel/intent.py` `lean`: short list with „Lean“ ([step 12](#kn-weiche-s12))
+- `app/panel/intent.py` `forced`: required first tool ([step 13](#kn-weiche-s13))
+- `app/panel/weiche.py` `count`: statistics without content ([step 14](#kn-weiche-s14))
+- `app/panel/weiche.py` `trace`: try a sentence ([step 14](#kn-weiche-s14))
+- `app/panel/intent_alltag.py` `measure`: everyday score ([step 14](#kn-weiche-s14))
 
 Self-tests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_werkzeuge`, `test_systemone`
 
@@ -1544,29 +1562,29 @@ flowchart TD
   s11 -.->|next round| s4
 ```
 
-1. **Question arrives**: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over.
-2. **Open the stream, instant sentence**: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows.
-3. **What the panel does itself**: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data.
-4. **Prepare a round**: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now.
-5. **Stream and cut into sentences**: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early.
-6. **Figure without proof?**: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result.
-7. **Deed without a tool?**: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). Only when a changing tool was offered.
-8. **Show and speak**: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm.
-9. **Data question without looking?**: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first.
-10. **Tool wanted?**: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped.
-11. **Run the tools**: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer.
-12. **Honest closing sentences**: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model.
-13. **The panel's own questions**: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. The profile's tool log is written.
-14. **Stream ends**: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once.
+1. <a id="kn-antwort-s1"></a>**Question arrives**: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over.
+2. <a id="kn-antwort-s2"></a>**Open the stream, instant sentence**: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows.
+3. <a id="kn-antwort-s3"></a>**What the panel does itself**: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data.
+4. <a id="kn-antwort-s4"></a>**Prepare a round**: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now.
+5. <a id="kn-antwort-s5"></a>**Stream and cut into sentences**: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early.
+6. <a id="kn-antwort-s6"></a>**Figure without proof?**: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result.
+7. <a id="kn-antwort-s7"></a>**Deed without a tool?**: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). Only when a changing tool was offered.
+8. <a id="kn-antwort-s8"></a>**Show and speak**: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm.
+9. <a id="kn-antwort-s9"></a>**Data question without looking?**: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first.
+10. <a id="kn-antwort-s10"></a>**Tool wanted?**: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped.
+11. <a id="kn-antwort-s11"></a>**Run the tools**: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer.
+12. <a id="kn-antwort-s12"></a>**Honest closing sentences**: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model.
+13. <a id="kn-antwort-s13"></a>**The panel's own questions**: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. The profile's tool log is written.
+14. <a id="kn-antwort-s14"></a>**Stream ends**: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once.
 
 **Examples:** Small talk without a tool: Spoken from the first sentence, no check steps in. · Tomorrow's appointments: The model calls the calendar, the next round answers from the result. · Made-up time: The sentence with the time is never said, an honest sentence instead. · „Light is on“, switching failed: Instead of the claim: „That did not work: …“.
 
 #### Numbers (from the code)
 
-- **4** tool calls per round, more do not run
-- **3** memory notes per answer
-- **2** same failures until a tool stops (or 3 of any kind)
-- **50** characters after which the first sentence goes at a comma
+- **4** tool calls per round, more do not run ([step 11](#kn-antwort-s11))
+- **3** memory notes per answer ([step 11](#kn-antwort-s11))
+- **2** same failures until a tool stops (or 3 of any kind) ([step 11](#kn-antwort-s11))
+- **50** characters after which the first sentence goes at a comma ([step 5](#kn-antwort-s5))
 
 #### Settings
 
@@ -1581,17 +1599,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/chat.py` `chat`: rate limit, speech first, „answering“
-- `app/panel/chat.py` `_answer`: rounds, tools, checks, speech output as one stream
-- `app/panel/chat.py` `split_sentences`: cuts finished sentences off
-- `app/panel/chat.py` `said_key`: spots a sentence already said
-- `app/panel/chat.py` `no_code`: code blocks only shown, never spoken
-- `app/panel/chat.py` `loop_count`: counts failures for stop error loops
-- `app/panel/answercheck.py` `known`: every figure the model was given
-- `app/panel/answercheck.py` `unsupported`: figures in the sentence without proof
-- `app/panel/answercheck.py` `fresh`: after the calendar only this answer's figures
-- `app/panel/taten.py` `check`: deed claimed, no tool managed it
-- `app/panel/taten.py` `sentence`: the fixed honest sentence
+- `app/panel/chat.py` `chat`: rate limit, speech first, „answering“ ([step 1](#kn-antwort-s1))
+- `app/panel/chat.py` `_answer`: rounds, tools, checks, speech output as one stream ([step 4](#kn-antwort-s4), [step 5](#kn-antwort-s5), [step 11](#kn-antwort-s11))
+- `app/panel/chat.py` `split_sentences`: cuts finished sentences off ([step 5](#kn-antwort-s5))
+- `app/panel/chat.py` `said_key`: spots a sentence already said ([step 8](#kn-antwort-s8))
+- `app/panel/chat.py` `no_code`: code blocks only shown, never spoken ([step 8](#kn-antwort-s8))
+- `app/panel/chat.py` `loop_count`: counts failures for stop error loops ([step 11](#kn-antwort-s11))
+- `app/panel/answercheck.py` `known`: every figure the model was given ([step 6](#kn-antwort-s6))
+- `app/panel/answercheck.py` `unsupported`: figures in the sentence without proof ([step 6](#kn-antwort-s6))
+- `app/panel/answercheck.py` `fresh`: after the calendar only this answer's figures ([step 6](#kn-antwort-s6))
+- `app/panel/taten.py` `check`: deed claimed, no tool managed it ([step 7](#kn-antwort-s7))
+- `app/panel/taten.py` `sentence`: the fixed honest sentence ([step 12](#kn-antwort-s12))
 
 Self-tests: `test_panel`, `test_taten`, `test_handlungsregel`, `test_fast_start`, `test_morgen_termine`
 
@@ -1642,23 +1660,25 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. **The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer.
-2. **Offered in this round?**: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock.
-3. **Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
-4. **Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail web search is closed too, also after own documents (except with „search locally first“, then only with the question's own words).
-5. **Service gone right now?**: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive.
-6. **Mark reading**: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer.
-7. **Run the tool**: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard.
-8. **Errors as a sentence**: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“.
-9. **Wrap the result as data**: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too.
-10. **Device marks the answer**: The device learns that the answer rests on outside text. Such answers do not go to the model again later.
-11. **Record**: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py.
-12. **Failed twice?**: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work.
-13. **Result back to the model**: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds).
+1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer.
+2. <a id="kn-werkzeuge-s2"></a>**Offered in this round?**: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock.
+3. <a id="kn-werkzeuge-s3"></a>**Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
+4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail web search is closed too, also after own documents (except with „search locally first“, then only with the question's own words).
+5. <a id="kn-werkzeuge-s5"></a>**Service gone right now?**: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive.
+6. <a id="kn-werkzeuge-s6"></a>**Mark reading**: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer.
+7. <a id="kn-werkzeuge-s7"></a>**Run the tool**: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard.
+8. <a id="kn-werkzeuge-s8"></a>**Errors as a sentence**: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“.
+9. <a id="kn-werkzeuge-s9"></a>**Wrap the result as data**: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too.
+10. <a id="kn-werkzeuge-s10"></a>**Device marks the answer**: The device learns that the answer rests on outside text. Such answers do not go to the model again later.
+11. <a id="kn-werkzeuge-s11"></a>**Record**: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py.
+12. <a id="kn-werkzeuge-s12"></a>**Failed twice?**: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work.
+13. <a id="kn-werkzeuge-s13"></a>**Result back to the model**: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds).
 
 **Examples:** Read appointments: Runs; the result goes back wrapped as data. · Made-up tool name: Not done: the tool was not offered. · Kill switch during the answer: Blocked: the next call reads the kill switch again. · Web search and light in one round: Blocked: after the web search nothing may switch.
 
 #### Rules
+
+Applies at: [step 4](#kn-werkzeuge-s4)
 
 | State in this answer | Locked |
 |---|---|
@@ -1670,11 +1690,11 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **4** calls per round
-- **3** memory notes per answer
-- **13** tools locked after outside text
-- **7** tools without internet with the kill switch
-- **79** tools with a readable name
+- **4** calls per round ([step 1](#kn-werkzeuge-s1))
+- **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
+- **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
+- **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
+- **79** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -1688,16 +1708,16 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/chat_tools.py` `run`: the checks and all built-in tools
-- `app/panel/chat.py` `_answer`: calls run_tool, wraps results, stops loops
-- `app/panel/chat.py` `wrap_outside`: outside text as a data block
-- `app/panel/chat.py` `LOCKED_OUTSIDE`: locked after outside text
-- `app/panel/chat.py` `LOCKED_MAIL`: locked after a mail
-- `app/panel/chat.py` `READS_OUTSIDE`: tools that bring outside text
-- `app/panel/notaus.py` `locked_tools`: what the kill switch locks per stage
-- `app/panel/dienstwacht.py` `tool_down`: fixed sentence when a service is gone
-- `app/panel/chat.py` `tool_info`: numbers for Logs → Requests
-- `app/panel/werkzeuge.py` `label`: readable name of a tool
+- `app/panel/chat_tools.py` `run`: the checks and all built-in tools ([step 2](#kn-werkzeuge-s2), [step 7](#kn-werkzeuge-s7))
+- `app/panel/chat.py` `_answer`: calls run_tool, wraps results, stops loops ([step 1](#kn-werkzeuge-s1))
+- `app/panel/chat.py` `wrap_outside`: outside text as a data block ([step 9](#kn-werkzeuge-s9))
+- `app/panel/chat.py` `LOCKED_OUTSIDE`: locked after outside text ([step 4](#kn-werkzeuge-s4))
+- `app/panel/chat.py` `LOCKED_MAIL`: locked after a mail ([step 4](#kn-werkzeuge-s4))
+- `app/panel/chat.py` `READS_OUTSIDE`: tools that bring outside text ([step 4](#kn-werkzeuge-s4), [step 6](#kn-werkzeuge-s6))
+- `app/panel/notaus.py` `locked_tools`: what the kill switch locks per stage ([step 3](#kn-werkzeuge-s3))
+- `app/panel/dienstwacht.py` `tool_down`: fixed sentence when a service is gone ([step 5](#kn-werkzeuge-s5))
+- `app/panel/chat.py` `tool_info`: numbers for Logs → Requests ([step 11](#kn-werkzeuge-s11))
+- `app/panel/werkzeuge.py` `label`: readable name of a tool ([step 11](#kn-werkzeuge-s11))
 
 Self-tests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`, `test_werkzeuge`, `test_werkzeug_abdeckung`
 
@@ -1753,23 +1773,25 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. **Model calls document_search**: The tool is offered only when the profile has own or shared documents, the function is released for the profile and the voice is recognized. Guests and unknown voices at a shared speaker never get it. The profile comes from the login, never from the model.
-2. **Tags or kind allowed?**: The model may narrow the search to tags or a kind of document (at most five tags). With „Document card and tags“ off for the profile these are dropped and every document is searched.
-3. **Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
-4. **Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
-5. **Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
-6. **Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises.
-7. **Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
-8. **Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. The hits carry the owner's name; everything is sorted by rank.
-9. **Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
-10. **Cross-encoder orders**: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set.
-11. **„What did I note lately?“**: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing.
-12. **No passage found?**: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess.
-13. **Passages with source to the model**: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources.
+1. <a id="kn-wissen-s1"></a>**Model calls document_search**: The tool is offered only when the profile has own or shared documents, the function is released for the profile and the voice is recognized. Guests and unknown voices at a shared speaker never get it. The profile comes from the login, never from the model.
+2. <a id="kn-wissen-s2"></a>**Tags or kind allowed?**: The model may narrow the search to tags or a kind of document (at most five tags). With „Document card and tags“ off for the profile these are dropped and every document is searched.
+3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
+4. <a id="kn-wissen-s4"></a>**Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
+5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
+6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises.
+7. <a id="kn-wissen-s7"></a>**Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
+8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. The hits carry the owner's name; everything is sorted by rank.
+9. <a id="kn-wissen-s9"></a>**Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
+10. <a id="kn-wissen-s10"></a>**Cross-encoder orders**: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set.
+11. <a id="kn-wissen-s11"></a>**„What did I note lately?“**: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing.
+12. <a id="kn-wissen-s12"></a>**No passage found?**: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess.
+13. <a id="kn-wissen-s13"></a>**Passages with source to the model**: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources.
 
 **Examples:** Question about a contract clause: Found: the clause and two neighbouring passages, re-ranked, with page. · Vector model still asleep: Found by full text alone; the answer did not wait. · Invoices with a tag, words do not fit: No passage, but the list of documents with the tag.
 
 #### Rules
+
+Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 | Source | How it is found | Who |
 |---|---|---|
@@ -1791,12 +1813,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **30** candidates for re-ranking
-- **-4.0** cross-encoder's lower limit
-- **0.4** weight of the context line
-- **8 s** longest wait for the question vector
-- **8.5 GiB** free memory for the vector model to start
-- **3** hits at most with „Look locally first“
+- **30** candidates for re-ranking ([step 9](#kn-wissen-s9))
+- **-4.0** cross-encoder's lower limit ([step 10](#kn-wissen-s10))
+- **0.4** weight of the context line ([step 5](#kn-wissen-s5))
+- **8 s** longest wait for the question vector ([step 3](#kn-wissen-s3))
+- **8.5 GiB** free memory for the vector model to start ([step 3](#kn-wissen-s3))
+- **3** hits at most with „Look locally first“ ([step 5](#kn-wissen-s5))
 
 #### Settings
 
@@ -1812,17 +1834,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/wissen.py` `search`: own and shared documents, mix, re-ranking
-- `app/panel/documents.py` `search`: full text and vectors, rank fusion
-- `app/panel/documents.py` `_terms`: search words from the question
-- `app/panel/documents.py` `match_docs`: documents with tags and kind
-- `app/panel/docembed.py` `query`: question vector or nothing
-- `app/panel/docembed.py` `_call`: one job for the model process
-- `app/panel/nachsortieren.py` `rank`: cross-encoder or the mix's order
-- `app/panel/wissen.py` `recent_window`: „noted lately“ as a fixed rule
-- `app/panel/wissen.py` `where`: source of a passage for the model
-- `app/panel/lokal.py` `look`: the quick look before the answer
-- `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks
+- `app/panel/wissen.py` `search`: own and shared documents, mix, re-ranking ([step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8), [step 9](#kn-wissen-s9))
+- `app/panel/documents.py` `search`: full text and vectors, rank fusion ([step 5](#kn-wissen-s5), [step 6](#kn-wissen-s6))
+- `app/panel/documents.py` `_terms`: search words from the question ([step 5](#kn-wissen-s5))
+- `app/panel/documents.py` `match_docs`: documents with tags and kind ([step 4](#kn-wissen-s4))
+- `app/panel/docembed.py` `query`: question vector or nothing ([step 3](#kn-wissen-s3))
+- `app/panel/docembed.py` `_call`: one job for the model process ([step 3](#kn-wissen-s3))
+- `app/panel/nachsortieren.py` `rank`: cross-encoder or the mix's order ([step 10](#kn-wissen-s10))
+- `app/panel/wissen.py` `recent_window`: „noted lately“ as a fixed rule ([step 11](#kn-wissen-s11))
+- `app/panel/wissen.py` `where`: source of a passage for the model ([step 13](#kn-wissen-s13))
+- `app/panel/lokal.py` `look`: the quick look before the answer ([step 5](#kn-wissen-s5))
+- `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 
 Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`
 
@@ -1875,22 +1897,24 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. **A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 27 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
-2. **Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
-3. **Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute).
-4. **Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
-5. **Public address?**: A public address is allowed at every level.
-6. **Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, remarkable, verbund).
-7. **Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
-8. **Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) only when Settings → Security → Allow home network addresses is on.
-9. **Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
-10. **Password only to its own site**: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https.
-11. **Answer at most 20 MB**: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory.
-12. **Answer to the tool**: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 27 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
+3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute).
+4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
+5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, remarkable, verbund).
+7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
+8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) only when Settings → Security → Allow home network addresses is on.
+9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
+10. <a id="kn-waechter-s10"></a>**Password only to its own site**: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https.
+11. <a id="kn-waechter-s11"></a>**Answer at most 20 MB**: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory.
+12. <a id="kn-waechter-s12"></a>**Answer to the tool**: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2.
 
 **Examples:** Web page from search: Allowed: connected to the checked public address. · Home Assistant at home: Allowed: the level home may go to the home network. · Calendar at home, switch off: Blocked: home network addresses are off for user services. · Link to cloud metadata: Blocked: a page from search never goes home, 169.254 never. · Kill switch on, ask weather: Blocked: with the kill switch nothing goes to the internet.
 
 #### Rules
+
+Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
@@ -1907,10 +1931,10 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **20 MB** largest answer
-- **30000–31099, 31443** closed own ports
-- **15** blocks in 10 minutes until kill switch stage 1 (if on)
-- **1** kill switch stage without internet
+- **20 MB** largest answer ([step 11](#kn-waechter-s11))
+- **30000–31099, 31443** closed own ports ([step 3](#kn-waechter-s3))
+- **15** blocks in 10 minutes until kill switch stage 1 (if on) ([step 4](#kn-waechter-s4))
+- **1** kill switch stage without internet ([step 4](#kn-waechter-s4))
 
 #### Settings
 
@@ -1924,16 +1948,16 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/netguard.py` `allowed`: the rule: nothing or the reason
-- `app/panel/netguard.py` `resolve`: resolve once, check every address, tell Live
-- `app/panel/netguard.py` `client`: the way out for tools
-- `app/panel/netguard.py` `_Transport`: password guard, size limit, result for My status
-- `app/panel/netguard.py` `_Capped`: cuts the answer, also unpacked
-- `app/panel/netguard.py` `same_site`: same site for login data
-- `app/panel/netguard.py` `own_addresses`: every address of this machine
-- `app/panel/netguard.py` `IMAP4_SSL`: mail over the checked address
-- `app/panel/notaus.py` `watch`: counts blocks for the automatic kill switch
-- `app/panel/live.py` `outgoing`: shows each decision on Live
+- `app/panel/netguard.py` `allowed`: the rule: nothing or the reason ([step 3](#kn-waechter-s3), [step 7](#kn-waechter-s7), [step 8](#kn-waechter-s8))
+- `app/panel/netguard.py` `resolve`: resolve once, check every address, tell Live ([step 2](#kn-waechter-s2))
+- `app/panel/netguard.py` `client`: the way out for tools ([step 1](#kn-waechter-s1))
+- `app/panel/netguard.py` `_Transport`: password guard, size limit, result for My status ([step 10](#kn-waechter-s10), [step 11](#kn-waechter-s11))
+- `app/panel/netguard.py` `_Capped`: cuts the answer, also unpacked ([step 11](#kn-waechter-s11))
+- `app/panel/netguard.py` `same_site`: same site for login data ([step 10](#kn-waechter-s10))
+- `app/panel/netguard.py` `own_addresses`: every address of this machine ([step 3](#kn-waechter-s3))
+- `app/panel/netguard.py` `IMAP4_SSL`: mail over the checked address ([step 9](#kn-waechter-s9))
+- `app/panel/notaus.py` `watch`: counts blocks for the automatic kill switch ([step 2](#kn-waechter-s2))
+- `app/panel/live.py` `outgoing`: shows each decision on Live ([step 2](#kn-waechter-s2))
 
 Self-tests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`
 
@@ -1978,22 +2002,24 @@ flowchart TD
   s7 -->|no| s7x
 ```
 
-1. **A request comes in**: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device.
-2. **Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
-3. **Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
-4. **Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. **Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (28 areas), profiles only through profiles.log_name. A self-test checks both.
-6. **End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
-7. **Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
-8. **Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
-9. **Request history on disk**: The record is appended. When the file grows too big, only the last 500 requests of the last 2880 minutes stay. The file is in no backup.
-10. **Admin reads Logs → Requests**: Only the admin and co-admins read the history, with a rate limit. A profile's name and device show only when the profile allows it; else it says „Profil“. For one request the panel shows the journal lines from its time.
-11. **Read and sort the journal**: logfilter reads at most 20000 lines; only numbers from fixed lists reach journalctl. Each line gets its area from its first word, its level from fixed error words; tokens, keys and passwords are blacked out before the line leaves the panel.
-12. **Diagnosis with a fixed hint**: The diagnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model.
+1. <a id="kn-betrieb-s1"></a>**A request comes in**: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device.
+2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
+3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
+4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (28 areas), profiles only through profiles.log_name. A self-test checks both.
+6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
+7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
+8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
+9. <a id="kn-betrieb-s9"></a>**Request history on disk**: The record is appended. When the file grows too big, only the last 500 requests of the last 2880 minutes stay. The file is in no backup.
+10. <a id="kn-betrieb-s10"></a>**Admin reads Logs → Requests**: Only the admin and co-admins read the history, with a rate limit. A profile's name and device show only when the profile allows it; else it says „Profil“. For one request the panel shows the journal lines from its time.
+11. <a id="kn-betrieb-s11"></a>**Read and sort the journal**: logfilter reads at most 20000 lines; only numbers from fixed lists reach journalctl. Each line gets its area from its first word, its level from fixed error words; tokens, keys and passwords are blacked out before the line leaves the panel.
+12. <a id="kn-betrieb-s12"></a>**Diagnosis with a fixed hint**: The diagnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model.
 
 **Examples:** All on, a question with a tool: Live shows the way, Logs → Requests keeps it, the journal has the line „anfrage:“. · Only the live page on: Visible on Status → Live, then stored nowhere. · Everything off: No record; only the modules' journal lines.
 
 #### Rules
+
+Applies at: [step 4](#kn-betrieb-s4)
 
 | Trace | Where | How long | In the backup |
 |---|---|---|---|
@@ -2015,12 +2041,12 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **500** requests in the history at most
-- **2880 min** so long a request stays
-- **5.0 s** from here a request counts as slow
-- **3** failed probes in a row until a service counts as gone
-- **30 min** at most one outage note per service
-- **7** daily and manual backups kept
+- **500** requests in the history at most ([step 9](#kn-betrieb-s9))
+- **2880 min** so long a request stays ([step 9](#kn-betrieb-s9))
+- **5.0 s** from here a request counts as slow ([step 6](#kn-betrieb-s6))
+- **3** failed probes in a row until a service counts as gone ([step 5](#kn-betrieb-s5))
+- **30 min** at most one outage note per service ([step 5](#kn-betrieb-s5))
+- **7** daily and manual backups kept ([step 9](#kn-betrieb-s9))
 
 #### Settings
 
@@ -2038,17 +2064,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/tracelog.py` `start`: a record when anything is on
-- `app/panel/tracelog.py` `safe`: only numbers and short fixed words
-- `app/panel/tracelog.py` `Rec`: steps, marks, state
-- `app/panel/tracelog.py` `finish`: journal line and request history
-- `app/panel/tracelog.py` `shown`: name only with consent
-- `app/panel/live.py` `step`: every step on Status → Live
-- `app/panel/logfilter.py` `AREAS`: the journal's area words
-- `app/panel/logfilter.py` `parse`: area, level, blacking out
-- `app/panel/logfilter.py` `summary`: counts and fixed hint
-- `app/panel/dienstwacht.py` `round_once`: one round of probes and notes
-- `app/panel/backup.py` `create`: pack one backup
+- `app/panel/tracelog.py` `start`: a record when anything is on ([step 1](#kn-betrieb-s1))
+- `app/panel/tracelog.py` `safe`: only numbers and short fixed words ([step 3](#kn-betrieb-s3))
+- `app/panel/tracelog.py` `Rec`: steps, marks, state ([step 3](#kn-betrieb-s3), [step 6](#kn-betrieb-s6))
+- `app/panel/tracelog.py` `finish`: journal line and request history ([step 8](#kn-betrieb-s8), [step 9](#kn-betrieb-s9))
+- `app/panel/tracelog.py` `shown`: name only with consent ([step 10](#kn-betrieb-s10))
+- `app/panel/live.py` `step`: every step on Status → Live ([step 4](#kn-betrieb-s4))
+- `app/panel/logfilter.py` `AREAS`: the journal's area words ([step 5](#kn-betrieb-s5))
+- `app/panel/logfilter.py` `parse`: area, level, blacking out ([step 11](#kn-betrieb-s11))
+- `app/panel/logfilter.py` `summary`: counts and fixed hint ([step 12](#kn-betrieb-s12))
+- `app/panel/dienstwacht.py` `round_once`: one round of probes and notes ([step 5](#kn-betrieb-s5))
+- `app/panel/backup.py` `create`: pack one backup ([step 9](#kn-betrieb-s9))
 
 Self-tests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, `test_dienstwacht`, `test_hardening`, `test_panel`
 
@@ -2096,30 +2122,30 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. **Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
-2. **Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
-3. **Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
-4. **Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache.
-5. **Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds.
-6. **One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
-7. **Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
-8. **First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
-9. **Read the lines**: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped.
-10. **Only answer text goes on**: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“.
-11. **Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority.
-12. **Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
-13. **Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
+1. <a id="kn-llm-s1"></a>**Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
+2. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
+3. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
+4. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache.
+5. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds.
+6. <a id="kn-llm-s6"></a>**One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
+7. <a id="kn-llm-s7"></a>**Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
+8. <a id="kn-llm-s8"></a>**First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
+9. <a id="kn-llm-s9"></a>**Read the lines**: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped.
+10. <a id="kn-llm-s10"></a>**Only answer text goes on**: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“.
+11. <a id="kn-llm-s11"></a>**Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority.
+12. <a id="kn-llm-s12"></a>**Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
+13. <a id="kn-llm-s13"></a>**Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
 
 **Examples:** Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence.
 
 #### Numbers (from the code)
 
-- **90 s** until the model's first line
-- **60 bis 600 s** allowed time limit
-- **20 s** background work still waits after speech
-- **3** cancels until background work gives up
-- **5 s** longest wait for priority
-- **30 s** a priority answer holds up at most this long
+- **90 s** until the model's first line ([step 8](#kn-llm-s8))
+- **60 bis 600 s** allowed time limit ([step 2](#kn-llm-s2))
+- **20 s** background work still waits after speech ([step 1](#kn-llm-s1))
+- **3** cancels until background work gives up ([step 1](#kn-llm-s1))
+- **5 s** longest wait for priority ([step 5](#kn-llm-s5))
+- **30 s** a priority answer holds up at most this long ([step 5](#kn-llm-s5))
 
 #### Settings
 
@@ -2134,18 +2160,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/chat.py` `chat`: sets „speech is running“ with every piece
-- `app/panel/chat.py` `_answer`: connection, request, rounds (llm_round), errors
-- `app/panel/chat.py` `llm_model`: model name from settings or /models
-- `app/panel/chat.py` `sampling`: top_p and presence_penalty
-- `app/panel/chat.py` `first_within`: the first line must come in time
-- `app/panel/chat.py` `ContextFull`: request longer than the context
-- `app/panel/chat.py` `llm_error_code`: error as a fixed code
-- `app/panel/chat.py` `LLM_GONE`: the spoken sentence when the model is gone
-- `app/panel/chat.py` `prompt_sizes`: size of the parts of a request
-- `app/panel/stufe.py` `wait_turn`: waits for an answer with priority
-- `app/panel/vorrang.py` `mark`: mark „speech is running“
-- `app/panel/vorrang.py` `run`: background work gives way to speech
+- `app/panel/chat.py` `chat`: sets „speech is running“ with every piece ([step 1](#kn-llm-s1))
+- `app/panel/chat.py` `_answer`: connection, request, rounds (llm_round), errors ([step 2](#kn-llm-s2), [step 4](#kn-llm-s4), [step 6](#kn-llm-s6))
+- `app/panel/chat.py` `llm_model`: model name from settings or /models ([step 3](#kn-llm-s3))
+- `app/panel/chat.py` `sampling`: top_p and presence_penalty ([step 4](#kn-llm-s4))
+- `app/panel/chat.py` `first_within`: the first line must come in time ([step 8](#kn-llm-s8))
+- `app/panel/chat.py` `ContextFull`: request longer than the context ([step 7](#kn-llm-s7))
+- `app/panel/chat.py` `llm_error_code`: error as a fixed code ([step 12](#kn-llm-s12))
+- `app/panel/chat.py` `LLM_GONE`: the spoken sentence when the model is gone ([step 12](#kn-llm-s12))
+- `app/panel/chat.py` `prompt_sizes`: size of the parts of a request ([step 11](#kn-llm-s11))
+- `app/panel/stufe.py` `wait_turn`: waits for an answer with priority ([step 5](#kn-llm-s5))
+- `app/panel/vorrang.py` `mark`: mark „speech is running“ ([step 1](#kn-llm-s1))
+- `app/panel/vorrang.py` `run`: background work gives way to speech ([step 1](#kn-llm-s1))
 
 Self-tests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`
 
@@ -2198,29 +2224,29 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. **A recording arrives**: The browser sends the recording to the panel. Each caller may only so often per minute (profile 240), guests share 3 places at once.
-2. **At most 50 MB**: read_audio reads the recording in pieces and stops at 50 MB. Only a signed-in profile may send a wake word; it then goes to the model as a hint.
-3. **Alongside on the CPU**: While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), the room voice, the check for an unknown voice and the measure of how much of the recording is really voice.
-4. **To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal.
-5. **Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask.
-6. **Engine ready?**: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason.
-7. **Wait by priority**: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped.
-8. **Sample rate allowed?**: audio_rate_ok reads the sample rate from the file's header (WAV, FLAC, Ogg, WebM) or asks ffprobe. A header with a made-up rate would fill the memory when it is converted.
-9. **Recognize**: With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only prompt, temperature and stream pass through, plus the context words from the settings. With Parakeet the proxy recognizes itself on the CPU, in pieces of at most 90 seconds cut at a quiet spot.
-10. **Silence, filler or echo?**: stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little voice. For profiles echo.check looks whether the text is the Spark's own voice from another device, and fremdstimme whether a microphone that opened by itself heard an unknown voice.
-11. **Voice recognized?**: speakers.identify compares the recording with every taught voiceprint. Only a clear match (above the threshold of the chosen strictness and clearly ahead of the runner-up) counts. Live shows only „voice recognized“, never whose.
-12. **Text back**: The text goes to the device, which turns it into the question to the chat. On an error a guest gets only a fixed code, never the service's text.
+1. <a id="kn-asr-s1"></a>**A recording arrives**: The browser sends the recording to the panel. Each caller may only so often per minute (profile 240), guests share 3 places at once.
+2. <a id="kn-asr-s2"></a>**At most 50 MB**: read_audio reads the recording in pieces and stops at 50 MB. Only a signed-in profile may send a wake word; it then goes to the model as a hint.
+3. <a id="kn-asr-s3"></a>**Alongside on the CPU**: While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), the room voice, the check for an unknown voice and the measure of how much of the recording is really voice.
+4. <a id="kn-asr-s4"></a>**To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal.
+5. <a id="kn-asr-s5"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask.
+6. <a id="kn-asr-s6"></a>**Engine ready?**: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason.
+7. <a id="kn-asr-s7"></a>**Wait by priority**: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped.
+8. <a id="kn-asr-s8"></a>**Sample rate allowed?**: audio_rate_ok reads the sample rate from the file's header (WAV, FLAC, Ogg, WebM) or asks ffprobe. A header with a made-up rate would fill the memory when it is converted.
+9. <a id="kn-asr-s9"></a>**Recognize**: With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only prompt, temperature and stream pass through, plus the context words from the settings. With Parakeet the proxy recognizes itself on the CPU, in pieces of at most 90 seconds cut at a quiet spot.
+10. <a id="kn-asr-s10"></a>**Silence, filler or echo?**: stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little voice. For profiles echo.check looks whether the text is the Spark's own voice from another device, and fremdstimme whether a microphone that opened by itself heard an unknown voice.
+11. <a id="kn-asr-s11"></a>**Voice recognized?**: speakers.identify compares the recording with every taught voiceprint. Only a clear match (above the threshold of the chosen strictness and clearly ahead of the runner-up) counts. Live shows only „voice recognized“, never whose.
+12. <a id="kn-asr-s12"></a>**Text back**: The text goes to the device, which turns it into the question to the chat. On an error a guest gets only a fixed code, never the service's text.
 
 **Examples:** Question in the browser, profile: Text back with the recognized voice. · Click after the answer: Dropped: too little voice, no question. · File with a made-up sample rate: Refused before the engine sees it. · Engine still loading: Refused with the reason, the device says so.
 
 #### Numbers (from the code)
 
-- **50 MB** largest recording at the panel
-- **8000–192000** allowed sample rate in Hz
-- **240** recordings per minute and profile
-- **3** guests at once
-- **0.75** speaker identification threshold at normal strictness
-- **120** minutes of audio Parakeet reads at most
+- **50 MB** largest recording at the panel ([step 2](#kn-asr-s2))
+- **8000–192000** allowed sample rate in Hz ([step 8](#kn-asr-s8))
+- **240** recordings per minute and profile ([step 1](#kn-asr-s1))
+- **3** guests at once ([step 1](#kn-asr-s1))
+- **0.75** speaker identification threshold at normal strictness ([step 11](#kn-asr-s11))
+- **120** minutes of audio Parakeet reads at most ([step 9](#kn-asr-s9))
 
 #### Settings
 
@@ -2234,18 +2260,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/admin.py` `test_asr`: rate limit and places for guests
-- `app/panel/admin.py` `_test_asr`: the way in the panel: read, check alongside, pass on
-- `app/panel/stufe.py` `asr_level`: the profile's stage, not at a shared speaker
-- `app/common.py` `BodyLimit`: size and key before reading
-- `app/common.py` `PrioGate`: waiting by priority
-- `app/common.py` `audio_rate_ok`: sample rate from the file header
-- `app/asr_proxy.py` `transcriptions`: the proxy in front of the engine
-- `app/asr_proxy.py` `engine_status`: ready, loading, error or off
-- `app/parakeet.py` `Recognizer`: Parakeet on the CPU
-- `app/panel/stille.py` `check`: silence and fillers
-- `app/panel/echo.py` `check`: the Spark's own voice
-- `app/panel/speakers.py` `identify`: whose voice, only on a clear match
+- `app/panel/admin.py` `test_asr`: rate limit and places for guests ([step 1](#kn-asr-s1))
+- `app/panel/admin.py` `_test_asr`: the way in the panel: read, check alongside, pass on ([step 2](#kn-asr-s2), [step 4](#kn-asr-s4))
+- `app/panel/stufe.py` `asr_level`: the profile's stage, not at a shared speaker ([step 4](#kn-asr-s4))
+- `app/common.py` `BodyLimit`: size and key before reading ([step 5](#kn-asr-s5))
+- `app/common.py` `PrioGate`: waiting by priority ([step 7](#kn-asr-s7))
+- `app/common.py` `audio_rate_ok`: sample rate from the file header ([step 8](#kn-asr-s8))
+- `app/asr_proxy.py` `transcriptions`: the proxy in front of the engine ([step 4](#kn-asr-s4))
+- `app/asr_proxy.py` `engine_status`: ready, loading, error or off ([step 6](#kn-asr-s6))
+- `app/parakeet.py` `Recognizer`: Parakeet on the CPU ([step 9](#kn-asr-s9))
+- `app/panel/stille.py` `check`: silence and fillers ([step 10](#kn-asr-s10))
+- `app/panel/echo.py` `check`: the Spark's own voice ([step 10](#kn-asr-s10))
+- `app/panel/speakers.py` `identify`: whose voice, only on a clear match ([step 11](#kn-asr-s11))
 
 Self-tests: `test_units`, `test_hardening`, `test_stufe`, `test_stille`, `test_echo`, `test_stimmabdruck`
 
@@ -2296,26 +2322,26 @@ flowchart TD
   s10 -->|queue full| s10x
 ```
 
-1. **A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key.
-2. **Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read.
-3. **Text valid?**: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network.
-4. **Engine ready?**: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason.
-5. **Markdown off, secrets hidden**: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value.
-6. **Clean the text**: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine.
-7. **Language, pronunciation, numbers**: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_numbers writes out date, time, money and numbers.
-8. **Pick the voice**: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice.
-9. **Streamed at another tempo?**: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays).
-10. **Wait by priority**: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival.
-11. **The engine speaks**: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run.
-12. **Sound back**: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text.
+1. <a id="kn-tts-s1"></a>**A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key.
+2. <a id="kn-tts-s2"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read.
+3. <a id="kn-tts-s3"></a>**Text valid?**: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network.
+4. <a id="kn-tts-s4"></a>**Engine ready?**: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason.
+5. <a id="kn-tts-s5"></a>**Markdown off, secrets hidden**: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value.
+6. <a id="kn-tts-s6"></a>**Clean the text**: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine.
+7. <a id="kn-tts-s7"></a>**Language, pronunciation, numbers**: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_numbers writes out date, time, money and numbers.
+8. <a id="kn-tts-s8"></a>**Pick the voice**: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice.
+9. <a id="kn-tts-s9"></a>**Streamed at another tempo?**: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays).
+10. <a id="kn-tts-s10"></a>**Wait by priority**: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival.
+11. <a id="kn-tts-s11"></a>**The engine speaks**: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run.
+12. <a id="kn-tts-s12"></a>**Sound back**: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text.
 
 **Examples:** Answer sentence in the chat: Spoken, streamed, with a steady voice. · Password in the answer: The voice says „shown in writing only“, the written answer keeps the value. · Only an emoji: Nothing to say, nothing goes to the engine. · Speak faster: The proxy stretches the streamed sound.
 
 #### Numbers (from the code)
 
-- **20000** characters per request at most
-- **„nur schriftlich sichtbar“** the voice says instead of a secret
-- **4** ways to read numbers
+- **20000** characters per request at most ([step 3](#kn-tts-s3))
+- **„nur schriftlich sichtbar“** the voice says instead of a secret ([step 5](#kn-tts-s5))
+- **4** ways to read numbers ([step 7](#kn-tts-s7))
 
 #### Settings
 
@@ -2328,17 +2354,17 @@ flowchart TD
 
 #### In the code
 
-- `app/tts_proxy.py` `speech`: the way of a sentence through the proxy
-- `app/tts_proxy.py` `check_reference`: reference only embedded
-- `app/tts_proxy.py` `engine_status`: ready, loading, error or off
-- `app/tts_proxy.py` `apply_clone`: cloned voice from voices/
-- `app/textnorm.py` `speech_markdown`: markdown signs off
-- `app/textnorm.py` `hide_secrets`: never speak secrets
-- `app/textnorm.py` `clean_text`: emojis, laughter, links, code
-- `app/textnorm.py` `guess_language`: guess German or English
-- `app/textnorm.py` `speak_numbers`: write out numbers
-- `app/tempo.py` `Stretcher`: tempo while streaming
-- `app/common.py` `PrioGate`: waiting by priority
+- `app/tts_proxy.py` `speech`: the way of a sentence through the proxy ([step 1](#kn-tts-s1))
+- `app/tts_proxy.py` `check_reference`: reference only embedded ([step 8](#kn-tts-s8))
+- `app/tts_proxy.py` `engine_status`: ready, loading, error or off ([step 4](#kn-tts-s4))
+- `app/tts_proxy.py` `apply_clone`: cloned voice from voices/ ([step 8](#kn-tts-s8))
+- `app/textnorm.py` `speech_markdown`: markdown signs off ([step 5](#kn-tts-s5))
+- `app/textnorm.py` `hide_secrets`: never speak secrets ([step 5](#kn-tts-s5))
+- `app/textnorm.py` `clean_text`: emojis, laughter, links, code ([step 6](#kn-tts-s6))
+- `app/textnorm.py` `guess_language`: guess German or English ([step 7](#kn-tts-s7))
+- `app/textnorm.py` `speak_numbers`: write out numbers ([step 7](#kn-tts-s7))
+- `app/tempo.py` `Stretcher`: tempo while streaming ([step 9](#kn-tts-s9))
+- `app/common.py` `PrioGate`: waiting by priority ([step 10](#kn-tts-s10))
 
 Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
 
@@ -2390,22 +2416,24 @@ flowchart TD
   s10 -->|yes| s10x
 ```
 
-1. **Model calls a tool**: The model names a tool and details. Who asks is already known (login); the service's login data lies sealed with the profile and never goes to the model.
-2. **Offered in this round?**: Only tools this round offered run. Another name is not run.
-3. **Kill switch holds it?**: The kill switch is read again for every call. From stage 1 the 7 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something.
-4. **Outside text read already?**: If the answer already read mail, web pages, calendar, documents or an archive, it may no longer switch, save or enter anything. The person has to say so in a new message.
-5. **Service known to be gone?**: If the service watch sees this tool's service as gone (and the note is on), the tool answers at once with a fixed sentence instead of waiting. The web search then tries the own Kiwix.
-6. **Fixed own way?**: The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services like Apple push go directly, without the guard. Which modules may do that and why is listed in netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there.
-7. **Level of the service**: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The level is in the code, not in the settings.
-8. **Guard allows the address?**: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address.
-9. **Request to the service**: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address.
-10. **Answer too large?**: Through the guard each answer is cut at the module's limit, also after unpacking.
-11. **Result for My status and Live**: Whether the service answered or refused the login, the profile sees under Me → My status; the live page counts what the guard allowed or blocked. Contents go nowhere.
-12. **Answer as data to the model**: The tool returns the answer as data. If it reads someone else's text (mail, calendar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4.
+1. <a id="kn-aussen-s1"></a>**Model calls a tool**: The model names a tool and details. Who asks is already known (login); the service's login data lies sealed with the profile and never goes to the model.
+2. <a id="kn-aussen-s2"></a>**Offered in this round?**: Only tools this round offered run. Another name is not run.
+3. <a id="kn-aussen-s3"></a>**Kill switch holds it?**: The kill switch is read again for every call. From stage 1 the 7 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something.
+4. <a id="kn-aussen-s4"></a>**Outside text read already?**: If the answer already read mail, web pages, calendar, documents or an archive, it may no longer switch, save or enter anything. The person has to say so in a new message.
+5. <a id="kn-aussen-s5"></a>**Service known to be gone?**: If the service watch sees this tool's service as gone (and the note is on), the tool answers at once with a fixed sentence instead of waiting. The web search then tries the own Kiwix.
+6. <a id="kn-aussen-s6"></a>**Fixed own way?**: The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services like Apple push go directly, without the guard. Which modules may do that and why is listed in netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there.
+7. <a id="kn-aussen-s7"></a>**Level of the service**: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The level is in the code, not in the settings.
+8. <a id="kn-aussen-s8"></a>**Guard allows the address?**: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address.
+9. <a id="kn-aussen-s9"></a>**Request to the service**: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address.
+10. <a id="kn-aussen-s10"></a>**Answer too large?**: Through the guard each answer is cut at the module's limit, also after unpacking.
+11. <a id="kn-aussen-s11"></a>**Result for My status and Live**: Whether the service answered or refused the login, the profile sees under Me → My status; the live page counts what the guard allowed or blocked. Contents go nowhere.
+12. <a id="kn-aussen-s12"></a>**Answer as data to the model**: The tool returns the answer as data. If it reads someone else's text (mail, calendar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4.
 
 **Examples:** Living room light on: Home Assistant in the home network at level home; switched. · Web search: SearXNG directly; pages from the results then go through the guard. · Kill switch stage 1, ask weather: Blocked before anything goes out. · Switch a light after a mail: Blocked: a mail may not switch anything.
 
 #### Rules
+
+Applies at: [step 7](#kn-aussen-s7), [step 8](#kn-aussen-s8)
 
 | Service | Way | Level |
 |---|---|---|
@@ -2421,10 +2449,10 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **20 MB** largest answer through the guard
-- **2 MB** largest answer of an MCP service
-- **7** tools that rest from kill switch stage 1
-- **5 s** longest probe of the service watch
+- **20 MB** largest answer through the guard ([step 10](#kn-aussen-s10))
+- **2 MB** largest answer of an MCP service ([step 10](#kn-aussen-s10))
+- **7** tools that rest from kill switch stage 1 ([step 3](#kn-aussen-s3))
+- **5 s** longest probe of the service watch ([step 5](#kn-aussen-s5))
 
 #### Settings
 
@@ -2440,16 +2468,16 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/chat_tools.py` `run`: offered, kill switch, outside text, service gone
-- `app/panel/notaus.py` `locked_tools`: which tools the kill switch locks
-- `app/panel/notaus.py` `INTERNET_TOOLS`: tools that go to the internet by themselves
-- `app/panel/dienstwacht.py` `tool_down`: fixed sentence when the service is gone
-- `app/panel/netguard.py` `DIRECT_OK`: who may connect directly and why
-- `app/panel/netguard.py` `client`: the way through the guard
-- `app/panel/netguard.py` `IMAP4_SSL`: mail to the checked address
-- `app/panel/homeassistant.py` `_client`: Home Assistant at level home
-- `app/panel/mcp.py` `_client`: MCP server at level user
-- `app/panel/chat.py` `web_search`: SearXNG directly
+- `app/panel/chat_tools.py` `run`: offered, kill switch, outside text, service gone ([step 1](#kn-aussen-s1))
+- `app/panel/notaus.py` `locked_tools`: which tools the kill switch locks ([step 3](#kn-aussen-s3))
+- `app/panel/notaus.py` `INTERNET_TOOLS`: tools that go to the internet by themselves ([step 3](#kn-aussen-s3))
+- `app/panel/dienstwacht.py` `tool_down`: fixed sentence when the service is gone ([step 5](#kn-aussen-s5))
+- `app/panel/netguard.py` `DIRECT_OK`: who may connect directly and why ([step 6](#kn-aussen-s6))
+- `app/panel/netguard.py` `client`: the way through the guard ([step 8](#kn-aussen-s8), [step 9](#kn-aussen-s9), [step 10](#kn-aussen-s10))
+- `app/panel/netguard.py` `IMAP4_SSL`: mail to the checked address ([step 9](#kn-aussen-s9))
+- `app/panel/homeassistant.py` `_client`: Home Assistant at level home ([step 7](#kn-aussen-s7), [step 9](#kn-aussen-s9))
+- `app/panel/mcp.py` `_client`: MCP server at level user ([step 7](#kn-aussen-s7), [step 9](#kn-aussen-s9), [step 10](#kn-aussen-s10))
+- `app/panel/chat.py` `web_search`: SearXNG directly ([step 6](#kn-aussen-s6), [step 9](#kn-aussen-s9))
 
 Self-tests: `test_waechter_umgehung`, `test_notaus`, `test_sperre_ueberall`, `test_dienstwacht`, `test_kiwix`, `test_meinmcp`, `test_remarkable`
 
@@ -2493,26 +2521,26 @@ flowchart TD
   s9 -->|no| s9x
 ```
 
-1. **A module keeps something**: The folder state/ belongs to the service user; install.sh creates it. Only the service can read new files in it.
-2. **A secret in it?**: Passwords, tokens and keys are sealed before they are stored. Everything else goes straight to writing.
-3. **Get the Spark's key**: vault._key reads secret.key. If there is none, it is made once (readable only for the service, never overwritten). After that it stays in the panel's memory.
-4. **Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
-5. **Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
-6. **Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. **Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
-8. **Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
-9. **Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
-10. **Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
-11. **Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read it again.
+1. <a id="kn-state-s1"></a>**A module keeps something**: The folder state/ belongs to the service user; install.sh creates it. Only the service can read new files in it.
+2. <a id="kn-state-s2"></a>**A secret in it?**: Passwords, tokens and keys are sealed before they are stored. Everything else goes straight to writing.
+3. <a id="kn-state-s3"></a>**Get the Spark's key**: vault._key reads secret.key. If there is none, it is made once (readable only for the service, never overwritten). After that it stays in the panel's memory.
+4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
+5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
+6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
+9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
+10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
+11. <a id="kn-state-s11"></a>**Read the keys again**: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read it again.
 
 **Examples:** Enter the Telegram bot token: Stored sealed, goes into every backup. · Lock after failed attempts: Stored plain, stays on this device. · Move to a new Spark: Every secret opens again, nothing to enter.
 
 #### Numbers (from the code)
 
-- **28** files in every backup
-- **43** files and folders that stay out with a reason
-- **8 MB** largest file when restoring
-- **12** characters the move password has at least
+- **28** files in every backup ([step 7](#kn-state-s7))
+- **43** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **8 MB** largest file when restoring ([step 9](#kn-state-s9))
+- **12** characters the move password has at least ([step 8](#kn-state-s8))
 
 #### Settings
 
@@ -2524,16 +2552,16 @@ flowchart TD
 
 #### In the code
 
-- `app/common.py` `write_json`: write atomically, keep the rights
-- `app/panel/vault.py` `_key`: get secret.key or make it once
-- `app/panel/vault.py` `seal`: seal
-- `app/panel/vault.py` `open_`: open, empty with another key
-- `app/panel/backup.py` `STATE_FILES`: what goes into the backup
-- `app/panel/backup.py` `STATE_LOCAL`: what stays out with a reason
-- `app/panel/backup.py` `_seal_keys`: seal secret.key for the move
-- `app/panel/backup.py` `_check_state`: check the files of the backup
-- `app/panel/backup.py` `_swap`: put in place with a way back
-- `app/panel/backup.py` `_forget_cached`: read the keys again
+- `app/common.py` `write_json`: write atomically, keep the rights ([step 5](#kn-state-s5))
+- `app/panel/vault.py` `_key`: get secret.key or make it once ([step 3](#kn-state-s3))
+- `app/panel/vault.py` `seal`: seal ([step 4](#kn-state-s4))
+- `app/panel/vault.py` `open_`: open, empty with another key ([step 6](#kn-state-s6))
+- `app/panel/backup.py` `STATE_FILES`: what goes into the backup ([step 7](#kn-state-s7))
+- `app/panel/backup.py` `STATE_LOCAL`: what stays out with a reason ([step 7](#kn-state-s7))
+- `app/panel/backup.py` `_seal_keys`: seal secret.key for the move ([step 8](#kn-state-s8))
+- `app/panel/backup.py` `_check_state`: check the files of the backup ([step 9](#kn-state-s9))
+- `app/panel/backup.py` `_swap`: put in place with a way back ([step 10](#kn-state-s10))
+- `app/panel/backup.py` `_forget_cached`: read the keys again ([step 11](#kn-state-s11))
 
 Self-tests: `test_technik`, `test_hardening`, `test_panel`, `test_tempo`
 
@@ -2579,22 +2607,24 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. **A request with a profile**: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile.
-2. **Path in its own folder**: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text.
-3. **A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read.
-4. **Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
-5. **Every file sorted**: Every file name is either in an area of speicher.AREAS (may go to the own storage) or in speicher.LOCAL (stays on the Spark, with a reason: keys, accounts, settings, voiceprint, queues). test_technik checks every name the code writes.
-6. **Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
-7. **Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
-8. **Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
-9. **Deleted waits in the bin**: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes.
-10. **In the backup**: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy.
-11. **Profile deleted?**: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID.
-12. **Only for this profile**: Every function reads only the folder of the signed-in profile. Guests have no folder.
+1. <a id="kn-users-s1"></a>**A request with a profile**: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile.
+2. <a id="kn-users-s2"></a>**Path in its own folder**: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text.
+3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read.
+4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
+5. <a id="kn-users-s5"></a>**Every file sorted**: Every file name is either in an area of speicher.AREAS (may go to the own storage) or in speicher.LOCAL (stays on the Spark, with a reason: keys, accounts, settings, voiceprint, queues). test_technik checks every name the code writes.
+6. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
+7. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
+8. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
+9. <a id="kn-users-s9"></a>**Deleted waits in the bin**: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes.
+10. <a id="kn-users-s10"></a>**In the backup**: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy.
+11. <a id="kn-users-s11"></a>**Profile deleted?**: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID.
+12. <a id="kn-users-s12"></a>**Only for this profile**: Every function reads only the folder of the signed-in profile. Guests have no folder.
 
 **Examples:** Memory entry, no own storage: Lies in its own folder and in the backup. · Enter a mail password: Sealed, stays on the Spark (account). · Document with own storage: Encrypted copy on the target.
 
 #### Rules
+
+Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 
 | Area | Files | Own storage |
 |---|---|---|
@@ -2607,11 +2637,11 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **2** targets per profile at most
-- **30** minutes between two runs
-- **2048 MB** at most per run
-- **30** days in the target's bin
-- **5000** files per copy at most
+- **2** targets per profile at most ([step 6](#kn-users-s6))
+- **30** minutes between two runs ([step 7](#kn-users-s7))
+- **2048 MB** at most per run ([step 7](#kn-users-s7))
+- **30** days in the target's bin ([step 9](#kn-users-s9))
+- **5000** files per copy at most ([step 7](#kn-users-s7))
 
 #### Settings
 
@@ -2624,18 +2654,18 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/profiles.py` `current`: the profile from cookie or device key
-- `app/panel/profiles.py` `_path`: path in the profile's folder
-- `app/panel/profiles.py` `_write`: write for the service only
-- `app/panel/profiles.py` `delete_user`: delete profile and folder
-- `app/panel/vault.py` `seal`: seal
-- `app/panel/speakers.py` `_store`: voiceprint sealed
-- `app/panel/speicher.py` `AREAS`: what may go to the own storage
-- `app/panel/speicher.py` `_key`: the profile's storage key, sealed
-- `app/panel/speicher.py` `local_files`: only the list, no links
-- `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces
-- `app/panel/speicher.py` `copy_once`: one run of the copy
-- `app/panel/backup.py` `_add_dir`: users/ into the backup
+- `app/panel/profiles.py` `current`: the profile from cookie or device key ([step 1](#kn-users-s1))
+- `app/panel/profiles.py` `_path`: path in the profile's folder ([step 2](#kn-users-s2))
+- `app/panel/profiles.py` `_write`: write for the service only ([step 4](#kn-users-s4))
+- `app/panel/profiles.py` `delete_user`: delete profile and folder ([step 11](#kn-users-s11))
+- `app/panel/vault.py` `seal`: seal ([step 3](#kn-users-s3))
+- `app/panel/speakers.py` `_store`: voiceprint sealed ([step 3](#kn-users-s3), [step 4](#kn-users-s4))
+- `app/panel/speicher.py` `AREAS`: what may go to the own storage ([step 5](#kn-users-s5))
+- `app/panel/speicher.py` `_key`: the profile's storage key, sealed ([step 8](#kn-users-s8))
+- `app/panel/speicher.py` `local_files`: only the list, no links ([step 7](#kn-users-s7))
+- `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces ([step 8](#kn-users-s8))
+- `app/panel/speicher.py` `copy_once`: one run of the copy ([step 7](#kn-users-s7), [step 8](#kn-users-s8))
+- `app/panel/backup.py` `_add_dir`: users/ into the backup ([step 10](#kn-users-s10))
 
 Self-tests: `test_speicher`, `test_technik`, `test_stimmabdruck`, `test_hardening`
 
@@ -2682,22 +2712,24 @@ flowchart TD
   s12 -->|check fails| s12x
 ```
 
-1. **The admin records a voice**: Under Settings → Voices the admin uploads a recording, with a name and best with the spoken text.
-2. **Name allowed?**: The name becomes the file name; so only letters, digits, underscore and hyphen. The recording may be at most sixty MB.
-3. **Not a WAV?**: The engine expects WAV. ffmpeg turns anything else into mono WAV, at most two minutes long.
-4. **Store**: The recording becomes voices/name.wav, the text voices/name.txt. Without text the engine uses only the timbre.
-5. **Speak with the voice**: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes.
-6. **Voices as a ZIP**: An import takes only flat name.wav and name.txt, checks the size of each file before anything is unpacked and renames, overwrites or skips on a clash, as chosen.
-7. **Once a day**: The panel looks every hour whether the last backup is older than a day. Then it packs in a pause (vorrang.in_thread), with low priority. Backups before every update, rollback and restore come on top.
-8. **Pack**: backup.create writes into backups/ (for the service only) first a .part file, then the final name: backup.json, users/ without users/secret and messages, voices/, config.json, the panel password and the files of STATE_FILES. SQLite files go in as a consistent copy.
-9. **Move backup?**: With a password (12 to 200 characters) the backup also carries secret.key, sealed with that password. Only the main admin with a fresh code can make one.
-10. **Remove old ones**: _prune keeps the newest 7 daily and manual backups and the newest 5 others (update, restore, move). So a few updates never push the daily ones out.
-11. **Download only with a code**: A backup holds every profile. With the code the browser gets a ticket that is valid for a minute and usable once, and downloads the file with it.
-12. **Restore**: restore unpacks only known paths, at most 8192 MB and only with enough free space, checks the settings like the settings page, makes a backup of the current state and then swaps users/, voices/, settings and state files, with a way back on an error.
+1. <a id="kn-ablage-s1"></a>**The admin records a voice**: Under Settings → Voices the admin uploads a recording, with a name and best with the spoken text.
+2. <a id="kn-ablage-s2"></a>**Name allowed?**: The name becomes the file name; so only letters, digits, underscore and hyphen. The recording may be at most sixty MB.
+3. <a id="kn-ablage-s3"></a>**Not a WAV?**: The engine expects WAV. ffmpeg turns anything else into mono WAV, at most two minutes long.
+4. <a id="kn-ablage-s4"></a>**Store**: The recording becomes voices/name.wav, the text voices/name.txt. Without text the engine uses only the timbre.
+5. <a id="kn-ablage-s5"></a>**Speak with the voice**: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes.
+6. <a id="kn-ablage-s6"></a>**Voices as a ZIP**: An import takes only flat name.wav and name.txt, checks the size of each file before anything is unpacked and renames, overwrites or skips on a clash, as chosen.
+7. <a id="kn-ablage-s7"></a>**Once a day**: The panel looks every hour whether the last backup is older than a day. Then it packs in a pause (vorrang.in_thread), with low priority. Backups before every update, rollback and restore come on top.
+8. <a id="kn-ablage-s8"></a>**Pack**: backup.create writes into backups/ (for the service only) first a .part file, then the final name: backup.json, users/ without users/secret and messages, voices/, config.json, the panel password and the files of STATE_FILES. SQLite files go in as a consistent copy.
+9. <a id="kn-ablage-s9"></a>**Move backup?**: With a password (12 to 200 characters) the backup also carries secret.key, sealed with that password. Only the main admin with a fresh code can make one.
+10. <a id="kn-ablage-s10"></a>**Remove old ones**: _prune keeps the newest 7 daily and manual backups and the newest 5 others (update, restore, move). So a few updates never push the daily ones out.
+11. <a id="kn-ablage-s11"></a>**Download only with a code**: A backup holds every profile. With the code the browser gets a ticket that is valid for a minute and usable once, and downloads the file with it.
+12. <a id="kn-ablage-s12"></a>**Restore**: restore unpacks only known paths, at most 8192 MB and only with enough free space, checks the settings like the settings page, makes a backup of the current state and then swaps users/, voices/, settings and state files, with a way back on an error.
 
 **Examples:** Voice from an m4a file: Stored as WAV, the Base model speaks with it. · Daily backup: New backup, the oldest daily one goes. · Move to a new Spark: Everything comes along, the secrets too. · Broken file uploaded: Refused, nothing changes on the Spark.
 
 #### Rules
+
+Applies at: [step 8](#kn-ablage-s8)
 
 | Part | In the backup | Why |
 |---|---|---|
@@ -2709,11 +2741,11 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **7** daily and manual backups kept
-- **5** event backups kept
-- **2048 MB** largest uploaded backup
-- **8192 MB** unpacked at most
-- **12–200** characters of the move password
+- **7** daily and manual backups kept ([step 10](#kn-ablage-s10))
+- **5** event backups kept ([step 10](#kn-ablage-s10))
+- **2048 MB** largest uploaded backup ([step 12](#kn-ablage-s12))
+- **8192 MB** unpacked at most ([step 12](#kn-ablage-s12))
+- **12–200** characters of the move password ([step 9](#kn-ablage-s9))
 
 #### Settings
 
@@ -2727,16 +2759,16 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/admin.py` `add_clone_voice`: check, convert, store a voice
-- `app/panel/admin.py` `import_clone_voices`: voices from a ZIP
-- `app/tts_proxy.py` `apply_clone`: speak with the voice
-- `app/panel/panel.py` `stability`: daily backup in a pause
-- `app/panel/backup.py` `create`: pack a backup
-- `app/panel/backup.py` `_add_dir`: folders without login key
-- `app/panel/backup.py` `_prune`: remove old ones
-- `app/panel/system.py` `backup_ticket`: one-time ticket to download
-- `app/panel/backup.py` `_check`: only known paths, size, space
-- `app/panel/backup.py` `restore`: check, back up, swap
+- `app/panel/admin.py` `add_clone_voice`: check, convert, store a voice ([step 1](#kn-ablage-s1), [step 2](#kn-ablage-s2), [step 4](#kn-ablage-s4))
+- `app/panel/admin.py` `import_clone_voices`: voices from a ZIP ([step 6](#kn-ablage-s6))
+- `app/tts_proxy.py` `apply_clone`: speak with the voice ([step 5](#kn-ablage-s5))
+- `app/panel/panel.py` `stability`: daily backup in a pause ([step 7](#kn-ablage-s7))
+- `app/panel/backup.py` `create`: pack a backup ([step 8](#kn-ablage-s8))
+- `app/panel/backup.py` `_add_dir`: folders without login key ([step 8](#kn-ablage-s8))
+- `app/panel/backup.py` `_prune`: remove old ones ([step 10](#kn-ablage-s10))
+- `app/panel/system.py` `backup_ticket`: one-time ticket to download ([step 11](#kn-ablage-s11))
+- `app/panel/backup.py` `_check`: only known paths, size, space ([step 12](#kn-ablage-s12))
+- `app/panel/backup.py` `restore`: check, back up, swap ([step 12](#kn-ablage-s12))
 
 Self-tests: `test_panel`, `test_hardening`, `test_offsite`
 
@@ -2779,28 +2811,28 @@ flowchart TD
   s7 -->|no| s7x
 ```
 
-1. **A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. **Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (28 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
-3. **Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
-4. **Polls quiet**: Successful status polls the panel makes every few seconds write no line.
-5. **Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
-6. **The admin opens the diagnosis**: Admin only, at most 60 calls per minute.
-7. **Filter from the fixed list?**: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell.
-8. **Read the journal**: read_journal asks journalctl with the namespace, for old installs without it the system journal. At most 20000 lines and 2 MB of text.
-9. **Black out secrets**: redact replaces Telegram tokens, Bearer keys, key=, token=, password= and logins in addresses with asterisks before a line leaves the panel.
-10. **Area and level by rules**: parse sorts every line into an area by its first word. It spots errors and warnings by fixed words; for web requests only the status code counts, for update lines never the subject.
-11. **Count and hint**: summary counts per area and level, draws a small history and adds a fixed hint with a way to the newest error.
-12. **Lines to the panel**: The panel shows the newest matching lines. They lie only in this Spark's journal, never in a backup.
+1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (28 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
+4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
+5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
+6. <a id="kn-journal-s6"></a>**The admin opens the diagnosis**: Admin only, at most 60 calls per minute.
+7. <a id="kn-journal-s7"></a>**Filter from the fixed list?**: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell.
+8. <a id="kn-journal-s8"></a>**Read the journal**: read_journal asks journalctl with the namespace, for old installs without it the system journal. At most 20000 lines and 2 MB of text.
+9. <a id="kn-journal-s9"></a>**Black out secrets**: redact replaces Telegram tokens, Bearer keys, key=, token=, password= and logins in addresses with asterisks before a line leaves the panel.
+10. <a id="kn-journal-s10"></a>**Area and level by rules**: parse sorts every line into an area by its first word. It spots errors and warnings by fixed words; for web requests only the status code counts, for update lines never the subject.
+11. <a id="kn-journal-s11"></a>**Count and hint**: summary counts per area and level, draws a small history and adds a fixed hint with a way to the newest error.
+12. <a id="kn-journal-s12"></a>**Lines to the panel**: The panel shows the newest matching lines. They lie only in this Spark's journal, never in a backup.
 
 **Examples:** Look at a web search error: Line in the search area with a fixed hint. · Time window changed in the browser: Refused, journalctl is not asked. · Storage run of a profile: Line „speicher: lauf …“ with numbers, the profile only as a short form.
 
 #### Numbers (from the code)
 
-- **28** areas of the diagnosis
-- **20000** lines read per call at most
-- **2 MB** journal text per call at most
-- **1000** lines shown at most
-- **240** minutes of „detail“ at most
+- **28** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **20000** lines read per call at most ([step 8](#kn-journal-s8))
+- **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
+- **1000** lines shown at most ([step 7](#kn-journal-s7))
+- **240** minutes of „detail“ at most ([step 3](#kn-journal-s3))
 
 #### Settings
 
@@ -2813,17 +2845,17 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/logfilter.py` `AREAS`: the fixed areas
-- `app/panel/logfilter.py` `logfilter`: the call: fixed lists only
-- `app/panel/logfilter.py` `read_journal`: namespace first, limits
-- `app/panel/logfilter.py` `redact`: black out secrets
-- `app/panel/logfilter.py` `parse`: area and level
-- `app/panel/logfilter.py` `summary`: counts, history, hint
-- `app/panel/logfilter.py` `detail`: detail, numbers only
-- `app/common.py` `JOURNAL_NAMESPACE`: the own part
-- `app/common.py` `journal`: last lines of a service
-- `app/common.py` `quiet_access_log`: status polls quiet
-- `app/panel/profiles.py` `log_name`: profile by name only with consent
+- `app/panel/logfilter.py` `AREAS`: the fixed areas ([step 2](#kn-journal-s2))
+- `app/panel/logfilter.py` `logfilter`: the call: fixed lists only ([step 6](#kn-journal-s6))
+- `app/panel/logfilter.py` `read_journal`: namespace first, limits ([step 8](#kn-journal-s8))
+- `app/panel/logfilter.py` `redact`: black out secrets ([step 9](#kn-journal-s9))
+- `app/panel/logfilter.py` `parse`: area and level ([step 10](#kn-journal-s10))
+- `app/panel/logfilter.py` `summary`: counts, history, hint ([step 11](#kn-journal-s11))
+- `app/panel/logfilter.py` `detail`: detail, numbers only ([step 12](#kn-journal-s12))
+- `app/common.py` `JOURNAL_NAMESPACE`: the own part ([step 5](#kn-journal-s5))
+- `app/common.py` `journal`: last lines of a service ([step 1](#kn-journal-s1))
+- `app/common.py` `quiet_access_log`: status polls quiet ([step 4](#kn-journal-s4))
+- `app/panel/profiles.py` `log_name`: profile by name only with consent ([step 2](#kn-journal-s2))
 
 Self-tests: `test_logfilter`, `test_log_luecken`
 <!-- /technik:knoten -->

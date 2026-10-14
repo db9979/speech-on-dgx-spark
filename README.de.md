@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.540** Technik-Seiten: Blase anklicken zeigt sofort ihren Text, Regeln, Zahlen und Code führen zu ihrem Schritt
 - **V01.0.539** Die Weiche hat jetzt auch ihre Seite unter Zustand → Technik: Gruppen, Hinweiswörter, Folgefragen, Eingrenzen
 - **V01.0.538** Hinweise „neu freigegeben“ nur bei echtem Einrichten, verschwinden danach; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** Outlook classic startet mit dem Spark-Add-in wieder
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.533** Android-App 1.3.0: Update direkt aus der App, geprüft und vom eigenen Spark; Geräte-Updates zeigt die App-Version je Handy
 - **V01.0.532** Jeder Kasten unter Zustand → Technik erklärt genau, wie er arbeitet, mit Schaubild Schritt für Schritt und Beispielen
 - **V01.0.531** Gesperrt, aber eigene Daten löschbar: Ich zeigt für gesperrte Funktionen eine Karte mit „Daten löschen“
-- **V01.0.530** Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, die Alltagsquote misst ehrlich; ihre Einstellungen an einem Ort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -637,7 +637,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 50 MB größte Aufnahme - 120 Fragen pro Minute und Profil - 4 Gäste gleichzeitig im Chat - 50 Gespräche pro Profil - 4 MB größtes Gespräch beim Speichern - 8 offene Seiten mit Sofort-Abgleich pro Profil"
+"text": "- 50 MB größte Aufnahme (Schritt 4) - 120 Fragen pro Minute und Profil (Schritt 4, Schritt 6) - 4 Gäste gleichzeitig im Chat (Schritt 4, Schritt 6) - 50 Gespräche pro Profil (Schritt 10) - 4 MB größtes Gespräch beim Speichern (Schritt 10) - 8 offene Seiten mit Sofort-Abgleich pro Profil (Schritt 11)"
 },
 {
 "lang": "de",
@@ -661,7 +661,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze - app/panel/stille.py check: Stille wird nie zu Worten - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= - app/panel/profiles.py append_convo: hängt unter Sperre an - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten"
+"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
 },
 {
 "lang": "de",
@@ -725,7 +725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code - 5 iPhones pro Profil - 57 feste Pfade für den App-Schlüssel - 30 Minuten gilt ein Android-Download-Link - 5 Downloads pro Android-Link"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 57 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3)"
 },
 {
 "lang": "de",
@@ -749,7 +749,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser - app/panel/iphone.py new_code: zufälliger Einmal-Code, nur der Hash - app/panel/iphone.py take_code: Code einmal einlösen - app/panel/iphone.py app_pair: der erste Kontakt der App - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus - app/panel/profiles.py _app_path: die feste Pfadliste der App - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung - app/panel/account.py profile_remove_device: Gerät entfernen - app/panel/android.py apk_response: App-Datei nur mit gültigem Link"
+"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/iphone.py new_code: zufälliger Einmal-Code, nur der Hash (Schritt 3) - app/panel/iphone.py take_code: Code einmal einlösen (Schritt 4) - app/panel/iphone.py app_pair: der erste Kontakt der App (Schritt 4, Schritt 5) - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark (Schritt 9) - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern (Schritt 5) - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus (Schritt 6) - app/panel/profiles.py _app_path: die feste Pfadliste der App (Schritt 7) - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung (Schritt 10) - app/panel/account.py profile_remove_device: Gerät entfernen (Schritt 11) - app/panel/android.py apk_response: App-Datei nur mit gültigem Link (Schritt 3)"
 },
 {
 "lang": "de",
@@ -813,7 +813,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Telegram-Code - 5 falsche Codes pro Chat und Stunde - 5 MB größte Sprachnachricht - 10 Minuten zählen bei Siri frühere Fragen - 8 Uhr-Antworten gleichzeitig - 10 Minuten bleibt eine Uhr-Antwort abrufbar"
+"text": "- 10 Minuten gilt ein Telegram-Code (Schritt 2) - 5 falsche Codes pro Chat und Stunde (Schritt 2) - 5 MB größte Sprachnachricht (Schritt 5) - 10 Minuten zählen bei Siri frühere Fragen (Schritt 6) - 8 Uhr-Antworten gleichzeitig (Schritt 9) - 10 Minuten bleibt eine Uhr-Antwort abrufbar (Schritt 9)"
 },
 {
 "lang": "de",
@@ -837,7 +837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/telegram.py loop: fragt Telegram, ruht bei Notaus - app/panel/telegram.py handle: eine Nachricht: Verknüpfung, Sperren, Befehle, Sprache - app/panel/telegram.py ask: Frage an den Chat, Antwort einsammeln, speichern - app/panel/telegram.py transcribe: Sprachnachricht über ffmpeg zur Spracherkennung - app/panel/chat.py siri_ask: Siri: Profil aus dem Schlüssel - app/panel/chat.py text_ask: Siri und Begleiter: Frage, Antwort, Verlauf - app/panel/chat.py watch_ask: Uhr: Antwort als Auftrag starten - app/panel/chat.py _watch_run: Uhr: Antwort in den Verlauf - app/panel/watch.py run: liest den Strom in den Uhr-Auftrag - app/panel/watch.py poll: Text und Ton stückweise - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch"
+"text": "- app/panel/telegram.py loop: fragt Telegram, ruht bei Notaus (Schritt 1) - app/panel/telegram.py handle: eine Nachricht: Verknüpfung, Sperren, Befehle, Sprache (Schritt 2, Schritt 3, Schritt 4) - app/panel/telegram.py ask: Frage an den Chat, Antwort einsammeln, speichern (Schritt 7, Schritt 8, Schritt 11) - app/panel/telegram.py transcribe: Sprachnachricht über ffmpeg zur Spracherkennung (Schritt 5) - app/panel/chat.py siri_ask: Siri: Profil aus dem Schlüssel (Schritt 1, Schritt 3) - app/panel/chat.py text_ask: Siri und Begleiter: Frage, Antwort, Verlauf (Schritt 6, Schritt 7, Schritt 11) - app/panel/chat.py watch_ask: Uhr: Antwort als Auftrag starten (Schritt 1, Schritt 7) - app/panel/chat.py _watch_run: Uhr: Antwort in den Verlauf (Schritt 11) - app/panel/watch.py run: liest den Strom in den Uhr-Auftrag (Schritt 8) - app/panel/watch.py poll: Text und Ton stückweise (Schritt 9) - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch (Schritt 11)"
 },
 {
 "lang": "de",
@@ -909,7 +909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code - 30 Sekunden Ton pro Frage - 2.0 Sekunden, dann werden die Rechte neu geprüft - 10 Minuten zählen frühere Fragen am Lautsprecher - 3 falsche Codewörter bis zur Sperre - 8 Wyoming-Verbindungen gleichzeitig"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 2) - 30 Sekunden Ton pro Frage (Schritt 6) - 2.0 Sekunden, dann werden die Rechte neu geprüft (Schritt 5) - 10 Minuten zählen frühere Fragen am Lautsprecher (Schritt 12) - 3 falsche Codewörter bis zur Sperre (Schritt 9) - 8 Wyoming-Verbindungen gleichzeitig (Schritt 5)"
 },
 {
 "lang": "de",
@@ -933,7 +933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen - app/panel/esp32.py same_board: MAC muss passen - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton"
+"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update (Schritt 1) - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen (Schritt 2) - app/panel/esp32.py same_board: MAC muss passen (Schritt 3) - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen (Schritt 5) - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig (Schritt 5) - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten (Schritt 10) - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme (Schritt 9) - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück (Schritt 11) - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert (Schritt 12) - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen (Schritt 5) - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele (Schritt 5) - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton (Schritt 7, Schritt 11)"
 },
 {
 "lang": "de",
@@ -997,7 +997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 90 Tage ohne Nutzung, dann endet eine Verbindung - 10 Verbindungen pro Profil - 60 Anfragen pro Minute je Verbindung - 2 Aufrufe gleichzeitig je Verbindung - 12000 Zeichen höchstens in einer Antwort - 15 Minuten wartet ein Vorschlag auf das Ja"
+"text": "- 90 Tage ohne Nutzung, dann endet eine Verbindung (Schritt 3) - 10 Verbindungen pro Profil (Schritt 3) - 60 Anfragen pro Minute je Verbindung (Schritt 6, Schritt 10) - 2 Aufrufe gleichzeitig je Verbindung (Schritt 8) - 12000 Zeichen höchstens in einer Antwort (Schritt 12) - 15 Minuten wartet ein Vorschlag auf das Ja (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1021,7 +1021,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mcpserver.py mcp_post: der Endpunkt: Origin, Schlüssel, Limit, Methode - app/panel/mcpserver.py origin_ok: keine fremde Webseite - app/panel/mcpserver.py check_conn: Schlüssel, Heimnetz, Notaus, Schalter - app/panel/mcpserver.py is_local: wirklich aus dem Heimnetz - app/panel/mcpserver.py find: Verbindung zum Hash des Schlüssels - app/panel/mcpserver.py tool_ok: darf das Profil dieses Werkzeug jetzt - app/panel/mcpserver.py call: gleichzeitige Aufrufe, Journal-Zeile - app/panel/mcpserver.py run: verteilt auf Sprache, Lesen, Fragen, Handeln - app/panel/mcpserver.py ask: ein Zug nur mit Lese-Werkzeugen - app/panel/mcpserver.py propose: Vorschlag statt Handlung - app/panel/mcpserver.py decide: das Ja des Profils, dann ausführen - app/panel/mcpserver.py carry_out: führt nur bestätigte Aktionen aus"
+"text": "- app/panel/mcpserver.py mcp_post: der Endpunkt: Origin, Schlüssel, Limit, Methode (Schritt 1) - app/panel/mcpserver.py origin_ok: keine fremde Webseite (Schritt 2) - app/panel/mcpserver.py check_conn: Schlüssel, Heimnetz, Notaus, Schalter (Schritt 3) - app/panel/mcpserver.py is_local: wirklich aus dem Heimnetz (Schritt 4) - app/panel/mcpserver.py find: Verbindung zum Hash des Schlüssels (Schritt 3) - app/panel/mcpserver.py tool_ok: darf das Profil dieses Werkzeug jetzt (Schritt 7) - app/panel/mcpserver.py call: gleichzeitige Aufrufe, Journal-Zeile (Schritt 8) - app/panel/mcpserver.py run: verteilt auf Sprache, Lesen, Fragen, Handeln (Schritt 9, Schritt 10) - app/panel/mcpserver.py ask: ein Zug nur mit Lese-Werkzeugen (Schritt 10) - app/panel/mcpserver.py propose: Vorschlag statt Handlung (Schritt 11) - app/panel/mcpserver.py decide: das Ja des Profils, dann ausführen (Schritt 11) - app/panel/mcpserver.py carry_out: führt nur bestätigte Aktionen aus (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1085,7 +1085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 1 Notaus-Stufe, ab der nichts von außen durchkommt - 3 Notaus-Stufe, in der auch zu Hause fast alles steht - 1.5 s ab hier gilt ein Lesen als langsam - 60 s höchstens eine Zeile je Route"
+"text": "- 1 Notaus-Stufe, ab der nichts von außen durchkommt (Schritt 5, Schritt 6) - 3 Notaus-Stufe, in der auch zu Hause fast alles steht (Schritt 5, Schritt 6) - 1.5 s ab hier gilt ein Lesen als langsam (Schritt 2) - 60 s höchstens eine Zeile je Route (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1109,7 +1109,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/panel.py slow_reads: misst jede Anfrage - app/panel/panel.py emergency: Notaus vor jedem Endpunkt - app/panel/notaus.py mine_gate: Mein Notaus für Geräteschlüssel - app/panel/notaus.py gate: was bei welcher Stufe durchkommt - app/panel/notaus.py at_home: im Heimnetz oder von außen - app/panel/panel.py sessions: fremde Seiten, Protokoll, Cookies erneuern - app/panel/guard.py same_origin: die Herkunftsregel - app/panel/panel.py _may_upload: große Uploads nur mit Anmeldung - app/common.py BodyLimit: Größengrenze vor dem Lesen - app/panel/update.py update_lock: Änderungen während eines Updates - app/panel/panel.py protect: Schutz-Kopfzeilen"
+"text": "- app/panel/panel.py slow_reads: misst jede Anfrage (Schritt 2) - app/panel/panel.py emergency: Notaus vor jedem Endpunkt (Schritt 3, Schritt 4) - app/panel/notaus.py mine_gate: Mein Notaus für Geräteschlüssel (Schritt 3) - app/panel/notaus.py gate: was bei welcher Stufe durchkommt (Schritt 4) - app/panel/notaus.py at_home: im Heimnetz oder von außen (Schritt 5) - app/panel/panel.py sessions: fremde Seiten, Protokoll, Cookies erneuern (Schritt 7, Schritt 12) - app/panel/guard.py same_origin: die Herkunftsregel (Schritt 7) - app/panel/panel.py _may_upload: große Uploads nur mit Anmeldung (Schritt 8) - app/common.py BodyLimit: Größengrenze vor dem Lesen (Schritt 9) - app/panel/update.py update_lock: Änderungen während eines Updates (Schritt 10) - app/panel/panel.py protect: Schutz-Kopfzeilen (Schritt 12)"
 },
 {
 "lang": "de",
@@ -1189,7 +1189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 5 Fehlversuche je Adresse in 15 Minuten bis zur Sperre - 10 Fehlversuche je Name in 15 Minuten bis zur Sperre - 60 s erste Sperre, jede weitere doppelt so lang bis 60 Minuten - 30 Fehlversuche je Name in 24 Stunden höchstens - 120 Chat-Anfragen je Minute für ein Profil - 4 gleichzeitige Plätze für Gäste - 90 Tage höchstens für eine Anmeldung im Browser"
+"text": "- 5 Fehlversuche je Adresse in 15 Minuten bis zur Sperre (Schritt 2, Schritt 3) - 10 Fehlversuche je Name in 15 Minuten bis zur Sperre (Schritt 2, Schritt 3) - 60 s erste Sperre, jede weitere doppelt so lang bis 60 Minuten (Schritt 2) - 30 Fehlversuche je Name in 24 Stunden höchstens (Schritt 2, Schritt 3) - 120 Chat-Anfragen je Minute für ein Profil (Schritt 9) - 4 gleichzeitige Plätze für Gäste (Schritt 10) - 90 Tage höchstens für eine Anmeldung im Browser (Schritt 5)"
 },
 {
 "lang": "de",
@@ -1213,7 +1213,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/guard.py check: Sperre vor dem Prüfen - app/panel/guard.py failed: Fehlversuch zählen, sperren - app/panel/guard.py succeeded: Zähler löschen, Browser merken - app/panel/account.py profile_login: Anmeldung eines Profils - app/panel/account.py second_step: Code oder Passkey - app/panel/core.py is_main_admin: Admin per Cookie oder HTTP Basic - app/panel/profiles.py current: das Profil hinter einer Anfrage - app/panel/profiles.py _cookie_user: Cookie prüfen - app/panel/core.py assistant: Profil, Gastzugang oder Admin - app/panel/guard.py limit: Rate-Limit je Minute - app/panel/guard.py Slot: Plätze für Gäste - app/panel/features.py reason: warum eine Funktion nicht geht"
+"text": "- app/panel/guard.py check: Sperre vor dem Prüfen (Schritt 2) - app/panel/guard.py failed: Fehlversuch zählen, sperren (Schritt 3) - app/panel/guard.py succeeded: Zähler löschen, Browser merken (Schritt 5) - app/panel/account.py profile_login: Anmeldung eines Profils (Schritt 3) - app/panel/account.py second_step: Code oder Passkey (Schritt 4) - app/panel/core.py is_main_admin: Admin per Cookie oder HTTP Basic (Schritt 6) - app/panel/profiles.py current: das Profil hinter einer Anfrage (Schritt 6) - app/panel/profiles.py _cookie_user: Cookie prüfen (Schritt 6) - app/panel/core.py assistant: Profil, Gastzugang oder Admin (Schritt 8) - app/panel/guard.py limit: Rate-Limit je Minute (Schritt 9) - app/panel/guard.py Slot: Plätze für Gäste (Schritt 10) - app/panel/features.py reason: warum eine Funktion nicht geht (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1285,7 +1285,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20000 Zeichen höchstens je Nachricht - 2 Minuten gilt eine Auswahl bei einer Rückfrage - 15 Minuten wartet „Soll ich mir das merken?“ - 4 Knöpfe höchstens bei einer Rückfrage - 2 Notaus-Stufe ohne Aktionen"
+"text": "- 20000 Zeichen höchstens je Nachricht (Schritt 1) - 2 Minuten gilt eine Auswahl bei einer Rückfrage (Schritt 7) - 15 Minuten wartet „Soll ich mir das merken?“ (Schritt 7) - 4 Knöpfe höchstens bei einer Rückfrage (Schritt 7) - 2 Notaus-Stufe ohne Aktionen (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1309,7 +1309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher - app/panel/chat.py trim_history: Verlauf kürzen - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen - app/panel/intent.py classify_cfg: feste Regeln der Weiche - app/panel/klaeren.py answer: Antwort auf eine Rückfrage - app/panel/features.py allowed: Freigabe je Funktion - app/panel/notaus.py locked_tools: was der Notaus wegnimmt - app/panel/intent.py narrow: Werkzeuge eingrenzen - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus"
+"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf (Schritt 1, Schritt 13) - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher (Schritt 3) - app/panel/chat.py trim_history: Verlauf kürzen (Schritt 2) - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen (Schritt 2, Schritt 4) - app/panel/intent.py classify_cfg: feste Regeln der Weiche (Schritt 4) - app/panel/klaeren.py answer: Antwort auf eine Rückfrage (Schritt 7) - app/panel/features.py allowed: Freigabe je Funktion (Schritt 10) - app/panel/notaus.py locked_tools: was der Notaus wegnimmt (Schritt 11) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 12) - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus (Schritt 8, Schritt 11)"
 },
 {
 "lang": "de",
@@ -1389,7 +1389,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (78 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (79 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1397,7 +1397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 Gruppen der Weiche - 2 Gruppen höchstens, die noch eingrenzen - 80 Zeichen höchstens für eine Folgefrage - 4 Sekunden höchstens für die Wahl des Modells - 300 ms Wartezeit mit „Schneller Antwortbeginn“ - 80 % Standard-Schwelle der Einordnung - 132 eingebaute Testsätze - 183 Alltagssätze zum Messen - 20 Versionen für Rückgängig"
+"text": "- 20 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 132 eingebaute Testsätze (Schritt 4, Schritt 5) - 183 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -1421,7 +1421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/intent.py classify: Gruppen nach festen Wörtern und Vorrang - app/panel/intent.py Route: Gruppe, Grund, Hinweise; wann klar - app/panel/intent.py hints_of: Hinweiswörter - app/panel/intent.py follow_up: Folgefrage - app/panel/intent.py ask_model: Wahl des Modells aus fester Liste - app/panel/intent.py pick_in_time: auf die Wahl warten oder abbrechen - app/panel/intent.py narrow: Werkzeuge eingrenzen - app/panel/intent.py lean: kurze Liste bei „Knapp“ - app/panel/intent.py forced: Pflicht für die erste Runde - app/panel/weiche.py count: Statistik ohne Inhalt - app/panel/weiche.py trace: Satz ausprobieren - app/panel/intent_alltag.py measure: Alltagsquote"
+"text": "- app/panel/intent.py classify: Gruppen nach festen Wörtern und Vorrang (Schritt 1) - app/panel/intent.py Route: Gruppe, Grund, Hinweise; wann klar (Schritt 6) - app/panel/intent.py hints_of: Hinweiswörter (Schritt 7) - app/panel/intent.py follow_up: Folgefrage (Schritt 8) - app/panel/intent.py ask_model: Wahl des Modells aus fester Liste (Schritt 10) - app/panel/intent.py pick_in_time: auf die Wahl warten oder abbrechen (Schritt 10) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 11) - app/panel/intent.py lean: kurze Liste bei „Knapp“ (Schritt 12) - app/panel/intent.py forced: Pflicht für die erste Runde (Schritt 13) - app/panel/weiche.py count: Statistik ohne Inhalt (Schritt 14) - app/panel/weiche.py trace: Satz ausprobieren (Schritt 14) - app/panel/intent_alltag.py measure: Alltagsquote (Schritt 14)"
 },
 {
 "lang": "de",
@@ -1493,7 +1493,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Werkzeugaufrufe pro Runde, mehr laufen nicht - 3 Gedächtnis-Notizen pro Antwort - 2 gleiche Fehler, bis ein Werkzeug stoppt (oder 3 beliebige) - 50 Zeichen, ab denen der erste Satz am Komma losgeht"
+"text": "- 4 Werkzeugaufrufe pro Runde, mehr laufen nicht (Schritt 11) - 3 Gedächtnis-Notizen pro Antwort (Schritt 11) - 2 gleiche Fehler, bis ein Werkzeug stoppt (oder 3 beliebige) (Schritt 11) - 50 Zeichen, ab denen der erste Satz am Komma losgeht (Schritt 5)"
 },
 {
 "lang": "de",
@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ - app/panel/chat.py _answer: Runden, Werkzeuge, Prüfungen, Sprachausgabe als ein Strom - app/panel/chat.py split_sentences: schneidet fertige Sätze ab - app/panel/chat.py said_key: erkennt einen schon gesagten Satz - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat - app/panel/answercheck.py unsupported: Angaben im Satz ohne Beleg - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft - app/panel/taten.py sentence: der feste ehrliche Satz"
+"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ (Schritt 1) - app/panel/chat.py _answer: Runden, Werkzeuge, Prüfungen, Sprachausgabe als ein Strom (Schritt 4, Schritt 5, Schritt 11) - app/panel/chat.py split_sentences: schneidet fertige Sätze ab (Schritt 5) - app/panel/chat.py said_key: erkennt einen schon gesagten Satz (Schritt 8) - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen (Schritt 8) - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen (Schritt 11) - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat (Schritt 6) - app/panel/answercheck.py unsupported: Angaben im Satz ohne Beleg (Schritt 6) - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort (Schritt 6) - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft (Schritt 7) - app/panel/taten.py sentence: der feste ehrliche Satz (Schritt 12)"
 },
 {
 "lang": "de",
@@ -1581,7 +1581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde - 3 Gedächtnis-Notizen pro Antwort - 13 Werkzeuge gesperrt nach fremdem Text - 7 Werkzeuge ohne Internet bei Notaus - 79 Werkzeuge mit verständlichem Namen"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 79 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_tools.py run: die Prüfungen und alle eingebauten Werkzeuge - app/panel/chat.py _answer: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen - app/panel/chat.py wrap_outside: fremder Text als Datenblock - app/panel/chat.py LOCKED_OUTSIDE: gesperrt nach fremdem Text - app/panel/chat.py LOCKED_MAIL: gesperrt nach einer Mail - app/panel/chat.py READS_OUTSIDE: Werkzeuge, die fremden Text bringen - app/panel/notaus.py locked_tools: was der Notaus je Stufe sperrt - app/panel/dienstwacht.py tool_down: fester Satz, wenn ein Dienst weg ist - app/panel/chat.py tool_info: Zahlen für Logs → Anfragen - app/panel/werkzeuge.py label: verständlicher Name eines Werkzeugs"
+"text": "- app/panel/chat_tools.py run: die Prüfungen und alle eingebauten Werkzeuge (Schritt 2, Schritt 7) - app/panel/chat.py _answer: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen (Schritt 1) - app/panel/chat.py wrap_outside: fremder Text als Datenblock (Schritt 9) - app/panel/chat.py LOCKED_OUTSIDE: gesperrt nach fremdem Text (Schritt 4) - app/panel/chat.py LOCKED_MAIL: gesperrt nach einer Mail (Schritt 4) - app/panel/chat.py READS_OUTSIDE: Werkzeuge, die fremden Text bringen (Schritt 4, Schritt 6) - app/panel/notaus.py locked_tools: was der Notaus je Stufe sperrt (Schritt 3) - app/panel/dienstwacht.py tool_down: fester Satz, wenn ein Dienst weg ist (Schritt 5) - app/panel/chat.py tool_info: Zahlen für Logs → Anfragen (Schritt 11) - app/panel/werkzeuge.py label: verständlicher Name eines Werkzeugs (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1685,7 +1685,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Kandidaten für das Nachsortieren - -4.0 Untergrenze des Cross-Encoders - 0.4 Gewicht der Kontextzeile - 8 s längstes Warten auf den Fragevektor - 8.5 GiB freier Speicher, damit das Vektormodell startet - 3 Treffer höchstens bei „Erst lokal suchen“"
+"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5)"
 },
 {
 "lang": "de",
@@ -1709,7 +1709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren - app/panel/documents.py search: Volltext und Vektoren, Rangmischung - app/panel/documents.py _terms: Suchwörter aus der Frage - app/panel/documents.py match_docs: Dokumente mit Tags und Art - app/panel/docembed.py query: Fragevektor oder nichts - app/panel/docembed.py _call: ein Auftrag an den Modellprozess - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel - app/panel/wissen.py where: Herkunft einer Stelle für das Modell - app/panel/lokal.py look: der kurze Blick vor der Antwort - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken"
+"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
 },
 {
 "lang": "de",
@@ -1773,7 +1773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 MB größte Antwort - 30000–31099, 31443 gesperrte eigene Ports - 15 Sperren in 10 Minuten bis Notaus Stufe 1 (wenn an) - 1 Notaus-Stufe ohne Internet"
+"text": "- 20 MB größte Antwort (Schritt 11) - 30000–31099, 31443 gesperrte eigene Ports (Schritt 3) - 15 Sperren in 10 Minuten bis Notaus Stufe 1 (wenn an) (Schritt 4) - 1 Notaus-Stufe ohne Internet (Schritt 4)"
 },
 {
 "lang": "de",
@@ -1797,7 +1797,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live"
+"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1877,7 +1877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 500 Anfragen im Verlauf höchstens - 2880 min so lange bleibt eine Anfrage - 5.0 s ab hier gilt eine Anfrage als langsam - 3 Fehlproben in Folge, bis ein Dienst als weg gilt - 30 min höchstens eine Ausfall-Meldung pro Dienst - 7 tägliche und eigene Sicherungen, die bleiben"
+"text": "- 500 Anfragen im Verlauf höchstens (Schritt 9) - 2880 min so lange bleibt eine Anfrage (Schritt 9) - 5.0 s ab hier gilt eine Anfrage als langsam (Schritt 6) - 3 Fehlproben in Folge, bis ein Dienst als weg gilt (Schritt 5) - 30 min höchstens eine Ausfall-Meldung pro Dienst (Schritt 5) - 7 tägliche und eigene Sicherungen, die bleiben (Schritt 9)"
 },
 {
 "lang": "de",
@@ -1901,7 +1901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/tracelog.py start: ein Datensatz, wenn etwas an ist - app/panel/tracelog.py safe: nur Zahlen und kurze feste Wörter - app/panel/tracelog.py Rec: Schritte, Marken, Zustand - app/panel/tracelog.py finish: Journal-Zeile und Anfrage-Verlauf - app/panel/tracelog.py shown: Name nur mit Zustimmung - app/panel/live.py step: jeder Schritt auf Zustand → Live - app/panel/logfilter.py AREAS: die Bereichswörter des Journals - app/panel/logfilter.py parse: Bereich, Stufe, Schwärzen - app/panel/logfilter.py summary: Zähler und fester Hinweis - app/panel/dienstwacht.py round_once: eine Runde Proben und Meldungen - app/panel/backup.py create: eine Sicherung packen"
+"text": "- app/panel/tracelog.py start: ein Datensatz, wenn etwas an ist (Schritt 1) - app/panel/tracelog.py safe: nur Zahlen und kurze feste Wörter (Schritt 3) - app/panel/tracelog.py Rec: Schritte, Marken, Zustand (Schritt 3, Schritt 6) - app/panel/tracelog.py finish: Journal-Zeile und Anfrage-Verlauf (Schritt 8, Schritt 9) - app/panel/tracelog.py shown: Name nur mit Zustimmung (Schritt 10) - app/panel/live.py step: jeder Schritt auf Zustand → Live (Schritt 4) - app/panel/logfilter.py AREAS: die Bereichswörter des Journals (Schritt 5) - app/panel/logfilter.py parse: Bereich, Stufe, Schwärzen (Schritt 11) - app/panel/logfilter.py summary: Zähler und fester Hinweis (Schritt 12) - app/panel/dienstwacht.py round_once: eine Runde Proben und Meldungen (Schritt 5) - app/panel/backup.py create: eine Sicherung packen (Schritt 9)"
 },
 {
 "lang": "de",
@@ -1965,7 +1965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 90 s bis zur ersten Zeile des Modells - 60 bis 600 s erlaubtes Zeitlimit - 20 s nach Sprache wartet Hintergrundarbeit noch - 3 Abbrüche, bis Hintergrundarbeit aufgibt - 5 s längste Wartezeit für Vorrang - 30 s so lange hält eine Antwort mit Vorrang höchstens auf"
+"text": "- 90 s bis zur ersten Zeile des Modells (Schritt 8) - 60 bis 600 s erlaubtes Zeitlimit (Schritt 2) - 20 s nach Sprache wartet Hintergrundarbeit noch (Schritt 1) - 3 Abbrüche, bis Hintergrundarbeit aufgibt (Schritt 1) - 5 s längste Wartezeit für Vorrang (Schritt 5) - 30 s so lange hält eine Antwort mit Vorrang höchstens auf (Schritt 5)"
 },
 {
 "lang": "de",
@@ -1989,7 +1989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle - app/panel/chat.py llm_model: Modellname aus Einstellung oder /models - app/panel/chat.py sampling: top_p und presence_penalty - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen - app/panel/chat.py ContextFull: Anfrage länger als der Kontext - app/panel/chat.py llm_error_code: Fehler als festes Kürzel - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang - app/panel/vorrang.py mark: Marke „Sprache läuft“ - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache"
+"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 2, Schritt 4, Schritt 6) - app/panel/chat.py llm_model: Modellname aus Einstellung oder /models (Schritt 3) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 4) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 8) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 7) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 12) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 12) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 11) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 5) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1)"
 },
 {
 "lang": "de",
@@ -2053,7 +2053,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 50 MB größte Aufnahme am Panel - 8000–192000 erlaubte Abtastrate in Hz - 240 Aufnahmen pro Minute und Profil - 3 Gäste gleichzeitig - 0.75 Schwelle der Sprechererkennung bei normaler Strenge - 120 Minuten Ton liest Parakeet höchstens"
+"text": "- 50 MB größte Aufnahme am Panel (Schritt 2) - 8000–192000 erlaubte Abtastrate in Hz (Schritt 8) - 240 Aufnahmen pro Minute und Profil (Schritt 1) - 3 Gäste gleichzeitig (Schritt 1) - 0.75 Schwelle der Sprechererkennung bei normaler Strenge (Schritt 11) - 120 Minuten Ton liest Parakeet höchstens (Schritt 9)"
 },
 {
 "lang": "de",
@@ -2077,7 +2077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Ratenlimit und Plätze für Gäste - app/panel/admin.py _test_asr: der Weg im Panel: lesen, nebenbei prüfen, weiterreichen - app/panel/stufe.py asr_level: Stufe des Profils, nicht am geteilten Lautsprecher - app/common.py BodyLimit: Größe und Schlüssel vor dem Lesen - app/common.py PrioGate: Warten nach Vorrang - app/common.py audio_rate_ok: Abtastrate aus dem Dateikopf - app/asr_proxy.py transcriptions: der Proxy vor der Engine - app/asr_proxy.py engine_status: bereit, lädt, Fehler oder aus - app/parakeet.py Recognizer: Parakeet auf dem Prozessor - app/panel/stille.py check: Stille und Füllwörter - app/panel/echo.py check: die eigene Stimme des Spark - app/panel/speakers.py identify: wessen Stimme, nur bei klarem Treffer"
+"text": "- app/panel/admin.py test_asr: Ratenlimit und Plätze für Gäste (Schritt 1) - app/panel/admin.py _test_asr: der Weg im Panel: lesen, nebenbei prüfen, weiterreichen (Schritt 2, Schritt 4) - app/panel/stufe.py asr_level: Stufe des Profils, nicht am geteilten Lautsprecher (Schritt 4) - app/common.py BodyLimit: Größe und Schlüssel vor dem Lesen (Schritt 5) - app/common.py PrioGate: Warten nach Vorrang (Schritt 7) - app/common.py audio_rate_ok: Abtastrate aus dem Dateikopf (Schritt 8) - app/asr_proxy.py transcriptions: der Proxy vor der Engine (Schritt 4) - app/asr_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 6) - app/parakeet.py Recognizer: Parakeet auf dem Prozessor (Schritt 9) - app/panel/stille.py check: Stille und Füllwörter (Schritt 10) - app/panel/echo.py check: die eigene Stimme des Spark (Schritt 10) - app/panel/speakers.py identify: wessen Stimme, nur bei klarem Treffer (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2141,7 +2141,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20000 Zeichen pro Anfrage höchstens - „nur schriftlich sichtbar“ sagt die Stimme statt eines Geheimnisses - 4 Arten, Zahlen vorzulesen"
+"text": "- 20000 Zeichen pro Anfrage höchstens (Schritt 3) - „nur schriftlich sichtbar“ sagt die Stimme statt eines Geheimnisses (Schritt 5) - 4 Arten, Zahlen vorzulesen (Schritt 7)"
 },
 {
 "lang": "de",
@@ -2165,7 +2165,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy - app/tts_proxy.py check_reference: Vorlage nur eingebettet - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ - app/textnorm.py speech_markdown: Markdown-Zeichen weg - app/textnorm.py hide_secrets: Geheimnisse nie sprechen - app/textnorm.py clean_text: Emojis, Lachen, Links, Code - app/textnorm.py guess_language: Deutsch oder Englisch raten - app/textnorm.py speak_numbers: Zahlen ausschreiben - app/tempo.py Stretcher: Tempo beim Streamen - app/common.py PrioGate: Warten nach Vorrang"
+"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy (Schritt 1) - app/tts_proxy.py check_reference: Vorlage nur eingebettet (Schritt 8) - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 4) - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ (Schritt 8) - app/textnorm.py speech_markdown: Markdown-Zeichen weg (Schritt 5) - app/textnorm.py hide_secrets: Geheimnisse nie sprechen (Schritt 5) - app/textnorm.py clean_text: Emojis, Lachen, Links, Code (Schritt 6) - app/textnorm.py guess_language: Deutsch oder Englisch raten (Schritt 7) - app/textnorm.py speak_numbers: Zahlen ausschreiben (Schritt 7) - app/tempo.py Stretcher: Tempo beim Streamen (Schritt 9) - app/common.py PrioGate: Warten nach Vorrang (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2229,7 +2229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 MB größte Antwort über den Wächter - 2 MB größte Antwort eines MCP-Dienstes - 7 Werkzeuge, die ab Notaus-Stufe 1 ruhen - 5 s längste Probe des Dienst-Wächters"
+"text": "- 20 MB größte Antwort über den Wächter (Schritt 10) - 2 MB größte Antwort eines MCP-Dienstes (Schritt 10) - 7 Werkzeuge, die ab Notaus-Stufe 1 ruhen (Schritt 3) - 5 s längste Probe des Dienst-Wächters (Schritt 5)"
 },
 {
 "lang": "de",
@@ -2253,7 +2253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_tools.py run: angeboten, Notaus, Text von außen, Dienst weg - app/panel/notaus.py locked_tools: welche Werkzeuge der Notaus sperrt - app/panel/notaus.py INTERNET_TOOLS: Werkzeuge, die selbst ins Internet gehen - app/panel/dienstwacht.py tool_down: fester Satz, wenn der Dienst weg ist - app/panel/netguard.py DIRECT_OK: wer direkt verbinden darf und warum - app/panel/netguard.py client: der Zugang über den Wächter - app/panel/netguard.py IMAP4_SSL: Mail an die geprüfte Adresse - app/panel/homeassistant.py _client: Home Assistant mit Stufe Heimnetz - app/panel/mcp.py _client: MCP-Server mit Stufe Nutzer - app/panel/chat.py web_search: SearXNG direkt"
+"text": "- app/panel/chat_tools.py run: angeboten, Notaus, Text von außen, Dienst weg (Schritt 1) - app/panel/notaus.py locked_tools: welche Werkzeuge der Notaus sperrt (Schritt 3) - app/panel/notaus.py INTERNET_TOOLS: Werkzeuge, die selbst ins Internet gehen (Schritt 3) - app/panel/dienstwacht.py tool_down: fester Satz, wenn der Dienst weg ist (Schritt 5) - app/panel/netguard.py DIRECT_OK: wer direkt verbinden darf und warum (Schritt 6) - app/panel/netguard.py client: der Zugang über den Wächter (Schritt 8, Schritt 9, Schritt 10) - app/panel/netguard.py IMAP4_SSL: Mail an die geprüfte Adresse (Schritt 9) - app/panel/homeassistant.py _client: Home Assistant mit Stufe Heimnetz (Schritt 7, Schritt 9) - app/panel/mcp.py _client: MCP-Server mit Stufe Nutzer (Schritt 7, Schritt 9, Schritt 10) - app/panel/chat.py web_search: SearXNG direkt (Schritt 6, Schritt 9)"
 },
 {
 "lang": "de",
@@ -2309,7 +2309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 28 Dateien in jeder Sicherung - 43 Dateien und Ordner, die mit Grund draußen bleiben - 8 MB größte Datei beim Wiederherstellen - 12 Zeichen hat das Umzugs-Passwort mindestens"
+"text": "- 28 Dateien in jeder Sicherung (Schritt 7) - 43 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2333,7 +2333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/common.py write_json: atomar schreiben, Rechte behalten - app/panel/vault.py _key: secret.key holen oder einmal anlegen - app/panel/vault.py seal: versiegeln - app/panel/vault.py open_: öffnen, leer bei fremdem Schlüssel - app/panel/backup.py STATE_FILES: was in die Sicherung kommt - app/panel/backup.py STATE_LOCAL: was mit Grund draußen bleibt - app/panel/backup.py _seal_keys: secret.key für den Umzug versiegeln - app/panel/backup.py _check_state: Dateien der Sicherung prüfen - app/panel/backup.py _swap: einsetzen mit Rückweg - app/panel/backup.py _forget_cached: Schlüssel neu lesen"
+"text": "- app/common.py write_json: atomar schreiben, Rechte behalten (Schritt 5) - app/panel/vault.py _key: secret.key holen oder einmal anlegen (Schritt 3) - app/panel/vault.py seal: versiegeln (Schritt 4) - app/panel/vault.py open_: öffnen, leer bei fremdem Schlüssel (Schritt 6) - app/panel/backup.py STATE_FILES: was in die Sicherung kommt (Schritt 7) - app/panel/backup.py STATE_LOCAL: was mit Grund draußen bleibt (Schritt 7) - app/panel/backup.py _seal_keys: secret.key für den Umzug versiegeln (Schritt 8) - app/panel/backup.py _check_state: Dateien der Sicherung prüfen (Schritt 9) - app/panel/backup.py _swap: einsetzen mit Rückweg (Schritt 10) - app/panel/backup.py _forget_cached: Schlüssel neu lesen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2397,7 +2397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 2 Ziele pro Profil höchstens - 30 Minuten zwischen zwei Läufen - 2048 MB höchstens pro Lauf - 30 Tage im Papierkorb des Ziels - 5000 Dateien pro Kopie höchstens"
+"text": "- 2 Ziele pro Profil höchstens (Schritt 6) - 30 Minuten zwischen zwei Läufen (Schritt 7) - 2048 MB höchstens pro Lauf (Schritt 7) - 30 Tage im Papierkorb des Ziels (Schritt 9) - 5000 Dateien pro Kopie höchstens (Schritt 7)"
 },
 {
 "lang": "de",
@@ -2421,7 +2421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/profiles.py current: das Profil aus Cookie oder Geräteschlüssel - app/panel/profiles.py _path: Pfad im Ordner des Profils - app/panel/profiles.py _write: schreiben nur für den Dienst - app/panel/profiles.py delete_user: Profil und Ordner löschen - app/panel/vault.py seal: versiegeln - app/panel/speakers.py _store: Stimmabdruck versiegelt - app/panel/speicher.py AREAS: was auf den eigenen Speicher darf - app/panel/speicher.py _key: Speicher-Schlüssel des Profils, versiegelt - app/panel/speicher.py local_files: nur die Liste, keine Links - app/panel/speicher.py seal_file: AES-256-GCM in Stücken - app/panel/speicher.py copy_once: ein Lauf der Kopie - app/panel/backup.py _add_dir: users/ in die Sicherung"
+"text": "- app/panel/profiles.py current: das Profil aus Cookie oder Geräteschlüssel (Schritt 1) - app/panel/profiles.py _path: Pfad im Ordner des Profils (Schritt 2) - app/panel/profiles.py _write: schreiben nur für den Dienst (Schritt 4) - app/panel/profiles.py delete_user: Profil und Ordner löschen (Schritt 11) - app/panel/vault.py seal: versiegeln (Schritt 3) - app/panel/speakers.py _store: Stimmabdruck versiegelt (Schritt 3, Schritt 4) - app/panel/speicher.py AREAS: was auf den eigenen Speicher darf (Schritt 5) - app/panel/speicher.py _key: Speicher-Schlüssel des Profils, versiegelt (Schritt 8) - app/panel/speicher.py local_files: nur die Liste, keine Links (Schritt 7) - app/panel/speicher.py seal_file: AES-256-GCM in Stücken (Schritt 8) - app/panel/speicher.py copy_once: ein Lauf der Kopie (Schritt 7, Schritt 8) - app/panel/backup.py _add_dir: users/ in die Sicherung (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2477,7 +2477,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 7 tägliche und manuelle Sicherungen bleiben - 5 Ereignis-Sicherungen bleiben - 2048 MB größte hochgeladene Sicherung - 8192 MB entpackt höchstens - 12–200 Zeichen des Umzugs-Passworts"
+"text": "- 7 tägliche und manuelle Sicherungen bleiben (Schritt 10) - 5 Ereignis-Sicherungen bleiben (Schritt 10) - 2048 MB größte hochgeladene Sicherung (Schritt 12) - 8192 MB entpackt höchstens (Schritt 12) - 12–200 Zeichen des Umzugs-Passworts (Schritt 9)"
 },
 {
 "lang": "de",
@@ -2501,7 +2501,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py add_clone_voice: Stimme prüfen, umwandeln, ablegen - app/panel/admin.py import_clone_voices: Stimmen aus einem ZIP - app/tts_proxy.py apply_clone: mit der Stimme sprechen - app/panel/panel.py stability: tägliche Sicherung in einer Pause - app/panel/backup.py create: eine Sicherung packen - app/panel/backup.py _add_dir: Ordner ohne Anmelde-Schlüssel - app/panel/backup.py _prune: alte aufräumen - app/panel/system.py backup_ticket: Einmal-Ticket zum Herunterladen - app/panel/backup.py _check: nur bekannte Pfade, Größe, Platz - app/panel/backup.py restore: prüfen, sichern, tauschen"
+"text": "- app/panel/admin.py add_clone_voice: Stimme prüfen, umwandeln, ablegen (Schritt 1, Schritt 2, Schritt 4) - app/panel/admin.py import_clone_voices: Stimmen aus einem ZIP (Schritt 6) - app/tts_proxy.py apply_clone: mit der Stimme sprechen (Schritt 5) - app/panel/panel.py stability: tägliche Sicherung in einer Pause (Schritt 7) - app/panel/backup.py create: eine Sicherung packen (Schritt 8) - app/panel/backup.py _add_dir: Ordner ohne Anmelde-Schlüssel (Schritt 8) - app/panel/backup.py _prune: alte aufräumen (Schritt 10) - app/panel/system.py backup_ticket: Einmal-Ticket zum Herunterladen (Schritt 11) - app/panel/backup.py _check: nur bekannte Pfade, Größe, Platz (Schritt 12) - app/panel/backup.py restore: prüfen, sichern, tauschen (Schritt 12)"
 },
 {
 "lang": "de",
@@ -2549,7 +2549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 28 Bereiche der Diagnose - 20000 Zeilen pro Abruf höchstens gelesen - 2 MB Journal-Text pro Abruf höchstens - 1000 Zeilen höchstens angezeigt - 240 Minuten „Ausführlich“ höchstens"
+"text": "- 28 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -2573,7 +2573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/logfilter.py AREAS: die festen Bereiche - app/panel/logfilter.py logfilter: der Abruf: nur feste Listen - app/panel/logfilter.py read_journal: Namespace zuerst, Grenzen - app/panel/logfilter.py redact: Geheimnisse schwärzen - app/panel/logfilter.py parse: Bereich und Stufe - app/panel/logfilter.py summary: Zähler, Verlauf, Hinweis - app/panel/logfilter.py detail: Ausführlich, nur Zahlen - app/common.py JOURNAL_NAMESPACE: der eigene Bereich - app/common.py journal: letzte Zeilen eines Dienstes - app/common.py quiet_access_log: Statusabfragen still - app/panel/profiles.py log_name: Profil nur mit Zustimmung beim Namen"
+"text": "- app/panel/logfilter.py AREAS: die festen Bereiche (Schritt 2) - app/panel/logfilter.py logfilter: der Abruf: nur feste Listen (Schritt 6) - app/panel/logfilter.py read_journal: Namespace zuerst, Grenzen (Schritt 8) - app/panel/logfilter.py redact: Geheimnisse schwärzen (Schritt 9) - app/panel/logfilter.py parse: Bereich und Stufe (Schritt 10) - app/panel/logfilter.py summary: Zähler, Verlauf, Hinweis (Schritt 11) - app/panel/logfilter.py detail: Ausführlich, nur Zahlen (Schritt 12) - app/common.py JOURNAL_NAMESPACE: der eigene Bereich (Schritt 5) - app/common.py journal: letzte Zeilen eines Dienstes (Schritt 1) - app/common.py quiet_access_log: Statusabfragen still (Schritt 4) - app/panel/profiles.py log_name: Profil nur mit Zustimmung beim Namen (Schritt 2)"
 },
 {
 "lang": "de",
@@ -6733,7 +6733,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 50 MB largest recording - 120 questions per minute and profile - 4 guests in the chat at once - 50 conversations per profile - 4 MB largest conversation when storing - 8 open pages with instant sync per profile"
+"text": "- 50 MB largest recording (step 4) - 120 questions per minute and profile (step 4, step 6) - 4 guests in the chat at once (step 4, step 6) - 50 conversations per profile (step 10) - 4 MB largest conversation when storing (step 10) - 8 open pages with instant sync per profile (step 11)"
 },
 {
 "lang": "en",
@@ -6757,7 +6757,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks - app/panel/admin.py read_audio: reads the recording with a size limit - app/panel/stille.py check: silence never becomes words - app/panel/echo.py check: the Spark's own voice is no question - app/panel/chat.py chat: limits, priority, „answering“, then the stream - app/panel/account.py profile_save_convo: stores only the new messages - app/panel/account.py profile_convos: list and changes since ?since= - app/panel/profiles.py append_convo: appends under a lock - app/panel/profiles.py _clean_convo: checks and trims a conversation - app/panel/verlauf.py stream: instant sync per open page - app/panel/verlauf.py begin: „answering“ for the other pages"
+"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
 },
 {
 "lang": "en",
@@ -6821,7 +6821,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid - 5 iPhones per profile - 57 fixed paths for the app key - 30 minutes an Android download link is valid - 5 downloads per Android link"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 57 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3)"
 },
 {
 "lang": "en",
@@ -6845,7 +6845,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser - app/panel/iphone.py new_code: random one-time code, only the hash - app/panel/iphone.py take_code: redeem a code once - app/panel/iphone.py app_pair: the app's first contact - app/panel/iphone.py app_hello: what the app may, the Spark decides - app/panel/profiles.py add_device: make a key, store its hash - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch - app/panel/profiles.py _app_path: the app's fixed path list - app/panel/core.py browser_profile: only the own browser login - app/panel/account.py profile_remove_device: remove a device - app/panel/android.py apk_response: app file only with a valid link"
+"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/iphone.py new_code: random one-time code, only the hash (step 3) - app/panel/iphone.py take_code: redeem a code once (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3)"
 },
 {
 "lang": "en",
@@ -6909,7 +6909,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a Telegram code is valid - 5 wrong codes per chat and hour - 5 MB largest voice message - 10 minutes earlier questions count for Siri - 8 watch answers at once - 10 minutes a watch answer stays fetchable"
+"text": "- 10 minutes a Telegram code is valid (step 2) - 5 wrong codes per chat and hour (step 2) - 5 MB largest voice message (step 5) - 10 minutes earlier questions count for Siri (step 6) - 8 watch answers at once (step 9) - 10 minutes a watch answer stays fetchable (step 9)"
 },
 {
 "lang": "en",
@@ -6933,7 +6933,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/telegram.py loop: polls Telegram, rests with the kill switch - app/panel/telegram.py handle: one message: link, locks, commands, voice - app/panel/telegram.py ask: question to the chat, collect the answer, store - app/panel/telegram.py transcribe: voice message through ffmpeg to recognition - app/panel/chat.py siri_ask: Siri: profile from the key - app/panel/chat.py text_ask: Siri and companion: question, answer, history - app/panel/chat.py watch_ask: watch: start the answer as a job - app/panel/chat.py _watch_run: watch: the answer into the history - app/panel/watch.py run: reads the stream into the watch job - app/panel/watch.py poll: text and sound piece by piece - app/panel/verlauf.py keep: the channel's day conversation or the main one"
+"text": "- app/panel/telegram.py loop: polls Telegram, rests with the kill switch (step 1) - app/panel/telegram.py handle: one message: link, locks, commands, voice (step 2, step 3, step 4) - app/panel/telegram.py ask: question to the chat, collect the answer, store (step 7, step 8, step 11) - app/panel/telegram.py transcribe: voice message through ffmpeg to recognition (step 5) - app/panel/chat.py siri_ask: Siri: profile from the key (step 1, step 3) - app/panel/chat.py text_ask: Siri and companion: question, answer, history (step 6, step 7, step 11) - app/panel/chat.py watch_ask: watch: start the answer as a job (step 1, step 7) - app/panel/chat.py _watch_run: watch: the answer into the history (step 11) - app/panel/watch.py run: reads the stream into the watch job (step 8) - app/panel/watch.py poll: text and sound piece by piece (step 9) - app/panel/verlauf.py keep: the channel's day conversation or the main one (step 11)"
 },
 {
 "lang": "en",
@@ -7005,7 +7005,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid - 30 seconds of sound per question - 2.0 seconds, then the rights are checked again - 10 minutes earlier questions count at a speaker - 3 wrong code words until the lock - 8 Wyoming connections at once"
+"text": "- 10 minutes a pairing code is valid (step 2) - 30 seconds of sound per question (step 6) - 2.0 seconds, then the rights are checked again (step 5) - 10 minutes earlier questions count at a speaker (step 12) - 3 wrong code words until the lock (step 9) - 8 Wyoming connections at once (step 5)"
 },
 {
 "lang": "en",
@@ -7029,7 +7029,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/esp32.py ota: start check: code, key once, update - app/panel/esp32.py _activation: six-digit code with limits - app/panel/esp32.py same_board: MAC must fit - app/panel/esp32.py speaker_ws: accept the connection and keep checking - app/panel/esp32.py still_allowed: switches and device still valid - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer - app/panel/esp32.py Session.code_gate: code word for an unsure voice - app/panel/esp32.py Session.speak: chat with the key, sound back - app/panel/esp32.py remember: day conversation, foreign voice marked - app/panel/wyoming.py settings: switch, port, allowed addresses - app/panel/wyoming.py handle: only allowed addresses, at most so many - app/panel/wyoming.py _session: sound to text and text to sound"
+"text": "- app/panel/esp32.py ota: start check: code, key once, update (step 1) - app/panel/esp32.py _activation: six-digit code with limits (step 2) - app/panel/esp32.py same_board: MAC must fit (step 3) - app/panel/esp32.py speaker_ws: accept the connection and keep checking (step 5) - app/panel/esp32.py still_allowed: switches and device still valid (step 5) - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer (step 10) - app/panel/esp32.py Session.code_gate: code word for an unsure voice (step 9) - app/panel/esp32.py Session.speak: chat with the key, sound back (step 11) - app/panel/esp32.py remember: day conversation, foreign voice marked (step 12) - app/panel/wyoming.py settings: switch, port, allowed addresses (step 5) - app/panel/wyoming.py handle: only allowed addresses, at most so many (step 5) - app/panel/wyoming.py _session: sound to text and text to sound (step 7, step 11)"
 },
 {
 "lang": "en",
@@ -7093,7 +7093,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 90 days without use, then a connection ends - 10 connections per profile - 60 requests per minute per connection - 2 calls at once per connection - 12000 characters at most in an answer - 15 minutes a proposal waits for the yes"
+"text": "- 90 days without use, then a connection ends (step 3) - 10 connections per profile (step 3) - 60 requests per minute per connection (step 6, step 10) - 2 calls at once per connection (step 8) - 12000 characters at most in an answer (step 12) - 15 minutes a proposal waits for the yes (step 11)"
 },
 {
 "lang": "en",
@@ -7117,7 +7117,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mcpserver.py mcp_post: the endpoint: origin, key, limit, method - app/panel/mcpserver.py origin_ok: no other web page - app/panel/mcpserver.py check_conn: key, home network, kill switch, switch - app/panel/mcpserver.py is_local: really from the home network - app/panel/mcpserver.py find: connection for the key's hash - app/panel/mcpserver.py tool_ok: may the profile use this tool now - app/panel/mcpserver.py call: calls at once, journal line - app/panel/mcpserver.py run: hands out to speech, reading, asking, acting - app/panel/mcpserver.py ask: one turn with reading tools only - app/panel/mcpserver.py propose: proposal instead of action - app/panel/mcpserver.py decide: the profile's yes, then carry out - app/panel/mcpserver.py carry_out: carries out confirmed actions only"
+"text": "- app/panel/mcpserver.py mcp_post: the endpoint: origin, key, limit, method (step 1) - app/panel/mcpserver.py origin_ok: no other web page (step 2) - app/panel/mcpserver.py check_conn: key, home network, kill switch, switch (step 3) - app/panel/mcpserver.py is_local: really from the home network (step 4) - app/panel/mcpserver.py find: connection for the key's hash (step 3) - app/panel/mcpserver.py tool_ok: may the profile use this tool now (step 7) - app/panel/mcpserver.py call: calls at once, journal line (step 8) - app/panel/mcpserver.py run: hands out to speech, reading, asking, acting (step 9, step 10) - app/panel/mcpserver.py ask: one turn with reading tools only (step 10) - app/panel/mcpserver.py propose: proposal instead of action (step 11) - app/panel/mcpserver.py decide: the profile's yes, then carry out (step 11) - app/panel/mcpserver.py carry_out: carries out confirmed actions only (step 11)"
 },
 {
 "lang": "en",
@@ -7181,7 +7181,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 1 kill switch stage from which nothing from outside passes - 3 kill switch stage in which almost everything stops at home too - 1.5 s from here a read counts as slow - 60 s at most one line per route"
+"text": "- 1 kill switch stage from which nothing from outside passes (step 5, step 6) - 3 kill switch stage in which almost everything stops at home too (step 5, step 6) - 1.5 s from here a read counts as slow (step 2) - 60 s at most one line per route (step 2)"
 },
 {
 "lang": "en",
@@ -7205,7 +7205,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/panel.py slow_reads: times every request - app/panel/panel.py emergency: kill switch before any endpoint - app/panel/notaus.py mine_gate: my kill switch for device keys - app/panel/notaus.py gate: what passes at which stage - app/panel/notaus.py at_home: at home or from outside - app/panel/panel.py sessions: foreign pages, log, renew cookies - app/panel/guard.py same_origin: the origin rule - app/panel/panel.py _may_upload: big uploads only with a login - app/common.py BodyLimit: size limit before reading - app/panel/update.py update_lock: changes during an update - app/panel/panel.py protect: protective headers"
+"text": "- app/panel/panel.py slow_reads: times every request (step 2) - app/panel/panel.py emergency: kill switch before any endpoint (step 3, step 4) - app/panel/notaus.py mine_gate: my kill switch for device keys (step 3) - app/panel/notaus.py gate: what passes at which stage (step 4) - app/panel/notaus.py at_home: at home or from outside (step 5) - app/panel/panel.py sessions: foreign pages, log, renew cookies (step 7, step 12) - app/panel/guard.py same_origin: the origin rule (step 7) - app/panel/panel.py _may_upload: big uploads only with a login (step 8) - app/common.py BodyLimit: size limit before reading (step 9) - app/panel/update.py update_lock: changes during an update (step 10) - app/panel/panel.py protect: protective headers (step 12)"
 },
 {
 "lang": "en",
@@ -7285,7 +7285,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 5 wrong attempts per address in 15 minutes until the lock - 10 wrong attempts per name in 15 minutes until the lock - 60 s first lock, each further one twice as long up to 60 minutes - 30 wrong attempts per name in 24 hours at most - 120 chat requests per minute for a profile - 4 places at once for guests - 90 days at most for a sign-in in the browser"
+"text": "- 5 wrong attempts per address in 15 minutes until the lock (step 2, step 3) - 10 wrong attempts per name in 15 minutes until the lock (step 2, step 3) - 60 s first lock, each further one twice as long up to 60 minutes (step 2) - 30 wrong attempts per name in 24 hours at most (step 2, step 3) - 120 chat requests per minute for a profile (step 9) - 4 places at once for guests (step 10) - 90 days at most for a sign-in in the browser (step 5)"
 },
 {
 "lang": "en",
@@ -7309,7 +7309,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/guard.py check: lock before checking - app/panel/guard.py failed: count a wrong attempt, lock - app/panel/guard.py succeeded: clear the counter, remember the browser - app/panel/account.py profile_login: a profile's login - app/panel/account.py second_step: code or passkey - app/panel/core.py is_main_admin: admin by cookie or HTTP Basic - app/panel/profiles.py current: the profile behind a request - app/panel/profiles.py _cookie_user: check a cookie - app/panel/core.py assistant: profile, guest access or admin - app/panel/guard.py limit: rate limit per minute - app/panel/guard.py Slot: places for guests - app/panel/features.py reason: why a function is not available"
+"text": "- app/panel/guard.py check: lock before checking (step 2) - app/panel/guard.py failed: count a wrong attempt, lock (step 3) - app/panel/guard.py succeeded: clear the counter, remember the browser (step 5) - app/panel/account.py profile_login: a profile's login (step 3) - app/panel/account.py second_step: code or passkey (step 4) - app/panel/core.py is_main_admin: admin by cookie or HTTP Basic (step 6) - app/panel/profiles.py current: the profile behind a request (step 6) - app/panel/profiles.py _cookie_user: check a cookie (step 6) - app/panel/core.py assistant: profile, guest access or admin (step 8) - app/panel/guard.py limit: rate limit per minute (step 9) - app/panel/guard.py Slot: places for guests (step 10) - app/panel/features.py reason: why a function is not available (step 11)"
 },
 {
 "lang": "en",
@@ -7373,7 +7373,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20000 characters at most per message - 2 minutes a choice answers a question back - 15 minutes „Shall I remember that?“ waits - 4 buttons at most for a question back - 2 kill switch stage without actions"
+"text": "- 20000 characters at most per message (step 1) - 2 minutes a choice answers a question back (step 7) - 15 minutes „Shall I remember that?“ waits (step 7) - 4 buttons at most for a question back (step 7) - 2 kill switch stage without actions (step 8)"
 },
 {
 "lang": "en",
@@ -7397,7 +7397,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_turn.py prepare: the whole way - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker - app/panel/chat.py trim_history: trim the history - app/panel/chat.py left_out: leave out answers from outside text - app/panel/intent.py classify_cfg: the switch's fixed rules - app/panel/klaeren.py answer: answer to a question back - app/panel/features.py allowed: release per function - app/panel/notaus.py locked_tools: what the kill switch takes away - app/panel/intent.py narrow: narrow the tools - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch"
+"text": "- app/panel/chat_turn.py prepare: the whole way (step 1, step 13) - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker (step 3) - app/panel/chat.py trim_history: trim the history (step 2) - app/panel/chat.py left_out: leave out answers from outside text (step 2, step 4) - app/panel/intent.py classify_cfg: the switch's fixed rules (step 4) - app/panel/klaeren.py answer: answer to a question back (step 7) - app/panel/features.py allowed: release per function (step 10) - app/panel/notaus.py locked_tools: what the kill switch takes away (step 11) - app/panel/intent.py narrow: narrow the tools (step 12) - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch (step 8, step 11)"
 },
 {
 "lang": "en",
@@ -7477,7 +7477,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (78 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (79 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -7485,7 +7485,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 groups of the switch - 2 groups at most that still narrow - 80 characters at most for a follow-up - 4 seconds at most for the model's pick - 300 ms waiting with „Fast answer start“ - 80 % default threshold of the classification - 132 built-in test sentences - 183 everyday sentences for measuring - 20 versions for undo"
+"text": "- 20 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 132 built-in test sentences (step 4, step 5) - 183 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -7509,7 +7509,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/intent.py classify: groups by fixed words and priority - app/panel/intent.py Route: group, reason, hints; when clear - app/panel/intent.py hints_of: hint words - app/panel/intent.py follow_up: follow-up - app/panel/intent.py ask_model: the model's pick from a fixed list - app/panel/intent.py pick_in_time: wait for the pick or stop it - app/panel/intent.py narrow: narrow the tools - app/panel/intent.py lean: short list with „Lean“ - app/panel/intent.py forced: required first tool - app/panel/weiche.py count: statistics without content - app/panel/weiche.py trace: try a sentence - app/panel/intent_alltag.py measure: everyday score"
+"text": "- app/panel/intent.py classify: groups by fixed words and priority (step 1) - app/panel/intent.py Route: group, reason, hints; when clear (step 6) - app/panel/intent.py hints_of: hint words (step 7) - app/panel/intent.py follow_up: follow-up (step 8) - app/panel/intent.py ask_model: the model's pick from a fixed list (step 10) - app/panel/intent.py pick_in_time: wait for the pick or stop it (step 10) - app/panel/intent.py narrow: narrow the tools (step 11) - app/panel/intent.py lean: short list with „Lean“ (step 12) - app/panel/intent.py forced: required first tool (step 13) - app/panel/weiche.py count: statistics without content (step 14) - app/panel/weiche.py trace: try a sentence (step 14) - app/panel/intent_alltag.py measure: everyday score (step 14)"
 },
 {
 "lang": "en",
@@ -7573,7 +7573,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 tool calls per round, more do not run - 3 memory notes per answer - 2 same failures until a tool stops (or 3 of any kind) - 50 characters after which the first sentence goes at a comma"
+"text": "- 4 tool calls per round, more do not run (step 11) - 3 memory notes per answer (step 11) - 2 same failures until a tool stops (or 3 of any kind) (step 11) - 50 characters after which the first sentence goes at a comma (step 5)"
 },
 {
 "lang": "en",
@@ -7597,7 +7597,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ - app/panel/chat.py _answer: rounds, tools, checks, speech output as one stream - app/panel/chat.py split_sentences: cuts finished sentences off - app/panel/chat.py said_key: spots a sentence already said - app/panel/chat.py no_code: code blocks only shown, never spoken - app/panel/chat.py loop_count: counts failures for stop error loops - app/panel/answercheck.py known: every figure the model was given - app/panel/answercheck.py unsupported: figures in the sentence without proof - app/panel/answercheck.py fresh: after the calendar only this answer's figures - app/panel/taten.py check: deed claimed, no tool managed it - app/panel/taten.py sentence: the fixed honest sentence"
+"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ (step 1) - app/panel/chat.py _answer: rounds, tools, checks, speech output as one stream (step 4, step 5, step 11) - app/panel/chat.py split_sentences: cuts finished sentences off (step 5) - app/panel/chat.py said_key: spots a sentence already said (step 8) - app/panel/chat.py no_code: code blocks only shown, never spoken (step 8) - app/panel/chat.py loop_count: counts failures for stop error loops (step 11) - app/panel/answercheck.py known: every figure the model was given (step 6) - app/panel/answercheck.py unsupported: figures in the sentence without proof (step 6) - app/panel/answercheck.py fresh: after the calendar only this answer's figures (step 6) - app/panel/taten.py check: deed claimed, no tool managed it (step 7) - app/panel/taten.py sentence: the fixed honest sentence (step 12)"
 },
 {
 "lang": "en",
@@ -7661,7 +7661,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round - 3 memory notes per answer - 13 tools locked after outside text - 7 tools without internet with the kill switch - 79 tools with a readable name"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 79 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -7685,7 +7685,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_tools.py run: the checks and all built-in tools - app/panel/chat.py _answer: calls run_tool, wraps results, stops loops - app/panel/chat.py wrap_outside: outside text as a data block - app/panel/chat.py LOCKED_OUTSIDE: locked after outside text - app/panel/chat.py LOCKED_MAIL: locked after a mail - app/panel/chat.py READS_OUTSIDE: tools that bring outside text - app/panel/notaus.py locked_tools: what the kill switch locks per stage - app/panel/dienstwacht.py tool_down: fixed sentence when a service is gone - app/panel/chat.py tool_info: numbers for Logs → Requests - app/panel/werkzeuge.py label: readable name of a tool"
+"text": "- app/panel/chat_tools.py run: the checks and all built-in tools (step 2, step 7) - app/panel/chat.py _answer: calls run_tool, wraps results, stops loops (step 1) - app/panel/chat.py wrap_outside: outside text as a data block (step 9) - app/panel/chat.py LOCKED_OUTSIDE: locked after outside text (step 4) - app/panel/chat.py LOCKED_MAIL: locked after a mail (step 4) - app/panel/chat.py READS_OUTSIDE: tools that bring outside text (step 4, step 6) - app/panel/notaus.py locked_tools: what the kill switch locks per stage (step 3) - app/panel/dienstwacht.py tool_down: fixed sentence when a service is gone (step 5) - app/panel/chat.py tool_info: numbers for Logs → Requests (step 11) - app/panel/werkzeuge.py label: readable name of a tool (step 11)"
 },
 {
 "lang": "en",
@@ -7765,7 +7765,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking - -4.0 cross-encoder's lower limit - 0.4 weight of the context line - 8 s longest wait for the question vector - 8.5 GiB free memory for the vector model to start - 3 hits at most with „Look locally first“"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 3 hits at most with „Look locally first“ (step 5)"
 },
 {
 "lang": "en",
@@ -7789,7 +7789,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking - app/panel/documents.py search: full text and vectors, rank fusion - app/panel/documents.py _terms: search words from the question - app/panel/documents.py match_docs: documents with tags and kind - app/panel/docembed.py query: question vector or nothing - app/panel/docembed.py _call: one job for the model process - app/panel/nachsortieren.py rank: cross-encoder or the mix's order - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule - app/panel/wissen.py where: source of a passage for the model - app/panel/lokal.py look: the quick look before the answer - app/panel/gedaechtnis.py hint_lines: facts in three blocks"
+"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
 },
 {
 "lang": "en",
@@ -7853,7 +7853,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 MB largest answer - 30000–31099, 31443 closed own ports - 15 blocks in 10 minutes until kill switch stage 1 (if on) - 1 kill switch stage without internet"
+"text": "- 20 MB largest answer (step 11) - 30000–31099, 31443 closed own ports (step 3) - 15 blocks in 10 minutes until kill switch stage 1 (if on) (step 4) - 1 kill switch stage without internet (step 4)"
 },
 {
 "lang": "en",
@@ -7877,7 +7877,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason - app/panel/netguard.py resolve: resolve once, check every address, tell Live - app/panel/netguard.py client: the way out for tools - app/panel/netguard.py _Transport: password guard, size limit, result for My status - app/panel/netguard.py _Capped: cuts the answer, also unpacked - app/panel/netguard.py same_site: same site for login data - app/panel/netguard.py own_addresses: every address of this machine - app/panel/netguard.py IMAP4_SSL: mail over the checked address - app/panel/notaus.py watch: counts blocks for the automatic kill switch - app/panel/live.py outgoing: shows each decision on Live"
+"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
 },
 {
 "lang": "en",
@@ -7949,7 +7949,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 500 requests in the history at most - 2880 min so long a request stays - 5.0 s from here a request counts as slow - 3 failed probes in a row until a service counts as gone - 30 min at most one outage note per service - 7 daily and manual backups kept"
+"text": "- 500 requests in the history at most (step 9) - 2880 min so long a request stays (step 9) - 5.0 s from here a request counts as slow (step 6) - 3 failed probes in a row until a service counts as gone (step 5) - 30 min at most one outage note per service (step 5) - 7 daily and manual backups kept (step 9)"
 },
 {
 "lang": "en",
@@ -7973,7 +7973,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/tracelog.py start: a record when anything is on - app/panel/tracelog.py safe: only numbers and short fixed words - app/panel/tracelog.py Rec: steps, marks, state - app/panel/tracelog.py finish: journal line and request history - app/panel/tracelog.py shown: name only with consent - app/panel/live.py step: every step on Status → Live - app/panel/logfilter.py AREAS: the journal's area words - app/panel/logfilter.py parse: area, level, blacking out - app/panel/logfilter.py summary: counts and fixed hint - app/panel/dienstwacht.py round_once: one round of probes and notes - app/panel/backup.py create: pack one backup"
+"text": "- app/panel/tracelog.py start: a record when anything is on (step 1) - app/panel/tracelog.py safe: only numbers and short fixed words (step 3) - app/panel/tracelog.py Rec: steps, marks, state (step 3, step 6) - app/panel/tracelog.py finish: journal line and request history (step 8, step 9) - app/panel/tracelog.py shown: name only with consent (step 10) - app/panel/live.py step: every step on Status → Live (step 4) - app/panel/logfilter.py AREAS: the journal's area words (step 5) - app/panel/logfilter.py parse: area, level, blacking out (step 11) - app/panel/logfilter.py summary: counts and fixed hint (step 12) - app/panel/dienstwacht.py round_once: one round of probes and notes (step 5) - app/panel/backup.py create: pack one backup (step 9)"
 },
 {
 "lang": "en",
@@ -8037,7 +8037,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 90 s until the model's first line - 60 bis 600 s allowed time limit - 20 s background work still waits after speech - 3 cancels until background work gives up - 5 s longest wait for priority - 30 s a priority answer holds up at most this long"
+"text": "- 90 s until the model's first line (step 8) - 60 bis 600 s allowed time limit (step 2) - 20 s background work still waits after speech (step 1) - 3 cancels until background work gives up (step 1) - 5 s longest wait for priority (step 5) - 30 s a priority answer holds up at most this long (step 5)"
 },
 {
 "lang": "en",
@@ -8061,7 +8061,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors - app/panel/chat.py llm_model: model name from settings or /models - app/panel/chat.py sampling: top_p and presence_penalty - app/panel/chat.py first_within: the first line must come in time - app/panel/chat.py ContextFull: request longer than the context - app/panel/chat.py llm_error_code: error as a fixed code - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone - app/panel/chat.py prompt_sizes: size of the parts of a request - app/panel/stufe.py wait_turn: waits for an answer with priority - app/panel/vorrang.py mark: mark „speech is running“ - app/panel/vorrang.py run: background work gives way to speech"
+"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 2, step 4, step 6) - app/panel/chat.py llm_model: model name from settings or /models (step 3) - app/panel/chat.py sampling: top_p and presence_penalty (step 4) - app/panel/chat.py first_within: the first line must come in time (step 8) - app/panel/chat.py ContextFull: request longer than the context (step 7) - app/panel/chat.py llm_error_code: error as a fixed code (step 12) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 12) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 11) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 5) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1)"
 },
 {
 "lang": "en",
@@ -8125,7 +8125,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 50 MB largest recording at the panel - 8000–192000 allowed sample rate in Hz - 240 recordings per minute and profile - 3 guests at once - 0.75 speaker identification threshold at normal strictness - 120 minutes of audio Parakeet reads at most"
+"text": "- 50 MB largest recording at the panel (step 2) - 8000–192000 allowed sample rate in Hz (step 8) - 240 recordings per minute and profile (step 1) - 3 guests at once (step 1) - 0.75 speaker identification threshold at normal strictness (step 11) - 120 minutes of audio Parakeet reads at most (step 9)"
 },
 {
 "lang": "en",
@@ -8149,7 +8149,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit and places for guests - app/panel/admin.py _test_asr: the way in the panel: read, check alongside, pass on - app/panel/stufe.py asr_level: the profile's stage, not at a shared speaker - app/common.py BodyLimit: size and key before reading - app/common.py PrioGate: waiting by priority - app/common.py audio_rate_ok: sample rate from the file header - app/asr_proxy.py transcriptions: the proxy in front of the engine - app/asr_proxy.py engine_status: ready, loading, error or off - app/parakeet.py Recognizer: Parakeet on the CPU - app/panel/stille.py check: silence and fillers - app/panel/echo.py check: the Spark's own voice - app/panel/speakers.py identify: whose voice, only on a clear match"
+"text": "- app/panel/admin.py test_asr: rate limit and places for guests (step 1) - app/panel/admin.py _test_asr: the way in the panel: read, check alongside, pass on (step 2, step 4) - app/panel/stufe.py asr_level: the profile's stage, not at a shared speaker (step 4) - app/common.py BodyLimit: size and key before reading (step 5) - app/common.py PrioGate: waiting by priority (step 7) - app/common.py audio_rate_ok: sample rate from the file header (step 8) - app/asr_proxy.py transcriptions: the proxy in front of the engine (step 4) - app/asr_proxy.py engine_status: ready, loading, error or off (step 6) - app/parakeet.py Recognizer: Parakeet on the CPU (step 9) - app/panel/stille.py check: silence and fillers (step 10) - app/panel/echo.py check: the Spark's own voice (step 10) - app/panel/speakers.py identify: whose voice, only on a clear match (step 11)"
 },
 {
 "lang": "en",
@@ -8213,7 +8213,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20000 characters per request at most - „nur schriftlich sichtbar“ the voice says instead of a secret - 4 ways to read numbers"
+"text": "- 20000 characters per request at most (step 3) - „nur schriftlich sichtbar“ the voice says instead of a secret (step 5) - 4 ways to read numbers (step 7)"
 },
 {
 "lang": "en",
@@ -8237,7 +8237,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy - app/tts_proxy.py check_reference: reference only embedded - app/tts_proxy.py engine_status: ready, loading, error or off - app/tts_proxy.py apply_clone: cloned voice from voices/ - app/textnorm.py speech_markdown: markdown signs off - app/textnorm.py hide_secrets: never speak secrets - app/textnorm.py clean_text: emojis, laughter, links, code - app/textnorm.py guess_language: guess German or English - app/textnorm.py speak_numbers: write out numbers - app/tempo.py Stretcher: tempo while streaming - app/common.py PrioGate: waiting by priority"
+"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy (step 1) - app/tts_proxy.py check_reference: reference only embedded (step 8) - app/tts_proxy.py engine_status: ready, loading, error or off (step 4) - app/tts_proxy.py apply_clone: cloned voice from voices/ (step 8) - app/textnorm.py speech_markdown: markdown signs off (step 5) - app/textnorm.py hide_secrets: never speak secrets (step 5) - app/textnorm.py clean_text: emojis, laughter, links, code (step 6) - app/textnorm.py guess_language: guess German or English (step 7) - app/textnorm.py speak_numbers: write out numbers (step 7) - app/tempo.py Stretcher: tempo while streaming (step 9) - app/common.py PrioGate: waiting by priority (step 10)"
 },
 {
 "lang": "en",
@@ -8301,7 +8301,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 MB largest answer through the guard - 2 MB largest answer of an MCP service - 7 tools that rest from kill switch stage 1 - 5 s longest probe of the service watch"
+"text": "- 20 MB largest answer through the guard (step 10) - 2 MB largest answer of an MCP service (step 10) - 7 tools that rest from kill switch stage 1 (step 3) - 5 s longest probe of the service watch (step 5)"
 },
 {
 "lang": "en",
@@ -8325,7 +8325,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_tools.py run: offered, kill switch, outside text, service gone - app/panel/notaus.py locked_tools: which tools the kill switch locks - app/panel/notaus.py INTERNET_TOOLS: tools that go to the internet by themselves - app/panel/dienstwacht.py tool_down: fixed sentence when the service is gone - app/panel/netguard.py DIRECT_OK: who may connect directly and why - app/panel/netguard.py client: the way through the guard - app/panel/netguard.py IMAP4_SSL: mail to the checked address - app/panel/homeassistant.py _client: Home Assistant at level home - app/panel/mcp.py _client: MCP server at level user - app/panel/chat.py web_search: SearXNG directly"
+"text": "- app/panel/chat_tools.py run: offered, kill switch, outside text, service gone (step 1) - app/panel/notaus.py locked_tools: which tools the kill switch locks (step 3) - app/panel/notaus.py INTERNET_TOOLS: tools that go to the internet by themselves (step 3) - app/panel/dienstwacht.py tool_down: fixed sentence when the service is gone (step 5) - app/panel/netguard.py DIRECT_OK: who may connect directly and why (step 6) - app/panel/netguard.py client: the way through the guard (step 8, step 9, step 10) - app/panel/netguard.py IMAP4_SSL: mail to the checked address (step 9) - app/panel/homeassistant.py _client: Home Assistant at level home (step 7, step 9) - app/panel/mcp.py _client: MCP server at level user (step 7, step 9, step 10) - app/panel/chat.py web_search: SearXNG directly (step 6, step 9)"
 },
 {
 "lang": "en",
@@ -8381,7 +8381,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 28 files in every backup - 43 files and folders that stay out with a reason - 8 MB largest file when restoring - 12 characters the move password has at least"
+"text": "- 28 files in every backup (step 7) - 43 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -8405,7 +8405,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/common.py write_json: write atomically, keep the rights - app/panel/vault.py _key: get secret.key or make it once - app/panel/vault.py seal: seal - app/panel/vault.py open_: open, empty with another key - app/panel/backup.py STATE_FILES: what goes into the backup - app/panel/backup.py STATE_LOCAL: what stays out with a reason - app/panel/backup.py _seal_keys: seal secret.key for the move - app/panel/backup.py _check_state: check the files of the backup - app/panel/backup.py _swap: put in place with a way back - app/panel/backup.py _forget_cached: read the keys again"
+"text": "- app/common.py write_json: write atomically, keep the rights (step 5) - app/panel/vault.py _key: get secret.key or make it once (step 3) - app/panel/vault.py seal: seal (step 4) - app/panel/vault.py open_: open, empty with another key (step 6) - app/panel/backup.py STATE_FILES: what goes into the backup (step 7) - app/panel/backup.py STATE_LOCAL: what stays out with a reason (step 7) - app/panel/backup.py _seal_keys: seal secret.key for the move (step 8) - app/panel/backup.py _check_state: check the files of the backup (step 9) - app/panel/backup.py _swap: put in place with a way back (step 10) - app/panel/backup.py _forget_cached: read the keys again (step 11)"
 },
 {
 "lang": "en",
@@ -8461,7 +8461,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 2 targets per profile at most - 30 minutes between two runs - 2048 MB at most per run - 30 days in the target's bin - 5000 files per copy at most"
+"text": "- 2 targets per profile at most (step 6) - 30 minutes between two runs (step 7) - 2048 MB at most per run (step 7) - 30 days in the target's bin (step 9) - 5000 files per copy at most (step 7)"
 },
 {
 "lang": "en",
@@ -8485,7 +8485,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/profiles.py current: the profile from cookie or device key - app/panel/profiles.py _path: path in the profile's folder - app/panel/profiles.py _write: write for the service only - app/panel/profiles.py delete_user: delete profile and folder - app/panel/vault.py seal: seal - app/panel/speakers.py _store: voiceprint sealed - app/panel/speicher.py AREAS: what may go to the own storage - app/panel/speicher.py _key: the profile's storage key, sealed - app/panel/speicher.py local_files: only the list, no links - app/panel/speicher.py seal_file: AES-256-GCM in pieces - app/panel/speicher.py copy_once: one run of the copy - app/panel/backup.py _add_dir: users/ into the backup"
+"text": "- app/panel/profiles.py current: the profile from cookie or device key (step 1) - app/panel/profiles.py _path: path in the profile's folder (step 2) - app/panel/profiles.py _write: write for the service only (step 4) - app/panel/profiles.py delete_user: delete profile and folder (step 11) - app/panel/vault.py seal: seal (step 3) - app/panel/speakers.py _store: voiceprint sealed (step 3, step 4) - app/panel/speicher.py AREAS: what may go to the own storage (step 5) - app/panel/speicher.py _key: the profile's storage key, sealed (step 8) - app/panel/speicher.py local_files: only the list, no links (step 7) - app/panel/speicher.py seal_file: AES-256-GCM in pieces (step 8) - app/panel/speicher.py copy_once: one run of the copy (step 7, step 8) - app/panel/backup.py _add_dir: users/ into the backup (step 10)"
 },
 {
 "lang": "en",
@@ -8541,7 +8541,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 7 daily and manual backups kept - 5 event backups kept - 2048 MB largest uploaded backup - 8192 MB unpacked at most - 12–200 characters of the move password"
+"text": "- 7 daily and manual backups kept (step 10) - 5 event backups kept (step 10) - 2048 MB largest uploaded backup (step 12) - 8192 MB unpacked at most (step 12) - 12–200 characters of the move password (step 9)"
 },
 {
 "lang": "en",
@@ -8565,7 +8565,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py add_clone_voice: check, convert, store a voice - app/panel/admin.py import_clone_voices: voices from a ZIP - app/tts_proxy.py apply_clone: speak with the voice - app/panel/panel.py stability: daily backup in a pause - app/panel/backup.py create: pack a backup - app/panel/backup.py _add_dir: folders without login key - app/panel/backup.py _prune: remove old ones - app/panel/system.py backup_ticket: one-time ticket to download - app/panel/backup.py _check: only known paths, size, space - app/panel/backup.py restore: check, back up, swap"
+"text": "- app/panel/admin.py add_clone_voice: check, convert, store a voice (step 1, step 2, step 4) - app/panel/admin.py import_clone_voices: voices from a ZIP (step 6) - app/tts_proxy.py apply_clone: speak with the voice (step 5) - app/panel/panel.py stability: daily backup in a pause (step 7) - app/panel/backup.py create: pack a backup (step 8) - app/panel/backup.py _add_dir: folders without login key (step 8) - app/panel/backup.py _prune: remove old ones (step 10) - app/panel/system.py backup_ticket: one-time ticket to download (step 11) - app/panel/backup.py _check: only known paths, size, space (step 12) - app/panel/backup.py restore: check, back up, swap (step 12)"
 },
 {
 "lang": "en",
@@ -8613,7 +8613,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 28 areas of the diagnosis - 20000 lines read per call at most - 2 MB journal text per call at most - 1000 lines shown at most - 240 minutes of „detail“ at most"
+"text": "- 28 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -8637,7 +8637,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/logfilter.py AREAS: the fixed areas - app/panel/logfilter.py logfilter: the call: fixed lists only - app/panel/logfilter.py read_journal: namespace first, limits - app/panel/logfilter.py redact: black out secrets - app/panel/logfilter.py parse: area and level - app/panel/logfilter.py summary: counts, history, hint - app/panel/logfilter.py detail: detail, numbers only - app/common.py JOURNAL_NAMESPACE: the own part - app/common.py journal: last lines of a service - app/common.py quiet_access_log: status polls quiet - app/panel/profiles.py log_name: profile by name only with consent"
+"text": "- app/panel/logfilter.py AREAS: the fixed areas (step 2) - app/panel/logfilter.py logfilter: the call: fixed lists only (step 6) - app/panel/logfilter.py read_journal: namespace first, limits (step 8) - app/panel/logfilter.py redact: black out secrets (step 9) - app/panel/logfilter.py parse: area and level (step 10) - app/panel/logfilter.py summary: counts, history, hint (step 11) - app/panel/logfilter.py detail: detail, numbers only (step 12) - app/common.py JOURNAL_NAMESPACE: the own part (step 5) - app/common.py journal: last lines of a service (step 1) - app/common.py quiet_access_log: status polls quiet (step 4) - app/panel/profiles.py log_name: profile by name only with consent (step 2)"
 },
 {
 "lang": "en",

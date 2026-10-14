@@ -248,6 +248,26 @@ class Knoten(unittest.TestCase):
     def test_every_box_has_a_page(self):
         self.assertEqual(set(technik_knoten.SEITEN_DATEN), set(technik.KNOTEN), "every box of the picture gets a page (technik_knoten.SEITEN_DATEN)")
 
+    def test_every_line_knows_its_step(self):
+        # Dominik 2026-10-14 (B): a click on a rule, number or code line marks its bubble, so every one has a step; the
+        # page's "bezug" names it where no step text does, and it holds nothing stale
+        for nid, p in technik_knoten.SEITEN_DATEN.items():
+            ids = {s["id"] for s in p["ablauf"]}
+            refs = {z[2] for z in p.get("zahlen", []) if len(z) > 2 and z[2]} | {r for r, _ in p.get("code", [])}
+            cells = {technik_knoten.zelle(row[0]) for row in p.get("regeln", [])[1:]}
+            for r in sorted(refs):
+                self.assertTrue(technik_knoten.schritte(p, r), f"{nid}: {r} needs a step (\"bezug\" in technik_seiten.py)")
+            for k, v in p.get("bezug", {}).items():
+                self.assertTrue(v and set(v) <= ids, f"{nid}: bezug {k} -> real steps")
+                if k == "regeln":
+                    self.assertTrue(cells, f"{nid}: bezug regeln without a rules table")
+                elif k.startswith("regel:"):
+                    self.assertIn(k[6:], cells, f"{nid}: bezug {k} names a rules row")
+                else:
+                    self.assertIn(k, refs, f"{nid}: bezug {k} names a number or code line of the page")
+            if cells:
+                self.assertIn("regeln", p.get("bezug", {}), f"{nid}: the rules table needs its steps (bezug regeln)")
+
     def test_pages_are_complete(self):
         for nid, p in technik_knoten.SEITEN_DATEN.items():
             ids = [s["id"] for s in p["ablauf"]]
@@ -434,6 +454,25 @@ class Page(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("!!document.querySelector('#tkview .kn-svg')&&!document.querySelector('#tkview #kn-code')"))
                 await pg.keyboard.press("Escape")
                 self.assertTrue(await pg.evaluate("!TK.full&&!!document.querySelector('#tkview #kn-code')"))
+                # a bubble marks its text (wide: framed in the list; phone: a card under the bubble), and back
+                await pg.click("#tkview [data-tkplay='-1']")
+                await pg.click("#tkview .kn-svg g.kn-st[data-kns='s6']")
+                self.assertTrue(await pg.evaluate("TK.mk==='s6'&&document.querySelector(\"#tkview .kn-steps li[data-kns='s6']\").classList.contains('mk')"
+                                                  "&&document.querySelector(\"#tkview .kn-st[data-kns='s5']\").classList.contains('mdim')"))
+                pop = await pg.evaluate("!!document.querySelector('#tkview .kn-pop')===!knWide()")
+                self.assertTrue(pop, f"{w}: card under the bubble only when the list is not beside the picture")
+                self.assertTrue(await pg.evaluate(wide), f"{w}: marked")
+                await pg.click("#tkview .kn-svg g.kn-st[data-kns='s6']")
+                self.assertTrue(await pg.evaluate("TK.mk===null&&!document.querySelector('#tkview .mk,#tkview .kn-pop')"))
+                await pg.click("#tkview .kn-steps li[data-kns='s3']")
+                self.assertTrue(await pg.evaluate("TK.mk==='s3'&&document.querySelector(\"#tkview .kn-svg g.kn-st[data-kns='s3']\").classList.contains('mk')"))
+                first = technik_knoten.seite("waechter")["code"][0]["steps"][0]
+                await pg.click("#tkview [data-knc='0']")
+                self.assertEqual(await pg.evaluate("TK.mk"), first, f"{w}: a code line marks its bubble")
+                self.assertTrue(await pg.evaluate("document.querySelector(\"#tkview [data-knc='0']\").classList.contains('mk')"))
+                self.assertTrue(await pg.evaluate("!!document.querySelector(\"#tkview .kn-steps li.mk .kn-rel [data-knto='c0']\")"))
+                await pg.keyboard.press("Escape")
+                self.assertTrue(await pg.evaluate("TK.mk===null&&!TK.full"))
                 if 380 < w < 400:   # every page fits a phone
                     for nid in technik_knoten.SEITEN_DATEN:
                         await pg.evaluate(f"knOpen('{nid}')")
@@ -443,6 +482,14 @@ class Page(unittest.TestCase):
                     await self._until(pg, "TK.page==='waechter'&&!!document.querySelector('#tkview .kn-head')")
                 await pg.click("#tkview .kn-head [data-tkv=bild]")
                 self.assertEqual(await pg.evaluate("TK.view+':'+TK.sel"), "bild:waechter")
+                # in the data flow a box picks its step of the request's way (chip and box blink); a second click opens it
+                await pg.click("#tktabs [data-tkv=fluss]")
+                await pg.click("#tkview .tk-steps [data-tkstep='0']")
+                n = await pg.evaluate("TK.d.nodes.map(n=>n.id).find(id=>!TK.d.steps[0].nodes.includes(id)&&TK.d.steps.some(s=>s.nodes.includes(id)))")
+                await pg.click(f"#tkview .tk-node[data-tkn='{n}']")
+                self.assertTrue(await pg.evaluate(f"TK.view==='fluss'&&TK.d.steps[TK.step].nodes.includes('{n}')"), f"{w}: box → its step")
+                await pg.click(f"#tkview .tk-node[data-tkn='{n}']")
+                self.assertEqual(await pg.evaluate("TK.view+':'+TK.sel"), f"bild:{n}")
                 await pg.click("#tktabs [data-tkv=module]")
                 self.assertIn("technik.py", await pg.text_content("#tkview"))
                 self.assertTrue(await pg.evaluate(wide), f"{w}: Bausteine")

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.540** Architecture pages: clicking a bubble shows its text at once, rules, numbers and code lead to their step
 - **V01.0.539** The switch now has its page under Status → Architecture too: groups, hint words, follow-ups, narrowing
 - **V01.0.538** Hints "newly released" only when there is something to set up, gone afterwards; "Set up" jumps right to the setting
 - **V01.0.537** Outlook classic starts again with the Spark add-in
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.533** Android app 1.3.0: update right from the app, checked and from your own Spark; Device updates shows the app version per phone
 - **V01.0.532** Every box under Status → Architecture explains exactly how it works, with a step-by-step picture and examples
 - **V01.0.531** Blocked, but own data deletable: Me shows a card with "Delete data" for blocked functions
-- **V01.0.530** Smarter switch: hint words keep fitting tools ready, follow-up questions keep their group, an everyday score measures honestly; its settings now live on one page
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

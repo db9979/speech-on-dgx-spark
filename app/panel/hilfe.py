@@ -668,6 +668,7 @@ def build_docs(root=REPO_DOCS):
                     if not para:
                         continue
                 plain = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", para)
+                plain = re.sub(r'<a id="[\w-]+"></a>', "", plain)   # step anchors of the node pages (technik_knoten)
                 bold = re.match(r"\*\*(.{2,80}?)[:.]?\*\*", plain)
                 plain = re.sub(r"\s+", " ", plain.replace("**", "").replace("`", "")).strip()
                 if len(plain) < 60:

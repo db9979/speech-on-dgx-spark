@@ -2,7 +2,7 @@
 // version. Four views: the picture (click a box: what it does, its files and modules, where it writes), the way of
 // one request in 8 steps (the way lights up), every storage place (filters, search, list with detail) and the
 // building blocks. Admin only; names of modules and paths, never contents. Only text from the data, always esc().
-const TK={d:null,lang:'',view:'bild',sel:'antwort',step:0,filt:'alle',q:'',row:null,full:false,zoom:1,page:null,pd:{},play:null};
+const TK={d:null,lang:'',view:'bild',sel:'antwort',step:0,filt:'alle',q:'',row:null,full:false,zoom:1,page:null,pd:{},play:null,mk:null,blink:false};
 const TKW=156,TKH=52,TKZ=[1,1.5,2,3];
 async function loadTechnik(){const lang=L==='en'?'en':'de';
   if(!TK.d||TK.lang!==lang){TK.d=await (await api('/api/admin/technik'+(lang==='en'?'?lang=en':''))).json();TK.lang=lang}
@@ -102,7 +102,7 @@ function knSvg(p){let y=14,o='',arrows='';const lay=[];
   lay.forEach((l,k)=>{const{s,h,tl,sl}=l,y0=l.y,cx=KNX+KNB/2,rx=s.art==='start'||s.art==='ende'?24:8;
     const shape=s.art==='frage'?`<polygon points="${KNX+16},${y0} ${KNX+KNB-16},${y0} ${KNX+KNB},${y0+h/2} ${KNX+KNB-16},${y0+h} ${KNX+16},${y0+h} ${KNX},${y0+h/2}"/>`:`<rect x="${KNX}" y="${y0}" width="${KNB}" height="${h}" rx="${rx}"/>`;
     let ty=y0+(h-(tl.length*17+sl.length*15))/2+13;
-    o+=`<g class="kn-st kn-${s.art}" data-kns="${esc(s.id)}">${shape}`+tl.map(x=>{const r=`<text x="${cx}" y="${ty}" text-anchor="middle">${esc(x)}</text>`;ty+=17;return r}).join('')+
+    o+=`<g class="kn-st kn-${s.art}" data-kns="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.n+'. '+s.name)}">${shape}`+tl.map(x=>{const r=`<text x="${cx}" y="${ty}" text-anchor="middle">${esc(x)}</text>`;ty+=17;return r}).join('')+
       sl.map(x=>{const r=`<text class="kn-sub" x="${cx}" y="${ty}" text-anchor="middle">${esc(x)}</text>`;ty+=15;return r}).join('')+
       `<circle class="kn-num" cx="${KNX+6}" cy="${y0+4}" r="11"/><text class="kn-numt" x="${KNX+6}" y="${y0+8}" text-anchor="middle">${s.n}</text></g>`;
     const nx=lay[k+1];if(nx){arrows+=`<path class="kn-ar" d="M${cx},${y0+h}V${nx.y-2}"/>`+(s.side&&s.side.main?`<text class="kn-lab" x="${cx+8}" y="${y0+h+19}">${esc(s.side.main)}</text>`:'')}
@@ -122,39 +122,81 @@ function knToday(p){if(!p.today_keys.length)return'';const d=p.today||{};
 function knFlow(p){const pl=TK.play;
   return`<div class="kn-ex">${p.examples.length?`<span class="mut kn-exl">${esc(t('Durchspielen:','Play through:'))}</span>`+p.examples.map((e,k)=>`<button class="ld-chip${pl&&pl.k===k?' on':''}" type="button" data-tkplay="${k}">▶ ${esc(e.name)}</button>`).join(''):''}`+
     (pl?`<button class="ld-chip" type="button" data-tkplay="-1">■ ${esc(t('Aus','Off'))}</button>`:'')+`</div><div class="kn-cap" id="kncap" aria-live="polite"></div>`+
-    `<div class="kn-flow"><div class="tk-pic kn-pic">${knSvg(p)}</div><ol class="kn-steps">${p.steps.map(s=>`<li data-kns="${esc(s.id)}"><b>${esc(s.name)}${/[.?!]$/.test(s.name)?'':'.'}</b> ${esc(s.text)}</li>`).join('')}</ol></div>`}
+    `<div class="kn-flow"><div class="tk-pic kn-pic">${knSvg(p)}</div><ol class="kn-steps">${p.steps.map(s=>`<li data-kns="${esc(s.id)}" tabindex="0"><b>${esc(s.name)}${/[.?!]$/.test(s.name)?'':'.'}</b> ${esc(s.text)}</li>`).join('')}</ol></div>`}
 function knPage(p){const sec=(id,title,body)=>body?`<div class="kn-sec" id="kn-${id}"><h4>${esc(title)}</h4>${body}</div>`:'';
   const rules=p.rules.length?`<div class="kn-tw"><table class="kn-tab"><thead><tr>${p.rules[0].map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`+
-    p.rules.slice(1).map(r=>`<tr>${r.map((c,j)=>`<td class="${c==='✓'?'ok':/^✕/.test(c)?'bad':''}">${j===0?`<b>${esc(c)}</b>`:esc(c)}</td>`).join('')}</tr>`).join('')+`</tbody></table></div>`:'';
+    p.rules.slice(1).map((r,i)=>`<tr data-knr="${i}">${r.map((c,j)=>`<td class="${c==='✓'?'ok':/^✕/.test(c)?'bad':''}">${j===0?`<b>${esc(c)}</b>`:esc(c)}</td>`).join('')}</tr>`).join('')+`</tbody></table></div>`:'';
   const nb=p.neighbours.map(id=>{const n=tkNode(id);if(!n)return'';return n.page?`<button class="ld-chip" type="button" data-tkpage="${esc(id)}">${esc(n.name)}</button>`:`<button class="ld-chip" type="button" data-tkgo="bild" data-tknode="${esc(id)}">${esc(n.name)}</button>`}).join('');
   return knHead(p)+knToday(p)+sec('kurz',t('Was er macht','What it does'),`<p>${esc(p.kurz)}</p><p><b>${esc(t('Warum:','Why:'))}</b> ${esc(p.warum)}</p>`)+
     `<div class="kn-sec" id="kn-ablauf"><div class="kn-sh"><h4>${esc(t('Ablauf Schritt für Schritt','Step by step'))}</h4><button class="b tk-fsbtn" type="button" data-tkfull>⛶ ${esc(t('Vollbild','Full screen'))}</button></div>${knFlow(p)}</div>`+
     sec('regeln',t('Regeln','Rules'),rules)+p.more.map((m,k)=>sec('mehr'+k,m.title,`<ul>${m.lines.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`)).join('')+
-    `<div class="kn-two">`+sec('zahlen',t('Zahlen aus dem Code','Numbers from the code'),p.numbers.length?`<div class="kn-nums">${p.numbers.map(z=>`<div><b>${esc(z.value)}</b><span>${esc(z.text)}</span></div>`).join('')}</div>`:'')+
+    `<div class="kn-two">`+sec('zahlen',t('Zahlen aus dem Code','Numbers from the code'),p.numbers.length?`<div class="kn-nums">${p.numbers.map((z,i)=>`<div data-knz="${i}"${z.steps.length?' tabindex="0"':''}><b>${esc(z.value)}</b><span>${esc(z.text)}</span></div>`).join('')}</div>`:'')+
     sec('einstellen',t('Einstellen und sehen','Set and see'),(p.settings.length||p.see.length)?`<ul>${p.settings.concat(p.see).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'')+`</div>`+
-    sec('code',t('Code','Code'),`<div class="kn-code">${p.code.map(c=>`<div><code>${esc(c.ref)}</code><span>${esc(c.text)}</span></div>`).join('')}</div>`+
+    sec('code',t('Code','Code'),`<div class="kn-code">${p.code.map((c,i)=>`<div data-knc="${i}"${c.steps.length?' tabindex="0"':''}><code>${esc(c.ref)}</code><span>${esc(c.text)}</span></div>`).join('')}</div>`+
       `<p class="mut kn-small">${p.tests.length?esc(t('Selbsttests: ','Self-tests: ')+p.tests.join(', '))+' · ':''}${[...new Set(p.code.map(c=>c.file))].map(f=>`<a href="${esc(p.github+f)}" target="_blank" rel="noopener noreferrer">${esc(f)}</a>`).join(' · ')}</p>`)+
     sec('nachbarn',t('Verbunden mit','Connected to'),nb?`<div class="ld-chips">${nb}</div>`:'')}
 async function knOpen(id){const lang=L==='en'?'en':'de',key=id+':'+lang;knStop();
   const fail=()=>{const d=document.querySelector('#tkview .tk-det');if(d)d.insertAdjacentHTML('beforeend',`<p class="mut">${esc(t('Die Seite kommt gerade nicht, bitte gleich noch einmal.','The page does not come right now, please try again shortly.'))}</p>`)};
   try{const r=await api('/api/admin/technik/knoten/'+encodeURIComponent(id)+(lang==='en'?'?lang=en':''));if(!r.ok){fail();return}TK.pd[key]=await r.json()}catch{fail();return}
-  TK.page=id;TK.view='knoten';tkRender();const b=$('tkbox');if(b&&b.getBoundingClientRect().top<0)b.scrollIntoView({block:'start'})}
+  if(TK.page!==id)TK.mk=null;TK.page=id;TK.view='knoten';tkRender();const b=$('tkbox');if(b&&b.getBoundingClientRect().top<0)b.scrollIntoView({block:'start'})}
 function knStop(){if(TK.play&&TK.play.timer)clearInterval(TK.play.timer);TK.play=null}
 // one example: every 1.1 s the next step lights (its exit too); the caption says which step and, at the end, the result
 function knShow(){const p=TK.pd[TK.page+':'+(L==='en'?'en':'de')],pl=TK.play,box=$('tkview');if(!p||!box)return;
   const ex=pl&&p.examples[pl.k],seen=ex?ex.path.slice(0,pl.i+1):[],cur=seen[seen.length-1];
   box.querySelectorAll('[data-kns]').forEach(e=>{const id=e.dataset.kns;e.classList.toggle('lit',seen.includes(id));e.classList.toggle('cur',id===cur);e.classList.toggle('dim',!!ex&&!seen.includes(id))});
+  knMarkApply(false);
+  if(ex&&knWide()){const li=box.querySelector('.kn-steps li.cur');if(li)knInView(li)}
   const cap=$('kncap');if(!cap)return;if(!ex){cap.textContent='';return}
   const st=p.steps.find(s=>s.id===cur.replace('!','')),end=pl.i>=ex.path.length-1;
   cap.innerHTML=`<b>${esc(ex.name)}</b> · `+(end?esc(ex.result):esc(st?(cur.endsWith('!')?st.side.label+': '+(st.side.text||t('weiter bei ','go on at ')+st.side.n):st.n+'. '+st.name):''))}
-function knPlay(k){knStop();if(k<0){tkRender();return}TK.play={k,i:0,timer:null};tkRender();knShow();
+function knPlay(k){knStop();if(k<0){tkRender();return}TK.mk=null;TK.play={k,i:0,timer:null};tkRender();knShow();
   TK.play.timer=setInterval(()=>{const p=TK.pd[TK.page+':'+(L==='en'?'en':'de')],pl=TK.play;if(!pl||!p||TK.view!=='knoten'||!$('kncap')){knStop();return}
     const ex=p.examples[pl.k];if(pl.i>=ex.path.length-1){clearInterval(pl.timer);pl.timer=null;return}pl.i++;knShow()},1100)}
+// a click on a bubble marks it and its text (frame, blinks twice, the rest fades); a click on the text, a rule, a number
+// or a code line marks its bubble. Wide: the list beside the picture scrolls to the text; narrow (phone): the text opens
+// as a card under the bubble. With a mouse, pointing at one lights the other (Dominik 2026-10-14: 1+3, phone 2, A-D).
+const knPd=()=>TK.pd[TK.page+':'+(L==='en'?'en':'de')];
+const knBase=e=>e.dataset.kns.replace('!','');
+function knWide(){const f=document.querySelector('#tkview .kn-flow');return!!f&&getComputedStyle(f).display==='grid'}
+const knSmooth=()=>matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';
+function knInView(el){const r=el.getBoundingClientRect();if(r.top<0||r.bottom>innerHeight)el.scrollIntoView({block:'nearest',behavior:knSmooth()})}
+function knBlink(els){els.forEach(e=>{e.classList.remove('blink');void e.getBoundingClientRect();e.classList.add('blink')})}
+// what belongs to a step: its rules rows, numbers and code lines (from technik_knoten.schritte)
+function knRel(p,id){const out=[];p.rules.slice(1).forEach((r,i)=>{if((p.rule_steps[i]||[]).includes(id))out.push(['r',i,t('Regel','Rule'),r[0]])});
+  p.numbers.forEach((z,i)=>{if(z.steps.includes(id))out.push(['z',i,t('Zahl','Number'),z.value+' '+z.text])});
+  p.code.forEach((c,i)=>{if(c.steps.includes(id))out.push(['c',i,t('Code','Code'),c.ref])});return out}
+function knRelHtml(p,id){const r=knRel(p,id);if(!r.length)return'';
+  return`<div class="kn-rel"><span class="mut">${esc(t('Passt dazu:','Belongs to it:'))}</span>${r.map(([k,i,l,x])=>`<button class="ld-chip" type="button" data-knto="${k}${i}"><b>${esc(l)}</b> ${esc(x.length>48?x.slice(0,47)+'…':x)}</button>`).join('')}</div>`}
+function knMarkApply(blink,from){const box=$('tkview'),p=knPd();if(!box||!p)return;const id=TK.mk;
+  box.querySelectorAll('.kn-rel,.kn-pop').forEach(e=>e.remove());
+  box.querySelectorAll('[data-kns]').forEach(e=>{const on=!!id&&knBase(e)===id;e.classList.toggle('mk',on);e.classList.toggle('mdim',!!id&&!on)});
+  const items=[['knr',i=>p.rule_steps[i]||[]],['knz',i=>p.numbers[i].steps],['knc',i=>p.code[i].steps]];
+  for(const[a,f]of items)box.querySelectorAll(`[data-${a}]`).forEach(e=>e.classList.toggle('mk',!!id&&f(+e.dataset[a]).includes(id)));
+  if(!id)return;const st=p.steps.find(s=>s.id===id);if(!st)return;
+  const li=box.querySelector(`.kn-steps li[data-kns="${id}"]`),g=box.querySelector(`.kn-svg g.kn-st[data-kns="${id}"]`);
+  if(li)li.insertAdjacentHTML('beforeend',knRelHtml(p,id));
+  if(!knWide()&&from==='bild'&&g){const pic=g.closest('.kn-pic'),r=g.getBoundingClientRect(),q=pic.getBoundingClientRect();
+    pic.insertAdjacentHTML('beforeend',`<div class="kn-pop" style="top:${Math.round(r.bottom-q.top+pic.scrollTop+6)}px"><button class="b kn-popx" type="button" data-knmk="" aria-label="${esc(t('Schließen','Close'))}">✕</button><b>${esc(st.n+'. '+st.name)}</b> ${esc(st.text)}${knRelHtml(p,id)}</div>`)}
+  if(!blink)return;const pop=box.querySelector('.kn-pop');knBlink([g,pop||li].filter(Boolean));
+  if(from==='bild'){if(pop)knInView(pop);else if(li)knInView(li)}else if(g)knInView(g)}
+function knMark(id,from){if(TK.play){knStop();tkRender()}TK.mk=id&&TK.mk===id&&from!=='item'?null:id||null;knMarkApply(true,from)}
+function knItem(k,i){const p=knPd();if(!p)return;const st=k==='r'?p.rule_steps[i]||[]:k==='z'?p.numbers[i].steps:p.code[i].steps;if(!st.length)return;knMark(st[0],'item')}
+function knGoItem(v){const k=v[0],i=+v.slice(1),e=document.querySelector(`#tkview [data-kn${k}="${i}"]`);if(!e)return;knInView(e);knBlink([e])}
+// with a mouse: pointing at a bubble lights its text and the other way round
+function knHover(e,on){if(TK.view!=='knoten'||!matchMedia('(hover: hover)').matches)return;const x=e.target.closest&&e.target.closest('#tkview [data-kns]');if(!x)return;
+  const id=knBase(x);document.querySelectorAll('#tkview [data-kns]').forEach(y=>{if(knBase(y)===id)y.classList.toggle('hv',on)})}
 // on a phone the picture scrolls sideways: bring the chosen box (or the first lit one) into view
 function tkFocusPic(){const pic=document.querySelector('#tkview .tk-pic');if(!pic||pic.scrollWidth<=pic.clientWidth)return;
   const n=pic.querySelector('.tk-node.sel,.tk-node.lit');if(!n)return;const r=n.getBoundingClientRect(),p=pic.getBoundingClientRect();
   pic.scrollLeft+=r.left-p.left-(p.width-r.width)/2}
-function tkClick(e){const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep],[data-tkfilt],[data-tkrow],[data-tkgo],[data-tkback],[data-tkgroup],[data-tkfull],[data-tkzoom],[data-tkclose],[data-tkpage],[data-tkplay]');if(!x||!TK.d)return;
+// the data flow: a new step blinks its chip and its boxes (a box clicked there blinks with its step)
+function tkBlinkFlow(){const b=TK.blink;TK.blink=false;if(!b||TK.view!=='fluss')return;const v=$('tkview');if(!v)return;
+  const chip=v.querySelector('.tk-steps .ld-chip.on');knBlink([chip,...v.querySelectorAll(typeof b==='string'?`.tk-node[data-tkn="${b}"]`:'.tk-node.lit')].filter(Boolean));if(chip)chip.scrollIntoView({block:'nearest',inline:'nearest'})}
+function tkClick(e){const k=TK.view==='knoten'&&e.target.closest('[data-knto],[data-knmk],[data-kns],[data-knr],[data-knz],[data-knc]');
+  if(k&&!e.target.closest('a,button:not([data-knto]):not([data-knmk])')){if(k.dataset.knto){knGoItem(k.dataset.knto);return}if(k.dataset.knmk!==undefined){knMark(null);return}
+    if(k.dataset.kns){knMark(knBase(k),k.closest('.kn-svg')?'bild':'text');return}
+    for(const a of['r','z','c'])if(k.dataset['kn'+a]!==undefined){knItem(a,+k.dataset['kn'+a]);return}}
+  const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep],[data-tkfilt],[data-tkrow],[data-tkgo],[data-tkback],[data-tkgroup],[data-tkfull],[data-tkzoom],[data-tkclose],[data-tkpage],[data-tkplay]');if(!x||!TK.d)return;
   if(x.dataset.tkpage){knOpen(x.dataset.tkpage);return}
   if(x.dataset.tkplay!==undefined){knPlay(+x.dataset.tkplay);return}
   if(x.dataset.tkfull!==undefined)tkFull(true);
@@ -162,14 +204,18 @@ function tkClick(e){const x=e.target.closest('[data-tkv],[data-tkn],[data-tkstep
   else if(x.dataset.tkzoom){const i=TKZ.indexOf(TK.zoom),z=x.dataset.tkzoom;TK.zoom=z==='0'?1:TKZ[Math.max(0,Math.min(TKZ.length-1,i+(z==='+'?1:-1)))]}
   else if(x.dataset.tkv){if(TK.view==='knoten'&&TK.page)TK.sel=TK.page;TK.view=x.dataset.tkv;TK.row=null}
   else if(x.dataset.tkgo){TK.view=x.dataset.tkgo;if(x.dataset.tkfilt){TK.filt=x.dataset.tkfilt;TK.q='';TK.row=null}if(x.dataset.tkstep)TK.step=+x.dataset.tkstep;if(x.dataset.tknode)TK.sel=x.dataset.tknode}
-  else if(x.dataset.tkn){if(TK.view==='fluss'){const i=TK.d.steps.findIndex(s=>s.nodes.includes(x.dataset.tkn));TK.sel=x.dataset.tkn;TK.view='bild';if(i<0)TK.step=0}else TK.sel=x.dataset.tkn}
-  else if(x.dataset.tkstep!==undefined){const i=+x.dataset.tkstep;if(i<0||i>=TK.d.steps.length)return;TK.step=i}
+  else if(x.dataset.tkn){const n=x.dataset.tkn;
+    if(TK.view==='fluss'&&!TK.d.steps[TK.step].nodes.includes(n)){const i=TK.d.steps.findIndex((s,j)=>j>TK.step&&s.nodes.includes(n)),j=i>=0?i:TK.d.steps.findIndex(s=>s.nodes.includes(n));
+      if(j>=0){TK.step=j;TK.blink=n}else{TK.sel=n;TK.view='bild';TK.step=0}}
+    else if(TK.view==='fluss'){TK.sel=n;TK.view='bild'}else TK.sel=n}
+  else if(x.dataset.tkstep!==undefined){const i=+x.dataset.tkstep;if(i<0||i>=TK.d.steps.length)return;TK.step=i;TK.blink=true}
   else if(x.dataset.tkfilt){TK.filt=x.dataset.tkfilt;TK.row=null}
   else if(x.dataset.tkrow){TK.row=x.dataset.tkrow;TK.narrow=$('tkbox').getBoundingClientRect().width<660}
   else if(x.dataset.tkback){TK.row=null}
   else if(x.dataset.tkgroup){const g=tkGroup(x.dataset.tkgroup);TK.view='bild';if(g&&g.node)TK.sel=g.node}
-  tkRender();tkFocusPic();if(x.dataset.tkfull!==undefined){const c=document.querySelector('#tkview [data-tkclose]');if(c)c.focus()}}
+  tkRender();tkFocusPic();tkBlinkFlow();if(x.dataset.tkfull!==undefined){const c=document.querySelector('#tkview [data-tkclose]');if(c)c.focus()}}
 (()=>{const b=$('tkbox');if(!b)return;b.addEventListener('click',tkClick);
-  b.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-tkn],[data-tkrow],[data-tkgroup]')){e.preventDefault();tkClick(e)}});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&TK.full){tkFull(false);tkRender();const f=document.querySelector('#tkview [data-tkfull]');if(f)f.focus()}})})();
+  b.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-tkn],[data-tkrow],[data-tkgroup],[data-kns],[data-knz],[data-knc]')){e.preventDefault();tkClick(e)}});
+  b.addEventListener('mouseover',e=>knHover(e,true));b.addEventListener('mouseout',e=>knHover(e,false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&TK.mk&&TK.view==='knoten'){knMark(null);return}if(e.key==='Escape'&&TK.full){tkFull(false);tkRender();const f=document.querySelector('#tkview [data-tkfull]');if(f)f.focus()}})})();
 window.loadTechnik=loadTechnik;window.tkFull=tkFull;

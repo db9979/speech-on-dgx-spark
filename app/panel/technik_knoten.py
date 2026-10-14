@@ -273,6 +273,26 @@ def _label(v, i):
     return v[i]
 
 
+def _roh(s):
+    """Every text of a step as written in technik_seiten (with its placeholders), to find what it names."""
+    out = []
+    for v in (s["name"], s["sub"], s["text"], (s["side"] or (0, 0, ""))[2]):
+        out += list(v) if isinstance(v, tuple) else [v]
+    return " ".join(x for x in out if isinstance(x, str))
+
+
+def zelle(c):
+    """A rules row's first cell as written (German, with its placeholders): the key of "regel:…" in "bezug"."""
+    return c[0] if isinstance(c, tuple) else c
+
+
+def schritte(p, ref):
+    """The steps a code name or number belongs to: those that name it, plus the page's "bezug" (Dominik 2026-10-14:
+    a click on a rule, number or code line marks its bubble, and the marked text lists them)."""
+    ids = [s["id"] for s in p["ablauf"] if ref in _roh(s)]
+    return ids + [x for x in p.get("bezug", {}).get(ref, []) if x not in ids]
+
+
 @functools.lru_cache(maxsize=64)
 def seite(nid, lang="de"):
     """One box's page in one language (texts filled from the code), or None when the box has no page yet."""
@@ -296,11 +316,15 @@ def seite(nid, lang="de"):
         steps.append({"id": s["id"], "n": n, "art": s["art"], "name": _pick(s["name"], i), "sub": _pick(s["sub"], i),
                       "text": _pick(s["text"], i), "side": side})
     rules = [[_pick(c, i) if not isinstance(c, str) else fill(c) for c in row] for row in p.get("regeln", [])]
-    code = [{"ref": r, "text": _pick(t, i), "file": os.path.relpath(_file(r.split(".")[0]), os.path.dirname(APP))}
-            for r, t in p.get("code", [])]
+    code = [{"ref": r, "text": _pick(t, i), "file": os.path.relpath(_file(r.split(".")[0]), os.path.dirname(APP)),
+             "steps": schritte(p, r)} for r, t in p.get("code", [])]
+    bezug = p.get("bezug", {})
+    rule_steps = [bezug.get("regel:" + zelle(row[0]), bezug.get("regeln", [])) for row in p.get("regeln", [])[1:]]
     return {"id": nid, "kurz": _pick(p["kurz"], i), "warum": _pick(p["warum"], i), "steps": steps,
             "examples": [{"name": _pick(b[0], i), "path": b[1], "result": _pick(b[2], i)} for b in p.get("beispiele", [])],
-            "rules": rules, "numbers": [{"value": fill(z[0]), "text": _pick(z[1], i)} for z in p.get("zahlen", [])],
+            "rules": rules, "rule_steps": rule_steps,
+            "numbers": [{"value": fill(z[0]), "text": _pick(z[1], i), "steps": schritte(p, z[2]) if len(z) > 2 and z[2] else []}
+                        for z in p.get("zahlen", [])],
             "settings": [_pick(x, i) for x in p.get("einstellen", [])], "see": [_pick(x, i) for x in p.get("sehen", [])],
             "more": [{"title": _pick(t, i), "lines": [_pick(x, i) for x in lines]} for t, lines in p.get("mehr", [])],
             "code": code, "tests": list(p.get("tests", [])), "github": GITHUB,
@@ -354,10 +378,10 @@ def mermaid(nid, lang="de"):
 
 TXT = {"de": {"warum": "Warum", "ablauf": "Ablauf", "regeln": "Regeln", "zahlen": "Zahlen (aus dem Code)",
               "einstellen": "Einstellen", "sehen": "Was du siehst", "code": "Im Code", "tests": "Selbsttests",
-              "beispiele": "Beispiele", "nein": "nein"},
+              "beispiele": "Beispiele", "nein": "nein", "schritt": "Schritt", "gilt": "Gilt bei"},
        "en": {"warum": "Why", "ablauf": "Way", "regeln": "Rules", "zahlen": "Numbers (from the code)",
               "einstellen": "Settings", "sehen": "What you see", "code": "In the code", "tests": "Self-tests",
-              "beispiele": "Examples", "nein": "no"}}
+              "beispiele": "Examples", "nein": "no", "schritt": "step", "gilt": "Applies at"}}
 
 
 def _cell(s):
@@ -372,22 +396,26 @@ def doc(lang, names):
         d = seite(nid, lang)
         out += [f"### {names[nid]}", "", d["kurz"], "", f"**{x['warum']}:** {d['warum']}", "", f"#### {x['ablauf']}", "",
                 mermaid(nid, lang), ""]
-        out += [f"{s['n']}. **{s['name']}**: {s['text']}" for s in d["steps"]]
+        n_of = {s["id"]: s["n"] for s in d["steps"]}
+        to = lambda ids: (" (" + ", ".join(f"[{x['schritt']} {n_of[i]}](#kn-{nid}-{i})" for i in ids) + ")") if ids else ""
+        out += [f'{s["n"]}. <a id="kn-{nid}-{s["id"]}"></a>**{s["name"]}**: {s["text"]}' for s in d["steps"]]
         if d["examples"]:
             out += ["", f"**{x['beispiele']}:** " + " · ".join(f"{e['name']}: {e['result']}" for e in d["examples"])]
         if d["rules"]:
             head, *rows = d["rules"]
-            out += ["", f"#### {x['regeln']}", "", "| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+            at = to(d["rule_steps"][0] if rows else [])
+            out += ["", f"#### {x['regeln']}", ""] + ([f"{x['gilt']}: {at[2:-1]}", ""] if at else []) + ["| " + " | ".join(head) + " |",
+                                                                                              "|" + "---|" * len(head)]
             out += ["| " + " | ".join(_cell(c) or "–" for c in r) + " |" for r in rows]
         for m in d["more"]:
             out += ["", f"#### {m['title']}", ""] + [f"- {ln}" for ln in m["lines"]]
         if d["numbers"]:
-            out += ["", f"#### {x['zahlen']}", ""] + [f"- **{z['value']}** {z['text']}" for z in d["numbers"]]
+            out += ["", f"#### {x['zahlen']}", ""] + [f"- **{z['value']}** {z['text']}{to(z['steps'])}" for z in d["numbers"]]
         if d["settings"]:
             out += ["", f"#### {x['einstellen']}", ""] + [f"- {s}" for s in d["settings"]]
         if d["see"]:
             out += ["", f"#### {x['sehen']}", ""] + [f"- {s}" for s in d["see"]]
-        out += ["", f"#### {x['code']}", ""] + [f"- `{c['file']}` `{c['ref'].split('.', 1)[1]}`: {c['text']}" for c in d["code"]]
+        out += ["", f"#### {x['code']}", ""] + [f"- `{c['file']}` `{c['ref'].split('.', 1)[1]}`: {c['text']}{to(c['steps'])}" for c in d["code"]]
         if d["tests"]:
             out += ["", f"{x['tests']}: " + ", ".join(f"`{t}`" for t in d["tests"])]
         out.append("")

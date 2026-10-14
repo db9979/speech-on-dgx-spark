@@ -108,3 +108,25 @@ html.tk-lock{overflow:hidden}
 #tkbox.tk-full .kn-svg{max-height:calc(100vh - 170px);max-width:none}
 #tkbox.tk-full .tk-zoomed .kn-svg{width:calc(var(--tkz,1)*min(100%,560px))}
 @media (min-width:1000px){#tkbox.tk-full .kn-flow{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px}}
+/* bubble ↔ text (Dominik 2026-10-14): a click marks a bubble and its text (frame, blinks twice, the rest fades); rules,
+   numbers and code lines of the marked step are framed too; on a phone the text opens as a card under the bubble */
+.kn-st,.kn-steps li,.kn-nums div[tabindex],.kn-code div[tabindex],.kn-tab tr[data-knr]{cursor:pointer}
+.kn-steps li{border:2px solid transparent}
+.kn-steps li.mk{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.kn-steps li.hv:not(.mk){background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.kn-steps li.mdim,.kn-st.mdim,.kn-side.mdim{opacity:.42}
+.kn-st.mk polygon,.kn-st.mk rect{stroke:var(--acc);stroke-width:3.4;fill:color-mix(in srgb,var(--acc) 14%,var(--card))}
+.kn-st.hv:not(.mk) polygon,.kn-st.hv:not(.mk) rect{stroke:var(--acc);stroke-width:2.6}
+.kn-st:focus,.kn-st:focus-visible{outline:none}.kn-st:focus-visible polygon,.kn-st:focus-visible rect{stroke:var(--acc);stroke-width:3}
+.kn-nums div.mk,.kn-code div.mk{outline:2px solid var(--acc);outline-offset:2px;border-radius:10px}
+.kn-tab tr.mk td{background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.kn-rel{display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center;margin:7px 0 2px;font-size:12.5px}
+.kn-rel .ld-chip{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kn-pic{position:relative}
+.kn-pop{position:absolute;left:8px;right:8px;z-index:3;background:var(--card);border:2px solid var(--acc);border-radius:12px;
+  padding:10px 34px 10px 12px;font-size:14px;line-height:1.45;box-shadow:0 6px 22px rgba(0,0,0,.18)}
+.kn-popx{position:absolute;top:6px;right:6px;padding:2px 8px;min-height:0}
+@keyframes knblink{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 40%,transparent)}}
+@keyframes knblinkg{50%{opacity:.3}}
+.blink:not(g){animation:knblink .42s ease-in-out 2}g.blink{animation:knblinkg .42s ease-in-out 2}
+@media (prefers-reduced-motion:reduce){.blink:not(g),g.blink{animation:none}}

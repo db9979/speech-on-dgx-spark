@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.540** · 2026-10-14 · Knoten-Seiten: Blase anklicken umrandet ihren Text und blinkt kurz (Handy: Karte unter der Blase), Regeln, Zahlen und Code markieren ihren Schritt, Durchspielen liest mit, Datenfluss-Kasten wählt seinen Schritt, Doku mit Schritt-Links
 - **V01.0.539** · 2026-10-14 · Knoten-Seite der Weiche: wie eine Frage einer Gruppe zugeordnet und die Werkzeuge eingegrenzt werden; jetzt hat jeder Kasten seine Seite
 - **V01.0.538** · 2026-10-14 · Hinweise „neu freigegeben“ nur noch, wenn das Profil selbst etwas einrichten muss (Los geht's); sie verschwinden, sobald es eingerichtet ist oder „Prüfen“ es bestätigt, spätestens nach 14 Tagen; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** · 2026-10-14 · Outlook classic hing mit dem Spark-Add-in beim Laden: IDTExtensibility2 übergibt custom jetzt als SAFEARRAY wie Extensibility.dll, GetCustomUI fängt Fehler ab, Einrichten-Dialog nennt den Ausweg

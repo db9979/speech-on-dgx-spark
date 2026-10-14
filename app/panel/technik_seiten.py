@@ -15,6 +15,12 @@ def S(sid, art, name, sub, text, side=None):
 SEITEN_DATEN = {
     "waechter": {
         "stand": "55042873e3",
+        "bezug": {
+            "notaus.AUTO": ["s4"], "netguard.allowed": ["s3", "s7", "s8"], "netguard.resolve": ["s2"],
+            "netguard._Transport": ["s10", "s11"], "netguard._Capped": ["s11"], "netguard.same_site": ["s10"],
+            "netguard.own_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
+            "live.outgoing": ["s2"], "regeln": ["s6", "s8"], "regel:immer": ["s3", "s4", "s7"],
+        },
         "kurz": ("Der Wächter entscheidet bei jeder Verbindung, die ein Werkzeug nach außen aufbaut, ob sie sein darf: "
                  "Webseiten aus der Suche, Kalender, Kontakte, Mail, Home Assistant, NAS und MCP-Dienste. "
                  "Er prüft die Adresse, die wirklich angefragt wird, nach festen Regeln; das Sprachmodell fragt er nie.",
@@ -186,6 +192,11 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
         "stand": "7cf7af3560",
+        "bezug": {
+            "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
+            "panel.sessions": ["s7", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
+            "panel.protect": ["s12"], "regeln": ["s4", "s5", "s6"],
+        },
         "kurz": ("Die Middleware ist die Schicht in panel.py, durch die jede HTTP-Anfrage geht, bevor ein Endpunkt sie "
                  "liest: Notaus, fremde Seiten (CSRF), Größe der Anfrage und Update-Sperre. Auf dem Rückweg setzt sie "
                  "Schutz-Kopfzeilen, schreibt Änderungen ins Admin-Protokoll und erneuert Anmeldungen.",
@@ -388,6 +399,13 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
         "stand": "cd61a46b1b",
+        "bezug": {
+            "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
+            "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
+            "account.profile_login": ["s3"], "account.second_step": ["s4"], "core.is_main_admin": ["s6"],
+            "profiles._cookie_user": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
+            "regel:Gast": ["s8", "s10"],
+        },
         "kurz": ("Hier entscheidet das Panel, wer eine Anfrage stellt und was diese Person darf: Anmeldung mit "
                  "Passwort oder PIN (mit Sperre nach Fehlversuchen), Cookie oder Geräteschlüssel, Rate-Limit und die "
                  "Freigaben je Funktion. Das Profil kommt nur aus Cookie, Schlüssel oder dem Panel selbst, nie aus dem "
@@ -590,6 +608,11 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
         "stand": "27c8c48c18",
+        "bezug": {
+            "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
+            "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
+            "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
+        },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
                  "gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und "
                  "Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge.",
@@ -773,6 +796,14 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
         "stand": "9885fa671a",
+        "bezug": {
+            "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
+            "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
+            "intent.ask_model": ["s10"], "intent.pick_in_time": ["s10"], "intent.lean": ["s12"],
+            "weiche.count": ["s14"], "weiche.trace": ["s14"], "intent_alltag.measure": ["s14"], "regeln": ["s9"],
+            "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
+            "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
+        },
         "kurz": ("Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und "
                  "so weiter, heute {intent.GROUPS|anzahl} Gruppen) und grenzt damit die Werkzeuge ein, die das "
                  "Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens "
@@ -1026,6 +1057,12 @@ SEITEN_DATEN = {
     },
     "antwort": {
         "stand": "952c4988c3",
+        "bezug": {
+            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
+            "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
+            "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
+            "answercheck.fresh": ["s6"],
+        },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
                  "Die Prüfungen entscheidet das Panel, nie das Modell.",
@@ -1208,6 +1245,14 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
         "stand": "88af5ddba6",
+        "bezug": {
+            "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
+            "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
+            "chat.READS_OUTSIDE": ["s4", "s6"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
+            "chat.tool_info": ["s11"], "werkzeuge.label": ["s11"], "regeln": ["s4"],
+            "regel:Notaus Stufe {notaus.STAGE.internet}": ["s3"],
+            "regel:Notaus Stufe {notaus.STAGE.aktion} oder eigener Notaus": ["s3"],
+        },
         "kurz": ("Wenn das Modell ein Werkzeug aufruft, führt chat_tools.run es aus, aber nur, wenn es in dieser Runde "
                  "angeboten war und keine Sperre greift. Das Ergebnis geht als Daten an das Modell zurück, nie als Befehl.",
                  "When the model calls a tool, chat_tools.run carries it out, but only when it was offered in this round "
@@ -1371,6 +1416,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
         "stand": "f734738328",
+        "bezug": {
+            "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
+            "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
+            "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
+            "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"],
+        },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
                  "dafür, dass Sprache immer vor Hintergrundarbeit kommt.",
@@ -1533,6 +1584,14 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
         "stand": "e79f00ee84",
+        "bezug": {
+            "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
+            "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
+            "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"],
+            "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"],
+            "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
+            "regel:Erst lokal suchen": ["s5"],
+        },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
                  "Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen "
@@ -1747,6 +1806,14 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
         "stand": "f9d1d6513d",
+        "bezug": {
+            "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
+            "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
+            "tracelog.shown": ["s10"], "live.step": ["s4"], "logfilter.parse": ["s11"],
+            "logfilter.summary": ["s12"], "dienstwacht.round_once": ["s5"], "backup.create": ["s9"],
+            "regeln": ["s4", "s5", "s9"], "regel:Live": ["s4"], "regel:Anfrage-Verlauf": ["s9"],
+            "regel:Journal": ["s5"], "regel:Dienst-Wächter": ["s5"], "regel:Sicherungen": ["s9"],
+        },
         "kurz": ("Betrieb hält fest, was der Spark tut, ohne Inhalte: den Weg jeder Anfrage (Logs → Anfragen), die "
                  "Live-Übersicht, das Journal mit festen Wörtern, den Dienst-Wächter und die Sicherung. Die Seite zeigt, "
                  "welche Spuren eine Anfrage hinterlässt.",
@@ -1939,6 +2006,13 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
         "stand": "44257a9cc2",
+        "bezug": {
+            "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
+            "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
+            "homeassistant._client": ["s7", "s9"], "mcp._client": ["s7", "s9", "s10"],
+            "chat.web_search": ["s6", "s9"], "regeln": ["s7", "s8"], "regel:SearXNG": ["s6"],
+            "regel:Wetter, Fahrplan, Wikipedia": ["s6"], "regel:Sprachmodell": ["s6"],
+        },
         "kurz": ("Dienste draußen sind alles, was der Spark über das Netz fragt: Home Assistant, Kalender, Kontakte, "
                  "Mail, SearXNG, Kiwix, reMarkable und MCP-Dienste. Adressen aus Einstellungen gehen über den Wächter "
                  "(netguard) mit einer festen Stufe; feste Dienste wie SearXNG, Wetter, Fahrplan und Wikipedia gehen "
@@ -2107,6 +2181,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
         "stand": "b79f98a912",
+        "bezug": {
+            "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
+            "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
+            "account.profile_convos": ["s11"], "profiles.append_convo": ["s10"], "profiles._clean_convo": ["s10"],
+            "verlauf.stream": ["s11"], "verlauf.begin": ["s6", "s11"], "regeln": ["s6", "s10"],
+        },
         "kurz": ("Die Seite im Browser (static/js/chat.js) ist das Gerät: sie nimmt die Frage auf, schickt den Ton zur "
                  "Spracherkennung, schickt den Text an /api/chat und spielt Text und Ton aus einem einzigen Strom ab. "
                  "Die Gespräche eines Profils liegen auf dem Spark, jede offene Seite gleicht sie ab.",
@@ -2289,6 +2369,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Apps
     "apps": {
         "stand": "7857751f40",
+        "bezug": {
+            "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
+            "iphone.new_code": ["s3"], "iphone.take_code": ["s4"], "iphone.app_pair": ["s4", "s5"],
+            "iphone.app_hello": ["s9"], "profiles._app_path": ["s7"], "account.profile_remove_device": ["s11"],
+            "android.apk_response": ["s3"], "regeln": ["s6", "s7"], "regel:ohne": ["s10"],
+        },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
                  "Android-App hat keinen eigenen Schlüssel: sie zeigt das Panel in einer WebView und meldet sich an wie "
@@ -2453,6 +2539,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
         "stand": "69b87c165e",
+        "bezug": {
+            "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
+            "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
+            "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"],
+            "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"],
+        },
         "kurz": ("Telegram, der Siri-Kurzbefehl und die Pebble-Uhr stellen kurze Fragen ohne Browser. Jeder Kanal baut "
                  "daraus eine Anfrage an /api/chat wie ein Gerät, sammelt die Antwort aus dem Strom ein und gibt sie "
                  "in seiner Form zurück. Den Verlauf speichert das Panel selbst im Profil.",
@@ -2622,6 +2714,13 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
         "stand": "ba4d177dfe",
+        "bezug": {
+            "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
+            "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
+            "esp32.Session.run_answer": ["s10"], "esp32.Session.code_gate": ["s9"], "esp32.Session.speak": ["s11"],
+            "esp32.remember": ["s12"], "wyoming.settings": ["s5"], "wyoming.handle": ["s5"],
+            "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"],
+        },
         "kurz": ("Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, "
                  "schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder "
                  "Lautsprecher ist ein Geräteschlüssel seines Profils. Home Assistant Assist nutzt über Wyoming nur "
@@ -2807,6 +2906,14 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
         "stand": "6b2d1629f1",
+        "bezug": {
+            "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
+            "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
+            "mcpserver.tool_ok": ["s7"], "mcpserver.call": ["s8"], "mcpserver.run": ["s9", "s10"],
+            "mcpserver.ask": ["s10"], "mcpserver.propose": ["s11"], "mcpserver.decide": ["s11"],
+            "mcpserver.carry_out": ["s11"], "regeln": ["s7"], "regel:Sprache": ["s9"], "regel:Lesen": ["s9"],
+            "regel:Spark fragen": ["s10"], "regel:Handeln mit Bestätigung": ["s11"],
+        },
         "kurz": ("Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context "
                  "Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre "
                  "eigene Werkzeugliste. Lesen geht direkt, Handeln nur als Vorschlag, den das Profil bestätigt.",
@@ -2987,6 +3094,11 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
         "stand": "bd38333a9d",
+        "bezug": {
+            "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
+            "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
+            "asr_proxy.transcriptions": ["s4"], "asr_proxy.engine_status": ["s6"], "parakeet.Recognizer": ["s9"],
+        },
         "kurz": ("Die Spracherkennung macht aus einer Aufnahme Text. Das Panel nimmt die Aufnahme an, prüft sie und "
                  "reicht sie an den ASR-Dienst weiter. Dieser Proxy prüft Schlüssel, Größe und Abtastrate, lässt "
                  "Anfragen nach Vorrang warten und gibt sie an die Engine, die nur auf dieser Maschine lauscht.",
@@ -3151,6 +3263,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
         "stand": "836b6f0dc0",
+        "bezug": {
+            "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
+            "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
+            "textnorm.hide_secrets": ["s5"], "textnorm.clean_text": ["s6"], "textnorm.guess_language": ["s7"],
+            "textnorm.speak_numbers": ["s7"], "common.PrioGate": ["s10"],
+        },
         "kurz": ("Die Sprachausgabe macht aus Text Ton. Der TTS-Dienst nimmt einen Satz an, räumt ihn auf, verdeckt "
                  "Geheimnisse, wählt Sprache und Stimme und gibt ihn an die Engine (Qwen3-TTS über vllm-omni), die nur "
                  "auf dieser Maschine lauscht. Der Ton kommt gestreamt zurück.",
@@ -3304,6 +3422,10 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ state/
     "state": {
         "stand": "5457d99e63",
+        "bezug": {
+            "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
+            "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
+        },
         "kurz": ("In state/ liegt, was für den ganzen Spark gilt und keinem Profil gehört: Schlüssel, Zugänge des "
                  "Admins, Telegram-Bot, Push-Schlüssel, Lautsprecher, Zähler, Sperren und Zustände der Dienste. "
                  "Geheimnisse darin sind mit dem Schlüssel des Spark versiegelt.",
@@ -3447,6 +3569,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ users/ID/
     "users": {
         "stand": "798fffaaf3",
+        "bezug": {
+            "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
+            "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],
+            "speicher.copy_once": ["s7", "s8"], "backup._add_dir": ["s10"], "regeln": ["s5", "s7"],
+            "regel:Zugänge, Schlüssel, Stimmabdruck": ["s3"],
+        },
         "kurz": ("Jedes Profil hat seinen eigenen Ordner users/ID/: Gespräche, Gedächtnis, Aufgaben, Dokumente, "
                  "Einstellungen, Zugänge und den Stimmabdruck. Welcher Ordner gilt, kommt nur aus der Anmeldung. "
                  "Auf Wunsch geht eine verschlüsselte Kopie davon auf einen eigenen Speicher.",
@@ -3603,6 +3731,12 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ voices/, backups/
     "ablage": {
         "stand": "c6f0cd6612",
+        "bezug": {
+            "backup.MAX_UPLOAD": ["s12"], "admin.add_clone_voice": ["s1", "s2", "s4"],
+            "admin.import_clone_voices": ["s6"], "tts_proxy.apply_clone": ["s5"], "panel.stability": ["s7"],
+            "backup._add_dir": ["s8"], "backup._prune": ["s10"], "system.backup_ticket": ["s11"],
+            "backup._check": ["s12"], "backup.restore": ["s12"], "regeln": ["s8"], "regel:secret.key": ["s9"],
+        },
         "kurz": ("In voices/ liegen die geklonten Stimmen (WAV und Text), in backups/ die Sicherungen des Spark. Eine "
                  "Sicherung entsteht einmal am Tag von selbst, vor jedem Update und auf Knopfdruck; die ältesten "
                  "fallen weg.",
@@ -3753,6 +3887,11 @@ SEITEN_DATEN = {
     # ------------------------------------------------------------------ journald
     "journal": {
         "stand": "2d9c2f502e",
+        "bezug": {
+            "logfilter.logfilter": ["s6"], "logfilter.read_journal": ["s8"], "logfilter.redact": ["s9"],
+            "logfilter.parse": ["s10"], "logfilter.summary": ["s11"], "logfilter.detail": ["s12"],
+            "common.JOURNAL_NAMESPACE": ["s5"], "common.journal": ["s1"], "common.quiet_access_log": ["s4"],
+        },
         "kurz": ("Alle Dienste des Spark schreiben ihre Zeilen in einen eigenen Bereich des Systemjournals "
                  "(Namespace speech-spark), mit eigener Grenze für Platz und Alter. Das Panel liest diese Zeilen nur "
                  "für den Admin, schwärzt Geheimnisse und ordnet sie nach festen Wörtern.",
