@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.562** · 2026-10-14 · Tests wieder grün: der Sprung-Link-Test setzt seinen Hinweis erst nach der ersten Zustand-Abfrage (die kommt seit V01.0.558 sofort beim Öffnen), Höhenbudget der Funktionen-Seite um die neue Zeile „Verbrauchszähler“ erweitert
 - **V01.0.561** · 2026-10-14 · Live: die Kästen unter „Dienste und Ziele“ behalten Name und Zustand auch in der normalen Ansicht; das Bild wird mit der Zahl der Ziele höher, statt die Kästen zu stauchen, lange Wörter enden mit „…“ (test_seitenrahmen LiveBoxes)
 - **V01.0.560** · 2026-10-14 · Wartungspause Paket 2: „Automatisch bei Neustart“ (Funktionen → Wartungspause, aus) pausiert Sprachmodell, Spracherkennung oder Sprachausgabe von selbst, wenn ihr Dienst neu startet oder qwen38 umschaltet, und macht weiter, sobald der Teil wieder antwortet; ESP32-Lautsprecher und Home Assistant spielen in der Pause der Sprachausgabe den kurzen Wartungssatz aus einer vorab gemachten Datei (sonst einen Ton), bei pausierter Spracherkennung sagt der Lautsprecher den Satz gleich nach dem Weckwort; iPhone-App: Seite Wartungspause unter „Spark verwalten“ (neuer TestFlight-Build nötig)
 - **V01.0.559** · 2026-10-14 · Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es

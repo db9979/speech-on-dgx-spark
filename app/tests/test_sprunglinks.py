@@ -386,9 +386,11 @@ class Browser(unittest.TestCase):
                 res = await pg.evaluate("ws=>ws.map(w=>{const r=wayParse(w,0);return r?[r.steps,r.want,r.end===w.length]:null})", list(ways))
                 bad = [f"{w} ({ways[w][0]}): {r}" for w, r in zip(ways, res) if not r or r[0] < r[1] or not r[2]]
                 self.assertEqual(bad, [])
-                await pg.evaluate("goSec('chat')")
+                # Zustand asks /api/status at once when it is opened (V01.0.558): the note goes in after that answer
+                async with pg.expect_response(lambda r: r.url.endswith("/api/status")):
+                    await pg.evaluate("ALERTS_LAST='';goSec('chat');goSec('mon')")
+                await self.until(pg, "ALERTS_LAST!==''")
                 await pg.evaluate("TRACE_ON=true;showAlerts([{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'}])")
-                await pg.evaluate("goSec('mon')")
                 await pg.click("#alerts .gonote button")
                 await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")
                 self.assertEqual(errors, [])
