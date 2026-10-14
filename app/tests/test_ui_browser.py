@@ -2953,6 +2953,34 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.inner_text("#csnum"), number(cid, chatsec.keys_for(other["id"], cid)))
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}/sicherheitsnummer: {over}px zu breit")
+                    if name == "pc":
+                        # a new device of the same person (here Python): the page shows its code and transfers the history
+                        priv2 = ec.generate_private_key(ec.SECP256R1())
+                        pub2 = b64(priv2.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
+                        kid2 = chatsec.add_key(me["id"], pub2, "android")
+                        h = hashlib.sha256(("spark-e2e-v1|device|" + pub2).encode()).digest()
+                        code = "".join("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[h[i] % 32] for i in range(6))
+                        await pg.evaluate("cxLoad()")
+                        await pg.wait_for_selector(".cx-share [data-csh=go]", timeout=20000)
+                        self.assertIn(code, await pg.inner_text(".cx-share"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}/verlauf: {over}px zu breit")
+                        await pg.click(".cx-share [data-csh=go]")
+                        await self.until(pg, "!!document.querySelector('.cx-share')&&document.querySelector('.cx-share').textContent.includes('Verlauf übertragen')", 20)
+                        self.assertFalse(any(k.get("want") for k in chatsec.own(me["id"])))
+                        mine = chatsec.keys_for(me["id"], cid)
+                        n = 0
+                        for x in chats._chat(cid)["items"]:
+                            if x.get("kind") != "box" or x.get("gone"):
+                                continue
+                            w = x["box"]["k"][kid2]
+                            by = next(y for y in mine if y["id"] == w["b"])
+                            self.assertEqual(by["uid"], me["id"])
+                            k2 = AESGCM(wrap(priv2, by["pub"], cid, w["b"], kid2, base64.b64decode(w["s"]))).decrypt(
+                                base64.b64decode(w["i"]), base64.b64decode(w["w"]), None)
+                            json.loads(AESGCM(k2).decrypt(base64.b64decode(x["box"]["iv"]), base64.b64decode(x["box"]["ct"]), cid.encode()))
+                            n += 1
+                        self.assertGreaterEqual(n, 3)    # both texts and the photo, now readable on the new device
                     self.assertEqual(errors, [], name)
                     await br.close()
         try:

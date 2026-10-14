@@ -874,6 +874,69 @@ class Private(Base):
         r = a.post(f"/api/chats/media?id={cid}&kind=box", content=json.dumps(box).encode() + b"\n" + blob)
         self.assertEqual(r.status_code, 403)
 
+    def test_a_new_device_gets_the_history_only_from_an_older_own_device(self):
+        a, b, da, db, cid = self.pair("Chhedda", "Chholm")
+        box, _ = db.box(cid, {"t": "Alter Verlauf"}, keys_of(b, cid))
+        self.assertEqual(b.post("/api/chats/send", json={"id": cid, "box": box}).status_code, 200)
+        mid = b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["id"]
+        da2 = Device(a)                                          # Hedda's new device: waits for the history
+        own = {k["id"]: k for k in a.get("/api/chats/keys").json()["keys"]}
+        self.assertTrue(own[da2.kid]["want"])
+        self.assertEqual(own[da2.kid]["pub"], da2.pub)           # the older device shows the code made from it
+        self.assertNotIn("want", own[da.kid])
+        mine = lambda c: next(x for x in c.get("/api/chats/items", params={"id": cid}).json()["items"] if x["id"] == mid)   # noqa: E731
+        stored = lambda: next(x for x in json.loads(read(chats._chat_file(cid)))["items"] if x["id"] == mid)["box"]   # noqa: E731
+        self.assertNotIn(da2.kid, mine(a)["box"]["k"])
+        q = lambda by, new: {"id": cid, "by": by, "new": new}   # noqa: E731
+        self.assertEqual(a.get("/api/chats/share", params=q(da2.kid, da.kid)).status_code, 403)   # never the new one for the old
+        self.assertEqual(a.get("/api/chats/share", params=q(db.kid, da2.kid)).status_code, 404)   # nor the other person's device
+        self.assertEqual(b.get("/api/chats/share", params=q(db.kid, da2.kid)).status_code, 404)   # nor for someone else
+        r = a.get("/api/chats/share", params=q(da.kid, da2.kid))
+        self.assertEqual(r.status_code, 200, r.text)
+        it = next(x for x in r.json()["items"] if x["id"] == mid)
+        self.assertEqual((it["from"], it["f"]), (uid_of(b), db.kid))
+        # the older device opens the content key with its own wrap and wraps it once more for the new one
+        sender = next(x for x in keys_of(a, cid) if x["id"] == it["f"])
+        k = AESGCM(da._wrap_key(sender["pub"], cid, it["f"], da.kid, base64.b64decode(it["w"]["s"]))).decrypt(
+            base64.b64decode(it["w"]["i"]), base64.b64decode(it["w"]["w"]), None)
+        salt, wi = os.urandom(16), os.urandom(12)
+        w = {"s": b64(salt), "i": b64(wi), "w": b64(AESGCM(da._wrap_key(da2.pub, cid, da.kid, da2.kid, salt)).encrypt(wi, k, None))}
+        for bad in ({mid: dict(w, b=da.kid)}, {mid: dict(w, w="kurz")}, {"nicht-hex": w}, {}):
+            self.assertEqual(a.post("/api/chats/share", json=dict(q(da.kid, da2.kid), wraps=bad)).status_code, 400, bad)
+        before = stored()
+        r = a.post("/api/chats/share", json=dict(q(da.kid, da2.kid), wraps={mid: w, "0" * 12: w}))
+        self.assertEqual(r.json(), {"added": 1})                 # an id that is no message adds nothing
+        self.assertEqual(a.post("/api/chats/share", json=dict(q(da.kid, da2.kid), wraps={mid: w})).json(), {"added": 0})
+        after = stored()
+        self.assertEqual((after["ct"], after["iv"], after["f"]), (before["ct"], before["iv"], before["f"]))   # the text untouched
+        self.assertEqual(after["k"][da2.kid]["b"], da.kid)
+        # the new device opens it: wrapped by the older one, written by the other person
+        got = mine(a)["box"]
+        x = got["k"][da2.kid]
+        k2 = AESGCM(da2._wrap_key(da.pub, cid, x["b"], da2.kid, base64.b64decode(x["s"]))).decrypt(
+            base64.b64decode(x["i"]), base64.b64decode(x["w"]), None)
+        self.assertEqual(json.loads(AESGCM(k2).decrypt(base64.b64decode(got["iv"]), base64.b64decode(got["ct"]), cid.encode()))["t"],
+                         "Alter Verlauf")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(a.post("/api/chats/share/done", json={"new": da2.kid, "n": 1}).status_code, 200)
+            self.assertEqual(a.get("/api/chats/share", params=q(da.kid, da2.kid)).status_code, 403)   # once only
+            self.assertEqual(a.post("/api/chats/share/done", json={"new": da2.kid, "n": 1}).status_code, 404)
+        self.assertIn("chats: private history shared | n 1", out.getvalue())
+        self.assertIn("chats: private history refused | why PermissionError", out.getvalue())
+        self.assertNotIn("want", {k["id"]: k for k in a.get("/api/chats/keys").json()["keys"]}[da2.kid])
+
+    def test_a_new_device_waits_only_a_day_and_the_first_device_waits_for_nothing(self):
+        a = profile("Chilse")
+        d1 = Device(a)
+        self.assertNotIn("want", a.get("/api/chats/keys").json()["keys"][0])
+        d2 = Device(a)
+        t = next(k for k in chatsec.current(uid_of(a)) if k["id"] == d2.kid)["t"]
+        self.assertGreaterEqual(chatsec.waiting(now=t + 60), 1)
+        with self.assertRaises(PermissionError):
+            chatsec._pair(uid_of(a), d1.kid, d2.kid, t + chatsec.SHARE_SECS + 1)
+        self.assertNotIn("want", next(k for k in chatsec.own(uid_of(a), now=t + chatsec.SHARE_SECS + 1) if k["id"] == d2.kid))
+
     def test_live_and_journal_numbers_only_and_a_deleted_profile_takes_its_keys(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):

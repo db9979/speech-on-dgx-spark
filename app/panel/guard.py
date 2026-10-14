@@ -432,6 +432,7 @@ LIVE_WORDS = {
     "admin_mode_failed": ("Eingang", "Admin-Modus abgewiesen"), "notzugang_cli": ("Eingang", "Notzugang auf dem Spark zurückgesetzt"), "passkey_added": ("Eingang", "Passkey angelegt"),
     "passkey_removed": ("Eingang", "Passkey entfernt"), "invite_used": ("Eingang", "Einladung benutzt"),
     "chat_key_added": ("Eingang", "Gerät für private Chats eingetragen"), "chat_key_removed": ("Eingang", "Gerät für private Chats entfernt"),
+    "chat_history_shared": ("Eingang", "Verlauf privater Chats an neues Gerät übertragen"),
     "verbund_code": ("Eingang", "Kopplungs-Code für einen anderen Spark erstellt"), "verbund_paired": ("Eingang", "Mit einem anderen Spark gekoppelt"),
     "verbund_peer_allow": ("Eingang", "Anderen Spark erlaubt"), "verbund_peer_block": ("Eingang", "Anderen Spark gesperrt"),
     "verbund_peer_remove": ("Eingang", "Anderen Spark entfernt"),

@@ -16,6 +16,12 @@ checks the form and that every current device of the other person is in "k" (nob
 that "f" is a current key of the sender; it never sees a text, a file name or a photo. Photos, files and voice
 come as one more box-encrypted blob beside the message (its key travels inside the message's payload).
 
+A new device of someone who already has one (Dominik 2026-10-14, Wahl 2 „Verlauf vom alten Gerät übertragen“): its key
+waits SHARE_SECS for an older device of the same person. That device shows a code made from the new key (the new one
+shows the same code), and after "Übertragen" it opens each content key of its private chats and wraps it once more for
+the new device; the Spark adds only that wrap, marked {"b": the wrapping device}, and never touches the text:
+    wrap key = HKDF-SHA256(ECDH(wrapping device, new device), salt, "spark-e2e-v1|cid|wrapping|new")
+
 What the Spark sees: who wrote to whom, when, how big. The people compare the "Sicherheitsnummer" (made from both
 sides' public keys, in chatsec.js) once; a new or removed device puts a line into each private chat of that person.
 
@@ -38,6 +44,8 @@ MAX_KEYS = 10            # current device keys per profile
 KEEP_GONE = 30           # removed keys kept (their public half opens older messages)
 MAX_BOX = 64 * 1024      # one message's box as JSON
 MAX_BLOB = 26 * 1024**2  # a photo, file or voice message, encrypted (25 MB and the tag)
+SHARE_SECS = 24 * 3600   # how long a new device waits for the history from an older one
+SHARE_MAX = 300          # wraps per request
 KID = re.compile(r"[0-9a-f]{12}")
 KINDS = ("browser", "android", "iphone")
 _B64 = re.compile(r"[A-Za-z0-9+/]+={0,2}")
@@ -121,7 +129,8 @@ def add_key(uid, pub, kind, now=None):
         if sum(1 for k in keys if not k.get("gone")) >= MAX_KEYS:
             raise OverflowError(f"Höchstens {MAX_KEYS} Geräte für private Chats. Ein altes unter ⓘ → Deine Geräte entfernen.")
         kid = secrets.token_hex(6)
-        keys.append({"id": kid, "pub": pub, "kind": kind, "t": now})
+        had = any(not k.get("gone") for k in keys)
+        keys.append({"id": kid, "pub": pub, "kind": kind, "t": now, **({"want": now} if had else {})})
         _save(uid, keys)
     _changed(uid, "newkey", now)
     _log("key added", kind=kind)
@@ -181,8 +190,98 @@ def keys_for(uid, cid):
     return out
 
 
-def own(uid):
-    return [{"id": k["id"], "kind": k.get("kind", "browser"), "t": int(k.get("t") or 0)} for k in current(uid)]
+def _wants(k, now):
+    return bool(k.get("want")) and now - float(k["want"]) < SHARE_SECS
+
+
+def own(uid, now=None):
+    """The own devices; "want": a new one waiting for the history, "pub" so an older one can show its code."""
+    now = time.time() if now is None else now
+    return [{"id": k["id"], "kind": k.get("kind", "browser"), "t": int(k.get("t") or 0),
+             **({"want": True, "pub": k["pub"]} if _wants(k, now) else {})} for k in current(uid)]
+
+
+# ---------------------------------------------------------------- the history for a new device of the same person
+def _pair(uid, by, new, now):
+    """(older device, new device) of uid, both current; the new one still waits and is younger."""
+    keys = {k["id"]: k for k in current(uid)}
+    b, n = keys.get(by), keys.get(new)
+    if not b or not n or by == new:
+        raise LookupError("no such key")
+    if not _wants(n, now) or float(b.get("t") or 0) >= float(n.get("t") or 0):
+        raise PermissionError("Dieses Gerät wartet nicht mehr auf den Verlauf.")
+    return b, n
+
+
+def share_list(uid, cid, by, new, now=None):
+    """The boxes of a private chat the new device cannot open yet: id, sender, sending key, the wrap for by."""
+    import chats
+    now = time.time() if now is None else now
+    _pair(uid, by, new, now)
+    c = chats._member(uid, cid)
+    if c.get("kind") != "priv":
+        raise LookupError("no such chat")
+    out = []
+    for x in chats._chat(cid, c, now)["items"]:
+        b = x.get("box") if x.get("kind") == "box" and not x.get("gone") else None
+        if isinstance(b, dict) and by in (b.get("k") or {}) and new not in b["k"]:
+            out.append({"id": x["id"], "from": x["from"], "f": b.get("f"), "w": b["k"][by]})
+    return out
+
+
+def share_add(uid, cid, by, new, wraps, now=None):
+    """Adds the new device's wraps (made by the older device by) to the boxes; returns how many were added."""
+    import chats
+    now = time.time() if now is None else now
+    _pair(uid, by, new, now)
+    if not isinstance(wraps, dict) or not wraps or len(wraps) > SHARE_MAX:
+        raise ValueError("bad wraps")
+    clean = {}
+    for mid, w in wraps.items():
+        if not chats.MID.fullmatch(str(mid)) or not isinstance(w, dict) or set(w) != {"s", "i", "w"}:
+            raise ValueError("bad wraps")
+        _b64(w["s"], 16)
+        _b64(w["i"], 12)
+        _b64(w["w"], 48)
+        clean[mid] = {"s": w["s"], "i": w["i"], "w": w["w"], "b": by}
+    c = chats._member(uid, cid)
+    if c.get("kind") != "priv":
+        raise LookupError("no such chat")
+
+    def f(meta, d, idx):
+        n = 0
+        for x in d["items"]:
+            b = x.get("box") if x.get("kind") == "box" and not x.get("gone") else None
+            w = clean.get(x["id"])
+            if w and isinstance(b, dict) and by in (b.get("k") or {}) and new not in b["k"] and len(b["k"]) < 3 * MAX_KEYS:
+                b["k"][new] = w
+                n += 1
+        return n
+    n = chats._mutate(cid, f, now)
+    if n:
+        chats._tell([uid], {"type": "keys", "id": cid})   # the new device opens what it can read now
+    return n
+
+
+def share_done(uid, new, n, now=None):
+    """The older device is through: the new one waits no more."""
+    now = time.time() if now is None else now
+    with _lock:
+        keys = _load(uid)
+        k = next((k for k in keys if k["id"] == new and not k.get("gone")), None)
+        if not k or not k.get("want"):
+            raise LookupError("no such key")
+        k.pop("want", None)
+        _save(uid, keys)
+    import chats
+    chats._tell([uid], {"type": "keys", "id": ""})
+    _log("history shared", n=max(0, min(10**6, int(n) if isinstance(n, int) else 0)))
+
+
+def waiting(now=None):
+    """New devices waiting for their history, for Live (a number)."""
+    now = time.time() if now is None else now
+    return sum(1 for p in profiles.names() for k in current(p["id"]) if _wants(k, now))
 
 
 # ---------------------------------------------------------------- a private chat of two
@@ -275,7 +374,7 @@ def for_live():
         return {"on": False}
     idx = chats._index()
     return {"on": True, "chats": sum(1 for x in idx.values() if x.get("kind") == "priv"),
-            "devices": sum(len(current(u["id"])) for u in profiles.names())}
+            "devices": sum(len(current(u["id"])) for u in profiles.names()), "waiting": waiting()}
 
 
 def _log(what, **nums):
@@ -355,3 +454,50 @@ async def api_private(request: Request, prof=Depends(_on)):
     except (LookupError, PermissionError, OverflowError) as e:
         raise chats._err(e)
     return {"id": cid}
+
+
+def _share_args(body_or_q):
+    by, new = str(body_or_q.get("by") or ""), str(body_or_q.get("new") or "")
+    if not KID.fullmatch(by) or not KID.fullmatch(new):
+        raise HTTPException(400, "key id is required")
+    return by, new
+
+
+@router.get("/api/chats/share", dependencies=[Depends(assistant)])
+def api_share_list(request: Request, id: str = "", by: str = "", new: str = "", prof=Depends(_on)):
+    """For an older device of the same person: the boxes of one private chat the new device cannot open yet."""
+    import chats
+    b, n = _share_args({"by": by, "new": new})
+    try:
+        return {"items": share_list(prof["id"], chats._cid(id), b, n)}
+    except (LookupError, PermissionError) as e:
+        _log("history refused", why=type(e).__name__)
+        raise chats._err(e)
+
+
+@router.post("/api/chats/share", dependencies=[Depends(assistant)])
+async def api_share_add(request: Request, prof=Depends(_on)):
+    import chats
+    body = await chats._json(request, 96 * 1024)
+    b, n = _share_args(body)
+    try:
+        added = share_add(prof["id"], chats._cid(body.get("id")), b, n, body.get("wraps"))
+    except (LookupError, PermissionError, ValueError) as e:
+        _log("history refused", why=type(e).__name__)
+        raise chats._err(e)
+    return {"added": added}
+
+
+@router.post("/api/chats/share/done", dependencies=[Depends(assistant)])
+async def api_share_done(request: Request, prof=Depends(_on)):
+    import chats
+    import guard
+    body = await chats._json(request, 1024)
+    _, n = _share_args({"by": "0" * 12, "new": body.get("new")})
+    try:
+        share_done(prof["id"], n, body.get("n"))
+    except LookupError as e:
+        _log("history refused", why="LookupError")
+        raise chats._err(e)
+    guard.log("chat_history_shared", name=prof["name"], uid=prof["id"])
+    return {"keys": own(prof["id"])}

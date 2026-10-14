@@ -90,7 +90,7 @@ function cxList(){const box=cxEl('cxlist');if(!box)return;const S=CX.S||{chats:[
     `<span class="cx-mid"><b>${c.private?'🔒 ':''}${c.far?'🌐 ':''}${esc(cxTitle(c.title))}</b><small>${esc(cxPreview(c))}</small></span>`+
     `<span class="cx-right"><span class="cx-when">${c.last?esc(cxWhen(c.last.t)):''}</span>`+
     `<span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">🔕</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span></span></button>`).join('');
-  cxHues(box)}
+  cxHues(box);if(S.private&&window.csShareCheck)csShareCheck(box)}
 cxEl('cxlist').addEventListener('click',e=>{if(e.target.closest('[data-cxfar]')){cxFindReset();if(!CX.cur)CX.data=null;cxPane('far');return}
   const h=e.target.closest('[data-hit]');if(h){const mid=h.dataset.mid;cxFindReset();cxOpen(h.dataset.hit).then(()=>cxJump(mid));return}
   const b=e.target.closest('[data-cx]');if(b)cxOpen(b.dataset.cx)});

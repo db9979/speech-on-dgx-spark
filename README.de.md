@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.550** Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
 - **V01.0.549** Begleiter: Schalter „Mikrofon offen/zu“ (Windows und Mac), Ich → Begleiter zeigt ihn je Gerät
 - **V01.0.548** Wartungspause, während Sprachmodell, Spracherkennung oder Sprachausgabe aktualisiert werden
 - **V01.0.547** Alle Seiten mit Seitenleiste im selben Rahmen: beim Wechsel der Reiter springt nichts mehr, der Inhalt nutzt die ganze Breite
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.543** Lizenz jetzt FSL-1.1-MIT: frei für dich, Familie, Freunde, Lehre und Forschung, kein Konkurrenzverkauf; jede Version wird nach zwei Jahren MIT
 - **V01.0.542** Postfach aufräumen: Modus-Zeile erklärt Aus, Vorschau, Sicher und Voll; Umschalten klappt wieder mit zweitem Anmeldeschritt
 - **V01.0.541** Admin ohne zweite Stufe: Profil mit Rolle ist gleich Admin, „Bestätigen“ fragt Admins nicht mehr
-- **V01.0.540** Technik-Seiten: Blase anklicken zeigt sofort ihren Text, Regeln, Zahlen und Code führen zu ihrem Schritt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

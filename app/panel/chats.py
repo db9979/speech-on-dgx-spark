@@ -1443,7 +1443,8 @@ def _private_live():
         p = chatsec.for_live()
     except Exception:
         p = {}
-    return {"private_on": bool(p.get("on")), "devices": int(p.get("devices") or 0)}
+    return {"private_on": bool(p.get("on")), "devices": int(p.get("devices") or 0),
+            "history_waiting": int(p.get("waiting") or 0)}
 
 
 # ---------------------------------------------------------------- photos, files, voice messages (Schritt B)

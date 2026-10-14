@@ -6,6 +6,9 @@
 // anew first (no place or camera data, the Spark cannot do that here). The Spark keeps only boxes and blobs.
 // The Sicherheitsnummer under ⓘ: SHA-512 over both people's current public keys, 12 blocks of 5 digits; compared
 // once, it is remembered on this device until a key changes. Everything that comes out of a box is data (esc, text).
+// A new device of someone who has one already waits for the history (Wahl 2): an older device shows the new device's
+// code (the same as on the new one: made from its public key, so a key the Spark slipped in shows another code), and
+// "Übertragen" wraps each content key once more for the new device ({"b": this device} in the box).
 const CS={db:null,me:null,own:[],keys:{},open:new Map(),urls:new Map()};
 const csEnc=s=>new TextEncoder().encode(s);
 const csRand=n=>crypto.getRandomValues(new Uint8Array(n));
@@ -50,9 +53,11 @@ async function csBox(cid,payload,keys){const K=csRand(32),iv=csRand(12),me=CS.me
     out.k[x.id]={s:csB64(s),i:csB64(wi),w:csB64(new Uint8Array(w))}}
   return out}
 // null: not for this device (sent before it was added) or not from the person it says
+async function csKeyOf(cid,box,keys,w){const snd=keys.find(x=>x.id===box.f);if(!snd)return null;let by=snd;
+  if(w.b){const me=keys.find(x=>x.id===CS.me.kid);by=keys.find(x=>x.id===w.b);if(!by||!me||by.uid!==me.uid)return null}   // only an own older device
+  return {snd,K:await crypto.subtle.decrypt({name:'AES-GCM',iv:csUn(w.i)},await csWrap(by.pub,cid,by.id,CS.me.kid,csUn(w.s)),csUn(w.w))}}
 async function csUnbox(cid,from,box,keys){const w=box&&box.k&&box.k[CS.me.kid];if(!w)return null;
-  const snd=keys.find(x=>x.id===box.f);if(!snd||snd.uid!==from)return null;
-  const K=await crypto.subtle.decrypt({name:'AES-GCM',iv:csUn(w.i)},await csWrap(snd.pub,cid,box.f,CS.me.kid,csUn(w.s)),csUn(w.w));
+  const o=await csKeyOf(cid,box,keys,w);if(!o||o.snd.uid!==from)return null;const K=o.K;
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:csUn(box.iv),additionalData:csEnc(cid)},await csAes(K,'decrypt'),csUn(box.ct));
   return csClean(JSON.parse(new TextDecoder().decode(pt)))}
 // what came out of a box is data from outside: only the known fields, as plain values
@@ -71,7 +76,7 @@ window.csPrepare=async(d,cid)=>{if(!d||!d.private)return;d.cs='';
     if(d.items.some(x=>x.kind==='box'&&x.box&&!keys.some(k=>k.id===x.box.f)))keys=await csKeys(cid,true)}catch{csLock(d);return}
   if(d.items.some(x=>x.kind==='sys'&&(x.sys==='newkey'||x.sys==='keygone')&&x.t>(CS.keys[cid+':t']||0))){keys=await csKeys(cid,true);CS.keys[cid+':t']=Date.now()/1000}
   for(const x of d.items){if(x.kind!=='box'||x.gone)continue;const ck=cid+'|'+x.id;let p=CS.open.get(ck);
-    if(p===undefined){try{p=await csUnbox(cid,x.from,x.box,keys)}catch{p=null}CS.open.set(ck,p)}
+    if(!p){try{p=await csUnbox(cid,x.from,x.box,keys)}catch{p=null}if(p)CS.open.set(ck,p)}   // not yet: maybe the history comes
     csShow(x,p)}
   for(const x of d.items)if(x.reply&&!x.reply.gone){const p=CS.open.get(cid+'|'+x.reply.id);
     if(p){x.reply.text=p.t;x.reply.kind=p.a?p.a.kind:'text'}else if(x.reply.kind==='box')x.reply.text='🔒'}};
@@ -83,6 +88,10 @@ function csLock(d){d.can_send=false;d.why=d.cs==='https'?csNoHttps():d.cs==='nee
   for(const x of d.items)if(x.kind==='box'&&!x.gone)csShow(x,null)}
 // after drawing: the line to add this device, and the attachments decrypted into blob addresses
 window.csAfter=(log,d)=>{if(!d||!d.private)return;
+  const mine=CS.me&&CS.own.find(k=>k.id===CS.me.kid);
+  if(mine&&mine.want&&d.items.some(x=>x.locked)){const n=document.createElement('div');n.className='cx-sys';
+    n.innerHTML=`${esc(t('Ältere Nachrichten liegen auf deinen anderen Geräten. Öffne Chats auf einem davon und tippe „Übertragen“, wenn dort derselbe Code steht:','Older messages are on your other devices. Open Chats on one of them and tap "Transfer" when it shows the same code:'))} <b class="cx-code" data-cscode="${esc(mine.pub)}">…</b>`;
+    log.prepend(n);csCode(mine.pub).then(c=>{const b=n.querySelector('.cx-code');if(b)b.textContent=c})}
   if(d.cs==='need'){const n=document.createElement('div');n.className='cx-sys';
     n.innerHTML=`${esc(t('Damit du hier lesen und schreiben kannst, bekommt dieses Gerät einen eigenen Schlüssel.','To read and write here, this device gets its own key.'))} <button type="button" class="b p" data-cxs="dev">${esc(t('Gerät eintragen','Add this device'))}</button>`;log.prepend(n)}
   log.querySelectorAll('[data-cse]').forEach(el=>csMedia(el,d))};
@@ -159,3 +168,48 @@ async function csAct(e){const b=e.target.closest('[data-cxs]');if(!b)return;cons
   catch(err){if(CX.pane)cxPmsg(err.message,true);else cxSay(err.message)}finally{b.disabled=false}}
 cxEl('cxpane').addEventListener('click',csAct);
 cxEl('cxlog').addEventListener('click',csAct);
+
+// ---------------------------------------------------------------- the history for a new device (Wahl 2)
+// the code both devices show: from the new device's public key only
+async function csCode(pub){const h=new Uint8Array(await crypto.subtle.digest('SHA-256',csEnc('spark-e2e-v1|device|'+pub)));
+  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[h[i]%32];return c}
+const csKindName=k=>({browser:t('Browser','Browser'),android:t('Android-App','Android app'),iphone:t('iPhone-App','iPhone app')})[k]||k;
+// after the chat list is drawn: an older device offers the transfer to a new one of the same person (CSH keeps it
+// across redraws of the list, also while the transfer runs)
+const CSH={t:0,later:0,nk:null,code:'',msg:'',busy:false,ok:''};
+window.csShareCheck=async box=>{if(!csOk())return;csShareDraw(box);if(CSH.busy)return;const wait=3000-(Date.now()-CSH.t);
+  if(wait>0){if(!CSH.later)CSH.later=setTimeout(()=>{CSH.later=0;csShareCheck(cxEl('cxlist'))},wait);return}CSH.t=Date.now();
+  try{await csDevice(false)}catch{return}
+  const me=CS.me&&CS.own.find(k=>k.id===CS.me.kid),nk=me&&!me.want?CS.own.find(k=>k.want&&k.id!==me.id&&k.t>=me.t&&k.pub):null;
+  if((nk&&nk.id)!==(CSH.nk&&CSH.nk.id)){CSH.nk=nk||null;CSH.msg='';CSH.code=nk?await csCode(nk.pub):''}
+  csShareDraw(cxEl('cxlist'))};
+function csShareDraw(box){if(!box)return;const old=box.querySelector('.cx-share');if(old)old.remove();const nk=CSH.nk;
+  if(!nk){if(CSH.ok){const n=document.createElement('div');n.className='cx-share';n.innerHTML=`<b>🔒 ${esc(CSH.ok)}</b>`;box.prepend(n)}return}
+  const when=new Date(nk.t*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const n=document.createElement('div');n.className='cx-share';
+  n.innerHTML=`<b>🔒 ${esc(t('Neues Gerät','New device'))}: ${esc(csKindName(nk.kind)+', '+when)}</b>`+
+    `<small>${esc(t('Verlauf deiner privaten Chats dorthin übertragen? Nur wenn dort derselbe Code steht:','Transfer the history of your private chats there? Only if it shows the same code:'))} <b class="cx-code">${esc(CSH.code)}</b></small>`+
+    `<span class="cx-acts2"><button type="button" class="b p" data-csh="go"${CSH.busy?' disabled':''}>${esc(t('Übertragen','Transfer'))}</button>`+
+    `<button type="button" class="b danger" data-csh="no"${CSH.busy?' disabled':''}>${esc(t('Nicht ich','Not me'))}</button></span>`+
+    (CSH.msg?`<small class="mut">${esc(CSH.msg)}</small>`:'');
+  box.prepend(n)}
+async function csShare(nk){const me=CS.me,list=(CX.S&&CX.S.chats||[]).filter(c=>c.private);let n=0,done=0;
+  for(const c of list){const r=await cxApi('/api/chats/share?'+new URLSearchParams({id:c.id,by:me.kid,new:nk.id}));
+    const keys=await csKeys(c.id,true);let wraps={};
+    const flush=async()=>{if(Object.keys(wraps).length){n+=(await cxApi('/api/chats/share',{id:c.id,by:me.kid,new:nk.id,wraps})).added||0;wraps={}}};
+    for(const it of r.items||[]){let o=null;try{o=await csKeyOf(c.id,{f:it.f},keys,it.w)}catch{}
+      if(!o||o.snd.uid!==it.from)continue;   // only what this device can open and really comes from that person
+      const s=csRand(16),i=csRand(12);
+      const w=await crypto.subtle.encrypt({name:'AES-GCM',iv:i},await csWrap(nk.pub,c.id,me.kid,nk.id,s),o.K);
+      wraps[it.id]={s:csB64(s),i:csB64(i),w:csB64(new Uint8Array(w))};if(Object.keys(wraps).length>=300)await flush()}
+    await flush();done++;CSH.msg=t('Übertragen: ','Transferred: ')+done+' / '+list.length;csShareDraw(cxEl('cxlist'))}
+  await cxApi('/api/chats/share/done',{new:nk.id,n});return n}
+cxEl('cxlist').addEventListener('click',async e=>{const b=e.target.closest('[data-csh]'),nk=CSH.nk;if(!b||!nk||CSH.busy)return;
+  if(b.dataset.csh==='no'&&!confirm(t('Dieses neue Gerät aus den privaten Chats nehmen? Es kann sie danach nicht mehr lesen.','Take this new device out of private chats? It cannot read them afterwards.')))return;
+  CSH.busy=true;csShareDraw(cxEl('cxlist'));
+  try{if(b.dataset.csh==='go'){const n=await csShare(nk);CSH.ok=t('Verlauf übertragen: ','History transferred: ')+n+' '+t('Nachrichten','messages');
+      setTimeout(()=>{CSH.ok='';csShareDraw(cxEl('cxlist'))},8000)}
+    else{await cxApi('/api/chats/keys/remove',{id:nk.id});CS.keys={}}
+    CSH.nk=null;CSH.msg=''}
+  catch(err){CSH.msg=cxTr(err.message)}
+  finally{CSH.busy=false;CSH.t=0;csShareDraw(cxEl('cxlist'))}});

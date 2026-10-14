@@ -1214,7 +1214,7 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{cht.get('chats', 0)} Chats · {cht.get('groups', 0)} Gruppen · heute {cht.get('sent', 0)} Nachrichten · "
                         f"{cht.get('pushed', 0)} Mitteilungen" + (f" · {cht['push_failed']} nicht zugestellt" if cht.get("push_failed") else "")
                         + (f" · {cht.get('media', 0)} Fotos/Dateien/Sprache · {cht.get('media_mb', 0)} MB" if cht.get("media_on") else "")
-                        + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}"
+                        + (f" · 🔒 {cht.get('private', 0)} privat, {cht.get('devices', 0)} Geräte, heute {cht.get('private_sent', 0)}" + (f", Verlauf übertragen: {cht['history_waiting']} wartet" if cht.get("history_waiting") else "")
                            if cht.get("private_on") else "")
                         + (f" · Alle: {cht['all']} Personen" if cht.get("all") else "")
                         + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
