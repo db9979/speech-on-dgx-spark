@@ -23,7 +23,7 @@ import re
 import textwrap
 import tokenize
 
-from technik_seiten import OFFEN, SEITEN_DATEN, S  # noqa: F401  (S for the pages, re-exported)
+from technik_seiten import SEITEN_DATEN, S  # noqa: F401  (S for the pages, re-exported)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
@@ -136,7 +136,8 @@ def _bereiche(v):
 
 
 FORMATE = {"": str, "mb": lambda v: f"{int(v) // 1048576} MB", "min": lambda v: str(int(v) // 60), "bereiche": _bereiche,
-           "anzahl": lambda v: str(len(v))}
+           "anzahl": lambda v: str(len(v)), "prozent": lambda v: f"{round(float(v) * 100)} %",
+           "ms": lambda v: f"{round(float(v) * 1000)} ms"}
 PLATZ = re.compile(r"\{(@?[\w.]+)(?:\|(\w+))?\}")
 
 
@@ -216,9 +217,24 @@ def finden(ref):
 def _tokens(seg):
     """The code without comments, blank lines and indentation, so only a change of what it does counts."""
     skip = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER}
+    text = textwrap.dedent(seg)
+    lines = text.splitlines(keepends=True)
+    out, depth, begin = [], 0, None
     try:
-        toks = tokenize.generate_tokens(io.StringIO(textwrap.dedent(seg)).readline)
-        return " ".join(t.string for t in toks if t.type not in skip)
+        for t in tokenize.generate_tokens(io.StringIO(text).readline):
+            kind = tokenize.tok_name.get(t.type, "")
+            # Python 3.12+ splits f-strings (and 3.14 t-strings) into pieces: rebuilt from the source as one string,
+            # like 3.11 reads them, so the fingerprint is the same on every Python version (tars, GitHub, threads)
+            if kind.endswith("STRING_START"):
+                depth, begin = depth + 1, begin if depth else t.start
+            elif kind.endswith("STRING_END") and depth:
+                depth -= 1
+                if not depth:
+                    (r0, c0), (r1, c1) = begin, t.end
+                    out.append("".join(lines[r0 - 1:r1])[c0:len("".join(lines[r0 - 1:r1 - 1])) + c1])
+            elif not depth and t.type not in skip:
+                out.append(t.string)
+        return " ".join(out)
     except (tokenize.TokenError, IndentationError, SyntaxError):
         return " ".join(seg.split())
 

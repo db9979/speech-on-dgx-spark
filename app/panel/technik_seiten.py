@@ -771,6 +771,259 @@ SEITEN_DATEN = {
         "heute": [],
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
+    "weiche": {
+        "stand": "9885fa671a",
+        "kurz": ("Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und "
+                 "so weiter, heute {intent.GROUPS|anzahl} Gruppen) und grenzt damit die Werkzeuge ein, die das "
+                 "Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens "
+                 "einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.",
+                 "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, "
+                 "today {intent.GROUPS|anzahl} groups) and so narrows the tools the language model sees in this turn. "
+                 "It works with fixed word lists; the model may at most pick once from a fixed list when no rule "
+                 "fits, and that too can only narrow."),
+        "warum": ("Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift "
+                  "seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, "
+                  "kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.",
+                  "Few fitting tools make the model faster and more accurate: it reads less and misses less often. "
+                  "Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can "
+                  "never allow more, at most leave a tool out."),
+        "ablauf": [
+            S("s1", "start", ("Nur die eigene Nachricht", "Only the own message"),
+              ("intent.classify_cfg", "intent.classify_cfg"),
+              ("Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was "
+               "das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert "
+               "hat.",
+               "Only the person's own latest message is read, never an answer before, outside text or what the "
+               "model wrote. The words the admin saved under Features → Switch are added.")),
+            S("s2", "frage", ("Nur Plaudern?", "Only small talk?"),
+              ("„Danke“, „Hallo“, „Gute Nacht“", "„thanks“, „hello“, „good night“"),
+              ("Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein "
+               "Werkzeug.",
+               "If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then "
+               "gets no tool at all."),
+              ("ok", "ja", "s14")),
+            S("s3", "frage", ("Frage zum Spark?", "Question about the Spark?"),
+              ("vor allen anderen Gruppen", "before every other group"),
+              ("„Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht "
+               "nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie "
+               "dazu. Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel "
+               "über den Ort der Frage.",
+               "„How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a "
+               "device or a search: group „spark“. A question about words or languages never counts. When „Ask "
+               "Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was "
+               "asked."),
+              ("ok", "ja", "s9")),
+            S("s4", "schritt", ("Wörter je Gruppe", "Words per group"),
+              ("eingebaut · Pflicht-Wörter · eigene Wörter", "built in · must words · own words"),
+              ("Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne "
+               "Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen "
+               "Wörter je Gruppe (höchstens {intent.MAX_ROUTE_WORDS}, nur ganze Wörter) finden eine Gruppe "
+               "zusätzlich, ersetzen aber nichts.",
+               "Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word "
+               "without a device („all off“) only counts as a whole command. The admin's must words and own words "
+               "per group (at most {intent.MAX_ROUTE_WORDS}, whole words only) find a group as well, but replace "
+               "nothing.")),
+            S("s5", "schritt", ("Vorrang zwischen Gruppen", "Priority between groups"),
+              ("feste Regeln · dann „Nicht bei“", "fixed rules · then „Not with“"),
+              ("Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument "
+               "erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue "
+               "Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der "
+               "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur ist nie "
+               "ein Gerät. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
+               "When several groups match, fixed rules tidy up: weather, list, message, document and „create "
+               "document“ come before smart home when there is no switching command; parcels before mail; „Do I have "
+               "new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly "
+               "or watches something is an agent; a question about language or nature is never a device. Last, the "
+               "admin's „Not with“ words take groups out again.")),
+            S("s6", "frage", ("Gruppe erkannt?", "Group recognized?"),
+              ("eine, zwei oder mehr", "one, two or more"),
+              ("Eine Gruppe oder höchstens {intent.MAX_MIXED} gelten als klar und grenzen ein. Mehr Gruppen auf "
+               "einmal sind nicht klar genug: dann bleiben alle Werkzeuge.",
+               "One group or at most {intent.MAX_MIXED} count as clear and narrow. More groups at once are not "
+               "clear enough: then every tool stays."),
+              ("ok", "ja", "s9")),
+            S("s7", "schritt", ("Hinweiswörter merken", "Note hint words"),
+              ("intent.hints_of · grenzen nie ein", "intent.hints_of · never narrow"),
+              ("Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet "
+               "aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die "
+               "Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird.",
+               "If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ "
+               "points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's "
+               "tools stay when something narrows later.")),
+            S("s8", "frage", ("Folgefrage?", "Follow-up?"),
+              ("„Und morgen?“", "„And tomorrow?“"),
+              ("Ist die Nachricht kurz (höchstens {intent.FOLLOW_MAX} Zeichen), zeigt zurück („und“, „das“, „es“) "
+               "und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die "
+               "eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“.",
+               "If the message is short (at most {intent.FOLLOW_MAX} characters), points back („and“, „that“, „it“) "
+               "and the own question just before had a clear group, that group holds again. Only the own question "
+               "counts, never the answer. The journal says „weiche: Folgefrage“."),
+              ("info", "ja", ("Gruppe der Frage davor", "group of the question before"))),
+            S("s9", "frage", ("Gezielte Werkzeugwahl an?", "Targeted tool choice on?"),
+              ("Schalter des Admins, Freigabe des Profils", "admin's switch, profile release"),
+              ("Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten "
+               "Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle "
+               "Werkzeuge, die die Rechte erlauben.",
+               "Only with this switch does the switch narrow, and not with a picture or a direct smart home command. "
+               "Without it the group only goes to the journal and statistics; the model sees every tool the rights "
+               "allow."),
+              ("ok", "nein", "s14")),
+            S("s10", "frage", ("Modell ordnet ein?", "Model sorts?"),
+              ("nur ohne Gruppe · „Modell ordnet ein“", "only without a group · „the model sorts“"),
+              ("Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt "
+               "das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die "
+               "Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens "
+               "{intent.ASK_TIMEOUT} Sekunden, mit „Schneller Antwortbeginn“ nur {intent.CACHED_WAIT|ms} "
+               "nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der "
+               "Schwelle (Standard {systemone.ROUTE_MIN|prozent}). Die Hinweis-Gruppen bleiben neben der Wahl.",
+               "If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model "
+               "picks one group from the fixed list once (JSON only, only the own message). The question already "
+               "runs beside the preparation from its start; the wait is at most {intent.ASK_TIMEOUT} seconds, with "
+               "„Fast answer start“ only {intent.CACHED_WAIT|ms} after the preparation. With classification "
+               "with probabilities the pick only counts from the threshold (default {systemone.ROUTE_MIN|prozent}). The hint "
+               "groups stay beside the pick."),
+              ("info", "ja", ("Grund „Modell“", "reason „Modell“"))),
+            S("s11", "schritt", ("Eingrenzen", "Narrow"),
+              ("intent.narrow · nie mehr als vorher", "intent.narrow · never more than before"),
+              ("Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer {intent.NARROW_KEEP|anzahl} feste "
+               "(sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
+               "Admins für diese Gruppe (höchstens {intent.MAX_EXTRA}) und was die eigenen Worte ausdrücklich "
+               "nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten "
+               "oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.",
+               "With a clear group its tools stay, plus always {intent.NARROW_KEEP|anzahl} fixed ones (remembering "
+               "something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most "
+               "{intent.MAX_EXTRA}) and what the own words name explicitly („onto the reMarkable“). All only as far "
+               "as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all "
+               "stay.")),
+            S("s12", "frage", ("Knapp?", "Lean?"),
+              ("unklar · „Knapp“ · kein Pflicht-Werkzeug", "unclear · „Lean“ · no required tool"),
+              ("Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein "
+               "Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, "
+               "die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher.",
+               "If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the "
+               "model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed "
+               "tools and the tools of the hint groups. It reads less and starts sooner."),
+              ("info", "ja", ("kurze Liste", "short list"))),
+            S("s13", "schritt", ("Erstes Werkzeug festlegen", "Fix the first tool"),
+              ("intent.forced · intent.direct", "intent.forced · intent.direct"),
+              ("Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste "
+               "Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist "
+               "das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen "
+               "und übermorgen mit dem Datum, das das Panel ausrechnet.",
+               "One single clear group, one required tool and only that one of the group offered: the first round "
+               "must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is "
+               "the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for "
+               "tomorrow and the day after with the date the panel works out.")),
+            S("s14", "ende", ("Journal und Zählung", "Journal and count"),
+              ("weiche: Absicht … · weiche-stats.json", "weiche: Absicht … · weiche-stats.json"),
+              ("Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht "
+               "… | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht "
+               "steht. Gezählt werden je Tag und Gruppe nur Anzahlen ({weiche.KEEP_DAYS} Tage), nie ein Wort der "
+               "Frage. Dann geht die Liste an die Antwort.",
+               "Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | "
+               "gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day "
+               "and group only counts are kept ({weiche.KEEP_DAYS} days), never a word of the question. Then the "
+               "list goes to the answer.")),
+        ],
+        "beispiele": [
+            (("„Mach das Licht im Wohnzimmer aus“", "„Turn off the living room light“"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s9", "s10", "s11", "s12", "s13", "s14"],
+             ("Gruppe smarthome (Wort „Licht“): das Modell sieht nur die Smart-Home-Werkzeuge und die festen.",
+              "Group smarthome (word „Licht“): the model only sees the smart home tools and the fixed ones.")),
+            (("„Und morgen?“ nach einer Wetterfrage", "„And tomorrow?“ after a weather question"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!", "s9", "s10", "s11", "s12", "s13", "s14"],
+             ("Keine Regel greift, aber die Folgefrage übernimmt „wetter“: nur das Wetter-Werkzeug ist Pflicht.",
+              "No rule fits, but the follow-up takes „wetter“: only the weather tool is required.")),
+            (("„Muss ich die Pflanzen gießen?“ mit „Knapp“", "„Do I need to water the plants?“ with „Lean“"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s12!", "s13", "s14"],
+             ("Unklar, Hinweis „gießen“ → wetter: kurze Liste plus Wetter-Werkzeug.",
+              "Unclear, hint „gießen“ → weather: short list plus the weather tool.")),
+            (("„Danke!“", "„Thanks!“"), ["s1", "s2", "s2!", "s14"],
+             ("Gruppe plaudern: Antwort ohne Werkzeug.", "Group small talk: answer without a tool.")),
+        ],
+        "regeln": [
+            [("Fragen, die keine Regel erkennt", "Questions no rule recognizes"), ("Was das Modell sieht", "What the model sees"),
+             ("Zeit", "Time")],
+            [("Alle Werkzeuge (Standard)", "All tools (default)"), ("alles, was die Rechte erlauben", "everything the rights allow"),
+             ("keine zusätzliche", "none added")],
+            [("Modell ordnet ein", "the model sorts"), ("die gewählte Gruppe und die Hinweis-Gruppen", "the picked group and the hint groups"),
+             ("eine kurze Modellfrage nebenher", "a short model question beside")],
+            [("Knapp", "Lean"), ("kurze Liste und Hinweis-Gruppen", "short list and hint groups"), ("keine, beginnt früher", "none, starts sooner")],
+            [("Einordnung mit Wahrscheinlichkeit", "Classification with probability"),
+             ("die Gruppe erst ab der Schwelle", "the group only from the threshold"), ("eine kurze Einordnung nebenher", "a short classification beside")],
+        ],
+        "zahlen": [
+            ("{intent.GROUPS|anzahl}", ("Gruppen der Weiche", "groups of the switch"), "intent.GROUPS"),
+            ("{intent.MAX_MIXED}", ("Gruppen höchstens, die noch eingrenzen", "groups at most that still narrow"), "intent.MAX_MIXED"),
+            ("{intent.FOLLOW_MAX}", ("Zeichen höchstens für eine Folgefrage", "characters at most for a follow-up"), "intent.FOLLOW_MAX"),
+            ("{intent.ASK_TIMEOUT}", ("Sekunden höchstens für die Wahl des Modells", "seconds at most for the model's pick"), "intent.ASK_TIMEOUT"),
+            ("{intent.CACHED_WAIT|ms}", ("Wartezeit mit „Schneller Antwortbeginn“", "waiting with „Fast answer start“"), "intent.CACHED_WAIT"),
+            ("{systemone.ROUTE_MIN|prozent}", ("Standard-Schwelle der Einordnung", "default threshold of the classification"), "systemone.ROUTE_MIN"),
+            ("{intent_bench.BENCH|anzahl}", ("eingebaute Testsätze", "built-in test sentences"), "intent_bench.BENCH"),
+            ("{intent_alltag.ALLTAG|anzahl}", ("Alltagssätze zum Messen", "everyday sentences for measuring"), "intent_alltag.ALLTAG"),
+            ("{weiche.KEEP_VERSIONS}", ("Versionen für Rückgängig", "versions for undo"), "weiche.KEEP_VERSIONS"),
+        ],
+        "einstellen": [
+            ("Funktionen → Gezielte Werkzeugwahl: ohne diesen Schalter grenzt die Weiche nichts ein (Standard aus).",
+             "Features → Targeted tool choice: without this switch the switch narrows nothing (default off)."),
+            ("Funktionen → Weiche: eigene Wörter je Gruppe, „Nicht bei“, zusätzliche Werkzeuge, Gruppen ohne Eingrenzen, "
+             "Pflicht-Wörter, eigene Testsätze und was Fragen bekommen, die keine Regel erkennt. Jede Änderung läuft "
+             "vorher durch alle Testsätze; ändert sich einer, wird erst nach Bestätigung gespeichert. Rückgängig hält "
+             "die letzten {weiche.KEEP_VERSIONS} Fassungen.",
+             "Features → Switch: own words per group, „Not with“, extra tools, groups without narrowing, must words, "
+             "own test sentences and what questions no rule recognizes get. Every change runs through all test "
+             "sentences first; if one changes, it is saved only after confirming. Undo keeps the last "
+             "{weiche.KEEP_VERSIONS} versions."),
+            ("Funktionen → Eindeutiges direkt abrufen: kurze Lesefragen ruft das Panel selbst ab (Standard aus).",
+             "Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off)."),
+        ],
+        "sehen": [
+            ("Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, "
+             "Alltagsquote und Statistik (7 Tage, nur Anzahlen).",
+             "Features → Switch: „Try a sentence“ shows the whole way of a sentence without the model; also test "
+             "sentences, everyday score and statistics (7 days, counts only)."),
+            ("Zustand → Logs: Zeilen „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ und "
+             "„weiche: direkt abgerufen“.",
+             "Status → Logs: lines „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ and "
+             "„weiche: direkt abgerufen“."),
+            ("Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“ und was aus der Wahl des Modells wurde.",
+             "Logs → Requests: per question group, tools „x of y“ and what became of the model's pick."),
+        ],
+        "mehr": [
+            (("Alltagsquote", "Everyday score"), [
+                ("Die Testsätze ({intent_bench.BENCH|anzahl}) halten jede gemeldete Fehlzuordnung fest und müssen alle "
+                 "stimmen. Die Alltagssätze ({intent_alltag.ALLTAG|anzahl}) wurden nie zum Einstellen benutzt: sie messen, "
+                 "wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein "
+                 "Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.",
+                 "The test sentences ({intent_bench.BENCH|anzahl}) hold every reported wrong turn and must all pass. "
+                 "The everyday sentences ({intent_alltag.ALLTAG|anzahl}) were never used for tuning: they measure how "
+                 "many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus "
+                 "protected going down or wrong going up."),
+            ]),
+            (("Werkzeugnamen", "Tool names"), [
+                ("Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle "
+                 "({werkzeuge.NAMES|anzahl} Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.",
+                 "Wherever a tool shows, a readable name comes from one table ({werkzeuge.NAMES|anzahl} tools), for "
+                 "example „Mailbox overview“ instead of mail_tidy_overview."),
+            ]),
+        ],
+        "code": [
+            ("intent.classify", ("Gruppen nach festen Wörtern und Vorrang", "groups by fixed words and priority")),
+            ("intent.Route", ("Gruppe, Grund, Hinweise; wann klar", "group, reason, hints; when clear")),
+            ("intent.hints_of", ("Hinweiswörter", "hint words")),
+            ("intent.follow_up", ("Folgefrage", "follow-up")),
+            ("intent.ask_model", ("Wahl des Modells aus fester Liste", "the model's pick from a fixed list")),
+            ("intent.pick_in_time", ("auf die Wahl warten oder abbrechen", "wait for the pick or stop it")),
+            ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
+            ("intent.lean", ("kurze Liste bei „Knapp“", "short list with „Lean“")),
+            ("intent.forced", ("Pflicht für die erste Runde", "required first tool")),
+            ("weiche.count", ("Statistik ohne Inhalt", "statistics without content")),
+            ("weiche.trace", ("Satz ausprobieren", "try a sentence")),
+            ("intent_alltag.measure", ("Alltagsquote", "everyday score")),
+        ],
+        "tests": ["test_intent", "test_intent_alltag", "test_weiche", "test_werkzeuge", "test_systemone"],
+        "heute": [],
+    },
     "antwort": {
         "stand": "952c4988c3",
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
@@ -3636,5 +3889,3 @@ SEITEN_DATEN = {
     },
 }
 
-# boxes still without a page: the list only gets shorter (the Weiche last, after its rework)
-OFFEN = {"weiche"}

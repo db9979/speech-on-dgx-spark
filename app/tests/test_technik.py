@@ -246,9 +246,7 @@ class Knoten(unittest.TestCase):
     """Knoten-Seiten (technik_knoten.py, Dominik 2026-10-14: „ebenso aktuell halten wie alles andere“)."""
 
     def test_every_box_has_a_page(self):
-        pages, offen = set(technik_knoten.SEITEN_DATEN), technik_knoten.OFFEN
-        self.assertEqual(pages | offen, set(technik.KNOTEN), "every box of the picture gets a page (technik_knoten.SEITEN_DATEN)")
-        self.assertEqual(pages & offen, set(), "a box with a page is no longer open")
+        self.assertEqual(set(technik_knoten.SEITEN_DATEN), set(technik.KNOTEN), "every box of the picture gets a page (technik_knoten.SEITEN_DATEN)")
 
     def test_pages_are_complete(self):
         for nid, p in technik_knoten.SEITEN_DATEN.items():
@@ -293,6 +291,11 @@ class Knoten(unittest.TestCase):
             self.assertEqual(p["stand"], now, f"the code of the box {nid} changed ({', '.join(technik_knoten.refs(p))}): check "
                                               f"its page in technik_knoten.SEITEN_DATEN (way, rules, numbers, texts), then set "
                                               f"its \"stand\" to \"{now}\" and run python3 app/panel/hilfe.py --docs")
+
+    def test_fingerprint_same_on_every_python(self):
+        # 3.12+ split f-strings into pieces; the fingerprint reads them whole, as 3.11 does (tars, GitHub, threads)
+        src = "x = f\"a{b!r:>{w}} {f'''q{z}'''}\" + rf\"\"\"m\n{y}\"\"\"  # c\n"
+        self.assertEqual(technik_knoten._tokens(src), "x = f\"a{b!r:>{w}} {f'''q{z}'''}\" + rf\"\"\"m\n{y}\"\"\"")
 
     def test_fingerprint_counts_what_the_code_does(self):
         t = technik_knoten._tokens

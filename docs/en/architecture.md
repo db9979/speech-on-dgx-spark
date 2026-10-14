@@ -1374,6 +1374,130 @@ flowchart TD
 
 Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `test_weiche`
 
+### Switch
+
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 20 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+
+**Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. Only the own message"])
+  s2{{"2. Only small talk?"}}
+  s3{{"3. Question about the Spark?"}}
+  s4["4. Words per group"]
+  s5["5. Priority between groups"]
+  s6{{"6. Group recognized?"}}
+  s7["7. Note hint words"]
+  s8{{"8. Follow-up?"}}
+  s9{{"9. Targeted tool choice on?"}}
+  s10{{"10. Model sorts?"}}
+  s11["11. Narrow"]
+  s12{{"12. Lean?"}}
+  s13["13. Fix the first tool"]
+  s14(["14. Journal and count"])
+  s1 --> s2
+  s2 -->|no| s3
+  s3 -->|no| s4
+  s4 --> s5
+  s5 --> s6
+  s6 -->|no| s7
+  s7 --> s8
+  s8 -->|no| s9
+  s9 -->|yes| s10
+  s10 -->|no| s11
+  s11 --> s12
+  s12 -->|no| s13
+  s13 --> s14
+  s2 -.->|yes| s14
+  s3 -.->|yes| s9
+  s6 -.->|yes| s9
+  s8x(["group of the question before"])
+  s8 -->|yes| s8x
+  s9 -.->|no| s14
+  s10x(["reason „Modell“"])
+  s10 -->|yes| s10x
+  s12x(["short list"])
+  s12 -->|yes| s12x
+```
+
+1. **Only the own message**: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Switch are added.
+2. **Only small talk?**: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all.
+3. **Question about the Spark?**: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts. When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked.
+4. **Words per group**: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing.
+5. **Priority between groups**: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language or nature is never a device. Last, the admin's „Not with“ words take groups out again.
+6. **Group recognized?**: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays.
+7. **Note hint words**: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later.
+8. **Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“.
+9. **Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
+10. **Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick.
+11. **Narrow**: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
+12. **Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
+13. **Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
+14. **Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer.
+
+**Examples:** „Turn off the living room light“: Group smarthome (word „Licht“): the model only sees the smart home tools and the fixed ones. · „And tomorrow?“ after a weather question: No rule fits, but the follow-up takes „wetter“: only the weather tool is required. · „Do I need to water the plants?“ with „Lean“: Unclear, hint „gießen“ → weather: short list plus the weather tool. · „Thanks!“: Group small talk: answer without a tool.
+
+#### Rules
+
+| Questions no rule recognizes | What the model sees | Time |
+|---|---|---|
+| All tools (default) | everything the rights allow | none added |
+| the model sorts | the picked group and the hint groups | a short model question beside |
+| Lean | short list and hint groups | none, starts sooner |
+| Classification with probability | the group only from the threshold | a short classification beside |
+
+#### Everyday score
+
+- The test sentences (132) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+
+#### Tool names
+
+- Wherever a tool shows, a readable name comes from one table (78 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+
+#### Numbers (from the code)
+
+- **20** groups of the switch
+- **2** groups at most that still narrow
+- **80** characters at most for a follow-up
+- **4** seconds at most for the model's pick
+- **300 ms** waiting with „Fast answer start“
+- **80 %** default threshold of the classification
+- **132** built-in test sentences
+- **183** everyday sentences for measuring
+- **20** versions for undo
+
+#### Settings
+
+- Features → Targeted tool choice: without this switch the switch narrows nothing (default off).
+- Features → Switch: own words per group, „Not with“, extra tools, groups without narrowing, must words, own test sentences and what questions no rule recognizes get. Every change runs through all test sentences first; if one changes, it is saved only after confirming. Undo keeps the last 20 versions.
+- Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off).
+
+#### What you see
+
+- Features → Switch: „Try a sentence“ shows the whole way of a sentence without the model; also test sentences, everyday score and statistics (7 days, counts only).
+- Status → Logs: lines „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ and „weiche: direkt abgerufen“.
+- Logs → Requests: per question group, tools „x of y“ and what became of the model's pick.
+
+#### In the code
+
+- `app/panel/intent.py` `classify`: groups by fixed words and priority
+- `app/panel/intent.py` `Route`: group, reason, hints; when clear
+- `app/panel/intent.py` `hints_of`: hint words
+- `app/panel/intent.py` `follow_up`: follow-up
+- `app/panel/intent.py` `ask_model`: the model's pick from a fixed list
+- `app/panel/intent.py` `pick_in_time`: wait for the pick or stop it
+- `app/panel/intent.py` `narrow`: narrow the tools
+- `app/panel/intent.py` `lean`: short list with „Lean“
+- `app/panel/intent.py` `forced`: required first tool
+- `app/panel/weiche.py` `count`: statistics without content
+- `app/panel/weiche.py` `trace`: try a sentence
+- `app/panel/intent_alltag.py` `measure`: everyday score
+
+Self-tests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_werkzeuge`, `test_systemone`
+
 ### Build answer
 
 This is where the answer is made: the panel asks the language model in rounds, runs offered tools, checks every finished sentence by fixed rules and sends text and sound to the device as one stream. The panel decides the checks, never the model.

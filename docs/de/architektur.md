@@ -1374,6 +1374,130 @@ flowchart TD
 
 Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `test_weiche`
 
+### Weiche
+
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 20 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+
+**Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Nur die eigene Nachricht"])
+  s2{{"2. Nur Plaudern?"}}
+  s3{{"3. Frage zum Spark?"}}
+  s4["4. Wörter je Gruppe"]
+  s5["5. Vorrang zwischen Gruppen"]
+  s6{{"6. Gruppe erkannt?"}}
+  s7["7. Hinweiswörter merken"]
+  s8{{"8. Folgefrage?"}}
+  s9{{"9. Gezielte Werkzeugwahl an?"}}
+  s10{{"10. Modell ordnet ein?"}}
+  s11["11. Eingrenzen"]
+  s12{{"12. Knapp?"}}
+  s13["13. Erstes Werkzeug festlegen"]
+  s14(["14. Journal und Zählung"])
+  s1 --> s2
+  s2 -->|nein| s3
+  s3 -->|nein| s4
+  s4 --> s5
+  s5 --> s6
+  s6 -->|nein| s7
+  s7 --> s8
+  s8 -->|nein| s9
+  s9 -->|ja| s10
+  s10 -->|nein| s11
+  s11 --> s12
+  s12 -->|nein| s13
+  s13 --> s14
+  s2 -.->|ja| s14
+  s3 -.->|ja| s9
+  s6 -.->|ja| s9
+  s8x(["Gruppe der Frage davor"])
+  s8 -->|ja| s8x
+  s9 -.->|nein| s14
+  s10x(["Grund „Modell“"])
+  s10 -->|ja| s10x
+  s12x(["kurze Liste"])
+  s12 -->|ja| s12x
+```
+
+1. **Nur die eigene Nachricht**: Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert hat.
+2. **Nur Plaudern?**: Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein Werkzeug.
+3. **Frage zum Spark?**: „Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie dazu. Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel über den Ort der Frage.
+4. **Wörter je Gruppe**: Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen Wörter je Gruppe (höchstens 20, nur ganze Wörter) finden eine Gruppe zusätzlich, ersetzen aber nichts.
+5. **Vorrang zwischen Gruppen**: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur ist nie ein Gerät. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.
+6. **Gruppe erkannt?**: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge.
+7. **Hinweiswörter merken**: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird.
+8. **Folgefrage?**: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“.
+9. **Gezielte Werkzeugwahl an?**: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben.
+10. **Modell ordnet ein?**: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl.
+11. **Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 4 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
+12. **Knapp?**: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher.
+13. **Erstes Werkzeug festlegen**: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet.
+14. **Journal und Zählung**: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort.
+
+**Beispiele:** „Mach das Licht im Wohnzimmer aus“: Gruppe smarthome (Wort „Licht“): das Modell sieht nur die Smart-Home-Werkzeuge und die festen. · „Und morgen?“ nach einer Wetterfrage: Keine Regel greift, aber die Folgefrage übernimmt „wetter“: nur das Wetter-Werkzeug ist Pflicht. · „Muss ich die Pflanzen gießen?“ mit „Knapp“: Unklar, Hinweis „gießen“ → wetter: kurze Liste plus Wetter-Werkzeug. · „Danke!“: Gruppe plaudern: Antwort ohne Werkzeug.
+
+#### Regeln
+
+| Fragen, die keine Regel erkennt | Was das Modell sieht | Zeit |
+|---|---|---|
+| Alle Werkzeuge (Standard) | alles, was die Rechte erlauben | keine zusätzliche |
+| Modell ordnet ein | die gewählte Gruppe und die Hinweis-Gruppen | eine kurze Modellfrage nebenher |
+| Knapp | kurze Liste und Hinweis-Gruppen | keine, beginnt früher |
+| Einordnung mit Wahrscheinlichkeit | die Gruppe erst ab der Schwelle | eine kurze Einordnung nebenher |
+
+#### Alltagsquote
+
+- Die Testsätze (132) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+
+#### Werkzeugnamen
+
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (78 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+
+#### Zahlen (aus dem Code)
+
+- **20** Gruppen der Weiche
+- **2** Gruppen höchstens, die noch eingrenzen
+- **80** Zeichen höchstens für eine Folgefrage
+- **4** Sekunden höchstens für die Wahl des Modells
+- **300 ms** Wartezeit mit „Schneller Antwortbeginn“
+- **80 %** Standard-Schwelle der Einordnung
+- **132** eingebaute Testsätze
+- **183** Alltagssätze zum Messen
+- **20** Versionen für Rückgängig
+
+#### Einstellen
+
+- Funktionen → Gezielte Werkzeugwahl: ohne diesen Schalter grenzt die Weiche nichts ein (Standard aus).
+- Funktionen → Weiche: eigene Wörter je Gruppe, „Nicht bei“, zusätzliche Werkzeuge, Gruppen ohne Eingrenzen, Pflicht-Wörter, eigene Testsätze und was Fragen bekommen, die keine Regel erkennt. Jede Änderung läuft vorher durch alle Testsätze; ändert sich einer, wird erst nach Bestätigung gespeichert. Rückgängig hält die letzten 20 Fassungen.
+- Funktionen → Eindeutiges direkt abrufen: kurze Lesefragen ruft das Panel selbst ab (Standard aus).
+
+#### Was du siehst
+
+- Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, Alltagsquote und Statistik (7 Tage, nur Anzahlen).
+- Zustand → Logs: Zeilen „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ und „weiche: direkt abgerufen“.
+- Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“ und was aus der Wahl des Modells wurde.
+
+#### Im Code
+
+- `app/panel/intent.py` `classify`: Gruppen nach festen Wörtern und Vorrang
+- `app/panel/intent.py` `Route`: Gruppe, Grund, Hinweise; wann klar
+- `app/panel/intent.py` `hints_of`: Hinweiswörter
+- `app/panel/intent.py` `follow_up`: Folgefrage
+- `app/panel/intent.py` `ask_model`: Wahl des Modells aus fester Liste
+- `app/panel/intent.py` `pick_in_time`: auf die Wahl warten oder abbrechen
+- `app/panel/intent.py` `narrow`: Werkzeuge eingrenzen
+- `app/panel/intent.py` `lean`: kurze Liste bei „Knapp“
+- `app/panel/intent.py` `forced`: Pflicht für die erste Runde
+- `app/panel/weiche.py` `count`: Statistik ohne Inhalt
+- `app/panel/weiche.py` `trace`: Satz ausprobieren
+- `app/panel/intent_alltag.py` `measure`: Alltagsquote
+
+Selbsttests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_werkzeuge`, `test_systemone`
+
 ### Antwort bauen
 
 Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. Die Prüfungen entscheidet das Panel, nie das Modell.

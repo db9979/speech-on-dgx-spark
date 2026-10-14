@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.539** Die Weiche hat jetzt auch ihre Seite unter Zustand → Technik: Gruppen, Hinweiswörter, Folgefragen, Eingrenzen
 - **V01.0.538** Hinweise „neu freigegeben“ nur bei echtem Einrichten, verschwinden danach; „Einrichten“ springt direkt zur Einstellung
 - **V01.0.537** Outlook classic startet mit dem Spark-Add-in wieder
 - **V01.0.536** Tests wieder grün: der Test der Modell-Liste beginnt mit einer frischen Minute ihres Abruflimits
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.532** Jeder Kasten unter Zustand → Technik erklärt genau, wie er arbeitet, mit Schaubild Schritt für Schritt und Beispielen
 - **V01.0.531** Gesperrt, aber eigene Daten löschbar: Ich zeigt für gesperrte Funktionen eine Karte mit „Daten löschen“
 - **V01.0.530** Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, die Alltagsquote misst ehrlich; ihre Einstellungen an einem Ort
-- **V01.0.529** Aufräum-Regel „eine Quelle“ mit Wächter-Tests; iPhone-App öffnet jede Ich-Seite in der App, Panel-Bereiche ohne Schalter je Profil
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
