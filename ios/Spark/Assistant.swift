@@ -8,7 +8,8 @@ import UserNotifications
 @MainActor
 final class Conversation: ObservableObject {
     struct Message: Identifiable {
-        let id = UUID()
+        /// stays the same when the conversation is caught up from the Spark (catchUp), so the bubbles keep their place
+        var id = UUID()
         let role: String
         var text: String
         var mark: String?
@@ -86,7 +87,20 @@ final class Conversation: ObservableObject {
     @Published var stored = false
     @Published var storing = false
     /// the Spark cannot be reached (no network, Spark or proxy down): typed questions wait in the outbox
-    @Published var unreachable = false
+    @Published var unreachable = false { didSet { if unreachable != oldValue { offlineSoon() } } }
+    /// the band „Spark nicht erreichbar“: only after 3 s without the Spark, so a short network change or the Spark's
+    /// restart during an update does not make it blink and push the page down (plaene/ruhige-seiten.md)
+    @Published private(set) var offlineShown = false
+    private var offlineTask: Task<Void, Never>?
+    private func offlineSoon() {
+        offlineTask?.cancel()
+        guard unreachable else { offlineShown = false; return }
+        offlineTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard let self, !Task.isCancelled, self.unreachable else { return }
+            withAnimation(.easeInOut(duration: 0.25)) { self.offlineShown = true }
+        }
+    }
     @Published var outbox: [Outbox.Item] = Outbox.load()
     /// devices of the profile in room mode (only with "Raum-Modus in der App zeigen"): line in the chat, Live Activity, widget
     @Published var rooms: [ListeningRoom] = []
@@ -306,7 +320,15 @@ final class Conversation: ObservableObject {
         }
         // only when the Spark has more than the app shows (the app keeps its own labels for what it asked itself)
         guard theirs.count > messages.suffix(60).count else { return }
-        messages = theirs
+        // the messages both have keep their identity, label and vote: SwiftUI only adds the new bubbles at the end
+        // instead of drawing the whole conversation anew (before: every bubble new, the list jumped)
+        let mine = messages.count <= theirs.count ? messages : []
+        messages = theirs.enumerated().map { (i, m) -> Message in
+            guard i < mine.count, mine[i].role == m.role else { return m }
+            var k = m
+            k.id = mine[i].id; k.label = mine[i].label; k.rateId = mine[i].rateId; k.rated = mine[i].rated
+            return k
+        }
         saved = messages.count
     }
 

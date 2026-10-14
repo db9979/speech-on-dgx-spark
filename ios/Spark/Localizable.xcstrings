@@ -7550,6 +7550,16 @@
           }
         }
       }
+    },
+    "Gerade vom Admin ausgeschaltet. Zurück schließt die Seite.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just switched off by the admin. Back closes the page."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

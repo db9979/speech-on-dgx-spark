@@ -33,6 +33,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
+import org.json.JSONObject
 
 /**
  * The whole app: the Spark's page in a WebView (on a phone it looks like the iPhone app, appview.js) and a
@@ -50,6 +51,11 @@ class MainActivity : Activity() {
     private lateinit var address: EditText
     private lateinit var hint: TextView
     private lateinit var strip: LinearLayout
+    private lateinit var wait: LinearLayout
+    /** the page loaded once: a later load error is the Spark restarting (an update), not a wrong address */
+    private var loadedOnce = false
+    private var failedNow = false
+    private var retries = 0
     private lateinit var stripText: TextView
     private var answer: Updater.Answer? = null
     private var askedAt = 0L
@@ -70,6 +76,8 @@ class MainActivity : Activity() {
         page.addView(web, LinearLayout.LayoutParams(-1, 0, 1f))
         root.addView(page, FrameLayout.LayoutParams(-1, -1))
         root.addView(setup, FrameLayout.LayoutParams(-1, -1))
+        wait = makeWait()
+        root.addView(wait, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
         // Android 15 draws behind the system bars: keep the page clear of them and of the keyboard
         if (Build.VERSION.SDK_INT >= 35) {
@@ -157,8 +165,20 @@ class MainActivity : Activity() {
         LiveConn.check(this)
     }
 
-    private fun load(url: String) {
+    /**
+     * The open page stays when only its jump changes (#weg=, #ask=, #talk from a note, a share or the assistant
+     * button): the page takes the new hash itself instead of loading anew, so nothing closes and nothing jumps to the
+     * top (plaene/ruhige-seiten.md). [force]: a new address, always load.
+     */
+    private fun load(url: String, force: Boolean = false) {
         showWeb()
+        val cur = web.url
+        val cut = url.indexOf('#')
+        val path = if (cut >= 0) url.substring(0, cut) else url
+        if (!force && loadedOnce && cur != null && cur.substringBefore('#') == path) {
+            if (cut >= 0) web.evaluateJavascript("location.hash='';location.hash=" + JSONObject.quote(url.substring(cut)), null)
+            return
+        }
         web.loadUrl(url)
     }
 
@@ -186,8 +206,27 @@ class MainActivity : Activity() {
                 return true
             }
 
+            override fun onPageFinished(view: WebView, url: String) {
+                if (failedNow) { failedNow = false; return }
+                loadedOnce = true
+                retries = 0
+                wait.visibility = View.GONE
+            }
+
             override fun onReceivedError(view: WebView, req: WebResourceRequest, err: WebResourceError) {
-                if (req.isForMainFrame) showSetup("Der Spark ist nicht erreichbar (${err.description}). Adresse prüfen oder später noch einmal.")
+                if (!req.isForMainFrame) return
+                // the page was there before: the Spark restarts (an update). A calm note over the page and a new try,
+                // instead of the address screen; only after about five minutes the address screen again
+                if (loadedOnce && retries < 25) {
+                    failedNow = true
+                    wait.visibility = View.VISIBLE
+                    val delay = minOf(15_000L, 2_000L shl minOf(retries, 3))
+                    retries++
+                    web.postDelayed({ web.reload() }, delay)
+                    return
+                }
+                wait.visibility = View.GONE
+                showSetup("Der Spark ist nicht erreichbar (${err.description}). Adresse prüfen oder später noch einmal.")
             }
         }
         w.webChromeClient = object : WebChromeClient() {
@@ -427,6 +466,33 @@ class MainActivity : Activity() {
         return box
     }
 
+    /** „Spark startet neu …“ over the page while it comes back (see onReceivedError) */
+    private fun makeWait(): LinearLayout {
+        val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.gravity = Gravity.CENTER
+        box.setBackgroundColor(if (dark) Color.BLACK else Color.rgb(242, 242, 247))
+        box.isClickable = true
+        val p = (24 * resources.displayMetrics.density).toInt()
+        box.setPadding(p, p, p, p)
+        box.addView(ProgressBar(this))
+        val t = TextView(this)
+        t.text = "Spark startet neu … Die Seite kommt gleich wieder."
+        t.textSize = 16f
+        t.gravity = Gravity.CENTER
+        t.setTextColor(if (dark) Color.LTGRAY else Color.DKGRAY)
+        t.setPadding(0, p / 2, 0, p / 2)
+        box.addView(t)
+        val other = Button(this)
+        other.text = "Adresse ändern"
+        other.setOnClickListener { wait.visibility = View.GONE; showSetup(null) }
+        box.addView(other)
+        box.visibility = View.GONE
+        return box
+    }
+
     private fun showSetup(problem: String?) {
         hint.text = problem ?: "Adresse deines Spark, so wie du ihn im Browser öffnest (mit https und echtem Zertifikat, z. B. über deinen Reverse Proxy). Danach meldest du dich wie im Browser mit Name und PIN an."
         address.setText(store.base ?: "")
@@ -450,7 +516,8 @@ class MainActivity : Activity() {
             store.lastNote = 0
         }
         store.base = base
-        load("$base/")
+        loadedOnce = false
+        load("$base/", force = true)
         NotePoll.schedule(this)
         askNotes()
         LiveConn.check(this)

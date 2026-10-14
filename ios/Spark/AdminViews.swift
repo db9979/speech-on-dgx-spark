@@ -23,7 +23,12 @@ final class AdminSession: ObservableObject {
 
     /// Asks the Spark what this app's profile may (whoami with the app's key).
     func refresh() async {
-        guard let who = try? await object("GET", "api/whoami") else { signedIn = false; role = ""; return }
+        let who: [String: Any]
+        do { who = try await object("GET", "api/whoami") } catch {
+            // the Spark restarting (an update) is no sign-out: the admin pages stay as they are (plaene/ruhige-seiten.md)
+            if NetWatch.offline(error) { return }
+            signedIn = false; role = ""; return
+        }
         version = who["version"] as? String ?? ""
         let by = who["admin_by"] as? String ?? ""
         role = ["admin", "manager"].contains(by) ? by : ""
@@ -110,17 +115,37 @@ struct AdminView: View {
 
 // ---------------------------------------------------------------- Zustand → Monitoring
 
+/// A timed poll's error, shown only from the second miss in a row (the Spark's restart during an update is one short
+/// miss), at the end of the list: the page keeps its last data and nothing shifts by itself (plaene/ruhige-seiten.md)
+struct PollMiss {
+    private(set) var text: String?
+    private var misses = 0
+    mutating func ok() { misses = 0; text = nil }
+    mutating func fail(_ e: Error) { misses += 1; if misses >= 2 { text = e.localizedDescription } }
+}
+
+/// Rows of a list that grows or changes while it is open keep their identity by what they say, not by their place
+/// (a new line on top would otherwise redraw every row): the text, and a counter for lines that say the same.
+func stableRows(_ rows: [[String: Any]], _ key: ([String: Any]) -> String) -> [(id: String, row: [String: Any])] {
+    var seen: [String: Int] = [:]
+    return rows.map { (r: [String: Any]) -> (id: String, row: [String: Any]) in
+        let k = key(r), n = seen[k, default: 0]
+        seen[k] = n + 1
+        return (id: n == 0 ? k : k + "#\(n)", row: r)
+    }
+}
+
 struct StatusView: View {
     @State private var d: [String: Any] = [:]
-    @State private var error: String?
+    @State private var miss = PollMiss()
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             let alerts = d["alerts"] as? [[String: Any]] ?? []
             Section("Braucht dich") {
                 if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(.green) }
-                ForEach(Array(alerts.enumerated()), id: \.offset) { _, a in
+                ForEach(stableRows(alerts) { ($0["text"] as? String ?? "") }, id: \.id) { item in
+                    let a = item.row
                     Label {
                         Text(verbatim: a["text"] as? String ?? "")
                     } icon: {
@@ -158,6 +183,7 @@ struct StatusView: View {
                     LabeledContent(name) { Text(verbatim: state).foregroundStyle(Self.color(state)) }
                 }
             }
+            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Monitoring")
         .refreshable { await load() }
@@ -170,8 +196,8 @@ struct StatusView: View {
     }
 
     private func load() async {
-        do { d = try await AdminSession.shared.object("GET", "api/status"); error = nil }
-        catch { self.error = error.localizedDescription }
+        do { d = try await AdminSession.shared.object("GET", "api/status"); miss.ok() }
+        catch { miss.fail(error) }
     }
 
     static func num(_ v: Any?) -> String {
@@ -428,7 +454,8 @@ struct LogsView: View {
                 }
             }
             Section {
-                ForEach(Array(rows.enumerated().reversed()), id: \.offset) { _, r in
+                ForEach(stableRows(rows) { ($0["t"] as? String ?? "") + "|" + ($0["msg"] as? String ?? "") }.reversed(), id: \.id) { item in
+                    let r = item.row
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: (r["t"] as? String ?? "") + (((r["area"] as? String) ?? "").isEmpty ? "" : " · " + (r["area"] as? String ?? "")))
                             .font(.caption2).foregroundStyle(.secondary)
@@ -481,6 +508,7 @@ struct ChecksView: View {
     @State private var quality: [String: Any] = [:]
     @State private var vorrang: [String: Any] = [:]
     @State private var error: String?
+    @State private var miss = PollMiss()
 
     var body: some View {
         List {
@@ -516,6 +544,7 @@ struct ChecksView: View {
                 }
                 Button("Vorrang prüfen") { Task { await run("api/vorrang") } }.disabled(vorrang["running"] as? Bool == true)
             } header: { Text("Vorrang für Sprache") } footer: { Text("Dauert etwa eine Minute.") }
+            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Prüfen")
         .refreshable { await load() }
@@ -533,8 +562,8 @@ struct ChecksView: View {
             live = try await s.object("GET", "api/livecheck")
             quality = try await s.object("GET", "api/quality")
             vorrang = try await s.object("GET", "api/vorrang")
-            error = nil
-        } catch { self.error = error.localizedDescription }
+            miss.ok()
+        } catch { miss.fail(error) }
     }
 
     private func run(_ path: String, timeout: TimeInterval = 60) async {

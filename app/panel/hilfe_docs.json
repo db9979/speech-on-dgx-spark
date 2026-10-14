@@ -21,7 +21,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "Verbindung von selbst. Live zeigt unter Verbindungen „Android-App (sofort)“ nur mit der Anzahl. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat. - Kamera für Videoanrufe (ab 1.3.1, V01.0.556): Die App fragt beim ersten Videoanruf in Chats nach der Kamera, beim ersten Anruf nach dem Mikrofon; nur für die Seite des eigenen Sparks. Ohne Kamera geht der Anruf mit Ton weiter. - Update in der App (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus). Freigegeben zeigt die App oben einen Streifen „Neue App-Version … · Jetzt aktualisieren“ (✕ blendet ihn bis zur nächsten Version aus); auch die Mitteilung „"
+"text": "Verbindung von selbst. Live zeigt unter Verbindungen „Android-App (sofort)“ nur mit der Anzahl. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat. - Ruhig beim Update des Spark (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die App „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa fünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle. - Kamera für Videoanrufe (ab 1.3.1, V01.0.556): Di"
 },
 {
 "lang": "de",
@@ -29,7 +29,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "Neue Spark-App“ und der Knopf unter Ich → Android-App starten das Update. Die App fragt nur ihren eigenen Spark (/api/profile/android: Version, Größe, SHA-256), nie GitHub, und lädt die APK mit ihrer Anmeldung von GET /api/android/apk in ihren Cache. Vor dem Installieren prüft sie selbst: Größe und SHA-256 wie gemeldet, Paketname io.github.db9979.spark, höhere Versionsnummer, gleicher Signierschlüssel wie die installierte App. Dann übernimmt der Paket-Installer von Android; er prüft die Signatur noch einmal und fragt „Aktualisieren“. Beim ersten Mal fragt Android einmal, ob die Spark-App Apps installieren darf („Dieser Quelle vertrauen“). Passt etwas nicht, löscht die App die Datei und installiert nichts. Ganz ohne Tipp geht es nicht: Still installieren dürfen nur Store-Apps oder Apps einer Firmen-Geräteverwaltung. Das Update auf 1.3.0 selbst läuft noch einmal über den Download-Link. - Versionen der Handys: Zustand → Geräte-Updates zeigt für die Android-App, welches Profil welche App-Version hat und wie viele Handys aktuell sind (aus der Kennung „SparkAndroid/x.y.z“ ihrer Anfragen, nur im Speicher, 14 Tage); Live zählt „Android aktuell/alle“. Eine neue Version eines Profils steht a"
+"text": "e App fragt beim ersten Videoanruf in Chats nach der Kamera, beim ersten Anruf nach dem Mikrofon; nur für die Seite des eigenen Sparks. Ohne Kamera geht der Anruf mit Ton weiter. - Update in der App (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus). Freigegeben zeigt die App oben einen Streifen „Neue App-Version … · Jetzt aktualisieren“ (✕ blendet ihn bis zur nächsten Version aus); auch die Mitteilung „Neue Spark-App“ und der Knopf unter Ich → Android-App starten das Update. Die App fragt nur ihren eigenen Spark (/api/profile/android: Version, Größe, SHA-256), nie GitHub, und lädt die APK mit ihrer Anmeldung von GET /api/android/apk in ihren Cache. Vor dem Installieren prüft sie selbst: Größe und SHA-256 wie gemeldet, Paketname io.github.db9979.spark, höhere Versionsnummer, gleicher Signierschlüssel wie die installierte App. Dann übernimmt der Paket-Installer von Android; er prüft die Signatur noch einmal und fragt „Aktualisieren“. Beim ersten Mal fragt Android einmal, ob die Spark-App Apps installieren darf („Dieser Quelle vertrauen“). Passt etwas nicht, löscht die App die Datei und installiert nichts. Ganz ohne Tipp geht es nicht: Still i"
 },
 {
 "lang": "de",
@@ -37,7 +37,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "ls Zeile android: app version … -> … im Log."
+"text": "nstallieren dürfen nur Store-Apps oder Apps einer Firmen-Geräteverwaltung. Das Update auf 1.3.0 selbst läuft noch einmal über den Download-Link. - Versionen der Handys: Zustand → Geräte-Updates zeigt für die Android-App, welches Profil welche App-Version hat und wie viele Handys aktuell sind (aus der Kennung „SparkAndroid/x.y.z“ ihrer Anfragen, nur im Speicher, 14 Tage); Live zählt „Android aktuell/alle“. Eine neue Version eines Profils steht als Zeile android: app version … -> … im Log."
 },
 {
 "lang": "de",
@@ -5189,7 +5189,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": " der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - In „Meine Dokumente“ speichern: Ist im Panel unter Ich → iPhone-App „Dokumente aus der App ablegen“ an, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
+"text": " der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - In „Meine Dokumente“ speichern: Ist im Panel unter Ich → iPhone-App „Dokumente aus der App ablegen“ an, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Ruhig, nichts springt (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachrichten von einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin sie gerade sperrt (mit Hinweis oben; Zurück s"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"title": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"text": "chließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
 },
 {
 "lang": "de",
@@ -6429,7 +6437,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": " the number only. - Assistant button: Settings → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Camera for video calls (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound. - Update in the app (1.3.0 and later, V01.0.533): admin: Features → Android app → \"Android: update in the app\" (off). Once released the app shows a strip \"New app version … · Update now\" at the top (✕ hides it until the next version); the note \"New Spark app\" and the button under Me → Android app start the update too. The app asks only its own Spark (/api/profile/android: version"
+"text": " the number only. - Assistant button: Settings → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Calm during a Spark update (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows \"Spark startet neu … Die Seite kommt gleich wieder.\" (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place. - Camera for video calls (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Cha"
 },
 {
 "lang": "en",
@@ -6437,7 +6445,15 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": ", size, SHA-256), never GitHub, and loads the APK with its sign-in from GET /api/android/apk into its cache. Before installing it checks itself: size and SHA-256 as reported, package name io.github.db9979.spark, a higher version code, the same signing key as the installed app. Then Android's package installer takes over; it checks the signature once more and asks \"Update\". The first time Android asks once whether the Spark app may install apps (\"Allow from this source\"). If anything does not match, the app deletes the file and installs nothing. It cannot work without a tap: only store apps or apps of a company device management may install silently. The update to 1.3.0 itself still goes once through the download link. - Versions of the phones: Status → Device updates shows for the Android app which profile runs which app version and how many phones are up to date (from the \"SparkAndroid/x.y.z\" tag of their requests, in memory only, 14 days); Live counts \"Android current/all\". A new version of a profile shows as a line android: app version … -> … in the log."
+"text": "ts, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound. - Update in the app (1.3.0 and later, V01.0.533): admin: Features → Android app → \"Android: update in the app\" (off). Once released the app shows a strip \"New app version … · Update now\" at the top (✕ hides it until the next version); the note \"New Spark app\" and the button under Me → Android app start the update too. The app asks only its own Spark (/api/profile/android: version, size, SHA-256), never GitHub, and loads the APK with its sign-in from GET /api/android/apk into its cache. Before installing it checks itself: size and SHA-256 as reported, package name io.github.db9979.spark, a higher version code, the same signing key as the installed app. Then Android's package installer takes over; it checks the signature once more and asks \"Update\". The first time Android asks once whether the Spark app may install apps (\"Allow from this source\"). If anything does not match, the app deletes the file and installs nothing. It cannot work without a tap: only store apps or apps of a company device management may install silently. The update to 1.3.0 itself still goes o"
+},
+{
+"lang": "en",
+"src": "android-app",
+"file": "Android app \"Spark\" (APK, no store)",
+"head": "Android app \"Spark\" (APK, no store)",
+"title": "Android app \"Spark\" (APK, no store)",
+"text": "nce through the download link. - Versions of the phones: Status → Device updates shows for the Android app which profile runs which app version and how many phones are up to date (from the \"SparkAndroid/x.y.z\" tag of their requests, in memory only, 14 days); Live counts \"Android current/all\". A new version of a profile shows as a line android: app version … -> … in the log."
 },
 {
 "lang": "en",
@@ -11381,7 +11397,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My documents\": With \"Store documents from the app\" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
+"text": "to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My documents\": With \"Store documents from the app\" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - Calm, nothing jumps (since V01.0.570): the note \"Spark not reachable\" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page under Settings stays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the list, rows in Logs and hints"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Quick start, history, photos, offline",
+"title": "Quick start, history, photos, offline",
+"text": " keep their place. With the charger, the history stays in place behind the stand view. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
 },
 {
 "lang": "en",

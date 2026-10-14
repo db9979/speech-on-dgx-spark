@@ -179,7 +179,11 @@ struct ChatView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if talk.standing { StandView() } else { talking }
+                // the conversation stays in place behind the stand view (plugging in no longer redraws it and loses the scroll)
+                ZStack {
+                    talking.opacity(talk.standing ? 0 : 1).allowsHitTesting(!talk.standing).accessibilityHidden(talk.standing)
+                    if talk.standing { StandView() }
+                }
             }
             .navigationTitle("Spark")
             .navigationBarTitleDisplayMode(.inline)
@@ -271,7 +275,7 @@ struct ChatView: View {
 
     private var talking: some View {
         VStack(spacing: 0) {
-            if talk.unreachable { OfflineBanner() }
+            if talk.offlineShown { OfflineBanner().transition(.move(edge: .top).combined(with: .opacity)) }
             if !talk.rooms.isEmpty { RoomBanner() }
             FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face, acts: talk.allowed.faceLife ? talk.faceActs : nil)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
@@ -732,6 +736,31 @@ struct MicButton: View {
     }
 }
 
+/// A page under Einstellungen that is open while its right goes away (the admin blocks it, Funktionen): it stays open
+/// with a note instead of vanishing under the finger; back closes it (plaene/ruhige-seiten.md)
+private struct KeepOpen: ViewModifier {
+    let key: String
+    let on: Bool
+    @Binding var open: Set<String>
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { open.insert(key) }
+            .safeAreaInset(edge: .top) {
+                if !on {
+                    Label("Gerade vom Admin ausgeschaltet. Zurück schließt die Seite.", systemImage: "lock")
+                        .font(.footnote).padding(8).frame(maxWidth: .infinity).background(.thinMaterial)
+                }
+            }
+    }
+}
+
+extension View {
+    fileprivate func keepOpen(_ key: String, _ on: Bool, _ open: Binding<Set<String>>) -> some View {
+        modifier(KeepOpen(key: key, on: on, open: open))
+    }
+}
+
 struct SettingsView: View {
     @EnvironmentObject var app: AppState
     @EnvironmentObject var talk: Conversation
@@ -754,6 +783,8 @@ struct SettingsView: View {
     @State private var myStatus = false
     /// Gesicht: the profile's own face ("" = the Spark's), the same value as Ich → Gespräch → Anzeige in the panel
     @State private var face = ""
+    /// the pages open below this one: they keep their link while open, even when their right goes away meanwhile
+    @State private var openPages: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -778,35 +809,35 @@ struct SettingsView: View {
                 }
                 Section {
                     NavigationLink("Mein Profil") { ProfileView() }
-                    if talk.allowed.docs {
-                        NavigationLink("Meine Dokumente") { DocumentsView(manage: talk.allowed.areas.contains("app_docs_edit")) }
+                    if talk.allowed.docs || openPages.contains("docs") {
+                        NavigationLink("Meine Dokumente") { DocumentsView(manage: talk.allowed.areas.contains("app_docs_edit")).keepOpen("docs", talk.allowed.docs, $openPages) }
                     }
-                    if talk.allowed.make {
-                        NavigationLink("Vom Spark erstellt") { MadeDocsView() }
+                    if talk.allowed.make || openPages.contains("make") {
+                        NavigationLink("Vom Spark erstellt") { MadeDocsView().keepOpen("make", talk.allowed.make, $openPages) }
                     }
-                    if talk.allowed.areas.contains("app_mine") {
-                        NavigationLink("Mein Alltag") { MineView() }
+                    if talk.allowed.areas.contains("app_mine") || openPages.contains("mine") {
+                        NavigationLink("Mein Alltag") { MineView().keepOpen("mine", talk.allowed.areas.contains("app_mine"), $openPages) }
                     }
-                    if myStatus {
-                        NavigationLink("Mein Zustand") { MyStatusView() }
+                    if myStatus || openPages.contains("status") {
+                        NavigationLink("Mein Zustand") { MyStatusView().keepOpen("status", myStatus, $openPages) }
                     }
-                    if talk.allowed.areas.contains("app_auto") {
-                        NavigationLink("Von selbst") { AutoView() }
+                    if talk.allowed.areas.contains("app_auto") || openPages.contains("auto") {
+                        NavigationLink("Von selbst") { AutoView().keepOpen("auto", talk.allowed.areas.contains("app_auto"), $openPages) }
                     }
-                    if talk.allowed.areas.contains("app_voice") {
-                        NavigationLink("Stimme einlernen") { VoiceView() }
+                    if talk.allowed.areas.contains("app_voice") || openPages.contains("voice") {
+                        NavigationLink("Stimme einlernen") { VoiceView().keepOpen("voice", talk.allowed.areas.contains("app_voice"), $openPages) }
                     }
-                    if talk.allowed.areas.contains("app_accounts") {
-                        NavigationLink("Konten verbinden") { AccountsView() }
+                    if talk.allowed.areas.contains("app_accounts") || openPages.contains("accounts") {
+                        NavigationLink("Konten verbinden") { AccountsView().keepOpen("accounts", talk.allowed.areas.contains("app_accounts"), $openPages) }
                     }
-                    if talk.allowed.areas.contains("app_security") {
-                        NavigationLink("Sicherheit") { SecurityView() }
+                    if talk.allowed.areas.contains("app_security") || openPages.contains("security") {
+                        NavigationLink("Sicherheit") { SecurityView().keepOpen("security", talk.allowed.areas.contains("app_security"), $openPages) }
                     }
                     if !talk.allowed.adminRole.isEmpty {   // an admin profile: admin in its own app (V01.0.541)
                         NavigationLink("Spark verwalten") { AdminView() }
                     }
-                    if talk.allowed.panel {
-                        NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: !talk.allowed.adminRole.isEmpty) }
+                    if talk.allowed.panel || openPages.contains("panel") {
+                        NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: !talk.allowed.adminRole.isEmpty).keepOpen("panel", talk.allowed.panel, $openPages) }
                     }
                 } footer: {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
@@ -889,6 +920,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
+            .onAppear { openPages.removeAll() }   // back on this page: nothing below is open any more
             .task { await loadTalk() }
             .task { if Demo.scene == nil { myStatus = await SparkAPI.current?.can("mystatus") ?? false } }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }

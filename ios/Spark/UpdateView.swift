@@ -16,17 +16,20 @@ final class UpdateModel: ObservableObject {
     private var poll: Task<Void, Never>?
     /// the old update's "done" stays on the Spark until the new one writes its first step
     private var sawRunning = false
+    private var missedAt = Date.distantPast
 
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
             state = try await api.updateState()
             error = nil
-            restarting = false
+            // „startet neu“ stays a few seconds after the last miss, so the line does not flip with every poll while
+            // the Spark comes back (plaene/ruhige-seiten.md)
+            restarting = restarting && Date().timeIntervalSince(missedAt) < 8
             if state.running { sawRunning = true }
             if state.running { follow() }
         } catch {
-            if following { restarting = true; sawRunning = true } else { self.error = error.localizedDescription }
+            if following { restarting = true; sawRunning = true; missedAt = Date() } else { self.error = error.localizedDescription }
         }
         loading = false
     }
