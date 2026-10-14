@@ -276,6 +276,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
 | `app/panel/nas.py` | NAS-Verbindung. |
+| `app/panel/nasquelle.py` | Wissensordner. |
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |
 | `app/panel/speicher.py` | Eigener Speicher. |
@@ -363,6 +364,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/hintergrund.json` | My status | Settings | – | yes | – |
 | `users/ID/mail.json` | Mail account | Login | password sealed | yes | – |
 | `users/ID/nas.json` | Storage places of the profile (NAS, cloud) | Login | password sealed | yes | – |
+| `users/ID/nasquelle.json` | Knowledge folders of the profile | Settings | – | yes | – |
+| `users/ID/nasquelle-stand.json` | What was read from the knowledge folders | State | – | yes | – |
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/calendar.json` | Calendar account | Login | password sealed | yes | – |
@@ -441,6 +444,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/mfa-admin.json` | Admin's second step | sealed | yes |
 | `state/migrated-chunk10` | One-time migration done | – | no |
 | `state/nas-admin.json` | The Spark's NAS connection | password sealed | yes |
+| `state/nasquelle-tmp` | Knowledge folder staging, seconds | – | no |
 | `state/notaus-keys.json` | Kill switch triggers | – | no |
 | `state/notaus-mine.json` | My kill switch | – | no |
 | `state/notaus.json` | Kill switch | – | no |

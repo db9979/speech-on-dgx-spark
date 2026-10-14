@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.523** Knowledge folders: the Spark reads documents from folders on your NAS or cloud and finds them when asked; nothing changes there
 - **V01.0.522** Blocking works everywhere: what the admin blocks for a profile holds in every part; own data stays deletable
 - **V01.0.521** Search at the top everywhere (also for profiles, magnifier on phones, box fits), every profile picks its own face
 - **V01.0.520** Re-rank hits: a small model on the CPU puts the best-matching passages first
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.516** Search check: test questions measure at night how often the document search finds the right passage
 - **V01.0.515** Inbox tidying: create an own folder right from the question when none fits
 - **V01.0.514** Storage cleaned up: Me → Storage shows places (NAS, cloud, folder) and below them what they are for; Features → "Storage and NAS" with "Copy of my data" below
-- **V01.0.513** Logs without contents: no spoken commands, server answers or raw profile ids in log lines any more, a test turns new ones red
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.523** · 2026-10-14 · Wissensordner: Profile wählen Ordner auf ihrer NAS oder Cloud (unter Ich → Speicher → Wofür); der Spark liest die Dokumente dort nur, findet sie bei Fragen und holt die Datei beim Öffnen frisch; neue, geänderte und gelöschte Dateien folgen beim Abgleich (Funktionen → Speicher und NAS → Wissensordner)
 - **V01.0.522** · 2026-10-14 · Sperre gilt überall: Was der Admin für ein Profil sperrt, greift in jedem Teil des Spark (Von selbst melden, Agent, Geräte, Apps, Werkzeuge), geprüft von einem Selbsttest; eigene Daten bleiben gesperrt sichtbar und löschbar (neu: Wetterort und Fahrplan löschen); Zweiter Schritt bei der Anmeldung ist nie sperrbar; Hinweise sagen, wer sperrt (Funktionen → Wer darf was)
 - **V01.0.521** · 2026-10-13 · Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst
 - **V01.0.520** · 2026-10-13 · Treffer nachsortieren (Plan suche-schaerfen, Stufe 3): Ein kleines Modell auf dem Prozessor (Cross-Encoder, eigener Prozess mit niedriger Priorität) liest Frage und die 30 Kandidaten der gemischten Suche zusammen und stellt die passendsten nach vorn, das große als Wahl; Zeitbudget 800 ms, sonst bleibt die Reihenfolge der Mischung; Modelldateien beim ersten Mal per Prüfsumme festgehalten; Suchprüfung misst „Nachsortiert“ mit; Admin-Schalter, aus

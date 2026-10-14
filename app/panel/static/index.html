@@ -76,6 +76,7 @@
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
   <div class="card zneed" id="zsvc" hidden><h2>Dienste</h2><div id="zsvclist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsvccheck">Jetzt prüfen</button><span class="mut" id="zsvcmsg"></span></div><div class="mut" style="margin-top:6px">Nur ob ein Dienst antwortet, nie Inhalte, Adressen oder Fehlertexte. Ein Haken weg: der Dienst wird nicht geprüft und niemand bekommt Hinweise dazu.</div></div>
   <div class="card zneed" id="znas" hidden><h2>Speicher und NAS</h2><div id="znaslist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Name, Art, Zustand und wofür der Ort da ist, nie Adresse oder Passwort.</div></div>
+  <div class="card zneed" id="znasquelle" hidden><h2>Wissensordner</h2><div id="znasquellelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Zahlen und Zustand, nie Pfade oder Dateinamen.</div></div>
   <div class="card zneed" id="zstore" hidden><h2>Kopie meiner Daten</h2><div id="zstorelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Art, Zustand, Größen und Anzahlen, nie Dateinamen oder Inhalte.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
@@ -163,6 +164,9 @@
       <div class="setrow" data-show="chat.storage_own" style="margin-left:36px"><div class="lbl"><b>Originale auslagern</b><span>Profile dürfen Originale von Dokumenten, die 30 Tage ruhen, nur auf ihrem Speicher lassen; beim Öffnen holt der Spark sie zurück.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_offload"><i></i></label></div>
       <div class="setrow" data-show="chat.storage_own" style="margin-left:36px"><div class="lbl"><b>Ordner auf dem Spark</b><span>Ein Ordner, den du selbst eingehängt hast (NFS, SMB, USB-Platte); Profile wählen darin einen Unterordner.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_folder"><i></i></label></div>
       <div data-show="chat.storage_folder" style="margin-left:54px"><label>Ordner für Kopien</label><input id="chat.storage_root" placeholder="/srv/spark-speicher" autocomplete="off"><div class="fh">Unter /mnt, /media oder /srv, schon vorhanden, kein Verweis; der Spark-Dienst braucht dort Schreibrecht.</div></div>
+      <div class="setrow" data-show="chat.nas_on" style="margin-left:18px"><div class="lbl"><b>Wissensordner</b><span>Profile wählen Ordner an ihren Orten; der Spark liest die Dokumente dort nur und findet sie bei Fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.nas_sources"><i></i></label></div>
+      <div data-show="chat.nas_sources" style="margin-left:36px"><label>Höchstens Dokumente von Orten pro Profil</label><input class="num" id="chat.nas_max_docs" type="number" min="100" max="20000"><div class="fh">100 bis 20000, Standard 5000; zählt getrennt von hochgeladenen Dokumenten.</div>
+        <label>Abgleich alle (Minuten)</label><input class="num" id="chat.nas_sources_every" type="number" min="15" max="1440"><div class="fh">15 bis 1440, Standard 30; nur in ruhigen Minuten, nie während der Spark spricht.</div></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
@@ -1059,6 +1063,7 @@
 <script src="/static/js/zuordnungen.js"></script>
 <script src="/static/js/nas.js"></script>
 <script src="/static/js/speicher.js"></script>
+<script src="/static/js/nasquelle.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>

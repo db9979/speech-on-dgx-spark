@@ -72,7 +72,7 @@ TOOLS = {
     "remarkable_page": "rm", "remarkable_attachment": "rm", "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
-    "Speicher-Abgleich": "speicher", "Speicher holen": "speicher",
+    "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Wissensordner-Abgleich": "nasquelle",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
     "Docling": "docling",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
@@ -119,6 +119,8 @@ TARGETS = {
     "nas": ("NAS", "Verbindungen und Sicherung · Heimnetz", "lan", False),
     # Eigener Speicher (speicher.py): copies of profiles' data on their NAS, WebDAV service or a folder; counts only
     "speicher": ("Kopie meiner Daten", "an den Speicherorten · verschlüsselt", "lan", False),
+    # Wissensordner (nasquelle.py): folders at the places read into the document search; numbers only
+    "nasquelle": ("Wissensordner", "Ordner an den Speicherorten · nur lesen", "lan", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
@@ -149,7 +151,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
@@ -1129,6 +1131,13 @@ def snapshot(view="admin", now=None):
         nasl = {"on": False}
     if nasl.get("on"):
         used.add("nas")
+    try:
+        import nasquelle
+        nql = nasquelle.for_live()
+    except Exception:
+        nql = {"on": False}
+    if nql.get("on"):
+        used.add("nasquelle")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1145,6 +1154,9 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")
                         + (" · Sicherung" if nasl.get("backup") else ""))
+        if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
+            x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
+                        + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else ""))
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
                         + ("" if meld.get("token") else " · kein Token"))

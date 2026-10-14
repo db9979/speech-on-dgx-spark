@@ -1478,3 +1478,4 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .facetile .facepic{width:54px;height:54px;display:block}.facetile .facepic svg{width:54px;height:54px;display:block}
 .facetile .facelbl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:420px){.facetiles{gap:6px}.facetile{font-size:11.5px}.facetile .facelbl{white-space:normal;overflow-wrap:anywhere;line-height:1.2;text-align:center}.facetile .facepic,.facetile .facepic svg{width:42px;height:42px}}
+.nqgrp .chk small{font-size:11px}.nqtree{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.nqtree .b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nqtree .fh{flex-basis:100%}

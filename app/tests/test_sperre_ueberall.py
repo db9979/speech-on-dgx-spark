@@ -304,6 +304,7 @@ ADMIN_ON_OK = {
     "android.py:profile_get": "display flag: admin switch and not features.blocked",
     "apns.py:admin_on": "Spark-wide push setup; per profile apns.on_for (features.allowed)",
     "appupdate.py:admin_on": "Spark-wide check and admin page; per profile features.allowed iphoneupdate",
+    "nasquelle.py:admin_on": "Spark switch for the round and Live; per profile nasquelle.allowed (features.allowed)",
     "doclingdienst.py:admin_on": "Spark switch for the shared Docling queue and Live; per profile doclingdienst.allowed",
     "begleiter.py:admin_on": "Spark-wide download of the program; per profile begleiter.allowed",
     "berater.py:wanted": "Spark-wide: the Einstellungs-Assistent runs at all",

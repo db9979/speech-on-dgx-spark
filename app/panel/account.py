@@ -83,7 +83,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "android": "android", "android_live": "androidlive", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher", "nas": "nas",
+       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund"}
 
 
@@ -1014,6 +1014,8 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_pro
 
 @router.delete("/api/profile/docs/{doc_id}", dependencies=[Depends(assistant)])
 def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
+    import nasquelle   # a document from a Wissensordner: left out from now on, the file at the place stays
+    nasquelle.excluded(prof["id"], doc_id)
     removed = documents.delete(prof["id"], doc_id)
     if removed:   # a document the Spark made (docmake.py) goes with its file
         import docmake

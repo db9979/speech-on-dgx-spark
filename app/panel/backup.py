@@ -107,6 +107,7 @@ STATE_LOCAL = {
     "doc-embed.json": "Zustand des Vektormodells",
     "doc-rank.json": "Prüfsummen des Nachsortier-Modells, entstehen neu",
     "notaus.json": "Notaus gilt nur auf diesem Gerät",
+    "nasquelle-tmp": "Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht",
     "notaus-mine.json": "Notaus gilt nur auf diesem Gerät",
     "notaus-keys.json": "Auslöser gelten nur auf diesem Gerät",
     "meldung-token.json": "Token wird neu eingetragen",

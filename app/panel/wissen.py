@@ -45,6 +45,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
 import docembed
 import documents
@@ -297,7 +298,10 @@ def where(h):
     when = time.strftime("%d.%m.%Y", time.localtime(h["changed"])) if h.get("changed") else ""
     # the headings above the piece (Stufe 2 of plan suche-schaerfen): outside text, cut hard, no brackets or quotes
     part = re.sub(r"\s+", " ", re.sub(r"<<<|>>>|[\[\]„“\"\n\r\t]", "", str(h.get("part") or ""))).strip()[:60]
-    return (("reMarkable: " if h.get("source") == "remarkable" else "") + h["name"] + (f", Seite {h['page']}" if h.get("page") else "")
+    # Wissensordner (nasquelle.py): "NAS · Ordner/Datei", the folder cut hard (outside text)
+    place = re.sub(r"\s+", " ", re.sub(r"<<<|>>>|[\[\]„“\"\n\r\t]", "", str(h.get("place") or ""))).strip().strip("/")[-80:]
+    nas = "NAS · " + (place + "/" if place else "") if h.get("source") == "nas" else ""
+    return (("reMarkable: " if h.get("source") == "remarkable" else nas) + h["name"] + (f", Seite {h['page']}" if h.get("page") else "")
             + (f", Abschnitt {part}" if part else "")
             + (f", geteilt von {h['owner']}" if h.get("owner") else "") + (f", geändert am {when}" if when else ""))
 
@@ -646,13 +650,20 @@ INLINE = ("image/jpeg", "application/pdf")
 
 
 @router.get("/api/profile/wissen/{doc_id}/file", dependencies=[Depends(assistant)])
-def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader)):
+async def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
-    got = documents.original(prof["id"], doc_id)
+    got = await asyncio.to_thread(documents.original, prof["id"], doc_id)
     if not got:
         owner = find_shared(prof["id"], doc_id)
-        got = documents.original(owner, doc_id) if owner else None
+        got = await asyncio.to_thread(documents.original, owner, doc_id) if owner else None
+    temp = None
+    if not got:
+        import nasquelle   # Wissensordner: the file is fetched from its place now, not kept on the Spark
+        try:
+            temp = got = await nasquelle.fetch(prof["id"], doc_id)
+        except nasquelle.SourceError:
+            raise HTTPException(503, "Die Datei liegt nur an deinem Speicherort, und der ist gerade nicht erreichbar.")
     if not got:
         if documents.away(prof["id"], doc_id):
             raise HTTPException(503, "Das Original liegt nur in der Kopie an deinem Speicherort und ist gerade nicht erreichbar.")
@@ -662,8 +673,9 @@ def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader))
     headers = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
     if ctype != "application/pdf":    # (a strict policy would also stop the browser's own PDF viewer)
         headers["Content-Security-Policy"] = "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox"
+    gone = BackgroundTask(os.remove, path) if temp else None
     return FileResponse(path, media_type=ctype, filename=name, content_disposition_type="inline" if inline else "attachment",
-                        headers=headers)
+                        headers=headers, background=gone)
 
 
 @router.get("/api/profile/wissen/{doc_id}/text", dependencies=[Depends(assistant)])
@@ -783,6 +795,8 @@ async def batch(request: Request, prof=Depends(browser_profile)):
 
     def one(doc_id):
         if do == "delete":
+            import nasquelle   # from a Wissensordner: left out from now on, never deleted at the place
+            nasquelle.excluded(uid, doc_id)
             return documents.delete(uid, doc_id)
         if do in ("use", "unuse"):
             return documents.set_use(uid, doc_id, do == "use")

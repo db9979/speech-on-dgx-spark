@@ -130,7 +130,7 @@ LOCAL = {
     "settings.json": "Einstellungen", "setup.json": "Einstellungen", "speicher.json": "Einstellungen",
     "speicher-stand.json": "Zustand", "transit.json": "Einstellungen", "weather.json": "Einstellungen",
     "proactive.json": "Einstellungen", "proactive-rules.json": "Einstellungen", "hintergrund.json": "Einstellungen",
-    "mail.json": "Login", "nas.json": "Login", "speicher.vor-nas.json": "Login", "mail-tidy.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
+    "mail.json": "Login", "nas.json": "Login", "nasquelle.json": "Einstellungen", "nasquelle-stand.json": "Zustand", "speicher.vor-nas.json": "Login", "mail-tidy.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
     "telegram.json": "Login", "push.json": "Gerät", "remarkable.json": "Login", "remarkable-lib.json": "Zustand",
     "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
     "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "chatkeys.json": "Schlüssel", "contacts.json": "noch nicht angeboten",

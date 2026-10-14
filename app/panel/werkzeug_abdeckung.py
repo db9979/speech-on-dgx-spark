@@ -140,6 +140,7 @@ WITHOUT = {
     "speicherordner": "Einstellung des Speichers",
     "speicherauslagern": "läuft im Hintergrund",
     "nas": "Speicherorte mit Anmeldung für Kopie und Sicherung, kein Werkzeug",
+    "nasquelle": "Wissensordner landen in der Dokumentensuche: document_search und Erst lokal finden sie, kein eigenes Werkzeug",
     "geraeteupdate": "läuft im Hintergrund",
     "geraetenacht": "läuft im Hintergrund",
     "xiaozhihinweis": "meldet sich von selbst",

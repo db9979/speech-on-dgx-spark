@@ -63,6 +63,7 @@ HOSTKEY = re.compile(r"[a-z0-9@.\-]{3,40} SHA256:[A-Za-z0-9+/]{43}")
 TIMEOUT = 20
 # what a use of a connection is called on the page (fixed words): name -> function(owner) -> {id: count}
 USES = {}
+USE_NAMES = {"speicher": "Kopie meiner Daten", "sicherung": "Sicherung", "wissen": "Wissensordner"}
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),
        "cert": ("Zertifikat passt nicht", "certificate does not fit"), "hostkey": ("Schlüssel des Servers hat sich geändert", "the server's key changed"),
        "blocked": ("vom Wächter nicht erlaubt", "not allowed by the Wächter"), "notaus": ("Notaus", "kill switch"),
@@ -638,8 +639,10 @@ def remove(nid: str, request: Request, prof=Depends(browser_profile)):
     c = find(uid, nid)
     if not c:
         raise HTTPException(404, "no such connection")
-    if uses(uid).get(nid):
-        raise HTTPException(409, "Dieser Ort ist noch für „Kopie meiner Daten“ an. Erst dort ausschalten.")
+    used = uses(uid).get(nid)
+    if used:
+        what = " und ".join(f"„{USE_NAMES.get(k, k)}“" for k in sorted(used))
+        raise HTTPException(409, f"Dieser Ort ist noch für {what} an. Erst dort ausschalten.")
     with _lock:
         save(uid, [x for x in load(uid) if x["id"] != nid])
     guard.log("nas_remove", detail=c["kind"])

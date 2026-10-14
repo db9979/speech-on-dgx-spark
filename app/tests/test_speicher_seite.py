@@ -38,6 +38,14 @@ STORE = {"admin": True, "on": True, "why": None, "lan": True, "folder": False, "
          "root": "", "max": 2, "key": True, "areas": [{"id": "gedaechtnis", "name": ["Gedächtnis", "Memory"]},
                                                       {"id": "dokumente", "name": ["Dokumente", "Documents"]}],
          "targets": [COPY]}
+GROUPS = [{"id": "dokumente", "name": ["Dokumente", "Documents"], "ends": [".pdf", ".docx"], "on": True},
+          {"id": "bilder", "name": ["Bilder und Scans", "Pictures and scans"], "ends": [".jpg"], "on": False}]
+FOLDER = {"id": "f1f2f3", "nas": PLACE["id"], "path": "/volume1/Ablage/Vertraege/ein/sehr/langer/ordnername/ohne/ende",
+          "groups": ["dokumente"], "skip": ["Alt"], "added": 1, "docs": 1234, "seen": 1300, "left": 66,
+          "out": {"art": 3, "versteckt": 2}, "last": {"t": 1, "ok": True}, "fail": None, "running": False}
+NQ = {"admin": True, "on": True, "why": None, "max": 8, "pictures": False, "docs": 1234, "max_docs": 5000, "groups": GROUPS,
+      "out_words": {"art": ["Art wird nie gelesen", "kind is never read"], "versteckt": ["System- oder versteckte Datei", "hidden"]},
+      "why_words": {"offline": ["nicht erreichbar", "not reachable"]}, "sources": [FOLDER]}
 
 
 class Static(unittest.TestCase):
@@ -60,11 +68,11 @@ class Static(unittest.TestCase):
 
     def test_new_texts_have_english(self):
         en = json.loads(re.search(r"const EN=(\{.*?\});\n", read("js", "i18n.js"), re.S).group(1))
-        for de in ("Speicher und NAS", "Kopie meiner Daten", "Ordner für Kopien"):
+        for de in ("Speicher und NAS", "Kopie meiner Daten", "Ordner für Kopien", "Wissensordner", "Abgleich alle (Minuten)"):
             self.assertIn(de, en)
 
     def test_server_text_is_text(self):
-        for name in ("nas.js", "speicher.js"):
+        for name in ("nas.js", "speicher.js", "nasquelle.js"):
             js = read("js", name)
             self.assertNotRegex(js, r"\bon(click|change|input)=\"", name)
             self.assertNotRegex(js, r"\$\{x\.(name|url|user|path)\}", name)   # always through esc()
@@ -101,6 +109,7 @@ class Browser(unittest.TestCase):
             await route.fulfill(status=200, content_type="application/json", body=json.dumps(data))
         await pg.route("**/api/profile/nas", lambda r: fx(r, NAS))
         await pg.route("**/api/profile/speicher", lambda r: fx(r, STORE))
+        await pg.route("**/api/profile/nasquelle", lambda r: fx(r, NQ))
         await pg.goto(base + "/")
         await pg.wait_for_timeout(600)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
@@ -125,6 +134,13 @@ class Browser(unittest.TestCase):
                         # the copy sits at its place, the other place offers to switch it on
                         first = await pg.evaluate("document.querySelectorAll('#nasbox .place')[0].innerText")
                         self.assertIn("12 Dateien", first)
+                        self.assertIn("Wissensordner", first)              # the folder sits at its place too
+                        self.assertIn("1234 Dokumente", first)
+                        self.assertIn("Weiterer Wissensordner", first)
+                        second = await pg.evaluate("document.querySelectorAll('#nasbox .place')[1].innerText")
+                        self.assertIn("Wissensordner", second)             # the other place offers one
+                        await pg.evaluate("document.querySelector('[data-nqon=\"d4e5f6\"]').click()")
+                        self.assertFalse(await pg.evaluate("document.querySelector('[data-nqform=\"d4e5f6\"]').hidden"))
                         over = await pg.evaluate("(()=>{const b=document.querySelector('#profmodal .mebody');return b.scrollWidth-b.clientWidth})()")
                         self.assertLessEqual(over, 0, w)
                         self.assertEqual(errors, [], w)

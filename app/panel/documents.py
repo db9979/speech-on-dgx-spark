@@ -66,7 +66,9 @@ NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("
                # Docling-Server (doclingdienst.py): '' not asked, wait, ok, x (failed or let go)
                ("docling", "TEXT DEFAULT ''"),
                # Stufe 2 of plan suche-schaerfen: the version of the context lines of its pieces (0 = to do)
-               ("headv", "INTEGER DEFAULT 0"))
+               ("headv", "INTEGER DEFAULT 0"),
+               # Wissensordner (nasquelle.py): "<folder id>:<path hash>" and the folder at the place it lies in
+               ("origin", "TEXT DEFAULT ''"), ("place", "TEXT DEFAULT ''"))
 # when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
 # part: the headings the piece stands under (NULL = not known yet, from before V01.0.519); head: the context line
 # (title, kind, part) that the word search weighs lower (ftshead) and the meaning search reads with the piece
@@ -590,7 +592,7 @@ def _row(r, todo):
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
             "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
-            **card(r)}
+            **({"place": r["place"]} if r["source"] == "nas" else {}), **card(r)}
 
 
 def _tags(v):
@@ -785,11 +787,12 @@ def _read(name, data, text=None, pictures=False, cleaned=False, later=False):
     return parts, todo, kind, "; ".join(notes)
 
 
-def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE, docling=False):
+def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE, docling=False, limit=None):
     """Stores a document. text: already read elsewhere (the iPhone app reads PDFs and scans itself;
     data is then only its size). pictures: photos and scanned pages may wait for the language model.
     keep: bytes the original may take (0 = do not keep it). docling: the Docling server reads the file again
-    later (doclingdienst.wanted); until then it is kept (the original, else in docling-wait/)."""
+    later (doclingdienst.wanted); until then it is kept (the original, else in docling-wait/). Documents from a
+    place (source "nas", nasquelle.py) count only against their own limit, the others against MAX_DOCS."""
     if len(data) > most:
         raise ValueError(f"file is larger than {most // 1024**2} MB")
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(str(name or "document")))[:120].strip() or "document"
@@ -801,8 +804,9 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
     doc_id = secrets.token_hex(6)
     stored = ""
     with _Db(uid) as con:
-        if con.execute("SELECT COUNT(*) FROM docs").fetchone()[0] >= MAX_DOCS:
-            raise ValueError(f"at most {MAX_DOCS} documents per profile")
+        most_docs = (limit or MAX_DOCS) if source == "nas" else MAX_DOCS
+        if con.execute("SELECT COUNT(*) FROM docs WHERE " + ("source='nas'" if source == "nas" else "source<>'nas'")).fetchone()[0] >= most_docs:
+            raise ValueError(f"at most {most_docs} documents per profile")
         if todo and con.execute("SELECT COUNT(*) FROM pages").fetchone()[0] + len(todo) > MAX_QUEUED:
             raise ValueError(f"at most {MAX_QUEUED} pages may wait to be read; try again later")
         if keep and text is None:
@@ -858,6 +862,20 @@ def delete(uid, doc_id):
             except OSError:
                 pass
     return True
+
+
+def set_place(uid, doc_id, origin, place):
+    """Wissensordner (nasquelle.py): where a document from a place comes from (folder id and path hash, and the
+    folder shown in Ich → Dokumente)."""
+    with _Db(uid) as con:
+        con.execute("UPDATE docs SET origin=?, place=? WHERE id=?", (str(origin)[:60], str(place)[:500], doc_id))
+
+
+def count_source(uid, source):
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM docs WHERE source=?", (source,)).fetchone()[0]
 
 
 def set_use(uid, doc_id, on):
@@ -1024,7 +1042,7 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
         if doc_id and not con.execute("SELECT 1 FROM docs WHERE id=?", (doc_id,)).fetchone():
             doc_id = None
         if not doc_id:
-            if con.execute("SELECT COUNT(*) FROM docs").fetchone()[0] >= MAX_DOCS:
+            if con.execute("SELECT COUNT(*) FROM docs WHERE source<>'nas'").fetchone()[0] >= MAX_DOCS:
                 raise ValueError(f"at most {MAX_DOCS} documents per profile")
             doc_id = secrets.token_hex(6)
             con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, source) "
@@ -1449,11 +1467,12 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
-            "SELECT c.id, c.doc, c.page, c.text, c.part, c.head, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
+            "SELECT c.id, c.doc, c.page, c.text, c.part, c.head, d.name, d.file, d.source, d.place FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
     return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
                   "part": got[i]["part"] or "", "head": got[i]["head"] or "",
-                  "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]},
+                  "file": bool(got[i]["file"]) or got[i]["source"] == "nas", "source": got[i]["source"], "score": ranks[i]},
+                 **({"place": got[i]["place"] or ""} if got[i]["source"] == "nas" else {}),
                  **({"changed": when.get(i, 0)} if fresh else {})) for i in best if i in got]
 
 

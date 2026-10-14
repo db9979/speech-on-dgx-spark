@@ -278,6 +278,8 @@ FEATURES = (
     F("nas", "Speicher und NAS", "Storage and NAS", "data", ("nas_on",), me="storebox", guide="nas"),
     # speicher.py: a copy of the profile's data at one of its places (WebDAV, SFTP, SMB) or a folder the admin mounted
     F("speicher", "Kopie meiner Daten", "Copy of my data", "data", ("storage_own",), parent="nas", me="storebox", guide="speicher"),
+    # nasquelle.py (S2): folders at a place read into the profile's own document search, only reading
+    F("nasquelle", "Wissensordner", "Knowledge folders", "data", ("nas_sources",), parent="nas", me="storebox", guide="nasquelle"),
     F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
       me="storebox", guide="speicherlan"),
     F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
