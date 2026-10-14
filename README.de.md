@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.530** Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, die Alltagsquote misst ehrlich; ihre Einstellungen an einem Ort
 - **V01.0.529** Aufräum-Regel „eine Quelle“ mit Wächter-Tests; iPhone-App öffnet jede Ich-Seite in der App, Panel-Bereiche ohne Schalter je Profil
 - **V01.0.528** Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)
 - **V01.0.527** Ablage-Ordner auf der NAS: Erstelltes und nach einem Ja Eigenes landet dort, der Eingang kommt zu den Dokumenten
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.523** Wissensordner: der Spark liest Dokumente aus Ordnern auf deiner NAS oder Cloud und findet sie bei Fragen; dort ändert sich nichts
 - **V01.0.522** Sperre gilt überall: was der Admin für ein Profil sperrt, greift in jedem Teil; eigene Daten bleiben löschbar
 - **V01.0.521** Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst
-- **V01.0.520** Treffer nachsortieren: ein kleines Modell auf dem Prozessor stellt die passendsten Fundstellen nach vorn
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

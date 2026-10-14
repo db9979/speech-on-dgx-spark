@@ -161,6 +161,7 @@ Feste Regeln, welche Werkzeuge das Modell für eine Frage sieht. Gibt nie mehr f
 | Modul | Aufgabe |
 |---|---|
 | `app/panel/intent.py` | Die Weiche: feste Regeln für die eigene letzte Nachricht |
+| `app/panel/intent_alltag.py` | Alltagssätze der Weiche: nur zum Messen |
 | `app/panel/intent_bench.py` | Testsätze der Weiche |
 | `app/panel/weiche.py` | Seite Funktionen → Weiche und ihre Statistik |
 | `app/panel/werkzeug_abdeckung.py` | Welche Funktion das Modell mit welchem Werkzeug erreicht (Regel 29) |

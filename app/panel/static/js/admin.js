@@ -886,7 +886,8 @@ function s1BenchShow(d){const out=$('s1benchout'),msg=$('s1benchmsg');if(!out)re
     <table class="brate"><tbody><tr class="bgrp"><td>${esc(t('Schwelle','Threshold'))}</td><td>${esc(t('grenzt ein','narrows'))}</td><td>${esc(t('davon falsch','of them wrong'))}</td></tr>${rows}</tbody></table>
     <div class="fh">${r.suggest?esc(t('Vorschlag: ','Suggestion: ')+Math.round(r.suggest*100)+' %'+t(' (höchstens 3 % falsch eingegrenzt).',' (at most 3 % narrowed wrongly).')):esc(t('Keine Schwelle mit höchstens 3 % Fehlern: lieber 90 % oder die Einordnung für die Werkzeugwahl nicht nutzen.','No threshold with at most 3 % errors: rather 90 % or do not use the classification for the tool choice.'))}${miss?' '+esc(t('Verwechselt: ','Mixed up: '))+miss:''}</div>
     ${r.suggest?`<div class="row"><button class="b" type="button" id="s1take">${esc(t('Vorschlag übernehmen','Take the suggestion'))}</button></div>`:''}`;
-  if($('s1take'))$('s1take').onclick=()=>{const el=$('chat.systemone_min');if(!el)return;el.value=String(r.suggest);el.dispatchEvent(new Event('change',{bubbles:true}));
+  // the threshold lives on Funktionen → Weiche (weiche.js): taken there, saved with „Prüfen und speichern“
+  if($('s1take'))$('s1take').onclick=()=>{if(!(window.whSetMin&&window.whSetMin(r.suggest)))return;
     msg.textContent=t('Eingesetzt, noch nicht gespeichert.','Filled in, not saved yet.')}}
 let s1Timer=null;
 async function s1BenchPoll(){clearTimeout(s1Timer);try{const d=await (await api('/api/admin/systemone/messen')).json();s1BenchShow(d);

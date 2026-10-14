@@ -148,6 +148,14 @@ async def prepare(request):
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     route = intent.classify_cfg(ask0, ccfg)
+    # a follow-up („Und morgen?“) takes the group of the person's own question just before (plan weiche-intelligenter 1)
+    if ask0 and not route.names:
+        before0 = next((m["content"] for m in reversed(messages[:-1])
+                        if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
+        follow = intent.follow_up(ask0, before0, ccfg)
+        if follow:
+            route = follow
+            print("weiche: Folgefrage -", route.label(), flush=True)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     # "Frag Spark" (hilfe.py): asked from a page of the panel, the question is about the Spark itself (a fixed
     # rule on where it was asked, never the model); the admin's own login only counts for the Spark's switches
@@ -760,8 +768,8 @@ async def prepare(request):
             # the message as the model would see it anyway (code words already replaced); with the stable start
             # (chat.prompt_cache) the model sees every tool anyway, so a pick that is late is left out
             pick = await intent.pick_in_time(pick_task, intent.CACHED_WAIT if cache_on else intent.ASK_TIMEOUT + 1)
-            if pick:
-                route = intent.Route([pick], {pick: "Modell"})
+            if pick:   # the hint words' groups stay beside the pick (intent.narrow)
+                route = intent.Route([pick], {pick: "Modell"}, route.hints)
             pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else \
                 "unsicher" if pick_info.get("p") is not None else "keine"
         tools = intent.narrow(route, tools, ccfg, ex.get("keep", set()))
@@ -851,9 +859,10 @@ async def prepare(request):
     if not force and ex.get("must") and ex["must"] in {t["function"]["name"] for t in tools}:
         force, need = ex["must"], [ex["must"]]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
-    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite') else '…'}“"
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage') else '…'}“"
                     for k, v in route.why.items())[:200]
     print("weiche: Absicht", route.label(), "| Grund", why or "-",
+          "| Hinweis", "+".join(route.hints) or "-",
           "| Werkzeuge", f"{len(tools)} von {all_tools}" if len(tools) != all_tools else len(tools),
           "| Pflicht", force or ", ".join(need) or "-", "| gesperrt", carry or "nichts",
           "| eingrenzen", "an" if route_on else "aus", flush=True)

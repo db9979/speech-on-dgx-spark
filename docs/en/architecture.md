@@ -161,6 +161,7 @@ Fixed rules for which tools the model sees for a question. Never gives more than
 | Module | Task |
 |---|---|
 | `app/panel/intent.py` | The switch ("Weiche"): what the person asks for in their own latest message, by fixed rules. |
+| `app/panel/intent_alltag.py` | The Weiche's everyday check: sentences as people say them, never used to set the rules up. |
 | `app/panel/intent_bench.py` | The Weiche's test bench (intent.py): sentence -> expected group ("" = no rule fits, "+" = two at once). |
 | `app/panel/weiche.py` | Features → Switch: the switch of intent.py, shown and set up in the panel. |
 | `app/panel/werkzeug_abdeckung.py` | Which function the assistant reaches how. |

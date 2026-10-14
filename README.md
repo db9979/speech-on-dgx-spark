@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.530** Smarter switch: hint words keep fitting tools ready, follow-up questions keep their group, an everyday score measures honestly; its settings now live on one page
 - **V01.0.529** Clean-up rule "one source" with guard tests; the iPhone app opens every Me page inside the app, panel areas without a switch per profile
 - **V01.0.528** Ask Spark in the companion shows answers formatted: bold headings, lists with marks and indent, code set apart (needs a new companion build)
 - **V01.0.527** Filing folder on the NAS: what the Spark makes and, after a yes, your own things go there; the inbox comes into your documents
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.523** Knowledge folders: the Spark reads documents from folders on your NAS or cloud and finds them when asked; nothing changes there
 - **V01.0.522** Blocking works everywhere: what the admin blocks for a profile holds in every part; own data stays deletable
 - **V01.0.521** Search at the top everywhere (also for profiles, magnifier on phones, box fits), every profile picks its own face
-- **V01.0.520** Re-rank hits: a small model on the CPU puts the best-matching passages first
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

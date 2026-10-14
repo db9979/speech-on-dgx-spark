@@ -8,6 +8,11 @@
 .wh-note{font-size:12.5px;margin:4px 0;width:100%}
 .wh-try{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.wh-try input{flex:1 1 240px;min-width:0;width:auto}.wh-try .b{flex:none}
 .wh-try .b[hidden]{display:none}
+.wh-before{margin-top:-2px}.wh-before input{font-size:13px}
+.wh-chip.hint{background:color-mix(in srgb,var(--warn,#e09a14) 15%,transparent);color:var(--fg)}
+.wh-must{margin:6px 0}.wh-must code{font-size:12px}
+.wh-unc select{width:100%;margin:4px 0 8px}
+.wh-score{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 8px;font-size:13px}.wh-score b{font-size:15px}
 .wh-flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:22px;margin-top:12px}
 .wh-flow>.mut,.wh-flow>.err{grid-column:1/-1}
 .wh-st{position:relative;display:flex;flex-direction:column;justify-content:flex-start;text-align:left;font:inherit;color:inherit;border:1px solid var(--line);border-radius:12px;padding:9px 10px 8px;background:var(--card);cursor:pointer;min-width:0}

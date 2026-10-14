@@ -9,6 +9,13 @@ can never give more than the rights do:
     chat.route_extra   tools a group keeps as well ("smarthome: weather"), only those the turn offers anyway
     chat.route_off     groups that are recognized but do not narrow (they get every tool, as without the switch)
     chat.route_tests   own test sentences [{"q": "Mach die Sauna an", "want": "smarthome"}] beside intent_bench.BENCH
+    chat.tool_words    words that make a tool a must („Werkzeugpflicht“) and find its group (moved here from
+                       Einstellungen → Sprachmodell, plan weiche-intelligenter step 0: one place for the Weiche's words)
+    chat.route_model   what a question no rule recognizes gets (moved here from Funktionen → Gezielte Werkzeugwahl)
+    chat.systemone_min from which probability the classification narrows (moved here from Funktionen → Einordnung
+                       mit Wahrscheinlichkeit; the switch itself stays there)
+
+The everyday check (intent_alltag.py) shows how well the rules do on sentences nobody tuned them for („Alltagsquote“).
 
 Every change is checked against all test sentences first; one that would turn out different stops the save until
 the admin confirms it. The last versions are kept for „Rückgängig“ (STATE/weiche-history.json). The protection
@@ -35,7 +42,8 @@ from core import auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
-KEYS = ("route_words", "route_not", "route_extra", "route_off", "route_tests")
+KEYS = ("route_words", "route_not", "route_extra", "route_off", "route_tests", "tool_words", "route_model", "systemone_min")
+MODELS = ("off", "on", "lean", "systemone")
 MAX_TESTS = 200
 MAX_Q = 200
 MAX_BODY = 40000
@@ -127,10 +135,22 @@ def check(ch):
     except ValueError as e:
         raise ValueError(f"Gruppen ohne Eingrenzen: {e}")
     parse_tests(ch.get("route_tests", []))
+    try:
+        chat.parse_tool_words(ch.get("tool_words", ""))
+    except ValueError as e:
+        raise ValueError(f"Pflicht-Wörter: {e}")
+    if ch.get("route_model", "off") not in MODELS:
+        raise ValueError("Fragen, die keine Regel erkennt: " + ", ".join(MODELS))
+    import systemone
+    v = ch.get("systemone_min", systemone.ROUTE_MIN)
+    if isinstance(v, bool) or v not in systemone.ROUTE_STEPS:
+        raise ValueError("Schwelle: " + ", ".join(str(x) for x in systemone.ROUTE_STEPS))
 
 
 def rules_of(ch):
-    return {k: ch.get(k, [] if k in ("route_off", "route_tests") else "") for k in KEYS}
+    import systemone
+    default = {"route_off": [], "route_tests": [], "route_model": "off", "systemone_min": systemone.ROUTE_MIN}
+    return {k: ch.get(k, default.get(k, "")) for k in KEYS}
 
 
 # ---------------------------------------------------------------- test sentences
@@ -180,9 +200,10 @@ def _source(name, text, ch):
     return "eingebaut"
 
 
-def trace(text, ch, today=None, english=False):
+def trace(text, ch, today=None, english=False, before=""):
     """The way of one sentence through the switch, by the same functions a turn uses (no model, nothing stored).
-    `today`: the local date for "morgen" (passed in, the rule never reads the clock itself)."""
+    `today`: the local date for "morgen" (passed in, the rule never reads the clock itself); `before`: the person's
+    own question just before, for a follow-up („Und morgen?“)."""
     import ack
     text = str(text or "")[:500]
     try:
@@ -197,8 +218,12 @@ def trace(text, ch, today=None, english=False):
         send = False
     small = bool(chat.SMALLTALK.fullmatch(text))
     route = intent.classify_cfg(text, ch)
+    follow = intent.follow_up(text, str(before or "")[:500], ch) if before and not route.names else None
+    if follow:
+        route = follow
     without = intent.classify(text, ch.get("tool_words", ""), ch.get("route_words", ""))
-    removed = [n for n in without.names if n not in route.names]
+    removed = [n for n in without.names if n not in route.names and not follow]
+    hinted = intent.hint_tools(route)
     off = ch.get("route_off") if isinstance(ch.get("route_off"), list) else []
     extra = intent.own_route_extra(ch.get("route_extra", ""))
     model = ch.get("route_model", "off")
@@ -214,7 +239,8 @@ def trace(text, ch, today=None, english=False):
     elif route.names == ["plaudern"]:
         tools, narrowed = [], "plaudern"
     elif not route.names and model == "lean":
-        tools, narrowed = [{"name": t, "kind": "knapp"} for t in sorted(intent.LEAN)], "knapp"
+        tools, narrowed = [{"name": t, "kind": "knapp"} for t in sorted(intent.LEAN)] \
+            + [{"name": t, "kind": "hinweis"} for t in sorted(hinted - intent.LEAN)], "knapp"
     else:
         tools, narrowed = [], ("modell" if not route.names and model in ("on", "systemone") else "alle")
     names = {t["name"] for t in tools}
@@ -235,7 +261,8 @@ def trace(text, ch, today=None, english=False):
         "checks": {"plaudern": small, "spark": spark, "senden": send},
         "names": route.names, "label": route.label(), "clear": route.clear,
         "mixed": len(route.names) > intent.MAX_MIXED,
-        "why": [{"group": n, "word": w, "source": _source(n, text, ch)} for n, w in route.why.items()],
+        "why": [{"group": n, "word": w, "source": "folge" if follow else _source(n, text, ch)} for n, w in route.why.items()],
+        "hints": [{"group": n, "word": w} for n, w in route.hints.items()], "follow": bool(follow),
         "removed": removed, "narrow": narrowed, "model": model, "tools": tools,
         "need": need, "force": force, "direct": direct, "date": args.get("date"),
         "ack": sentence, "notaus": held,
@@ -291,17 +318,22 @@ def count(route, offered, of, direct=None, now=None):
     names = route.names if route else []
     key = "unklar" if not names else names[0] if len(names) == 1 else "mehrere"
     model = bool(route and any(v == "Modell" for v in route.why.values()))
+    follow = bool(route and any(v == "Folgefrage" for v in route.why.values()))
+    hint = bool(route and route.hints)
     with _lock:
         days = _days()
         day = days.setdefault(_day(now), {})
-        g = day.setdefault(key, [0, 0, 0, 0, 0])
-        if not isinstance(g, list) or len(g) != 5:
-            g = day[key] = [0, 0, 0, 0, 0]
+        g = day.setdefault(key, [0] * 7)
+        if not isinstance(g, list) or len(g) not in (5, 7):
+            g = day[key] = [0] * 7
+        g.extend([0] * (7 - len(g)))   # days counted before follow-ups and hints were
         g[0] += 1
         g[1] += int(offered or 0)
         g[2] += int(of or 0)
         g[3] += 1 if direct else 0
         g[4] += 1 if model else 0
+        g[5] += 1 if follow else 0
+        g[6] += 1 if hint else 0
         oldest = _day(now - KEEP_DAYS * 86400)
         for old in [d for d in days if d <= oldest]:
             days.pop(old, None)
@@ -329,21 +361,30 @@ def summary(now=None):
     week = {_day(now - i * 86400) for i in range(7)}
     with _lock:
         days = json.loads(json.dumps(_days()))
-    groups, total = {}, {"n": 0, "rules": 0, "model": 0, "unklar": 0, "direct": 0}
+    groups, total = {}, {"n": 0, "rules": 0, "model": 0, "unklar": 0, "direct": 0, "folge": 0, "hinweis": 0,
+                           "folge_today": 0, "hinweis_today": 0}
     for day, rows in days.items():
         if day not in week or not isinstance(rows, dict):
             continue
         for key, g in rows.items():
-            if not isinstance(g, list) or len(g) != 5:
+            if not isinstance(g, list) or len(g) not in (5, 7):
                 continue
-            s = groups.setdefault(key, {"today": 0, "n": 0, "tools": 0, "of": 0, "direct": 0, "model": 0})
+            g = g + [0] * (7 - len(g))
+            s = groups.setdefault(key, {"today": 0, "n": 0, "tools": 0, "of": 0, "direct": 0, "model": 0, "folge": 0,
+                                        "hinweis": 0})
             s["n"] += g[0]
             s["tools"] += g[1]
             s["of"] += g[2]
             s["direct"] += g[3]
             s["model"] += g[4]
+            s["folge"] += g[5]
+            s["hinweis"] += g[6]
+            total["folge"] += g[5]
+            total["hinweis"] += g[6]
             if day == today:
                 s["today"] += g[0]
+                total["folge_today"] += g[5]
+                total["hinweis_today"] += g[6]
             total["n"] += g[0]
             total["direct"] += g[3]
             total["model"] += g[4]
@@ -367,10 +408,11 @@ def live_today(now=None):
     rows = sorted(((k, v["today"]) for k, v in s["groups"].items() if v.get("today")), key=lambda x: -x[1])
     n = sum(v for _, v in rows)
     if not n:
-        return {"n": 0, "known": 0, "unklar": 0, "top": []}
+        return {"n": 0, "known": 0, "unklar": 0, "top": [], "folge": 0, "hinweis": 0}
     unk = dict(rows).get("unklar", 0)
     return {"n": n, "known": round(100 * (n - unk - dict(rows).get("plaudern", 0)) / n), "unklar": unk,
-            "top": [[intent.LABELS.get(k, k), v] for k, v in rows if k not in ("unklar", "plaudern")][:3]}
+            "top": [[intent.LABELS.get(k, k), v] for k, v in rows if k not in ("unklar", "plaudern")][:3],
+            "folge": s["total"]["folge_today"], "hinweis": s["total"]["hinweis_today"]}
 
 
 # ---------------------------------------------------------------- versions (Rückgängig)
@@ -415,9 +457,10 @@ def _view(ch, english=False):
     groups = []
     for name, (tools, _) in intent.GROUPS.items():
         w = words[name]
+        hint = intent._alternatives(intent.HINTS[name].pattern) if name in intent.HINTS else []
         groups.append({
             "name": name, "label": intent.LABELS.get(name, name), "says": intent.GROUP_SAYS.get(name, ""),
-            "words": w["words"], "own": w["own"], "not": nots.get(name, []), "extra": extra.get(name, []),
+            "words": w["words"], "own": w["own"], "not": nots.get(name, []), "extra": extra.get(name, []), "hints": hint,
             "off": name in off, "tools": sorted(tools), "direct": sorted(tools & direct),
             "vorrang": VORRANG.get(name, ("", ""))[1 if english else 0],
             "tests": [x for x in tests if name in x["want"].split("+") or name in x["got"].split("+")],
@@ -433,10 +476,29 @@ def _view(ch, english=False):
                   "builtin_ok": sum(1 for x in tests if not x["own"] and x["ok"]),
                   "own": [x for x in tests if x["own"]], "wrong": [x for x in tests if not x["ok"]][:50]},
         "unklar": {"stats": stats["groups"].get("unklar", {})},
+        "alltag": alltag(ch),
+        "systemone": ch.get("systemone") is True,
+        "steps": list(_steps()),
+        "must_tools": sorted(chat.rule_tools()),
         "stats": stats, "rules": rules_of(ch),
         "history": [{"t": x.get("t"), "by": x.get("by")} for x in _history()][-5:][::-1],
-        "limits": {"words": intent.MAX_ROUTE_WORDS, "extra": intent.MAX_EXTRA, "tests": MAX_TESTS, "q": MAX_Q},
+        "limits": {"words": intent.MAX_ROUTE_WORDS, "extra": intent.MAX_EXTRA, "tests": MAX_TESTS, "q": MAX_Q,
+                   "must": chat.MAX_TOOL_WORDS_CHARS},
     }
+
+
+def _steps():
+    import systemone
+    return systemone.ROUTE_STEPS
+
+
+def alltag(ch):
+    """The everyday check with these rules (intent_alltag.py): how many land right, are kept by a hint, stay open
+    or land wrong, and the sentences that do not land right (at most 60)."""
+    import intent_alltag
+    m = intent_alltag.measure(lambda q: intent.classify_cfg(q, ch))
+    m["rows"] = m["rows"][:60]
+    return m
 
 
 async def _body(request):
@@ -462,7 +524,7 @@ def _rules_from(body, ch):
     if not isinstance(rules, dict) or set(rules) - set(KEYS):
         raise HTTPException(400, "rules: " + ", ".join(KEYS))
     merged = dict(ch, **rules)
-    for k in ("route_words", "route_not", "route_extra"):
+    for k in ("route_words", "route_not", "route_extra", "tool_words"):
         if not isinstance(merged.get(k, ""), str):
             raise HTTPException(400, f"{k}: Text")
     try:
@@ -494,11 +556,14 @@ async def try_sentence(request: Request):
     text = body.get("text")
     if not isinstance(text, str) or not text.strip() or len(text) > intent.MAX_TEST:
         raise HTTPException(400, f"text: 1 bis {intent.MAX_TEST} Zeichen")
+    before = body.get("before", "")
+    if not isinstance(before, str) or len(before) > intent.MAX_TEST:
+        raise HTTPException(400, f"before: höchstens {intent.MAX_TEST} Zeichen")
     ch = load_config().get("chat", {})
     if "rules" in body:
         ch = _rules_from(body, ch)
     return trace(text, ch, chat.local_now(body.get("tz") if isinstance(body.get("tz"), str) else None).date(),
-                 _english(request))
+                 _english(request), before)
 
 
 @router.post("/api/admin/weiche/check", dependencies=[Depends(auth)])

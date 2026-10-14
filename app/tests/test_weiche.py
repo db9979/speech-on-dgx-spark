@@ -226,12 +226,19 @@ class Page(unittest.TestCase):
 
     def test_protection_rules_are_not_settings(self):
         # the page sets only these keys; the locks, the Notaus and the lookup limit are none of them
-        self.assertEqual(set(weiche.KEYS), {"route_words", "route_not", "route_extra", "route_off", "route_tests"})
+        # (plan weiche-intelligenter step 0: the must words, what unclear questions get and the classification's
+        # threshold moved here from other pages; they are word lists and choices, never a protection rule)
+        self.assertEqual(set(weiche.KEYS), {"route_words", "route_not", "route_extra", "route_off", "route_tests",
+                                            "tool_words", "route_model", "systemone_min"})
         with open(os.path.join(os.path.dirname(panel.__file__), "..", "config.default.json")) as f:
             chat_defaults = json.load(f)["chat"]
+        moved = {"route_model": "off", "systemone_min": 0.8}
         for k in weiche.KEYS:
             self.assertIn(k, chat_defaults)
-            self.assertFalse(chat_defaults[k])   # new rules start empty
+            if k in moved:
+                self.assertEqual(chat_defaults[k], moved[k])   # the same default as on the page before
+            else:
+                self.assertFalse(chat_defaults[k])   # new rules start empty
 
 
 if __name__ == "__main__":

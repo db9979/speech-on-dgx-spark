@@ -46,24 +46,36 @@ HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermos
                         r"\w*tür(en)?|\w*fenster|garagentor\w*|türschloss|waschmaschine\w*|trockner\w*|"
                         r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?)\b")
 CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
-                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin\w*)\b)")
+                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin\w*|"
+                            # everyday ways to ask for the own days (plan weiche-intelligenter 2: „Hab ich am Freitag Zeit?“)
+                            r"meeting\w*|elternabend\w*|verplant|(das|dem|ein|unser|mein|nächste[ns]?) treffen|treffe? ich mich|"
+                            r"hab(e)? ich .{0,30}\bvor|bin ich .{0,30}\b(frei|verplant|verabredet)|hab(e)? ich .{0,25}\b(zeit|frei))\b)")
 LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
-                        r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b)")
+                        r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b|"
+                        r"\b(muss|müssen|soll|sollen) (ich|wir) .{0,25}einkaufen\b|^\W*schreib \w+( und \w+)? auf\W*$|"
+                        r"\b(auf|in|zu) (meine|die|den) (aufgaben|einkauf)\b)")
 MEMORY_WORDS = re.compile(r"(?i)\b(merk dir|merke dir|vergiss|weißt du (noch|was)|was weißt du über mich|"
                           r"erinnerst du dich|haben wir (schon )?(mal )?(darüber )?(gesprochen|geredet)|letztes mal|"
-                          r"remember|forget)\b")
+                          r"remember|forget|"
+                          # what the person says about themselves, and what was talked about (plan weiche-intelligenter 2)
+                          r"ich mag (keine?n?|kein)|ich hasse|ich bin allergisch|allergi\w*|mein(e)? lieblings\w*|"
+                          r"worüber haben wir|was hab(e)? ich dir .{0,40}(erzählt|gesagt))\b")
 DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*verträge\w*|\w*rechnung\w*|pdf|"
                        r"\w*versicherung\w*|police\w*|garantie\w*|gewährleistung\w*|\w*anleitung\w*|handbuch\w*|"
                        r"\w*bescheid\w*|kündigung\w*|kündigungsfrist\w*|steuer(erklärung|bescheid|unterlagen)?|"
                        r"arztbrief\w*|befund\w*|beleg\w*|quittung\w*|zeugnis\w*|lebenslauf\w*|"
-                       r"(meine[nmr]?|in den) (dateien|papiere\w*)|documents?)\b")
+                       r"(meine[nmr]?|in den) (dateien|papiere\w*)|nebenkosten\w*|documents?)\b")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
-                           r"geburtstag\w*|phone number|contacts?)\b")
-MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?)\b")
+                           r"geburtstag(e|en|s)?|nummer vo[mn]|wo wohnt|anschrift\w*|phone number|contacts?)\b")
+MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?|"
+                           r"ruf(e)? alle|antworte? [A-ZÄÖÜ]\w+,? dass)\b")
 AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*|auftr(a|ä)g\w*|beobachtung\w*)\b")
-REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me)\b)")
+REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|"
+                            r"sag mir (in|um|heute|morgen|gleich) .{1,40}(bescheid|,? dass))\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
-                           r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast)\b)")
+                           r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast|"
+                           r"schirm\w*|regenjacke|sonnencreme|draußen|frost\w*|glatteis|unwetter\w*|jacke mitnehm\w*|"
+                           r"wird es .{0,25}(schön|sonnig|nass|trocken))\b)")
 SWITCH_VERBS = re.compile(r"(?i)\b((aus|ein|an|ab|um)(schalten|machen)|schalt\w*|turn (on|off)|switch (on|off))\b")
 MINE = re.compile(r"(?i)\b(habe|hab|hat|für mich|an mich|mir|meine?)\b")
 SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|panel\b|settings?\b|"
@@ -75,8 +87,53 @@ PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurz
                          # calling and navigating (iphone_action): „Ruf Mama an“, „Navigiere nach Hause“
                          r"(?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|navigier\w*|route nach|bring mich nach|call \w+|navigate)\b")
 # „Räum mein Postfach auf“ is the mailbox (mail_tidy), „Amazon-Bestellung“ a parcel (plan werkzeug-abdeckung B2)
-MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer)\b)")
-PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b\w*bestellung\w*\b)")
+MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer|post (vo[mn]|von der)|antwort (vo[mn]|von der)|"
+                        r"(e-?mail-?|mail)?entwurf\w* .{0,30}antwort\w*|antwort an (frau|herrn?))\b)")
+PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b(\w*bestellung\w*|dhl|hermes|dpd|gls|"
+                          r"zustell\w*)\b)")
+# plan weiche-intelligenter 2: current things the rules missed („Wie steht der DAX?“, „Hat der Baumarkt heute offen?“)
+SEARCH_WORDS = re.compile(chat.NEED_SEARCH.pattern + r"|(?i:\b(dax|aktie\w*|börse\w*|bitcoin|benzinpreis\w*|spritpreis\w*|"
+                          r"diesel\w*|stau|staus|staumeldung\w*|fernsehprogramm|tv-programm|im fernsehen|was gibt es neues|"
+                          r"neuigkeiten|in der welt|weltgeschehen|flohmarkt\w*|veranstaltung\w*|konzert\w*|trainer\w*|"
+                          r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet)\b)")
+TRANSIT_WORDS = re.compile(dict(chat.NEED_TOOLS)["transit"].pattern + r"|(?i:\b(ice|ic|regionalbahn|regionalexpress|"
+                           r"u-?bahn|bahnhof|gleis)\b)")
+# a job that comes back by itself („Schick mir jeden Morgen die Schlagzeilen“) or a watch („Pass auf, wann …“):
+# the group agent, not a search now (a reminder „jeden Montag“ stays a reminder)
+RECUR = re.compile(r"(?i)\b(jeden|jede[nr]?) (morgen|abend|tag|früh|woche|montag|dienstag|mittwoch|donnerstag|freitag|"
+                   r"samstag|sonntag)\b")
+DELIVER = re.compile(r"(?i)\b(schick\w*|sag\w*|gib|lies|meld\w*|fass\w* .{1,40}zusammen|send\w*)\b")
+WATCH = re.compile(r"(?i)\bpass auf,? (wann|ob|wenn)\b")
+# „Schreib eine Kündigung“, „Erstelle eine Tabelle …“: a sentence that starts by asking for a file is that file
+MAKE_START = re.compile(r"(?i)^\W*(bitte |kannst du (mir )?|könntest du (mir )?|spark,? )?(schreib|erstell|mach|entwirf|"
+                        r"verfass|formulier|bau)\w*\b")
+MAKE_LETTER = re.compile(r"(?i)\b(schreib|erstell|entwirf|verfass|formulier)\w* (mir )?(eine?n?|ein) (kündigung|widerspruch|"
+                         r"beschwerde|bewerbung|antrag|anschreiben|vollmacht|reklamation)\w*")
+# a question about words or a language („Was heißt Fenster auf Englisch?“) and about nature („Licht von der Sonne“):
+# knowledge, never a device, a contact or a page of the Spark
+LANGUAGE = re.compile(r"(?i)\b(was (bedeutet|heißt) (das wort|der begriff|das fremdwort)|auf (englisch|deutsch|französisch|"
+                      r"spanisch|italienisch|türkisch|polnisch|russisch|niederländisch)|übersetz\w*|in english)\b")
+NATURE = re.compile(r"(?i)\b(sonne|erde|mond\w*|planet\w*|lichtjahr\w*|lichtgeschwindigkeit|universum|weltall|sterne?n?)\b")
+
+# Hint words (plan weiche-intelligenter 2): when no rule recognizes a group for sure, a hint names the groups the
+# question may be about. A hint never narrows: it only keeps that group's tools with chat.route_model "lean" and
+# beside a model's pick (lean(), narrow()), and only those the rights and locks left. Fixed words, never the model.
+HINTS = {
+    "kalender": re.compile(r"(?i)\b(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|wochenende|übermorgen|"
+                           r"nächste woche|los|zeit|frei|uhr|treffen|besuch\w*)\b"),
+    "mail": re.compile(r"(?i)\b(geschrieben|post|brief\w*|antwort\w*|wollte .{1,30} von mir|bank|finanzamt)\b"),
+    "nachricht": re.compile(r"(?i)\b(geschrieben|jemand|alle|sag [A-ZÄÖÜ]\w+)\b"),
+    "wetter": re.compile(r"(?i)\b(gießen|jacke|mantel|grill\w*|kalt|warm|sonne\w*|schön|nass|trocken)\b"),
+    "liste": re.compile(r"(?i)\b(brauchen|kein\w* .{1,25} mehr|einkauf\w*|kaufen|besorgen|milch|brot|butter|eier|kaffee)\b"),
+    "kontakt": re.compile(r"(?i)\b(nummer|wohnt|anschrift|oma|opa|tante|onkel|mama|papa|bruder|schwester)\b"),
+    "paket": re.compile(r"(?i)\b(kommt|liefer\w*|bestellt|amazon|zalando|otto)\b"),
+    "erinnerung": re.compile(r"(?i)\b(in (einer|\d+) (stunde|minute)\w*|um \d{1,2}( uhr)?|nicht vergessen|denk dran)\b"),
+    "smarthome": re.compile(r"(?i)\b(hell\w*|dunkel\w*|warm|kalt|leise\w*|laut\w*)\b"),
+    "gedaechtnis": re.compile(r"(?i)\b(ich (mag|bin|esse|trinke)|mein(e)? \w+ ist|erzählt|geredet|gesprochen)\b"),
+    "agent": re.compile(r"(?i)\b(automatisch\w*|regelmäßig\w*|immer wenn)\b"),
+    "dokument": re.compile(r"(?i)\b(versichert|bezahlt|kosten|frist)\b"),
+    "bahn": re.compile(r"(?i)\b(los|fahren|fahrt|ankomm\w*|umsteig\w*)\b"),
+}
 
 GROUPS = {
     "smarthome": ({"home_assistant", "home_assistant_action", "home_assistant_states", "home_assistant_history",
@@ -84,11 +141,11 @@ GROUPS = {
     "kalender": ({"calendar_events", "calendar_add", "calendar_change", "daily_briefing"}, CALENDAR_WORDS),
     "mail": ({"mail_list", "mail_search", "mail_read", "mail_tidy_overview", "mail_tidy_propose", "mail_draft"},
              MAIL_WORDS),
-    "websuche": ({"web_search"}, chat.NEED_SEARCH),
+    "websuche": ({"web_search"}, SEARCH_WORDS),
     "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel"}, REMINDER_WORDS),
     "liste": ({"tasks_show", "tasks_add", "tasks_change", "home_assistant_todo"}, LIST_WORDS),
     "wetter": ({"weather"}, WEATHER_WORDS),
-    "bahn": ({"transit"}, dict(chat.NEED_TOOLS)["transit"]),
+    "bahn": ({"transit"}, TRANSIT_WORDS),
     "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
     "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
@@ -106,7 +163,8 @@ GROUPS = {
     "erstellen": ({"document_plan", "document_change", "document_status", "document_send", "remarkable_sent",
                    "spark_tagebuch"},
                   re.compile(docmake.MAKE_WORDS.pattern + "|" + chat.DONE_WORDS.pattern.removeprefix("(?i)") + "|"
-                             + chat.DIARY_WORDS.pattern.removeprefix("(?i)"), re.I)),
+                             + chat.DIARY_WORDS.pattern.removeprefix("(?i)") + "|" + MAKE_LETTER.pattern.removeprefix("(?i)"),
+                             re.I)),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
@@ -144,9 +202,10 @@ REFERS = re.compile(r"(?i)\b(davon|dazu|daran|darin|drin|daraus|darauf|darüber|
 
 
 class Route:
-    def __init__(self, names, why):
+    def __init__(self, names, why, hints=None):
         self.names = names          # [intent], [] = unklar, ["plaudern"]
         self.why = why              # {intent: word that matched}
+        self.hints = hints or {}    # {intent: hint word}: only when no rule was sure (HINTS); never narrows
 
     @property
     def clear(self):
@@ -173,9 +232,10 @@ def classify(text, extra_words="", group_words="", not_words=""):
         return Route(["plaudern"], {})
     # a question about the Spark itself (hilfe.py, plan hilfe-besser 1): "Wie verbinde ich Home Assistant?" is about
     # setting it up, not about switching; it goes to the Spark-Hilfe only, before any other rule or the model's pick
+    lang = LANGUAGE.search(text)
     try:
         import hilfe
-        h = hilfe.help_question(text)
+        h = None if lang else hilfe.help_question(text)
     except Exception as e:
         print("weiche: Hilfe-Erkennung", type(e).__name__, flush=True)
         h = None
@@ -217,7 +277,8 @@ def classify(text, extra_words="", group_words="", not_words=""):
     if "smarthome" in why and not device and len(why) > 1:
         why.pop("smarthome")
     # "Habe ich neue Nachrichten?" are messages for the person, "Was gibt es in den Nachrichten?" news
-    if "websuche" in why and "nachricht" in why and why["websuche"].lower().startswith("nachricht"):
+    news = any(m.group(0).lower().startswith("nachricht") for m in SEARCH_WORDS.finditer(text))
+    if "websuche" in why and "nachricht" in why and news:
         why.pop("websuche" if MINE.search(text) else "nachricht")
     # "Schreib Anna, dass ..." is a message even without the word (messages.py decides the details)
     try:
@@ -244,6 +305,21 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # "Wie warm wird es morgen?" is weather, not the thermostat
     if "wetter" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
+    # „Schreib eine Kündigung …“, „Mach ein Word-Dokument …“: a sentence that starts by asking for a file is that file,
+    # not a look into the own documents; „Tabelle“ there is a spreadsheet, not the league table
+    if "erstellen" in why and MAKE_START.search(text):
+        why.pop("dokument", None)
+        if why.get("websuche", "").lower() == "tabelle":
+            why.pop("websuche")
+    # a job that comes back by itself or a watch: the group agent (a reminder stays a reminder)
+    if (RECUR.search(text) and DELIVER.search(text) or WATCH.search(text)) and "erinnerung" not in why:
+        why["agent"] = (RECUR.search(text) or WATCH.search(text)).group(0)
+        for name in ("websuche", "iphone", "nachricht"):
+            why.pop(name, None)
+    # „Was heißt Fenster auf Englisch?“, „Wie lange braucht Licht von der Sonne zur Erde?“: knowledge, no device
+    if (lang or NATURE.search(text)) and not homeassistant.is_command(text):
+        for name in ("smarthome", "kontakt", "dokument"):
+            why.pop(name, None)
     # „Sag mir Bescheid, wenn es eine neue Firmware gibt“ is a watch (beobachten.py, plan „Eigene Aufgaben“):
     # a recurring job that searches later, not a search, a reminder or a state now
     try:
@@ -261,7 +337,44 @@ def classify(text, extra_words="", group_words="", not_words=""):
     for name, rx in own_route_words(not_words).items():
         if name in why and rx.search(text):
             why.pop(name)
-    return Route(list(why), why)
+    return Route(list(why), why, {} if why else hints_of(text))
+
+
+def hints_of(text):
+    """The groups a question no rule recognized may be about, by the hint words (HINTS), {group: word}."""
+    out = {}
+    for name, rx in HINTS.items():
+        m = rx.search(str(text or "")[:2000])
+        if m:
+            out[name] = m.group(0).strip()[:40]
+    return out
+
+
+def hint_tools(route):
+    """The tools of the groups a hint names (kept beside a model's pick and with "lean")."""
+    out = set()
+    for n in (route.hints or {}):
+        out |= GROUPS.get(n, (set(), None))[0]
+    return out
+
+
+# A follow-up („Und morgen?“, „Mach es wieder aus“, plan weiche-intelligenter 1): no rule recognizes it, it points
+# back, it is short, and the person's own question just before had one clear group. Then it is that group again.
+# Only the person's own earlier message counts (never an answer or outside text), and only narrowing follows.
+FOLLOW_MAX = 80
+
+
+def follow_up(text, before, ccfg=None):
+    """The Route of a follow-up question from the person's own question before, or None."""
+    text = str(text or "")
+    if not text.strip() or len(text) > FOLLOW_MAX or not before or not refers_back(text):
+        return None
+    if classify_cfg(text, ccfg).names:
+        return None
+    prev = classify_cfg(str(before)[:2000], ccfg)
+    if not prev.clear or prev.names == ["plaudern"]:
+        return None
+    return Route(list(prev.names), {n: "Folgefrage" for n in prev.names})
 
 
 FEATURE_VERB = re.compile(r"(?i)^\W*(bitte |kannst du |könntest du |spark,? )?(schalt\w*|mach\w*|aktivier\w*|deaktivier\w*|"
@@ -311,7 +424,7 @@ def narrow(route, tools, ccfg=None, keep=frozenset()):
     if any(n in off for n in route.names):
         return tools
     extra = own_route_extra(ccfg.get("route_extra", ""))
-    want = route.tools() | NARROW_KEEP | set(keep) | {t for n in route.names for t in extra.get(n, ())}
+    want = route.tools() | NARROW_KEEP | set(keep) | {t for n in route.names for t in extra.get(n, ())} | hint_tools(route)
     kept = [t for t in tools if t["function"]["name"] in want]
     if not any(t["function"]["name"] in route.tools() for t in kept):
         return tools
@@ -377,7 +490,9 @@ def lean(route, tools, keep=frozenset()):
     (possibly none). Anything a rule recognized stays as narrow() left it."""
     if route.names:
         return tools
-    return [t for t in tools if t["function"]["name"] in LEAN or t["function"]["name"] in keep]
+    hinted = hint_tools(route)
+    return [t for t in tools if t["function"]["name"] in LEAN or t["function"]["name"] in keep
+            or t["function"]["name"] in hinted]
 
 
 def forced(route, need, offered):

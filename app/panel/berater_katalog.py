@@ -34,7 +34,7 @@ ENTRIES = {
                         way="Funktionen → Weiche", restart=""),
     "pflicht_wort": dict(stufe=A, art="pflicht", sec="chat", key="tool_words",
                          de="Wort, bei dem ein Werkzeug Pflicht ist", en="Word that makes a tool a must",
-                         way="Einstellungen → Sprachmodell", restart=""),
+                         way="Funktionen → Weiche", restart=""),
     # R2, R3 (plan vorschlaege-besser.md): a fixed sentence for a tool, a tool a group of the Weiche keeps as well
     "werkzeug_hinweis": dict(stufe=A, art="hinweis", sec="chat", key="tool_hints",
                              de="Hinweis zu einem Werkzeug", en="Hint for a tool",
@@ -78,7 +78,7 @@ ENTRIES = {
     # ---- C: switches and ways of working (second step, never the autopilot)
     "weiche_modell": dict(stufe=C, art="choice", sec="chat", key="route_model", choices=("off", "lean", "on", "systemone"),
                           de="Unklare Fragen an das Sprachmodell", en="Unclear questions to the language model",
-                          way="Funktionen", restart=""),
+                          way="Funktionen → Weiche", restart=""),
     "schneller_beginn": dict(stufe=C, art="switch", sec="chat", key="prompt_cache",
                              de="Schneller Antwortbeginn", en="Faster first words", way="Einstellungen → Sprachmodell", restart=""),
     "antwort_pruefen": dict(stufe=C, art="switch", sec="chat", key="answer_check",

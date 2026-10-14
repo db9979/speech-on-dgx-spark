@@ -1024,7 +1024,7 @@ async def analyse(case, c=None, now=None):
 
 # ---------------------------------------------------------------- Regeln (R7): every admin rule in one list
 RULE_KEYS = {   # config key -> (German, English, way, catalog key the assistant proposes with)
-    "tool_words": ("Pflicht-Wörter", "Must words", "Einstellungen → Sprachmodell", "pflicht_wort"),
+    "tool_words": ("Pflicht-Wörter", "Must words", "Funktionen → Weiche", "pflicht_wort"),
     "tool_hints": ("Werkzeug-Hinweise", "Tool hints", "Einstellungen → Sprachmodell", "werkzeug_hinweis"),
     "route_words": ("Eigene Wörter der Weiche", "Own words of the Weiche", "Funktionen → Weiche", "weiche_wort"),
     "route_not": ("„Nicht bei“", "\"Not with\"", "Funktionen → Weiche", "weiche_nicht"),

@@ -374,7 +374,9 @@ def help_question(text):
             flat = re.sub(r"[\s\-–„“\"']+", "", obj)
             for t_ in _titles():
                 tf = re.sub(r"[\s\-–„“\"']+", "", t_)
-                if t_ in low or (len(flat) >= 5 and (flat in tf or tf in flat) and len(flat) <= 40):
+                # the title is what is asked about („Was ist der Raummodus?“), not a word somewhere later
+                # („Was ist der Unterschied zwischen Wetter und Klima?“ is knowledge; plan weiche-intelligenter 2)
+                if obj.startswith(t_) or (len(flat) >= 5 and (flat in tf or flat.startswith(tf)) and len(flat) <= 40):
                     return what.group(0) + " " + t_
         return None
     if STRONG.search(text):

@@ -266,10 +266,13 @@ class Fields(unittest.TestCase):
         self.assertIn("MutationObserver(later)", js)
 
     def test_tool_words_have_the_panels_limit(self):
+        # the must words moved to Funktionen → Weiche (plan weiche-intelligenter step 0): checked there with the
+        # panel's own limit (weiche.check → chat.parse_tool_words), the page shows it
         import chat
-        m = re.search(r'<textarea id="chat.tool_words"[^>]*maxlength="(\d+)"', read("index.html"))
-        self.assertIsNotNone(m)
-        self.assertEqual(int(m.group(1)), chat.MAX_TOOL_WORDS_CHARS)
+        import weiche
+        self.assertNotIn('id="chat.tool_words"', read("index.html"))
+        with self.assertRaises(ValueError):
+            weiche.check({"tool_words": "web_search: " + "x" * (chat.MAX_TOOL_WORDS_CHARS + 1)})
 
 
 class SmallThings(unittest.TestCase):

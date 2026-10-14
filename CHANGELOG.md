@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.530** · 2026-10-14 · Weiche intelligenter: Hinweiswörter halten passende Werkzeuge bereit, Folgefragen erben die Gruppe, Alltagsquote misst ehrlich; Pflicht-Wörter, unklare Fragen und Schwelle nur noch unter Funktionen → Weiche
 - **V01.0.529** · 2026-10-14 · Aufräum-Regel „eine Quelle“ (Richtlinie Teil 17, test_aufraeumen mit Altlastenliste, die nur schrumpft) und App-Gleichstand: Ich-Seiten aus features.ME_PAGES, die iPhone-App öffnet jede Seite in der App, Panel-Bereiche ohne Schalter je Profil
 - **V01.0.528** · 2026-10-14 · Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)
 - **V01.0.527** · 2026-10-14 · Ablage-Ordner (Synology S4): „spark_ablage“ an einem Ort im Heimnetz ist der einzige Ordner, in den der Spark schreibt; erstellte Dokumente landen in Erstellt, nach einem Ja auch Eigenes („Leg das auf die NAS“, Werkzeug nas_ablegen), Dateien aus Eingang kommen wie ein Upload zu den Dokumenten und wandern nach Eingang/erledigt; nie überschreiben, nie löschen (Ich → Speicher)
