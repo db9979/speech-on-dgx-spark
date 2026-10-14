@@ -195,6 +195,7 @@ ACTION_OK = {
     ("dienstwacht.py", "round_once"): "Ausfall und Entwarnung über live.event (ereignis: Dienste …)",
     ("docmake.py", "_can_start"): "nur eine Prüfung; Auftrag und Senden schreiben ihre Zeilen",
     ("geraeteupdate.py", "tick"): "check_all schreibt über live.job",
+    ("naszustand.py", "_paused"): "nur eine Prüfung; read_once schreibt „naszustand: gelesen …“ oder „… fehlgeschlagen“",
     ("mcpserver.py", "carry_out"): "decide schreibt guard.log und „mcp-server: confirmed action …“",
     ("netguard.py", "allowed"): "nur eine Prüfung; der Wächter loggt die Ablehnung selbst",
     ("proactive.py", "blocked"): "nur eine Prüfung; deliver loggt „not said (Grund)“",

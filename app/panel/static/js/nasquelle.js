@@ -49,9 +49,15 @@ function nqBind(box,after,say){if(!NQ)return;
   box.querySelectorAll('[data-nqprev]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqprev,m=q('data-nqprevmsg',id);m.className='fh';m.textContent=t('Zähle, was gelesen würde …','Counting what would be read …');
     try{const d=await (await api('/api/profile/nasquelle/preview',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[]}))).json();
       const per=Object.entries(d.groups).map(([g,n])=>{const x=NQ.groups.find(y=>y.id===g);return (x?t(x.name[0],x.name[1]):g)+' '+n}).join(', ');
-      m.textContent=t(`${d.files} Dateien (${spSize(d.bytes)})`,`${d.files} files (${spSize(d.bytes)})`)+(per?': '+per:'')+'. '
-        +t(`Der Spark liest sie in ${d.rounds} Runden, alle ${d.every} Minuten.`,`The Spark reads them in ${d.rounds} rounds, every ${d.every} minutes.`)
-        +(d.files>d.room?' '+t(`Platz ist noch für ${d.room} Dokumente.`,`There is room for ${d.room} more documents.`):'')+(d.complete?'':' '+t('Der Ordner ist sehr groß: gezählt ist nur ein Teil.','The folder is very large: only part was counted.'))}
+      // Dominik 2026-10-14 ("was bedeutet diese info"): what will be read, what stays out and why, how to change it
+      m.textContent=t(`${d.files} Dateien passen zur Auswahl (${spSize(d.bytes)})`,`${d.files} files fit the choice (${spSize(d.bytes)})`)+(per?': '+per:'')+'. '
+        +(d.left_out?t(`Gelesen werden davon höchstens ${d.read}, ${d.left_out} bleiben ungelesen: Pro Profil gehen ${d.limit} Dokumente von Orten in die Suche (stellt der Admin ein unter Funktionen → Speicher und NAS → Wissensordner). Zuerst kommen Dokumente, Tabellen und Text, dann Bilder und Scans, jeweils die neuesten zuerst.`,
+            `At most ${d.read} of them are read, ${d.left_out} stay unread: each profile gets ${d.limit} documents from places into the search (set by the admin under Features → Storage and NAS → Knowledge folders). Documents, tables and text come first, then pictures and scans, the newest first each.`)
+            +(d.groups.bilder?' '+t('Tipp: „Bilder und Scans“ abwählen oder einen Unterordner wählen.','Tip: untick "Pictures and scans" or pick a sub folder.'):'')+' '
+          :t('Alle werden gelesen. ','All of them are read. '))
+        +(d.read?t(`Das erste Lesen braucht etwa ${d.rounds} Runden zu höchstens 200 Dateien, in ruhigen Minuten eine nach der anderen; danach schaut der Spark alle ${d.every} Minuten nach Neuem.`,
+            `The first reading takes about ${d.rounds} rounds of up to 200 files, one after another in quiet minutes; then the Spark looks for new files every ${d.every} minutes.`):'')
+        +(d.complete?'':' '+t(`Der Ordner ist sehr groß: gezählt wurde nur bis ${d.seen_most} Einträge oder eine Minute lang, es sind also noch mehr.`,`The folder is very large: only up to ${d.seen_most} entries or one minute were counted, so there are more.`))}
     catch(e){m.className='fh err';m.textContent=e.message}});
   box.querySelectorAll('[data-nqadd]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqadd;b.disabled=true;say(t('Prüfe den Ordner …','Checking the folder …'));
     try{await api('/api/profile/nasquelle',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[]}));await after();say(t('Hinzugefügt. Der Spark liest jetzt; große Ordner brauchen mehrere Runden.','Added. The Spark is reading now; large folders take several rounds.'))}

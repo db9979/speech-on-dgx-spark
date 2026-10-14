@@ -280,6 +280,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/nasablage.py` | Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten |
 | `app/panel/nashilfe.py` | NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto |
 | `app/panel/nasquelle.py` | Wissensordner: Ordner an einem Speicherort nur lesen und in die Dokumentensuche bringen |
+| `app/panel/naszustand.py` | Zustand der NAS: Belegung, RAID, Festplatten und Temperatur über SNMPv3 (nur lesen, nur Admin) |
 | `app/panel/offsite.py` | Sicherung nach außen, verschlüsselt |
 | `app/panel/quality.py` | Qualitätstest gegen das echte Sprachmodell |
 | `app/panel/speicher.py` | Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt |
@@ -451,6 +452,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/migrated-chunk10` | Einmalige Umstellung erledigt | – | nein |
 | `state/nas-admin.json` | NAS-Verbindung des Spark | Passwort versiegelt | ja |
 | `state/nasquelle-tmp` | Zwischendateien der Wissensordner, Sekunden | – | nein |
+| `state/naszustand.json` | Zustand der NAS: Adresse, SNMP-Benutzer, letzte Werte | Passwörter versiegelt | ja |
 | `state/notaus-keys.json` | Notaus-Auslöser | – | nein |
 | `state/notaus-mine.json` | Mein Notaus | – | nein |
 | `state/notaus.json` | Notaus | – | nein |
@@ -1548,7 +1550,7 @@ flowchart TD
 - **3** Gedächtnis-Notizen pro Antwort
 - **13** Werkzeuge gesperrt nach fremdem Text
 - **7** Werkzeuge ohne Internet bei Notaus
-- **78** Werkzeuge mit verständlichem Namen
+- **79** Werkzeuge mit verständlichem Namen
 
 #### Einstellen
 
@@ -1749,7 +1751,7 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. **Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 26 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. **Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 27 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. **Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. **Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu).
 4. **Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
@@ -2373,7 +2375,7 @@ flowchart TD
 4. **Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. **Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. **Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. **Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (27, kommen in jede Sicherung) oder backup.STATE_LOCAL (43, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
+7. **Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (28, kommen in jede Sicherung) oder backup.STATE_LOCAL (43, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
 8. **Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. **Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. **Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2383,7 +2385,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **27** Dateien in jeder Sicherung
+- **28** Dateien in jeder Sicherung
 - **43** Dateien und Ordner, die mit Grund draußen bleiben
 - **8 MB** größte Datei beim Wiederherstellen
 - **12** Zeichen hat das Umzugs-Passwort mindestens

@@ -933,7 +933,8 @@ class Packages(unittest.TestCase):
             return out
         extra, main = blocks("requirements-speicher.lock"), blocks("requirements-panel.lock")
         self.assertEqual(set(extra), {"bcrypt", "invoke", "paramiko", "pynacl", "pyspnego", "smbprotocol",
-                                          "ifaddr", "zeroconf"})   # since V01.0.524: Im Heimnetz suchen (nashilfe.py)
+                                          "ifaddr", "zeroconf",   # since V01.0.524: Im Heimnetz suchen (nashilfe.py)
+                                          "pyasn1", "pysnmp"})   # since S6: Zustand der NAS (naszustand.py)
         for k, v in extra.items():
             self.assertEqual(v, main[k], k)
             self.assertTrue(v[1], k)

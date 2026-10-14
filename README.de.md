@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.535** Zustand der NAS: Belegung, RAID, Festplatten und Temperatur der Synology, Hinweise an die Admins, Frage per Sprache; Wissensordner lesen Dokumente vor Bildern
 - **V01.0.534** Kanal-Zeichen in der eigenen blauen Blase (z. B. „Begleiter“) wieder lesbar: weiß wie der Text, hell und dunkel
 - **V01.0.533** Android-App 1.3.0: Update direkt aus der App, geprüft und vom eigenen Spark; Geräte-Updates zeigt die App-Version je Handy
 - **V01.0.532** Jeder Kasten unter Zustand → Technik erklärt genau, wie er arbeitet, mit Schaubild Schritt für Schritt und Beispielen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.528** Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)
 - **V01.0.527** Ablage-Ordner auf der NAS: Erstelltes und nach einem Ja Eigenes landet dort, der Eingang kommt zu den Dokumenten
 - **V01.0.526** Tests wieder grün: „Wer darf was“ zeigt nie mehr einen veralteten Stand
-- **V01.0.525** Tests wieder grün: der Browser-Test der Suche wartet, bis die Seite angemeldet ist
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

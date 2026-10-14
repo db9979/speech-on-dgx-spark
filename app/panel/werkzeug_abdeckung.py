@@ -30,6 +30,7 @@ TOOLS = {
     "remarkable": ("document_search", "remarkable_library"),
     "rmtodo": ("remarkable_library",),
     "nasablage": ("nas_ablegen",),
+    "naszustand": ("nas_zustand",),
     "rmsend": ("remarkable_note", "remarkable_sent"),
     "rmweb": ("remarkable_page", "remarkable_attachment"),
     "rmaufgaben": ("remarkable_sheet",),   # every sheet on request goes through it (rmplus.SHEETS)
@@ -194,7 +195,8 @@ PANEL_STEPS = {"local_search"}
 BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "remarkable_page": "remarkable",
            "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
-           "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage"}
+           "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
+           "nas_zustand": "naszustand"}
 
 # one typical request per tool of a Weiche group: it must reach that group (tests/test_werkzeug_abdeckung.py)
 SENTENCES = {

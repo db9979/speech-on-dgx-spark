@@ -50,6 +50,7 @@ OHNE = {
     "rmfresh": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "rmguide": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "rmpapier": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
+    "naszustand": "keine Daten des Profils: nur der Haupt-Admin richtet den Zustand der NAS unter Funktionen ein und vergisst ihn dort",
     "rmaufgaben": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "mystatus": "keine eigenen Daten: zeigt nur, was andere Funktionen wissen",
     "vorrang": "keine eigenen Daten: die Stufe gibt der Admin",

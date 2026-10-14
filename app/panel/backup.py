@@ -55,6 +55,7 @@ STATE_FILES = {
     "nas-admin.json": "json",       # the admin's NAS connection (nas.py): address, user, password sealed, pinned certificate
     "offsite.json": "json",         # Sicherung nach außen: WebDAV address, user, password and backup password (sealed)
     "docling.json": "json",         # Docling-Server: address, key (sealed), accepted certificate
+    "naszustand.json": "json",      # Zustand der NAS: host, SNMPv3 user, both passwords sealed, the newest values
     "mfa-admin.json": "json",       # the admin's second step (secret sealed with secret.key)
     "apns.json": "json",            # iPhone push: Apple key (sealed), key id, team
     "apns-tokens.json": "json",     # iPhone push: the devices' tokens

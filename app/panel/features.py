@@ -308,6 +308,8 @@ FEATURES = (
     # nasablage.py (S4): spark_ablage at a place in the home network; made documents and, after "Ja", own things go
     # into Erstellt/, files put into Eingang/ come into Dokumente; the only folder the Spark writes to
     F("nasablage", "Ablage-Ordner", "Filing folder", "data", ("nas_drop",), parent="nas", me="storebox", guide="nasablage"),
+    # naszustand.py (S6): the main admin lets the Spark read how the NAS is doing (SNMPv3); only admin profiles ask
+    F("naszustand", "Zustand der NAS", "NAS status", "data", ("nas_status",), parent="nas", guide="naszustand"),
     F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
       me="storebox", guide="speicherlan"),
     F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
@@ -364,13 +366,19 @@ PREFS = {f.pref for f in FEATURES if f.pref}
 
 # Spark-wide conditions besides the switches (an address that must be set), registered by the module
 # that knows them, so this file imports none of them: key -> function(chat config) -> bool
+def _naszustand_set_up(c):
+    import naszustand
+    return naszustand.set_up(c)
+
+
 def _docling_set_up(c):
     import doclingdienst
     return doclingdienst.set_up(c)
 
 
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
-         "docling": _docling_set_up}                          # the Docling server needs its address
+         "docling": _docling_set_up,                          # the Docling server needs its address
+         "naszustand": _naszustand_set_up}                    # the NAS status needs its host and SNMP user
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
 # a profile's own stored data of a function, registered by the module that keeps it: key -> (count(uid) -> int,

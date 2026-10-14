@@ -42,7 +42,7 @@ ALLGEMEIN = {"memory_save", "memory_forget", "history_search", "document_search"
              "remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sheet", "local_search", "spark_hilfe",
              "spark_vorschlag", "article_more", "routine_save",
              # offered when the person's own words name them, kept whatever the Weiche's group (werkzeug_abdeckung.BY_WORD)
-             "remarkable_library", "home_rules_list", "home_rule_delete", "speaker_volume", "proactive_pause", "undo_last", "nas_ablegen"}
+             "remarkable_library", "home_rules_list", "home_rule_delete", "speaker_volume", "proactive_pause", "undo_last", "nas_ablegen", "nas_zustand"}
 # tool definitions that never reach the chat's model (the health check's own test call, the agent's page reader)
 NICHT_IM_CHAT = {"get_time", "read_page"}
 TOOL = re.compile(r"[a-z][a-z0-9_]{1,40}")

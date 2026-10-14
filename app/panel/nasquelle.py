@@ -17,8 +17,10 @@ Rules (fixed, never decided by the model):
   #snapshot), lock and temporary files are always left out. The content must fit the name (magic bytes, as an
   upload): a ".pdf" that is no PDF is left out.
 - How much: at most MAX_SOURCES folders, MAX_LIST entries looked at per folder, ROUND_FILES files or ROUND_BYTES
-  per round (the first round of a big folder spreads over several), and chat.nas_max_docs documents from the
-  places per profile (default NAS_DOCS, they do not count against the uploads).
+  per round (the first round of a big folder spreads over several, one a minute in quiet minutes), and
+  chat.nas_max_docs documents from the places per profile (default NAS_DOCS, they do not count against the
+  uploads). When a folder holds more than fits, what is read first is fixed (first): documents, tables, slides,
+  text and mails before pictures and scans, the newest first; the rest waits until there is room again.
 - When: every chat.nas_sources_every minutes (15 to 1440, default 30), only in quiet minutes (vorrang), never
   while an update runs or with Notaus. A file that changed is read again; one that is gone leaves the search.
 - Deleting in Ich → Dokumente means "nicht mehr finden": the file is left out until it changes, never deleted
@@ -447,6 +449,21 @@ def _conn(uid, nid):
     return c
 
 
+def first(item):
+    """The order files are read in (Dominik 2026-10-14: what gets in when a folder holds more than the limit):
+    every group before pictures and scans, then the newest first. item = (rel, size, mtime)."""
+    m = item[2] if isinstance(item[2], (int, float)) else 0
+    return (group_of(item[0]) == "bilder", -m)
+
+
+def plan(n, size, room):
+    """For the preview: of n files (size bytes) how many fit, how many stay out, and in how many rounds."""
+    read = max(0, min(n, room))
+    part = size * read // n if n else 0
+    return {"read": read, "left_out": n - read,
+            "rounds": max(1, -(-read // ROUND_FILES), -(-part // ROUND_BYTES)) if read else 0}
+
+
 async def walk(rd, skip=(), most=MAX_LIST, secs=LIST_SECS):
     """Every file below the folder: ([(rel, size, time)], {"versteckt": n} folders left out, complete)."""
     t_end = time.monotonic() + secs
@@ -600,6 +617,7 @@ async def sync_once(uid, sid, why="auto", now=None):
         todo = [(h, x) for h, x in now_set.items()
                 if h not in have or (have[h].get("s"), have[h].get("m")) != (x[1], x[2])]
         todo = [(h, x) for h, x in todo if not (h in have and have[h].get("x") == "aus" and (have[h].get("s"), have[h].get("m")) == (x[1], x[2]))]
+        todo.sort(key=lambda hx: first(hx[1]))      # documents before pictures, the newest first (first)
         new, size_sum, full = 0, 0, False
         for h, (rel, size, mtime) in todo:
             if new >= ROUND_FILES or size_sum + size > ROUND_BYTES and new:
@@ -948,9 +966,10 @@ async def preview(request: Request, prof=Depends(_on)):
             per[g] = per.get(g, 0) + 1
             size += sz
     n = sum(per.values())
+    room = max(0, max_docs() - nas_docs(uid))
     print(f"nasquelle: vorschau | {n} dateien | {_log_name(uid)}", flush=True)
-    return {"files": n, "groups": per, "out": out, "bytes": size, "complete": complete,
-            "rounds": max(1, -(-n // ROUND_FILES)), "every": every() // 60, "room": max(0, max_docs() - nas_docs(uid))}
+    return dict({"files": n, "groups": per, "out": out, "bytes": size, "complete": complete, "seen_most": MAX_LIST,
+                 "every": every() // 60, "room": room, "limit": max_docs()}, **plan(n, size, room))
 
 
 @router.post("/api/profile/nasquelle")

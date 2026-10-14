@@ -94,6 +94,9 @@ SVC = {
     # Ablage-Ordner (nasablage.py): the places with a filing folder of the profiles, one part per address
     "ablage": ("Ablage-Ordner", "Filing folder", "Ablegen auf der NAS und neue Dateien aus dem Eingang warten, bis sie zurück ist.",
                SLOW, "nasablage"),
+    # Zustand der NAS (naszustand.py): its own SNMPv3 reading every few minutes; the probe only looks at the newest one
+    "naszustand": ("Zustand der NAS", "NAS status", "Speicherplatz, RAID und Festplatten der NAS werden gerade nicht beobachtet.",
+                   SLOW, "naszustand"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Chats mit anderen Sparks (verbund.py): the own address as other Sparks see it (its /.well-known/spark-verbund)
@@ -271,6 +274,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import naszustand
+        p = naszustand.probes()
+        if p:
+            out["naszustand"] = p
+    except Exception:
+        pass
+    try:
         import doclingdienst
         d = doclingdienst._read()
         if doclingdienst.admin_on(c) and _origin(d.get("url")):
@@ -418,6 +428,9 @@ async def probe(sid, key, p, cfg):
             return await _own(p, cfg)
         if sid == "mail":
             return await _imap(p)
+        if p.get("snmp"):    # Zustand der NAS: the newest reading of naszustand.py, no question of its own
+            import naszustand
+            return Probe(naszustand.reachable())
         if p.get("tcp"):
             return await _tcp(p)
         return await _http(p)
@@ -426,7 +439,7 @@ async def probe(sid, key, p, cfg):
 
 
 def _host(sid, p):
-    if sid == "mail" or p.get("tcp"):
+    if sid == "mail" or p.get("tcp") or p.get("snmp"):
         return p.get("host", "")
     return urlsplit(p.get("url", "")).hostname or ""
 
@@ -576,6 +589,20 @@ async def round_once(now=None, force=False):
     return changes
 
 
+def warn(sid, words, bad, now=None):
+    """A problem a watched service reports by itself (naszustand.py: a full volume, a degraded RAID …): told to the
+    admins once when it starts (bad) and once when it is gone, through the same queue as outages (night, device).
+    words: fixed words and numbers made by the caller, never an outside text."""
+    now = time.time() if now is None else now
+    if sid not in SVC or not admin_on():
+        return
+    words = re.sub(r"[^\w %°.,:()/+\-]", "", str(words))[:80]
+    _queue_all({"k": "warn" if bad else "fine", "s": sid, "w": words, "t": now}, now)
+    _write()
+    import live
+    live.event("Dienste", f"{SVC[sid][0]}: {words}" if bad else f"{SVC[sid][0]}: wieder in Ordnung")
+
+
 def _gone(sid, e, now):
     """The service is gone: a note now, or (it went and came within REPEAT) counted and told later."""
     import live
@@ -660,9 +687,12 @@ def text(items, now, c=None):
     """(title, body) from the queued items: fixed words, names of services, times. Never an address or error."""
     c = features.chat_cfg() if c is None else c
     svc = _read()["svc"]
-    per = {}
+    per, warns = {}, []
     for it in items:
-        per.setdefault(it["s"], []).append(it)
+        if it.get("k") in ("warn", "fine"):     # a problem a service reports (warn): fixed words and numbers
+            warns.append(it)
+        else:
+            per.setdefault(it["s"], []).append(it)
     gone, back, lines = [], [], []
     for s in SVC:
         its = per.get(s)
@@ -697,9 +727,14 @@ def text(items, now, c=None):
             title += " · ✅ " + names(back) + " wieder da"
         if still:
             lines.append("Weiter weg: " + ", ".join(still) + ".")
-    else:
+    elif back:
         title = "✅ Wieder da: " + names(back)
         lines.append("Noch weg: " + ", ".join(still) + "." if still else "Alles läuft wieder.")
+    else:
+        bad = [it for it in warns if it["k"] == "warn"]
+        title = ("⚠️ " + SVC[bad[-1]["s"]][0] + ": " + bad[-1]["w"]) if bad else "✅ " + SVC[warns[-1]["s"]][0] + " wieder in Ordnung"
+    lines = [f"{SVC[it['s']][0]}: {it['w']}." if it["k"] == "warn" else f"{SVC[it['s']][0]}: wieder in Ordnung ({it['w']})."
+             for it in warns] + lines
     return title[:120], " ".join(lines)[:600]
 
 
@@ -763,6 +798,12 @@ def alerts(now=None):
         if e.get("st") == "down":
             out.append({"kind": "service", "level": "bad", "go": "Zustand → Dienste",
                         "text": f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(e.get('since') or 0)} nicht. {SVC[sid][2]}"})
+    try:          # what a service reports by itself and the admins were told of (naszustand.py)
+        import naszustand
+        if "naszustand" not in _read()["skip"]:
+            out += naszustand.alerts()
+    except Exception:
+        pass
     return out
 
 

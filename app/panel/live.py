@@ -73,7 +73,7 @@ TOOLS = {
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Wissensordner-Abgleich": "nasquelle",
-    "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage",
+    "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
     "Docling": "docling",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
@@ -124,6 +124,8 @@ TARGETS = {
     "nasquelle": ("Wissensordner", "Ordner an den Speicherorten · nur lesen", "lan", False),
     # Ablage-Ordner (nasablage.py): spark_ablage at a place in the home network, written only there; numbers only
     "nasablage": ("Ablage-Ordner", "spark_ablage im Heimnetz · schreibt nur dort", "lan", False),
+    # Zustand der NAS (naszustand.py): SNMPv3 reading of the own NAS, admin only; numbers only
+    "naszustand": ("Zustand der NAS", "SNMPv3 · nur lesen · Heimnetz", "lan", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
@@ -154,7 +156,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
@@ -1155,6 +1157,13 @@ def snapshot(view="admin", now=None):
         nab = {"on": False}
     if nab.get("on"):
         used.add("nasablage")
+    try:
+        import naszustand
+        nzs = naszustand.for_live()
+    except Exception:
+        nzs = {"on": False}
+    if nzs.get("on"):
+        used.add("naszustand")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1177,6 +1186,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "nasablage" and nab.get("on"):   # Ablage-Ordner: profiles, files put there and taken in (no path, no name)
             x["sub"] = (f"{nab.get('profiles', 0)} Profile · {nab.get('made', 0)} abgelegt · {nab.get('fetched', 0)} aus dem Eingang"
                         + (f" · {nab['bad']} mit Fehler" if nab.get("bad") else ""))
+        if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, disks, open problems (no address)
+            x["sub"] = (f"{nzs.get('vols', 0)} Speicherbereiche · {nzs.get('disks', 0)} Festplatten"
+                        + ("" if nzs.get("ok") else " · antwortet nicht") + (f" · {nzs['warn']} Hinweise" if nzs.get("warn") else ""))
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
                         + ("" if meld.get("token") else " · kein Token"))

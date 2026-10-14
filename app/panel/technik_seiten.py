@@ -387,7 +387,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "fa3562547d",
+        "stand": "cd61a46b1b",
         "kurz": ("Hier entscheidet das Panel, wer eine Anfrage stellt und was diese Person darf: Anmeldung mit "
                  "Passwort oder PIN (mit Sperre nach Fehlversuchen), Cookie oder Geräteschlüssel, Rate-Limit und die "
                  "Freigaben je Funktion. Das Profil kommt nur aus Cookie, Schlüssel oder dem Panel selbst, nie aus dem "
@@ -1853,7 +1853,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "179511575a",
+        "stand": "b79f98a912",
         "kurz": ("Die Seite im Browser (static/js/chat.js) ist das Gerät: sie nimmt die Frage auf, schickt den Ton zur "
                  "Spracherkennung, schickt den Text an /api/chat und spielt Text und Ton aus einem einzigen Strom ab. "
                  "Die Gespräche eines Profils liegen auf dem Spark, jede offene Seite gleicht sie ab.",
@@ -2553,7 +2553,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "09e8072d30",
+        "stand": "6b2d1629f1",
         "kurz": ("Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context "
                  "Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre "
                  "eigene Werkzeugliste. Lesen geht direkt, Handeln nur als Vorschlag, den das Profil bestätigt.",
@@ -2733,7 +2733,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "83bc05bfaa",
+        "stand": "bd38333a9d",
         "kurz": ("Die Spracherkennung macht aus einer Aufnahme Text. Das Panel nimmt die Aufnahme an, prüft sie und "
                  "reicht sie an den ASR-Dienst weiter. Dieser Proxy prüft Schlüssel, Größe und Abtastrate, lässt "
                  "Anfragen nach Vorrang warten und gibt sie an die Engine, die nur auf dieser Maschine lauscht.",
@@ -3050,7 +3050,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "383157ac86",
+        "stand": "5457d99e63",
         "kurz": ("In state/ liegt, was für den ganzen Spark gilt und keinem Profil gehört: Schlüssel, Zugänge des "
                  "Admins, Telegram-Bot, Push-Schlüssel, Lautsprecher, Zähler, Sperren und Zustände der Dienste. "
                  "Geheimnisse darin sind mit dem Schlüssel des Spark versiegelt.",

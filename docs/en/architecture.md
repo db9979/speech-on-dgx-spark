@@ -280,6 +280,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/nasablage.py` | Ablage-Ordner. |
 | `app/panel/nashilfe.py` | Synology-Komfort: find a NAS in the home network and show what the Spark's user may do on a connected place. |
 | `app/panel/nasquelle.py` | Wissensordner. |
+| `app/panel/naszustand.py` | Zustand der NAS. |
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |
 | `app/panel/speicher.py` | Eigener Speicher. |
@@ -451,6 +452,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/migrated-chunk10` | One-time migration done | – | no |
 | `state/nas-admin.json` | The Spark's NAS connection | password sealed | yes |
 | `state/nasquelle-tmp` | Knowledge folder staging, seconds | – | no |
+| `state/naszustand.json` | NAS status: address, SNMP user, newest values | passwords sealed | yes |
 | `state/notaus-keys.json` | Kill switch triggers | – | no |
 | `state/notaus-mine.json` | My kill switch | – | no |
 | `state/notaus.json` | Kill switch | – | no |
@@ -1548,7 +1550,7 @@ flowchart TD
 - **3** memory notes per answer
 - **13** tools locked after outside text
 - **7** tools without internet with the kill switch
-- **78** tools with a readable name
+- **79** tools with a readable name
 
 #### Settings
 
@@ -1749,7 +1751,7 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. **A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 26 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. **A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 27 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. **Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. **Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute).
 4. **Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
@@ -2373,7 +2375,7 @@ flowchart TD
 4. **Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. **Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. **Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. **Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (27, go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. **Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
 8. **Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. **Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. **Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2383,7 +2385,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **27** files in every backup
+- **28** files in every backup
 - **43** files and folders that stay out with a reason
 - **8 MB** largest file when restoring
 - **12** characters the move password has at least

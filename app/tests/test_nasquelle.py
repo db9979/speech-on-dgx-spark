@@ -267,6 +267,18 @@ class Reading(Base):
         self.assertGreaterEqual(nasquelle.MAX_SOURCES, 1)
         self.assertEqual(nasquelle._int("nas_max_docs", 5000, 100, 20000), 5000)
 
+    def test_over_the_limit_documents_first_then_the_newest(self):
+        """Dominik 2026-10-14: which files get in when a folder holds more than the limit. Documents, tables and text
+        before pictures and scans, the newest first; the preview says how many stay out and how many rounds."""
+        items = [("Fotos/a.jpg", 1, 300), ("alt.pdf", 1, 100), ("neu.pdf", 1, 200), ("Fotos/b.png", 1, 400),
+                 ("notiz.txt", 1, None)]
+        self.assertEqual([x[0] for x in sorted(items, key=nasquelle.first)],
+                         ["neu.pdf", "alt.pdf", "notiz.txt", "Fotos/b.png", "Fotos/a.jpg"])
+        gb = 1024 ** 3
+        self.assertEqual(nasquelle.plan(16932, 8 * gb, 5000), {"read": 5000, "left_out": 11932, "rounds": 25})
+        self.assertEqual(nasquelle.plan(300, 5 * gb, 5000), {"read": 300, "left_out": 0, "rounds": 5})   # 1 GB per round
+        self.assertEqual(nasquelle.plan(10, gb, 0), {"read": 0, "left_out": 10, "rounds": 0})
+
     def test_opening_fetches_the_file_from_the_place(self):
         c, uid, nid, sid = self.ready("NqOeffnen")
         run(nasquelle.sync_once(uid, sid))
@@ -304,6 +316,7 @@ class Pages(Base):
         self.assertEqual(d["dirs"], ["Fotos", "Vertraege"])        # @eaDir never shown
         p = c.post("/api/profile/nasquelle/preview", json={"nas": nid, "path": "/dav/Ablage"}).json()
         self.assertEqual(p["files"], 5)                           # 3 text, 1 docx, 1 pdf (content is checked when read)
+        self.assertEqual((p["read"], p["left_out"], p["rounds"], p["limit"]), (5, 0, 1, 5000))
         self.assertEqual(p["out"].get("art"), 1)
         self.assertTrue(p["complete"])
         self.assertEqual(c.get(f"/api/profile/nasquelle/tree?nas={nid}&path=/dav/../etc").status_code, 400)

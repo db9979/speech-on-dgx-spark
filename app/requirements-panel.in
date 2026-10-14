@@ -35,3 +35,5 @@ paramiko==5.0.0
 smbprotocol==1.17.0
 # Synology finden (nasfinden.py): only listens to mDNS announcements in the home network, never scans
 zeroconf==0.148.0
+# Zustand der NAS (naszustand.py, Synology S6): SNMPv3 with authPriv only (SHA, AES; AES uses cryptography)
+pysnmp==7.1.30
