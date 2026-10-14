@@ -14,11 +14,12 @@ const whoNeed=f=>{const it=whoItem(f);return !!(f.spark&&it&&typeof featNeed==='
 // indented below the function it builds on, when that one sits in the same group
 const whoSub=f=>!!(f.parent&&WHO.features.some(x=>x.key===f.parent&&x.group===f.group));
 function whoKeep(f){return whoF==='on'?f.spark:whoF==='new'?!f.seen:whoF==='need'?whoNeed(f):true}
-async function loadWho(){const box=$('whobox');if(!box)return;
+let WHO_SEQ=0;   // only the newest load draws: an older answer arriving late must not show an old state
+async function loadWho(){const box=$('whobox');if(!box)return;const seq=++WHO_SEQ;
   // the settings and the switches side by side (plan seiten-laden.md), drawn when both are there
   const cfg=typeof loadCfg==='function'&&!document.body.classList.contains('mgr')?loadCfg().catch(()=>{}):null;
-  try{WHO=await (await api('/api/admin/features')).json()}catch(e){await cfg;box.textContent=e.message;return}
-  await cfg;if(typeof needsSet==='function')needsSet(WHO)
+  let got;try{got=await (await api('/api/admin/features')).json()}catch(e){await cfg;if(seq===WHO_SEQ)box.textContent=e.message;return}
+  await cfg;if(seq!==WHO_SEQ)return;WHO=got;if(typeof needsSet==='function')needsSet(WHO)
   drawWho()}
 function whoGuest(){return t('Gäste bekommen nur Fragen und Antworten, keine Funktion.','Guests only get questions and answers, no function.')}   // never a function (Dominik 2026-10-13)
 function whoBox(on,can,label,act){const b=document.createElement('button');b.type='button';b.className='wbox'+(on?' on':'')+(can?'':' no');
