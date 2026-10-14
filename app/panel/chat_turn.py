@@ -21,6 +21,7 @@ import faelle  # noqa: E402
 import fixes  # noqa: E402
 import hamelden  # noqa: E402
 import aendern  # noqa: E402
+import nasablage  # noqa: E402
 import meinmcp  # noqa: E402
 import homeassistant  # noqa: E402
 import images  # noqa: E402
@@ -530,7 +531,7 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         import roomfar
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage):
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
@@ -674,7 +675,7 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage):
             if xprop and xprop.get("proposed") == mod.__name__:
                 continue   # the panel made this proposal from this very message (agent: „Sag mir Bescheid, wenn …“)
             p = mod.pending(who["id"])

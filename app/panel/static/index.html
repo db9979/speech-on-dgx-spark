@@ -167,6 +167,8 @@
       <div class="setrow" data-show="chat.nas_on" style="margin-left:18px"><div class="lbl"><b>Wissensordner</b><span>Profile wählen Ordner an ihren Orten; der Spark liest die Dokumente dort nur und findet sie bei Fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.nas_sources"><i></i></label></div>
       <div data-show="chat.nas_sources" style="margin-left:36px"><label>Höchstens Dokumente von Orten pro Profil</label><input class="num" id="chat.nas_max_docs" type="number" min="100" max="20000"><div class="fh">100 bis 20000, Standard 5000; zählt getrennt von hochgeladenen Dokumenten.</div>
         <label>Abgleich alle (Minuten)</label><input class="num" id="chat.nas_sources_every" type="number" min="15" max="1440"><div class="fh">15 bis 1440, Standard 30; nur in ruhigen Minuten, nie während der Spark spricht.</div></div>
+      <div class="setrow" data-show="chat.nas_on" style="margin-left:18px"><div class="lbl"><b>Ablage-Ordner</b><span>Ordner „spark_ablage“ im Heimnetz: der Spark legt dort Erstelltes ab und holt den Eingang zu den Dokumenten. Woanders schreibt er nie.</span></div><label class="tgl"><input type="checkbox" id="chat.nas_drop"><i></i></label></div>
+      <div data-show="chat.nas_drop" style="margin-left:36px"><label>Eingang abholen alle (Minuten)</label><input class="num" id="chat.nas_drop_every" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 15; nur in ruhigen Minuten. Abgeholtes wandert nach Eingang/erledigt, nichts wird gelöscht.</div></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
@@ -1065,6 +1067,7 @@
 <script src="/static/js/speicher.js"></script>
 <script src="/static/js/nasquelle.js"></script>
 <script src="/static/js/nashilfe.js"></script>
+<script src="/static/js/nasablage.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>

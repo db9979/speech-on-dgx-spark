@@ -46,6 +46,10 @@ FOLDER = {"id": "f1f2f3", "nas": PLACE["id"], "path": "/volume1/Ablage/Vertraege
 NQ = {"admin": True, "on": True, "why": None, "max": 8, "pictures": False, "docs": 1234, "max_docs": 5000, "groups": GROUPS,
       "out_words": {"art": ["Art wird nie gelesen", "kind is never read"], "versteckt": ["System- oder versteckte Datei", "hidden"]},
       "why_words": {"offline": ["nicht erreichbar", "not reachable"]}, "sources": [FOLDER]}
+NAB = {"admin": True, "on": True, "why": None, "docs": True, "made_ok": True, "every": 15, "folder": "spark_ablage",
+       "why_words": {"offline": ["nicht erreichbar", "not reachable"]},
+       "drop": {"nas": PLACE["id"], "added": 1, "auto": True, "inbox": True, "made": 3, "dropped": 1, "fetched": 12,
+                "refused": 2, "last": {"t": 1, "ok": True}, "fail": None, "running": False}}
 
 
 class Static(unittest.TestCase):
@@ -110,6 +114,7 @@ class Browser(unittest.TestCase):
         await pg.route("**/api/profile/nas", lambda r: fx(r, NAS))
         await pg.route("**/api/profile/speicher", lambda r: fx(r, STORE))
         await pg.route("**/api/profile/nasquelle", lambda r: fx(r, NQ))
+        await pg.route("**/api/profile/nasablage", lambda r: fx(r, NAB))
         await pg.goto(base + "/")
         await pg.wait_for_timeout(600)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
@@ -139,6 +144,10 @@ class Browser(unittest.TestCase):
                         self.assertIn("Weiterer Wissensordner", first)
                         second = await pg.evaluate("document.querySelectorAll('#nasbox .place')[1].innerText")
                         self.assertIn("Wissensordner", second)             # the other place offers one
+                        self.assertIn("Ablage-Ordner", first)              # the filing folder sits at its place
+                        self.assertIn("4 abgelegt", first)
+                        self.assertIn("Eingang jetzt abholen", first)
+                        self.assertNotIn("Ablage-Ordner", second)          # one per profile
                         for s2 in ("Rechte anzeigen", "Im Heimnetz suchen"):
                             self.assertIn(s2, text, (w, s2))
                         await pg.evaluate("""nhDraw(document.querySelector('[data-nhout="a1b2c3"]'),{supported:true,admin_like:true,drop:'schreiben',complete:true,

@@ -22,6 +22,7 @@ KIND = {
     "tasks_add": "aufgabe", "tasks_change": "aufgabe",
     "calendar_change": "termin", "speaker_volume": "geraet",
     "agent_change": "aenderung", "agent_watch": "aenderung", "home_rule_delete": "aenderung", "proactive_pause": "aenderung", "undo_last": "aenderung",
+    "nas_ablegen": "ablegen",
 }
 # kind -> the tool that knows what was done earlier (R4 "Nein zu eigenem Tun", thread "Einstellungen optimieren")
 STATUS = {"dokument": "document_status", "remarkable": "remarkable_sent", "erinnerung": "reminder_list",
@@ -85,6 +86,8 @@ CLAIMS = {
               r"i(?:'ll| will) remember|i(?:'ve| have) forgotten)\b",
     "aenderung": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:pausiert|gelöscht|rückgängig gemacht|wiederhergestellt|"
                  r"fortgesetzt|paused|deleted|undone|restored)\b",
+    "ablegen": r"\b(?:liegt|liegen|ist|wurde|habe|hab)\b[^.!?]{0,40}\b(?:auf (?:der|deiner|die|deine) nas|im ablage-?ordner|"
+               r"on (?:your|the) nas|in (?:your|the) filing folder)\b",
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
 }
 CLAIMS = {k: re.compile(v, re.I) for k, v in CLAIMS.items()}
@@ -124,7 +127,7 @@ WHAT = {"geraet": ("das Gerät", "the device"), "erinnerung": ("die Erinnerung",
         "termin": ("der Termin", "the appointment"), "mail_entwurf": ("der Mail-Entwurf", "the mail draft"),
         "dokument": ("das Dokument", "the document"), "remarkable": ("das reMarkable", "the reMarkable"),
         "nachricht": ("die Nachricht", "the message"), "merken": ("das Merken", "remembering it"),
-        "aufgabe": ("die Aufgabe", "the task"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
+        "aufgabe": ("die Aufgabe", "the task"), "ablegen": ("das Ablegen auf der NAS", "filing it on the NAS"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
 
 
 def sentence(art, status, en=False, what=""):

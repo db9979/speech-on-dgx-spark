@@ -1068,13 +1068,18 @@ async def _tell(uid, d, changed):
     """The note that it is ready (push.py picks the profile's device: app, Telegram, Begleiter, browser), and the
     profile's own delivery of finished documents."""
     extra = ""
+    try:      # the profile's filing folder on its NAS (nasablage.py): a copy into Erstellt/, never over another file
+        import nasablage
+        extra = await nasablage.after_made(uid, d)
+    except Exception as e:   # noqa: BLE001 - the note goes out anyway
+        print("docmake: ablage", type(e).__name__, flush=True)
     to = deliver_of(uid)
     if to:
         try:
-            extra = " " + await send(uid, d, to, d["format"])
+            extra += " " + await send(uid, d, to, d["format"])
         except Exception as e:
             print("docmake: Zustellung nicht geklappt:", type(e).__name__, flush=True)
-            extra = f" Zustellung ({TARGET_NAMES[to]}) ging nicht."
+            extra += f" Zustellung ({TARGET_NAMES[to]}) ging nicht."
     try:
         import push
         k = KINDS[d["kind"]][0]

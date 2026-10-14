@@ -91,6 +91,9 @@ SVC = {
     # Wissensordner (nasquelle.py): the places with a folder of the profiles, one part per address
     "wissen": ("Wissensordner", "Knowledge folders", "Neue Dateien aus den Wissensordnern kommen später; gefunden wird, was schon gelesen ist.",
                SLOW, "nasquelle"),
+    # Ablage-Ordner (nasablage.py): the places with a filing folder of the profiles, one part per address
+    "ablage": ("Ablage-Ordner", "Filing folder", "Ablegen auf der NAS und neue Dateien aus dem Eingang warten, bis sie zurück ist.",
+               SLOW, "nasablage"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Chats mit anderen Sparks (verbund.py): the own address as other Sparks see it (its /.well-known/spark-verbund)
@@ -294,6 +297,13 @@ def active(c=None, cfg=None):
         p = dict(list(nasquelle.probes().items())[:MAX_PARTS])
         if p:
             out["wissen"] = p
+    except Exception:
+        pass
+    try:
+        import nasablage
+        p = dict(list(nasablage.probes().items())[:MAX_PARTS])
+        if p:
+            out["ablage"] = p
     except Exception:
         pass
     skip = set(_read()["skip"])

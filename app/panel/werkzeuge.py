@@ -47,6 +47,7 @@ NAMES = {
     "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document"),
     "remarkable_sent": ("Aufs reMarkable Gelegtes", "Put on the reMarkable"),
     "remarkable_library": ("reMarkable-Ablage", "reMarkable library"),
+    "nas_ablegen": ("Auf der NAS ablegen", "Save to the NAS"),
     "pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer"),
     # tools outside the switch's groups, the panel's own steps and tools only programs call over MCP
     "get_time": ("Uhrzeit", "Time"), "read_page": ("Webseite lesen", "Read web page"),

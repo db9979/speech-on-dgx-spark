@@ -276,6 +276,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
 | `app/panel/nas.py` | NAS-Verbindung. |
+| `app/panel/nasablage.py` | Ablage-Ordner. |
 | `app/panel/nashilfe.py` | Synology-Komfort: find a NAS in the home network and show what the Spark's user may do on a connected place. |
 | `app/panel/nasquelle.py` | Wissensordner. |
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
@@ -367,6 +368,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/nas.json` | Storage places of the profile (NAS, cloud) | Login | password sealed | yes | – |
 | `users/ID/nasquelle.json` | Knowledge folders of the profile | Settings | – | yes | – |
 | `users/ID/nasquelle-stand.json` | What was read from the knowledge folders | State | – | yes | – |
+| `users/ID/nasablage.json` | Filing folder of the profile | Settings | – | yes | – |
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/calendar.json` | Calendar account | Login | password sealed | yes | – |

@@ -63,7 +63,7 @@ HOSTKEY = re.compile(r"[a-z0-9@.\-]{3,40} SHA256:[A-Za-z0-9+/]{43}")
 TIMEOUT = 20
 # what a use of a connection is called on the page (fixed words): name -> function(owner) -> {id: count}
 USES = {}
-USE_NAMES = {"speicher": "Kopie meiner Daten", "sicherung": "Sicherung", "wissen": "Wissensordner"}
+USE_NAMES = {"speicher": "Kopie meiner Daten", "sicherung": "Sicherung", "wissen": "Wissensordner", "ablage": "Ablage-Ordner"}
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),
        "cert": ("Zertifikat passt nicht", "certificate does not fit"), "hostkey": ("Schlüssel des Servers hat sich geändert", "the server's key changed"),
        "blocked": ("vom Wächter nicht erlaubt", "not allowed by the Wächter"), "notaus": ("Notaus", "kill switch"),

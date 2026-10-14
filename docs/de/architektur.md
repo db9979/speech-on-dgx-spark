@@ -276,6 +276,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
+| `app/panel/nasablage.py` | Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten |
 | `app/panel/nashilfe.py` | NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto |
 | `app/panel/nasquelle.py` | Wissensordner: Ordner an einem Speicherort nur lesen und in die Dokumentensuche bringen |
 | `app/panel/offsite.py` | Sicherung nach außen, verschlüsselt |
@@ -367,6 +368,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/nas.json` | Speicherorte des Profils (NAS, Cloud) | Login | Passwort versiegelt | ja | – |
 | `users/ID/nasquelle.json` | Wissensordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/nasquelle-stand.json` | Was aus den Wissensordnern gelesen ist | Zustand | – | ja | – |
+| `users/ID/nasablage.json` | Ablage-Ordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang | Login | Passwort versiegelt | ja | – |

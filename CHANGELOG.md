@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.527** · 2026-10-14 · Ablage-Ordner (Synology S4): „spark_ablage“ an einem Ort im Heimnetz ist der einzige Ordner, in den der Spark schreibt; erstellte Dokumente landen in Erstellt, nach einem Ja auch Eigenes („Leg das auf die NAS“, Werkzeug nas_ablegen), Dateien aus Eingang kommen wie ein Upload zu den Dokumenten und wandern nach Eingang/erledigt; nie überschreiben, nie löschen (Ich → Speicher)
 - **V01.0.526** · 2026-10-14 · Tests wieder grün: „Wer darf was“ zeigt nur noch die neueste Antwort des Servers, eine verspätete ältere überschreibt den Stand nicht mehr
 - **V01.0.525** · 2026-10-14 · Tests wieder grün: der Browser-Test der Suche wartet, bis die Seite angemeldet ist (lzIdle kam vor der Anmeldung)
 - **V01.0.524** · 2026-10-14 · Synology-Komfort: „Im Heimnetz suchen“ findet die NAS über mDNS (nie Abtasten) und füllt die Adresse aus; „Rechte anzeigen“ zeigt je Ordner, was der Spark darf, schreibt nur eine Probe in spark_ablage und warnt bei einem Admin-Konto; Anleitung „Synology einrichten“ (Ich → Speicher)

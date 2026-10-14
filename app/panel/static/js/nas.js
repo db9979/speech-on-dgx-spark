@@ -1,7 +1,7 @@
 // "Ich → Speicher" (nas.py, plan synology-bauplan.md; Dominik 2026-10-13 „wie empfohlen umsetzen“): the places of a
 // profile, each a NAS or cloud connected once (address, kind, user, password, accepted certificate or server key), or
 // a folder the admin mounted on the Spark, and below each place what it is for ("Wofür"): the copy of my data
-// (speicher.js), the Wissensordner (nasquelle.js), later Ablage. Connecting or changing a login asks for a code; the password never
+// (speicher.js), the Wissensordner (nasquelle.js), the Ablage-Ordner (nasablage.js). Connecting or changing a login asks for a code; the password never
 // comes back; a certificate that does not fit is accepted only by its fingerprint. Server text is text (esc).
 let NAS_ON=false;
 const NAS_WHY={offline:['nicht erreichbar','not reachable'],auth:['Anmeldung abgelehnt','sign-in refused'],cert:['Zertifikat passt nicht','certificate does not fit'],
@@ -10,7 +10,7 @@ const NAS_KIND={webdav:['NAS oder Cloud (WebDAV)','NAS or cloud (WebDAV)'],smb:[
 const NAS_HINT={webdav:['https://nas.fritz.box:5006','Synology: Paket „WebDAV Server“, HTTPS-Port 5006. Nur Adresse und Port, ohne Ordner.','Synology: package "WebDAV Server", HTTPS port 5006. Only address and port, no folder.'],
   smb:['smb://nas.fritz.box','Nur im Heimnetz und nur verschlüsselt (SMB 3). Nur die Adresse, die Freigabe kommt bei der Nutzung.','Only at home and only encrypted (SMB 3). Only the address, the share comes with the use.'],
   sftp:['sftp://nas.fritz.box','SSH am NAS einschalten. Der Schlüssel des Servers wird beim Verbinden gemerkt.','Turn on SSH on the NAS. The server\'s key is remembered when connecting.']};
-const NAS_USE={speicher:['Kopie meiner Daten','Copy of my data'],sicherung:['Sicherung','Backup'],wissen:['Wissensordner','Knowledge folders']};
+const NAS_USE={speicher:['Kopie meiner Daten','Copy of my data'],sicherung:['Sicherung','Backup'],wissen:['Wissensordner','Knowledge folders'],ablage:['Ablage-Ordner','Filing folder']};
 const nasWhy=k=>t(...(NAS_WHY[k]||NAS_WHY.other));
 let NAS_LIST=[];
 function nasState(x){const c=x.checked;if(!c)return ['',t('noch nicht geprüft','not checked yet')];
@@ -26,9 +26,10 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
   let d,s=null;try{d=await (await api('/api/profile/nas')).json()}catch{box.innerHTML='';return}
   if(typeof STORE_ON!=='undefined'&&STORE_ON)try{s=await (await api('/api/profile/speicher')).json();if(!s.on)s=null}catch{s=null}
   if(typeof nqLoad==='function')await nqLoad();
+  if(typeof naLoad==='function')await naLoad();
   NAS_LIST=d.on?d.items:[];
   const copies=id=>s?s.targets.filter(x=>x.nas===id):[];
-  const other=x=>Object.keys(x.uses||{}).filter(k=>k!=='speicher'&&!(k==='wissen'&&typeof NQ!=='undefined'&&NQ)).map(k=>t(...(NAS_USE[k]||[k,k]))).join(', ');
+  const other=x=>Object.keys(x.uses||{}).filter(k=>k!=='speicher'&&!(k==='wissen'&&typeof NQ!=='undefined'&&NQ)&&!(k==='ablage'&&typeof NAB!=='undefined'&&NAB)).map(k=>t(...(NAS_USE[k]||[k,k]))).join(', ');
   const login=x=>`<details><summary>${esc(t('Anmeldung ändern','Change sign-in'))}</summary>
         <label>${esc(t('Name','Name'))}</label><input data-nasname="${esc(x.id)}" value="${esc(x.name)}" maxlength="40" autocomplete="off">
         <label>${esc(t('Benutzer','User'))}</label><input data-nasuser="${esc(x.id)}" value="${esc(x.user)}" maxlength="128" autocomplete="off">
@@ -40,7 +41,7 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
         <div class="row"><button class="b" type="button" data-nasput="${esc(x.id)}">${esc(t('Übernehmen','Apply'))}</button></div></details>`;
   const lanNo=x=>s&&x.zone==='lan'&&!s.lan?`<div class="fh">${esc(t('Kopien ins Heimnetz hat der Admin nicht erlaubt.','The admin has not allowed copies in the home network.'))}</div>`:'';
   const place=x=>{const [cls,word]=nasState(x),z=x.zone==='lan'?t('Heimnetz','home network'):t('Internet','internet'),cs=copies(x.id);
-    const uses=(s?(cs.length?cs.map(c=>spCopy(s,c,x)).join(''):(s.targets.length<s.max?spCopy(s,null,x)+lanNo(x):'')):'')+(typeof nqUse==='function'?nqUse(x):'');
+    const uses=(s?(cs.length?cs.map(c=>spCopy(s,c,x)).join(''):(s.targets.length<s.max?spCopy(s,null,x)+lanNo(x):'')):'')+(typeof nqUse==='function'?nqUse(x):'')+(typeof naUse==='function'?naUse(x):'');
     return `<div class="place"><div class="place-h"><span><b>${esc(x.name)}</b> <em class="pill ${cls}">${esc(word)}</em>
         <small class="mut">${esc(t(...NAS_KIND[x.kind]||NAS_KIND.webdav))} · ${esc(z)} · ${esc(x.url)}${x.user?' · '+esc(x.user):''}</small></span>
         <span class="place-b"><button class="b" type="button" data-nascheck="${esc(x.id)}">${esc(t('Verbindung prüfen','Check connection'))}</button>${typeof nhRightsBtn==='function'?nhRightsBtn(x):''}</span></div>
@@ -75,6 +76,7 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
   const after=async ok=>{await showNas();if(ok)xmsg('nasmsg',ok)};
   if(s)spBind(box,s,showNas,(x,err)=>say('nasmsg',x,err));
   if(typeof nqBind==='function')nqBind(box,showNas,(x,err)=>say('nasmsg',x,err));
+  if(typeof naBind==='function')naBind(box,showNas,(x,err)=>say('nasmsg',x,err));
   if(typeof nhBind==='function')nhBind(box,(x,err)=>say('nasaddmsg',x,err));
   codeLock($('nasadd'),'confirm');box.querySelectorAll('[data-nasput]').forEach(b=>codeLock(b,'confirm'));
   if($('naskind'))$('naskind').onchange=()=>{const k=$('naskind').value,f=k==='folder';$('naslogin').hidden=f;$('nasfolder').hidden=!f;
