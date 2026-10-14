@@ -88,11 +88,13 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
     const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
   box.appendChild(mc);
   $('zmeta').textContent=[g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean).join(' · ');
+  // each part opens where it comes from (way.js wayA): the requests, the own speakers, the logs
   const bg=g.background||{},td=[];
-  td.push(g.answers?(L==='en'?g.answers+' answers':g.answers+' Antworten')+(g.first_sound!=null?t(' (erster Ton im Mittel ',' (first sound median ')+fmt(g.first_sound,' s',1)+')':''):t('noch keine Antwort','no answer yet'));
-  if(g.speakers)td.push(t('Lautsprecher ','Speakers ')+g.speakers.online+t(' von ',' of ')+g.speakers.known+t(' online',' online'));
-  if(bg.held)td.push(t('Hintergrund hat ','Background waited ')+bg.held+t('-mal auf Sprache gewartet',' times for speech'));
-  const tb=$('ztoday');tb.hidden=false;tb.textContent='';const h=document.createElement('b');h.textContent=t('Heute (24 Std.): ','Today (24 h): ');tb.append(h,td.join(' · '))}
+  td.push(wayA(g.answers?(L==='en'?g.answers+' answers':g.answers+' Antworten')+(g.first_sound!=null?t(' (erster Ton im Mittel ',' (first sound median ')+fmt(g.first_sound,' s',1)+')':''):t('noch keine Antwort','no answer yet'),t('Zustand → Logs → Anfragen','Status → Logs → Requests')));
+  if(g.speakers)td.push(wayA(t('Lautsprecher ','Speakers ')+g.speakers.online+t(' von ',' of ')+g.speakers.known+t(' online',' online'),t('Ich → Lautsprecher','Me → Speakers'),t('Funktionen → Eigene Lautsprecher (ESP32)','Features → Own speakers (ESP32)')));
+  if(bg.held)td.push(wayA(t('Hintergrund hat ','Background waited ')+bg.held+t('-mal auf Sprache gewartet',' times for speech'),t('Zustand → Logs','Status → Logs')));
+  const tb=$('ztoday');tb.hidden=false;tb.textContent='';const h=document.createElement('b');h.textContent=t('Heute (24 Std.): ','Today (24 h): ');tb.append(h);
+  td.forEach((x,i)=>{if(i)tb.append(' · ');tb.append(x)})}
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};

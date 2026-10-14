@@ -434,6 +434,8 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 /* Sprung-Links (way.js): a place named in a hint opens with one tap */
 .wayl{color:var(--acc);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;cursor:pointer;overflow-wrap:anywhere}
 .wayl:hover{text-decoration-thickness:2px}
+.wayrow{cursor:pointer;border-radius:8px}.wayrow:hover{background:rgba(127,127,127,.08)}.wayrow:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wayrow .pill,.wayrow.kn-tn b{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .note.gonote{display:flex;align-items:center;gap:10px;justify-content:space-between}.note.gonote>span{flex:1;min-width:0}.note.gonote>button{flex:none}
 .sflash{animation:sflash 2.2s ease}@keyframes sflash{0%,40%{background:color-mix(in srgb,var(--acc) 18%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}100%{background:transparent;box-shadow:none}}
 @media (max-width:760px){.cfgnav .sbox{margin:0;padding:10px;border-bottom:1px solid var(--line)}.cfgnav .sbox input{font-size:16px}.menav .sbox input{font-size:16px}}

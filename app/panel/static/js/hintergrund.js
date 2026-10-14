@@ -57,6 +57,7 @@ setInterval(bgDot,60e3);setTimeout(bgDot,3e3);
 async function zBg(){const box=$('zbg');if(!box||document.hidden)return;let d={on:false};
   try{const r=await fetch('/api/admin/hintergrund',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;
-  const part=(x,de,en)=>`<div class="zrow"><span class="pill ${x.bad?'bad':x.wait?'warn':'ok'}">${esc(t(de,en))}</span><span>${esc(bgLine(x)||t('nichts','nothing'))}</span></div>`;
-  $('zbglist').innerHTML=`<div class="zrow"><span class="pill">${d.profiles}</span><span>${esc(t('Profile nutzen die Seite','profiles use the page'))}${d.need?' · '+esc(t(`${d.need} Dinge brauchen ihre Besitzer`,`${d.need} things need their owners`)):''}</span></div>`+
+  // each row opens its place (way.js): the profiles under Personen und Geräte, the parts on the own page Mein Zustand
+  const part=(x,de,en)=>`<div class="zrow" data-way="${esc(t('Ich → Mein Zustand','Me → My status'))}"><span class="pill ${x.bad?'bad':x.wait?'warn':'ok'}">${esc(t(de,en))}</span><span>${esc(bgLine(x)||t('nichts','nothing'))}</span></div>`;
+  $('zbglist').innerHTML=`<div class="zrow" data-way="${esc(t('Personen und Geräte → Personen und Geräte','People and devices → People and devices'))}"><span class="pill">${d.profiles}</span><span>${esc(t('Profile nutzen die Seite','profiles use the page'))}${d.need?' · '+esc(t(`${d.need} Dinge brauchen ihre Besitzer`,`${d.need} things need their owners`)):''}</span></div>`+
     part(d.jobs,'Im Hintergrund','In the background')+part(d.services,'Verbunden','Connected')}

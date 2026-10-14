@@ -262,6 +262,38 @@ class Outside(unittest.TestCase):
         self.assertIn("_balloonAction = Wege.Hash(text)", tray)
 
 
+# Zahlen mit Ziel (Dominik 14.10.2026: „sollte klickbar sein und direkt hinbringen sonst sucht man sich den Wolf“):
+# cards under Zustand → Monitoring whose rows need no way of their own (they carry their own buttons, or there are none)
+ROWS_OWN = {"zneed": "jede Zeile hat ihren Knopf zum Ort",
+            "zroom": "jede Zeile hat Beenden, die Karte zeigt nur wo und bis wann",
+            "znotaus": "zeigt den Notaus selbst, seine Knöpfe stehen auf der Karte",
+            "znmine": "jede Zeile hat Aufheben",
+            "zhead": "Überschrift ohne Zeilen; ein Weg in ihrem Satz wird von selbst ein Sprung-Link"}
+
+
+def count_ways():
+    """{(de, en)}: the ways that counts and rows open (way.js WAY_CARDS, data-way, wayA)."""
+    pair = re.compile(r"""(?:\[|t\()'([^']*→[^']*)','([^']*→[^']*)'""")
+    out = set()
+    for f in glob.glob(os.path.join(PANEL, "static", "js", "*.js")):
+        src = open(f, encoding="utf-8").read()
+        block = re.search(r"const WAY_CARDS=\{(.*?)\};", src, re.S)
+        if block:
+            out |= set(pair.findall(block.group(1)))
+        for line in src.splitlines():
+            if "data-way=" in line or "wayA(" in line:
+                out |= set(pair.findall(line))
+    return out
+
+
+class Counts(unittest.TestCase):
+    def test_the_count_ways_are_collected(self):
+        ways = count_ways()
+        self.assertIn(("Zustand → Logs → Anfragen", "Status → Logs → Requests"), ways)
+        self.assertIn(("Ich → Mein Zustand", "Me → My status"), ways)
+        self.assertGreaterEqual(len(ways), 8)
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Browser(unittest.TestCase):
     @classmethod
@@ -418,6 +450,62 @@ class Browser(unittest.TestCase):
                 await br.close()
         asyncio.run(go())
 
+    def test_every_count_ways_whole(self):
+        """Each way a count or row opens finds every one of its steps, in German and in English."""
+        ways = sorted(count_ways())
+
+        async def go():
+            bad = []
+            async with async_playwright() as p:
+                for locale, k in (("de-DE", 0), ("en-US", 1)):
+                    br, pg, errors = await self.page(p, locale)
+                    for s in ("mon", "logs", "prof", "live", "cfg"):
+                        await pg.evaluate(f"goSec('{s}')")
+                        await pg.wait_for_timeout(300)
+                    await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false")
+                    res = await pg.evaluate("ws=>ws.map(w=>{const r=wayParse(w,0,true);return r?[r.steps,r.want,r.end===w.length]:null})",
+                                            [w[k] for w in ways])
+                    bad += [f"{w[k]}: {r}" for w, r in zip(ways, res) if not r or r[0] < r[1] or not r[2]]
+                    self.assertEqual(errors, [])
+                    await br.close()
+            return bad
+
+        bad = asyncio.run(go())
+        self.assertEqual(bad, [], "Zahlen mit Weg ohne Ziel:\n" + "\n".join(bad))
+
+    def test_every_status_card_row_leads_somewhere(self):
+        """A row in any card under Zustand → Monitoring opens its place (a new card without a way turns this red),
+        the counts of „Mein Zustand aller Profile“ and „Heute“ are links, and a click on one jumps there."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p)
+                await pg.evaluate("goSec('mon')")
+                await pg.wait_for_timeout(400)
+                # a plain row in every card: it takes the card's way
+                cards = await pg.evaluate("""[...document.querySelectorAll('#mon .card[id]')].filter(c=>c.id!=='ztech'&&!c.closest('#ztech')).map(c=>{
+                  const r=document.createElement('div');r.className='zrow';r.dataset.probe='1';r.innerHTML='<span class="pill">1</span><span>x</span>';
+                  c.appendChild(r);const w=wayRowWay(r),x=w&&wayParse(w,0,true);r.remove();return [c.id,w,!!x&&x.steps>=x.want]})""")
+                bad = [f"{i}: {w!r}" for i, w, ok in cards if i not in ROWS_OWN and not ok]
+                self.assertEqual(bad, [], "Karten unter Zustand ohne Ziel für ihre Zeilen")
+                self.assertIn("zbg", [c[0] for c in cards])
+                # Dominik's screenshot: „Mein Zustand aller Profile“ and the „Heute“ line
+                await pg.route("**/api/admin/hintergrund", lambda r: r.fulfill(json={
+                    "on": True, "profiles": 2, "need": 0, "jobs": {"run": 1, "wait": 2, "ok": 6}, "services": {"wait": 3, "ok": 15}}))
+                await pg.evaluate("MYST_ON=true;zBg()")   # the own page Mein Zustand is on for this profile
+                await self.until(pg, "document.querySelectorAll('#zbglist .zrow.wayrow[role=link]').length===3")
+                await pg.evaluate("zCards({glance:{answers:10,first_sound:4.7,speakers:{online:0,known:2},background:{held:3}},services:{},system:{},check:{}})")
+                parts = await pg.evaluate("[...$('ztoday').childNodes].filter(n=>n.nodeName!=='B'&&n.textContent.trim()!=='·').map(n=>n.nodeName+':'+(n.dataset?n.dataset.way:n.textContent))")
+                # the speakers: the own page Lautsprecher, or its switch while that page is off (here)
+                self.assertEqual(parts, ["A:Zustand → Logs → Anfragen", "A:Funktionen → Eigene Lautsprecher (ESP32)", "A:Zustand → Logs"])
+                await pg.click("#zbglist .zrow.wayrow >> nth=0")
+                await self.until(pg, "getComputedStyle($('prof')).display!=='none'")
+                await pg.evaluate("goSec('mon')")
+                await pg.focus("#zbglist .zrow.wayrow >> nth=0")
+                await pg.keyboard.press("Enter")
+                await self.until(pg, "getComputedStyle($('prof')).display!=='none'")
+                self.assertEqual(errors, [])
+                await br.close()
+        asyncio.run(go())
 
 if __name__ == "__main__":
     unittest.main()

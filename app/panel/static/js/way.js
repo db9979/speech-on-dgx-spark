@@ -89,6 +89,25 @@ async function wayGo(text){let last=null;
     if(last&&r.end<=last.end&&r.steps<=last.steps)return;
     await r.hit.go();last=r;if(r.steps>=r.want&&r.quoted!==false)return;
     await wayWait(400)}}
+// one link: text that opens the way (way.js turns hints into it, a count builds it with wayA)
+function wayEl(text,way){const l=document.createElement('a');l.href='#';l.className='wayl';l.dataset.way=way;l.textContent=text;
+  l.title=t('Dorthin springen','Go there');return l}
+// a count or part of a line that stands for a place (Zustand → Monitoring „Heute“): a link to the first way the viewer
+// can open (the own page first, then the switch), else text
+function wayA(text,...ways){const w=ways.find(x=>x&&wayParse(x,0));return w?wayEl(text,w):document.createTextNode(text)}
+// Zahlen und Zeilen, die für einen Ort stehen (Dominik 14.10.2026: „sollte klickbar sein und direkt hinbringen“):
+// a row (.zrow, .znrow, a count .kn-tn on a Technik page) with data-way, or in a card of WAY_CARDS, opens that place. A click on a control in the row
+// stays the control's; a row without controls is a link for the keyboard too. Only counts and names move, never content.
+const WAY_ROWS='.zrow,.znrow,.kn-tn',WAY_CTRL='a,button,input,select,textarea,label,summary';
+const WAY_CARDS={zbg:['Funktionen → Mein Zustand','Features → My status'],zsvc:['Funktionen → Dienst-Wächter','Features → Service watch'],
+  znas:['Ich → Speicher','Me → Storage'],znaszustand:['Funktionen → Zustand der NAS','Features → NAS status'],
+  znasquelle:['Ich → Speicher','Me → Storage'],zstore:['Ich → Speicher','Me → Storage'],
+  zdev:['Funktionen → Geräte-Updates','Features → Device updates'],zdocs:['Funktionen → Eigene Dokumente','Features → Own documents']};
+function wayRowWay(r){if(r.dataset.way)return r.dataset.way;for(let c=r.parentElement;c;c=c.parentElement)if(WAY_CARDS[c.id])return t(...WAY_CARDS[c.id]);return ''}
+function wayRows(root){if(!root||root.nodeType!==1)return;const l=root.matches(WAY_ROWS)?[root]:root.querySelectorAll(WAY_ROWS);
+  for(const r of l){const w=wayRowWay(r),on=!!w&&!!wayParse(w,0);r.classList.toggle('wayrow',on);
+    if(on&&!r.querySelector(WAY_CTRL)){r.setAttribute('role','link');r.tabIndex=0;r.title=t('Dorthin springen','Go there')}
+    else if(r.getAttribute('role')==='link'){r.removeAttribute('role');r.removeAttribute('tabindex');r.removeAttribute('title')}}}
 // turns the hints in one text node into links
 function wayText(node){const s=node.nodeValue;if(!s||s.indexOf('→')<0)return;const p=node.parentElement;if(!p||p.closest(WAY_SKIP))return;
   const parts=[];let last=0,m;WAY_RX.lastIndex=0;
@@ -96,8 +115,7 @@ function wayText(node){const s=node.nodeValue;if(!s||s.indexOf('→')<0)return;c
     parts.push([r.start,r.end]);last=r.end;WAY_RX.lastIndex=r.end}
   if(!parts.length)return;const f=document.createDocumentFragment();let at=0;
   for(const [a,b] of parts){if(a>at)f.appendChild(document.createTextNode(s.slice(at,a)));
-    const l=document.createElement('a');l.href='#';l.className='wayl';l.dataset.way=s.slice(a,b);l.textContent=s.slice(a,b);
-    l.title=t('Dorthin springen','Go there');f.appendChild(l);at=b}
+    f.appendChild(wayEl(s.slice(a,b),s.slice(a,b)));at=b}
   if(at<s.length)f.appendChild(document.createTextNode(s.slice(at)));node.replaceWith(f)}
 function wayScan(root){if(!root)return;if(root.nodeType===3){wayText(root);return}if(root.nodeType!==1||root.closest&&root.closest(WAY_SKIP))return;
   if(root.textContent.indexOf('→')<0)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),list=[];
@@ -109,8 +127,10 @@ function wayHash(){const m=/^#weg=(.{3,600})$/.exec(location.hash);if(!m)return;
 addEventListener('hashchange',()=>{if(typeof PROFILE!=='undefined'&&location.hash.startsWith('#weg='))wayHash()});
 if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>{const w=e.data&&e.data.weg;
   if(typeof PROFILE!=='undefined'&&typeof w==='string'&&w.length>=3&&w.length<=200&&wayParse(w,0))wayGo(w)});
-document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.wayl[data-way]');if(!a)return;e.preventDefault();wayGo(a.dataset.way)});
-{let q=0;const todo=new Set();const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;const l=[...todo];todo.clear();l.forEach(n=>{if(n.isConnected)wayScan(n)})})};
+document.addEventListener('click',e=>{if(!e.target.closest)return;const a=e.target.closest('a.wayl[data-way]');if(a){e.preventDefault();wayGo(a.dataset.way);return}
+  const r=e.target.closest('.wayrow');if(r&&!e.target.closest(WAY_CTRL)&&!String(getSelection()||''))wayGo(wayRowWay(r))});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' '||!e.target.matches||!e.target.matches('.wayrow[role=link]'))return;e.preventDefault();wayGo(wayRowWay(e.target))});
+{let q=0;const todo=new Set();const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;const l=[...todo];todo.clear();l.forEach(n=>{if(n.isConnected){wayScan(n);wayRows(n)}})})};
  // the version under the page is written once the page knows who signs in: then the whole page again (admin, Ich pages)
  new MutationObserver(ms=>{for(const m of ms){if(m.target.id==='ver')todo.add(document.body);if(m.type==='characterData')todo.add(m.target);else m.addedNodes.forEach(n=>todo.add(n))}later()})
    .observe(document.body,{childList:true,subtree:true,characterData:true});
