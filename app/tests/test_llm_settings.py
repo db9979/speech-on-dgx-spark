@@ -160,6 +160,9 @@ class ModelList(unittest.TestCase):
         self.seen = []
         self.answer = lambda req: admin.httpx.Response(200, json={"data": [{"id": "Qwen/Qwen3.8-27B"}, {"id": "lean"}]})
         admin._llm_list.clear()
+        import guard   # every admin page load in a browser test asks for the list too: start with a fresh minute
+        for k in [k for k in guard._rate if k[0] == "llmmodels"]:
+            guard._rate.pop(k, None)
 
         def fake(**kw):
             def handler(req):

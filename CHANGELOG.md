@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.536** · 2026-10-14 · Tests wieder grün: die Modell-Liste unter Sprachmodell beginnt im Test mit einer frischen Minute, Browser-Tests davor hatten ihr Abruflimit verbraucht
 - **V01.0.535** · 2026-10-14 · Zustand der NAS (Synology S6): der Spark liest über SNMPv3 (nur authPriv) Belegung, RAID, Festplatten, Temperatur und DSM-Update der NAS, zeigt sie unter Zustand → Dienste, meldet den Admins volle Speicherbereiche, beschädigte RAIDs, Festplatten-Warnungen und Hitze einmal und bei Entwarnung, Admins fragen per Sprache („Wie voll ist die NAS?“); Wissensordner lesen über der Grenze zuerst Dokumente, dann Bilder, die neuesten zuerst, und die Vorschau sagt ehrlich, wie viel gelesen wird
 - **V01.0.534** · 2026-10-14 · Kanal-Zeichen in der eigenen blauen Blase (z. B. „Begleiter“) wieder lesbar: weiß wie der Text, hell und dunkel
 - **V01.0.533** · 2026-10-14 · Android-App 1.3.0: Update in der App (Admin-Schalter, aus): Streifen oben, die App lädt die neue Version von deinem Spark, prüft Prüfsumme, Paket, Version und Signatur und lässt Android sie installieren; Zustand → Geräte-Updates zeigt, welches Handy welche App-Version hat
