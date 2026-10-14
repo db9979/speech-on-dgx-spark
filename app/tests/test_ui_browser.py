@@ -699,6 +699,44 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_github_token_row_folds_when_it_works(self):
+        """Dominik 14.10.2026: a saved token that works shows only a status line with "Ändern" and "Entfernen";
+        "Ändern" opens the field again, a token GitHub refused keeps the field open."""
+        import ghtoken
+        tok = "github_pat_" + "Ui7x" * 20
+
+        async def ok():
+            ghtoken._state.update(t=1, ok=True, why="", limit=5000, until="2027-10-14", refused=False)
+            return ghtoken.info()
+        real = ghtoken.check
+        ghtoken.check = ok
+        ghtoken.save(tok)
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=upd]').click()")
+                await self.until(pg, "!!document.getElementById('ghtokedit')")
+                self.assertFalse(await pg.evaluate("!!document.getElementById('ghtoken')"))
+                self.assertIn("geprüft ✓", await pg.evaluate("document.querySelector('#ghtokadmin .ghtok').textContent"))
+                self.assertTrue(await pg.evaluate("!!document.getElementById('ghtokdel')"))
+                await pg.evaluate("document.getElementById('ghtokedit').click()")
+                await self.until(pg, "!!document.getElementById('ghtoken')")
+                await pg.evaluate("document.getElementById('ghtokcancel').click()")
+                await self.until(pg, "!!document.getElementById('ghtokedit')")
+                ghtoken._state.update(refused=True, ok=False, why="Token abgelehnt oder abgelaufen")
+                await pg.evaluate("ghAdmin()")
+                await self.until(pg, "!!document.getElementById('ghtoken')")
+                self.assertIn("abgelehnt", await pg.evaluate("document.querySelector('#ghtokadmin .ghtok').textContent"))
+                self.assertNotIn(tok, await pg.content())
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            ghtoken.check = real
+            ghtoken.drop()
+
     def test_settings_pages_stand_still_and_framed(self):
         """V01.0.254: with a real scrollbar (Windows, Linux) every Einstellungen page starts at the same place, also a
         page short enough to need no scrollbar (Spracherkennung, Sicherheit jumped 7 px to the right before), and no

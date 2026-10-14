@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.566** · 2026-10-14 · GitHub-Token unter Einstellungen → Update: funktioniert er, zeigt die Zeile nur noch „gesetzt, geprüft ✓“ mit Ändern und Entfernen
 - **V01.0.565** · 2026-10-14 · ROT-FIX Mailstil 2: der Browser-Test wartet, bis die Seite gestartet ist, bevor er Ich → E-Mail öffnet
 - **V01.0.564** · 2026-10-14 · ROT-FIX Mailstil: der Browser-Test schaltet die Funktion wirklich ein, sonst setzte die späte Anmeldeabfrage den Schalter wieder aus
 - **V01.0.563** · 2026-10-14 · Mailstil lernen: der Spark liest gesendete Mails nur lesend, merkt sich Anrede, Gruß, Länge, Ton und Wendungen je Privat/Beruflich/Unbekannt und schreibt Mail-Entwürfe (Sprache, Chat, Begleiter „Antwort entwerfen“) in diesem Stil; nur die Zusammenfassung wird gespeichert, Funktionen → Mailstil lernen (aus)
