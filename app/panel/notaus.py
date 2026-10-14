@@ -515,6 +515,7 @@ async def tell_admins(old, new, by, channel):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 
+import core  # noqa: E402
 from core import admin_code_fresh, auth  # noqa: E402
 
 router = APIRouter()
@@ -621,19 +622,6 @@ def _mine_list():
     return [{"uid": uid, "name": names.get(uid, "?"), "since": v["since"]} for uid, v in m.items()][:50]
 
 
-async def _body(request):
-    raw = await request.body()
-    if len(raw) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    try:
-        d = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "JSON expected")
-    if not isinstance(d, dict):
-        raise HTTPException(400, "JSON object expected")
-    return d
-
-
 def _creds(request):
     """HTTP Basic is never a way in here (scripts would bypass the browser rules); only the cookie counts."""
     return None
@@ -657,7 +645,7 @@ async def post_trigger(request: Request):
     guard.limit(request, "notausset", uid=uid or None, admin=admin)
     if not admin:
         raise HTTPException(403, "Den Notaus dürfen nur Admins auslösen.")
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     lvl = body.get("level")
     if not isinstance(lvl, int) or isinstance(lvl, bool) or lvl not in (1, 2, 3):
         raise HTTPException(400, "Stufe 1, 2 oder 3")
@@ -676,7 +664,7 @@ async def post_lift(request: Request):
     if not how:
         raise HTTPException(403, "Aufheben nur als Admin, im Browser, im Heimnetz.")
     guard.limit(request, "notausoff", admin=True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     to = body.get("to")
     if not isinstance(to, int) or isinstance(to, bool) or to not in (0, 1):
         raise HTTPException(400, "to: 0 oder 1")
@@ -722,7 +710,7 @@ async def post_mine(request: Request):
     if not who[1]:      # the main admin's login beside a profile: the profile's name
         name = (profiles.current(request) or {}).get("name", name)
     guard.limit(request, "notausset", uid=uid, admin=admin)
-    await _body(request)
+    await core.json_body(request, MAX_BODY)
     if not mine_on(uid, name, channel):
         raise HTTPException(409, "Mein Notaus ist schon an.")
     agent.notaus_hold(only=uid)
@@ -761,7 +749,7 @@ async def post_mine_off(request: Request):
         raise HTTPException(401, "login required")
     uid = prof["id"]
     guard.limit(request, "notausoff", uid=uid)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     if not own(uid) or (ALL in mine() and uid not in mine()):
         raise HTTPException(409, "Mein Notaus ist nicht an." if not own(uid) else "Nur ein Admin kann ihn gerade aufheben.")
     u = next((u for u in profiles._load()["users"] if u["id"] == uid), None)
@@ -790,7 +778,7 @@ async def post_mine_off_admin(request: Request):
     if not how:
         raise HTTPException(403, "Aufheben nur als Admin, im Browser, im Heimnetz.")
     guard.limit(request, "notausoff", admin=True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     uid = body.get("uid")
     if not isinstance(uid, str) or len(uid) > 40:
         raise HTTPException(400, "uid")
@@ -984,7 +972,7 @@ async def post_ha(request: Request):
     if not k:
         guard.failed(request, "notaus-ha", what="notaus_key")
         raise HTTPException(401, "Schlüssel fehlt oder ist unbekannt")
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     lvl = body.get("level", 2)
     if not isinstance(lvl, int) or isinstance(lvl, bool) or lvl not in (1, 2, 3):
         raise HTTPException(400, "level: 1, 2 oder 3")
@@ -1002,7 +990,7 @@ def get_keys():
 @router.post("/api/admin/notaus/keys", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def post_key(request: Request):
     guard.limit(request, "notausoff", admin=True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     try:
         token = key_new(body.get("name"))
     except ValueError as e:

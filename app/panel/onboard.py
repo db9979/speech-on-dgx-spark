@@ -31,6 +31,7 @@ import guard
 import join
 import mfa
 import profiles
+import core
 from core import assistant, auth, browser_profile, confirm_code, own_profile
 
 router = APIRouter()
@@ -212,7 +213,7 @@ def profile_setup(request: Request, prof=Depends(own_profile)):
 
 @router.put("/api/profile/setup", dependencies=[Depends(assistant)])
 async def profile_setup_put(request: Request, prof=Depends(browser_profile)):
-    body = await join._json(request)
+    body = await core.json_body(request, join.MAX_BODY)
     change = {}
     if "welcome" in body:
         change["welcome"] = body["welcome"] is True
@@ -364,7 +365,7 @@ async def handoff_new(request: Request, prof=Depends(browser_profile)):
     _hand_on()
     # the phone gets a login of its own: with the second step on, a current code first (like a new device)
     await confirm_code(request, prof["id"], prof["name"])
-    body = await join._json(request)
+    body = await core.json_body(request, join.MAX_BODY)
     base = _hbase(body)
     guard.limit(request, "pair")
     hid, code = hand_new(prof["id"])
@@ -384,7 +385,7 @@ def handoff_state(hid: str, prof=Depends(browser_profile)):
 @router.post("/api/profile/handoff/{hid}/confirm", dependencies=[Depends(assistant)])
 async def handoff_confirm(hid: str, request: Request, prof=Depends(browser_profile)):
     _hand_on()
-    body = await join._json(request)
+    body = await core.json_body(request, join.MAX_BODY)
     num = body.get("num")
     st = hand_confirm(hid, prof["id"], num if isinstance(num, int) and not isinstance(num, bool) else -1) \
         if re.fullmatch(r"[0-9a-f]{16}", hid) else None
@@ -400,7 +401,7 @@ async def handoff_claim(request: Request):
     _hand_on()
     guard.check(request)
     guard.limit(request, "pair")
-    body = await join._json(request)
+    body = await core.json_body(request, join.MAX_BODY)
     got = hand_claim(body.get("code"), request.headers.get("user-agent", ""))
     if not got:
         guard.failed(request, None, what="handoff_code")
@@ -413,7 +414,7 @@ async def handoff_finish(request: Request):
     """The phone asks whether the computer picked its number; then it is signed in."""
     _hand_on()
     guard.limit(request, "handoff")
-    body = await join._json(request)
+    body = await core.json_body(request, join.MAX_BODY)
     uid = hand_finish(body.get("code"), body.get("wait"))
     if uid == "wait":
         return {"wait": True}

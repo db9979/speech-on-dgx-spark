@@ -44,6 +44,7 @@ import profiles
 import remarkable
 import rmaufgaben
 import rmpapier
+import core
 from core import assistant, browser_profile
 
 router = APIRouter()
@@ -762,8 +763,7 @@ async def todo_route(request: Request, prof=Depends(browser_profile)):
     if not features.allowed("rmtodo", uid):
         raise HTTPException(403, "Aufgaben vom reMarkable sind aus (Funktionen → Aufgaben vom reMarkable)")
     guard.limit(request, "rm", uid)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     tid, do = body.get("id"), body.get("do")
     if not isinstance(tid, str) or not re.fullmatch(r"[0-9a-f]{16}", tid) or do not in ("remind", "drop"):
         raise HTTPException(400, "id und do (remind oder drop)")

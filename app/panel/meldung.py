@@ -40,6 +40,7 @@ import guard
 import profiles
 import vault
 from common import load_config, write_json
+import core
 from core import admin_code_fresh, assistant, auth
 
 router = APIRouter()
@@ -887,19 +888,6 @@ async def by_phrase(uid, name, text, channel="sprache"):
 
 
 # ---------------------------------------------------------------- endpoints
-async def _json(request, n=MAX_APPLOG + 8192):
-    raw = await request.body()
-    if len(raw) > n:
-        raise HTTPException(413, "too large")
-    try:
-        d = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "JSON expected")
-    if not isinstance(d, dict):
-        raise HTTPException(400, "JSON object expected")
-    return d
-
-
 def _own(who, rid):
     d = _read(rid)
     if not d or (d.get("uid") != who["uid"] and not who["staff"]):
@@ -941,7 +929,7 @@ async def get_reports(request: Request, id: str = ""):
 async def post_draft(request: Request):
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await _json(request)
+    b = await core.json_body(request, MAX_APPLOG + 8192)
     tid = b.get("trace") if isinstance(b.get("trace"), str) and re.fullmatch(r"[0-9a-f]{6}", b.get("trace") or "") else None
     applog = b.get("applog") if isinstance(b.get("applog"), str) and who["channel"] == "app" else ""
     d = create(who["uid"], who["name"], who["channel"], b.get("text", ""), str(b.get("area") or "sonstiges"),
@@ -955,7 +943,7 @@ async def post_draft(request: Request):
 async def post_preview(request: Request):
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await _json(request, 16384)
+    b = await core.json_body(request, 16384)
     d = _own(who, str(b.get("id") or ""))
     return preview(d, _skip(b.get("skip") or []))
 
@@ -966,7 +954,7 @@ async def post_send(request: Request):
     "new issue" link, or ("local": true) only keeps it on the Spark."""
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await _json(request, 16384)
+    b = await core.json_body(request, 16384)
     d = _own(who, str(b.get("id") or ""))
     if d.get("status") != "entwurf":
         raise HTTPException(409, "Schon gesendet oder abgelegt.")
@@ -1035,7 +1023,7 @@ async def post_thread(request: Request):
     """State and answers on GitHub for one sent report (the caller's own; staff: every one)."""
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await _json(request, 1024)
+    b = await core.json_body(request, 1024)
     d = _own(who, str(b.get("id") or ""))
     num = (d.get("issue") or {}).get("number")
     if d.get("status") != "gesendet" or not isinstance(num, int):
@@ -1047,7 +1035,7 @@ async def post_thread(request: Request):
 async def post_delete(request: Request):
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await _json(request, 1024)
+    b = await core.json_body(request, 1024)
     d = _own(who, str(b.get("id") or ""))
     with _lock:
         try:
@@ -1067,7 +1055,7 @@ def admin_state(request: Request):
 @router.put("/api/admin/report/token", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_token(request: Request):
     guard.limit(request, "report", admin=True)
-    b = await _json(request, 1024)
+    b = await core.json_body(request, 1024)
     tok = str(b.get("token") or "").strip()
     if not TOKEN.fullmatch(tok):
         raise HTTPException(400, "Nur ein fine-grained Token (beginnt mit github_pat_), nur für das Meldungs-Repo, nur „Issues“.")

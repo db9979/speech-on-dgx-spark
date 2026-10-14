@@ -38,6 +38,7 @@ import guard
 import intent
 import werkzeuge
 from common import load_config, write_json
+import core
 from core import auth
 
 router = APIRouter()
@@ -501,19 +502,6 @@ def alltag(ch):
     return m
 
 
-async def _body(request):
-    raw = await request.body()
-    if len(raw) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 def _english(request):
     return request.headers.get("accept-language", "")[:2].lower() == "en" or request.query_params.get("lang") == "en"
 
@@ -552,7 +540,7 @@ async def page(request: Request):
 async def try_sentence(request: Request):
     """One sentence through the switch with the saved rules (or the ones being edited): its whole way."""
     guard.limit(request, "route", None, True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     text = body.get("text")
     if not isinstance(text, str) or not text.strip() or len(text) > intent.MAX_TEST:
         raise HTTPException(400, f"text: 1 bis {intent.MAX_TEST} Zeichen")
@@ -570,7 +558,7 @@ async def try_sentence(request: Request):
 async def preview(request: Request):
     """What a change would do before it is saved: the test sentences that turn out different."""
     guard.limit(request, "route", None, True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     ch = load_config().get("chat", {})
     new = _rules_from(body, ch)
     changed = await asyncio.to_thread(flips, ch, new)
@@ -581,7 +569,7 @@ async def preview(request: Request):
 async def save(request: Request):
     """Saves the rules; a test sentence that would turn out different stops it unless "confirm" is true."""
     guard.limit(request, "weichesave", None, True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     ch = load_config().get("chat", {})
     new = _rules_from(body, ch)
     changed = await asyncio.to_thread(flips, ch, new)
@@ -619,7 +607,7 @@ async def wrong_turn(request: Request):
     """„Falsch zugeordnet“: the admin's sentence and the right group -> words that would make it so, each with the
     sentences it would change. Nothing is saved here."""
     guard.limit(request, "route", None, True)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     text, want = body.get("text"), body.get("want")
     if not isinstance(text, str) or not text.strip() or len(text) > MAX_Q:
         raise HTTPException(400, f"text: 1 bis {MAX_Q} Zeichen")

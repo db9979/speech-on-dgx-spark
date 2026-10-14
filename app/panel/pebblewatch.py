@@ -26,6 +26,7 @@ import profiles
 import features
 from account import browser_profile
 from common import load_config
+import core
 from core import assistant, confirm_code, own_profile
 
 router = APIRouter()
@@ -135,21 +136,6 @@ def _base(body):
     return base
 
 
-async def _json(request):
-    if int(request.headers.get("content-length") or 0) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    data = bytearray()
-    async for chunk in request.stream():
-        data += chunk
-        if len(data) > MAX_BODY:
-            raise HTTPException(413, "too large")
-    try:
-        d = json.loads(bytes(data) or b"{}")
-    except ValueError:
-        return {}
-    return d if isinstance(d, dict) else {}
-
-
 def _on(request: Request, prof=Depends(browser_profile)):
     """Pairing and managing watches: only from the profile's own browser login, never with a device key."""
     if not admin_on():
@@ -180,7 +166,7 @@ def profile_qr(base: str, prof=Depends(_on)):
 @router.post("/api/profile/pebble/pair", dependencies=[Depends(assistant)])
 async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time setup line for the watch app's settings on the phone."""
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
         raise HTTPException(403, "Die Pebble-Uhr hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
     if len(watches(prof["id"])) >= MAX_WATCHES:
@@ -219,7 +205,7 @@ features.OWN["pebble"] = (lambda uid: len(watches(uid)), _clear)
 async def watch_pair(request: Request):
     """The phone's first contact: the one-time code gives the watch app its own key (scope "watch")."""
     guard.limit(request, "pair")
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY, lenient=True)
     uid = take_code(body.get("code"))
     prof = uid and profiles.by_id(uid)
     if not prof or not allowed(uid):

@@ -43,6 +43,7 @@ import guard
 import netguard
 import profiles
 import remarkable
+import core
 from core import assistant, browser_profile
 
 router = APIRouter()
@@ -1254,8 +1255,7 @@ async def undo_route(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     _need(uid, "rmpapier", "Gestaltete Blätter")
     guard.limit(request, "rm", uid)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     did, n = body.get("id"), body.get("n")
     if not isinstance(did, str) or not remarkable.ID.fullmatch(did) or not isinstance(n, str) \
             or not re.fullmatch(r"weg|rem:[0-9a-f]{8}", n):
@@ -1316,8 +1316,7 @@ async def tasks_undo_route(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     _need(uid, "rmaufgaben", "Das Aufgabenblatt")
     guard.limit(request, "rm", uid)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     i = body.get("i")
     if not isinstance(i, str) or not re.fullmatch(r"[0-9]{1,14}", i):
         raise HTTPException(400, "i")

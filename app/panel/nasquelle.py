@@ -57,6 +57,7 @@ import profiles
 import vault
 import zertpin
 from common import load_config
+import core
 from core import auth, browser_profile, spawn
 
 router = APIRouter()
@@ -899,11 +900,6 @@ def _on(prof=Depends(browser_profile)):
     return prof
 
 
-async def _body(request, most=8192):
-    import iphone
-    return await iphone._json(request, most)
-
-
 def _say(kind):
     return {"offline": "Der Ort antwortet nicht (Adresse, Netz oder NAS aus?).",
             "auth": "Der Ort lehnt die Anmeldung ab: beim Ort „Anmeldung ändern“.",
@@ -1009,7 +1005,7 @@ async def preview(request: Request, prof=Depends(_on)):
     """{"nas", "path", "groups", "skip"}: what would be read (numbers per group, left out with reason, size)."""
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     who = _want_haus(uid, body)
     c = _place(uid, body.get("nas"))
     path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
@@ -1043,7 +1039,7 @@ async def add(request: Request, prof=Depends(_on)):
     """{"nas", "path", "groups", "skip"}: a new folder; the first round starts at once."""
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     c = _place(uid, body.get("nas"))
     path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
     who = _want_haus(uid, body)
@@ -1084,7 +1080,7 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
     """{"groups"?, "skip"?}: what is read from this folder; the next round follows it."""
     guard.limit(request, "storage", prof["id"])
     uid = _store(prof["id"], sid)
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     items = sources(uid)
     s = next((x for x in items if x["id"] == sid), None)
     if not s:

@@ -28,6 +28,7 @@ import features
 import guard
 import profiles
 from common import STAGE_HEADER, STAGE_HIGH, STAGE_KEY_HEADER, STAGE_LOW, stage_key, write_json
+import core
 from core import assistant, auth
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -175,19 +176,6 @@ def today():
 
 
 # ---------------------------------------------------------------- endpoints
-async def _small(request):
-    raw = await request.body()
-    if len(raw) > 256:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 def rights(uid):
     """For the profile detail (admin.py _rights)."""
     lv = levels()
@@ -198,7 +186,7 @@ def rights(uid):
 async def admin_level(uid: str, request: Request):
     """{"level": "" | "vorrang" | "hinten"} for one profile (Personen und Geräte → profile → Rechte)."""
     guard.limit(request, "features", admin=True)
-    body = await _small(request)
+    body = await core.json_body(request, 256)
     lv = body.get("level")
     if uid not in profiles.user_ids():
         raise HTTPException(404, "no such profile")

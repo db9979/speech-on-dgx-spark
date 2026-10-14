@@ -70,6 +70,7 @@ import profiles
 import symbole
 import verbrauch
 from common import load_config, no_think
+import core
 from core import assistant, browser_profile, own_profile
 
 router = APIRouter()
@@ -1775,11 +1776,6 @@ def _prof(request, prof):
     return prof
 
 
-async def _json(request, most=MAX_BODY):
-    import iphone
-    return await iphone._json(request, most)
-
-
 def _doc_or_404(uid, did):
     d = load(uid, did) if ID.fullmatch(str(did or "")) else None
     if not d:
@@ -1813,7 +1809,7 @@ def make_info(request: Request, prof=Depends(own_profile)):
 async def plan_edit(pid: str, request: Request, prof=Depends(browser_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "make", uid)
-    body = await _json(request, 256 * 1024)
+    body = await core.json_body(request, 256 * 1024, lenient=True)
     with _lock:
         p = _pending.get(uid)
     if not p or p["id"] != pid or p.get("state") != "new":
@@ -1910,7 +1906,7 @@ async def doc_link(did: str, request: Request, prof=Depends(browser_profile)):
     """A download link for a browser without the login (the Android app hands downloads to the phone's browser)."""
     uid = _prof(request, prof)["id"]
     guard.limit(request, "makesend", uid)
-    body = await _json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     d = _doc_or_404(uid, did)
     fmt = body.get("fmt") or d["format"]
     if fmt not in KINDS[d["kind"]][4]:
@@ -1949,7 +1945,7 @@ async def doc_edit(did: str, request: Request, prof=Depends(browser_profile)):
     """The person's own correction of one section (or the title or the letter): no model, a new version."""
     uid = _prof(request, prof)["id"]
     guard.limit(request, "make", uid)
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY, lenient=True)
     d = _doc_or_404(uid, did)
     c, _ = content_of(d)
     c = json.loads(json.dumps(c))
@@ -1975,7 +1971,7 @@ async def doc_edit(did: str, request: Request, prof=Depends(browser_profile)):
 async def doc_change(did: str, request: Request, prof=Depends(browser_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "make", uid)
-    body = await _json(request, 64 * 1024)
+    body = await core.json_body(request, 64 * 1024, lenient=True)
     d = _doc_or_404(uid, did)
     action = body.get("action")
     if action not in ACTIONS:
@@ -1996,7 +1992,7 @@ async def doc_change(did: str, request: Request, prof=Depends(browser_profile)):
 async def doc_restore(did: str, request: Request, prof=Depends(browser_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "make", uid)
-    body = await _json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     d = _doc_or_404(uid, did)
     c, ver = content_of(d, body.get("v") if isinstance(body.get("v"), int) else -1)
     if c is None:
@@ -2010,7 +2006,7 @@ async def doc_restore(did: str, request: Request, prof=Depends(browser_profile))
 async def doc_send(did: str, request: Request, prof=Depends(browser_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "makesend", uid)
-    body = await _json(request, 4096)
+    body = await core.json_body(request, 4096, lenient=True)
     d = _doc_or_404(uid, did)
     fmt = body.get("fmt") or d["format"]
     if fmt not in docrender.FORMATS:

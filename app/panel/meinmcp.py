@@ -58,6 +58,7 @@ import netguard
 import profiles
 import vault
 from common import write_json
+import core
 from core import admin_code, auth, browser_profile, secret_profile
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -697,11 +698,6 @@ def _may(prof):
         raise HTTPException(403, features.missing_text("mymcp", prof["id"]) or "„Eigene MCP-Dienste“ ist für dein Profil nicht freigegeben.")
 
 
-async def _body(request, most=65536):
-    import iphone
-    return await iphone._json(request, most)
-
-
 def public(uid, s, st=None):
     """A service for the profile's page: never the key or a token."""
     return {"id": s["id"], "name": s["name"], "url": s["url"], "host": host_of(s["url"]), "has_key": bool(s.get("token")),
@@ -734,7 +730,7 @@ async def add(request: Request, prof=Depends(_on)):
     import guard
     guard.limit(request, "mymcp", prof["id"])
     _may(prof)
-    body = await _body(request)
+    body = await core.json_body(request, 65536, lenient=True)
     uid = prof["id"]
     name = str(body.get("name") or "").strip()
     if not NAME.fullmatch(name):
@@ -778,7 +774,7 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
     guard.limit(request, "mymcp", prof["id"])
     _may(prof)
     uid = prof["id"]
-    body = await _body(request)
+    body = await core.json_body(request, 65536, lenient=True)
     s = find(uid, sid)
     if not s:
         raise HTTPException(404, "no such service")
@@ -899,7 +895,7 @@ async def oauth_finish(request: Request, prof=Depends(_on)):
     _may(prof)
     if not features.allowed("mymcpoauth", prof["id"]):
         raise HTTPException(403, "Anmeldung (OAuth) für eigene Dienste ist ausgeschaltet.")
-    body = await _body(request, 8192)
+    body = await core.json_body(request, 8192, lenient=True)
     state, code = str(body.get("state") or ""), str(body.get("code") or "")
     if not STATE_RE.fullmatch(state) or not CODE_RE.fullmatch(code):
         raise HTTPException(400, "Die Anmeldung kam unvollständig zurück.")
@@ -941,7 +937,7 @@ def admin_get():
 @router.put("/api/admin/mymcp/hosts", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_hosts(request: Request):
     """{"hosts": ["example.org", …]}: only these hosts (and their subdomains); empty: every public one."""
-    body = await _body(request, 8192)
+    body = await core.json_body(request, 8192, lenient=True)
     hosts = body.get("hosts")
     if not isinstance(hosts, list) or len(hosts) > MAX_HOSTS:
         raise HTTPException(400, f"hosts: a list of at most {MAX_HOSTS} host names")
@@ -962,7 +958,7 @@ async def admin_hosts(request: Request):
 @router.put("/api/admin/mymcp/{uid}/{sid}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_block(uid: str, sid: str, request: Request):
     """{"blocked": true|false}: blocks this service's host for this profile at once (also when re-added)."""
-    body = await _body(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     if uid not in profiles.user_ids():
         raise HTTPException(404, "no such profile")
     s = find(uid, sid)

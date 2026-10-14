@@ -2265,7 +2265,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "18d5935aeb",
+        "stand": "2d8c585a96",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2457,7 +2457,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "7857751f40",
+        "stand": "b681ba5a38",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "iphone.new_code": ["s3"], "iphone.take_code": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -2802,7 +2802,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "64524277ea",
+        "stand": "28676b9ee3",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],

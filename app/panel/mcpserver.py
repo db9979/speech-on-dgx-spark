@@ -53,6 +53,7 @@ import notaus
 import verbrauch
 import profiles
 from common import load_config, write_json
+import core
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
 
 router = APIRouter()
@@ -1103,16 +1104,6 @@ def _on(prof=Depends(browser_profile)):
     return prof
 
 
-async def _json(request):
-    try:
-        d = json.loads(await _body(request, MAX_JSON) or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(d, dict):
-        raise HTTPException(400, "a JSON object")
-    return d
-
-
 def _name(v):
     v = str(v or "").strip()
     if not NAME.fullmatch(v):
@@ -1158,7 +1149,7 @@ async def profile_key(request: Request, prof=Depends(_on)):
     guard.limit(request, "features", uid)
     if not features.allowed("mcpserver", uid):
         raise HTTPException(403, "Erst „Spark als MCP-Server für mich“ einschalten.")
-    body = await _json(request)
+    body = await core.json_body(request, MAX_JSON)
     name, tools, where = _name(body.get("name")), clean_tools(body.get("tools"), uid), body.get("where", "lokal")
     await _where_ok(request, prof, where)
     token, c = add_key(uid, name, tools, where)
@@ -1170,7 +1161,7 @@ async def profile_key(request: Request, prof=Depends(_on)):
 async def profile_change(cid: str, request: Request, prof=Depends(_on)):
     uid = prof["id"]
     guard.limit(request, "features", uid)
-    body = await _json(request)
+    body = await core.json_body(request, MAX_JSON)
     old = next((c for c in conns(uid) if c["id"] == cid), None)
     if not old:
         raise HTTPException(404, "no such connection")
@@ -1214,7 +1205,7 @@ features.OWN["mcpserver"] = (lambda uid: len(_mine(uid)), _clear)
 
 @router.post("/api/profile/mcp/actions/{aid}")
 async def profile_decide(aid: str, request: Request, prof=Depends(_on)):
-    body = await _json(request)
+    body = await core.json_body(request, MAX_JSON)
     yes = body.get("yes")
     if not isinstance(yes, bool):
         raise HTTPException(400, "yes: true or false")
@@ -1238,7 +1229,7 @@ async def profile_auth_answer(rid: str, request: Request, prof=Depends(_on)):
     ask = auth_ask(rid)
     if not ask:
         raise HTTPException(404, "Diese Anmeldung ist abgelaufen. Im Programm noch einmal verbinden.")
-    body = await _json(request)
+    body = await core.json_body(request, MAX_JSON)
     sep = "&" if "?" in ask["redirect"] else "?"
     extra = {"state": ask["state"]} if ask["state"] else {}
     if body.get("yes") is not True:

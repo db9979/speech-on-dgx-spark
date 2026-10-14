@@ -45,6 +45,7 @@ import vorrang
 import nas
 import zertpin
 from common import write_json
+import core
 from core import spawn, admin_code, admin_code_fresh, auth
 
 router = APIRouter()
@@ -307,15 +308,7 @@ def offsite_get():
 @router.put("/api/admin/offsite", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def offsite_put(request: Request):
     guard.limit(request, "offsite", admin=True)
-    raw = await request.body()
-    if len(raw) > 2048:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "invalid JSON")
+    b = await core.json_body(request, 2048)
     d = _read()
     url = d.get("url", "")
     if "url" in b:
@@ -376,14 +369,8 @@ async def offsite_cert(request: Request):
     """{"url"?}: the certificate the NAS shows (fingerprint, names, until, fits the address), to compare. Reads only;
     accepting it is PUT {"cert": fingerprint} with a fresh code."""
     guard.limit(request, "offsite", admin=True)
-    raw = await request.body()
-    if len(raw) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    url = (b.get("url") if isinstance(b, dict) else None) or _read().get("url", "")
+    b = await core.json_body(request, 1024)
+    url = b.get("url") or _read().get("url", "")
     try:
         url = check_url(str(url).strip())
     except ValueError as e:

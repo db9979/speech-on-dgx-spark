@@ -27,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
+import core
 from core import assistant, browser_profile
 
 router = APIRouter()
@@ -425,19 +426,6 @@ def _prof(request, write=False):
     return prof
 
 
-async def _body(request, most=2048):
-    raw = await request.body()
-    if len(raw) > most:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "object expected")
-    return b
-
-
 def _public(r):
     return {k: r.get(k) for k in ("mid", "area", "words", "id", "name", "room", "since", "used", "last", "how")}
 
@@ -493,7 +481,7 @@ async def add_map(request: Request):
     """{area, words, id}: the profile names one of its own things itself ("Eigene Namen vergeben")."""
     prof = _prof(request, True)
     guard.limit(request, "zuordnungset", prof["id"])
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     area = b.get("area")
     ws = _clean_words(b.get("words"))
     tgt = await _target(prof["id"], area, b.get("id"))
@@ -507,7 +495,7 @@ async def change_map(mid: str, request: Request):
     """{words?, id?}: other words or another target."""
     prof = _prof(request, True)
     guard.limit(request, "zuordnungset", prof["id"])
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     rows = load(prof["id"])
     row = next((r for r in rows if r.get("mid") == mid), None)
     if not row:

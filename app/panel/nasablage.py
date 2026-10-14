@@ -50,6 +50,7 @@ import netguard
 import nasquelle
 import profiles
 from common import load_config
+import core
 from core import auth, browser_profile
 
 router = APIRouter()
@@ -687,7 +688,7 @@ def get_mine(request: Request, prof=Depends(browser_profile)):
 async def setup(request: Request, prof=Depends(_on)):
     guard.limit(request, "storagenow", prof["id"])
     uid = prof["id"]
-    body = await nasquelle._body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     nid = str(body.get("nas") or "")
     c = nasquelle._place(uid, nid)
     import nas
@@ -719,7 +720,7 @@ async def setup(request: Request, prof=Depends(_on)):
 async def change(request: Request, prof=Depends(_on)):
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
-    body = await nasquelle._body(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     d = get(uid)
     if not d:
         raise HTTPException(404, "kein Ablage-Ordner eingerichtet")

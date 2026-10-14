@@ -45,7 +45,7 @@ import guard
 import notaus
 import profiles
 from common import load_config, write_json
-from core import assistant, auth, own_profile
+from core import assistant, auth, json_body, own_profile
 from account import browser_profile
 
 router = APIRouter()
@@ -300,21 +300,6 @@ def _base(body):
     return base
 
 
-async def _json(request):
-    if int(request.headers.get("content-length") or 0) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    data = bytearray()
-    async for chunk in request.stream():
-        data += chunk
-        if len(data) > MAX_BODY:
-            raise HTTPException(413, "too large")
-    try:
-        d = json.loads(bytes(data) or b"{}")
-    except ValueError:
-        return {}
-    return d if isinstance(d, dict) else {}
-
-
 # ---------------------------------------------------------------- notes while the app is closed
 def reachable(uid, now=None):
     now = time.time() if now is None else now
@@ -372,7 +357,7 @@ def profile_get(request: Request, prof=Depends(own_profile)):
 async def profile_link(request: Request, prof=Depends(_on)):
     """A download link with a one-time token, as QR code for the phone's camera."""
     guard.limit(request, "android", prof["id"])
-    body = await _json(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
         raise HTTPException(403, "Die Android-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
     if not meta():

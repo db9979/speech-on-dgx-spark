@@ -53,7 +53,7 @@ import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
 from common import load_config  # noqa: E402
-from core import admin_cookie_ok, api_headers, assistant  # noqa: E402
+from core import admin_cookie_ok, api_headers, assistant, json_body  # noqa: E402
 
 router = APIRouter()
 
@@ -2850,18 +2850,7 @@ async def watch_poll(id: str, t: int = 0, a: int = 0):
 @router.post("/api/watch/report", dependencies=[Depends(assistant)])
 async def watch_report(request: Request):
     """The phone's times for one answer (watch.report_line), once per answer, into the log."""
-    if int(request.headers.get("content-length") or 0) > 1024:
-        raise HTTPException(413, "too large")
-    data = bytearray()
-    async for part in request.stream():
-        data += part
-        if len(data) > 1024:
-            raise HTTPException(413, "too large")
-    try:
-        body = json.loads(bytes(data) or b"{}")
-    except ValueError:
-        body = {}
-    body = body if isinstance(body, dict) else {}
+    body = await json_body(request, 1024, lenient=True)
     job = watch.JOBS.get(str(body.get("id", ""))[:40])
     if not job or job.reported:
         return {"ok": False}

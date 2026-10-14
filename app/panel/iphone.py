@@ -29,7 +29,7 @@ import profiles
 import features
 from account import browser_profile
 from common import load_config
-from core import app_version, assistant, confirm_code, own_profile
+from core import app_version, assistant, confirm_code, json_body, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -200,22 +200,6 @@ def _qr(text):
         return ""
 
 
-async def _json(request, most=MAX_BODY):
-    if int(request.headers.get("content-length") or 0) > most:
-        raise HTTPException(413, "too large")
-    data = bytearray()
-    async for chunk in request.stream():
-        data += chunk
-        if len(data) > most:
-            raise HTTPException(413, "too large")
-    import json
-    try:
-        d = json.loads(bytes(data) or b"{}")
-    except ValueError:
-        return {}
-    return d if isinstance(d, dict) else {}
-
-
 def _on(request: Request, prof=Depends(browser_profile)):
     """Pairing and managing iPhones: only from the profile's own browser login, never with a device key."""
     if not admin_on():
@@ -235,7 +219,7 @@ def profile_get(prof=Depends(own_profile)):
 @router.post("/api/profile/iphone/pair", dependencies=[Depends(assistant)])
 async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time link for the app: as a QR code and as a link for this very iPhone."""
-    body = await _json(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
         raise HTTPException(403, "Die iPhone-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
     if len(phones(prof["id"])) >= MAX_PHONES:
@@ -298,7 +282,7 @@ def apple_site(request: Request):
 async def app_pair(request: Request):
     """The app's first contact: the one-time code from the link gives it its own key (scope "app")."""
     guard.limit(request, "pair")
-    body = await _json(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     uid = take_code(body.get("code"))
     prof = uid and profiles.by_id(uid)
     if not prof or not allowed(uid):
@@ -377,7 +361,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
     if not docs_on(prof["id"]):
         raise HTTPException(403, "documents from the app are off (Ich -> iPhone-App)")
     guard.limit(request, "doc", prof["id"], False)
-    body = await _json(request, DOC_BODY)
+    body = await json_body(request, DOC_BODY, lenient=True)
     name, text = body.get("name"), body.get("text")
     if not isinstance(name, str) or not isinstance(text, str):
         raise HTTPException(400, "name and text are required")
@@ -438,7 +422,7 @@ def app_settings(request: Request, prof=Depends(own_profile)):
 async def app_settings_save(request: Request, prof=Depends(own_profile)):
     _app_only(request)
     guard.limit(request, "chat", prof["id"], False)
-    body = {k: v for k, v in (await _json(request, SETTINGS_BODY)).items() if k not in GONE}
+    body = {k: v for k, v in (await json_body(request, SETTINGS_BODY, lenient=True)).items() if k not in GONE}
     fields = _fields(prof["id"])
     wrong = [k for k in body if k not in fields]
     if wrong:

@@ -37,7 +37,7 @@ import features
 import guard
 import profiles
 from common import write_json
-from core import assistant
+from core import assistant, json_body
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -584,14 +584,8 @@ async def post_rate(request: Request):
     if not prof:
         raise HTTPException(403, "Bewerten gibt es nur mit Profil.")
     guard.limit(request, "rate", prof["id"])
-    raw = await request.body()
-    if len(raw) > 2048:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict) or not RID.fullmatch(str(b.get("id"))) or not isinstance(b.get("good"), bool):
+    b = await json_body(request, 2048)
+    if not RID.fullmatch(str(b.get("id"))) or not isinstance(b.get("good"), bool):
         raise HTTPException(400, "id and good")
     if not can_rate(prof["id"]):
         raise HTTPException(403, "Bewerten ist aus.")

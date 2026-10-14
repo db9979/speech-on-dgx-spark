@@ -34,7 +34,7 @@ import notaus
 import profiles
 import wartung
 from common import load_config
-from core import api_headers, assistant, auth, browser_profile, own_profile
+from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
 KEY = "bilder"
@@ -556,11 +556,6 @@ def _prof(request, prof):
     return prof
 
 
-async def _json(request, most=8 * 1024):
-    import iphone
-    return await iphone._json(request, most)
-
-
 @router.get("/api/bilder", dependencies=[Depends(assistant)])
 def bilder_list(request: Request, prof=Depends(own_profile)):
     uid = _prof(request, prof)["id"]
@@ -575,7 +570,7 @@ def bilder_list(request: Request, prof=Depends(own_profile)):
 async def bilder_paint(request: Request, prof=Depends(browser_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "bildmalen", uid)
-    body = await _json(request)
+    body = await json_body(request, 8 * 1024, lenient=True)
     wish = clean(body.get("wunsch"), MAX_WISH)
     try:
         return start(prof, wish, wish, str(body.get("format") or ""), "seite", "web")

@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 from common import load_config, write_json
-from core import acting_profile, assistant, auth
+from core import acting_profile, assistant, auth, json_body
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
 
@@ -795,14 +795,7 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
         raise HTTPException(404, "no such function or profile")
     if key in NO_BLOCK:
         raise HTTPException(400, "not blockable")
-    raw = await request.body()
-    if len(raw) > 256:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    on = body.get("on") if isinstance(body, dict) else None
+    on = (await json_body(request, 256)).get("on")
     if not isinstance(on, bool):
         raise HTTPException(400, "on: true or false")
     import admin

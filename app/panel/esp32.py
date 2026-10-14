@@ -1597,7 +1597,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSo
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 from account import browser_profile  # noqa: E402
-from core import admin_code, assistant, auth, confirm_code, own_profile, secret_profile  # noqa: E402
+from core import admin_code, assistant, auth, confirm_code, json_body, own_profile, secret_profile  # noqa: E402
 from core import secret_profile_fresh, speaker_on  # noqa: E402
 
 router = APIRouter()
@@ -1617,22 +1617,6 @@ def ws_url(base):
     return re.sub(r"^http", "ws", base) + "/api/esp32/ws"
 
 
-async def _body(request, limit=MAX_BODY):
-    """JSON body of at most limit bytes, read before anything else; {} when empty or not JSON."""
-    if int(request.headers.get("content-length") or 0) > limit:
-        raise HTTPException(413, "too large")
-    data = bytearray()
-    async for chunk in request.stream():
-        data += chunk
-        if len(data) > limit:
-            raise HTTPException(413, "too large")
-    try:
-        d = json.loads(bytes(data) or b"{}")
-    except ValueError:
-        return {}
-    return d if isinstance(d, dict) else {}
-
-
 def _client_info(request, body):
     app = body.get("application") if isinstance(body.get("application"), dict) else {}
     board = body.get("board") if isinstance(body.get("board"), dict) else {}
@@ -1648,7 +1632,7 @@ async def ota(request: Request):
     if not admin_on():
         print("esp32: start check refused (speakers are switched off in Funktionen)", flush=True)
         return JSONResponse({"error": "off"}, status_code=403)
-    info = _client_info(request, await _body(request))
+    info = _client_info(request, await json_body(request, MAX_BODY, lenient=True))
     cid = info["client"]
     if not re.fullmatch(r"[0-9a-fA-F\-]{8,64}", cid):
         print("esp32: start check without a board id refused", flush=True)
@@ -1746,7 +1730,7 @@ def _activation(cid, info, ip):
 async def ota_activate(request: Request):
     if not admin_on():
         return JSONResponse({"error": "off"}, status_code=403)
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     p = _pending.get(request.headers.get("client-id", ""))
     got = body.get("challenge")
     if p and got is not None and not (isinstance(got, str) and hmac.compare_digest(got.encode()[:64], p["challenge"].encode())):
@@ -1963,7 +1947,7 @@ async def profile_speaker_code(request: Request, prof=Depends(secret_profile_fre
         raise HTTPException(403, "Codewort am Lautsprecher ist ausgeschaltet.")
     if features.blocked("spkcode", prof["id"]):
         raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     try:
         res = spkcode.set_code(prof["id"], str(body.get("code", ""))[:200])
     except ValueError as e:
@@ -1992,7 +1976,7 @@ def _name(x):
 async def profile_setup(request: Request, prof=Depends(_on)):
     """A new speaker set up from this browser: its device key, its client id and the addresses. The
     browser writes them with the Wi-Fi into the board's settings; the key is not kept here in clear."""
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     await confirm_code(request, prof["id"], prof["name"])   # a new way into the profile
     m = manifest()
     var = str(body.get("variant", ""))
@@ -2022,7 +2006,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     tries = [t for t in _fails.get(prof["id"], []) if now - t < CODE_SECONDS]
     if len(tries) >= 5:
         raise HTTPException(429, "Zu viele falsche Codes. Bitte in zehn Minuten noch einmal.")
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     code = re.sub(r"\D", "", str(body.get("code", "")))[:6]
     name = _name(body.get("name"))
     with _lock:
@@ -2056,7 +2040,7 @@ def _mine(did, prof):
 @router.put("/api/profile/esp32/{did}", dependencies=[Depends(assistant)])
 async def profile_change(did: str, request: Request, prof=Depends(browser_profile)):
     cid = _mine(did, prof)
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     if "name" in body:
         name = _name(body["name"])
         with profiles._lock:
@@ -2311,7 +2295,7 @@ def profile_diag(did: str, request: Request, prof=Depends(browser_profile)):
 async def profile_net_check(did: str, request: Request, prof=Depends(browser_profile)):
     """"Netz prüfen": the speaker's address tried from the Spark (fixed paths only, see net_check)."""
     cid = _mine(did, prof)
-    await _body(request)
+    await json_body(request, MAX_BODY, lenient=True)
     now = time.time()
     tries = [t for t in _net_tries.get(prof["id"], []) if now - t < 600]
     if len(tries) >= NET_CHECKS:
@@ -2347,7 +2331,7 @@ async def profile_voice_here(did: str, request: Request, prof=Depends(secret_pro
     cid = _mine(did, prof)
     if not profile_on(prof["id"]) or not admin_on():
         raise HTTPException(403, "speakers are turned off")
-    await _body(request)
+    await json_body(request, MAX_BODY, lenient=True)
     s = _live.get(did)
     if s and s.room is None and s.enrolling is None and not (s.answer and not s.answer.done()):
         s.answer = asyncio.create_task(s.run_enroll())
@@ -2398,7 +2382,7 @@ def admin_get(request: Request):
 async def admin_net_check(request: Request):
     """"Adresse prüfen" under Funktionen: the address the speakers get (the one typed in, else the saved
     one, else this page's), tried from the Spark like "Netz prüfen"; reads only, same fixed paths."""
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY, lenient=True)
     now = time.time()
     tries = [t for t in _net_tries.get("admin", []) if now - t < 600]
     if len(tries) >= NET_CHECKS:

@@ -42,6 +42,7 @@ import llm
 import profiles
 import vorrang
 from common import load_config, write_json
+import core
 from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
@@ -408,8 +409,7 @@ async def add(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "pruef", uid, False)
-    import iphone
-    body = await iphone._json(request, 2048)
+    body = await core.json_body(request, 2048, lenient=True)
     q = re.sub(r"\s+", " ", str(body.get("q") or "")).strip()
     doc, page, src = str(body.get("doc") or ""), body.get("page"), body.get("src") or "eigen"
     if not 5 <= len(q) <= 200:

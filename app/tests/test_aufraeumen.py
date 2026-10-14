@@ -14,6 +14,7 @@ starts at zero.
 - f  no raw fetch( in the panel's scripts: api()/apiTry() in base.js (sign-in, code dialog, Notaus, loading bar)
 - g  group and function names the same in features.py and guides.js
 - h  every translation in i18n.js and every class in the style sheets is still used
+- i  no own reader of a request body: core.json_body
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -155,6 +156,26 @@ class OwnModelCall(Ratchet, unittest.TestCase):
     def hits(self):
         return {k: v for k, v in count_by_file(py_files(), lambda name, src: src.count("chat/completions")).items()
                 if k not in self.OWN}
+
+
+class OwnBodyReader(Ratchet, unittest.TestCase):
+    WHAT = "an own reader of a request's JSON body, use core.json_body (size limit while reading)"
+    ALT = {}   # all on core.json_body since the big cleanup step 4
+    OWN = {("panel/chats.py", "_box_media"): "one JSON line, then the sealed file as bytes"}
+
+    def hits(self):
+        def count(name, src):
+            if name == "panel/core.py":
+                return 0
+            n = 0
+            for node in ast.walk(ast.parse(src)):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    body = ast.unparse(node)
+                    if ("request.body()" in body or "request.stream()" in body) and "json.loads(" in body \
+                            and (name, node.name) not in self.OWN:
+                        n += 1
+            return n
+        return count_by_file(py_files(), count)
 
 
 class RawFetch(Ratchet, unittest.TestCase):

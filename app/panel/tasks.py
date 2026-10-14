@@ -434,6 +434,7 @@ async def briefing(uid, zone=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import PlainTextResponse  # noqa: E402
 
+import core  # noqa: E402
 from core import browser_profile, own_profile  # noqa: E402
 
 router = APIRouter()
@@ -502,8 +503,7 @@ async def add_items(lst: str, request: Request, prof=Depends(_on)):
     if lst not in LISTS:
         raise HTTPException(400, "unknown list")
     _app_ios(request, prof["id"])
-    import iphone
-    text = str((await iphone._json(request, 8192)).get("text", ""))
+    text = str((await core.json_body(request, 8192, lenient=True)).get("text", ""))
     try:
         await add(prof["id"], lst, [x for x in re.split(r"[,\n]", text)])
     except (httpx.HTTPError, ValueError) as e:

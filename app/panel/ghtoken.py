@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import vault  # noqa: E402
 from common import write_json  # noqa: E402
-from core import admin_code_fresh, auth  # noqa: E402
+from core import admin_code_fresh, auth, json_body  # noqa: E402
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -141,13 +141,7 @@ def admin_state(request: Request):
 @router.put("/api/admin/ghtoken", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_save(request: Request):
     guard.limit(request, "ghtoken", admin=True)
-    if int(request.headers.get("content-length") or 0) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(await request.body() or b"{}")
-    except ValueError:
-        raise HTTPException(400, "JSON expected")
-    tok = str((b if isinstance(b, dict) else {}).get("token") or "").strip()
+    tok = str((await json_body(request, 1024)).get("token") or "").strip()
     if not TOKEN.fullmatch(tok):
         raise HTTPException(400, "Nur ein fine-grained Token (beginnt mit github_pat_), nur „Public repositories“, ohne Rechte.")
     save(tok)

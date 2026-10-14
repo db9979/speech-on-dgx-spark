@@ -27,7 +27,6 @@ import difflib
 import hashlib
 import hmac
 import io
-import json
 import os
 import plistlib
 import re
@@ -47,6 +46,7 @@ import llm
 import notaus
 import profiles
 from common import load_config, no_think
+import core
 from core import assistant, browser_profile, confirm_code
 
 router = APIRouter()
@@ -396,24 +396,6 @@ async def picture_text(uid, iid):
 
 
 # ---------------------------------------------------------------- endpoints
-async def _body(request):
-    cl = request.headers.get("content-length", "")
-    if cl.isdigit() and int(cl) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    raw = bytearray()
-    async for chunk in request.stream():
-        raw += chunk
-        if len(raw) > MAX_BODY:
-            raise HTTPException(413, "too large")
-    try:
-        body = json.loads(bytes(raw) or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 def _mine(request, prof):
     if not allowed(prof["id"]):
         raise HTTPException(403, "Die Schreibhilfe ist aus (Funktionen → Schreibhilfe, Ich → Schreibhilfe).")
@@ -472,7 +454,7 @@ def write_info(request: Request):
 async def write_assist(request: Request):
     prof, client, where = writer(request)
     _mine(request, prof)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     app = body.pop("app", None)
     body.pop("_app", None)
     dev = profiles.device(request)
@@ -501,7 +483,7 @@ async def write_picture(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)
     if not pics_ok(prof["id"]):
         raise HTTPException(403, "Bilder sind für dich nicht freigegeben (Funktionen → Bilder erkennen).")
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     try:
         return {"text": await picture_text(prof["id"], body.get("id"))}
     except ValueError as e:
@@ -519,7 +501,7 @@ async def write_draft(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)
     if not draft_ok(prof["id"]):
         raise HTTPException(403, "Entwürfe sind aus (Ich → E-Mail → Aufräumen → Entwürfe).")
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     notaus.stop("aktion")
     import tidy
     try:
@@ -636,7 +618,7 @@ def profile_helpers(prof=Depends(browser_profile)):
 async def profile_pair(request: Request, prof=Depends(browser_profile)):
     """A one-time setup line "<address>#schreib=XXXX-XXXX" for one program."""
     _apps(prof)
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     base = _base(body.get("base"))
     if len(helpers(prof["id"])) >= MAX_HELPERS:
         raise HTTPException(409, f"Schon {MAX_HELPERS} Programme gekoppelt. Erst eines entfernen.")
@@ -674,7 +656,7 @@ features.OWN["schreib"] = (lambda uid: len(helpers(uid)), _clear)
 async def program_pair(request: Request):
     """A program's first contact: the one-time code gives it its own key (scope "write")."""
     guard.limit(request, "pair")
-    body = await _body(request)
+    body = await core.json_body(request, MAX_BODY)
     kind = body.get("kind")
     name = str(body.get("name") or "").strip()
     if kind not in KINDS:

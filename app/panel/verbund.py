@@ -1185,7 +1185,7 @@ async def _media_in(dom, b):
 
 
 # ---------------------------------------------------------------- endpoints
-from core import admin_code, assistant, auth, own_profile  # noqa: E402
+from core import admin_code, assistant, auth, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -1263,7 +1263,7 @@ def api_state(request: Request, prof=Depends(_on)):
 @router.post("/api/verbund/ask", dependencies=[Depends(assistant)])
 async def api_ask(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         rid = ask(prof["id"], body.get("addr"))
     except (PermissionError, ValueError, OverflowError, LookupError) as e:
@@ -1275,7 +1275,7 @@ async def api_ask(request: Request, prof=Depends(_on)):
 @router.post("/api/verbund/answer", dependencies=[Depends(assistant)])
 async def api_answer(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         cid = answer(prof["id"], _rid(body.get("id")), str(body.get("act") or ""))
     except (PermissionError, ValueError, OverflowError, LookupError) as e:
@@ -1287,7 +1287,7 @@ async def api_answer(request: Request, prof=Depends(_on)):
 @router.post("/api/verbund/remove", dependencies=[Depends(assistant)])
 async def api_remove(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         remove(prof["id"], _rid(body.get("id")))
     except LookupError as e:
@@ -1299,7 +1299,7 @@ async def api_remove(request: Request, prof=Depends(_on)):
 @router.post("/api/verbund/open", dependencies=[Depends(assistant)])
 async def api_open(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     rid = _rid(body.get("id"))
     if not can_write(prof["id"], rid):
         _log("open refused")
@@ -1334,9 +1334,8 @@ def api_pair_new(request: Request):
 
 @router.post("/api/admin/verbund/connect", dependencies=[Depends(auth), Depends(_admin), Depends(admin_code)])
 async def api_connect(request: Request):
-    import chats
     import guard
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         r = await pair_use(body.get("code"))
     except (ValueError, OverflowError, LookupError, PermissionError) as e:
@@ -1348,9 +1347,8 @@ async def api_connect(request: Request):
 
 @router.post("/api/admin/verbund/peer", dependencies=[Depends(auth), Depends(_admin)])
 async def api_peer(request: Request):
-    import chats
     import guard
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     act = str(body.get("act") or "")
     try:
         peer_set(body.get("domain"), act)

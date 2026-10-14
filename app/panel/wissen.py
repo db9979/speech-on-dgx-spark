@@ -56,7 +56,7 @@ import profiles
 import vorrang
 import features
 from common import load_config, write_json
-from core import assistant, auth, browser_profile, own_profile
+from core import assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
 DAY_PAGES = 100
@@ -552,8 +552,7 @@ def admin_state():
 async def admin_quota(request: Request):
     """{"owner", "mb": 50..50000 or null}: the admin's own space for one profile; null = the default."""
     guard.limit(request, "doc", admin=True)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await json_body(request, 1024, lenient=True)
     owner, mb = str(body.get("owner") or ""), body.get("mb")
     if owner not in profiles.user_ids():
         raise HTTPException(404, "no such profile")
@@ -572,8 +571,7 @@ async def admin_quota(request: Request):
 @router.post("/api/admin/wissen/unshare", dependencies=[Depends(auth)])
 async def admin_unshare(request: Request):
     guard.limit(request, "doc", admin=True)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await json_body(request, 1024, lenient=True)
     owner, doc_id = str(body.get("owner") or ""), str(body.get("id") or "")
     if owner not in profiles.user_ids() or not documents.set_shared(owner, doc_id, False):
         raise HTTPException(404, "no such document")
@@ -611,8 +609,7 @@ def info(prof=Depends(own_profile)):
 async def set_use(doc_id: str, request: Request, prof=Depends(browser_profile)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
-    import iphone
-    body = await iphone._json(request, 2048)
+    body = await json_body(request, 2048, lenient=True)
     if "tags" in body:                           # the owner's own tags; null = the automatic ones again
         if body["tags"] is not None and not isinstance(body["tags"], list):
             raise HTTPException(400, "tags: a list of words or null")
@@ -769,8 +766,7 @@ BATCH_DO = ("delete", "use", "unuse", "share", "unshare", "tag", "reread")
 async def batch(request: Request, prof=Depends(browser_profile)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
-    import iphone
-    body = await iphone._json(request, 8192)
+    body = await json_body(request, 8192, lenient=True)
     do, ids = body.get("do"), body.get("ids")
     if do not in BATCH_DO:
         raise HTTPException(400, "do: " + ", ".join(BATCH_DO))
@@ -823,8 +819,7 @@ async def batch(request: Request, prof=Depends(browser_profile)):
 async def try_search(request: Request, prof=Depends(browser_profile)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
-    import iphone
-    body = await iphone._json(request, 4096)
+    body = await json_body(request, 4096, lenient=True)
     q = str(body.get("q") or "").strip()[:300]
     if not q:
         raise HTTPException(400, "q is required")
@@ -838,12 +833,11 @@ async def from_chat(request: Request, prof=Depends(browser_profile)):
     """A picture attached in the assistant goes into the documents, only on the person's click."""
     _docs_on()
     import images
-    import iphone
     uid = prof["id"]
     if not on(uid, "pictures"):
         raise HTTPException(403, "pictures in documents are off (Funktionen, Ich → Dokumente)")
     guard.limit(request, "doc", uid, False)
-    body = await iphone._json(request, 1024)
+    body = await json_body(request, 1024, lenient=True)
     iid = str(body.get("id") or "")
     if not images.ID.fullmatch(iid):
         raise HTTPException(400, "id is required")

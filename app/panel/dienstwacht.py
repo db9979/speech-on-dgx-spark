@@ -50,7 +50,7 @@ import guard
 import netguard
 import profiles
 from common import load_config, write_json
-from core import auth
+from core import auth, json_body
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -968,14 +968,7 @@ async def admin_watch(sid: str, request: Request):
     guard.limit(request, "svcwatch", admin=True)
     if sid not in SVC:
         raise HTTPException(404, "no such service")
-    raw = await request.body()
-    if len(raw) > 64:
-        raise HTTPException(413, "too large")
-    import json
-    try:
-        on = json.loads(raw or b"{}").get("on")
-    except (ValueError, AttributeError):
-        raise HTTPException(400, "invalid JSON")
+    on = (await json_body(request, 64)).get("on")
     if not isinstance(on, bool):
         raise HTTPException(400, "on: true or false")
     d = _read()

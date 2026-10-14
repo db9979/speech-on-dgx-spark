@@ -47,7 +47,7 @@ import llm
 import profiles
 import taten
 from common import load_config, write_json
-from core import assistant, auth
+from core import assistant, auth, json_body
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -2539,19 +2539,6 @@ def _who(request):
     return me["id"] if me else "main"
 
 
-async def _body(request, limit=2048):
-    raw = await request.body()
-    if len(raw) > limit:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "invalid JSON")
-    return b
-
-
 def _need_on():
     if not wanted():
         raise HTTPException(403, "Der Einstellungs-Assistent ist aus (Funktionen).")
@@ -2659,7 +2646,7 @@ async def admin_melder(request: Request):
     """The detectors the admin switched off ({"off": [keys]})."""
     import admin
     guard.limit(request, "berater", None, True)
-    b = await _body(request)
+    b = await json_body(request, 2048)
     off = b.get("off")
     if not isinstance(off, list) or any(k not in MELDER for k in off):
         raise HTTPException(400, "off: Melder")
@@ -2676,7 +2663,7 @@ async def admin_rule(request: Request):
     """Verbessern → Regeln „Entfernen“: {key, name, item}, one item of one rule setting."""
     guard.limit(request, "beraterset", None, True)
     _need_on()
-    b = await _body(request)
+    b = await json_body(request, 2048)
     await asyncio.to_thread(drop_rule, b.get("key"), b.get("name"), b.get("item"), _who(request))
     return overview()
 
@@ -2694,7 +2681,7 @@ async def admin_rules_import(request: Request):
     """{rules, force?}: takes an export after the Prüfstand; a version of the rules before is kept."""
     guard.limit(request, "beraterset", None, True)
     _need_on()
-    b = await _body(request, MAX_IMPORT)
+    b = await json_body(request, MAX_IMPORT)
     res = await asyncio.to_thread(import_rules, b.get("rules"), _who(request), b.get("force") is True)
     return dict(overview(), imported=res)
 
@@ -2704,7 +2691,7 @@ async def admin_rules_version(request: Request):
     """{i}: back to a kept version of the rules (the newest first, as the page lists them)."""
     guard.limit(request, "beraterset", None, True)
     _need_on()
-    b = await _body(request)
+    b = await json_body(request, 2048)
     n = len(versions())
     i = b.get("i")
     if not isinstance(i, int) or isinstance(i, bool):
@@ -2719,7 +2706,7 @@ async def admin_act(request: Request, pid: str, what: str):
     guard.limit(request, "beraterset", None, True)
     _need_on()
     _pid(pid)
-    b = await _body(request)
+    b = await json_body(request, 2048)
     by = _who(request)
     if what == "take":
         laut = b.get("laut") if isinstance(b.get("laut"), str) else None
@@ -2786,7 +2773,7 @@ async def admin_case(request: Request, cid: str, what: str):
             raise HTTPException(409, "Keine passende Regel bekommen: Sprachmodell im LAN und Aufrufe des Tages prüfen.")
     elif what == "soll":
         import befund
-        b = await _body(request)
+        b = await json_body(request, 2048)
         tool = b.get("tool")
         if not isinstance(tool, str) or tool not in befund.karte():
             raise HTTPException(400, "tool: ein Werkzeug der Werkzeug-Karte")

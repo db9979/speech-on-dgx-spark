@@ -1601,14 +1601,9 @@ async def briefing(uid, zone=None):
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import admin_code, auth, browser_profile  # noqa: E402
+from core import admin_code, auth, browser_profile, json_body  # noqa: E402
 
 router = APIRouter()
-
-
-async def _body(request, most=16384):
-    import iphone
-    return await iphone._json(request, most)
 
 
 def _public_job(x, full=False):
@@ -1666,7 +1661,7 @@ async def profile_new_job(request: Request, prof=Depends(browser_profile)):
     _uses(prof)
     import guard
     guard.limit(request, "chat", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     item, why = enqueue(prof["id"], body.get("task"), doc=body.get("doc") is True, origin="page")
     if not item:
         raise HTTPException(400, why)
@@ -1705,7 +1700,7 @@ async def profile_new_plan(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(403, "agent functions are turned off")
     _uses(prof)
     import chat
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     if body.get("kind") == "watch" and not watch_on(prof["id"]):
         raise HTTPException(403, "watching is not allowed for this profile")
     try:
@@ -1742,7 +1737,7 @@ async def profile_edit_plan(pid: str, request: Request, prof=Depends(browser_pro
     _uses(prof)
     import guard
     guard.limit(request, "aufgaben", prof["id"])
-    body = await _body(request, 4096)
+    body = await json_body(request, 4096, lenient=True)
     old = next((x for x in load(prof["id"])["plans"] if x["id"] == pid), None)
     if not old:
         raise HTTPException(404, "no such plan")
@@ -1787,7 +1782,7 @@ async def profile_new_routine(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "agent functions are turned off")
     _uses(prof, "act")
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     try:
         add_routine(prof["id"], body.get("name"), body.get("steps"))
     except ValueError as e:
@@ -1929,7 +1924,7 @@ async def profile_edit_reminder(rid: str, request: Request, prof=Depends(_on)):
     guard.limit(request, "aufgaben", prof["id"])
     if not features.allowed("reminders", prof["id"]):
         raise HTTPException(403, "reminders are turned off")
-    body = await _body(request, 2048)
+    body = await json_body(request, 2048, lenient=True)
     try:
         edit_reminder(prof["id"], rid, body)
     except ValueError as e:
@@ -1975,7 +1970,7 @@ async def profile_mail_senders(request: Request, prof=Depends(_on)):
     guard.limit(request, "aufgaben", prof["id"])
     if not features.allowed("proactive", prof["id"]):
         raise HTTPException(403, "speaking up by itself is turned off")
-    body = await _body(request, 1024)
+    body = await json_body(request, 1024, lenient=True)
     have = senders(prof["id"])
     try:
         if body.get("add"):
@@ -2009,7 +2004,7 @@ def admin_get():
 
 @router.put("/api/admin/agent/levels", dependencies=[Depends(auth)])
 async def admin_levels(request: Request):
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     ids = {u["id"] for u in profiles._load()["users"]}
     levels = body.get("levels") if isinstance(body.get("levels"), dict) else {}
     st = admin_state()
@@ -2022,7 +2017,7 @@ async def admin_levels(request: Request):
 @router.put("/api/admin/agent/levels/{uid}", dependencies=[Depends(auth)])
 async def admin_level(uid: str, request: Request):
     """{"level": "" | "read" | "act"}: what one profile may (Personen und Geräte → profile → Rechte)."""
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     lv = body.get("level")
     if uid not in profiles.user_ids():
         raise HTTPException(404, "no such profile")
@@ -2041,7 +2036,7 @@ async def admin_level(uid: str, request: Request):
 
 @router.post("/api/admin/agent/mcp", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_mcp_add(request: Request):
-    body = await _body(request)
+    body = await json_body(request, 16384, lenient=True)
     name, url, tok = clean(body.get("name"), 40), str(body.get("url") or "").strip(), str(body.get("token") or "").strip()
     if not name:
         raise HTTPException(400, "Name fehlt.")
@@ -2064,7 +2059,7 @@ async def admin_mcp_add(request: Request):
 
 @router.put("/api/admin/agent/mcp/{sid}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_mcp_set(sid: str, request: Request):
-    body = await _body(request, 65536)
+    body = await json_body(request, 65536, lenient=True)
     st = admin_state()
     s = next((x for x in st["mcp"] if x["id"] == sid), None)
     if not s:

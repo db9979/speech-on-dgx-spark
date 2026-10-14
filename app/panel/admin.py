@@ -31,6 +31,7 @@ import wyoming  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, write_json  # noqa: E402
 from core import (  # noqa: E402
+    json_body,
     spawn,
     ASR_ENGINE_KEYS,
     ADMIN_IDLE,
@@ -216,13 +217,7 @@ def admin_untrust(uid: str, tid: str, request: Request):
 async def admin_set_call(uid: str, request: Request):
     """The Rufname others use in messages ("Thomas M."): unique among every name and Rufname."""
     _no_admin_profile(request, uid)
-    raw = await request.body()
-    if len(raw) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        call = str((json.loads(raw or b"{}") or {}).get("call") or "")
-    except (ValueError, AttributeError):
-        raise HTTPException(400, "invalid JSON")
+    call = str((await json_body(request, 1024)).get("call") or "")
     try:
         return {"call": profiles.set_call(uid, call)}
     except LookupError:
@@ -891,14 +886,8 @@ def admin_switches():
 
 @router.put("/api/admin/switches", dependencies=[Depends(auth)])
 async def admin_switch(request: Request):
-    raw = await request.body()
-    if len(raw) > 512:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    key, on = (body.get("key"), body.get("on")) if isinstance(body, dict) else (None, None)
+    body = await json_body(request, 512)
+    key, on = body.get("key"), body.get("on")
     if key not in app_switches() or not isinstance(on, bool):
         raise HTTPException(400, "not a switch the app may change")
     with _save_lock:   # one config write at a time (_save)

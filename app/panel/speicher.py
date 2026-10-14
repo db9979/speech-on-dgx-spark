@@ -77,6 +77,7 @@ import netguard
 import profiles
 import vault
 import zertpin
+import core
 from core import auth, browser_profile, secret_profile, spawn
 
 router = APIRouter()
@@ -1744,11 +1745,6 @@ def _may(prof):
         raise HTTPException(403, features.missing_text("speicher", prof["id"]) or "Kopie meiner Daten ist ausgeschaltet.")
 
 
-async def _body(request, most=8192):
-    import iphone
-    return await iphone._json(request, most)
-
-
 def _areas(v):
     if not isinstance(v, list) or not all(isinstance(a, str) for a in v):
         raise HTTPException(400, "areas: a list")
@@ -1864,7 +1860,7 @@ async def add(request: Request, prof=Depends(_on)):
     guard.limit(request, "storage", prof["id"])
     _may(prof)
     uid = prof["id"]
-    body = _nas_body(uid, await _body(request))
+    body = _nas_body(uid, await core.json_body(request, 8192, lenient=True))
     t = _from_nas(uid, _target_from(body), body)
     _one_offload(uid, t)
     pw = body.get("password")
@@ -1906,7 +1902,7 @@ async def change(tid: str, request: Request, prof=Depends(_on)):
     old = find(uid, tid)
     if not old:
         raise HTTPException(404, "no such target")
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     t = _from_nas(uid, _target_from(body, old), body)
     _one_offload(uid, t)
     login = old["kind"] in LOGIN_KINDS and (t["url"] != old["url"] or t["user"] != old["user"] or bool(body.get("password"))

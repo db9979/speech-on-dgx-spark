@@ -31,7 +31,6 @@ neutral name ("dokument.pdf"), never the profile's file name. Answers are capped
 """
 import asyncio
 import ipaddress
-import json
 import os
 import re
 import secrets
@@ -51,7 +50,7 @@ import profiles
 import vault
 import zertpin
 from common import read_json, write_json
-from core import admin_code_fresh, auth
+from core import admin_code_fresh, auth, json_body
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -378,19 +377,6 @@ def sample_pdf():
 
 
 # ---------------------------------------------------------------- endpoints (admin; changes main admin with a code)
-async def _body(request, most=2048):
-    raw = await request.body()
-    if len(raw) > most:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "invalid JSON")
-    return b
-
-
 SAY = {"down": "Der Docling-Server antwortet nicht.", "cert": "Das Zertifikat passt nicht zur Adresse. Unter "
        "„Zertifikat prüfen“ den Fingerabdruck vergleichen und annehmen.", "key": "Der Docling-Server lehnt den "
        "Schlüssel ab.", "blocked": "Der Wächter erlaubt diese Adresse nicht (http nur im Heimnetz).",
@@ -406,7 +392,7 @@ def docling_get():
 @router.put("/api/admin/docling", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def docling_put(request: Request):
     guard.limit(request, "docling", admin=True)
-    b = await _body(request)
+    b = await json_body(request, 2048)
     d = _read()
     url = d.get("url", "")
     if "url" in b:
@@ -458,7 +444,7 @@ async def docling_cert(request: Request):
     """{"url"?}: the certificate the server shows (fingerprint, names, until, fits the address), to compare. Reads
     only; accepting it is PUT {"cert": fingerprint} with a fresh code."""
     guard.limit(request, "docling", admin=True)
-    b = await _body(request, 1024)
+    b = await json_body(request, 1024)
     try:
         url = check_url(b.get("url") or _read().get("url", ""))
     except ValueError as e:

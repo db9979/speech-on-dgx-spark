@@ -47,6 +47,7 @@ import profiles
 import vault
 import zertpin
 from common import write_json
+import core
 from core import auth, browser_profile, secret_profile
 
 router = APIRouter()
@@ -455,11 +456,6 @@ def _on(prof=Depends(browser_profile)):
     return prof
 
 
-async def _body(request, most=8192):
-    import iphone
-    return await iphone._json(request, most)
-
-
 def _name(v):
     v = str(v or "").strip()
     if not NAME.fullmatch(v):
@@ -526,7 +522,7 @@ async def add(request: Request, prof=Depends(_on)):
     """{"name", "kind", "url", "user", "password", "cert"?}: a new connection, checked by signing in."""
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     kind = body.get("kind")
     if kind not in KINDS:
         raise HTTPException(400, "kind: webdav, smb or sftp")
@@ -566,7 +562,7 @@ async def add(request: Request, prof=Depends(_on)):
 async def cert_of(request: Request, prof=Depends(_on)):
     """{"url"} or {"id"}: the certificate the NAS shows (fingerprint, names, until, fits), to compare. Reads only."""
     guard.limit(request, "storage", prof["id"])
-    body = await _body(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     if body.get("id"):
         c = find(prof["id"], str(body["id"]))
         if not c:
@@ -592,7 +588,7 @@ async def change(nid: str, request: Request, prof=Depends(_on)):
     old = find(uid, nid)
     if not old:
         raise HTTPException(404, "no such connection")
-    body = await _body(request)
+    body = await core.json_body(request, 8192, lenient=True)
     c = dict(old)
     if "name" in body:
         c["name"] = _name(body["name"])

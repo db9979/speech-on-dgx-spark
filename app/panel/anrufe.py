@@ -503,7 +503,7 @@ async def loop():
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -549,7 +549,7 @@ def api_ice(request: Request, prof=Depends(_on)):
 @router.post("/api/anrufe/start", dependencies=[Depends(assistant)])
 async def api_start(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     dev = _ids(body, call=False)
     try:
         call, state = await start(prof["id"], chats._cid(body.get("id")), body.get("video") is True, dev)
@@ -562,8 +562,7 @@ async def api_start(request: Request, prof=Depends(_on)):
 
 @router.post("/api/anrufe/answer", dependencies=[Depends(assistant)])
 async def api_answer(request: Request, prof=Depends(_on)):
-    import chats
-    call, dev = _ids(await chats._json(request, 1024))
+    call, dev = _ids(await json_body(request, 1024))
     try:
         x = answer(prof["id"], call, dev)
     except LookupError as e:
@@ -574,8 +573,7 @@ async def api_answer(request: Request, prof=Depends(_on)):
 
 @router.post("/api/anrufe/signal", dependencies=[Depends(assistant)])
 async def api_signal(request: Request, prof=Depends(_on)):
-    import chats
-    body = await chats._json(request, MAX_SIGNAL + 2048)
+    body = await json_body(request, MAX_SIGNAL + 2048)
     call, dev = _ids(body)
     try:
         signal(prof["id"], call, dev, body.get("data"))
@@ -587,8 +585,7 @@ async def api_signal(request: Request, prof=Depends(_on)):
 
 @router.post("/api/anrufe/end", dependencies=[Depends(assistant)])
 async def api_end(request: Request, prof=Depends(_on)):
-    import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     call, _ = _ids(body)
     why = body.get("why") if body.get("why") in ("hangup", "reject") else "hangup"
     try:

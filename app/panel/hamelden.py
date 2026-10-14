@@ -40,7 +40,7 @@ import llm
 import netguard
 import profiles
 import proactive
-from core import assistant, browser_profile, own_profile, secret_profile
+from core import assistant, browser_profile, json_body, own_profile, secret_profile
 
 router = APIRouter()
 
@@ -610,14 +610,7 @@ async def api_event(request: Request, prof=Depends(own_profile)):
     if profiles.key_scope(request) != "haev":
         raise HTTPException(403, "only with the Home Assistant key for events")
     guard.limit(request, "haev", prof["id"])
-    raw = await request.body()
-    if len(raw) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    name = str(body.get("event", "") if isinstance(body, dict) else "").strip().lower()
+    name = str((await json_body(request, 1024)).get("event", "")).strip().lower()
     if not EVENT_NAME.fullmatch(name):
         raise HTTPException(400, "event: a name from the list in the panel, e.g. klingel")
     res = await event(prof["id"], name)
@@ -647,14 +640,11 @@ async def api_events_put(request: Request, prof=Depends(browser_profile)):
     if not features.allowed("haevent", prof["id"]):
         raise HTTPException(403, "Home Assistant meldet an Spark ist aus")
     guard.limit(request, "hamelden", prof["id"])
-    raw = await request.body()
-    if len(raw) > 16384:
-        raise HTTPException(413, "too large")
+    body = await json_body(request, 16384)
     try:
-        body = json.loads(raw or b"{}")
-        items = check_events(prof["id"], body.get("events") if isinstance(body, dict) else None)
+        items = check_events(prof["id"], body.get("events"))
     except ValueError as e:
-        raise HTTPException(400, str(e) if not isinstance(e, json.JSONDecodeError) else "invalid JSON")
+        raise HTTPException(400, str(e))
     return {"events": save_events(prof["id"], items)}
 
 
@@ -692,14 +682,7 @@ async def api_event_test(request: Request, prof=Depends(browser_profile)):
     if not _gate(prof["id"]):
         raise HTTPException(403, "Home Assistant meldet an Spark ist aus")
     guard.limit(request, "hamelden", prof["id"])
-    raw = await request.body()
-    if len(raw) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    name = str(body.get("event", "") if isinstance(body, dict) else "")[:40]
+    name = str((await json_body(request, 1024)).get("event", ""))[:40]
     if not EVENT_NAME.fullmatch(name):
         raise HTTPException(400, "event is required")
     _ev_said.pop((prof["id"], name), None)

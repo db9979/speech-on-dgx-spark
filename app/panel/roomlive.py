@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 import features
+import core
 from core import spawn, assistant, auth, browser_profile, own_profile, secret_profile
 
 router = APIRouter()
@@ -286,19 +287,6 @@ def _on():
         raise HTTPException(403, "room mode is turned off")
 
 
-async def _body(request, limit=2048):
-    raw = await request.body()
-    if len(raw) > limit:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "invalid JSON")
-    return b
-
-
 def _rid(b):
     rid = str(b.get("room") or "")
     if not re.fullmatch(r"[A-Za-z0-9]{6,32}", rid):
@@ -336,7 +324,7 @@ def _name_of(request, b, uid):
 async def api_start(request: Request, prof=Depends(own_profile)):
     """A page starts room mode: it is listed with its name and end."""
     guard.limit(request, "room", prof["id"])
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     mins = b.get("mins") if b.get("mins") in MINS else 30
     e = add(prof["id"], _rid(b), "browser", _name_of(request, b, prof["id"]), clock() + mins * 60,
             voices=b.get("voices"), probe=b.get("probe"))
@@ -348,7 +336,7 @@ async def api_alive(request: Request, prof=Depends(own_profile)):
     """A page's sign of life: tells it its end (maybe extended elsewhere), or that it was ended."""
     guard.limit(request, "room", prof["id"])
     import room
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     uid, rid = prof["id"], _rid(b)
     why = ended(uid, rid)
     if why:
@@ -383,7 +371,7 @@ async def api_end(request: Request, prof=Depends(own_profile)):
     """Ends one room of the profile ({"key"}) or all of them ({"all": true}). Allowed to the app and the room key."""
     guard.limit(request, "room", prof["id"])
     _may_see(request, prof["id"])
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     why = _who(request)
     if b.get("all") is True:
         return {"ended": await end_all(why, prof["id"]), "rooms": mine(prof["id"])}
@@ -396,7 +384,7 @@ async def api_end(request: Request, prof=Depends(own_profile)):
 async def api_extend(request: Request, prof=Depends(browser_profile)):
     """Longer: only in the profile's own browser login, never longer than 4 hours from now."""
     guard.limit(request, "room", prof["id"])
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     if b.get("mins") not in EXTEND:
         raise HTTPException(400, "mins: 15, 30 or 60")
     if not extend(_key(b), b["mins"], prof["id"]):
@@ -462,7 +450,7 @@ def api_admin_rooms():
 async def api_admin_end(request: Request):
     """Ends one room or all of them (e.g. when guests come). Ending only means less: no fresh code needed."""
     guard.limit(request, "room", admin=True)
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     if b.get("all") is True:
         n = await end_all("admin")
     else:

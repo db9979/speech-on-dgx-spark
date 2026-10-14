@@ -46,7 +46,7 @@ import mail
 import notaus
 import profiles
 from common import no_think
-from core import assistant, browser_profile, own_profile
+from core import assistant, browser_profile, json_body, own_profile
 
 router = APIRouter()
 GROUPS = (("privat", "Privat", "Private"), ("beruflich", "Beruflich", "Work"), ("unbekannt", "Unbekannt", "Unknown"))
@@ -535,11 +535,6 @@ def _mine(request, prof, rate="mailstil"):
     guard.limit(request, rate, prof["id"])
 
 
-async def _body(request, most=16 * 1024):
-    import account      # the one capped reader (also without Content-Length)
-    return await account._capped_body(request, most)
-
-
 @router.get("/api/profile/mailstil", dependencies=[Depends(assistant)])
 def api_get(prof=Depends(own_profile)):
     return public(prof["id"])
@@ -548,7 +543,7 @@ def api_get(prof=Depends(own_profile)):
 @router.put("/api/profile/mailstil", dependencies=[Depends(assistant)])
 async def api_set(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)
-    b = await _body(request)
+    b = await json_body(request, 16 * 1024)
     d = load(prof["id"])
     changed = 0
     for g, fields in (b.get("groups") or {}).items() if isinstance(b.get("groups"), dict) else []:
@@ -574,7 +569,7 @@ async def api_set(request: Request, prof=Depends(browser_profile)):
 async def api_learn(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof, "mailstillearn")
     notaus.stop("gespraech")
-    b = await _body(request)
+    b = await json_body(request, 16 * 1024)
     aids = b.get("aids")
     if aids is not None and (not isinstance(aids, list) or not all(isinstance(a, str) for a in aids) or len(aids) > 8):
         raise HTTPException(400, "aids: list of mailbox ids")

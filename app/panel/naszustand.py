@@ -41,6 +41,7 @@ import guard
 import netguard
 import vault
 from common import write_json
+import core
 from core import admin_code, auth
 
 router = APIRouter()
@@ -571,19 +572,6 @@ async def tool(name, args, ctx):
 
 
 # ---------------------------------------------------------------- routes (admin)
-async def _body(request, most=2048):
-    raw = await request.body()
-    if len(raw) > most:
-        raise HTTPException(413, "too large")
-    try:
-        b = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(b, dict):
-        raise HTTPException(400, "invalid JSON")
-    return b
-
-
 @router.get("/api/admin/naszustand", dependencies=[Depends(auth)])
 def get_state(request: Request):
     guard.limit(request, "naszustand", admin=True)
@@ -597,7 +585,7 @@ async def put_state(request: Request):
     guard.limit(request, "naszustand", admin=True)
     if not switched():
         raise HTTPException(403, "Zustand der NAS ist aus (Funktionen → Speicher und NAS).")
-    b = await _body(request)
+    b = await core.json_body(request, 2048)
     d = _read()
     try:
         host = check_host(b.get("host", d.get("host", "")))

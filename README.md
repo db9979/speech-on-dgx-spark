@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.580** Cleanup step 4: one shared reader for request bodies with a size limit
 - **V01.0.579** Cleanup step 3: one shared way to the language model (llm.py)
 - **V01.0.578** Cleanup step 2: every JSON file through one shared writer, no fixed .tmp names any more
 - **V01.0.577** Cleanup step 1: dead imports, functions, texts and CSS gone, one list of removed keys, switch checks from the defaults
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.573** Painting pictures: a short yes after the assistant asks back paints, no web search
 - **V01.0.572** Speakers with code word: short questions of a surely recognised voice no longer come as a guest
 - **V01.0.571** Painted pictures right in the chat: in the iPhone app too, and again after a reload and on every device
-- **V01.0.570** Calm apps: the iPhone shows "not reachable" only after 3 seconds, appends new messages, open pages stay open; Android 1.3.2 waits while the Spark restarts instead of jumping to the address screen
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -31,6 +31,7 @@ import profiles
 import vorrang
 import features
 from common import load_config, no_think
+import core
 from core import assistant, browser_profile, own_profile
 
 router = APIRouter()
@@ -1155,15 +1156,9 @@ async def api_feedback(request: Request, prof=Depends(own_profile)):
 async def api_rule_add(request: Request, prof=Depends(browser_profile)):
     import guard
     guard.limit(request, "hamelden", prof["id"])
-    raw = await request.body()
-    if len(raw) > 8192:
-        raise HTTPException(413, "too large")
+    body = await core.json_body(request, 8192)
     try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    try:
-        await add_rule(prof["id"], body if isinstance(body, dict) else {})
+        await add_rule(prof["id"], body)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return status(prof["id"])     # a live connection takes the new rule's device with the next minute (hamelden.ensure)
@@ -1211,15 +1206,9 @@ async def api_rule_change(rid: str, request: Request, prof=Depends(browser_profi
     guard.limit(request, "hamelden", prof["id"])
     if not re.fullmatch(r"[0-9a-f]{8}", rid):
         raise HTTPException(404, "no such rule")
-    raw = await request.body()
-    if len(raw) > 8192:
-        raise HTTPException(413, "too large")
+    body = await core.json_body(request, 8192)
     try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    try:
-        await add_rule(prof["id"], body if isinstance(body, dict) else {}, replace=rid)
+        await add_rule(prof["id"], body, replace=rid)
     except LookupError as e:
         raise HTTPException(404, str(e))
     except ValueError as e:

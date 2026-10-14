@@ -73,7 +73,7 @@ import profiles
 import schreib
 import signatur
 from common import load_config, no_think, write_json
-from core import assistant, auth, browser_profile, confirm_code
+from core import assistant, auth, browser_profile, confirm_code, json_body
 
 router = APIRouter()
 PARTS = ("write", "ask", "dictate", "notes", "status", "notaus",
@@ -441,22 +441,6 @@ def _need(prof):
     return prof
 
 
-async def _body(request, limit=MAX_BODY):
-    cl = request.headers.get("content-length", "")
-    if cl.isdigit() and int(cl) > limit:
-        raise HTTPException(413, "too large")
-    raw = bytearray()
-    async for chunk in request.stream():
-        raw += chunk
-        if len(raw) > limit:
-            raise HTTPException(413, "too large")
-    try:
-        body = json.loads(bytes(raw) or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    return body if isinstance(body, dict) else {}
-
-
 @router.get("/api/profile/desk", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(browser_profile)):
     uid = prof["id"]
@@ -482,7 +466,7 @@ def profile_get(prof=Depends(browser_profile)):
 async def profile_pair(request: Request, prof=Depends(browser_profile)):
     _need(prof)
     guard.limit(request, "desk", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     base = schreib._base(body.get("base"))
     if len(devices(prof["id"])) >= MAX_DEVICES:
         raise HTTPException(409, f"Schon {MAX_DEVICES} Geräte gekoppelt. Erst eines entfernen.")
@@ -499,7 +483,7 @@ async def profile_set(did: str, request: Request, prof=Depends(browser_profile))
     guard.limit(request, "desk", prof["id"])
     if not any(x["id"] == did for x in devices(prof["id"])):
         raise HTTPException(404, "no such device")
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     cfg = clean(body.get("cfg"))
     old = {b["entity"] for b in device_cfg(did)[0]["home"]["buttons"]}
     new = [b for b in cfg["home"]["buttons"] if b["entity"] not in old]
@@ -544,7 +528,7 @@ features.OWN["begleiter"] = (lambda uid: len(devices(uid)), _clear)
 async def program_pair(request: Request):
     """The program's first contact: the one-time code gives it its own key (scope "desk")."""
     guard.limit(request, "pair")
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     kind = body.get("kind")
     name = str(body.get("name") or "").strip()
     if kind not in KINDS:
@@ -680,7 +664,7 @@ async def program_ask(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "ask")
     guard.limit(request, "deskask", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     profiles.used(prof["id"], "desk")
     import chat
     _live("Frage gestellt")
@@ -1048,7 +1032,7 @@ async def program_apps(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "act")
     guard.limit(request, "deskapps", prof["id"])
-    body = await _body(request, MAX_APPS_BODY)
+    body = await json_body(request, MAX_APPS_BODY)
     if not isinstance(body.get("apps"), list):
         raise HTTPException(400, "apps: Liste")
     n = save_installed(dev["id"], prof["id"], body["apps"][:MAX_INSTALLED * 2])
@@ -1062,7 +1046,7 @@ async def program_act(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "act")
     guard.limit(request, "deskact", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     now = time.time()
     with _lock:
         x = next((a for a in _asks.get(prof["id"], []) if a["id"] == body.get("id") and a["did"] == dev["id"]), None)
@@ -1332,7 +1316,7 @@ async def program_speak(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "speak")
     guard.limit(request, "deskspeak", prof["id"])
-    body = await _body(request, 64 * 1024)
+    body = await json_body(request, 64 * 1024)
     text = re.sub(r"[ \t]+", " ", schreib.CTRL.sub(" ", str(body.get("text") or ""))).strip()
     if not text:
         raise HTTPException(400, "Kein Text zum Vorlesen.")
@@ -1502,7 +1486,7 @@ async def program_inbox_done(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "inbox")
     guard.limit(request, "deskinbox", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     _inbox_take(prof["id"], dev["id"], str(body.get("id") or "")[:40], True)
     return {}
 
@@ -1581,7 +1565,7 @@ async def program_remind(request: Request):
     guard.limit(request, "deskagenda", uid)
     if not features.allowed("reminders", uid):
         raise HTTPException(403, "Erinnerungen sind aus (Funktionen → Timer und Erinnerungen).")
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     m = body.get("minutes")
     if not isinstance(m, int) or isinstance(m, bool) or not 1 <= m <= 1440:
         raise HTTPException(400, "minutes: 1 bis 1440")
@@ -1685,7 +1669,7 @@ async def program_busy(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "quiet")
     guard.limit(request, "deskbusy", prof["id"])
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     if not isinstance(body.get("busy"), bool):
         raise HTTPException(400, "busy: true oder false")
     why = body.get("why") if body.get("why") in QUIET_WHY else "call"
@@ -1804,7 +1788,7 @@ async def program_meet_start(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "meeting")
     guard.limit(request, "deskmeet", prof["id"])
-    await _body(request)
+    await json_body(request, MAX_BODY)
     mid = meet_start(prof["id"], dev["id"])
     profiles.used(prof["id"], "desk")
     _live("Besprechung: Mitschreiben gestartet")
@@ -1846,7 +1830,7 @@ async def program_meet_end(request: Request):
     uid = prof["id"]
     _part(prof, dev, "meeting")
     guard.limit(request, "deskmeet", uid)
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     m = _meeting(uid, dev["id"], body.get("id"))
     if m["ended"]:
         return {"summary": m["summary"], "tasks": m["tasks"], "chars": m["chars"]}
@@ -1895,7 +1879,7 @@ async def program_meet_keep(request: Request):
     uid = prof["id"]
     _part(prof, dev, "meeting")
     guard.limit(request, "deskmeet", uid)
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     m = _meeting(uid, dev["id"], body.get("id"))
     if not m["ended"]:
         raise HTTPException(409, "Erst die Besprechung beenden.")
@@ -2053,7 +2037,7 @@ async def program_home_press(request: Request):
     uid = prof["id"]
     _part(prof, dev, "home")
     guard.limit(request, "deskhome", uid)
-    body = await _body(request)
+    body = await json_body(request, MAX_BODY)
     b = next((x for x in device_cfg(dev["id"])[0]["home"]["buttons"] if x["id"] == body.get("id")), None)
     if not b:
         raise HTTPException(404, "Diesen Knopf gibt es nicht (mehr).")

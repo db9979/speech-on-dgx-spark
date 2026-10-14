@@ -58,6 +58,7 @@ import notaus
 import profiles
 import vault
 import vorrang
+import core
 from core import assistant, browser_profile, secret_profile
 from textnorm import plain_markdown
 
@@ -1248,8 +1249,7 @@ async def pair(request: Request, prof=Depends(secret_profile)):
     if not allowed(uid):
         raise HTTPException(403, "reMarkable ist aus")
     guard.limit(request, "rmpair", uid)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     try:
         tok = await register(body.get("code"))
     except ValueError as e:
@@ -1327,8 +1327,7 @@ async def pick(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     _on(prof)
     guard.limit(request, "rm", uid)
-    import iphone
-    body = await iphone._json(request, 64 * 1024)
+    body = await core.json_body(request, 64 * 1024, lenient=True)
     ids = body.get("ids")
     if not isinstance(ids, list) or len(ids) > MAX_PICKED or not all(isinstance(i, str) and ID.fullmatch(i) for i in ids):
         raise HTTPException(400, f"ids: a list of at most {MAX_PICKED} reMarkable ids")
@@ -1349,8 +1348,7 @@ async def target(request: Request, prof=Depends(browser_profile)):
     if not send_allowed(uid):
         raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rm", uid)
-    import iphone
-    body = await iphone._json(request, 1024)
+    body = await core.json_body(request, 1024, lenient=True)
     t = body.get("id") or ""
     items = library(uid)
     if t and (not isinstance(t, str) or not ID.fullmatch(t) or not (items.get(t) or {}).get("folder")
@@ -1397,8 +1395,7 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
     if not send_allowed(uid):
         raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rmsend", uid)
-    import iphone
-    body = await iphone._json(request, 4 * MAX_SEND + 4096)
+    body = await core.json_body(request, 4 * MAX_SEND + 4096, lenient=True)
     if not load(uid).get("token"):
         raise HTTPException(400, "nicht verbunden")
     t0 = time.time()

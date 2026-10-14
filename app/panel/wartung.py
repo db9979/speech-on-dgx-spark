@@ -405,6 +405,7 @@ def for_live(now=None):
 # ---------------------------------------------------------------- API (admin)
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
+import core  # noqa: E402
 from core import acting_profile, auth  # noqa: E402
 
 router = APIRouter()
@@ -427,15 +428,7 @@ async def post_wartung(request: Request):
     guard.limit(request, "wartung", admin=True)
     if not admin_on():
         raise HTTPException(409, "Die Wartungspause ist aus (Funktionen → Wartungspause).")
-    raw = await request.body()
-    if len(raw) > MAX_BODY:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
+    body = await core.json_body(request, MAX_BODY)
     channel = "app" if body.get("channel") == "app" else "panel"
     try:
         if body.get("more") is True:

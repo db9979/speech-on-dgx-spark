@@ -44,6 +44,7 @@ import guard
 import mfa
 import profiles
 from common import write_json
+import core
 from core import spawn, acting_profile, admin_code, auth
 
 router = APIRouter()
@@ -321,24 +322,6 @@ def create_profile(code, name, pin, now=None):
     return uid, name
 
 
-async def _json(request):
-    """The body, read with a byte limit before anything is parsed (most routes here need no sign-in)."""
-    if int(request.headers.get("content-length") or 0) > MAX_BODY:
-        raise HTTPException(413, "too big")
-    raw = bytearray()
-    async for chunk in request.stream():
-        raw += chunk
-        if len(raw) > MAX_BODY:
-            raise HTTPException(413, "too big")
-    try:
-        body = json.loads(bytes(raw) or b"{}")
-    except ValueError:
-        raise HTTPException(400, "not JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "not JSON")
-    return body
-
-
 def _on():
     if mode() != "invite":
         raise HTTPException(404, "Not Found")
@@ -363,7 +346,7 @@ def admin_get():
 
 @router.put("/api/admin/join", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_put(request: Request):
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY)
     new = settings()
     if "mode" in body:
         if body["mode"] not in MODES:
@@ -403,7 +386,7 @@ def _base(body):
 
 @router.post("/api/admin/join/invites", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_invite(request: Request):
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY)
     base = _base(body)
     uid = str(body.get("uid") or "")
     days = body.get("days", 7)
@@ -467,7 +450,7 @@ def _peek(request, code):
 async def join_check(request: Request):
     """What the welcome page shows: the suggested name, until when, what is needed. Uses nothing up."""
     _pin_or_on()
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY)
     iid, v = _peek(request, body.get("code"))
     c = features.chat_cfg()
     uid = v.get("uid") or ""
@@ -487,7 +470,7 @@ def _cookie(r, uid, request):
 async def join(request: Request):
     """A new profile ("new") or a new PIN ("pin") from an invitation; the browser is signed in afterwards."""
     _pin_or_on()
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY)
     code = body.get("code")
     iid, v = _peek(request, code)
     now = int(time.time())
@@ -544,7 +527,7 @@ async def app_join(request: Request):
     import iphone
     if not features.admin_on("iphone"):
         raise HTTPException(403, "Die iPhone-App ist auf diesem Spark aus.")
-    body = await _json(request)
+    body = await core.json_body(request, MAX_BODY)
     _peek(request, body.get("code"))
     uid, name = create_profile(body.get("code"), body.get("name"), body.get("pin"))
     token = profiles.add_device(iphone._name(body.get("device")), uid, scope="app")

@@ -35,6 +35,7 @@ import homeassistant  # noqa: E402
 import features  # noqa: E402
 from common import load_config  # noqa: E402
 from core import (  # noqa: E402
+    json_body,
     spawn,
     ADMIN_IDLE,
     admin_cookie_ok,
@@ -287,19 +288,6 @@ def admin_roles():
     return coadmin.listing()
 
 
-async def _small_body(request):
-    raw = await request.body()
-    if len(raw) > 1024:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 def _by(request):
     """"main" for the panel password, else the acting admin profile's id."""
     me = acting_profile(request)
@@ -310,7 +298,7 @@ def _by(request):
 async def admin_roles_set(request: Request):
     """{"main": "<profile id>"}: the main admin profile (its code also counts for the panel password); only the
     panel password or the main profile itself changes it."""
-    body = await _small_body(request)
+    body = await json_body(request, 1024)
     if "main" not in body:
         raise HTTPException(400, "main missing")
     uid = str(body["main"] or "")
@@ -331,7 +319,7 @@ async def admin_roles_set(request: Request):
 @router.put("/api/admin/roles/{uid}", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_role_set(uid: str, request: Request):
     """{"role": "admin" | "manager" | ""}: give, change or take away a profile's role (takes effect at once)."""
-    role = str((await _small_body(request)).get("role", "") or "")
+    role = str((await json_body(request, 1024)).get("role", "") or "")
     try:
         coadmin.set_role(uid, role, _by(request))
     except LookupError:
@@ -618,19 +606,6 @@ def profile_untrust(tid: str, request: Request, prof=Depends(browser_profile)):
 _KID = re.compile(r"[0-9a-f]{16}")
 
 
-async def _passkey_body(request):
-    raw = await request.body()
-    if len(raw) > 16384:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 def _passkeys(who, request):
     return {"items": passkey.listing(who, passkey.rp_id(request)), "host": passkey.rp_id(request) or "",
             "ready": passkey._lib() is not None, "max": passkey.MAX_KEYS}
@@ -647,7 +622,7 @@ async def _passkey_begin(request, who, label):
 
 async def _passkey_finish(request, who):
     guard.limit(request, "trust", uid=who)
-    body = await _passkey_body(request)
+    body = await json_body(request, 16384)
     kid = passkey.finish_add(who, body.get("sid"), body.get("response"), str(body.get("name", ""))[:60], request,
                              confirm_login(request, who))
     if not kid:
@@ -784,7 +759,7 @@ def profile_memory(prof=Depends(own_profile)):
 async def profile_confirm_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → „Stimmt noch“: the fact counts as right from now on (the panel's rules, no model)."""
     guard.limit(request, "memory", uid=prof["id"])
-    await _capped_body(request, 256)
+    await json_body(request, 256)
     if not gedaechtnis.on(prof["id"]):
         raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     if not gedaechtnis.confirm(prof["id"], str(fact_id)[:40]):
@@ -796,7 +771,7 @@ async def profile_confirm_fact(fact_id: str, request: Request, prof=Depends(brow
 async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → „Zurückholen“: {"i": n} makes the fact's earlier version n its wording again."""
     guard.limit(request, "memory", uid=prof["id"])
-    body = await _capped_body(request, 256)
+    body = await json_body(request, 256)
     if not gedaechtnis.on(prof["id"]):
         raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     i = body.get("i") if isinstance(body, dict) else None
@@ -812,7 +787,7 @@ async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(brow
 async def profile_fact_topic(fact_id: str, request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → Thema: {"topic": one of gedaechtnis.TOPICS}; the model never changes it again."""
     guard.limit(request, "memory", uid=prof["id"])
-    body = await _capped_body(request, 256)
+    body = await json_body(request, 256)
     if not gedaechtnis.topics_on(prof["id"]):
         raise HTTPException(403, "Themen sind für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     topic = body.get("topic")
@@ -851,28 +826,10 @@ def profile_forget(fact_id: str, prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"], fact_id=fact_id)}
 
 
-async def _capped_body(request, most):
-    """A small JSON object, read with a size limit (also without Content-Length)."""
-    if int(request.headers.get("content-length") or 0) > most:
-        raise HTTPException(413, "too large")
-    raw = bytearray()
-    async for chunk in request.stream():
-        raw += chunk
-        if len(raw) > most:
-            raise HTTPException(413, "too large")
-    try:
-        body = json.loads(bytes(raw) or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
-
-
 @router.put("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
 async def profile_change_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → Ändern: the person's own wording replaces the fact (no model involved)."""
-    b = await _capped_body(request, 4096)
+    b = await json_body(request, 4096)
     text = profiles.change_fact(prof["id"], str(fact_id)[:40], str((b or {}).get("text", ""))[:4000])
     if text is None:
         raise HTTPException(404, "Eintrag nicht gefunden oder leer")
@@ -882,7 +839,7 @@ async def profile_change_fact(fact_id: str, request: Request, prof=Depends(brows
 @router.post("/api/profile/memory/forget", dependencies=[Depends(assistant)])
 async def profile_forget_some(request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → Auswählen: several facts at once (at most 500)."""
-    b = await _capped_body(request, 32768)
+    b = await json_body(request, 32768)
     ids = [str(x)[:40] for x in (b or {}).get("ids", []) if isinstance(x, str)][:500] if isinstance((b or {}).get("ids"), list) else []
     if not ids:
         raise HTTPException(400, "ids fehlen")
@@ -912,8 +869,7 @@ CONVO_BODY = 4 * 1024 * 1024   # 60 messages of 20 000 characters
 
 @router.put("/api/profile/convos", dependencies=[Depends(assistant)])
 async def profile_save_convo(request: Request, prof=Depends(own_profile)):
-    import iphone
-    body = await iphone._json(request, CONVO_BODY)   # size checked while reading (also for the iPhone app)
+    body = await json_body(request, CONVO_BODY, lenient=True)   # size checked while reading (also for the iPhone app)
     ha = homeassistant.get(prof["id"])
     if ha and homeassistant.needs_code(ha) and isinstance(body, dict) and isinstance(body.get("msgs"), list):
         body["msgs"] = [dict(m, content=homeassistant.redact(ha, m.get("content")))

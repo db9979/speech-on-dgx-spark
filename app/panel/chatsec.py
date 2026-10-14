@@ -385,7 +385,7 @@ def _log(what, **nums):
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, confirm_code, own_profile  # noqa: E402
+from core import assistant, confirm_code, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -420,7 +420,7 @@ async def api_key_add(request: Request, prof=Depends(_on)):
     """A new device for private chats: a new key, like a new device for the Spark (the second step's code)."""
     import chats
     import guard
-    body = await chats._json(request, 2048)
+    body = await json_body(request, 2048)
     await confirm_code(request, prof["id"], prof["name"])
     try:
         kid = add_key(prof["id"], body.get("pub"), str(body.get("kind") or "browser"))
@@ -434,7 +434,7 @@ async def api_key_add(request: Request, prof=Depends(_on)):
 async def api_key_remove(request: Request, prof=Depends(_on)):
     import chats
     import guard
-    kid = str((await chats._json(request, 1024)).get("id") or "")
+    kid = str((await json_body(request, 1024)).get("id") or "")
     if not KID.fullmatch(kid):
         raise HTTPException(400, "key id is required")
     try:
@@ -448,7 +448,7 @@ async def api_key_remove(request: Request, prof=Depends(_on)):
 @router.post("/api/chats/private", dependencies=[Depends(assistant)])
 async def api_private(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         cid = open_priv(prof["id"], str(body.get("to") or ""))
     except (LookupError, PermissionError, OverflowError) as e:
@@ -478,7 +478,7 @@ def api_share_list(request: Request, id: str = "", by: str = "", new: str = "", 
 @router.post("/api/chats/share", dependencies=[Depends(assistant)])
 async def api_share_add(request: Request, prof=Depends(_on)):
     import chats
-    body = await chats._json(request, 96 * 1024)
+    body = await json_body(request, 96 * 1024)
     b, n = _share_args(body)
     try:
         added = share_add(prof["id"], chats._cid(body.get("id")), b, n, body.get("wraps"))
@@ -492,7 +492,7 @@ async def api_share_add(request: Request, prof=Depends(_on)):
 async def api_share_done(request: Request, prof=Depends(_on)):
     import chats
     import guard
-    body = await chats._json(request, 1024)
+    body = await json_body(request, 1024)
     _, n = _share_args({"by": "0" * 12, "new": body.get("new")})
     try:
         share_done(prof["id"], n, body.get("n"))

@@ -284,7 +284,7 @@ async def test(uid, now=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
 from account import browser_profile  # noqa: E402
-from core import admin_code, assistant, auth, own_profile  # noqa: E402
+from core import admin_code, assistant, auth, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -304,7 +304,7 @@ def admin_get():
 @router.put("/api/admin/apns", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set(request: Request):
     import iphone
-    body = await iphone._json(request)    # size limit while reading, also without content-length
+    body = await json_body(request, iphone.MAX_BODY, lenient=True)
     key_id, team = str(body.get("key_id", "")).strip(), str(body.get("team", "")).strip()
     bundle = str(body.get("bundle", "")).strip()
     if not re.fullmatch(r"[A-Z0-9]{10}", key_id):
@@ -342,7 +342,7 @@ async def app_token(request: Request, prof=Depends(own_profile)):
         raise HTTPException(403, "only the iPhone app")
     guard.limit(request, "chat", prof["id"], False)
     import iphone
-    body = await iphone._json(request)
+    body = await json_body(request, iphone.MAX_BODY, lenient=True)
     token = body.get("token") if isinstance(body.get("token"), str) else ""
     token = token.lower()
     if not TOKEN.fullmatch(token):

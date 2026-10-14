@@ -2047,7 +2047,7 @@ def waiting(uid, since, now=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import Response, StreamingResponse  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -2074,19 +2074,6 @@ def _seen(request: Request, prof=Depends(own_profile)):
         raise HTTPException(403, "chats are turned off")
     guard.limit(request, "chatsget", prof["id"])
     return prof
-
-
-async def _json(request, limit=16384):
-    raw = await request.body()
-    if len(raw) > limit:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
 
 
 def _cid(v):
@@ -2185,7 +2172,7 @@ def api_items(request: Request, id: str = "", before: str = "", prof=Depends(_on
 
 @router.post("/api/chats/open", dependencies=[Depends(assistant)])
 async def api_open(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         cid = open_one(prof["id"], str(body.get("to") or ""))
     except (LookupError, PermissionError, OverflowError) as e:
@@ -2195,7 +2182,7 @@ async def api_open(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/group", dependencies=[Depends(assistant)])
 async def api_group(request: Request, prof=Depends(_on)):
-    body = await _json(request, 8192)
+    body = await json_body(request, 8192)
     try:
         cid, left = make_group(prof["id"], body.get("name"), body.get("members"))
     except (PermissionError, ValueError, OverflowError) as e:
@@ -2205,7 +2192,7 @@ async def api_group(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/send", dependencies=[Depends(assistant)])
 async def api_send(request: Request, prof=Depends(_on)):
-    body = await _json(request, 96 * 1024)   # a private chat's box carries the text once per device
+    body = await json_body(request, 96 * 1024)   # a private chat's box carries the text once per device
     try:
         item = await send(prof["id"], _cid(body.get("id")), body.get("text"), str(body.get("reply") or ""),
                           box=body.get("box") if "box" in body else None)
@@ -2216,7 +2203,7 @@ async def api_send(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/edit", dependencies=[Depends(assistant)])
 async def api_edit(request: Request, prof=Depends(_on)):
-    body = await _json(request)
+    body = await json_body(request, 16384)
     try:
         edit(prof["id"], _cid(body.get("id")), _mid(body.get("mid")), body.get("text"))
     except (LookupError, PermissionError, ValueError) as e:
@@ -2226,7 +2213,7 @@ async def api_edit(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/back", dependencies=[Depends(assistant)])
 async def api_back(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         take_back(prof["id"], _cid(body.get("id")), _mid(body.get("mid")))
     except (LookupError, PermissionError, ValueError) as e:
@@ -2236,7 +2223,7 @@ async def api_back(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/react", dependencies=[Depends(assistant)])
 async def api_react(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         react(prof["id"], _cid(body.get("id")), _mid(body.get("mid")), str(body.get("emoji") or ""))
     except (LookupError, ValueError) as e:
@@ -2246,7 +2233,7 @@ async def api_react(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/read", dependencies=[Depends(assistant)])
 async def api_read(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         read(prof["id"], _cid(body.get("id")))
     except (LookupError, ValueError) as e:
@@ -2258,7 +2245,7 @@ async def api_read(request: Request, prof=Depends(_on)):
 async def api_typing(request: Request, prof=Depends(_on)):
     import guard
     guard.limit(request, "chatstyping", prof["id"])
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         typing(prof["id"], _cid(body.get("id")))
     except (LookupError, ValueError) as e:
@@ -2268,7 +2255,7 @@ async def api_typing(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/opts", dependencies=[Depends(assistant)])
 async def api_opts(request: Request, prof=Depends(_on)):
-    body = await _json(request, 2048)
+    body = await json_body(request, 2048)
     try:
         options(prof["id"], _cid(body.get("id")), {k: body[k] for k in ("mute", "vanish", "name") if k in body})
     except (LookupError, PermissionError, ValueError) as e:
@@ -2278,7 +2265,7 @@ async def api_opts(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/members", dependencies=[Depends(assistant)])
 async def api_members(request: Request, prof=Depends(_on)):
-    body = await _json(request, 8192)
+    body = await json_body(request, 8192)
     lists = []
     for k in ("add", "remove", "admin"):
         v = body.get(k) or []
@@ -2294,7 +2281,7 @@ async def api_members(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/leave", dependencies=[Depends(assistant)])
 async def api_leave(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         leave(prof["id"], _cid(body.get("id")))
     except (LookupError, ValueError) as e:
@@ -2304,7 +2291,7 @@ async def api_leave(request: Request, prof=Depends(_on)):
 
 @router.post("/api/chats/clear", dependencies=[Depends(assistant)])
 async def api_clear(request: Request, prof=Depends(_on)):
-    body = await _json(request, 1024)
+    body = await json_body(request, 1024)
     try:
         clear(prof["id"], _cid(body.get("id")))
     except (LookupError, ValueError) as e:
@@ -2317,7 +2304,7 @@ async def api_find(request: Request, prof=Depends(_on)):
     """POST, not ?q=: the words searched for must not land in the access log."""
     import guard
     guard.limit(request, "chatsfind", prof["id"])
-    q = str((await _json(request, 1024)).get("q") or "")
+    q = str((await json_body(request, 1024)).get("q") or "")
     if len(q) > 200:
         raise HTTPException(413, "too long")
     return {"hits": await asyncio.to_thread(find, prof["id"], q)}
@@ -2431,7 +2418,7 @@ async def api_invite(request: Request, prof=Depends(_on)):
     if not invite_on():
         raise HTTPException(403, "Einladungen in Chats sind auf dem Spark aus.")
     guard.limit(request, "chatsinvite", prof["id"])
-    body = await _json(request, 2048)
+    body = await json_body(request, 2048)
     base = join._base(body)
     name = re.sub(r"[\x00-\x1f<>\"\\]", "", str(body.get("name") or "")).strip()[:MAX_NAME]
     iid, code = join.make(name, INVITE_DAYS, by=prof["name"], chat=prof["id"])
@@ -2445,7 +2432,7 @@ async def api_invite(request: Request, prof=Depends(_on)):
 async def api_invite_back(request: Request, prof=Depends(_on)):
     import guard
     import join
-    iid = str((await _json(request, 1024)).get("id") or "")
+    iid = str((await json_body(request, 1024)).get("id") or "")
     if not join._ID.fullmatch(iid) or not join.revoke(iid, chat=prof["id"]):
         raise HTTPException(404, "Diese Einladung gibt es nicht mehr.")
     guard.log("invite_revoked", by=prof["name"], invite=iid)

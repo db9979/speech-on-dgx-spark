@@ -4,6 +4,7 @@ import re
 import asyncio
 import hashlib
 import hmac
+import json
 import secrets
 import subprocess
 import sys
@@ -56,6 +57,29 @@ COOKIE = "speech_spark_admin"
 # Browsers keep sending HTTP Basic credentials from the old login dialog; after "log out" this
 # cookie makes the panel ignore them in that browser until the next password login.
 NO_BASIC = "speech_spark_no_basic"
+
+
+async def json_body(request: Request, limit, lenient=False):
+    """The request's JSON object, read in pieces and never more than limit bytes (413 above it, also when the
+    announced length says so). Broken JSON or no object: 400, or {} with lenient (what older apps send). The one
+    reader of a request body (Große Aufräumaktion step 4)."""
+    cl = request.headers.get("content-length", "")
+    if cl.isdigit() and int(cl) > limit:
+        raise HTTPException(413, "too large")
+    raw = bytearray()
+    async for chunk in request.stream():
+        raw += chunk
+        if len(raw) > limit:
+            raise HTTPException(413, "too large")
+    try:
+        d = json.loads(bytes(raw) or b"{}")
+    except ValueError:
+        d = None
+    if isinstance(d, dict):
+        return d
+    if lenient:
+        return {}
+    raise HTTPException(400, "invalid JSON")
 
 
 def _stored_hash():

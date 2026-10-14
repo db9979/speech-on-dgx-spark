@@ -1055,22 +1055,10 @@ async def briefing(uid, zone=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
 import chats  # noqa: E402
+import core  # noqa: E402
 from core import assistant, browser_profile  # noqa: E402
 
 router = APIRouter()
-
-
-async def _json(request, limit=8192):
-    raw = await request.body()
-    if len(raw) > limit:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    return body
 
 
 def who_state(uid):
@@ -1100,7 +1088,7 @@ def api_who_get(request: Request, prof=Depends(browser_profile)):
 async def api_who(request: Request, prof=Depends(browser_profile)):
     """Who may write to me: picked profiles and blocked ones. A setting: browser login only."""
     _setting(request, prof)
-    body = await _json(request)
+    body = await core.json_body(request, 8192)
     known = set(profiles.user_ids()) - {prof["id"]}
 
     def ids(v):
@@ -1123,7 +1111,7 @@ async def api_call(request: Request, prof=Depends(browser_profile)):
     """The own Rufname ("Thomas M.", "Papa"): how others can name me ("Schreib Tom …"). A setting: browser login
     only; unique among every name and Rufname, so a spoken name never fits two profiles."""
     _setting(request, prof)
-    body = await _json(request, 1024)
+    body = await core.json_body(request, 1024)
     try:
         call = profiles.set_call(prof["id"], body.get("call"))
     except LookupError:
@@ -1139,7 +1127,7 @@ async def api_announce(request: Request, prof=Depends(chats._on)):
     if not announce_on():
         _log_announce(prof["id"], "chats", "refused switched off")
         raise HTTPException(403, "announcements are turned off")
-    body = await _json(request)
+    body = await core.json_body(request, 8192)
     ids = body.get("speakers")
     if not isinstance(ids, list) or not ids or len(ids) > 20 or not all(isinstance(x, str) for x in ids):
         _log_announce(prof["id"], "chats", "refused no speaker picked")
