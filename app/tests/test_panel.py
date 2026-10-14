@@ -1212,6 +1212,39 @@ class Quality(unittest.TestCase):
         self.assertFalse(quality._need(cases["kalender-ohne-zugriff"]))
         self.assertTrue(quality._check(cases["termin-vorschlag"], "Am 13. Oktober um 10 Uhr, oder?", []))
 
+    def test_three_red_questions_of_v568(self):
+        # Qualitätstest V01.0.568: each case fixed in the panel, never by a weaker check
+        import chat
+        import quality
+        cases = {c["id"]: c for c in quality.cases()}
+        # 1. a timer announced although no tool exists: the user hears the fixed sentence, not the promise
+        none = {"acts": [], "offered": set(), "looked": False, "ran": 0}
+        said, held = quality.heard("Ich rufe das Timer-Werkzeug auf, um die 5 Minuten zu starten.", [], False, none)
+        self.assertEqual(said, "Das habe ich nicht ausgeführt.")
+        self.assertEqual(held, ["Tat ohne Werkzeug (ankuendigung)"])
+        self.assertEqual(quality._check(cases["timer-ohne-werkzeug"], said, [], held), [])
+        self.assertTrue(quality._check(cases["timer-ohne-werkzeug"], "Ich rufe das Timer-Werkzeug auf.", [], []))
+        # an announcement before a tool that did run goes silently, a deed claimed after it worked is said
+        said, held = quality.heard("Ich stelle dir einen Timer.", [], False, dict(none, ran=1))
+        self.assertEqual((said, held), ("", []))
+        ok = [{"art": "erinnerung", "ok": True, "wait": False, "what": ""}]
+        said, _ = quality.heard("Ich stelle dir einen Timer auf 5 Minuten.", [], False, dict(none, acts=ok, ran=1))
+        self.assertEqual(said, "Ich stelle dir einen Timer auf 5 Minuten.")
+        # 2. a question only: memory_save is not offered (the same rule as in a real turn), the other wording too
+        for cid in ["gedaechtnis-unbekannt", "gedaechtnis-unbekannt~2", "gedaechtnis-bestaetigt"]:
+            names = {t["function"]["name"] for t in chat.offer_memory(cases[cid]["tools"], cases[cid]["q"])}
+            self.assertNotIn("memory_save", names, cid)
+            self.assertIn("memory_forget", names, cid)
+        for q in ["Merk dir, dass ich gerne grünen Tee trinke.", "Merkst du dir, dass ich Tee mag?",
+                  "Ich heiße Tim, wie spät ist es?", "Mein Bruder heißt Tim. Weißt du das?"]:
+            self.assertFalse(chat.just_asks(q), q)
+        # 3. an honest „keine Möglichkeit“ is as right as „kein Zugriff“; an amount still fails
+        konto = cases["kontostand"]
+        self.assertEqual(quality._check(konto, "Ich habe gerade keine Möglichkeit, direkt in dein Bankkonto zu schauen. "
+                                               "Kannst du mir sagen, bei welcher Bank du bist?", []), [])
+        self.assertTrue(quality._check(konto, "Dein Kontostand beträgt 1.250 Euro.", []))
+        self.assertTrue(quality._check(konto, "Gute Frage. Schau am besten in deine Banking-App.", []))
+
 
 class AnswerCheck(unittest.TestCase):
     def test_figures(self):

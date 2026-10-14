@@ -1358,7 +1358,7 @@ flowchart TD
 7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten.
 8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
 9. <a id="kn-vorbereiten-s9"></a>**Ja zu einem Vorschlag**: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs.
-10. <a id="kn-vorbereiten-s10"></a>**Werkzeuge nach Rechten**: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches.
+10. <a id="kn-vorbereiten-s10"></a>**Werkzeuge nach Rechten**: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird.
 11. <a id="kn-vorbereiten-s11"></a>**Etwas nimmt Werkzeuge weg?**: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat.
 12. <a id="kn-vorbereiten-s12"></a>**Weiche grenzt ein**: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss.
 13. <a id="kn-vorbereiten-s13"></a>**Gesprächszug fertig**: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an.
@@ -1393,7 +1393,7 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 #### Was du siehst
 
 - Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“, Pflichtwerkzeug und Sperre, ohne Inhalt.
-- Zustand → Logs: Zeilen wie „weiche: Absicht …“, „chat: web search …“ oder „notaus: … Werkzeuge nicht angeboten“.
+- Zustand → Logs: Zeilen wie „weiche: Absicht …“, „chat: web search …“, „chat: memory_save not offered …“ oder „notaus: … Werkzeuge nicht angeboten“.
 
 #### Im Code
 
@@ -1401,6 +1401,7 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 - `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am Lautsprecher ([Schritt 3](#kn-vorbereiten-s3))
 - `app/panel/chat.py` `trim_history`: Verlauf kürzen ([Schritt 2](#kn-vorbereiten-s2))
 - `app/panel/chat.py` `left_out`: Antworten aus fremdem Text weglassen ([Schritt 2](#kn-vorbereiten-s2), [Schritt 4](#kn-vorbereiten-s4))
+- `app/panel/chat.py` `offer_memory`: kein memory_save, wenn die Nachricht nur fragt ([Schritt 10](#kn-vorbereiten-s10))
 - `app/panel/intent.py` `classify_cfg`: feste Regeln der Weiche ([Schritt 4](#kn-vorbereiten-s4))
 - `app/panel/klaeren.py` `answer`: Antwort auf eine Rückfrage ([Schritt 7](#kn-vorbereiten-s7))
 - `app/panel/features.py` `allowed`: Freigabe je Funktion ([Schritt 10](#kn-vorbereiten-s10))
@@ -1588,7 +1589,7 @@ flowchart TD
 4. <a id="kn-antwort-s4"></a>**Runde vorbereiten**: Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll.
 5. <a id="kn-antwort-s5"></a>**Streamen und in Sätze schneiden**: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt.
 6. <a id="kn-antwort-s6"></a>**Zahl ohne Beleg?**: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen.
-7. <a id="kn-antwort-s7"></a>**Tat ohne Werkzeug?**: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Gilt nur, wenn ein änderndes Werkzeug angeboten war.
+7. <a id="kn-antwort-s7"></a>**Tat ohne Werkzeug?**: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war.
 8. <a id="kn-antwort-s8"></a>**Zeigen und sprechen**: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt.
 9. <a id="kn-antwort-s9"></a>**Datenfrage ohne Nachsehen?**: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen.
 10. <a id="kn-antwort-s10"></a>**Werkzeug gewünscht?**: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg.
@@ -1629,6 +1630,7 @@ flowchart TD
 - `app/panel/answercheck.py` `unsupported`: Angaben im Satz ohne Beleg ([Schritt 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `fresh`: nach dem Kalender nur Angaben dieser Antwort ([Schritt 6](#kn-antwort-s6))
 - `app/panel/taten.py` `check`: Tat behauptet, aber kein Werkzeug hat es geschafft ([Schritt 7](#kn-antwort-s7))
+- `app/panel/taten.py` `announces`: Werkzeugaufruf oder Tat nur angekündigt ([Schritt 7](#kn-antwort-s7), [Schritt 12](#kn-antwort-s12))
 - `app/panel/taten.py` `sentence`: der feste ehrliche Satz ([Schritt 12](#kn-antwort-s12))
 
 Selbsttests: `test_panel`, `test_taten`, `test_handlungsregel`, `test_fast_start`, `test_morgen_termine`

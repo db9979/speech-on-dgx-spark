@@ -1358,7 +1358,7 @@ flowchart TD
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
 9. <a id="kn-vorbereiten-s9"></a>**Yes to a proposal**: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation.
-10. <a id="kn-vorbereiten-s10"></a>**Tools by rights**: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal.
+10. <a id="kn-vorbereiten-s10"></a>**Tools by rights**: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved.
 11. <a id="kn-vorbereiten-s11"></a>**Something takes tools away?**: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it.
 12. <a id="kn-vorbereiten-s12"></a>**The switch narrows**: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call.
 13. <a id="kn-vorbereiten-s13"></a>**Turn ready**: The system prompt goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off.
@@ -1393,7 +1393,7 @@ Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 #### What you see
 
 - Logs → Requests: per question group, tools „x of y“, required tool and lock, without content.
-- Status → Logs: lines like „weiche: Absicht …“, „chat: web search …“ or „notaus: … Werkzeuge nicht angeboten“.
+- Status → Logs: lines like „weiche: Absicht …“, „chat: web search …“, „chat: memory_save not offered …“ or „notaus: … Werkzeuge nicht angeboten“.
 
 #### In the code
 
@@ -1401,6 +1401,7 @@ Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 - `app/panel/chat_turn.py` `shared_stranger`: unknown voice at a speaker ([step 3](#kn-vorbereiten-s3))
 - `app/panel/chat.py` `trim_history`: trim the history ([step 2](#kn-vorbereiten-s2))
 - `app/panel/chat.py` `left_out`: leave out answers from outside text ([step 2](#kn-vorbereiten-s2), [step 4](#kn-vorbereiten-s4))
+- `app/panel/chat.py` `offer_memory`: no memory_save when the message only asks ([step 10](#kn-vorbereiten-s10))
 - `app/panel/intent.py` `classify_cfg`: the switch's fixed rules ([step 4](#kn-vorbereiten-s4))
 - `app/panel/klaeren.py` `answer`: answer to a question back ([step 7](#kn-vorbereiten-s7))
 - `app/panel/features.py` `allowed`: release per function ([step 10](#kn-vorbereiten-s10))
@@ -1588,7 +1589,7 @@ flowchart TD
 4. <a id="kn-antwort-s4"></a>**Prepare a round**: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now.
 5. <a id="kn-antwort-s5"></a>**Stream and cut into sentences**: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early.
 6. <a id="kn-antwort-s6"></a>**Figure without proof?**: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result.
-7. <a id="kn-antwort-s7"></a>**Deed without a tool?**: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). Only when a changing tool was offered.
+7. <a id="kn-antwort-s7"></a>**Deed without a tool?**: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). Applies when a changing tool or none at all was offered.
 8. <a id="kn-antwort-s8"></a>**Show and speak**: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm.
 9. <a id="kn-antwort-s9"></a>**Data question without looking?**: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first.
 10. <a id="kn-antwort-s10"></a>**Tool wanted?**: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped.
@@ -1629,6 +1630,7 @@ flowchart TD
 - `app/panel/answercheck.py` `unsupported`: figures in the sentence without proof ([step 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `fresh`: after the calendar only this answer's figures ([step 6](#kn-antwort-s6))
 - `app/panel/taten.py` `check`: deed claimed, no tool managed it ([step 7](#kn-antwort-s7))
+- `app/panel/taten.py` `announces`: tool call or deed only announced ([step 7](#kn-antwort-s7), [step 12](#kn-antwort-s12))
 - `app/panel/taten.py` `sentence`: the fixed honest sentence ([step 12](#kn-antwort-s12))
 
 Self-tests: `test_panel`, `test_taten`, `test_handlungsregel`, `test_fast_start`, `test_morgen_termine`

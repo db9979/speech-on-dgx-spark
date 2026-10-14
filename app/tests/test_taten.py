@@ -64,6 +64,17 @@ class Rules(unittest.TestCase):
         self.assertEqual(taten.check("Ich habe den Termin eingetragen und die Nachricht an Anna gesendet.",
                                      [{"art": "termin", "ok": True}], set()), [])
 
+    def test_announcements(self):
+        # Qualitätstest V01.0.568: „Ich rufe das Timer-Werkzeug auf …“ in an answer without any tool
+        for text in ["Ich rufe das Timer-Werkzeug auf, um die 5 Minuten zu starten.", "Ich stelle dir einen Timer auf 5 Minuten.",
+                     "Ich rufe jetzt reminder_set auf.", "Ich werde das Werkzeug dafür aufrufen.", "I'll use the timer tool."]:
+            self.assertTrue(taten.announces(text), text)
+            self.assertEqual(taten.check(text, [], set()), [taten.ANNOUNCED], text)
+        for text in ["Ich kann keinen Timer stellen.", "Soll ich einen Timer stellen?", "Ich schaue nach.", "Der Timer läuft."]:
+            self.assertFalse(taten.announces(text), text)
+        ok = [{"art": "erinnerung", "ok": True, "wait": False, "what": ""}]
+        self.assertEqual(taten.check("Ich stelle dir einen Timer auf 5 Minuten.", ok, {"reminder_set"}), [])
+
     def test_results(self):
         self.assertTrue(taten.failed("Fehler: not found"))
         self.assertTrue(taten.failed("Not done: code word missing"))
@@ -116,6 +127,24 @@ class Chat(unittest.TestCase):
         helpers.set_config(action_check=False)
         said, _ = ask(c, "SAY |x| Gut. Habe ich mir gemerkt.")
         self.assertIn("Habe ich mir gemerkt.", said)
+
+    def test_announced_tool_without_a_call_is_not_said(self):
+        c = profile("Taten4")
+        said, _ = ask(c, "SAY |x| Gut. Ich rufe das Wetter-Werkzeug auf, um nachzusehen.")
+        self.assertIn("Gut.", said)
+        self.assertNotIn("Wetter-Werkzeug", said)
+        self.assertIn("Das habe ich nicht ausgeführt.", said)
+
+    def test_a_question_only_gets_no_memory_save(self):
+        c = profile("Taten5")
+        helpers.LLM_CALLS.clear()
+        ask(c, "Weißt du, wie mein Bruder heißt?")
+        names = {t["function"]["name"] for b in helpers.LLM_CALLS if b.get("stream") for t in b.get("tools") or []}
+        self.assertNotIn("memory_save", names)
+        helpers.LLM_CALLS.clear()
+        ask(c, "Merk dir, dass mein Bruder Tim heißt.")
+        names = {t["function"]["name"] for b in helpers.LLM_CALLS if b.get("stream") for t in b.get("tools") or []}
+        self.assertIn("memory_save", names)
 
     def test_a_tool_that_worked_lets_it_through(self):
         c = profile("Taten2")

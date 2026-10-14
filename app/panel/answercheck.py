@@ -153,9 +153,10 @@ def unquoted(sentence, texts):
 # only their switches (chat.action_check, chat.loop_stop, standard on) turn them off.
 BUILTIN = {
     "action_check": ("Taten prüfen", "Check deeds",
-                     "Ein Satz, der eine Tat behauptet, die in dieser Antwort kein Werkzeug geschafft hat, wird nicht "
-                     "gesagt; stattdessen ein ehrlicher Satz.",
-                     "A sentence claiming a deed no tool managed in this answer is not said; an honest sentence instead.",
+                     "Ein Satz, der eine Tat behauptet oder ankündigt, die in dieser Antwort kein Werkzeug geschafft hat, "
+                     "wird nicht gesagt; stattdessen ein ehrlicher Satz.",
+                     "A sentence claiming or announcing a deed no tool managed in this answer is not said; an honest "
+                     "sentence instead.",
                      "held"),
     "loop_stop": ("Fehlerschleife stoppen", "Stop error loops",
                   "Ein Werkzeug, das mit denselben Angaben zweimal gescheitert ist, läuft in dieser Antwort nicht noch "

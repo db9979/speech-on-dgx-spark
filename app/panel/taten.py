@@ -92,6 +92,15 @@ CLAIMS = {
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
 }
 CLAIMS = {k: re.compile(v, re.I) for k, v in CLAIMS.items()}
+# a sentence that announces a tool call or a deed as happening now („Ich rufe das Timer-Werkzeug auf …“, Qualitätstest
+# V01.0.568): said in an answer in which no tool ran, it promises something that never happens
+ANNOUNCED = "ankuendigung"
+ANNOUNCE = re.compile(
+    r"\bich\s+(?:rufe|nutze|verwende|benutze|starte|öffne|werde)\b[^.!?]{0,60}\b(?:\w+-)?(?:werkzeug|tool|funktion)\w*\b"
+    r"|\bich\s+(?:rufe|nutze|verwende|benutze|werde)\b[^.!?]{0,40}\b[a-z]+_[a-z_]+\b"
+    r"|\bich\s+(?:stelle|starte|setze)\b[^.!?]{0,30}\b(?:timer|wecker|erinnerung)\b"
+    r"|\b(?:i(?:'m| am| will|'ll)|let me)\s+(?:now\s+)?(?:call|use|calling|using|start|starting|set|setting)\b[^.!?]{0,40}"
+    r"\b(?:tool|function|timer|reminder)\b", re.I)
 DONE_ANY = re.compile(r"^\s*(?:erledigt|fertig|gemacht|done|okay,? erledigt)\s*[.!]?\s*$", re.I)
 NOT_CLAIM = re.compile(r"(?i)\b(?:soll ich|möchtest du|willst du|kann ich|könnte ich|shall i|should i|do you want|"
                        r"nicht|kein|keine|not|never|wenn du)\b")
@@ -105,11 +114,20 @@ def claims(text):
     return found or ({""} if DONE_ANY.match(text) else set())
 
 
+def announces(text):
+    """True when a finished sentence announces a tool call or a deed as happening now (never „soll ich …“, „ich kann
+    … nicht“): never said; when no tool runs in the whole answer, the fixed sentence comes instead (chat.py)."""
+    return bool(text) and not NOT_CLAIM.search(text) and bool(ANNOUNCE.search(text))
+
+
 def check(text, acts, offered, looked=False):
     """The kinds a sentence claims without a tool of that kind having worked in this answer: the sentence is held back
     when this is not empty. acts: [{"art", "ok", "what"}] of this answer; offered: names of the tools offered. A bare
     "Erledigt." counts only when something that changes things was offered and nothing worked; looked: a reading tool
-    worked in this answer, then "Fertig." may just end a look-up and is said."""
+    worked in this answer, then "Fertig." may just end a look-up and is said. An announcement (announces) before any
+    tool worked is held as "ankuendigung"; chat.py lets it go silently when a tool runs later in the answer."""
+    if not looked and not any(a.get("ok") for a in acts) and announces(text):
+        return [ANNOUNCED]
     kinds = claims(text)
     done = {a["art"] for a in acts if a.get("ok")}
     if "" in kinds:

@@ -716,6 +716,11 @@ async def prepare(request):
                        and isinstance(messages[-2].get("content"), str) else "",
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
+    if messages[-1]["role"] == "user" and isinstance(messages[-1].get("content"), str):
+        kept = chat.offer_memory(tools, messages[-1]["content"])
+        if len(kept) < len(tools):
+            print("chat: memory_save not offered - the message only asks", flush=True)
+        tools = kept
     if held or mine:
         gone_n = len(tools)
         tools = [t for t in tools if t["function"]["name"] not in notaus.locked_tools(held, ex["changes"], mine)]

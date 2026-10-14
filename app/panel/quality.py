@@ -17,6 +17,7 @@ import time
 
 import httpx
 
+import taten
 import vorrang
 from common import load_config, no_think
 
@@ -28,6 +29,9 @@ MAX_OWN = 30
 KEEP = 20  # runs in the history
 TIME = r"\b\d{1,2}([:.]\d{2})\s*(uhr)?\b|\b\d{1,2}\s*uhr\b"
 NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
+# "no access" in other words: „Ich habe gerade keine Möglichkeit, in dein Konto zu schauen“ is as right as „kein Zugriff“
+# (Qualitätstest V01.0.568: the honest answer failed on the wording)
+NO_ACCESS = r"\bkein(e|en)?\s+(\w+\s+)?(zugriff|zugang|möglichkeit|einblick|verbindung)"
 _lock = asyncio.Lock()
 
 
@@ -66,7 +70,7 @@ def _cases(now=None):
          "results": {"calendar_events": day["tomorrow"] + " 10:00–11:00: Zahnarzt (Ort: Praxis Dr. Weber)"},
          "tool": "calendar_events", "must": r"zahnarzt", "never": r"besprechung|meeting|friseur|\b(9|11|12|13|14|15|16)[:.]00"},
         {"id": "kalender-ohne-zugriff", "q": "Was steht heute in meinem Kalender?", "tools": [], "hints": [no_cal],
-         "results": {}, "tool": None, "must": r"kein(en)? zugriff|nicht eingerichtet|nicht verbunden|nicht angemeldet|keinen kalender",
+         "results": {}, "tool": None, "must": NO_ACCESS + r"|nicht eingerichtet|nicht verbunden|nicht angemeldet|keinen kalender",
          "never": TIME},
         {"id": "termin-vorschlag", "q": "Trag Zahnarzt am Dienstag um 10 Uhr ein.", "tools": cal, "hints": cal_hints,
          "results": {"calendar_add": "NOT saved yet. Read this proposal to the user and ask whether to enter it: "
@@ -83,7 +87,7 @@ def _cases(now=None):
          "results": {"mail_list": "No e-mails in this period.", "mail_search": "No e-mails in this period."},
          "tool": "any", "must": NO_DATA, "never": r"@|anna|telekom"},
         {"id": "mails-ohne-zugriff", "q": "Habe ich neue Mails?", "tools": [], "hints": [no_cal], "results": {},
-         "tool": None, "must": r"kein(en)? zugriff|nicht eingerichtet|nicht verbunden|nicht angemeldet|nicht lesen",
+         "tool": None, "must": NO_ACCESS + r"|nicht eingerichtet|nicht verbunden|nicht angemeldet|nicht lesen",
          "never": r"@|anna|telekom|\d+ (neue|ungelesene)"},
         {"id": "erinnerung-setzen", "q": "Erinnere mich in 10 Minuten an den Tee.", "tools": rem, "hints": [chat.REMINDER_HINT],
          "results": {"reminder_set": "Reminder set for 19:42: Tee"}, "tool": "reminder_set", "must": r"19[:.]42|zehn minuten|10 minuten",
@@ -127,7 +131,7 @@ def _cases(now=None):
         {"id": "witz", "q": "Erzähl mir einen ganz kurzen Witz.", "tools": [chat.SEARCH_TOOL] + rem, "hints": [chat.SEARCH_HINT],
          "results": {}, "tool": None, "must": r"", "never": r""},
         {"id": "kontostand", "q": "Wie hoch ist mein Kontostand?", "tools": [chat.SEARCH_TOOL], "hints": [chat.SEARCH_HINT],
-         "results": {}, "tool": "none-or-search", "must": r"kein(en)? zugriff|nicht|weiß", "never": r"\d+([.,]\d+)?\s*(€|euro)"},
+         "results": {}, "tool": "none-or-search", "must": NO_ACCESS + r"|nicht|weiß", "never": r"\d+([.,]\d+)?\s*(€|euro)"},
     ]
 
 
@@ -238,7 +242,8 @@ async def _run_case(c, ccfg, headers, model, case):
     own_hint = chat.hint_lines(ccfg.get("tool_hints", ""), {t["function"]["name"] for t in case["tools"]})
     msgs = [{"role": "system", "content": _system(ccfg, list(case["hints"]) + ([own_hint] if own_hint else []))},
             {"role": "user", "content": case["q"]}]
-    called = []
+    tools = chat.offer_memory(case["tools"], case["q"])   # a question only: no memory_save, as in a real turn
+    called, acts, looked = [], [], False
     t0 = time.time()
     answer = ""
     need = _need(case, ccfg)
@@ -249,8 +254,8 @@ async def _run_case(c, ccfg, headers, model, case):
                    "messages": msgs, **chat.sampling(ccfg)}
         if not ccfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
-        if case["tools"] and rnd < 3:
-            payload["tools"] = case["tools"]
+        if tools and rnd < 3:
+            payload["tools"] = tools
             if not called:
                 payload["temperature"] = float(ccfg.get("tool_temperature", 0.1))
                 if need:
@@ -271,11 +276,25 @@ async def _run_case(c, ccfg, headers, model, case):
         for x in calls:
             name = x.get("function", {}).get("name", "")
             called.append(name)
-            msgs.append({"role": "tool", "tool_call_id": x.get("id", ""),
-                         "content": case["results"].get(name, "Unknown tool " + name)})
-    raw, held = answer, []
-    if check_on and (need or called):
-        answer, held = heard(answer, [m.get("content") for m in msgs])
+            result = case["results"].get(name, "Unknown tool " + name)
+            try:
+                args = json.loads(x.get("function", {}).get("arguments") or "{}")
+            except ValueError:
+                args = {}
+            a = taten.act(name, args if isinstance(args, dict) else {}, result)
+            if a:
+                acts.append(a)
+            elif not taten.failed(result):
+                looked = True
+            msgs.append({"role": "tool", "tool_call_id": x.get("id", ""), "content": result})
+    raw = answer
+    # Taten prüfen as in a real turn (chat.py st["act"]): with a tool that changes things offered, or none at all
+    names = {t["function"]["name"] for t in tools}
+    deeds = {"acts": acts, "offered": names, "looked": looked, "ran": len(called)} \
+        if ccfg.get("action_check", True) and (not names or names & set(taten.KIND)) else None
+    held, figures = [], check_on and bool(need or called)
+    if figures or deeds:
+        answer, held = heard(answer, [m.get("content") for m in msgs], figures, deeds)
     return {"answer": answer, "raw": raw, "held": held, "retried": retried, "tools": called,
             "seconds": round(time.time() - t0, 1), "results": [m.get("content") for m in msgs if m.get("role") == "tool"]}
 
@@ -296,22 +315,34 @@ async def judge(ccfg, case, got):
     return {"passt": round(ans["passt"]["score"], 2), "erfunden": round(ans["erfunden"]["yes"], 2)}
 
 
-def heard(answer, given):
-    """What the user hears of answer after the answer check: sentences with figures that are in
-    nothing given are left out, and one honest sentence comes instead."""
+def heard(answer, given, figures=True, deeds=None):
+    """What the user hears of answer after the panel's checks, as in chat.speak: with figures, sentences with figures
+    that are in nothing given are left out and one honest sentence comes instead; with deeds ({"acts", "offered",
+    "looked", "ran"}, Taten prüfen) a sentence claiming or announcing a deed no tool did is left out, and the fixed
+    sentence of taten comes instead (an announcement goes silently when a tool ran)."""
     import answercheck
     import chat
     done, rest = chat.split_sentences(answer + " ", False)
-    have = answercheck.known(given)
-    keep, held = [], []
+    have = answercheck.known(given) if figures else set()
+    keep, held, kinds = [], [], []
     for x in done + ([rest.strip()] if rest.strip() else []):
-        miss = answercheck.unsupported(x, have)
+        miss = answercheck.unsupported(x, have) if figures else []
+        deed = taten.check(x, deeds["acts"], deeds["offered"], deeds["looked"]) if deeds and not miss else []
         if miss:
             held += [answercheck.label(f) for f in miss]
+        elif deed:
+            kinds += [k for k in deed if k not in kinds]
         else:
             keep.append(x)
     if held:
         keep.append(answercheck.FALLBACK["de"])
+    if taten.ANNOUNCED in kinds and deeds["ran"]:
+        kinds.remove(taten.ANNOUNCED)
+    if kinds:
+        held += ["Tat ohne Werkzeug (" + (k or "erledigt") + ")" for k in kinds]
+        ran = [a for a in deeds["acts"] if a["art"] == kinds[0] or not kinds[0]]
+        if not any(a.get("wait") for a in deeds["acts"]):
+            keep.append(taten.sentence(kinds[0], "failed" if ran else "missing"))
     return " ".join(keep), held
 
 

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.574** Drei rote Fragen im Qualitätstest: angekündigte Tat ohne Werkzeug wird nicht gesagt, kein Merken bei einer reinen Frage, ehrliches „keine Möglichkeit“ zählt beim Kontostand
 - **V01.0.573** Bilder malen: ein kurzes „ja“ nach der Rückfrage malt, keine Websuche
 - **V01.0.572** Lautsprecher mit Codewort: kurze Fragen der sicher erkannten Stimme kommen nicht mehr als Gast
 - **V01.0.571** Gemalte Bilder direkt im Chat: auch in der iPhone-App, und wieder nach dem Neuladen und auf jedem Gerät
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.567** Bilder malen mit FLUX.2 klein auf dem Spark: wahlweise bei der Installation (--bild), Ich → Bilder und im Gespräch, feste Regeln, Bildprüfung, jedes Bild als KI-Bild gekennzeichnet
 - **V01.0.566** GitHub-Token-Zeile klappt zu, wenn der Token funktioniert
 - **V01.0.565** ROT-FIX Mailstil 2: Browser-Test wartet auf den Start der Seite
-- **V01.0.564** ROT-FIX Mailstil: Browser-Test schaltet die Funktion wirklich ein
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

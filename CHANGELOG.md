@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.574** · 2026-10-14 · Drei rote Fragen im Qualitätstest: ein Satz, der einen Werkzeugaufruf nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt, ohne Werkzeug danach kommt „Das habe ich nicht ausgeführt.“ (Taten prüfen jetzt auch ohne angebotenes Werkzeug); eine Nachricht, die nur fragt, bekommt kein memory_save; der Qualitätstest nimmt beim Kontostand jedes ehrliche „kein Zugriff“ an, auch „keine Möglichkeit“
 - **V01.0.573** · 2026-10-14 · Bilder malen: nach einer Rückfrage zum Bildwunsch („lieber erfundene Personen?“) reicht bis 10 Minuten nach dem eigenen Wunsch ein kurzes „ja“, „passt“ oder „fiktiv“, das Malen bleibt angeboten und der Hinweis verbietet Websuche und fremde Bilddienste (vorher suchte der Assistent im Web)
 - **V01.0.572** · 2026-10-14 · Lautsprecher mit Codewort: eine sicher erkannte Stimme bekommt bei kurzen Fragen ohne Persönliches wieder die Rechte des Inhabers statt Gastrechte
 - **V01.0.571** · 2026-10-14 · Bilder malen: das Bild erscheint direkt im Chat der iPhone-App (Ereignis „bild“, Karte unter der Antwort, sichern oder teilen) und bleibt mit seinem Auftrag an der Antwort, so zeigen Panel und App es auch nach dem Neuladen und in gespeicherten Gesprächen; App-Schlüssel liest nur Auftrag und Bilddatei des eigenen Profils

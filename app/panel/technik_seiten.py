@@ -621,10 +621,11 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "e92f822350",
+        "stand": "77c0a6813c",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
+            "chat.offer_memory": ["s10"],
             "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
         },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
@@ -724,11 +725,15 @@ SEITEN_DATEN = {
               ("Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten "
                "dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die "
                "iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem "
-               "Gerät bekommt nichts Persönliches.",
+               "Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: "
+               "ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit "
+               "kein erfundener Fakt gespeichert wird.",
                "Each tool group comes only with the admin's switch, the release for the profile and its own data: "
                "search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app "
                "and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets "
-               "nothing personal.")),
+               "nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a "
+               "question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is "
+               "saved.")),
             S("s11", "frage", ("Etwas nimmt Werkzeuge weg?", "Something takes tools away?"),
               ("Notaus · MCP · Bild · Gast", "kill switch · MCP · picture · guest"),
               ("Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die "
@@ -789,14 +794,17 @@ SEITEN_DATEN = {
         "sehen": [
             ("Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“, Pflichtwerkzeug und Sperre, ohne Inhalt.",
              "Logs → Requests: per question group, tools „x of y“, required tool and lock, without content."),
-            ("Zustand → Logs: Zeilen wie „weiche: Absicht …“, „chat: web search …“ oder „notaus: … Werkzeuge nicht angeboten“.",
-             "Status → Logs: lines like „weiche: Absicht …“, „chat: web search …“ or „notaus: … Werkzeuge nicht angeboten“."),
+            ("Zustand → Logs: Zeilen wie „weiche: Absicht …“, „chat: web search …“, „chat: memory_save not offered …“ "
+             "oder „notaus: … Werkzeuge nicht angeboten“.",
+             "Status → Logs: lines like „weiche: Absicht …“, „chat: web search …“, „chat: memory_save not offered …“ or "
+             "„notaus: … Werkzeuge nicht angeboten“."),
         ],
         "code": [
             ("chat_turn.prepare", ("der ganze Ablauf", "the whole way")),
             ("chat_turn.shared_stranger", ("fremde Stimme am Lautsprecher", "unknown voice at a speaker")),
             ("chat.trim_history", ("Verlauf kürzen", "trim the history")),
             ("chat.left_out", ("Antworten aus fremdem Text weglassen", "leave out answers from outside text")),
+            ("chat.offer_memory", ("kein memory_save, wenn die Nachricht nur fragt", "no memory_save when the message only asks")),
             ("intent.classify_cfg", ("feste Regeln der Weiche", "the switch's fixed rules")),
             ("klaeren.answer", ("Antwort auf eine Rückfrage", "answer to a question back")),
             ("features.allowed", ("Freigabe je Funktion", "release per function")),
@@ -1071,12 +1079,12 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "35a7fb8135",
+        "stand": "7b3efb3241",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
-            "answercheck.fresh": ["s6"],
+            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -1143,9 +1151,14 @@ SEITEN_DATEN = {
             S("s7", "frage", ("Tat ohne Werkzeug?", "Deed without a tool?"),
               ("Taten prüfen", "check deeds"),
               ("Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug "
-               "dieser Art geklappt haben (taten.check). Gilt nur, wenn ein änderndes Werkzeug angeboten war.",
+               "dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur "
+               "ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt "
+               "das Panel am Ende seinen festen Satz (taten.announces). Gilt, wenn ein änderndes Werkzeug oder gar "
+               "keines angeboten war.",
                "When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this "
-               "answer (taten.check). Only when a changing tool was offered."),
+               "answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer "
+               "tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end "
+               "(taten.announces). Applies when a changing tool or none at all was offered."),
               ("info", "ja", ("Satz fällt weg, am Ende „hat nicht geklappt“", "Sentence dropped, „did not work“ at the end"))),
             S("s8", "schritt", ("Zeigen und sprechen", "Show and speak"),
               ("nie ein Satz zweimal", "never a sentence twice"),
@@ -1251,6 +1264,7 @@ SEITEN_DATEN = {
             ("answercheck.unsupported", ("Angaben im Satz ohne Beleg", "figures in the sentence without proof")),
             ("answercheck.fresh", ("nach dem Kalender nur Angaben dieser Antwort", "after the calendar only this answer's figures")),
             ("taten.check", ("Tat behauptet, aber kein Werkzeug hat es geschafft", "deed claimed, no tool managed it")),
+            ("taten.announces", ("Werkzeugaufruf oder Tat nur angekündigt", "tool call or deed only announced")),
             ("taten.sentence", ("der feste ehrliche Satz", "the fixed honest sentence")),
         ],
         "tests": ["test_panel", "test_taten", "test_handlungsregel", "test_fast_start", "test_morgen_termine"],
@@ -1259,7 +1273,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "ce4663b8b0",
+        "stand": "fe2e58a6e3",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1430,7 +1444,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "58dcfc98e9",
+        "stand": "5d288683c4",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],

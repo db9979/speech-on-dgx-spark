@@ -296,6 +296,26 @@ MEMORY_TOOLS = [
         "description": "Forget remembered facts that contain the given words, when the user asks you to.",
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
 
+# a message that only asks („Weißt du, wie mein Bruder heißt?“) has nothing to keep: memory_save is not offered, so the
+# model cannot note a made-up fact (Qualitätstest V01.0.568). One sentence ending in "?", nothing to remember, nothing
+# the person says about themselves.
+TELLS = re.compile(r"(?i)\b(merk\w*|speicher\w*|notier\w*|behalt\w*|vergiss|remember|note|save|keep)\b"
+                   r"|\bich\s+(heiße|bin|habe|hab|mag|wohne|arbeite|trinke|esse|hasse|liebe|fahre|spiele)\b"
+                   r"|\b(i am|i'm|i have|i like|my name is)\b")
+
+
+def just_asks(text):
+    """True when the message is one question and tells nothing to keep."""
+    t = str(text or "").strip()
+    return t.endswith("?") and len(re.split(r"[.!?]+\s+", t)) == 1 and not TELLS.search(t)
+
+
+def offer_memory(tools, text):
+    """The tools without memory_save when the message only asks (just_asks); the same rule in chat_turn and quality."""
+    if not just_asks(text):
+        return tools
+    return [t for t in tools if t["function"]["name"] != "memory_save"]
+
 
 HISTORY_TOOL = {"type": "function", "function": {
     "name": "history_search",
@@ -1795,8 +1815,10 @@ async def _answer(request, turn):
                   "cal": bool(set(need or []) & CAL_READS),
                   "seen": set(), "echo": False, "echoed": 0,
                   # Handlungs-Prüfung (taten.py): what changed in this answer, sentences claiming a deed nobody did
-                  "act": bool(ccfg.get("action_check", True)) and any(t["function"]["name"] in taten.KIND for t in tools or []),
-                  "acts": [], "held_acts": [], "fails": {}, "stopped": set(), "looked": False,
+                  # with no tool offered at all as well: every claimed or announced deed is then false (Qualitätstest)
+                  "act": bool(ccfg.get("action_check", True)) and (not tools or any(t["function"]["name"] in taten.KIND
+                                                                                    for t in tools)),
+                  "ran": 0, "acts": [], "held_acts": [], "fails": {}, "stopped": set(), "looked": False,
                   "names": {t["function"]["name"] for t in tools or []}}
             if carry:
                 await out.put({"type": carry})
@@ -2016,6 +2038,7 @@ async def _answer(request, turn):
                     if tr:
                         tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
                     result = await run_tool(x["name"], args, st)
+                    st["ran"] += 1
                     a = taten.act(x["name"], args, result)
                     if a:
                         st["acts"].append(a)
@@ -2084,6 +2107,10 @@ async def _answer(request, turn):
                 st["shown"] += len(note) + 1
                 await sentences.put(note)
             fix_asked = False
+            if taten.ANNOUNCED in st["held_acts"] and st["ran"]:
+                # an announcement before a tool call that did come: left out, the tool's answer says the rest
+                st["held_acts"].remove(taten.ANNOUNCED)
+                print("chat: action check: announcement left out, a tool ran", flush=True)
             if st["held_acts"]:
                 # "Taten prüfen": a deed was claimed that no tool did; one fixed sentence instead (never the model's)
                 en = guess_language(messages[-1]["content"]) == "English"
