@@ -158,7 +158,6 @@ class CoAdmin(unittest.TestCase):
         c, uid = self.give("KoWim", role="manager")
         self.assertEqual(c.get("/api/whoami").json()["admin_by"], "manager")
         self.assertEqual(c.get("/api/admin/profiles").status_code, 200)
-        self.assertEqual(c.get("/api/admin/switches").status_code, 200)
         self.assertEqual(c.get("/api/admin/protocol").status_code, 200)
         for method, path in (("GET", "/api/config"), ("PUT", "/api/config"), ("POST", "/api/update"),
                              ("POST", "/api/service/tts/restart"), ("GET", "/api/backups"), ("POST", "/api/backups"),
@@ -170,6 +169,32 @@ class CoAdmin(unittest.TestCase):
         profile("KoXaversKind")
         d = c.get(f"/api/admin/profiles/{uid_of('KoXaversKind')}").json()
         self.assertNotIn("rights", d)
+
+    def test_manager_only_lifts_blocks(self):
+        """Dominik 2026-10-14: only the admin switches functions on and off and blocks a profile; a Verwalter only
+        lifts a block (Funktionen → Wer darf was), enforced on the server."""
+        import features
+        c, _ = self.give("KoBruno", role="manager")
+        profile("KoBrunoKind")
+        kid = uid_of("KoBrunoKind")
+        helpers.set_config(weather=True, deny={"weather": [kid]})
+        self.addCleanup(helpers.set_config, weather=False, deny={})
+        for method in ("GET", "PUT"):
+            self.assertEqual(c.request(method, "/api/admin/switches", json={"key": "weather", "on": False}).status_code, 403, method)
+        self.assertTrue(features.chat_cfg()["weather"])
+        # setting a block: refused, nothing written
+        r = c.put(f"/api/admin/features/transit/profiles/{kid}", json={"on": False})
+        self.assertEqual(r.status_code, 403, r.text)
+        self.assertEqual(features.chat_cfg()["deny"], {"weather": [kid]})
+        # lifting one: allowed, logged with who
+        r = c.put(f"/api/admin/features/weather/profiles/{kid}", json={"on": True})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertFalse(features.blocked("weather", kid))
+        # the admin still does both
+        a, _ = self.give("KoBerta")
+        self.assertEqual(a.put(f"/api/admin/features/weather/profiles/{kid}", json={"on": False}).status_code, 200)
+        self.assertTrue(features.blocked("weather", kid))
+        self.assertEqual(a.put("/api/admin/switches", json={"key": "weather", "on": True}).status_code, 200)
 
     def test_ends_at_once(self):
         c, uid = self.give("KoYara")

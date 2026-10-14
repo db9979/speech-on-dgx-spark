@@ -6,7 +6,8 @@ The admin gives a profile one of two roles:
     "admin"     Admin: everything the panel password may, except the password's own things (core.main_auth: the
                 password itself, its second step, signing it out everywhere). It stays the way in when nothing else
                 works (Notzugang: the address with #admin, `sudo speech-spark notzugang`).
-    "manager"   Verwalter: only MANAGER below (Zustand, Logs, profiles and devices, feature switches)
+    "manager"   Verwalter: only MANAGER below (Zustand, Logs, profiles and devices, lifting blocks of functions);
+                switching functions on or off and blocking a profile stay with the admin (Dominik 2026-10-14)
 
 There is no second stage: a profile with a role IS admin in its own browser login and in its own iPhone app,
 as long as
@@ -50,7 +51,8 @@ MANAGER = tuple((frozenset(m), re.compile(p)) for m, p in (
     (("GET",), r"/api/logs/[a-z\-]+"), (("GET",), r"/api/vorrang"), (("GET",), r"/api/livecheck"),
     (("GET",), r"/api/quality"), (("GET",), r"/api/update"), (("GET",), r"/api/update/progress"),
     (("GET",), r"/api/admin/rooms"), (("GET",), r"/api/admin/wissen"), (("GET",), r"/api/admin/protocol"),
-    (("GET", "PUT"), r"/api/admin/switches"), (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
+    # no /api/admin/switches: only the admin switches functions (Dominik 2026-10-14); blocks he only lifts (features.py)
+    (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
     (("GET", "POST"), r"/api/admin/profiles"), (("GET", "PUT", "DELETE"), rf"/api/admin/profiles/{_P}"),
     (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
     (("DELETE",), rf"/api/admin/profiles/{_P}/sessions/[0-9a-f]{{16}}"),

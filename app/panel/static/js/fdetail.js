@@ -1,8 +1,8 @@
 // Funktionen als Liste + Detail (plaene/einstellungen-neu.md, Paket 3): on a wide page the open function shows on the
 // right (its sentence, who may use it, its settings, its guide), the list on the left stays one line per function. On a
 // narrow page it opens below its line as before. The rows are moved, not copied: ids, loading, saving, "braucht dich"
-// and the search work unchanged, and closing puts them back into the item. "Wer darf es" uses the same endpoints as
-// the table "Wer darf was" (/api/admin/features, …/profiles/<id>) and works at once, without the save bar. What the
+// and the search work unchanged, and closing puts them back into the item. "Wer darf es" is where the admin blocks a
+// profile (/api/admin/features, …/profiles/<id>; Wer darf was lists the blocks) and works at once, without the save bar. What the
 // Spark allows works for every profile at once (Dominik 2026-10-13); a chip only blocks one profile (on = may use it).
 (()=>{
 const pane=$('pane-feat');if(!pane)return;

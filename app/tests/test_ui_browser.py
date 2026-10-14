@@ -522,8 +522,16 @@ class Browser(unittest.TestCase):
         """V01.0.398 (Dominik: the click on a function did not load right): the name under Wer darf was opens
         Funktionen at the function's own switch row, also a switch inside another function's item; when that
         row is hidden because the switch it builds on is off, at that switch. Folded groups open, the row is in
-        view. Checked on a computer and a phone."""
+        view. Checked on a computer and a phone. Wer darf was lists only blocked functions (Dominik 2026-10-14):
+        Uitest is blocked for them during the test."""
+        import features
+        import profiles
         keys = ("weather", "instant_ack", "doc_semantic", "remarkable_plus", "mcp_server_act", "report_notify", "own_style")
+        me = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        deny = {f.key: [me] for f in features.FEATURES if f.admin[0] in keys and f.key not in features.NO_BLOCK}
+        self.assertEqual({features.BY_KEY[k].admin[0] for k in deny}, set(keys))
+        helpers.set_config(deny=deny)
+        self.addCleanup(helpers.set_config, deny={})
         async def go():
             async with async_playwright() as p:
                 for width in (1280, 390):
@@ -803,9 +811,8 @@ class Browser(unittest.TestCase):
 
     def test_voraussetzungen_mit_einschalten(self):
         """Dominik 2026-10-12: switching on a function that builds on others asks to switch those on too; switching
-        off says what goes off with it. Funktionen (the page's switches, saved with the page) and Wer darf was
-        (the Spark column; a profile's cell while the Spark is off is a disabled dash, since what the Spark allows works
-        for every profile and a cell only blocks)."""
+        off says what goes off with it. On Funktionen (the page's switches, saved with the page), the only place that
+        switches functions on since Wer darf was lists only the blocks (Dominik 2026-10-14)."""
         import json as _json
         import os as _os
         import profiles
@@ -843,33 +850,6 @@ class Browser(unittest.TestCase):
                 await self.until(pg, "document.getElementById('chat.documents').checked")
                 self.assertIn("Damit sind auch „Dokumente erstellen“ aus", said[-1])
                 self.assertFalse(cfg()["documents"])          # nothing saved without the page's save
-                # Wer darf was (leaving Funktionen with the unsaved page asks first: leave): the Spark box of
-                # "Eigene Vorlagen" switches the whole chain after the question
-                answers = [True]
-                await pg.evaluate("goSec('who')")
-                await self.loaded(pg)
-                await self.until(pg, "typeof WHO!=='undefined'&&!!WHO&&!!document.querySelector('#whobox .wname')")
-                # (switching changes what Uitest may use, and the page may reload for that: started, not awaited,
-                # and checked on the Spark)
-                async def until_server(check):
-                    for _ in range(100):
-                        if check():
-                            return
-                        await asyncio.sleep(0.2)
-                    self.fail("not switched")
-                answers = [True]
-                await pg.evaluate("setTimeout(()=>whoSpark(WHO.features.find(f=>f.key==='erstellenvorlagen'),true),0)")
-                await until_server(lambda: cfg()["doc_make_templates"])
-                c = cfg()
-                self.assertTrue(c["documents"] and c["doc_make"] and c["doc_make_templates"], c)
-                self.assertIn("„Eigene Vorlagen“ braucht auch „Eigene Dokumente“ und „Dokumente erstellen“", said[-1])
-                # a profile's cell while the Spark is off: a disabled dash that says why, nothing to switch there
-                helpers.set_config(documents=False, doc_make=False)
-                # (the page may load itself again for the change of what Uitest may use: open Wer darf was until it shows it)
-                cell = f"#whobox button.wcell[data-uid='{me}'][aria-label^='Dokumente erstellen – ']"
-                await self.until(pg, f"(document.querySelector(\"{cell}\")||{{}}).disabled===true"
-                                     "||((window._wl=(window._wl||0)+1)%20===1&&goSec('who'),false)")
-                self.assertIn("Spark aus", await pg.get_attribute(cell, "aria-label"))
                 self.assertEqual(errors, [])
                 await br.close()
         try:
@@ -2207,43 +2187,82 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_who_may_do_what(self):
-        """Plan „Vereinheitlichen“ Phase 3 (V01.0.269): Funktionen → Wer darf was. A table on computers, cards with
-        chips on phones; a profile cell blocks or allows only that profile (✓/⊘), Spark off makes the cells dashes."""
+        """Funktionen → Wer darf was, slim since Dominik 2026-10-14 (option 3 „Verschlanken“): only the functions the
+        admin blocked for at least one profile, one chip per blocked profile that lifts the block (also while the Spark
+        is off); a function nobody is blocked for does not show, there is no Spark column and no filter. Nothing
+        blocked: one sentence with a jump to Funktionen. The same list on a computer and on phones of 390 and 320 px,
+        never wider than the screen."""
+        import features
+        import profiles
+        me = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
         helpers.set_config(weather=True, transit=False)
+
+        def denied():
+            return {k: v for k, v in (features.chat_cfg().get("deny") or {}).items() if me in v}
+
         async def go():
             async with async_playwright() as p:
-                for name, w, h in VIEWS:
+                for name, w, h in VIEWS + (("klein", 320, 640),):
+                    helpers.set_config(deny={"weather": [me], "transit": [me]})
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('who')")
-                    await pg.wait_for_selector("#whobox .wfilt")
-                    if name == "pc":
-                        self.assertTrue(await pg.is_visible("table.who"))
-                        heads = await pg.evaluate("[...document.querySelectorAll('table.who thead th')].map(x=>x.textContent)")
-                        self.assertIn("Uitest", heads)
-                        self.assertEqual(heads[1], "Spark")
-                        sel = "table.who button[aria-label^='Wetter – Uitest']"
-                    else:
-                        self.assertFalse(await pg.is_visible("table.who"))
-                        sel = "#whobox .wcard button.chip[aria-label^='Wetter – Uitest']"
-                    before = await pg.get_attribute(sel, "aria-pressed")
-                    await pg.click(sel)
-                    await pg.wait_for_function(f"document.querySelector(\"{sel}\").getAttribute('aria-pressed')!=='{before}'")
-                    # transit is off on the Spark: its profile cells are disabled dashes (what the Spark allows works
-                    # for every profile, a cell only blocks; test_voraussetzungen_mit_einschalten)
-                    off = "table.who button[aria-label^='Bus und Bahn – Uitest']" if name == "pc" else \
-                        "#whobox button.chip[aria-label^='Bus und Bahn – Uitest']"
-                    self.assertTrue(await pg.evaluate(f"document.querySelector(\"{off}\").classList.contains('woff')"))
-                    await pg.click("#whobox .wfilt button[data-f=on]")
-                    self.assertFalse(await pg.evaluate(f"!!document.querySelector(\"{off}\")"))
-                    await pg.click("#whobox .wfilt button[data-f=all]")
+                    await pg.wait_for_selector("#whobox .wrow")
+                    rows = await pg.evaluate("[...document.querySelectorAll('#whobox .wrow .wname')].map(x=>x.textContent)")
+                    self.assertEqual(sorted(rows), ["Bus und Bahn", "Wetter"], name)   # nothing else is blocked
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#whobox .wchip').length"), 2, name)
+                    self.assertFalse(await pg.evaluate("!!document.querySelector('#whobox table,#whobox [aria-label*=\"Spark\"]')"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, name)
+                    # a chip lifts the block for that profile: its row goes, the Spark holds it
+                    await pg.click("#whobox .wchip[aria-label^='Wetter – Uitest']")
+                    await self.until(pg, "!document.querySelector(\"#whobox .wchip[aria-label^='Wetter – Uitest']\")")
+                    self.assertEqual(set(denied()), {"transit"}, name)
+                    # transit is off on the Spark: its block still shows and lifts
+                    await pg.click("#whobox .wchip[aria-label^='Bus und Bahn – Uitest']")
+                    await pg.wait_for_selector("#whobox .wempty")
+                    self.assertEqual(denied(), {}, name)
+                    self.assertIn("Kein Profil ist gesperrt. Sperren setzt du in der Funktion unter „Wer darf es“.",
+                                  await pg.text_content("#whobox .wempty"))
+                    self.assertFalse(await pg.query_selector("#whobox .wrow"), name)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    await pg.click("#whobox .wempty .wlink")      # the jump to Funktionen (Sprung-Links)
+                    await self.until(pg, "!!document.querySelector('.cfgwrap.featmode')")
                     self.assertEqual(errors, [], name)
                     await br.close()
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(weather=True)
+            helpers.set_config(weather=True, deny={})
+
+    def test_who_shows_no_unblocked_function(self):
+        """Blocked for one profile only: that function shows with that profile's chip, every other profile and every
+        function nobody is blocked for stay out (the list is about blocks, not about who may use what)."""
+        import features
+        import profiles
+        try:
+            profiles.add_user("Uiandere", "4711")
+        except Exception:
+            pass
+        users = {u["name"]: u["id"] for u in profiles._load()["users"]}
+        me, other = users["Uitest"], users["Uiandere"]
+        helpers.set_config(weather=True, deny={"weather": [other]})
+        self.addCleanup(helpers.set_config, deny={})
+        unblocked = sum(1 for f in features.FEATURES if f.key != "weather" and f.key not in features.NO_BLOCK)
+        self.assertGreater(unblocked, 10)
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("goSec('who')")
+                await pg.wait_for_selector("#whobox .wrow")
+                rows = await pg.evaluate("[...document.querySelectorAll('#whobox .wrow')].map(r=>[r.querySelector('.wname').textContent,"
+                                         "[...r.querySelectorAll('.wchip')].map(c=>c.dataset.uid)])")
+                self.assertEqual(rows, [["Wetter", [other]]])
+                self.assertNotIn(me, json.dumps(rows))
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
 
     def test_one_profile_detail(self):
         """Phase 5: Personen und Geräte – the Gäste row, role badges, "+ Neu" opens the fields, and one detail per
@@ -2267,7 +2286,7 @@ class Browser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, name)
                     await pg.click("#pfeat")
-                    await pg.wait_for_selector("#whobox .wfilt")
+                    await pg.wait_for_selector("#whobox .wnote")
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())

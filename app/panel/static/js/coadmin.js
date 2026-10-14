@@ -9,7 +9,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_ROLE=who.admin_role||nu
   if(ADMIN_BY!=='admin'&&LG.tab==='audit')LG.tab='adm';
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
     document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test'&&x[0]!=='verb'&&x[0]!=='tech');
-    // Funktionen: only "Wer darf was" (the switches over /api/admin/switches, like in the app), not the settings form
+    // Funktionen: only "Wer darf was" (the blocks, to lift them), not the settings form
     GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route');lastSec.feat='who'}
   // signing out is the profile's own sign-out: the admin rights end with it
   const b=$('logoutbtn');b.onclick=async()=>{try{await fetch('/api/profile/logout',{method:'POST'})}catch{}location.reload()}}
@@ -17,7 +17,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_ROLE=who.admin_role||nu
 function coadmMe(){const box=$('coadmbox');if(!box)return;box.replaceChildren();if(!ADMIN_ROLE)return;
   const r=ADMIN_ROLE,lbl=document.createElement('label');lbl.textContent=t('Admin-Rechte','Admin rights');
   const p=document.createElement('div');p.className='fh';
-  p.textContent=r.role==='manager'?t('Verwalter: Zustand, Logs, Personen und Geräte, Funktionen ein und aus.','Manager: status, logs, profiles and devices, functions on and off.')
+  p.textContent=r.role==='manager'?t('Verwalter: Zustand, Logs, Personen und Geräte, Sperren aufheben. Funktionen schaltet und sperrt nur der Admin.','Manager: status, logs, profiles and devices, lifting blocks. Only the admin switches and blocks functions.')
     :t('Admin: alles, nur das Panel-Passwort (Notzugang) selbst und sein zweiter Schritt bleiben beim Passwort.','Admin: everything; only the panel password (emergency access) itself and its second step stay with the password.')
      +(r.main?' '+t('Du bist Haupt-Admin: dein Code gilt auch für den Notzugang.','You are the main admin: your code also counts for the emergency access.'):'');
   box.append(lbl,p);const n=document.createElement('div');n.className='fh';

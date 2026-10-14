@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.551** · 2026-10-14 · „Wer darf was“ zeigt nur noch gesperrte Funktionen, antippen hebt die Sperre auf; neue Sperren in der Funktion unter „Wer darf es“; der Verwalter hebt nur noch Sperren auf, Funktionen schaltet und sperrt nur der Admin (Panel und iPhone-App, vom Server erzwungen)
 - **V01.0.550** · 2026-10-14 · Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
 - **V01.0.549** · 2026-10-14 · Begleiter: Schalter „Mikrofon offen/zu“ sperrt jedes Mikrofon (Weckwort, Diktat, Knöpfe, Frag Spark, Besprechung), bleibt nach Neustart, Symbol durchgestrichen; Ich → Begleiter zeigt den Zustand je Gerät, Live zählt
 - **V01.0.548** · 2026-10-14 · Wartungspause für Sprachmodell, Spracherkennung und Sprachausgabe: Zustand → Wartungspause oder sudo speech-spark pause/weiter; fester Satz statt Modell, Hintergrundarbeit wartet, Dienst-Wächter und Watchdog bleiben still, Ende nach zwei guten Prüfungen

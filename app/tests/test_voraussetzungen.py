@@ -98,50 +98,20 @@ class Chain(Base):
 
 
 class Enable(Base):
+    """Only Funktionen switches a chain on (needs.js ticks the page's switches, saved with the page). The Spark column
+    of Wer darf was and its POST /api/admin/features/{key}/enable went with the slim page (Dominik 2026-10-14)."""
     def setUp(self):
         super().setUp()
         helpers.set_config(documents=False, doc_make=False, doc_make_templates=False)
 
-    def test_enable_switches_the_whole_chain(self):
-        r = ADMIN.post("/api/admin/features/erstellenvorlagen/enable", json={})
-        self.assertEqual(r.status_code, 200, r.text)
-        d = r.json()
-        self.assertEqual(d["switched"], ["documents", "doc_make", "doc_make_templates"])
-        self.assertTrue(d["spark"])
+    def test_no_second_way_to_switch_on(self):
+        for body in ({}, ["x"]):
+            self.assertIn(ADMIN.post("/api/admin/features/erstellenvorlagen/enable", json=body).status_code, (404, 405))
         c = chat_cfg()
-        self.assertTrue(c["documents"] and c["doc_make"] and c["doc_make_templates"])
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json={}).json()["switched"], [])
-
-    def test_enable_holds_for_every_profile(self):
-        """Switching on is for the whole Spark: no profile to name, and what is released works for each profile."""
-        _, uid = profile("VorausProfil")
-        r = ADMIN.post("/api/admin/features/erstellen/enable", json={"uid": uid})
-        self.assertEqual(r.status_code, 200, r.text)
-        self.assertNotIn("doc_make", profiles.settings(uid))
-        self.assertTrue(features.allowed("erstellen", uid))
-
-    def test_refusals(self):
-        self.assertEqual(ADMIN.post("/api/admin/features/nope/enable", json={}).status_code, 404)
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", json=["x"]).status_code, 400)
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", content=b"{nope").status_code, 400)
-        self.assertEqual(ADMIN.post("/api/admin/features/erstellen/enable", content=b"x" * 300).status_code, 413)
-        # only the admin
-        c, _ = profile("VorausGast")
-        self.assertIn(c.post("/api/admin/features/erstellen/enable", json={}).status_code, (401, 403))
-        self.assertIn(TestClient(panel.app).post("/api/admin/features/erstellen/enable", json={}).status_code, (401, 403))
-        self.assertFalse(chat_cfg()["doc_make"])
-
-    def test_switches_the_app_may_not_change_come_back_as_ways(self):
-        import admin
-        may = set(admin.app_switches())
-        hidden = next((sw for f in features.FEATURES for sw in features.chain_switches(f.key) if sw not in may), None)
-        if hidden is None:
-            self.skipTest("every switch may be changed")
-        key = next(f.key for f in features.FEATURES if hidden in features.chain_switches(f.key))
-        helpers.set_config(**{hidden: False})
-        d = ADMIN.post(f"/api/admin/features/{key}/enable", json={}).json()
-        self.assertIn(hidden, [m["switch"] for m in d["manual"]])
-        self.assertFalse(chat_cfg()[hidden])
+        self.assertFalse(c["documents"] or c["doc_make"] or c["doc_make_templates"])
+        js = open(os.path.join(HERE, "..", "panel", "static", "js", "needs.js"), encoding="utf-8").read()
+        self.assertNotIn("/enable", js)
+        self.assertNotIn("needsSpark", js)
 
     def test_matrix_carries_chain_states_and_names(self):
         m = ADMIN.get("/api/admin/features").json()
@@ -149,7 +119,6 @@ class Enable(Base):
         self.assertEqual(row["chain"], ["documents", "doc_make"])
         self.assertIs(m["states"]["documents"], False)
         self.assertEqual(m["snames"]["documents"], ["Eigene Dokumente", "Own documents"])
-        self.assertIn("doc_make", m["switchable"])
 
 
 if __name__ == "__main__":

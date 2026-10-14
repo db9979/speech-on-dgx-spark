@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 from common import load_config, write_json
-from core import assistant, auth
+from core import acting_profile, assistant, auth
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
 
@@ -710,12 +710,12 @@ def app_pages(uid):
 
 
 # ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)
-SEEN = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "features-seen.json")
 _UID = re.compile(r"u_[0-9a-f]{12}")
+SEEN = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "features-seen.json")
 
 
 def _seen(c):
-    """When each function was first on on this Spark: "Neu, noch nie an" lists the others."""
+    """When each function was first on on this Spark: tipps.py shows „neu freigegeben“ for NEW_DAYS after it."""
     try:
         with open(SEEN) as f:
             d = json.load(f)
@@ -733,29 +733,24 @@ def _seen(c):
 
 
 def matrix():
+    """Funktionen → Wer darf was (only the blocked ones), „Wer darf es“ in each function, the switch chain on
+    Funktionen (needs.js), the tiles under Apps and the iPhone app's profile page."""
     c = chat_cfg()
-    seen = _seen(c)
     users = profiles.names()
-    import admin
     import coadmin
-    switchable = set(admin.app_switches())   # what /api/admin/switches may change (not public, mfa, iphone …)
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
     rows = []
     for f in FEATURES:
-        rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
-                     "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None,
+        rows.append({"key": f.key, "name": [f.de, f.en], "switch": f.admin[0], "spark": admin_on(f.key, c),
                      "blockable": f.key not in NO_BLOCK,
-                     "seen": f.key in seen, "guide": f.guide,
                      # per profile: may it use it (True), blocked here by the admin (False) or through a function it builds on
                      "cells": {u["id"]: u["id"] not in (deny.get(f.key) or ()) for u in users},
                      "inherited": {u["id"]: blocked(f.key, u["id"], c) and u["id"] not in (deny.get(f.key) or ()) for u in users},
-                     "chain": chain_switches(f.key), "setup": [admin_way(k) for k in unready(f.key, c)]})
+                     "chain": chain_switches(f.key)})
     every = sorted({sw for f in FEATURES for sw in f.admin})
-    return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
+    return {"features": rows,
             "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"])} for u in users],
-            "public": _switch(c, "public"), "why": WHY,
-            "states": {sw: _switch(c, sw) for sw in every}, "snames": {sw: list(switch_name(sw)) for sw in every},
-            "switchable": sorted(sw for sw in every if sw in switchable)}
+            "states": {sw: _switch(c, sw) for sw in every}, "snames": {sw: list(switch_name(sw)) for sw in every}}
 
 
 @router.get("/api/admin/features", dependencies=[Depends(auth)])
@@ -767,7 +762,8 @@ def admin_features(request: Request):
 @router.put("/api/admin/features/{key}/profiles/{uid}", dependencies=[Depends(auth)])
 async def admin_feature_profile(key: str, uid: str, request: Request):
     """The admin blocks a function for one profile, or lifts the block ({"on": false} blocks, {"on": true} allows
-    again). Stored in config.json chat.deny, which only the admin writes: the profile cannot lift it itself."""
+    again). Stored in config.json chat.deny, which only the admin writes: the profile cannot lift it itself. A
+    Verwalter only lifts blocks (Dominik 2026-10-14): blocking stays with the admin."""
     guard.limit(request, "features", admin=True)
     f = BY_KEY.get(key)
     if not f or not _UID.fullmatch(uid) or not profiles.by_id(uid):
@@ -785,6 +781,10 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
     if not isinstance(on, bool):
         raise HTTPException(400, "on: true or false")
     import admin
+    elev = acting_profile(request)
+    if not on and elev and elev.get("role") == "manager":
+        guard.log("feature_profile", uid=uid, by=elev["id"], detail=f"{f.de}: Sperren nur durch den Admin, abgelehnt")
+        raise HTTPException(403, "only the admin blocks a function for a profile")
     admin._no_admin_profile(request, uid)
     with admin._save_lock:   # one config write at a time (admin._save)
         new = admin.get_config()
@@ -795,43 +795,6 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
         old = admin.validate(new)
         write_json(admin.CONFIG_PATH, new, indent=2)
     admin.undo.record(old, new, admin._by(request), admin.SENSITIVE)
-    elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
     guard.log("feature_profile", uid=uid, by="main" if not elev else elev["id"],
               detail=f"{f.de} für {profiles.by_id(uid)['name']} {'erlaubt' if on else 'gesperrt'}")
     return {"key": key, "uid": uid, "on": on}
-
-
-@router.post("/api/admin/features/{key}/enable", dependencies=[Depends(auth)])
-async def admin_feature_enable(key: str, request: Request):
-    """Switch a function on together with everything it builds on (its chain's Spark switches). Switches the app
-    may not change and what still needs setting up come back as ways, they are never switched here."""
-    guard.limit(request, "features", admin=True)
-    f = BY_KEY.get(key)
-    if not f:
-        raise HTTPException(404, "no such function")
-    raw = await request.body()
-    if len(raw) > 256:
-        raise HTTPException(413, "too large")
-    try:
-        body = json.loads(raw or b"{}")
-    except ValueError:
-        raise HTTPException(400, "invalid JSON")
-    if not isinstance(body, dict):
-        raise HTTPException(400, "invalid JSON")
-    import admin
-    may = set(admin.app_switches())
-    todo = missing(key)
-    can, manual = [sw for sw in todo if sw in may], [sw for sw in todo if sw not in may]
-    if can:
-        with admin._save_lock:   # one config write at a time (admin._save)
-            new = admin.get_config()
-            for sw in can:
-                new["chat"][sw] = True
-            old = admin.validate(new)
-            write_json(admin.CONFIG_PATH, new, indent=2)
-        admin.undo.record(old, new, admin._by(request), admin.SENSITIVE)
-        guard.log("config_switch", detail=", ".join(f"chat.{sw}=on" for sw in can) + f" (für {f.de})")
-    c = chat_cfg()
-    return {"key": key, "switched": can, "names": [list(switch_name(sw)) for sw in can],
-            "manual": [{"switch": sw, "name": list(switch_name(sw)), "way": [switch_way(sw), switch_way(sw, "en")]} for sw in manual],
-            "setup": [[admin_way(k), admin_way(k, "en")] for k in unready(key, c)], "spark": admin_on(key, c)}

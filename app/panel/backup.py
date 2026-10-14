@@ -78,7 +78,7 @@ STATE_FILES = {
     "setup.json": "json",           # first-start wizard done
     "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
     "admins.json": "json",          # profiles as admins: roles and the main admin profile (coadmin.py)
-    "features-seen.json": "json",   # when each function was first on ("Neu, noch nie an", features.py)
+    "features-seen.json": "json",   # when each function was first on („neu freigegeben“ in tipps.py, features.py)
     "join.json": "json",            # new people by invitation: the switch, invitations (code hashes) (join.py)
 }
 # every other file or folder in state/, with the reason it stays out of a backup (Zustand → Technik, technik.py;

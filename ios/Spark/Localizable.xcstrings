@@ -7181,6 +7181,16 @@
         }
       }
     },
+    "Als Verwalter hebst du hier nur Sperren auf. Funktionen schalten und Profile sperren kann nur der Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As a manager you only lift blocks here. Only the admin switches functions and blocks profiles."
+          }
+        }
+      }
+    },
     "Was auf dem Spark an ist, gilt sofort für jedes Profil. Aus sperrt eine Funktion nur für dieses Profil; das Profil kann die Sperre nicht selbst aufheben.": {
       "localizations": {
         "en": {

@@ -260,8 +260,10 @@ class Matrix(unittest.TestCase):
         d = ADMIN.get("/api/admin/features").json()
         row = next(f for f in d["features"] if f["key"] == "weather")
         self.assertIs(row["cells"][uid], True)                          # released: every profile may use it
-        self.assertTrue(row["switchable"])
-        self.assertTrue(row["seen"])                                    # on now, so no longer "new"
+        # only what its readers use (Wer darf was, Wer darf es, needs.js, the tiles, the iPhone app): no Spark column,
+        # no filters since Dominik 2026-10-14 ("Verschlanken")
+        self.assertEqual(set(row), {"key", "name", "switch", "spark", "blockable", "cells", "inherited", "chain"})
+        self.assertEqual(set(d), {"features", "profiles", "states", "snames"})
         self.assertTrue(any(p["id"] == uid for p in d["profiles"]))
         self.assertIs(next(f for f in d["features"] if f["key"] == "memory")["cells"][uid], True)
         block(self, "weather", uid)
@@ -291,16 +293,15 @@ class Matrix(unittest.TestCase):
         self.assertIn(c.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": False}).status_code, (401, 403))
         self.assertNotIn(uid, json.dumps(features.chat_cfg().get("deny") or {}))
 
-    def test_new_until_first_on(self):
+    def test_first_on_recorded(self):
+        """tipps.py shows „neu freigegeben“ from the time a function was first on; it stays known once it was on."""
         helpers.set_config(transit=False)
-        rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
-        if not rows["transit"]["seen"]:
+        self.addCleanup(helpers.set_config, transit=False)
+        if "transit" not in features._seen(features.chat_cfg()):
             helpers.set_config(transit=True)
-            rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
-            self.assertTrue(rows["transit"]["seen"])
+            self.assertIn("transit", features._seen(features.chat_cfg()))
             helpers.set_config(transit=False)
-            rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
-            self.assertTrue(rows["transit"]["seen"])                  # stays known once it was on
+            self.assertIn("transit", features._seen(features.chat_cfg()))     # stays known once it was on
         self.assertIn("features-seen.json", __import__("backup").STATE_FILES)
 
 

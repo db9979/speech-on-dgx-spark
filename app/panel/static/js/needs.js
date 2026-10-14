@@ -1,9 +1,8 @@
 // Voraussetzungen (Dominik 2026-10-12: "eine Info geben, wenn jemand Funktionen einschaltet, die andere
 // voraussetzen, auch mit einschalten"). features.py gives every function its chain of Spark switches
-// (/api/admin/features: chain, states, snames, switchable). Switching on asks whether the missing ones go on
-// too; switching off says which functions that are on now go off with it.
-// Funktionen: the switches are checkboxes chat.<switch> saved with the page (only checked here, saving stays
-// with the page); Wer darf was: who.js asks needsOn/needsOff and switches over /api/admin/features/<key>/enable.
+// (/api/admin/features: chain, states, snames). Switching on asks whether the missing ones go on too; switching
+// off says which functions that are on now go off with it. Funktionen: the switches are checkboxes chat.<switch>
+// saved with the page (only checked here, saving stays with the page).
 let NEEDS=null,NEEDS_AT=0,NEEDS_QUIET=false;
 async function needsLoad(force){
   if(NEEDS&&!force&&Date.now()-NEEDS_AT<30e3)return NEEDS;
@@ -26,17 +25,6 @@ function needsAskOn(f,miss){
 function needsAskOff(sw,aff){
   return confirm(t(`Damit sind auch ${needsList(aff.map(needsFName))} aus. Trotzdem ausschalten?`,
                    `This also switches off ${needsList(aff.map(needsFName))}. Switch off anyway?`))}
-// what the Spark could not switch itself (switches only the main admin sets, addresses): one note with ways
-function needsNote(d){const ways=[...(d.manual||[]).map(m=>m.way[L==='en'?1:0]),...(d.setup||[]).map(w=>w[L==='en'?1:0])];
-  if(ways.length)alert(t('Noch selbst erledigen: ','Still to do yourself: ')+ways.join(', '))}
-// Wer darf was: the Spark column. true when the caller may go on with its own switching.
-async function needsSpark(f,on,isOn){
-  await needsLoad();
-  if(on){const miss=needsMissing(f,isOn,f.switch);if(!miss.length)return true;
-    if(!needsAskOn(f,miss))return true;            // only its own switch, as before
-    const d=await (await api(`/api/admin/features/${encodeURIComponent(f.key)}/enable`,xjson('POST',{}))).json();
-    needsNote(d);return false}
-  const aff=needsAffected(f.switch,isOn);return !aff.length||needsAskOff(f.switch,aff)}
 // Funktionen: a switch on the page changed
 async function needsCfg(el){
   if(NEEDS_QUIET||!el||!el.id||!el.id.startsWith('chat.')||el.type!=='checkbox')return;
@@ -55,4 +43,4 @@ async function needsCfg(el){
     const aff=needsAffected(sw,s=>s===sw||isOn(s));if(!aff.length)return;
     if(!needsAskOff(sw,aff))set([sw],true)}}
 document.addEventListener('change',e=>{const el=e.target;if(el&&el.id&&el.id.startsWith('chat.')&&el.closest&&el.closest('#pane-feat'))needsCfg(el)});
-window.needsSet=needsSet;window.needsSpark=needsSpark;window.needsLoad=needsLoad;
+window.needsSet=needsSet;window.needsLoad=needsLoad;

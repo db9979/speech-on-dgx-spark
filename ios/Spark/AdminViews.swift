@@ -89,7 +89,8 @@ struct AdminView: View {
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                 } header: { Text("Zustand") }
                 Section {
-                    NavigationLink("Funktionen") { FeaturesView() }
+                    // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)
+                    if s.role != "manager" { NavigationLink("Funktionen") { FeaturesView() } }
                     NavigationLink("Personen und Geräte") { AdminProfilesView() }
                     if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
                 } header: { Text("Ändern") } footer: {
@@ -515,11 +516,15 @@ struct AdminProfileView: View {
                         Text(verbatim: f.name)
                         if f.via { Text("Gesperrt über eine Funktion, auf der sie aufbaut") }
                     }
-                    .disabled(f.via)
+                    .disabled(f.via || (s.role == "manager" && f.on))   // a Verwalter only lifts a block
                 }
                 if funcs.isEmpty { Text("Keine Funktion auf dem Spark an.").foregroundStyle(.secondary) }
             } header: { Text("Funktionen: \(funcsOn) von \(funcs.count) freigegeben") } footer: {
-                Text("Was auf dem Spark an ist, gilt sofort für jedes Profil. Aus sperrt eine Funktion nur für dieses Profil; das Profil kann die Sperre nicht selbst aufheben.")
+                if s.role == "manager" {
+                    Text("Als Verwalter hebst du hier nur Sperren auf. Funktionen schalten und Profile sperren kann nur der Admin.")
+                } else {
+                    Text("Was auf dem Spark an ist, gilt sofort für jedes Profil. Aus sperrt eine Funktion nur für dieses Profil; das Profil kann die Sperre nicht selbst aufheben.")
+                }
             }
             Section {
                 ForEach(sessions, id: \.id) { x in

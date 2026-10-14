@@ -77,11 +77,13 @@ PAGE_TEXT = {
     "logs": ("Zustand → Logs: das Protokoll des Spark mit Filtern (Diagnose, Anfragen), „Kopieren für Thread“ gibt einen Auszug ohne Geheimnisse.",
              "Status → Logs: the Spark's log with filters (diagnosis, requests); \"Copy for thread\" gives an excerpt without secrets."),
     "feat": ("Funktionen: jede Funktion des Spark mit ihrem Admin-Schalter, darunter Unter-Schalter und die Anleitung. "
-             "Was hier an ist, gilt sofort für jedes Profil; einzelne Profile sperrt der Admin unter Funktionen → Wer darf was.",
+             "Was hier an ist, gilt sofort für jedes Profil; einzelne Profile sperrt der Admin in der Funktion unter „Wer darf es“.",
              "Features: every function of the Spark with its admin switch, sub-switches below and the guide. What is on here "
-             "applies to every profile at once; the admin blocks single profiles under Features → Who may do what."),
-    "who": ("Funktionen → Wer darf was: welche Funktion welches Profil benutzen darf und wer sie gerade an hat.",
-            "Features → Who may do what: which function each profile may use and who has it on."),
+             "applies to every profile at once; the admin blocks single profiles in the function under \"Who may use it\"."),
+    "who": ("Funktionen → Wer darf was: nur die Funktionen, die der Admin für ein Profil gesperrt hat; antippen hebt die "
+            "Sperre auf. Neue Sperren setzt der Admin in der Funktion unter „Wer darf es“.",
+            "Features → Who may do what: only the functions the admin blocked for a profile; tap to lift the block. The "
+            "admin sets new blocks in the function under \"Who may use it\"."),
     "route": ("Funktionen → Weiche: welche Werkzeuge eine Frage bekommt, als Bild. Einen Satz ausprobieren, Gruppen mit eigenen "
               "Wörtern, „Nicht bei“ und zusätzlichen Werkzeugen ergänzen, Testsätze, „Falsch zugeordnet …“ und Rückgängig.",
               "Features → Switch: which tools a question gets, as a picture. Try a sentence, add own words, “Not with” and extra "
