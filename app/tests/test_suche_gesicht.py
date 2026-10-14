@@ -169,6 +169,8 @@ class Browser(unittest.TestCase):
             self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
         self.assertEqual((await pg.request.post(base + "/api/profile/login", data={"name": "Gesicht", "pin": "4711"})).status, 200)
         await pg.goto(base + "/")
+        # signed in: lzIdle() is true as soon as no box loads, which can be before /api/whoami has answered
+        await pg.wait_for_function("document.body.classList.contains('adm')", timeout=20000)
         await pg.wait_for_function("!!window.lzIdle&&lzIdle()", timeout=20000)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
         return br, pg, errors
