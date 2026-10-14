@@ -11,6 +11,8 @@ Run:  python -m unittest discover -s app/tests -t app     (from the repository r
 """
 import asyncio
 import os
+import subprocess
+import sys
 import time
 import unittest
 from unittest import mock
@@ -253,6 +255,26 @@ class Shell(Base):
         self.assertEqual(wartung.state()["parts"], ["llm", "asr", "tts"])
         for bad in (["gpu"], ["llm", "3"], ["llm", "abc"]):
             self.assertEqual(wartung.cli(bad, now=T0)[0], 2, bad)
+
+    def test_the_script_runs_like_speech_spark_calls_it(self):
+        # speech-spark.sh (as_panel_user) starts the file itself in app/panel with an empty environment: no PYTHONPATH,
+        # so app/ (common.py) must come from the file's own path (tars 2026-10-14: ModuleNotFoundError 'common')
+        env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "PYTHONUNBUFFERED": "1"}
+        env.update({k: v for k, v in os.environ.items() if k.startswith("SPEECH_SPARK_")})
+
+        def run(*args):
+            return subprocess.run([sys.executable, os.path.join(helpers.APP, "panel", "wartung.py"), *args],
+                                  cwd=os.path.join(helpers.APP, "panel"), env=env, capture_output=True, text=True,
+                                  timeout=120)
+        r = run("llm", "30")
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertTrue(wartung.paused("llm"))
+        r = run("status")
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertIn("Wartungspause: Sprachmodell", r.stdout)
+        r = run("weiter")
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertFalse(wartung.paused("llm"))
 
     def test_the_shell_command_runs_as_the_service_user(self):
         with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:

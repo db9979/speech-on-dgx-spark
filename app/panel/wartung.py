@@ -23,6 +23,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script (speech-spark pause)
 import features  # noqa: E402
 import guard  # noqa: E402
 from common import load_config, write_json  # noqa: E402
