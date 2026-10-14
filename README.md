@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.553** Maintenance pause: `sudo speech-spark pause` works again (could not find common.py)
 - **V01.0.552** Household folder: an admin picks a NAS folder for everyone, every profile finds its documents
 - **V01.0.551** "Who may do what" only shows blocks; the manager only lifts blocks, only the admin switches functions
 - **V01.0.550** Private chats: history from an old device to a new one; the new device shows a code, the old one wraps the keys once more after "Transfer", the Spark reads nothing
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.546** Counts with a target: every row of a card under Status and every number of "Today" jumps to its place
 - **V01.0.545** Companion lifts Outlook's block on the Spark add-in, "Draft a reply" no longer hangs behind Outlook's question
 - **V01.0.544** Personal things stay with the profile: briefing and Spark diary not for a recognized voice at someone else's device, speakers read messages only to the recognized voice, Verwalter sees only own report drafts, smart home sentences no longer in the log
-- **V01.0.543** License now FSL-1.1-MIT: free for you, family, friends, teaching and research, no competing sale; every version turns MIT after two years
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

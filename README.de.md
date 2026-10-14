@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.553** Wartungspause: `sudo speech-spark pause` läuft wieder (fand common.py nicht)
 - **V01.0.552** Haushaltsordner: ein Admin wählt einen NAS-Ordner für alle, jedes Profil findet die Dokumente
 - **V01.0.551** „Wer darf was“ zeigt nur noch Sperren; der Verwalter hebt nur Sperren auf, Funktionen schaltet nur der Admin
 - **V01.0.550** Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.546** Zahlen mit Ziel: jede Zeile einer Karte unter Zustand und jede Zahl in „Heute“ springt zu ihrer Stelle
 - **V01.0.545** Begleiter hebt Outlooks Sperre fürs Spark-Add-in auf, „Antwort entwerfen“ hängt nicht mehr hinter Outlooks Frage
 - **V01.0.544** Persönliches bleibt beim Profil: Briefing und Spark-Tagebuch nicht für eine erkannte Stimme am fremden Gerät, Lautsprecher liest Nachrichten nur der erkannten Stimme vor, Verwalter sieht nur eigene Meldungs-Entwürfe, Smart-Home-Sätze nicht mehr im Log
-- **V01.0.543** Lizenz jetzt FSL-1.1-MIT: frei für dich, Familie, Freunde, Lehre und Forschung, kein Konkurrenzverkauf; jede Version wird nach zwei Jahren MIT
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
