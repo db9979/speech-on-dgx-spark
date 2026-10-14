@@ -67,6 +67,60 @@ MAX_BYTES = 20 * 1024 * 1024
 QUIET = contextvars.ContextVar("netguard_quiet", default=False)
 
 
+# Modules that open connections without client()/resolve() above, each with its reason (plan knoten-seiten.md, Extra B;
+# tests/test_waechter_umgehung.py turns red for a module that connects directly and is not listed here, and for a line
+# here whose module no longer does). Kinds: "lokal" = own services on 127.0.0.1; "sprachmodell" = the language model at
+# chat.llm_url; "suche" = SearXNG at chat.search_url; "fest" = a fixed public service; "geprueft" = a socket opened only
+# after resolve() checked the address. A new address from settings or from outside text never belongs here: it goes
+# through client(). Findings about these ways: plaene/waechter-umgehung.md.
+DIRECT_OK = {
+    "account": ("lokal", "Sprachausgabe auf localhost (Ansagen fürs Gerät)"),
+    "ack": ("lokal", "Sprachausgabe auf localhost (fehlende Kurzansagen)"),
+    "admin": ("sprachmodell", "Sprachmodell (/models), eigene Sprachdienste und der Suchtest an der eingetragenen SearXNG-Adresse"),
+    "agent": ("sprachmodell", "Sprachmodell und SearXNG"),
+    "android": ("fest", "App-Release von GitHub, Datei mit SHA-256 geprüft"),
+    "apns": ("fest", "Apple-Push (api.push.apple.com); Notaus-Meldungen laufen selbst darüber"),
+    "begleiter": ("fest", "Sprachausgabe auf localhost und Begleiter-Release von GitHub (SHA-256 geprüft)"),
+    "berater": ("sprachmodell", "Sprachmodell für den Einstellungs-Assistenten"),
+    "chat": ("sprachmodell", "Sprachmodell und SearXNG; Seiten aus Suchergebnissen gehen über client()"),
+    "dienstwacht": ("sprachmodell", "Probe des Sprachmodells; die anderen Proben gehen über client() und resolve()"),
+    "docmake": ("sprachmodell", "Sprachmodell beim Erstellen von Dokumenten"),
+    "esp32": ("fest", "eigene Sprachdienste auf localhost, Firmware-Release von GitHub (SHA-256 geprüft), Lautsprecher nach resolve()"),
+    "fixes": ("sprachmodell", "Sprachmodell"),
+    "gedaechtnis": ("sprachmodell", "Sprachmodell"),
+    "hamelden": ("sprachmodell", "Sprachmodell; Home Assistant geht über client()"),
+    "health": ("sprachmodell", "Gesundheitstest: Sprachmodell, eigene Sprachdienste, SearXNG"),
+    "images": ("sprachmodell", "Sprachmodell"),
+    "intent": ("sprachmodell", "Sprachmodell für unklare Fragen der Weiche"),
+    "mcpserver": ("lokal", "eigene Sprachdienste auf localhost"),
+    "memtidy": ("sprachmodell", "Sprachmodell"),
+    "monitor": ("lokal", "Gesundheitsabfrage der eigenen Dienste auf localhost"),
+    "proactive": ("sprachmodell", "Sprachmodell und SearXNG"),
+    "push": ("fest", "Browser-Push nur an bekannte Push-Dienste (PUSH_HOSTS)"),
+    "quality": ("sprachmodell", "Sprachmodell"),
+    "rmplus": ("sprachmodell", "Sprachmodell und SearXNG; Webseiten gehen über client()"),
+    "room": ("suche", "SearXNG für den Raummodus"),
+    "schreib": ("sprachmodell", "Sprachmodell"),
+    "speicher": ("geprueft", "SFTP und SMB nach resolve()"),
+    "suchpruefung": ("sprachmodell", "Sprachmodell"),
+    "system": ("sprachmodell", "Einrichtung: Test des Sprachmodells an der eingegebenen Adresse (nur Admin)"),
+    "systemone": ("sprachmodell", "Sprachmodell"),
+    "telegram": ("fest", "Telegram-Bot-API und eigene Sprachdienste auf localhost"),
+    "tidy": ("sprachmodell", "Sprachmodell"),
+    "transit": ("fest", "Fahrplan-Dienst (chat.transit_url)"),
+    "update": ("fest", "Update-Prüfung bei GitHub"),
+    "vorrang": ("sprachmodell", "Sprachmodell und eigene Sprachdienste"),
+    "weather": ("fest", "Wetter-Dienst (chat.weather_url, chat.geocode_url)"),
+    "wiki": ("fest", "Wikipedia-API (chat.wiki_url)"),
+    "wissen": ("sprachmodell", "Sprachmodell"),
+    "wyoming": ("lokal", "eigene Sprachdienste auf localhost"),
+    "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
+    "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),
+    "tts_proxy": ("lokal", "Sprachausgabe: Proxy zur Engine auf localhost"),
+    "bench": ("lokal", "Messung der eigenen Dienste auf localhost (Kommandozeile)"),
+}
+
+
 class Blocked(ValueError):
     pass
 

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.532** Every box under Status → Architecture explains exactly how it works, with a step-by-step picture and examples
 - **V01.0.531** Blocked, but own data deletable: Me shows a card with "Delete data" for blocked functions
 - **V01.0.530** Smarter switch: hint words keep fitting tools ready, follow-up questions keep their group, an everyday score measures honestly; its settings now live on one page
 - **V01.0.529** Clean-up rule "one source" with guard tests; the iPhone app opens every Me page inside the app, panel areas without a switch per profile
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.525** Tests green again: the search browser test waits until the page is signed in
 - **V01.0.524** Synology comfort: find the NAS in the home network, see per folder what the Spark may do, warning for admin accounts
 - **V01.0.523** Knowledge folders: the Spark reads documents from folders on your NAS or cloud and finds them when asked; nothing changes there
-- **V01.0.522** Blocking works everywhere: what the admin blocks for a profile holds in every part; own data stays deletable
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

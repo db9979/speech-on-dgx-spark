@@ -58,3 +58,53 @@ html.tk-lock{overflow:hidden}
 /* phones: the steps get the whole row, „Vollbild“ goes below them; in Vollbild the title has its own row */
 @container (max-width:659.98px){.tk-top>.ld-chips{flex-basis:100%}}
 @media (max-width:659.98px){.tk-fsbar b{flex-basis:100%}}
+/* Knoten-Seiten (technik_knoten.py): one box in detail; its way as a column with exits to the right, examples light
+   it step by step (lit/cur/dim), Vollbild shows only the way */
+.kn-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 10px}.kn-t{flex:1;min-width:0}.kn-h{margin:2px 0 4px;font-size:22px}
+.kn-today{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 12px;font-size:13.5px}
+.kn-tn b{font-size:18px;color:var(--acc);font-variant-numeric:tabular-nums}
+.kn-sec{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px;background:var(--card)}
+.kn-sec h4{margin:0 0 8px;font-size:15px}.kn-sec p{margin:0 0 8px;line-height:1.5}.kn-sec ul{margin:0;padding-left:20px;line-height:1.5}
+.kn-sec li{margin:0 0 4px}.kn-sh{display:flex;align-items:center;gap:8px;margin:0 0 8px}.kn-sh h4{flex:1;margin:0}
+.kn-ex{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}.kn-exl{font-size:13px}
+.kn-cap{min-height:1.4em;font-size:13.5px;margin:0 0 8px}
+.kn-flow{display:block}
+.kn-pic{padding:6px}
+.tk-svg.kn-svg{min-width:0;max-width:560px}
+@container (min-width:900px){.tk-svg.kn-svg{max-height:none}}
+.kn-steps{margin:12px 0 0;padding-left:24px;font-size:14px;line-height:1.45}.kn-steps li{margin:0 0 7px;break-inside:avoid;border-radius:8px;padding:1px 4px}
+.kn-steps li::marker{color:var(--acc);font-weight:700}
+.kn-steps li.cur{background:color-mix(in srgb,var(--acc) 14%,transparent)}.kn-steps li.dim{opacity:.55}
+@container (min-width:900px){.kn-flow{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:20px;align-items:start}.kn-steps{margin:0}}
+.kn-st polygon,.kn-st rect{fill:var(--card);stroke:var(--line);stroke-width:1.4}
+.kn-frage polygon{fill:color-mix(in srgb,var(--acc) 10%,var(--card));stroke:var(--acc)}
+.kn-start rect,.kn-ende rect{fill:color-mix(in srgb,var(--line) 35%,var(--card))}
+.kn-svg text{fill:var(--fg);font:600 13.5px var(--font,system-ui)}.kn-svg .kn-sub{fill:var(--mut);font:400 11.5px var(--font,system-ui)}
+.kn-svg .kn-lab{fill:var(--mut);font:600 11.5px var(--font,system-ui)}
+.kn-num{fill:var(--acc)}.kn-svg .kn-numt{fill:var(--bg);font:700 11px var(--font,system-ui)}
+.kn-ar{stroke:var(--mut);stroke-width:1.5;fill:none;marker-end:url(#knah)}#knah path{fill:var(--mut)}
+.kn-ar-stop{stroke:var(--bad)}.kn-ar-ok{stroke:var(--ok)}.kn-ar-zurueck{stroke-dasharray:5 4}
+.kn-side rect{stroke-width:1.4}
+.kn-stop rect{fill:color-mix(in srgb,var(--bad) 13%,var(--card));stroke:var(--bad)}
+.kn-ok rect{fill:color-mix(in srgb,var(--ok) 13%,var(--card));stroke:var(--ok)}
+.kn-zurueck rect,.kn-info rect{fill:var(--card);stroke:var(--line);stroke-dasharray:5 4}
+.kn-st.dim,.kn-side.dim{opacity:.35}
+.kn-st.lit polygon,.kn-st.lit rect{stroke:var(--acc2);stroke-width:2.6}
+.kn-st.cur polygon,.kn-st.cur rect,.kn-side.cur rect{stroke-width:3.4;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--acc2) 60%,transparent))}
+.kn-side.lit rect{stroke-width:2.6}
+@media (prefers-reduced-motion:reduce){.kn-st.cur polygon,.kn-st.cur rect,.kn-side.cur rect{filter:none}}
+.kn-tw{overflow-x:auto}.kn-tab{border-collapse:collapse;width:100%;font-size:13.5px}
+.kn-tab th,.kn-tab td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.kn-tab th{font-size:12.5px;color:var(--mut);font-weight:600}.kn-tab td.ok{color:var(--ok);font-weight:700}.kn-tab td.bad{color:var(--bad);font-weight:600}
+.kn-two{display:grid;grid-template-columns:minmax(0,1fr);gap:0 12px}
+@container (min-width:900px){.kn-two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.kn-nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.kn-nums div{border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.kn-nums b{display:block;font-size:20px;color:var(--acc);overflow-wrap:anywhere}.kn-nums span{font-size:12.5px;color:var(--mut)}
+.kn-code{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 18px;font-size:13.5px}
+.kn-code div{display:flex;flex-direction:column;padding:6px 0;border-bottom:1px solid var(--line);min-width:0}
+.kn-code code{overflow-wrap:anywhere}.kn-code span{color:var(--mut);font-size:12.5px}
+.kn-small{font-size:12.5px;margin-top:8px;overflow-wrap:anywhere}
+#tkbox.tk-full .kn-svg{max-height:calc(100vh - 170px);max-width:none}
+#tkbox.tk-full .tk-zoomed .kn-svg{width:calc(var(--tkz,1)*min(100%,560px))}
+@media (min-width:1000px){#tkbox.tk-full .kn-flow{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px}}

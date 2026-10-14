@@ -212,6 +212,13 @@ def _bump(key, now=None):
     _count[key] = _count.get(key, 0) + 1
 
 
+def counts_today(now=None):
+    """Zustand → Technik, Knoten-Seiten („heute“, technik_knoten.heute): today's counts, numbers only."""
+    day = time.strftime("%Y-%m-%d", time.localtime(now or time.time()))
+    with _lock:
+        return {k: v for k, v in _count.items() if k != "day"} if _count.get("day") == day else {}
+
+
 def event(area, text, now=None):
     """One line for "Ereignisse": fixed words and numbers only. Also in the journal (Zustand → Logs → Diagnose,
     filter Ereignisse), whether Live is on or not: what Live shows, the log shows too (Dominik 2026-10-13)."""

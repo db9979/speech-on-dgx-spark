@@ -18,12 +18,13 @@ import os
 import re
 import sys
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
 import backup  # noqa: E402
 import guard  # noqa: E402
 import speicher  # noqa: E402
+import technik_knoten  # noqa: E402
 from core import auth  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +64,7 @@ GRUPPEN = {
 # every module of app/panel and app/: name -> (group, German line). English comes from the module's docstring.
 MODULE = {
     # Zugang und Rechte
-    "panel": ("zugang", "Startet das Panel, Middleware (Größe, Herkunft, Notaus), liefert die Seite aus"),
+    "panel": ("zugang", "Startet das Panel, Middleware (Notaus, Herkunft, Größe), liefert die Seite aus"),
     "core": ("zugang", "Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer"),
     "guard": ("zugang", "Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log"),
     "profiles": ("zugang", "Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil"),
@@ -205,6 +206,8 @@ MODULE = {
     "hilfe": ("betrieb", "Spark-Hilfe und Index der Doku"),
     "wege": ("betrieb", "Sprung-Links in Texten außerhalb des Panels"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
+    "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),
+    "technik_seiten": ("betrieb", "Die Texte der Knoten-Seiten, Zahlen als Platzhalter aus dem Code"),
     # Sprachdienste (app/)
     "asr_proxy": ("sprache", "Spracherkennung: nimmt an und reicht an die Engine durch"),
     "asr_server": ("sprache", "Spracherkennung als eigener kleiner Dienst"),
@@ -225,8 +228,8 @@ NO_MODULE = {"selftest"}   # app/selftest.py runs the tests, it is not part of t
 KNOTEN = {
     "geraet": (16, 40, "Browser und Handy", "Browser and phone", "static/js", "", "Nimmt Sprache auf, zeigt Text, spielt Ton.",
                "Records speech, shows text, plays sound.", ["static/js/chat.js"]),
-    "apps": (16, 115, "Apps", "Apps", "iPhone, Android", "", "Eigene Apps mit Geräteschlüssel, gleicher Weg wie der Browser.",
-             "Own apps with a device key, the same way as the browser.", ["ios/", "android/"]),
+    "apps": (16, 115, "Apps", "Apps", "iPhone, Android", "", "Eigene Apps: iPhone mit Geräteschlüssel, Android mit Anmeldung wie im Browser.",
+             "Own apps: iPhone with a device key, Android signed in like the browser.", ["ios/", "android/"]),
     "kanaele": (16, 190, "Telegram, Siri, Uhr", "Telegram, Siri, watch", "Kanäle", "geraete",
                 "Kurze Fragen ohne Browser; den Verlauf speichert das Panel selbst.",
                 "Short questions without a browser; the panel keeps the history itself.", []),
@@ -236,8 +239,8 @@ KNOTEN = {
     "mcpc": (16, 340, "MCP-Programme", "MCP programs", "/mcp", "", "Claude, n8n, Open WebUI fragen über den MCP-Server.",
              "Claude, n8n, Open WebUI ask through the MCP server.", ["mcpserver.py"]),
     "middleware": (200, 60, "Middleware", "Middleware", "panel.py", "",
-                   "Größenlimit, Herkunft (CSRF) und Notaus, bevor ein Endpunkt die Anfrage liest.",
-                   "Size limit, origin (CSRF) and kill switch before an endpoint reads the request.", ["panel.py", "notaus.py"]),
+                   "Notaus, Herkunft (CSRF) und Größenlimit, in dieser Reihenfolge, bevor ein Endpunkt die Anfrage liest.",
+                   "Kill switch, origin (CSRF) and size limit, in this order, before an endpoint reads the request.", ["panel.py", "notaus.py"]),
     "zugang": (200, 165, "Anmeldung, Profil", "Login, profile", "guard · profiles", "zugang",
                "Rate-Limit, Anmeldung per Cookie oder Geräteschlüssel, Freigaben. Das Profil kommt nie vom Modell.",
                "Rate limit, login by cookie or device key, releases. The profile never comes from the model.", []),
@@ -268,16 +271,16 @@ KNOTEN = {
     "tts": (766, 190, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
             "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "textnorm.py"]),
     "aussen": (766, 270, "Dienste draußen", "Outside services", "HA, Mail, Suche …", "",
-               "Home Assistant, Kalender, Mail, SearXNG, Kiwix, reMarkable, MCP. Nur über den Wächter.",
-               "Home Assistant, calendar, mail, SearXNG, Kiwix, reMarkable, MCP. Only through the guard.", []),
+               "Home Assistant, Kalender, Mail, SearXNG, Kiwix, reMarkable, MCP. Über den Wächter; feste Dienste mit Grund in netguard.DIRECT_OK.",
+               "Home Assistant, calendar, mail, SearXNG, Kiwix, reMarkable, MCP. Through the guard; fixed services with a reason in netguard.DIRECT_OK.", []),
     "state": (200, 375, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
               "Global state: keys, statistics, watchers.", []),
     "users": (380, 375, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",
               "Everything of one profile; no profile sees another one's folder.", []),
     "ablage": (560, 375, "voices/, backups/", "voices/, backups/", "Stimmen, Sicherungen", "",
                "Geklonte Stimmen und Sicherungen.", "Cloned voices and backups.", []),
-    "journal": (766, 375, "journald", "journald", "speech-spark", "", "Alle Dienste, 14 Tage, höchstens 500 MB.",
-                "All services, 14 days, at most 500 MB.", []),
+    "journal": (766, 375, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
+                "All services; how long and how much is set by the admin (default 14 days, 500 MB).", []),
 }
 KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middleware"), ("lautsprecher", "middleware"),
           ("mcpc", "middleware"), ("middleware", "zugang"), ("middleware", "asr"), ("zugang", "vorbereiten"),
@@ -294,8 +297,8 @@ SCHRITTE = [
     ("Eingabe", "Input", "Das Mikrofon nimmt auf, das Panel reicht den Ton an die Spracherkennung weiter.",
      "The microphone records, the panel hands the sound to speech recognition.", "POST /api/test/asr",
      ["geraet", "middleware", "asr"], ["geraet>middleware", "middleware>asr"]),
-    ("Zugang", "Access", "Größe, Herkunft und Notaus, dann Rate-Limit, Anmeldung und Profil.",
-     "Size, origin and kill switch, then rate limit, login and profile.", "POST /api/chat · guard.limit · profiles.current",
+    ("Zugang", "Access", "Notaus, Herkunft und Größe, dann Rate-Limit, Anmeldung und Profil.",
+     "Kill switch, origin and size, then rate limit, login and profile.", "POST /api/chat · guard.limit · profiles.current",
      ["geraet", "middleware", "zugang"], ["geraet>middleware", "middleware>zugang"]),
     ("Vorbereiten", "Prepare", "Sprache zuerst (vorrang), andere Geräte sehen „antwortet gerade“, dann Rechte, Sperren, Systemprompt.",
      "Speech first (vorrang), other devices see \"answering\", then rights, locks, system prompt.", "chat_turn.prepare()",
@@ -428,7 +431,7 @@ SYSTEM = [
     ("/var/lib/speech-spark/firmware/", ("ESP32-Firmware", "ESP32 firmware"), "nein", ("signiert", "signed")),
     ("/var/lib/speech-spark/voices/", ("Geklonte Stimmen (WAV und Text)", "Cloned voices (WAV and text)"), "ja", ("", "")),
     ("/var/lib/speech-spark/backups/", ("Sicherungen: 7 neueste plus 5 Ereignis-Sicherungen", "Backups: newest 7 plus 5 event backups"), "–", ("", "")),
-    ("journald (Namespace speech-spark)", ("Logs aller Dienste, 14 Tage, höchstens 500 MB", "Logs of all services, 14 days, at most 500 MB"), "nein", ("", "")),
+    ("journald (Namespace speech-spark)", ("Logs aller Dienste, Dauer und Größe nach Einstellung", "Logs of all services, time and size as set"), "nein", ("", "")),
 ]
 
 
@@ -545,7 +548,7 @@ def data(lang="de"):
         groups.append({"id": gid, "name": g[i], "text": g[2 + i], "node": ORT.get(gid, ""),
                        "modules": [{"name": n, "file": files[n], "text": _en_line(n) if en else MODULE[n][1]} for n in mods]})
     nodes = [{"id": k, "x": v[0], "y": v[1], "name": v[2 + i], "sub": v[4], "group": v[5], "text": v[6 + i], "files": v[8],
-              "store": k in ("state", "users", "ablage", "journal")} for k, v in KNOTEN.items()]
+              "store": k in ("state", "users", "ablage", "journal"), "page": k in technik_knoten.SEITEN_DATEN} for k, v in KNOTEN.items()]
     steps = [{"name": s[i], "text": s[2 + i], "code": s[4], "nodes": s[5], "edges": s[6]} for s in SCHRITTE]
     rows = []
     for r in speicherorte():
@@ -602,6 +605,8 @@ def block(name, lang="de"):
             out += [f"| `{m['file']}` | {_cell(m['text'])} |" for m in g["modules"]]
             out.append("")
         return "\n".join(out).rstrip()
+    if name == "knoten":
+        return technik_knoten.doc(lang, {n["id"]: n["name"] for n in d["nodes"]})
     if name == "datenfluss":
         out = []
         for n, s in enumerate(d["steps"], 1):
@@ -631,7 +636,7 @@ def block(name, lang="de"):
     raise KeyError(name)
 
 
-BLOCKS = ("bild", "datenfluss", "bausteine", "speicher")
+BLOCKS = ("bild", "datenfluss", "bausteine", "speicher", "knoten")
 MARK = re.compile(r"(<!-- technik:(\w+) -->\n)(?:.*?\n)?(<!-- /technik:\2 -->)", re.S)
 
 
@@ -643,6 +648,7 @@ def render_doc(text, lang):
 def write_docs():
     """Writes the generated parts into docs/de/architektur.md and docs/en/architecture.md (hilfe.py --docs calls it)."""
     data.cache_clear()
+    technik_knoten.seite.cache_clear()
     changed = []
     for lang, path in DOCS.items():
         with open(path, encoding="utf-8") as f:
@@ -664,6 +670,20 @@ def technik(request: Request, lang: str = "de"):
     """Zustand → Technik: parts, picture, steps and storage places (names and paths only)."""
     guard.limit(request, "technik", None, True)
     return data("en" if lang == "en" else "de")
+
+
+@router.get("/api/admin/technik/knoten/{nid}", dependencies=[Depends(auth)])
+def technik_knoten_seite(request: Request, nid: str, lang: str = "de"):
+    """Zustand → Technik, Knoten-Seite: how one box works (texts from technik_knoten.py, numbers from the code) and
+    today's counts of it (numbers only)."""
+    guard.limit(request, "technikseite", None, True)
+    lang = "en" if lang == "en" else "de"
+    page = technik_knoten.seite(nid, lang) if nid in KNOTEN else None
+    if not page:
+        raise HTTPException(404, "no page for this box")
+    v = KNOTEN[nid]
+    return dict(page, name=v[3 if lang == "en" else 2], sub=v[4], group=v[5], files=v[8],
+                neighbours=sorted({b if a == nid else a for a, b in KANTEN if nid in (a, b)}), today=technik_knoten.heute(nid))
 
 
 if __name__ == "__main__" and "--docs" in sys.argv:

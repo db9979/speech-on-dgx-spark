@@ -18,6 +18,7 @@ import backup  # noqa: E402
 import profiles  # noqa: E402
 import speicher  # noqa: E402
 import technik  # noqa: E402
+import technik_knoten  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from tests.test_ui_browser import async_playwright, browser_ok, chromium  # noqa: E402
 
@@ -241,6 +242,95 @@ class Endpoint(unittest.TestCase):
                 self.assertNotIn("Gespräch", json.dumps([g["name"] for g in d["groups"]], ensure_ascii=False))
 
 
+class Knoten(unittest.TestCase):
+    """Knoten-Seiten (technik_knoten.py, Dominik 2026-10-14: „ebenso aktuell halten wie alles andere“)."""
+
+    def test_every_box_has_a_page(self):
+        pages, offen = set(technik_knoten.SEITEN_DATEN), technik_knoten.OFFEN
+        self.assertEqual(pages | offen, set(technik.KNOTEN), "every box of the picture gets a page (technik_knoten.SEITEN_DATEN)")
+        self.assertEqual(pages & offen, set(), "a box with a page is no longer open")
+
+    def test_pages_are_complete(self):
+        for nid, p in technik_knoten.SEITEN_DATEN.items():
+            ids = [s["id"] for s in p["ablauf"]]
+            self.assertGreaterEqual(len(ids), 4, nid)
+            self.assertEqual(len(ids), len(set(ids)), nid)
+            self.assertEqual(p["ablauf"][0]["art"], "start", nid)
+            for s in p["ablauf"]:
+                self.assertIn(s["art"], technik_knoten.ARTEN, nid)
+                for f in ("name", "sub", "text"):
+                    self.assertTrue(all(isinstance(x, str) and x.strip() for x in s[f]) and len(s[f]) == 2, f"{nid}/{s['id']}/{f}")
+                if s["side"]:
+                    kind, label, what = s["side"]
+                    self.assertIn(kind, technik_knoten.SEITEN, nid)
+                    if kind in ("ok", "zurueck"):
+                        self.assertIn(what, ids, f"{nid}/{s['id']}: exit to a real step")
+                    if s["art"] == "frage":
+                        self.assertIn(label, technik_knoten.LABELS, f"{nid}/{s['id']}: a question leaves with ja or nein")
+            for name, path, result in p.get("beispiele", []):
+                for x in path:
+                    self.assertIn(x.rstrip("!"), ids, f"{nid}: example {name[0]}")
+                    if x.endswith("!"):
+                        self.assertTrue(next(s for s in p["ablauf"] if s["id"] == x[:-1])["side"], f"{nid}: {x} has an exit")
+            for lang in ("de", "en"):
+                d = technik_knoten.seite(nid, lang)
+                self.assertTrue(d["kurz"] and d["warum"] and d["code"], f"{nid} {lang}")
+                self.assertNotIn("{", json.dumps(d, ensure_ascii=False).replace("{\"", "").replace("{}", ""), f"{nid} {lang}: every placeholder filled")
+
+    def test_names_in_the_code_exist(self):
+        for nid, p in technik_knoten.SEITEN_DATEN.items():
+            for ref in technik_knoten.refs(p):
+                self.assertIsNotNone(technik_knoten.finden(ref), f"{nid}: {ref} is gone from the code, change the page")
+            for ph in technik_knoten.placeholders(p):
+                technik_knoten.fill(ph)
+            for t in p.get("tests", []):
+                self.assertTrue(os.path.exists(os.path.join(APP, "tests", t + ".py")), f"{nid}: test {t}")
+
+    def test_page_follows_its_code(self):
+        """A changed function, class or constant of a box turns this red until its page was checked (rule 30)."""
+        for nid, p in technik_knoten.SEITEN_DATEN.items():
+            now = technik_knoten.stand(p)
+            self.assertEqual(p["stand"], now, f"the code of the box {nid} changed ({', '.join(technik_knoten.refs(p))}): check "
+                                              f"its page in technik_knoten.SEITEN_DATEN (way, rules, numbers, texts), then set "
+                                              f"its \"stand\" to \"{now}\" and run python3 app/panel/hilfe.py --docs")
+
+    def test_fingerprint_counts_what_the_code_does(self):
+        t = technik_knoten._tokens
+        a = "def f(x):\n    return x + 1\n"
+        self.assertEqual(t(a), t("def f(x):\n\n    # a comment\n    return x  +  1\n"))
+        self.assertNotEqual(t(a), t("def f(x):\n    return x + 2\n"))
+
+    def test_page_endpoint(self):
+        anon = TestClient(panel.app)
+        self.assertIn(anon.get("/api/admin/technik/knoten/waechter").status_code, (401, 403))
+        admin = TestClient(panel.app)
+        self.assertEqual(admin.post("/api/login", json={"password": "secret-admin"}).status_code, 200)
+        self.assertEqual(admin.get("/api/admin/technik/knoten/nichtda").status_code, 404)
+        for lang in ("de", "en"):
+            d = admin.get("/api/admin/technik/knoten/waechter" + ("?lang=en" if lang == "en" else "")).json()
+            self.assertEqual(d["name"], technik.KNOTEN["waechter"][3 if lang == "en" else 2])
+            self.assertEqual(len(d["steps"]), len(technik_knoten.SEITEN_DATEN["waechter"]["ablauf"]))
+            self.assertIn("aussen", d["neighbours"])
+            self.assertTrue(all(isinstance(v, (int, bool)) for v in d["today"].values()), "today: numbers only")
+            self.assertNotIn("secret-admin", json.dumps(d))
+        data = admin.get("/api/admin/technik").json()
+        self.assertEqual({n["id"] for n in data["nodes"] if n["page"]}, set(technik_knoten.SEITEN_DATEN))
+
+    def test_today_numbers_only(self):
+        import live
+        old = live.on
+        live.on = lambda: True
+        try:
+            live._bump("guard_bad")
+            d = technik_knoten.heute("waechter")
+            self.assertGreaterEqual(d["guard_bad"], 1)
+            self.assertEqual(set(d), {k for k, _ in technik_knoten.SEITEN_DATEN["waechter"]["heute"]})
+            live.on = lambda: False
+            self.assertEqual(technik_knoten.heute("waechter"), {"off": True})
+        finally:
+            live.on = old
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     @classmethod
@@ -321,6 +411,35 @@ class Page(unittest.TestCase):
                     self.assertTrue(await pg.is_visible("#tktabs"))
                 await pg.fill("#tkq", "wissen.db")
                 self.assertEqual(await pg.evaluate("document.querySelectorAll('#tkview .ld-row').length"), 1)
+                # Knoten-Seite: from the box's detail, its way drawn from the steps, an example plays, Vollbild, back
+                await pg.click("#tktabs [data-tkv=bild]")
+                await pg.evaluate("document.querySelector(\"#tkview [data-tkn='waechter']\").dispatchEvent(new MouseEvent('click',{bubbles:true}))")
+                await pg.click("#tkview .tk-det [data-tkpage='waechter']")
+                await self._until(pg, "TK.view==='knoten'&&!!document.querySelector('#tkview .kn-svg')")
+                steps = technik_knoten.SEITEN_DATEN["waechter"]["ablauf"]
+                self.assertEqual(await pg.evaluate("document.querySelectorAll('#tkview .kn-svg .kn-st').length"), len(steps))
+                self.assertEqual(await pg.evaluate("document.querySelectorAll('#tkview .kn-steps li').length"), len(steps))
+                self.assertTrue(await pg.evaluate(wide), f"{w}: Knoten-Seite")
+                await pg.click("#tkview [data-tkplay='4']")       # Notaus an: blocked at step 4
+                ex = technik_knoten.seite("waechter")["examples"][4]
+                await self._until(pg, "document.getElementById('kncap').textContent.includes(%s)" % json.dumps(ex["result"]))
+                self.assertTrue(await pg.evaluate("document.querySelector(\"#tkview .kn-side[data-kns='s4!']\").classList.contains('lit')"))
+                self.assertTrue(await pg.evaluate("document.querySelector(\"#tkview .kn-st[data-kns='s9']\").classList.contains('dim')"))
+                await pg.click("#kn-ablauf [data-tkfull]")
+                box = await pg.evaluate("(()=>{const r=document.getElementById('tkview').getBoundingClientRect();return[r.left,r.top]})()")
+                self.assertEqual(tuple(box), (0, 0), f"{w}: Vollbild of the way")
+                self.assertTrue(await pg.evaluate("!!document.querySelector('#tkview .kn-svg')&&!document.querySelector('#tkview #kn-code')"))
+                await pg.keyboard.press("Escape")
+                self.assertTrue(await pg.evaluate("!TK.full&&!!document.querySelector('#tkview #kn-code')"))
+                if 380 < w < 400:   # every page fits a phone
+                    for nid in technik_knoten.SEITEN_DATEN:
+                        await pg.evaluate(f"knOpen('{nid}')")
+                        await self._until(pg, f"TK.page==='{nid}'&&!!document.querySelector('#tkview .kn-svg')")
+                        self.assertTrue(await pg.evaluate(wide), f"{w}: page {nid}")
+                    await pg.evaluate("knOpen('waechter')")
+                    await self._until(pg, "TK.page==='waechter'&&!!document.querySelector('#tkview .kn-head')")
+                await pg.click("#tkview .kn-head [data-tkv=bild]")
+                self.assertEqual(await pg.evaluate("TK.view+':'+TK.sel"), "bild:waechter")
                 await pg.click("#tktabs [data-tkv=module]")
                 self.assertIn("technik.py", await pg.text_content("#tkview"))
                 self.assertTrue(await pg.evaluate(wide), f"{w}: Bausteine")
