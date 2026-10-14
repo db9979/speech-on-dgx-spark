@@ -378,10 +378,12 @@ async def prepare(request):
         ha = None
     if tg:
         system = (system + "\n\n" + chat.TELEGRAM_HINT).strip()
-    # the panel's own chat (browser, phone view, Android app): Markdown is shown formatted, never spoken
-    if not body.get("client") and not app_key and not mcp:
+    # the panel's own chat (browser, phone view, Android app) and the Begleiter: Markdown is shown formatted,
+    # never spoken
+    if body.get("client") in (None, "", "desk") and not app_key and not mcp:
         system = (system + "\n\n" + chat.WEB_HINT + " " + (
-            chat.WEB_TEXT_HINT if body.get("speak") is False else chat.WEB_SPOKEN_HINT)).strip()
+            chat.WEB_TEXT_HINT if body.get("speak") is False and body.get("client") != "desk"   # the Begleiter may read aloud
+            else chat.WEB_SPOKEN_HINT)).strip()
     if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
         print("homeassistant: turn for", profiles.log_name(who), "- tools",
               "offered" if ha else "NOT offered: " + (

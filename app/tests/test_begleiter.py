@@ -253,6 +253,29 @@ class Begleiter(unittest.TestCase):
         self.assertTrue(r.json()["answer"])
         self.assertEqual(prog.post("/api/desk/ask", json={"text": ""}).json()["answer"], "Ich habe keine Frage gehört.")
 
+    def test_ask_sends_markdown_for_new_builds_and_plain_for_old_ones(self):
+        """Dominik 2026-10-14 "die chats landen in der begleiter app unformatiert": "md" carries the Markdown
+        the window draws (gegliedert), "answer" stays plain for older builds and for reading aloud; secrets are
+        hidden in both, and the model hears that the answer is shown formatted but may be read aloud."""
+        import chat
+        c = self.on("DkFormat")
+        _, prog = self.pair(c)
+        helpers.LLM_CALLS.clear()
+        r = prog.post("/api/desk/ask", json={"text": "SAY |x| **Heute:**\n1. `main.cf` prüfen\n2. Das Passwort ist **Sonne77**."})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual(d["answer"], "Heute:\n1. main.cf prüfen\n2. Das Passwort ist nur schriftlich sichtbar.")
+        self.assertEqual(d["md"], "**Heute:**\n1. `main.cf` prüfen\n2. Das Passwort ist nur schriftlich sichtbar.")
+        self.assertNotIn("Sonne77", json.dumps(d))
+        system = helpers.LLM_CALLS[-1]["messages"][0]["content"]
+        self.assertIn(chat.WEB_HINT, system)
+        self.assertIn(chat.WEB_SPOKEN_HINT, system)   # no tables or code blocks: the Begleiter may read it aloud
+        self.assertNotIn(chat.WEB_TEXT_HINT, system)
+        # Siri never gets Markdown, not even as an extra field
+        key = profiles.add_device("iPhone Siri DkFormat", uid_of("DkFormat"))
+        r = TestClient(panel.app).post("/api/siri/ask", json={"text": "SAY |x| **Fertig.**"}, headers={"X-Speech-Device": key})
+        self.assertEqual(r.json(), {"answer": "Fertig."})
+
     def test_notes_wait_for_the_program_and_only_with_the_part_on(self):
         c = self.on("DkEmil")
         _, prog = self.pair(c)

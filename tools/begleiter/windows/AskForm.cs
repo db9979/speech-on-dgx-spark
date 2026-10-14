@@ -403,7 +403,7 @@ internal sealed class AskForm : ThemedForm
         _cts = new CancellationTokenSource();
         try
         {
-            string answer = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token, _note);
+            (string answer, string? md) = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token, _note);
             if (IsDisposed)
             {
                 return;
@@ -417,7 +417,7 @@ internal sealed class AskForm : ThemedForm
             }
 
             _chat.Pending = false;
-            _chat.Add(mine: false, answer.Trim());
+            _chat.Add(mine: false, answer.Trim(), md?.Trim());
             string mode = AskSpeakModes.Normalize(_config.AskSpeak);
             if (answer.Trim().Length > 0 && _desk()?.IsOn(Parts.Speak) == true && _desk()?.Aloud != false &&
                 (mode == AskSpeakModes.Always || (mode == AskSpeakModes.Spoken && spoken)))
@@ -653,10 +653,12 @@ internal sealed class AskForm : ThemedForm
 /// <summary>
 /// Verlauf als Sprechblasen, selbst gezeichnet: eigene Fragen rechts mit Akzent-Verlauf, Antworten links als
 /// weiche Karte mit dem Gesicht daneben und „Kopieren“ darunter. Rechtsklick auf eine Blase: Kopieren.
+/// Antworten mit Markdown (MdText) erscheinen gegliedert: Überschriften fett, Listen mit Zeichen und Einzug,
+/// Code in Monospace; kopiert und vorgelesen wird der schlichte Text.
 /// </summary>
 internal sealed class ChatView : Panel, IThemed
 {
-    private readonly List<(bool Mine, string Text)> _messages = new();
+    private readonly List<(bool Mine, string Text, List<MdLine>? Md)> _messages = new();
     private readonly List<Block> _blocks = new();
     private readonly System.Windows.Forms.Timer _dots = new() { Interval = 400 };
     private readonly ContextMenuStrip _menu = new();
@@ -713,9 +715,11 @@ internal sealed class ChatView : Panel, IThemed
         }
     }
 
-    public void Add(bool mine, string text)
+    /// <summary>Eine Blase anfügen; md ist die Antwort mit Markdown (gegliedert gezeigt), text der schlichte Text.</summary>
+    public void Add(bool mine, string text, string? md = null)
     {
-        _messages.Add((mine, text));
+        List<MdLine>? lines = !mine && !string.IsNullOrWhiteSpace(md) ? MdText.Lines(md) : null;
+        _messages.Add((mine, text, lines is { Count: > 0 } ? lines : null));
         AccessibleDescription = (mine ? "Du: " : "Spark: ") + text;
         Relayout(scrollToEnd: true);
     }
@@ -731,7 +735,62 @@ internal sealed class ChatView : Panel, IThemed
 
     private int S(float v) => Draw.Scale(v, _dpi);
 
-    private sealed record Block(int Index, bool Mine, string Text, Rectangle Bubble, Rectangle TextRect, Rectangle Avatar, Rectangle Copy);
+    private sealed record Block(int Index, bool Mine, string Text, Rectangle Bubble, Rectangle TextRect, Rectangle Avatar, Rectangle Copy, List<Row>? Rows = null);
+
+    /// <summary>Eine gezeichnete Zeile einer gegliederten Antwort, relativ zur Textfläche der Blase.</summary>
+    private sealed record Row(MdKind Kind, string Text, string Mark, Rectangle Rect, Rectangle MarkRect, Font Font);
+
+    /// <summary>Die Zeilen einer gegliederten Antwort für die Breite maxText messen und untereinander legen.</summary>
+    private (List<Row> Rows, Size Size) LayoutMd(List<MdLine> lines, int maxText)
+    {
+        var rows = new List<Row>();
+        int y = 0;
+        int width = 0;
+        int step = S(16);
+        Font bold = Theme.UiFont(_dpi, 10f, FontStyle.Bold);
+        Font mono = Theme.MonoFont(_dpi, 9f);
+        for (int i = 0; i < lines.Count; i++)
+        {
+            MdLine l = lines[i];
+            if (l.Kind == MdKind.Blank)
+            {
+                y += S(7);
+                continue;
+            }
+
+            if (l.Kind == MdKind.Rule)
+            {
+                rows.Add(new Row(l.Kind, "", "", new Rectangle(0, y + S(2), Math.Max(S(40), width), S(9)), Rectangle.Empty, Font));
+                y += S(13);
+                continue;
+            }
+
+            if (l.Kind == MdKind.Heading && rows.Count > 0 && lines[i - 1].Kind != MdKind.Blank)
+            {
+                y += S(4);
+            }
+
+            Font font = l.Kind == MdKind.Heading ? bold : l.Kind == MdKind.Code ? mono : Font;
+            int indent = l.Level * step;
+            Rectangle markRect = Rectangle.Empty;
+            if (l.Mark.Length > 0)
+            {
+                Size m = TextRenderer.MeasureText(l.Mark, Font, new Size(1000, 1000), TextFormatFlags.NoPrefix);
+                markRect = new Rectangle(indent, y, m.Width, m.Height);
+                indent += Math.Max(step, m.Width + S(4));
+            }
+
+            int room = Math.Max(S(40), maxText - indent);
+            string shown = l.Text.Length > 0 ? l.Text : " ";
+            Size size = TextRenderer.MeasureText(shown, font, new Size(room, 100000), TextFlags);
+            var rect = new Rectangle(indent, y, room, size.Height);   // drawn as wide as measured, so it wraps the same
+            rows.Add(new Row(l.Kind, shown, l.Mark, rect, markRect, font));
+            width = Math.Max(width, indent + Math.Min(room, size.Width));
+            y = rect.Bottom + (l.Kind == MdKind.Code ? 0 : S(2));
+        }
+
+        return (rows, new Size(Math.Max(1, width), Math.Max(1, y)));
+    }
 
     private const TextFormatFlags TextFlags = TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix;
 
@@ -745,13 +804,13 @@ internal sealed class ChatView : Panel, IThemed
         int padY = S(9);
         int avatar = S(30);
 
-        IEnumerable<(int Index, bool Mine, string Text)> items = _messages.Select((m, i) => (i, m.Mine, m.Text));
+        IEnumerable<(int Index, bool Mine, string Text, List<MdLine>? Md)> items = _messages.Select((m, i) => (i, m.Mine, m.Text, m.Md));
         if (_pending)
         {
-            items = items.Append((-1, false, "Der Spark denkt nach"));
+            items = items.Append((-1, false, "Der Spark denkt nach", (List<MdLine>?)null));
         }
 
-        foreach (var (index, mine, text) in items)
+        foreach (var (index, mine, text, md) in items)
         {
             if (mine)
             {
@@ -765,7 +824,17 @@ internal sealed class ChatView : Panel, IThemed
             {
                 int bx = x0 + avatar + S(8);
                 int maxText = Math.Max(1, (int)((avail - avatar - S(8)) * 0.92) - (2 * padX));
-                Size size = TextRenderer.MeasureText(index < 0 ? text + " ..." : text, Font, new Size(maxText, 100000), TextFlags);
+                List<Row>? rows = null;
+                Size size;
+                if (md is not null)
+                {
+                    (rows, size) = LayoutMd(md, maxText);
+                }
+                else
+                {
+                    size = TextRenderer.MeasureText(index < 0 ? text + " ..." : text, Font, new Size(maxText, 100000), TextFlags);
+                }
+
                 var bubble = new Rectangle(bx, y, size.Width + (2 * padX), size.Height + (2 * padY));
                 Rectangle copy = Rectangle.Empty;
                 int bottom = bubble.Bottom;
@@ -777,7 +846,7 @@ internal sealed class ChatView : Panel, IThemed
                     bottom = copy.Bottom;
                 }
 
-                _blocks.Add(new Block(index, false, text, bubble, Rectangle.Inflate(bubble, -padX, -padY), new Rectangle(x0, y, avatar, avatar), copy));
+                _blocks.Add(new Block(index, false, text, bubble, Rectangle.Inflate(bubble, -padX, -padY), new Rectangle(x0, y, avatar, avatar), copy, rows));
                 y = bottom + S(12);
             }
         }
@@ -858,8 +927,16 @@ internal sealed class ChatView : Panel, IThemed
                     g.DrawPath(pen, path);
                 }
 
-                string shown = b.Index < 0 ? b.Text + " " + new string('.', _dotCount) : b.Text;
-                TextRenderer.DrawText(g, shown, Font, text, b.Index < 0 ? p.Muted : p.Fg, TextFlags);
+                if (b.Rows is { } rows)
+                {
+                    PaintRows(g, rows, text, p);
+                }
+                else
+                {
+                    string shown = b.Index < 0 ? b.Text + " " + new string('.', _dotCount) : b.Text;
+                    TextRenderer.DrawText(g, shown, Font, text, b.Index < 0 ? p.Muted : p.Fg, TextFlags);
+                }
+
                 if (!b.Copy.IsEmpty)
                 {
                     Rectangle copy = b.Copy;
@@ -868,6 +945,31 @@ internal sealed class ChatView : Panel, IThemed
                     TextRenderer.DrawText(g, "Kopieren", f, copy, b.Index == _hoverCopy ? p.Accent : p.Muted, TextFormatFlags.NoPrefix);
                 }
             }
+        }
+    }
+
+    private void PaintRows(Graphics g, List<Row> rows, Rectangle area, Palette p)
+    {
+        Point origin = area.Location;
+        foreach (Row row in rows)
+        {
+            Rectangle rect = row.Rect;
+            rect.Offset(origin);
+            if (row.Kind == MdKind.Rule)
+            {
+                using var pen = new Pen(p.Line);
+                g.DrawLine(pen, area.Left, rect.Top + (rect.Height / 2), area.Right, rect.Top + (rect.Height / 2));
+                continue;
+            }
+
+            if (!row.MarkRect.IsEmpty)
+            {
+                Rectangle mark = row.MarkRect;
+                mark.Offset(origin);
+                TextRenderer.DrawText(g, row.Mark, Font, mark, p.Muted, TextFormatFlags.NoPrefix);
+            }
+
+            TextRenderer.DrawText(g, row.Text, row.Font, rect, p.Fg, TextFlags);
         }
     }
 

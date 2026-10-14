@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// Frag Spark: a question as text (or spoken, when Diktieren is on), the answer as plain, selectable text.
-/// The Spark keeps follow-ups in context itself.
+/// Frag Spark: a question as text (or spoken, when Diktieren is on), the answer as selectable text, formatted
+/// when the Spark sends Markdown (MdAnswer). The Spark keeps follow-ups in context itself.
 @MainActor
 final class AskController: ObservableObject {
     static let shared = AskController()
@@ -13,6 +13,8 @@ final class AskController: ObservableObject {
         let question: String
         let answer: String
         let failed: Bool
+        /// the answer with Markdown, shown formatted; copied and read aloud is `answer`
+        var md: String? = nil
     }
 
     @Published var input = ""
@@ -67,11 +69,12 @@ final class AskController: ObservableObject {
         status = ""
         task = Task { @MainActor [weak self] in
             do {
-                let a = try await client.ask(q, note: note)
+                let (a, md) = try await client.askRich(q, note: note)
                 guard let self else { return }
                 self.noteContext = nil
                 let clean = a.trimmingCharacters(in: .whitespacesAndNewlines)
-                self.entries.append(Entry(question: q, answer: clean, failed: false))
+                let shown = md?.trimmingCharacters(in: .whitespacesAndNewlines)
+                self.entries.append(Entry(question: q, answer: clean, failed: false, md: shown?.isEmpty == false ? shown : nil))
                 Self.speakIfWanted(clean, spoken: spoken)
                 if self.generation == mine {
                     self.input = ""
@@ -197,7 +200,7 @@ struct AskView: View {
                             }
                             ForEach(c.entries) { e in
                                 own(e.question)
-                                answer(e.answer)
+                                answer(e.answer, md: e.md)
                             }
                             if let q = c.pending {
                                 own(q)
@@ -330,10 +333,10 @@ struct AskView: View {
     }
 
     /// the Spark's answer: left, soft card with the face
-    private func answer(_ a: String) -> some View {
+    private func answer(_ a: String, md: String? = nil) -> some View {
         HStack(alignment: .top, spacing: 8) {
             FaceView(size: 30)
-            Text(verbatim: a)
+            (md.map { Text(MdAnswer.styled($0)) } ?? Text(verbatim: a))
                 .font(.system(size: 13))
                 .foregroundColor(Theme.fg)
                 .textSelection(.enabled)
@@ -345,5 +348,47 @@ struct AskView: View {
                     .stroke(Theme.line, lineWidth: 1))
             Spacer(minLength: 30)
         }
+    }
+}
+
+/// A Spark answer with Markdown as AttributedString (like the iPhone app's AnswerText): headings and lists
+/// as lines with "•", bold, italic and `code` inline, links only to public http(s) addresses. Nothing is run.
+enum MdAnswer {
+    static func lines(_ s: String) -> String {
+        s.components(separatedBy: "\n").compactMap { line -> String? in
+            if line.range(of: #"^\s{0,3}(```|~~~)"#, options: .regularExpression) != nil { return nil }
+            if line.range(of: #"^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$"#, options: .regularExpression) != nil { return nil }
+            var l = line
+            if let r = l.range(of: #"^\s{0,3}#{1,6}\s+"#, options: .regularExpression) {
+                l.removeSubrange(r)
+                let head = l.trimmingCharacters(in: CharacterSet(charactersIn: "#* "))
+                l = head.isEmpty ? "" : "**" + head + "**"
+            }
+            if let r = l.range(of: #"^\s*[-*+]\s+"#, options: .regularExpression) {
+                l.replaceSubrange(r, with: String(l[r].prefix(while: { $0 == " " })) + "• ")
+            }
+            return l
+        }.joined(separator: "\n")
+    }
+
+    static func linkOK(_ u: URL) -> Bool {
+        guard let scheme = u.scheme?.lowercased(), scheme == "http" || scheme == "https", u.user == nil,
+              let host = u.host?.lowercased(), host.contains("."), !host.hasSuffix(".local"), !host.hasSuffix(".lan"),
+              !host.hasSuffix(".internal"), !host.hasSuffix(".fritz.box"), !host.hasSuffix(".home.arpa"), !host.contains(":")
+        else { return false }
+        let lan = #"^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2\d|3[01])\.)"#
+        return host.range(of: lan, options: .regularExpression) == nil
+    }
+
+    static func styled(_ s: String) -> AttributedString {
+        let src = lines(s)
+        guard src.count <= 60000, var a = try? AttributedString(markdown: src, options: AttributedString.MarkdownParsingOptions(
+            interpretedSyntax: .inlineOnlyPreservingWhitespace)) else { return AttributedString(src) }
+        let bad = a.runs.compactMap { run -> Range<AttributedString.Index>? in
+            guard let u = run.link else { return nil }
+            return linkOK(u) ? nil : run.range
+        }
+        for r in bad { a[r].link = nil }
+        return a
     }
 }

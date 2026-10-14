@@ -2,7 +2,8 @@
 Markdown aussprechen"): the panel's chat shows the model's Markdown formatted (md.js, never innerHTML from
 model text, links only http(s) to public hosts), the voice never says the signs (textnorm.speech_markdown in
 both speech services, before the secret rule), devices without formatting get the text without the signs
-(textnorm.plain_markdown: Telegram, Siri, Begleiter, reMarkable, watch, speaker displays)."""
+(textnorm.plain_markdown: Telegram, Siri, reMarkable, watch, speaker displays; the Begleiter gets both, see
+test_begleiter)."""
 import asyncio
 import json
 import os

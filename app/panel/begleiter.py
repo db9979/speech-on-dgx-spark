@@ -671,7 +671,8 @@ async def program_ask(request: Request):
             x = next((n for n in _notes.get(prof["id"], []) if n["n"] == body["note"]), None)
         note = x and (x["title"] + ": " + x["body"])
     out = await chat.text_ask(request, prof, {"text": body.get("text"), "tz": body.get("tz"), "note": note or ""}, "desk")
-    return {"answer": str(out.get("answer") or "")}
+    md = out.get("md")   # the Markdown for builds that draw it; "answer" stays plain for older ones
+    return dict({"answer": str(out.get("answer") or "")}, **({"md": md} if isinstance(md, str) and md else {}))
 
 
 @router.post("/api/desk/dictate", dependencies=[Depends(assistant)])

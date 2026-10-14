@@ -520,8 +520,11 @@ internal static class SparkClient
         }
     }
 
-    /// <summary>POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten).</summary>
-    public static async Task<string> AskAsync(string baseUrl, string key, string text, CancellationToken ct, int? note = null)
+    /// <summary>
+    /// POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten). Answer ist schlichter Text (Vorlesen), Md die
+    /// Antwort mit Markdown zum gegliederten Anzeigen (fehlt bei älteren Sparks).
+    /// </summary>
+    public static async Task<(string Answer, string? Md)> AskAsync(string baseUrl, string key, string text, CancellationToken ct, int? note = null)
     {
         var body = new JsonObject { ["text"] = text };
         if (note is { } n)
@@ -536,7 +539,8 @@ internal static class SparkClient
 
         using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/ask") { Content = JsonContent(body) };
         JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
-        return Json.Str(json["answer"]) ?? throw new SparkException(null, "Der Spark hat keine Antwort geschickt.");
+        string answer = Json.Str(json["answer"]) ?? throw new SparkException(null, "Der Spark hat keine Antwort geschickt.");
+        return (answer, Json.Str(json["md"]));
     }
 
     /// <summary>POST /api/desk/dictate – WAV (16 kHz, mono, 16 bit) in Text umwandeln.</summary>

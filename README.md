@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.528** Ask Spark in the companion shows answers formatted: bold headings, lists with marks and indent, code set apart (needs a new companion build)
 - **V01.0.527** Filing folder on the NAS: what the Spark makes and, after a yes, your own things go there; the inbox comes into your documents
 - **V01.0.526** Tests green again: "Who may do what" never shows an outdated state any more
 - **V01.0.525** Tests green again: the search browser test waits until the page is signed in
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.521** Search at the top everywhere (also for profiles, magnifier on phones, box fits), every profile picks its own face
 - **V01.0.520** Re-rank hits: a small model on the CPU puts the best-matching passages first
 - **V01.0.519** Document search: cut at headings, a context line per section, the section in the source note
-- **V01.0.518** Tests green again: the Markdown test waits until the chat page is shown
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

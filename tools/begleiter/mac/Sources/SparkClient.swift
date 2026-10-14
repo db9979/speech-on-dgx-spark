@@ -267,13 +267,19 @@ extension SparkClient {
                             ms: (d["ms"] as? NSNumber)?.intValue)
     }
 
-    /// POST /api/desk/ask (the Spark keeps follow-ups in context itself).
+    /// POST /api/desk/ask (the Spark keeps follow-ups in context itself): the plain answer.
     func ask(_ text: String, note: Int? = nil) async throws -> String {
+        try await askRich(text, note: note).answer
+    }
+
+    /// The same with "md", the answer with Markdown for showing it formatted (missing from older Sparks);
+    /// "answer" stays the plain text for reading aloud and copying.
+    func askRich(_ text: String, note: Int? = nil) async throws -> (answer: String, md: String?) {
         var body: [String: Any] = ["text": String(text.prefix(SparkClient.askMax)), "tz": TimeZone.current.identifier]
         if let note { body["note"] = note }
         let d = try await postJSON("api/desk/ask", body, timeout: 190)
         guard let a = d["answer"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
-        return a
+        return (a, d["md"] as? String)
     }
 
     /// POST /api/desk/dictate with the recording as WAV.

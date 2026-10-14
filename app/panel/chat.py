@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from textnorm import guess_language, hide_secrets, plain_markdown, speakable, speech_markdown  # noqa: E402
+from textnorm import SECRET_HINT, guess_language, hide_secrets, plain_markdown, speakable, speech_markdown  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
@@ -2732,6 +2732,7 @@ async def siri_ask(request: Request):
 
 
 # who asks with a plain text and reads the answer: (trace client, conversation id start, its title)
+MD_ANSWER_MAX = 60000   # like md.js and the Begleiter's MdText: longer answers are not formatted anyway
 ASKERS = {"siri": ("siri", "siri-", "Siri"), "desk": ("desk", "desk-", "Begleiter")}
 
 
@@ -2795,7 +2796,14 @@ async def text_ask(request, prof, body, who="siri"):
         print("chat: siri convo:", type(e).__name__, e, flush=True)
     # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them), and neither
     # shows Markdown: Siri gets the speakable text, the Begleiter the plain one (the history keeps the original)
-    return {"answer": hide_secrets(speech_markdown(answer) if who == "siri" else plain_markdown(answer))}
+    if who == "siri":
+        return {"answer": hide_secrets(speech_markdown(answer))}
+    # the Begleiter: "answer" plain (older builds show it as it is), "md" the Markdown for builds that draw it;
+    # left out when the plain text hides more secrets than the Markdown (a code split by a sign)
+    plain, md = hide_secrets(plain_markdown(answer)), hide_secrets(answer)
+    def hidden(x):
+        return sum(x.count(h) for h in SECRET_HINT.values())
+    return dict({"answer": plain}, **({"md": md[:MD_ANSWER_MAX]} if hidden(md) >= hidden(plain) else {}))
 
 
 def _watch_job(job_id):

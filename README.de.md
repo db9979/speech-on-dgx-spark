@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.528** Frag Spark im Begleiter zeigt Antworten gegliedert: Überschriften fett, Listen mit Zeichen und Einzug, Code abgesetzt (neuer Begleiter-Build nötig)
 - **V01.0.527** Ablage-Ordner auf der NAS: Erstelltes und nach einem Ja Eigenes landet dort, der Eingang kommt zu den Dokumenten
 - **V01.0.526** Tests wieder grün: „Wer darf was“ zeigt nie mehr einen veralteten Stand
 - **V01.0.525** Tests wieder grün: der Browser-Test der Suche wartet, bis die Seite angemeldet ist
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.521** Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst
 - **V01.0.520** Treffer nachsortieren: ein kleines Modell auf dem Prozessor stellt die passendsten Fundstellen nach vorn
 - **V01.0.519** Dokumentensuche: Schnitt an Überschriften, Kontextzeile je Abschnitt, Abschnitt in der Quellenangabe
-- **V01.0.518** Tests wieder grün: Markdown-Test wartet, bis die Chat-Seite sichtbar ist
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
