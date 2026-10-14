@@ -304,11 +304,13 @@ class Browser(unittest.TestCase):
                             await route.fulfill(status=200, content_type="application/json", body=json.dumps(VIEW))
                         await pg.route("**/api/profile/mailstil", view)
                         await pg.goto(base + "/")
-                        await pg.wait_for_function("typeof lzIdle!=='function'||lzIdle()")
+                        for _ in range(100):   # the start (/api/whoami) has set the switches; before, Ich has no E-Mail page yet
+                            if await pg.evaluate("typeof MSTIL_ON!=='undefined'&&MSTIL_ON&&MAIL_ON&&!!PROFILE"):
+                                break
+                            await pg.wait_for_timeout(100)
                         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
-                        await pg.evaluate("MAIL_ON=true;MSTIL_ON=true")
                         await pg.evaluate("openMe('mailbox')")
-                        await pg.evaluate("showMailStil()")
+                        await pg.wait_for_selector("#mailbox", state="visible")
                         await pg.wait_for_selector("#mailstil .ic-tabs button")
                         tabs = await pg.eval_on_selector_all("#mailstil .ic-tabs button", "b=>b.map(x=>x.textContent)")
                         self.assertEqual(tabs, ["Privat", "Beruflich", "Unbekannt"])
