@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.543** License now FSL-1.1-MIT: free for you, family, friends, teaching and research, no competing sale; every version turns MIT after two years
 - **V01.0.542** Inbox tidying: a mode line explains Off, Preview, Safe and Full; switching works again with the second login step
 - **V01.0.541** Admin without a second stage: a profile with a role is admin at once, "Confirm" no longer asks admins
 - **V01.0.540** Architecture pages: clicking a bubble shows its text at once, rules, numbers and code lead to their step
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.536** Tests green again: the model list test starts with a fresh minute of its rate limit
 - **V01.0.535** NAS status: use, RAID, disks and temperature of your Synology, notes to the admins, ask by voice; knowledge folders read documents before pictures
 - **V01.0.534** Channel tag in your own blue bubble (e.g. "Companion") readable again: white like the text, light and dark
-- **V01.0.533** Android app 1.3.0: update right from the app, checked and from your own Spark; Device updates shows the app version per phone
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -121,4 +121,4 @@ The project is free. If you like it, you can support it at [buymeacoffee.com/zqu
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The models (Qwen3-ASR, Qwen3-TTS) and packages (vLLM, vllm-omni, PyTorch) are downloaded during installation and come under their own licenses. This project is not affiliated with NVIDIA or the Qwen team.
+FSL-1.1-MIT (Functional Source License), see [LICENSE](LICENSE). You may use, read, change and share the Spark for yourself, your family and friends, for teaching and research; the only thing not allowed is offering it as a competing commercial product. Every version turns MIT on its own two years after its release. Versions up to V01.0.542 remain under MIT. Third-party parts included (e.g. XiaoZhi firmware, Lucide icons) keep their own license. The models (Qwen3-ASR, Qwen3-TTS) and packages (vLLM, vllm-omni, PyTorch) are downloaded during installation and come under their own licenses. This project is not affiliated with NVIDIA or the Qwen team.
