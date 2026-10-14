@@ -31,6 +31,7 @@ import docmake
 import fixes
 import guard
 import homeassistant
+import verbrauch
 import zustand_wz
 from common import load_config
 from core import auth
@@ -614,6 +615,7 @@ async def ask_model(ccfg, text, info=None, uid=None):
                                            "json_schema": {"name": "absicht", "schema": schema}},
                        "chat_template_kwargs": {"enable_thinking": False}}
             r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+            verbrauch.response("Weiche", r, payload)
             r.raise_for_status()
             raw = r.json()["choices"][0]["message"].get("content") or ""
     except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as e:

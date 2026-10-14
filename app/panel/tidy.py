@@ -50,6 +50,7 @@ import notaus
 import profiles
 import vorrang
 import features
+import verbrauch
 
 CATS = {"werbung": "Werbung", "newsletter": "Newsletter", "rechnungen": "Rechnungen",
         "benachrichtigungen": "Benachrichtigungen", "social": "Social"}
@@ -507,6 +508,7 @@ def classify(h, text):
                    "chat_template_kwargs": {"enable_thinking": False}}
         vorrang.hold("Mail sortieren", model=True)   # a worker thread: waits while somebody speaks
         r = c.post(url + "/chat/completions", json=payload, headers=headers)
+        verbrauch.response("Postfach aufräumen", r, payload)
         r.raise_for_status()
         return parse_class(r.json()["choices"][0]["message"].get("content") or "")
 

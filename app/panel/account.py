@@ -82,7 +82,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
        "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
-       "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "person_priority": "vorrang",
+       "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund",
@@ -1253,6 +1253,7 @@ async def assistant_say(request: Request):
 async def _say(cfg, req, text, who, device):
     """The TTS stream of /api/assistant/say as server-sent events."""
     mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
+    pcm = 0                   # bytes spoken (Verbrauchszähler)
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
         async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
                             json=req, headers=api_headers()) as r:
@@ -1269,8 +1270,11 @@ async def _say(cfg, req, text, who, device):
                         until = time.time()
                     # 16-bit mono PCM at 24 kHz: 48000 bytes per second, 4 base64 characters per 3 bytes
                     until = max(until, time.time()) + len(audio) * 3 / 4 / 48000
+                    pcm += len(audio) * 3 // 4
                     echo.played(mine, until)
                     yield f"data: {json.dumps({'type': 'audio', 'audio': audio})}\n\n"
+    import verbrauch
+    verbrauch.spoken("Antwort sprechen", pcm, who=verbrauch.who_of(who))
     yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
 

@@ -190,9 +190,13 @@ async def run(job, factory, retries=RETRIES, sleep=asyncio.sleep):
         raise Busy(job)
 
 
-async def post(c, job, url, **kw):
-    """One background request to the language model (httpx client c), see run()."""
-    return await run(job, lambda: c.post(url, **kw))
+async def post(c, job, url, who=None, **kw):
+    """One background request to the language model (httpx client c), see run(). Counted under its job name, for
+    the profile `who` when the work is for one (verbrauch.py, numbers only)."""
+    r = await run(job, lambda: c.post(url, **kw))
+    import verbrauch
+    verbrauch.response(job, r, kw.get("json"), who)
+    return r
 
 
 async def in_thread(job, fn, *args):

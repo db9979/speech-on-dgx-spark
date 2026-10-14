@@ -7260,6 +7260,126 @@
           }
         }
       }
+    },
+    "Verbrauch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage"
+          }
+        }
+      }
+    },
+    "Der Verbrauchszähler ist aus. Einschalten unter Funktionen → Verbrauchszähler.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The usage counter is off. Switch it on under Features → Usage counter."
+          }
+        }
+      }
+    },
+    "Sprachmodell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language model"
+          }
+        }
+      }
+    },
+    "Aus dem Zwischenspeicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From the cache"
+          }
+        }
+      }
+    },
+    "Sprache gehört / gesprochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech heard / spoken"
+          }
+        }
+      }
+    },
+    "30 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 days"
+          }
+        }
+      }
+    },
+    "12 Monate": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 months"
+          }
+        }
+      }
+    },
+    "Nach Modell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By model"
+          }
+        }
+      }
+    },
+    "Nach Profil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By profile"
+          }
+        }
+      }
+    },
+    "Zähler leeren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty counters"
+          }
+        }
+      }
+    },
+    "Nur Zahlen, nie Fragen oder Antworten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numbers only, never questions or answers."
+          }
+        }
+      }
+    },
+    "Alle Zähler leeren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty all counters?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

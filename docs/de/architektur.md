@@ -293,6 +293,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/tracelog.py` | Logs → Anfragen: der Weg jeder Anfrage |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll |
 | `app/panel/update.py` | Updates von GitHub, nur nach grünem Test |
+| `app/panel/verbrauch.py` | Verbrauchszähler je Modell, Aufgabe und Profil, Tageskontingent |
 | `app/panel/wartung.py` | Wartungspause: Spark hält an, während ein Modell neu eingespielt wird |
 | `app/panel/wege.py` | Sprung-Links in Texten außerhalb des Panels |
 
@@ -480,6 +481,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/update-progress.json` | Update-Fortschritt | – | nein |
 | `state/update-target` | Gewünschter Update-Stand | – | nein |
 | `state/vapid.pem` | Web-Push-Schlüssel | ist ein Schlüssel | ja |
+| `state/verbrauch-kontingent.json` | eigene Tageskontingente | – | ja |
+| `state/verbrauch.json` | Verbrauch je Modell, Aufgabe und Profil (nur Zahlen) | – | nein |
 | `state/vision.json` | Bildfragen, 10 min | – | nein |
 | `state/vorrang-key` | Schlüssel Panel ↔ Sprachdienste | ist ein Schlüssel | nein |
 | `state/wartung.json` | Wartungspause | – | nein |
@@ -1105,7 +1108,7 @@ flowchart TD
 8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
 10. <a id="kn-middleware-s10"></a>**Update läuft?**: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED).
-11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“).
+11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil.
 12. <a id="kn-middleware-s12"></a>**Antwort mit Schutz**: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure.
 
 **Beispiele:** Einstellung im Browser zu Hause: Durch: der Endpunkt prüft die Anmeldung, die Änderung steht im Admin-Protokoll. · Fremde Webseite schickt ein Formular: Abgewiesen mit 403, bevor ein Endpunkt etwas tut. · Notaus Stufe 1, App unterwegs: Gesperrt mit 503 und der Stufe; die App zeigt den Notaus. · Großer Upload ohne Anmeldung: Abgewiesen mit 401, kein Byte gelesen.
@@ -1151,7 +1154,7 @@ Gilt bei: [Schritt 4](#kn-middleware-s4), [Schritt 5](#kn-middleware-s5), [Schri
 - `app/panel/notaus.py` `mine_gate`: Mein Notaus für Geräteschlüssel ([Schritt 3](#kn-middleware-s3))
 - `app/panel/notaus.py` `gate`: was bei welcher Stufe durchkommt ([Schritt 4](#kn-middleware-s4))
 - `app/panel/notaus.py` `at_home`: im Heimnetz oder von außen ([Schritt 5](#kn-middleware-s5))
-- `app/panel/panel.py` `sessions`: fremde Seiten, Protokoll, Cookies erneuern ([Schritt 7](#kn-middleware-s7), [Schritt 12](#kn-middleware-s12))
+- `app/panel/panel.py` `sessions`: fremde Seiten, Protokoll, Cookies erneuern ([Schritt 7](#kn-middleware-s7), [Schritt 11](#kn-middleware-s11), [Schritt 12](#kn-middleware-s12))
 - `app/panel/guard.py` `same_origin`: die Herkunftsregel ([Schritt 7](#kn-middleware-s7))
 - `app/panel/panel.py` `_may_upload`: große Uploads nur mit Anmeldung ([Schritt 8](#kn-middleware-s8))
 - `app/common.py` `BodyLimit`: Größengrenze vor dem Lesen ([Schritt 9](#kn-middleware-s9))
@@ -2136,14 +2139,14 @@ flowchart TD
 2. <a id="kn-llm-s1w"></a>**Wartungspause?**: Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der Zeit endet die Pause erst, wenn das Modell 2-mal hintereinander antwortet.
 3. <a id="kn-llm-s2"></a>**Verbindung für diese Antwort**: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter.
 4. <a id="kn-llm-s3"></a>**Modellname**: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse.
-5. <a id="kn-llm-s4"></a>**Anfrage bauen**: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs meldet der Server, wie viel er gelesen hat und wie viel aus seinem Zwischenspeicher kam.
-6. <a id="kn-llm-s5"></a>**Wartet jemand mit Vorrang?**: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf.
+5. <a id="kn-llm-s4"></a>**Anfrage bauen**: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs oder Verbrauchszähler meldet der Server am Ende, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam.
+6. <a id="kn-llm-s5"></a>**Wartet jemand mit Vorrang?**: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. Davor prüft das Panel das Tageskontingent: ein Profil darüber bekommt einen festen Satz statt einer Antwort.
 7. <a id="kn-llm-s6"></a>**Eine Runde an das Modell**: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie.
 8. <a id="kn-llm-s7"></a>**Zu lang für das Modell?**: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu.
 9. <a id="kn-llm-s8"></a>**Erste Zeile rechtzeitig?**: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille.
 10. <a id="kn-llm-s9"></a>**Zeilen lesen**: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen.
 11. <a id="kn-llm-s10"></a>**Nur Antworttext weiter**: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“.
-12. <a id="kn-llm-s11"></a>**Runde festhalten**: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang.
+12. <a id="kn-llm-s11"></a>**Runde festhalten**: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. Der Verbrauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers geschätzt, rund 3.5 Zeichen je Token).
 13. <a id="kn-llm-s12"></a>**Fehler unterwegs?**: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text.
 14. <a id="kn-llm-s13"></a>**Text und Werkzeugaufrufe zurück**: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel.
 
@@ -2165,10 +2168,12 @@ flowchart TD
 - Einstellungen → Sprachmodell, unter Erweitert: Zeitlimit für eine Antwort.
 - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst.
 - Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30).
+- Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent je Profil.
 
 #### Was du siehst
 
 - Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und die Zeit bis zum ersten Wort.
+- Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil.
 - Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet.
 
 #### Im Code
@@ -2187,6 +2192,8 @@ flowchart TD
 - `app/panel/vorrang.py` `run`: Hintergrundarbeit weicht der Sprache ([Schritt 1](#kn-llm-s1))
 - `app/panel/wartung.py` `paused`: Wartungspause: das Modell wird nicht gefragt ([Schritt 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: der feste Satz mit der Restzeit ([Schritt 2](#kn-llm-s1w))
+- `app/panel/verbrauch.py` `llm`: zählt Tokens einer Runde ([Schritt 12](#kn-llm-s11))
+- `app/panel/verbrauch.py` `over`: Tageskontingent erreicht? ([Schritt 6](#kn-llm-s5))
 
 Selbsttests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`, `test_wartung`
 
@@ -2270,6 +2277,7 @@ flowchart TD
 
 #### Was du siehst
 
+- Zustand → Verbrauch: gehörte Sekunden je Tag, Aufgabe und Profil.
 - Zustand → Monitoring: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.
 - Zustand → Logs → Anfragen: wie lange eine Aufnahme gewartet hat und wie viele sie überholt hat.
 
@@ -2365,6 +2373,7 @@ flowchart TD
 
 #### Was du siehst
 
+- Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.
 - Zustand → Monitoring: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die Warteschlange.
 
 #### Im Code
@@ -2542,7 +2551,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (28, kommen in jede Sicherung) oder backup.STATE_LOCAL (44, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (45, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2552,8 +2561,8 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **28** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **44** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **29** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **45** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

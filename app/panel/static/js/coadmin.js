@@ -8,7 +8,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_ROLE=who.admin_role||nu
   if(!elevated())return;document.body.classList.add('coadm');
   if(ADMIN_BY!=='admin'&&LG.tab==='audit')LG.tab='adm';
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
-    document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test'&&x[0]!=='verb'&&x[0]!=='tech');
+    document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test'&&x[0]!=='verb'&&x[0]!=='usage'&&x[0]!=='tech');
     // Funktionen: only "Wer darf was" (the blocks, to lift them), not the settings form
     GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route');lastSec.feat='who'}
   // signing out is the profile's own sign-out: the admin rights end with it

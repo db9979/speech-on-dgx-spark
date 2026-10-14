@@ -70,6 +70,7 @@ import numpy as np
 import echo
 import logfilter
 import notaus
+import verbrauch
 import profiles
 import spkcode
 import vault
@@ -567,6 +568,7 @@ async def transcribe(pcm: bytes) -> str:
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                          files={"file": ("speaker.wav", wav16k(pcm))}, data={"language": "auto", "response_format": "json"},
                          headers=api_headers())
+    verbrauch.heard("Lautsprecher", r)
     r.raise_for_status()
     return str(r.json().get("text", "")).strip()
 
@@ -594,25 +596,28 @@ async def tts_stream(uid, text):
     if st.get("voice"):
         body["voice"] = st["voice"]
     left = 60 * OUT_RATE * 2
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-        async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
-                            headers=api_headers()) as r:
-            r.raise_for_status()
-            async for line in r.aiter_lines():
-                if not line.startswith("data:"):
-                    continue
-                try:
-                    ev = json.loads(line[5:])
-                except ValueError:
-                    continue
-                if ev.get("type") == "speech.audio.error":
-                    raise RuntimeError(str(ev.get("error"))[:120])
-                if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
-                    pcm = base64.b64decode(ev["audio"])[:left]
-                    left -= len(pcm)
-                    yield pcm
-                    if left <= 0:
-                        return
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+            async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
+                                headers=api_headers()) as r:
+                r.raise_for_status()
+                async for line in r.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    try:
+                        ev = json.loads(line[5:])
+                    except ValueError:
+                        continue
+                    if ev.get("type") == "speech.audio.error":
+                        raise RuntimeError(str(ev.get("error"))[:120])
+                    if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                        pcm = base64.b64decode(ev["audio"])[:left]
+                        left -= len(pcm)
+                        yield pcm
+                        if left <= 0:
+                            return
+    finally:   # Verbrauchszähler: seconds spoken at the speaker, for its profile
+        verbrauch.spoken("Lautsprecher", 60 * OUT_RATE * 2 - left, who=uid)
 
 
 async def _nothing():

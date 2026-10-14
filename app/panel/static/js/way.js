@@ -102,7 +102,8 @@ const WAY_ROWS='.zrow,.znrow,.kn-tn',WAY_CTRL='a,button,input,select,textarea,la
 const WAY_CARDS={zbg:['Funktionen → Mein Zustand','Features → My status'],zsvc:['Funktionen → Dienst-Wächter','Features → Service watch'],zwart:['Funktionen → Wartungspause','Features → Maintenance pause'],
   znas:['Ich → Speicher','Me → Storage'],znaszustand:['Funktionen → Zustand der NAS','Features → NAS status'],
   znasquelle:['Ich → Speicher','Me → Storage'],zstore:['Ich → Speicher','Me → Storage'],
-  zdev:['Funktionen → Geräte-Updates','Features → Device updates'],zdocs:['Funktionen → Eigene Dokumente','Features → Own documents']};
+  zdev:['Funktionen → Geräte-Updates','Features → Device updates'],zdocs:['Funktionen → Eigene Dokumente','Features → Own documents'],
+  zverbrauch:['Zustand → Verbrauch','Status → Usage']};
 function wayRowWay(r){if(r.dataset.way)return r.dataset.way;for(let c=r.parentElement;c;c=c.parentElement)if(WAY_CARDS[c.id])return t(...WAY_CARDS[c.id]);return ''}
 function wayRows(root){if(!root||root.nodeType!==1)return;const l=root.matches(WAY_ROWS)?[root]:root.querySelectorAll(WAY_ROWS);
   for(const r of l){const w=wayRowWay(r),on=!!w&&!!wayParse(w,0);r.classList.toggle('wayrow',on);

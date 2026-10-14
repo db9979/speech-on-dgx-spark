@@ -50,6 +50,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 import features
 import guard
 import notaus
+import verbrauch
 import profiles
 from common import load_config
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
@@ -601,6 +602,7 @@ async def speech(name, args, uid):
         async with httpx.AsyncClient(timeout=300) as cl:
             r = await cl.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                               files={"file": ("audio." + fmt, data)}, data=form, headers=dict(api_headers(), **low))
+        verbrauch.heard("MCP", r, uid)
         if r.status_code != 200:
             return _result(f"Die Spracherkennung hat abgelehnt (HTTP {r.status_code}).", True)
         return _result(str(r.json().get("text", "")).strip() or "(nichts erkannt)")
@@ -622,6 +624,7 @@ async def speech(name, args, uid):
                 out += part
                 if len(out) > 8 * 1024 ** 2:
                     return _result("Die Aufnahme wäre zu lang, bitte kürzeren Text.", True)
+    verbrauch.add("tts", "MCP", uid)   # MP3: the call counts, its seconds are not read from the file
     return {"content": [{"type": "audio", "data": base64.b64encode(bytes(out)).decode(), "mimeType": "audio/mpeg"}],
             "isError": False}
 

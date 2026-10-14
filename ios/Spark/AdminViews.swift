@@ -87,6 +87,7 @@ struct AdminView: View {
                     NavigationLink("Monitoring") { StatusView() }
                     NavigationLink("Logs") { LogsView() }
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
+                    if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
                 } header: { Text("Zustand") }
                 Section {
                     // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)
@@ -176,6 +177,100 @@ struct StatusView: View {
             out.append((q["unit"] as? String ?? "", q["state"] as? String ?? "?"))
         }
         return out
+    }
+}
+
+// ---------------------------------------------------------------- Zustand → Verbrauch (verbrauch.py, admin only)
+
+struct UsageView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var zeit = "30t"
+    @State private var error: String?
+    @State private var asking = false
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if d["on"] as? Bool == false {
+                Text(SparkAPI.way(String(localized: "Der Verbrauchszähler ist aus. Einschalten unter Funktionen → Verbrauchszähler."))).foregroundStyle(.secondary)
+            } else {
+                let today = d["today"] as? [String: Any] ?? [:]
+                let llm = today["llm"] as? [String: Any] ?? [:], asr = today["asr"] as? [String: Any] ?? [:], tts = today["tts"] as? [String: Any] ?? [:]
+                Section("Heute") {
+                    LabeledContent("Sprachmodell") { Text(verbatim: Self.n(Self.d(llm["read"]) + Self.d(llm["written"])) + " Tokens") }
+                    LabeledContent("Aus dem Zwischenspeicher") { Text(verbatim: Self.pct(llm["cached"], llm["read"])) }
+                    LabeledContent("Sprache gehört / gesprochen") { Text(verbatim: Self.sec(asr["amount"]) + " / " + Self.sec(tts["amount"])) }
+                }
+                Section {
+                    Picker("Zeitraum", selection: $zeit) {
+                        Text("30 Tage").tag("30t")
+                        Text("12 Monate").tag("12m")
+                    }.pickerStyle(.segmented)
+                }
+                Section("Nach Modell") {
+                    ForEach(Array((d["models"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, m in
+                        LabeledContent { Text(verbatim: Self.amount(m)) } label: { Text(verbatim: Self.word(m["name"])) }
+                    }
+                }
+                Section("Nach Profil") {
+                    ForEach(Array((d["profiles"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, p in
+                        LabeledContent { Text(verbatim: Self.n(Self.d(p["tokens"])) + " Tokens") } label: { Text(verbatim: Self.who(p)) }
+                    }
+                }
+                Section {
+                    Button("Zähler leeren", role: .destructive) { asking = true }
+                } footer: { Text("Nur Zahlen, nie Fragen oder Antworten.") }
+            }
+        }
+        .navigationTitle("Verbrauch")
+        .refreshable { await load() }
+        .task(id: zeit) { await load() }
+        .confirmationDialog("Alle Zähler leeren?", isPresented: $asking) {
+            Button("Zähler leeren", role: .destructive) { Task { await clear() } }
+        }
+    }
+
+    private func load() async {
+        do { d = try await AdminSession.shared.object("GET", "api/admin/verbrauch", query: ["zeit": zeit]); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func clear() async {
+        do { _ = try await AdminSession.shared.call("POST", "api/admin/verbrauch/leeren", body: [:]); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    static var de: Bool { Locale.current.language.languageCode?.identifier == "de" }
+    static func d(_ v: Any?) -> Double { (v as? NSNumber)?.doubleValue ?? 0 }
+    static func n(_ v: Double) -> String {
+        if v >= 1e6 { return String(format: de ? "%.2f Mio" : "%.2f M", v / 1e6) }
+        if v >= 1e4 { return String(format: de ? "%.1f Tsd" : "%.1f k", v / 1e3) }
+        return String(Int(v))
+    }
+    static func sec(_ v: Any?) -> String {
+        let s = d(v)
+        if s >= 3600 { return String(format: "%.1f h", s / 3600) }
+        return s >= 60 ? "\(Int(s / 60)) min" : "\(Int(s)) s"
+    }
+    static func pct(_ a: Any?, _ b: Any?) -> String { d(b) > 0 ? "\(Int((100 * d(a) / d(b)).rounded())) %" : "–" }
+    static func word(_ v: Any?) -> String {
+        let a = v as? [String] ?? []
+        return a.count == 2 ? (de ? a[0] : a[1]) : ""
+    }
+    static func amount(_ m: [String: Any]) -> String {
+        switch m["unit"] as? String {
+        case "tok": return n(d(m["read"]) + d(m["written"])) + " Tokens"
+        case "sek": return sec(m["amount"])
+        default: return n(d(m["amount"])) + " " + word(m["unit_name"])
+        }
+    }
+    static func who(_ p: [String: Any]) -> String {
+        switch p["kind"] as? String {
+        case "gast": return de ? "Gäste" : "Guests"
+        case "spark": return de ? "Spark selbst" : "The Spark itself"
+        case "geloescht": return de ? "Gelöschte Profile" : "Deleted profiles"
+        default: return p["name"] as? String ?? ""
+        }
     }
 }
 

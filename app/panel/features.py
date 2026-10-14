@@ -52,7 +52,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
             ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
-            ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"))
+            ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
+            ("usebox", "Verbrauch", "Usage"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -303,6 +304,11 @@ FEATURES = (
     F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), me="rpbox", guide="melden"),
     F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
       parent="melden", me="rpbox", guide="meldenadmin"),
+    # verbrauch.py (plan plaene/token-zaehler.md): how much the models do, numbers only; each profile sees its own
+    # under Ich → Verbrauch; the daily quota limits a profile's language model tokens (admin profiles never)
+    F("verbrauch", "Verbrauchszähler", "Usage counter", "sec", ("usage_count",), me="usebox", guide="verbrauch"),
+    F("kontingent", "Tageskontingent", "Daily quota", "sec", ("usage_quota",), parent="verbrauch", me="usebox",
+      guide="kontingent"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
     # wartung.py: while the language model, ASR or TTS is updated the Spark pauses on purpose (fixed sentence, background waits)

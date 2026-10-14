@@ -79,6 +79,7 @@ STATE_FILES = {
     "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
     "admins.json": "json",          # profiles as admins: roles and the main admin profile (coadmin.py)
     "features-seen.json": "json",   # when each function was first on („neu freigegeben“ in tipps.py, features.py)
+    "verbrauch-kontingent.json": "json",  # Tageskontingent: the admin's own quota per profile (verbrauch.py)
     "join.json": "json",            # new people by invitation: the switch, invitations (code hashes) (join.py)
 }
 # every other file or folder in state/, with the reason it stays out of a backup (Zustand → Technik, technik.py;
@@ -94,6 +95,7 @@ STATE_LOCAL = {
     "audit.log": "Protokoll dieses Geräts",
     "traces.jsonl": "Anfrage-Verlauf, 48 h",
     "latency.json": "Statistik",
+    "verbrauch.json": "Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)",
     "livecheck.json": "letzte Echtprüfung",
     "live-monitors.json": "Wandmonitore dieses Geräts",
     "dienste-zustand.json": "Zustand der Hintergrund-Dienste",

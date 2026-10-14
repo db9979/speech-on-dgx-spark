@@ -78,6 +78,7 @@
   <div class="card zneed" id="znas" hidden><h2>Speicher und NAS</h2><div id="znaslist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Name, Art, Zustand und wofür der Ort da ist, nie Adresse oder Passwort.</div></div>
   <div class="card zneed" id="znaszustand" hidden><h2>Zustand der NAS</h2><div id="znaszustandlist"></div><div class="mut" style="margin-top:6px">Werte aus SNMPv3, nur lesen; nie Adresse oder Passwort.</div></div>
   <div class="card zneed" id="znasquelle" hidden><h2>Wissensordner</h2><div id="znasquellelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Zahlen und Zustand, nie Pfade oder Dateinamen.</div></div>
+  <div class="card zneed" id="zverbrauch" hidden><h2>Verbrauch heute</h2><div id="zverbrauchlist"></div><div class="mut" style="margin-top:6px">Nur Zahlen je Modell, nie Fragen oder Antworten.</div></div>
   <div class="card zneed" id="zstore" hidden><h2>Kopie meiner Daten</h2><div id="zstorelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Art, Zustand, Größen und Anzahlen, nie Dateinamen oder Inhalte.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
@@ -189,6 +190,9 @@
       <div class="row" style="margin-top:8px"><button class="b" id="searchtest" type="button">Verbindung testen</button><span id="searchmsg" class="mut"></span></div><div class="fh">Über deine eigene SearXNG-Instanz. Am besten erlaubt sie das JSON-Format (settings.yml: search.formats: [html, json]); sonst liest das Panel die normale Ergebnisseite.</div></div>
       <div class="setrow"><div class="lbl"><b>Timer und Erinnerungen</b><span>„Erinnere mich in 10 Minuten an den Ofen“: Das Gerät klingelt und sagt es an.</span></div><label class="tgl"><input type="checkbox" id="chat.reminders"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Mein Zustand</b><span>Jedes Profil sieht unter Ich, was der Spark im Hintergrund für es erledigt und ob seine verbundenen Dienste antworten.</span></div><label class="tgl"><input type="checkbox" id="chat.my_status"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Verbrauchszähler</b><span>Zählt Tokens, Sekunden und Bilder je Modell, Aufgabe und Profil, nur Zahlen. Zu sehen unter Zustand → Verbrauch und Ich → Verbrauch.</span></div><label class="tgl"><input type="checkbox" id="chat.usage_count"><i></i></label></div>
+      <div class="setrow" data-show="chat.usage_count" style="margin-left:18px"><div class="lbl"><b>Tageskontingent</b><span>Höchstens so viele Tokens am Tag beim Sprachmodell je Profil, danach ein fester Satz bis Mitternacht. Admin-Profile ohne Grenze.</span></div><label class="tgl"><input type="checkbox" id="chat.usage_quota"><i></i></label></div>
+      <div data-show="chat.usage_quota" style="margin-left:36px"><label>Tokens pro Tag und Profil (Tausend)</label><input class="num" id="chat.usage_quota_k" type="number" min="1" max="100000"><div class="fh">1 bis 100000, Standard 2000. Einzelnen Profilen gibst du unter Zustand → Verbrauch mehr oder weniger.</div></div>
       <div class="setrow"><div class="lbl"><b>Probleme melden</b><span>Profile melden Probleme als Issue an GitHub, mit anonymisierten Logs; was rausgeht, sehen sie vorher.</span></div><label class="tgl"><input type="checkbox" id="chat.report"><i></i></label></div>
       <div class="setrow" data-show="chat.report" style="margin-left:18px"><div class="lbl"><b>Admin per Assistent informieren</b><span>Neue Meldung eines Profils: der Assistent sagt es den Admin-Profilen, nur wer, Bereich und Weg, nie der Text.</span></div><label class="tgl"><input type="checkbox" id="chat.report_notify"><i></i></label></div>
       <div data-show="chat.report" style="margin-left:18px"><label>GitHub-Repo für Meldungen</label><input id="chat.report_repo" data-req placeholder="db9979/spark-meldungen" autocomplete="off"><div class="fh">besitzer/name, am besten privat. Meldungen gehen nur dorthin.</div>
@@ -859,6 +863,13 @@
     <div class="ld-split"><div class="ld-list" id="vblist"></div><div class="ld-detail" id="vbdetail" hidden></div></div></div>
   <div class="mut" id="vbmsg"></div>
 </div></section>
+<section id="usage"><div class="card ld-box" id="usgbox">
+  <div class="ld-head"><h2>Verbrauch</h2><div class="lseg" id="usgseg"></div><button class="b" type="button" id="usgclear" hidden>Zähler leeren</button></div>
+  <div class="pintro">Wie viel jedes Modell arbeitet: Tokens beim Sprachmodell, Sekunden beim Hören und Sprechen, Texte bei der Bedeutungssuche, Bilder. Nur Zahlen, nie Inhalte.</div>
+  <div class="note" id="usgoff" hidden>Der Verbrauchszähler ist aus. Einschalten unter Funktionen → Verbrauchszähler.</div>
+  <div id="usgmain" hidden></div>
+  <div class="mut" id="usgmsg"></div>
+</div></section>
 <section id="tech"><div class="card ld-box" id="tkbox">
   <div class="ld-head"><h2>Technik</h2></div>
   <div class="pintro">Wie der Spark gebaut ist: die Teile, der Weg einer Anfrage und wo welche Daten liegen. Aus dem Code der installierten Version.</div>
@@ -935,6 +946,7 @@
       <div class="row" style="margin-top:10px"><button class="b" id="setreset" type="button">Auf Vorgaben zurücksetzen</button></div></div>
     <div id="overbox" class="ptab"></div>
     <div id="bgbox" class="ptab"></div>
+    <div id="usebox" class="ptab"></div>
     <div id="notebox" class="ptab"><div class="intro">Erinnerungen und das Tagesbriefing kommen als Mitteilung aufs Handy oder den Rechner, auch wenn die Seite zu ist.</div>
       <div id="pushbox" style="display:none"><label>Erinnerungen auf diesem Gerät</label>
         <div class="fh" id="pushstate"></div>
@@ -1125,6 +1137,7 @@
 <script src="/static/js/melden.js"></script>
 <script src="/static/js/weiche.js"></script>
 <script src="/static/js/technik.js"></script>
+<script src="/static/js/verbrauch.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>
 <script src="/static/js/start.js"></script>

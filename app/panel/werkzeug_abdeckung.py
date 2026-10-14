@@ -134,6 +134,8 @@ WITHOUT = {
     "haevent": "meldet sich von selbst",
     "mailwichtig": "meldet sich von selbst",
     "mystatus": "Seite Ich → Mein Zustand",
+    "verbrauch": "Seiten Zustand → Verbrauch und Ich → Verbrauch, nur Zahlen",
+    "kontingent": "fester Satz im Gespräch, kein Werkzeug",
     "dienstwacht": "meldet sich von selbst",
     "wartung": "Zustand → Wartungspause; in der Pause sagt das Panel einen festen Satz statt einer Antwort",
     "meldenadmin": "meldet sich von selbst",

@@ -68,6 +68,7 @@ from fastapi.responses import FileResponse, Response
 import features
 import guard
 import notaus
+import verbrauch
 import profiles
 import schreib
 import signatur
@@ -1320,7 +1321,9 @@ async def _speak(cfg, body, uid, out):
                     raise HTTPException(413, "Der Text ist zum Vorlesen zu lang.")
     if not out:
         raise HTTPException(502, "Die Sprachausgabe hat nichts geliefert.")
-    return bytes(out) if out[:4] == b"RIFF" else wav_of(bytes(out))
+    wav = bytes(out) if out[:4] == b"RIFF" else wav_of(bytes(out))
+    verbrauch.spoken("Begleiter", wav=wav, who=uid)
+    return wav
 
 
 @router.post("/api/desk/speak", dependencies=[Depends(assistant)])

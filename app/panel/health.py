@@ -32,6 +32,7 @@ import guard  # noqa: E402
 from common import load_config  # noqa: E402
 from core import UNITS, api_headers, app_version, run  # noqa: E402
 from monitor import service_health  # noqa: E402
+import verbrauch  # noqa: E402
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 WATCH_EVERY, HUNG_AFTER, LOAD_LIMIT, GRACE = 30, 300, 45 * 60, 180
@@ -236,6 +237,7 @@ async def livecheck(reason="manual"):
                 r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", headers=headers, json={
                     "model": model, "max_tokens": 200, "stream": False,
                     "messages": [{"role": "user", "content": "Antworte nur mit dem Wort OK."}]})
+                verbrauch.response("Dienst prüfen", r)
                 ok = r.status_code == 200
                 text = (r.json()["choices"][0]["message"].get("content") or "").strip() if ok else r.text[:200]
                 steps.append({"name": "llm", "ok": ok, "seconds": round(time.time() - t0, 2),
@@ -253,6 +255,7 @@ async def livecheck(reason="manual"):
                         "chat_template_kwargs": {"enable_thinking": False},
                         "tools": [CHECK_TOOL], "tool_choice": "auto",
                         "messages": [{"role": "user", "content": "Wie spät ist es? Nutze dafür das Werkzeug."}]})
+                    verbrauch.response("Dienst prüfen", r)
                     ok, detail = tool_called(r.json() if r.status_code == 200 else None)
                     steps.append({"name": "tools", "ok": ok, "seconds": round(time.time() - t0, 2),
                                   "detail": detail if r.status_code == 200 else f"HTTP {r.status_code}"})

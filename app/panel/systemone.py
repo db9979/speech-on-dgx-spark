@@ -207,6 +207,9 @@ def _note(use, ok, ms, why=""):
             k = {"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail")
             _count[k] = _count.get(k, 0) + 1
         _last[use] = (time.time(), ok, ms)
+    if ok:   # Verbrauchszähler: one question to the model, under the use's own name
+        import verbrauch
+        verbrauch.add("systemone", USES.get(use, use), amount=1, ms=ms)
     if not (ok and use == "messen"):   # a measurement says its sum once at the end (no flood of lines)
         print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" if ok else f"nicht genutzt ({why}), weiter ohne"), flush=True)
     if not ok:

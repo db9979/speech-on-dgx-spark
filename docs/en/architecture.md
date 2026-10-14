@@ -293,6 +293,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
+| `app/panel/verbrauch.py` | Verbrauchszähler. |
 | `app/panel/wartung.py` | Wartungspause: while the language model (qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
 | `app/panel/wege.py` | Ways into the panel in texts that leave it ("Einschalten unter Me → Telegram"): Telegram messages, push notes. |
 
@@ -480,6 +481,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/update-progress.json` | Update progress | – | no |
 | `state/update-target` | Requested update target | – | no |
 | `state/vapid.pem` | Web push key | is a key | yes |
+| `state/verbrauch-kontingent.json` | Own daily quotas | – | yes |
+| `state/verbrauch.json` | Usage per model, task and profile (numbers only) | – | no |
 | `state/vision.json` | Picture questions, 10 min | – | no |
 | `state/vorrang-key` | Key panel ↔ speech services | is a key | no |
 | `state/wartung.json` | Maintenance pause | – | no |
@@ -1105,7 +1108,7 @@ flowchart TD
 8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
 9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
 10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
-11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“).
+11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile.
 12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
 
 **Examples:** Setting in the browser at home: Passes: the endpoint checks the login, the change is in the admin log. · Foreign web page sends a form: Refused with 403 before any endpoint acts. · Kill switch stage 1, app on the road: Blocked with 503 and the stage; the app shows the kill switch. · Big upload without login: Refused with 401, not a byte read.
@@ -1151,7 +1154,7 @@ Applies at: [step 4](#kn-middleware-s4), [step 5](#kn-middleware-s5), [step 6](#
 - `app/panel/notaus.py` `mine_gate`: my kill switch for device keys ([step 3](#kn-middleware-s3))
 - `app/panel/notaus.py` `gate`: what passes at which stage ([step 4](#kn-middleware-s4))
 - `app/panel/notaus.py` `at_home`: at home or from outside ([step 5](#kn-middleware-s5))
-- `app/panel/panel.py` `sessions`: foreign pages, log, renew cookies ([step 7](#kn-middleware-s7), [step 12](#kn-middleware-s12))
+- `app/panel/panel.py` `sessions`: foreign pages, log, renew cookies ([step 7](#kn-middleware-s7), [step 11](#kn-middleware-s11), [step 12](#kn-middleware-s12))
 - `app/panel/guard.py` `same_origin`: the origin rule ([step 7](#kn-middleware-s7))
 - `app/panel/panel.py` `_may_upload`: big uploads only with a login ([step 8](#kn-middleware-s8))
 - `app/common.py` `BodyLimit`: size limit before reading ([step 9](#kn-middleware-s9))
@@ -2136,14 +2139,14 @@ flowchart TD
 2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row.
 3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
 4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
-5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache.
-6. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds.
+5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache.
+6. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the daily quota is checked: a profile over its quota gets a fixed sentence instead of an answer.
 7. <a id="kn-llm-s6"></a>**One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
 8. <a id="kn-llm-s7"></a>**Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
 9. <a id="kn-llm-s8"></a>**First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
 10. <a id="kn-llm-s9"></a>**Read the lines**: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped.
 11. <a id="kn-llm-s10"></a>**Only answer text goes on**: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“.
-12. <a id="kn-llm-s11"></a>**Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority.
+12. <a id="kn-llm-s11"></a>**Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. The usage counter counts tokens read and written per task and profile (estimated without the server's report, about 3.5 characters per token).
 13. <a id="kn-llm-s12"></a>**Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
 14. <a id="kn-llm-s13"></a>**Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
 
@@ -2165,10 +2168,12 @@ flowchart TD
 - Settings → Language model, under Advanced: Time limit for an answer.
 - Features → Priority for people: chosen profiles get their answer first.
 - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30).
+- Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile.
 
 #### What you see
 
 - Status → Logs → Advanced → Conversation: per round tokens read, of them from the cache, and the time to the first word.
+- Status → Usage: tokens per day, model, area and profile.
 - Status → Checks → Speech first: whether speech output stays smooth while the model computes.
 
 #### In the code
@@ -2187,6 +2192,8 @@ flowchart TD
 - `app/panel/vorrang.py` `run`: background work gives way to speech ([step 1](#kn-llm-s1))
 - `app/panel/wartung.py` `paused`: maintenance pause: the model is not asked ([step 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: the fixed sentence with the time left ([step 2](#kn-llm-s1w))
+- `app/panel/verbrauch.py` `llm`: counts the tokens of a round ([step 12](#kn-llm-s11))
+- `app/panel/verbrauch.py` `over`: daily quota reached? ([step 6](#kn-llm-s5))
 
 Self-tests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`, `test_wartung`
 
@@ -2270,6 +2277,7 @@ flowchart TD
 
 #### What you see
 
+- Status → Usage: seconds heard per day, task and profile.
 - Status → Monitoring: engine state, requests, failures, average time and the queue.
 - Status → Logs → Requests: how long a recording waited and how many it overtook.
 
@@ -2365,6 +2373,7 @@ flowchart TD
 
 #### What you see
 
+- Status → Usage: seconds spoken per day, task and profile.
 - Status → Monitoring: engine state, requests, failures, time to the first sound and the queue.
 
 #### In the code
@@ -2542,7 +2551,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (44, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (45, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2552,8 +2561,8 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **28** files in every backup ([step 7](#kn-state-s7))
-- **44** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **29** files in every backup ([step 7](#kn-state-s7))
+- **45** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

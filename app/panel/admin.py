@@ -742,7 +742,7 @@ def validate(new):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
               "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "docling", "search_check", "search_check_auto", "rerank", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
-              "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
+              "usage_count", "usage_quota", "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
               "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
               "systemone_klage"):
         if not isinstance(ch.get(k, False), bool):
@@ -769,6 +769,10 @@ def validate(new):
         raise HTTPException(400, "rerank_ms: 300 to 2000")
     if ch.get("rerank_model", "klein") not in ("klein", "gross"):
         raise HTTPException(400, "rerank_model: klein or gross")
+    import verbrauch
+    uq = ch.get("usage_quota_k", 2000)
+    if not isinstance(uq, int) or isinstance(uq, bool) or not 1 <= uq <= verbrauch.QUOTA_MAX_K:
+        raise HTTPException(400, f"usage_quota_k: 1 to {verbrauch.QUOTA_MAX_K}")
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")
@@ -1066,6 +1070,8 @@ async def _test_asr(request, file, language, wake, room, opened=""):
             if task is not None:
                 task.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
+    import verbrauch   # Verbrauchszähler: seconds heard, for the profile (or guests)
+    verbrauch.heard("Frage hören", r, verbrauch.who_of(me))
     # a click, the chime or the room after an answer comes back as "Ja" or "Okay": no question (fixed rule)
     if r.status_code == 200:
         try:

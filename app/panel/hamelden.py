@@ -475,7 +475,7 @@ async def describe_camera(uid, item, eid):
                        "messages": [{"role": "system", "content": CAM_SYSTEM},
                                     images.with_pictures({"content": "Was ist auf dem Bild zu sehen?"}, [pic])]}
             r = await vorrang.post(c, "Kamerabild", cc["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
+                                   json=payload, headers=headers, who=uid)
             r.raise_for_status()
             desc = clean_desc(r.json()["choices"][0]["message"].get("content") or "")
             _live("Kamerabild vom Sprachmodell beschrieben (Bild nicht gespeichert)")

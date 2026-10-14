@@ -191,10 +191,10 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "94cb3583f4",
+        "stand": "a2cd582b2b",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
-            "panel.sessions": ["s7", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
+            "panel.sessions": ["s7", "s11", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
             "panel.protect": ["s12"], "regeln": ["s4", "s5", "s6"],
         },
         "kurz": ("Die Middleware ist die Schicht in panel.py, durch die jede HTTP-Anfrage geht, bevor ein Endpunkt sie "
@@ -304,9 +304,11 @@ SEITEN_DATEN = {
             S("s11", "schritt", ("Endpunkt", "Endpoint"),
               ("Anmeldung, Profil, Rate-Limit", "login, profile, rate limit"),
               ("Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die "
-               "nächste Station, „Anmeldung, Profil“).",
+               "nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, "
+               "für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil.",
                "Only now the endpoint reads the request and checks login, profile and rate limit itself (the next "
-               "box, „Login, profile“).")),
+               "box, „Login, profile“). With the usage counter on, the request first notes which profile it runs "
+               "for: what it asks the models counts for that profile.")),
             S("s12", "ende", ("Antwort mit Schutz", "Answer with protection"),
               ("Kopfzeilen · Protokoll · Cookies", "headers · log · cookies"),
               ("Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, "
@@ -398,7 +400,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "f448818e49",
+        "stand": "05c8b0ccf6",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -805,7 +807,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "f9f19e6af2",
+        "stand": "709f647740",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -1067,7 +1069,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "06905fbd69",
+        "stand": "35a7fb8135",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1255,7 +1257,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "83a0c8e7c6",
+        "stand": "ce4663b8b0",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1426,12 +1428,13 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "7db350d426",
+        "stand": "31d0a7d211",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
             "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
+            "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"],
         },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
@@ -1482,18 +1485,21 @@ SEITEN_DATEN = {
               ("stream, max_tokens, Temperatur, Denken aus", "stream, max_tokens, temperature, thinking off"),
               ("Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist "
                "aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei "
-               "eingeschalteten Logs meldet der Server, wie viel er gelesen hat und wie viel aus seinem Zwischenspeicher kam.",
+               "eingeschalteten Logs oder Verbrauchszähler meldet der Server am Ende, wie viel er gelesen und "
+               "geschrieben hat und wie viel aus seinem Zwischenspeicher kam.",
                "The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is "
-               "off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the "
-               "server reports how much it read and how much came from its cache.")),
+               "off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage "
+               "counter on the server reports at the end how much it read and wrote and how much came from its cache.")),
             S("s5", "frage", ("Wartet jemand mit Vorrang?", "Someone with priority waiting?"),
               ("Vorrang für Personen", "priority for people"),
               ("Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens "
                "die eingestellte Zeit (bis {stufe.WAIT_RANGE.1} Sekunden). Eine Antwort mit Vorrang hält andere "
-               "höchstens {stufe.FIRST_MAX} Sekunden auf.",
+               "höchstens {stufe.FIRST_MAX} Sekunden auf. Davor prüft das Panel das Tageskontingent: ein Profil darüber "
+               "bekommt einen festen Satz statt einer Antwort.",
                "When another person has priority and their answer has no first sentence yet, this round waits at most "
                "the configured time (up to {stufe.WAIT_RANGE.1} seconds). An answer with priority holds others up "
-               "for at most {stufe.FIRST_MAX} seconds."),
+               "for at most {stufe.FIRST_MAX} seconds. Before that the daily quota is checked: a profile over its "
+               "quota gets a fixed sentence instead of an answer."),
               ("info", "ja", ("kurz warten, dann weiter", "wait shortly, then go on"))),
             S("s6", "schritt", ("Eine Runde an das Modell", "One round to the model"),
               ("gestreamt (SSE)", "streamed (SSE)"),
@@ -1531,9 +1537,13 @@ SEITEN_DATEN = {
             S("s11", "schritt", ("Runde festhalten", "Record the round"),
               ("Tokens, Zwischenspeicher, Zeiten", "tokens, cache, times"),
               ("Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von "
-               "Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang.",
+               "Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. Der "
+               "Verbrauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers "
+               "geschätzt, rund {verbrauch.CHARS_PER_TOKEN} Zeichen je Token).",
                "For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, "
-               "tool list and history, time to the first word, waiting time for priority.")),
+               "tool list and history, time to the first word, waiting time for priority. The usage counter counts "
+               "tokens read and written per task and profile (estimated without the server's report, about "
+               "{verbrauch.CHARS_PER_TOKEN} characters per token).")),
             S("s12", "frage", ("Fehler unterwegs?", "Error on the way?"),
               ("nicht erreichbar, zu langsam, Schlüssel", "not reachable, too slow, key"),
               ("Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell "
@@ -1582,12 +1592,17 @@ SEITEN_DATEN = {
              "Features → Priority for people: chosen profiles get their answer first."),
             ("Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30).",
              "Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30)."),
+            ("Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent "
+             "je Profil.",
+             "Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile."),
         ],
         "sehen": [
             ("Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und "
              "die Zeit bis zum ersten Wort.",
              "Status → Logs → Advanced → Conversation: per round tokens read, of them from the cache, and the time to "
              "the first word."),
+            ("Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil.",
+             "Status → Usage: tokens per day, model, area and profile."),
             ("Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet.",
              "Status → Checks → Speech first: whether speech output stays smooth while the model computes."),
         ],
@@ -1606,9 +1621,12 @@ SEITEN_DATEN = {
             ("vorrang.run", ("Hintergrundarbeit weicht der Sprache", "background work gives way to speech")),
             ("wartung.paused", ("Wartungspause: das Modell wird nicht gefragt", "maintenance pause: the model is not asked")),
             ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
+            ("verbrauch.llm", ("zählt Tokens einer Runde", "counts the tokens of a round")),
+            ("verbrauch.over", ("Tageskontingent erreicht?", "daily quota reached?")),
         ],
         "tests": ["test_panel", "test_llm_settings", "test_vorrang", "test_stufe", "test_fast_start", "test_wartung"],
-        "heute": [],
+        "heute": [("vb_llm_calls", ("Anfragen", "requests")), ("vb_llm_in", ("Tokens gelesen", "tokens read")),
+                  ("vb_llm_out", ("Tokens geschrieben", "tokens written"))],
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
@@ -2218,7 +2236,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "fe6023b828",
+        "stand": "e2adb13a41",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2576,7 +2594,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "69b87c165e",
+        "stand": "e2f185fb17",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -2943,7 +2961,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "9d5a3befbe",
+        "stand": "3b2707913c",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3131,7 +3149,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "7a424e00ad",
+        "stand": "b1bc1ca3c0",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3275,6 +3293,8 @@ SEITEN_DATEN = {
              "Features → Speaker recognition: recognize profiles by their voice and how strictly (default off)."),
         ],
         "sehen": [
+            ("Zustand → Verbrauch: gehörte Sekunden je Tag, Aufgabe und Profil.",
+             "Status → Usage: seconds heard per day, task and profile."),
             ("Zustand → Monitoring: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.",
              "Status → Monitoring: engine state, requests, failures, average time and the queue."),
             ("Zustand → Logs → Anfragen: wie lange eine Aufnahme gewartet hat und wie viele sie überholt hat.",
@@ -3295,7 +3315,7 @@ SEITEN_DATEN = {
             ("speakers.identify", ("wessen Stimme, nur bei klarem Treffer", "whose voice, only on a clear match")),
         ],
         "tests": ["test_units", "test_hardening", "test_stufe", "test_stille", "test_echo", "test_stimmabdruck"],
-        "heute": [],
+        "heute": [("vb_asr_calls", ("Aufnahmen", "recordings")), ("vb_asr_amount", ("Sekunden gehört", "seconds heard"))],
     },
 
     # ------------------------------------------------------------------ Sprachausgabe
@@ -3436,6 +3456,8 @@ SEITEN_DATEN = {
              "Settings → Voices: record, play and save own voices (for a Base model)."),
         ],
         "sehen": [
+            ("Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.",
+             "Status → Usage: seconds spoken per day, task and profile."),
             ("Zustand → Monitoring: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die "
              "Warteschlange.",
              "Status → Monitoring: engine state, requests, failures, time to the first sound and the queue."),
@@ -3454,12 +3476,12 @@ SEITEN_DATEN = {
             ("common.PrioGate", ("Warten nach Vorrang", "waiting by priority")),
         ],
         "tests": ["test_units", "test_markdown", "test_hardening", "test_stufe", "test_tempo"],
-        "heute": [],
+        "heute": [("vb_tts_calls", ("Ausgaben", "outputs")), ("vb_tts_amount", ("Sekunden gesprochen", "seconds spoken"))],
     },
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "6c241e3dd1",
+        "stand": "4aa2f9a9e8",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],

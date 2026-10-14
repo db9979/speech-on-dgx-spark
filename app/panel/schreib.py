@@ -44,6 +44,7 @@ import features
 import guard
 import notaus
 import profiles
+import verbrauch
 from common import load_config
 from core import assistant, browser_profile, confirm_code
 
@@ -293,6 +294,7 @@ async def _model(msgs, temperature, max_tokens, job):
         payload = {"model": model, "temperature": temperature, "max_tokens": max_tokens, "stream": False,
                    "chat_template_kwargs": {"enable_thinking": False}, "messages": msgs}
         r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+    verbrauch.response("Schreibhilfe", r, payload)
     if r.status_code != 200:
         raise RuntimeError(f"Sprachmodell: HTTP {r.status_code}")
     return str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")

@@ -113,7 +113,7 @@ async def propose(uid):
                                 {"role": "user", "content": "\n".join(lines)[:24000]}],
                    "chat_template_kwargs": {"enable_thinking": False}}
         r = await vorrang.post(c, "Gedächtnis aufräumen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
+                               json=payload, headers=headers, who=uid)
         r.raise_for_status()
         prop = parse(r.json()["choices"][0]["message"].get("content") or "", facts)
     if not prop["merge"] and not prop["drop"]:

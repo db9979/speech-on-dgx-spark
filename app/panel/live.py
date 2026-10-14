@@ -1176,11 +1176,18 @@ def snapshot(view="admin", now=None):
         used.add("taten")
     else:
         tat = {}
+    try:
+        import verbrauch
+        vb = verbrauch.for_live(now)
+    except Exception:
+        vb = {"on": False}
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
                for k, v in TARGETS.items() if (v[3] and k not in off) or k in used]
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
+        if x["id"] == "qwen" and vb.get("on"):   # Verbrauchszähler: tokens of the last minute and today (numbers only)
+            x["sub"] = f"{x['sub']} · {vb.get('rate', 0)} Tokens/min · heute {vb.get('today', 0)}"
         if x["id"] == "nas" and nasl.get("on"):   # NAS: connections and how many failed their last check (no address)
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")

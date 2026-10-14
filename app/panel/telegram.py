@@ -30,6 +30,7 @@ import httpx
 import profiles
 from textnorm import plain_markdown
 import notaus
+import verbrauch
 import vault
 import features
 from common import load_config
@@ -287,6 +288,7 @@ async def transcribe(audio):
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                          files={"file": ("voice.wav", wav)}, data={"language": "auto", "response_format": "json"},
                          headers=api_headers())
+    verbrauch.heard("Telegram", r)
     r.raise_for_status()
     return str(r.json().get("text", "")).strip()
 
@@ -302,6 +304,7 @@ async def speak(uid, text):
     async with httpx.AsyncClient(timeout=600) as c:
         r = await c.post(f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body, headers=api_headers())
     r.raise_for_status()
+    verbrauch.spoken("Telegram", wav=r.content, who=uid)
     return await asyncio.to_thread(_ffmpeg, ["-c:a", "libopus", "-b:a", "32k", "-f", "ogg"], r.content)
 
 

@@ -516,7 +516,7 @@ async def assign_topics(uid, now=None):
                                     {"role": "user", "content": "<<<FAKTEN\n" + lines.replace("<<<", "") + "\nFAKTEN>>>"}],
                        "chat_template_kwargs": {"enable_thinking": False}}
             r = await vorrang.post(c, "Gedächtnis-Themen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                                   json=payload, headers=headers)
+                                   json=payload, headers=headers, who=uid)
             r.raise_for_status()
             text = r.json()["choices"][0]["message"].get("content") or ""
     except Exception as e:

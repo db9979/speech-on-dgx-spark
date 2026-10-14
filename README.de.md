@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.557** Verbrauchszähler: Tokens und Sekunden je Modell, Aufgabe und Profil unter Zustand → Verbrauch und Ich → Verbrauch, dazu ein Tageskontingent je Profil
 - **V01.0.556** Anrufe mit Sprache und Video in Chats zu zweit, direkt von Gerät zu Gerät verschlüsselt; eigener Vermittler auf tars für unterwegs (Router: UDP 3478 und 49160–49200); Android-App 1.3.1 mit Kamera
 - **V01.0.555** Verbessern verständlicher: Karte mit Was, Woher, Warum, Was hilft, gebündelte Vorschläge, Ampel und Ganzer Weg
 - **V01.0.554** Technik-Seiten: Klick auf eine Zeile zeigt ihre Blase direkt darunter, kein Hochrollen mehr
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.550** Private Chats: Verlauf vom alten Gerät auf ein neues übertragen; das neue Gerät zeigt einen Code, das alte packt nach „Übertragen“ die Schlüssel ein weiteres Mal ein, der Spark liest nichts
 - **V01.0.549** Begleiter: Schalter „Mikrofon offen/zu“ (Windows und Mac), Ich → Begleiter zeigt ihn je Gerät
 - **V01.0.548** Wartungspause, während Sprachmodell, Spracherkennung oder Sprachausgabe aktualisiert werden
-- **V01.0.547** Alle Seiten mit Seitenleiste im selben Rahmen: beim Wechsel der Reiter springt nichts mehr, der Inhalt nutzt die ganze Breite
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

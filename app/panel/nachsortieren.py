@@ -188,7 +188,11 @@ async def _scores(query, texts):
 
 async def _held(query, texts):
     try:
-        return await _scores(query, texts)
+        t0 = time.time()
+        out = await _scores(query, texts)
+        import verbrauch   # Verbrauchszähler: pairs of question and hit the cross-encoder scored
+        verbrauch.add("rerank", "Treffer nachsortieren", amount=len(texts), ms=int((time.time() - t0) * 1000))
+        return out
     except BaseException:
         _stop()    # an answer left in the pipe would belong to the next question
         raise

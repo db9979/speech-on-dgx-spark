@@ -50,6 +50,7 @@ import features  # noqa: E402
 import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules for facts)
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
+import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
 from common import load_config, no_think  # noqa: E402
 from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1280,7 +1281,9 @@ def llm_error_code(e, status=None):
 LLM_GONE = {"llm_down": {"de": "Mein Sprachmodell ist gerade nicht erreichbar. Versuch es bitte gleich noch einmal.",
                          "en": "My language model cannot be reached right now. Please try again in a moment."},
             "llm_slow": {"de": "Mein Sprachmodell antwortet gerade nicht. Versuch es bitte gleich noch einmal.",
-                         "en": "My language model is not answering right now. Please try again in a moment."}}
+                         "en": "My language model is not answering right now. Please try again in a moment."},
+            # Tageskontingent (verbrauch.py): the profile used up its tokens for today
+            "quota": {"de": verbrauch.QUOTA_TEXT[0], "en": verbrauch.QUOTA_TEXT[1]}}
 
 
 class ContextFull(RuntimeError):
@@ -1363,7 +1366,7 @@ async def morning_briefing(uid, tz="", markdown=False):
         if not ccfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
         r = await vorrang.post(c, "Tagesüberblick", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                               json=payload, headers=headers)
+                               json=payload, headers=headers, who=uid)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"]["content"] or ""
     return no_think(text)
@@ -1763,6 +1766,7 @@ async def _answer(request, turn):
     vip = stufe.begin(turn)   # None unless this is the own turn of a profile with Vorrang  # the tools (chat_tools.py) use them too
 
     async def llm():
+        verbrauch.WHO.set(verbrauch.who_of(who))   # what this answer asks the models counts for this profile
         try:
             if wartung.paused("llm"):
                 # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out
@@ -1775,6 +1779,8 @@ async def _answer(request, turn):
                 trace["said"] += note
                 await sentences.put(note)
                 return
+            if who and verbrauch.over(who["id"]):    # Tageskontingent used up: one fixed sentence, no model
+                raise verbrauch.Quota()
             model = await llm_model(c, ccfg, lheaders)
             fix_task = asyncio.create_task(fixes.extract(
                 ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None
@@ -1782,7 +1788,7 @@ async def _answer(request, turn):
                     "temperature": float(ccfg.get("temperature", 0.3)), **sampling(ccfg)}
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
-            if tm["on"] or tr:   # the server says how much it read and how much came from its cache
+            if tm["on"] or tr or verbrauch.on(ccfg):   # the server says how much it read, from its cache and wrote
                 base["stream_options"] = {"include_usage": True}
             st = {"buf": "", "first": not acked, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
                   "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None,
@@ -2142,19 +2148,21 @@ async def _answer(request, turn):
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))
             status = status or (int(m.group(1)) if m else None)
-            code = llm_error_code(e, status)
+            code = "quota" if isinstance(e, verbrauch.Quota) else llm_error_code(e, status)
             if tr:
                 tr.fail(code)
             if code in LLM_GONE and not trace["said"].strip():
                 # said out loud as well: on a speaker, the watch or in the car nobody reads the error
                 note = LLM_GONE[code]["en" if guess_language(messages[-1]["content"]) == "English" else "de"]
-                print("chat: language model not reachable:", code, flush=True)
+                print("chat: language model " + ("not asked: daily quota" if code == "quota" else "not reachable:"),
+                      "" if code == "quota" else code, flush=True)
                 await out.put({"type": "text", "delta": note})
                 trace["said"] += note
                 await sentences.put(note)
-            print(f"chat: language model failed ({type(e).__name__}: {str(e)[:300]})", flush=True)
-            # to the page only the kind (B2: guests see no addresses or texts from inside), the log keeps the rest
-            await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}"})
+            if code != "quota":
+                print(f"chat: language model failed ({type(e).__name__}: {str(e)[:300]})", flush=True)
+                # to the page only the kind (B2: guests see no addresses or texts from inside), the log keeps the rest
+                await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}"})
         finally:
             stufe.first(vip)
             if who:  # the person can look this up in "Ich" → Protokoll (a few days only)
@@ -2420,6 +2428,8 @@ async def _answer(request, turn):
                 st["shown"] += len(text)
             st["buf"] += text
         rec["end"] = time.time()
+        verbrauch.llm("Gespräch", rec["usage"], int((rec["end"] - rec["start"]) * 1000),
+                      sum(prompt_sizes(payload).values()) if rec["usage"] is None else 0, st["shown"])
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
         if tr:
             use = rec["usage"] if isinstance(rec["usage"], dict) else {}
@@ -2472,7 +2482,8 @@ async def _answer(request, turn):
         first, played_until, ttfa = True, 0.0, 0.5
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
-        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0, "empty": 0}   # for Logs → Anfragen
+        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0, "empty": 0,
+                "sec": 0.0}   # for Logs → Anfragen and the Verbrauchszähler (seconds of audio)
         waits = list(TTS_WAITS)   # this answer's patience with a speech service that restarts
         try:
             while not done:
@@ -2587,6 +2598,7 @@ async def _answer(request, turn):
                                             said["behind"] += 1
                                     # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                                     played_until = max(played_until, now) + len(ev["audio"]) * 3 / 4 / 48000
+                                    said["sec"] += len(ev["audio"]) * 3 / 4 / 48000
                                     echo.played(mine, played_until)
                                     await out.put({"type": "audio", "audio": ev["audio"]})
                                 elif ev.get("type") == "speech.audio.error":
@@ -2616,6 +2628,8 @@ async def _answer(request, turn):
             while not done and await sentences.get() is not None:  # the text still comes to the end
                 pass
         finally:
+            verbrauch.audio("tts", "Antwort sprechen", said["sec"],
+                            int((time.time() - said["start"]) * 1000) if said["start"] else 0, verbrauch.who_of(who))
             if tr and said["start"]:
                 tr.step("tts", "Sprachausgabe", said["start"], time.time(), pieces=said["pieces"], chars=said["chars"],
                         behind=said["behind"] or None, waited_ms=said["waited"] or None, overtook=said["overtook"] or None,

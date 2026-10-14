@@ -37,6 +37,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 import features
+import verbrauch
 from common import load_config
 from core import assistant, auth, own_profile
 
@@ -312,6 +313,7 @@ async def vision_test():
                        "chat_template_kwargs": {"enable_thinking": False},
                        "messages": [with_pictures({"content": TEST_QUESTION}, [pic])]}
             r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+            verbrauch.response("Dienst prüfen", r, payload)
             if r.status_code != 200:
                 res["error"] = f"HTTP {r.status_code}: " + re.sub(r"\s+", " ", r.text)[:200]
             else:

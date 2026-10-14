@@ -332,19 +332,29 @@ def seite(nid, lang="de"):
 
 
 def heute(nid):
-    """Today's counts of a box (numbers only; empty while Live is off)."""
+    """Today's counts of a box (numbers only). Keys vb_* come from the usage counter (verbrauch.py), the others from
+    the live overview; "off" names the one that is switched off ("live" or "verbrauch")."""
     p = SEITEN_DATEN.get(nid) or {}
     keys = [k for k, _ in p.get("heute", [])]
     if not keys:
         return {}
-    try:
-        import live
-        c = live.counts_today() if live.on() else None
-    except Exception:
-        c = None
-    if c is None:
-        return {"off": True}
-    return {k: int(c.get(k, 0)) for k in keys}
+    c = {}
+    for src, mine in (("verbrauch", [k for k in keys if k.startswith("vb_")]), ("live", [k for k in keys if not k.startswith("vb_")])):
+        if not mine:
+            continue
+        try:
+            if src == "live":
+                import live
+                got = live.counts_today() if live.on() else None
+            else:
+                import verbrauch
+                got = verbrauch.heute() if verbrauch.on() else None
+        except Exception:
+            got = None
+        if got is None:
+            return {"off": True if src == "live" else src}
+        c.update({k: int(got.get(k, 0)) for k in mine})
+    return c
 
 
 # ---------------------------------------------------------------- the docs

@@ -110,10 +110,11 @@ import chats  # noqa: E402
 import chatsec  # noqa: E402
 import anrufe  # noqa: E402
 import verbund  # noqa: E402
+import verbrauch  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, verbrauch):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -173,6 +174,10 @@ async def sessions(request: Request, call_next):
         r = guard.foreign_page()
         protect(request, r)
         return r
+    if request.method in ("POST", "PUT") and request.url.path.startswith("/api/") and verbrauch.on():
+        # Verbrauchszähler: what this request asks the models (also jobs it starts) counts for its profile
+        me = profiles.current(request)
+        verbrauch.WHO.set(me["id"] if me else verbrauch.SPARK)
     response = await call_next(request)
     path = request.url.path
     if guard.logged(path, request.method):

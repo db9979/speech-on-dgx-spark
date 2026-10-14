@@ -295,6 +295,8 @@ class OwnData(Base):
 # Every features.admin_on call left in the panel (file:function) and why it may stay: it is admin-only, Spark-wide
 # (no profile), a module's own Spark switch next to its per-profile check, or a display flag combined with the block.
 ADMIN_ON_OK = {
+    "verbrauch.py:on": "Spark-wide counter (admin switch); each profile's own view asks features.allowed verbrauch",
+    "verbrauch.py:quota_on": "Spark-wide early out; each profile then features.allowed kontingent (verbrauch.limit)",
     "account.py:whoami": "page flags: admin switch and not features.blocked for the profile",
     "account.py:profile_voice": "display flag: admin switch and not features.blocked",
     "account.py:_allow": "display flags: admin switch and not features.blocked",

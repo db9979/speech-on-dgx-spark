@@ -184,8 +184,13 @@ async def _call(texts, kind, timeout, keep=True):
 async def embed(texts, kind, keep=True):
     """float16 bytes (DIM values, length 1) per text; kind "query" or "passage". keep=False: only while
     the model already runs, and without restarting its idle time."""
-    return await _call([str(t)[:2000] for t in texts][:BATCH], kind,
-                       CALL_TIMEOUT if kind == "passage" else QUERY_TIMEOUT, keep)
+    batch = [str(t)[:2000] for t in texts][:BATCH]
+    t0 = time.time()
+    out = await _call(batch, kind, CALL_TIMEOUT if kind == "passage" else QUERY_TIMEOUT, keep)
+    import verbrauch   # Verbrauchszähler: texts turned into vectors (questions or document pieces)
+    verbrauch.add("embed", "Dokumente suchen" if kind == "query" else "Suchindex", amount=len(batch),
+                  ms=int((time.time() - t0) * 1000))
+    return out
 
 
 async def query(text, keep=True):

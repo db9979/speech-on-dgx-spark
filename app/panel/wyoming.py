@@ -27,6 +27,7 @@ from urllib.parse import urlsplit
 from common import load_config
 import live
 import notaus
+import verbrauch
 
 MAX_AUDIO = 16000 * 2 * 120      # two minutes of 16 kHz mono 16 bit
 MAX_DATA = 64 * 1024             # JSON part of one event
@@ -171,6 +172,7 @@ async def transcribe(s, wav, language):
     async with httpx.AsyncClient(timeout=300) as c:
         r = await c.post(f"http://127.0.0.1:{s['asr_port']}/v1/audio/transcriptions", files={"file": ("ha.wav", wav)},
                          data={"language": lang or "auto", "response_format": "json"}, headers=api_headers())
+    verbrauch.heard("Home Assistant Assist", r)
     r.raise_for_status()
     return str(r.json().get("text", "")).strip()
 
@@ -184,6 +186,10 @@ async def synthesize(s, text, voice):
     async with httpx.AsyncClient(timeout=300) as c:
         r = await c.post(f"http://127.0.0.1:{s['tts_port']}/v1/audio/speech", json=body, headers=api_headers())
     r.raise_for_status()
+    if r.content[:4] == b"RIFF":
+        verbrauch.spoken("Home Assistant Assist", wav=r.content)
+    else:
+        verbrauch.spoken("Home Assistant Assist", len(r.content))
     # raw PCM as the engine makes it (Qwen3-TTS: 24 kHz, 16 bit, mono); a WAV is read as one
     return pcm_of(r.content) if r.content[:4] == b"RIFF" else (24000, 2, 1, r.content)
 

@@ -19,6 +19,7 @@ import httpx
 import calendars
 import profiles
 import features
+import verbrauch
 
 PENDING_SECONDS = 15 * 60
 MAX_LEN = 160
@@ -73,6 +74,7 @@ async def extract(ccfg, model, name, correction, said_before, outside):
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=5)) as c:
             r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+            verbrauch.response("Korrekturen lernen", r, payload)
             r.raise_for_status()
             text = r.json()["choices"][0]["message"].get("content") or ""
     except (httpx.HTTPError, ValueError, KeyError, IndexError) as e:

@@ -118,8 +118,9 @@ function knHead(p){const g=p.group&&tkGroup(p.group);
     `<div class="tk-files">${(p.files.length?p.files:[p.sub]).map(f=>`<code>${esc(f)}</code>`).join('')}</div></div></div>`}
 // each count opens the live overview that counts it (way.js .kn-tn rows)
 function knToday(p){if(!p.today_keys.length)return'';const d=p.today||{};
+  if(d.off==='verbrauch')return`<div class="kn-today mut">${esc(t('Zahlen für heute zählt der Verbrauchszähler; er ist aus (Funktionen → Verbrauchszähler).','Today\'s numbers are counted by the usage counter; it is off (Features → Usage counter).'))}</div>`;
   if(d.off)return`<div class="kn-today mut">${esc(t('Zahlen für heute zählt die Live-Übersicht; sie ist aus (Einstellungen → Spark → Betrieb → Logs „Live-Seite“).','Today\'s numbers are counted by the live overview; it is off (Settings → Spark → Operation → Logs “Live page”).'))}</div>`;
-  return`<div class="kn-today"><b>${esc(t('Heute','Today'))}</b>${p.today_keys.map(([k,l])=>`<span class="kn-tn" data-knt="${esc(k)}" data-way="${esc(t('Zustand → Live','Status → Live'))}"><b>${Number(d[k]||0)}</b> ${esc(l)}</span>`).join('')}</div>`}
+  return`<div class="kn-today"><b>${esc(t('Heute','Today'))}</b>${p.today_keys.map(([k,l])=>`<span class="kn-tn" data-knt="${esc(k)}" data-way="${esc(/^vb_/.test(k)?t('Zustand → Verbrauch','Status → Usage'):t('Zustand → Live','Status → Live'))}"><b>${Number(d[k]||0)}</b> ${esc(l)}</span>`).join('')}</div>`}
 function knFlow(p){const pl=TK.play;
   return`<div class="kn-ex">${p.examples.length?`<span class="mut kn-exl">${esc(t('Durchspielen:','Play through:'))}</span>`+p.examples.map((e,k)=>`<button class="ld-chip${pl&&pl.k===k?' on':''}" type="button" data-tkplay="${k}">▶ ${esc(e.name)}</button>`).join(''):''}`+
     (pl?`<button class="ld-chip" type="button" data-tkplay="-1">■ ${esc(t('Aus','Off'))}</button>`:'')+`</div><div class="kn-cap" id="kncap" aria-live="polite"></div>`+

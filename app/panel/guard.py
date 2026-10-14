@@ -540,7 +540,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
         "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "technikseite": (0, 90),
-        "aufgaben": (0, 60), "aufgabenrun": (0, 6)}  # per minute: (guest, profile or admin)
+        "aufgaben": (0, 60), "aufgabenrun": (0, 6), "verbrauch": (0, 60), "verbrauchset": (0, 20)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

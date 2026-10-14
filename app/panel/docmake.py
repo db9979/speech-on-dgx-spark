@@ -67,6 +67,7 @@ import guard
 import notaus
 import profiles
 import symbole
+import verbrauch
 from common import load_config
 from core import assistant, browser_profile, own_profile
 
@@ -649,6 +650,7 @@ async def _model(msgs, schema, max_tokens):
         if r.status_code == 400:      # a server without schemas: the same without
             payload.pop("response_format")
             r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+    verbrauch.response("Dokument erstellen", r, payload)
     if r.status_code != 200:
         raise RuntimeError(f"Sprachmodell: HTTP {r.status_code}")
     return str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
