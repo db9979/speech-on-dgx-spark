@@ -299,6 +299,54 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Fortgeschritten: MCP-Server auf der NAS",
+"text": "Seit V01.0.552 (Synology-Plan S7, nur Anleitung, kein Code im Spark). Wer seine Dateien lieber über ein eigenes MCP-Programm auf der Synology anbietet statt über die Wissensordner, findet unter docs/vorlagen/nas-mcp eine gehärtete Vorlage für den Container Manager: einen Dateiserver (@modelcontextprotocol/server-filesystem hinter supergateway, Streamable HTTP) und davor einen Türsteher (nginx), der nur /mcp mit dem richtigen Schlüssel durchlässt."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Ehrlich vorweg",
+"text": "Ehrlich vorweg: Die Wissensordner (Ich → Speicher) sind für fast alle der bessere Weg: kein fremdes Programm, der Spark liest selbst, alles im Wächter und in Live. Ein MCP-Container ist Software von Dritten auf deiner NAS, mit Zugriff auf den Ordner, den du ihm gibst. Er ist so sicher wie seine Abhängigkeiten, und Updates musst du selbst bauen. Nimm ihn nur, wenn du genau weißt, warum."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Was die Vorlage festlegt",
+"text": "Was die Vorlage festlegt: - Basis-Images nur mit Digest (node:22-alpine@sha256:…, nginx-unprivileged@sha256:…), feste Paketversionen, npm ci beim Bauen statt npm install bei jedem Start, ohne Install-Skripte. - Der Ordner nur lesend (/volume1/dokumente:/data:ro), dazu read_only: true, user: \"1000:1000\", cap_drop: [ALL], security_opt: no-new-privileges, Speicher- und Prozessgrenze. - Der Dateiserver hängt nur im internen Netz (internal: true): kein Port, kein Internet. Nach außen geht nur der Türsteher, und der nur auf 127.0.0.1:8765. - Erreichbar nur über den Reverse-Proxy der NAS mit HTTPS und einem gültigen Zertifikat (der Spark prüft es; ein selbst signiertes lehnt er ab). Der Türsteher verlangt Authorization: Bearer <Schlüssel> und gibt den Schlüssel nicht weiter."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Einrichten",
+"text": "Einrichten: 1. Die vier Dateien auf die NAS kopieren (z. B. /volume1/docker/nas-mcp). Einmal npm install --package-lock-only ausführen (auf einem anderen Rechner genügt), damit package-lock.json die genauen Versionen festhält. 2. Die beiden Digests eintragen (Befehle stehen in den Dateien), in compose.yaml den Ordner anpassen, in nginx.conf SCHLUESSEL durch einen langen Zufallswert ersetzen (openssl rand -hex 32). 3. Container Manager → Projekt → Erstellen, Pfad wählen, compose.yaml übernehmen, bauen und starten. 4. DSM → Systemsteuerung → Anmeldeportal → Erweitert → Reverse Proxy → Erstellen: Quelle HTTPS mit eigenem Port oder Namen, Ziel HTTP localhost:8765. Zertifikat unter Sicherheit → Zertifikat zuordnen. 5. Spark: Admin schaltet Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* an und, weil die NAS im Heimnetz steht, Einstellungen → Sicherheit → *Heimnetz-Adressen erlauben*. 6. Profil: Ich → *Meine MCP-Dienste*: Name „NAS-Dateien“, Adresse https://<NAS>:<Port>/mcp, den Schlüssel, „Dienst anbinden“. Unter „Werkzeuge freigeben“ nur die lesenden Werkzeuge (read_text_file, list_directory, search_files, get_file_info …) auf „Lesen“; alles, was schr"
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Einrichten",
+"text": "eibt, verschiebt oder anlegt, bleibt „Aus“ (der Ordner ist ohnehin nur lesend eingebunden)."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Fortgeschritten: MCP-Server auf der NAS",
+"title": "Aus",
+"text": "Aus: Im Spark den Dienst entfernen (der Schlüssel wird gelöscht), auf der NAS das Projekt stoppen und die Reverse-Proxy-Regel löschen. Ein neuer Schlüssel: in nginx.conf ändern, Türsteher neu starten, im Spark den Dienst mit dem neuen Schlüssel neu eintragen."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "„Hey Siri, frag Spark“",
 "title": "„Hey Siri, frag Spark“",
 "text": "Ein iPhone-Kurzbefehl schickt die diktierte Frage an POST /api/siri/ask (Header X-Speech-Device mit einem Geräteschlüssel deines Profils, Inhalt {\"text\": \"...\"}) und lässt Siri das Feld answer vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und mit CarPlay; Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil. Schritt für Schritt unter Funktionen → Anleitungen."
@@ -1645,7 +1693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "l, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind. Die Treffer tragen den Namen des Besitzers; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben"
+"text": "l, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind. Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle z"
 },
 {
 "lang": "de",
@@ -1653,7 +1701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ". Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
+"text": "usammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
 },
 {
 "lang": "de",
@@ -6427,6 +6475,46 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Advanced: MCP server on the NAS",
+"title": "Advanced: MCP server on the NAS",
+"text": "Since V01.0.552 (Synology plan S7, guide only, no code in the Spark). If you would rather offer your files through an MCP program of your own on the Synology than through knowledge folders, docs/vorlagen/nas-mcp has a hardened template for Container Manager: a file server (@modelcontextprotocol/server-filesystem behind supergateway, Streamable HTTP) with a doorman (nginx) in front that only lets /mcp through with the right key."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Advanced: MCP server on the NAS",
+"title": "Honestly first",
+"text": "Honestly first: knowledge folders (Me → Storage) are the better way for almost everyone: no third-party program, the Spark reads by itself, everything through the Wächter and in Live. An MCP container is third-party software on your NAS with access to the folder you give it. It is as safe as its dependencies, and you have to build updates yourself. Only use it when you know exactly why."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Advanced: MCP server on the NAS",
+"title": "What the template fixes",
+"text": "What the template fixes: - Base images only by digest (node:22-alpine@sha256:…, nginx-unprivileged@sha256:…), fixed package versions, npm ci at build time instead of npm install at every start, without install scripts. - The folder read-only (/volume1/dokumente:/data:ro), plus read_only: true, user: \"1000:1000\", cap_drop: [ALL], security_opt: no-new-privileges, memory and process limits. - The file server sits only in the internal network (internal: true): no port, no internet. Only the doorman faces outward, and only on 127.0.0.1:8765. - Reachable only through the NAS's reverse proxy with HTTPS and a valid certificate (the Spark checks it and refuses a self-signed one). The doorman requires Authorization: Bearer <key> and does not pass the key on."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Advanced: MCP server on the NAS",
+"title": "Setup",
+"text": "Setup: 1. Copy the four files to the NAS (e.g. /volume1/docker/nas-mcp). Run npm install --package-lock-only once (another computer will do) so package-lock.json pins the exact versions. 2. Enter both digests (the commands are in the files), adjust the folder in compose.yaml, replace SCHLUESSEL in nginx.conf with a long random value (openssl rand -hex 32). 3. Container Manager → Project → Create, choose the path, take compose.yaml, build and start. 4. DSM → Control Panel → Login Portal → Advanced → Reverse Proxy → Create: source HTTPS with its own port or name, destination HTTP localhost:8765. Assign a certificate under Security → Certificate. 5. Spark: the admin turns on Features → Agent functions → Services over MCP → *Own MCP services for profiles* and, since the NAS is in the home network, Settings → Security → *Allow home network addresses*. 6. Profile: Me → *My MCP services*: name \"NAS files\", address https://<NAS>:<port>/mcp, the key, \"Connect service\". Under \"Release tools\" set only the reading tools (read_text_file, list_directory, search_files, get_file_info …) to \"Read\"; everything that writes, moves or creates stays \"Off\" (the folder is mounted read-only anyway)."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Advanced: MCP server on the NAS",
+"title": "Off",
+"text": "Off: remove the service in the Spark (the key is deleted), stop the project on the NAS and delete the reverse proxy rule. A new key: change it in nginx.conf, restart the doorman, enter the service again in the Spark with the new key."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "\"Hey Siri, ask Spark\"",
 "title": "\"Hey Siri, ask Spark\"",
 "text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces and in Features → Guides."
@@ -7765,7 +7853,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. The hits carry the owner's name; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately,"
+"text": " 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer"
 },
 {
 "lang": "en",
@@ -7773,7 +7861,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
+"text": " never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
 },
 {
 "lang": "en",

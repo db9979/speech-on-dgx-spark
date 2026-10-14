@@ -351,7 +351,116 @@ class Pages(Base):
                 nasquelle.clean_path(bad)
 
 
+class Haushalt(Base):
+    """S5: an admin profile picks a folder at its place for the whole household; every profile the admin released it
+    for finds its documents (marked "Haushalt"), guests and blocked profiles never; it hangs on the admin's place."""
+    def setUp(self):
+        super().setUp()
+        import notaus
+        self._admins = []
+        self._old = notaus.admin_uids
+        notaus.admin_uids = lambda: list(self._admins)
+        helpers.set_config(nas_shared=True)
+
+    def tearDown(self):
+        import notaus
+        notaus.admin_uids = self._old
+        for s in nasquelle.sources(nasquelle.HAUS):
+            nasquelle.remove_source(nasquelle.HAUS, s["id"])
+        helpers.set_config(nas_shared=False)
+        super().tearDown()
+
+    def admin(self, name):
+        c, uid = profile(name)
+        self._admins.append(uid)
+        return c, uid, self.place(c)
+
+    def haus(self, c, nid):
+        r = c.post("/api/profile/nasquelle", json={"nas": nid, "path": "/dav/Ablage", "haus": True})
+        self.assertEqual(r.status_code, 200, r.text)
+        return r.json()["added"]
+
+    def test_only_an_admin_profile_with_the_switch_chooses_it(self):
+        c, uid = profile("NqHausNein")
+        nid = self.place(c)
+        r = c.post("/api/profile/nasquelle", json={"nas": nid, "path": "/dav/Ablage", "haus": True})
+        self.assertEqual(r.status_code, 403, r.text)                    # no admin profile
+        self.assertFalse(c.get("/api/profile/nasquelle").json()["haus"]["may"])
+        a, auid, anid = self.admin("NqHausAdmin")
+        helpers.set_config(nas_shared=False)
+        self.assertEqual(a.post("/api/profile/nasquelle", json={"nas": anid, "path": "/dav/Ablage", "haus": True}).status_code, 403)
+        helpers.set_config(nas_shared=True)
+        self.assertTrue(a.get("/api/profile/nasquelle").json()["haus"]["may"])
+        sid = self.haus(a, anid)
+        self.assertEqual(nasquelle.sources(auid), [])                    # not the admin's own Wissensordner
+        s = nasquelle.find(nasquelle.HAUS, sid)
+        self.assertEqual((s["owner"], s["nas"]), (auid, anid))
+        self.assertEqual([x["id"] for x in a.get("/api/profile/nasquelle").json()["haus"]["sources"]], [sid])
+        self.assertEqual(c.delete(f"/api/profile/nasquelle/{sid}").status_code, 404)   # another profile cannot touch it
+        self.assertEqual(c.post(f"/api/profile/nasquelle/{sid}/now").status_code, 404)
+
+    def test_every_released_profile_finds_it_guests_and_blocked_never(self):
+        a, auid, anid = self.admin("NqHausLeser")
+        sid = self.haus(a, anid)
+        got = run(nasquelle.sync_once(nasquelle.HAUS, sid))
+        self.assertTrue(got["ok"], got)
+        self.assertEqual(set(DAV["calls"]), {"PROPFIND", "GET"})       # only reading
+        b, buid = profile("NqHausAnna")
+        import wissen
+        hits = run(wissen.search(buid, "Mietvertrag Frist gekuendigt", semantic=False))
+        self.assertTrue(hits and hits[0].get("owner") == "Haushalt", hits)
+        self.assertIn("Haushalt", [d["owner"] for d in wissen.shared_list(buid)])
+        doc = next(x["d"] for x in nasquelle.state(nasquelle.HAUS, sid)["files"].values() if x["p"] == "Vertraege/brief.docx")
+        r = b.get(f"/api/profile/wissen/{doc}/file")                    # opened from the admin's place, not kept
+        self.assertEqual((r.status_code, r.content), (200, DOCX))
+        self.assertFalse(nasquelle.haus_find(None))                      # guests: never
+        helpers.set_config(deny={"nashaushalt": [buid]})
+        self.assertFalse(run(wissen.search(buid, "Mietvertrag Frist gekuendigt", semantic=False)))
+        self.assertEqual(b.get(f"/api/profile/wissen/{doc}/file").status_code, 404)
+        helpers.set_config(deny={}, nas_shared=False)
+        self.assertFalse(run(wissen.search(buid, "Mietvertrag Frist gekuendigt", semantic=False)))
+        self.assertNotIn(nasquelle.HAUS, [u for u, _ in run(nasquelle.round_once(now=10 ** 10))])
+
+    def test_it_hangs_on_the_admin_and_its_place(self):
+        a, auid, anid = self.admin("NqHausOrt")
+        sid = self.haus(a, anid)
+        run(nasquelle.sync_once(nasquelle.HAUS, sid))
+        self.assertGreater(documents.count_source(nasquelle.HAUS, "nas"), 0)
+        r = a.delete(f"/api/profile/nas/{anid}")
+        self.assertEqual(r.status_code, 409, r.text)                     # the place is in use for the household
+        self._admins.remove(auid)                                        # no admin any more: nothing is read
+        self.assertEqual(run(nasquelle.sync_once(nasquelle.HAUS, sid)), {"ok": False, "kind": "gone"})
+        self._admins.append(auid)
+        self.assertEqual(a.delete(f"/api/profile/nasquelle/{sid}").status_code, 200)
+        self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 0)
+        sid = self.haus(a, anid)
+        self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{auid}").status_code, 200)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            run(nasquelle.round_once(now=10 ** 10))
+        self.assertIsNone(nasquelle.find(nasquelle.HAUS, sid))            # the profile is gone, so is its folder
+        self.assertIn("nasquelle: haushalt entfernt | besitzer weg", out.getvalue())
+
+
 class Everywhere(Base):
+    def test_the_iphone_app_shows_the_nas_and_opens_from_it(self):
+        """S8: documents from a place carry "NAS · folder" in Ich → Dokumente of the iPhone app and open from the
+        place through the Spark (the profile's docs list gives source and place; never a file name of the folder)."""
+        c, uid, nid, sid = self.ready("NqApp")
+        run(nasquelle.sync_once(uid, sid))
+        d = next(x for x in c.get("/api/profile/docs").json() if x["name"] == "miete.txt")
+        self.assertEqual((d["source"], d["place"]), ("nas", "/dav/Ablage/Vertraege"))
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if not os.path.isdir(os.path.join(root, "ios")):
+            self.skipTest("ios/ is not in an app/-only copy")
+        with open(os.path.join(root, "ios", "Shared", "SparkAPI.swift"), encoding="utf-8") as f:
+            api = f.read()
+        with open(os.path.join(root, "ios", "Spark", "DocumentsView.swift"), encoding="utf-8") as f:
+            view = f.read()
+        self.assertIn('source: String((d["source"] as? String', api)
+        self.assertIn('if d.source == "nas"', view)
+        self.assertIn('if doc.file || doc.source == "nas" { original = try? await api.docOriginal(doc.id) }', view)
+
     def test_logs_without_paths_names_or_profiles(self):
         c, uid, nid, sid = self.ready("NqLogZebra")
         out = io.StringIO()
@@ -376,7 +485,8 @@ class Everywhere(Base):
         n = nasquelle.for_live()
         self.assertTrue(n["on"])
         self.assertGreaterEqual((n["profiles"], n["folders"], n["docs"]), (1, 1, 4))
-        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs"})   # numbers only
+        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs", "haus_folders", "haus_bad", "haus_docs"})   # numbers only
+        self.assertTrue(all(type(v) is int for k, v in n.items() if k != "on"))
         self.assertIn("nasquelle", live.TARGETS)
         self.assertIn("wissen", dienstwacht.SVC)
         self.assertTrue(any(uid in p["uids"] for p in nasquelle.probes().values()))

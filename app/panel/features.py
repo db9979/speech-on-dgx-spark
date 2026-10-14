@@ -307,6 +307,9 @@ FEATURES = (
     F("speicher", "Kopie meiner Daten", "Copy of my data", "data", ("storage_own",), parent="nas", me="storebox", guide="speicher"),
     # nasquelle.py (S2): folders at a place read into the profile's own document search, only reading
     F("nasquelle", "Wissensordner", "Knowledge folders", "data", ("nas_sources",), parent="nas", me="storebox", guide="nasquelle"),
+    # nasquelle.py (S5): an admin profile picks one folder at its place "für alle"; every profile finds what is in it
+    F("nashaushalt", "Haushaltsordner", "Household folder", "data", ("nas_shared",), parent="nasquelle", me="storebox",
+      guide="nashaushalt"),
     # nasablage.py (S4): spark_ablage at a place in the home network; made documents and, after "Ja", own things go
     # into Erstellt/, files put into Eingang/ come into Dokumente; the only folder the Spark writes to
     F("nasablage", "Ablage-Ordner", "Filing folder", "data", ("nas_drop",), parent="nas", me="storebox", guide="nasablage"),

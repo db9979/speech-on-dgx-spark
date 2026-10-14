@@ -92,8 +92,34 @@ def admin_on(what):
 
 
 def on(uid, what):
-    """Released by the admin for this profile (features.py: block, second step)."""
+    """Released by the admin for this profile (features.py: block, second step). The Haushaltsordner (nasquelle.HAUS,
+    no profile): what the admin switched on, while the Haushaltsordner is on."""
+    import nasquelle
+    if uid == nasquelle.HAUS:
+        return admin_on(what) and nasquelle.haus_on()
     return features.allowed(DOC_FEATURE[what], uid)
+
+
+def _readers():
+    """Whose documents the quiet minutes work on: every profile, and the Haushaltsordner while it is on."""
+    import nasquelle
+    return profiles.user_ids() + ([nasquelle.HAUS] if nasquelle.haus_on() else [])
+
+
+def _docs_ok(uid):
+    import nasquelle
+    return nasquelle.haus_on() if uid == nasquelle.HAUS else features.allowed("documents", uid)
+
+
+def _owner_name(o):
+    import nasquelle
+    return "Haushalt" if o == nasquelle.HAUS else (profiles.by_id(o) or {}).get("name", "?")
+
+
+def _note(uid, *a, **kw):
+    import nasquelle
+    if uid != nasquelle.HAUS:      # Mein Zustand is a profile's page; the household has none
+        hintergrund.note(uid, *a, **kw)
 
 
 QUOTAS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "doc-quotas.json")
@@ -157,17 +183,18 @@ def add(uid, name, data, text=None, source="upload"):
 
 
 def _sharers(uid):
-    """The other profiles that offer documents to everyone ("Für alle"), when this profile may see them."""
-    if not on(uid, "shared"):
-        return []
-    return [o for o in profiles.user_ids() if o != uid and on(o, "shared")]
+    """The other profiles that offer documents to everyone ("Für alle"), when this profile may see them, and the
+    Haushaltsordner (nasquelle.HAUS, S5) when the admin released it for this profile."""
+    import nasquelle
+    out = [o for o in profiles.user_ids() if o != uid and on(o, "shared")] if on(uid, "shared") else []
+    return out + ([nasquelle.HAUS] if nasquelle.haus_find(uid) else [])
 
 
 def shared_list(uid):
     """[{"id", "name", "file", "kind", "pages", "owner"}] the other profiles offer to this one."""
     out = []
     for o in _sharers(uid):
-        owner = (profiles.by_id(o) or {}).get("name", "?")
+        owner = _owner_name(o)
         out += [dict(d, owner=owner) for d in documents.list_shared(o)]
     return out
 
@@ -201,7 +228,7 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     own = documents.match_docs(uid, tags, art) if narrow else None
     hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh)
     for o in _sharers(uid):
-        owner = (profiles.by_id(o) or {}).get("name", "?")
+        owner = _owner_name(o)
         keep = documents.match_docs(o, tags, art, shared_only=True) if narrow else None
         theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True, keep, fresh)
         hits += [dict(h, owner=owner, shared=True) for h in theirs]
@@ -217,7 +244,7 @@ def cards(uid, tags=None, art=None):
     out = [d for d in documents.list_docs(uid, used_only=True) if d["id"] in own]
     for o in _sharers(uid):
         keep = documents.match_docs(o, tags, art, shared_only=True)
-        owner = (profiles.by_id(o) or {}).get("name", "?")
+        owner = _owner_name(o)
         out += [dict(d, owner=owner) for d in documents.list_shared(o) if d["id"] in keep]
     return out
 
@@ -288,7 +315,7 @@ async def recent(uid, since=0, until=None, k=8):
     """"Was habe ich zuletzt notiert?": the own pages changed last (and the ones others offer), newest first."""
     hits = await asyncio.to_thread(documents.recent, uid, since, until, k)
     for o in _sharers(uid):
-        owner = (profiles.by_id(o) or {}).get("name", "?")
+        owner = _owner_name(o)
         hits += [dict(h, owner=owner, shared=True) for h in await asyncio.to_thread(documents.recent, o, since, until, k, True)]
     return sorted(hits, key=lambda h: -h.get("changed", 0))[:k]
 
@@ -425,7 +452,7 @@ async def due_once(idle=True, now=None):
     at_night = bool(n and n["active"])
     day, key, limit = (n["key"], "night", NIGHT_PAGES) if at_night else (today(now), "vision", DAY_PAGES)
     most = None if long_ok(now) else LONG
-    for uid in profiles.user_ids():
+    for uid in _readers():
         if not on(uid, "pictures") or documents.count_today(uid, day, key=key) >= limit:
             continue
         nxt = await asyncio.to_thread(documents.next_page, uid, most)
@@ -438,7 +465,7 @@ async def due_once(idle=True, now=None):
             text = await read_page(jpeg)
             await asyncio.to_thread(documents.page_read, uid, doc, page, text)
             _last["read"] = time.time()
-            hintergrund.note(uid, "docs", True, 1, per_day=True)
+            _note(uid, "docs", True, 1, per_day=True)
             print(f"wissen: page read ({len(text)} chars)", flush=True)
         except Exception as e:
             await asyncio.to_thread(documents.page_read, uid, doc, page, None, True)
@@ -447,7 +474,7 @@ async def due_once(idle=True, now=None):
         finally:
             _now.clear()
         return "page"
-    for uid in profiles.user_ids():
+    for uid in _readers():
         if not on(uid, "brief") or documents.count_today(uid, today(now), key="brief") >= BRIEF_DAY:
             continue
         nxt = await asyncio.to_thread(documents.next_card, uid)
@@ -458,15 +485,15 @@ async def due_once(idle=True, now=None):
         try:
             got = await make_brief(text)
             await asyncio.to_thread(documents.set_card, uid, doc, got)
-            hintergrund.note(uid, "brief", True, 1, per_day=True)
+            _note(uid, "brief", True, 1, per_day=True)
             print("wissen: steckbrief made", flush=True)
         except Exception as e:
             await asyncio.to_thread(documents.set_card, uid, doc, None, True)
             print("wissen: no steckbrief:", type(e).__name__, flush=True)
         return "brief"
     # context lines of the pieces (Stufe 2 of plan suche-schaerfen): before the vectors, which read them
-    for uid in profiles.user_ids():
-        if not features.allowed("documents", uid) or not await asyncio.to_thread(documents.heads_left, uid):
+    for uid in _readers():
+        if not _docs_ok(uid) or not await asyncio.to_thread(documents.heads_left, uid):
             continue
         t0 = time.time()
         done = await asyncio.to_thread(documents.due_heads, uid, HEADS_STEP)
@@ -474,7 +501,7 @@ async def due_once(idle=True, now=None):
         import live
         live.bg_done(f"Kontext für {done} Dokumente", True, time.time() - t0)
         return "kopf"
-    for uid in profiles.user_ids():
+    for uid in _readers():
         if not on(uid, "semantic"):
             continue
         miss = await asyncio.to_thread(documents.missing_vectors, uid, docembed.BATCH)
@@ -487,7 +514,7 @@ async def due_once(idle=True, now=None):
             return None
         await asyncio.to_thread(documents.set_vectors, uid, [(i, v) for (i, _), v in zip(miss, vecs)])
         _last["vectors"] = time.time()
-        hintergrund.note(uid, "meaning", True, len(vecs), per_day=True)
+        _note(uid, "meaning", True, len(vecs), per_day=True)
         return "vectors"
     import suchpruefung     # Suchprüfung (plan suche-schaerfen): the night's run, else one test question
     got = await suchpruefung.due_once(now)
@@ -654,14 +681,15 @@ async def download(doc_id: str, request: Request, view: int = 0, prof=Depends(re
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
     got = await asyncio.to_thread(documents.original, prof["id"], doc_id)
+    owner = None
     if not got:
         owner = find_shared(prof["id"], doc_id)
         got = await asyncio.to_thread(documents.original, owner, doc_id) if owner else None
     temp = None
     if not got:
         import nasquelle   # Wissensordner: the file is fetched from its place now, not kept on the Spark
-        try:
-            temp = got = await nasquelle.fetch(prof["id"], doc_id)
+        try:               # (a document of the Haushaltsordner from the admin's place, never another profile's)
+            temp = got = await nasquelle.fetch(nasquelle.HAUS if owner == nasquelle.HAUS else prof["id"], doc_id)
         except nasquelle.SourceError:
             raise HTTPException(503, "Die Datei liegt nur an deinem Speicherort, und der ist gerade nicht erreichbar.")
     if not got:
@@ -690,7 +718,7 @@ def read_again(doc_id: str, request: Request, start: int = 0, prof=Depends(reade
         owner = find_shared(prof["id"], doc_id)
         got = documents.text_of(owner, doc_id, start=start) if owner else None
         if got:
-            got["owner"] = (profiles.by_id(owner) or {}).get("name", "?")
+            got["owner"] = _owner_name(owner)
     if not got:
         raise HTTPException(404, "no such document")
     if not got.get("owner") and on(prof["id"], "brief"):

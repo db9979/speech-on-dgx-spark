@@ -69,6 +69,8 @@ ROUND_FILES = 200
 ROUND_BYTES = 1024 ** 3
 NAS_DOCS = 5000                # documents from the places per profile (chat.nas_max_docs, 100 to 20000)
 EVERY = 30                     # minutes (chat.nas_sources_every, 15 to 1440)
+HAUS = "haushalt"              # the Haushaltsordner (S5): its folders, state and documents as if it were a profile
+OWNER = re.compile(r"u_[0-9a-f]{12}")
 RETRY = (600, 1800, 3600, 7200)
 START_GRACE = 180
 TIMEOUT = 20
@@ -124,9 +126,39 @@ def admin_on(c=None):
 
 
 def allowed(uid, c=None):
-    """Released for this profile (features.py: the place, documents and this switch, not blocked)."""
+    """Released for this profile (features.py: the place, documents and this switch, not blocked). HAUS: the
+    Haushaltsordner is switched on."""
     c = features.chat_cfg() if c is None else c
+    if uid == HAUS:
+        return haus_on(c)
     return bool(uid) and features.allowed("nasquelle", uid, c) and features.allowed("documents", uid, c)
+
+
+def haus_on(c=None):
+    """The Haushaltsordner is switched on (chat.nas_shared and what it builds on: the place, the Wissensordner)."""
+    return features.admin_on("nashaushalt", c)
+
+
+def haus_find(uid, c=None):
+    """This profile finds what is in the Haushaltsordner (released, not blocked, documents too); guests never."""
+    c = features.chat_cfg() if c is None else c
+    return bool(uid) and uid != HAUS and features.allowed("nashaushalt", uid, c) and features.allowed("documents", uid, c)
+
+
+def haus_admin(uid, c=None):
+    """This profile may choose a Haushaltsordner at one of its own places: an admin profile with Wissensordner."""
+    import zustand_wz
+    return bool(uid) and uid != HAUS and haus_find(uid, c) and allowed(uid, c) and zustand_wz.is_admin(uid)
+
+
+def _owner(uid, s):
+    """Whose place a folder is at: the profile itself, for the Haushaltsordner the admin profile that chose it."""
+    return s.get("owner", "") if uid == HAUS else uid
+
+
+def _pictures(uid):
+    import wissen
+    return wissen.on(uid, "pictures")
 
 
 def _int(key, default, lo, hi):
@@ -183,8 +215,11 @@ def _clean(s):
     except ValueError:
         return None
     groups = [g for g in GROUPS if g in (s.get("groups") or [])]
-    return {"id": s["id"], "nas": s["nas"], "path": path, "groups": groups or [g for g, v in GROUPS.items() if v[3]],
-            "skip": [x for x in skip if x], "added": int(s.get("added") or 0)}
+    out = {"id": s["id"], "nas": s["nas"], "path": path, "groups": groups or [g for g, v in GROUPS.items() if v[3]],
+           "skip": [x for x in skip if x], "added": int(s.get("added") or 0)}
+    if OWNER.fullmatch(str(s.get("owner", ""))):
+        out["owner"] = s["owner"]
+    return out
 
 
 def sources(uid):
@@ -232,9 +267,9 @@ def _hash(sid, rel):
 
 
 def uses(uid):
-    """For nas.uses: {connection id: number of folders}."""
+    """For nas.uses: {connection id: number of folders}, the Haushaltsordner at this profile's places too."""
     out = {}
-    for s in sources(uid):
+    for s in sources(uid) + [s for s in sources(HAUS) if uid and s.get("owner") == uid]:
         out[s["nas"]] = out.get(s["nas"], 0) + 1
     return out
 
@@ -518,7 +553,7 @@ def _rm(p):
 
 
 def _log_name(uid):
-    return profiles.log_name(profiles.by_id(uid))
+    return "haushalt" if uid == HAUS else profiles.log_name(profiles.by_id(uid))
 
 
 def _live(name, *a, **kw):
@@ -552,11 +587,13 @@ async def _read_one(uid, s, rd, rel, size, pictures):
         return "", "inhalt"
     try:
         got = await asyncio.to_thread(lambda: documents.add(uid, name, data, pictures=pictures, keep=0, source="nas", most=most,
-                                                            docling=doclingdienst.wanted(uid, name, None), limit=max_docs()))
+                                                            docling=uid != HAUS and doclingdienst.wanted(uid, name, None), limit=max_docs()))
     except ValueError:
         return "", "lesen"
     folder = s["path"] + "/" + "/".join(rel.split("/")[:-1]) if "/" in rel else s["path"]
     await asyncio.to_thread(documents.set_place, uid, got["id"], f"{s['id']}:{_hash(s['id'], rel)}", folder or "/")
+    if uid == HAUS:     # the Haushaltsordner's documents are for every profile that may find them (wissen._sharers)
+        await asyncio.to_thread(documents.set_shared, HAUS, got["id"], True)
     return got["id"], None
 
 
@@ -592,9 +629,12 @@ async def sync_once(uid, sid, why="auto", now=None):
     _live("bg", "Wissensordner-Abgleich", "läuft")
     rd = None
     try:
-        import wissen
-        pictures = wissen.on(uid, "pictures")
-        c = _conn(uid, s["nas"])
+        pictures = _pictures(uid)
+        if uid == HAUS:
+            import zustand_wz
+            if not zustand_wz.is_admin(_owner(uid, s)):    # only an admin's place serves the whole household
+                raise SourceError("gone")
+        c = _conn(_owner(uid, s), s["nas"])
         rd = reader(c, s["path"])
         files, out, complete = await walk(rd, s["skip"])
         have = st["files"]
@@ -688,7 +728,12 @@ async def round_once(now=None):
     if vorrang.speaking():
         return []
     done = []
-    for uid in profiles.user_ids():
+    ids = profiles.user_ids()
+    for s in sources(HAUS):
+        if s.get("owner") not in ids:    # the admin profile whose place it was is gone: so is its Haushaltsordner
+            n = remove_source(HAUS, s["id"])
+            print(f"nasquelle: haushalt entfernt | besitzer weg | {n} dokumente", flush=True)
+    for uid in ids + [HAUS]:
         if not allowed(uid, c):
             continue
         for s in sources(uid):
@@ -742,7 +787,7 @@ async def fetch(uid, doc_id):
     rel = x["p"]
     name = rel.split("/")[-1]
     most = wissen.pdf_bytes() if name.lower().endswith(".pdf") else documents.MAX_OTHER
-    rd = reader(_conn(uid, s["nas"]), s["path"])
+    rd = reader(_conn(_owner(uid, s), s["nas"]), s["path"])
     tmp = _tmp()
     try:
         await rd.get(rel, tmp, most)
@@ -786,7 +831,9 @@ def for_live():
         folders += len(ss)
         bad += sum(1 for s in ss if state(uid, s["id"])["fail"])
         docs += nas_docs(uid)
-    return {"on": True, "profiles": profs, "folders": folders, "bad": bad, "docs": docs}
+    hs = sources(HAUS) if haus_on() else []
+    return {"on": True, "profiles": profs, "folders": folders, "bad": bad, "docs": docs,    # the Haushaltsordner apart
+            "haus_folders": len(hs), "haus_bad": sum(1 for s in hs if state(HAUS, s["id"])["fail"]), "haus_docs": nas_docs(HAUS) if hs else 0}
 
 
 def probes():
@@ -795,11 +842,11 @@ def probes():
     if not admin_on():
         return out
     import nas
-    for uid in profiles.user_ids():
+    for uid in profiles.user_ids() + [HAUS]:
         if not allowed(uid):
             continue
         for s in sources(uid):
-            c = nas.find(uid, s["nas"])
+            c = nas.find(_owner(uid, s), s["nas"])
             if not c:
                 continue
             u = urlsplit(c["url"])
@@ -816,11 +863,11 @@ def probes():
 def overview():
     """Zustand (admin): per profile folders, state and numbers, never a path or a name."""
     rows = []
-    names = {p["id"]: p["name"] for p in profiles.names()}
-    for uid in profiles.user_ids():
+    names = dict({p["id"]: p["name"] for p in profiles.names()}, **{HAUS: "Haushalt"})
+    for uid in profiles.user_ids() + [HAUS]:
         for s in sources(uid):
             st = state(uid, s["id"])
-            rows.append({"profile": names.get(uid, "?"), "files": sum(1 for x in st["files"].values() if x.get("d")),
+            rows.append({"profile": names.get(uid, "?"), "haus": uid == HAUS, "files": sum(1 for x in st["files"].values() if x.get("d")),
                          "left": st["left"], "fail": (st["fail"] or {}).get("kind", ""), "last": (st["last"] or {}).get("t", 0)})
     return {"on": admin_on(), "rows": rows}
 
@@ -835,9 +882,12 @@ def public(uid, s, st=None):
 
 
 def _view(uid):
-    import wissen
+    mine = [s for s in sources(HAUS) if s.get("owner") == uid]
     return {"admin": admin_on(), "on": allowed(uid), "why": features.reason("nasquelle", uid), "max": MAX_SOURCES,
-            "pictures": wissen.on(uid, "pictures"), "docs": nas_docs(uid), "max_docs": max_docs(),
+            "pictures": _pictures(uid), "docs": nas_docs(uid), "max_docs": max_docs(),
+            # the Haushaltsordner this admin profile chose at its places (S5); "may": it can choose one
+            "haus": {"may": haus_admin(uid), "pictures": _pictures(HAUS), "docs": nas_docs(HAUS) if mine else 0,
+                     "max": MAX_SOURCES, "count": len(sources(HAUS)), "sources": [public(HAUS, s) for s in mine]},
             "groups": [{"id": g, "name": [v[0], v[1]], "ends": list(v[2]), "on": v[3]} for g, v in GROUPS.items()],
             "out_words": {k: list(v) for k, v in WHY_OUT.items()}, "why_words": {k: list(v) for k, v in WHY.items()},
             "sources": [public(uid, s) for s in sources(uid)]}
@@ -891,6 +941,26 @@ def _skip(v):
         raise HTTPException(400, "invalid folder")
 
 
+def _store(uid, sid, setting=True):
+    """(uid or HAUS) whose folder sid is: the profile's own, or the Haushaltsordner it chose (changing and reading
+    that needs haus_admin; removing it stays possible, it is at the profile's own place)."""
+    if find(uid, sid):
+        return uid
+    s = find(HAUS, sid)
+    if s and s.get("owner") == uid and (not setting or haus_admin(uid)):
+        return HAUS
+    raise HTTPException(404, "no such folder")
+
+
+def _want_haus(uid, body):
+    """{"haus": true}: the folder is for the whole household (S5), only for an admin profile that may choose one."""
+    if body.get("haus") is not True:
+        return uid
+    if not haus_admin(uid):
+        raise HTTPException(403, "Den Haushaltsordner wählt nur ein Admin-Profil, wenn der Admin ihn freigegeben hat.")
+    return HAUS
+
+
 def _place(uid, nid):
     import nas
     if not ID.fullmatch(str(nid or "")) or not nas.find(uid, nid):
@@ -942,9 +1012,9 @@ async def tree(request: Request, nas: str = "", path: str = "", prof=Depends(_on
 async def preview(request: Request, prof=Depends(_on)):
     """{"nas", "path", "groups", "skip"}: what would be read (numbers per group, left out with reason, size)."""
     guard.limit(request, "storage", prof["id"])
-    import wissen
     uid = prof["id"]
     body = await _body(request)
+    who = _want_haus(uid, body)
     c = _place(uid, body.get("nas"))
     path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
     rd = reader(c, path)
@@ -955,7 +1025,7 @@ async def preview(request: Request, prof=Depends(_on)):
         raise HTTPException(502, _say(e.kind))
     finally:
         await rd.close()
-    pictures = wissen.on(uid, "pictures")
+    pictures = _pictures(who)
     per, size = {}, 0
     for rel, sz, _ in files:
         reason = classify(rel, sz, groups, pictures)
@@ -966,8 +1036,8 @@ async def preview(request: Request, prof=Depends(_on)):
             per[g] = per.get(g, 0) + 1
             size += sz
     n = sum(per.values())
-    room = max(0, max_docs() - nas_docs(uid))
-    print(f"nasquelle: vorschau | {n} dateien | {_log_name(uid)}", flush=True)
+    room = max(0, max_docs() - nas_docs(who))
+    print(f"nasquelle: vorschau | {n} dateien | {_log_name(uid)}" + (" | haushalt" if who == HAUS else ""), flush=True)
     return dict({"files": n, "groups": per, "out": out, "bytes": size, "complete": complete, "seen_most": MAX_LIST,
                  "every": every() // 60, "room": room, "limit": max_docs()}, **plan(n, size, room))
 
@@ -980,7 +1050,8 @@ async def add(request: Request, prof=Depends(_on)):
     body = await _body(request)
     c = _place(uid, body.get("nas"))
     path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
-    items = sources(uid)
+    who = _want_haus(uid, body)
+    items = sources(who)
     if len(items) >= MAX_SOURCES:
         raise HTTPException(400, f"Höchstens {MAX_SOURCES} Wissensordner.")
     if any(s["nas"] == c["id"] and s["path"] == path for s in items):
@@ -999,11 +1070,16 @@ async def add(request: Request, prof=Depends(_on)):
     sid = secrets.token_hex(3)
     while any(s["id"] == sid for s in items):
         sid = secrets.token_hex(3)
-    items.append({"id": sid, "nas": c["id"], "path": path, "groups": groups, "skip": skip, "added": int(time.time())})
-    _save(uid, items)
-    guard.log("nasquelle_add", detail=c["kind"])
-    print(f"nasquelle: hinzugefügt | art={c['kind']} | {_log_name(uid)}", flush=True)
-    spawn(sync_once(uid, sid, "add"))
+    while find(uid if who == HAUS else HAUS, sid):      # ids stay unique over the profile and the household
+        sid = secrets.token_hex(3)
+    item = {"id": sid, "nas": c["id"], "path": path, "groups": groups, "skip": skip, "added": int(time.time())}
+    if who == HAUS:
+        item["owner"] = uid
+    items.append(item)
+    _save(who, items)
+    guard.log("nasquelle_add", detail=c["kind"] + (" haushalt" if who == HAUS else ""))
+    print(f"nasquelle: hinzugefügt | art={c['kind']} | {_log_name(uid)}" + (" | haushalt" if who == HAUS else ""), flush=True)
+    spawn(sync_once(who, sid, "add"))
     return {"ok": True, "added": sid}
 
 
@@ -1011,7 +1087,7 @@ async def add(request: Request, prof=Depends(_on)):
 async def change(sid: str, request: Request, prof=Depends(_on)):
     """{"groups"?, "skip"?}: what is read from this folder; the next round follows it."""
     guard.limit(request, "storage", prof["id"])
-    uid = prof["id"]
+    uid = _store(prof["id"], sid)
     body = await _body(request)
     items = sources(uid)
     s = next((x for x in items if x["id"] == sid), None)
@@ -1032,7 +1108,7 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
     st["last"] = None                 # due again at once
     _put_state(uid, sid, st)
     guard.log("nasquelle_change")
-    print(f"nasquelle: geändert | {_log_name(uid)}", flush=True)
+    print(f"nasquelle: geändert | {_log_name(prof['id'])}" + (" | haushalt" if uid == HAUS else ""), flush=True)
     return {"ok": True}
 
 
@@ -1040,13 +1116,10 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
 def remove(sid: str, request: Request, prof=Depends(browser_profile)):
     """The folder and its documents leave the search (nothing changes at the place). Also when blocked: own data."""
     guard.limit(request, "storage", prof["id"])
-    uid = prof["id"]
-    items = sources(uid)
-    if not any(s["id"] == sid for s in items):
-        raise HTTPException(404, "no such folder")
+    uid = _store(prof["id"], sid, setting=False)
     n = remove_source(uid, sid)
     guard.log("nasquelle_remove", detail=str(n))
-    print(f"nasquelle: entfernt | {n} dokumente | {_log_name(uid)}", flush=True)
+    print(f"nasquelle: entfernt | {n} dokumente | {_log_name(prof['id'])}" + (" | haushalt" if uid == HAUS else ""), flush=True)
     return {"ok": True, "removed": n}
 
 
@@ -1075,9 +1148,7 @@ features.OWN["nasquelle"] = (lambda uid: len(sources(uid)), _clear)
 @router.post("/api/profile/nasquelle/{sid}/now")
 async def now_route(sid: str, request: Request, prof=Depends(_on)):
     guard.limit(request, "storagenow", prof["id"])
-    uid = prof["id"]
-    if not find(uid, sid):
-        raise HTTPException(404, "no such folder")
+    uid = _store(prof["id"], sid)
     if (uid, sid) in _running:
         raise HTTPException(409, "Der Abgleich läuft schon.")
     got = await sync_once(uid, sid, "now")

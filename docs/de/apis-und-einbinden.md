@@ -136,6 +136,28 @@ Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene 
 
 **Sichtbar:** Zustand → Live zeigt jeden Aufruf als Schritt zum Ziel „MCP-Dienste“ und unter Ereignisse „MCP: Dienst · Host · ok oder Fehler · Dauer“, dazu angebunden, entfernt, angemeldet, gesperrt; nie Frage, Angaben oder Antwort, nie den Profilnamen. Ich → Mein Zustand zeigt eine Zeile pro Dienst (antwortet, Anmeldung nötig, gesperrt). Die Entscheidungen des Wächters stehen wie immer unter Live.
 
+### Fortgeschritten: MCP-Server auf der NAS
+
+Seit V01.0.552 (Synology-Plan S7, nur Anleitung, kein Code im Spark). Wer seine Dateien lieber über ein eigenes MCP-Programm auf der Synology anbietet statt über die Wissensordner, findet unter [`docs/vorlagen/nas-mcp`](../vorlagen/nas-mcp) eine gehärtete Vorlage für den Container Manager: einen Dateiserver (`@modelcontextprotocol/server-filesystem` hinter `supergateway`, Streamable HTTP) und davor einen Türsteher (nginx), der nur `/mcp` mit dem richtigen Schlüssel durchlässt.
+
+**Ehrlich vorweg:** Die Wissensordner (Ich → Speicher) sind für fast alle der bessere Weg: kein fremdes Programm, der Spark liest selbst, alles im Wächter und in Live. Ein MCP-Container ist Software von Dritten auf deiner NAS, mit Zugriff auf den Ordner, den du ihm gibst. Er ist so sicher wie seine Abhängigkeiten, und Updates musst du selbst bauen. Nimm ihn nur, wenn du genau weißt, warum.
+
+**Was die Vorlage festlegt:**
+- Basis-Images nur mit Digest (`node:22-alpine@sha256:…`, `nginx-unprivileged@sha256:…`), feste Paketversionen, `npm ci` beim Bauen statt `npm install` bei jedem Start, ohne Install-Skripte.
+- Der Ordner nur lesend (`/volume1/dokumente:/data:ro`), dazu `read_only: true`, `user: "1000:1000"`, `cap_drop: [ALL]`, `security_opt: no-new-privileges`, Speicher- und Prozessgrenze.
+- Der Dateiserver hängt nur im internen Netz (`internal: true`): kein Port, kein Internet. Nach außen geht nur der Türsteher, und der nur auf `127.0.0.1:8765`.
+- Erreichbar nur über den Reverse-Proxy der NAS mit HTTPS und einem gültigen Zertifikat (der Spark prüft es; ein selbst signiertes lehnt er ab). Der Türsteher verlangt `Authorization: Bearer <Schlüssel>` und gibt den Schlüssel nicht weiter.
+
+**Einrichten:**
+1. Die vier Dateien auf die NAS kopieren (z. B. `/volume1/docker/nas-mcp`). Einmal `npm install --package-lock-only` ausführen (auf einem anderen Rechner genügt), damit `package-lock.json` die genauen Versionen festhält.
+2. Die beiden Digests eintragen (Befehle stehen in den Dateien), in `compose.yaml` den Ordner anpassen, in `nginx.conf` `SCHLUESSEL` durch einen langen Zufallswert ersetzen (`openssl rand -hex 32`).
+3. Container Manager → Projekt → Erstellen, Pfad wählen, `compose.yaml` übernehmen, bauen und starten.
+4. DSM → Systemsteuerung → Anmeldeportal → Erweitert → Reverse Proxy → Erstellen: Quelle HTTPS mit eigenem Port oder Namen, Ziel HTTP `localhost:8765`. Zertifikat unter Sicherheit → Zertifikat zuordnen.
+5. Spark: Admin schaltet Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* an und, weil die NAS im Heimnetz steht, Einstellungen → Sicherheit → *Heimnetz-Adressen erlauben*.
+6. Profil: Ich → *Meine MCP-Dienste*: Name „NAS-Dateien“, Adresse `https://<NAS>:<Port>/mcp`, den Schlüssel, „Dienst anbinden“. Unter „Werkzeuge freigeben“ nur die lesenden Werkzeuge (`read_text_file`, `list_directory`, `search_files`, `get_file_info` …) auf „Lesen“; alles, was schreibt, verschiebt oder anlegt, bleibt „Aus“ (der Ordner ist ohnehin nur lesend eingebunden).
+
+**Aus:** Im Spark den Dienst entfernen (der Schlüssel wird gelöscht), auf der NAS das Projekt stoppen und die Reverse-Proxy-Regel löschen. Ein neuer Schlüssel: in `nginx.conf` ändern, Türsteher neu starten, im Spark den Dienst mit dem neuen Schlüssel neu eintragen.
+
 ### „Hey Siri, frag Spark“
 
 Ein iPhone-Kurzbefehl schickt die diktierte Frage an `POST /api/siri/ask` (Header `X-Speech-Device` mit

@@ -136,6 +136,28 @@ Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect 
 
 **Visible:** Status → Live shows each call as a step to the target "MCP-Dienste" and under events "MCP: service · host · ok or error · duration", plus connected, removed, signed in, blocked; never question, arguments or answer, never the profile's name. Me → My status shows one row per service (answers, sign-in needed, blocked). The guard's decisions show under Live as always.
 
+### Advanced: MCP server on the NAS
+
+Since V01.0.552 (Synology plan S7, guide only, no code in the Spark). If you would rather offer your files through an MCP program of your own on the Synology than through knowledge folders, [`docs/vorlagen/nas-mcp`](../vorlagen/nas-mcp) has a hardened template for Container Manager: a file server (`@modelcontextprotocol/server-filesystem` behind `supergateway`, Streamable HTTP) with a doorman (nginx) in front that only lets `/mcp` through with the right key.
+
+**Honestly first:** knowledge folders (Me → Storage) are the better way for almost everyone: no third-party program, the Spark reads by itself, everything through the Wächter and in Live. An MCP container is third-party software on your NAS with access to the folder you give it. It is as safe as its dependencies, and you have to build updates yourself. Only use it when you know exactly why.
+
+**What the template fixes:**
+- Base images only by digest (`node:22-alpine@sha256:…`, `nginx-unprivileged@sha256:…`), fixed package versions, `npm ci` at build time instead of `npm install` at every start, without install scripts.
+- The folder read-only (`/volume1/dokumente:/data:ro`), plus `read_only: true`, `user: "1000:1000"`, `cap_drop: [ALL]`, `security_opt: no-new-privileges`, memory and process limits.
+- The file server sits only in the internal network (`internal: true`): no port, no internet. Only the doorman faces outward, and only on `127.0.0.1:8765`.
+- Reachable only through the NAS's reverse proxy with HTTPS and a valid certificate (the Spark checks it and refuses a self-signed one). The doorman requires `Authorization: Bearer <key>` and does not pass the key on.
+
+**Setup:**
+1. Copy the four files to the NAS (e.g. `/volume1/docker/nas-mcp`). Run `npm install --package-lock-only` once (another computer will do) so `package-lock.json` pins the exact versions.
+2. Enter both digests (the commands are in the files), adjust the folder in `compose.yaml`, replace `SCHLUESSEL` in `nginx.conf` with a long random value (`openssl rand -hex 32`).
+3. Container Manager → Project → Create, choose the path, take `compose.yaml`, build and start.
+4. DSM → Control Panel → Login Portal → Advanced → Reverse Proxy → Create: source HTTPS with its own port or name, destination HTTP `localhost:8765`. Assign a certificate under Security → Certificate.
+5. Spark: the admin turns on Features → Agent functions → Services over MCP → *Own MCP services for profiles* and, since the NAS is in the home network, Settings → Security → *Allow home network addresses*.
+6. Profile: Me → *My MCP services*: name "NAS files", address `https://<NAS>:<port>/mcp`, the key, "Connect service". Under "Release tools" set only the reading tools (`read_text_file`, `list_directory`, `search_files`, `get_file_info` …) to "Read"; everything that writes, moves or creates stays "Off" (the folder is mounted read-only anyway).
+
+**Off:** remove the service in the Spark (the key is deleted), stop the project on the NAS and delete the reverse proxy rule. A new key: change it in `nginx.conf`, restart the doorman, enter the service again in the Spark with the new key.
+
 ### "Hey Siri, ask Spark"
 
 An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a

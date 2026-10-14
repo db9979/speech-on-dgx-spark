@@ -169,6 +169,9 @@ struct SparkDoc: Identifiable, Equatable {
     var title = ""
     var due = ""
     var tags: [String] = []
+    /// "nas": read from a knowledge folder (Synology S8); place is its folder there, the file is fetched when opened
+    var source = ""
+    var place = ""
 }
 
 /// A document the Spark made (GET /api/make): its newest version and the small preview of the first part.
@@ -496,7 +499,8 @@ struct SparkAPI {
                             pages: (d["pages"] as? NSNumber)?.intValue ?? 0, todo: (d["todo"] as? NSNumber)?.intValue ?? 0,
                             use: d["use"] as? Bool ?? true, shared: d["shared"] as? Bool ?? false,
                             title: String((d["title"] as? String ?? "").prefix(200)), due: String((d["due"] as? String ?? "").prefix(10)),
-                            tags: (d["tags"] as? [String] ?? []).prefix(12).map { String($0.prefix(24)) })
+                            tags: (d["tags"] as? [String] ?? []).prefix(12).map { String($0.prefix(24)) },
+                            source: String((d["source"] as? String ?? "").prefix(12)), place: String((d["place"] as? String ?? "").prefix(300)))
         }
     }
 

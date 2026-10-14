@@ -1612,7 +1612,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "e79f00ee84",
+        "stand": "28753c1b13",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -1696,10 +1696,13 @@ SEITEN_DATEN = {
             S("s8", "schritt", ("Geteilte Dokumente der anderen", "Shared documents of the others"),
               ("„Für alle“ markiert, nur fertig gelesene", "marked „for everyone“, only fully read ones"),
               ("Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über "
-               "Dokumente, die dort „Für alle“ sind. Die Treffer tragen den Namen des Besitzers; alles wird nach Rang "
-               "sortiert.",
+               "Dokumente, die dort „Für alle“ sind. Ist der Haushaltsordner für das Profil frei, läuft sie auch im "
+               "Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; "
+               "alles wird nach Rang sortiert.",
                "With „Shared documents“ the same search runs in the other profiles' files, but only over documents "
-               "marked „for everyone“ there. The hits carry the owner's name; everything is sorted by rank.")),
+               "marked „for everyone“ there. With the household folder released for the profile it also runs in the "
+               "household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is "
+               "sorted by rank.")),
             S("s9", "frage", ("Treffer nachsortieren an?", "Re-rank hits on?"),
               ("sonst die ersten fünf der Mischung", "else the first five of the mix"),
               ("Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung "

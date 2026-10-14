@@ -1,0 +1,8 @@
+{
+  "name": "spark-nas-mcp",
+  "private": true,
+  "dependencies": {
+    "@modelcontextprotocol/server-filesystem": "2026.8.31",
+    "supergateway": "4.1.0"
+  }
+}

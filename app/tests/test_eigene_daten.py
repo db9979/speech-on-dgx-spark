@@ -51,6 +51,7 @@ OHNE = {
     "rmguide": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "rmpapier": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "naszustand": "keine Daten des Profils: nur der Haupt-Admin richtet den Zustand der NAS unter Funktionen ein und vergisst ihn dort",
+    "nashaushalt": "die Ordner gehören zu den Wissensordnern des Admin-Profils (nasquelle); andere Profile finden nur mit",
     "rmaufgaben": "die Daten gehören zur reMarkable-Verbindung (remarkable)",
     "mystatus": "keine eigenen Daten: zeigt nur, was andere Funktionen wissen",
     "vorrang": "keine eigenen Daten: die Stufe gibt der Admin",

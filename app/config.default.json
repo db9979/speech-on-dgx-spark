@@ -227,6 +227,7 @@
     "storage_offload": false,
     "nas_on": false,
     "nas_sources": false,
+    "nas_shared": false,
     "nas_max_docs": 5000,
     "nas_sources_every": 30,
     "nas_drop": false,

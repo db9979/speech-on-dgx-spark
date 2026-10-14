@@ -2,10 +2,11 @@
 // Spark reads into Dokumente (only reading; nothing changes there). Per folder: what is read (groups, sub folders
 // left out), numbers, state, "Jetzt abgleichen", "Entfernen". New folders: type or browse the path, preview, add.
 // When the admin blocks the profile the folders stay visible and can be removed (own data). Server text is text (esc).
+// An admin profile can mark a new folder "Für alle im Haushalt" (Haushaltsordner, S5): every profile finds it then.
 let NQ=null;
 const NQ_PATH={webdav:'/',smb:'',sftp:'/volume1/'};
 const nqWhy=k=>t(...((NQ&&NQ.why_words||{})[k]||NAS_WHY[k]||NAS_WHY.other));
-async function nqLoad(){NQ=null;try{const d=await (await api('/api/profile/nasquelle')).json();if(d.on||d.sources.length)NQ=d}catch{NQ=null}return NQ}
+async function nqLoad(){NQ=null;try{const d=await (await api('/api/profile/nasquelle')).json();d.haus=d.haus||{may:false,sources:[],count:0,max:0};if(d.on||d.sources.length||d.haus.sources.length)NQ=d}catch{NQ=null}return NQ}
 function nqGroups(pre,picked){return `<div class="nqgrp">${NQ.groups.map(g=>{const off=g.id==='bilder'&&!NQ.pictures;
   return `<label class="chk"><input type="checkbox" data-nqg="${esc(pre)}" value="${esc(g.id)}"${picked.includes(g.id)&&!off?' checked':''}${off?' disabled':''}> ${esc(t(g.name[0],g.name[1]))} <small class="mut">${esc(g.ends.join(' '))}</small></label>`}).join('')}
   ${NQ.pictures?'':`<div class="fh">${esc(t('Bilder und Scans braucht unter Funktionen „Bilder in Dokumenten“.','Pictures and scans need "Pictures in documents" under Features.'))}</div>`}</div>`}
@@ -13,8 +14,8 @@ function nqOut(out){const k=Object.keys(out||{}).filter(x=>out[x]);if(!k.length)
   return `<details><summary>${esc(t('Ausgelassen','Left out'))}</summary>${k.map(x=>`<div class="mut">${esc(t(...(NQ.out_words[x]||[x,x])))}: ${esc(String(out[x]))}</div>`).join('')}</details>`}
 function nqState(x){if(x.running)return ['warn',t('liest gerade','reading now')];if(x.fail)return [x.fail.kind==='offline'?'warn':'bad',nqWhy(x.fail.kind)];
   return x.last?['ok',t('aktuell','up to date')]:['',t('noch nicht gelesen','not read yet')]}
-function nqOne(x){const [cls,word]=nqState(x),on=NQ.on;
-  return `<div class="use"><div class="use-h"><span><b>${esc(t('Wissensordner','Knowledge folder'))}</b> <em class="pill ${cls}">${esc(word)}</em>
+function nqOne(x){const [cls,word]=nqState(x),on=NQ.on&&(!x.haus||NQ.haus.may);
+  return `<div class="use"><div class="use-h"><span><b>${esc(x.haus?t('Haushaltsordner (für alle)','Household folder (for everyone)'):t('Wissensordner','Knowledge folder'))}</b> <em class="pill ${cls}">${esc(word)}</em>
       <small>${esc(x.path)} · ${esc(t(`${x.docs} Dokumente`,`${x.docs} documents`))} · ${esc(t(`${x.seen} im Ordner`,`${x.seen} in the folder`))}${x.left?' · '+esc(t(`${x.left} warten`,`${x.left} waiting`)):''} · ${esc(t('zuletzt','last'))} ${esc(spWhen(x.last&&x.last.t))}</small></span></div>
     ${on?'':`<div class="fh">${esc(t('Vom Admin ausgeschaltet oder für dich gesperrt: der Ordner wird nicht mehr gelesen. Entfernen geht weiter.','Switched off or blocked for you by the admin: the folder is not read any more. Removing still works.'))}</div>`}
     ${nqOut(x.out)}
@@ -24,18 +25,21 @@ function nqOne(x){const [cls,word]=nqState(x),on=NQ.on;
       <div class="row"><button class="b p" type="button" data-nqsave="${esc(x.id)}">${esc(t('Speichern','Save'))}</button></div></details>`:''}
     <div class="row"><button class="b" type="button" data-nqdel="${esc(x.id)}">${esc(t('Entfernen','Remove'))}</button></div></div>`}
 // the Wissensordner part of one place under "Wofür" (nas.js)
-function nqUse(place){if(!NQ)return '';const mine=NQ.sources.filter(x=>x.nas===place.id),id=place.id;
-  const add=NQ.on&&NQ.sources.length<NQ.max?`<div class="use"><div class="use-h"><span><b>${esc(mine.length?t('Weiterer Wissensordner','Another knowledge folder'):t('Wissensordner','Knowledge folder'))}</b><small>${esc(t('Der Spark liest Dokumente aus einem Ordner dort und findet sie bei Fragen; dort ändert sich nichts.','The Spark reads documents from a folder there and finds them when asked; nothing changes there.'))}</small></span>${tglIn(`data-nqon="${esc(id)}" aria-label="${esc(t('Wissensordner','Knowledge folder'))}"`,false)}</div>
+function nqUse(place){if(!NQ)return '';const id=place.id,hs=NQ.haus.sources.filter(x=>x.nas===id).map(x=>Object.assign({haus:true},x));
+  const mine=NQ.sources.filter(x=>x.nas===id).concat(hs),may=NQ.haus.may&&NQ.haus.count<NQ.haus.max;
+  const add=NQ.on&&(NQ.sources.length<NQ.max||may)?`<div class="use"><div class="use-h"><span><b>${esc(mine.length?t('Weiterer Wissensordner','Another knowledge folder'):t('Wissensordner','Knowledge folder'))}</b><small>${esc(t('Der Spark liest Dokumente aus einem Ordner dort und findet sie bei Fragen; dort ändert sich nichts.','The Spark reads documents from a folder there and finds them when asked; nothing changes there.'))}</small></span>${tglIn(`data-nqon="${esc(id)}" aria-label="${esc(t('Wissensordner','Knowledge folder'))}"`,false)}</div>
     <div class="useform" data-nqform="${esc(id)}" hidden><label>${esc(t('Ordner dort','Folder there'))}</label><input data-nqpath="${esc(id)}" maxlength="300" value="${esc(NQ_PATH[place.kind]??'/')}" autocomplete="off">
       <div class="fh">${esc(place.kind==='smb'?t('Freigabe und Ordner, z. B. /home/Dokumente','Share and folder, e.g. /home/Documents'):t('Pfad dort, z. B. /home/Dokumente','Path there, e.g. /home/Documents'))}</div>
       <div class="row"><button class="b" type="button" data-nqtree="${esc(id)}">${esc(t('Ordner durchsuchen','Browse folders'))}</button></div><div class="nqtree" data-nqdirs="${esc(id)}"></div>
       <label style="margin-top:8px">${esc(t('Was gelesen wird','What is read'))}</label>${nqGroups('new-'+id,NQ.groups.filter(g=>g.on).map(g=>g.id))}
+      ${may?`<label class="chk"><input type="checkbox" data-nqhaus="${esc(id)}"${NQ.sources.length<NQ.max?'':' checked disabled'}> ${esc(t('Für alle im Haushalt (Haushaltsordner): jedes Profil findet die Dokumente, Gäste und fremde Stimmen nie','For everyone in the household (household folder): every profile finds the documents, guests and unknown voices never'))}</label>`:''}
       <div class="row" style="margin-top:8px"><button class="b" type="button" data-nqprev="${esc(id)}">${esc(t('Vorschau','Preview'))}</button><button class="b p" type="button" data-nqadd="${esc(id)}">${esc(t('Hinzufügen','Add'))}</button></div>
       <div class="fh" data-nqprevmsg="${esc(id)}" role="status"></div></div></div>`:'';
   return mine.map(nqOne).join('')+add}
 function nqBind(box,after,say){if(!NQ)return;
   const picked=pre=>[...box.querySelectorAll(`[data-nqg="${pre}"]`)].filter(c=>c.checked).map(c=>c.value);
   const q=(a,id)=>box.querySelector(`[${a}="${id}"]`);
+  const haus=id=>{const c=q('data-nqhaus',id);return !!(c&&c.checked)};
   const go=async(url,opts,ok)=>{try{const r=await (await api(url,opts)).json();await after();if(ok)say(ok(r))}catch(e){await after();say(e.message,true)}};
   box.querySelectorAll('[data-nqon]').forEach(c=>c.onchange=()=>{const f=q('data-nqform',c.dataset.nqon);if(f)f.hidden=!c.checked});
   box.querySelectorAll('[data-nqtree]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqtree,p=q('data-nqpath',id),out=q('data-nqdirs',id);
@@ -47,7 +51,7 @@ function nqBind(box,after,say){if(!NQ)return;
       const m=document.createElement('div');m.className='fh';m.textContent=t(`${d.files} Dateien direkt hier`,`${d.files} files right here`)+(d.more?' · '+t('nur die ersten 500 Ordner','only the first 500 folders'):'');out.appendChild(m)}
     catch(e){out.textContent='';say(e.message,true)}});
   box.querySelectorAll('[data-nqprev]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqprev,m=q('data-nqprevmsg',id);m.className='fh';m.textContent=t('Zähle, was gelesen würde …','Counting what would be read …');
-    try{const d=await (await api('/api/profile/nasquelle/preview',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[]}))).json();
+    try{const d=await (await api('/api/profile/nasquelle/preview',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[],haus:haus(id)}))).json();
       const per=Object.entries(d.groups).map(([g,n])=>{const x=NQ.groups.find(y=>y.id===g);return (x?t(x.name[0],x.name[1]):g)+' '+n}).join(', ');
       // Dominik 2026-10-14 ("was bedeutet diese info"): what will be read, what stays out and why, how to change it
       m.textContent=t(`${d.files} Dateien passen zur Auswahl (${spSize(d.bytes)})`,`${d.files} files fit the choice (${spSize(d.bytes)})`)+(per?': '+per:'')+'. '
@@ -60,7 +64,7 @@ function nqBind(box,after,say){if(!NQ)return;
         +(d.complete?'':' '+t(`Der Ordner ist sehr groß: gezählt wurde nur bis ${d.seen_most} Einträge oder eine Minute lang, es sind also noch mehr.`,`The folder is very large: only up to ${d.seen_most} entries or one minute were counted, so there are more.`))}
     catch(e){m.className='fh err';m.textContent=e.message}});
   box.querySelectorAll('[data-nqadd]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqadd;b.disabled=true;say(t('Prüfe den Ordner …','Checking the folder …'));
-    try{await api('/api/profile/nasquelle',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[]}));await after();say(t('Hinzugefügt. Der Spark liest jetzt; große Ordner brauchen mehrere Runden.','Added. The Spark is reading now; large folders take several rounds.'))}
+    try{await api('/api/profile/nasquelle',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[],haus:haus(id)}));await after();say(t('Hinzugefügt. Der Spark liest jetzt; große Ordner brauchen mehrere Runden.','Added. The Spark is reading now; large folders take several rounds.'))}
     catch(e){b.disabled=false;say(e.message,true)}});
   box.querySelectorAll('[data-nqnow]').forEach(b=>b.onclick=()=>{b.disabled=true;say(t('Lese den Ordner …','Reading the folder …'));
     go('/api/profile/nasquelle/'+encodeURIComponent(b.dataset.nqnow)+'/now',{method:'POST'},r=>t(`${r.new} neu, ${r.gone} weg, ${r.left} warten.`,`${r.new} new, ${r.gone} gone, ${r.left} waiting.`))});
@@ -72,5 +76,5 @@ function nqBind(box,after,say){if(!NQ)return;
 async function zNasquelle(){const box=$('znasquelle');if(!box||document.hidden)return;let d;
   try{const r=await fetch('/api/admin/nasquelle',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;
-  $('znasquellelist').innerHTML=d.rows.length?d.rows.map(x=>`<div class="zrow"><span class="pill ${x.fail?(x.fail==='offline'?'warn':'bad'):'ok'}">${esc(x.fail?t(...(NAS_WHY[x.fail]||NAS_WHY.other)):t('aktuell','up to date'))}</span><span><b>${esc(x.profile)}</b><div class="mut">${esc(t(`${x.files} Dokumente`,`${x.files} documents`))}${x.left?' · '+esc(t(`${x.left} warten`,`${x.left} waiting`)):''} · ${esc(t('zuletzt','last'))} ${esc(spWhen(x.last))}</div></span></div>`).join('')
+  $('znasquellelist').innerHTML=d.rows.length?d.rows.map(x=>`<div class="zrow"><span class="pill ${x.fail?(x.fail==='offline'?'warn':'bad'):'ok'}">${esc(x.fail?t(...(NAS_WHY[x.fail]||NAS_WHY.other)):t('aktuell','up to date'))}</span><span><b>${esc(x.haus?t('Haushalt','Household'):x.profile)}</b><div class="mut">${esc(t(`${x.files} Dokumente`,`${x.files} documents`))}${x.left?' · '+esc(t(`${x.left} warten`,`${x.left} waiting`)):''} · ${esc(t('zuletzt','last'))} ${esc(spWhen(x.last))}</div></span></div>`).join('')
     :`<div class="mut">${esc(t('Noch kein Profil liest einen Ordner.','No profile reads a folder yet.'))}</div>`}

@@ -71,6 +71,10 @@ struct DocumentsView: View {
                                 else if d.state != "ready" || d.todo > 0 { Text("wird noch gelesen") }
                             }
                             .font(.caption).foregroundStyle(.secondary)
+                            if d.source == "nas" {      // from a knowledge folder: where it lies on the NAS (the folder, never more)
+                                Label { Text(verbatim: "NAS · " + (d.place.isEmpty ? "/" : d.place)) } icon: { Image(systemName: "externaldrive") }
+                                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                            }
                             if manage { badges(d) }
                         }
                     }
@@ -285,7 +289,7 @@ struct DocumentView: View {
 
     private func load() async {
         guard let api = SparkAPI.current, loading else { return }
-        if doc.file { original = try? await api.docOriginal(doc.id) }
+        if doc.file || doc.source == "nas" { original = try? await api.docOriginal(doc.id) }   // NAS: fetched fresh by the Spark
         do { text = try await api.docText(doc.id) } catch { self.error = error.localizedDescription }
         if original == nil { tab = 1 }
         loading = false

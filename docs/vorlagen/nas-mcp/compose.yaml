@@ -1,0 +1,36 @@
+# MCP-Dateiserver auf der NAS, gehärtet (Anleitung: docs/de/apis-und-einbinden.md, „MCP-Server auf der NAS“).
+# Der Ordner wird nur gelesen; nach außen geht nur 127.0.0.1:8765, davor der DSM-Reverse-Proxy mit HTTPS.
+services:
+  mcp:
+    build: .
+    image: spark-nas-mcp:1
+    read_only: true
+    user: "1000:1000"
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:size=16m,noexec,nosuid"]
+    volumes:
+      - /volume1/dokumente:/data:ro        # nur diesen Ordner, nur lesend
+    networks: [innen]                      # kein Port, kein Internet
+    mem_limit: 256m
+    pids_limit: 64
+    restart: unless-stopped
+  tuer:
+    # Basis nur mit Digest, wie im Dockerfile: docker pull nginxinc/nginx-unprivileged:1.28-alpine
+    image: nginxinc/nginx-unprivileged:1.28-alpine@sha256:DIGEST_HIER_EINTRAGEN
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:size=8m,noexec,nosuid"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports: ["127.0.0.1:8765:8080"]         # nur für den Reverse-Proxy der NAS selbst
+    networks: [innen, aussen]
+    depends_on: [mcp]
+    mem_limit: 64m
+    pids_limit: 32
+    restart: unless-stopped
+networks:
+  innen:
+    internal: true
+  aussen: {}

@@ -192,5 +192,46 @@ class Rights(Base):
         self.assertNotRegex(js, r"\$\{(x|f)\.(name|model|addr)\}")      # outside text always through esc()
 
 
+class McpTemplate(unittest.TestCase):
+    """S7: the guide "MCP-Server auf der NAS" and its hardened template (docs/vorlagen/nas-mcp) stay hardened."""
+    ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+
+    def read(self, name):
+        path = os.path.join(self.ROOT, "docs", "vorlagen", "nas-mcp", name)
+        if not os.path.exists(path):
+            raise unittest.SkipTest("docs/ is not in this copy (the Spark tests only app/)")
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_guide_is_honest_and_keeps_writing_off(self):
+        with open(os.path.join(self.ROOT, "app", "panel", "static", "js", "guides.js"), encoding="utf-8") as f:
+            js = f.read()
+        g = js[js.index("{id:'nasmcp',"):]
+        g = g[:g.index("\n{id:")]
+        self.assertNotIn("sw:", g[:g.index("t:[")])                 # only a guide, no switch of its own
+        for word in ("Wissensordner", "Software von Dritten", "docs/vorlagen/nas-mcp", "bleibt „Aus“", ":ro"):
+            self.assertIn(word, g)
+
+    def test_template_is_hardened(self):
+        compose, docker, nginx = self.read("compose.yaml"), self.read("Dockerfile"), self.read("nginx.conf")
+        self.assertRegex(docker, r"(?m)^FROM [^\s]+@sha256:")
+        self.assertIn("npm ci", docker)
+        self.assertIn("--ignore-scripts", docker)
+        self.assertNotIn("npm install", docker)
+        self.assertRegex(compose, r"image: [^\s]+@sha256:")
+        self.assertIn(":/data:ro", compose)
+        self.assertEqual(compose.count("read_only: true"), 2)
+        self.assertEqual(compose.count("cap_drop: [ALL]"), 2)
+        self.assertEqual(compose.count("no-new-privileges:true"), 2)
+        self.assertIn('user: "1000:1000"', compose)
+        self.assertIn("internal: true", compose)
+        ports = [line for line in compose.splitlines() if "ports:" in line]
+        self.assertEqual(ports, ['    ports: ["127.0.0.1:8765:8080"]         # nur für den Reverse-Proxy der NAS selbst'])
+        self.assertIn('$http_authorization != "Bearer SCHLUESSEL"', nginx)
+        self.assertIn("location / { return 404; }", nginx)
+        pkg = self.read("package.json")
+        self.assertNotRegex(pkg, r'"[\^~]|latest')                  # exact versions only
+
+
 if __name__ == "__main__":
     unittest.main()

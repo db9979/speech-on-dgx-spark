@@ -306,6 +306,7 @@ ADMIN_ON_OK = {
     "apns.py:admin_on": "Spark-wide push setup; per profile apns.on_for (features.allowed)",
     "appupdate.py:admin_on": "Spark-wide check and admin page; per profile features.allowed iphoneupdate",
     "nasquelle.py:admin_on": "Spark switch for the round and Live; per profile nasquelle.allowed (features.allowed)",
+    "nasquelle.py:haus_on": "Spark switch for reading the Haushaltsordner (no profile); who finds it: nasquelle.haus_find (features.allowed)",
     "nasablage.py:admin_on": "Spark switch for the round, Live and the Dienst-Wächter; per profile nasablage.allowed (features.allowed)",
     "naszustand.py:admin_on": "admin only: the Spark's own NAS, read for the admins; the tool asks features.allowed and an admin profile",
     "naszustand.py:switched": "admin only: the main admin's settings page may set it up before the NAS is stored (READY)",
