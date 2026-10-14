@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.555** Clearer Improve page: card with what, where from, why, what helps, bundled proposals, traffic light and whole way
 - **V01.0.554** Architecture pages: clicking a line shows its bubble right below it, no more scrolling up
 - **V01.0.553** Maintenance pause: `sudo speech-spark pause` works again (could not find common.py)
 - **V01.0.552** Household folder: an admin picks a NAS folder for everyone, every profile finds its documents
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.548** Maintenance pause while the language model, ASR or TTS is updated
 - **V01.0.547** Every page with a side menu in the same frame: switching tabs no longer jumps, the content uses the full width
 - **V01.0.546** Counts with a target: every row of a card under Status and every number of "Today" jumps to its place
-- **V01.0.545** Companion lifts Outlook's block on the Spark add-in, "Draft a reply" no longer hangs behind Outlook's question
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
