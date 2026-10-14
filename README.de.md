@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.542** Postfach aufräumen: Modus-Zeile erklärt Aus, Vorschau, Sicher und Voll; Umschalten klappt wieder mit zweitem Anmeldeschritt
 - **V01.0.541** Admin ohne zweite Stufe: Profil mit Rolle ist gleich Admin, „Bestätigen“ fragt Admins nicht mehr
 - **V01.0.540** Technik-Seiten: Blase anklicken zeigt sofort ihren Text, Regeln, Zahlen und Code führen zu ihrem Schritt
 - **V01.0.539** Die Weiche hat jetzt auch ihre Seite unter Zustand → Technik: Gruppen, Hinweiswörter, Folgefragen, Eingrenzen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.535** Zustand der NAS: Belegung, RAID, Festplatten und Temperatur der Synology, Hinweise an die Admins, Frage per Sprache; Wissensordner lesen Dokumente vor Bildern
 - **V01.0.534** Kanal-Zeichen in der eigenen blauen Blase (z. B. „Begleiter“) wieder lesbar: weiß wie der Text, hell und dunkel
 - **V01.0.533** Android-App 1.3.0: Update direkt aus der App, geprüft und vom eigenen Spark; Geräte-Updates zeigt die App-Version je Handy
-- **V01.0.532** Jeder Kasten unter Zustand → Technik erklärt genau, wie er arbeitet, mit Schaubild Schritt für Schritt und Beispielen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

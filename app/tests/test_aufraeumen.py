@@ -174,7 +174,7 @@ class RawFetch(Ratchet, unittest.TestCase):
     ALT = {"admin.js": 4, "bewerten.js": 1, "changelog.js": 1, "coadmin.js": 1, "dienste.js": 1, "esp.js": 1,
            "geraete.js": 1, "hilfe.js": 2, "hintergrund.js": 2, "join.js": 1, "laden.js": 2, "me.js": 8,
            "melden.js": 1, "mfa.js": 2, "nas.js": 1, "nasquelle.js": 1, "notaus.js": 2, "proactive.js": 3,
-           "room.js": 6, "speicher.js": 1, "start.js": 2, "tidy.js": 1, "today.js": 1, "zuordnungen.js": 1}
+           "room.js": 6, "speicher.js": 1, "start.js": 2, "today.js": 1, "zuordnungen.js": 1}
     OWN = {"base.js": "api() itself", "live.js": "live.html loads without base.js",
            "esptool.js": "the vendored flasher"}
 

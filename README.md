@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.542** Inbox tidying: a mode line explains Off, Preview, Safe and Full; switching works again with the second login step
 - **V01.0.541** Admin without a second stage: a profile with a role is admin at once, "Confirm" no longer asks admins
 - **V01.0.540** Architecture pages: clicking a bubble shows its text at once, rules, numbers and code lead to their step
 - **V01.0.539** The switch now has its page under Status → Architecture too: groups, hint words, follow-ups, narrowing
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.535** NAS status: use, RAID, disks and temperature of your Synology, notes to the admins, ask by voice; knowledge folders read documents before pictures
 - **V01.0.534** Channel tag in your own blue bubble (e.g. "Companion") readable again: white like the text, light and dark
 - **V01.0.533** Android app 1.3.0: update right from the app, checked and from your own Spark; Device updates shows the app version per phone
-- **V01.0.532** Every box under Status → Architecture explains exactly how it works, with a step-by-step picture and examples
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

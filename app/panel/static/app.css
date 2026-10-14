@@ -1300,6 +1300,7 @@ select.segsel{display:none!important}
 .ic-form h4{margin:16px 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}.ic-form h4:first-child{margin-top:4px}
 #tidybox.tidy{border:0;padding:0;margin:0 0 12px}#tidybox .ic-note{margin:0 0 6px}#tidybox ul{margin:4px 0 8px}
 .ic-card .b svg,.ic-note .b svg{margin-right:6px;vertical-align:-2px}
+.ic-card .ic-modesay{flex-basis:100%;margin:0;padding-top:8px;border-top:1px solid var(--line)}
 .ic-h4{margin:16px 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
 textarea.factedit{width:100%;margin:0 0 6px}
 @container (max-width:520px){.ic-row .ic-badge{display:none}.ic-row .ic-meta{white-space:normal}}

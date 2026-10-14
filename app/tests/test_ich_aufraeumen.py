@@ -253,6 +253,67 @@ class Browser(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_mail_modes_say_what_they_do(self):
+        """Aus / Vorschau / Sicher / Voll: a visible line under the card says what the chosen mode does (not only a
+        tooltip, phones have none); pointing at another mode shows its line; fits 320 px."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors, uid = await self.page(p, 320, 700)
+                try:
+                    await self.show(pg, "mailbox", "showMailTidy()")
+                    await pg.wait_for_selector("#mailtidy .ic-modesay")
+                    say = "document.querySelector('#mailtidy [data-modesay=m1]')"
+                    self.assertTrue(await pg.evaluate(say + ".getBoundingClientRect().height>0"))
+                    self.assertIn("schlägt nur vor", await pg.evaluate(say + ".textContent"))      # the mock is in preview
+                    lines = {}
+                    for k in ("off", "safe", "auto"):
+                        await pg.evaluate(f"document.querySelector('#mailtidy .ic-seg button[data-v={k}]').focus()")
+                        lines[k] = await pg.evaluate(say + ".textContent")
+                    self.assertIn("nicht", lines["off"])
+                    self.assertIn("Eindeutiges", lines["safe"])
+                    self.assertIn("85 %", lines["auto"])
+                    self.assertEqual(len(set(lines.values())), 3)
+                    await pg.evaluate("document.activeElement.blur()")
+                    self.assertIn("schlägt nur vor", await pg.evaluate(say + ".textContent"))
+                    self.assertEqual(await pg.evaluate("document.querySelector('#mailtidy .ic-seg button[data-v=auto]').title"), "Voll automatisch")
+                    await self.check_layout(pg, "modes 320")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_mail_mode_change_asks_for_the_code(self):
+        """Changing a mode is a setting (stufen.py: code when the profile has the second step). The answer 428 opens
+        the code window and sends again; with a bare fetch the switch seemed stuck (Dominik 2026-10-14)."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors, uid = await self.page(p, 390, 844)
+                try:
+                    sent = []
+
+                    async def put(route):
+                        if route.request.method != "PUT":
+                            await route.fulfill(status=200, content_type="application/json", body=json.dumps(TIDY))
+                            return
+                        sent.append([json.loads(route.request.post_data or "{}"), route.request.headers.get("x-speech-code")])
+                        if not route.request.headers.get("x-speech-code"):
+                            await route.fulfill(status=428, content_type="application/json", body=json.dumps({"detail": "code required"}))
+                            return
+                        acc = dict(TIDY["accounts"][0], mode="safe")
+                        await route.fulfill(status=200, content_type="application/json", body=json.dumps(dict(TIDY, accounts=[acc])))
+                    await pg.route("**/api/profile/tidy", put)
+                    await pg.evaluate("window.confirmAsk=async()=>({code:'123456'})")
+                    await self.show(pg, "mailbox", "showMailTidy()")
+                    await pg.wait_for_selector("#mailtidy .ic-seg")
+                    await pg.evaluate("document.querySelector('#mailtidy .ic-seg button[data-v=safe]').click()")
+                    await pg.wait_for_function("document.querySelector('#mailtidy .ic-seg button.on').dataset.v==='safe'")
+                    self.assertEqual(sent, [[{"accounts": {"m1": {"mode": "safe"}}}, None], [{"accounts": {"m1": {"mode": "safe"}}}, "123456"]])
+                    self.assertIn("Eindeutiges", await pg.evaluate("document.querySelector('#mailtidy [data-modesay=m1]').textContent"))
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_mail_new_folder_from_a_question(self):
         """'＋ Neuer Ordner' in a question: a name field, a wrong name is refused here already, a right one is sent
         with the answer (the panel makes the folder); fits on a phone."""

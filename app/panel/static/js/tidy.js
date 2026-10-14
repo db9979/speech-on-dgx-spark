@@ -1,11 +1,18 @@
 // "Ich" → E-Mail, part "Postfach aufräumen": inbox tidying per mailbox (see tidy.py). Moves only, never deletes; drafts only.
 let TIDY_ON=false,TIDY=null;
-const TMODES=[['off',t('Aus','Off')],['preview',t('Vorschau (verschiebt nichts)','Preview (moves nothing)')],
-  ['safe',t('Sicher automatisch','Safe automatic')],['auto',t('Voll automatisch','Fully automatic')]];
+// the modes per mailbox: short label on the segment, name as tooltip, and a visible line what the Spark does (tidy._run)
+const TMODES=[['off',t('Aus','Off'),t('Aus','Off'),t('Der Spark prüft dieses Postfach nicht und verschiebt nichts.','The Spark does not check this mailbox and moves nothing.')],
+  ['preview',t('Vorschau','Preview'),t('Vorschau (verschiebt nichts)','Preview (moves nothing)'),t('Der Spark prüft neue Mails und schlägt nur vor: Vorschläge stehen unter „Vorschau“, Unklares unter „Fragen“. Verschoben wird erst, wenn du es bestätigst.','The Spark checks new mail and only proposes: proposals are under "Preview", unclear mail under "Questions". Nothing moves until you confirm it.')],
+  ['safe',t('Sicher','Safe'),t('Sicher automatisch','Safe automatic'),t('Der Spark verschiebt nur Eindeutiges: was deine Regeln sagen oder Kopfzeilen belegen (Abmelde-Link, Verteiler, soziales Netzwerk, automatischer Absender). Was nur das Sprachmodell vermutet, kommt in die Vorschau; Ordner auf „erst nachfragen“ fragt er vorher.','The Spark moves only clear cases: what your rules say or headers prove (unsubscribe link, mailing list, social network, automatic sender). What only the language model guesses goes to the preview; for folders set to "ask first" it asks.')],
+  ['auto',t('Voll','Full'),t('Voll automatisch','Fully automatic'),t('Wie „Sicher“, und zusätzlich verschiebt der Spark, was das Sprachmodell zu mindestens 85 % sicher einordnet. Ist es unsicherer, fragt er nach.','Like "Safe", and the Spark also moves what the language model files with at least 85 % certainty. When it is less sure, it asks.')]];
+const tmodeSay=k=>(TMODES.find(m=>m[0]===k)||TMODES[0])[3];
 const tidyMsg=(x,err)=>{const m=$('tidymsg');if(m){m.textContent=x||'';m.className='fh'+(err?' err':'')}};
 const tdate=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-async function tidyCall(path,body,method='POST'){const r=await fetch('/api/profile/tidy'+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
-  const d=await r.json().catch(()=>({}));if(!r.ok){tidyMsg(errSay(r.status,d.detail,""),true);return null}TIDY=d;tidyRender();return d}
+// through api(): settings (PUT) need the current code when the profile has the second step (stufen.py, 428); api() asks
+// for it in the one code window and sends again. With a bare fetch the 428 only ended as a grey line (V01.0.533).
+async function tidyCall(path,body,method='POST'){let r;
+  try{r=await api('/api/profile/tidy'+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})}catch(e){tidyMsg(e.message,true);return null}
+  const d=await r.json().catch(()=>({}));TIDY=d;tidyRender();return d}
 function catSel(id,val,keep=true){return `<select id="${id}">${Object.entries(TIDY.cats).map(([k,v])=>`<option value="${k}"${k===val?' selected':''}>${esc(TIDY.folders[k]||v)}</option>`).join('')}${keep?`<option value="keep"${val==='keep'?' selected':''}>${t('Posteingang','Inbox')}</option>`:''}</select>`}
 async function showMailTidy(){const box=$('mailtidy');if(!box)return;if(!PROFILE||!TIDY_ON){box.innerHTML='';return}
   try{TIDY=await (await api('/api/profile/tidy')).json()}catch{box.innerHTML='';return}tidyRender()}
@@ -39,15 +46,18 @@ function tidyRender(){const d=TIDY,box=$('mailtidy'),E=icEl;
     if(a.last_run)parts.push(t('zuletzt ','last ')+tdate(a.last_run));if(a.mode!=='off')parts.push(t(`prüft alle ${d.every} Minuten`,`checks every ${d.every} minutes`));
     if(a.error)parts.push('⚠ '+a.error);if(a.stopped)parts.push('⚠ '+t('angehalten: ','stopped: ')+a.stopped);
     const seg=E('div','ic-seg');seg.setAttribute('role','group');seg.setAttribute('aria-label',t('Aufräumen für ','Tidying for ')+a.name);
-    for(const [k,l] of TMODES){const b=E('button',k===a.mode?'on':'',{off:t('Aus','Off'),preview:t('Vorschau','Preview'),safe:t('Sicher','Safe'),auto:t('Voll','Full')}[k]);
-      b.type='button';b.title=l;b.dataset.mode=a.id;b.dataset.v=k;b.setAttribute('aria-pressed',k===a.mode?'true':'false');
+    // a visible line under the card says what the chosen mode does; pointing at or focusing a segment shows that one's line
+    const say=E('div','fh ic-modesay',tmodeSay(a.mode));say.dataset.modesay=a.id;say.id='tmode-'+a.id;
+    for(const [k,short,name] of TMODES){const b=E('button',k===a.mode?'on':'',short);
+      b.type='button';b.title=name;b.dataset.mode=a.id;b.dataset.v=k;b.setAttribute('aria-pressed',k===a.mode?'true':'false');b.setAttribute('aria-describedby',say.id);
+      b.onmouseenter=b.onfocus=()=>{say.textContent=tmodeSay(k)};b.onmouseleave=b.onblur=()=>{say.textContent=tmodeSay(a.mode)};
       b.onclick=()=>{if(k!==a.mode)tidyCall('',{accounts:{[a.id]:{mode:k}}},'PUT')};seg.appendChild(b)}
     const run=E('button','b',t('Jetzt prüfen','Check now'));run.type='button';run.dataset.run=a.id;
     run.onclick=async()=>{tidyMsg(t('Prüfe …','Checking …'));const r0=await tidyCall('/run',{aid:a.id});
       if(r0&&r0.report){const r=r0.report;tidyMsg(r.first?t('Gestartet: ab jetzt werden neue Mails sortiert.','Started: new mail is sorted from now on.'):r.error?'⚠ '+r.error:`${r.new||0} ${t('neu','new')}, ${r.moved||0} ${t('verschoben','moved')}, ${r.preview||0} ${t('in der Vorschau','in the preview')}, ${r.asked||0} ${t('Fragen','questions')}`+(r.waiting?`, ${r.waiting} ${t('warten aufs Modell','wait for the model')}`:''),!!r.error)}};
-    box.appendChild(icCard('mail',a.name,parts.join(' · '),[seg,run],[
+    const card=icCard('mail',a.name,parts.join(' · '),[seg,run],[
       {label:t('Altlasten der letzten 90 Tage ansehen','Look at old mail of the last 90 days'),act:async()=>{tidyMsg(t('Sehe mir die letzten 90 Tage an …','Looking at the last 90 days …'));if(await tidyCall('/backlog',{aid:a.id}))tidyMsg('')}},
-      {label:a.drafts?t('Antwort-Entwürfe nicht mehr erlauben','Stop allowing reply drafts'):t('Antwort-Entwürfe erlauben (nie senden)','Allow reply drafts (never sent)'),act:()=>tidyCall('',{accounts:{[a.id]:{drafts:!a.drafts}}},'PUT')}]))}
+      {label:a.drafts?t('Antwort-Entwürfe nicht mehr erlauben','Stop allowing reply drafts'):t('Antwort-Entwürfe erlauben (nie senden)','Allow reply drafts (never sent)'),act:()=>tidyCall('',{accounts:{[a.id]:{drafts:!a.drafts}}},'PUT')}]);card.appendChild(say);box.appendChild(card)}
   const msg=E('div','fh');msg.id='tidymsg';box.appendChild(msg);
   if(d.backlog){const bl=d.backlog,go=E('button','b p',t('Verschieben','Move')),drop=E('button','b',t('Verwerfen','Discard'));go.type=drop.type='button';go.disabled=!bl.moves;
     go.onclick=async()=>{if(!confirm(t('Jetzt verschieben? Es wird nichts gelöscht, und alles lässt sich zurückholen.','Move now? Nothing is deleted, and everything can be brought back.')))return;tidyMsg(t('Verschiebe …','Moving …'));const r=await tidyCall('/backlog',{apply:true});if(r)tidyMsg(r.report.moved+t(' Mails verschoben.',' mails moved.'))};

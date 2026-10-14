@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.542** · 2026-10-14 · Postfach aufräumen: Modus-Zeile unter Aus / Vorschau / Sicher / Voll sagt, was der Modus tut (auch am Handy, nicht nur als Tooltip); Umschalten fragt jetzt nach dem Code, statt hängen zu bleiben
 - **V01.0.541** · 2026-10-14 · Admin ohne zweite Stufe: Profile mit Rolle Admin oder Verwalter sind in ihrer eigenen Anmeldung (mit zweitem Schritt) gleich Admin, der Admin-Modus fällt weg; „Bestätigen“ fragt Admins nicht mehr, „Schutz ändern“ jedes Mal; Haupt-Admin und Mit-Admin werden zu Admin; Panel-Passwort nur noch als Notzugang im Browser; iPhone-App verwaltet über den App-Schlüssel, Schalter „Spark verwalten in der App“ entfällt; Admin- und Änderungsprotokoll zeigen wieder die neuesten Einträge
 - **V01.0.540** · 2026-10-14 · Knoten-Seiten: Blase anklicken umrandet ihren Text und blinkt kurz (Handy: Karte unter der Blase), Regeln, Zahlen und Code markieren ihren Schritt, Durchspielen liest mit, Datenfluss-Kasten wählt seinen Schritt, Doku mit Schritt-Links
 - **V01.0.539** · 2026-10-14 · Knoten-Seite der Weiche: wie eine Frage einer Gruppe zugeordnet und die Werkzeuge eingegrenzt werden; jetzt hat jeder Kasten seine Seite
