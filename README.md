@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.575** Red fix: the video call test no longer depends on the clock, „Mein Rufname“ saves reliably again
 - **V01.0.574** Three red questions in the quality test: an announced deed without a tool is not said, nothing is remembered from a plain question, an honest „keine Möglichkeit“ counts for the account balance
 - **V01.0.573** Painting pictures: a short yes after the assistant asks back paints, no web search
 - **V01.0.572** Speakers with code word: short questions of a surely recognised voice no longer come as a guest
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.568** Chats with other Sparks V2: photos, files and voice messages go too (the receiver checks them and makes them anew), and groups can take in people on other Sparks (text only for now); two new admin switches, both off
 - **V01.0.567** Painting pictures with FLUX.2 klein on the Spark: optional at install (--bild), Me → Pictures and in the conversation, fixed rules, image check, every picture marked as AI-made
 - **V01.0.566** GitHub token row folds once the token works
-- **V01.0.565** RED FIX mail style 2: the browser test waits for the page to start
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

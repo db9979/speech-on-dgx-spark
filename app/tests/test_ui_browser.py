@@ -1260,7 +1260,7 @@ class Browser(unittest.TestCase):
                             break
                         await pg.wait_for_timeout(100)
                     self.assertNotIn(other, messages._load(me)["allow"], name)
-                    self.assertTrue(await pg.evaluate("!!$('cxcall')&&!!$('cxcallsave')"), name)
+                    self.assertTrue(await pg.evaluate("!!$('cxcallname')&&!!$('cxcallsave')"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     self.assertEqual(errors, [], name)
@@ -3151,10 +3151,15 @@ class Browser(unittest.TestCase):
         """Anrufe (anrufe.js): 🎥 in a chat of two rings the other person's open Chats page, "Mit Video" connects the
         two pages straight (WebRTC, fake camera and microphone, no Vermittler at home), both show the running time,
         hanging up closes both windows and leaves one line "call" in the chat. Strict CSP, nothing sticks out."""
+        import anrufe
         import chats
         import profiles
+        from unittest import mock
         helpers.set_config(chats=True, chats_calls=True)
         self.addCleanup(helpers.set_config, chats_calls=False)
+        q = mock.patch.object(anrufe, "_quiet", return_value=False)   # no quiet hours: the test never hangs on the clock
+        q.start()
+        self.addCleanup(q.stop)
         me = next(x for x in profiles.names() if x["name"] == "Uitest")
         try:
             profiles.add_user("Anrufpartner", "2580")

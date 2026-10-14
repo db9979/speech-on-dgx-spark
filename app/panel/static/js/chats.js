@@ -391,11 +391,11 @@ async function cxWhoRows(el){const sel=el.querySelector('select[id$="_msg_from"]
   const pick=(key,list)=>d.others.length?d.others.map(o=>`<label class="chk"><input type="checkbox" data-cxwho="${key}" value="${esc(o.id)}"${list.includes(o.id)?' checked':''}> ${esc(o.name)}</label>`).join(' '):`<span class="mut">${esc(t('Noch kein anderes Profil mit Chats.','No other profile with chats yet.'))}</span>`;
   const draw=()=>{box.innerHTML=(sel.value==='chosen'?`<div class="fh">${esc(t('Ausgewählt:','Picked:'))}</div><div class="row cx-whol">${pick('allow',d.allow)}</div>`:'')+
     `<details${d.block.length?' open':''}><summary>${esc(t('Gesperrt','Blocked'))} (${d.block.length})</summary><div class="row cx-whol">${pick('block',d.block)}</div></details>`+
-    `<label for="cxcall">${esc(t('Mein Rufname','My call name'))}</label><div class="rowin"><input id="cxcall" maxlength="40" value="${esc(d.call||'')}" placeholder="${esc(t('z. B. Tom oder Papa','e.g. Tom or Dad'))}"><button class="b" type="button" id="cxcallsave">${esc(t('Speichern','Save'))}</button></div>`+
+    `<label for="cxcallname">${esc(t('Mein Rufname','My call name'))}</label><div class="rowin"><input id="cxcallname" maxlength="40" value="${esc(d.call||'')}" placeholder="${esc(t('z. B. Tom oder Papa','e.g. Tom or Dad'))}"><button class="b" type="button" id="cxcallsave">${esc(t('Speichern','Save'))}</button></div>`+
     `<div class="fh">${esc(t('So können andere dich nennen („Schreib Tom, …“), wenn Namen sich ähneln. Muss eindeutig sein.','How others can name you ("Tell Tom …") when names are alike. Must be unique.'))}</div><div class="fh" id="cxwhomsg" role="status"></div>`;
     box.querySelectorAll('[data-cxwho]').forEach(c=>c.onchange=async()=>{const k=c.dataset.cxwho;
       try{d=await (await api('/api/chats/who',xjson('PUT',{[k]:[...box.querySelectorAll(`[data-cxwho="${k}"]:checked`)].map(x=>x.value)}))).json();xmsg('cxwhomsg',t('Gespeichert.','Saved.'))}catch(e){xmsg('cxwhomsg',e.message,true)}});
-    $('cxcallsave').onclick=async()=>{try{d=await (await api('/api/chats/call',xjson('PUT',{call:$('cxcall').value}))).json();
+    box.querySelector('#cxcallsave').onclick=async()=>{try{d=await (await api('/api/chats/call',xjson('PUT',{call:box.querySelector('#cxcallname').value}))).json();
       xmsg('cxwhomsg',d.call?t('Rufname gespeichert: ','Call name saved: ')+d.call:t('Rufname entfernt.','Call name removed.'))}catch(e){xmsg('cxwhomsg',e.message,true)}}};
   sel.addEventListener('change',draw);draw()}
 window.cxWhoRows=cxWhoRows;
