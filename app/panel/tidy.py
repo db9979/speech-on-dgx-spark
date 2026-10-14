@@ -493,6 +493,7 @@ def classify(h, text):
         return None, 0
     url = cc["llm_url"].rstrip("/")
     headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
+    vorrang.hold("Mail sortieren", model=True)   # Wartungspause of the language model: the sorting waits
     with httpx.Client(timeout=httpx.Timeout(90, connect=5)) as c:
         model = cc.get("llm_model") or _model.get(url)
         if not model:
@@ -504,7 +505,7 @@ def classify(h, text):
         payload = {"model": model, "temperature": 0, "max_tokens": 60,
                    "messages": [{"role": "system", "content": CLASSIFY}, {"role": "user", "content": user}],
                    "chat_template_kwargs": {"enable_thinking": False}}
-        vorrang.hold("Mail sortieren")   # a worker thread: waits while somebody speaks
+        vorrang.hold("Mail sortieren", model=True)   # a worker thread: waits while somebody speaks
         r = c.post(url + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         return parse_class(r.json()["choices"][0]["message"].get("content") or "")

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.548** Wartungspause, während Sprachmodell, Spracherkennung oder Sprachausgabe aktualisiert werden
 - **V01.0.547** Alle Seiten mit Seitenleiste im selben Rahmen: beim Wechsel der Reiter springt nichts mehr, der Inhalt nutzt die ganze Breite
 - **V01.0.546** Zahlen mit Ziel: jede Zeile einer Karte unter Zustand und jede Zahl in „Heute“ springt zu ihrer Stelle
 - **V01.0.545** Begleiter hebt Outlooks Sperre fürs Spark-Add-in auf, „Antwort entwerfen“ hängt nicht mehr hinter Outlooks Frage
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.541** Admin ohne zweite Stufe: Profil mit Rolle ist gleich Admin, „Bestätigen“ fragt Admins nicht mehr
 - **V01.0.540** Technik-Seiten: Blase anklicken zeigt sofort ihren Text, Regeln, Zahlen und Code führen zu ihrem Schritt
 - **V01.0.539** Die Weiche hat jetzt auch ihre Seite unter Zustand → Technik: Gruppen, Hinweiswörter, Folgefragen, Eingrenzen
-- **V01.0.538** Hinweise „neu freigegeben“ nur bei echtem Einrichten, verschwinden danach; „Einrichten“ springt direkt zur Einstellung
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

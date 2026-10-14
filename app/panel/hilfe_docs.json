@@ -1357,7 +1357,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 4 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell n"
+"text": "Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 4 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ u"
 },
 {
 "lang": "de",
@@ -1365,7 +1365,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort."
+"text": "nd verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort."
 },
 {
 "lang": "de",
@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Dienst-Wächter",
 "title": "Dienst-Wächter",
-"text": "- Eine Schleife prüft Sprachmodell, Hören, Sprechen, Internet, SearXNG, Kiwix, Home Assistant, Mail, Kalender und NAS, je nach Dienst jede Minute oder alle 5 Minuten, ohne Anmeldung: eine HTTP-Antwort unter 500 gilt als „antwortet“. - Weg ist ein Dienst nach 3 Fehlproben über mindestens 3 Minuten, zurück nach 2 guten. Ist das Internet weg, gibt es eine Meldung für alles dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts. - Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von selbst“ aus."
+"text": "- Eine Schleife prüft Sprachmodell, Hören, Sprechen, Internet, SearXNG, Kiwix, Home Assistant, Mail, Kalender und NAS, je nach Dienst jede Minute oder alle 5 Minuten, ohne Anmeldung: eine HTTP-Antwort unter 500 gilt als „antwortet“. - Weg ist ein Dienst nach 3 Fehlproben über mindestens 3 Minuten, zurück nach 2 guten. Ist das Internet weg, gibt es eine Meldung für alles dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts, ebenso nicht für einen Teil in der Wartungspause, bis deren Zeit um ist. - Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von selbst“ aus."
 },
 {
 "lang": "de",
@@ -1885,7 +1885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Einstellungen → Spark → Betrieb → Anfragen verfolgen: Logs → Anfragen (Standard aus). - Einstellungen → Spark → Betrieb → Logs „Live-Seite“: Zustand → Live (Standard aus). - Funktionen → Dienst-Wächter: Dienste prüfen und Admins bei Ausfall benachrichtigen (Standard aus). - Einstellungen → Sicherung: eine Sicherung von Hand anlegen oder zurückspielen."
+"text": "- Einstellungen → Spark → Betrieb → Anfragen verfolgen: Logs → Anfragen (Standard aus). - Einstellungen → Spark → Betrieb → Logs „Live-Seite“: Zustand → Live (Standard aus). - Funktionen → Dienst-Wächter: Dienste prüfen und Admins bei Ausfall benachrichtigen (Standard aus). - Funktionen → Wartungspause: vor einem Update Sprachmodell, Spracherkennung oder Sprachausgabe anhalten (Standard aus), dann Zustand → Wartungspause. - Einstellungen → Sicherung: eine Sicherung von Hand anlegen oder zurückspielen."
 },
 {
 "lang": "de",
@@ -1933,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Sprache zuerst: Mit dem Start einer Antwort und bei jedem gestreamten Stück setzt das Panel die Marke „Sprache läuft“. Hintergrundarbeit am Modell wartet bis 20 Sekunden danach und wird abgebrochen, sobald jemand spricht; nach 3 Abbrüchen gibt sie für diesmal auf. 2. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 3. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 4. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs meldet der Server, wie viel er gelesen hat und wie viel aus seinem Zwischenspeicher kam. 5. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden)"
+"text": "1. Sprache zuerst: Mit dem Start einer Antwort und bei jedem gestreamten Stück setzt das Panel die Marke „Sprache läuft“. Hintergrundarbeit am Modell wartet bis 20 Sekunden danach und wird abgebrochen, sobald jemand spricht; nach 3 Abbrüchen gibt sie für diesmal auf. 2. Wartungspause?: Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der Zeit endet die Pause erst, wenn das Modell 2-mal hintereinander antwortet. 3. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 4. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 5. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Den"
 },
 {
 "lang": "de",
@@ -1941,7 +1941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ". Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. 6. Eine Runde an das Modell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 7. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 8. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 9. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 10. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 11. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systempromp"
+"text": "ken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs meldet der Server, wie viel er gelesen hat und wie viel aus seinem Zwischenspeicher kam. 6. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. 7. Eine Runde an das Modell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 8. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 9. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 10. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt li"
 },
 {
 "lang": "de",
@@ -1949,7 +1949,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "t, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. 12. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 13. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
+"text": "efert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 11. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 12. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. 13. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 14. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
 },
 {
 "lang": "de",
@@ -1957,7 +1957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Beispiele",
-"text": "Beispiele: Normale Antwort: Gestreamt, der erste Satz geht sofort zur Sprachausgabe. · Zwei Personen, eine mit Vorrang: Die Runde wartet kurz, bis die Antwort mit Vorrang ihren ersten Satz hat. · Sehr langes Dokument im Verlauf: Verlauf gekürzt, einmal neu gefragt. · qwen38 hängt: „Mein Sprachmodell antwortet gerade nicht.“ statt Stille."
+"text": "Beispiele: Normale Antwort: Gestreamt, der erste Satz geht sofort zur Sprachausgabe. · Zwei Personen, eine mit Vorrang: Die Runde wartet kurz, bis die Antwort mit Vorrang ihren ersten Satz hat. · Sehr langes Dokument im Verlauf: Verlauf gekürzt, einmal neu gefragt. · qwen38 hängt: „Mein Sprachmodell antwortet gerade nicht.“ statt Stille. · qwen38 wird neu eingespielt: „Ich werde gerade aktualisiert und bin in etwa 20 Minuten wieder da.“"
 },
 {
 "lang": "de",
@@ -1965,7 +1965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 90 s bis zur ersten Zeile des Modells (Schritt 8) - 60 bis 600 s erlaubtes Zeitlimit (Schritt 2) - 20 s nach Sprache wartet Hintergrundarbeit noch (Schritt 1) - 3 Abbrüche, bis Hintergrundarbeit aufgibt (Schritt 1) - 5 s längste Wartezeit für Vorrang (Schritt 5) - 30 s so lange hält eine Antwort mit Vorrang höchstens auf (Schritt 5)"
+"text": "- 90 s bis zur ersten Zeile des Modells (Schritt 9) - 60 bis 600 s erlaubtes Zeitlimit (Schritt 3) - 20 s nach Sprache wartet Hintergrundarbeit noch (Schritt 1) - 3 Abbrüche, bis Hintergrundarbeit aufgibt (Schritt 1) - 5 s längste Wartezeit für Vorrang (Schritt 6) - 30 s so lange hält eine Antwort mit Vorrang höchstens auf (Schritt 6) - 5 bis 240 min Dauer einer Wartungspause (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge einer Antwort. - Einstellungen → Sprachmodell, unter Erweitert: Zeitlimit für eine Antwort. - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst."
+"text": "- Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge einer Antwort. - Einstellungen → Sprachmodell, unter Erweitert: Zeitlimit für eine Antwort. - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst. - Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30)."
 },
 {
 "lang": "de",
@@ -1989,7 +1989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 2, Schritt 4, Schritt 6) - app/panel/chat.py llm_model: Modellname aus Einstellung oder /models (Schritt 3) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 4) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 8) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 7) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 12) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 12) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 11) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 5) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1)"
+"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/chat.py llm_model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gefragt (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1997,7 +1997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_panel, test_llm_settings, test_vorrang, test_stufe, test_fast_start"
+"text": "Selbsttests: test_panel, test_llm_settings, test_vorrang, test_stufe, test_fast_start, test_wartung"
 },
 {
 "lang": "de",
@@ -2293,7 +2293,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (28, kommen in jede Sicherung) oder backup.STATE_LOCAL (43, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund), ihn neu lesen."
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (28, kommen in jede Sicherung) oder backup.STATE_LOCAL (44, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund), ihn neu lesen."
 },
 {
 "lang": "de",
@@ -2309,7 +2309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 28 Dateien in jeder Sicherung (Schritt 7) - 43 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 28 Dateien in jeder Sicherung (Schritt 7) - 44 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5613,7 +5613,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
-"text": "eug, dessen Dienst als weg gilt (Archiv, Websuche, Home Assistant, Mail, Kalender, Wetter, Bahn, Pakete, Wikipedia, Webseiten), läuft es nicht; das Modell bekommt einen festen Satz („Home Assistant ist gerade nicht erreichbar (seit 05:12).“) und soll nichts raten. Bei Home Assistant, Mail und Kalender zählen nur die eigenen Adressen des Profils. Fehlt die Websuche, antwortet zuerst das eigene Kiwix-Archiv, wenn es an ist. ## Selbsttest"
+"text": "eug, dessen Dienst als weg gilt (Archiv, Websuche, Home Assistant, Mail, Kalender, Wetter, Bahn, Pakete, Wikipedia, Webseiten), läuft es nicht; das Modell bekommt einen festen Satz („Home Assistant ist gerade nicht erreichbar (seit 05:12).“) und soll nichts raten. Bei Home Assistant, Mail und Kalender zählen nur die eigenen Adressen des Profils. Fehlt die Websuche, antwortet zuerst das eigene Kiwix-Archiv, wenn es an ist. - Wartungspause (chat.wartung, aus; nur Admins; wartung.py, Plan plaene/wartungspause.md): Vor einem Update des Sprachmodells (qwen38), der Spracherkennung oder der Sprachausgabe hält der Admin diese Teile an, unter *Zustand → Wartungspause* (15, 30, 60 oder 120 Minuten) oder auf dem Spark mit sudo speech-spark pause llm 30 (Teile llm, asr, tts, durch Komma getrennt, oder alles; 5 bis 240 Minuten), beendet mit „Weiter“ bzw. sudo speech-spark weiter. Der Befehl läuft als Dienstnutzer des Panels und schreibt nur state/wartung.json (bleibt beim Sichern weg). - In der Pause des Sprachmodells fragt das Panel das Modell nicht: jede Frage bekommt sofort den festen Satz „Ich werde gerade aktualisiert und bin in etwa N Minuten wieder da.“ (auch gesprochen, ohne Fehler und "
 },
 {
 "lang": "de",
@@ -5621,13 +5621,21 @@
 "file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
+"text": "ohne Brückensatz); Weiche, System One und Schreibhilfe fragen ebenfalls nicht. Hintergrundarbeit am Modell (vorrang.run/post, quiet/hold mit model=True: Lernen, Aufträge, Mail sortieren, wichtige Mails, Tagesüberblick, reMarkable …) wartet und läuft danach nacheinander; das zählt nicht als Abbruch. Ist nur die Sprachausgabe angehalten, kommen Antworten als Text. - Der Dienst-Wächter meldet für einen angehaltenen Teil keinen Ausfall, der Watchdog startet ihn nicht neu, die Prüfung nach einem Update wartet bis nach der Pause. - Ende von selbst: Ist die Zeit um, prüft das Panel die angehaltenen Teile mit den Proben des Dienst-Wächters; nach 2 guten Prüfungen in Folge (alle 15 Sekunden) endet die Pause. Antwortet ein Teil nicht, bleibt die Pause, die Admin-Profile bekommen einmal eine Mitteilung (Kennung wartung), und der Dienst-Wächter zählt ab dann wieder. Schalter aus beendet eine laufende Pause; eine kaputte Datei gilt als keine Pause. - Anzeige: *Zustand → Wartungspause* (Teile, seit, bis, wer, Zahl der Anfragen mit dem festen Satz und der wartenden Hintergrundarbeit), Live zeigt die Teile blau als „Pause“. Journal: wartung: an|aus|verlaengert|pruefung|zeitlimit … mit Teilen, Minu"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Selbsttest",
 "text": "Jede Installation und jedes Update führt den Selbsttest des Panels aus (app/tests), gegen nachgebaute LLM-, TTS- und Home-Assistant-Server in einem Wegwerf-Ordner: Anmeldung und Zugang, dass Profile nie Gedächtnis, Dokumente, Gespräche, Postfächer oder Home Assistant eines anderen sehen, die Werkzeuge im Gespräch, das Lernen aus Gesprächen, Kalender und Textbereinigung. Er läuft, bevor die neue Version live geht. Bei einem Update bricht ein Fehler das Update ab, und die alte Version läuft weiter; bei einer Erstinstallation wird er nur gemeldet. Das Ergebnis steht im Update-Protokoll. Dazu gehören die Sicherheitsprüfungen (test_hardening.py, ein Test pro Schutz) und ein Scanner (test_scanner.py), der neuen Code ablehnt, wenn er shell=True, eval oder ähnliches nutzt, eine Route ohne Anmeldung anlegt, einen Upload ohne Größengrenze liest, Werte in onclick nicht für JavaScript maskiert oder ein Werkzeug des Assistenten nicht als „liest fremden Text / ändert etwas / nur eigene Daten“ einordnet. Von Hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Stabilität",
+"head": "Selbsttest",
 "title": "Schonende Updates",
 "text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Der ganze Selbsttest läuft weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
 },
@@ -5635,7 +5643,7 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Stabilität",
+"head": "Selbsttest",
 "title": "Heute Nacht einspielen",
 "text": "Heute Nacht einspielen (Einstellungen → Update, aus): Eine neue geprüfte Version wird nachts zwischen 3 und 5 Uhr eingespielt, höchstens einmal pro Nacht, mit Sicherung vorher. Spricht gerade jemand mit dem Spark (in den letzten zwei Minuten), wartet es bis zur nächsten Pause; ist GitHub nicht erreichbar, fragt es nach 15 Minuten wieder. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist. Der Knopf „Update installieren“ fragt eigens nach, wenn gerade ein Gespräch läuft. Die Live-Übersicht zeigt unter „Läuft gerade“ ein laufendes Update mit Schritt und Anteil, eine Stunde lang das Ergebnis und ob „nachts“ an ist."
 },
@@ -7469,7 +7477,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. 11. Narrow: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exac"
+"text": "ognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and "
 },
 {
 "lang": "en",
@@ -7477,7 +7485,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer."
+"text": "only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -7957,7 +7965,7 @@
 "file": "Architecture and data flow",
 "head": "Service watch",
 "title": "Service watch",
-"text": "- A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, mail, calendar and NAS, each every minute or every 5 minutes, without login: an HTTP answer below 500 counts as „answers“. - A service is gone after 3 failed probes over at least 3 minutes, back after 2 good ones. With the internet gone there is one note for everything behind it. During update, start and kill switch stage 2 nothing counts. - The probes go through the guard but do not count on the live list and never trigger the automatic kill switch."
+"text": "- A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, mail, calendar and NAS, each every minute or every 5 minutes, without login: an HTTP answer below 500 counts as „answers“. - A service is gone after 3 failed probes over at least 3 minutes, back after 2 good ones. With the internet gone there is one note for everything behind it. During update, start and kill switch stage 2 nothing counts, nor for a part in the maintenance pause until its time is up. - The probes go through the guard but do not count on the live list and never trigger the automatic kill switch."
 },
 {
 "lang": "en",
@@ -7981,7 +7989,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Settings → Spark → Operation → Trace requests: Logs → Requests (default off). - Settings → Spark → Operation → Logs “Live page”: Status → Live (default off). - Features → Service watch: look at services and tell the admins about outages (default off). - Settings → Backup: create a backup by hand or restore one."
+"text": "- Settings → Spark → Operation → Trace requests: Logs → Requests (default off). - Settings → Spark → Operation → Logs “Live page”: Status → Live (default off). - Features → Service watch: look at services and tell the admins about outages (default off). - Features → Maintenance pause: pause the language model, speech recognition or speech output before an update (default off), then Status → Maintenance pause. - Settings → Backup: create a backup by hand or restore one."
 },
 {
 "lang": "en",
@@ -8029,7 +8037,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Speech first: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time. 2. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 3. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 4. Build the request: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache. 5. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. 6. One round to "
+"text": "1. Speech first: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time. 2. Maintenance pause?: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. 3. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 4. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 5. Build the request: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on"
 },
 {
 "lang": "en",
@@ -8037,7 +8045,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the model: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it. 7. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 8. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 9. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 10. Only answer text goes on: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 11. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. 12. Error on the way?: An error becomes a fixed code: not reachable, too slow, key "
+"text": ". While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache. 6. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. 7. One round to the model: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it. 8. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 9. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 10. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 11. Only answer text goes on: Thinking inside the text (<think> … </thi"
 },
 {
 "lang": "en",
@@ -8045,7 +8053,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 13. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
+"text": "nk>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 12. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. 13. Error on the way?: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 14. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
 },
 {
 "lang": "en",
@@ -8053,7 +8061,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Examples",
-"text": "Examples: Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence."
+"text": "Examples: Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence. · qwen38 is being updated: „I am being updated right now and will be back in about 20 minutes.“"
 },
 {
 "lang": "en",
@@ -8061,7 +8069,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 90 s until the model's first line (step 8) - 60 bis 600 s allowed time limit (step 2) - 20 s background work still waits after speech (step 1) - 3 cancels until background work gives up (step 1) - 5 s longest wait for priority (step 5) - 30 s a priority answer holds up at most this long (step 5)"
+"text": "- 90 s until the model's first line (step 9) - 60 bis 600 s allowed time limit (step 3) - 20 s background work still waits after speech (step 1) - 3 cancels until background work gives up (step 1) - 5 s longest wait for priority (step 6) - 30 s a priority answer holds up at most this long (step 6) - 5 bis 240 min length of a maintenance pause (step 2)"
 },
 {
 "lang": "en",
@@ -8069,7 +8077,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Settings → Language model: Address, Key and Model; also Think first, Temperature and Length of an answer. - Settings → Language model, under Advanced: Time limit for an answer. - Features → Priority for people: chosen profiles get their answer first."
+"text": "- Settings → Language model: Address, Key and Model; also Think first, Temperature and Length of an answer. - Settings → Language model, under Advanced: Time limit for an answer. - Features → Priority for people: chosen profiles get their answer first. - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30)."
 },
 {
 "lang": "en",
@@ -8085,7 +8093,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 2, step 4, step 6) - app/panel/chat.py llm_model: model name from settings or /models (step 3) - app/panel/chat.py sampling: top_p and presence_penalty (step 4) - app/panel/chat.py first_within: the first line must come in time (step 8) - app/panel/chat.py ContextFull: request longer than the context (step 7) - app/panel/chat.py llm_error_code: error as a fixed code (step 12) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 12) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 11) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 5) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1)"
+"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/chat.py llm_model: model name from settings or /models (step 4) - app/panel/chat.py sampling: top_p and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2)"
 },
 {
 "lang": "en",
@@ -8093,7 +8101,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_panel, test_llm_settings, test_vorrang, test_stufe, test_fast_start"
+"text": "Self-tests: test_panel, test_llm_settings, test_vorrang, test_stufe, test_fast_start, test_wartung"
 },
 {
 "lang": "en",
@@ -8389,7 +8397,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read it again."
+"text": " go into every backup) or backup.STATE_LOCAL (44, with their reason). test_technik finds every name the code writes there and wants it in one of the lists. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund) read it again."
 },
 {
 "lang": "en",
@@ -8405,7 +8413,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 28 files in every backup (step 7) - 43 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 28 files in every backup (step 7) - 44 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -11493,7 +11501,7 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
-"text": "fixed sentence (\"Home Assistant is not reachable right now (since 05:12).\") and must not guess. For Home Assistant, mail and calendar only the profile's own addresses count. When the web search is missing, the own Kiwix archive answers first when it is on. ## Self-test"
+"text": "fixed sentence (\"Home Assistant is not reachable right now (since 05:12).\") and must not guess. For Home Assistant, mail and calendar only the profile's own addresses count. When the web search is missing, the own Kiwix archive answers first when it is on. - Maintenance pause (chat.wartung, off; admins only; wartung.py, plan plaene/wartungspause.md): before an update of the language model (qwen38), the speech recognition or the speech output the admin pauses these parts, under *Status → Maintenance pause* (15, 30, 60 or 120 minutes) or on the Spark with sudo speech-spark pause llm 30 (parts llm, asr, tts, comma separated, or alles; 5 to 240 minutes), ended with \"Weiter\" or sudo speech-spark weiter. The command runs as the panel's service user and only writes state/wartung.json (left out of backups). - During a pause of the language model the panel does not ask the model: every question gets the fixed sentence \"I am being updated right now and will be back in about N minutes.\" at once (also spoken, without an error and without a bridge sentence); the Weiche, System One and the writing help do not ask either. Background work on the model (vorrang.run/post, quiet/hold with model=True:"
 },
 {
 "lang": "en",
@@ -11501,13 +11509,21 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
+"text": " learning, jobs, mail sorting, important mail, daily briefing, reMarkable …) waits and runs afterwards, one after the other; that does not count as a cancel. With only the speech output paused, answers come as text. - The service watch reports no outage for a paused part, the watchdog does not restart it, the check after an update waits until after the pause. - Ending by itself: when the time is up the panel checks the paused parts with the service watch's probes; after 2 good checks in a row (every 15 seconds) the pause ends. When a part does not answer, the pause stays, the admin profiles get one notification (tag wartung) and from then on the service watch counts again. Switching it off ends a running pause; a damaged file counts as no pause. - Shown: *Status → Maintenance pause* (parts, since, until, who, number of requests answered with the fixed sentence and of waiting background work), Live shows the parts in blue as \"Pause\". Journal: wartung: an|aus|verlaengert|pruefung|zeitlimit … with parts, minutes and numbers. The kill switch always comes first, the pause never lifts it."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Self-test",
 "text": "Every install and update runs the panel's self-test (app/tests) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. It includes the security checks (test_hardening.py, one test per guard) and a scanner (test_scanner.py) that refuses new code using shell=True, eval or the like, a route without a login, an upload read without a size limit, values in onclick not escaped for JavaScript, or an assistant tool not sorted as \"reads outside text / changes something / own data only\". By hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Stability",
+"head": "Self-test",
 "title": "Gentle updates",
 "text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). The whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke test checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
 },
@@ -11515,7 +11531,7 @@
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Stability",
+"head": "Self-test",
 "title": "Install overnight",
 "text": "Install overnight (Settings → Update, off): a new tested version is installed at night between 3 and 5 am, at most once a night, with a backup first. If somebody is talking with the Spark (within the last two minutes) it waits for the next pause; if GitHub cannot be reached it asks again after 15 minutes. Nothing starts during the kill switch. Turning it on needs the second sign-in step when that is on. The \"Install update\" button asks once more when a conversation is going on. The live view shows a running update under \"Running now\" with its step and share, its outcome for an hour, and whether \"overnight\" is on."
 },

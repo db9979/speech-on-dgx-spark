@@ -424,7 +424,7 @@ async def _llm(messages, tools):
 
 async def _quiet():
     """Answers to people come first: wait while somebody talks to the assistant (vorrang.py)."""
-    await vorrang.quiet("Agent")
+    await vorrang.quiet("Agent", model=True)
 
 
 def _args(raw):

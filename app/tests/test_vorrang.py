@@ -204,7 +204,7 @@ class Panel(Base):
         for name in ("chat.py", "agent.py", "memtidy.py", "proactive.py", "quality.py", "wissen.py"):
             src = _read(os.path.join(helpers.APP, "panel", name))
             self.assertIn("vorrang.post(", src, name)
-        self.assertIn('vorrang.hold("Mail sortieren")', _read(os.path.join(helpers.APP, "panel", "tidy.py")))
+        self.assertIn('vorrang.hold("Mail sortieren", model=True)', _read(os.path.join(helpers.APP, "panel", "tidy.py")))
         self.assertIn('vorrang.in_thread("Sicherung"', _read(os.path.join(helpers.APP, "panel", "panel.py")))
 
     def test_endpoints_need_the_admin(self):

@@ -862,7 +862,7 @@ async def important(h):
     """The probability that a mail is important to its reader, from its sender and subject; None when
     qwen38 cannot answer (asked again at the next check)."""
     import systemone
-    await vorrang.quiet("Wichtige Mail")
+    await vorrang.quiet("Wichtige Mail", model=True)
     def one(v):     # a header stays one line of data
         return re.sub(r"\s+", " ", str(v or ""))[:300]
     state = f"Absender: {one(h['from'])}\nBetreff: {one(h['subject']) or '(ohne Betreff)'}"

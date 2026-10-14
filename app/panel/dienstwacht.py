@@ -458,6 +458,15 @@ def _paused(now):
     return False
 
 
+def _maintained(sid):
+    """Wartungspause (wartung.py) of this service and its time not over: no outage, nobody hears of it."""
+    try:
+        import wartung
+        return any(v[0] == sid and wartung.quiet(k) for k, v in wartung.PARTS.items())
+    except Exception:
+        return False
+
+
 def _restarted(sid, now):
     if sid not in ("asr", "tts"):
         return False
@@ -543,7 +552,7 @@ async def round_once(now=None, force=False):
                 _close(sid, now)
             e.update(st="held" if held else "blocked", fails=0, oks=0, told=False)
             continue
-        if not good and _restarted(sid, now):
+        if not good and (_restarted(sid, now) or _maintained(sid)):
             continue
         if good:
             e["oks"] += 1

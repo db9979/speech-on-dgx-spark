@@ -13,6 +13,9 @@
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
+#   speech-spark pause [llm|asr|tts|alles][,…] [min]  Wartungspause while a model is updated (default llm 30)
+#   speech-spark pause status      is a Wartungspause running, how long still
+#   speech-spark weiter            end the Wartungspause
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -206,6 +209,11 @@ cmd_notzugang() {
     local a; read -r -p "Weiter? [j/N] " a
     case "$a" in j|J|ja|Ja|y|Y|yes) ;; *) echo "Abgebrochen, nichts geändert."; exit 1 ;; esac
   fi
+  as_panel_user notzugang.py
+}
+
+# A panel module run as the panel's service user, so every file keeps its owner: as_panel_user <file.py> [args]
+as_panel_user() {
   local svc
   svc=$(systemctl show -p User --value speech-spark-panel.service 2>/dev/null || true)
   [ -n "$svc" ] || svc=$(stat -c %U "$VAR/state")
@@ -214,7 +222,14 @@ cmd_notzugang() {
   runuser -u "$svc" -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 PYTHONUNBUFFERED=1 \
     SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_STATE="$VAR/state" SPEECH_SPARK_USERS="$VAR/users" \
     SPEECH_SPARK_VOICES="$VAR/voices" SPEECH_SPARK_PREFIX="$PREFIX" HF_HOME="$VAR/hf" \
-    "$PREFIX/venv-panel/bin/python" "$PREFIX/app/panel/notzugang.py"
+    "$PREFIX/venv-panel/bin/python" "$PREFIX/app/panel/$1" "${@:2}"
+}
+
+# Wartungspause (app/panel/wartung.py): while qwen38, ASR or TTS is updated the Spark pauses on purpose.
+cmd_pause() {
+  need_root pause "$@"
+  [ "$(mode)" = full ] || die "no web panel installed"
+  as_panel_user wartung.py "$@"
 }
 
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
@@ -227,6 +242,8 @@ case "${1:-}" in
   logs) shift; cmd_logs "$@" ;;
   panel) shift; cmd_panel "$@" ;;
   notzugang) shift; cmd_notzugang "$@" ;;
-  ""|-h|--help|help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
+  pause) shift; cmd_pause "$@" ;;
+  weiter) shift; cmd_pause weiter ;;
+  ""|-h|--help|help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

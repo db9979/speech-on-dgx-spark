@@ -99,7 +99,7 @@ function wayA(text,...ways){const w=ways.find(x=>x&&wayParse(x,0));return w?wayE
 // a row (.zrow, .znrow, a count .kn-tn on a Technik page) with data-way, or in a card of WAY_CARDS, opens that place. A click on a control in the row
 // stays the control's; a row without controls is a link for the keyboard too. Only counts and names move, never content.
 const WAY_ROWS='.zrow,.znrow,.kn-tn',WAY_CTRL='a,button,input,select,textarea,label,summary';
-const WAY_CARDS={zbg:['Funktionen → Mein Zustand','Features → My status'],zsvc:['Funktionen → Dienst-Wächter','Features → Service watch'],
+const WAY_CARDS={zbg:['Funktionen → Mein Zustand','Features → My status'],zsvc:['Funktionen → Dienst-Wächter','Features → Service watch'],zwart:['Funktionen → Wartungspause','Features → Maintenance pause'],
   znas:['Ich → Speicher','Me → Storage'],znaszustand:['Funktionen → Zustand der NAS','Features → NAS status'],
   znasquelle:['Ich → Speicher','Me → Storage'],zstore:['Ich → Speicher','Me → Storage'],
   zdev:['Funktionen → Geräte-Updates','Features → Device updates'],zdocs:['Funktionen → Eigene Dokumente','Features → Own documents']};

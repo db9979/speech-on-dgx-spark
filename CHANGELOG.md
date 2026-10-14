@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.548** · 2026-10-14 · Wartungspause für Sprachmodell, Spracherkennung und Sprachausgabe: Zustand → Wartungspause oder sudo speech-spark pause/weiter; fester Satz statt Modell, Hintergrundarbeit wartet, Dienst-Wächter und Watchdog bleiben still, Ende nach zwei guten Prüfungen
 - **V01.0.547** · 2026-10-14 · Ein Rahmen für alle Seiten mit Seitenleiste: Zustand (Monitoring, Live, Prüfen, Logs, Verbessern, Technik), Funktionen, Personen und Geräte, Einstellungen und Ich nutzen dieselbe Breite und Menüspalte; beim Wechsel der Reiter springt nichts mehr, der Inhalt nutzt die ganze Breite (test_seitenrahmen)
 - **V01.0.546** · 2026-10-14 · Zahlen mit Ziel: jede Zeile einer Karte unter Zustand und jede Zahl der Zeile „Heute“ springt zu ihrer Stelle („Mein Zustand aller Profile“ zu Personen und Geräte und Ich → Mein Zustand, Antworten zu Zustand → Logs → Anfragen, Lautsprecher zu Ich → Lautsprecher, Dienste, Speicher, NAS, Geräte-Updates, Dokumente zu ihrer Funktion), die Zahlen „Heute“ der Technik-Seiten zur Live-Übersicht; test_sprunglinks meldet jede Karte ohne Ziel
 - **V01.0.545** · 2026-10-14 · Office-Add-ins einrichten hebt Outlooks Sperre (Deaktivierte Elemente, CrashingAddinList) nur für das Spark-Add-in auf; nach dem Hänger blieb das Häkchen sonst leer; „Antwort entwerfen“ holt Outlook nach vorn, wenn es fragt (Externe Inhalte), und zählt die Sekunden

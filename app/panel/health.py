@@ -142,8 +142,11 @@ async def watch_once(update_running=lambda: False):
         return []
     now = time.time()
     done = []
+    import wartung
     for name in ("asr", "tts"):
         if not cfg[name].get("enabled", True):
+            continue
+        if wartung.quiet(name):   # Wartungspause: its update may stop and start it, the watchdog stays out
             continue
         health = await service_health(name, cfg)
         engine = cfg[name].get("backend") in ("vllm", "vllm-omni") and cfg[name].get("recognizer") != "parakeet"
@@ -162,7 +165,7 @@ async def watch_once(update_running=lambda: False):
     # the VoiceDesign engine has no front end of its own: restarted when it is switched on but has
     # failed (systemd gave up on it)
     t = cfg.get("tts", {})
-    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("voicedesign_enabled"):
+    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("voicedesign_enabled") and not wartung.quiet("tts"):
         unit = UNITS["tts-design"]
         code, out = await asyncio.to_thread(run, ["systemctl", "is-active", unit])
         if out.strip() == "failed":

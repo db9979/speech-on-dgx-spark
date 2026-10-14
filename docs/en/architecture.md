@@ -291,6 +291,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
+| `app/panel/wartung.py` | Wartungspause: while the language model (qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
 | `app/panel/wege.py` | Ways into the panel in texts that leave it ("Einschalten unter Me → Telegram"): Telegram messages, push notes. |
 
 ### Speech services
@@ -479,6 +480,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/vapid.pem` | Web push key | is a key | yes |
 | `state/vision.json` | Picture questions, 10 min | – | no |
 | `state/vorrang-key` | Key panel ↔ speech services | is a key | no |
+| `state/wartung.json` | Maintenance pause | – | no |
 | `state/weiche-history.json` | Switch changes | – | no |
 | `state/weiche-stats.json` | Switch statistics | – | no |
 <!-- /technik:speicher -->
@@ -1449,7 +1451,7 @@ flowchart TD
 7. <a id="kn-weiche-s7"></a>**Note hint words**: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later.
 8. <a id="kn-weiche-s8"></a>**Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“.
 9. <a id="kn-weiche-s9"></a>**Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
-10. <a id="kn-weiche-s10"></a>**Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick.
+10. <a id="kn-weiche-s10"></a>**Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked.
 11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
 12. <a id="kn-weiche-s12"></a>**Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
 13. <a id="kn-weiche-s13"></a>**Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
@@ -2033,7 +2035,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 #### Service watch
 
 - A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, mail, calendar and NAS, each every minute or every 5 minutes, without login: an HTTP answer below 500 counts as „answers“.
-- A service is gone after 3 failed probes over at least 3 minutes, back after 2 good ones. With the internet gone there is one note for everything behind it. During update, start and kill switch stage 2 nothing counts.
+- A service is gone after 3 failed probes over at least 3 minutes, back after 2 good ones. With the internet gone there is one note for everything behind it. During update, start and kill switch stage 2 nothing counts, nor for a part in the maintenance pause until its time is up.
 - The probes go through the guard but do not count on the live list and never trigger the automatic kill switch.
 
 #### Backup
@@ -2054,6 +2056,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 - Settings → Spark → Operation → Trace requests: Logs → Requests (default off).
 - Settings → Spark → Operation → Logs “Live page”: Status → Live (default off).
 - Features → Service watch: look at services and tell the admins about outages (default off).
+- Features → Maintenance pause: pause the language model, speech recognition or speech output before an update (default off), then Status → Maintenance pause.
 - Settings → Backup: create a backup by hand or restore one.
 
 #### What you see
@@ -2090,19 +2093,21 @@ The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes 
 ```mermaid
 flowchart TD
   s1(["1. Speech first"])
-  s2["2. Connection for this answer"]
-  s3["3. Model name"]
-  s4["4. Build the request"]
-  s5{{"5. Someone with priority waiting?"}}
-  s6["6. One round to the model"]
-  s7{{"7. Too long for the model?"}}
-  s8{{"8. First line in time?"}}
-  s9["9. Read the lines"]
-  s10["10. Only answer text goes on"]
-  s11["11. Record the round"]
-  s12{{"12. Error on the way?"}}
-  s13(["13. Text and tool calls back"])
-  s1 --> s2
+  s1w{{"2. Maintenance pause?"}}
+  s2["3. Connection for this answer"]
+  s3["4. Model name"]
+  s4["5. Build the request"]
+  s5{{"6. Someone with priority waiting?"}}
+  s6["7. One round to the model"]
+  s7{{"8. Too long for the model?"}}
+  s8{{"9. First line in time?"}}
+  s9["10. Read the lines"]
+  s10["11. Only answer text goes on"]
+  s11["12. Record the round"]
+  s12{{"13. Error on the way?"}}
+  s13(["14. Text and tool calls back"])
+  s1 --> s1w
+  s1w -->|no| s2
   s2 --> s3
   s3 --> s4
   s4 --> s5
@@ -2114,6 +2119,8 @@ flowchart TD
   s10 --> s11
   s11 --> s12
   s12 -->|no| s13
+  s1wx(["„I am being updated right now …“"])
+  s1w -->|yes| s1wx
   s5x(["wait shortly, then go on"])
   s5 -->|yes| s5x
   s7 -.->|yes| s6
@@ -2124,35 +2131,38 @@ flowchart TD
 ```
 
 1. <a id="kn-llm-s1"></a>**Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
-2. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
-3. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
-4. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache.
-5. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds.
-6. <a id="kn-llm-s6"></a>**One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
-7. <a id="kn-llm-s7"></a>**Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
-8. <a id="kn-llm-s8"></a>**First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
-9. <a id="kn-llm-s9"></a>**Read the lines**: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped.
-10. <a id="kn-llm-s10"></a>**Only answer text goes on**: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“.
-11. <a id="kn-llm-s11"></a>**Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority.
-12. <a id="kn-llm-s12"></a>**Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
-13. <a id="kn-llm-s13"></a>**Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
+2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row.
+3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
+4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
+5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs on the server reports how much it read and how much came from its cache.
+6. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds.
+7. <a id="kn-llm-s6"></a>**One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
+8. <a id="kn-llm-s7"></a>**Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
+9. <a id="kn-llm-s8"></a>**First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
+10. <a id="kn-llm-s9"></a>**Read the lines**: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped.
+11. <a id="kn-llm-s10"></a>**Only answer text goes on**: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“.
+12. <a id="kn-llm-s11"></a>**Record the round**: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority.
+13. <a id="kn-llm-s12"></a>**Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
+14. <a id="kn-llm-s13"></a>**Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
 
-**Examples:** Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence.
+**Examples:** Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence. · qwen38 is being updated: „I am being updated right now and will be back in about 20 minutes.“
 
 #### Numbers (from the code)
 
-- **90 s** until the model's first line ([step 8](#kn-llm-s8))
-- **60 bis 600 s** allowed time limit ([step 2](#kn-llm-s2))
+- **90 s** until the model's first line ([step 9](#kn-llm-s8))
+- **60 bis 600 s** allowed time limit ([step 3](#kn-llm-s2))
 - **20 s** background work still waits after speech ([step 1](#kn-llm-s1))
 - **3** cancels until background work gives up ([step 1](#kn-llm-s1))
-- **5 s** longest wait for priority ([step 5](#kn-llm-s5))
-- **30 s** a priority answer holds up at most this long ([step 5](#kn-llm-s5))
+- **5 s** longest wait for priority ([step 6](#kn-llm-s5))
+- **30 s** a priority answer holds up at most this long ([step 6](#kn-llm-s5))
+- **5 bis 240 min** length of a maintenance pause ([step 2](#kn-llm-s1w))
 
 #### Settings
 
 - Settings → Language model: Address, Key and Model; also Think first, Temperature and Length of an answer.
 - Settings → Language model, under Advanced: Time limit for an answer.
 - Features → Priority for people: chosen profiles get their answer first.
+- Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30).
 
 #### What you see
 
@@ -2162,19 +2172,21 @@ flowchart TD
 #### In the code
 
 - `app/panel/chat.py` `chat`: sets „speech is running“ with every piece ([step 1](#kn-llm-s1))
-- `app/panel/chat.py` `_answer`: connection, request, rounds (llm_round), errors ([step 2](#kn-llm-s2), [step 4](#kn-llm-s4), [step 6](#kn-llm-s6))
-- `app/panel/chat.py` `llm_model`: model name from settings or /models ([step 3](#kn-llm-s3))
-- `app/panel/chat.py` `sampling`: top_p and presence_penalty ([step 4](#kn-llm-s4))
-- `app/panel/chat.py` `first_within`: the first line must come in time ([step 8](#kn-llm-s8))
-- `app/panel/chat.py` `ContextFull`: request longer than the context ([step 7](#kn-llm-s7))
-- `app/panel/chat.py` `llm_error_code`: error as a fixed code ([step 12](#kn-llm-s12))
-- `app/panel/chat.py` `LLM_GONE`: the spoken sentence when the model is gone ([step 12](#kn-llm-s12))
-- `app/panel/chat.py` `prompt_sizes`: size of the parts of a request ([step 11](#kn-llm-s11))
-- `app/panel/stufe.py` `wait_turn`: waits for an answer with priority ([step 5](#kn-llm-s5))
+- `app/panel/chat.py` `_answer`: connection, request, rounds (llm_round), errors ([step 3](#kn-llm-s2), [step 5](#kn-llm-s4), [step 7](#kn-llm-s6))
+- `app/panel/chat.py` `llm_model`: model name from settings or /models ([step 4](#kn-llm-s3))
+- `app/panel/chat.py` `sampling`: top_p and presence_penalty ([step 5](#kn-llm-s4))
+- `app/panel/chat.py` `first_within`: the first line must come in time ([step 9](#kn-llm-s8))
+- `app/panel/chat.py` `ContextFull`: request longer than the context ([step 8](#kn-llm-s7))
+- `app/panel/chat.py` `llm_error_code`: error as a fixed code ([step 13](#kn-llm-s12))
+- `app/panel/chat.py` `LLM_GONE`: the spoken sentence when the model is gone ([step 13](#kn-llm-s12))
+- `app/panel/chat.py` `prompt_sizes`: size of the parts of a request ([step 12](#kn-llm-s11))
+- `app/panel/stufe.py` `wait_turn`: waits for an answer with priority ([step 6](#kn-llm-s5))
 - `app/panel/vorrang.py` `mark`: mark „speech is running“ ([step 1](#kn-llm-s1))
 - `app/panel/vorrang.py` `run`: background work gives way to speech ([step 1](#kn-llm-s1))
+- `app/panel/wartung.py` `paused`: maintenance pause: the model is not asked ([step 2](#kn-llm-s1w))
+- `app/panel/wartung.py` `sentence`: the fixed sentence with the time left ([step 2](#kn-llm-s1w))
 
-Self-tests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`
+Self-tests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`, `test_wartung`
 
 ### Speech recognition
 
@@ -2528,7 +2540,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (43, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (28, go into every backup) or backup.STATE_LOCAL (44, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2539,7 +2551,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **28** files in every backup ([step 7](#kn-state-s7))
-- **43** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **44** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

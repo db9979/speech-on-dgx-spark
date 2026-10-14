@@ -35,6 +35,7 @@ import tidy  # noqa: E402
 import wissen  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 import features  # noqa: E402
+import wartung  # noqa: E402  (Wartungspause)
 
 
 def at_speaker(request, body):
@@ -374,6 +375,9 @@ async def prepare(request):
     if quiet(request, body, pset, car):
         body["speak"] = False
         print("chat: Antworten vorlesen aus, nur Text", flush=True)
+    elif body.get("speak") is not False and wartung.paused("tts"):   # Wartungspause of the speech output: text only
+        body["speak"] = False
+        print("chat: wartungspause sprachausgabe, nur Text", flush=True)
     app_blocked = bool(ha and who and app_key and (not profiles.settings(who["id"]).get("app_ha")
                                                    or car and not profiles.settings(who["id"]).get("app_car_ha")))
     # actions on the iPhone itself: only from the app's own key, only when the profile allowed them

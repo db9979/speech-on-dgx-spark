@@ -224,6 +224,9 @@ def _prep(ccfg, use, state, questions):
     url = endpoint(ccfg)
     if not url:
         raise Unavailable("keine Adresse")
+    import wartung
+    if wartung.paused("llm"):     # Wartungspause: qwen38 is being updated, nothing is asked
+        raise Unavailable("Wartung")
     return url, body(state, questions)
 
 

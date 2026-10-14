@@ -592,6 +592,9 @@ async def ask_model(ccfg, text, info=None, uid=None):
     is None. The pick can only narrow the tools (narrow()), it never allows or starts anything.
     With chat.route_model "systemone" (and Einordnung allowed for the profile) the pick comes from
     ask_systemone instead; not allowed there means no pick at all."""
+    import wartung
+    if wartung.paused("llm"):   # Wartungspause: the model is not asked (the turn goes on as without a pick)
+        return None
     if ccfg.get("route_model") == "systemone":
         import features
         if not uid or not features.allowed("einordnung", uid, ccfg):

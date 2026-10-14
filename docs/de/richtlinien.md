@@ -118,6 +118,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Rate-Limit pro IP plus globale Semaphore für LLM, ASR und TTS (`guard.limit`, `guard.Slot`). Obergrenzen für Jobs, Werkzeugaufrufe, Suchen und Speicher-Einträge. (C)
 - Caches mit Ablauf und Maximalgröße. Schwere Arbeit läuft per `to_thread` mit Budget, nie im Event-Loop. (C; 🧪 test_tempo.OffTheLoop)
 - Hintergrundarbeit gibt der Sprache Vorrang: `vorrang.run`, `post`, `in_thread`, `quiet` und `hold`. Höchstens eine Hintergrund-Anfrage gleichzeitig ans Sprachmodell. Das ist eine feste Regel. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
+- **Wartungspause** (Dominik 2026-10-14): Hintergrundarbeit, die das Sprachmodell fragt, läuft über `vorrang.run`/`post` oder wartet vorher mit `quiet`/`hold(…, model=True)`; so wartet sie auch während einer Wartungspause. Wer das Modell im Vordergrund selbst fragt, prüft vorher `wartung.paused("llm")` und sagt `wartung.sentence` statt auf eine Zeitüberschreitung zu warten. (🧪 test_wartung)
 
 ### 2.3 Fremder Text (Prompt-Injection)
 - Als fremd gilt: Web, Seiten, Mail, Kalender, Kontakte, Pakete, Dokumente, HA-Zustände, Telegram, im Raum Mitgehörtes und alte Antworten, die daraus gebaut wurden. (C)

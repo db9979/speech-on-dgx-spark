@@ -41,6 +41,7 @@ import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
+import wartung  # noqa: E402  (Wartungspause: a fixed sentence while the model is updated)
 import stufe  # noqa: E402  (priority for people)
 import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
 import systemone  # noqa: E402  (Einordnung mit Wahrscheinlichkeit: Antworten im Hintergrund prüfen)
@@ -1736,7 +1737,7 @@ async def _answer(request, turn):
     # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
     # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
     ack_lang, acked = None, False
-    if who and own_browser and body.get("speak") is not False and body.get("client") not in ("watch", "siri") \
+    if who and own_browser and body.get("speak") is not False and not wartung.paused("llm") and body.get("client") not in ("watch", "siri") \
             and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg) \
             and not getattr(turn, "kl_took", False):   # the answer to the panel's own question needs no bridge sentence
         ack_lang = tts_body.get("language") if tts_body.get("language") in ("German", "English") else \
@@ -1763,6 +1764,17 @@ async def _answer(request, turn):
 
     async def llm():
         try:
+            if wartung.paused("llm"):
+                # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out
+                note = wartung.sentence(guess_language(messages[-1]["content"]) == "English")
+                print("chat: wartungspause, fester satz", flush=True)
+                if tr:
+                    tr.step("prep", "Wartungspause (Panel)", time.time(), panel=True)
+                trace["calls"].append({"name": "Wartungspause (Panel)", "args": "", "result": "fester Satz"})
+                await out.put({"type": "text", "delta": note})
+                trace["said"] += note
+                await sentences.put(note)
+                return
             model = await llm_model(c, ccfg, lheaders)
             fix_task = asyncio.create_task(fixes.extract(
                 ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None

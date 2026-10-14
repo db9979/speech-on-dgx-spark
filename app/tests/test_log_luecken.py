@@ -176,6 +176,7 @@ PRINT_OK = {
     ("tracelog.py", "finish"): "line() baut „anfrage: …“",
     ("logfilter.py", "detail"): "ausführliche Zeile „<bereich>: detail …“ eines festen Bereichs",
     ("notzugang.py", "main"): "Konsole von „speech-spark notzugang“, nicht das Journal",
+    ("wartung.py", "<module>"): "Konsole von „speech-spark pause|weiter“, nicht das Journal",
     ("hilfe.py", "<module>"): "Konsole von „hilfe.py --docs“",
     ("werkzeuge.py", "<module>"): "Konsole von „werkzeuge.py --write“",
 }
@@ -232,6 +233,7 @@ CONTENT_SAFE = {"len", "log_name", "_log_name", "_who", "type", "bool", "int", "
 CONTENT_OK = {
     ("chat.py", "body"): "watch.report_line schreibt aus body nur Zahlen und feste Wörter (OUTCOMES)",
     ("faelle.py", "said"): "Titel des Melders aus festen Regeln, auf Buchstaben und Zahlen gekürzt, höchstens 100 Zeichen",
+    ("wartung.py", "line"): "Antwort von „speech-spark pause|weiter“ auf der Konsole, feste Sätze mit Teilen und Minuten",
     ("live.py", "text"): "Live-Ereignisse tragen nur Art, Anzahl und Status (Grundsatz 6), nie Inhalte",
     ("logfilter.py", "text"): "Ausführliches Log, nur nach Einschalten durch den Admin und durch redact gefiltert",
     ("offsite.py", "msg"): "eigene Fehlertexte der Sicherung (HTTP-Code, Ordner), kein Inhalt",

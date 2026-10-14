@@ -92,6 +92,7 @@ import begleiter  # noqa: E402
 import systemone  # noqa: E402
 import geraeteupdate  # noqa: E402
 import dienstwacht  # noqa: E402
+import wartung  # noqa: E402
 import faelle  # noqa: E402
 import berater  # noqa: E402
 import speicher  # noqa: E402
@@ -111,7 +112,7 @@ import verbund  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik):
+for _module in (account, admin, chat, chats, chatsec, verbund, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -304,6 +305,8 @@ async def stability():
 
     async def after_update():
         if health.after_update_due(update.update_progress()):
+            while wartung.state()["on"]:     # a Wartungspause (wartung.py): the check comes after it
+                await asyncio.sleep(wartung.EVERY)
             await health.ready(load_config())
             res = await health.livecheck("after update")
             print("livecheck: after update:", "ok" if res and res["ok"] else res, flush=True)
@@ -373,6 +376,7 @@ async def stability():
     spawn(begleiter.fetch_loop())
     spawn(geraeteupdate.loop())
     spawn(dienstwacht.loop())
+    spawn(wartung.loop())
     spawn(berater.loop())
     spawn(speicher.loop())
     nasquelle.clean_tmp()

@@ -398,7 +398,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "aba0171ded",
+        "stand": "cb41693bf9",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -617,7 +617,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "27c8c48c18",
+        "stand": "e92f822350",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -805,7 +805,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "9885fa671a",
+        "stand": "f9f19e6af2",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -916,13 +916,14 @@ SEITEN_DATEN = {
                "Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens "
                "{intent.ASK_TIMEOUT} Sekunden, mit „Schneller Antwortbeginn“ nur {intent.CACHED_WAIT|ms} "
                "nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der "
-               "Schwelle (Standard {systemone.ROUTE_MIN|prozent}). Die Hinweis-Gruppen bleiben neben der Wahl.",
+               "Schwelle (Standard {systemone.ROUTE_MIN|prozent}). Die Hinweis-Gruppen bleiben neben der Wahl. In "
+               "einer Wartungspause des Sprachmodells wird es nicht gefragt.",
                "If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model "
                "picks one group from the fixed list once (JSON only, only the own message). The question already "
                "runs beside the preparation from its start; the wait is at most {intent.ASK_TIMEOUT} seconds, with "
                "„Fast answer start“ only {intent.CACHED_WAIT|ms} after the preparation. With classification "
                "with probabilities the pick only counts from the threshold (default {systemone.ROUTE_MIN|prozent}). The hint "
-               "groups stay beside the pick."),
+               "groups stay beside the pick. During a maintenance pause of the language model it is not asked."),
               ("info", "ja", ("Grund „Modell“", "reason „Modell“"))),
             S("s11", "schritt", ("Eingrenzen", "Narrow"),
               ("intent.narrow · nie mehr als vorher", "intent.narrow · never more than before"),
@@ -1066,7 +1067,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "30565820eb",
+        "stand": "06905fbd69",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1254,7 +1255,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "8935a8e6b5",
+        "stand": "83a0c8e7c6",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1425,12 +1426,12 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "f2bee9bf38",
+        "stand": "7db350d426",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "chat.llm_model": ["s3"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
-            "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"],
+            "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
         },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
@@ -1453,6 +1454,17 @@ SEITEN_DATEN = {
                "When an answer starts and with every streamed piece the panel sets the mark „speech is running“. "
                "Background work on the model waits until {vorrang.GRACE} seconds after it and is cancelled as soon as "
                "somebody speaks; after {vorrang.RETRIES} cancels it gives up for this time.")),
+            S("s1w", "frage", ("Wartungspause?", "Maintenance pause?"),
+              ("Zustand → Wartungspause", "Status → Maintenance pause"),
+              ("Hat ein Admin das Sprachmodell für ein Update angehalten, fragt das Panel es gar nicht erst: die Antwort "
+               "ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. "
+               "Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der "
+               "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet.",
+               "When an admin paused the language model for an update, the panel does not ask it at all: the answer is "
+               "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
+               "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
+               "time the pause only ends once the model answers {wartung.OK_N} times in a row."),
+              ("stop", "ja", ("„Ich werde gerade aktualisiert …“", "„I am being updated right now …“"))),
             S("s2", "schritt", ("Verbindung für diese Antwort", "Connection for this answer"),
               ("Zeitlimit {chat.TIMEOUT_RANGE.0} bis {chat.TIMEOUT_RANGE.1} s", "time limit {chat.TIMEOUT_RANGE.0} to {chat.TIMEOUT_RANGE.1} s"),
               ("Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) "
@@ -1548,6 +1560,8 @@ SEITEN_DATEN = {
              ("Verlauf gekürzt, einmal neu gefragt.", "History cut, asked once more.")),
             (("qwen38 hängt", "qwen38 hangs"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!"],
              ("„Mein Sprachmodell antwortet gerade nicht.“ statt Stille.", "„My language model is not answering right now.“ instead of silence.")),
+            (("qwen38 wird neu eingespielt", "qwen38 is being updated"), ["s1", "s1w", "s1w!"],
+             ("„Ich werde gerade aktualisiert und bin in etwa 20 Minuten wieder da.“", "„I am being updated right now and will be back in about 20 minutes.“")),
         ],
         "zahlen": [
             ("{chat.FIRST_WAIT} s", ("bis zur ersten Zeile des Modells", "until the model's first line"), "chat.FIRST_WAIT"),
@@ -1556,6 +1570,7 @@ SEITEN_DATEN = {
             ("{vorrang.RETRIES}", ("Abbrüche, bis Hintergrundarbeit aufgibt", "cancels until background work gives up"), "vorrang.RETRIES"),
             ("{stufe.WAIT_RANGE.1} s", ("längste Wartezeit für Vorrang", "longest wait for priority"), "stufe.WAIT_RANGE"),
             ("{stufe.FIRST_MAX} s", ("so lange hält eine Antwort mit Vorrang höchstens auf", "a priority answer holds up at most this long"), "stufe.FIRST_MAX"),
+            ("{wartung.MIN_MIN} bis {wartung.MAX_MIN} min", ("Dauer einer Wartungspause", "length of a maintenance pause"), "wartung.MAX_MIN"),
         ],
         "einstellen": [
             ("Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge "
@@ -1565,6 +1580,8 @@ SEITEN_DATEN = {
              "Settings → Language model, under Advanced: Time limit for an answer."),
             ("Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst.",
              "Features → Priority for people: chosen profiles get their answer first."),
+            ("Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30).",
+             "Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30)."),
         ],
         "sehen": [
             ("Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und "
@@ -1587,8 +1604,10 @@ SEITEN_DATEN = {
             ("stufe.wait_turn", ("wartet auf eine Antwort mit Vorrang", "waits for an answer with priority")),
             ("vorrang.mark", ("Marke „Sprache läuft“", "mark „speech is running“")),
             ("vorrang.run", ("Hintergrundarbeit weicht der Sprache", "background work gives way to speech")),
+            ("wartung.paused", ("Wartungspause: das Modell wird nicht gefragt", "maintenance pause: the model is not asked")),
+            ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
         ],
-        "tests": ["test_panel", "test_llm_settings", "test_vorrang", "test_stufe", "test_fast_start"],
+        "tests": ["test_panel", "test_llm_settings", "test_vorrang", "test_stufe", "test_fast_start", "test_wartung"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
@@ -1815,7 +1834,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "f9d1d6513d",
+        "stand": "b844c7b855",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -1954,6 +1973,10 @@ SEITEN_DATEN = {
              "Settings → Spark → Operation → Logs “Live page”: Status → Live (default off)."),
             ("Funktionen → Dienst-Wächter: Dienste prüfen und Admins bei Ausfall benachrichtigen (Standard aus).",
              "Features → Service watch: look at services and tell the admins about outages (default off)."),
+            ("Funktionen → Wartungspause: vor einem Update Sprachmodell, Spracherkennung oder Sprachausgabe anhalten "
+             "(Standard aus), dann Zustand → Wartungspause.",
+             "Features → Maintenance pause: pause the language model, speech recognition or speech output before an "
+             "update (default off), then Status → Maintenance pause."),
             ("Einstellungen → Sicherung: eine Sicherung von Hand anlegen oder zurückspielen.",
              "Settings → Backup: create a backup by hand or restore one."),
         ],
@@ -1977,10 +2000,12 @@ SEITEN_DATEN = {
                  "an HTTP answer below 500 counts as „answers“."),
                 ("Weg ist ein Dienst nach {dienstwacht.FAIL_N} Fehlproben über mindestens {dienstwacht.FAIL_S|min} "
                  "Minuten, zurück nach {dienstwacht.OK_N} guten. Ist das Internet weg, gibt es eine Meldung für alles "
-                 "dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts.",
+                 "dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts, ebenso nicht für einen Teil in der "
+                 "Wartungspause, bis deren Zeit um ist.",
                  "A service is gone after {dienstwacht.FAIL_N} failed probes over at least {dienstwacht.FAIL_S|min} "
                  "minutes, back after {dienstwacht.OK_N} good ones. With the internet gone there is one note for "
-                 "everything behind it. During update, start and kill switch stage 2 nothing counts."),
+                 "everything behind it. During update, start and kill switch stage 2 nothing counts, nor for a part in "
+                 "the maintenance pause until its time is up."),
                 ("Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von "
                  "selbst“ aus.",
                  "The probes go through the guard but do not count on the live list and never trigger the automatic "
@@ -2190,7 +2215,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "b79f98a912",
+        "stand": "d708a41abb",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2915,7 +2940,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "6b2d1629f1",
+        "stand": "d7cdd7029b",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3103,7 +3128,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "bd38333a9d",
+        "stand": "3db59e6339",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3431,7 +3456,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "5457d99e63",
+        "stand": "3b7db705ab",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],

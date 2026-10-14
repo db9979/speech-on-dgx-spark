@@ -339,6 +339,7 @@ ADMIN_ON_OK = {
     "contacts.py:admin_on": "Spark switch; per profile contacts.usable, endpoints add features.blocked",
     "core.py:_gate": "setup endpoints: admin switch, then features.blocked for the profile",
     "dienstwacht.py:admin_on": "Spark-wide service watch",
+    "wartung.py:admin_on": "Spark-wide maintenance pause, only admins start it",
     "dienstwacht.py:active": "Spark-wide: which services are watched",
     "dienstwacht.py:_affected": "Spark-wide: which functions a gone service touches",
     "docmake.py:admin_on": "Spark switch for Live; per profile docmake.on (features.allowed)",

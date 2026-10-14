@@ -23,7 +23,7 @@ const col=id=>{if(!LV.cm||Object.keys(LV.cm).length>300)LV.cm={};const m=LV.cm;
 const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weiche','Switch'),tt('Absicht','Intent')],['llm',tt('Sprachmodell','Language model'),'qwen38'],
   ['tool',tt('Werkzeuge','Tools'),tt('Suchen, Nachschlagen, Schalten','search, look up, switch')],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
 const SNAME=Object.fromEntries(STAGES.map(s=>[s[0],s[1]]));
-const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)'};
+const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)',pause:'var(--acc)'};
 const KIND={in:tt('Eingang','Arrival'),asr:tt('Hören','Listening'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),ack:tt('Sofort-Satz','Instant sentence'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
 const ZONE={spark:[tt('im Spark','on the Spark'),'loc'],lan:[tt('Heimnetz','Home network'),'lan'],net:['Internet','net']};
 const PH=()=>matchMedia('(max-width:760px)').matches;

@@ -118,6 +118,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Rate limit per IP plus a global semaphore for LLM, ASR and TTS (`guard.limit`, `guard.Slot`). Upper limits for jobs, tool calls, searches and memory entries. (C)
 - Caches with expiry and maximum size. Heavy work runs via `to_thread` with a budget, never in the event loop. (C; 🧪 test_tempo.OffTheLoop)
 - Background work gives speech priority: `vorrang.run`, `post`, `in_thread`, `quiet` and `hold`. At most one background request at a time to the language model. This is a fixed rule. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
+- **Maintenance pause** (Dominik 2026-10-14): background work that asks the language model goes through `vorrang.run`/`post` or waits first with `quiet`/`hold(…, model=True)`; that way it also waits during a maintenance pause. Code that asks the model itself in the foreground checks `wartung.paused("llm")` first and says `wartung.sentence` instead of waiting for a time-out. (🧪 test_wartung)
 
 ### 2.3 Outside text (prompt injection)
 - Counts as outside: web, pages, mail, calendar, contacts, parcels, documents, HA states, Telegram, things overheard in the room and old answers built from them. (C)

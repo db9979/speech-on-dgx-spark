@@ -1,0 +1,283 @@
+"""Wartungspause (wartung.py, plan plaene/wartungspause.md).
+
+Off without the admin's switch; only admins start and end it; a question during a pause of the language model gets
+the fixed sentence at once and the model is never asked; background work on the model waits and runs afterwards;
+the Dienst-Wächter and the watchdog leave a paused part alone until its time is over; at the end of the time the
+pause ends only after OK_N good checks, else it stays, the admins get one push and the Dienst-Wächter counts again;
+a damaged file is no pause; the shell command; Live shows the part as paused; the Notaus is never touched.
+No test depends on the wall clock: times are passed in or taken relative to now.
+
+Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
+"""
+import asyncio
+import os
+import time
+import unittest
+from unittest import mock
+
+from fastapi.testclient import TestClient
+
+from tests import helpers
+
+helpers.start()
+import panel  # noqa: E402
+import dienstwacht  # noqa: E402
+import guard  # noqa: E402
+import health  # noqa: E402
+import live  # noqa: E402
+import notaus  # noqa: E402
+import push  # noqa: E402
+import vorrang  # noqa: E402
+import wartung  # noqa: E402
+
+ADMIN = TestClient(panel.app)
+ADMIN.post("/api/login", json={"password": "secret-admin"})
+T0 = 1_800_000_000.0
+
+
+def run(coro):
+    return asyncio.run(coro)
+
+
+class Base(unittest.TestCase):
+    def setUp(self):
+        helpers.set_config(wartung=True, public=True)
+        wartung.end("test")
+        for k in [k for k in guard._rate if k[0] == "wartung"]:
+            guard._rate.pop(k, None)
+
+    def tearDown(self):
+        wartung.end("test")
+        helpers.set_config(wartung=False)
+
+
+class Off(Base):
+    def test_nothing_without_the_switch(self):
+        wartung.start(["llm"], 30, "main", now=T0)
+        helpers.set_config(wartung=False)
+        self.assertFalse(wartung.paused("llm"))
+        self.assertEqual(ADMIN.post("/api/admin/wartung", json={"parts": ["llm"], "minutes": 30}).status_code, 409)
+        code, line = wartung.cli(["llm", "30"])
+        self.assertEqual(code, 1)
+        self.assertIn("Funktionen → Wartungspause", line)
+
+    def test_switch_off_ends_a_running_pause(self):
+        wartung.start(["llm"], 30, "main", now=T0)
+        helpers.set_config(wartung=False)
+        self.assertEqual(run(wartung.tick(T0 + 60)), "aus")
+        self.assertFalse(wartung.state()["on"])
+
+    def test_damaged_file_is_no_pause(self):
+        with open(wartung.FILE, "w") as f:
+            f.write("{kaputt")
+        self.assertFalse(wartung.paused("llm"))
+        with open(wartung.FILE, "w") as f:
+            f.write('{"on": true, "parts": ["llm"], "since": 5, "until": 1}')
+        self.assertFalse(wartung.paused("llm"))
+        os.remove(wartung.FILE)
+
+
+class Api(Base):
+    def test_only_admins(self):
+        anon = TestClient(panel.app)
+        self.assertIn(anon.get("/api/admin/wartung").status_code, (401, 403))
+        self.assertIn(anon.post("/api/admin/wartung", json={"parts": ["llm"], "minutes": 30}).status_code, (401, 403))
+        self.assertIn(anon.post("/api/admin/wartung/weiter").status_code, (401, 403))
+        self.assertFalse(wartung.state()["on"])
+
+    def test_start_more_and_weiter(self):
+        r = ADMIN.post("/api/admin/wartung", json={"parts": ["tts", "llm"], "minutes": 15})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertTrue(d["paused"])
+        self.assertEqual(d["parts"], ["llm", "tts"])
+        self.assertEqual(d["by"], "Admin")
+        self.assertTrue(14 <= d["left"] <= 15)
+        self.assertTrue(30 - 1 <= ADMIN.post("/api/admin/wartung", json={"more": True}).json()["left"] <= 30)
+        self.assertFalse(ADMIN.post("/api/admin/wartung/weiter").json()["paused"])
+        self.assertFalse(wartung.paused("llm"))
+
+    def test_wrong_input_is_refused(self):
+        for body in ({"parts": ["gpu"], "minutes": 30}, {"parts": [], "minutes": 30}, {"parts": ["llm"], "minutes": 1},
+                     {"parts": ["llm"], "minutes": 999}, {"parts": ["llm"], "minutes": True}, {"parts": "llm", "minutes": 30},
+                     {"more": True}):
+            self.assertEqual(ADMIN.post("/api/admin/wartung", json=body).status_code, 400, body)
+        self.assertEqual(ADMIN.post("/api/admin/wartung", content=b"x" * 300,
+                                    headers={"Content-Type": "application/json"}).status_code, 413)
+        self.assertFalse(wartung.state()["on"])
+
+    def test_the_kill_switch_is_never_touched(self):
+        before = notaus.level()
+        ADMIN.post("/api/admin/wartung", json={"parts": ["llm", "asr", "tts"], "minutes": 30})
+        ADMIN.post("/api/admin/wartung/weiter")
+        self.assertEqual(notaus.level(), before)
+
+
+class Chat(Base):
+    def test_fixed_sentence_and_the_model_is_not_asked(self):
+        wartung.start(["llm"], 30, "main")
+        n = len(helpers.LLM_CALLS)
+        r = ADMIN.post("/api/chat", json={"messages": [{"role": "user", "content": "Wie wird das Wetter morgen?"}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        evs = helpers.events(r)
+        said = "".join(e.get("delta", "") for e in evs if e["type"] == "text")
+        self.assertTrue(said.startswith("Ich werde gerade aktualisiert und bin in etwa "), said)
+        self.assertFalse([e for e in evs if e["type"] == "error"])
+        self.assertEqual(len(helpers.LLM_CALLS), n, "the model was asked during the pause")
+        self.assertGreaterEqual(wartung.view()["asked"], 1)
+
+    def test_english_and_overdue(self):
+        wartung.start(["llm"], 30, "main", now=T0)
+        self.assertIn("about 30 minutes", wartung.sentence(True, now=T0))
+        self.assertIn("in etwa 1 Minute wieder", wartung.sentence(False, now=T0 + 29 * 60 + 30))
+        self.assertIn("gleich wieder da", wartung.sentence(False, now=T0 + 31 * 60))
+
+    def test_only_tts_paused_gives_text_only(self):
+        wartung.start(["tts"], 30, "main")
+        n = len(helpers.LLM_CALLS)
+        evs = helpers.events(ADMIN.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]}))
+        self.assertGreater(len(helpers.LLM_CALLS), n, "a pause of the speech output leaves the model alone")
+        self.assertFalse([e for e in evs if e["type"] == "audio"])
+
+    def test_weiche_and_systemone_do_not_ask(self):
+        import intent
+        import systemone
+        wartung.start(["llm"], 30, "main")
+        self.assertIsNone(run(intent.ask_model({"llm_url": "http://127.0.0.1:1/v1"}, "Wetter?")))
+        with self.assertRaises(systemone.Unavailable):
+            systemone._prep({"llm_url": "http://127.0.0.1:1/v1"}, next(iter(systemone.USES)), "x", [])
+
+
+class Background(Base):
+    def test_model_work_waits_and_runs_afterwards(self):
+        wartung.start(["llm"], 30, "main", now=T0)
+        ran, slept = [], []
+
+        async def sleep(s):
+            slept.append(s)
+            if len(slept) == 3:
+                wartung.end("weiter")
+
+        async def work():
+            ran.append(wartung.paused("llm"))
+            return "ok"
+
+        with mock.patch.object(vorrang, "speaking", lambda now=None: False):
+            self.assertEqual(run(vorrang.run("Lernen", work, sleep=sleep)), "ok")
+        self.assertEqual(ran, [False], "the work ran only after the pause")
+        self.assertEqual(len(slept), 3)
+
+    def test_other_waits_do_not_hold_without_model(self):
+        wartung.start(["llm"], 30, "main", now=T0)
+        with mock.patch.object(vorrang, "speaking", lambda now=None: False):
+            self.assertEqual(run(vorrang.quiet("Sicherung")), 0)
+            self.assertEqual(vorrang.hold("Sicherung"), 0)
+
+
+class Watchers(Base):
+    def test_dienstwacht_and_watchdog_stay_out_until_the_time_is_over(self):
+        wartung.start(["asr", "llm"], 30, "main")
+        self.assertTrue(dienstwacht._maintained("qwen"))
+        self.assertTrue(dienstwacht._maintained("asr"))
+        self.assertFalse(dienstwacht._maintained("tts"))
+        restarted = []
+        with mock.patch.object(health, "_restart", lambda *a: restarted.append(a[0])), \
+                mock.patch.object(health, "service_health", mock.AsyncMock(return_value=None)), \
+                mock.patch.object(health, "judge", lambda *a, **k: "antwortet nicht"):
+            run(health.watch_once())
+        self.assertNotIn("ASR", restarted)
+        self.assertIn("TTS", restarted)
+        s = wartung.state()
+        wartung._write(dict(s, overdue=True))
+        self.assertFalse(dienstwacht._maintained("qwen"), "after its time the Dienst-Wächter counts again")
+        self.assertTrue(wartung.paused("llm"), "but the pause itself stays")
+
+
+class Ending(Base):
+    def setUp(self):
+        super().setUp()
+        self.sent = []
+
+        async def send(uid, title, body, tag="", private=True, why="", to=""):
+            self.sent.append((uid, title, tag))
+            return 1
+        self.patches = [mock.patch.object(push, "send", send), mock.patch.object(notaus, "admin_uids", lambda: ["a1", "a2"])]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        super().tearDown()
+
+    def test_ends_after_two_good_checks(self):
+        wartung.start(["llm"], 15, "main", now=T0)
+
+        async def good(part, cfg):
+            return True
+        self.assertEqual(run(wartung.tick(T0 + 60, answers=good)), "pause")
+        self.assertEqual(run(wartung.tick(T0 + 15 * 60, answers=good)), "pruefen")
+        self.assertTrue(wartung.paused("llm"))
+        self.assertEqual(run(wartung.tick(T0 + 15 * 60 + 15, answers=good)), "aus")
+        self.assertFalse(wartung.paused("llm"))
+        self.assertEqual(self.sent, [])
+
+    def test_not_answering_keeps_the_pause_and_tells_the_admins_once(self):
+        wartung.start(["llm", "tts"], 15, "main", now=T0)
+        answers = {"llm": False, "tts": True}
+
+        async def check(part, cfg):
+            return answers[part]
+        self.assertEqual(run(wartung.tick(T0 + 15 * 60, answers=check)), "wartet")
+        self.assertEqual(run(wartung.tick(T0 + 16 * 60, answers=check)), "wartet")
+        self.assertTrue(wartung.paused("llm"))
+        self.assertTrue(wartung.state()["overdue"])
+        self.assertEqual(sorted(u for u, _, _ in self.sent), ["a1", "a2"])
+        self.assertEqual({t for _, _, t in self.sent}, {"wartung"})
+        answers["llm"] = True
+        run(wartung.tick(T0 + 17 * 60, answers=check))
+        self.assertEqual(run(wartung.tick(T0 + 17 * 60 + 15, answers=check)), "aus")
+
+
+class Shell(Base):
+    def test_pause_status_weiter(self):
+        self.assertEqual(wartung.cli(["status"])[1], "Keine Wartungspause.")
+        code, line = wartung.cli(["llm,tts", "45"], now=T0)
+        self.assertEqual(code, 0, line)
+        self.assertEqual(wartung.state()["parts"], ["llm", "tts"])
+        self.assertEqual(wartung.state()["channel"], "kommandozeile")
+        self.assertIn("noch 45 min", wartung.cli(["status"], now=T0)[1])
+        self.assertEqual(wartung.cli(["weiter"], now=T0 + 600)[0], 0)
+        self.assertFalse(wartung.state()["on"])
+        self.assertEqual(wartung.cli(["alles"], now=T0)[0], 0)
+        self.assertEqual(wartung.state()["parts"], ["llm", "asr", "tts"])
+        for bad in (["gpu"], ["llm", "3"], ["llm", "abc"]):
+            self.assertEqual(wartung.cli(bad, now=T0)[0], 2, bad)
+
+    def test_the_shell_command_runs_as_the_service_user(self):
+        with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:
+            cli = f.read()
+        self.assertIn("pause) shift; cmd_pause", cli)
+        self.assertIn("weiter) shift; cmd_pause weiter", cli)
+        self.assertRegex(cli, r"cmd_pause\(\) \{\n  need_root pause .*\n(.*\n)*?  as_panel_user wartung\.py")
+
+
+class Shown(Base):
+    def test_live_shows_the_paused_parts_without_who(self):
+        wartung.start(["llm"], 30, "main")
+        snap = live.snapshot("admin")
+        self.assertEqual(snap["svc"]["qwen"]["st"], "pause")
+        self.assertTrue(snap["wartung"]["on"])
+        self.assertNotIn("by", snap["wartung"])
+        wartung.end("weiter")
+        self.assertFalse(live.snapshot("admin")["wartung"]["on"])
+
+    def test_view_numbers_only(self):
+        wartung.start(["llm"], 30, "main", now=time.time())
+        d = wartung.view()
+        self.assertEqual(set(d), {"on", "paused", "parts", "since", "until", "left", "overdue", "channel", "by", "asked",
+                                  "held", "choices"})
+
+
+if __name__ == "__main__":
+    unittest.main()

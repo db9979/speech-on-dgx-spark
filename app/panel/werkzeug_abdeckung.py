@@ -135,6 +135,7 @@ WITHOUT = {
     "mailwichtig": "meldet sich von selbst",
     "mystatus": "Seite Ich → Mein Zustand",
     "dienstwacht": "meldet sich von selbst",
+    "wartung": "Zustand → Wartungspause; in der Pause sagt das Panel einen festen Satz statt einer Antwort",
     "meldenadmin": "meldet sich von selbst",
     "bewertenzurueck": "meldet sich von selbst",
     "speicher": "läuft im Hintergrund",

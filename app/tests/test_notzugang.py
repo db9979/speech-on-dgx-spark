@@ -103,8 +103,10 @@ class Notzugang(unittest.TestCase):
         body = re.search(r"cmd_notzugang\(\) \{\n(.*?)\n\}", cli, re.S).group(1)
         self.assertIn("need_root notzugang", body)
         self.assertIn('read -r -p "Weiter? [j/N] "', body)
-        self.assertIn('runuser -u "$svc" -- env -i', body)
-        self.assertIn('[ "$svc" != root ]', body)
+        self.assertIn("as_panel_user notzugang.py", body)
+        helper = re.search(r"as_panel_user\(\) \{\n(.*?)\n\}", cli, re.S).group(1)   # the one way to run as the service user
+        self.assertIn('runuser -u "$svc" -- env -i', helper)
+        self.assertIn('[ "$svc" != root ]', helper)
         self.assertIn("notzugang) shift; cmd_notzugang", cli)
 
 

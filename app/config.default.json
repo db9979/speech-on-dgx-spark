@@ -188,6 +188,7 @@
     "report_repo": "db9979/spark-meldungen",
     "dev_updates": false,
     "svc_watch": false,
+    "wartung": false,
     "memory_check": false,
     "memory_ask": false,
     "memory_topics": false,

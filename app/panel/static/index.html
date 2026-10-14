@@ -74,6 +74,7 @@
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
   <div class="card zneed" id="zsvc" hidden><h2>Dienste</h2><div id="zsvclist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsvccheck">Jetzt prüfen</button><span class="mut" id="zsvcmsg"></span></div><div class="mut" style="margin-top:6px">Nur ob ein Dienst antwortet, nie Inhalte, Adressen oder Fehlertexte. Ein Haken weg: der Dienst wird nicht geprüft und niemand bekommt Hinweise dazu.</div></div>
+  <div class="card zneed" id="zwart" hidden><h2>Wartungspause</h2><div id="zwartlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zwartgo">Pause starten</button><button class="b" type="button" id="zwarton" hidden>Weiter</button><button class="b" type="button" id="zwartmore" hidden>+15 min</button><span class="mut" id="zwartmsg"></span></div><div class="mut" style="margin-top:6px">Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe: der Spark antwortet mit einem festen Satz, Hintergrundarbeit wartet, der Dienst-Wächter bleibt still. Danach geht es von selbst weiter, sobald alles wieder antwortet.</div></div>
   <div class="card zneed" id="znas" hidden><h2>Speicher und NAS</h2><div id="znaslist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Name, Art, Zustand und wofür der Ort da ist, nie Adresse oder Passwort.</div></div>
   <div class="card zneed" id="znaszustand" hidden><h2>Zustand der NAS</h2><div id="znaszustandlist"></div><div class="mut" style="margin-top:6px">Werte aus SNMPv3, nur lesen; nie Adresse oder Passwort.</div></div>
   <div class="card zneed" id="znasquelle" hidden><h2>Wissensordner</h2><div id="znasquellelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Zahlen und Zustand, nie Pfade oder Dateinamen.</div></div>
@@ -193,6 +194,7 @@
         <div id="rpadmin" data-nodirty="1"></div></div>
       <div class="setrow"><div class="lbl"><b>Dienst-Wächter</b><span>Der Spark prüft selbst, ob Archiv, Internet, Websuche und andere Dienste antworten, und meldet den Admins Ausfall und Entwarnung.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch"><i></i></label></div>
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Wartungspause</b><span>Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe hält der Spark kurz an: fester Satz statt Fehler, Hintergrund wartet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
       <div class="setrow" data-show="chat.bewerten" style="margin-left:36px"><div class="lbl"><b>Rückmeldung, wenn es behoben ist</b><span>Wer 👎 gemeldet hat, hört nach der Nachkontrolle, dass eine Änderung geholfen hat.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten_back"><i></i></label></div>
@@ -1072,6 +1074,7 @@
 <script src="/static/js/hintergrund.js"></script>
 <script src="/static/js/geraete.js"></script>
 <script src="/static/js/dienste.js"></script>
+<script src="/static/js/wartung.js"></script>
 <script src="/static/js/verbessern.js"></script>
 <script src="/static/js/bewerten.js"></script>
 <script src="/static/js/zuordnungen.js"></script>

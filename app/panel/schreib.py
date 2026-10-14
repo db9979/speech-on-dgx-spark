@@ -281,6 +281,10 @@ def _trace(uid, client, label, chars, where):
 async def _model(msgs, temperature, max_tokens, job):
     import chat
     import stufe
+    import wartung
+    if wartung.paused("llm"):     # Wartungspause: said at once, never the model's time-out
+        print("schreib: wartungspause, nicht gefragt", flush=True)
+        raise HTTPException(503, wartung.sentence())
     ccfg = load_config().get("chat", {})
     headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     async with httpx.AsyncClient(timeout=httpx.Timeout(SECONDS, connect=5)) as c:

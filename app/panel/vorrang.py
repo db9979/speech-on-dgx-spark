@@ -17,7 +17,8 @@ reading uploads ...):
 run()/post() wait for a pause, let only one background request run at a time and cancel it as soon
 as somebody speaks (vLLM stops the request when the connection closes, so the GPU is free at once);
 it starts again in the next pause, at most RETRIES times, then Busy is raised. Journal lines start
-with "vorrang:".
+with "vorrang:". During a Wartungspause of the language model (wartung.py) run()/post() and quiet()/hold() with
+model=True wait as well (not counted as a try) and go on, one after the other, once it ends.
 """
 import asyncio
 import os
@@ -82,15 +83,29 @@ def today(now=None):
     return dict(_day(now), speaking=speaking(now))
 
 
-async def quiet(job, sleep=asyncio.sleep):
-    """Waits until nobody speaks. Returns the seconds waited."""
-    if not speaking():
+def paused():
+    """Wartungspause of the language model (wartung.py): background work that asks it waits too; never raises."""
+    try:
+        import wartung
+        return wartung.paused("llm")
+    except Exception:
+        return False
+
+
+async def quiet(job, sleep=asyncio.sleep, model=False):
+    """Waits until nobody speaks (model: and no Wartungspause of the language model). Returns the seconds waited."""
+    if not speaking() and not (model and paused()):
         return 0
     t0 = time.time()
     count("held")
-    print(f"vorrang: {job} wartet (Gespräch)", flush=True)
+    if model and paused():
+        import wartung
+        wartung.held()
+        print(f"vorrang: {job} wartet (Wartung)", flush=True)
+    else:
+        print(f"vorrang: {job} wartet (Gespräch)", flush=True)
     _live(job, "wait")
-    while speaking():
+    while speaking() or model and paused():
         await sleep(1)
     _live(job, None)
     waited = time.time() - t0
@@ -99,15 +114,20 @@ async def quiet(job, sleep=asyncio.sleep):
     return waited
 
 
-def hold(job, sleep=time.sleep):
+def hold(job, sleep=time.sleep, model=False):
     """quiet() for code in a worker thread (never call it on the event loop)."""
-    if not speaking():
+    if not speaking() and not (model and paused()):
         return 0
     t0 = time.time()
     count("held")
-    print(f"vorrang: {job} wartet (Gespräch)", flush=True)
+    if model and paused():
+        import wartung
+        wartung.held()
+        print(f"vorrang: {job} wartet (Wartung)", flush=True)
+    else:
+        print(f"vorrang: {job} wartet (Gespräch)", flush=True)
     _live(job, "wait")
-    while speaking():
+    while speaking() or model and paused():
         sleep(1)
     _live(job, None)
     waited = time.time() - t0
@@ -146,7 +166,7 @@ async def run(job, factory, retries=RETRIES, sleep=asyncio.sleep):
     t0 = time.time()
     async with _slot():
         for _ in range(retries + 1):
-            await quiet(job, sleep)
+            await quiet(job, sleep, model=True)
             _live(job, "run")
             task = asyncio.ensure_future(factory())
             while not task.done():
