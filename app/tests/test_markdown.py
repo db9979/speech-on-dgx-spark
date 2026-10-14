@@ -225,6 +225,15 @@ class Browser(unittest.TestCase):
                 self.assertFalse(got["wide"])                                      # 320 px: nothing sticks out
                 self.assertNotIn("**", got["plain"])
                 self.assertIn("<b>Tag</b>", got["plain"])                           # text stays text
+                # Dominik 2026-10-14 "schrift auf hintergrund nicht lesbar (blau)": the channel tag ("Begleiter")
+                # in an own message reads like the message itself, in light and dark, and keeps to the width
+                for theme in ("light", "dark"):
+                    tag = await pg.evaluate("""th=>{document.documentElement.dataset.theme=th;const b=chatLog('user','also es kam dann echt später');
+                      attRender(b,null,false,'desk');const v=b.querySelector('.via');const r=b.parentElement.getBoundingClientRect();
+                      return {via:getComputedStyle(v).color,text:getComputedStyle(b).color,mut:getComputedStyle(document.documentElement).getPropertyValue('--mut').trim(),
+                        wide:r.right>innerWidth+1||document.documentElement.scrollWidth>innerWidth}}""", theme)
+                    self.assertEqual(tag["via"], tag["text"], theme)
+                    self.assertFalse(tag["wide"], theme)
                 await br.close()
         asyncio.run(go())
 

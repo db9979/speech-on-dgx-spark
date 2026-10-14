@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.534** Channel tag in your own blue bubble (e.g. "Companion") readable again: white like the text, light and dark
 - **V01.0.533** Android app 1.3.0: update right from the app, checked and from your own Spark; Device updates shows the app version per phone
 - **V01.0.532** Every box under Status → Architecture explains exactly how it works, with a step-by-step picture and examples
 - **V01.0.531** Blocked, but own data deletable: Me shows a card with "Delete data" for blocked functions
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.527** Filing folder on the NAS: what the Spark makes and, after a yes, your own things go there; the inbox comes into your documents
 - **V01.0.526** Tests green again: "Who may do what" never shows an outdated state any more
 - **V01.0.525** Tests green again: the search browser test waits until the page is signed in
-- **V01.0.524** Synology comfort: find the NAS in the home network, see per folder what the Spark may do, warning for admin accounts
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

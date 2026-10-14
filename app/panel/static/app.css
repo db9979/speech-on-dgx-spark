@@ -283,6 +283,7 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .bubble .mem{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
 /* Verlauf auf allen Geräten (verlauf.js): the channel a message came through, and another device answering right now */
 .bubble .via{display:inline-block;margin:0 6px 2px 0;padding:0 6px;border-radius:8px;font-size:11px;line-height:17px;color:var(--mut);border:1px solid var(--line);vertical-align:1px}
+.msg.user .bubble .via{color:#fff;border-color:rgba(255,255,255,.65);background:rgba(255,255,255,.16)}
 .msg.elsewhere{opacity:.6}
 .msg.elsewhere .bubble{font-size:13px;font-style:italic;color:var(--mut)}
 .token{font-family:ui-monospace,monospace;word-break:break-all;user-select:all}

@@ -4565,7 +4565,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "- *Verlauf sofort abgleichen*: Jede offene Seite hält eine Ereignis-Verbindung zum Spark (/api/profile/convos/stream, höchstens 8 pro Profil, nach 30 Minuten neu). Ändert sich ein Gespräch auf einem anderen Gerät, holt die Seite es sofort; ein gelöschtes Gespräch schließt sich. Antwortet gerade ein anderes Gerät im offenen Gespräch, steht blass „Handy antwortet gerade …“ (nur die Geräteart, nie die Frage). Die Live-Übersicht zeigt nur die Zahl dieser Verbindungen. - *Ein Gespräch für alle Kanäle*: Telegram, Siri, Begleiter, Uhr und die eigene Stimme am Lautsprecher schreiben ins heutige Hauptgespräch (das neueste von heute, das keinem Kanal allein gehört; sonst „Heute TT.MM.“), jede Nachricht mit Kanal-Zeichen. Mehr Zusammenhang, aber auch mehr fremder Kontext. Eine Stimme, die nicht sicher die des Besitzers ist, bleibt im Gespräch des Lautsprechers. - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffnet das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald der Spark wieder antwortet. Jeder andere Browser speichert n"
+"text": "- *Verlauf sofort abgleichen*: Jede offene Seite hält eine Ereignis-Verbindung zum Spark (/api/profile/convos/stream, höchstens 8 pro Profil, nach 30 Minuten neu). Ändert sich ein Gespräch auf einem anderen Gerät, holt die Seite es sofort; ein gelöschtes Gespräch schließt sich. Antwortet gerade ein anderes Gerät im offenen Gespräch, steht blass „Handy antwortet gerade …“ (nur die Geräteart, nie die Frage). Die Live-Übersicht zeigt nur die Zahl dieser Verbindungen. - *Ein Gespräch für alle Kanäle*: Telegram, Siri, Begleiter, Uhr und die eigene Stimme am Lautsprecher schreiben ins heutige Hauptgespräch (das neueste von heute, das keinem Kanal allein gehört; sonst „Heute TT.MM.“), jede Nachricht mit Kanal-Zeichen (in der eigenen, blauen Blase weiß wie der Text, V01.0.534). Mehr Zusammenhang, aber auch mehr fremder Kontext. Eine Stimme, die nicht sicher die des Besitzers ist, bleibt im Gespräch des Lautsprechers. - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffnet das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald "
 },
 {
 "lang": "de",
@@ -4573,7 +4573,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "ichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer."
+"text": "der Spark wieder antwortet. Jeder andere Browser speichert nichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer."
 },
 {
 "lang": "de",
@@ -10381,7 +10381,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "- *Instant history sync*: each open page keeps one event connection to the Spark (/api/profile/convos/stream, at most 8 per profile, renewed after 30 minutes). When a conversation changes on another device, the page fetches it at once; a deleted conversation closes. While another device answers in the open conversation, a pale \"Phone is answering …\" shows (only the kind of device, never the question). The live view shows only the number of these connections. - *One conversation for all channels*: Telegram, Siri, the companion, the watch and the own voice at a speaker write into today's main conversation (the newest of today that belongs to no channel alone; else \"Heute DD.MM.\"), each message marked with its channel. More context, but also more foreign context. A voice that is not surely the owner's stays in the speaker's conversation. - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; questions without a connection (at most 10) go out once the Spark answers again. Every other browser stores nothing and deletes what it h"
+"text": "- *Instant history sync*: each open page keeps one event connection to the Spark (/api/profile/convos/stream, at most 8 per profile, renewed after 30 minutes). When a conversation changes on another device, the page fetches it at once; a deleted conversation closes. While another device answers in the open conversation, a pale \"Phone is answering …\" shows (only the kind of device, never the question). The live view shows only the number of these connections. - *One conversation for all channels*: Telegram, Siri, the companion, the watch and the own voice at a speaker write into today's main conversation (the newest of today that belongs to no channel alone; else \"Heute DD.MM.\"), each message marked with its channel (white like the text in the own, blue bubble, V01.0.534). More context, but also more foreign context. A voice that is not surely the owner's stays in the speaker's conversation. - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; questions without a connection (at most 10) go out once the Spark answers again."
 },
 {
 "lang": "en",
@@ -10389,7 +10389,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "ad the next time it opens; signing out always deletes."
+"text": " Every other browser stores nothing and deletes what it had the next time it opens; signing out always deletes."
 },
 {
 "lang": "en",
