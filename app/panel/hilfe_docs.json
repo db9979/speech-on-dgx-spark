@@ -3500,6 +3500,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Outlook classic hing beim Start (V01.0.537)",
+"text": "Outlook classic hing beim Start (V01.0.537): Mit dem Spark-Add-in blieb Outlook classic bei „Add-Ins werden geladen“ stehen. Ursache war die selbst deklarierte Office-Schnittstelle: Die Parameter custom wurden nicht wie in Office als SAFEARRAY übergeben. Jetzt ist die Schnittstelle genau wie bei Microsoft deklariert, und nichts im Add-in kann Outlook mit einem Fehler stören. Wer betroffen ist: im Begleiter den Teil „Office-Add-ins“ aus- und nach dem Update wieder einschalten. Der Einrichten-Dialog nennt diesen Ausweg jetzt auch."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einsprechen in den Begleiter-Fenstern (V01.0.466)",
 "text": "Einsprechen in den Begleiter-Fenstern (V01.0.466): Ist der Teil „Diktieren“ an, hat jedes freie Textfeld der Begleiter-Fenster einen Mikrofon-Knopf: „Antwort entwerfen“ (Stichpunkte und Mail-Text), „Text verbessern“ (Wunsch, Ausgangstext, Ergebnis), „Bildschirm fragen“ (Frage) und wie bisher „Frag Spark“. Erster Klick startet, zweiter (■) beendet die Aufnahme (höchstens 60 Sekunden); der Spark erkennt den Text, er kommt an die Schreibmarke bzw. ans Ende und wird nie ausgeführt. Damit lassen sich auch die Outlook-classic-Knöpfe „Antwort entwerfen“ und „Text verbessern“ ganz einsprechen. Nie in Codewort- oder Passwortfeldern. Die Office-Add-ins in Word, Excel und neuem Outlook haben keinen Mikrofon-Knopf. Knopf-Beschriftungen brechen nie mitten im Wort um; ist das Mac-Fenster zu schmal, rutscht „Spark unterstützen“ in eine eigene Zeile."
 },
@@ -9366,6 +9374,14 @@
 "head": "Voice chat",
 "title": "Office add-ins from the companion (V01.0.433)",
 "text": "Office add-ins from the companion (V01.0.433): new part \"Office add-ins\" (per device, off; needs the writing help). Then \"Office-Add-ins einrichten …\" in the companion; it asks first. Outlook classic (Windows): a \"Spark\" button in the ribbon (main window and reading: draft a reply, translate; composing: improve text, translate), also with iCloud or IMAP accounts. The button only sends one fixed word to the running companion, which works as with its hotkeys; nothing is ever sent. Word and Excel (Windows and Mac): the companion registers the Office add-in itself. For that open the panel once at its https address, save under Me → Companion; the admin must have released \"In other programs\" of the writing help. New Outlook, Outlook for Mac and on the web: the companion shows the file and opens the page \"Add from file\"; adding it is done by the person (Microsoft allows nothing else, only for Microsoft 365, Exchange or Outlook.com). Part off: everything is removed again."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Outlook classic hung at start (V01.0.537)",
+"text": "Outlook classic hung at start (V01.0.537): with the Spark add-in, Outlook classic stopped at \"Loading add-ins\". The cause was the self-declared Office interface: the custom parameters were not passed as a SAFEARRAY like in Office. The interface is now declared exactly as Microsoft does, and nothing in the add-in can disturb Outlook with an error. If affected: switch the part \"Office add-ins\" off in the companion and on again after the update. The setup dialog now names this way out too."
 },
 {
 "lang": "en",

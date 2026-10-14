@@ -44,7 +44,8 @@ internal sealed partial class TrayContext
         string what = "Der Begleiter richtet für dein Windows-Konto ein:\n\n"
             + (OfficeSetup.HasClassic ? "• Outlook classic: Knopf „Spark“ (verbessern, Antwort entwerfen, übersetzen)\n" : "")
             + (web ? "• Word und Excel: Knopf „Spark Schreibhilfe“\n" : "")
-            + "\nEs wirkt beim nächsten Start der Programme. Gesendet wird nie etwas. Weiter?";
+            + "\nEs wirkt beim nächsten Start der Programme. Gesendet wird nie etwas. Startet Outlook danach nicht, "
+            + "unter Ich → Begleiter den Teil „Office-Add-ins“ ausschalten: der Begleiter trägt dann alles aus. Weiter?";
         if (!OfficeSetup.HasClassic && !web)
         {
             Notify("Für Word und Excel das Panel einmal über seine https-Adresse öffnen, unter Ich → Begleiter speichern "

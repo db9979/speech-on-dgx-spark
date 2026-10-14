@@ -1270,6 +1270,18 @@ class Office(unittest.TestCase):
         self.assertIn("OfficeSetup.Uninstall();", self.src("windows", "Program.cs"))
         self.assertIn("MessageBox.Show(what", tray)                       # asks before setting up
 
+    def test_outlook_classic_addin_marshals_like_office(self):
+        """Dominik 2026-10-14: Outlook hung at "Add-Ins werden geladen". The own IDTExtensibility2 must pass
+        "custom" as SAFEARRAY of VARIANTs like Extensibility.dll, and nothing may throw into Outlook."""
+        addin = self.src("outlook-classic", "Connect.cs")
+        iface = addin[addin.index("public interface IDTExtensibility2"):addin.index("public interface IRibbonExtensibility")]
+        self.assertEqual(iface.count("ref Array custom"), 5)
+        self.assertEqual(iface.count("[In, MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_VARIANT)] ref Array custom"), 5)
+        self.assertIn("[return: MarshalAs(UnmanagedType.BStr)]", addin)
+        ui = addin[addin.index("public string GetCustomUI"):addin.index("public void OnSpark")]
+        self.assertIn("catch (Exception)", ui)
+        self.assertIn("Startet Outlook danach nicht", self.src("windows", "TrayContext.Office.cs"))
+
     def test_mac_sets_up_word_and_excel_only_on_request(self):
         office = self.src("mac", "Sources", "Office.swift")
         model = self.src("mac", "Sources", "Model.swift")
