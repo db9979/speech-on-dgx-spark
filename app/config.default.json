@@ -44,6 +44,16 @@
     "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
     "voicedesign_port": 31013
   },
+  "image": {
+    "enabled": false,
+    "variant": "4b-q8",
+    "port": 31005,
+    "engine_port": 31015,
+    "idle_min": 10,
+    "day_limit": 30,
+    "store_mb": 500,
+    "max_side": 1024
+  },
   "api": {
     "key": ""
   },
@@ -125,6 +135,7 @@
     "doc_make": false,
     "doc_make_templates": false,
     "doc_make_wikipics": false,
+    "bilder": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

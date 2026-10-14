@@ -961,6 +961,8 @@ def _att(a):
                 out.append({"k": "doc", "l": items})
         elif k == "mk" and x.get("t"):
             out.append({"k": "mk", "t": str(x["t"])[:120], "n": str(x.get("n", ""))[:40]})
+        elif k == "bild" and x.get("p"):   # a picture painted for this answer (bilder.py): its prompt, Ich → Bilder shows it
+            out.append({"k": "bild", "p": str(x["p"])[:300]})
     return out
 
 

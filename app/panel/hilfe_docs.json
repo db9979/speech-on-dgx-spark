@@ -1389,7 +1389,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 20 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 21 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1445,7 +1445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (132) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (138) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1453,7 +1453,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (79 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (80 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1461,7 +1461,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 132 eingebaute Testsätze (Schritt 4, Schritt 5) - 183 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 21 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 138 eingebaute Testsätze (Schritt 4, Schritt 5) - 183 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -1645,7 +1645,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 79 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 80 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1893,7 +1893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (28 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: F"
+"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: F"
 },
 {
 "lang": "de",
@@ -2259,6 +2259,78 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Bilder malen",
+"title": "Bilder malen",
+"text": "Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Bilder malen",
+"title": "Warum",
+"text": "Warum: Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen Speicher: es darf das Sprachmodell und die Stimme nie verdrängen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in bilder.start. 2. Funktion frei?: bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. 5. Warten auf eine Pause: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. 6. Modell geladen?: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungest"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ört. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt in den Ordner des Profils (bilder.keep), die Karte im Chat zeigt es, über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Beispiele",
+"text": "Beispiele: Katze auf einem Skateboard: Gemalt, gekennzeichnet, in der Galerie. · Bild vom eigenen Profilnamen: Feste Absage, das Modell wird nicht gefragt. · Zu wenig Speicher frei: Nichts geladen, Sprache läuft weiter."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Zahlen (aus dem Code)",
+"title": "Zahlen (aus dem Code)",
+"text": "- 300 Bilder pro Profil höchstens (Schritt 4) - 10 Aufträge warten höchstens (Schritt 4) - 0.5 Anteil der Bildprüfung, ab dem verworfen wird (Schritt 8) - 4 Schritte pro Bild (Schritt 7) - 720 Sekunden pro Auftrag höchstens (Schritt 5)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Einstellen",
+"title": "Einstellen",
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Was du siehst",
+"title": "Was du siehst",
+"text": "- Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "- app/panel/bilder.py start: Wunsch annehmen (Schritt 1) - app/panel/bilder.py on: Freigabe für das Profil (Schritt 2) - app/panel/bilder.py refuse_text: Wortliste und Personen (Schritt 3) - app/panel/bilder.py _work: Auftrag im Hintergrund (Schritt 5) - app/panel/bilder.py keep: Bild ablegen (Schritt 10) - app/bild_server.py Engine.start: Engine laden (Schritt 6) - app/bild_server.py Engine.paint: Malen (Schritt 7) - app/bild_server.py nsfw_share: Bildprüfung (Schritt 8) - app/bild_server.py finish: Kennzeichnen und neu kodieren (Schritt 9)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Dienste draußen",
 "title": "Dienste draußen",
 "text": "Dienste draußen sind alles, was der Spark über das Netz fragt: Home Assistant, Kalender, Kontakte, Mail, SearXNG, Kiwix, reMarkable und MCP-Dienste. Adressen aus Einstellungen gehen über den Wächter (netguard) mit einer festen Stufe; feste Dienste wie SearXNG, Wetter, Fahrplan und Wikipedia gehen direkt."
@@ -2373,7 +2445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (47, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund, anrufe), ihn neu lesen."
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (48, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, verbund, anrufe), ihn neu lesen."
 },
 {
 "lang": "de",
@@ -2389,7 +2461,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 47 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 48 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2605,7 +2677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (28 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -2629,7 +2701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 28 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 29 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -3470,6 +3542,30 @@
 "head": "Sprach-Chat",
 "title": "Bilder erkennen (V01.0.190, standardmäßig aus)",
 "text": "Dokumente““ ab (siehe Wissen aus Uploads). In einer Antwort mit Bild bekommt das Modell keine Werkzeuge; die Antwort gilt als Text von außen, die nächste Runde ist gesperrt wie nach einer Webseite, und daraus wird nichts gelernt. Unter der Antwort speichert „In Meine Dokumente speichern“ den Antworttext. Schnittstelle: POST /api/chat/image (Bild als Rohdaten) → {\"id\"}, dann POST /api/chat mit \"images\": [id]; GET /api/chat/image sagt, ob der Aufrufer darf."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
+"text": "Bilder malen (V01.0.567, standardmäßig aus, Plan plaene/bildgenerierung.md): Der Spark malt Bilder selbst mit FLUX.2 [klein], ohne Internet. Das Modell kommt nur mit der Installation: sudo ./install.sh --bild 4b-q8 (4B mit Q8, Apache 2.0, empfohlen), 4b-q4 (weniger Speicher), 9b-q8 oder 9b-q4 (FLUX Non-Commercial, nur privat); die erste Installation fragt danach, Standard ist keins. Die Engine ist stable-diffusion.cpp (sd-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, kein Docker), die Modelldateien sind fest mit Revision und SHA-256 (bildmodell.py). Der Dienst speech-spark-bild (bild_server.py, nur 127.0.0.1:31005, API-Schlüssel) lädt die Engine erst beim ersten Bild (127.0.0.1:31015, vorher Prüfung des freien Speichers) und beendet sie nach *Entladen nach Minuten ohne Bild* (Standard 10). Schalter: Admin unter Funktionen → Bilder malen (chat.bilder); freigegeben gilt es für jedes Profil, Gäste nie, nie über MCP. Ein Profil malt unter *Ich → Bilder* (Wunsch, Format Quadrat, Querformat, Hochformat oder Breitbild) oder im Gespräch („Mal mir eine Katze auf einem Skateboard“): die Weiche-Gruppe „bild“ bietet bild_malen, das Modell schreibt dazu einen englischen Prompt, d"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
+"text": "er unter dem Bild steht. Das Werkzeug gilt als Änderung (nach fremdem Text gesperrt, Notaus Stufe 2 hält es an). Der Auftrag läuft im Hintergrund, wartet auf eine Gesprächspause (Vorrang für Sprache), es malt immer nur ein Bild zugleich, höchstens 10 warten, 12 Minuten pro Auftrag. Feste Regeln, nicht abschaltbar: eine Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole), keine Personen, die der Spark kennt (Profilnamen und Kontakte), danach eine Bildprüfung (ViT-Klassifikator, ONNX auf der CPU; über 50 % wird das Bild verworfen, fehlt die Prüfung, wird nichts gezeigt); jedes Bild ist als KI-Bild gekennzeichnet (PNG-Text „KI-erzeugt“, IPTC trainedAlgorithmicMedia) und neu kodiert. Ablage: users/<p>/bilder/ mit index.json, *Bilder pro Profil und Tag* (Standard 30, gleitend 24 Stunden), *Platz pro Profil* (Standard 500 MB), höchstens 300 Bilder; *Längste Seite* 512 bis 1408 Pixel (Standard 1024). Im Chat zeigt eine Karte den Fortschritt, dann das Bild mit Herunterladen und „Alle Bilder“; im Verlauf bleibt „Bild: <Prompt>“. *Ich → Bilder* zeigt die Bilder als Galerie mit Wunsch, Prompt, Zeit, Größe, Dauer, Herunterladen und Löschen, oben „Alle Bilder löschen“. Fertig über die"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
+"text": " iPhone-App oder Telegram: Push „Bild“. „Bild testen“ unter dem Schalter malt ein Testbild und zeigt Ladezeit, Malzeit und Speicher (Stufe 0, Messung). Zustand → Live: Ziel „Bilder malen“ mit Anzahlen (läuft, wartet, heute fertig, fehlgeschlagen, abgelehnt), nie Wünsche oder Prompts; Dienst-Wächter-Teil „Bilder malen“; Logs (Bereich „Bild“): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <grund> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (Profil): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; Admin: GET|POST /api/admin/bild-test. Später (Stufe 2): eigene Bilder ändern, native Apps, Telegram-Foto, Open-WebUI-Schnittstelle."
 },
 {
 "lang": "de",
@@ -4945,6 +5041,22 @@
 },
 {
 "lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Bilder malen (optional)",
+"title": "Bilder malen (optional)",
+"text": "Mit --bild installiert die Installation zusätzlich das Bildmodell FLUX.2 [klein] (nur mit dem Webportal; die erste Installation fragt danach, Standard ist keins, sudo speech-spark models fragt erneut):"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Bilder malen (optional)",
+"title": "Bilder malen (optional)",
+"text": "Sie baut einmal stable-diffusion.cpp (sd-server, fester Commit, CUDA für den GB10, braucht nvcc und cmake) nach /opt/speech-spark/sdcpp, lädt die Modelldateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/bild und richtet den Dienst speech-spark-bild ein (nur 127.0.0.1, Ports image.port 31005 und image.engine_port 31015). Das Modell belegt nur beim Malen Speicher. Danach im Portal Funktionen → Bilder malen einschalten und „Bild testen“ drücken. Einzelheiten: Assistent."
+},
+{
+"lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
 "head": "iPhone-App „Spark“",
@@ -5749,7 +5861,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
-"text": "eug, dessen Dienst als weg gilt (Archiv, Websuche, Home Assistant, Mail, Kalender, Wetter, Bahn, Pakete, Wikipedia, Webseiten), läuft es nicht; das Modell bekommt einen festen Satz („Home Assistant ist gerade nicht erreichbar (seit 05:12).“) und soll nichts raten. Bei Home Assistant, Mail und Kalender zählen nur die eigenen Adressen des Profils. Fehlt die Websuche, antwortet zuerst das eigene Kiwix-Archiv, wenn es an ist. - Wartungspause (chat.wartung, aus; nur Admins; wartung.py, Plan plaene/wartungspause.md): Vor einem Update des Sprachmodells (qwen38), der Spracherkennung oder der Sprachausgabe hält der Admin diese Teile an, unter *Zustand → Wartungspause* (15, 30, 60 oder 120 Minuten) oder auf dem Spark mit sudo speech-spark pause llm 30 (Teile llm, asr, tts, durch Komma getrennt, oder alles; 5 bis 240 Minuten), beendet mit „Weiter“ bzw. sudo speech-spark weiter. Der Befehl läuft als Dienstnutzer des Panels und schreibt nur state/wartung.json (bleibt beim Sichern weg). - In der Pause des Sprachmodells fragt das Panel das Modell nicht: jede Frage bekommt sofort den festen Satz „Ich werde gerade aktualisiert und bin in etwa N Minuten wieder da.“ (auch gesprochen, ohne Fehler und "
+"text": "eug, dessen Dienst als weg gilt (Archiv, Websuche, Home Assistant, Mail, Kalender, Wetter, Bahn, Pakete, Wikipedia, Webseiten), läuft es nicht; das Modell bekommt einen festen Satz („Home Assistant ist gerade nicht erreichbar (seit 05:12).“) und soll nichts raten. Bei Home Assistant, Mail und Kalender zählen nur die eigenen Adressen des Profils. Fehlt die Websuche, antwortet zuerst das eigene Kiwix-Archiv, wenn es an ist. - Wartungspause (chat.wartung, aus; nur Admins; wartung.py, Plan plaene/wartungspause.md): Vor einem Update des Sprachmodells (qwen38), der Spracherkennung oder der Sprachausgabe hält der Admin diese Teile an, unter *Zustand → Wartungspause* (15, 30, 60 oder 120 Minuten) oder auf dem Spark mit sudo speech-spark pause llm 30 (Teile llm, asr, tts, bild (Bilder malen: neue Bilder warten nicht, sondern bekommen „wird gerade gewartet“), durch Komma getrennt, oder alles; 5 bis 240 Minuten), beendet mit „Weiter“ bzw. sudo speech-spark weiter. Der Befehl läuft als Dienstnutzer des Panels und schreibt nur state/wartung.json (bleibt beim Sichern weg). - In der Pause des Sprachmodells fragt das Panel das Modell nicht: jede Frage bekommt sofort den festen Satz „Ich werde gera"
 },
 {
 "lang": "de",
@@ -5757,7 +5869,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
-"text": "ohne Brückensatz); Weiche, System One und Schreibhilfe fragen ebenfalls nicht. Hintergrundarbeit am Modell (vorrang.run/post, quiet/hold mit model=True: Lernen, Aufträge, Mail sortieren, wichtige Mails, Tagesüberblick, reMarkable …) wartet und läuft danach nacheinander; das zählt nicht als Abbruch. Ist nur die Sprachausgabe angehalten, kommen Antworten als Text. - Der Dienst-Wächter meldet für einen angehaltenen Teil keinen Ausfall, der Watchdog startet ihn nicht neu, die Prüfung nach einem Update wartet bis nach der Pause. - Ende von selbst: Ist die Zeit um, prüft das Panel die angehaltenen Teile mit den Proben des Dienst-Wächters; nach 2 guten Prüfungen in Folge (alle 15 Sekunden) endet die Pause. Antwortet ein Teil nicht, bleibt die Pause, die Admin-Profile bekommen einmal eine Mitteilung (Kennung wartung), und der Dienst-Wächter zählt ab dann wieder. Schalter aus beendet eine laufende Pause; eine kaputte Datei gilt als keine Pause. - Anzeige: *Zustand → Wartungspause* (Teile, seit, bis, wer, Zahl der Anfragen mit dem festen Satz und der wartenden Hintergrundarbeit), Live zeigt die Teile blau als „Pause“. Journal: wartung: an|aus|verlaengert|pruefung|zeitlimit … mit Teilen, Minu"
+"text": "de aktualisiert und bin in etwa N Minuten wieder da.“ (auch gesprochen, ohne Fehler und ohne Brückensatz); Weiche, System One und Schreibhilfe fragen ebenfalls nicht. Hintergrundarbeit am Modell (vorrang.run/post, quiet/hold mit model=True: Lernen, Aufträge, Mail sortieren, wichtige Mails, Tagesüberblick, reMarkable …) wartet und läuft danach nacheinander; das zählt nicht als Abbruch. Ist nur die Sprachausgabe angehalten, kommen Antworten als Text. - Der Dienst-Wächter meldet für einen angehaltenen Teil keinen Ausfall, der Watchdog startet ihn nicht neu, die Prüfung nach einem Update wartet bis nach der Pause. - Ende von selbst: Ist die Zeit um, prüft das Panel die angehaltenen Teile mit den Proben des Dienst-Wächters; nach 2 guten Prüfungen in Folge (alle 15 Sekunden) endet die Pause. Antwortet ein Teil nicht, bleibt die Pause, die Admin-Profile bekommen einmal eine Mitteilung (Kennung wartung), und der Dienst-Wächter zählt ab dann wieder. Schalter aus beendet eine laufende Pause; eine kaputte Datei gilt als keine Pause. - Anzeige: *Zustand → Wartungspause* (Teile, seit, bis, wer, Zahl der Anfragen mit dem festen Satz und der wartenden Hintergrundarbeit), Live zeigt die Teile blau"
 },
 {
 "lang": "de",
@@ -7629,7 +7741,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 20 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 21 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -7685,7 +7797,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (132) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (138) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -7693,7 +7805,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (79 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (80 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -7701,7 +7813,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 132 built-in test sentences (step 4, step 5) - 183 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 21 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 138 built-in test sentences (step 4, step 5) - 183 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -7877,7 +7989,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 79 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 80 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -8125,7 +8237,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (28 areas), profiles only through profiles.log_name. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace request"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (29 areas), profiles only through profiles.log_name. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace request"
 },
 {
 "lang": "en",
@@ -8475,6 +8587,78 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Painting pictures",
+"title": "Painting pictures",
+"text": "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 klein only at the first picture, checks the finished picture and frees the memory after a quiet time."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Painting pictures",
+"title": "Why",
+"text": "Why: A picture model can paint anything, also nudity, violence or real people. The language model never decides that; fixed rules before and after painting do. And the model needs a lot of shared memory: it must never push out the language model or the voice."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Both end in bilder.start. 2. Feature released?: bilder.on asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. 5. Wait for a pause: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. 6. Model loaded?: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. 7. Paint: The engine paints the picture in 4 steps at the chos"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "en size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder (bilder.keep), the card in the chat shows it, a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Examples",
+"text": "Examples: Cat on a skateboard: Painted, marked, in the gallery. · Picture of the own profile name: Fixed refusal, the model is not asked. · Too little memory free: Nothing loaded, speech keeps running."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Numbers (from the code)",
+"title": "Numbers (from the code)",
+"text": "- 300 pictures per profile at most (step 4) - 10 jobs wait at most (step 4) - 0.5 image check share above which it is discarded (step 8) - 4 steps per picture (step 7) - 720 seconds per job at most (step 5)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Settings",
+"title": "Settings",
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\"."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "What you see",
+"title": "What you see",
+"text": "- State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\"."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "- app/panel/bilder.py start: accept a wish (step 1) - app/panel/bilder.py on: release for the profile (step 2) - app/panel/bilder.py refuse_text: word list and people (step 3) - app/panel/bilder.py _work: job in the background (step 5) - app/panel/bilder.py keep: store the picture (step 10) - app/bild_server.py Engine.start: load the engine (step 6) - app/bild_server.py Engine.paint: paint (step 7) - app/bild_server.py nsfw_share: image check (step 8) - app/bild_server.py finish: mark and re-encode (step 9)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Outside services",
 "title": "Outside services",
 "text": "Outside services are everything the Spark asks over the network: Home Assistant, calendars, contacts, mail, SearXNG, Kiwix, reMarkable and MCP services. Addresses from settings go through the guard (netguard) with a fixed level; fixed services like SearXNG, weather, transit and Wikipedia go directly."
@@ -8589,7 +8773,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " go into every backup) or backup.STATE_LOCAL (47, with their reason). test_technik finds every name the code writes there and wants it in one of the lists. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": " go into every backup) or backup.STATE_LOCAL (48, with their reason). test_technik finds every name the code writes there and wants it in one of the lists. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -8605,7 +8789,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 29 files in every backup (step 7) - 47 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 29 files in every backup (step 7) - 48 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -8813,7 +8997,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (28 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (29 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -8837,7 +9021,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 28 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 29 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -9638,6 +9822,30 @@
 "head": "Voice chat",
 "title": "Picture recognition (V01.0.190, off by default)",
 "text": "ledge from uploads). In an answer with a picture the model gets no tools; the answer counts as outside text, the next turn is locked like after a web page, and nothing is learned from it. Below the answer, \"Store under My documents\" keeps the answer text. API: POST /api/chat/image (raw picture) → {\"id\"}, then POST /api/chat with \"images\": [id]; GET /api/chat/image says whether the caller may."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
+"text": "Painting pictures (V01.0.567, off by default, plan plaene/bildgenerierung.md): The Spark paints pictures itself with FLUX.2 [klein], without the internet. The model only comes with the installation: sudo ./install.sh --bild 4b-q8 (4B with Q8, Apache 2.0, recommended), 4b-q4 (less memory), 9b-q8 or 9b-q4 (FLUX Non-Commercial, private use only); the first install asks, the default is none. The engine is stable-diffusion.cpp (sd-server, pinned to one commit, built for the GB10 with CUDA, no Docker); the model files are pinned by revision and SHA-256 (bildmodell.py). The service speech-spark-bild (bild_server.py, only 127.0.0.1:31005, API key) loads the engine at the first picture (127.0.0.1:31015, after checking the free memory) and stops it after *Unload after minutes without a picture* (default 10). Switch: admin under Features → Painting pictures (chat.bilder); once released it applies to every profile, never to guests, never over MCP. A profile paints under *Me → Pictures* (wish, format square, landscape, portrait or wide) or in the conversation (\"Paint me a cat on a skateboard\"): the router group \"bild\" offers bild_malen, the model writes an English prompt that is shown under the"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
+"text": " picture. The tool counts as a change (locked after outside text, emergency stop stage 2 holds it). The job runs in the background and waits for a pause in the conversation (speech goes first); one picture at a time, at most 10 waiting, 12 minutes per job. Fixed rules that cannot be switched off: a word list (nothing sexual, no violence, no hate symbols), no people the Spark knows (profile names and contacts), then an image check (ViT classifier, ONNX on the CPU; above 50 % the picture is discarded, without the check nothing is shown); every picture is marked as AI-made (PNG text \"KI-erzeugt\", IPTC trainedAlgorithmicMedia) and re-encoded. Storage: users/<p>/bilder/ with index.json, *Pictures per profile and day* (default 30, rolling 24 hours), *Space per profile* (default 500 MB), at most 300 pictures; *Longest side* 512 to 1408 pixels (default 1024). In the chat a card shows the progress, then the picture with Download and \"All pictures\"; the history keeps \"Picture: <prompt>\". *Me → Pictures* shows them as a gallery with wish, prompt, time, size, duration, download and delete, \"Delete all pictures\" on top. Finished through the iPhone app or Telegram: push \"Bild\". \"Bild testen\" bel"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
+"text": "ow the switch paints a test picture and shows load time, paint time and memory (stage 0, measuring). State → Live: target \"Painting pictures\" with counts (running, waiting, done, failed and refused today), never wishes or prompts; service guard part \"Painting pictures\"; logs (area \"Bild\"): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <reason> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (profile): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; admin: GET|POST /api/admin/bild-test. Later (stage 2): editing own pictures, native apps, Telegram photo, Open WebUI interface."
 },
 {
 "lang": "en",
@@ -11009,6 +11217,22 @@
 },
 {
 "lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Painting pictures (optional)",
+"title": "Painting pictures (optional)",
+"text": "With --bild the installation also installs the picture model FLUX.2 [klein] (only with the web panel; the first install asks, the default is none, sudo speech-spark models asks again):"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Painting pictures (optional)",
+"title": "Painting pictures (optional)",
+"text": "It builds stable-diffusion.cpp once (sd-server, pinned commit, CUDA for the GB10, needs nvcc and cmake) into /opt/speech-spark/sdcpp, downloads the model files with a SHA-256 check into /var/lib/speech-spark/models/bild and sets up the service speech-spark-bild (only 127.0.0.1, ports image.port 31005 and image.engine_port 31015). The model takes memory only while painting. Then switch on Features → Painting pictures in the panel and press \"Bild testen\". Details: Assistant."
+},
+{
+"lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
 "head": "iPhone app \"Spark\"",
@@ -11741,7 +11965,7 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
-"text": "fixed sentence (\"Home Assistant is not reachable right now (since 05:12).\") and must not guess. For Home Assistant, mail and calendar only the profile's own addresses count. When the web search is missing, the own Kiwix archive answers first when it is on. - Maintenance pause (chat.wartung, off; admins only; wartung.py, plan plaene/wartungspause.md): before an update of the language model (qwen38), the speech recognition or the speech output the admin pauses these parts, under *Status → Maintenance pause* (15, 30, 60 or 120 minutes) or on the Spark with sudo speech-spark pause llm 30 (parts llm, asr, tts, comma separated, or alles; 5 to 240 minutes), ended with \"Weiter\" or sudo speech-spark weiter. The command runs as the panel's service user and only writes state/wartung.json (left out of backups). - During a pause of the language model the panel does not ask the model: every question gets the fixed sentence \"I am being updated right now and will be back in about N minutes.\" at once (also spoken, without an error and without a bridge sentence); the Weiche, System One and the writing help do not ask either. Background work on the model (vorrang.run/post, quiet/hold with model=True:"
+"text": "fixed sentence (\"Home Assistant is not reachable right now (since 05:12).\") and must not guess. For Home Assistant, mail and calendar only the profile's own addresses count. When the web search is missing, the own Kiwix archive answers first when it is on. - Maintenance pause (chat.wartung, off; admins only; wartung.py, plan plaene/wartungspause.md): before an update of the language model (qwen38), the speech recognition or the speech output the admin pauses these parts, under *Status → Maintenance pause* (15, 30, 60 or 120 minutes) or on the Spark with sudo speech-spark pause llm 30 (parts llm, asr, tts, bild (painting pictures: new pictures do not wait but get \"being maintained\"), comma separated, or alles; 5 to 240 minutes), ended with \"Weiter\" or sudo speech-spark weiter. The command runs as the panel's service user and only writes state/wartung.json (left out of backups). - During a pause of the language model the panel does not ask the model: every question gets the fixed sentence \"I am being updated right now and will be back in about N minutes.\" at once (also spoken, without an error and without a bridge sentence); the Weiche, System One and the writing help do not ask eith"
 },
 {
 "lang": "en",
@@ -11749,7 +11973,7 @@
 "file": "Security and operation",
 "head": "Stability",
 "title": "Stability",
-"text": " learning, jobs, mail sorting, important mail, daily briefing, reMarkable …) waits and runs afterwards, one after the other; that does not count as a cancel. With only the speech output paused, answers come as text. - The service watch reports no outage for a paused part, the watchdog does not restart it, the check after an update waits until after the pause. - Ending by itself: when the time is up the panel checks the paused parts with the service watch's probes; after 2 good checks in a row (every 15 seconds) the pause ends. When a part does not answer, the pause stays, the admin profiles get one notification (tag wartung) and from then on the service watch counts again. Switching it off ends a running pause; a damaged file counts as no pause. - Shown: *Status → Maintenance pause* (parts, since, until, who, number of requests answered with the fixed sentence and of waiting background work), Live shows the parts in blue as \"Pause\". Journal: wartung: an|aus|verlaengert|pruefung|zeitlimit … with parts, minutes and numbers. The kill switch always comes first, the pause never lifts it. - Automatic (chat.wartung_auto, below it, off; *Features → Maintenance pause → Automatically on rest"
+"text": "er. Background work on the model (vorrang.run/post, quiet/hold with model=True: learning, jobs, mail sorting, important mail, daily briefing, reMarkable …) waits and runs afterwards, one after the other; that does not count as a cancel. With only the speech output paused, answers come as text. - The service watch reports no outage for a paused part, the watchdog does not restart it, the check after an update waits until after the pause. - Ending by itself: when the time is up the panel checks the paused parts with the service watch's probes; after 2 good checks in a row (every 15 seconds) the pause ends. When a part does not answer, the pause stays, the admin profiles get one notification (tag wartung) and from then on the service watch counts again. Switching it off ends a running pause; a damaged file counts as no pause. - Shown: *Status → Maintenance pause* (parts, since, until, who, number of requests answered with the fixed sentence and of waiting background work), Live shows the parts in blue as \"Pause\". Journal: wartung: an|aus|verlaengert|pruefung|zeitlimit … with parts, minutes and numbers. The kill switch always comes first, the pause never lifts it. - Automatic (chat.war"
 },
 {
 "lang": "en",

@@ -25,7 +25,7 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark key new` | neuer API-Schlüssel (der alte gilt sofort nicht mehr) |
 | `sudo speech-spark models` | Modelle neu wählen, gleiche Fragen wie bei der Installation |
 | `sudo speech-spark update` | Update wie der Knopf im Portal (`--check` zeigt nur, was neu ist) |
-| `sudo speech-spark logs tts -n 100` | letzte Log-Zeilen (asr, tts, asr-engine, tts-engine, tts-design, watch, update, all) |
+| `sudo speech-spark logs tts -n 100` | letzte Log-Zeilen (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, all) |
 | `sudo speech-spark panel enable` | Webportal nachrüsten; Modelle und API-Schlüssel bleiben |
 | `sudo speech-spark panel disable` | Webportal entfernen; Profile und Daten bleiben auf der Platte |
 | `sudo speech-spark notzugang` | ausgesperrt: neues Panel-Passwort (einmal angezeigt), zweiter Schritt des Notzugangs aus (alte Datei als `.bak`), Haupt-Admin gelöst (Rollen bleiben); fragt vorher, steht im Änderungsprotokoll, Push an die Admins. Danach `https://…/#admin` ohne Code, zweiten Schritt neu einrichten, Haupt-Admin wieder wählen |
@@ -65,6 +65,19 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 | `--uninstall` | wie `./uninstall.sh` (siehe unten) |
 
 Ein erneuter Aufruf aktualisiert den Code und ergänzt in den Python-Umgebungen, was fehlt; schon installierte Pakete bleiben, wie sie sind. Die bestehende Konfiguration bleibt erhalten, neue Einstellungen werden ergänzt.
+
+## Bilder malen (optional)
+
+Mit `--bild` installiert die Installation zusätzlich das Bildmodell FLUX.2 [klein] (nur mit dem Webportal; die erste Installation fragt danach, Standard ist keins, `sudo speech-spark models` fragt erneut):
+
+```bash
+sudo ./install.sh --bild 4b-q8   # 4B, Q8: ~9 GB Platte, ~11 GiB beim Malen, Apache 2.0 (empfohlen)
+sudo ./install.sh --bild 4b-q4   # 4B, Q4: weniger Speicher
+sudo ./install.sh --bild 9b-q8   # 9B (auch 9b-q4): FLUX Non-Commercial, nur privat
+sudo ./install.sh --bild none    # wieder aus (die Dateien bleiben in /var/lib/speech-spark/models/bild)
+```
+
+Sie baut einmal stable-diffusion.cpp (`sd-server`, fester Commit, CUDA für den GB10, braucht `nvcc` und `cmake`) nach `/opt/speech-spark/sdcpp`, lädt die Modelldateien mit SHA-256-Prüfung nach `/var/lib/speech-spark/models/bild` und richtet den Dienst `speech-spark-bild` ein (nur `127.0.0.1`, Ports `image.port` 31005 und `image.engine_port` 31015). Das Modell belegt nur beim Malen Speicher. Danach im Portal Funktionen → Bilder malen einschalten und „Bild testen“ drücken. Einzelheiten: [Assistent](assistent.md).
 
 ## Deinstallieren
 

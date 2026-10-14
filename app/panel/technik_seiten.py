@@ -400,7 +400,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "99152ae74a",
+        "stand": "4013f1bea5",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -807,7 +807,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "709f647740",
+        "stand": "540739c5fd",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -1864,7 +1864,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "b844c7b855",
+        "stand": "820bea825e",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -2070,7 +2070,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
-        "stand": "44257a9cc2",
+        "stand": "135bdb737d",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -2245,7 +2245,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "13fe01d417",
+        "stand": "18d5935aeb",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2979,7 +2979,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "116f5a29c3",
+        "stand": "81e94728c1",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3167,7 +3167,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "555b70cc9d",
+        "stand": "4cf64be6c3",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3497,9 +3497,142 @@ SEITEN_DATEN = {
         "heute": [("vb_tts_calls", ("Ausgaben", "outputs")), ("vb_tts_amount", ("Sekunden gesprochen", "seconds spoken"))],
     },
 
+    # ------------------------------------------------------------------ Bilder malen
+    "bild": {
+        "stand": "b25681ed53",
+        "bezug": {
+            "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
+            "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
+        },
+        "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
+                 "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
+                 "klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.",
+                 "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with "
+                 "fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 "
+                 "klein only at the first picture, checks the finished picture and frees the memory after a quiet time."),
+        "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
+                  "Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen "
+                  "Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.",
+                  "A picture model can paint anything, also nudity, violence or real people. The language model never "
+                  "decides that; fixed rules before and after painting do. And the model needs a lot of shared "
+                  "memory: it must never push out the language model or the voice."),
+        "ablauf": [
+            S("s1", "start", ("Ein Bildwunsch", "A picture wish"),
+              ("Ich → Bilder oder bild_malen im Gespräch", "Me → Pictures or bild_malen in the conversation"),
+              ("Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch "
+               "das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in "
+               "bilder.start.",
+               "A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in "
+               "the conversation; the model writes an English prompt for it. Both end in bilder.start.")),
+            S("s2", "frage", ("Funktion frei?", "Feature released?"),
+              ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
+              ("bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
+               "gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.",
+               "bilder.on asks the release: the admin switched painting pictures on and did not block this profile. "
+               "Guests never get the tool; after outside text and at kill switch stage 2 it is locked."),
+              ("stop", "nein", ("Hinweis mit Weg zum Schalter", "Hint with the way to the switch"))),
+            S("s3", "frage", ("Wunsch erlaubt?", "Wish allowed?"),
+              ("Wortliste und bekannte Personen", "word list and known people"),
+              ("bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, "
+               "keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen.",
+               "bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no "
+               "hate symbols) and against the names of profiles and contacts. The model cannot get around it."),
+              ("stop", "nein", ("Feste Absage, nichts gemalt", "Fixed refusal, nothing painted"))),
+            S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
+              ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
+              ("Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens {bilder.MAX_PICS} Bilder; "
+               "auf dem ganzen Spark warten höchstens {bilder.WAITING} Aufträge.",
+               "Per profile there are pictures per day (rolling 24 hours), space and at most {bilder.MAX_PICS} "
+               "pictures; on the whole Spark at most {bilder.WAITING} jobs wait."),
+              ("stop", "nein", ("Abgelehnt mit Grund", "Refused with the reason"))),
+            S("s5", "schritt", ("Warten auf eine Pause", "Wait for a pause"),
+              ("Sprache zuerst, ein Bild zugleich", "speech first, one picture at a time"),
+              ("Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt "
+               "immer nur ein Bild zugleich, höchstens {bilder.JOB_SECONDS} Sekunden lang.",
+               "The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only "
+               "one picture at a time, for at most {bilder.JOB_SECONDS} seconds.")),
+            S("s6", "frage", ("Modell geladen?", "Model loaded?"),
+              ("sonst laden, wenn genug Speicher frei ist", "else load, when enough memory is free"),
+              ("bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug "
+               "gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört.",
+               "bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared "
+               "memory is free; otherwise everything else stays undisturbed."),
+              ("stop", "nein", ("Zu wenig Speicher, später nochmal", "Too little memory, try later"))),
+            S("s7", "schritt", ("Malen", "Paint"),
+              ("FLUX.2 klein, {bildmodell.STEPS} Schritte", "FLUX.2 klein, {bildmodell.STEPS} steps"),
+              ("Die Engine malt das Bild in {bildmodell.STEPS} Schritten in der gewählten Größe; ihre eigene Ausgabe "
+               "kommt nie ins Journal, weil sie den Prompt nennen würde.",
+               "The engine paints the picture in {bildmodell.STEPS} steps at the chosen size; its own output never "
+               "reaches the journal, because it would name the prompt.")),
+            S("s8", "frage", ("Bild unbedenklich?", "Picture harmless?"),
+              ("Bildprüfung nach dem Malen", "image check after painting"),
+              ("bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über "
+               "{bilder.NSFW_MAX} wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.",
+               "bild_server.nsfw_share lets a classifier on the CPU check the picture. Above {bilder.NSFW_MAX} it is "
+               "discarded; without the check the panel shows nothing."),
+              ("stop", "nein", ("Verworfen, nichts gespeichert", "Discarded, nothing stored"))),
+            S("s9", "schritt", ("Als KI-Bild kennzeichnen", "Mark as AI picture"),
+              ("neu kodiert, mit Kennzeichen", "re-encoded, with marking"),
+              ("bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als "
+               "IPTC-Angabe).",
+               "bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an "
+               "IPTC entry).")),
+            S("s10", "ende", ("Bild abgelegt", "Picture stored"),
+              ("users/ID/bilder/, Karte, Push", "users/ID/bilder/, card, push"),
+              ("Das Bild kommt in den Ordner des Profils (bilder.keep), die Karte im Chat zeigt es, über App oder "
+               "Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher "
+               "frei.",
+               "The picture goes into the profile's folder (bilder.keep), the card in the chat shows it, a push goes "
+               "out through the app or Telegram. After a quiet time the picture service stops the engine and frees the "
+               "memory.")),
+        ],
+        "beispiele": [
+            (("Katze auf einem Skateboard", "Cat on a skateboard"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"],
+             ("Gemalt, gekennzeichnet, in der Galerie.", "Painted, marked, in the gallery.")),
+            (("Bild vom eigenen Profilnamen", "Picture of the own profile name"), ["s1", "s2", "s3", "s3!"],
+             ("Feste Absage, das Modell wird nicht gefragt.", "Fixed refusal, the model is not asked.")),
+            (("Zu wenig Speicher frei", "Too little memory free"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!"],
+             ("Nichts geladen, Sprache läuft weiter.", "Nothing loaded, speech keeps running.")),
+        ],
+        "zahlen": [
+            ("{bilder.MAX_PICS}", ("Bilder pro Profil höchstens", "pictures per profile at most"), "bilder.MAX_PICS"),
+            ("{bilder.WAITING}", ("Aufträge warten höchstens", "jobs wait at most"), "bilder.WAITING"),
+            ("{bilder.NSFW_MAX}", ("Anteil der Bildprüfung, ab dem verworfen wird", "image check share above which it is discarded"),
+             "bilder.NSFW_MAX"),
+            ("{bildmodell.STEPS}", ("Schritte pro Bild", "steps per picture"), "bildmodell.STEPS"),
+            ("{bilder.JOB_SECONDS}", ("Sekunden pro Auftrag höchstens", "seconds per job at most"), "bilder.JOB_SECONDS"),
+        ],
+        "einstellen": [
+            ("Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none).",
+             "Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none)."),
+            ("Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, "
+             "„Bild testen“.",
+             "Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "
+             "\"Bild testen\"."),
+        ],
+        "sehen": [
+            ("Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.",
+             "State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\"."),
+        ],
+        "code": [
+            ("bilder.start", ("Wunsch annehmen", "accept a wish")),
+            ("bilder.on", ("Freigabe für das Profil", "release for the profile")),
+            ("bilder.refuse_text", ("Wortliste und Personen", "word list and people")),
+            ("bilder._work", ("Auftrag im Hintergrund", "job in the background")),
+            ("bilder.keep", ("Bild ablegen", "store the picture")),
+            ("bild_server.Engine.start", ("Engine laden", "load the engine")),
+            ("bild_server.Engine.paint", ("Malen", "paint")),
+            ("bild_server.nsfw_share", ("Bildprüfung", "image check")),
+            ("bild_server.finish", ("Kennzeichnen und neu kodieren", "mark and re-encode")),
+        ],
+        "tests": ["test_bilder"],
+        "heute": [],
+    },
+
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "e4eb073707",
+        "stand": "70ff0437bf",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -3646,7 +3779,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "798fffaaf3",
+        "stand": "532e6595f8",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
             "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],

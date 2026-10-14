@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.567** Bilder malen mit FLUX.2 klein auf dem Spark: wahlweise bei der Installation (--bild), Ich → Bilder und im Gespräch, feste Regeln, Bildprüfung, jedes Bild als KI-Bild gekennzeichnet
 - **V01.0.566** GitHub-Token-Zeile klappt zu, wenn der Token funktioniert
 - **V01.0.565** ROT-FIX Mailstil 2: Browser-Test wartet auf den Start der Seite
 - **V01.0.564** ROT-FIX Mailstil: Browser-Test schaltet die Funktion wirklich ein
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.560** Wartungspause von selbst, wenn ein Modell neu startet; Lautsprecher spielen den Wartungssatz; Seite in der iPhone-App
 - **V01.0.559** Sicherheits-Fix Anrufe: der coturn-Dienst des Systems wird bei jedem Update gesperrt und angehalten, coturn kommt zuverlässig mit, der Vermittler startet wieder (AF_NETLINK), fehlt coturn, sagt das Panel es
 - **V01.0.558** Ruhigere Seiten: Speichern lädt nicht mehr neu und springt nicht nach oben, das Update zeigt nur noch ein ruhiges Fenster
-- **V01.0.556** Anrufe mit Sprache und Video in Chats zu zweit, direkt von Gerät zu Gerät verschlüsselt; eigener Vermittler auf tars für unterwegs (Router: UDP 3478 und 49160–49200); Android-App 1.3.1 mit Kamera
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

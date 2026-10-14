@@ -244,7 +244,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[];let rateId='';
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[];let rateId='';
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
@@ -274,6 +274,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='why'){why=ev}
         else if(ev.type==='hilfe'){hcards.push(ev.card)}
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
+        else if(ev.type==='bild'){blcards.push(ev)}   // a picture painted for this answer (bilder.js)
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
         else if(ev.type==='rate'){rateId=ev.id}   // 👍/👎 for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
@@ -283,7 +284,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
   catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
-  const att=attOf(searches,sources,docs,drefs,mkcards);   // what stands under the answer, kept with it
+  const att=attOf(searches,sources,docs,drefs,mkcards,blcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
   else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(att.length?{att}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
@@ -293,6 +294,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(why)el.appendChild(whyNote(why));
   if(typeof hilfeCard==='function')for(const c of hcards)el.appendChild(hilfeCard(c));
   if(typeof mkCard==='function')for(const c of mkcards)el.appendChild(mkCard(c));
+  if(typeof bildCard==='function')for(const c of blcards)el.appendChild(bildCard(c));
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
@@ -504,10 +506,11 @@ function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via)});fillConvos()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a
 // reload show it again (profiles._att checks it on the Spark). live: right after the answer, where the card itself shows.
-function attOf(searches,sources,docs,drefs,mkcards){const a=[];
+function attOf(searches,sources,docs,drefs,mkcards,blcards){const a=[];
   if(sources.length)a.push({k:'src',q:searches.join(' · ').slice(0,200),l:sources.slice(0,5).map(x=>({t:String(x.title||'').slice(0,100),u:String(x.url||'').slice(0,500)}))});
   if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0}))});
   for(const c of mkcards.slice(0,3))a.push({k:'mk',t:String(c.title||'').slice(0,120),n:String(c.kind_name||'').slice(0,40)});
+  for(const c of (blcards||[]).slice(0,3))a.push({k:'bild',p:String(c.prompt||'').slice(0,300)});
   return a}
 const VIA={telegram:'Telegram',siri:'Siri',desk:t('Begleiter','Companion'),watch:t('Uhr','Watch'),speaker:t('Lautsprecher','Speaker')};
 function attRender(el,att,live,via){
@@ -525,7 +528,8 @@ function attRender(el,att,live,via){
       d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
     else if(a.k==='mk'&&!live){const d=document.createElement('div');d.className='mem';
       d.innerHTML=`📄 ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;
-      d.querySelector('button').onclick=()=>openMe('docbox');el.appendChild(d)}}}
+      d.querySelector('button').onclick=()=>openMe('docbox');el.appendChild(d)}
+    else if(a.k==='bild'&&!live&&typeof bildAtt==='function')el.appendChild(bildAtt(a))}}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
 async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
   try{const r=await api('/api/assistant/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:ctrl.signal});

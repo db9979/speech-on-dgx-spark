@@ -37,6 +37,7 @@ TOOLS = {
     "erstellen": ("document_plan", "document_change", "document_status", "document_send"),
     "erstellenvorlagen": ("document_plan",),
     "erstellenbilder": ("document_plan",),
+    "bilder": ("bild_malen",),
     "tagebuch": ("spark_tagebuch",),
     "sparkzustand": ("spark_zustand",),
     # everyday
@@ -219,6 +220,7 @@ SENTENCES = {
     "document_search": "Wann läuft meine Versicherung ab?",
     "document_list": "Welche Dokumente habe ich?",
     "document_plan": "Mach eine Präsentation über den Mauerfall",
+    "bild_malen": "Mal mir eine Katze auf einem Skateboard",
     "spark_tagebuch": "Was hast du heute für mich gemacht?",
     "reminder_set": "Erinnere mich in zehn Minuten an den Tee",
     "reminder_list": "Welche Erinnerungen habe ich?",

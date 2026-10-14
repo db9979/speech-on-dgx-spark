@@ -100,6 +100,7 @@ STATE_LOCAL = {
     "live-monitors.json": "Wandmonitore dieses Geräts",
     "dienste-zustand.json": "Zustand der Hintergrund-Dienste",
     "weiche-stats.json": "Statistik",
+    "bild-test.json": "Messwert dieses Geräts (Bild testen)",
     "weiche-history.json": "Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)",
     "bewertungen.json": "Zähler pro Tag",
     "quality.json": "letztes Ergebnis",

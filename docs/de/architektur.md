@@ -30,6 +30,7 @@ flowchart LR
   llm["Sprachmodell<br/>:30001 qwen38"]
   asr["Spracherkennung<br/>:31001 → :31011"]
   tts["Sprachausgabe<br/>:31002 → :31012"]
+  bild["Bilder malen<br/>:31005 → :31015"]
   aussen["Dienste draußen<br/>HA, Mail, Suche …"]
   state[("state/<br/>global")]
   users[("users/ID/<br/>pro Profil")]
@@ -51,6 +52,7 @@ flowchart LR
   waechter --> aussen
   werkzeuge --> wissen
   antwort --> tts
+  werkzeuge --> bild
   antwort --> geraet
   antwort --> betrieb
   betrieb --> state
@@ -173,6 +175,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/bilder.py` | Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte |
 | `app/panel/docembed.py` | Bedeutungsvektoren für die Dokumentsuche |
 | `app/panel/doclingdienst.py` | Docling-Server im Heimnetz: Dokumente und Scans besser lesen |
 | `app/panel/docmake.py` | Dokumente erstellen: Aufträge, Vorlagen, Ablage |
@@ -308,6 +311,8 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/asr_proxy.py` | Spracherkennung: nimmt an und reicht an die Engine durch |
 | `app/asr_server.py` | Spracherkennung als eigener kleiner Dienst |
 | `app/bench.py` | Leistung messen |
+| `app/bild_server.py` | Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild |
+| `app/bildmodell.py` | Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation |
 | `app/common.py` | Gemeinsame Helfer für die Dienste: Einstellungen, Zustand |
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |
@@ -364,6 +369,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |
+| `users/ID/bilder/` | Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe) |  | – | ja | Gemalte Bilder |
 | `users/ID/settings.json` | Einstellungen | Einstellungen | – | ja | – |
 | `users/ID/setup.json` | Einrichtung | Einstellungen | – | ja | – |
 | `users/ID/speicher.json` | Ziele des eigenen Speichers | Einstellungen | Schlüssel versiegelt | ja | – |
@@ -430,6 +436,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/bench-latest.json` | Letzte Messung | – | nein |
 | `state/berater.json` | Vorschläge des Assistenten | – | ja |
 | `state/bewertungen.json` | Bewertungen pro Tag | – | nein |
+| `state/bild-test.json` | Letztes Probebild (Bild testen) | – | nein |
 | `state/config-undo.json` | Rückgängig (ohne Geheimnisse) | ohne Geheimnisse | nein |
 | `state/dienste-zustand.json` | Hintergrund-Dienste | – | nein |
 | `state/dienstwacht.json` | Dienst-Wächter | – | ja |
@@ -1404,7 +1411,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 20 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 21 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -1481,21 +1488,21 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (132) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (138) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (79 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (80 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **20** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **21** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **132** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **138** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **183** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -1706,7 +1713,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **79** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **80** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2018,7 +2025,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (28 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -2399,6 +2406,91 @@ flowchart TD
 
 Selbsttests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
 
+### Bilder malen
+
+Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.
+
+**Warum:** Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Ein Bildwunsch"])
+  s2{{"2. Funktion frei?"}}
+  s3{{"3. Wunsch erlaubt?"}}
+  s4{{"4. Innerhalb der Grenzen?"}}
+  s5["5. Warten auf eine Pause"]
+  s6{{"6. Modell geladen?"}}
+  s7["7. Malen"]
+  s8{{"8. Bild unbedenklich?"}}
+  s9["9. Als KI-Bild kennzeichnen"]
+  s10(["10. Bild abgelegt"])
+  s1 --> s2
+  s2 -->|ja| s3
+  s3 -->|ja| s4
+  s4 -->|ja| s5
+  s5 --> s6
+  s6 -->|ja| s7
+  s7 --> s8
+  s8 -->|ja| s9
+  s9 --> s10
+  s2x(["Hinweis mit Weg zum Schalter"])
+  s2 -->|nein| s2x
+  s3x(["Feste Absage, nichts gemalt"])
+  s3 -->|nein| s3x
+  s4x(["Abgelehnt mit Grund"])
+  s4 -->|nein| s4x
+  s6x(["Zu wenig Speicher, später nochmal"])
+  s6 -->|nein| s6x
+  s8x(["Verworfen, nichts gespeichert"])
+  s8 -->|nein| s8x
+```
+
+1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in bilder.start.
+2. <a id="kn-bild-s2"></a>**Funktion frei?**: bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
+3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen.
+4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge.
+5. <a id="kn-bild-s5"></a>**Warten auf eine Pause**: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang.
+6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört.
+7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
+8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
+9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als IPTC-Angabe).
+10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt in den Ordner des Profils (bilder.keep), die Karte im Chat zeigt es, über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei.
+
+**Beispiele:** Katze auf einem Skateboard: Gemalt, gekennzeichnet, in der Galerie. · Bild vom eigenen Profilnamen: Feste Absage, das Modell wird nicht gefragt. · Zu wenig Speicher frei: Nichts geladen, Sprache läuft weiter.
+
+#### Zahlen (aus dem Code)
+
+- **300** Bilder pro Profil höchstens ([Schritt 4](#kn-bild-s4))
+- **10** Aufträge warten höchstens ([Schritt 4](#kn-bild-s4))
+- **0.5** Anteil der Bildprüfung, ab dem verworfen wird ([Schritt 8](#kn-bild-s8))
+- **4** Schritte pro Bild ([Schritt 7](#kn-bild-s7))
+- **720** Sekunden pro Auftrag höchstens ([Schritt 5](#kn-bild-s5))
+
+#### Einstellen
+
+- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none).
+- Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“.
+
+#### Was du siehst
+
+- Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.
+
+#### Im Code
+
+- `app/panel/bilder.py` `start`: Wunsch annehmen ([Schritt 1](#kn-bild-s1))
+- `app/panel/bilder.py` `on`: Freigabe für das Profil ([Schritt 2](#kn-bild-s2))
+- `app/panel/bilder.py` `refuse_text`: Wortliste und Personen ([Schritt 3](#kn-bild-s3))
+- `app/panel/bilder.py` `_work`: Auftrag im Hintergrund ([Schritt 5](#kn-bild-s5))
+- `app/panel/bilder.py` `keep`: Bild ablegen ([Schritt 10](#kn-bild-s10))
+- `app/bild_server.py` `Engine.start`: Engine laden ([Schritt 6](#kn-bild-s6))
+- `app/bild_server.py` `Engine.paint`: Malen ([Schritt 7](#kn-bild-s7))
+- `app/bild_server.py` `nsfw_share`: Bildprüfung ([Schritt 8](#kn-bild-s8))
+- `app/bild_server.py` `finish`: Kennzeichnen und neu kodieren ([Schritt 9](#kn-bild-s9))
+
+Selbsttests: `test_bilder`
+
 ### Dienste draußen
 
 Dienste draußen sind alles, was der Spark über das Netz fragt: Home Assistant, Kalender, Kontakte, Mail, SearXNG, Kiwix, reMarkable und MCP-Dienste. Adressen aus Einstellungen gehen über den Wächter (netguard) mit einer festen Stufe; feste Dienste wie SearXNG, Wetter, Fahrplan und Wikipedia gehen direkt.
@@ -2558,7 +2650,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (47, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (48, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2569,7 +2661,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **29** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **47** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **48** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -2843,7 +2935,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (28 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -2859,7 +2951,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **28** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **29** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

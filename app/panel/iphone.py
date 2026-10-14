@@ -71,10 +71,13 @@ _DOC = r"[0-9a-f]{12}"
 _DEV = r"d_[0-9a-f]{12}"
 _ACC = r"[mck][0-9a-f]{8}"
 AREAS = {
-    # Mein Alltag: memory, the next appointments, the Spark's own reminders
+    # Mein Alltag: memory, the next appointments, the Spark's own reminders, the painted pictures
     "app_mine": ((("GET",), r"/api/profile/memory"), (("DELETE",), rf"/api/profile/memory/{_ID}"),
                  (("POST",), r"/api/profile/memory/tidy"), (("POST",), r"/api/profile/calendar/test"),
-                 (("DELETE",), rf"/api/profile/reminders/{_ID}")),
+                 (("DELETE",), rf"/api/profile/reminders/{_ID}"),
+                 # Ich → Bilder (bilder.py): look, paint from a wish, delete one or all
+                 (("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
+                 (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}")),
     # Dokumente verwalten: switches, "Für alle", tags, read again, deadline reminder, delete (own documents only)
     "app_docs_edit": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
                       (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),

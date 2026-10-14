@@ -25,7 +25,7 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark key new` | new API key (the old one stops working at once) |
 | `sudo speech-spark models` | choose the models again, same questions as the install |
 | `sudo speech-spark update` | update like the panel's button (`--check` only shows what is new) |
-| `sudo speech-spark logs tts -n 100` | last log lines (asr, tts, asr-engine, tts-engine, tts-design, watch, update, all) |
+| `sudo speech-spark logs tts -n 100` | last log lines (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, all) |
 | `sudo speech-spark panel enable` | add the web panel later; models and API key stay |
 | `sudo speech-spark panel disable` | remove the web panel; profiles and data stay on disk |
 | `sudo speech-spark notzugang` | locked out: new panel password (shown once), the emergency access's second step off (old file kept as `.bak`), the main admin profile unlinked (roles stay); asks first, noted in the change log, push to the admins. Then `https://…/#admin` without a code, set the second step up again, choose the main admin again |
@@ -65,6 +65,19 @@ The installer keeps its own git checkout in `/opt/speech-spark/src`, so it no lo
 | `--uninstall` | same as `./uninstall.sh` (see below) |
 
 Running the script again updates the code and adds what is missing to the Python environments; packages already installed stay as they are. The existing configuration is kept and new settings are added.
+
+## Painting pictures (optional)
+
+With `--bild` the installation also installs the picture model FLUX.2 [klein] (only with the web panel; the first install asks, the default is none, `sudo speech-spark models` asks again):
+
+```bash
+sudo ./install.sh --bild 4b-q8   # 4B, Q8: ~9 GB disk, ~11 GiB while painting, Apache 2.0 (recommended)
+sudo ./install.sh --bild 4b-q4   # 4B, Q4: less memory
+sudo ./install.sh --bild 9b-q8   # 9B (also 9b-q4): FLUX Non-Commercial, private use only
+sudo ./install.sh --bild none    # off again (the files stay in /var/lib/speech-spark/models/bild)
+```
+
+It builds stable-diffusion.cpp once (`sd-server`, pinned commit, CUDA for the GB10, needs `nvcc` and `cmake`) into `/opt/speech-spark/sdcpp`, downloads the model files with a SHA-256 check into `/var/lib/speech-spark/models/bild` and sets up the service `speech-spark-bild` (only `127.0.0.1`, ports `image.port` 31005 and `image.engine_port` 31015). The model takes memory only while painting. Then switch on Features → Painting pictures in the panel and press "Bild testen". Details: [Assistant](assistant.md).
 
 ## Uninstalling
 

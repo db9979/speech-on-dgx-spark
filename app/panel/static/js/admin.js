@@ -194,7 +194,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -921,6 +921,16 @@ async function s1BenchPoll(){clearTimeout(s1Timer);try{const d=await (await api(
   if(d.run&&document.getElementById('s1bench'))s1Timer=setTimeout(s1BenchPoll,2000)}catch{}}
 if($('s1bench'))$('s1bench').onclick=async()=>{try{s1BenchShow(await (await api('/api/admin/systemone/messen',{method:'POST'})).json());s1Timer=setTimeout(s1BenchPoll,2000)}
   catch(e){$('s1benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// Bilder malen (bilder.py): one sample picture, the service's measurements (load time, seconds, memory)
+function bildTestShow(d){const m=$('bildtestmsg');if(!m)return;const r=d&&d.last,h=d&&d.health||{};
+  const st={missing:t('Bildmodell nicht installiert (sudo ./install.sh --bild 4b-q8)','picture model not installed (sudo ./install.sh --bild 4b-q8)'),off_install:t('Bildmodell nicht installiert (sudo ./install.sh --bild 4b-q8)','picture model not installed (sudo ./install.sh --bild 4b-q8)'),
+    down:t('Bild-Dienst antwortet nicht','picture service does not answer'),off:t('entladen','unloaded'),starting:t('lädt','loading'),ready:t('geladen','loaded'),busy:t('malt','painting'),error:t('Fehler','error')}[h.status]||'';
+  const num=(v,u)=>v==null?'':String(v).replace('.',L==='en'?'.':',')+' '+u;
+  const parts=[h.name,st,h.load_s!=null&&t('Laden ','load ')+num(h.load_s,'s'),h.last_s!=null&&t('Bild ','picture ')+num(h.last_s,'s'),h.peak_gib!=null&&t('Speicher ','memory ')+num(h.peak_gib,'GB')].filter(Boolean);
+  m.textContent=(r?(r.ok?'✓ '+t('Probebild gemalt','sample painted'):'✗ '+t('nicht gemalt: ','not painted: ')+r.why)+' · ':'')+parts.join(' · ')}
+async function bildTestLoad(){if(!$('bildtestgo'))return;try{bildTestShow(await (await api('/api/admin/bild-test')).json())}catch{}}
+if($('bildtestgo'))$('bildtestgo').onclick=async()=>{$('bildtestgo').disabled=true;$('bildtestmsg').textContent=t('malt ein Probebild …','painting a sample …');
+  try{bildTestShow(await (await api('/api/admin/bild-test',{method:'POST'})).json())}catch(e){$('bildtestmsg').textContent=e.message}$('bildtestgo').disabled=false};
 if($('visiongo'))$('visiongo').onclick=async()=>{$('visiongo').disabled=true;$('visionmsg').textContent=t('prüft …','checking …');
   try{visionShow((await (await api('/api/admin/vision-test',{method:'POST'})).json()).last)}catch(e){$('visionmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('visiongo').disabled=false};
 

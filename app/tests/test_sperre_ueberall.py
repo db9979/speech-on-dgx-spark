@@ -347,6 +347,7 @@ ADMIN_ON_OK = {
     "dienstwacht.py:active": "Spark-wide: which services are watched",
     "dienstwacht.py:_affected": "Spark-wide: which functions a gone service touches",
     "docmake.py:admin_on": "Spark switch for Live; per profile docmake.on (features.allowed)",
+    "bilder.py:admin_on": "Spark switch for Live; per profile bilder.on (features.allowed)",
     "esp32.py:admin_on": "Spark switch (firmware, OTA without a profile); per profile profile_on / allowed",
     "esp32.py:profile_get": "display flag next to the profile's own state",
     "esp32.py:profile_speaker_code": "endpoint: admin switch, then features.blocked",

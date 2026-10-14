@@ -662,6 +662,20 @@ def validate(new):
             raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
     if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
+    # Bilder malen (bild_server.py): whether it is installed, which model and its ports are chosen by install.sh
+    # (sudo ./install.sh --bild ...); the panel only sets the limits, read live by the service
+    im, oim = new["image"], old.get("image", {})
+    for k in ("enabled", "variant", "port", "engine_port"):
+        if k in oim:
+            im[k] = oim[k]
+        else:
+            im.pop(k, None)
+    for k, lo, hi in (("idle_min", 1, 120), ("day_limit", 1, 500), ("store_mb", 50, 20000), ("max_side", 512, 1408)):
+        v = im.get(k)
+        if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+            raise HTTPException(400, f"image {k}: {lo} bis {hi}")
+    if im["max_side"] % 64:
+        raise HTTPException(400, "image max_side: a multiple of 64")
     w = new["watch"]
     if not isinstance(w.get("watchdog"), bool):
         raise HTTPException(400, "watch watchdog must be true or false")
@@ -741,7 +755,7 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "action_check", "loop_stop", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "docling", "search_check", "search_check_auto", "rerank", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
+              "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "bilder", "docling", "search_check", "search_check_auto", "rerank", "remarkable", "remarkable_paper", "remarkable_tasks", "remarkable_send", "remarkable_fresh", "remarkable_plus", "my_status", "person_priority",
               "usage_count", "usage_quota", "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
               "systemone", "systemone_tidy", "systemone_mail", "systemone_quality", "systemone_berater", "systemone_check",
               "systemone_klage"):

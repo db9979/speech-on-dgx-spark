@@ -99,6 +99,8 @@ SVC = {
                    SLOW, "naszustand"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
+    # Bilder malen (bild_server.py on 127.0.0.1): the service, not the engine; an engine unloaded after idling is no outage
+    "bild": ("Bilder malen", "Painting pictures", "Bilder malen geht gerade nicht; alles andere läuft weiter.", EVERY, "bild"),
     # Chats mit anderen Sparks (verbund.py): the own address as other Sparks see it (its /.well-known/spark-verbund)
     "verbund": ("Erreichbar für andere Sparks", "Reachable for other Sparks",
                 "Andere Sparks erreichen diesen Spark gerade nicht; ihre Nachrichten kommen später.", SLOW, "chats"),
@@ -311,6 +313,8 @@ def active(c=None, cfg=None):
             out["store"] = p
     except Exception:
         pass
+    if features.admin_on("bilder", c):
+        out["bild"] = {"own": {"bild": True}}
     try:
         import nasquelle
         p = dict(list(nasquelle.probes().items())[:MAX_PARTS])
@@ -435,6 +439,9 @@ async def probe(sid, key, p, cfg):
             return await _llm(p)
         if sid in ("asr", "tts"):
             return await _own(p, cfg)
+        if p.get("bild"):
+            import bilder
+            return Probe((await bilder.health()).get("status") in ("off", "starting", "ready", "busy"))
         if sid == "mail":
             return await _imap(p)
         if p.get("snmp"):    # Zustand der NAS: the newest reading of naszustand.py, no question of its own
@@ -528,7 +535,7 @@ async def round_once(now=None, force=False):
     try:
         res = await asyncio.gather(*(asyncio.wait_for(probe(sid, k, p, cfg), TIMEOUT * 2) for sid, k, p in todo),
                                    return_exceptions=True)
-        nets = await asyncio.gather(*(asyncio.to_thread(_is_public, _host(sid, p)) for sid, k, p in todo if sid not in ("qwen", "asr", "tts", "inet")),
+        nets = await asyncio.gather(*(asyncio.to_thread(_is_public, _host(sid, p)) for sid, k, p in todo if sid not in ("qwen", "asr", "tts", "inet", "bild")),
                                     return_exceptions=True)
     finally:
         netguard.QUIET.reset(token)
@@ -536,7 +543,7 @@ async def round_once(now=None, force=False):
     seen = {}
     for (sid, k, p), r in zip(todo, res):
         r = r if isinstance(r, Probe) else Probe(False)
-        g = None if sid in ("qwen", "asr", "tts", "inet") else next(nets, None)
+        g = None if sid in ("qwen", "asr", "tts", "inet", "bild") else next(nets, None)
         x = seen.setdefault(sid, {"ok": [], "bad": [], "why": set(), "net": []})
         (x["ok"] if r.ok else x["bad"]).append(k)
         if r.why:

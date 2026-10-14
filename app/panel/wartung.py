@@ -39,7 +39,7 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "wartung.json")
 # the parts that can pause: id -> (Dienst-Wächter id, name de, name en)
 PARTS = {"llm": ("qwen", "Sprachmodell", "Language model"), "asr": ("asr", "Spracherkennung", "Speech recognition"),
-         "tts": ("tts", "Sprachausgabe", "Speech output")}
+         "tts": ("tts", "Sprachausgabe", "Speech output"), "bild": ("bild", "Bilder malen", "Painting pictures")}
 MINUTES = (15, 30, 60, 120)    # the choices on Zustand; the shell command takes any whole number in MIN_MIN..MAX_MIN
 MIN_MIN, MAX_MIN = 5, 240
 MORE = 15                      # "+15 min"
@@ -109,7 +109,7 @@ def state():
 
 
 def paused(part):
-    """True while this part (llm, asr, tts) is paused and the admin switch is on."""
+    """True while this part (llm, asr, tts, bild) is paused and the admin switch is on."""
     try:
         s = state()
         return bool(s["on"] and part in s["parts"] and admin_on())
@@ -449,7 +449,7 @@ async def post_wartung(request: Request):
             guard.log("wartung", by=_who(request), detail="Wartungspause an: " + _names(state()["parts"]))
     except ValueError as e:
         print("wartung: abgelehnt", str(e)[:20], flush=True)
-        raise HTTPException(400, {"parts": "Teil: llm, asr oder tts", "minutes": f"Minuten: {MIN_MIN} bis {MAX_MIN}",
+        raise HTTPException(400, {"parts": "Teil: llm, asr, tts oder bild", "minutes": f"Minuten: {MIN_MIN} bis {MAX_MIN}",
                                   "off": "Es läuft keine Wartungspause."}.get(str(e), "ungültig"))
     return view()
 
@@ -466,7 +466,7 @@ def post_weiter(request: Request):
 
 
 # ---------------------------------------------------------------- shell command (sudo speech-spark pause|weiter)
-USAGE = "speech-spark pause [llm|asr|tts|alles][,…] [Minuten]  ·  speech-spark weiter  ·  speech-spark pause status"
+USAGE = "speech-spark pause [llm|asr|tts|bild|alles][,…] [Minuten]  ·  speech-spark weiter  ·  speech-spark pause status"
 
 
 def cli(args, now=None):

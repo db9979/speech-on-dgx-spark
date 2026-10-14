@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 APP = helpers.APP
 # the scripts each front end starts (both kinds: the proxy in front of an engine, the transformers server)
-ENTRY = {"asr": ("asr_proxy.py", "asr_server.py"), "tts": ("tts_proxy.py", "tts_server.py")}
+ENTRY = {"asr": ("asr_proxy.py", "asr_server.py"), "tts": ("tts_proxy.py", "tts_server.py"), "bild": ("bild_server.py",)}
 SAFE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]*")
 
 
@@ -86,7 +86,7 @@ class RestartMap(unittest.TestCase):
 
     def test_listed_files_exist_and_stay_inside_app(self):
         for svc, files in restart_map().items():
-            self.assertIn(svc, ENTRY, "install.sh only knows asr and tts")
+            self.assertIn(svc, ENTRY, "install.sh only knows asr, tts and bild")
             for f in files:
                 self.assertTrue(SAFE.fullmatch(f) and ".." not in f, f)
                 self.assertTrue(os.path.isfile(os.path.join(APP, f)), f"app/restart-map: {f} does not exist")

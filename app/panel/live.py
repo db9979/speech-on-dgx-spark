@@ -83,6 +83,8 @@ TOOLS = {
     "Meldung": "mem", "GitHub-Meldung": "issues",
     # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
+    # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
+    "bild_malen": "bild", "Bild malen": "bild",
     # the job itself (docmake._work): every part written by the language model, then the file built
     "document_write": "make", "document_build": "make",
     # before writing: the Kiwix article for the fact check and pictures (folien.py), the own documents
@@ -138,6 +140,8 @@ TARGETS = {
     "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
     # Dokumente erstellen (docmake.py): the line shows jobs in numbers, never a title or text
     "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
+    # Bilder malen (bilder.py, bild_server.py): the line shows pictures in numbers, never a wish or a prompt
+    "bild": ("Bilder malen", "FLUX.2 klein · auf dem Spark", "spark", False),
     # Einstellungs-Assistent (berater.py): shown while it is on, the line with 👍/👎, cases and proposals in numbers
     "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
     # Gedächtnis prüfen (gedaechtnis.py): shown while it is on, the facts of all profiles by mark, numbers only
@@ -157,7 +161,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
-           "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
+           "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
@@ -1099,6 +1103,13 @@ def snapshot(view="admin", now=None):
     if make.get("on"):
         used.add("make")
     try:
+        import bilder
+        bild = bilder.for_live()
+    except Exception:
+        bild = {"on": False}
+    if bild.get("on"):
+        used.add("bild")
+    try:
         import berater
         verb = berater.for_live(now)
     except Exception:
@@ -1249,6 +1260,10 @@ def snapshot(view="admin", now=None):
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))
+        if x["id"] == "bild":   # Bilder malen: pictures in numbers (no wish, no prompt)
+            x["sub"] = (f"{bild.get('run', 0)} malt · {bild.get('wait', 0)} wartet · {bild.get('done', 0)} heute gemalt"
+                        + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
+                        + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
     try:   # Wartungspause (wartung.py): the paused parts in blue, "Pause" (never who or why)
         import wartung
@@ -1266,6 +1281,7 @@ def snapshot(view="admin", now=None):
             "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
+            "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "failed", "refused")},
             "stats": node_stats(now)}
 
 

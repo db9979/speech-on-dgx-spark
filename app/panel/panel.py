@@ -105,6 +105,7 @@ import nashilfe  # noqa: E402
 import meldung  # noqa: E402
 import ghtoken  # noqa: E402
 import docmake  # noqa: E402
+import bilder  # noqa: E402
 import verlauf  # noqa: E402
 import klaeren  # noqa: E402
 import chats  # noqa: E402
@@ -115,7 +116,7 @@ import verbrauch  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, verbrauch):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, bilder, verbrauch):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 

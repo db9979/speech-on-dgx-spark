@@ -43,7 +43,7 @@ GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkei
 # (/api/features "pages"); test_app_gleichstand keeps the copies equal (Richtlinie Teil 1 Zeile 18, Dominik 2026-10-14)
 ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My status"), ("gobox", "Los geht's", "Let's go"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
-            ("docbox", "Dokumente", "Documents"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
+            ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"),
             ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
@@ -181,6 +181,8 @@ FEATURES = (
     # pictures for slides from the own Kiwix (docmake.wiki_pictures; Präsentationen professionell, point 5)
     F("erstellenbilder", "Bilder aus dem Kiwix", "Pictures from the Kiwix", "data", ("doc_make_wikipics",),
       parent="erstellen", me="docbox", guide="erstellenbilder"),
+    # Bilder malen (bilder.py, bild_server.py, plan bildgenerierung): FLUX.2 [klein] on the Spark, installed by install.sh --bild
+    F("bilder", "Bilder malen", "Painting pictures", "data", ("bilder",), me="bildbox", guide="bilder"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
@@ -398,6 +400,7 @@ def _docling_set_up(c):
 
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
          "docling": _docling_set_up,                          # the Docling server needs its address
+         "bilder": lambda c: bool(load_config("image").get("enabled")),   # the picture model installed (install.sh --bild)
          "naszustand": _naszustand_set_up}                    # the NAS status needs its host and SNMP user
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}

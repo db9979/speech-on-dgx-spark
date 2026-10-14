@@ -431,7 +431,7 @@ class Shell(Base):
         self.assertEqual(wartung.cli(["weiter"], now=T0 + 600)[0], 0)
         self.assertFalse(wartung.state()["on"])
         self.assertEqual(wartung.cli(["alles"], now=T0)[0], 0)
-        self.assertEqual(wartung.state()["parts"], ["llm", "asr", "tts"])
+        self.assertEqual(wartung.state()["parts"], list(wartung.PARTS))   # alles: every part, the picture service too
         for bad in (["gpu"], ["llm", "3"], ["llm", "abc"]):
             self.assertEqual(wartung.cli(bad, now=T0)[0], 2, bad)
 

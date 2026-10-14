@@ -4,3 +4,4 @@
 # tests/test_rauchtest.py checks this list against the imports, so a new module cannot be forgotten.
 asr: asr_proxy.py asr_server.py common.py parakeet.py config.default.json
 tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py config.default.json
+bild: bild_server.py bildmodell.py common.py config.default.json

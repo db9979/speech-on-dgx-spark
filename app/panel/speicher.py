@@ -122,6 +122,7 @@ AREAS = {
     "alltag": ("Aufgaben und Erinnerungen", "Tasks and reminders", ("tasks.json", "reminders.json")),
     "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)", ("wissen.db", "docs/files/", "suchpruefung.json")),
     "erstellt": ("Erstellte Dokumente", "Created documents", ("erstellt/",)),
+    "bilder": ("Gemalte Bilder", "Painted pictures", ("bilder/",)),
 }
 # every other file a profile has stays on the Spark (docs/de/richtlinien.md, Teil 1 "Eigener Speicher"): keys,
 # logins, settings, voiceprint, queues and marks. A new file under users/<uid>/ goes either into AREAS or here,

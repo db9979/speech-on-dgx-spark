@@ -27,6 +27,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import chat
+import bilder
 import docmake
 import fixes
 import guard
@@ -36,6 +37,8 @@ import zustand_wz
 from common import load_config
 from core import auth
 
+# a switching verb a picture wish keeps the smart home for („Male das Wohnzimmer blau aus“ stays both)
+SWITCH_VERB = re.compile(r"(?i)\b(schalt\w*|einschalt\w*|ausschalt\w*|dimm\w*)\b|\b(an|aus)\s*[.!?]?\s*$")
 # intent -> (tools of this group, words in the person's message); order is only for the journal
 HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermostat\w*|temperatur\w*|grad\b|"
                         r"fernseher\w*|tv|rollo\w*|rolll?[aä]den\w*|jalousie\w*|steckdose\w*|pool\w*|whirlpool\w*|"
@@ -166,6 +169,9 @@ GROUPS = {
                   re.compile(docmake.MAKE_WORDS.pattern + "|" + chat.DONE_WORDS.pattern.removeprefix("(?i)") + "|"
                              + chat.DIARY_WORDS.pattern.removeprefix("(?i)") + "|" + MAKE_LETTER.pattern.removeprefix("(?i)"),
                              re.I)),
+    # Bilder malen (bilder.py): a picture, drawing, logo or colouring page painted on the Spark; „Was ist auf dem
+    # Bild?“ has no painting word and stays with Bilder erkennen (images.py)
+    "bild": ({"bild_malen"}, bilder.WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
@@ -312,6 +318,15 @@ def classify(text, extra_words="", group_words="", not_words=""):
         why.pop("dokument", None)
         if why.get("websuche", "").lower() == "tabelle":
             why.pop("websuche")
+    # „Mal mir eine Katze“, „Erstell ein Logo für den Verein“ (bilder.py): a picture to paint, not a document,
+    # a look into the own documents, a web search or switching a device
+    if "bild" in why:
+        if not docmake.MAKE_WORDS.search(text):
+            why.pop("erstellen", None)
+        for name in ("websuche", "dokument"):
+            why.pop(name, None)
+        if not SWITCH_VERB.search(text):   # „Mal mir ein Haus mit Garten“: the garden is in the picture
+            why.pop("smarthome", None)
     # a job that comes back by itself or a watch: the group agent (a reminder stays a reminder)
     if (RECUR.search(text) and DELIVER.search(text) or WATCH.search(text)) and "erinnerung" not in why:
         why["agent"] = (RECUR.search(text) or WATCH.search(text)).group(0)
@@ -546,6 +561,7 @@ GROUP_SAYS = {
     "smarthome": "Licht, Heizung, Geräte oder Zustände im Haus schalten oder abfragen",
     "kalender": "Termine ansehen oder eintragen, Tagesüberblick",
     "erstellen": "ein Dokument, einen Brief, eine Präsentation oder Tabelle als Datei erstellen oder ändern",
+    "bild": "ein Bild, eine Zeichnung, ein Logo oder eine Malvorlage malen lassen",
     "mail": "E-Mails lesen, suchen, aufräumen oder entwerfen",
     "websuche": "aktuelle Dinge im Internet nachsehen (Nachrichten, Preise, Öffnungszeiten, Ergebnisse)",
     "erinnerung": "Timer oder Erinnerung stellen, ansehen oder löschen",
@@ -751,13 +767,13 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
-          "archiv": "Eigenes Archiv"}
+          "bild": "Bilder malen", "archiv": "Eigenes Archiv"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
-           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix"}
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder"}
 
 
 def explain(route, offered, who, stranger, c=None):

@@ -30,6 +30,7 @@ flowchart LR
   llm["Language model<br/>:30001 qwen38"]
   asr["Speech recognition<br/>:31001 → :31011"]
   tts["Speech output<br/>:31002 → :31012"]
+  bild["Painting pictures<br/>:31005 → :31015"]
   aussen["Outside services<br/>HA, Mail, Suche …"]
   state[("state/<br/>global")]
   users[("users/ID/<br/>pro Profil")]
@@ -51,6 +52,7 @@ flowchart LR
   waechter --> aussen
   werkzeuge --> wissen
   antwort --> tts
+  werkzeuge --> bild
   antwort --> geraet
   antwort --> betrieb
   betrieb --> state
@@ -173,6 +175,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 
 | Module | Task |
 |---|---|
+| `app/panel/bilder.py` | Bilder malen: pictures from a wish, painted on the Spark by FLUX.2 [klein] (bild_server.py on 127.0.0.1, image.port). |
 | `app/panel/docembed.py` | Meaning vectors for the document search. |
 | `app/panel/doclingdienst.py` | Docling-Server anbinden: the admin connects a docling-serve in the home network (Docker on another machine), and uploaded documents are read a second time, b … |
 | `app/panel/docmake.py` | Dokumente erstellen: the Spark writes letters, reports, minutes, notes, presentations and tables for a profile, as Word, PowerPoint, Excel, PDF, Markdown, te … |
@@ -308,6 +311,8 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/asr_proxy.py` | Qwen3-ASR front end for the vLLM engine (backend "vllm"). |
 | `app/asr_server.py` | Qwen3-ASR as a small HTTP service (OpenAI-style /v1/audio/transcriptions). |
 | `app/bench.py` | Measures speech on this box: time to first audio, speed and memory. |
+| `app/bild_server.py` | Bilder malen: the image service. |
+| `app/bildmodell.py` | Bilder malen: the one list of the image models, where they lie and how they are fetched and checked. |
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
@@ -364,6 +369,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
+| `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
 | `users/ID/settings.json` | Settings | Settings | – | yes | – |
 | `users/ID/setup.json` | Setup | Settings | – | yes | – |
 | `users/ID/speicher.json` | Own storage targets | Settings | key sealed | yes | – |
@@ -430,6 +436,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/bench-latest.json` | Last benchmark | – | no |
 | `state/berater.json` | Assistant proposals | – | yes |
 | `state/bewertungen.json` | Ratings per day | – | no |
+| `state/bild-test.json` | Last sample picture (Test a picture) | – | no |
 | `state/config-undo.json` | Undo (no secrets) | without secrets | no |
 | `state/dienste-zustand.json` | Background services | – | no |
 | `state/dienstwacht.json` | Service watcher | – | yes |
@@ -1404,7 +1411,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 20 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 21 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -1481,21 +1488,21 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (132) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (138) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (79 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (80 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **20** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **21** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **132** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **138** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **183** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -1706,7 +1713,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **79** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **80** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2018,7 +2025,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (28 areas), profiles only through profiles.log_name. A self-test checks both.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (29 areas), profiles only through profiles.log_name. A self-test checks both.
 6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
 7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
 8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
@@ -2399,6 +2406,91 @@ flowchart TD
 
 Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
 
+### Painting pictures
+
+Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 klein only at the first picture, checks the finished picture and frees the memory after a quiet time.
+
+**Why:** A picture model can paint anything, also nudity, violence or real people. The language model never decides that; fixed rules before and after painting do. And the model needs a lot of shared memory: it must never push out the language model or the voice.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. A picture wish"])
+  s2{{"2. Feature released?"}}
+  s3{{"3. Wish allowed?"}}
+  s4{{"4. Within the limits?"}}
+  s5["5. Wait for a pause"]
+  s6{{"6. Model loaded?"}}
+  s7["7. Paint"]
+  s8{{"8. Picture harmless?"}}
+  s9["9. Mark as AI picture"]
+  s10(["10. Picture stored"])
+  s1 --> s2
+  s2 -->|yes| s3
+  s3 -->|yes| s4
+  s4 -->|yes| s5
+  s5 --> s6
+  s6 -->|yes| s7
+  s7 --> s8
+  s8 -->|yes| s9
+  s9 --> s10
+  s2x(["Hint with the way to the switch"])
+  s2 -->|no| s2x
+  s3x(["Fixed refusal, nothing painted"])
+  s3 -->|no| s3x
+  s4x(["Refused with the reason"])
+  s4 -->|no| s4x
+  s6x(["Too little memory, try later"])
+  s6 -->|no| s6x
+  s8x(["Discarded, nothing stored"])
+  s8 -->|no| s8x
+```
+
+1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Both end in bilder.start.
+2. <a id="kn-bild-s2"></a>**Feature released?**: bilder.on asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
+3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it.
+4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait.
+5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds.
+6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed.
+7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
+8. <a id="kn-bild-s8"></a>**Picture harmless?**: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing.
+9. <a id="kn-bild-s9"></a>**Mark as AI picture**: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an IPTC entry).
+10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder (bilder.keep), the card in the chat shows it, a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory.
+
+**Examples:** Cat on a skateboard: Painted, marked, in the gallery. · Picture of the own profile name: Fixed refusal, the model is not asked. · Too little memory free: Nothing loaded, speech keeps running.
+
+#### Numbers (from the code)
+
+- **300** pictures per profile at most ([step 4](#kn-bild-s4))
+- **10** jobs wait at most ([step 4](#kn-bild-s4))
+- **0.5** image check share above which it is discarded ([step 8](#kn-bild-s8))
+- **4** steps per picture ([step 7](#kn-bild-s7))
+- **720** seconds per job at most ([step 5](#kn-bild-s5))
+
+#### Settings
+
+- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none).
+- Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "Bild testen".
+
+#### What you see
+
+- State → Live: target "Painting pictures" with numbers only; Logs → Diagnosis, area "Bild".
+
+#### In the code
+
+- `app/panel/bilder.py` `start`: accept a wish ([step 1](#kn-bild-s1))
+- `app/panel/bilder.py` `on`: release for the profile ([step 2](#kn-bild-s2))
+- `app/panel/bilder.py` `refuse_text`: word list and people ([step 3](#kn-bild-s3))
+- `app/panel/bilder.py` `_work`: job in the background ([step 5](#kn-bild-s5))
+- `app/panel/bilder.py` `keep`: store the picture ([step 10](#kn-bild-s10))
+- `app/bild_server.py` `Engine.start`: load the engine ([step 6](#kn-bild-s6))
+- `app/bild_server.py` `Engine.paint`: paint ([step 7](#kn-bild-s7))
+- `app/bild_server.py` `nsfw_share`: image check ([step 8](#kn-bild-s8))
+- `app/bild_server.py` `finish`: mark and re-encode ([step 9](#kn-bild-s9))
+
+Self-tests: `test_bilder`
+
 ### Outside services
 
 Outside services are everything the Spark asks over the network: Home Assistant, calendars, contacts, mail, SearXNG, Kiwix, reMarkable and MCP services. Addresses from settings go through the guard (netguard) with a fixed level; fixed services like SearXNG, weather, transit and Wikipedia go directly.
@@ -2558,7 +2650,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (47, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (48, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2569,7 +2661,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **29** files in every backup ([step 7](#kn-state-s7))
-- **47** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **48** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -2843,7 +2935,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (28 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (29 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
 5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
@@ -2859,7 +2951,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **28** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **29** areas of the diagnosis ([step 2](#kn-journal-s2))
 - **20000** lines read per call at most ([step 8](#kn-journal-s8))
 - **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
 - **1000** lines shown at most ([step 7](#kn-journal-s7))

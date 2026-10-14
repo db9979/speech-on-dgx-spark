@@ -18,6 +18,13 @@ BENCH = [
     ("Ist der Brief fertig?", "erstellen"),
     ("Hast du mir heute was aufs reMarkable geschickt?", "erstellen"),
     ("Schreib mir einen Brief an die Hausverwaltung wegen der Heizung", "erstellen"),
+    # Bilder malen (bilder.py): a picture wish, never a document, a search or switching; „Was ist auf dem Bild?“ stays out
+    ("Mal mir eine Katze auf einem Skateboard", "bild"),
+    ("Kannst du mir ein Bild von einem Leuchtturm malen?", "bild"),
+    ("Erstell ein Logo für unseren Fußballverein", "bild"),
+    ("Mach mir eine Malvorlage mit einem Dinosaurier", "bild"),
+    ("Mal mir ein Haus mit Garten", "bild"),
+    ("Was ist auf dem Bild?", ""),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

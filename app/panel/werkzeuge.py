@@ -45,6 +45,7 @@ NAMES = {
     "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),
     "document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"),
     "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document"),
+    "bild_malen": ("Bild malen", "Paint picture"),
     "remarkable_sent": ("Aufs reMarkable Gelegtes", "Put on the reMarkable"),
     "remarkable_library": ("reMarkable-Ablage", "reMarkable library"),
     "nas_ablegen": ("Auf der NAS ablegen", "Save to the NAS"),

@@ -5,6 +5,7 @@
 #   sudo ./install.sh                  # install (the first run asks what to install), or update
 #   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
+#   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
 #   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
@@ -34,7 +35,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0
+MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
@@ -50,13 +51,14 @@ while [ $# -gt 0 ]; do
     --tts) TTS_PICK="$2"; shift ;;
     --voicedesign) VD_PICK=yes ;;
     --no-voicedesign) VD_PICK=no ;;
+    --bild) BILD_PICK="$2"; shift ;;
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -66,6 +68,7 @@ case "$ASR_BACKEND" in ""|vllm|transformers) ;; *) echo "--asr-backend must be v
 case "$MODE" in ""|full|api) ;; *) echo "--mode must be full or api" >&2; exit 2 ;; esac
 case "$ASR_PICK" in ""|1.7b|0.6b|parakeet|none) ;; *) echo "--asr must be 1.7b, 0.6b, parakeet or none" >&2; exit 2 ;; esac
 case "$TTS_PICK" in ""|0.6b|1.7b|none) ;; *) echo "--tts must be 0.6b, 1.7b or none" >&2; exit 2 ;; esac
+case "$BILD_PICK" in ""|4b-q8|4b-q4|9b-q8|9b-q4|none) ;; *) echo "--bild must be 4b-q8, 4b-q4, 9b-q8, 9b-q4 or none" >&2; exit 2 ;; esac
 
 say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 # During an update the panel shows a progress bar; each step also goes into this file.
@@ -262,6 +265,19 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
     case "$(ask "Install it? (y/n)" "$d" y n j)" in y|j) VD_PICK=yes ;; n) VD_PICK=no ;; esac
   fi
 fi
+# Bilder malen (plan bildgenerierung): only with the panel, it is the only caller; off unless asked for
+if [ "$ASK" = 1 ] && [ "$MODE" = full ] && { [ "$FIRST" = 1 ] || [ "$CHOOSE_MODELS" = 1 ]; } && [ -z "$BILD_PICK" ]; then
+  echo
+  echo "Bilder malen: the Spark paints pictures itself with FLUX.2 [klein] (loaded only while painting)."
+  echo "  1) 4B, Q8   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 4b-q8) GB disk, ~11 GiB while painting, Apache 2.0 (recommended)"
+  echo "  2) 4B, Q4   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 4b-q4) GB disk, ~7 GiB while painting, Apache 2.0"
+  echo "  3) 9B, Q8   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 9b-q8) GB disk, ~22 GiB while painting, FLUX Non-Commercial (private use only)"
+  echo "  4) 9B, Q4   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 9b-q4) GB disk, ~13 GiB while painting, FLUX Non-Commercial (private use only)"
+  echo "  5) none"
+  echo "  ($(gib_free) GiB are free right now.)"
+  d=5; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.image.enabled // false')" = true ] && d=1
+  case "$(ask "Choice" "$d" 1 2 3 4 5)" in 1) BILD_PICK=4b-q8 ;; 2) BILD_PICK=4b-q4 ;; 3) BILD_PICK=9b-q8 ;; 4) BILD_PICK=9b-q4 ;; 5) BILD_PICK=none ;; esac
+fi
 if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ]; then
   echo
   echo "Should other computers in the network reach the APIs? (An API key is required either way.)"
@@ -304,6 +320,10 @@ case "$TTS_PICK" in
   none) jqi '.tts.enabled=false' ;;
 esac
 case "$VD_PICK" in yes) jqi '.tts.voicedesign_enabled=true' ;; no) jqi '.tts.voicedesign_enabled=false' ;; esac
+case "$BILD_PICK" in
+  none) jqi '.image.enabled=false' ;;
+  ?*) jqi --arg v "$BILD_PICK" '.image.enabled=true | .image.variant=$v' ;;
+esac
 case "$NET_PICK" in
   local) jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1"' ;;
   network) jqi '.asr.host="0.0.0.0" | .tts.host="0.0.0.0"' ;;
@@ -402,6 +422,7 @@ ASR_PORT=$(cfg_int .asr.port 31001); TTS_PORT=$(cfg_int .tts.port 31002); PANEL_
 BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
+WITH_BILD=0; [ "$MODE" = full ] && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
 
 # ---------------------------------------------------------------- ports
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
@@ -410,6 +431,7 @@ ports="$ASR_PORT $TTS_PORT"
 [ "$MODE" = full ] && [ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
 [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
 [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
+[ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -551,6 +573,43 @@ if [ "$USE_ENGINE" = 1 ]; then
   check_cuda engine
   "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-engine does not start; see the output above"
   rm -f -- "$v/.pkgs"; printf '%s\n' "engine $VLLM_VERSION $VLLM_OMNI_VERSION" >"$v/.pkgs"
+  fi
+fi
+
+# ---------------------------------------------------------------- Bilder malen (optional, plan bildgenerierung)
+# The engine is stable-diffusion.cpp's sd-server, built here once per pinned commit (bildmodell.SDCPP_COMMIT) for the
+# GB10 (CUDA, sm_121), no Docker; the model files are pinned by revision and SHA-256 (bildmodell.py). Without the
+# option nothing of this is fetched or built, and the service stays off.
+SDCPP_COMMIT=$(sed -n 's/^SDCPP_COMMIT = "\([0-9a-f]\{40\}\)"$/\1/p' "$INSTALL_FROM/app/bildmodell.py")
+if [ "$WITH_BILD" = 1 ]; then
+  [ -n "$SDCPP_COMMIT" ] || die "app/bildmodell.py names no stable-diffusion.cpp commit"
+  if [ -L "$PREFIX/sdcpp" ] || [ "$(cat "$PREFIX/sdcpp/.built" 2>/dev/null)" != "$SDCPP_COMMIT" ] || [ ! -x "$PREFIX/sdcpp/bin/sd-server" ]; then
+    say "Building the picture engine (stable-diffusion.cpp ${SDCPP_COMMIT:0:12}, CUDA; takes a while once)"
+    command -v cmake >/dev/null || apt_wait install -y -q cmake || die "cmake could not be installed"
+    NVCC=$(command -v nvcc || echo /usr/local/cuda/bin/nvcc)
+    [ -x "$NVCC" ] || die "nvcc not found (CUDA toolkit); needed once to build the picture engine"
+    rm -rf -- "$PREFIX/sdcpp.new"
+    git clone --quiet --no-checkout https://github.com/leejet/stable-diffusion.cpp "$PREFIX/sdcpp.new" \
+      || die "could not fetch stable-diffusion.cpp"
+    git -C "$PREFIX/sdcpp.new" checkout --quiet "$SDCPP_COMMIT" || die "stable-diffusion.cpp has no commit $SDCPP_COMMIT"
+    git -C "$PREFIX/sdcpp.new" submodule update --quiet --init ggml || die "could not fetch ggml for stable-diffusion.cpp"
+    nice -n 10 cmake -S "$PREFIX/sdcpp.new" -B "$PREFIX/sdcpp.new/build" -DCMAKE_BUILD_TYPE=Release \
+      -DSD_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=121 -DCMAKE_CUDA_COMPILER="$NVCC" \
+      -DSD_WEBP=OFF -DSD_WEBM=OFF -DSD_SERVER_BUILD_FRONTEND=OFF >/dev/null || die "cmake for the picture engine failed"
+    nice -n 10 cmake --build "$PREFIX/sdcpp.new/build" --target sd-server -j "$(nproc)" >/dev/null \
+      || die "building the picture engine failed"
+    built=$(find "$PREFIX/sdcpp.new/build" -type f -name sd-server -perm -u+x | head -1)
+    [ -n "$built" ] || die "the build left no sd-server"
+    install -d -m 755 "$PREFIX/sdcpp.new/bin" && install -m 755 "$built" "$PREFIX/sdcpp.new/bin/sd-server"
+    printf '%s\n' "$SDCPP_COMMIT" >"$PREFIX/sdcpp.new/.built"
+    rm -rf -- "$PREFIX/sdcpp" && mv -- "$PREFIX/sdcpp.new" "$PREFIX/sdcpp"
+  fi
+  if [ "$DOWNLOAD" = 1 ]; then
+    say "Picture model $(cfg .image.variant) (only what is missing; checked with SHA-256)"
+    as_svc mkdir -p -- "$VAR/models/bild"
+    # the new app/ is not in place yet: the script comes from the source, read by root (like Parakeet below)
+    sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-panel/bin/python" - download "$(cfg .image.variant)" "$VAR/models/bild" \
+      <"$INSTALL_FROM/app/bildmodell.py" || warn "picture model incomplete; run the install again later (Bilder malen says what is missing)"
   fi
 fi
 
@@ -699,7 +758,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine tts-design turn; do
+  for u in asr asr-engine tts tts-engine bild tts-design turn; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -922,6 +981,36 @@ CapabilityBoundingSet=
 LockPersonality=yes
 EOF
 
+# Bilder malen (bild_server.py): only on 127.0.0.1, the panel is its only caller. It starts the picture engine
+# (sd-server) as its own child only while painting and stops it after image.idle_min minutes. No MemoryMax= for
+# the same reason as the engines above (unified memory); bild_server checks the free memory before it loads and
+# is the first one the kernel may stop when memory runs out.
+cat >/etc/systemd/system/speech-spark-bild.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Bilder malen (FLUX.2 klein)
+After=network-online.target $QWEN38_AFTER
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=SPEECH_SPARK_BILD_DIR=$VAR/models/bild
+Environment=SPEECH_SPARK_SD_SERVER=$PREFIX/sdcpp/bin/sd-server
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/bild_server.py
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+KillMode=control-group
+OOMScoreAdjust=1000
+Nice=10
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Runs update.sh from the root-owned clone; started by the panel's update button.
 cat >/etc/systemd/system/speech-spark-update.service <<EOF
 [Unit]
@@ -1004,7 +1093,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr or tts)
+restart_front() {  # $1 = service (asr, tts or bild)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -1038,6 +1127,12 @@ if [ "$WITH_TTS" = 1 ]; then
   restart_front tts
 else
   systemctl disable --now speech-spark-tts.service 2>/dev/null || true
+fi
+
+if [ "$WITH_BILD" = 1 ]; then
+  restart_front bild
+else
+  systemctl disable --now speech-spark-bild.service 2>/dev/null || true
 fi
 
 wait_ready() {  # $1 = name, $2 = port, $3 = minutes; the last status stays in st_$1

@@ -24,6 +24,7 @@ import wiki
 import hilfe
 import meinmcp
 import docmake
+import bilder
 import tagebuch
 import zustand_wz
 import rmliste
@@ -31,7 +32,7 @@ import nasablage
 import naszustand
 import aendern
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand]
 
 
 def offer(ctx):

@@ -148,7 +148,7 @@ OHNE = {
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_issue", "berater_me", "berater_notify",
         "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_mode", "verbund_domain", "chats_calls", "calls_turn", "calls_turn_host", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
-        "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_max_mb", "doc_night", "doc_night_from", "docling", "search_check", "search_check_auto", "search_check_day", "rerank", "rerank_model", "rerank_ms",
+        "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "bilder", "doc_max_mb", "doc_night", "doc_night_from", "docling", "search_check", "search_check_auto", "search_check_day", "rerank", "rerank_model", "rerank_ms",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents",
         "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips", "tagebuch", "status_voice", "undo_voice", "berater_why",
         "feature_tips_push", "follow_up", "geocode_url", "ha_camera", "ha_events", "ha_live", "ha_loud",
@@ -166,6 +166,10 @@ OHNE = {
         "systemone_check", "systemone_klage", "systemone_mail", "systemone_min", "systemone_quality", "systemone_tidy", "tasks", "telegram", "thinking", "tool_thinking", "top_p", "transit",
         "transit_url", "usage_count", "usage_quota", "usage_quota_k", "weather", "weather_url", "wiki", "wiki_url", "write_apps", "write_help", "wyoming",
         "wyoming_allow", "wyoming_port", "wyoming_voice",
+    ),
+    # Bilder malen (bilder.py, bild_server.py): installed by install.sh, limits nobody tunes from a case
+    "image": (
+        "day_limit", "enabled", "engine_port", "idle_min", "max_side", "port", "store_mb", "variant",
     ),
     "logs": (
         "keep_days", "live", "live_monitor", "live_names", "live_screens", "max_mb", "trace",

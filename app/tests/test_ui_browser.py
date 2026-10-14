@@ -851,6 +851,61 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(write_help=False)
 
+    def test_bilder_page(self):
+        """Ich → Bilder (bilder.js, Bilder malen): the form, the gallery and a picture's details with download; on a
+        computer and a phone, with the strict CSP, without sideways scrolling."""
+        import io as _io
+        import bilder
+        import profiles
+        from PIL import Image
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["image"]["enabled"] = True
+        c["chat"]["bilder"] = True
+        helpers.write_config(c)
+        b = _io.BytesIO()
+        Image.new("RGB", (64, 48), (20, 120, 200)).save(b, "PNG")
+        bilder.clear(me)
+        bilder.keep(me, b.getvalue(), {"w": 64, "h": 48, "prompt": "a blue sky <b>x</b>", "wish": "Blauer Himmel",
+                                       "format": "quer", "seconds": 2.5, "src": "seite"})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('bildbox')")
+                        await pg.wait_for_selector("#blgo", state="visible", timeout=20000)
+                        await pg.click("#bildbox .bltile")
+                        await pg.wait_for_selector("#bildbox .ld-detail a.b", state="visible", timeout=20000)
+                        txt = await pg.inner_text("#bildbox .ld-detail")
+                        self.assertIn("a blue sky <b>x</b>", txt)      # the prompt as text, never as HTML
+                        self.assertIn("Blauer Himmel", txt)
+                        # the picture comes from /api/bilder/{id}/datei: wait until the browser has it (lazy loading)
+                        # (polled: the strict CSP refuses wait_for_function's string)
+                        ok = 0
+                        for _ in range(100):
+                            ok = await pg.evaluate("(()=>{const i=document.querySelector('#bildbox .ld-detail img');return i&&i.complete?i.naturalWidth:0})()")
+                            if ok:
+                                break
+                            await asyncio.sleep(0.2)
+                        self.assertEqual(ok, 64, name)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            bilder.clear(me)
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                c = json.load(f)
+            c["image"]["enabled"] = False
+            c["chat"]["bilder"] = False
+            helpers.write_config(c)
+
     def test_voraussetzungen_mit_einschalten(self):
         """Dominik 2026-10-12: switching on a function that builds on others asks to switch those on too; switching
         off says what goes off with it. On Funktionen (the page's switches, saved with the page), the only place that
@@ -1247,7 +1302,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4950 if w < 760 else 3900, f"{w}: {tall}px")   # V01.0.557: +1 line "Verbrauchszähler" (4876 px at 390, GitHub 3867 px at 1280, here 3848), V01.0.501: +1 line "NAS verbinden" (GitHub 3811 px at 1280), V01.0.490: +2 lines "Zustand per Sprache", "Rückgängig per Sprache", V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 5050 if w < 760 else 3950, f"{w}: {tall}px")   # V01.0.567: +1 line "Bilder malen" (4950 px at 390, 3904 px at 1280), V01.0.557: +1 line "Verbrauchszähler" (4876 px at 390, GitHub 3867 px at 1280, here 3848), V01.0.501: +1 line "NAS verbinden" (GitHub 3811 px at 1280), V01.0.490: +2 lines "Zustand per Sprache", "Rückgängig per Sprache", V01.0.465: +1 line "Spark-Tagebuch" ("Warum?", "Fall analysieren", "Automatisch zurücknehmen" are sub-switches), V01.0.472: +1 sub-switch "Stopp beim Vorlesen", V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")

@@ -85,6 +85,8 @@ DIRECT_OK = {
     "chat": ("sprachmodell", "Sprachmodell und SearXNG; Seiten aus Suchergebnissen gehen über client()"),
     "dienstwacht": ("sprachmodell", "Probe des Sprachmodells; die anderen Proben gehen über client() und resolve()"),
     "docmake": ("sprachmodell", "Sprachmodell beim Erstellen von Dokumenten"),
+    "bild_server": ("lokal", "eigene Bild-Engine (sd-server) auf 127.0.0.1 (image.engine_port), nur der Bild-Dienst fragt sie"),
+    "bilder": ("lokal", "eigener Bild-Dienst auf 127.0.0.1 (image.port), malt ohne Netz"),
     "esp32": ("fest", "eigene Sprachdienste auf localhost, Firmware-Release von GitHub (SHA-256 geprüft), Lautsprecher nach resolve()"),
     "fixes": ("sprachmodell", "Sprachmodell"),
     "gedaechtnis": ("sprachmodell", "Sprachmodell"),
