@@ -435,9 +435,13 @@ from core import assistant, browser_profile, own_profile, secret_profile  # noqa
 router = APIRouter()
 
 
-def _on():
+def _on(request: Request):
     if not admin_on():
         raise HTTPException(403, "contacts are turned off")
+    prof = profiles.current(request)
+    # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
+    if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("contacts", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 @router.get("/api/profile/contacts", dependencies=[Depends(assistant)])

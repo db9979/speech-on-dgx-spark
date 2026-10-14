@@ -1757,7 +1757,7 @@ def _on(prof=Depends(browser_profile)):
 
 def _may(prof):
     if not allowed(prof["id"]):
-        raise HTTPException(403, "Kopie meiner Daten ist ausgeschaltet.")
+        raise HTTPException(403, features.missing_text("speicher", prof["id"]) or "Kopie meiner Daten ist ausgeschaltet.")
 
 
 async def _body(request, most=8192):

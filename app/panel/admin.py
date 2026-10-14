@@ -573,7 +573,7 @@ def validate(new):
     # Wer darf was: the functions the admin blocked for single profiles (features.blocked); only the admin writes it
     deny = ch.get("deny", {})
     if not (isinstance(deny, dict) and len(deny) <= len(features.FEATURES)
-            and all(k in features.BY_KEY and isinstance(v, list) and 0 < len(v) <= features.MAX_DENY and len(set(v)) == len(v)
+            and all(k in features.BY_KEY and k not in features.NO_BLOCK and isinstance(v, list) and 0 < len(v) <= features.MAX_DENY and len(set(v)) == len(v)
                     and all(isinstance(u, str) and re.fullmatch(r"u_[0-9a-f]{12}", u) for u in v) for k, v in deny.items())):
         raise HTTPException(400, "deny: function → list of profile ids")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:

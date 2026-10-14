@@ -84,8 +84,7 @@ def _app_key(request):
 
 def for_app(uid):
     """What hello tells the app: whether it shows the version page and the start button."""
-    import iphone
-    if not admin_on() or not iphone.allowed(uid):
+    if not features.allowed("iphoneupdate", uid):   # (needs the app itself too: its chain)
         return {"notify": False, "start": False}
     return rights(uid)
 
@@ -212,7 +211,6 @@ async def due_once(now=None):
     if not who:
         return 0
     import apns
-    import iphone
     import update
     remote = await update.remote_state()
     if not remote.get("latest") or remote.get("behind") in (0, None):
@@ -225,7 +223,7 @@ async def due_once(now=None):
     text = f"{version} ist geprüft und bereit" + (f" ({n} Änderungen)." if n > 0 else ".") + \
         " In der App unter Einstellungen → Spark-Version."
     for u in who:
-        if told.get(u) == version or not iphone.allowed(u) or not apns.on_for(u) or _quiet(u, now):
+        if told.get(u) == version or not features.allowed("iphoneupdate", u) or not apns.on_for(u) or _quiet(u, now):
             continue
         t0 = time.time()
         ok = await apns.send(u, "Neue Spark-Version", text, tag="update", now=now)

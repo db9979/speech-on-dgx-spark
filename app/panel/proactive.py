@@ -352,7 +352,7 @@ def _minutes(n):
 
 async def check_events(uid, p, now):
     import calendars
-    if not ccfg().get("calendar", True) or not calendars.get(uid)["calendars"]:
+    if not features.allowed("calendar", uid) or not calendars.get(uid)["calendars"]:
         return
     lead = int(p.get("pro_lead", 20))
     res = await calendars.events(uid, now, now + datetime.timedelta(minutes=lead + 1), now.tzinfo)
@@ -374,7 +374,7 @@ async def check_events(uid, p, now):
         _mut(uid, mark)   # first: a note that cannot be said now is not tried again every minute
         text = f"In {_minutes(mins)}: {x['title']}" + (f", Ort {x['location']}" if x.get("location") else "") + "."
         offer = None
-        if mins > 10 and ccfg().get("reminders", True):
+        if mins > 10 and features.allowed("reminders", uid):
             due = x["start"] - datetime.timedelta(minutes=5)
             offer = {"text": x["title"], "due": int(due.timestamp() * 1000)}
             text += f" Soll ich dich um {due:%H:%M} Uhr noch einmal erinnern?"
@@ -628,7 +628,7 @@ async def check_ha(uid, p, by_id=None):
     import homeassistant
     import hamelden
     rs = rules(uid)
-    item = homeassistant.get(uid) if rs and ccfg().get("homeassistant", False) else None
+    item = homeassistant.get(uid) if rs and features.allowed("ha", uid) else None
     if not item:
         return
     if by_id is None:
@@ -724,7 +724,7 @@ async def greet(uid, now=None):
     prof = profiles.by_id(uid) or {"name": ""}
     point, data = "", ""
     import calendars
-    if ccfg().get("calendar", True) and calendars.get(uid)["calendars"]:
+    if features.allowed("calendar", uid) and calendars.get(uid)["calendars"]:
         try:
             res = await calendars.events(uid, now, now + datetime.timedelta(hours=4), zone)
             nxt = next((x for x in (res or ([], []))[0] if not x["allday"] and x["start"] > now), None)
@@ -732,7 +732,7 @@ async def greet(uid, now=None):
                 point, data = f"Um {nxt['start']:%H:%M} Uhr hast du {nxt['title']}.", calendars.line(nxt)
         except Exception as e:
             print("proactive: greet calendar:", type(e).__name__, e, flush=True)
-    if not point and ccfg().get("reminders", True):
+    if not point and features.allowed("reminders", uid):
         end = now.replace(hour=23, minute=59).timestamp() * 1000
         rem = [x for x in profiles.reminders(uid) if now.timestamp() * 1000 < x["due"] <= end]
         if rem:
@@ -826,7 +826,7 @@ async def _llm(system, user, max_tokens=300):
 
 async def check_follow(uid, p, now):
     day = now.strftime("%Y-%m-%d")
-    if state(uid).get("follow_day") == day or not 10 <= now.hour < 20 or not ccfg().get("history", True):
+    if state(uid).get("follow_day") == day or not 10 <= now.hour < 20 or not features.allowed("history", uid):
         return
     if blocked(uid, "follow", p, now):
         return
@@ -879,7 +879,7 @@ async def check_mail(uid, p):
     senders = [s.strip().lower() for s in str(p.get("pro_mail_from", "")).split(",") if len(s.strip()) > 2]
     smart = mail_smart(uid, p)
     st = state(uid)
-    if not (senders or smart) or not ccfg().get("mail", False) or not mail.get(uid)["accounts"]:
+    if not (senders or smart) or not features.allowed("mail", uid) or not mail.get(uid)["accounts"]:
         return
     if time.time() - st.get("mail_checked", 0) < MAIL_EVERY - 5:
         return
@@ -959,7 +959,7 @@ async def check_weather(uid, p, now):
     direct = weather.usable(uid)   # the profile's own weather service: numbers, no search, no model
     st = state(uid)
     if not at or st.get("weather_day") == day or float(st.get("weather_wait") or 0) > time.time() or \
-            (not direct and (not place or not cc.get("search") or not cc.get("search_url"))):
+            (not direct and (not place or not cc.get("search_url") or not features.allowed("search", uid, cc))):
         return
     start = now.replace(hour=int(at[1]), minute=int(at[2]), second=0, microsecond=0)
     if not start <= now < start + datetime.timedelta(hours=2) or blocked(uid, "weather", p, now):
@@ -1085,9 +1085,12 @@ async def due_once(now=None):
 
 
 # ---------------------------------------------------------------- API
-def _on():
+def _on(request: Request):
     if not enabled():
         raise HTTPException(403, "speaking up by itself is turned off")
+    prof = profiles.current(request)
+    if prof and features.blocked("proactive", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 def status(uid):
@@ -1103,18 +1106,18 @@ def status(uid):
     cc = ccfg()
     day = datetime.datetime.now(_zone(p)).strftime("%Y-%m-%d")
     per = st.get("per", {}) if st.get("day") == day else {}
-    return {"enabled": enabled(), "today": st.get("count", 0) if st.get("day") == day else 0,
+    return {"enabled": enabled() and not features.blocked("proactive", uid, cc), "today": st.get("count", 0) if st.get("day") == day else 0,
             "paused_until": int(st.get("pause_until", 0)) if st.get("pause_until", 0) > time.time() else 0,
             "kinds": [{"kind": k, "label": v[0], "cap": cap(st, p, k), "full": v[1], "today": per.get(k, 0)}
                       for k, v in KINDS.items()],
             "rules": [dict(r, line=rule_line(r)) for r in rules(uid)],
             "ha": hamelden.status(uid),
             "speakers": hamelden.speakers(uid) if features.allowed("haloud", uid) else [],
-            "has": {"calendar": bool(cc.get("calendar", True) and calendars.get(uid)["calendars"]),
-                    "ha": bool(cc.get("homeassistant", False) and homeassistant.get(uid)),
-                    "mail": bool(cc.get("mail", False) and mail.get(uid)["accounts"]),
-                    "search": bool(cc.get("search") and cc.get("search_url")),
-                    "history": bool(cc.get("history", True)), "reminders": bool(cc.get("reminders", True)),
+            "has": {"calendar": bool(features.allowed("calendar", uid, cc) and calendars.get(uid)["calendars"]),
+                    "ha": bool(features.allowed("ha", uid, cc) and homeassistant.get(uid)),
+                    "mail": bool(features.allowed("mail", uid, cc) and mail.get(uid)["accounts"]),
+                    "search": bool(cc.get("search_url") and features.allowed("search", uid, cc)),
+                    "history": features.allowed("history", uid, cc), "reminders": features.allowed("reminders", uid, cc),
                     "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid),
                     "transit": bool(transit.usable(uid) and transit.get(uid).get("commute"))}}
 
@@ -1200,7 +1203,7 @@ async def api_devices(request: Request, prof=Depends(browser_profile)):
     import guard
     import homeassistant
     guard.limit(request, "hament", prof["id"])
-    item = homeassistant.get(prof["id"]) if ccfg().get("homeassistant", False) else None
+    item = homeassistant.get(prof["id"]) if features.allowed("ha", prof["id"]) else None
     if not item:
         raise HTTPException(409, "Home Assistant ist nicht verbunden.")
     try:

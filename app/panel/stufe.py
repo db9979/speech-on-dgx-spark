@@ -77,7 +77,8 @@ def level(uid, c=None):
     """"vorrang", "" (normal) or "hinten" for this profile; always "" while the admin switch is off or for guests."""
     if not uid or not on(c):
         return ""
-    return levels().get(uid, "")
+    lv = levels().get(uid, "")
+    return "" if lv == "vorrang" and features.blocked("vorrang", uid, c) else lv   # "hinten" is no function
 
 
 def turn_level(turn):

@@ -163,8 +163,11 @@ async def due_once():
     ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     if not ccfg.get("memory", True):
         return None
+    import features
     for uid in profiles.user_ids():
         if time.time() - _checked(uid) < EVERY or len(profiles.memory(uid)) < MIN_FACTS:
+            continue
+        if not features.allowed("memory", uid, ccfg):   # the admin blocked it for this profile
             continue
         if os.path.exists(_file(uid, "memory-tidy.json")):
             continue   # still waiting for an answer

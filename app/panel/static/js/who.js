@@ -66,7 +66,9 @@ function whoVia(f,uid){let k=f.parent;for(let i=0;k&&i<10;i++){const x=WHO.featu
 function whoCell(f,p){const n=p.name,b=document.createElement('button');b.type='button';b.className='wbox wcell';
   const off=!f.spark,inh=!off&&!!(f.inherited&&f.inherited[p.id]),on=!!f.cells[p.id];
   let label;
-  if(off||inh){b.disabled=true;b.textContent='–';b.classList.add('woff');b.setAttribute('aria-pressed','false');
+  if(f.blockable===false){b.disabled=true;b.textContent='✓';b.classList.add('woff');b.setAttribute('aria-pressed','true');
+    label=t('immer erlaubt, nicht sperrbar','always allowed, cannot be blocked')}
+  else if(off||inh){b.disabled=true;b.textContent='–';b.classList.add('woff');b.setAttribute('aria-pressed','false');
     label=off?t('Spark aus','Spark off'):(()=>{const v=whoVia(f,p.id);return v?t(`gesperrt über „${v}“`,`blocked through "${v}"`):t('gesperrt über eine Vorstufe','blocked through a function it builds on')})()}
   else{b.textContent=on?'✓':'⊘';if(on)b.classList.add('on');else b.classList.add('wblk');b.setAttribute('aria-pressed',on?'true':'false');
     label=on?t('darf es, antippen sperrt','may use it, tap to block'):t('vom Admin gesperrt, antippen erlaubt wieder','blocked by the admin, tap to allow again');

@@ -1088,6 +1088,9 @@ class Session:
         if not room.enabled():
             await self.say("Der Raum-Modus ist ausgeschaltet. Der Admin kann ihn unter Funktionen einschalten.")
             return
+        if not features.allowed("room", uid):
+            await self.say("Den Raum-Modus hat der Admin für dein Profil gesperrt.")
+            return
         if sum(1 for x in list(_live.values()) if x.room is not None) >= ROOM_MAX:
             print("room: speaker refused (already", ROOM_MAX, "speakers in room mode)", flush=True)
             await self.say("Gerade hören schon zu viele Lautsprecher im Raum zu. Bitte später noch einmal.")
@@ -1142,7 +1145,8 @@ class Session:
                 if r is None:
                     return
                 uid = self.dev["user"]
-                if not room.enabled() or not admin_on() or not profile_on(uid) or _devices().get(self.dev["id"]) is None:
+                if not room.enabled() or not admin_on() or not profile_on(uid) or not features.allowed("room", uid) \
+                        or _devices().get(self.dev["id"]) is None:
                     await self.room_end("switched off", say=False, code="off")
                     return
                 if time.time() > r["until"]:
@@ -1782,7 +1786,7 @@ def _on(prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "speakers are turned off")
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "switch speakers on for your profile first")
+        raise HTTPException(403, "speakers are blocked for this profile by the admin (Funktionen → Wer darf was)")
     return prof
 
 
@@ -1861,11 +1865,11 @@ def profile_get(request: Request, prof=Depends(own_profile)):
     base = _base(request)
     return {"enabled": admin_on(), "on": profile_on(prof["id"]), "firmware": _fw_public(), "base": base,
             "fixed_base": bool(load_config().get("chat", {}).get("esp32_url")), "devices": _list(prof["id"]),
-            "room": bool(load_config().get("chat", {}).get("room", False)),
-            "speaker_id": bool(load_config().get("chat", {}).get("speaker_id", False)),
+            "room": features.allowed("room", prof["id"]),
+            "speaker_id": features.allowed("speaker", prof["id"]),
             "code": dict(spkcode.public(prof["id"]), enabled=features.admin_on("spkcode"),
                          on=features.profile_on("spkcode", prof["id"])),
-            "stop": {"enabled": features.admin_on("espstopp")}}
+            "stop": {"enabled": features.allowed("espstopp", prof["id"])}}
 
 
 @router.put("/api/profile/speaker-code", dependencies=[Depends(assistant)])
@@ -1874,6 +1878,8 @@ async def profile_speaker_code(request: Request, prof=Depends(secret_profile_fre
     profile's own browser login with a fresh code, never sent back, never in a log."""
     if not features.admin_on("spkcode"):
         raise HTTPException(403, "Codewort am Lautsprecher ist ausgeschaltet.")
+    if features.blocked("spkcode", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
     body = await _body(request)
     try:
         res = spkcode.set_code(prof["id"], str(body.get("code", ""))[:200])
@@ -2026,7 +2032,7 @@ async def _room_switch(did, cid, prof, on):
     """The switch "Raum" of a speaker: starts or ends room mode now when it is connected, else at its
     next wake word."""
     import room
-    if on and (not room.enabled() or not admin_on() or not profile_on(prof["id"])):
+    if on and (not room.enabled() or not admin_on() or not profile_on(prof["id"]) or not features.allowed("room", prof["id"])):
         raise HTTPException(403, "Der Raum-Modus ist ausgeschaltet (Funktionen).")
     s = _live.get(did)
     if on:

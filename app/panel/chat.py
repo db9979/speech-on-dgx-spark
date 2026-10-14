@@ -72,6 +72,8 @@ async def learn_once():
         for uid in profiles.user_ids():
             if not dict(adm, **profiles.settings(uid)).get("learn", True):
                 continue
+            if not (features.allowed("memory", uid, ccfg) and features.allowed("history", uid, ccfg)):
+                continue   # the admin blocked it for this profile (Funktionen → Wer darf was)
             prof = profiles.by_id(uid)
             for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
                 if vorrang.speaking():
@@ -1327,7 +1329,7 @@ async def morning_briefing(uid, tz="", markdown=False):
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow = today + datetime.timedelta(days=1)
     parts = [now_line(tz).split(" Nutze")[0], f"Name: {prof['name'] if prof else ''}"]
-    cal = calendars.get(uid) if ccfg.get("calendar", True) else {"calendars": [], "topics": []}
+    cal = calendars.get(uid) if features.allowed("calendar", uid, ccfg) else {"calendars": [], "topics": []}
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
         if cal["calendars"]:
             try:
@@ -1336,11 +1338,11 @@ async def morning_briefing(uid, tz="", markdown=False):
                 parts += [f"Calendar '{n}' could not be read." for n, _ in errors]
             except Exception as e:
                 parts.append(f"Calendar not reachable: {type(e).__name__}")
-        if ccfg.get("reminders", True):
+        if features.allowed("reminders", uid, ccfg):
             pend = [x for x in profiles.reminders(uid) if x["due"] < tomorrow.timestamp() * 1000]
             parts.append("Reminders today:\n" + ("\n".join(
                 f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
-        if ccfg.get("search") and ccfg.get("search_url"):
+        if ccfg.get("search_url") and features.allowed("search", uid, ccfg):
             quick = dict(ccfg, search_pages=0, search_results=3)
             for q in cal.get("topics", [])[:4]:
                 try:
@@ -1348,7 +1350,7 @@ async def morning_briefing(uid, tz="", markdown=False):
                 except Exception:
                     pass
         parts += [x for _, x in await extras.briefing(uid, zone)]
-        if ccfg.get("mail", False) and mail.get(uid)["accounts"]:   # last: nothing after it acts on its text
+        if features.allowed("mail", uid, ccfg) and mail.get(uid)["accounts"]:   # last: nothing after it acts on its text
             try:
                 parts.append(await asyncio.to_thread(mail.briefing, uid))
             except Exception:
@@ -1371,10 +1373,11 @@ async def due_briefings(now=None):
     two hours after that time (the panel may have been off). Also kept as a conversation."""
     import push
     sent = 0
+    c = features.chat_cfg()   # read once: many profiles
     for uid in profiles.user_ids():
         s = profiles.settings(uid)
-        if not s.get("briefing_at") or not push.reachable(uid):
-            continue
+        if not s.get("briefing_at") or not push.reachable(uid) or not features.allowed("calendar", uid, c):
+            continue   # the briefing belongs to the calendar: not while the admin blocked it for this profile
         local = now or datetime.datetime.now(user_zone(s.get("tz", "")))
         hh, mm = map(int, s["briefing_at"].split(":"))
         start = local.replace(hour=hh, minute=mm, second=0, microsecond=0)
@@ -1462,7 +1465,7 @@ def history_chars(ccfg):
 
 def own_style(ccfg, who, pset, own_browser):
     """The profile's own wishes for the tone: admin chat.own_style on, a signed-in profile, its own voice; never guests."""
-    text = pset.get("style") if who and own_browser and features.admin_on("style", ccfg) else ""
+    text = pset.get("style") if who and own_browser and features.allowed("style", who["id"], ccfg) else ""
     return text.strip()[:STYLE_MAX] if isinstance(text, str) else ""
 
 

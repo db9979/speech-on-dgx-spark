@@ -284,7 +284,7 @@ async def answer(uid, q, page):
         parts.append("Passende Stellen aus den eigenen Dokumenten:\n" + _outside(
             "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in found)))
     cc, web = features.chat_cfg(), False
-    if features.admin_on("search") and cc.get("search_url"):
+    if features.allowed("search", uid, cc) and cc.get("search_url"):
         try:
             from chat import web_search
             async with httpx.AsyncClient(timeout=15) as c:
@@ -718,7 +718,7 @@ def tools_for(uid, text):
         return out
     out += [PAGE_TOOL] if URL.search(text) else []
     import mail
-    if ATTACH_WORDS.search(text) and features.chat_cfg().get("mail", False) and mail.get(uid)["accounts"]:
+    if ATTACH_WORDS.search(text) and features.allowed("mail", uid) and mail.get(uid)["accounts"]:
         out.append(ATTACH_TOOL)
     return out
 

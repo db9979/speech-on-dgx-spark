@@ -77,9 +77,9 @@ PAGE_TEXT = {
     "logs": ("Zustand → Logs: das Protokoll des Spark mit Filtern (Diagnose, Anfragen), „Kopieren für Thread“ gibt einen Auszug ohne Geheimnisse.",
              "Status → Logs: the Spark's log with filters (diagnosis, requests); \"Copy for thread\" gives an excerpt without secrets."),
     "feat": ("Funktionen: jede Funktion des Spark mit ihrem Admin-Schalter, darunter Unter-Schalter und die Anleitung. "
-             "Was hier aus ist, kann kein Profil benutzen; vieles muss jedes Profil zusätzlich unter Ich einschalten.",
-             "Features: every function of the Spark with its admin switch, sub-switches below and the guide. What is off here no "
-             "profile can use; much of it each profile also switches on under Me."),
+             "Was hier an ist, gilt sofort für jedes Profil; einzelne Profile sperrt der Admin unter Funktionen → Wer darf was.",
+             "Features: every function of the Spark with its admin switch, sub-switches below and the guide. What is on here "
+             "applies to every profile at once; the admin blocks single profiles under Features → Who may do what."),
     "who": ("Funktionen → Wer darf was: welche Funktion welches Profil benutzen darf und wer sie gerade an hat.",
             "Features → Who may do what: which function each profile may use and who has it on."),
     "route": ("Funktionen → Weiche: welche Werkzeuge eine Frage bekommt, als Bild. Einen Satz ausprobieren, Gruppen mit eigenen "
@@ -1121,6 +1121,10 @@ def answer_text(question, uid, level="profile", page=None, lang="de", request=No
                 off_spark = True
                 text = ("Diese Funktion ist auf dem Spark aus; nur der Admin kann sie einschalten."
                         if li == 0 else "This function is off on the Spark; only the admin can switch it on.") + " " + text
+            elif it["feature"] and uid and features.blocked(it["feature"], uid, c):
+                off_spark = True
+                text = ("Diese Funktion hat der Admin für dich gesperrt (Funktionen → Wer darf was)."
+                        if li == 0 else "The admin blocked this function for you (Features → Who may do what).") + " " + text
         text = SECRET.sub("…", text)
         ws = [way(w, org, app, lang) for w in ways(it, lang, level, c)]
         head = f"[{i}] {kinds[it['kind']][li]} „{it['title']}“"
@@ -1211,6 +1215,9 @@ def build_card(uid, wanted, on_, admin, lang="de", recipe=None, c=None):
         if key not in APPLY_PROFILE:
             blocked.append({"name": name(f), "why": ("nur von Hand (Zeig mir wo)", "only by hand (show me where)")[li],
                             "key": key, "me": f.me or "", "sw": "chat." + f.admin[0] if f.admin else ""})
+            return
+        if on_ and not admin and features.blocked(key, uid, c):   # the admin's block: no card switches around it
+            blocked.append({"name": name(f), "why": ("vom Admin für dich gesperrt", "blocked for you by the admin")[li]})
             return
         if on_ and f.parent and not features.admin_on(f.parent, c):
             add(f.parent, depth + 1)

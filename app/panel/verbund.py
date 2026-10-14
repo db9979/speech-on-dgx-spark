@@ -119,7 +119,7 @@ def admin_on():
 
 
 def usable(uid):
-    """The admin allows it, Chats work for the person and its own switch (Ich → Gespräch → Chats) is on."""
+    """The admin allows it (not blocked for this profile) and Chats work for the person."""
     import chats
     return bool(uid and features.allowed("verbund", uid) and chats.usable(uid))
 
@@ -374,7 +374,7 @@ def why_not(uid, rid):
     if not admin_on():
         return "Chats mit anderen Sparks sind gerade ausgeschaltet."
     if not usable(uid):
-        return "Schalte unter Ich → Gespräch → Chats „Chats mit anderen Sparks“ ein."
+        return ("Chats mit anderen Sparks gehen für dich gerade nicht. " + features.missing_text("verbund", uid)).strip()
     c = contact(uid, rid)
     if not c or c.get("state") != "ok":
         return "Diese Person ist nicht mehr in deinen Kontakten auf anderen Sparks."

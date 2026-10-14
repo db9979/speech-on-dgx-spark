@@ -436,7 +436,7 @@ async def heard(uid, rid, text, body):
                                                              if time.time() - x[0] < 120]}
         if r["mute"] <= time.time():
             # looked up while the room still talks, so the answer is ready in the next pause
-            cue["prep"] = asyncio.ensure_future(answer(cue["text"], cue["before"]))
+            cue["prep"] = asyncio.ensure_future(answer(cue["text"], cue["before"], uid))
     elif level != "questions":
         if kinds["cal"] and appointment_cue(text):
             cue = {"kind": "calendar", "text": red}
@@ -470,7 +470,7 @@ def _drop(cue):
         t.cancel()
 
 
-async def _prepared(cue):
+async def _prepared(cue, uid=""):
     """The answer looked up when the question was heard; asked again if that lookup is gone."""
     t = cue.get("prep")
     try:
@@ -481,7 +481,7 @@ async def _prepared(cue):
             raise
     except Exception as e:
         print("room: prepared answer failed:", type(e).__name__, flush=True)
-    return await answer(cue["text"], cue.get("before") or [])
+    return await answer(cue["text"], cue.get("before") or [], uid)
 
 
 async def pause(uid, rid, body):
@@ -501,7 +501,7 @@ async def pause(uid, rid, body):
     say, data = None, ""
     try:
         if cue and cue["kind"] == "question":
-            say, data = await _prepared(cue)
+            say, data = await _prepared(cue, uid)
         elif cue and cue["kind"] == "conv":
             say, data = cue["say"], "berechnet"
         elif cue and cue["kind"] == "timer":
@@ -517,7 +517,7 @@ async def pause(uid, rid, body):
         elif not cue and _may_detect(r, body):
             cue = await detect(r, body)
             if cue and cue["kind"] == "question":
-                say, data = await answer(cue["text"], cue.get("before") or [])
+                say, data = await answer(cue["text"], cue.get("before") or [], uid)
             elif cue and cue["kind"] == "calendar":
                 say, data = await propose_appointment(uid, r, tz)
             elif cue and cue["kind"] == "shop":
@@ -584,7 +584,7 @@ async def tv_on(uid, area):
     hit = _TV.get(key)
     if hit and 0 <= time.time() - hit[0] < TV_SECONDS:
         return hit[1]
-    ha = homeassistant.get(uid) if proactive.ccfg().get("homeassistant", False) else None
+    ha = homeassistant.get(uid) if features.allowed("ha", uid) else None
     on = None
     if ha:
         try:
@@ -723,7 +723,7 @@ def full_question(question, before, said):
     return q
 
 
-async def answer(question, before=()):
+async def answer(question, before=(), uid=""):
     cc = proactive.ccfg()
     before = list(before)
     if before and needs_context(question):
@@ -735,7 +735,7 @@ async def answer(question, before=()):
             return None, "unclear what the question refers to"
         question = full
     source = ""
-    if cc.get("search") and cc.get("search_url"):
+    if cc.get("search_url") and features.allowed("search", uid, cc):   # the room's profile (blocked: no web)
         from chat import web_search
         async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=5)) as c:
             source = (await web_search(c, dict(cc, search_pages=0, search_results=4), question))[0][:5000]
@@ -778,7 +778,7 @@ def parse_appointment(text, lines, tz):
 
 
 async def propose_appointment(uid, r, tz):
-    if not proactive.ccfg().get("calendar", True) or not calendars.get(uid)["calendars"]:
+    if not features.allowed("calendar", uid) or not calendars.get(uid)["calendars"]:
         return None, "no calendar connected"
     from chat import now_line
     lines = [x[1] for x in r["lines"][-8:]]
@@ -804,7 +804,7 @@ async def _area_states(ha, area, every=False):
 
 async def room_state(uid, r, what, area):
     """The room's real temperature or light, and a proposal to change it."""
-    ha = homeassistant.get(uid) if proactive.ccfg().get("homeassistant", False) else None
+    ha = homeassistant.get(uid) if features.allowed("ha", uid) else None
     if not ha or not area:
         return None, "no Home Assistant" if not ha else "no room set for this device"
     states = await _area_states(ha, area)
@@ -841,7 +841,7 @@ async def room_state(uid, r, what, area):
 
 
 def propose_shopping(uid, r):
-    ha = homeassistant.get(uid) if proactive.ccfg().get("homeassistant", False) else None
+    ha = homeassistant.get(uid) if features.allowed("ha", uid) else None
     if not ha:
         return None, "no Home Assistant"
     items, r["shop"] = r["shop"], []
@@ -850,12 +850,12 @@ def propose_shopping(uid, r):
     return f"Soll ich {names} auf die Einkaufsliste setzen?", ", ".join(items)
 
 
-def _timers_on():
-    return proactive.ccfg().get("reminders", True)
+def _timers_on(uid):
+    return features.allowed("reminders", uid)
 
 
 def propose_timer(uid, r, cue):
-    if not _timers_on():
+    if not _timers_on(uid):
         return None, "timers are turned off"
     n = cue["minutes"]
     span = f"{n} Minuten" if n % 60 or n < 60 else ("eine Stunde" if n == 60 else f"{n // 60} Stunden")
@@ -865,7 +865,7 @@ def propose_timer(uid, r, cue):
 
 
 def propose_reminder(uid, r, cue, tz):
-    if not _timers_on():
+    if not _timers_on(uid):
         return None, "reminders are turned off"
     from chat import user_zone
     now = datetime.datetime.now(user_zone(tz))
@@ -930,6 +930,10 @@ def _not_owner(uid, voice, text=None):
 
 async def _carry_out(uid, r, offer, text):
     """A yes to the open proposal: the panel does it and says only the checked result."""
+    need = {"ha": "ha", "shop": "ha", "timer": "reminders", "remind": "reminders", "calendar": "calendar"}.get(offer["kind"], "room")
+    if not features.allowed(need, uid):   # blocked by the admin since it was proposed (Funktionen → Wer darf was)
+        r["offer"] = None
+        return "Das geht für dein Profil gerade nicht."
     if offer["kind"] in ("ha", "shop"):
         ha = homeassistant.get(uid)
         if not ha:
@@ -988,9 +992,12 @@ async def comment(r):
 
 
 # ---------------------------------------------------------------- API
-def _on():
+def _on(request: Request):
     if not enabled():
         raise HTTPException(403, "room mode is turned off")
+    prof = profiles.current(request)
+    if prof and features.blocked("room", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 def _rid(body):

@@ -96,7 +96,7 @@ def items(uid):
     if features.allowed("beratermich", uid):
         for p in berater.profile_props(uid):
             out.append({"src": "mich", "id": p["id"], "text": p["title"][0], "sub": p["why"][0].replace("👎", "Daumen runter")})
-    if admin(uid) and features.admin_on("berater"):
+    if admin(uid) and features.allowed("berater", uid):
         for p in berater.props(status=("offen",)):
             if p.get("stufe") in ("C", "U", "I", "P"):
                 continue          # with a code, outside or a plan: only in the app
@@ -445,7 +445,7 @@ def _do(uid, it, choice, now):
         return "abgelehnt", None
     if src == "berater":
         # Dominik 2b: an admin's tick is done directly; checked again now (the role may have changed since)
-        if not (admin(uid) and features.admin_on("berater")):
+        if not (admin(uid) and features.allowed("berater", uid)):
             return "aus", None
         p = berater.get(iid)
         if not p or p.get("status") != "offen" or p.get("stufe") in ("C", "U", "I", "P"):

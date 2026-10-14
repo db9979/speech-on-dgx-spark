@@ -816,10 +816,12 @@ def notify_targets(skip=""):
     """The admin profiles that hear of a new report: the one chosen for admin notes, owners and Mit-Admins
     (notaus.admin_uids), without the reporter, without those that turned it off for themselves (report_notify),
     and none when the admin switch chat.report_notify is off."""
-    if not features.chat_cfg().get("report_notify", False):
+    c = features.chat_cfg()
+    if not c.get("report_notify", False):
         return []
     import notaus
-    return [u for u in notaus.admin_uids() if u and u != skip and profiles.settings(u).get("report_notify", True) is not False]
+    return [u for u in notaus.admin_uids() if u and u != skip and profiles.settings(u).get("report_notify", True) is not False
+            and not features.blocked("meldenadmin", u, c)]
 
 
 def _may_notify(uid):

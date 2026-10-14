@@ -166,6 +166,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Locked means visible:** locked rows are shown grey with a reason ("Switched off by the admin" / "Vom Admin ausgeschaltet"), not hidden. Under Me they are collected in a collapsed box. The reason comes from `features.reason()`, never from the model. (D, P einstellungen-neu)
 - **The Features page stays short.** New sub-features come as sub-switches (`data-show`) under their main switch. (M; 🧪 test_ui_browser height budget)
 - **Preferences only for unasked actions, on and switchable off under Me:** A feature gets a profile preference (`pref=` in `features.py`) only when the Spark does something by itself with it (speaks up, announces, sends to a device, tidies up). The preference starts on, a missing value counts as on; it is in `profiles.NO_PRESET` and gets its toggle on the Me page named in `me` in the same commit. Nothing else has a profile switch. (Dominik 2026-10-13; 🧪 test_features)
+- **A block holds everywhere:** What acts for a profile asks `features.allowed`; `features.admin_on` only on admin pages or Spark-wide places, each with its reason in `test_sperre_ueberall.ADMIN_ON_OK`. Seeing and deleting own data works also while blocked. (Dominik 2026-10-13; 🧪 test_sperre_ueberall)
 - **Roles:** logs, requests and Live are seen by the main admin and co-admin, not by the manager. (P anfrage-verfolgen, live-uebersicht)
 - Build only after Dominik's OK. For larger features first a plan under `plaene/` with pictures, numbered points and a ★ recommendation. (PA, M)
 

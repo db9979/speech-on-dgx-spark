@@ -117,7 +117,7 @@ def cache(uid):
 def status(uid):
     """For Ich → Von selbst: whether the live connection runs."""
     s = _streams.get(uid)
-    on = features.admin_on("halive")
+    on = features.admin_on("halive") and not features.blocked("halive", uid)
     if not s:
         return {"live": False, "allowed": on, "error": ""}
     return {"live": bool(s.synced and not s.error), "allowed": on, "since": int(s.since), "error": s.error,
@@ -639,7 +639,7 @@ async def api_event(request: Request, prof=Depends(own_profile)):
 @router.get("/api/profile/ha-events", dependencies=[Depends(assistant)])
 def api_events_get(prof=Depends(browser_profile)):
     last = profiles.seen()
-    return {"allowed": features.admin_on("haevent"), "on": _gate(prof["id"]), "events": events(prof["id"]),
+    return {"allowed": features.admin_on("haevent") and not features.blocked("haevent", prof["id"]), "on": _gate(prof["id"]), "events": events(prof["id"]),
             "keys": [{"id": x["id"], "created": x.get("created"), "last": (last.get(x["id"]) or {}).get("t")}
                      for x in _keys(prof["id"])],
             "speakers": speakers(prof["id"]) if features.allowed("haloud", prof["id"]) else []}

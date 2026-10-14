@@ -118,7 +118,7 @@ async def prepare(request):
     # memory, no history, no timers, no web search (Dominik 2026-10-13: "einfach bloß Frage, Antwort"). Fixed rule.
     me0 = profiles.current(request)
     guest = not me0 or bool(shared_stranger(request, body, me0))
-    search = bool(ccfg.get("search") and ccfg.get("search_url")) and not guest
+    search = bool(ccfg.get("search") and ccfg.get("search_url")) and not guest and features.allowed("search", me0["id"], ccfg)
     # The answer before came from mail (also a mail note the assistant made by itself): kept in this
     # turn it would lock the web search too (its text could carry the mail away). So it is kept only
     # when the new question goes on about it ("Was schreibt sie noch?"); any other question (or one
@@ -215,6 +215,7 @@ async def prepare(request):
     # why the search is (not) offered, for the journal and for the model (never silently missing)
     print("chat: web search", "NOT offered: guest, only questions and answers" if guest
           else "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
+          else "NOT offered: not for this profile (Funktionen → Wer darf was)" if not features.allowed("search", me0["id"], ccfg)
           else "NOT offered: no SearXNG address" if not search
           else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
     if cache_on and search and carry == "mail":   # the usual hint stays, the lock goes with the question
@@ -328,12 +329,12 @@ async def prepare(request):
         system = (system + "\n\n" + chat.SPEAKER_HINT).strip()
     # a voice recognized at someone else's device gets no personal data at all (it could be a recording
     # of that person): no memory, history, documents, calendar, contacts, lists or reminders
-    prof = who if ccfg.get("memory", True) and own_browser and not mcp else None
+    prof = who if who and ccfg.get("memory", True) and own_browser and not mcp and features.allowed("memory", who["id"], ccfg) else None
     memcheck = None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + chat.memory_hint(prof)).strip()
         memcheck = chat.gedaechtnis.for_turn(prof["id"]) if chat.gedaechtnis.on(prof["id"], ccfg) else None
-    past = bool(prof and ccfg.get("history", True))
+    past = bool(prof and ccfg.get("history", True) and features.allowed("history", prof["id"], ccfg))
     if past:
         system = (system + "\n\n" + chat.HISTORY_HINT).strip()
     # pictures (images.py): only with the admin's and the profile's switches, from its own login, app or
@@ -346,7 +347,8 @@ async def prepare(request):
         print("chat:", len(pics), "picture(s) attached, no tools in this answer, locked like outside text", flush=True)
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
-    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) and not pics and not mcp else None
+    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) and not pics and not mcp \
+        and features.allowed("ha", who["id"], ccfg) else None
     # over Telegram the profile decides: personal data only with tg_private, switching only with tg_ha
     # and a code word (the messages pass Telegram's servers)
     tg = body.get("client") == "telegram"
@@ -384,6 +386,7 @@ async def prepare(request):
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
                   else "a picture is attached (no tools in this answer)" if pics
+                  else "not for this profile (Funktionen → Wer darf was)" if not features.allowed("ha", who["id"], ccfg)
                   else "not allowed in the car (Ich → iPhone-App)" if app_blocked and car
                   else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
                   else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
@@ -478,22 +481,24 @@ async def prepare(request):
             print("homeassistant: lookup failed:", type(e).__name__, flush=True)
     # own documents plus the ones other profiles offer to everyone; neither for guests or a voice the
     # shared speaker does not recognize (private_ok)
-    docs_ok = bool(who and private_ok and ccfg.get("documents", True) and (not mcp or "document_search" in mcp["tools"]))
+    docs_ok = bool(who and private_ok and ccfg.get("documents", True) and (not mcp or "document_search" in mcp["tools"])
+                   and features.allowed("documents", who["id"], ccfg))
     docs = documents.list_docs(who["id"], used_only=True) if docs_ok else []
     shared_docs = wissen.shared_list(who["id"]) if docs_ok else []
     if docs or shared_docs:
         system = per_turn(system, chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
                                                  wissen.on(who["id"], "brief")))
     docs = docs + shared_docs
-    timers = bool(ccfg.get("reminders", True)) and not guest
+    timers = bool(ccfg.get("reminders", True)) and not guest and bool(who) and features.allowed("reminders", who["id"], ccfg)
     if timers:
         system = (system + "\n\n" + chat.REMINDER_HINT).strip()
     # e-mail like Home Assistant: only for the profile's own login or device key
-    mailbox = bool(who and own_browser and private_ok and not mcp and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
+    mailbox = bool(who and own_browser and private_ok and not mcp and ccfg.get("mail", False) and features.allowed("mail", who["id"], ccfg)
+                   and mail.get(who["id"])["accounts"])
     if mailbox:
         system = (system + "\n\n" + chat.MAIL_HINT).strip()
     # tidying and drafts (tidy.py): only for mailboxes the profile switched on; changes after a yes
-    tidy_st = tidy.state(who["id"]) if mailbox and tidy.admin_on() else None
+    tidy_st = tidy.state(who["id"]) if mailbox and features.allowed("tidy", who["id"], ccfg) else None
     tidy_on = bool(tidy_st and any(tidy.acct_state(tidy_st, x["id"])["mode"] != "off"
                                    for x in mail.get(who["id"])["accounts"]))
     drafts_on = bool(tidy_st and any(tidy.acct_state(tidy_st, x["id"]).get("drafts")
@@ -502,7 +507,7 @@ async def prepare(request):
         system = (system + "\n\n" + chat.TIDY_HINT).strip()
     if drafts_on:
         system = (system + "\n\n" + chat.DRAFT_HINT).strip()
-    briefing = bool(ccfg.get("calendar", True)) and not guest
+    briefing = bool(ccfg.get("calendar", True)) and not guest and bool(who) and features.allowed("calendar", who["id"], ccfg)
     cal_note = list(kl_note)
     if role_cmd:   # shown in the tool log like a tool the panel ran itself
         cal_note.append({"name": {"notaus": "Notaus (Panel)", "meldung": "Meldung (Panel)", "bewertung": "Bewertung (Panel)",

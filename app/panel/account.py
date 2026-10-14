@@ -113,8 +113,10 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
-            **{name: features.admin_on(key, chat) for name, key in WHO.items()},
-            "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
+            # a function the admin blocked for this profile (Funktionen → Wer darf was) shows no page either
+            **{name: features.admin_on(key, chat) and not (prof and features.blocked(key, prof["id"], chat))
+               for name, key in WHO.items()},
+            "agent": bool(prof and agent.level(prof["id"])),
             # Chats (chats.py): the menu entry only for a profile that may use them now (Spark and own switch)
             "chats_use": bool(prof and features.allowed("chats", prof["id"], chat)),
             # what this profile may use now (features.stamp): a page or app that started with another one reloads its switches
@@ -492,7 +494,7 @@ async def profile_quality_case(request: Request, prof=Depends(browser_profile)):
     """A question the assistant got wrong goes to the admin's quality test (fixes.py, quality.py). Only the
     profile's own browser login; the text comes from the profile's own log, not from the request."""
     guard.limit(request, "chat", uid=prof["id"])
-    if not load_config().get("chat", {}).get("learn_fixes", False):
+    if not load_config().get("chat", {}).get("learn_fixes", False) or features.blocked("fixes", prof["id"]):
         raise HTTPException(403, "learning from corrections is off")
     body = await request.json()
     t = body.get("t") if isinstance(body, dict) else None
@@ -1001,6 +1003,8 @@ def profile_docs(request: Request, prof=Depends(own_profile)):
 async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_profile)):
     if not load_config().get("chat", {}).get("documents", True):
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
+    if features.blocked("documents", prof["id"]):
+        raise HTTPException(403, "documents are blocked for this profile (Funktionen → Wer darf was)")
     data = await file.read(wissen.pdf_bytes() + 1)
     try:
         return await asyncio.to_thread(wissen.add, prof["id"], file.filename, data)
@@ -1178,7 +1182,8 @@ async def profile_ha_test(request: Request, prof=Depends(browser_profile)):
 
 @router.get("/api/profile/voice", dependencies=[Depends(assistant)])
 def profile_voice(prof=Depends(own_profile)):
-    return {"samples": len(speakers.samples(prof["id"])), "enabled": load_config()["chat"].get("speaker_id", False)}
+    return {"samples": len(speakers.samples(prof["id"])),
+            "enabled": features.admin_on("speaker") and not features.blocked("speaker", prof["id"])}
 
 
 @router.post("/api/profile/voice", dependencies=[Depends(assistant), Depends(speaker_on)])

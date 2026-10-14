@@ -442,9 +442,11 @@ def blocked(key, uid, c=None):
     one it builds on. A profile can never change this itself, it is not in its settings."""
     c = chat_cfg() if c is None else c
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
-    return any(uid in (deny.get(k) or ()) for k in chain(key))
+    return any(uid in (deny.get(k) or ()) for k in chain(key) if k not in NO_BLOCK)
 
 
+# never blocked for a single profile: a profile must always be able to set up its second step (Dominik 2026-10-13)
+NO_BLOCK = {"mfa"}
 MAX_DENY = 2000   # blocked profiles per function (Wer darf was): the whole household, a bound for the config
 
 
@@ -455,7 +457,7 @@ def clean_deny(deny):
     have = set(profiles.user_ids())
     out = {}
     for k, v in deny.items():
-        if k in BY_KEY and isinstance(v, list):
+        if k in BY_KEY and k not in NO_BLOCK and isinstance(v, list):
             ids = list(dict.fromkeys(u for u in v if isinstance(u, str) and u in have))[:MAX_DENY]
             if ids:
                 out[k] = ids
@@ -678,6 +680,7 @@ def matrix():
     for f in FEATURES:
         rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
                      "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None,
+                     "blockable": f.key not in NO_BLOCK,
                      "seen": f.key in seen, "guide": f.guide,
                      # per profile: may it use it (True), blocked here by the admin (False) or through a function it builds on
                      "cells": {u["id"]: u["id"] not in (deny.get(f.key) or ()) for u in users},
@@ -705,6 +708,8 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
     f = BY_KEY.get(key)
     if not f or not _UID.fullmatch(uid) or not profiles.by_id(uid):
         raise HTTPException(404, "no such function or profile")
+    if key in NO_BLOCK:
+        raise HTTPException(400, "not blockable")
     raw = await request.body()
     if len(raw) > 256:
         raise HTTPException(413, "too large")

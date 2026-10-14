@@ -1642,7 +1642,10 @@ async def due_once(idle=True):
     import asyncio
     if not admin_on():
         return
+    c = features.chat_cfg()   # read once: many profiles
     for uid in profiles.user_ids():
+        if not features.allowed("tidy", uid, c):   # the admin blocked it for this profile (Funktionen → Wer darf was)
+            continue
         d = state(uid)
         every = d["every"] * 60
         for x in mail.get(uid)["accounts"]:
@@ -1701,9 +1704,13 @@ from core import assistant, browser_profile, own_profile, secret_profile  # noqa
 router = APIRouter()
 
 
-def _on():
+def _on(request: Request):
     if not admin_on():
         raise HTTPException(403, "inbox tidying is turned off")
+    prof = profiles.current(request)
+    # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
+    if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("tidy", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 async def _body(request):

@@ -698,7 +698,7 @@ def _on(prof=Depends(browser_profile)):
 
 def _may(prof):
     if not allowed(prof["id"]):
-        raise HTTPException(403, "Erst „Eigene MCP-Dienste“ für dich einschalten.")
+        raise HTTPException(403, features.missing_text("mymcp", prof["id"]) or "„Eigene MCP-Dienste“ ist für dein Profil nicht freigegeben.")
 
 
 async def _body(request, most=65536):

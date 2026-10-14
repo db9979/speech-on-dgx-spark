@@ -69,7 +69,7 @@ def ha_on():
 
 
 def _gate(uid):
-    return ha_on()
+    return features.allowed("roomha", uid)   # the admin switch, and not blocked for this profile
 
 
 profiles.ROOM_GATE[0] = _gate

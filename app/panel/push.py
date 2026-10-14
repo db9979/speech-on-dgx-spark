@@ -314,11 +314,13 @@ def page_lately(uid):
 async def due_reminders():
     """Sends due reminders of profiles that have push switched on. Each one is taken off the list
     first, so a reminder a device already played is never pushed, and a pushed one never rings again."""
+    import features
     now = time.time() * 1000
     sent = 0
+    c = features.chat_cfg()   # read once: many profiles
     for uid in profiles.user_ids():
-        if not reachable(uid, private=False):
-            continue
+        if not reachable(uid, private=False) or not features.allowed("reminders", uid, c):
+            continue   # (the admin may have blocked reminders for this profile: Funktionen → Wer darf was)
         by = now - (PAGE_GRACE if page_lately(uid) else 0)
         for x in [x for x in profiles.reminders(uid) if x.get("due", 0) <= by]:
             if not profiles.take_reminder(uid, x["id"], by):

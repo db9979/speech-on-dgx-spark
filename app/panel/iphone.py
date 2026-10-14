@@ -115,12 +115,8 @@ GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_seman
                   "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on"))
 
 
-def panel_on():
-    return bool(load_config().get("chat", {}).get("iphone_panel", False))
-
-
 def area_on(uid, right):
-    return admin_on() and panel_on() and bool(profiles.settings(uid).get(right))
+    return features.allowed("iphonepanel", uid) and bool(profiles.settings(uid).get(right))
 
 
 profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p in rules)
@@ -212,10 +208,12 @@ async def _json(request, most=MAX_BODY):
     return d if isinstance(d, dict) else {}
 
 
-def _on(prof=Depends(browser_profile)):
+def _on(request: Request, prof=Depends(browser_profile)):
     """Pairing and managing iPhones: only from the profile's own browser login, never with a device key."""
     if not admin_on():
         raise HTTPException(403, "the iPhone app is turned off")
+    if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("iphone", prof["id"]):   # own data: seen and deleted also while blocked
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
     return prof
 
 
@@ -231,7 +229,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time link for the app: as a QR code and as a link for this very iPhone."""
     body = await _json(request)
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "Erst „iPhone-App für mich“ einschalten.")
+        raise HTTPException(403, "Die iPhone-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
     if len(phones(prof["id"])) >= MAX_PHONES:
         raise HTTPException(409, f"Schon {MAX_PHONES} iPhones gekoppelt. Erst eines entfernen.")
     base = _base(body)
@@ -307,7 +305,7 @@ def app_hello(prof=Depends(own_profile)):
             # what the profile allows the app (the panel decides; the app only shows and follows it)
             "listen": bool(s.get("app_listen")), "act": bool(s.get("app_act")),
             "proactive": bool(proactive.enabled() and features.allowed("proactive", prof["id"])),
-            "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
+            "reminders": features.allowed("reminders", prof["id"]),
             # the profile's own face (Ich → Gespräch → Anzeige, also the app's Einstellungen → Gesicht), else the
             # Spark's (Einstellungen → Vorgaben); only names from the fixed list
             "face": profiles.face_of(prof["id"], load_config().get("chat", {})),
@@ -328,9 +326,9 @@ def app_hello(prof=Depends(own_profile)):
             # Spark updates (appupdate.py): the version page and the start button, rights set by the admin
             "update": appupdate.for_app(prof["id"]),
             # where room mode listens right now (roomlive.py): the line in the chat, the widget and the Live Activity
-            "rooms": bool(load_config().get("chat", {}).get("room", False) and s.get("app_room")),
+            "rooms": bool(features.allowed("room", prof["id"]) and s.get("app_room")),
             # panel areas in the app (plaene/iphone-uebernimmt-panel.md); panel: the bridge "Im Panel öffnen"
-            "panel": panel_on(), "areas": panel_rights(prof["id"]),
+            "panel": features.allowed("iphonepanel", prof["id"]), "areas": panel_rights(prof["id"]),
             # "Problem melden" in the settings (meldung.py): admin switch and the profile's own
             "report": features.allowed("melden", prof["id"]),
             # "Vom Spark erstellt" (docmake.py): the made documents to look at, download and share
@@ -342,7 +340,7 @@ DOC_CHARS = 1_000_000
 
 
 def docs_on(uid):
-    return bool(load_config().get("chat", {}).get("documents", True) and profiles.settings(uid).get("app_docs"))
+    return bool(features.allowed("documents", uid) and profiles.settings(uid).get("app_docs"))
 
 
 @router.post("/api/iphone/doc", dependencies=[Depends(assistant)])
@@ -401,12 +399,13 @@ def app_settings(request: Request, prof=Depends(own_profile)):
     fields = _fields(prof["id"])
     return {"settings": {k: p[k] for k in fields},
             # which of the conversation switches the admin allows (the rest change nothing)
-            "admin": {"tool_think": features.admin_on("toolthink", chat), "route": features.admin_on("routing", chat),
-                      "fix_learn": features.admin_on("fixes", chat)},
+            "admin": {"tool_think": features.allowed("toolthink", prof["id"], chat), "route": features.allowed("routing", prof["id"], chat),
+                      "fix_learn": features.allowed("fixes", prof["id"], chat)},
             # shown only: the tone is changed in the browser login, the rights in Ich -> iPhone-App
-            "style": p.get("style", "") if features.admin_on("style", chat) else None,
+            "style": p.get("style", "") if features.allowed("style", prof["id"], chat) else None,
             "rights": {k: bool(p.get(k)) for k in RIGHTS},
-            "allow": {"proactive": proactive.enabled(), "documents": features.admin_on("documents", chat)},
+            "allow": {"proactive": proactive.enabled() and not features.blocked("proactive", prof["id"], chat),
+                      "documents": features.allowed("documents", prof["id"], chat)},
             # services the admin released for this profile ("Von selbst" can only use those)
             "services": {k: features.allowed(f, prof["id"], chat)
                          for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("con_on", "contacts"),

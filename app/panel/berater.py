@@ -2036,7 +2036,7 @@ def profile_props(uid, now=None):
 
     def add(key, new, de, en):
         e = K.ENTRIES[key]
-        if e["need"] and not features.admin_on(e["need"]):
+        if e["need"] and not features.allowed(e["need"], uid):
             return
         if s.get(e["key"], profiles.SETTINGS[e["key"]][0]) == new:
             return

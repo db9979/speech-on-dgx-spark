@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.522** Sperre gilt überall: was der Admin für ein Profil sperrt, greift in jedem Teil; eigene Daten bleiben löschbar
 - **V01.0.521** Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst
 - **V01.0.520** Treffer nachsortieren: ein kleines Modell auf dem Prozessor stellt die passendsten Fundstellen nach vorn
 - **V01.0.519** Dokumentensuche: Schnitt an Überschriften, Kontextzeile je Abschnitt, Abschnitt in der Quellenangabe
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.515** Postfach aufräumen: eigenen Ordner direkt aus der Frage anlegen, wenn keiner passt
 - **V01.0.514** Speicher aufgeräumt: Ich → Speicher zeigt Orte (NAS, Cloud, Ordner) und darunter, wofür sie da sind; Funktionen → „Speicher und NAS“ mit „Kopie meiner Daten“ darunter
 - **V01.0.513** Logs ohne Inhalte: keine gesprochenen Befehle, Server-Antworten oder rohen Profil-IDs mehr in Logzeilen, ein Test macht neue rot
-- **V01.0.512** reMarkable: Die Anmerkung auf dem Aufgabenblatt wird gelesen und kommt als Punkt zum Ankreuzen zurück, auch als Auftrag
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

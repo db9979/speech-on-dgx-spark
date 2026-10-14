@@ -439,9 +439,11 @@ from core import browser_profile, own_profile  # noqa: E402
 router = APIRouter()
 
 
-def _on(prof=Depends(own_profile)):
+def _on(request: Request, prof=Depends(own_profile)):
     if not admin_on():
         raise HTTPException(403, "tasks are turned off")
+    if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("tasks", prof["id"]):   # own data: seen and deleted also while blocked
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
     return prof
 
 

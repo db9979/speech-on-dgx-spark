@@ -158,8 +158,8 @@ def items(uid, c=None):
     st = state(uid)
     out = []
     for key, feat, step, me, de, en in ITEMS:
-        if not _shown(key, feat, c):
-            continue
+        if not _shown(key, feat, c) or (feat and features.blocked(feat, uid, c)):
+            continue   # (blocked for this profile by the admin: nothing to set up)
         f = features.BY_KEY.get(feat) if feat else None
         why = features.reason(feat, uid, c, s) if feat else None
         out.append({"key": key, "step": step, "name": [de, en], "me": me, "done": _done(key, uid),
@@ -194,7 +194,7 @@ def profile_setup(request: Request, prof=Depends(own_profile)):
     d = join.settings()
     out = {"steps": [{"key": k, "name": [de, en]} for k, de, en in STEPS], "items": items(prof["id"]),
            "state": state(prof["id"]), "handoff": d["handoff"]}
-    if d["app_link"] and features.admin_on("iphone"):
+    if d["app_link"] and features.allowed("iphone", prof["id"]):
         out["app_link"], out["app_qr"] = d["app_link"], join._qr(d["app_link"])
     return out
 

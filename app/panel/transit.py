@@ -12,6 +12,7 @@ same answer). With a commute set, "Von selbst" can say once a day when that trai
 """
 import datetime
 import json
+import os
 import re
 import time
 
@@ -300,9 +301,13 @@ from core import assistant, browser_profile, own_profile  # noqa: E402
 router = APIRouter()
 
 
-def _on():
+def _on(request: Request):
     if not admin_on():
         raise HTTPException(403, "transit is turned off")
+    prof = profiles.current(request)
+    # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
+    if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("transit", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 @router.get("/api/profile/transit", dependencies=[Depends(assistant)])
@@ -317,6 +322,18 @@ async def api_put(request: Request, prof=Depends(browser_profile)):
         return save(prof["id"], body if isinstance(body, dict) else {})
     except (ValueError, TypeError, AttributeError) as e:
         raise HTTPException(400, str(e))
+
+
+@router.delete("/api/profile/transit", dependencies=[Depends(assistant)])
+def api_delete(request: Request, prof=Depends(browser_profile)):
+    """Removes the profile's stop and commute: its own data, so also while the admin switched it off or blocked it."""
+    import guard
+    guard.limit(request, "features", prof["id"])
+    try:
+        os.remove(_file(prof["id"]))
+    except OSError:
+        pass
+    return get(prof["id"])
 
 
 @router.post("/api/profile/transit/find", dependencies=[Depends(assistant), Depends(_on)])

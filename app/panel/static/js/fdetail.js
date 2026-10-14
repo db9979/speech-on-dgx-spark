@@ -37,7 +37,7 @@ async function who(it){let box=[...it.children].find(x=>x.classList.contains('fw
   const d=WD||await whoData();if(!d){box.hidden=true;return}
   // the function itself and the switches inside it that show now (a sub-switch hides while the one it builds on is off)
   const shown=el=>{for(let x=el.closest('[data-show]');x;x=x.parentElement&&x.parentElement.closest('[data-show]'))if(x.style.display==='none')return false;return true};
-  const fs=d.features.filter(f=>{const el=$('chat.'+f.switch);return inItem(it,el)&&('chat.'+f.switch===it.dataset.sw||shown(el))});if(!fs.length){box.hidden=true;return}
+  const fs=d.features.filter(f=>{if(f.blockable===false)return false;const el=$('chat.'+f.switch);return inItem(it,el)&&('chat.'+f.switch===it.dataset.sw||shown(el))});if(!fs.length){box.hidden=true;return}
   box.hidden=false;box.textContent='';const h=document.createElement('div');h.className='fwhoh';
   h.innerHTML=`<b>${esc(t('Wer darf es','Who may use it'))}</b><span>${esc(t('wirkt sofort','applies at once'))}</span>`;box.appendChild(h);
   for(const f of fs){const r=document.createElement('div');r.className='fwrow';

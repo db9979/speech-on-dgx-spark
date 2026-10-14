@@ -379,9 +379,13 @@ from core import assistant, browser_profile, own_profile  # noqa: E402
 router = APIRouter()
 
 
-def _on():
+def _on(request: Request):
     if not admin_on():
         raise HTTPException(403, "weather is turned off")
+    prof = profiles.current(request)
+    # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
+    if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("weather", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 @router.get("/api/profile/weather", dependencies=[Depends(assistant)])
@@ -404,6 +408,18 @@ async def api_set(request: Request, prof=Depends(browser_profile)):
     except httpx.HTTPError as e:
         raise HTTPException(400, f"Wetterdienst nicht erreichbar ({type(e).__name__})")
     return {"place": d, "sample": sample, "choices": choices}
+
+
+@router.delete("/api/profile/weather", dependencies=[Depends(assistant)])
+def api_delete(request: Request, prof=Depends(browser_profile)):
+    """Removes the profile's place: its own data, so also while the admin switched weather off or blocked it."""
+    import guard
+    guard.limit(request, "features", prof["id"])
+    try:
+        os.remove(_file(prof["id"]))
+    except OSError:
+        pass
+    return {"place": {}}
 
 
 @router.post("/api/profile/weather/test", dependencies=[Depends(assistant), Depends(_on)])

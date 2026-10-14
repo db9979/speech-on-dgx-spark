@@ -462,31 +462,33 @@ async def secret_profile_fresh(request: Request):
     return await _secret_profile(request, True)
 
 
-# Calendar and briefing topics: profiles only; the stored password is never sent back.
-def calendar_on():
+def _gate(key, why, request):
+    """The admin switch, and not blocked for the profile behind this request (Funktionen → Wer darf was)."""
     import features   # features.py imports this module
-    if not features.admin_on("calendar"):
-        raise HTTPException(403, "calendar and daily briefing are turned off")
+    if not features.admin_on(key):
+        raise HTTPException(403, why)
+    prof = profiles.current(request)
+    if prof and features.blocked(key, prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+
+
+# Calendar and briefing topics: profiles only; the stored password is never sent back.
+def calendar_on(request: Request):
+    _gate("calendar", "calendar and daily briefing are turned off", request)
 
 
 # Home Assistant: each profile connects its own; the token is never sent back.
-def ha_on():
-    import features   # features.py imports this module
-    if not features.admin_on("ha"):
-        raise HTTPException(403, "Home Assistant is turned off")
+def ha_on(request: Request):
+    _gate("ha", "Home Assistant is turned off", request)
 
 
 # E-mail: each profile connects its own mailboxes, read only; the password is never sent back.
-def mail_on():
-    import features   # features.py imports this module
-    if not features.admin_on("mail"):
-        raise HTTPException(403, "reading e-mail is turned off")
+def mail_on(request: Request):
+    _gate("mail", "reading e-mail is turned off", request)
 
 
-def speaker_on():
-    import features   # features.py imports this module
-    if not features.admin_on("speaker"):
-        raise HTTPException(403, "speaker identification is turned off")
+def speaker_on(request: Request):
+    _gate("speaker", "speaker identification is turned off", request)
 
 
 def api_headers():

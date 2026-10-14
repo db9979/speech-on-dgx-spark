@@ -113,10 +113,6 @@ def _granted(uid):
 features.GRANTED["agent"] = _granted   # the admin gives the level; it holds at once unless the admin blocks the profile
 
 
-def mcp_on():
-    return features.admin_on("mcp")
-
-
 def watch_on(uid):
     """Watches allowed for this profile: the admin's switch „Beobachten“ and the agent level (reading is enough)."""
     return bool(level(uid)) and features.allowed("beobachten", uid)
@@ -144,7 +140,7 @@ def may(uid, need):
 
 
 def servers_for(uid):
-    return admin_state()["mcp"] if mcp_on() and level(uid) else []
+    return admin_state()["mcp"] if level(uid) and features.allowed("mcp", uid) else []
 
 
 # ---------------------------------------------------------------- the profile's jobs, plans and routines
@@ -381,15 +377,15 @@ def job_tools(uid, private):
     import documents
     cfg = dict(_defaults(), **ccfg())
     out = {}
-    if cfg.get("search") and cfg.get("search_url"):
+    if cfg.get("search_url") and features.allowed("search", uid, cfg):
         out["web_search"] = JOB_TOOLS["web_search"]
         out["read_page"] = JOB_TOOLS["read_page"]
     if private:
-        if cfg.get("calendar", True) and calendars.get(uid)["calendars"]:
+        if features.allowed("calendar", uid, cfg) and calendars.get(uid)["calendars"]:
             out["calendar_events"] = JOB_TOOLS["calendar_events"]
-        if cfg.get("reminders", True):
+        if features.allowed("reminders", uid, cfg):
             out["reminder_list"] = JOB_TOOLS["reminder_list"]
-        if cfg.get("documents", True) and documents.list_docs(uid):
+        if features.allowed("documents", uid, cfg) and documents.list_docs(uid):
             out["document_search"] = JOB_TOOLS["document_search"]
     extra = {}
     for name, server, t in mcp.tools_for(servers_for(uid), uid, ("read",)):
@@ -1456,7 +1452,7 @@ def offer(ctx):
             changes.add("agent_change")
         hint.append(HINT)
         import homeassistant
-        if lv == "act" and ccfg().get("homeassistant", False) and homeassistant.get(uid):
+        if lv == "act" and features.allowed("ha", uid) and homeassistant.get(uid):
             tools.append(TOOLS["routine_save"])
             changes.add("routine_save")
             hint.append(HINT_ACT)
@@ -1634,10 +1630,10 @@ def _view(uid):
     import homeassistant
     return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(level(uid)),
             "watch": watch_on(uid), "max_watch": beobachten.MAX_WATCH, "own": own_tasks(uid, d),
-            "ha": bool(ccfg().get("homeassistant", False) and homeassistant.get(uid)),
+            "ha": bool(features.allowed("ha", uid) and homeassistant.get(uid)),
             "jobs": [_public_job(x) for x in reversed(d["jobs"])],
             "plans": [dict(x, text=describe_plan(x)) for x in d["plans"]],
-            "routines": d["routines"], "day_max": DAY_MAX, "search": bool(ccfg().get("search") and ccfg().get("search_url")),
+            "routines": d["routines"], "day_max": DAY_MAX, "search": bool(ccfg().get("search_url") and features.allowed("search", uid)),
             "servers": [{"name": s["name"], "tools": [t["name"] for t in s.get("tools") or [] if t.get("mode") != "off"]}
                         for s in servers_for(uid) if uid in (s.get("users") or [])]}
 
@@ -1651,7 +1647,8 @@ def _on(prof=Depends(browser_profile)):
 
 def _uses(prof, need="read"):
     if not may(prof["id"], need):
-        raise HTTPException(403, "not allowed for this profile (Admin: Agent-Funktionen, Ich: einschalten)")
+        raise HTTPException(403, "Nicht für dieses Profil. " + (features.missing_text("agent", prof["id"])
+                                                                 or "Der Admin gibt die Stufe unter Funktionen → Agent-Funktionen."))
 
 
 @router.get("/api/profile/agent")

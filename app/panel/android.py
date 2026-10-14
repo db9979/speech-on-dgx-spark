@@ -306,9 +306,11 @@ def notes(uid, after, now=None):
 
 
 # ---------------------------------------------------------------- endpoints
-def _on(prof=Depends(browser_profile)):
+def _on(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "the Android app is turned off")
+    if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("android", prof["id"]):   # own data: seen and deleted also while blocked
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
     return prof
 
 
@@ -318,7 +320,7 @@ def profile_get(prof=Depends(own_profile)):
     with _lock:
         waiting = bool(_waiters.get(uid))
     return {"enabled": admin_on(), "on": profile_on(uid), "app": meta() if admin_on() else None,
-            "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive"),
+            "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive") and not features.blocked("androidlive", uid),
             "live": live_ok(uid), "connected": waiting}
 
 
@@ -328,7 +330,7 @@ async def profile_link(request: Request, prof=Depends(_on)):
     guard.limit(request, "android", prof["id"])
     body = await _json(request)
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "Erst „Android-App für mich“ einschalten.")
+        raise HTTPException(403, "Die Android-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
     if not meta():
         raise HTTPException(409, "Der Spark hat die App noch nicht geholt.")
     url = f"{_base(body)}/android/spark.apk?t={new_token(prof['id'])}"

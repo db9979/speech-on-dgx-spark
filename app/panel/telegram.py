@@ -174,7 +174,8 @@ def unlink(uid):
 def push_on(uid, private=False):
     """Notes go to Telegram: tg_push, and for private ones (appointments, mails, the briefing) also tg_private."""
     s = profiles.settings(uid)
-    return bool(admin_on() and token() and link(uid) and s.get("tg_push") and (not private or s.get("tg_private")))
+    return bool(features.allowed("telegram", uid) and token() and link(uid) and s.get("tg_push")
+                and (not private or s.get("tg_private")))
 
 
 # ---------------------------------------------------------------- talking to the assistant
@@ -353,6 +354,9 @@ async def handle(c, upd):
     import notaus
     if notaus.own(uid):   # Mein Notaus: Telegram is closed for this profile (notaus.py)
         await call(c, "sendMessage", chat_id=cid, text="Mein Notaus ist an. Aufheben geht nur im Browser unter Ich → Sicherheit.")
+        return
+    if features.blocked("telegram", uid):   # the admin blocked Telegram for this profile: nothing is answered or done
+        await call(c, "sendMessage", chat_id=cid, text="Telegram hat der Admin für dein Profil gesperrt.")
         return
     # a forwarded message is someone else's words: it never switches anything (see FORWARDED below)
     fwd = any(k in m for k in ("forward_origin", "forward_from", "forward_from_chat", "forward_sender_name", "forward_date"))
@@ -730,15 +734,18 @@ def admin_delete():
     return admin_get()
 
 
-def _on():
+def _on(request: Request):
     if not admin_on() or not token():
         raise HTTPException(403, "Telegram is turned off")
+    prof = profiles.current(request)
+    if prof and features.blocked("telegram", prof["id"]):
+        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
 
 
 @router.get("/api/profile/telegram", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(own_profile)):
     lk = link(prof["id"])
-    return {"enabled": bool(admin_on() and token()), "bot": _state().get("bot", ""),
+    return {"enabled": bool(admin_on() and token() and not features.blocked("telegram", prof["id"])), "bot": _state().get("bot", ""),
             "linked": {"name": lk.get("name", ""), "since": lk.get("since")} if lk else None}
 
 

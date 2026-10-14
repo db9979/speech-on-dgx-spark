@@ -286,7 +286,7 @@ GAPS = (
      ("weil Mail oder Kalender verbunden sind: schützt dein Profil", "because mail or calendar is connected: protects your profile")),
     ("g:passkey", None, lambda u, c: _mfa_on(u) and not _passkeys(u),
      ("weil dein zweiter Anmeldeschritt an ist: Face ID oder Fingerabdruck statt Code", "because your second sign-in step is on: Face ID or fingerprint instead of the code")),
-    ("g:speaker", "speaker", lambda u, c: _has_speaker(u) and features.admin_on("speaker", c) and not _voice(u),
+    ("g:speaker", "speaker", lambda u, c: _has_speaker(u) and features.allowed("speaker", u, c) and not _voice(u),
      ("weil du einen eigenen Lautsprecher hast: er erkennt dann deine Stimme", "because you have an own speaker: it then knows your voice")),
 )
 PSEUDO = {"g:passkey": (["Passkeys", "Passkeys"], "secbox", "mfa")}
