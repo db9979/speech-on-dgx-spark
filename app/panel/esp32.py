@@ -1448,6 +1448,13 @@ class Session:
             await self.say("Sag bitte dein Codewort.", tone=True)
             self.listen(self.mode)
             return "", "", True
+        if lvl == "grey" and v and v.get("ok") and not spkcode.locked(uid, did):
+            # a sure voice in an unusual moment (a short question …) asking nothing personal: as without the code
+            # word. The code word only ever adds a question before personal things, it never takes the owner's
+            # own voice away (Dominik 2026-10-14: every short question at the bedroom speaker came as a guest)
+            print("esp32: owner's voice recognized at", name, f"({odd}, nothing personal asked)", nums,
+                  "- personal data allowed", flush=True)
+            return uid, "", False
         if lvl == "grey":
             return "", f"voice not sure ({odd}), nothing personal asked {nums}".strip()[:160], False
         return "", why, False

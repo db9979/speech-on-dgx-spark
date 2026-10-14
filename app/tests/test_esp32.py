@@ -1344,6 +1344,16 @@ class SpeakerCode(unittest.TestCase):
             # the grey zone and nothing personal: no code word, nothing personal either
             voice, _, asked = asyncio.run(se.code_gate("Wie wird das Wetter?", "", "x", self.v(0.70)))
             self.assertEqual((voice, asked), ("", False))
+            # a sure voice in a short question: nothing personal asked, the owner's rights as without the code
+            # word (never stricter than off); something personal: asked for the code word
+            self.assertEqual(asyncio.run(se.code_gate("Wie wird das Wetter?", uid, "", self.v(0.85, seconds=1.2))),
+                             (uid, "", False))
+            spkcode.forget(did)
+            voice, _, asked = asyncio.run(se.code_gate("Was steht in meinen Mails?", uid, "", self.v(0.85, seconds=1.2)))
+            self.assertEqual((voice, asked), ("", True))
+            spkcode.forget(did)
+            voice, _, asked = asyncio.run(se.code_gate("Was steht in meinen Mails?", "", "x", self.v(0.70)))
+            self.assertTrue(asked)
             # the right code word (as speech recognition writes it): the waiting question with the profile's data
             asyncio.run(se.code_answer("blaue giraffe 7"))
             self.assertEqual(se.spoken[-1], ("Was steht in meinen Mails?", uid))

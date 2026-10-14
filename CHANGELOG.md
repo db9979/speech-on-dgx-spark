@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.572** · 2026-10-14 · Lautsprecher mit Codewort: eine sicher erkannte Stimme bekommt bei kurzen Fragen ohne Persönliches wieder die Rechte des Inhabers statt Gastrechte
 - **V01.0.571** · 2026-10-14 · Bilder malen: das Bild erscheint direkt im Chat der iPhone-App (Ereignis „bild“, Karte unter der Antwort, sichern oder teilen) und bleibt mit seinem Auftrag an der Antwort, so zeigen Panel und App es auch nach dem Neuladen und in gespeicherten Gesprächen; App-Schlüssel liest nur Auftrag und Bilddatei des eigenen Profils
 - **V01.0.570** · 2026-10-14 · Ruhige Apps: iPhone zeigt „Spark nicht erreichbar“ erst nach 3 Sekunden, Nachrichten anderer Geräte werden angehängt statt neu aufgebaut, eine offene Einstellungsseite bleibt offen, Monitoring und Logs behalten ihre Zeilen; Android 1.3.2 wartet beim Neustart des Spark mit „Spark startet neu …“ statt zur Adresseingabe zu springen und lädt bei Mitteilungen die Seite nicht neu
 - **V01.0.569** · 2026-10-14 · Zustand → Monitoring als Kacheln: „Jetzt“ und „Heute“ mit Symbol, großer Zahl und Farbe, jede Heute-Kachel springt zu ihrer Stelle, übrige Karten als „Bereiche“; iPhone mit Abschnitt „Heute“

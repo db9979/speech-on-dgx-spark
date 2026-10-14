@@ -2784,7 +2784,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "0225adf6c5",
+        "stand": "64524277ea",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -2870,10 +2870,12 @@ SEITEN_DATEN = {
               ("Codewort am Lautsprecher", "speaker code word"),
               ("Mit Codewort am Lautsprecher: eine unsichere Stimme, die nach Persönlichem fragt, wird nach dem "
                "Codewort gefragt, die Frage wartet. Nach {spkcode.FAILS} falschen Versuchen fragt der Lautsprecher "
-               "{spkcode.LOCK|min} Minuten lang nicht mehr. Ohne sichere Stimme gibt es nur Allgemeines.",
+               "{spkcode.LOCK|min} Minuten lang nicht mehr. Ohne sichere Stimme gibt es nur Allgemeines. Eine sichere "
+               "Stimme in einer kurzen Frage ohne Persönliches bekommt die Rechte des Inhabers wie ohne Codewort.",
                "With the speaker code word: an unsure voice asking for personal things is asked for the code word, "
                "the question waits. After {spkcode.FAILS} wrong tries the speaker does not ask for {spkcode.LOCK|min} "
-               "minutes. Without a sure voice there are only general things."),
+               "minutes. Without a sure voice there are only general things. A sure voice in a short question asking "
+               "nothing personal gets the owner's rights as without the code word."),
               ("info", "ja", ("„Sag bitte dein Codewort“", "„Please say your code word“"))),
             S("s10", "schritt", ("Wie ein Gerät an /api/chat", "Like a device to /api/chat"),
               ("Schlüssel und erkannte Stimme in der Anfrage", "key and recognized voice in the request"),

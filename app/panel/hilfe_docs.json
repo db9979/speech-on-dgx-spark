@@ -965,7 +965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ch etwas geändert hat. 6. Zuhören: Nach dem Weckwort schickt das Board Opus-Ton. Der Spark erkennt das Satzende selbst (0.7 Sekunden Stille nach Sprache) und nimmt höchstens 30 Sekunden pro Frage. 7. Erkennen und Stimme prüfen: Die Spracherkennung macht Text daraus. Gleichzeitig prüft speakers.verify, ob es die Stimme des Profils ist, wenn die Sprechererkennung an ist und das Profil seine Stimme angelernt hat. 8. Nichts, Stopp oder eigene Stimme?: Kein Text, ein Stopp-Wort oder die eigene Stimme des Spark von einem anderen Gerät (echo.check) bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort. 9. Persönliches ohne sichere Stimme?: Mit Codewort am Lautsprecher: eine unsichere Stimme, die nach Persönlichem fragt, wird nach dem Codewort gefragt, die Frage wartet. Nach 3 falschen Versuchen fragt der Lautsprecher 30 Minuten lang nicht mehr. Ohne sichere Stimme gibt es nur Allgemeines. 10. Wie ein Gerät an /api/chat: Der Spark ruft den Chat mit dem Schlüssel des Lautsprechers auf; Stimme, Gedächtnis und Raum des Profils gelten. Wessen Stimme es war, setzt nur das Panel selbst in die Anfrage; war sie nicht sicher die des Profils, gilt die Frage wie die eines Gastes. 11. Ton "
+"text": "ch etwas geändert hat. 6. Zuhören: Nach dem Weckwort schickt das Board Opus-Ton. Der Spark erkennt das Satzende selbst (0.7 Sekunden Stille nach Sprache) und nimmt höchstens 30 Sekunden pro Frage. 7. Erkennen und Stimme prüfen: Die Spracherkennung macht Text daraus. Gleichzeitig prüft speakers.verify, ob es die Stimme des Profils ist, wenn die Sprechererkennung an ist und das Profil seine Stimme angelernt hat. 8. Nichts, Stopp oder eigene Stimme?: Kein Text, ein Stopp-Wort oder die eigene Stimme des Spark von einem anderen Gerät (echo.check) bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort. 9. Persönliches ohne sichere Stimme?: Mit Codewort am Lautsprecher: eine unsichere Stimme, die nach Persönlichem fragt, wird nach dem Codewort gefragt, die Frage wartet. Nach 3 falschen Versuchen fragt der Lautsprecher 30 Minuten lang nicht mehr. Ohne sichere Stimme gibt es nur Allgemeines. Eine sichere Stimme in einer kurzen Frage ohne Persönliches bekommt die Rechte des Inhabers wie ohne Codewort. 10. Wie ein Gerät an /api/chat: Der Spark ruft den Chat mit dem Schlüssel des Lautsprechers auf; Stimme, Gedächtnis und Raum des Profils gelten. Wessen Stimme es war, setzt nur das P"
 },
 {
 "lang": "de",
@@ -973,7 +973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "zurück: Die Antwort geht als Opus mit 24000 Hz im Takt der Wiedergabe zum Board, der Text ohne Markdown für ein Display. Andere Geräte im Haus wissen, dass gerade der Spark spricht (echo.said). 12. Im Verlauf des Lautsprechers: Frage und Antwort kommen in das Tagesgespräch des Lautsprechers, das Codewort geschwärzt. Eine Stimme, die nicht sicher die des Profils war, wird als fremder Text markiert: die nächste Frage beginnt gesperrt, und daraus wird nichts über das Profil gelernt."
+"text": "anel selbst in die Anfrage; war sie nicht sicher die des Profils, gilt die Frage wie die eines Gastes. 11. Ton zurück: Die Antwort geht als Opus mit 24000 Hz im Takt der Wiedergabe zum Board, der Text ohne Markdown für ein Display. Andere Geräte im Haus wissen, dass gerade der Spark spricht (echo.said). 12. Im Verlauf des Lautsprechers: Frage und Antwort kommen in das Tagesgespräch des Lautsprechers, das Codewort geschwärzt. Eine Stimme, die nicht sicher die des Profils war, wird als fremder Text markiert: die nächste Frage beginnt gesperrt, und daraus wird nichts über das Profil gelernt."
 },
 {
 "lang": "de",
@@ -7373,7 +7373,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "peech) and takes at most 30 seconds per question. 7. Recognize and check the voice: Speech recognition makes text of it. At the same time speakers.verify checks whether it is the profile's voice, when speaker ID is on and the profile has taught its voice. 8. Nothing, stop or own voice?: No text, a stop word or the Spark's own voice from another device (echo.check) get no answer. The board waits for its wake word again. 9. Personal without a sure voice?: With the speaker code word: an unsure voice asking for personal things is asked for the code word, the question waits. After 3 wrong tries the speaker does not ask for 30 minutes. Without a sure voice there are only general things. 10. Like a device to /api/chat: The Spark calls the chat with the speaker's key; the profile's voice, memory and room apply. Whose voice it was only the panel itself puts into the request; if it was not surely the profile's, the question counts like a guest's. 11. Sound back: The answer goes to the board as Opus at 24000 Hz at playback pace, the text without Markdown for a display. Other devices in the house know the Spark is speaking right now (echo.said). 12. In the speaker's history: Question and answe"
+"text": "peech) and takes at most 30 seconds per question. 7. Recognize and check the voice: Speech recognition makes text of it. At the same time speakers.verify checks whether it is the profile's voice, when speaker ID is on and the profile has taught its voice. 8. Nothing, stop or own voice?: No text, a stop word or the Spark's own voice from another device (echo.check) get no answer. The board waits for its wake word again. 9. Personal without a sure voice?: With the speaker code word: an unsure voice asking for personal things is asked for the code word, the question waits. After 3 wrong tries the speaker does not ask for 30 minutes. Without a sure voice there are only general things. A sure voice in a short question asking nothing personal gets the owner's rights as without the code word. 10. Like a device to /api/chat: The Spark calls the chat with the speaker's key; the profile's voice, memory and room apply. Whose voice it was only the panel itself puts into the request; if it was not surely the profile's, the question counts like a guest's. 11. Sound back: The answer goes to the board as Opus at 24000 Hz at playback pace, the text without Markdown for a display. Other devices in t"
 },
 {
 "lang": "en",
@@ -7381,7 +7381,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "r go into the speaker's conversation of the day, the code word blacked out. A voice that was not surely the profile's is marked as outside text: the next question starts locked, and nothing about the profile is learned from it."
+"text": "he house know the Spark is speaking right now (echo.said). 12. In the speaker's history: Question and answer go into the speaker's conversation of the day, the code word blacked out. A voice that was not surely the profile's is marked as outside text: the next question starts locked, and nothing about the profile is learned from it."
 },
 {
 "lang": "en",
