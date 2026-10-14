@@ -175,7 +175,8 @@ def is_main_admin(request: Request, creds: HTTPBasicCredentials | None):
 
 
 def is_admin(request: Request, creds: HTTPBasicCredentials | None):
-    """The main admin, or a profile in its admin mode whose role reaches this request (coadmin.py)."""
+    """The main admin (panel password), or an admin profile whose role reaches this request (coadmin.py): its own
+    browser login or its iPhone app, no second stage (plan plaene/admin-ohne-zweite-stufe.md)."""
     if is_main_admin(request, creds):
         request.scope["speech_main_admin"] = True
         return True
@@ -183,7 +184,7 @@ def is_admin(request: Request, creds: HTTPBasicCredentials | None):
 
 
 def acting_profile(request: Request):
-    """The profile in its admin mode behind this admin request ({"id", "name", "role", ...}), None for the main admin."""
+    """The admin profile behind this admin request ({"id", "name", "role", ...}), None for the main admin."""
     return None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
 
 
@@ -203,28 +204,13 @@ def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security
 
 
 def main_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
-    """Only the main admin: admin roles, his password and second step, restoring and downloading backups."""
+    """Only the panel password (Notzugang): the password itself, its own second step, signing it out everywhere.
+    Everything else an admin may, an admin profile may too (auth)."""
     if is_main_admin(request, creds):
         request.scope["speech_main_admin"] = True
         return
     if coadmin.session(request):
-        raise HTTPException(403, "Das darf nur der Hauptadmin (Panel-Passwort).")
-    raise HTTPException(401, "login required")
-
-
-def owner_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
-    """The main admin: the panel password, or the profile with the role "owner" (Haupt-Admin, coadmin.py) in its
-    admin mode, so Dominik needs one login only (plan „Vereinheitlichen“ Phase 7). The password's own things
-    (itself, its second step, signing it out everywhere) stay with main_auth: it is the way in when nothing else works."""
-    if is_main_admin(request, creds):
-        request.scope["speech_main_admin"] = True
-        return
-    s = coadmin.session(request)
-    if s and s["role"] == "owner":
-        request.scope["speech_coadmin"] = s
-        return
-    if s:
-        raise HTTPException(403, "Das darf nur der Hauptadmin.")
+        raise HTTPException(403, "Das gehört zum Notzugang (Panel-Passwort).")
     raise HTTPException(401, "login required")
 
 
@@ -233,7 +219,9 @@ def owner_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(se
 CODE_HEADER = "x-speech-code"
 # One right code counts for CONFIRM_WINDOW seconds in the same login (plan plaene/zweiter-schritt-seltener.md,
 # "sudo" window): the admin's login, the profile's browser login or the iPhone app's key, never another one.
-# Kept in memory only (a restart of the panel ends it); logging out, ending the admin mode and the button
+# Admins (the panel password, a profile with a role) are never asked at the level "Bestätigen", only for
+# "Schutz ändern" (plan plaene/admin-ohne-zweite-stufe.md, Dominik „A2“): admin_login().
+# Kept in memory only (a restart of the panel ends it); logging out and the button
 # "Bestätigung beenden" end it too. The most important changes ask every time (fresh=True).
 CONFIRM_WINDOW = 600
 MAX_WINDOWS = 200
@@ -243,7 +231,7 @@ _wlock = threading.Lock()
 
 def _login_key(request: Request, who):
     """The login this request comes with, for `who`: "d:<device>" (its app key), "a:<family>" (the main admin's
-    browser login) or "p:<session>" (the profile's browser login, also while its admin mode is open). Only
+    browser login) or "p:<session>" (the profile's browser login, also an admin profile's). Only
     checked logins count; None without one (HTTP Basic, a foreign cookie)."""
     if request.headers.get(profiles.DEVICE_HEADER):
         dev = profiles._device(profiles._load(), request)
@@ -305,6 +293,14 @@ def _device_uid(request):
     return dev.get("user") if dev else None
 
 
+def admin_login(request: Request):
+    """This request comes from an admin: the panel password's login or an admin profile (any role). Admins are
+    not asked at the level "Bestätigen" (stufen.CONFIRM)."""
+    if password_set() and _admin_cookie_age(request) is not None:
+        return True
+    return coadmin.session(request) is not None
+
+
 def confirmed_until(request: Request):
     """Until when a right code still counts in this request's login (whoami shows it), 0 when it does not."""
     if is_main_admin(request, None) and mfa.enabled(mfa.ADMIN):
@@ -330,7 +326,7 @@ async def confirm_code(request: Request, who, name, fresh=False):
     # the list decides whether a code from the last minutes counts (stufen.py, "Bestätigen") or not ("Schutz ändern")
     lvl = stufen.level(request, fresh)
     login = _login_key(request, who)
-    if lvl != stufen.PROTECT and window_until(who, login):
+    if lvl != stufen.PROTECT and (window_until(who, login) or admin_login(request)):
         return
     answer = passkey.header_answer(request)
     code = request.headers.get(CODE_HEADER, "")
@@ -348,6 +344,7 @@ async def confirm_code(request: Request, who, name, fresh=False):
 
 
 async def _admin_code(request, fresh):
+    # the admin profile behind the request answers with its own code (or passkey), the panel password with its own
     prof = acting_profile(request)
     if prof:
         await confirm_code(request, prof["id"], prof["name"], fresh)
@@ -356,7 +353,7 @@ async def _admin_code(request, fresh):
 
 
 async def admin_code(request: Request):
-    """A code for important changes: the main admin's, or the code of the profile in its admin mode. A right
+    """A code for important changes: the main admin's, or the code of the admin profile behind the request. A right
     code from the last CONFIRM_WINDOW seconds in the same login counts too."""
     await _admin_code(request, False)
 

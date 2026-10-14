@@ -54,7 +54,6 @@ from core import (  # noqa: E402
     assistant,
     auth,
     main_auth,
-    owner_auth,
     check_password,
     password_set,
     store_password,
@@ -67,7 +66,7 @@ from chat import web_search  # noqa: E402
 router = APIRouter()
 
 
-@router.get("/api/audit", dependencies=[Depends(owner_auth)])
+@router.get("/api/audit", dependencies=[Depends(auth)])
 def audit(limit: int = 300):
     """The change log: logins, failed logins, lockouts and every change, newest first."""
     names = {u: (profiles.by_id(u) or {}).get("name") for u in profiles.user_ids()}
@@ -84,7 +83,7 @@ def _profile_extra(uid):
     import roomlive
     import onboard
     return {"mfa": mfa.enabled(uid), "room": roomlive.count(uid),
-            "role": coadmin.role(uid) if coadmin.on() else "", "setup": onboard.summary(uid)}
+            "role": coadmin.role(uid), "setup": onboard.summary(uid)}
 
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
@@ -119,12 +118,13 @@ async def admin_add_profile(request: Request):
 
 
 def _no_admin_profile(request, *uids):
-    """A profile in its admin mode (coadmin.py) never changes an admin profile, another one or its own: PIN,
-    second step, devices, deleting. That stays with the main admin, so nobody locks another admin out."""
+    """An admin profile (coadmin.py) changes another admin profile's PIN, second step, devices or deletes it only
+    with the role Admin, never its own here (that is Ich → Sicherheit) and never the main one's (Haupt-Admin):
+    so nobody locks the main admin out. A Verwalter never changes an admin profile."""
     me = acting_profile(request)
-    # the Haupt-Admin (role owner) is the main admin: he changes the other admin profiles, only not his own here
-    if me and any(u and coadmin.role(u) and (me["role"] != "owner" or u == me["id"]) for u in uids):
-        raise HTTPException(403, "Profile mit Admin-Rolle ändert nur der Hauptadmin.")
+    main = coadmin.main_uid()
+    if me and any(u and coadmin.role(u) and (me["role"] != "admin" or u == me["id"] or u == main) for u in uids):
+        raise HTTPException(403, "Dieses Admin-Profil ändert nur der Haupt-Admin oder das Panel-Passwort.")
 
 
 def _device_owner(did):
@@ -171,7 +171,7 @@ def admin_profile(uid: str, request: Request):
     me = acting_profile(request)
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid), trusted=mfa.list_trusted(uid),
-               features={"on": on, "of": of}, main=not me or me["role"] == "owner", owner=not me, roles=coadmin.on())
+               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me)
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
     return out
@@ -914,7 +914,7 @@ async def admin_switch(request: Request):
 
 
 # Rückgängig (undo.py, plan „Bedienung gesamt“ C5): the last 50 saved changes with their old values. The main admin
-# sees all, a profile in its admin mode its own; undoing goes through validate() and _save() like saving.
+# sees all, a Verwalter his own; undoing goes through validate() and _save() like saving.
 def _undo_view(x, names):
     by = x.get("by")
     return {"id": x["id"], "t": x["t"], "by": "main" if by == "main" else names.get(by, ""), "mine": by,
@@ -925,7 +925,7 @@ def _undo_view(x, names):
 def undo_list(request: Request):
     me = acting_profile(request)
     names = {u["id"]: u["name"] for u in profiles.names()}
-    mine = me["id"] if me and me["role"] != "owner" else None
+    mine = me["id"] if me and me["role"] != "admin" else None
     return {"items": [_undo_view(x, names) for x in undo.listing(mine)]}
 
 
@@ -934,7 +934,7 @@ def undo_one(uid: str, request: Request):
     guard.limit(request, "undo", admin=True)
     item = undo.get(uid) if undo.ID.fullmatch(uid) else None
     me = acting_profile(request)
-    if not item or (me and me["role"] != "owner" and item.get("by") != me["id"]):
+    if not item or (me and me["role"] != "admin" and item.get("by") != me["id"]):
         raise HTTPException(404, "no such change")
     if item.get("undone"):
         raise HTTPException(409, "already undone")

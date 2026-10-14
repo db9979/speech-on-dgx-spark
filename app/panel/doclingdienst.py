@@ -50,7 +50,7 @@ import netguard
 import profiles
 import vault
 import zertpin
-from core import admin_code_fresh, auth, owner_auth
+from core import admin_code_fresh, auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -411,7 +411,7 @@ def docling_get():
 
 
 # the address and the key decide where the profiles' documents go: the main admin with a fresh code every time
-@router.put("/api/admin/docling", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.put("/api/admin/docling", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def docling_put(request: Request):
     guard.limit(request, "docling", admin=True)
     b = await _body(request)
@@ -461,7 +461,7 @@ async def docling_put(request: Request):
     return view()
 
 
-@router.post("/api/admin/docling/cert", dependencies=[Depends(owner_auth)])
+@router.post("/api/admin/docling/cert", dependencies=[Depends(auth)])
 async def docling_cert(request: Request):
     """{"url"?}: the certificate the server shows (fingerprint, names, until, fits the address), to compare. Reads
     only; accepting it is PUT {"cert": fingerprint} with a fresh code."""
@@ -483,7 +483,7 @@ async def docling_cert(request: Request):
     return {k: got[k] for k in ("sha256", "names", "until", "self_signed", "fits", "expired")} | {"pinned": pinned == got["sha256"]}
 
 
-@router.post("/api/admin/docling/test", dependencies=[Depends(owner_auth)])
+@router.post("/api/admin/docling/test", dependencies=[Depends(auth)])
 async def docling_test(request: Request):
     """Reads the built-in sample on the stored server: reachable, key, certificate, tables. Sends nothing of a profile."""
     guard.limit(request, "docling", admin=True)

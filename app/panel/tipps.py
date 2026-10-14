@@ -424,14 +424,10 @@ def _find(uid, tid, admin, c=None):
 
 
 def _admins():
-    """The profiles that look after the Spark (coadmin roles, and the one the main admin chose for notes)."""
+    """The profiles that look after the Spark (coadmin roles)."""
     try:
         import coadmin
-        d = coadmin.listing()
-        out = [u["id"] for u in d["users"]]
-        if d.get("notify"):
-            out.append(d["notify"])
-        return list(dict.fromkeys(out))
+        return [u["id"] for u in coadmin.listing()["users"]]
     except Exception:
         return []
 

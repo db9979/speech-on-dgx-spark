@@ -190,7 +190,7 @@ class QuestionMarks(unittest.TestCase):
     def test_the_rows_of_the_review_have_their_entry(self):
         import hilfe
         ids = set(hilfe.known_ids())
-        for k in ("bakfile", "bakpw", "vfile", "coadmnotify", "llmmodelsel", "tts.default_voice", "rptoken",
+        for k in ("bakfile", "bakpw", "vfile", "llmmodelsel", "tts.default_voice", "rptoken",
                   "roomdetect", "roomping", "roomprobe", "roomsum", "roomtext", "roomtone"):
             self.assertIn("sw:" + k, ids, k)
         # fields inside a row's sentence (Von selbst: how long before, from whom, where) get no "?" at all

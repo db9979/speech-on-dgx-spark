@@ -188,7 +188,7 @@ OHNE = {
     ),
 }
 OHNE_PROFIL = (
-        "agent_doc", "android_live", "app_act", "app_admin", "app_car_ha", "app_docs",
+        "agent_doc", "android_live", "app_act", "app_car_ha", "app_docs",
         "app_ha", "app_images", "app_ios", "app_listen", "app_push", "app_room",
         "auto", "barge", "barge_level", "berater_note", "berater_skip", "briefing_at",
         "chat_push_text", "chat_receipts", "con_bday", "daily", "devup_night", "doc_deliver", "doc_docling", "doc_due", "doc_sender",

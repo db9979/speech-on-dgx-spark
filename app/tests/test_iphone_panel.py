@@ -39,7 +39,9 @@ class Areas(unittest.TestCase):
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["iphone_panel"], False)
-        self.assertIs(profiles.SETTINGS["app_admin"][0], False)
+        # "Spark verwalten in der App" (app_admin) is gone since V01.0.541: the admin role decides, by the app key
+        self.assertNotIn("app_admin", profiles.SETTINGS)
+        self.assertIn("app_admin", iphone.GONE)
         # no profile switch per area any more: the admin release decides (Freigabe nur durch Admin)
         for k in iphone.AREAS:
             self.assertNotIn(k, profiles.SETTINGS, k)
@@ -51,7 +53,7 @@ class Areas(unittest.TestCase):
         c, a = self.app("Pia")
         self.assertEqual(a.get("/api/profile/memory").status_code, 200)
         self.assertTrue(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
-        self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_admin"])   # the profile's own choice
+        self.assertNotIn("app_admin", a.get("/api/iphone/hello").json()["areas"])   # no area, the role decides
         # an old switch from the browser or an old app changes nothing
         c.put("/api/profile/settings", json={"app_mine": False})
         self.assertNotIn("app_mine", profiles.settings(self.uid("Pia")))
@@ -81,8 +83,10 @@ class Areas(unittest.TestCase):
 
     def test_rights_never_from_the_app(self):
         c, a = self.app("Rosa")
-        for k in ("app_admin", "app_on", "app_ha"):
+        for k in ("app_on", "app_ha", "app_room"):
             self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
+        a.put("/api/iphone/settings", json={"app_admin": True})          # gone: ignored, never stored
+        self.assertNotIn("app_admin", profiles.settings(self.uid("Rosa")))
         # with "Mein Alltag" the app changes the conversation switches, only those
         self.assertEqual(a.put("/api/iphone/settings", json={"learn": False}).status_code, 200)
         self.assertIs(a.get("/api/iphone/settings").json()["settings"]["learn"], False)
@@ -93,10 +97,11 @@ class Areas(unittest.TestCase):
         finally:
             helpers.set_config(iphone_panel=True)
 
-    def test_admin_area_opens_no_path(self):
+    def test_no_admin_path_without_a_role(self):
         c, a = self.app("Sami")
-        c.put("/api/profile/settings", json={"app_admin": True})
-        self.assertTrue(a.get("/api/iphone/hello").json()["areas"]["app_admin"])
+        c.put("/api/profile/settings", json={"app_admin": True})        # an old switch changes nothing
+        self.assertNotIn("app_admin", profiles.settings(self.uid("Sami")))
+        self.assertIsNone(a.get("/api/iphone/hello").json().get("admin_role") or None)
         for path in ("/api/admin/profiles", "/api/config", "/api/update"):
             self.assertIn(a.get(path).status_code, (401, 403), path)
 
@@ -193,31 +198,23 @@ class Areas(unittest.TestCase):
         self.assertIs(x.get("/api/config").json()["chat"]["weather"], False)
 
 
-    def test_admin_login_from_the_app_needs_switch_and_second_step(self):
+    def test_the_password_never_from_the_app(self):
+        """Since V01.0.541 the panel password is the emergency access, only in a browser; the app is admin by
+        the profile's role and its own key (test_coadmin), never by the password."""
         import mfa
         c, a = self.app("Tamo")
         real = (mfa.enabled, mfa.verify)
         try:
-            mfa.enabled = lambda who: False
-            self.assertEqual(a.post("/api/login", json={"password": "secret-admin"}).status_code, 403)
-            c.put("/api/profile/settings", json={"app_admin": True})
-            # the password alone is not enough on a phone
-            self.assertEqual(a.post("/api/login", json={"password": "secret-admin"}).status_code, 409)
             mfa.enabled = lambda who: who == mfa.ADMIN
             mfa.verify = lambda who, code: who == mfa.ADMIN and code == "123456"
-            r = a.post("/api/login", json={"password": "secret-admin"})
-            self.assertEqual(r.json(), {"code": True})
-            self.assertEqual(a.post("/api/login", json={"password": "secret-admin", "code": "000000"}).status_code, 401)
-            r = a.post("/api/login", json={"password": "secret-admin", "code": "123456"})
-            self.assertEqual(r.status_code, 200, r.text)
-            # a key that is not the app's, or an unknown one, never signs in as admin
+            for body in ({"password": "secret-admin"}, {"password": "secret-admin", "code": "123456"}):
+                self.assertEqual(a.post("/api/login", json=body).status_code, 403)
             from fastapi.testclient import TestClient
             import panel
             x = TestClient(panel.app)
             x.headers[H] = "not-a-key"
-            self.assertEqual(x.post("/api/login", json={"password": "secret-admin", "code": "123456"}).status_code, 401)
-            helpers.set_config(iphone_panel=False)
-            self.assertEqual(a.post("/api/login", json={"password": "secret-admin", "code": "123456"}).status_code, 403)
+            self.assertEqual(x.post("/api/login", json={"password": "secret-admin", "code": "123456"}).status_code, 403)
+            self.assertFalse(a.get("/api/whoami").json()["admin"])
         finally:
             mfa.enabled, mfa.verify = real
             guard._fails.clear()

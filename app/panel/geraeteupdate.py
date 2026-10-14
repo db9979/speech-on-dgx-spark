@@ -10,7 +10,7 @@ only version numbers that match VERSION.
 
 - Overview: Zustand (admin, all devices), Mein Zustand (own devices, hintergrund.py), Live (kinds, counts, state).
 - Note per new version (kind "devup" in push.py): once per version and profile, only to profiles with such a
-  device (unless the admin blocked them), plus the admin's note profile (coadmin.notify_uid). The first version a
+  device (unless the admin blocked them), plus the admin's note profile (coadmin.main_uid). The first version a
   Spark sees is only remembered, so switching this on does not send old news.
 - Speakers at night (admin chat.dev_updates_night, profile devup_night, per speaker "Updates von selbst"): in the
   window from chat.dev_updates_night_at for NIGHT_LEN the Spark restarts one connected, idle speaker; it fetches
@@ -444,7 +444,7 @@ async def _send(uid, title, body):
 def _admin_uid():
     try:
         import coadmin
-        return coadmin.notify_uid()
+        return coadmin.main_uid()
     except Exception:
         return ""
 

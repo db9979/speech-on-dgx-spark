@@ -304,7 +304,7 @@ USER_DOCS = {"assistent", "assistant", "iphone-app", "android-app", "app-datensc
 
 
 def admin_here(request):
-    """What this browser login may see beyond its profile: "admin" (main admin or Mit-Admin), "manager" (Verwalter:
+    """What this browser login may see beyond its profile: "admin" (main admin or an admin profile), "manager" (Verwalter:
     feature switches only) or "profile". A device key is always "profile"."""
     if request.headers.get(profiles.DEVICE_HEADER):
         return "profile"

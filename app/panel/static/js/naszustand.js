@@ -11,7 +11,7 @@ function nzShow(d){NZ=d;if(!$('nzbox'))return;$('nzhost').value=d.host||'';$('nz
   m.textContent=!d.set?t('Noch nicht eingerichtet.','Not set up yet.'):!l?t('Noch nicht gelesen.','Not read yet.')
     :l.ok?t('Zuletzt gelesen: ','Last read: ')+new Date(l.t*1000).toLocaleString():t('Fehler am ','Failed on ')+new Date(l.t*1000).toLocaleString()+': '+nzWhy(l.why);
   m.classList.toggle('err',!!(l&&!l.ok));$('nznow').disabled=!d.set;$('nzforget').disabled=!d.set}
-async function nzLoad(){if(!$('nzbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
+async function nzLoad(){if(!$('nzbox')||document.body.classList.contains('mgr'))return;
   try{nzShow(await (await api('/api/admin/naszustand')).json())}catch{}}
 const nzErr=e=>{$('nzmsg').textContent=e.message;$('nzmsg').classList.add('err')};
 const nzDone=d=>{nzShow(d);if(d.checked===false&&d.why){$('nzmsg').textContent=t('Gespeichert, aber gelesen hat es nicht: ','Saved, but reading failed: ')+nzWhy(d.why);$('nzmsg').classList.add('err')}zNasZustand()};

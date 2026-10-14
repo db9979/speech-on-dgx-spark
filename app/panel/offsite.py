@@ -44,7 +44,7 @@ import vault
 import vorrang
 import nas
 import zertpin
-from core import spawn, admin_code, admin_code_fresh, owner_auth
+from core import spawn, admin_code, admin_code_fresh, auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -300,14 +300,14 @@ def _exists(name):
 
 
 # ---------------------------------------------------------------- endpoints (main admin only)
-@router.get("/api/admin/offsite", dependencies=[Depends(owner_auth)])
+@router.get("/api/admin/offsite", dependencies=[Depends(auth)])
 def offsite_get():
     return view()
 
 
 # the address and password decide where a backup with every secret goes: a fresh code every time,
 # like downloading a backup (core.admin_code_fresh)
-@router.put("/api/admin/offsite", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.put("/api/admin/offsite", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def offsite_put(request: Request):
     guard.limit(request, "offsite", admin=True)
     raw = await request.body()
@@ -374,7 +374,7 @@ async def offsite_put(request: Request):
     return view()
 
 
-@router.post("/api/admin/offsite/cert", dependencies=[Depends(owner_auth)])
+@router.post("/api/admin/offsite/cert", dependencies=[Depends(auth)])
 async def offsite_cert(request: Request):
     """{"url"?}: the certificate the NAS shows (fingerprint, names, until, fits the address), to compare. Reads only;
     accepting it is PUT {"cert": fingerprint} with a fresh code."""
@@ -401,7 +401,7 @@ async def offsite_cert(request: Request):
     return {k: got[k] for k in ("sha256", "names", "until", "self_signed", "fits", "expired")} | {"pinned": pinned == got["sha256"]}
 
 
-@router.post("/api/admin/offsite/now", dependencies=[Depends(owner_auth), Depends(admin_code)])
+@router.post("/api/admin/offsite/now", dependencies=[Depends(auth), Depends(admin_code)])
 async def offsite_now(request: Request):
     guard.limit(request, "offsite", admin=True)
     if _running["on"]:

@@ -390,7 +390,6 @@ QUIET_WHY = {
     "/api/profile/logout": "eigener Eintrag",
     "/api/profile/reminders": "Erinnerung gespielt oder gelöscht: eigene Zeilen im Journal (reminders:)",
     "/api/tasks/inbox": "Einkaufsliste ans iPhone: eigene Zeile im Journal (tasks:)",
-    "/api/admin/elevate": "Admin-Modus öffnen, halten, beenden: eigene Einträge admin_mode_*",
     "/api/chats/send": "Schreiben im Chat: viele pro Minute, Zeilen im Journal (chats:)",
     "/api/chats/edit": "Schreiben im Chat",
     "/api/chats/back": "Schreiben im Chat",
@@ -426,6 +425,9 @@ LIVE_WORDS = {
     "profile_login": ("Eingang", "Anmeldung eines Profils"), "admin_login": ("Eingang", "Admin-Anmeldung"),
     "handoff_login": ("Eingang", "Anmeldung per Übergabe"), "trusted_browser": ("Eingang", "neuer vertrauter Browser"),
     "trusted_browser_removed": ("Eingang", "vertrauter Browser entfernt"),
+    "admin_profile_login": ("Eingang", "Anmeldung eines Admin-Profils"), "admin_role_refused": ("Eingang", "Admin-Rolle abgewiesen"),
+    "admin_main": ("Eingang", "Haupt-Admin gewählt"),
+    # before V01.0.541 (the admin mode): only for older entries
     "admin_mode_on": ("Eingang", "Admin-Modus geöffnet"), "admin_mode_off": ("Eingang", "Admin-Modus beendet"),
     "admin_mode_failed": ("Eingang", "Admin-Modus abgewiesen"), "notzugang_cli": ("Eingang", "Notzugang auf dem Spark zurückgesetzt"), "passkey_added": ("Eingang", "Passkey angelegt"),
     "passkey_removed": ("Eingang", "Passkey entfernt"), "invite_used": ("Eingang", "Einladung benutzt"),

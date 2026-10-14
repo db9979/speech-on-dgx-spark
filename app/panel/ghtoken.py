@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import vault  # noqa: E402
-from core import admin_code_fresh, auth, owner_auth  # noqa: E402
+from core import admin_code_fresh, auth  # noqa: E402
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -141,7 +141,7 @@ def admin_state(request: Request):
     return info()
 
 
-@router.put("/api/admin/ghtoken", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.put("/api/admin/ghtoken", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_save(request: Request):
     guard.limit(request, "ghtoken", admin=True)
     if int(request.headers.get("content-length") or 0) > 1024:
@@ -159,7 +159,7 @@ async def admin_save(request: Request):
     return await check()
 
 
-@router.delete("/api/admin/ghtoken", dependencies=[Depends(owner_auth)])
+@router.delete("/api/admin/ghtoken", dependencies=[Depends(auth)])
 def admin_drop(request: Request):
     guard.limit(request, "ghtoken", admin=True)
     drop()

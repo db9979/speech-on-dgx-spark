@@ -1,59 +1,46 @@
-"""Profiles as admins (V01.0.255, plan plaene/benutzer-als-admin.md).
+"""Profiles as admins (V01.0.255, plan plaene/benutzer-als-admin.md; since V01.0.541 without the admin mode,
+plan plaene/admin-ohne-zweite-stufe.md, Dominik 2026-10-14 „A2 B1 C1“).
 
-The main admin (the panel password) can give a profile one of three roles:
+The admin gives a profile one of two roles:
 
-    "owner"     Haupt-Admin (V01.0.275, plan „Vereinheitlichen“ Phase 7): the main admin as a profile, so one login
-                (PIN, second step, admin mode with a fresh code) is enough. Everything the panel password may
-                (core.owner_auth) except the password's own things: the password itself, its second step and
-                signing it out everywhere stay the way in when nothing else works. Only the password gives or
-                takes this role, and only one profile has it.
-
-    "coadmin"   Mit-Admin: everything the main admin can, except the main admin's own things (core.main_auth:
-                roles, admin password and second step, restoring and downloading backups) and changes to
-                another admin profile (its PIN, second step, devices, deleting it; admin.py)
+    "admin"     Admin: everything the panel password may, except the password's own things (core.main_auth: the
+                password itself, its second step, signing it out everywhere). It stays the way in when nothing else
+                works (Notzugang: the address with #admin, `sudo speech-spark notzugang`).
     "manager"   Verwalter: only MANAGER below (Zustand, Logs, profiles and devices, feature switches)
 
-A role alone gives nothing. The profile needs its own second step, the main admin needs his, the switch
-"Benutzer als Admin" must be on, and the profile opens the admin mode with a fresh code ("Admin-Modus",
-like sudo): a cookie that ends after IDLE seconds without use and after LONGEST in any case. It is signed
-with the profiles' login key (users/secret, never in a backup) over the profile's PIN, its "log out
-everywhere" count, its second step, its role and when the role was given: changing any of these, or
-taking the role away, ends every open admin mode of that profile at once. In the browser the admin mode
-holds only together with the same profile's login; from the iPhone app ("via" a device id) only while that
-app key exists and its profile keeps "Spark verwalten in der App" on.
+There is no second stage: a profile with a role IS admin in its own browser login and in its own iPhone app,
+as long as
+  - its second login step is on (a role is only given then; switched off, the rights rest until it is on again),
+  - the browser login was made with that second step (code, passkey or a browser the profile trusts:
+    profiles.second_step_of), not with the PIN alone, not by "Am Handy weitermachen", not before the second step
+    was set up (the mark is the second step's "since"),
+  - the app key was made after the second step was set up and the profile may use the iPhone app.
+Speakers, the watch, Telegram, Siri, MCP and own programs never act as admin; guests never get a role.
 
-The role never reaches the assistant: speech, speakers, the watch, Telegram, mail and Siri have no admin
-tools, and guests never get a role. Every admin request is logged with who did it (by).
+One admin profile is the "main" one (Haupt-Admin): its code also counts for the panel password (mfa.OWNER), only
+it or the panel password changes it (its profile, its role, who is main). The first admin role the panel password
+gives makes that profile main. The last admin role cannot be taken away by a profile, only by the password.
+Every admin request is logged with who did it (by); admin profiles hear of new admin logins and role changes.
 
-    STATE/admins.json  {"on": bool, "notify": "<profile id>" | "", "users": {uid: {"role", "since", "k", "by"}}}
-                       (k: random per role given; signs the admin mode, so a new role ends the old ones)
+    STATE/admins.json  {"main": "<profile id>" | "", "users": {uid: {"role", "since", "by"}}}
+                       (before V01.0.541: "on", "notify", roles owner/coadmin/manager: read as below)
 """
-import hashlib
-import hmac
 import json
 import os
 import re
-import secrets
 import threading
 import time
 
-import guard
 import mfa
 import profiles
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "admins.json")
-ROLES = ("owner", "coadmin", "manager")
-NAMES = {"owner": "Haupt-Admin", "coadmin": "Mit-Admin", "manager": "Verwalter"}
+ROLES = ("admin", "manager")
+NAMES = {"admin": "Admin", "manager": "Verwalter"}
 MAX_ADMINS = 5
-COOKIE = "speech_spark_elev"
-IDLE = 900               # 15 minutes without use end the admin mode
-LONGEST = 8 * 3600       # and 8 hours in any case
-TRUSTED_IDLE = 3600      # opened in a browser the profile trusts (via "t"): 60 minutes without use
-TRUSTED_LONGEST = 12 * 3600   # and 12 hours (plan plaene/zweiter-schritt-seltener.md)
-RENEW = 60               # the cookie is renewed at most once a minute while used
 _UID = re.compile(r"u_[0-9a-f]{12}")
-_VIA = re.compile(r"b|t|d_[0-9a-f]{12}")   # browser, trusted browser, the iPhone app's key
+_OLD = {"owner": "admin", "coadmin": "admin", "manager": "manager"}   # roles before V01.0.541
 _lock = threading.Lock()
 
 # What a Verwalter may reach (method, path); everything else stays closed for him.
@@ -63,9 +50,7 @@ MANAGER = tuple((frozenset(m), re.compile(p)) for m, p in (
     (("GET",), r"/api/logs/[a-z\-]+"), (("GET",), r"/api/vorrang"), (("GET",), r"/api/livecheck"),
     (("GET",), r"/api/quality"), (("GET",), r"/api/update"), (("GET",), r"/api/update/progress"),
     (("GET",), r"/api/admin/rooms"), (("GET",), r"/api/admin/wissen"), (("GET",), r"/api/admin/protocol"),
-    (("GET", "PUT"), r"/api/admin/switches"), (("POST",), r"/api/admin/elevate/keep"),
-    (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
-    (("PUT",), r"/api/admin/features/[a-z0-9_]+/new"),
+    (("GET", "PUT"), r"/api/admin/switches"), (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
     (("GET", "POST"), r"/api/admin/profiles"), (("GET", "PUT", "DELETE"), rf"/api/admin/profiles/{_P}"),
     (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
     (("DELETE",), rf"/api/admin/profiles/{_P}/sessions/[0-9a-f]{{16}}"),
@@ -85,9 +70,18 @@ def _read():
         d = {}
     d = d if isinstance(d, dict) else {}
     users = d.get("users") if isinstance(d.get("users"), dict) else {}
-    users = {u: x for u, x in users.items() if _UID.fullmatch(str(u)) and isinstance(x, dict) and x.get("role") in ROLES}
-    notify = d.get("notify") if _UID.fullmatch(str(d.get("notify") or "")) else ""
-    return {"on": d.get("on") is True, "notify": notify, "users": users}
+    users = {u: x for u, x in users.items() if _UID.fullmatch(str(u)) and isinstance(x, dict) and x.get("role") in ROLES + tuple(_OLD)}
+    if "on" in d:
+        # the old file (before V01.0.541): the switch "Benutzer als Admin" off meant no role counted, so none counts
+        # now either; the old Haupt-Admin profile (owner) stays the main one, its code is the password's
+        owner = next((u for u, x in users.items() if x.get("role") == "owner"), "")
+        users = {u: {"role": _OLD[x["role"]], "since": x.get("since"), "by": x.get("by", "main")}
+                 for u, x in users.items()} if d.get("on") is True else {}
+        main = owner if d.get("on") is True else ""
+    else:
+        main = d.get("main") if _UID.fullmatch(str(d.get("main") or "")) else ""
+    main = main if users.get(main, {}).get("role") == "admin" else ""
+    return {"main": main, "users": users}
 
 
 def _write(d):
@@ -98,164 +92,142 @@ def _write(d):
     os.replace(tmp, FILE)
 
 
-def on():
-    return _read()["on"]
-
-
 def role(uid):
-    """The role the main admin gave this profile ("" for none; also while the switch is off)."""
+    """The role this profile was given ("" for none). It acts only with its second step on (session)."""
     x = _read()["users"].get(uid)
     return x["role"] if x and uid in profiles.user_ids() else ""
 
 
-def owner_uid():
-    """The profile with the role "owner" while the switch is on (its second step is also the panel password's,
-    mfa.OWNER), or None."""
-    d = _read()
-    if not d["on"]:
-        return None
-    ids = profiles.user_ids()
-    return next((u for u, x in d["users"].items() if x.get("role") == "owner" and u in ids), None)
+def acts(uid):
+    """The role while it counts: given and the profile's second step on, else ""."""
+    r = role(uid)
+    return r if r and mfa.enabled(uid) else ""
 
 
-mfa.OWNER[0] = owner_uid
+def main_uid():
+    """The main admin profile (Haupt-Admin): hears of admin things, its code is also the password's; "" for none."""
+    m = _read()["main"]
+    return m if m in profiles.user_ids() else ""
+
+
+def _owner():
+    return main_uid() or None
+
+
+mfa.OWNER[0] = _owner
+
+
+def admin_uids():
+    """Every profile whose role "admin" counts now, the main one first."""
+    d, ids = _read(), profiles.user_ids()
+    out = [u for u, x in d["users"].items() if x["role"] == "admin" and u in ids and mfa.enabled(u)]
+    return sorted(out, key=lambda u: u != d["main"])
 
 
 def listing():
     d = _read()
     known = {u["id"]: u["name"] for u in profiles.names()}
-    return {"on": d["on"], "notify": d["notify"] if d["notify"] in known else "", "max": MAX_ADMINS,
-            "main_mfa": mfa.enabled(mfa.ADMIN),
-            "users": [{"id": u, "name": known[u], "role": x["role"], "since": x.get("since"), "mfa": mfa.enabled(u)}
+    return {"main": d["main"] if d["main"] in known else "", "max": MAX_ADMINS,
+            "users": [{"id": u, "name": known[u], "role": x["role"], "since": x.get("since"), "mfa": mfa.enabled(u),
+                       "main": u == d["main"]}
                       for u, x in d["users"].items() if u in known]}
 
 
-def set_on(value):
-    if value and not mfa.enabled(mfa.ADMIN):
-        raise ValueError("Erst den zweiten Anmeldeschritt für den Hauptadmin einschalten (Einstellungen → Sicherheit).")
-    with _lock:
-        d = _read()
-        d["on"] = bool(value)
-        _write(d)
-
-
-def set_notify(uid):
-    if uid and uid not in profiles.user_ids():
-        raise LookupError("no such profile")
-    with _lock:
-        d = _read()
-        d["notify"] = uid or ""
-        _write(d)
-
-
-def set_role(uid, new):
-    """new: a role, or "" to take it away. A new role (also a changed one) ends the profile's admin mode."""
+def set_role(uid, new, by="main"):
+    """new: a role, or "" to take it away. by: "main" (the panel password) or the acting profile's id."""
     if uid not in profiles.user_ids():
         raise LookupError("no such profile")
     if new and new not in ROLES:
-        raise ValueError("role must be owner, coadmin, manager or empty")
+        raise ValueError("role must be admin, manager or empty")
+    if new and not mfa.enabled(uid):
+        raise ValueError("Erst braucht das Profil seinen zweiten Anmeldeschritt (Ich → Sicherheit).")
     with _lock:
         d = _read()
         d["users"] = {u: x for u, x in d["users"].items() if u in profiles.user_ids()}
-        if new == "owner" and any(x["role"] == "owner" for u, x in d["users"].items() if u != uid):
-            raise ValueError("Es gibt schon einen Haupt-Admin. Dort zuerst die Rolle ändern.")
+        if by != "main" and uid == d["main"] and by != uid:
+            raise PermissionError("Den Haupt-Admin ändert nur er selbst oder das Panel-Passwort.")
+        admins = [u for u, x in d["users"].items() if x["role"] == "admin"]
+        if by != "main" and new != "admin" and admins == [uid]:
+            raise ValueError("Das ist die letzte Admin-Rolle. Erst einem anderen Profil Admin geben.")
         if not new:
             d["users"].pop(uid, None)
         else:
             if uid not in d["users"] and len(d["users"]) >= MAX_ADMINS:
                 raise ValueError(f"höchstens {MAX_ADMINS} Profile mit Admin-Rolle")
             if d["users"].get(uid, {}).get("role") != new:
-                d["users"][uid] = {"role": new, "since": int(time.time()), "k": secrets.token_hex(8), "by": "main"}
+                d["users"][uid] = {"role": new, "since": int(time.time()), "by": by}
+        if d["users"].get(d["main"], {}).get("role") != "admin":
+            d["main"] = ""
+        if not d["main"] and by == "main" and new == "admin":
+            d["main"] = uid   # the first admin the password gives is the main one
         _write(d)
 
 
-def forget(uid):
-    """A deleted profile leaves the list (and is no longer the one told about admin modes)."""
+def set_main(uid, by="main"):
+    """Makes an admin profile the main one (its code then also counts for the panel password)."""
     with _lock:
         d = _read()
-        if uid in d["users"] or d["notify"] == uid:
+        if by != "main" and by != d["main"]:
+            raise PermissionError("Den Haupt-Admin wählt nur der Haupt-Admin oder das Panel-Passwort.")
+        if uid and (d["users"].get(uid, {}).get("role") != "admin" or not mfa.enabled(uid)):
+            raise ValueError("Haupt-Admin kann nur ein Profil mit der Rolle Admin und zweitem Anmeldeschritt sein.")
+        d["main"] = uid or ""
+        _write(d)
+
+
+def unlink_main():
+    """The emergency access (notzugang.py): the password no longer asks the main profile's code."""
+    with _lock:
+        d = _read()
+        was = d["main"]
+        d["main"] = ""
+        _write(d)
+    return bool(was)
+
+
+def forget(uid):
+    """A deleted profile leaves the list."""
+    with _lock:
+        d = _read()
+        if uid in d["users"] or d["main"] == uid:
             d["users"].pop(uid, None)
-            d["notify"] = "" if d["notify"] == uid else d["notify"]
+            d["main"] = "" if d["main"] == uid else d["main"]
             _write(d)
 
 
-# ---------------------------------------------------------------- the admin mode
-def _sig(u, entry, start, issued, family, via):
-    msg = "|".join(("speech-spark-elev", u["id"], u["pin"], str(u.get("epoch", 0)), entry["role"], str(entry.get("k")),
-                    mfa.session_salt(u["id"]), str(start), str(issued), family, via))
-    return hmac.new(profiles._secret(), msg.encode(), hashlib.sha256).hexdigest()
-
-
-def _token(uid, start, family, via, now=None):
-    u = next((x for x in profiles._load()["users"] if x["id"] == uid), None)
-    entry = _read()["users"].get(uid)
-    if not u or not entry:
+# ---------------------------------------------------------------- who acts as admin
+def session(request):
+    """{"id", "name", "role", "via"} of the profile behind this request when it acts as admin, else None.
+    via: "b" (its own browser login) or the iPhone app key's id."""
+    if request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         return None
-    issued = int(now if now is not None else time.time())
-    return f"{uid}.{start}.{issued}.{family}.{via}.{_sig(u, entry, start, issued, family, via)}"
-
-
-def start(uid, via, now=None):
-    """A new admin mode for this profile: the cookie value."""
-    now = int(now if now is not None else time.time())
-    return _token(uid, now, secrets.token_hex(8), via, now)
-
-
-def _parse(raw):
-    p = (raw or "").split(".")
-    if len(p) != 6 or not _UID.fullmatch(p[0]) or not p[1].isdigit() or not p[2].isdigit() \
-            or not re.fullmatch(r"[0-9a-f]{16}", p[3]) or not _VIA.fullmatch(p[4]):
-        return None
-    return {"uid": p[0], "start": int(p[1]), "issued": int(p[2]), "family": p[3], "via": p[4], "sig": p[5]}
-
-
-def session(request, now=None):
-    """{"id", "name", "role", "via", "start", "issued", "family"} of a valid admin mode in this request, else None."""
-    raw = request.cookies.get(COOKIE, "")
-    t = _parse(raw)
-    if not t:
-        return None
-    now = now if now is not None else time.time()
-    d = _read()
-    entry = d["users"].get(t["uid"])
-    if not d["on"] or not entry or not mfa.enabled(mfa.ADMIN) or not mfa.enabled(t["uid"]):
-        return None
-    if t["via"] == "t" and not mfa.trusted(t["uid"], request, now):
-        t["via"] = "b"   # the trust was removed: from now on the short limits (the signature stays the one for "t")
-        sig_via = "t"
-    else:
-        sig_via = t["via"]
-    idle, longest = limits(t["via"])
-    if now - t["issued"] > idle or now - t["start"] > longest or t["issued"] < t["start"] or t["issued"] > now + 60:
-        return None
-    u = next((x for x in profiles._load()["users"] if x["id"] == t["uid"]), None)
-    if not u or not secrets.compare_digest(t["sig"], _sig(u, entry, t["start"], t["issued"], t["family"], sig_via)):
-        return None
-    if guard.revoked("elev-family:" + t["family"]):
-        return None
-    if t["via"] in ("b", "t"):
-        # only together with the same profile's own browser login
-        cu, _ = profiles._cookie_user(profiles._load(), request.cookies.get(profiles.COOKIE, ""))
-        if not cu or cu["id"] != t["uid"]:
+    d = profiles._load()
+    if request.headers.get(profiles.DEVICE_HEADER):
+        dev = profiles._device(d, request)
+        if not dev or dev.get("scope") != "app":
             return None
-    elif not app_ok(t["uid"], t["via"]):
+        uid, via = dev["user"], dev["id"]
+    else:
+        raw = request.cookies.get(profiles.COOKIE, "")
+        u, _ = profiles._cookie_user(d, raw)
+        if not u:
+            return None
+        uid, via = u["id"], "b"
+    entry = _read()["users"].get(uid)
+    mark = mfa.mark(uid)
+    if not entry or not mark or not mfa.enabled(uid) or uid not in profiles.user_ids():
         return None
-    return {"id": u["id"], "name": u["name"], "role": entry["role"], "via": sig_via, "short": sig_via != t["via"],
-            "start": t["start"], "issued": t["issued"], "family": t["family"]}
-
-
-def limits(via, short=False):
-    """(seconds without use, seconds in any case) of an admin mode opened this way."""
-    return (TRUSTED_IDLE, TRUSTED_LONGEST) if via == "t" and not short else (IDLE, LONGEST)
-
-
-def app_ok(uid, did):
-    """The iPhone app's key `did` still exists, belongs to `uid` and may open "Spark verwalten"."""
-    dev = next((x for x in profiles._load()["devices"] if x["id"] == did), None)
-    if not dev or dev.get("user") != uid or dev.get("scope") != "app":
-        return False
-    import iphone
-    return iphone.allowed(uid) and iphone.area_on(uid, "app_admin")
+    if via == "b":
+        if profiles.second_step_of(raw) != mark:
+            return None   # signed in with the PIN alone, by "Am Handy weitermachen" or before the second step
+    else:
+        import iphone
+        import notaus
+        # an app key made before the second step was set up does not count (unknown "since" in very old files: it does)
+        if int(dev.get("created") or 0) < int(mfa.status(uid)["since"] or 0) or not iphone.allowed(uid) or notaus.own(uid):
+            return None
+    u = next(x for x in d["users"] if x["id"] == uid)
+    return {"id": uid, "name": u["name"], "role": entry["role"], "via": via}
 
 
 def manager_may(request):
@@ -264,7 +236,7 @@ def manager_may(request):
 
 
 def allows(request):
-    """True when this request comes with a valid admin mode whose role reaches it. Marks the request."""
+    """True when this request comes from an admin profile whose role reaches it. Marks the request."""
     s = session(request)
     if not s or (s["role"] == "manager" and not manager_may(request)):
         return False
@@ -272,46 +244,15 @@ def allows(request):
     return True
 
 
-def renewed(request, now=None):
-    """A fresh cookie value for an admin mode in use (same start and family), else None."""
-    now = int(now if now is not None else time.time())
-    s = session(request, now)
-    if not s or now - s["issued"] < RENEW:
-        return None
-    return _token(s["id"], s["start"], s["family"], s["via"], now)
-
-
-def end(request):
-    """Ends the admin mode of this request (every copy of it)."""
-    t = _parse(request.cookies.get(COOKIE, ""))
-    if t:
-        guard.revoke("elev-family:" + t["family"], LONGEST + 120)
-    return t
-
-
-def expires(s, now=None):
-    """When the admin mode ends without further use (unix time)."""
-    idle, longest = limits(s["via"], s.get("short"))
-    return min(s["issued"] + idle, s["start"] + longest)
-
-
-def notify_uid():
-    """The profile that hears about admin things: the one the main admin chose, else the Haupt-Admin profile."""
-    d = _read()
-    uid = d["notify"] or next((u for u, x in d["users"].items() if x.get("role") == "owner"), "")
-    return uid if uid in profiles.user_ids() else ""
-
-
-async def tell_main(name, role_name, via):
-    """Optional note to the profile the main admin chose (push, as that profile set it up)."""
-    uid = _read()["notify"]
-    if not uid or uid not in profiles.user_ids():
-        return 0
+async def tell(text, skip=""):
+    """A note (push) to every admin profile but `skip`, as each set it up. Returns how many devices it reached."""
     import push
-    where = "in der iPhone-App" if via not in ("b", "t") else "im Browser"
-    try:
-        return await push.send(uid, "🔐 Spark", f"{name} hat den Admin-Modus geöffnet ({role_name}, {where}).",
-                               tag="admin", private=False)
-    except Exception as e:
-        print("coadmin: note failed:", type(e).__name__, flush=True)
-        return 0
+    reached = 0
+    for uid in admin_uids():
+        if uid == skip:
+            continue
+        try:
+            reached += await push.send(uid, "🔐 Spark", text, tag="admin", private=False)
+        except Exception as e:
+            print("coadmin: note failed:", type(e).__name__, flush=True)
+    return reached

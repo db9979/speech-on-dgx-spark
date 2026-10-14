@@ -802,11 +802,11 @@ struct SettingsView: View {
                     if talk.allowed.areas.contains("app_security") {
                         NavigationLink("Sicherheit") { SecurityView() }
                     }
-                    if talk.allowed.areas.contains("app_admin") {
-                        NavigationLink("Spark verwalten") { AdminView(profileRole: talk.allowed.adminRole) }
+                    if !talk.allowed.adminRole.isEmpty {   // an admin profile: admin in its own app (V01.0.541)
+                        NavigationLink("Spark verwalten") { AdminView() }
                     }
                     if talk.allowed.panel {
-                        NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: talk.allowed.areas.contains("app_admin")) }
+                        NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: !talk.allowed.adminRole.isEmpty) }
                     }
                 } footer: {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")

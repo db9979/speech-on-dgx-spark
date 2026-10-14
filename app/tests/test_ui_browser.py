@@ -1525,13 +1525,13 @@ class Browser(unittest.TestCase):
             mfa.disable(uid)
 
     def test_profile_as_admin(self):
-        """V01.0.255 (coadmin.py): the main admin gives a role under Einstellungen → Sicherheit; the profile opens
-        its admin mode under Ich → Sicherheit; then a bar says so, the main admin's own things are hidden, and a
-        Verwalter does not see Einstellungen and Einbinden."""
+        """V01.0.541 (coadmin.py, no admin mode): the main admin gives a role under Einstellungen → Sicherheit; a
+        profile with the role is admin right after signing in with its code, the password's own things are hidden,
+        and a Verwalter does not see Einstellungen and Einbinden."""
         import coadmin
         import mfa
         import profiles
-        real = (mfa.enabled, mfa.verify)
+        real = (mfa.enabled, mfa.verify, mfa.mark)
         uid = next(u["id"] for u in profiles.names() if u["name"] == "Uitest")
         base = f"http://127.0.0.1:{self.port}"
 
@@ -1540,6 +1540,7 @@ class Browser(unittest.TestCase):
                 br, pg, errors = await self.page(p, 1280, 900)   # the main admin signs in before his second step is "on"
                 mfa.enabled = lambda who: who in (mfa.ADMIN, uid)
                 mfa.verify = lambda who, code: code == "123456"
+                mfa.mark = lambda who: "m-" + who if who == uid else ""     # the mark a login with the code carries
                 await pg.reload()
                 await pg.wait_for_timeout(600)
                 await pg.evaluate("goCfg('sec')")
@@ -1549,8 +1550,7 @@ class Browser(unittest.TestCase):
                 # the list of profiles may take a moment when many profiles exist (the whole test run)
                 await pg.wait_for_selector("#coadmuser", state="visible", timeout=20000)
                 await br.close()
-                for role in ("coadmin", "manager"):
-                    coadmin.set_on(True)
+                for role in ("admin", "manager"):
                     coadmin.set_role(uid, role)
                     exe = chromium()
                     br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
@@ -1560,35 +1560,29 @@ class Browser(unittest.TestCase):
                     await pg.goto(base + "/")
                     r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711", "code": "123456"})
                     self.assertEqual(r.status, 200)
+                    self.assertTrue((await r.json()).get("admin"))
                     await pg.goto(base + "/")
-                    await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'")
-                    self.assertFalse(await pg.evaluate("ADMIN"))
-                    await pg.evaluate("openMe('secbox')")
-                    await pg.wait_for_selector("#coadmbox button", state="visible", timeout=20000)
-                    r = await pg.request.post(base + "/api/admin/elevate", headers={"X-Speech-Code": "123456"})
-                    self.assertEqual(r.status, 200)
-                    await pg.goto(base + "/")
-                    # wait for the state, not a fixed 800 ms (red on a slow GitHub runner, V01.0.419)
-                    await self.until(pg, "typeof ADMIN!=='undefined'&&ADMIN&&elevated()", 20)
-                    await pg.wait_for_selector("#coadmbar", state="visible", timeout=20000)
-                    self.assertEqual(await pg.is_visible("nav button[data-s=cfg]"), role == "coadmin")
-                    if role == "coadmin":
+                    # wait for the state, not a fixed time (red on a slow GitHub runner, V01.0.419)
+                    await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'&&ADMIN===true&&elevated()", 20)
+                    self.assertIn("coadm", await pg.evaluate("document.body.className"))
+                    self.assertEqual(await pg.is_visible("nav button[data-s=cfg]"), role == "admin")
+                    if role == "admin":
                         await pg.evaluate("goCfg('sec')")
                         await pg.wait_for_timeout(500)
                         self.assertFalse(await pg.is_visible("#pwopen"))
-                        self.assertFalse(await pg.is_visible("#coadmlist"))
                     await pg.evaluate("goSec('logs')")
                     await pg.wait_for_timeout(300)
-                    self.assertFalse(await pg.is_visible("#logtabs button[data-lt=audit]"))
+                    # the security log: an Admin sees it like the password, a Verwalter not
+                    self.assertEqual(await pg.is_visible("#logtabs button[data-lt=audit]"), role == "admin")
                     await pg.click("#logtabs button[data-lt=adm]")
-                    await self.until(pg, "$('logout').innerText.includes('Admin-Modus geöffnet')", 20)
+                    await self.until(pg, "$('logout').innerText.includes('Admin-Profil angemeldet')", 20)
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"coadmin-{role}.png"))
                     self.assertEqual(errs, [])
                     await br.close()
         try:
             self.run_async(go())
         finally:
-            mfa.enabled, mfa.verify = real
+            mfa.enabled, mfa.verify, mfa.mark = real
             try:
                 os.remove(coadmin.FILE)
             except OSError:
@@ -2330,7 +2324,7 @@ class Browser(unittest.TestCase):
                     await pg.goto(base + "/")
                     await self.until(pg, PAGE_READY)
                     self.assertIn("guest", await pg.evaluate("document.body.className"))
-                    # V01.0.285: "Spark verwalten" is not for guests; the admin opens the page with #admin
+                    # since V01.0.541 there is no button for a second admin sign-in; the password opens with #admin
                     self.assertFalse(await pg.is_visible("#loginbtn"))
                     await pg.goto(base + "/#admin")                      # only the hash changes (V01.0.439)
                     await pg.wait_for_selector("#login", state="visible")

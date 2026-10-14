@@ -29,8 +29,8 @@ async function loadLogs(){
     if(tab!==LG.tab)return;LDATA=tab==='diag'?d:null;rows=d.rows;head=d.head}
   else if(tab==='svc'){const txt=await (await api(`/api/logs/${encodeURIComponent(LG.svc)}?lines=${LG.lines}`)).text();
     if(tab!==LG.tab)return;rows=txt.split('\n').filter(x=>x.trim()&&!x.startsWith('-- ')).map(lparse);LDATA=null;head=`# ${LG.svc} · ${rows.length} Zeilen`}
-  else if(tab==='adm'){loadUndo().catch(()=>{});rows=(await adminRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Admin-Protokoll','Admin log')} · ${rows.length}`}
-  else{rows=(await auditRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Änderungsprotokoll','Change log')} · ${rows.length}`}
+  else if(tab==='adm'){loadUndo().catch(()=>{});rows=(await adminRows()).slice(0,LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Admin-Protokoll','Admin log')} · ${rows.length}`}
+  else{rows=(await auditRows()).slice(0,LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Änderungsprotokoll','Change log')} · ${rows.length}`}
   LROWS=rows;LROWS.head=head;lrender()}
 function lshow(){
   $('logreqtab').hidden=!TRACE_ON;const req=LG.tab==='req';$('logreq').hidden=!req;$('logout').hidden=req;$('loglines').hidden=req;$('logcopy').hidden=req;

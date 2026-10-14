@@ -163,17 +163,20 @@ class DesignKlar(unittest.TestCase):
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))
         self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "chats", "me", "mon", "more"])
 
-    def test_manage_button_only_for_admin_roles(self):
-        """V01.0.285: the header button "Spark verwalten" (and the phone menu's admin login) shows only for a
-        profile with an admin role (whoami admin_role), not for guests or ordinary profiles."""
+    def test_no_second_admin_sign_in(self):
+        """V01.0.541 (Dominik "A2 B1 C1"): no button "Spark verwalten" for a second admin sign-in any more; a profile
+        with an admin role is admin in its own login, the panel password stays reachable only over #admin."""
+        html = read("index.html")
+        for gone in ('id="loginbtn"', 'id="milogin"', 'id="proflogadmin"', 'id="coadmon"'):
+            self.assertNotIn(gone, html)
         css = read("app.css")
-        self.assertNotIn("body.guest #loginbtn{display:inline-flex", css)
-        self.assertNotIn("body.prof #loginbtn{display:inline-flex", css)
-        self.assertIn("body.mayadm #loginbtn{display:inline-flex", css)
+        self.assertNotIn("#loginbtn", css)
+        self.assertNotIn("mayadm", css)
         start = read("js", "start.js")
-        self.assertIn("if(who.profile&&who.admin_role)document.body.classList.add('mayadm')", start)
+        self.assertNotIn("mayadm", start)
         self.assertIn("location.hash==='#admin'", start)
-        self.assertIn("$('milogin').style.display=!ADMIN&&document.body.classList.contains('mayadm')", read("js", "phone.js"))
+        self.assertNotIn("milogin", read("js", "phone.js"))
+        self.assertNotIn("/api/admin/elevate", read("js", "coadmin.js") + read("js", "me.js"))
 
     def test_no_old_page_name(self):
         for f in ("guides.js", "admin.js", "wizard.js"):

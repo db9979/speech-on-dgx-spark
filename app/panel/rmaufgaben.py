@@ -7,7 +7,7 @@ Sources (each by its own switch, only what the profile may do anyway):
   todo     tasks found in the handwriting (rmplus, rm_todo)      Erinnern (tomorrow 9:00) / Weg / Später
   ged      memory entries marked stale or contradicted (gedpruefen) Stimmt / Stimmt nicht / Später
   mich     proposals for the profile's own settings (beratermich)  Übernehmen / Nein
-  berater  the Einstellungs-Assistent's proposals: only for an admin profile (owner, co-admin) and never stufe C/U/I/P;
+  berater  the Einstellungs-Assistent's proposals: only for an admin profile (role Admin) and never stufe C/U/I/P;
            Dominik 2b: ticked on paper = done directly (each with "Zurücknehmen" under Ich → reMarkable → Papier)
   praxis   Praxistest after an update (idea 1, admin): the new versions' lines from the changelog, Klappt / Klappt nicht;
            "Klappt nicht" becomes a case under Zustand → Verbessern
@@ -62,9 +62,9 @@ def on(uid):
 
 
 def admin(uid):
-    """An admin profile: owner or co-admin while the roles are on (coadmin.py)."""
+    """An admin profile: the role Admin with its second step on (coadmin.py)."""
     import coadmin
-    return bool(uid) and coadmin.on() and coadmin.role(uid) in ("owner", "coadmin")
+    return bool(uid) and coadmin.acts(uid) == "admin"
 
 
 def _zone(uid):

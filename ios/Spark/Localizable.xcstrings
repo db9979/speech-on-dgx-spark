@@ -231,16 +231,6 @@
         }
       }
     },
-    "Admin-Anmeldung": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Admin sign-in"
-          }
-        }
-      }
-    },
     "Admin-Rechte": {
       "localizations": {
         "en": {
@@ -307,36 +297,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "All fine"
-          }
-        }
-      }
-    },
-    "Als Haupt-Admin, mit dem Code deines Profils: alles wie mit dem Admin-Passwort. Nach 15 Minuten ohne Bedienung endet die Anmeldung.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As main admin, with your profile's code: everything like with the admin password. Signing in ends after 15 minutes without use."
-          }
-        }
-      }
-    },
-    "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As co-admin, with your profile's code. The sign-in ends after 15 minutes without use."
-          }
-        }
-      }
-    },
-    "Als Verwalter: Monitoring, Logs, Funktionen, Profile und Geräte. Mit dem Code deines Profils.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "As manager: monitoring, logs, features, profiles and devices. With your profile's code."
           }
         }
       }
@@ -901,16 +861,6 @@
         }
       }
     },
-    "Code falsch.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wrong code."
-          }
-        }
-      }
-    },
     "Comic": {
       "localizations": {
         "en": {
@@ -937,16 +887,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "For this, turn on “Documents from the app” in the panel under Me → iPhone app."
-          }
-        }
-      }
-    },
-    "Danach meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Then sign in with the admin password and the admin's code, as in the browser."
           }
         }
       }
@@ -1327,26 +1267,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The second step is off for this profile."
-          }
-        }
-      }
-    },
-    "Die Admin-Anmeldung ist abgelaufen. Bitte neu anmelden.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The admin sign-in has expired. Please sign in again."
-          }
-        }
-      }
-    },
-    "Die Anmeldung gilt nur, solange die App offen ist.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The sign-in lasts only while the app is open."
           }
         }
       }
@@ -2001,16 +1921,6 @@
         }
       }
     },
-    "Falsches Passwort.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wrong password."
-          }
-        }
-      }
-    },
     "Favorit": {
       "localizations": {
         "en": {
@@ -2367,16 +2277,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Memory"
-          }
-        }
-      }
-    },
-    "Geht nur mit dem zweiten Anmeldeschritt des Admins und mit „Spark verwalten in der App“ unter Ich → iPhone-App.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Works only with the admin's second login step and with \"Manage the Spark in the app\" under Me → iPhone app."
           }
         }
       }
@@ -3417,16 +3317,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pair with this Spark?"
-          }
-        }
-      }
-    },
-    "Mit meinem Profil anmelden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in with my profile"
           }
         }
       }
@@ -5311,16 +5201,6 @@
         }
       }
     },
-    "Was einen Code braucht (neue PIN, Profil löschen), fragt danach. Sprachmodell, Engines und Ports bleiben im Browser.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Whatever needs a code (new PIN, deleting a profile) asks for it. Language model, engines and ports stay in the browser."
-          }
-        }
-      }
-    },
     "Was möchtest du wissen?": {
       "localizations": {
         "en": {
@@ -5617,16 +5497,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Too short. Please read all three sentences."
-          }
-        }
-      }
-    },
-    "Zu viele falsche Versuche, bitte später noch einmal.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Too many wrong attempts, please try again later."
           }
         }
       }
@@ -6231,16 +6101,6 @@
         }
       }
     },
-    "Mit Passkey anmelden": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in with passkey"
-          }
-        }
-      }
-    },
     "Hier gibt es keinen Passkey. Lege ihn in Safari über die Adresse mit Namen unter Ich → Sicherheit an, oder nimm den Code.": {
       "localizations": {
         "en": {
@@ -6301,26 +6161,6 @@
         }
       }
     },
-    "Bitte zuerst das Passwort, dann „Mit Passkey anmelden“.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "First the password, then “Sign in with passkey”."
-          }
-        }
-      }
-    },
-    "Passkey nicht angenommen. Bitte den Code eingeben.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passkey not accepted. Please enter the code."
-          }
-        }
-      }
-    },
     "Als Admin: der ganze Spark (Stufe 2 „Hände weg“) oder nur dein Profil. Aufheben geht nie in der App.": {
       "localizations": {
         "en": {
@@ -6357,16 +6197,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Put the whole Spark on stage 2 “Hands off”? Lifting only as admin in the browser at home."
-          }
-        }
-      }
-    },
-    "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only an admin stops the whole Spark. Sign in under Manage Spark first."
           }
         }
       }
@@ -7357,6 +7187,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "What is on on the Spark applies to every profile at once. Off blocks a function for this profile only; the profile cannot lift the block itself."
+          }
+        }
+      }
+    },
+    "Dein Profil ist gerade kein Admin (Rolle oder zweiter Anmeldeschritt fehlt).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile is not an admin right now (role or second login step missing)."
+          }
+        }
+      }
+    },
+    "Dein Profil ist Admin; Face ID schützt diesen Bereich auf dem iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile is an admin; Face ID guards this area on the iPhone."
+          }
+        }
+      }
+    },
+    "Dein Profil ist gerade kein Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile is not an admin right now."
+          }
+        }
+      }
+    },
+    "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin rights come only with your profile's second login step (Me → Security). The panel password (emergency access) works only in the browser."
+          }
+        }
+      }
+    },
+    "Schutz-Änderungen (Rollen, Sicherungen, zweiter Schritt) fragen nach Code oder Face ID. Sprachmodell, Engines und Ports bleiben im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protection changes (roles, backups, second step) ask for the code or Face ID. Language model, engines and ports stay in the browser."
+          }
+        }
+      }
+    },
+    "Den ganzen Spark hält nur ein Admin an. Dein Profil ist gerade kein Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only an admin stops the whole Spark. Your profile is not an admin right now."
           }
         }
       }

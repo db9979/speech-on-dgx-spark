@@ -40,7 +40,7 @@ import guard
 import profiles
 import vault
 from common import load_config
-from core import admin_code_fresh, assistant, auth, owner_auth
+from core import admin_code_fresh, assistant, auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -87,7 +87,7 @@ def repo():
 
 
 def _staff(request):
-    """(name, uid, logs) for the main admin or a profile in its admin mode; logs: may add Diagnose lines
+    """(name, uid, logs) for the main admin or an admin profile; logs: may add Diagnose lines
     (not the Verwalter role, like Logs → Anfragen). None otherwise."""
     import coadmin
     import core
@@ -813,7 +813,7 @@ CHANNEL_NAMES = {"panel": "das Panel", "app": "die iPhone-App", "android": "die 
 
 
 def notify_targets(skip=""):
-    """The admin profiles that hear of a new report: the one chosen for admin notes, owners and Mit-Admins
+    """The admin profiles that hear of a new report: every profile with the role Admin, the main one first
     (notaus.admin_uids), without the reporter, without those that turned it off for themselves (report_notify),
     and none when the admin switch chat.report_notify is off."""
     c = features.chat_cfg()
@@ -1071,7 +1071,7 @@ def admin_state(request: Request):
     return dict(token_info(), repo=repo(), on=admin_on(), live=for_live())
 
 
-@router.put("/api/admin/report/token", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.put("/api/admin/report/token", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_token(request: Request):
     guard.limit(request, "report", admin=True)
     b = await _json(request, 1024)
@@ -1084,7 +1084,7 @@ async def admin_token(request: Request):
     return await check_token()
 
 
-@router.delete("/api/admin/report/token", dependencies=[Depends(owner_auth)])
+@router.delete("/api/admin/report/token", dependencies=[Depends(auth)])
 def admin_token_drop(request: Request):
     guard.limit(request, "report", admin=True)
     token_drop()

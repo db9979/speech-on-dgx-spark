@@ -112,7 +112,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | Modul | Aufgabe |
 |---|---|
 | `app/panel/account.py` | Was ein Gerät für sich selbst darf: Anmelden und eigene Daten |
-| `app/panel/coadmin.py` | Profile als Admins: Haupt-Admin, Mit-Admin, Verwalter |
+| `app/panel/coadmin.py` | Profile als Admins: Admin und Verwalter, ohne zweite Stufe |
 | `app/panel/core.py` | Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer |
 | `app/panel/features.py` | Alle Funktionen mit Namen und Freigaben an einer Stelle |
 | `app/panel/guard.py` | Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log |
@@ -1096,9 +1096,9 @@ flowchart TD
 3. <a id="kn-middleware-s3"></a>**Mein Notaus für diesen Schlüssel?**: Trägt die Anfrage einen Geräteschlüssel und hat dessen Profil seinen eigenen Notaus an, bekommt sie nichts außer dem Stand des Notaus. Sonst merkt sich das Panel, für welches Profil diese Anfrage handelt, damit die letzte Abwehr tiefer unten weiß, wessen Aktion es wäre.
 4. <a id="kn-middleware-s4"></a>**Notaus an?**: Ist der Notaus aus, geht die Anfrage gleich weiter zur Herkunftsprüfung. Die Seite selbst und ihre Dateien kommen immer durch, damit man den Notaus sehen und aufheben kann.
 5. <a id="kn-middleware-s5"></a>**Von außen?**: Im Heimnetz ist nur, wer eine private Adresse hat und nicht über einen Proxy kommt, oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand.
-6. <a id="kn-middleware-s6"></a>**Alles still?**: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, der Admin-Modus, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.
+6. <a id="kn-middleware-s6"></a>**Alles still?**: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.
 7. <a id="kn-middleware-s7"></a>**Fremde Seite?**: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch.
-8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil, Admin-Modus oder eine Authorization-Zeile. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
+8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
 10. <a id="kn-middleware-s10"></a>**Update läuft?**: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“).
@@ -1114,7 +1114,7 @@ Gilt bei: [Schritt 4](#kn-middleware-s4), [Schritt 5](#kn-middleware-s5), [Schri
 |---|---|---|
 | aus | alles | alles |
 | 1 und 2 | nur die Seite und der Notaus-Stand | alles; Aktionen hält das Panel tiefer unten an |
-| 3 | nur die Seite und der Notaus-Stand | Anmelden, Admin-Modus, Aufheben, Zustand und Logs lesen |
+| 3 | nur die Seite und der Notaus-Stand | Anmelden, Aufheben, Zustand und Logs lesen |
 
 #### Warum diese Reihenfolge
 
@@ -1209,7 +1209,7 @@ flowchart TD
 2. <a id="kn-zugang-s2"></a>**Gesperrt?**: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren.
 3. <a id="kn-zugang-s3"></a>**Passwort oder PIN richtig?**: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“.
 4. <a id="kn-zugang-s4"></a>**Zweiter Schritt?**: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN.
-5. <a id="kn-zugang-s5"></a>**Cookie setzen**: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert.
+5. <a id="kn-zugang-s5"></a>**Cookie setzen**: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung.
 6. <a id="kn-zugang-s6"></a>**Profil bestimmen**: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet.
 7. <a id="kn-zugang-s7"></a>**Schlüssel für diesen Weg frei?**: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält.
 8. <a id="kn-zugang-s8"></a>**Ohne Profil und Gastzugang aus?**: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort.
@@ -1218,7 +1218,7 @@ flowchart TD
 11. <a id="kn-zugang-s11"></a>**Freigabe je Funktion**: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort.
 12. <a id="kn-zugang-s12"></a>**Weiter zur Vorbereitung**: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“.
 
-**Beispiele:** Anmeldung mit PIN: Angemeldet: der Browser hat ein signiertes Cookie. · Fremder rät eine PIN: Abgewiesen; nach 5 Fehlversuchen ist die Adresse gesperrt. · Frage aus der iPhone-App: Durch: Profil aus dem Geräteschlüssel, Freigaben je Funktion. · Gast, Gastzugang aus: Abgewiesen mit 401: ohne Profil kein Assistent.
+**Beispiele:** Anmeldung mit PIN: Angemeldet: der Browser hat ein signiertes Cookie. · Admin-Profil meldet sich mit Code an: Angemeldet und gleich Admin: die Sitzung trägt das Zeichen des zweiten Schritts. · Fremder rät eine PIN: Abgewiesen; nach 5 Fehlversuchen ist die Adresse gesperrt. · Frage aus der iPhone-App: Durch: Profil aus dem Geräteschlüssel, Freigaben je Funktion. · Gast, Gastzugang aus: Abgewiesen mit 401: ohne Profil kein Assistent.
 
 #### Regeln
 
@@ -1228,6 +1228,7 @@ Gilt bei: [Schritt 6](#kn-zugang-s6), [Schritt 7](#kn-zugang-s7)
 |---|---|---|
 | Browser mit Profil | signiertes Cookie, Sitzung in der Liste | alles des Profils |
 | Admin | Passwort-Cookie oder HTTP Basic | Admin-Seiten; HTTP Basic nur ohne zweiten Schritt |
+| Profil mit Admin-Rolle | Cookie mit Zeichen des zweiten Schritts oder App-Schlüssel von danach | Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code |
 | Geräteschlüssel ohne Bereich | Hash des Schlüssels | Assistent des Profils, keine Verbindungen oder Sicherheit ändern |
 | Geräteschlüssel mit Bereich | Hash, Pfad, Schalter | nur die Pfade seines Bereichs |
 | Gast | nur mit Assistent ohne Passwort | Frage und Antwort, kein Werkzeug |

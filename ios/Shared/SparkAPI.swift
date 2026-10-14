@@ -102,7 +102,7 @@ struct Allowed: Equatable {
     /// panel areas in the app (admin switch chat.iphone_panel): "Im Panel öffnen" and the areas the profile switched on
     var panel = false
     var areas: Set<String> = []
-    /// the profile's own admin role ("coadmin" or "manager", V01.0.255): "Mit meinem Profil anmelden" in Spark verwalten
+    /// the profile's own admin role while it counts ("admin" or "manager", V01.0.541): "Spark verwalten" in the app
     var adminRole = ""
     /// "Problem melden" (meldung.py): admin switch chat.report, not blocked for this profile
     var report = false
@@ -314,7 +314,7 @@ struct SparkAPI {
                        rooms: d["rooms"] as? Bool ?? false,
                        panel: d["panel"] as? Bool ?? false,
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
-                       adminRole: ["coadmin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
+                       adminRole: ["admin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
                        report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false)
     }
 

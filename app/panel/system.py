@@ -21,7 +21,7 @@ import profiles  # noqa: E402
 import quality  # noqa: E402
 import vorrang  # noqa: E402
 from common import load_config  # noqa: E402
-from core import spawn, DEFAULTS, admin_code, admin_code_fresh, auth, owner_auth  # noqa: E402
+from core import spawn, DEFAULTS, admin_code, admin_code_fresh, auth  # noqa: E402
 
 router = APIRouter()
 
@@ -52,7 +52,7 @@ async def backup_now():
     return item
 
 
-@router.post("/api/backups/move", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.post("/api/backups/move", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def backup_move(password: str = Body("", embed=True)):
     """A move backup: also carries the key of the encrypted secrets, sealed with this password."""
     try:
@@ -76,7 +76,7 @@ async def backup_move(password: str = Body("", embed=True)):
 _tickets = {}
 
 
-@router.post("/api/backups/{name}/ticket", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.post("/api/backups/{name}/ticket", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 def backup_ticket(name: str):
     try:
         backup.path_of(name)
@@ -91,7 +91,7 @@ def backup_ticket(name: str):
     return {"url": f"/api/backups/{name}?t={t}"}
 
 
-@router.get("/api/backups/{name}", dependencies=[Depends(owner_auth)])
+@router.get("/api/backups/{name}", dependencies=[Depends(auth)])
 def backup_download(name: str, t: str = ""):
     try:
         path = backup.path_of(name)
@@ -103,7 +103,7 @@ def backup_download(name: str, t: str = ""):
     return FileResponse(path, media_type="application/gzip", filename=name)
 
 
-@router.delete("/api/backups/{name}", dependencies=[Depends(owner_auth)])
+@router.delete("/api/backups/{name}", dependencies=[Depends(auth)])
 def backup_delete(name: str):
     try:
         backup.remove(name)
@@ -112,7 +112,7 @@ def backup_delete(name: str):
     return {"backups": backup.listing()}
 
 
-@router.post("/api/backups/{name}/restore", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.post("/api/backups/{name}/restore", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def backup_restore(request: Request, name: str, password: str = Body("", embed=True)):
     try:
         path = backup.path_of(name)
@@ -121,7 +121,7 @@ async def backup_restore(request: Request, name: str, password: str = Body("", e
     return await _restore(open(path, "rb"), name, password[:backup.MOVE_MAX], _keep_admin(request))
 
 
-@router.post("/api/backups-upload", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.post("/api/backups-upload", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def backup_upload(request: Request, file: UploadFile = File(...), password: str = Form("")):
     """Restores a backup file from this computer (e.g. one downloaded earlier or from another Spark)."""
     tmp = tempfile.TemporaryFile()
@@ -136,7 +136,7 @@ async def backup_upload(request: Request, file: UploadFile = File(...), password
 
 
 def _keep_admin(request):
-    """The owner profile restores without touching the panel password and its second step (main admin only)."""
+    """An admin profile restores without touching the panel password and its second step (main admin only)."""
     return not request.scope.get("speech_main_admin")
 
 

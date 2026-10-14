@@ -1096,9 +1096,9 @@ flowchart TD
 3. <a id="kn-middleware-s3"></a>**My kill switch for this key?**: If the request carries a device key and that key's profile has its own kill switch on, it gets nothing but the kill switch state. Otherwise the panel notes which profile this request acts for, so the last line of defence further down knows whose action it would be.
 4. <a id="kn-middleware-s4"></a>**Kill switch on?**: With the kill switch off the request goes straight on to the origin check. The page itself and its files always pass, so the kill switch can be seen and lifted.
 5. <a id="kn-middleware-s5"></a>**From outside?**: In the home network is only who has a private address and does not come through a proxy, or comes through a listed proxy that reports a private address. From kill switch stage 1 everything from outside only gets the page and the kill switch state.
-6. <a id="kn-middleware-s6"></a>**All quiet?**: In stage 3 only logins, the admin mode, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down.
+6. <a id="kn-middleware-s6"></a>**All quiet?**: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down.
 7. <a id="kn-middleware-s7"></a>**Foreign page?**: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes.
-8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile, admin mode or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
+8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
 9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
 10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“).
@@ -1114,7 +1114,7 @@ Applies at: [step 4](#kn-middleware-s4), [step 5](#kn-middleware-s5), [step 6](#
 |---|---|---|
 | off | everything | everything |
 | 1 and 2 | only the page and the kill switch state | everything; the panel holds actions off further down |
-| 3 | only the page and the kill switch state | logging in, admin mode, lifting, reading status and logs |
+| 3 | only the page and the kill switch state | logging in, lifting, reading status and logs |
 
 #### Why this order
 
@@ -1209,7 +1209,7 @@ flowchart TD
 2. <a id="kn-zugang-s2"></a>**Locked?**: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out.
 3. <a id="kn-zugang-s3"></a>**Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
 4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
-5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step.
+5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own.
 6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
 7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
 8. <a id="kn-zugang-s8"></a>**No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
@@ -1218,7 +1218,7 @@ flowchart TD
 11. <a id="kn-zugang-s11"></a>**Release per function**: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once.
 12. <a id="kn-zugang-s12"></a>**On to preparing**: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“.
 
-**Examples:** Login with PIN: Logged in: the browser has a signed cookie. · Stranger guesses a PIN: Refused; after 5 wrong attempts the address is locked. · Question from the iPhone app: Passes: profile from the device key, releases per function. · Guest, guest access off: Refused with 401: no assistant without a profile.
+**Examples:** Login with PIN: Logged in: the browser has a signed cookie. · Admin profile signs in with its code: Signed in and admin at once: the session carries the second step's mark. · Stranger guesses a PIN: Refused; after 5 wrong attempts the address is locked. · Question from the iPhone app: Passes: profile from the device key, releases per function. · Guest, guest access off: Refused with 401: no assistant without a profile.
 
 #### Rules
 
@@ -1228,6 +1228,7 @@ Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 |---|---|---|
 | Browser with profile | signed cookie, session in the list | everything of the profile |
 | Admin | password cookie or HTTP Basic | admin pages; HTTP Basic only without a second step |
+| Profile with an admin role | cookie with the second step's mark or an app key made after it | the admin pages of its role; only „change protection“ asks for the code |
 | Device key without scope | hash of the key | the profile's assistant, no changes to connections or security |
 | Device key with scope | hash, path, switch | only the paths of its scope |
 | Guest | only with assistant without password | question and answer, no tool |

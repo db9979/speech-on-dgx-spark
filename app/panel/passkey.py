@@ -3,7 +3,7 @@ plan plaene/zweiter-schritt-seltener.md, point 4).
 
 A passkey belongs to the second login step: it is kept in the same file (mfa.json "passkeys", at most MAX_KEYS)
 and only while that step is on; the authenticator app's code and the recovery codes stay as the way back.
-Everywhere a code is asked (login, admin mode, important changes) a passkey counts the same: the browser signs
+Everywhere a code is asked (login, important changes) a passkey counts the same: the browser signs
 a one-time challenge of this panel, for this host name, with the person's fingerprint, face or device PIN
 (user verification required). That cannot be phished like a typed code: another page gets no signature for us.
 

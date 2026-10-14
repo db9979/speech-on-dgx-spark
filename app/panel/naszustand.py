@@ -12,7 +12,7 @@ Rules (fixed, never decided by the model):
 - SNMPv3 with authPriv only (SHA and AES-128), never v1 or v2c with a community: _user refuses anything else.
 - The host must be in the home network (nas.home_name) and goes through netguard HOME (resolve) like every NAS
   connection, so the Notaus and the Wächter hold it; the user and both passwords sit sealed in the vault and are never
-  shown again, logged or sent to the apps. Changing them needs the main admin with a code (stufen.py).
+  shown again, logged or sent to the apps. Changing them needs an admin (panel password or a profile with the Admin role, stufen.py).
 - Answers are data: only the OIDs asked for are taken (_parse), numbers outside sane ranges, rows beyond MAX_ROWS and
   texts that are no plain names are dropped and counted ("verworfen"). The tool nas_zustand answers with fixed
   words and these numbers only (chat.INSIDE); volume names are kept only when they look like "Volume 1".
@@ -41,7 +41,7 @@ import guard
 import netguard
 import vault
 from common import write_json
-from core import admin_code, auth, owner_auth
+from core import admin_code, auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -590,8 +590,8 @@ def get_state(request: Request):
     return public()
 
 
-# where the Spark's SNMP user goes: the main admin with a code (stufen.py)
-@router.put("/api/admin/naszustand", dependencies=[Depends(owner_auth), Depends(admin_code)])
+# where the Spark's SNMP user goes: an admin, at the level in stufen.py
+@router.put("/api/admin/naszustand", dependencies=[Depends(auth), Depends(admin_code)])
 async def put_state(request: Request):
     """{"host", "user", "auth", "priv"}: empty passwords keep the stored ones (a new host needs them again)."""
     guard.limit(request, "naszustand", admin=True)
@@ -638,7 +638,7 @@ async def read_now(request: Request):
     return dict(public(), checked=res.get("ok", False), why=res.get("why", ""))
 
 
-@router.delete("/api/admin/naszustand", dependencies=[Depends(owner_auth)])
+@router.delete("/api/admin/naszustand", dependencies=[Depends(auth)])
 def forget(request: Request):
     """Forgets host, user and passwords; the switch stays as it is."""
     guard.limit(request, "naszustand", admin=True)

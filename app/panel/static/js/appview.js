@@ -196,7 +196,6 @@ function lookRows(){return row('data-ax="lang"',esc(t('Sprache','Language')),esc
 function lookAct(a){if(a==='lang')$('langbtn').click();else if(a==='theme')$('themebtn').click();
   else if(a==='desk'||a==='app'){if(a==='desk'&&window.closeProf)closeProf();try{localStorage.setItem('appview',a==='desk'?'off':'on')}catch{}apply();
     if(a==='app'){if(window.closeProf)closeProf();tab('spark')}}
-  else if(a==='login'){if(window.closeProf)closeProf();adminEnter()}
   else if(a==='logout')$('logoutbtn').click();else if(a==='find')palOpen();else if(a==='notaus'&&window.naOpen)naOpen()}
 // ---------------------------------------------------------------- Verwalten
 let mSig='';
@@ -223,8 +222,7 @@ const _meTabs=meTabs;
 meTabs=function(){const r=_meTabs(),p=$('ptabs');
   if(ON&&!GATE&&!(typeof ADMIN!=='undefined'&&ADMIN))
     p.insertAdjacentHTML('beforeend',`<div class="mgrp apx">${esc(t('Darstellung','Appearance'))}</div>`+
-      [['lang',t('Sprache','Language'),L==='en'?'English':'Deutsch'],['theme',t('Hell / Dunkel','Light / dark'),themeName()],['desk',t('Am Rechner-Layout zeigen','Show the computer layout'),''],
-       ...(B.classList.contains('mayadm')?[['login',t('Spark verwalten','Manage the Spark'),'']]:[])].map(([a,l,v])=>`<button type="button" class="apx" data-apx="${a}">${esc(l)}<small class="apxv">${esc(v)}</small></button>`).join(''));
+      [['lang',t('Sprache','Language'),L==='en'?'English':'Deutsch'],['theme',t('Hell / Dunkel','Light / dark'),themeName()],['desk',t('Am Rechner-Layout zeigen','Show the computer layout'),'']].map(([a,l,v])=>`<button type="button" class="apx" data-apx="${a}">${esc(l)}<small class="apxv">${esc(v)}</small></button>`).join(''));
   // the way back from "Am Rechner-Layout zeigen"
   if(!ON&&NAR.matches&&!GATE)p.insertAdjacentHTML('beforeend',`<button type="button" class="apon" data-apx="app">${esc(t('Wie die App anzeigen','Show like the app'))}</button>`);
   return r};

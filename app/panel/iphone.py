@@ -64,9 +64,8 @@ profiles.APP_GATE[0] = allowed
 # chat.iphone_panel opens every area for every profile at once, only the admin blocks single profiles
 # (Freigabe nur durch Admin; the areas' own profile switches are gone since the App-Gleichstand, Dominik
 # 2026-10-14). Only these paths open for the app's key; each keeps its own checks (secret_profile
-# wants a fresh code from the app, so the profile needs its second step). "Spark verwalten" (app_admin)
-# opens no path: the app signs in like the browser, with the admin password and the admin's code, and only
-# where the profile itself chose it for its phone (a guard of its own, like the second step, not a release).
+# wants a fresh code from the app, so the profile needs its second step). "Spark verwalten" needs no area: a
+# profile with an admin role is admin by its app key (coadmin.session), since V01.0.541 without a switch.
 _ID = r"[0-9a-f]{1,16}"
 _DOC = r"[0-9a-f]{12}"
 _DEV = r"d_[0-9a-f]{12}"
@@ -107,7 +106,7 @@ AREAS = {
                      (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
 }
 # what hello tells the app (the app shows an area where it is true)
-RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts", "app_admin")
+RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts")
 # conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
 MINE_FIELDS = ("daily", "learn")
 # document settings (Ich -> Dokumente) with "Dokumente verwalten"; the functions themselves follow the admin release
@@ -116,13 +115,12 @@ AUTO_FIELDS = ()
 # switches older apps still send although the admin release alone decides now (Freigabe vereinfachen): ignored
 GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
                   "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on",
-                  "app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts"))
+                  "app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts",
+                  "app_admin"))
 
 
 def area_on(uid, right):
-    if not features.allowed("iphonepanel", uid):
-        return False
-    return right != "app_admin" or bool(profiles.settings(uid).get("app_admin"))
+    return features.allowed("iphonepanel", uid)
 
 
 profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p in rules)
@@ -310,8 +308,9 @@ async def app_pair(request: Request):
 
 
 def _admin_role(uid):
+    """The role the app acts with: an admin profile is admin in its own app by its key (coadmin.session)."""
     import coadmin
-    return coadmin.role(uid) if coadmin.on() and area_on(uid, "app_admin") else ""
+    return coadmin.acts(uid)
 
 
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
@@ -334,7 +333,7 @@ def app_hello(prof=Depends(own_profile)):
             "push": apns.on_for(prof["id"]),
             # CarPlay: the smart home only with its own switch
             "car_ha": bool(s.get("app_car_ha")),
-            # "Spark verwalten" with the profile's own role (coadmin.py): "coadmin", "manager" or "" (none, or the switch off)
+            # "Spark verwalten" with the profile's own role (coadmin.py): "admin", "manager" or "" (none, or its second step off)
             "admin_role": _admin_role(prof["id"]),
             # documents from the app into "Meine Dokumente"
             "docs": docs_on(prof["id"]),
@@ -399,7 +398,7 @@ APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
               "speak")            # Antworten vorlesen: the profile's switch, every device of it follows (chat_turn.quiet)
 RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
-          "app_room", "app_admin")
+          "app_room")
 SETTINGS_BODY = 8192
 
 

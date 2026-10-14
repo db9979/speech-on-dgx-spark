@@ -49,8 +49,6 @@ OPEN = {
     "/api/esp32/ota/activate": "the speaker's first contact; only with a pending one-time code",
     "/api/esp32/fw/{version}/{name}": "public firmware files",
     "/api/iphone/pair": "the iPhone app's first contact; only with a one-time code from the profile's own login",
-    "/api/admin/elevate": "a profile opens its admin mode: checks its own login or app key, its role, both second steps and a fresh code",
-    "/api/admin/elevate/end": "ends only the admin mode this request carries",
     "/api/confirm/end": "ends only the confirmation window of the logins this request carries",
     "/api/pebble/pair": "the Pebble phone app's first contact; only with a one-time code from the profile's own login",
     "/api/write/pair": "a writing help program's first contact; only with a one-time code from the profile's own login",
@@ -89,7 +87,7 @@ OPEN = {
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }
-LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
+LOGIN = re.compile(r"Depends\((auth|main_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'
                    r'(?:async )?def \w+\((.*?)\):\n', re.S)
 

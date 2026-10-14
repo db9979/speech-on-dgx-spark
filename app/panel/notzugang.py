@@ -3,10 +3,9 @@ updates ausgesperrt habe …“). Only on the Spark itself: the shell command ne
 service user, the panel has no way to start it.
 
 It sets a new panel password (shown once), moves the emergency access's own second step aside (kept as .bak, set it
-up again under Einstellungen → Sicherheit), and switches "Benutzer als Admin" off so the password no longer asks for
-the main admin profile's code (mfa.linked); the roles stay and count again when the switch is turned back on. Every
-admin login and admin mode ends. It is noted in the change log (notzugang_cli) and the profiles with an admin role
-get a push."""
+up again under Einstellungen → Sicherheit), and unlinks the main admin profile (Haupt-Admin) so the password no longer
+asks for its code (mfa.linked); the roles stay, the profile can be made main again. Every login with the password
+ends (a new password). It is noted in the change log (notzugang_cli) and the profiles with an admin role get a push."""
 import asyncio
 import os
 import secrets
@@ -21,7 +20,7 @@ import mfa  # noqa: E402
 import profiles  # noqa: E402
 
 LETTERS = "abcdefghjkmnpqrstuvwxyz23456789"   # no 0/o, 1/l/i: read off a terminal and typed on a phone
-NOTE = "Der Notzugang wurde auf dem Spark zurückgesetzt (neues Panel-Passwort, „Benutzer als Admin“ aus)."
+NOTE = "Der Notzugang wurde auf dem Spark zurückgesetzt (neues Panel-Passwort, Haupt-Admin gelöst)."
 
 
 def new_password():
@@ -29,13 +28,10 @@ def new_password():
 
 
 def admins():
-    """The profiles that hear about it: every one with an admin role, and the one chosen for admin notes."""
+    """The profiles that hear about it: every one with an admin role."""
     d = coadmin._read()
     ids = profiles.user_ids()
-    out = [u for u in d["users"] if u in ids]
-    if d["notify"] in ids and d["notify"] not in out:
-        out.append(d["notify"])
-    return out
+    return [u for u in d["users"] if u in ids]
 
 
 async def tell(uids):
@@ -58,11 +54,9 @@ def reset(now=None):
     step = os.path.exists(own)
     if step:
         os.replace(own, f"{own}.{now}.bak")
-    was_on = coadmin.on()
-    if was_on:
-        coadmin.set_on(False)
-    guard.log("notzugang_cli", second_step_off=step or None, admins_off=was_on or None)
-    return password, {"second_step_off": step, "admins_off": was_on, "notify": admins()}
+    unlinked = coadmin.unlink_main()
+    guard.log("notzugang_cli", second_step_off=step or None, main_unlinked=unlinked or None)
+    return password, {"second_step_off": step, "main_unlinked": unlinked, "notify": admins()}
 
 
 def main():
@@ -75,8 +69,8 @@ def main():
     print("Anmelden: https://<Adresse des Spark>/#admin mit diesem Passwort, ohne Code.")
     if done["second_step_off"]:
         print("Zweiter Schritt des Notzugangs: aus (alte Datei als .bak). Neu einrichten unter Einstellungen → Sicherheit.")
-    if done["admins_off"]:
-        print("„Benutzer als Admin“: aus, die Rollen bleiben. Danach wieder einschalten (Einstellungen → Sicherheit).")
+    if done["main_unlinked"]:
+        print("Haupt-Admin: gelöst, die Rollen bleiben. Wieder wählen unter Einstellungen → Sicherheit → Admin-Rechte.")
     print(f"Push an Admins: {reached} Gerät(e) erreicht." if done["notify"] else "Push: kein Profil mit Admin-Rolle.")
     print("Steht im Änderungsprotokoll (notzugang_cli).")
 

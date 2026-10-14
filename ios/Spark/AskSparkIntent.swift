@@ -298,6 +298,7 @@ struct NotausIntent: AppIntent {
         guard SparkAPI.current != nil else {
             throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt."))
         }
+        await AdminSession.shared.refresh()
         let admin = AdminSession.shared.signedIn
         var what = scope ?? .mine
         if admin && scope == nil {
@@ -305,7 +306,7 @@ struct NotausIntent: AppIntent {
             what = picked ?? .mine
         }
         if what == .whole && !admin {
-            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden."))
+            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Dein Profil ist gerade kein Admin."))
         }
         if what == .whole {
             try await requestConfirmation(result: .result(dialog: "Den ganzen Spark auf Stufe 2 „Hände weg“ stellen? Aufheben nur als Admin im Browser im Heimnetz."))

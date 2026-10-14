@@ -391,6 +391,25 @@ def _drop_sessions(uid):
         _write(_path("sessions.json"), d)
 
 
+def mark_second_step(raw, mark):
+    """This browser login was made with the profile's second step (code, passkey, trusted browser): remember its
+    fingerprint (mfa.mark). Only such a login acts as admin (coadmin.session); a new setup makes it count no more."""
+    parts = (raw or "").split(".")
+    if len(parts) != 4 or not mark:
+        return
+    with _slock:
+        d = _sessions()
+        if d.get(parts[2], {}).get("u") == parts[0]:
+            d[parts[2]]["m"] = mark
+            _write(_path("sessions.json"), d)
+
+
+def second_step_of(raw):
+    """The second step's fingerprint this browser login was made with, "" for none (see mark_second_step)."""
+    parts = (raw or "").split(".")
+    return str(_sessions().get(parts[2], {}).get("m", "")) if len(parts) == 4 else ""
+
+
 def _cookie_value(u, issued=None, sid=None, agent=""):
     issued = int(issued or time.time())
     sid = sid or _new_session(u["id"], agent)
@@ -818,7 +837,6 @@ SETTINGS = {
     "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
     "app_room": (False, lambda v: isinstance(v, bool)),     # where room mode listens, in the app (roomlive.py)
     # panel areas in the app (iphone.AREAS, admin chat.iphone_panel): one switch per area, set in the browser
-    "app_admin": (False, lambda v: isinstance(v, bool)),
     "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"

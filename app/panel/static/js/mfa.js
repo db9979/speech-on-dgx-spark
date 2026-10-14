@@ -25,7 +25,7 @@ async function mfaTrusted(box,base){let d;try{d=await (await api(base+'/trusted'
     b.onclick=async()=>{try{await api(base+'/trusted/'+encodeURIComponent(x.id),{method:'DELETE'})}catch(e){mfaMsg(box,e.message,true);return}mfaShow(box.id,base)};
     li.append(sp,b);ul.appendChild(li)}
   if(!d.items.length){const li=document.createElement('li');li.className='mut';li.textContent=t('Keiner. Beim Anmelden „Diesem Browser vertrauen“ ankreuzen, dann fragt er bis zu '+d.days+' Tage keinen Code.','None. Tick "Trust this browser" when signing in, then it asks for no code for up to '+d.days+' days.');ul.appendChild(li)}
-  const fh=document.createElement('div');fh.className='fh';fh.textContent=t(`Ein vertrauter Browser fragt bei der Anmeldung ${d.days} Tage keinen Code, nach ${d.idle} Tagen ohne Nutzung wieder. Admin-Modus und wichtige Änderungen fragen trotzdem.`,`A trusted browser asks for no code at sign-in for ${d.days} days, after ${d.idle} days without use again. The admin mode and important changes still ask.`);
+  const fh=document.createElement('div');fh.className='fh';fh.textContent=t(`Ein vertrauter Browser fragt bei der Anmeldung ${d.days} Tage keinen Code, nach ${d.idle} Tagen ohne Nutzung wieder. Wichtige Änderungen fragen trotzdem.`,`A trusted browser asks for no code at sign-in for ${d.days} days, after ${d.idle} days without use again. Important changes still ask.`);
   wrap.append(lbl,ul,fh);box.appendChild(wrap)}
 async function mfaAct(box,base,a){try{
   if(a==='setup'){const r=await (await api(base+'/setup',jbody())).json();
@@ -55,6 +55,8 @@ function trustUi(who){const d=who.trust_days||60;
   document.querySelectorAll('.trusttxt').forEach(e=>e.textContent=t(`Diesem Browser ${d} Tage vertrauen`,`Trust this browser for ${d} days`));
   let last=false;try{last=localStorage.getItem('trustlast')==='1'}catch{}
   ['logintrust','proftrust'].forEach(id=>{const c=$(id);if(!c)return;c.checked=last;c.onchange=()=>{try{localStorage.setItem('trustlast',c.checked?'1':'0')}catch{}}});
+  // admins are not asked at "Bestätigen" (core.admin_login): the single lock goes away for them
+  document.body.classList.toggle('cfree',!!who.confirm_free);
   confirmShow(who.confirm_until||0)}
 let CONF_UNTIL=0,CONF_T=null;
 function confirmShow(until){CONF_UNTIL=until||0;let bar=$('confbar');
@@ -159,5 +161,5 @@ if(stufenBox)stufenBox.addEventListener('toggle',async()=>{if(!stufenBox.open||s
       const li0=document.createElement('li');li0.className='mut';li0.textContent=L==='en'?({Schutz:'Protection',Daten:'Data',Konten:'Accounts','Geräte':'Devices',Personen:'People'}[area]||area):area;ul.appendChild(li0);
       for(const x of items){const li=document.createElement('li');li.textContent=L==='en'?x.en:x.de;ul.appendChild(li)}out.appendChild(ul)}};
   const p0=document.createElement('div');p0.textContent=t('Lesen und normale Einstellungen fragen nie. Gefragt wird immer dein eigener Code (oder dein Passkey).','Reading and ordinary settings never ask. It is always your own code (or your passkey).');out.appendChild(p0);
-  part(t('🔒 Bestätigen','🔒 Confirm'),t('Ein richtiger Code gilt danach ','A right code then counts ')+d.minutes+t(' Minuten in dieser Anmeldung.',' minutes in this login.'),d.levels.confirm);
+  part(t('🔒 Bestätigen','🔒 Confirm'),t('Ein richtiger Code gilt danach ','A right code then counts ')+d.minutes+t(' Minuten in dieser Anmeldung. Admins werden hier nicht gefragt.',' minutes in this login. Admins are not asked here.'),d.levels.confirm);
   part(t('🔒🔒 Schutz ändern','🔒🔒 Change protection'),t('Fragt jedes Mal.','Asks every time.'),d.levels.protect)});

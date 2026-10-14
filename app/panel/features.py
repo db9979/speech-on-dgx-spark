@@ -750,7 +750,7 @@ def matrix():
                      "chain": chain_switches(f.key), "setup": [admin_way(k) for k in unready(f.key, c)]})
     every = sorted({sw for f in FEATURES for sw in f.admin})
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
-            "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"]) if coadmin.on() else ""} for u in users],
+            "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"])} for u in users],
             "public": _switch(c, "public"), "why": WHY,
             "states": {sw: _switch(c, sw) for sw in every}, "snames": {sw: list(switch_name(sw)) for sw in every},
             "switchable": sorted(sw for sw in every if sw in switchable)}

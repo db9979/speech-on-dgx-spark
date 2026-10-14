@@ -2,98 +2,32 @@ import LocalAuthentication
 import SwiftUI
 import UIKit
 
-/// "Spark verwalten": the admin's part of the panel in the app. The app signs in like the browser, with the
-/// admin password and the admin's code (the Spark wants both from a phone, and the profile's switch
-/// "Spark verwalten in der App"). The login lives in memory only, in a session of its own without the
-/// iPhone's key; closing the app or "Abmelden" ends it.
+/// "Spark verwalten": the admin's part of the panel in the app. Since V01.0.541 (plan plaene/admin-ohne-zweite-stufe.md)
+/// a profile with an admin role is admin in its own app by the app's key, without a second login: the Spark checks
+/// the role and the profile's second step with every request. The panel password (emergency access) stays in the
+/// browser. Face ID guards the area in the app.
 @MainActor
 final class AdminSession: ObservableObject {
     static let shared = AdminSession()
 
     @Published private(set) var signedIn = false
     @Published var version = ""
-    /// who is signed in: "main" (admin password) or a profile in its admin mode ("owner", "coadmin", "manager")
-    @Published private(set) var role = "main"
-    private var session = AdminSession.fresh()
-    private var kept = Date.distantPast
-    /// the Spark's passkey challenge after the right password, when the admin has a passkey for this address
-    @Published private(set) var loginPasskey = false
-    private var loginChallenge: [String: Any]?
-
-    private static func fresh() -> URLSession {
+    /// the profile's role on the Spark: "admin", "manager" or "" (none, or resting without the second step)
+    @Published private(set) var role = ""
+    private let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
-        c.httpCookieAcceptPolicy = .onlyFromMainDocumentDomain
+        c.httpCookieAcceptPolicy = .never
         c.timeoutIntervalForRequest = 60
         return URLSession(configuration: c)
-    }
+    }()
 
-    /// true: signed in; false: the Spark wants the code next. code: six digits, or SparkAPI.passkey for Face ID.
-    func login(password: String, code: String?) async throws -> Bool {
-        guard let base = Store.baseURL, let key = Store.key else { throw SparkError(message: String(localized: "Nicht gekoppelt.")) }
-        var r = URLRequest(url: base.appendingPathComponent("api/login"))
-        r.httpMethod = "POST"
-        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // the app's own key goes along only here: the Spark checks the profile's switch for this login
-        r.setValue(key, forHTTPHeaderField: "X-Speech-Device")
-        var body: [String: Any] = ["password": password]
-        if code == SparkAPI.passkey {
-            guard let challenge = loginChallenge, let sign = SparkAPI.passkeySigner, let host = base.host else {
-                throw SparkError(message: String(localized: "Bitte zuerst das Passwort, dann „Mit Passkey anmelden“."))
-            }
-            loginChallenge = nil   // each challenge once
-            loginPasskey = false
-            body["passkey"] = try await sign(challenge, host)
-        } else if let code {
-            body["code"] = code
-        }
-        r.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, response) = try await session.data(for: r)
-        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
-        let d = SparkAPI.object(data)
-        if statusCode == 200 && d["code"] as? Bool == true {
-            loginChallenge = d["passkey"] as? [String: Any]
-            loginPasskey = loginChallenge != nil && SparkAPI.passkeyPossible
-            return false
-        }
-        guard statusCode == 200 else {
-            switch statusCode {
-            case 401: throw SparkError(message: code == nil ? String(localized: "Falsches Passwort.") : code == SparkAPI.passkey ? String(localized: "Passkey nicht angenommen. Bitte den Code eingeben.") : String(localized: "Code falsch."))
-            case 429: throw SparkError(message: String(localized: "Zu viele falsche Versuche, bitte später noch einmal."))
-            default: throw SparkError(message: d["detail"] as? String ?? String(localized: "Fehler \(statusCode) vom Spark."))
-            }
-        }
-        await signedInNow()
-        return true
-    }
-
-    private func signedInNow() async {
-        signedIn = true
-        kept = Date()
-        if let who = try? await object("GET", "api/whoami") {
-            version = who["version"] as? String ?? ""
-            let by = who["admin_by"] as? String ?? "main"
-            role = ["owner", "coadmin", "manager"].contains(by) ? by : "main"
-        }
-    }
-
-    /// "Mit meinem Profil anmelden": the profile's admin role with the iPhone's key and the profile's own code.
-    func elevate(code: String) async throws {
-        guard let base = Store.baseURL, let key = Store.key else { throw SparkError(message: String(localized: "Nicht gekoppelt.")) }
-        var r = URLRequest(url: base.appendingPathComponent("api/admin/elevate"))
-        r.httpMethod = "POST"
-        // the app's own key goes along only here: the Spark checks the profile's role and switches for it
-        r.setValue(key, forHTTPHeaderField: "X-Speech-Device")
-        let (data, response) = try await SparkAPI.confirmed(r, code: code, session: session)
-        try SparkAPI.check(data, response)
-        await signedInNow()
-    }
-
-    func logout() async {
-        _ = try? await call("POST", role == "main" ? "api/logout" : "api/admin/elevate/end")
-        role = "main"
-        session.invalidateAndCancel()
-        session = Self.fresh()
-        signedIn = false
+    /// Asks the Spark what this app's profile may (whoami with the app's key).
+    func refresh() async {
+        guard let who = try? await object("GET", "api/whoami") else { signedIn = false; role = ""; return }
+        version = who["version"] as? String ?? ""
+        let by = who["admin_by"] as? String ?? ""
+        role = ["admin", "manager"].contains(by) ? by : ""
+        signedIn = !role.isEmpty
     }
 
     func call(_ method: String, _ path: String, query: [String: String] = [:], body: [String: Any]? = nil,
@@ -104,19 +38,16 @@ final class AdminSession: ObservableObject {
         var r = URLRequest(url: c.url!)
         r.httpMethod = method
         r.timeoutInterval = timeout
+        // the app's own key: the Spark checks the profile's role and its second step with every request
+        if let key = Store.key { r.setValue(key, forHTTPHeaderField: "X-Speech-Device") }
         if let body {
             r.setValue("application/json", forHTTPHeaderField: "Content-Type")
             r.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
         let (data, response) = try await SparkAPI.confirmed(r, code: code, session: session)
-        // a profile's admin mode ends after 15 minutes without use: while used, renew it at most every 2 minutes
-        if role != "main" && signedIn && path != "api/admin/elevate/keep" && Date().timeIntervalSince(kept) > 120 {
-            kept = Date()
-            Task { _ = try? await self.call("POST", "api/admin/elevate/keep") }
-        }
-        if (response as? HTTPURLResponse)?.statusCode == 401 {
+        if (response as? HTTPURLResponse)?.statusCode == 401 && path != "api/whoami" {
             signedIn = false
-            throw SparkError(message: String(localized: "Die Admin-Anmeldung ist abgelaufen. Bitte neu anmelden."))
+            throw SparkError(message: String(localized: "Dein Profil ist gerade kein Admin (Rolle oder zweiter Anmeldeschritt fehlt)."))
         }
         try SparkAPI.check(data, response)
         return data
@@ -136,26 +67,21 @@ final class AdminSession: ObservableObject {
 }
 
 struct AdminView: View {
-    /// the profile's own admin role from the Spark ("coadmin", "manager" or "")
-    var profileRole = ""
     @ObservedObject private var s = AdminSession.shared
-    @State private var ask: CodeRequest?
     @State private var unlocked = false
-    @State private var password = ""
-    @State private var code = ""
-    @State private var askCode = false
-    @State private var busy = false
-    @State private var error: String?
 
     var body: some View {
         Form {
             if !unlocked {
                 Section {
                     Button("Mit Face ID entsperren") { Task { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) } }
-                } footer: { Text("Danach meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser.") }
+                } footer: { Text("Dein Profil ist Admin; Face ID schützt diesen Bereich auf dem iPhone.") }
             } else if !s.signedIn {
-                if !profileRole.isEmpty { profileLogin }
-                login
+                Section {
+                    Text("Dein Profil ist gerade kein Admin.")
+                } footer: {
+                    Text(SparkAPI.way(String(localized: "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.")))
+                }
             } else {
                 Section {
                     NavigationLink("Monitoring") { StatusView() }
@@ -167,59 +93,15 @@ struct AdminView: View {
                     NavigationLink("Personen und Geräte") { AdminProfilesView() }
                     if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
                 } header: { Text("Ändern") } footer: {
-                    Text("Was einen Code braucht (neue PIN, Profil löschen), fragt danach. Sprachmodell, Engines und Ports bleiben im Browser.")
+                    Text("Schutz-Änderungen (Rollen, Sicherungen, zweiter Schritt) fragen nach Code oder Face ID. Sprachmodell, Engines und Ports bleiben im Browser.")
                 }
-                Section {
-                    Button("Abmelden", role: .destructive) { Task { await s.logout() } }
-                } footer: { Text("Die Anmeldung gilt nur, solange die App offen ist.") }
             }
         }
         .navigationTitle("Spark verwalten")
-        .task { if !unlocked { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) } }
-        .codeAlert($ask)
-    }
-
-    private var profileLogin: some View {
-        Section {
-            Button("Mit meinem Profil anmelden") {
-                ask = CodeRequest { c in
-                    do { try await s.elevate(code: c); error = nil } catch { self.error = error.localizedDescription }
-                }
-            }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
-        } footer: {
-            Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Personen und Geräte. Mit dem Code deines Profils.")
-                 : profileRole == "owner" ? String(localized: "Als Haupt-Admin, mit dem Code deines Profils: alles wie mit dem Admin-Passwort. Nach 15 Minuten ohne Bedienung endet die Anmeldung.")
-                                          : String(localized: "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung."))
+        .task {
+            if !unlocked { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) }
+            await s.refresh()
         }
-    }
-
-    private var login: some View {
-        Section {
-            SecureField("Admin-Passwort", text: $password).textContentType(.password)
-            if askCode {
-                TextField("Code aus der Authenticator-App", text: $code).keyboardType(.numberPad).textContentType(.oneTimeCode)
-                if s.loginPasskey {
-                    Button("Mit Passkey anmelden") { Task { await signIn(passkey: true) } }.disabled(busy)
-                }
-            }
-            Button {
-                Task { await signIn() }
-            } label: { if busy { ProgressView() } else { Text("Anmelden") } }
-            .disabled(busy || password.isEmpty || (askCode && code.count != 6))
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
-        } header: { Text("Admin-Anmeldung") } footer: {
-            Text(SparkAPI.way(String(localized: "Geht nur mit dem zweiten Anmeldeschritt des Admins und mit „Spark verwalten in der App“ unter Ich → iPhone-App.")))
-        }
-    }
-
-    private func signIn(passkey: Bool = false) async {
-        busy = true
-        defer { busy = false }
-        do {
-            let done = try await s.login(password: password, code: passkey ? SparkAPI.passkey : askCode ? code : nil)
-            if done { password = ""; code = ""; askCode = false; error = nil } else { askCode = true; error = nil }
-        } catch { self.error = error.localizedDescription; code = "" }
     }
 }
 
@@ -762,7 +644,7 @@ struct BackupsView: View {
                         Text(b.created, format: .dateTime.day().month().year().hour().minute())
                         Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(b.size), countStyle: .file)).font(.caption).foregroundStyle(.secondary)
                     }
-                    .swipeActions { if s.role == "main" || s.role == "owner" { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } } }
+                    .swipeActions { if s.role == "admin" { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } } }
                 }
             } header: { Text("Sicherungen") }
         }

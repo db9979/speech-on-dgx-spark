@@ -7,7 +7,7 @@ the answer, tool arguments or results, outside text or secrets. Every text that 
 from the panel or passes SAFE (tool names only from the tools the turn offered). A profile's name and
 device show only while that profile allows it (its switch "trace_name", Ich → Gespräch); else the
 request is "Profil". Guests are "Gast". Kept for 48 hours at most, 500 requests, 40 steps each, in
-STATE/traces.jsonl (not in backups). Main admin and co-admins read it (not the Verwalter role).
+STATE/traces.jsonl (not in backups). Main admin and profiles with the role Admin read it (not the Verwalter role).
 A person's 👍/👎 for the answer (faelle.rate) is added to its request by vote(): only the thumb, the fixed
 reason word (faelle.REASONS), the seconds after the answer and the case id, never the note or the question
 (Dominik 2026-10-12: „den Daumen anzeigen ob hoch oder runter“). A changed vote replaces the old one.

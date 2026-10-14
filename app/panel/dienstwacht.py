@@ -21,7 +21,7 @@ No flood of notes:
   until 7 o'clock and come as one summary;
 - nothing while the Spark updates, while it starts, or just after the watchdog restarted Hören or Sprechen.
 
-Who hears it: the admin profiles (notaus.admin_uids: the one chosen for admin notes, owners, Mit-Admins) whose own
+Who hears it: the admin profiles (notaus.admin_uids: every profile with the role Admin, the main one first) whose own
 preference svc_note is not switched off, on the device they chose (svc_device, push.send to=...). The words are fixed: the
 service's name, times and what does not work; never an address, a host, a profile's name or an error text.
 

@@ -2364,7 +2364,8 @@ class SecondStep(unittest.TestCase):
             self.assertEqual(ADMIN.post("/api/password", json={"old": "secret-admin", "new": "secret-admin"}).status_code, 428)
             r = ADMIN.post("/api/password", json={"old": "secret-admin", "new": "secret-admin"}, headers={"X-Speech-Code": "999999"})
             self.assertEqual(r.status_code, 428)
-            self.assertEqual(ADMIN.post("/api/admin/devices", json={"name": "Box", "user": "x"}).status_code, 428)
+            # "Bestätigen" never asks the admin (since V01.0.541, Dominik "A2"), only "Schutz ändern" above
+            self.assertNotEqual(ADMIN.post("/api/admin/devices", json={"name": "Box", "user": "x"}).status_code, 428)
             self.assertEqual(ADMIN.get("/api/mfa").json()["codes_left"], 9)
             # forgetting trusted browsers ends the trust and the other admin logins, this one stays
             self.assertEqual(ADMIN.post("/api/mfa/forget").status_code, 200)

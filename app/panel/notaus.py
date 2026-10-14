@@ -9,10 +9,10 @@
     3 "Alles still" stage 2, and no conversation at all: chat, speech recognition, speakers, Wyoming, room mode,
                     the watch; the panel shows only the Notaus page (login, logs and lifting stay)
 
-Triggering is easy and lifting is hard. Only admins (main admin, or a profile in its admin mode) see and
+Triggering is easy and lifting is hard. Only admins (main admin, or an admin profile) see and
 trigger it (Dominik 2026-10-10: it stops the Spark for everyone); a stage can only go up that way. Ordinary
 profiles and guests see neither the button nor who or why, only that the Spark is stopped. Lifting (down to stage 1, or off) only by the main
-admin or a profile in its admin mode (not the Verwalter role), in a browser in the home network, never from an
+admin or an admin profile (not the Verwalter role), in a browser in the home network, never from an
 app key, with a fresh code (the main admin without a second step types the panel password again). The language
 model, mail, web pages, documents, Home Assistant, Telegram or MCP can never trigger or lift it: nothing reads
 text for it, the panel's own endpoints decide.
@@ -408,11 +408,11 @@ def at_home(request):
 
 # What still answers while the Notaus is on (everything else gets 503 with the stage):
 #   from outside (stage 1 and up): the page and its files, the Notaus state and raising it
-#   at home in stage 3 also: logins, the admin mode, whoami, lifting, and reading Zustand, the logs and Zustand → Live
+#   at home in stage 3 also: logins, whoami, lifting, and reading Zustand, the logs and Zustand → Live
 PAGE = ("/", "/live", "/sw.js", "/manifest.webmanifest", "/favicon.ico", "/apple-touch-icon.png")
 OUTSIDE_OK = ("/api/notaus",)
 STILL_OK = ("/api/notaus", "/api/admin/notaus/off", "/api/whoami", "/api/login", "/api/logout", "/api/profile/login",
-            "/api/profile/logout", "/api/admin/elevate", "/api/admin/elevate/end", "/api/admin/elevate/keep")
+            "/api/profile/logout")
 STILL_READ = ("/api/status", "/api/audit", "/api/admin/undo", "/api/admin/live", "/api/admin/live/monitors", "/api/live/state")
 STILL_READ_PREFIX = ("/api/logs/",)
 
@@ -498,16 +498,9 @@ async def after_change(old, new, by, channel):
 
 
 def admin_uids():
-    """The profiles that hear about a Notaus: the one chosen for admin notes, and every owner and Mit-Admin."""
+    """The profiles that hear about a Notaus: every admin profile, the Haupt-Admin first."""
     import coadmin
-    uids = []
-    first = coadmin.notify_uid()
-    if first:
-        uids.append(first)
-    for u in coadmin.listing()["users"]:
-        if u["role"] in ("owner", "coadmin") and u["id"] not in uids:
-            uids.append(u["id"])
-    return uids[:6]
+    return coadmin.admin_uids()[:6]
 
 
 async def tell_admins(old, new, by, channel):
@@ -555,7 +548,7 @@ def _caller(request, creds=None):
     if not dev and core.is_main_admin(request, creds) and core.password_set():
         return "Admin", "", True, None, where
     elev = coadmin.session(request)
-    if elev:          # a profile in its admin mode, in the browser or in the phone app (coadmin holds it there)
+    if elev:          # an admin profile, in its browser or in its phone app (coadmin.session)
         return elev["name"], elev["id"], True, None, where
     prof = profiles.current(request)
     if not prof:
@@ -575,7 +568,7 @@ def _lift_how(request, creds=None):
     if core.password_set() and core._admin_cookie_age(request) is not None:
         return "code" if mfa.enabled(mfa.ADMIN) else "password"
     elev = coadmin.session(request)
-    if elev and elev.get("role") in ("owner", "coadmin") and not str(elev.get("via", "")).startswith("d_"):
+    if elev and elev.get("role") == "admin" and elev.get("via") == "b":
         return "code"
     return ""
 
@@ -592,7 +585,7 @@ def view(request, creds=None):
             out["mine"] = {"on": True, "since": (mine().get(dev["user"]) or {}).get("since"), "lift": False}
         return out
     me = _mine_uid(request, who)
-    if me:           # Mein Notaus of this profile (the admin mode's profile, or the profile beside the main admin)
+    if me:           # Mein Notaus of this profile (the admin profile, or the profile beside the main admin)
         m = mine()
         on = own(me)
         out["mine"] = {"on": on, "since": (m.get(me) or {}).get("since") if on else None,
@@ -847,10 +840,10 @@ async def tell_admins_mine(name, on):
 # Only the panel's own fixed rules decide here: a command or a fixed sentence the person typed or said, never text the
 # model wrote or read. They only switch on; lifting stays in the browser (above).
 def admin_profile(uid):
-    """A profile the main admin made an admin (owner, Mit-Admin, Verwalter) may trigger the big Notaus by itself."""
+    """A profile with an admin role (Admin, Verwalter) and its second step may trigger the big Notaus by itself."""
     import coadmin
     try:
-        return bool(uid) and coadmin.on() and coadmin.role(uid) in ("owner", "coadmin", "manager")
+        return bool(uid) and bool(coadmin.acts(uid))
     except Exception:
         return False
 

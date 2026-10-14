@@ -97,7 +97,8 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - The following things need a browser login and a fresh code (`browser_profile` + `confirm_code`), never the device key: secrets, addresses that receive a token, code word, push targets and mail accounts. (C)
   - Only exception: the iPhone app key with the scope switch (`secret_profile`).
 - "Fresh" means: correct code of the same login within the last 10 minutes.
-  - Really asked every time with `*_fresh` or `fresh=True`. These are password, second step, roles, backups, code word, admin mode and Spark update from the app.
+  - Really asked every time with `*_fresh` or `fresh=True`. These are password, second step, roles and main admin, backups, code word and Spark update from the app.
+  - Admins (panel password or a profile with a role, signed in with the second step) are never asked at the "confirm" level, only at "change protection" (`core.admin_login`). Admin rights only come from a login with the second step, never from a PIN or handoff. New admin endpoints use `core.auth`; there is no second admin stage.
   - A passkey counts like a code. Code prompts therefore always run via `confirm_code`, never via a separate `mfa.verify`.
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
 - In the browser always use `api()` or `apiTry()`, never a raw `fetch` to code endpoints. In the iPhone app always `SparkAPI.confirmed`. (C)
@@ -169,7 +170,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **The Features page stays short.** New sub-features come as sub-switches (`data-show`) under their main switch. (M; 🧪 test_ui_browser height budget)
 - **Preferences only for unasked actions, on and switchable off under Me:** A feature gets a profile preference (`pref=` in `features.py`) only when the Spark does something by itself with it (speaks up, announces, sends to a device, tidies up). The preference starts on, a missing value counts as on; it is in `profiles.NO_PRESET` and gets its toggle on the Me page named in `me` in the same commit. Nothing else has a profile switch. (Dominik 2026-10-13; 🧪 test_features)
 - **A block holds everywhere:** What acts for a profile asks `features.allowed`; `features.admin_on` only on admin pages or Spark-wide places, each with its reason in `test_sperre_ueberall.ADMIN_ON_OK`. Seeing and deleting own data works also while blocked: the function's delete routes let DELETE through, and Me shows in place of the hidden page a card of the function with "Delete data". For it every module with a profile's own data registers count and delete in `features.OWN`; what is left out on purpose is listed with its reason in `test_eigene_daten.OHNE`. (Dominik 2026-10-13/14; 🧪 test_sperre_ueberall, test_eigene_daten)
-- **Roles:** logs, requests and Live are seen by the main admin and co-admin, not by the manager. (P anfrage-verfolgen, live-uebersicht)
+- **Roles:** logs, requests and Live are seen by the panel password and profiles with the Admin role, not by the manager. (P anfrage-verfolgen, live-uebersicht)
 - Build only after Dominik's OK. For larger features first a plan under `plaene/` with pictures, numbered points and a ★ recommendation. (PA, M)
 
 ---
@@ -288,7 +289,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 
 ## 10. Repo, push procedure, CI, releases
 
-- **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.NNN). (PA)
+- **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.541). (PA)
 - **Batched push (PA, Dominik 2026-10-13, replaces "wait for the test run"):**
   1. Pushes go in order through the push queue (`push-warteschlange.md`); only whoever is on top pushes, never jump the queue.
   2. Whoever is on top pushes at once, even while a "Tests" run for main is running or waiting: first `git pull --rebase`, the **next free version number at push time** (never reserve in advance), self-tests green. Then remove your own line; the next one goes at once.
@@ -296,7 +297,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
   4. If the run on main turns red: PUSH-STOPP for everyone; the coordinator finds the cause and puts its ROT-FIX on top.
 - **Tests in parts (V01.0.502):** "Tests" runs in four parts at the same time (`selftest.py --part K/4`), cut by test module and its duration in `app/tests/dauer.json` (a module stays together because some tests build on earlier classes of their module; only a very long class with entries per test is spread test by test); together the parts hold every test exactly once. The job "Ergebnis" adds up the failures of all parts; the limit of 5 failures counts for the whole run. If one part gets clearly longer than the others, measure `dauer.json` again. (🧪 test_selftest_runner)
 - **PUSH STOP:** if the coordinator says "PUSH-STOPP", nothing is pushed until they explicitly lift the block. (M)
-- **Commit message:** `V01.0.NNN short description`. The CHANGELOG lines are made from it. Avoid a plain "merge main" as the message. (📝)
+- **Commit message:** `V01.0.541 short description`. The CHANGELOG lines are made from it. Avoid a plain "merge main" as the message. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):
   - Every `uses:` is pinned to a 40-character SHA with `# vN`. `contents: write` only at job level. `persist-credentials: false`.
   - Signing keys and releases only with `environment: release`. No `pull_request_target`.
@@ -311,7 +312,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 ## 11. Documentation and versions
 
 - **README.md and README.de.md stay short** (about 90 lines): installation, "Latest changes" with exactly 10 lines, diagram, links into `docs/`. (PA, M [[readme-layout]])
-- **Per version** one line at the top of `CHANGELOG.md` in the format `- **V01.0.NNN** · YYYY-MM-DD · Text` (otherwise it is missing from "What's new") and in both READMEs; the oldest line drops out. (PA; 🧪 test_changelog only checks the format)
+- **Per version** one line at the top of `CHANGELOG.md` in the format `- **V01.0.541** · YYYY-MM-DD · Text` (otherwise it is missing from "What's new") and in both READMEs; the oldest line drops out. (PA; 🧪 test_changelog only checks the format)
   - VERSION, the newest CHANGELOG line and the first line of both READMEs match, each README has exactly 10 lines. (🧪 test_richtlinie.Versions)
 - **Details** are only in `docs/de/*.md` and `docs/en/*.md`, both languages structured the same way. Then run `hilfe.py --docs`. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
 - **Docs always current** (Dominik 2026-10-13): every change updates docs, help and architecture docs in the same commit. The blocks between `<!-- technik:… -->` in `architektur.md`/`architecture.md` are written from the code by `hilfe.py --docs`; never edit them by hand. (PA; 🧪 test_technik.Docs)

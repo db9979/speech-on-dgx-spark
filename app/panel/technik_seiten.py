@@ -191,7 +191,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "7cf7af3560",
+        "stand": "94cb3583f4",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
             "panel.sessions": ["s7", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
@@ -257,10 +257,10 @@ SEITEN_DATEN = {
               ("stop", "ja", ("Von außen gesperrt (503)", "Blocked from outside (503)"))),
             S("s6", "frage", ("Alles still?", "All quiet?"),
               ("Stufe {notaus.STAGE.gespraech}", "stage {notaus.STAGE.gespraech}"),
-              ("In Stufe {notaus.STAGE.gespraech} gehen auch im Heimnetz nur noch Anmelden, der Admin-Modus, das "
+              ("In Stufe {notaus.STAGE.gespraech} gehen auch im Heimnetz nur noch Anmelden, das "
                "Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft "
                "im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.",
-               "In stage {notaus.STAGE.gespraech} only logins, the admin mode, lifting the kill switch and reading "
+               "In stage {notaus.STAGE.gespraech} only logins, lifting the kill switch and reading "
                "status, logs and live pass, also at home. In the stages below everything at home goes on; the panel "
                "then holds actions off further down."),
               ("stop", "ja", ("Alles angehalten (503)", "Everything stopped (503)"))),
@@ -278,11 +278,11 @@ SEITEN_DATEN = {
             S("s8", "frage", ("Großer Upload ohne Anmeldung?", "Big upload without login?"),
               ("_may_upload", "_may_upload"),
               ("Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer "
-               "überhaupt angemeldet sein könnte: Admin-Cookie, Profil, Admin-Modus oder eine Authorization-Zeile. "
+               "überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. "
                "Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden "
                "Uploads gelesen wird.",
                "The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who "
-               "could be logged in at all: admin cookie, profile, admin mode or an Authorization line. The real check "
+               "could be logged in at all: admin cookie, profile or an Authorization line. The real check "
                "comes later in the endpoint; here no byte of a stranger's upload is read."),
               ("stop", "ja", ("Anmeldung nötig (401)", "Login required (401)"))),
             S("s9", "frage", ("Zu groß?", "Too large?"),
@@ -339,7 +339,7 @@ SEITEN_DATEN = {
              ("nur die Seite und der Notaus-Stand", "only the page and the kill switch state"),
              ("alles; Aktionen hält das Panel tiefer unten an", "everything; the panel holds actions off further down")],
             [("{notaus.STAGE.gespraech}", "{notaus.STAGE.gespraech}"), ("nur die Seite und der Notaus-Stand", "only the page and the kill switch state"),
-             ("Anmelden, Admin-Modus, Aufheben, Zustand und Logs lesen", "logging in, admin mode, lifting, reading status and logs")],
+             ("Anmelden, Aufheben, Zustand und Logs lesen", "logging in, lifting, reading status and logs")],
         ],
         "zahlen": [
             ("{notaus.STAGE.aussen}", ("Notaus-Stufe, ab der nichts von außen durchkommt", "kill switch stage from which nothing from outside passes"), "notaus.STAGE"),
@@ -398,7 +398,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "cd61a46b1b",
+        "stand": "aba0171ded",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -459,11 +459,15 @@ SEITEN_DATEN = {
               ("Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das "
                "Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens "
                "{profiles.SESSION_DAYS} Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie "
-               "ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert.",
+               "ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der "
+               "zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur "
+               "dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung.",
                "The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile "
                "cookie is signed and stands in the list of signed-in browsers; it holds at most "
                "{profiles.SESSION_DAYS} days without use and is renewed while used. The admin cookie is signed with "
-               "the password, a key of this Spark only and the second step.")),
+               "the password, a key of this Spark only and the second step. When the second step was part of it "
+               "(code, passkey or a trusted browser) the session carries its mark: only then does a profile's "
+               "admin role count, without an admin sign-in of its own.")),
             S("s6", "schritt", ("Profil bestimmen", "Find the profile"),
               ("profiles.current", "profiles.current"),
               ("Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel "
@@ -523,6 +527,9 @@ SEITEN_DATEN = {
         "beispiele": [
             (("Anmeldung mit PIN", "Login with PIN"), ["s1", "s2", "s3", "s4", "s5"],
              ("Angemeldet: der Browser hat ein signiertes Cookie.", "Logged in: the browser has a signed cookie.")),
+            (("Admin-Profil meldet sich mit Code an", "Admin profile signs in with its code"), ["s1", "s2", "s3", "s4", "s5"],
+             ("Angemeldet und gleich Admin: die Sitzung trägt das Zeichen des zweiten Schritts.",
+              "Signed in and admin at once: the session carries the second step's mark.")),
             (("Fremder rät eine PIN", "Stranger guesses a PIN"), ["s1", "s2", "s3", "s3!"],
              ("Abgewiesen; nach {guard.MAX_FAILS} Fehlversuchen ist die Adresse gesperrt.",
               "Refused; after {guard.MAX_FAILS} wrong attempts the address is locked.")),
@@ -538,6 +545,9 @@ SEITEN_DATEN = {
              ("alles des Profils", "everything of the profile")],
             [("Admin", "Admin"), ("Passwort-Cookie oder HTTP Basic", "password cookie or HTTP Basic"),
              ("Admin-Seiten; HTTP Basic nur ohne zweiten Schritt", "admin pages; HTTP Basic only without a second step")],
+            [("Profil mit Admin-Rolle", "Profile with an admin role"),
+             ("Cookie mit Zeichen des zweiten Schritts oder App-Schlüssel von danach", "cookie with the second step's mark or an app key made after it"),
+             ("Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code", "the admin pages of its role; only „change protection“ asks for the code")],
             [("Geräteschlüssel ohne Bereich", "Device key without scope"), ("Hash des Schlüssels", "hash of the key"),
              ("Assistent des Profils, keine Verbindungen oder Sicherheit ändern", "the profile's assistant, no changes to connections or security")],
             [("Geräteschlüssel mit Bereich", "Device key with scope"), ("Hash, Pfad, Schalter", "hash, path, switch"),

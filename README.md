@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.541** Admin without a second stage: a profile with a role is admin at once, "Confirm" no longer asks admins
 - **V01.0.540** Architecture pages: clicking a bubble shows its text at once, rules, numbers and code lead to their step
 - **V01.0.539** The switch now has its page under Status → Architecture too: groups, hint words, follow-ups, narrowing
 - **V01.0.538** Hints "newly released" only when there is something to set up, gone afterwards; "Set up" jumps right to the setting
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.534** Channel tag in your own blue bubble (e.g. "Companion") readable again: white like the text, light and dark
 - **V01.0.533** Android app 1.3.0: update right from the app, checked and from your own Spark; Device updates shows the app version per phone
 - **V01.0.532** Every box under Status → Architecture explains exactly how it works, with a step-by-step picture and examples
-- **V01.0.531** Blocked, but own data deletable: Me shows a card with "Delete data" for blocked functions
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

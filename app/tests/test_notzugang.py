@@ -35,8 +35,7 @@ class Notzugang(unittest.TestCase):
         self.uid = uid_of("NotOtto")
         fake_second_step(mfa.ADMIN)
         fake_second_step(self.uid)
-        coadmin.set_on(True)
-        coadmin.set_role(self.uid, "owner")
+        coadmin.set_role(self.uid, "admin")             # the first admin the password gives: the main one
         self.sent = []
 
         async def send(uid, title, body, **kw):
@@ -66,7 +65,7 @@ class Notzugang(unittest.TestCase):
         password, done = notzugang.reset(now=1_800_000_000)
         self.assertRegex(password, r"^[a-z2-9]{5}(-[a-z2-9]{5}){3}$")
         self.assertNotRegex(password, r"[01ilo]")
-        self.assertEqual(done, {"second_step_off": True, "admins_off": True, "notify": [self.uid]})
+        self.assertEqual(done, {"second_step_off": True, "main_unlinked": True, "notify": [self.uid]})
         # the new password counts, the old one not; no code asked
         self.assertTrue(core.check_password(password))
         self.assertFalse(core.check_password("secret-admin"))
@@ -74,10 +73,10 @@ class Notzugang(unittest.TestCase):
         self.assertFalse(mfa.enabled(mfa.ADMIN))
         a = TestClient(panel.app)
         self.assertEqual(a.post("/api/login", json={"password": password}).json(), {"ok": True})
-        # the old step is kept aside, the roles stay, only the switch is off
+        # the old step is kept aside, the roles stay, only the main admin is unlinked
         self.assertTrue(os.path.exists(mfa._own_path(mfa.ADMIN) + ".1800000000.bak"))
-        self.assertFalse(coadmin.on())
-        self.assertEqual(coadmin._read()["users"][self.uid]["role"], "owner")
+        self.assertEqual(coadmin.main_uid(), "")
+        self.assertEqual(coadmin.role(self.uid), "admin")
         self.assertTrue(mfa.enabled(self.uid))          # the profile's own step is untouched
         # noted and told
         self.assertIn("notzugang_cli", _events()[-3:])
@@ -87,10 +86,10 @@ class Notzugang(unittest.TestCase):
         self.assertIs(self.sent[0][2].get("private"), False)
 
     def test_nothing_to_turn_off(self):
-        coadmin.set_on(False)
+        coadmin.unlink_main()
         os.remove(mfa._own_path(mfa.ADMIN))
         password, done = notzugang.reset()
-        self.assertEqual((done["second_step_off"], done["admins_off"]), (False, False))
+        self.assertEqual((done["second_step_off"], done["main_unlinked"]), (False, False))
         self.assertTrue(core.check_password(password))
 
     def test_only_from_the_shell(self):

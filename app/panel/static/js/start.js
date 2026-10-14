@@ -4,14 +4,12 @@
 // ADMIN, PUBLIC and GATE are declared in base.js (V01.0.422)
 window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.display='grid';$('loginmsg').textContent='';$('loginpw').value=$('logincode').value='';$('logincodebox').style.display='none';setTimeout(()=>$('loginpw').focus(),50)}};
 ON.adminLogin=()=>{$('profmodal').style.display='none';showLogin()};
-// "Spark verwalten" (plan plaene/zweiter-faktor-einheitlich.md): a profile with an admin role opens its admin mode with
-// its own code; the panel password is the emergency access, only over the address with #admin
-window.adminEnter=async()=>{if(!document.body.classList.contains('mayadm')){showLogin();return}
-  try{await api('/api/admin/elevate',{method:'POST'});location.reload()}catch(e){alert(e.message)}};
+// a profile with an admin role is admin in its own login (coadmin.js); the panel password is the emergency access,
+// only over the address with #admin
 // the address with #admin typed into an open page changes only the hash, the page is not loaded again (V01.0.439)
 window.addEventListener('hashchange',()=>{if(location.hash!=='#admin')return;history.replaceState(null,'',location.pathname+location.search);
   if(!ADMIN){$('profmodal').style.display='none';showLogin()}});
-$('loginbtn').onclick=()=>adminEnter();$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
+$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
 $('loginform').onsubmit=async e=>{e.preventDefault();
   try{const r=await (await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value,code:$('logincode').value,trust:$('logintrust').checked})})).json();
     // right password, the second step is on: the code field comes next
@@ -43,9 +41,7 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';if(!toAdmin)openMe('loginbox');return}   // the password only with #admin
     // one shell for everybody (plan „Vereinheitlichen“ Phase 7): a signed-in profile gets the same menu as the admin,
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
-    if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}
-    // "Spark verwalten" only for a profile with an admin role; the main admin opens the page with #admin (above)
-    if(who.profile&&who.admin_role)document.body.classList.add('mayadm');}
+    if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   try{const s=sessionStorage.getItem('versec');sessionStorage.removeItem('versec');if(s&&s!=='chat'&&$(s))goSec(s)}catch{}

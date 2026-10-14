@@ -10,7 +10,7 @@ trusted browser (and every other admin login) ends.
 Trusted browsers (V01.0.289, plan plaene/zweiter-schritt-seltener.md): each one is an entry in the file
 ("trusted": {id: {name, issued, last}}, at most MAX_TRUSTED), so it can be listed and removed one by one.
 It holds for panel.trust_days (7..90) and ends earlier after TRUST_IDLE_DAYS without use. A trusted
-browser only skips the code at the login: the admin mode and the changes that need a fresh code still ask.
+browser only skips the code at the login: the changes that need a fresh code still ask.
 
 Device keys (speakers, Siri, Pebble, phone) are not asked for a code: they are made by the admin, who
 confirms that with a code.
@@ -48,12 +48,12 @@ _lock = threading.Lock()
 _pending = {}                            # who -> (secret, started)
 
 
-# One code per person (V01.0.427, plan plaene/zweiter-faktor-einheitlich.md, point 1): while a profile has the
-# role "owner" (Haupt-Admin, coadmin.py, switch on) and its own second step, the panel password (now only the
-# emergency access) uses that profile's second step: its code, passkeys, trusted browsers and recovery codes.
-# Nobody types someone else's code. The admin's own file stays as it is and counts again as soon as the role,
-# the switch or the profile's second step is gone, so the way in never ends up without a second step.
-OWNER = [lambda: None]                   # coadmin.py: the owner profile's id while "Benutzer als Admin" is on
+# One code per person (V01.0.427, plan plaene/zweiter-faktor-einheitlich.md, point 1): while an admin profile is
+# the main one (Haupt-Admin, coadmin.main_uid) and has its own second step, the panel password (only the emergency
+# access) uses that profile's second step: its code, passkeys, trusted browsers and recovery codes. Nobody types
+# someone else's code. The admin's own file stays as it is and counts again as soon as there is no main profile
+# or its second step is gone, so the way in never ends up without a second step.
+OWNER = [lambda: None]                   # coadmin.py: the main admin profile's id
 
 
 def _own_path(who):
@@ -105,6 +105,13 @@ def _write(who, d):
 
 def enabled(who):
     return _read(who) is not None
+
+
+def mark(who):
+    """A short fingerprint of this second step, new with every setup ("" while off). A profile's browser login
+    remembers it when it was made with the second step (profiles.mark_second_step); coadmin.session compares."""
+    d = _read(who)
+    return hashlib.sha256(str(d.get("secret", "")).encode()).hexdigest()[:16] if d else ""
 
 
 def status(who):

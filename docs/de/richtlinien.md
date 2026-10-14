@@ -97,7 +97,8 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Für folgende Dinge braucht es eine Browser-Anmeldung und einen frischen Code (`browser_profile` + `confirm_code`), nie den Geräteschlüssel: Geheimnisse, Adressen, die ein Token bekommen, Codewort, Push-Ziele und Mail-Konten. (C)
   - Einzige Ausnahme: der iPhone-App-Schlüssel mit dem Bereichsschalter (`secret_profile`).
 - „Frisch“ heißt: richtiger Code derselben Anmeldung in den letzten 10 Minuten.
-  - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort, Admin-Modus und Spark-Update aus der App.
+  - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen und Haupt-Admin, Sicherungen, Codewort und Spark-Update aus der App.
+  - Admins (Panel-Passwort oder Profil mit Rolle, angemeldet mit dem zweiten Schritt) fragt die Stufe „Bestätigen“ nie, nur „Schutz ändern“ (`core.admin_login`). Admin-Rechte kommen nur aus einer Anmeldung mit zweitem Schritt, nie aus PIN oder Übergabe. Neue Admin-Endpunkte nehmen `core.auth`, eine zweite Admin-Stufe gibt es nicht.
   - Ein Passkey zählt wie ein Code. Code-Abfragen laufen deshalb immer über `confirm_code`, nie über ein eigenes `mfa.verify`.
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
 - Im Browser immer `api()` bzw. `apiTry()` verwenden, nie ein rohes `fetch` an Code-Endpunkte. In der iPhone-App immer `SparkAPI.confirmed`. (C)
@@ -169,7 +170,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Die Funktionen-Seite bleibt kurz.** Neue Unterfunktionen kommen als Unterschalter (`data-show`) unter ihren Hauptschalter. (M; 🧪 test_ui_browser Höhenbudget)
 - **Vorlieben nur für Ungefragtes, an und unter Ich abschaltbar:** Eine Funktion bekommt nur dann eine Profil-Vorliebe (`pref=` in `features.py`), wenn der Spark damit von sich aus etwas tut (melden, ansagen, auf ein Gerät schicken, aufräumen). Die Vorliebe steht von Anfang an auf an, fehlt sie in den Einstellungen, gilt an; sie steht in `profiles.NO_PRESET` und im selben Commit als Schalter auf der Ich-Seite aus `me`. Alles andere hat keinen Profilschalter. (Dominik 2026-10-13; 🧪 test_features)
 - **Sperre gilt überall:** Was für ein Profil handelt, fragt `features.allowed`; `features.admin_on` nur an Admin-Seiten oder Spark-weiten Stellen, jede mit Grund in `test_sperre_ueberall.ADMIN_ON_OK`. Eigene Daten ansehen und löschen geht auch gesperrt: Die Löschwege der Funktion lassen DELETE durch, und Ich zeigt an der Stelle der verborgenen Seite eine Karte der Funktion mit „Daten löschen“. Dafür trägt jedes Modul mit eigenen Daten eines Profils Anzahl und Löschen in `features.OWN` ein; was bewusst fehlt, steht mit Grund in `test_eigene_daten.OHNE`. (Dominik 2026-10-13/14; 🧪 test_sperre_ueberall, test_eigene_daten)
-- **Rollen:** Logs, Anfragen und Live sehen Haupt-Admin und Mit-Admin, der Verwalter nicht. (P anfrage-verfolgen, live-uebersicht)
+- **Rollen:** Logs, Anfragen und Live sehen Panel-Passwort und Profile mit Rolle Admin, der Verwalter nicht. (P anfrage-verfolgen, live-uebersicht)
 - Bauen nur nach Dominiks OK. Bei größeren Funktionen erst einen Plan unter `plaene/` mit Bildern, nummerierten Punkten und ★-Empfehlung. (PA, M)
 
 ---
@@ -288,7 +289,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 
 ## 10. Repo, Push-Ablauf, CI, Releases
 
-- **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.NNN). (PA)
+- **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.541). (PA)
 - **Sammel-Push (PA, Dominik 2026-10-13, ersetzt „auf den Testlauf warten“):**
   1. Gepusht wird der Reihe nach über die Push-Warteschlange (`push-warteschlange.md`); nur wer ganz oben steht, pusht, nie vordrängeln.
   2. Wer oben steht, pusht sofort, auch wenn ein Lauf „Tests“ für main läuft oder wartet: vorher `git pull --rebase`, **nächste freie Versionsnummer zum Push-Zeitpunkt** (nie vorab reservieren), Selbsttests grün. Danach eigene Zeile entfernen, der Nächste ist sofort dran.
@@ -296,7 +297,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   4. Wird der Lauf auf main rot: PUSH-STOPP für alle; der Koordinator bestimmt den Verursacher und setzt dessen ROT-FIX nach oben.
 - **Tests in Teilen (V01.0.502):** „Tests“ läuft in vier Teilen gleichzeitig (`selftest.py --part K/4`), geschnitten nach Testmodulen und ihrer Dauer in `app/tests/dauer.json` (ein Modul bleibt zusammen, weil manche Tests auf frühere Klassen ihres Moduls bauen; nur eine sehr lange Klasse mit Einträgen je Test wird Test für Test verteilt); zusammen enthalten die Teile jeden Test genau einmal. Der Job „Ergebnis“ zählt die Fehler aller Teile zusammen, die Grenze von 5 Fehlern gilt für den ganzen Lauf. Wird ein Teil deutlich länger als die anderen, `dauer.json` neu messen. (🧪 test_selftest_runner)
 - **PUSH-STOPP:** Sagt der Koordinator „PUSH-STOPP“, wird nicht gepusht, bis er die Sperre ausdrücklich aufhebt. (M)
-- **Commit-Nachricht:** `V01.0.NNN Kurzbeschreibung`. Die CHANGELOG-Zeilen entstehen daraus. Ein einfaches „merge main“ als Nachricht vermeiden. (📝)
+- **Commit-Nachricht:** `V01.0.541 Kurzbeschreibung`. Die CHANGELOG-Zeilen entstehen daraus. Ein einfaches „merge main“ als Nachricht vermeiden. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):
   - Jedes `uses:` ist auf einen 40-stelligen SHA mit `# vN` gepinnt. `contents: write` nur auf Job-Ebene. `persist-credentials: false`.
   - Signierschlüssel und Releases nur mit `environment: release`. Kein `pull_request_target`.
@@ -311,7 +312,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 ## 11. Dokumentation und Versionen
 
 - **README.md und README.de.md bleiben kurz** (etwa 90 Zeilen): Installation, „Letzte Änderungen“ mit genau 10 Zeilen, Schaubild, Links in `docs/`. (PA, M [[readme-layout]])
-- **Pro Version** eine Zeile oben in `CHANGELOG.md` im Format `- **V01.0.NNN** · YYYY-MM-DD · Text` (sonst fehlt sie in „Was ist neu“) und in beiden READMEs, die älteste Zeile fällt raus. (PA; 🧪 test_changelog prüft nur das Format)
+- **Pro Version** eine Zeile oben in `CHANGELOG.md` im Format `- **V01.0.541** · YYYY-MM-DD · Text` (sonst fehlt sie in „Was ist neu“) und in beiden READMEs, die älteste Zeile fällt raus. (PA; 🧪 test_changelog prüft nur das Format)
   - VERSION, die neueste CHANGELOG-Zeile und die erste Zeile beider READMEs stimmen überein, jede README hat genau 10 Zeilen. (🧪 test_richtlinie.Versions)
 - **Details** stehen nur in `docs/de/*.md` und `docs/en/*.md`, beide Sprachen gleich gegliedert. Danach `hilfe.py --docs` ausführen. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
 - **Doku immer aktuell** (Dominik 2026-10-13): Jede Änderung zieht Doku, Hilfe und Architektur-Doku im selben Commit mit. Die Blöcke zwischen `<!-- technik:… -->` in `architektur.md`/`architecture.md` schreibt `hilfe.py --docs` aus dem Code; nie von Hand ändern. (PA; 🧪 test_technik.Docs)

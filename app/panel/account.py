@@ -56,7 +56,7 @@ from core import (  # noqa: E402
     api_headers,
     auth,
     main_auth,
-    owner_auth,
+    admin_login,
     app_version,
     assistant,
     calendar_on,
@@ -126,11 +126,14 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     main = is_main_admin(request, creds)
     elev = None if main else coadmin.session(request)
     prof = profiles.current(request)
-    own = prof and not request.headers.get(profiles.DEVICE_HEADER) and coadmin.on() and coadmin.role(prof["id"])
+    own = prof and not request.headers.get(profiles.DEVICE_HEADER) and coadmin.role(prof["id"])
     return {"admin": bool(main or elev), "admin_by": "main" if main else elev["role"] if elev else "",
-            "admin_until": coadmin.expires(elev) if elev else None, "admin_name": elev["name"] if elev else "",
-            # the profile's own role: Ich → Sicherheit offers its admin mode (with what it still needs)
-            "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "main_mfa": mfa.enabled(mfa.ADMIN)} if own else None,
+            "admin_name": elev["name"] if elev else "",
+            # the profile's own role: Ich → Sicherheit says what it may, or why its rights rest right now
+            "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "acts": bool(elev),
+                           "main": prof["id"] == coadmin.main_uid()} if own else None,
+            # admins are not asked at the level "Bestätigen" (core.admin_login, Dominik „A2“)
+            "confirm_free": admin_login(request),
             "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
             # the Notaus (notaus.py): its stage, and whether this login may trigger it (the button in the header)
             "notaus": notaus.level(), "notaus_may": bool(main or elev),
@@ -156,7 +159,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "setup": _setup(prof, request),
             # blocked by the admin but own data left (features.OWN): Ich shows only „Daten löschen“ there
             "locked": _locked(prof, request, chat),
-            # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
+            # Logs → Anfragen: main admin and profiles with the role Admin (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             # Zustand → Live (live.py): the same people
             "live": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("live", False) is True,
@@ -194,20 +197,11 @@ async def second_step(request: Request, body, who, name, what):
     return None
 
 
-def _app_admin(request):
-    """The admin login from the iPhone app ("Spark verwalten", iphone.py): the app sends its own key along,
-    and signs in only with the profile's switch for it and while the admin has the second step (the
-    password alone is not enough on a phone)."""
-    dev = profiles.device(request)
-    if request.headers.get(profiles.DEVICE_HEADER) and not dev:
-        raise HTTPException(401, "unknown device")
-    if not dev:
-        return
-    import iphone
-    if dev["scope"] != "app" or not iphone.allowed(dev["user"]) or not iphone.area_on(dev["user"], "app_admin"):
-        raise HTTPException(403, "Spark verwalten ist für dieses iPhone aus (Ich → iPhone-App).")
-    if not mfa.enabled(mfa.ADMIN):
-        raise HTTPException(409, "Erst den zweiten Anmeldeschritt für den Admin einschalten (Einstellungen → Sicherheit).")
+def _browser_only(request):
+    """The panel password is the emergency access (Notzugang): only in a browser. An admin profile's own app is
+    admin by its key (coadmin.session), so the app never sends the password (since V01.0.541)."""
+    if request.headers.get(profiles.DEVICE_HEADER):
+        raise HTTPException(403, "Der Notzugang geht nur im Browser. Ein Admin-Profil ist in seiner App schon Admin.")
 
 
 def _trust(r, body, who, request):
@@ -221,7 +215,7 @@ def _trust(r, body, who, request):
 
 async def _tell_trusted(who, name):
     """A short note to the person (the admin: the profile chosen for admin notes), if push is set up."""
-    uid = coadmin.notify_uid() if who == mfa.ADMIN else who
+    uid = coadmin.main_uid() if who == mfa.ADMIN else who
     if not uid:
         return 0
     whose = "den Admin" if who == mfa.ADMIN else "dein Profil"
@@ -237,7 +231,7 @@ async def _tell_trusted(who, name):
 async def login(request: Request):
     body = await request.json()
     guard.check(request, guard.ADMIN)
-    _app_admin(request)
+    _browser_only(request)
     # PBKDF2 with 200 000 rounds takes about 0.2 s on the Spark: in a worker thread, not on the event loop
     if not await asyncio.to_thread(check_password, str(body.get("password", ""))):
         guard.failed(request, guard.ADMIN, what="admin_login")
@@ -280,15 +274,15 @@ async def logout_everywhere(request: Request):
 
 
 # ---------------------------------------------------------------- profiles as admins (coadmin.py)
-# The main admin gives roles (Mit-Admin, Verwalter); a profile with a role opens its admin mode with its own
-# fresh code, in its browser login or from its iPhone app ("Spark verwalten").
-ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_mode_on", "admin_mode_off", "admin_mode_failed",
-                "admin_role", "admin_roles_switch", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
+# The admin gives roles (Admin, Verwalter); a profile with a role is admin in its own browser login and its own
+# iPhone app, without a second stage (plan plaene/admin-ohne-zweite-stufe.md).
+ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_profile_login",
+                "admin_role", "admin_role_refused", "admin_main", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
                 "feature_profile", "agent_level", "iphone_update_rights", "person_priority",
                 "live_monitor_code", "live_monitor_paired", "live_monitor_deleted", "live_code_failed")
 
 
-@router.get("/api/admin/roles", dependencies=[Depends(owner_auth)])
+@router.get("/api/admin/roles", dependencies=[Depends(auth)])
 def admin_roles():
     return coadmin.listing()
 
@@ -306,136 +300,73 @@ async def _small_body(request):
     return body
 
 
-@router.put("/api/admin/roles", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+def _by(request):
+    """"main" for the panel password, else the acting admin profile's id."""
+    me = acting_profile(request)
+    return me["id"] if me else "main"
+
+
+@router.put("/api/admin/roles", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_roles_set(request: Request):
-    """{"on": bool} the switch "Benutzer als Admin", {"notify": "<profile id>" | ""} who hears of admin modes."""
+    """{"main": "<profile id>"}: the main admin profile (its code also counts for the panel password); only the
+    panel password or the main profile itself changes it."""
     body = await _small_body(request)
+    if "main" not in body:
+        raise HTTPException(400, "main missing")
+    uid = str(body["main"] or "")
     try:
-        if "on" in body:
-            if not isinstance(body["on"], bool):
-                raise HTTPException(400, "on must be true or false")
-            coadmin.set_on(body["on"])
-            guard.log("admin_roles_switch", ip=guard.client_ip(request), detail="an" if body["on"] else "aus")
-        if "notify" in body:
-            coadmin.set_notify(str(body["notify"] or ""))
-    except LookupError:
-        raise HTTPException(404, "no such profile")
+        coadmin.set_main(uid, _by(request))
+    except PermissionError as e:
+        guard.log("admin_role_refused", ip=guard.client_ip(request), uid=uid or None, detail="haupt")
+        raise HTTPException(403, str(e))
     except ValueError as e:
+        guard.log("admin_role_refused", ip=guard.client_ip(request), uid=uid or None, detail="haupt")
         raise HTTPException(409, str(e))
+    guard.log("admin_main", ip=guard.client_ip(request), uid=uid or None)
+    name = (profiles.by_id(uid) or {}).get("name", "")
+    spawn(coadmin.tell(f"Haupt-Admin ist jetzt {name}." if name else "Es gibt keinen Haupt-Admin mehr."))
     return coadmin.listing()
 
 
-@router.put("/api/admin/roles/{uid}", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
+@router.put("/api/admin/roles/{uid}", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 async def admin_role_set(uid: str, request: Request):
-    """{"role": "coadmin" | "manager" | ""}: give, change or take away a profile's role (ends its admin mode)."""
-    role = (await _small_body(request)).get("role", "")
-    if acting_profile(request) and "owner" in (role, coadmin.role(uid)):
-        raise HTTPException(403, "Den Haupt-Admin gibt und nimmt nur das Panel-Passwort.")
+    """{"role": "admin" | "manager" | ""}: give, change or take away a profile's role (takes effect at once)."""
+    role = str((await _small_body(request)).get("role", "") or "")
     try:
-        coadmin.set_role(uid, str(role or ""))
+        coadmin.set_role(uid, role, _by(request))
     except LookupError:
         raise HTTPException(404, "no such profile")
+    except PermissionError as e:
+        guard.log("admin_role_refused", ip=guard.client_ip(request), uid=uid, detail="haupt")
+        raise HTTPException(403, str(e))
     except ValueError as e:
+        guard.log("admin_role_refused", ip=guard.client_ip(request), uid=uid, detail="regel")
         raise HTTPException(400 if "role must" in str(e) else 409, str(e))
     guard.log("admin_role", ip=guard.client_ip(request), uid=uid, detail=coadmin.NAMES.get(role, "keine"))
+    name = (profiles.by_id(uid) or {}).get("name", "")
+    spawn(coadmin.tell(f"{name} ist jetzt {coadmin.NAMES[role]}." if role else f"{name} hat keine Admin-Rolle mehr."))
     return coadmin.listing()
 
 
-def _elevating_profile(request):
-    """(profile, via) of the one asking for its admin mode: its own browser login ("b") or its iPhone app's key."""
-    if request.headers.get(profiles.DEVICE_HEADER):
-        dev = profiles.device(request)
-        if not dev:
-            raise HTTPException(401, "unknown device")
-        if dev["scope"] != "app" or not coadmin.app_ok(dev["user"], dev["id"]):
-            raise HTTPException(403, "Spark verwalten ist für dieses iPhone aus (Ich → iPhone-App).")
-        return profiles.by_id(dev["user"]), dev["id"]
-    u, _ = profiles._cookie_user(profiles._load(), request.cookies.get(profiles.COOKIE, ""))
-    if not u:
-        raise HTTPException(401, "no profile")
-    return profiles.by_id(u["id"]), "b"
-
-
-@router.post("/api/admin/elevate")  # open: checks the profile itself (browser login or app key), its role and a fresh code
-async def admin_elevate(request: Request):
-    if not coadmin.on():
-        raise HTTPException(403, "Benutzer als Admin ist aus.")
-    prof, via = _elevating_profile(request)
-    if not prof:
-        raise HTTPException(401, "no profile")
-    role = coadmin.role(prof["id"])
-    if not role:
-        raise HTTPException(403, "Dein Profil hat keine Admin-Rolle.")
-    if not mfa.enabled(mfa.ADMIN):
-        raise HTTPException(409, "Der Hauptadmin braucht erst seinen zweiten Anmeldeschritt.")
-    if not mfa.enabled(prof["id"]):
-        raise HTTPException(409, "Erst den zweiten Anmeldeschritt für dein Profil einschalten (Ich → Sicherheit).")
-    try:
-        await confirm_code(request, prof["id"], prof["name"], fresh=True)   # always asked: the second step is on (checked above)
-    except HTTPException as e:
-        if e.detail == "wrong code":
-            guard.log("admin_mode_failed", ip=guard.client_ip(request), uid=prof["id"], name=prof["name"])
-        raise
-    until, value = _admin_mode_on(request, prof, via)
-    if not value:
-        raise HTTPException(403, "Dein Profil hat keine Admin-Rolle.")
-    r = Response(json.dumps({"ok": True, "role": coadmin.role(prof["id"]), "until": until}), media_type="application/json")
-    r.set_cookie(coadmin.COOKIE, value, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
-    return r
-
-
-def _admin_ready(uid):
-    """The profile may open its admin mode (switch on, a role, both second steps): "gleich als Admin" is offered."""
-    return bool(coadmin.on() and coadmin.role(uid) and mfa.enabled(mfa.ADMIN) and mfa.enabled(uid))
-
-
-def _admin_mode_on(request, prof, via):
-    """Opens the admin mode after a fresh code: log line, note to the main admin. Returns (until when it stays
-    open without use, the cookie value), or (0, None) without a role."""
-    if via == "b" and mfa.trusted(prof["id"], request):
-        via = "t"   # a trusted browser: the admin mode stays open longer without use (coadmin.limits)
-    role = coadmin.role(prof["id"])
-    value = coadmin.start(prof["id"], via) if role else None
-    if not value:
-        return 0, None
-    where = "iPhone-App" if via not in ("b", "t") else "vertrauter Browser" if via == "t" else "Browser"
-    guard.log("admin_mode_on", ip=guard.client_ip(request), uid=prof["id"], name=prof["name"], detail=f"{coadmin.NAMES[role]}, {where}")
-    spawn(coadmin.tell_main(prof["name"], coadmin.NAMES[role], via))
-    return int(time.time()) + coadmin.limits(via)[0], value
-
-
-@router.post("/api/admin/elevate/end")  # open: ends only the admin mode this request carries
-def admin_elevate_end(request: Request):
-    s = coadmin.session(request)
-    coadmin.end(request)
-    end_window(request)
-    if s:
-        guard.log("admin_mode_off", ip=guard.client_ip(request), uid=s["id"], name=s["name"])
-    r = Response('{"ok": true}', media_type="application/json")
-    r.delete_cookie(coadmin.COOKIE)
-    return r
-
-
-@router.post("/api/admin/elevate/keep", dependencies=[Depends(auth)])
-def admin_elevate_keep(request: Request):
-    """The page is in use: the answer renews the admin mode (only changing requests renew it, so a page left
-    open alone, which keeps reading the state, does not keep it open)."""
-    s = acting_profile(request)
-    if not s:
-        return {"until": None}
-    idle, longest = coadmin.limits(s["via"], s.get("short"))
-    return {"until": min(int(time.time()) + idle, s["start"] + longest)}
+def _admin_signed_in(request, uid, name):
+    """A profile with a role signed in with its second step: log line and a note to the admin profiles."""
+    r = coadmin.acts(uid)
+    if not r:
+        return
+    guard.log("admin_profile_login", ip=guard.client_ip(request), uid=uid, name=name, detail=coadmin.NAMES[r])
+    agent_name = profiles.agent_label(request.headers.get("user-agent", ""))
+    spawn(coadmin.tell(f"{name} ist als {coadmin.NAMES[r]} angemeldet ({agent_name})."))
 
 
 @router.get("/api/admin/protocol", dependencies=[Depends(auth)])
 def admin_protocol(request: Request, limit: int = 300):
-    """Admin actions with who did them: the main admin sees everything, a profile in its admin mode its own."""
+    """Admin actions with who did them: the main admin sees everything, a Verwalter his own."""
     me = acting_profile(request)
     out = []
     for x in guard.read(5000):
         if not (x.get("by") or x.get("event") in ADMIN_EVENTS):
             continue
-        if me and me["role"] != "owner" and x.get("by") != me["id"] and not (x.get("event", "").startswith("admin_mode") and x.get("uid") == me["id"]):
+        if me and me["role"] != "admin" and x.get("by") != me["id"] and not (x.get("event") == "admin_profile_login" and x.get("uid") == me["id"]):
             continue
         out.append(x)
         if len(out) >= max(1, min(limit, 1000)):
@@ -458,26 +389,19 @@ async def profile_login(request: Request):
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong name or PIN")
     uid = value.split(".", 1)[0]
-    # „gleich als Admin" (plan plaene/zweiter-faktor-einheitlich.md, point 3): the code typed for this login is
-    # fresh, so it may open the admin mode too; a trusted browser types none, there the admin mode asks as always
-    fresh = mfa.enabled(uid) and not mfa.trusted(uid, request)
     ask = await second_step(request, body, uid, name, "profile_code")
     if ask:
-        if _admin_ready(uid):
-            d = json.loads(ask.body)
-            ask = Response(json.dumps({**d, "admin": True}), media_type="application/json")
         return ask
-    admin = body.get("admin") is True and fresh and _admin_ready(uid)
+    admin = bool(coadmin.acts(uid)) and bool(mfa.mark(uid))
     r = Response(json.dumps({"ok": True, **({"admin": True} if admin else {})}), media_type="application/json")
     guard.succeeded(request, name, r)
-    guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
+    guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=uid)
     r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
+    # made with the second step (code, passkey or a trusted browser): this login may act as admin (coadmin.session)
+    if mfa.enabled(uid):
+        profiles.mark_second_step(value, mfa.mark(uid))
     _trust(r, body, uid, request)
-    if admin:
-        real = next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip())
-        _, mode = _admin_mode_on(request, {"id": uid, "name": real}, "b")
-        if mode:
-            r.set_cookie(coadmin.COOKIE, mode, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
+    _admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
     return r
 
 
@@ -489,10 +413,8 @@ def profile_logout(request: Request):
     u, _ = profiles._cookie_user(profiles._load(), raw)
     if u and raw.count(".") == 3:
         profiles.end_session(u["id"], raw.split(".")[2])
-    coadmin.end(request)   # the admin mode ends with the profile's login
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(profiles.COOKIE)
-    r.delete_cookie(coadmin.COOKIE)
     return r
 
 
@@ -576,8 +498,11 @@ async def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response('{"ok": true}', media_type="application/json")
     if not request.headers.get(profiles.DEVICE_HEADER):
-        r.set_cookie(profiles.COOKIE, profiles._cookie_value(u, agent=request.headers.get("user-agent", "")), max_age=profiles.session_secs(),
-                     httponly=True, samesite="lax")
+        mark = profiles.second_step_of(request.cookies.get(profiles.COOKIE, ""))
+        value = profiles._cookie_value(u, agent=request.headers.get("user-agent", ""))
+        r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
+        if mark and mark == mfa.mark(prof["id"]):
+            profiles.mark_second_step(value, mark)   # the new login keeps what the old one was made with
     return r
 
 
@@ -821,7 +746,9 @@ async def profile_mfa_enable(request: Request, prof=Depends(browser_profile)):
     guard.log("profile_mfa_on", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response(json.dumps({"recovery": codes}), media_type="application/json")
-    r.set_cookie(profiles.COOKIE, profiles._cookie_value(u, agent=request.headers.get("user-agent", "")), max_age=profiles.session_secs(), httponly=True, samesite="lax")
+    value = profiles._cookie_value(u, agent=request.headers.get("user-agent", ""))
+    r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
+    profiles.mark_second_step(value, mfa.mark(prof["id"]))   # this browser just typed the new step's code
     return r
 
 

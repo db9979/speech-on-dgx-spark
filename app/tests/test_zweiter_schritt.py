@@ -1,7 +1,7 @@
 """Fewer codes, same protection (plan plaene/zweiter-schritt-seltener.md, V01.0.289): trusted browsers one by one
 (days from panel.trust_days, end after 30 days without use, at most ten, removable), a right code counts ten
-minutes only in the same login while the most important changes always ask, and the admin mode stays open longer
-only in a trusted browser. No test depends on the wall clock: times are passed in or the window is set by hand."""
+minutes only in the same login while the most important changes always ask, and (since V01.0.541, no admin mode)
+a profile with an admin role is admin in a login made in its trusted browser too, never in one made with the PIN. No test depends on the wall clock: times are passed in or the window is set by hand."""
 import asyncio
 import secrets
 import time
@@ -138,34 +138,21 @@ class ConfirmWindow(unittest.TestCase):
         core._windows.clear()
         guard.reset()
 
-    def test_admin_window_same_login_only(self):
-        self.assertEqual(ADMIN.post("/api/admin/devices", json={"name": "Box1", "user": "x"}).status_code, 428)
-        r = ADMIN.post("/api/admin/devices", json={"name": "Box1", "user": "x"}, headers=CODE)
-        self.assertNotEqual(r.status_code, 428, r.text)
-        until = ADMIN.get("/api/whoami").json()["confirm_until"]
-        self.assertGreater(until, 0)
-        # the next important change in the same login: no code
-        self.assertNotEqual(ADMIN.post("/api/admin/devices", json={"name": "Box2", "user": "x"}).status_code, 428)
-        # another admin login of the same password: asks
+    def test_admin_logins_are_never_asked_to_confirm(self):
+        # since V01.0.541 (Dominik "A2"): "Bestätigen" never asks an admin login, the window is for profiles only
+        self.assertTrue(ADMIN.get("/api/whoami").json()["confirm_free"])
+        self.assertNotEqual(ADMIN.post("/api/admin/devices", json={"name": "Box1", "user": "x"}).status_code, 428)
         other = TestClient(panel.app)
         other.cookies.set(core.COOKIE, core._session_token())
-        self.assertEqual(other.get("/api/whoami").json()["confirm_until"], 0)
-        self.assertEqual(other.post("/api/admin/devices", json={"name": "Box3", "user": "x"}).status_code, 428)
-        # the most important ones always ask: password, second step, roles, backups
+        self.assertNotEqual(other.post("/api/admin/devices", json={"name": "Box3", "user": "x"}).status_code, 428)
+        self.assertEqual(core._windows, {})                    # nothing to remember for an admin
+        # the most important ones ("Schutz ändern") always ask: password, second step, roles, backups
         self.assertEqual(ADMIN.post("/api/password", json={"old": "secret-admin", "new": "secret-admin"}).status_code, 428)
         self.assertEqual(ADMIN.post("/api/mfa/recovery").status_code, 428)
-        self.assertEqual(ADMIN.put("/api/admin/roles", json={"on": False}).status_code, 428)
+        self.assertEqual(ADMIN.put("/api/admin/roles", json={"main": None}).status_code, 428)
         self.assertEqual(ADMIN.post("/api/backups/x.tar.gz/restore").status_code, 428)
-        # over: asks again (the window is set back by hand instead of waiting)
-        key = next(iter(core._windows))
-        core._windows[key] = 1
-        self.assertEqual(ADMIN.post("/api/admin/devices", json={"name": "Box4", "user": "x"}).status_code, 428)
-        # "Beenden" ends it
-        ADMIN.post("/api/admin/devices", json={"name": "Box5", "user": "x"}, headers=CODE)
-        self.assertGreater(ADMIN.get("/api/whoami").json()["confirm_until"], 0)
-        self.assertEqual(ADMIN.post("/api/confirm/end").json()["ended"], 1)
-        self.assertEqual(ADMIN.get("/api/whoami").json()["confirm_until"], 0)
-        self.assertEqual(ADMIN.post("/api/admin/devices", json={"name": "Box6", "user": "x"}).status_code, 428)
+        # a login without the admin password is asked as before
+        self.assertFalse(TestClient(panel.app).get("/api/whoami").json().get("confirm_free"))
 
     def test_profile_window_per_login(self):
         a = profile("WinWilma")
@@ -202,18 +189,17 @@ class ConfirmWindow(unittest.TestCase):
         self.assertEqual(core.CONFIRM_WINDOW, 600)
 
 
-class LongerAdminMode(unittest.TestCase):
+class AdminByTrustedBrowser(unittest.TestCase):
     def setUp(self):
         guard.reset()
         core._windows.clear()
-        self.c = profile("ModeMax")
+        profile("ModeMax")
         self.uid = uid_of("ModeMax")
         fake_second_step(self.uid)
         self.real = (mfa.enabled, mfa.verify)
         mfa.enabled = lambda who: who in (mfa.ADMIN, self.uid)
         mfa.verify = lambda who, code: code == "123456"
-        coadmin.set_on(True)
-        coadmin.set_role(self.uid, "coadmin")
+        coadmin.set_role(self.uid, "admin")
 
     def tearDown(self):
         mfa.enabled, mfa.verify = self.real
@@ -226,44 +212,33 @@ class LongerAdminMode(unittest.TestCase):
             pass
         guard.reset()
 
-    def test_limits(self):
-        self.assertEqual(coadmin.limits("b"), (900, 8 * 3600))
-        self.assertEqual(coadmin.limits("d_000000000000"), (900, 8 * 3600))
-        self.assertEqual(coadmin.limits("t"), (3600, 12 * 3600))
-        self.assertEqual(coadmin.limits("t", short=True), (900, 8 * 3600))
+    def login(self, trust=None, code=False):
+        c = TestClient(panel.app)
+        if trust:
+            c.cookies.set(mfa.trust_cookie(self.uid), trust)
+        body = {"name": "ModeMax", "pin": "1234", **({"code": "123456"} if code else {})}
+        return c, c.post("/api/profile/login", json=body)
 
-    def test_trusted_browser_longer_and_still_a_code(self):
-        # opening asks for a code even in a trusted browser and with an open confirmation window
+    def test_trusted_browser_is_admin_without_a_code(self):
         v = mfa.add_trusted(self.uid, "Mac · Safari")
-        self.c.cookies.set(mfa.trust_cookie(self.uid), v)
-        asyncio.run(core.confirm_code(Req(self.c, CODE), self.uid, "ModeMax"))
-        self.assertEqual(self.c.post("/api/admin/elevate").status_code, 428)
-        r = self.c.post("/api/admin/elevate", headers=CODE)
+        c, r = self.login(trust=v)
         self.assertEqual(r.status_code, 200, r.text)
-        s = coadmin.session(Req(self.c))
-        self.assertEqual(s["via"], "t")
-        self.assertEqual(coadmin.expires(s) - s["issued"], 3600)
-        # 30 minutes without use: still open (a plain browser would be closed)
-        self.assertIsNotNone(coadmin.session(Req(self.c), now=s["issued"] + 1800))
-        # trust removed: back to the short limits at once
-        mfa.remove_trusted(self.uid, v.split(".")[0])
-        self.assertIsNone(coadmin.session(Req(self.c), now=s["issued"] + 1800))
-        s2 = coadmin.session(Req(self.c), now=s["issued"] + 60)
-        self.assertTrue(s2["short"])
-        self.assertEqual(coadmin.expires(s2) - s2["issued"], 900)
+        self.assertTrue(r.json().get("admin"))
+        self.assertEqual(c.get("/api/admin/profiles").status_code, 200)
+        self.assertTrue(c.get("/api/whoami").json()["confirm_free"])
+        # "Schutz ändern" still asks, even here
+        self.assertEqual(c.put(f"/api/admin/roles/{self.uid}", json={"role": "manager"}).status_code, 428)
 
-    def test_plain_browser_short(self):
-        r = self.c.post("/api/admin/elevate", headers=CODE)
+    def test_without_trust_the_code_is_asked_and_a_forged_mark_fails(self):
+        c, r = self.login()                                   # the PIN alone: never admin
+        self.assertFalse(r.status_code == 200 and r.json().get("admin"))
+        self.assertEqual(c.get("/api/admin/profiles").status_code, 401)
+        c, r = self.login(code=True)
         self.assertEqual(r.status_code, 200, r.text)
-        s = coadmin.session(Req(self.c))
-        self.assertEqual(s["via"], "b")
-        self.assertIsNone(coadmin.session(Req(self.c), now=s["issued"] + 1000))
-        # a cookie claiming "t" without a trusted browser does not pass the signature
-        raw = self.c.cookies.get(coadmin.COOKIE).split(".")
-        raw[4] = "t"
-        forged = Req(self.c)
-        forged.cookies[coadmin.COOKIE] = ".".join(raw)
-        self.assertIsNone(coadmin.session(forged))
+        self.assertEqual(c.get("/api/admin/profiles").status_code, 200)
+        raw = c.cookies.get(profiles.COOKIE)
+        profiles.mark_second_step(raw, "0" * 16)              # a login that does not carry this second step
+        self.assertEqual(c.get("/api/admin/profiles").status_code, 401)
 
 
 if __name__ == "__main__":

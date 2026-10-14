@@ -77,7 +77,7 @@ STATE_FILES = {
     "quality-history.json": "json",
     "setup.json": "json",           # first-start wizard done
     "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
-    "admins.json": "json",          # profiles as admins: roles, the switch, who hears of admin modes (coadmin.py)
+    "admins.json": "json",          # profiles as admins: roles and the main admin profile (coadmin.py)
     "features-seen.json": "json",   # when each function was first on ("Neu, noch nie an", features.py)
     "join.json": "json",            # new people by invitation: the switch, invitations (code hashes) (join.py)
 }
@@ -319,9 +319,9 @@ def restore(fileobj, check_config=None, password=None, keep_admin=False):
 
     check_config(dict) -> dict: checks the backup's settings (and may fill newer keys); it raises
     ValueError when they are not acceptable, and nothing is changed then. A move backup needs its
-    password; a wrong one changes nothing. keep_admin (a restore by the owner profile, not with the panel
+    password; a wrong one changes nothing. keep_admin (a restore by an admin profile, not with the panel
     password): the panel password and its second step stay as they are here, so a made-up backup cannot
-    hand the owner the main password (core.owner_auth: those stay with main_auth)."""
+    hand an admin profile the main password (those stay with core.main_auth)."""
     with tarfile.open(fileobj=fileobj, mode="r:gz") as tar:
         members = _check(tar)
         work = tempfile.mkdtemp(prefix="restore-", dir=BASE if os.path.isdir(BASE) else None)

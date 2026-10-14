@@ -474,7 +474,7 @@ class Release(unittest.TestCase):
         c, uid = profile("RelGina")
         # the release switches that were removed with Freigabe vereinfachen
         gone = """
-        agent_on android_on app_accounts app_auto app_docs_edit app_mine app_on app_security app_voice berater_ask berater_me chats_on con_on desk_on devup_on
+        agent_on android_on app_accounts app_admin app_auto app_docs_edit app_mine app_on app_security app_voice berater_ask berater_me chats_on con_on desk_on devup_on
         direct_read doc_brief doc_make doc_make_templates doc_make_wikipics doc_originals
         doc_pictures doc_semantic doc_shared esp_on esp_stop fix_learn images_on instant_ack
         kiwix_on klaeren klaeren_merken local_first mcps_on mem_ask mem_check mem_topics

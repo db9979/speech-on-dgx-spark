@@ -70,8 +70,12 @@ class Stage1(unittest.TestCase):
         self.assertIn("^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-", engine)
 
     def test_sensitive_settings_need_the_code(self):
+        # sensitive settings are at the level "Bestätigen" (stufen.LIST): since V01.0.541 (Dominik "A2") an admin
+        # login never asks there, any other login keeps asking (test_coadmin.test_confirm_never_asks_admins_protect_always)
         import admin
         import mfa
+        import stufen
+        self.assertEqual(stufen.LIST[("PUT", "/api/config")][0], stufen.CONFIRM)
         cfg = ADMIN.get("/api/config").json()
         real = mfa.enabled
         mfa.enabled = lambda who: who == mfa.ADMIN
@@ -79,12 +83,13 @@ class Stage1(unittest.TestCase):
             for sec, key in (("chat", "llm_url"), ("chat", "telegram_api"), ("chat", "search_url")):
                 new = json.loads(json.dumps(cfg))
                 new[sec][key] = "https://elsewhere.example/v1"
-                self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 428, key)
-            same = json.loads(json.dumps(cfg))
-            same["chat"]["max_tokens"] = cfg["chat"]["max_tokens"]  # nothing sensitive changed
-            self.assertEqual(ADMIN.put("/api/config", json=same).status_code, 200)
+                self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 200, key)
+                self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 200, key)
+            no_admin = TestClient(panel.app)
+            self.assertEqual(no_admin.put("/api/config", json=cfg).status_code, 401)
         finally:
             mfa.enabled = real
+            ADMIN.put("/api/config", json=cfg)
         self.assertIn(("chat", "llm_key"), admin.SENSITIVE)
 
     def test_llm_test_keeps_the_stored_key_home(self):

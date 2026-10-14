@@ -56,12 +56,10 @@ body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
-/* "Spark verwalten" only for a profile with an admin role (start.js: body.mayadm); everybody else: #admin in the address */
-body.mayadm #loginbtn{display:inline-flex!important}
 /* a signed-in profile without admin login (start.js): the admin's shell with only Assistent and Ich */
 body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
-body.coadm:not(.owner) .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* .pwonly: only with the panel password, also not for the Haupt-Admin profile */   /* a profile in its admin mode (coadmin.js): what only the main admin may do */
+body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* an admin profile (coadmin.js): .pwonly only with the panel password; a Verwalter does not see .mainonly */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
 .updlock{z-index:1000;backdrop-filter:blur(3px)}.updlock .modalcard{width:min(440px,100%)}
 .ulbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 8px}.ulbar i{display:block;height:100%;width:3%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .8s ease}
@@ -211,7 +209,7 @@ body[data-face=comic] .av,body[data-face=comic_woman] .av{background:var(--avfac
 #madmin:empty{display:none}#madmin{padding:6px 0;border-bottom:1px solid var(--line)}#madmin .mi{border:0;padding:10px 6px;min-height:44px}
 @media (max-width:760px){
   header{position:sticky;padding:8px 10px 8px 14px;padding-top:max(8px,env(safe-area-inset-top));gap:8px;flex-wrap:nowrap}
-  header nav,#hdr,#langbtn,#themebtn,#loginbtn,#logoutbtn,body.guest #loginbtn{display:none!important}
+  header nav,#hdr,#langbtn,#themebtn,#logoutbtn{display:none!important}
   #mmenu{display:flex;margin-left:auto;padding:10px 12px;min-height:44px}#mmenu svg{width:18px;height:18px}
   header h1{font-size:15px;overflow:hidden;text-overflow:ellipsis}
   body.inchat{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
@@ -1309,7 +1307,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 /* the mode buttons of a mailbox never push a narrow page sideways (wider fonts on some systems) */
 .ic-seg{max-width:100%;min-width:0}.ic-seg button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @container (max-width:420px){.ic-seg{display:flex;flex:1 1 100%}.ic-seg button{flex:1 1 0;padding:5px 4px}}
-.needcode::after{content:" 🔒";font-size:.85em}.needcode2::after{content:" 🔒🔒";font-size:.85em}
+.needcode::after{content:" 🔒";font-size:.85em}body.cfree .needcode::after{content:none}.needcode2::after{content:" 🔒🔒";font-size:.85em}
 /* 👍/👎 under an answer (bewerten.js): never part of copied answer text */
 .vbquote{margin-top:4px;overflow-wrap:anywhere}.vbquote .vbqbad{color:var(--bad)}
 .ratebar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;-webkit-user-select:none;user-select:none}

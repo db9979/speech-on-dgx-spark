@@ -419,10 +419,9 @@ class Channels(Base):
         super().setUp()
         import coadmin
         import guard
-        self.real = (coadmin.on, coadmin.role)
+        self.real = coadmin.acts
         self.admins = set()
-        coadmin.on = lambda: True
-        coadmin.role = lambda uid: "coadmin" if uid in self.admins else None
+        coadmin.acts = lambda uid: "admin" if uid in self.admins else None
         guard.reset()
         try:
             os.remove(notaus.KEYS_FILE)
@@ -432,7 +431,7 @@ class Channels(Base):
     def tearDown(self):
         import coadmin
         import guard
-        coadmin.on, coadmin.role = self.real
+        coadmin.acts = self.real
         guard.reset()
         try:
             os.remove(notaus.KEYS_FILE)

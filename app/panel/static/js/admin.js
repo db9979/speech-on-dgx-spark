@@ -806,7 +806,7 @@ function certBox(m,c,pinned,accept,forget){if(!m)return;m.textContent='';m.class
       btn(t('Diesem Zertifikat vertrauen','Trust this certificate'),()=>accept(c.sha256))}
     return}
   if(pinned){line(t('Angenommenes Zertifikat: ','Accepted certificate: ')+pinned);btn(t('Vergessen','Forget'),forget)}}
-async function loadOff(){if(!$('offbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
+async function loadOff(){if(!$('offbox')||document.body.classList.contains('mgr'))return;
   try{offShow(await (await api('/api/admin/offsite')).json())}catch{}}
 async function offPut(b){try{offShow(await (await api('/api/admin/offsite',xjson('PUT',b))).json())}catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err');return false}return true}
 if($('offcert'))$('offcert').onclick=async()=>{const m=$('offcertmsg');m.textContent=t('frage den NAS …','asking the NAS …');
@@ -828,7 +828,7 @@ function dlShow(d){$('dlurl').value=d.url||'';$('dlkey').value='';$('dlplain').h
     +(d.url?' · '+t(`heute ${s.ok||0} gelesen, ${s.failed||0} Fehler`,`today ${s.ok||0} read, ${s.failed||0} failed`):'');
   m.classList.toggle('err',!!(l&&!l.ok));
   certBox($('dlcertmsg'),null,d.cert,()=>{},()=>{if(confirm(t('Das angenommene Zertifikat vergessen? Danach liest Docling nur mit einem Zertifikat, das zur Adresse passt.','Forget the accepted certificate? Then Docling only reads with a certificate that fits the address.')))dlPut({cert:''})})}
-async function dlLoad(){if(!$('dlbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
+async function dlLoad(){if(!$('dlbox')||document.body.classList.contains('mgr'))return;
   try{dlShow(await (await api('/api/admin/docling')).json())}catch{}}
 async function dlPut(b){try{dlShow(await (await api('/api/admin/docling',xjson('PUT',b))).json())}catch(e){$('dlmsg').textContent=e.message;$('dlmsg').classList.add('err');return false}return true}
 if($('dlsave'))$('dlsave').onclick=()=>dlPut({url:$('dlurl').value.trim(),key:$('dlkey').value});

@@ -7,7 +7,7 @@ Three levels, nothing in between:
            send data elsewhere. A right code (or passkey) counts for core.CONFIRM_WINDOW in the same login.
   protect  "Schutz ändern": the protection itself (password, second step, passkeys, roles, code words), all
            data in or out (backups, offsite, report token), the emergency stop off, a new Spark version,
-           opening the admin mode. Asked every time.
+           Asked every time, also of admins (who skip "Bestätigen": core.admin_login).
 
 core.confirm_code takes the level from here (by method and route), so one place decides. The self-test
 tests/test_stufen.py finds every route that asks for a code and fails when it is missing here or listed with
@@ -31,9 +31,8 @@ LIST = {
     ("POST", "/api/profile/mfa/disable"): (PROTECT, "Schutz", "Zweiten Schritt ausschalten", "Switch off the second step"),
     ("POST", "/api/profile/mfa/recovery"): (PROTECT, "Schutz", "Neue Wiederherstellungscodes", "New recovery codes"),
     ("POST", "/api/profile/mfa/passkeys/begin"): (PROTECT, "Schutz", "Passkey anlegen", "Add a passkey"),
-    ("PUT", "/api/admin/roles"): (PROTECT, "Schutz", "Admin-Rollen ändern", "Change admin roles"),
+    ("PUT", "/api/admin/roles"): (PROTECT, "Schutz", "Haupt-Admin wählen", "Choose the main admin"),
     ("PUT", "/api/admin/roles/{uid}"): (PROTECT, "Schutz", "Admin-Rolle einer Person ändern", "Change a person's admin role"),
-    ("POST", "/api/admin/elevate"): (PROTECT, "Schutz", "Admin-Modus öffnen", "Open the admin mode"),
     ("DELETE", "/api/admin/profiles/{uid}/mfa"): (PROTECT, "Schutz", "Zweiten Schritt einer Person zurücksetzen", "Reset a person's second step"),
     ("PUT", "/api/profile/homeassistant/code"): (PROTECT, "Schutz", "Codewort für Home Assistant", "Code word for Home Assistant"),
     ("PUT", "/api/profile/speaker-code"): (PROTECT, "Schutz", "Codewort am Lautsprecher", "Code word at the speaker"),

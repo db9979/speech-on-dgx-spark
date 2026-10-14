@@ -927,6 +927,7 @@ enum Notaus {
         try SparkAPI.check(data, response)
         let d = SparkAPI.object(data)
         var s = State(level: (d["level"] as? NSNumber)?.intValue ?? 0, mine: (d["mine"] as? [String: Any])?["on"] as? Bool == true)
+        await AdminSession.shared.refresh()
         if AdminSession.shared.signedIn, let a = try? await AdminSession.shared.object("GET", "api/notaus") {
             s.may = a["may"] as? Bool == true
             s.level = (a["level"] as? NSNumber)?.intValue ?? s.level
@@ -940,10 +941,11 @@ enum Notaus {
         _ = try await api.post("api/notaus/mine", [:])
     }
 
-    /// the whole Spark on stage 2 "Hände weg": only with the admin login of "Spark verwalten"
+    /// the whole Spark on stage 2 "Hände weg": only for an admin profile (its app is admin by its key)
     static func whole() async throws {
+        await AdminSession.shared.refresh()
         guard AdminSession.shared.signedIn else {
-            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden."))
+            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Dein Profil ist gerade kein Admin."))
         }
         _ = try await AdminSession.shared.object("POST", "api/notaus", body: ["level": 2])
     }

@@ -73,7 +73,7 @@ class List(unittest.TestCase):
         self.assertNotIn("/api", json.dumps(o))          # the page shows what, never routes
 
     def test_the_protection_itself_always_asks(self):
-        for k in (("POST", "/api/password"), ("POST", "/api/profile/mfa/disable"), ("POST", "/api/admin/elevate"),
+        for k in (("POST", "/api/password"), ("POST", "/api/profile/mfa/disable"), ("PUT", "/api/admin/roles"),
                   ("POST", "/api/backups/{name}/restore"), ("PUT", "/api/admin/roles/{uid}"), ("POST", "/api/iphone/update"),
                   ("POST", "/api/profile/mfa/passkeys/begin"), ("PUT", "/api/profile/homeassistant/code")):
             self.assertEqual(stufen.LIST[k][0], stufen.PROTECT, k)
@@ -125,7 +125,6 @@ class OneCodePerPerson(unittest.TestCase):
         fake_second_step(mfa.ADMIN)                     # the admin's own step, before any link
         fake_second_step(self.uid)
         self.own = mfa._load(mfa._own_path(mfa.ADMIN))
-        coadmin.set_on(True)
 
     def tearDown(self):
         mfa.verify = self.real
@@ -143,7 +142,7 @@ class OneCodePerPerson(unittest.TestCase):
 
     def test_password_uses_the_owner_profiles_code(self):
         self.assertIsNone(mfa.linked())                 # no Haupt-Admin yet: the admin's own step
-        coadmin.set_role(self.uid, "owner")
+        coadmin.set_role(self.uid, "admin")             # the first admin the password gives: the main one
         self.assertEqual(mfa.linked(), self.uid)
         used = []
         mfa.verify = lambda who, code: used.append(mfa._path(who)) or code == "123456"
@@ -167,18 +166,19 @@ class OneCodePerPerson(unittest.TestCase):
         self.assertEqual(core.code_name(mfa.ADMIN, guard.ADMIN), "Notzugang")
 
     def test_never_without_a_second_step(self):
-        coadmin.set_role(self.uid, "owner")
+        coadmin.set_role(self.uid, "admin")
         mfa.disable(self.uid)                           # the profile switches its step off
         self.assertIsNone(mfa.linked())
         self.assertTrue(mfa.enabled(mfa.ADMIN))         # the admin's own step again
         fake_second_step(self.uid)
-        coadmin.set_on(False)                           # the switch off: the admin's own step
+        coadmin.unlink_main()                           # unlinked (sudo speech-spark notzugang): the admin's own step
         self.assertIsNone(mfa.linked())
         self.assertEqual(mfa._path(mfa.ADMIN), mfa._own_path(mfa.ADMIN))
 
 
 class LoginAsAdmin(unittest.TestCase):
-    """„Gleich als Admin": the code typed for the login opens the admin mode too, never without a fresh code."""
+    """Since V01.0.541 (no admin mode): the code typed for the login makes a profile with a role admin at once,
+    never without the second step."""
     def setUp(self):
         self.real = (mfa.enabled, mfa.verify)
         self.on = {mfa.ADMIN}
@@ -201,25 +201,22 @@ class LoginAsAdmin(unittest.TestCase):
         profile("StufenAda")
         uid = uid_of("StufenAda")
         self.on.add(uid)
+        fake_second_step(uid)                                   # its mark goes into the login
+        self.addCleanup(lambda: os.path.exists(mfa._own_path(uid)) and os.remove(mfa._own_path(uid)))
         c = TestClient(panel.app)
-        self.assertNotIn("admin", self.login(c).json())          # no role: not offered
-        coadmin.set_on(True)
-        coadmin.set_role(uid, "coadmin")
-        self.assertEqual(self.login(c).json(), {"code": True, "admin": True})
-        r = self.login(c, code="123456", admin=True)
+        self.assertEqual(self.login(c, code="123456").json(), {"ok": True})     # no role: only the profile
+        coadmin.set_role(uid, "admin")
+        self.assertEqual(self.login(c).json(), {"code": True})
+        r = self.login(c, code="123456")
         self.assertEqual(r.json(), {"ok": True, "admin": True})
-        self.assertEqual(c.get("/api/whoami").json()["admin_by"], "coadmin")
-        # without the tick: only the profile
-        d = TestClient(panel.app)
-        self.assertEqual(self.login(d, code="123456").json(), {"ok": True})
-        self.assertNotEqual(d.get("/api/whoami").json().get("admin_by"), "coadmin")
-        # a wrong code opens nothing, and "admin" alone without the second step never does
+        self.assertEqual(c.get("/api/whoami").json()["admin_by"], "admin")
+        # a wrong code opens nothing, and without the second step the role never counts
         e = TestClient(panel.app)
-        self.assertEqual(self.login(e, code="000000", admin=True).status_code, 401)
+        self.assertEqual(self.login(e, code="000000").status_code, 401)
         self.on.discard(uid)
         f = TestClient(panel.app)
-        self.assertEqual(self.login(f, admin=True).json(), {"ok": True})
-        self.assertNotEqual(f.get("/api/whoami").json().get("admin_by"), "coadmin")
+        self.assertEqual(self.login(f).json(), {"ok": True})
+        self.assertFalse(f.get("/api/whoami").json().get("admin"))
 
 
 if __name__ == "__main__":

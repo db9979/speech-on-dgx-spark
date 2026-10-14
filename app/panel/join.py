@@ -417,7 +417,7 @@ async def admin_invite(request: Request):
             raise HTTPException(404, "no such profile")
         import coadmin
         if acting_profile(request) and coadmin.role(uid):
-            raise HTTPException(403, "Profile mit Admin-Rolle ändert nur der Hauptadmin.")
+            raise HTTPException(403, "Profile mit Admin-Rolle ändert nur das Panel-Passwort.")
         name = profiles.by_id(uid)["name"]
     else:
         if mode() != "invite":
@@ -528,11 +528,11 @@ async def join(request: Request):
 
 
 def _tell_admin(name):
-    """The main admin's chosen profile hears of it (coadmin's "notify"), if any."""
+    """The main admin profile hears of it (coadmin.main_uid), if any."""
     try:
         import coadmin
         import push
-        uid = coadmin._read().get("notify")
+        uid = coadmin.main_uid()
         if uid and uid in profiles.user_ids():
             spawn(push.send(uid, "👋 Spark", f"{name} ist mit einer Einladung dazugekommen.", tag="admin", private=False))
     except Exception as e:
