@@ -1,7 +1,6 @@
 /* Zustand → Technik (technik.js): the picture as an SVG across the whole width with the detail below it, steps as
    chips, storage places as "Liste mit Detailbereich" (ld-). „Vollbild“ lays the picture over the whole screen with
    zoom. Colours only from the theme (--acc, --acc2, --line …). Dominik 2026-10-13: „2+3+4“ (layout plan). */
-body.intech main{max-width:1800px}
 #tkbox .ltabs{margin:10px 0 12px}
 .tk-view{min-width:0}
 .tk-split{display:block}

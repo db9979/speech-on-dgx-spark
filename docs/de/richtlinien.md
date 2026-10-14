@@ -217,6 +217,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   - **Listen:** Muster „Liste mit Detailbereich“ (`ld-`), am Handy wird das Detail eine eigene Seite. Ich-Seiten nutzen `ichteile.js` (Unterreiter mit Zahl, Statuskarte, ⋯-Menü, 10 Zeilen + „Weitere zeigen“, Gefahrenzone) und **keine inneren Scroll-Kästen**.
   - (D, P einstellungen-neu, ich-aufraeumen; 🧪 test_guides.BuildingBlocks, test_einstellungen_neu, test_ich_aufraeumen)
 - **Breite:** Kein seitliches Scrollen bei 320, 390 und 1280 px. Kein Element ragt am Handy über den Rand. (🧪 test_ui_browser, test_ich_aufraeumen)
+- **Rahmen:** Alle Seiten mit Seitenleiste (Zustand, Funktionen, Personen und Geräte, Einstellungen, Ich) nutzen den einen Rahmen aus `app.css` (`--frame`, `--sidecol`, `--sidegap`): Seitenleiste und Inhalt stehen auf jedem Reiter an derselben Stelle und gleich breit, keine Seite setzt eine eigene Breite. (D 2026-10-14; 🧪 test_seitenrahmen)
 - **Höhe:** Der Assistent füllt das Fenster (nur der Verlauf scrollt). Höhenbudgets gelten für die Funktionen-Seite (< 2450 px bei 1280) und Personen und Geräte (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
 - **Handy:** Tippziele mindestens 44 px, Eingabefelder 16 px, Safe-Area beachten. Das Gesicht bzw. „Frag Spark“ liegt nie über Bedienelementen. (P handy-wie-app; teils 🧪)
 - **Statusfarben** grün, gelb und rot. „Braucht dich“ hat immer einen Knopf dorthin. Bernstein (`--c4`) gibt es im Live-Bild nur für Internet. (P design-klar, M)
@@ -361,6 +362,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_hilfe, test_hilfe_quality | Hilfe-Index aktuell, ≥ 60 Alltagsfragen richtig |
 | test_seiten_laden | Seiten laden über `ladeBox`, Ich gleichzeitig, Fehler im Kasten, nach 30 s „Noch einmal“, Band „Spark antwortet nicht“, langsame Lesezugriffe in Diagnose |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | keine Breite über den Rand (320/390/1280), Höhenbudgets, keine inneren Scroll-Kästen |
+| test_seitenrahmen | ein Rahmen für alle Seiten mit Seitenleiste: gleiche Stelle und Breite auf jedem Reiter, nichts breiter als das Handy |
 | test_workflows, test_lock, test_lieferkette | gepinnte Actions, Rechte, Signierumgebung, Paket-Hashes, ffmpeg-Whitelist |
 | test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |
 | test_rauchtest | jedes Modul lädt, `restart-map` vollständig |

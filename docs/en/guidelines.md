@@ -217,6 +217,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
   - **Lists:** pattern "list with detail area" (`ld-`), on the phone the detail becomes a page of its own. Me pages use `ichteile.js` (sub-tabs with count, status card, ⋯ menu, 10 rows + "Show more", danger zone) and **no inner scroll boxes**.
   - (D, P einstellungen-neu, ich-aufraeumen; 🧪 test_guides.BuildingBlocks, test_einstellungen_neu, test_ich_aufraeumen)
 - **Width:** no horizontal scrolling at 320, 390 and 1280 px. No element sticks out over the edge on the phone. (🧪 test_ui_browser, test_ich_aufraeumen)
+- **Frame:** every page with a side menu (Zustand, Funktionen, Personen und Geräte, Einstellungen, Ich) uses the one frame from `app.css` (`--frame`, `--sidecol`, `--sidegap`): menu column and content sit in the same place with the same width on every tab, no page sets a width of its own. (D 2026-10-14; 🧪 test_seitenrahmen)
 - **Height:** the Assistant fills the window (only the history scrolls). Height budgets apply to the Features page (< 2450 px at 1280) and People and devices (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
 - **Phone:** tap targets at least 44 px, input fields 16 px, respect the safe area. The face or "Ask Spark" ("Frag Spark") never lies over controls. (P handy-wie-app; partly 🧪)
 - **Status colours** green, yellow and red. "Needs you" always has a button leading there. Amber (`--c4`) exists in the live picture only for the internet. (P design-klar, M)
@@ -361,6 +362,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_hilfe, test_hilfe_quality | help index current, ≥ 60 everyday questions right |
 | test_seiten_laden | pages load through `ladeBox`, Me side by side, errors in the box, "Try again" after 30 s, band "The Spark is not answering", slow reads in Diagnosis |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | no width beyond the edge (320/390/1280), height budgets, no inner scroll boxes |
+| test_seitenrahmen | one frame for every page with a side menu: same place and width on every tab, nothing wider than the phone |
 | test_workflows, test_lock, test_lieferkette | pinned actions, permissions, signing environment, package hashes, ffmpeg whitelist |
 | test_selftest_runner | one second attempt, > 5 no attempt, warning |
 | test_rauchtest | every module loads, `restart-map` complete |

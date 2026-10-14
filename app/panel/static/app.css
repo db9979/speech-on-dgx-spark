@@ -481,7 +481,7 @@ body.guest .navme{display:none}
   body.adm .hfoot{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
   body.adm .hfoot .b{order:0!important}
   body.adm #logoutbtn{flex:1}
-  body.adm main{max-width:1240px}
+  body.adm main{max-width:var(--frame)}
 }
 @media (max-width:760px){
   body.adm #mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:color-mix(in srgb,var(--card) 92%,transparent);
@@ -518,8 +518,7 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
 /* Ich as a page beside the sidebar (design „Klar“, V01.0.147): no veil, same list → page as the settings */
 @media (min-width:761px){
   body.adm #profmodal{left:232px;background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;padding:24px 18px;place-items:start center;z-index:6}
-  body.adm #profmodal .mecard{width:min(1100px,100%);height:calc(100vh - 48px);animation:none}
-  body.adm #profmodal .mewrap{grid-template-columns:240px 1fr}
+  body.adm #profmodal .mecard{height:calc(100vh - 48px);animation:none}
 }
 /* Ich → Lautsprecher (esp.js): list → one speaker in sections */
 #espbox .espgrp{padding:16px 0 4px}#espbox .esplist{margin-top:0}#espbox .esplist .overrow b .pill{margin-left:6px;font-size:11px}
@@ -607,7 +606,10 @@ details.adv h3.sec{margin-top:14px}
 .cfgnav .subbadge{margin-left:6px;font-size:11px;vertical-align:1px}
 /* Zustand and Einbinden like Einstellungen (V01.0.207): second column on computers, list → page on phones */
 #subback,.subnav small.gls{display:none}
-@media (min-width:761px){main.hassub{display:grid;grid-template-columns:190px minmax(0,1fr);column-gap:16px;align-items:start}
+/* One frame for every page with a side menu (Dominik 2026-10-14 „alle Reiter wie Technik framen“): Zustand, Funktionen,
+   Personen und Geräte, Einstellungen and Ich use the same width and the same menu column, so nothing jumps when switching */
+:root{--frame:1800px;--sidecol:220px;--sidegap:24px}
+@media (min-width:761px){main.hassub{display:grid;grid-template-columns:var(--sidecol) minmax(0,1fr);column-gap:var(--sidegap);align-items:start}
   main.hassub>*{grid-column:2;min-width:0}
   main.hassub>#subnav{grid-column:1;grid-row:1/span 40;flex-direction:column;flex-wrap:nowrap;gap:4px;padding:0;margin:0;background:none;max-width:none;position:sticky;top:24px}
   main.hassub>#subnav button{flex:none;text-align:left;padding:9px 12px;border-radius:10px;font-size:14px;white-space:normal}
@@ -623,7 +625,7 @@ details.adv h3.sec{margin-top:14px}
   main.sublist>#subnav small.gls{display:block;font-size:13px;color:var(--mut);font-weight:400;margin-top:2px}}
 @media (max-width:760px){.cfgnav .glneed .glrow{display:flex;flex-direction:row;align-items:center;padding:10px 2px;min-height:0;font-size:15px;border-radius:0;border-bottom:1px solid var(--line)}
   .cfgnav .glneed .glrow:last-child{border-bottom:0}.cfgnav .glneed .glrow::before{display:none}}
-@media (min-width:761px){main.hassub{grid-template-columns:170px minmax(0,1fr)}#svc td.row{flex-wrap:nowrap}}
+@media (min-width:761px){#svc td.row{flex-wrap:nowrap}}
 /* Zustand → Logs (V01.0.212): tiles, newest error, filter buttons, tidy list */
 .lcard{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);overflow:visible}
 .lbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.lbar .sp{flex:1}.lbar[hidden],.lsum[hidden],.lchips[hidden],.lasterr[hidden],.lseg[hidden]{display:none}
@@ -1062,7 +1064,7 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 /* Seitengerüst (plaene/einstellungen-neu.md, Paket 1, js/seite.js): the page sits on the background, the rows of
    each section in one rounded box (.sgrp) under a small heading; segment buttons for short choices (.segc);
    the save bar floats at the bottom while something is unsaved */
-#cfg .cfgwrap{max-width:1040px;grid-template-columns:220px minmax(0,1fr);gap:24px}
+#cfg .cfgwrap{max-width:none;grid-template-columns:var(--sidecol) minmax(0,1fr);gap:var(--sidegap)}
 #cfg .cfgwrap.featmode{grid-template-columns:minmax(0,1fr)}   /* Funktionen from the sidebar: no settings menu, the page takes the width */
 #cfg .pane{background:none;border:0;box-shadow:none;padding:4px 2px 0;overflow:visible}
 #cfg .pane .pt{font-size:22px;letter-spacing:-.02em;margin:0 0 2px}
@@ -1120,7 +1122,6 @@ select.segsel{display:none!important}
 #cfgnav button[data-p=feat].hasic{display:none}
 /* Funktionen als Liste + Detail (Paket 3, js/fdetail.js): wide, the open function shows in a column on the right that
    stays in view while the list scrolls; narrow it opens below its line as before */
-#cfg .cfgwrap:has(#pane-feat.on){max-width:1320px}
 .fdet{display:none}
 #pane-feat.fsplit{position:relative;padding-right:384px}
 #pane-feat.fsplit>.fdet{display:block;position:absolute;top:0;right:0;bottom:0;width:364px}
@@ -1150,9 +1151,9 @@ select.segsel{display:none!important}
    the content, symbols in the column, the conversation settings in boxes one below the other; "Schließen" goes
    (Ich is a menu entry like the others), the face no longer covers a button */
 @media (min-width:761px){
-  body.adm #profmodal .mecard{width:min(1040px,100%);background:none;border:0;box-shadow:none;padding:0}
-  body.adm #profmodal .mewrap{grid-template-columns:220px minmax(0,1fr);gap:24px}
-  body.adm #profmodal .mehead{display:grid;grid-template-columns:220px minmax(0,1fr);gap:0 24px;align-items:end;margin-bottom:14px}
+  body.adm #profmodal .mecard{width:min(var(--frame),100%);background:none;border:0;box-shadow:none;padding:0}
+  body.adm #profmodal .mewrap{grid-template-columns:var(--sidecol) minmax(0,1fr);gap:var(--sidegap)}
+  body.adm #profmodal .mehead{display:grid;grid-template-columns:var(--sidecol) minmax(0,1fr);gap:0 var(--sidegap);align-items:end;margin-bottom:14px}
   body.adm #profmodal .mehrow{display:contents}
   body.adm #profmodal #profhead{grid-column:1;grid-row:1;font-size:13px;font-weight:650;color:var(--mut);padding:0 12px 4px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   body.adm #profmodal #mepage{display:block;grid-column:2;grid-row:1;font-size:22px;letter-spacing:-.02em;margin:0}
