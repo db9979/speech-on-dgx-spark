@@ -195,6 +195,7 @@ MODULE = {
     "speicher": ("betrieb", "Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt"),
     "nas": ("betrieb", "Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung"),
     "nasquelle": ("betrieb", "Wissensordner: Ordner an einem Speicherort nur lesen und in die Dokumentensuche bringen"),
+    "nashilfe": ("betrieb", "NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto"),
     "update": ("betrieb", "Updates von GitHub, nur nach grünem Test"),
     "ghtoken": ("betrieb", "Lese-Token für GitHub"),
     "meldung": ("betrieb", "Probleme melden als GitHub-Issue"),

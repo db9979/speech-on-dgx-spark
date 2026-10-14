@@ -276,6 +276,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
+| `app/panel/nashilfe.py` | NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto |
 | `app/panel/nasquelle.py` | Wissensordner: Ordner an einem Speicherort nur lesen und in die Dokumentensuche bringen |
 | `app/panel/offsite.py` | Sicherung nach außen, verschlüsselt |
 | `app/panel/quality.py` | Qualitätstest gegen das echte Sprachmodell |

@@ -43,8 +43,8 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
     const uses=(s?(cs.length?cs.map(c=>spCopy(s,c,x)).join(''):(s.targets.length<s.max?spCopy(s,null,x)+lanNo(x):'')):'')+(typeof nqUse==='function'?nqUse(x):'');
     return `<div class="place"><div class="place-h"><span><b>${esc(x.name)}</b> <em class="pill ${cls}">${esc(word)}</em>
         <small class="mut">${esc(t(...NAS_KIND[x.kind]||NAS_KIND.webdav))} · ${esc(z)} · ${esc(x.url)}${x.user?' · '+esc(x.user):''}</small></span>
-        <button class="b" type="button" data-nascheck="${esc(x.id)}">${esc(t('Verbindung prüfen','Check connection'))}</button></div>
-      <div class="fh" data-nascert="${esc(x.id)}" role="status"></div>
+        <span class="place-b"><button class="b" type="button" data-nascheck="${esc(x.id)}">${esc(t('Verbindung prüfen','Check connection'))}</button>${typeof nhRightsBtn==='function'?nhRightsBtn(x):''}</span></div>
+      <div class="fh" data-nascert="${esc(x.id)}" role="status"></div>${typeof nhOut==='function'?nhOut(x):''}
       ${uses||other(x)?`<div class="uselbl">${esc(t('Wofür','What for'))}</div>`:''}${uses}
       ${other(x)?`<div class="use"><small>${esc(t('Außerdem: ','Also: '))}${esc(other(x))}</small></div>`:''}
       ${login(x)}<div class="row"><button class="b" type="button" data-nasdel="${esc(x.id)}" data-nasn="${esc(x.name)}">${esc(t('Ort entfernen','Remove place'))}</button></div></div>`};
@@ -57,6 +57,7 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
     ${s?`<div class="fh">${esc(t('Bleibt immer auf dem Spark: Schlüssel und Anmeldung, zweiter Anmeldeschritt, Passwörter deiner Dienste, Einstellungen und Stimmabdruck.','Always stays on the Spark: keys and sign-in, second sign-in step, passwords of your services, settings and voice print.'))}</div>`:''}
     <div class="places">${d.items.map(place).join('')}${folders.map(folder).join('')}${d.items.length||folders.length?'':`<div class="mut">${esc(t('Noch kein Ort verbunden.','No place connected yet.'))}</div>`}</div>
     ${full&&kinds.every(k=>k[0]!=='folder')?`<div class="fh">${esc(t(`Höchstens ${d.max} Orte.`,`At most ${d.max} places.`))}</div>`:`<details class="addplace"${d.items.length||folders.length?'':' open'}><summary>＋ ${esc(t('Ort hinzufügen','Add a place'))}</summary>
+      ${typeof nhFind==='function'?nhFind():''}
       <label>${esc(t('Name','Name'))}</label><input id="nasname" maxlength="40" placeholder="${esc(t('z. B. Synology Keller','e.g. Synology basement'))}" autocomplete="off">
       <label>${esc(t('Art','Kind'))}</label><select id="naskind">${kinds.filter(k=>k[0]==='folder'||!full).map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join('')}</select>
       <div id="naslogin"><label>${esc(t('Adresse','Address'))}</label><input id="nasurl" maxlength="300" placeholder="${esc(NAS_HINT.webdav[0])}" autocomplete="off">
@@ -74,6 +75,7 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
   const after=async ok=>{await showNas();if(ok)xmsg('nasmsg',ok)};
   if(s)spBind(box,s,showNas,(x,err)=>say('nasmsg',x,err));
   if(typeof nqBind==='function')nqBind(box,showNas,(x,err)=>say('nasmsg',x,err));
+  if(typeof nhBind==='function')nhBind(box,(x,err)=>say('nasaddmsg',x,err));
   codeLock($('nasadd'),'confirm');box.querySelectorAll('[data-nasput]').forEach(b=>codeLock(b,'confirm'));
   if($('naskind'))$('naskind').onchange=()=>{const k=$('naskind').value,f=k==='folder';$('naslogin').hidden=f;$('nasfolder').hidden=!f;
     if(!f){$('nasurl').placeholder=NAS_HINT[k][0];$('nashint').textContent=t(NAS_HINT[k][1],NAS_HINT[k][2])}};
@@ -87,7 +89,8 @@ async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_
     if(!ok){say('nasaddmsg',t(`Bitte die Adresse mit ${kind==='webdav'?'https://':kind+'://'} eingeben.`,`Please enter the address with ${kind==='webdav'?'https://':kind+'://'}.`),true);$('nasurl').focus();return}
     if(!body.password){say('nasaddmsg',t('Bitte das Passwort eingeben.','Please enter the password.'),true);$('naspw').focus();return}
     const send=async cert=>{if(cert)body.cert=cert;b.disabled=true;say('nasaddmsg',t('Melde mich an …','Signing in …'));
-      try{await api('/api/profile/nas',xjson('POST',body));await after(t('Verbunden. Jetzt beim Ort wählen, wofür er da ist.','Connected. Now choose at the place what it is for.'))}
+      try{const r=await (await api('/api/profile/nas',xjson('POST',body))).json();await after(t('Verbunden. Jetzt beim Ort wählen, wofür er da ist.','Connected. Now choose at the place what it is for.'));
+        if(typeof nhRights==='function'&&r.added)nhRights($('nasbox'),r.added,(x,err)=>say('nasmsg',x,err))}
       catch(e){b.disabled=false;const c=nasCertOf(e);if(c){nasCert($('nasaddmsg'),c,send);return}say('nasaddmsg',codeErr(e),true)}};
     send()};
   const put=async(id,body)=>{const m=box.querySelector(`[data-nascert="${id}"]`);

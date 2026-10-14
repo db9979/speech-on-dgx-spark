@@ -276,6 +276,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
 | `app/panel/nas.py` | NAS-Verbindung. |
+| `app/panel/nashilfe.py` | Synology-Komfort: find a NAS in the home network and show what the Spark's user may do on a connected place. |
 | `app/panel/nasquelle.py` | Wissensordner. |
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |

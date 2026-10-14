@@ -932,7 +932,8 @@ class Packages(unittest.TestCase):
                     out[m.group(1)] = (m.group(2), sorted(re.findall(r"sha256:([0-9a-f]{64})", b)))
             return out
         extra, main = blocks("requirements-speicher.lock"), blocks("requirements-panel.lock")
-        self.assertEqual(set(extra), {"bcrypt", "invoke", "paramiko", "pynacl", "pyspnego", "smbprotocol"})
+        self.assertEqual(set(extra), {"bcrypt", "invoke", "paramiko", "pynacl", "pyspnego", "smbprotocol",
+                                          "ifaddr", "zeroconf"})   # since V01.0.524: Im Heimnetz suchen (nashilfe.py)
         for k, v in extra.items():
             self.assertEqual(v, main[k], k)
             self.assertTrue(v[1], k)

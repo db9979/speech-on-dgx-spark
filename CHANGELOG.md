@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.524** · 2026-10-14 · Synology-Komfort: „Im Heimnetz suchen“ findet die NAS über mDNS (nie Abtasten) und füllt die Adresse aus; „Rechte anzeigen“ zeigt je Ordner, was der Spark darf, schreibt nur eine Probe in spark_ablage und warnt bei einem Admin-Konto; Anleitung „Synology einrichten“ (Ich → Speicher)
 - **V01.0.523** · 2026-10-14 · Wissensordner: Profile wählen Ordner auf ihrer NAS oder Cloud (unter Ich → Speicher → Wofür); der Spark liest die Dokumente dort nur, findet sie bei Fragen und holt die Datei beim Öffnen frisch; neue, geänderte und gelöschte Dateien folgen beim Abgleich (Funktionen → Speicher und NAS → Wissensordner)
 - **V01.0.522** · 2026-10-14 · Sperre gilt überall: Was der Admin für ein Profil sperrt, greift in jedem Teil des Spark (Von selbst melden, Agent, Geräte, Apps, Werkzeuge), geprüft von einem Selbsttest; eigene Daten bleiben gesperrt sichtbar und löschbar (neu: Wetterort und Fahrplan löschen); Zweiter Schritt bei der Anmeldung ist nie sperrbar; Hinweise sagen, wer sperrt (Funktionen → Wer darf was)
 - **V01.0.521** · 2026-10-13 · Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst

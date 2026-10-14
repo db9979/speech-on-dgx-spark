@@ -139,6 +139,12 @@ class Browser(unittest.TestCase):
                         self.assertIn("Weiterer Wissensordner", first)
                         second = await pg.evaluate("document.querySelectorAll('#nasbox .place')[1].innerText")
                         self.assertIn("Wissensordner", second)             # the other place offers one
+                        for s2 in ("Rechte anzeigen", "Im Heimnetz suchen"):
+                            self.assertIn(s2, text, (w, s2))
+                        await pg.evaluate("""nhDraw(document.querySelector('[data-nhout="a1b2c3"]'),{supported:true,admin_like:true,drop:'schreiben',complete:true,
+                          folders:[{name:'homes',right:'lesen'},{name:'spark_ablage',right:'schreiben'},{name:'ein-sehr-langer-ordnername-ohne-leerzeichen-bis-zum-ende',right:'nein'}]})""")
+                        warn = await pg.evaluate("document.querySelector('#nasbox .nhwarn').innerText")
+                        self.assertIn("Admin-Konto", warn)
                         await pg.evaluate("document.querySelector('[data-nqon=\"d4e5f6\"]').click()")
                         self.assertFalse(await pg.evaluate("document.querySelector('[data-nqform=\"d4e5f6\"]').hidden"))
                         over = await pg.evaluate("(()=>{const b=document.querySelector('#profmodal .mebody');return b.scrollWidth-b.clientWidth})()")

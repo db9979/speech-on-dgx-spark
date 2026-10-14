@@ -33,3 +33,5 @@ fpdf2==2.8.9
 # Eigener Speicher (speicher.py): SFTP and SMB3 targets
 paramiko==5.0.0
 smbprotocol==1.17.0
+# Synology finden (nasfinden.py): only listens to mDNS announcements in the home network, never scans
+zeroconf==0.148.0

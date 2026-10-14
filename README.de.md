@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.524** Synology-Komfort: NAS im Heimnetz finden, je Ordner sehen, was der Spark darf, Warnung bei Admin-Konto
 - **V01.0.523** Wissensordner: der Spark liest Dokumente aus Ordnern auf deiner NAS oder Cloud und findet sie bei Fragen; dort ändert sich nichts
 - **V01.0.522** Sperre gilt überall: was der Admin für ein Profil sperrt, greift in jedem Teil; eigene Daten bleiben löschbar
 - **V01.0.521** Suche überall oben (auch für Profile, Lupe am Handy, Fenster passt), jedes Profil wählt sein Gesicht selbst
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.517** Technik-Seite mit großem Bild und Vollbild-Zoom; Stimmabdruck liegt jetzt versiegelt
 - **V01.0.516** Suchprüfung: Prüffragen messen nachts, wie oft die Dokumentensuche die richtige Stelle findet
 - **V01.0.515** Postfach aufräumen: eigenen Ordner direkt aus der Frage anlegen, wenn keiner passt
-- **V01.0.514** Speicher aufgeräumt: Ich → Speicher zeigt Orte (NAS, Cloud, Ordner) und darunter, wofür sie da sind; Funktionen → „Speicher und NAS“ mit „Kopie meiner Daten“ darunter
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
