@@ -129,15 +129,7 @@ class UnusedImport(Ratchet, unittest.TestCase):
 
 class OwnJsonWrite(Ratchet, unittest.TestCase):
     WHAT = "an own atomic JSON write (json.dump + os.replace), use common.write_json"
-    ALT = {"bench.py": 2, "panel/agent.py": 1, "panel/android.py": 1, "panel/apns.py": 1, "panel/backup.py": 1,
-           "panel/begleiter.py": 1, "panel/coadmin.py": 1, "panel/docembed.py": 1,
-           "panel/doclingdienst.py": 1, "panel/esp32.py": 2, "panel/geraeteupdate.py": 1,
-           "panel/ghtoken.py": 1, "panel/guard.py": 3, "panel/health.py": 1, "panel/hintergrund.py": 1,
-           "panel/images.py": 1, "panel/join.py": 1, "panel/latency.py": 2, "panel/live.py": 1,
-           "panel/mcpserver.py": 1, "panel/meinmcp.py": 1, "panel/meldung.py": 2, "panel/mfa.py": 1,
-           "panel/nachsortieren.py": 1, "panel/nas.py": 1, "panel/notaus.py": 3, "panel/offsite.py": 1,
-           "panel/profiles.py": 1, "panel/quality.py": 3, "panel/stufe.py": 1, "panel/telegram.py": 1,
-           "panel/tipps.py": 2, "panel/undo.py": 1, "panel/update.py": 1, "panel/wissen.py": 1}
+    ALT = {}   # all on common.write_json since the big cleanup step 2
 
     def hits(self):
         def count(name, src):

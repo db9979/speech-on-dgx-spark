@@ -24,7 +24,7 @@ import time
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import load_config, mem_available_gib  # noqa: E402
+from common import load_config, mem_available_gib, write_json  # noqa: E402
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE_DIR, "bench-latest.json")
@@ -242,15 +242,12 @@ class Bench:
         history = load_history()
         res["previous"] = history[-1] if history else None
         try:
-            os.makedirs(STATE_DIR, exist_ok=True)
             save_history(history + [{"time": round(res["time"]), "qwen38": bool(res["qwen38_active"]),
                                      "values": values(res)}])
         except OSError as e:
             self.log(f"could not save {HISTORY}: {e}")
         try:
-            with open(RESULT + ".tmp", "w") as f:
-                json.dump(res, f, indent=2)
-            os.replace(RESULT + ".tmp", RESULT)
+            write_json(RESULT, res, indent=2, mode=0o644)
         except OSError as e:
             self.log(f"could not save {RESULT}: {e}")
         return res
@@ -439,10 +436,7 @@ def load_history():
 
 
 def save_history(items):
-    tmp = HISTORY + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(items[-KEEP_RUNS:], f)
-    os.replace(tmp, HISTORY)
+    write_json(HISTORY, items[-KEEP_RUNS:], mode=0o600)
 
 
 def report(r):

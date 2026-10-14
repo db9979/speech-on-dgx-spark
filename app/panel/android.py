@@ -44,7 +44,7 @@ import features
 import guard
 import notaus
 import profiles
-from common import load_config
+from common import load_config, write_json
 from core import assistant, auth, own_profile
 from account import browser_profile
 
@@ -217,9 +217,7 @@ async def fetch_apk(c=None):
         with open(APK + ".part", "wb") as f:
             f.write(data)
         os.replace(APK + ".part", APK)
-        with open(META + ".part", "w") as f:
-            json.dump({"version": ver, "code": code, "sha256": sha}, f)
-        os.replace(META + ".part", META)
+        write_json(META, {"version": ver, "code": code, "sha256": sha}, mode=0o644)
         print("android: app", ver, "taken", flush=True)
         return ver
     finally:

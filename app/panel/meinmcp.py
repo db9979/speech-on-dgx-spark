@@ -57,6 +57,7 @@ import mcp
 import netguard
 import profiles
 import vault
+from common import write_json
 from core import admin_code, auth, browser_profile, secret_profile
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -183,11 +184,7 @@ def admin_state():
 
 def save_admin_state(d):
     with _lock:
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _admin_file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump({"hosts": d["hosts"], "blocked": d["blocked"]}, f, indent=1)
-        os.replace(tmp, _admin_file())
+        write_json(_admin_file(), {"hosts": d["hosts"], "blocked": d["blocked"]}, indent=1, mode=0o600)
 
 
 def host_ok(host, st=None):

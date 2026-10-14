@@ -35,7 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 import guard
-from common import load_config
+from common import load_config, write_json
 from core import auth
 
 router = APIRouter()
@@ -1325,11 +1325,7 @@ def _load():
 
 
 def _store(items):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = _file() + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump({"items": items}, f)
-    os.replace(tmp, _file())
+    write_json(_file(), {"items": items}, mode=0o600)
 
 
 def _hash(x):

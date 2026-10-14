@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import STAGE_HEADER, STAGE_HIGH, STAGE_KEY_HEADER, STAGE_LOW, stage_key
+from common import STAGE_HEADER, STAGE_HIGH, STAGE_KEY_HEADER, STAGE_LOW, stage_key, write_json
 from core import assistant, auth
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -59,11 +59,7 @@ def levels():
 
 def _save(lv):
     with _lock:
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump({"levels": lv}, f)
-        os.replace(tmp, _file())
+        write_json(_file(), {"levels": lv}, mode=0o600)
 
 
 def on(c=None):

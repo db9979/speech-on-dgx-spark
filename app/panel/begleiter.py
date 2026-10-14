@@ -72,7 +72,7 @@ import verbrauch
 import profiles
 import schreib
 import signatur
-from common import load_config, no_think
+from common import load_config, no_think, write_json
 from core import assistant, auth, browser_profile, confirm_code
 
 router = APIRouter()
@@ -2308,9 +2308,7 @@ async def fetch(platform, c=None):
         old = {f["name"] for f in (cur or {}).get("files", {}).values()}
         for v in clean.values():
             os.replace(os.path.join(folder, v["name"] + ".part"), os.path.join(folder, v["name"]))
-        with open(os.path.join(folder, "begleiter.json.part"), "w") as f:
-            json.dump({"version": ver, "files": clean}, f)
-        os.replace(os.path.join(folder, "begleiter.json.part"), os.path.join(folder, "begleiter.json"))
+        write_json(os.path.join(folder, "begleiter.json"), {"version": ver, "files": clean}, mode=0o644)
         for name in old - {v["name"] for v in clean.values()}:
             try:
                 os.remove(os.path.join(folder, name))

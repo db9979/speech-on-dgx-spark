@@ -80,12 +80,25 @@ def load_config(section=None):
     return cfg[section] if section else cfg
 
 
-def write_json(path, data, indent=None, mode=None):
+def read_json(path, default=None):
+    """The JSON in path, or a fresh copy of default when the file is missing, broken or of another kind than
+    default (a dict where a list belongs). The one JSON reader next to write_json."""
+    import copy
+    try:
+        with open(path) as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        return copy.deepcopy(default)
+    return d if default is None or isinstance(d, type(default)) else copy.deepcopy(default)
+
+
+def write_json(path, data, indent=None, mode=None, ensure_ascii=True, dir_mode=0o777):
     """Writes JSON atomically: a fresh temporary file next to it (never a fixed .tmp name two writers would share,
-    never through a link), then rename. Keeps the file's mode, a new one gets 0600 (or mode)."""
+    never through a link), then rename. Keeps the file's mode, a new one gets 0600 (or mode); a missing folder is
+    made with dir_mode. The one JSON writer (Richtlinie Teil 17, test_aufraeumen)."""
     import tempfile
     folder = os.path.dirname(os.path.abspath(path))
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(folder, mode=dir_mode, exist_ok=True)
     if mode is None:
         try:
             mode = os.stat(path).st_mode & 0o777
@@ -93,8 +106,8 @@ def write_json(path, data, indent=None, mode=None):
             mode = 0o600
     fd, tmp = tempfile.mkstemp(prefix="." + os.path.basename(path) + ".", suffix=".tmp", dir=folder)
     try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f, indent=indent)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
         os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:

@@ -52,7 +52,7 @@ import guard
 import notaus
 import verbrauch
 import profiles
-from common import load_config
+from common import load_config, write_json
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
 
 router = APIRouter()
@@ -212,11 +212,7 @@ def _load():
 
 
 def _save(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = _file() + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(d, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, _file())
+    write_json(_file(), d, indent=1, mode=0o600, ensure_ascii=False)
 
 
 def _hash(token):

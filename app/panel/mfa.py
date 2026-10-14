@@ -32,6 +32,7 @@ from urllib.parse import quote
 
 import profiles
 import vault
+from common import write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 ADMIN = "admin"
@@ -95,12 +96,7 @@ def _read(who):
 
 
 def _write(who, d):
-    p = _path(who)
-    os.makedirs(os.path.dirname(p), mode=0o700, exist_ok=True)
-    tmp = p + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, p)
+    write_json(_path(who), d, mode=0o600, dir_mode=0o700)
 
 
 def enabled(who):

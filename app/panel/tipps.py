@@ -32,6 +32,7 @@ import guard
 import notaus
 import onboard
 import profiles
+from common import write_json
 from core import assistant, browser_profile
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -92,11 +93,7 @@ def _mut(uid, fn):
         d = {u: v for u, v in d.items() if u in set(profiles.user_ids()) or u == uid}
         d[uid] = st
         try:
-            os.makedirs(STATE, exist_ok=True)
-            tmp = FILE + ".tmp"
-            with open(tmp, "w") as f:
-                json.dump(d, f)
-            os.replace(tmp, FILE)
+            write_json(FILE, d)
         except OSError:
             pass
         return st
@@ -107,9 +104,7 @@ def forget(uid):
         d = _all()
         if d.pop(uid, None) is not None:
             try:
-                with open(FILE + ".tmp", "w") as f:
-                    json.dump(d, f)
-                os.replace(FILE + ".tmp", FILE)
+                write_json(FILE, d)
             except OSError:
                 pass
 

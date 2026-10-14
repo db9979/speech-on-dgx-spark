@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
+from common import write_json
 from core import assistant, auth, own_profile
 
 router = APIRouter()
@@ -131,11 +132,7 @@ def seen(kind, key, ok, why="", now=None):
         if changed or now - _svc["saved"] > SAVE_EVERY:
             _svc["saved"] = now
             try:
-                os.makedirs(STATE, exist_ok=True)
-                tmp = SERVICES_FILE + ".tmp"
-                with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-                    json.dump(d, f)
-                os.replace(tmp, SERVICES_FILE)
+                write_json(SERVICES_FILE, d, mode=0o600)
             except OSError:
                 pass
 

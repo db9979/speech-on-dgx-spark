@@ -21,6 +21,8 @@ import shutil
 import threading
 import time
 
+from common import write_json
+
 USERS_DIR = os.environ.get("SPEECH_SPARK_USERS", "/var/lib/speech-spark/users")
 COOKIE = "speech_spark_user"
 DEVICE_HEADER = "x-speech-device"
@@ -35,11 +37,7 @@ def _path(*parts):
 
 
 def _write(path, data):
-    os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
-    tmp = path + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(data, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, path)
+    write_json(path, data, indent=1, mode=0o600, ensure_ascii=False, dir_mode=0o700)
 
 
 def _load():

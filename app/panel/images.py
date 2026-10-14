@@ -38,7 +38,7 @@ import guard
 import profiles
 import features
 import verbrauch
-from common import load_config
+from common import load_config, write_json
 from core import assistant, auth, own_profile
 
 router = APIRouter()
@@ -327,11 +327,7 @@ async def vision_test():
     res["seconds"] = round(time.time() - t0, 2)
     print("images: vision test", "ok" if res["ok"] else "NOT ok: " + res["error"], flush=True)
     try:
-        os.makedirs(STATE, exist_ok=True)
-        tmp = RESULT + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump(res, f)
-        os.replace(tmp, RESULT)
+        write_json(RESULT, res, mode=0o644)
     except OSError:
         pass
     return res

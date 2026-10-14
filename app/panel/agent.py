@@ -49,7 +49,7 @@ import notaus
 import profiles
 import vorrang
 import features
-from common import load_config, no_think
+from common import load_config, no_think, write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LEVELS = ("read", "act")
@@ -91,11 +91,7 @@ def admin_state():
 
 def save_admin_state(d):
     with _lock:
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _admin_file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump({"levels": d["levels"], "mcp": d["mcp"]}, f, ensure_ascii=False, indent=1)
-        os.replace(tmp, _admin_file())
+        write_json(_admin_file(), {"levels": d["levels"], "mcp": d["mcp"]}, indent=1, mode=0o600, ensure_ascii=False)
 
 
 def ccfg():

@@ -28,6 +28,7 @@ import httpx
 import profiles
 import vault
 import features
+from common import read_json, write_json
 
 try:
     from cryptography.hazmat.primitives import hashes, serialization
@@ -56,21 +57,12 @@ def _file(name):
 
 
 def _read(name):
-    try:
-        with open(_file(name)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    return read_json(_file(name), {})
 
 
 def _write(name, d):
     with _lock:
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _file(name) + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump(d, f)
-        os.replace(tmp, _file(name))
+        write_json(_file(name), d, mode=0o600)
 
 
 def settings():

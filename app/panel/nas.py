@@ -46,6 +46,7 @@ import netguard
 import profiles
 import vault
 import zertpin
+from common import write_json
 from core import auth, browser_profile, secret_profile
 
 router = APIRouter()
@@ -175,11 +176,7 @@ def save(owner, items):
     with _lock:
         path = _file(owner)
         if owner is ADMIN:
-            os.makedirs(STATE, exist_ok=True)
-            tmp = path + ".tmp"
-            with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-                json.dump({"nas": items[:HARD]}, f)
-            os.replace(tmp, path)
+            write_json(path, {"nas": items[:HARD]}, mode=0o600)
         else:
             profiles._write(path, {"nas": items[:HARD]})
 

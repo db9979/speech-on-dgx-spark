@@ -35,7 +35,7 @@ import tempfile
 import threading
 import time
 
-from common import CONFIG_PATH
+from common import CONFIG_PATH, write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 BASE = os.path.dirname(STATE.rstrip("/"))
@@ -474,10 +474,7 @@ def _swap(work, new_cfg, key=None):
             if os.path.exists(CONFIG_PATH):
                 with open(CONFIG_PATH, "rb") as f:
                     prev = f.read()
-            tmp = CONFIG_PATH + ".tmp"
-            with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o640), "w") as f:
-                json.dump(new_cfg, f, indent=2)
-            os.replace(tmp, CONFIG_PATH)
+            write_json(CONFIG_PATH, new_cfg, indent=2, mode=0o640)
             undo.append((CONFIG_PATH, prev))
             done.append("config")
         files = [(os.path.join(work, "state", n), n) for n in STATE_FILES]

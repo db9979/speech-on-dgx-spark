@@ -21,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import vault  # noqa: E402
+from common import write_json  # noqa: E402
 from core import admin_code_fresh, auth  # noqa: E402
 
 router = APIRouter()
@@ -87,12 +88,8 @@ def info():
 def save(token, now=None):
     if not vault.available():
         raise HTTPException(503, "Verschlüsselung fehlt (python3-cryptography).")
-    os.makedirs(STATE, exist_ok=True)
     d = {"token": vault.seal(token), "since": int(time.time() if now is None else now), "until": None}
-    tmp = TOKEN_FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, TOKEN_FILE)
+    write_json(TOKEN_FILE, d, mode=0o600)
     _state.update(refused=False, t=0, ok=None, why="", until=None, limit=None)
 
 

@@ -19,7 +19,7 @@ import httpx
 
 import taten
 import vorrang
-from common import load_config, no_think
+from common import load_config, no_think, write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
@@ -222,10 +222,7 @@ def drop_own(cid):
 
 
 def _write_own(items):
-    os.makedirs(STATE, exist_ok=True)
-    with open(OWN + ".tmp", "w") as f:
-        json.dump(items, f, ensure_ascii=False)
-    os.replace(OWN + ".tmp", OWN)
+    write_json(OWN, items, ensure_ascii=False)
 
 
 def _system(ccfg, hints):
@@ -443,10 +440,7 @@ async def run(reason="manual"):
 
 
 def _save(res):
-    os.makedirs(STATE, exist_ok=True)
-    with open(RESULT + ".tmp", "w") as f:
-        json.dump(res, f, ensure_ascii=False, indent=1)
-    os.replace(RESULT + ".tmp", RESULT)
+    write_json(RESULT, res, indent=1, ensure_ascii=False)
 
 
 def history():
@@ -470,10 +464,7 @@ def _history(res):
                  "total": res["total"], "ids": [x["id"] for x in res["cases"]],
                  "fail": [x["id"] for x in res["cases"] if not x["ok"]],
                  "flaky": [x["id"] for x in res["cases"] if x.get("flaky")]})
-    os.makedirs(STATE, exist_ok=True)
-    with open(HISTORY + ".tmp", "w") as f:
-        json.dump(prev[-KEEP:], f, ensure_ascii=False)
-    os.replace(HISTORY + ".tmp", HISTORY)
+    write_json(HISTORY, prev[-KEEP:], ensure_ascii=False)
 
 
 def last():

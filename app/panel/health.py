@@ -29,7 +29,7 @@ import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
-from common import load_config  # noqa: E402
+from common import load_config, write_json  # noqa: E402
 from core import UNITS, api_headers, app_version, run  # noqa: E402
 from monitor import service_health  # noqa: E402
 import verbrauch  # noqa: E402
@@ -311,10 +311,7 @@ async def livecheck(reason="manual"):
         res = {"t": int(time.time()), "version": app_version(), "reason": reason,
                "ok": all(s["ok"] is not False for s in steps), "steps": steps}
         try:
-            os.makedirs(STATE, exist_ok=True)
-            with open(LIVE_FILE + ".tmp", "w") as f:
-                json.dump(res, f, ensure_ascii=False)
-            os.replace(LIVE_FILE + ".tmp", LIVE_FILE)
+            write_json(LIVE_FILE, res, ensure_ascii=False, mode=0o644)
         except OSError as e:
             print("livecheck:", e, flush=True)
         if not res["ok"]:

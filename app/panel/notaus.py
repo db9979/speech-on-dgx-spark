@@ -42,6 +42,7 @@ import threading
 import time
 
 import guard
+from common import write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "notaus.json")
@@ -238,11 +239,7 @@ def own(uid):
 
 
 def _mine_write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = MINE_FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w", encoding="utf-8") as f:
-        json.dump({"profiles": d}, f, ensure_ascii=False)
-    os.replace(tmp, MINE_FILE)
+    write_json(MINE_FILE, {"profiles": d}, mode=0o600, ensure_ascii=False)
     _mine_cache.update(key=None, d=None)
 
 
@@ -296,11 +293,7 @@ def counts():
 
 
 def _write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w", encoding="utf-8") as f:
-        json.dump(d, f, ensure_ascii=False)
-    os.replace(tmp, FILE)
+    write_json(FILE, d, mode=0o600, ensure_ascii=False)
     _cache.update(key=None, state=None)
 
 
@@ -930,11 +923,7 @@ def _keys():
 
 
 def _keys_write(items):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = KEYS_FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w", encoding="utf-8") as f:
-        json.dump({"keys": items}, f, ensure_ascii=False)
-    os.replace(tmp, KEYS_FILE)
+    write_json(KEYS_FILE, {"keys": items}, mode=0o600, ensure_ascii=False)
 
 
 def _hash(token):

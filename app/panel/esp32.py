@@ -75,7 +75,7 @@ import profiles
 import spkcode
 import vault
 import features
-from common import load_config
+from common import load_config, read_json, write_json
 from textnorm import guess_language, speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
@@ -136,20 +136,11 @@ def _file():
 
 
 def _state():
-    try:
-        with open(_file()) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    return read_json(_file(), {})
 
 
 def _save(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = _file() + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, _file())
+    write_json(_file(), d, mode=0o600)
 
 
 def _update(fn):
@@ -355,17 +346,14 @@ async def _fetch_firmware(c=None):
                         raise FetchError(f"{fn}: Prüfsumme passt nicht, nichts übernommen.")
                     with open(dst, "wb") as f:
                         f.write(data)
-            with open(os.path.join(tmp, "manifest.json"), "w") as f:
-                json.dump(m, f)
+            write_json(os.path.join(tmp, "manifest.json"), m, mode=0o644)
         except BaseException:
             shutil.rmtree(tmp, ignore_errors=True)
             raise
         final = os.path.join(FW_DIR, ver)
         shutil.rmtree(final, ignore_errors=True)
         os.replace(tmp, final)
-        with open(os.path.join(FW_DIR, "current.json.tmp"), "w") as f:
-            json.dump({"version": ver, "previous": cur["version"] if cur else ""}, f)
-        os.replace(os.path.join(FW_DIR, "current.json.tmp"), os.path.join(FW_DIR, "current.json"))
+        write_json(os.path.join(FW_DIR, "current.json"), {"version": ver, "previous": cur["version"] if cur else ""}, mode=0o644)
         keep = {ver, cur["version"] if cur else ""}
         for x in os.listdir(FW_DIR):
             if os.path.isdir(os.path.join(FW_DIR, x)) and x not in keep:

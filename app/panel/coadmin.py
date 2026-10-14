@@ -34,6 +34,7 @@ import time
 
 import mfa
 import profiles
+from common import write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "admins.json")
@@ -87,11 +88,7 @@ def _read():
 
 
 def _write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, FILE)
+    write_json(FILE, d, mode=0o600)
 
 
 def role(uid):

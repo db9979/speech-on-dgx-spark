@@ -16,6 +16,8 @@ import secrets
 import threading
 import time
 
+from common import write_json
+
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "config-undo.json")
 KEEP = 50
@@ -37,11 +39,7 @@ def _read():
 
 
 def _write(items):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(items[-KEEP:], f, ensure_ascii=False)
-    os.replace(tmp, FILE)
+    write_json(FILE, items[-KEEP:], mode=0o600, ensure_ascii=False)
 
 
 def _plain(v):

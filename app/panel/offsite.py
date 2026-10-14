@@ -44,6 +44,7 @@ import vault
 import vorrang
 import nas
 import zertpin
+from common import write_json
 from core import spawn, admin_code, admin_code_fresh, auth
 
 router = APIRouter()
@@ -167,11 +168,7 @@ def _write(d):
         d.update({k: v for k, v in nas.collapse(nas.ADMIN, t, "webdav").items() if k in ("nas", "path")})
     else:
         d = {k: v for k, v in d.items() if k not in ("nas", "path")}
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, FILE)
+    write_json(FILE, d, mode=0o600)
 
 
 def _nas_uses(owner):

@@ -33,7 +33,7 @@ import notaus
 import verbrauch
 import vault
 import features
-from common import load_config
+from common import load_config, write_json
 
 API = "https://api.telegram.org"
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -70,11 +70,7 @@ def _state():
 def _save_state(**kw):
     with _lock:
         d = dict(_state(), **kw)
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump(d, f)
-        os.replace(tmp, _file())
+        write_json(_file(), d, mode=0o600)
 
 
 def token():

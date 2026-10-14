@@ -31,6 +31,8 @@ from urllib.parse import urlsplit
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
+from common import write_json
+
 MAX_FAILS, MAX_NAME_FAILS, WINDOW = 5, 10, 15 * 60
 LOCK_FIRST, LOCK_MAX = 60, 3600
 DAY_FAILS, KNOWN = 30, 20
@@ -70,10 +72,7 @@ def _save():
     data = {"locks": {_k(k): v for k, v in _locks.items()}, "day": {_k(k): list(v) for k, v in _day.items()},
             "known": {_k(k): sorted(v) for k, v in _known.items()}}
     try:
-        tmp = SAVED + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            json.dump(data, f)
-        os.replace(tmp, SAVED)
+        write_json(SAVED, data, mode=0o600)
     except OSError:
         pass
 
@@ -159,10 +158,7 @@ def _first_hint(peer, now=None):
         return False
     _hinted.add(peer)
     try:
-        os.makedirs(STATE, exist_ok=True)
-        with open(HINTED + ".part", "w") as f:
-            json.dump({"day": day, "peers": sorted(x for x in _hinted if not x.startswith("day:"))}, f)
-        os.replace(HINTED + ".part", HINTED)
+        write_json(HINTED, {"day": day, "peers": sorted(x for x in _hinted if not x.startswith("day:"))})
     except OSError:
         pass
     return True
@@ -318,10 +314,7 @@ def revoke(raw, ttl):
             r.pop(k, None)
         r[hashlib.sha256(raw.encode()).hexdigest()] = now + ttl
         try:
-            tmp = REVOKED + ".tmp"
-            with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-                json.dump(r, f)
-            os.replace(tmp, REVOKED)
+            write_json(REVOKED, r, mode=0o600)
         except OSError:
             pass
 

@@ -39,7 +39,7 @@ import features
 import guard
 import profiles
 import vault
-from common import load_config
+from common import load_config, write_json
 from core import admin_code_fresh, assistant, auth
 
 router = APIRouter()
@@ -416,11 +416,7 @@ def _read(rid):
 
 
 def _write(d):
-    os.makedirs(DIR, mode=0o700, exist_ok=True)
-    tmp = _path(d["id"]) + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f, ensure_ascii=False)
-    os.replace(tmp, _path(d["id"]))
+    write_json(_path(d["id"]), d, mode=0o600, ensure_ascii=False, dir_mode=0o700)
 
 
 def _all(now=None):
@@ -596,12 +592,8 @@ def token_info():
 def token_save(token, now=None):
     if not vault.available():
         raise HTTPException(503, "Verschlüsselung fehlt (python3-cryptography).")
-    os.makedirs(STATE, exist_ok=True)
     d = {"token": vault.seal(token), "since": int(time.time() if now is None else now), "until": None}
-    tmp = TOKEN_FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, TOKEN_FILE)
+    write_json(TOKEN_FILE, d, mode=0o600)
     _check.update(t=0, ok=None, why="", until=None)
 
 

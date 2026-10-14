@@ -3650,7 +3650,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "70ff0437bf",
+        "stand": "8c6b642130",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -3797,7 +3797,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "532e6595f8",
+        "stand": "207e9a1fa5",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
             "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],

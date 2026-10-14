@@ -50,6 +50,7 @@ import netguard
 import profiles
 import vault
 import zertpin
+from common import read_json, write_json
 from core import admin_code_fresh, auth
 
 router = APIRouter()
@@ -76,20 +77,11 @@ _mem = {"down_until": 0.0, "now": None}     # now: {"uid"} while a file is with 
 
 # ---------------------------------------------------------------- settings
 def _read():
-    try:
-        with open(FILE) as f:
-            d = json.load(f)
-    except (OSError, ValueError):
-        d = {}
-    return d if isinstance(d, dict) else {}
+    return read_json(FILE, {})
 
 
 def _write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, FILE)
+    write_json(FILE, d, mode=0o600)
 
 
 def _update(**kw):

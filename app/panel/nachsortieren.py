@@ -21,7 +21,7 @@ import sys
 import time
 
 import features
-from common import load_config
+from common import load_config, write_json
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PINS = os.path.join(STATE, "doc-rank.json")
@@ -110,11 +110,7 @@ def _check_pins(sz, sha):
     if sz in pins:
         return pins[sz] == sha
     pins[sz] = sha
-    os.makedirs(STATE, exist_ok=True)
-    tmp = PINS + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(pins, f)
-    os.replace(tmp, PINS)
+    write_json(PINS, pins, mode=0o644)
     return True
 
 

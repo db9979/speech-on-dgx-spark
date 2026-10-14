@@ -12,7 +12,7 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import journal  # noqa: E402
+from common import journal, write_json  # noqa: E402
 from core import PREFIX, admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
 import ghtoken  # noqa: E402
@@ -393,9 +393,7 @@ def _night_day():
 
 def _night_done(day):
     try:
-        with open(NIGHT_FILE + ".part", "w") as f:
-            json.dump({"day": day}, f)
-        os.replace(NIGHT_FILE + ".part", NIGHT_FILE)
+        write_json(NIGHT_FILE, {"day": day})
     except OSError:
         pass
 

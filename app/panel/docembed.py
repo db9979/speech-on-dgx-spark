@@ -20,6 +20,8 @@ import os
 import sys
 import time
 
+from common import read_json, write_json
+
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PINS = os.path.join(STATE, "doc-embed.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.py")
@@ -80,12 +82,7 @@ def _free_gib():
 
 
 def _pins():
-    try:
-        with open(PINS) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    return read_json(PINS, {})
 
 
 def _check_pins(sha):
@@ -95,11 +92,7 @@ def _check_pins(sha):
     old = _pins()
     if old:
         return old == sha
-    os.makedirs(STATE, exist_ok=True)
-    tmp = PINS + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(sha, f)
-    os.replace(tmp, PINS)
+    write_json(PINS, sha, mode=0o644)
     return True
 
 

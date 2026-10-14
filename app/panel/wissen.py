@@ -54,7 +54,7 @@ import hintergrund
 import profiles
 import vorrang
 import features
-from common import load_config, no_think
+from common import load_config, no_think, write_json
 from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
@@ -586,11 +586,7 @@ async def admin_quota(request: Request):
         d.pop(owner, None)
     else:
         d[owner] = mb
-    os.makedirs(os.path.dirname(QUOTAS), exist_ok=True)
-    tmp = QUOTAS + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, QUOTAS)
+    write_json(QUOTAS, d, mode=0o600)
     guard.log("doc_quota", ip=guard.client_ip(request), mb=mb)
     return {"ok": True, "quota_mb": quota_bytes(owner) // 1024**2}
 

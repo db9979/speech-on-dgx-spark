@@ -43,6 +43,7 @@ import features
 import guard
 import mfa
 import profiles
+from common import write_json
 from core import spawn, acting_profile, admin_code, auth
 
 router = APIRouter()
@@ -91,11 +92,7 @@ def _invites(raw):
 
 
 def _write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = FILE + ".tmp"
-    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        json.dump(d, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, FILE)
+    write_json(FILE, d, indent=1, mode=0o600, ensure_ascii=False)
 
 
 def _prune(d, now):

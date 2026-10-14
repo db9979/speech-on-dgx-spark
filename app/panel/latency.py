@@ -12,6 +12,8 @@ import statistics
 import threading
 import time
 
+from common import write_json
+
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEEP_DAYS, MAX_ENTRIES = 14, 5000
 DAY = 86400
@@ -41,11 +43,7 @@ def add(seconds, client="web", now=None):
     with _lock:
         items = [x for x in _load() if x["t"] > now - KEEP_DAYS * DAY]
         items = (items + [{"t": round(now), "a": round(seconds, 2), "c": client}])[-MAX_ENTRIES:]
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-            json.dump(items, f)
-        os.replace(tmp, _file())
+        write_json(_file(), items, mode=0o600)
 
 
 def add_ack(seconds, now=None):
@@ -56,11 +54,7 @@ def add_ack(seconds, now=None):
     with _lock:
         items = [x for x in _load() if x["t"] > now - KEEP_DAYS * DAY]
         items = (items + [{"t": round(now), "a": round(seconds, 2), "c": "web", "k": "ack"}])[-MAX_ENTRIES:]
-        os.makedirs(STATE, exist_ok=True)
-        tmp = _file() + ".tmp"
-        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
-            json.dump(items, f)
-        os.replace(tmp, _file())
+        write_json(_file(), items, mode=0o600)
 
 
 def _stats(values):
