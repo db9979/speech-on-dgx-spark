@@ -611,6 +611,36 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_zustand_tiles_fit_and_lead_somewhere(self):
+        """Plan „Zustand-Übersicht“ 1 (Dominik 2026-10-14): „Jetzt“ and „Heute“ are tiles with icon and colour, each
+        „Heute“ tile a jump link, the first sound yellow only by latency's rule, the speakers yellow when not all are
+        online; chips under the sentence; „Zum offenen Punkt“ only with open points; no overflow at 320 and 390 px."""
+        fake = ("zustand({glance:{version:'V01.0.1',backup:null,check:{},answers:4,first_sound:7.0,slower:true,"
+                "speakers:{online:1,known:2},background:{held:2}},services:{},system:{mem_avail_gib:31.4,mem_total_gib:119.7},alerts:[]})")
+        async def go():
+            async with async_playwright() as p:
+                for w in (320, 390, 1280):
+                    br, pg, errors = await self.page(p, w, 900)
+                    await pg.evaluate("goSec('mon')")
+                    await pg.wait_for_function("$('zhead').dataset.lvl", timeout=20000)
+                    await pg.evaluate(fake)
+                    tiles = await pg.evaluate("[...$('ztoday').children].map(n=>[n.nodeName,n.dataset.lvl,!!n.dataset.way,!!n.querySelector('svg.zico')])")
+                    self.assertEqual([x[1] for x in tiles], ["acc", "warn", "warn", "acc2"])
+                    self.assertTrue(all(x[0] == "A" and x[2] and x[3] for x in tiles), tiles)
+                    self.assertEqual(await pg.evaluate("$('zcards').children.length"), 4)
+                    self.assertGreaterEqual(await pg.evaluate("$('zmeta').querySelectorAll('span').length"), 2)
+                    self.assertFalse(await pg.evaluate("$('ztodayh').hidden"))
+                    await pg.evaluate("zustand({glance:{first_sound:3,slower:false},services:{},system:{},alerts:[]})")
+                    self.assertEqual(await pg.evaluate("$('ztoday').children[1].dataset.lvl"), "acc")
+                    await pg.evaluate("markDirty($('pane-tts'),true)")
+                    self.assertEqual(await pg.evaluate("$('zgo').hidden"), False)
+                    await pg.evaluate("markDirty($('pane-tts'),false)")
+                    self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"), w)
+                    self.assertFalse(await pg.evaluate("[...document.querySelectorAll('#mon .zcard')].some(e=>e.getBoundingClientRect().right>innerWidth+1)"), w)
+                    self.assertEqual(errors, [])
+                    await br.close()
+        self.run_async(go())
+
     def test_zustand_says_how_it_is_and_what_needs_you(self):
         """V01.0.146: Zustand starts with one sentence and lists unsaved settings pages under "Braucht dich"
         with a button that opens the page; the dot in the menu follows the sentence. (Services may also be

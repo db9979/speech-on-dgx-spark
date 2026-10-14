@@ -7510,6 +7510,46 @@
           }
         }
       }
+    },
+    "Heute (24 Std.)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today (24 h)"
+          }
+        }
+      }
+    },
+    "Erster Ton": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First sound"
+          }
+        }
+      }
+    },
+    "Lautsprecher online": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speakers online"
+          }
+        }
+      }
+    },
+    "Hintergrund wartete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background waited"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

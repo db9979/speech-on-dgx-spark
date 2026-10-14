@@ -134,6 +134,25 @@ struct StatusView: View {
                 LabeledContent("CPU") { Text(verbatim: Self.num(sys["cpu"]) + " %") }
                 LabeledContent("GPU") { Text(verbatim: Self.num(gpu["util"]) + " % · " + Self.num(gpu["temp"]) + " °C · " + Self.num(gpu["power"]) + " W") }
             }
+            // the "Heute" tiles of Zustand → Monitoring (admin.glance): counts and times only; orange by the panel's rules
+            let g = d["glance"] as? [String: Any] ?? [:]
+            Section("Heute (24 Std.)") {
+                LabeledContent { Text(verbatim: Self.num(g["answers"] ?? 0)) } label: { Label("Antworten", systemImage: "bubble.left") }
+                if g["first_sound"] is NSNumber {
+                    LabeledContent {
+                        Text(verbatim: Self.num(g["first_sound"]) + " s").foregroundStyle(g["slower"] as? Bool == true ? .orange : .primary)
+                    } label: { Label("Erster Ton", systemImage: "timer") }
+                }
+                if let sp = g["speakers"] as? [String: Any] {
+                    let on = (sp["online"] as? NSNumber)?.intValue ?? 0, known = (sp["known"] as? NSNumber)?.intValue ?? 0
+                    LabeledContent {
+                        Text(verbatim: "\(on) / \(known)").foregroundStyle(on < known ? .orange : .green)
+                    } label: { Label("Lautsprecher online", systemImage: "hifispeaker") }
+                }
+                if let held = ((g["background"] as? [String: Any])?["held"] as? NSNumber)?.intValue, held > 0 {
+                    LabeledContent { Text(verbatim: "\(held)×") } label: { Label("Hintergrund wartete", systemImage: "waveform.path.ecg") }
+                }
+            }
             Section("Speech-Dienste") {
                 ForEach(Self.services(d), id: \.0) { name, state in
                     LabeledContent(name) { Text(verbatim: state).foregroundStyle(Self.color(state)) }

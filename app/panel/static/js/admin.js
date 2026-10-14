@@ -58,7 +58,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   // the notes above, one tap away (they hold the way to the place each is about)
   if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise stehen oben.','Notes are shown above.');
     a.onclick=e=>{e.preventDefault();const n=$('alerts').firstElementChild;if(n)sFlash(n)};$('ztext').appendChild(a)}
-  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';
+  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';$('zgo').hidden=!need.length;
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
@@ -66,15 +66,36 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
     b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
-// Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286): under the sentence version, last backup and last
-// check; four cards Zuhören, Sprechen, Sprachmodell, Speicher (with the 8 GiB line below which DGX OS ends
-// processes); a "Heute" line (answers, first sound, speakers online, background work that waited for speech). The
-// service table, GPU and qwen38 stay complete under "Technische Details". From /api/status (admin.glance).
+// Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286; tiles since the plan „Zustand-Übersicht“ 1): under
+// the sentence chips with version, last backup and last check; „Jetzt“ four tiles Zuhören, Sprechen, Sprachmodell,
+// Speicher (with the 8 GiB line below which DGX OS ends processes); „Heute“ tiles for answers, first sound, speakers
+// online and background work that waited for speech, each one a jump link to its place; the other cards below as
+// „Bereiche“ with an icon. The service table, GPU and qwen38 stay complete under "Technische Details". From
+// /api/status (admin.glance); the colours come from fixed rules there and here, never from the model.
 const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
 function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
-function zCard(lvl,name,big,small,go){const b=document.createElement('button');b.type='button';b.className='zcard';b.dataset.lvl=lvl;
-  const k=document.createElement('span');k.className='zk';k.textContent=name;const v=document.createElement('b');v.textContent=big;b.append(k,v);
-  if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}if(go)b.onclick=go;return b}
+// line icons (24 grid) of the tiles and of the cards under Zustand; a card without one shows none
+const ZICO={ear:['M6 8.5a6 6 0 1 1 12 0c0 3-2 4-3 5.5s-1 3.5-3.5 3.5','M9.5 9a2.5 2.5 0 0 1 5 0'],spk:['M11 5 6 9H3v6h3l5 4z','M15.5 8.5a5 5 0 0 1 0 7','M18.5 5.5a9 9 0 0 1 0 13'],
+  llm:['M8 5h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z','M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4'],
+  mem:['M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z','M7 10v4M11 10v4M15 10v4'],chat:['M21 12a8 8 0 0 1-11.6 7.1L4 20l1.2-4.4A8 8 0 1 1 21 12z'],
+  timer:['M20 13a8 8 0 1 1-16 0 8 8 0 0 1 16 0z','M12 9v4l2.5 2.5M9 2h6'],esp:['M9 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z','M15 14a3 3 0 1 1-6 0 3 3 0 0 1 6 0z','M12 7h.01'],
+  pulse:['M3 12h4l3-8 4 16 3-8h4'],chev:['M9 6l6 6-6 6'],alert:['M12 3 2 20h20z','M12 10v4M12 17h.01'],user:['M20 21a8 8 0 0 0-16 0','M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'],
+  globe:['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z','M3 12h18','M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18'],pause:['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z','M10 9v6M14 9v6'],
+  nas:['M6 3h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z','M6 14h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z','M8 6.5h.01M8 17.5h.01'],
+  folder:['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],copy:['M8 8h11v11H8z','M5 16V5h11'],dev:['M12 3v12M7 10l5 5 5-5','M4 19h16'],
+  doc:['M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z','M14 3v5h5M9 13h6M9 17h4']};
+const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zstore:'copy',zdev:'dev',zdocs:'doc'};
+function zIco(name,cls){const N='http://www.w3.org/2000/svg',v=document.createElementNS(N,'svg');v.setAttribute('viewBox','0 0 24 24');v.setAttribute('aria-hidden','true');v.setAttribute('class',cls||'zico');
+  for(const d of ZICO[name]||[]){const p=document.createElementNS(N,'path');p.setAttribute('d',d);v.appendChild(p)}return v}
+for(const [id,ic] of Object.entries(ZCARD_ICO)){const h=document.querySelector('#'+id+'>h2');if(h){const b=document.createElement('span');b.className='zbub';b.appendChild(zIco(ic));h.prepend(b)}}
+$('zgo').onclick=()=>sFlash($('zneed'));
+// one tile: icon, name, big value (+unit), one small line; a button (go) or a jump link (way) or nothing
+function zCard(lvl,ic,name,big,unit,small,go,way){const b=way?wayEl('',way):document.createElement(go?'button':'div');b.textContent='';
+  if(go){b.type='button';b.onclick=go}b.classList.add('zcard');b.dataset.lvl=lvl;
+  const hd=document.createElement('span');hd.className='zhd';const bub=document.createElement('span');bub.className='zbub';bub.appendChild(zIco(ic));
+  const k=document.createElement('span');k.className='zk';k.textContent=name;hd.append(bub,k);if(go||way)hd.appendChild(zIco('chev','zch'));
+  const v=document.createElement('b');v.textContent=big;if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
+  if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}return b}
 function zSvc(v){if(!v)return['',t('nicht eingerichtet','not set up')];const h=v.health||{};
   if(['failed','error'].includes(v.state)||h.error)return['bad',t('Fehler','Error')];
   if(v.state==='active'||['ready','ok'].includes(h.status))return['ok',h.busy?t('arbeitet','working'):t('läuft','running')];
@@ -83,25 +104,30 @@ function zSvc(v){if(!v)return['',t('nicht eingerichtet','not set up')];const h=v
 function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=s.services||{},sy=s.system||{};box.textContent='';
   const short=m=>String(m||'').split('/').pop();
   const a=sv.asr,ah=(a&&a.health)||{},[al,at]=zSvc(a);
-  box.appendChild(zCard(al,t('Zuhören','Listening'),at,[short(ah.model),ah.avg_latency_s!=null?t('Ø ','avg ')+fmt(ah.avg_latency_s,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
+  box.appendChild(zCard(al,'ear',t('Zuhören','Listening'),at,'',[short(ah.model),ah.avg_latency_s!=null?t('Ø ','avg ')+fmt(ah.avg_latency_s,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
   const p=sv.tts,ph=(p&&p.health)||{},[pl,pt]=zSvc(p),ft=ph.avg_ttfa_s??ph.avg_ttft_s;
-  box.appendChild(zCard(pl,t('Sprechen','Speaking'),pt,[short(ph.model),ft!=null?t('erster Ton Ø ','first sound avg ')+fmt(ft,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
+  box.appendChild(zCard(pl,'spk',t('Sprechen','Speaking'),pt,'',[short(ph.model),ft!=null?t('erster Ton Ø ','first sound avg ')+fmt(ft,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
   const c=g.check||{};
-  box.appendChild(zCard(c.llm===true?'ok':c.llm===false?'bad':'',t('Sprachmodell','Language model'),c.llm===true?t('antwortet','answers'):c.llm===false?t('antwortet nicht','does not answer'):t('noch nicht geprüft','not checked yet'),
+  box.appendChild(zCard(c.llm===true?'ok':c.llm===false?'bad':'','llm',t('Sprachmodell','Language model'),c.llm===true?t('antwortet','answers'):c.llm===false?t('antwortet nicht','does not answer'):t('noch nicht geprüft','not checked yet'),'',
     c.time?t('geprüft ','checked ')+zAgo(c.time)+(c.seconds!=null?' · '+fmt(c.seconds,' s',1):''):t('Prüfen startet die Funktionsprüfung','Checks runs the function check'),()=>goSec('test')));
   const free=sy.mem_avail_gib,tot=sy.mem_total_gib,ml=free==null?'':free<8?'bad':free<12?'warn':'ok';
-  const mc=zCard(ml,t('Speicher','Memory'),free==null?'–':fmt(free,' GiB',1)+t(' frei',' free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
+  const mc=zCard(ml,'mem',t('Speicher','Memory'),free==null?'–':fmt(free,'',1),free==null?'':t(' GiB frei',' GiB free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
   if(free!=null&&tot){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');f.style.width=Math.max(2,Math.min(100,Math.round(100*free/tot)))+'%';
     const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
   box.appendChild(mc);
-  $('zmeta').textContent=[g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean).join(' · ');
-  // each part opens where it comes from (way.js wayA): the requests, the own speakers, the logs
-  const bg=g.background||{},td=[];
-  td.push(wayA(g.answers?(L==='en'?g.answers+' answers':g.answers+' Antworten')+(g.first_sound!=null?t(' (erster Ton im Mittel ',' (first sound median ')+fmt(g.first_sound,' s',1)+')':''):t('noch keine Antwort','no answer yet'),t('Zustand → Logs → Anfragen','Status → Logs → Requests')));
-  if(g.speakers)td.push(wayA(t('Lautsprecher ','Speakers ')+g.speakers.online+t(' von ',' of ')+g.speakers.known+t(' online',' online'),t('Ich → Lautsprecher','Me → Speakers'),t('Funktionen → Eigene Lautsprecher (ESP32)','Features → Own speakers (ESP32)')));
-  if(bg.held)td.push(wayA(t('Hintergrund hat ','Background waited ')+bg.held+t('-mal auf Sprache gewartet',' times for speech'),t('Zustand → Logs','Status → Logs')));
-  const tb=$('ztoday');tb.hidden=false;tb.textContent='';const h=document.createElement('b');h.textContent=t('Heute (24 Std.): ','Today (24 h): ');tb.append(h);
-  td.forEach((x,i)=>{if(i)tb.append(' · ');tb.append(x)})}
+  const meta=$('zmeta');meta.textContent='';
+  for(const x of [g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean)){const sp=document.createElement('span');sp.textContent=x;meta.appendChild(sp)}
+  // „Heute“: each tile opens where its number comes from (way.js wayFirst): the requests, the own speakers, the logs
+  const bg=g.background||{},tb=$('ztoday'),sk=g.speakers;tb.textContent='';
+  const req=wayFirst(t('Zustand → Logs → Anfragen','Status → Logs → Requests'));
+  tb.appendChild(zCard('acc','chat',t('Antworten','Answers'),String(g.answers||0),'',g.answers?t('ansehen unter Logs','see them in the logs'):t('noch keine Antwort','no answer yet'),null,req));
+  if(g.first_sound!=null)tb.appendChild(zCard(g.slower?'warn':'acc','timer',t('Erster Ton','First sound'),fmt(g.first_sound,'',1),' s',
+    g.slower?t('langsamer als sonst','slower than usual'):t('im Mittel','median'),null,req));
+  if(sk)tb.appendChild(zCard(!sk.known?'':sk.online<sk.known?'warn':'ok','esp',t('Lautsprecher','Speakers'),String(sk.online),t(' von ',' of ')+sk.known+t(' online',' online'),
+    sk.known&&!sk.online?t('keiner erreichbar','none reachable'):sk.online<sk.known?t('nicht alle erreichbar','not all reachable'):t('alle erreichbar','all reachable'),null,
+    wayFirst(t('Ich → Lautsprecher','Me → Speakers'),t('Funktionen → Eigene Lautsprecher (ESP32)','Features → Own speakers (ESP32)'))));
+  if(bg.held)tb.appendChild(zCard('acc2','pulse',t('Hintergrund','Background'),String(bg.held),t('× gewartet','× waited'),t('auf Sprache gewartet','waited for speech'),null,wayFirst(t('Zustand → Logs','Status → Logs'))));
+  tb.hidden=$('ztodayh').hidden=false}
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};

@@ -790,17 +790,36 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .ttry .tchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ttry .chip{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;text-align:left}
 .mewrap>.metoday{padding:0 4px 8px;border-bottom:1px solid var(--line);flex:none}
 @media (max-width:760px){#profmodal:not(.sub):not(.one) .mewrap{overflow-y:auto;-webkit-overflow-scrolling:touch}#profmodal:not(.sub):not(.one) .menav{overflow:visible;flex:none}}#profmodal.sub .mewrap>.metoday{display:none}
-/* Zustand in plain words (C3, V01.0.286): four cards, a "Heute" line, the technical details folded */
-.zmeta{font-size:12.5px;margin-top:2px}.zmeta:empty{display:none}
-.zcards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.zcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer;min-width:0}
-.zcard .zk{font-size:12.5px;color:var(--mut)}.zcard b{font-size:16px;font-weight:650}.zcard small{font-size:12.5px;color:var(--mut);overflow-wrap:anywhere}
-.zcard[data-lvl=ok] b{color:var(--ok)}.zcard[data-lvl=warn] b{color:var(--warn)}.zcard[data-lvl=bad]{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}.zcard[data-lvl=bad] b{color:var(--bad)}
-.zbar{position:relative;display:block;width:100%;height:6px;border-radius:99px;background:var(--line);margin-top:4px}.zbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+/* Zustand in plain words (C3, V01.0.286), tiles since the plan „Zustand-Übersicht“ 1: chips under the sentence, „Jetzt“
+   and „Heute“ as tiles (icon, large value, colour bar), the other cards as „Bereiche“ with an icon, details folded */
+.zht{flex:1;min-width:0}.zgo{flex:none;margin-left:auto}.zgo[hidden]{display:none}
+.zmeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}.zmeta:empty{display:none}
+.zmeta span{font-size:12px;padding:2px 9px;border-radius:99px;background:color-mix(in srgb,var(--line) 70%,var(--card));color:var(--mut)}
+.zsec{font-size:12.5px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin:18px 2px 9px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.zsec small{text-transform:none;letter-spacing:0;font-weight:400;font-size:12px}.zsec[hidden]{display:none}
+#mon:not(:has(#zareas>.card:not([hidden]))) .zareash{display:none}
+.zcards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:6px}.zcards[hidden]{display:none}
+.zcard{--zc:var(--mut);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:13px 14px 12px 17px;border:1px solid var(--line);border-radius:16px;
+  background:var(--card);color:var(--fg);font:inherit;text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:transform .12s,border-color .15s}
+a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-color:color-mix(in srgb,var(--zc) 45%,var(--line));transform:translateY(-1px)}
+.zcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--zc)}
+.zcard[data-lvl=ok]{--zc:var(--ok)}.zcard[data-lvl=warn]{--zc:var(--warn)}.zcard[data-lvl=bad]{--zc:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.zcard[data-lvl=acc]{--zc:var(--acc)}.zcard[data-lvl=acc2]{--zc:var(--acc2)}
+.zhd{display:flex;align-items:center;gap:8px;width:100%;min-width:0}.zcard .zk{font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zbub{width:30px;height:30px;flex:none;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--zc,var(--acc)) 14%,transparent);color:var(--zc,var(--acc))}
+.zico{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.zch{width:16px;height:16px;flex:none;margin-left:auto;fill:none;stroke:var(--mut);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.6}
+.zcard>b{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.15;margin-top:6px;overflow-wrap:anywhere}.zcard[data-lvl=bad]>b{color:var(--bad)}
+.zcard>b .zu{font-size:14px;font-weight:600;color:var(--mut);margin-left:2px}
+.zcard>small{font-size:12.5px;color:var(--mut);overflow-wrap:anywhere}
+.zbar{position:relative;display:block;width:100%;height:6px;border-radius:99px;background:var(--line);margin-top:6px}.zbar i{display:block;height:100%;border-radius:99px;background:var(--zc)}
 .zbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--bad);border-radius:2px}
-.ztoday{font-size:14px;color:var(--mut);margin:0 2px 14px}.ztoday b{color:var(--fg);font-weight:600}
+#zneed{border-left:4px solid var(--warn)}#zneed:has(.pill.bad){border-left-color:var(--bad)}#zneed{--zc:var(--warn)}#zneed:has(.pill.bad){--zc:var(--bad)}
+.zareas{columns:2 380px;column-gap:12px}.zareas>.card{break-inside:avoid;margin:0 0 12px}
+#zneed>h2,.zareas>.card>h2{display:flex;align-items:center;gap:10px}
 details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:650;font-size:15px;padding:8px 2px;color:var(--mut)}details.ztech[open]>summary{margin-bottom:10px;color:var(--fg)}
-@media (max-width:760px){.zcards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.zcards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.zcard>b{font-size:21px}.zgo{display:none}.zcard{padding:12px 11px 11px 14px}
+  .zhd{gap:6px}.zcard .zbub{width:26px;height:26px;border-radius:8px}.zcard .zk{white-space:normal;overflow-wrap:anywhere}.zch{display:none}#zneed .zrow>span:nth-child(2){hyphens:auto;overflow-wrap:anywhere}}
 /* Rückgängig above the admin log (C5, V01.0.286) */
 .lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .zrow span{font-size:13.5px}
 /* Notaus (notaus.js, plan plaene/notaus.md): red button, band on every page, the whole page in stage 3 or from outside */

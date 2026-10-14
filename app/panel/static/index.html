@@ -68,10 +68,14 @@
     <div class="mut" style="margin-top:6px">Nur Art und Anzahl seit dem Auslösen, nie Inhalte.</div></div>
   <div class="card znotaus" id="znmine" hidden><h2>Mein Notaus von Profilen</h2><div class="mut">Diese Profile haben nur ihren eigenen Teil stillgelegt. Aufheben kann das Profil selbst mit PIN, oder du hier.</div><div id="znmrows"></div>
     <div class="row" id="znmpwbox" hidden style="margin-top:6px"><input type="password" id="znmpw" autocomplete="current-password" placeholder="Panel-Passwort" aria-label="Panel-Passwort"></div><span id="znmmsg" class="fh"></span></div>
-  <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="mut zmeta" id="zmeta"></div></div></div>
-  <div class="zcards" id="zcards"></div>
-  <div class="ztoday" id="ztoday" hidden></div>
+  <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div class="zht"><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="zmeta" id="zmeta"></div></div><button class="b zgo" id="zgo" type="button" hidden>Zum offenen Punkt</button></div>
   <div class="card zneed" id="zneed" hidden><h2>Braucht dich</h2><div id="zlist"></div></div>
+  <h3 class="zsec">Jetzt</h3>
+  <div class="zcards" id="zcards"></div>
+  <h3 class="zsec" id="ztodayh" hidden>Heute <small>letzte 24 Std. · antippen öffnet die Stelle</small></h3>
+  <div class="zcards ztoday" id="ztoday" hidden></div>
+  <h3 class="zsec zareash">Bereiche</h3>
+  <div class="zareas" id="zareas">
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
   <div class="card zneed" id="zsvc" hidden><h2>Dienste</h2><div id="zsvclist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsvccheck">Jetzt prüfen</button><span class="mut" id="zsvcmsg"></span></div><div class="mut" style="margin-top:6px">Nur ob ein Dienst antwortet, nie Inhalte, Adressen oder Fehlertexte. Ein Haken weg: der Dienst wird nicht geprüft und niemand bekommt Hinweise dazu.</div></div>
@@ -83,6 +87,7 @@
   <div class="card zneed" id="zstore" hidden><h2>Kopie meiner Daten</h2><div id="zstorelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Art, Zustand, Größen und Anzahlen, nie Dateinamen oder Inhalte.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
+  </div>
   <div id="memnote"></div>
   <details class="ztech" id="ztech"><summary>Technische Details</summary>
     <div class="grid">

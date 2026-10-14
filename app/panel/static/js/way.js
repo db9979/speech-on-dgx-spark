@@ -89,12 +89,12 @@ async function wayGo(text){let last=null;
     if(last&&r.end<=last.end&&r.steps<=last.steps)return;
     await r.hit.go();last=r;if(r.steps>=r.want&&r.quoted!==false)return;
     await wayWait(400)}}
-// one link: text that opens the way (way.js turns hints into it, a count builds it with wayA)
+// one link: text that opens the way (way.js turns hints into it, a tile under Zustand holds it)
 function wayEl(text,way){const l=document.createElement('a');l.href='#';l.className='wayl';l.dataset.way=way;l.textContent=text;
   l.title=t('Dorthin springen','Go there');return l}
-// a count or part of a line that stands for a place (Zustand → Monitoring „Heute“): a link to the first way the viewer
-// can open (the own page first, then the switch), else text
-function wayA(text,...ways){const w=ways.find(x=>x&&wayParse(x,0));return w?wayEl(text,w):document.createTextNode(text)}
+// a count that stands for a place (Zustand → Monitoring „Heute“ tiles): the first way the viewer can open (the own
+// page first, then the switch), else '' (the tile is no link then)
+function wayFirst(...ways){return ways.find(x=>x&&wayParse(x,0))||''}
 // Zahlen und Zeilen, die für einen Ort stehen (Dominik 14.10.2026: „sollte klickbar sein und direkt hinbringen“):
 // a row (.zrow, .znrow, a count .kn-tn on a Technik page) with data-way, or in a card of WAY_CARDS, opens that place. A click on a control in the row
 // stays the control's; a row without controls is a link for the keyboard too. Only counts and names move, never content.

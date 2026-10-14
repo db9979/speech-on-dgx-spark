@@ -272,7 +272,7 @@ ROWS_OWN = {"zneed": "jede Zeile hat ihren Knopf zum Ort",
 
 
 def count_ways():
-    """{(de, en)}: the ways that counts and rows open (way.js WAY_CARDS, data-way, wayA)."""
+    """{(de, en)}: the ways that counts and rows open (way.js WAY_CARDS, data-way, wayFirst)."""
     pair = re.compile(r"""(?:\[|t\()'([^']*→[^']*)','([^']*→[^']*)'""")
     out = set()
     for f in glob.glob(os.path.join(PANEL, "static", "js", "*.js")):
@@ -281,7 +281,7 @@ def count_ways():
         if block:
             out |= set(pair.findall(block.group(1)))
         for line in src.splitlines():
-            if "data-way=" in line or "wayA(" in line:
+            if "data-way=" in line or "wayFirst(" in line:
                 out |= set(pair.findall(line))
     return out
 
@@ -496,9 +496,11 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("MYST_ON=true;zBg()")   # the own page Mein Zustand is on for this profile
                 await self.until(pg, "document.querySelectorAll('#zbglist .zrow.wayrow[role=link]').length===3")
                 await pg.evaluate("zCards({glance:{answers:10,first_sound:4.7,speakers:{online:0,known:2},background:{held:3}},services:{},system:{},check:{}})")
-                parts = await pg.evaluate("[...$('ztoday').childNodes].filter(n=>n.nodeName!=='B'&&n.textContent.trim()!=='·').map(n=>n.nodeName+':'+(n.dataset?n.dataset.way:n.textContent))")
-                # the speakers: the own page Lautsprecher, or its switch while that page is off (here)
-                self.assertEqual(parts, ["A:Zustand → Logs → Anfragen", "A:Funktionen → Eigene Lautsprecher (ESP32)", "A:Zustand → Logs"])
+                parts = await pg.evaluate("[...$('ztoday').children].map(n=>n.nodeName+':'+(n.dataset.way||''))")
+                # one tile per count, each a link (V01.0.546 links, tiles since „Zustand-Übersicht“); the speakers: the
+                # own page Lautsprecher, or its switch while that page is off (here)
+                self.assertEqual(parts, ["A:Zustand → Logs → Anfragen", "A:Zustand → Logs → Anfragen",
+                                         "A:Funktionen → Eigene Lautsprecher (ESP32)", "A:Zustand → Logs"])
                 await pg.click("#zbglist .zrow.wayrow >> nth=0")
                 await self.until(pg, "getComputedStyle($('prof')).display!=='none'")
                 await pg.evaluate("goSec('mon')")

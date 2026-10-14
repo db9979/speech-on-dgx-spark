@@ -373,18 +373,21 @@ def _status(cfg, healths):
 
 def glance(cfg):
     """Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286): version, last backup, the last live check
-    (does the language model answer?) and a "Heute" line. Only times and counts, never what was said."""
+    (does the language model answer?) and the "Heute" tiles; "slower" is latency's fixed rule (clearly slower than the
+    week), which colours the first-sound tile. Only times and counts, never what was said."""
     import latency
     import vorrang
     from core import app_version
     live = health.last_live() or {}
     llm = next((x for x in live.get("steps") or [] if x.get("name") == "llm"), None)
     last = backup.listing()
-    day = latency.summary()["day"] or {}
+    lat = latency.summary()
+    day = lat["day"] or {}
     out = {"version": app_version(), "backup": last[0]["created"] if last else None,
            "check": {"time": live.get("t"), "llm": None if llm is None else bool(llm.get("ok")),
                      "seconds": llm.get("seconds") if llm else None},
-           "answers": day.get("n", 0), "first_sound": day.get("median"), "background": vorrang.today()}
+           "answers": day.get("n", 0), "first_sound": day.get("median"), "slower": lat["warn"] is not None,
+           "background": vorrang.today()}
     if features.admin_on("esp32", cfg.get("chat", {})):
         import esp32
         out["speakers"] = {"known": len(esp32.clients()), "online": len(esp32._live)}
