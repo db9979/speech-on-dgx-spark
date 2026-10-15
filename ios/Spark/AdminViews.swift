@@ -234,20 +234,32 @@ struct StatusView: View {
 struct ModelsView: View {
     @State private var d: [String: Any] = [:]
     @State private var error: String?
+    @State private var ask: [String: String]?      // stage E4: {art, id, name} to switch, or {art, zurueck} to bring back
 
     var body: some View {
+        let w = d["wechsel"] as? [String: Any] ?? [:]
+        let an = w["an"] as? Bool == true, laeuft = w["laeuft"] as? Bool == true
+        let alte = w["alte"] as? [String: Any] ?? [:]
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if laeuft {
+                Text(SparkAPI.way(String(localized: "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs."))).foregroundStyle(.secondary)
+            }
             let b = d["budget"] as? [String: Any] ?? [:]
             Section {
                 LabeledContent("Feste Modelle") { Text(verbatim: Self.gib(b["fest"])) }
                 LabeledContent("Modelle bei Bedarf") { Text(verbatim: Self.gib(b["bedarf"])) }
                 LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
             } header: { Text("Speicher-Budget") } footer: {
-                Text("Nur zum Ansehen. Messen auf dem Spark: sudo speech-spark modelle messen")
+                if an {
+                    Text("Wechseln: beim Modell auf „Wechseln“ tippen. Messen auf dem Spark: sudo speech-spark modelle messen")
+                } else {
+                    Text(SparkAPI.way(String(localized: "Zum Wechseln Funktionen → Modelle wechseln einschalten. Messen auf dem Spark: sudo speech-spark modelle messen")))
+                }
             }
             ForEach(Array((d["arten"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, a in
                 let rows = a["modelle"] as? [[String: Any]] ?? []
+                let art = a["art"] as? String ?? ""
                 if !rows.isEmpty {
                     Section {
                         ForEach(Array(rows.enumerated()), id: \.offset) { _, m in
@@ -257,8 +269,16 @@ struct ModelsView: View {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: m["name"] as? String ?? "")
                                     if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
+                                    if an && !laeuft && m["waehlbar"] as? Bool == true && m["aktiv"] as? Bool != true {
+                                        Button("Wechseln") {
+                                            ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""]
+                                        }.font(.caption).buttonStyle(.borderless)
+                                    }
                                 }
                             }
+                        }
+                        if an, let alt = alte[art] as? [String: Any], (alt["tage_frei"] as? Int ?? 0) > 0, !laeuft {
+                            Button("Vorheriges Modell zurückholen") { ask = ["art": art, "zurueck": "1"] }
                         }
                     } header: { Text(verbatim: a["name"] as? String ?? "") }
                 }
@@ -267,11 +287,31 @@ struct ModelsView: View {
         .navigationTitle("Modelle")
         .refreshable { await load() }
         .task { await load() }
+        .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : "Modell wechseln?"),
+                            isPresented: Binding(get: { ask != nil }, set: { if !$0 { ask = nil } }), titleVisibility: .visible) {
+            Button("Ja") { if let a = ask { Task { await send(a) } } }
+        } message: {
+            Text("Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.")
+        }
     }
 
     private func load() async {
         do { d = try await AdminSession.shared.object("GET", "api/admin/modelle", query: ["lang": UsageView.de ? "de" : "en"]); error = nil }
         catch { self.error = error.localizedDescription }
+    }
+
+    private func send(_ a: [String: String]) async {
+        let lang = ["lang": UsageView.de ? "de" : "en"]
+        do {
+            if a["zurueck"] != nil {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/zurueck", query: lang, body: ["art": a["art"] ?? ""])
+            } else {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/wechseln", query: lang,
+                                                         body: ["art": a["art"] ?? "", "id": a["id"] ?? ""])
+            }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        ask = nil
     }
 
     static func gib(_ v: Any?) -> String {

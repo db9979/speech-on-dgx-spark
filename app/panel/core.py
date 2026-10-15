@@ -33,7 +33,7 @@ UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine":
                           "tts-design": "speech-spark-tts-design"})
 # the own language model (plan eigene-modelle, E2/E3): only `speech-spark modelle llm uebernehmen|zurueck` switches them
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
-LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update", **OWN_LLM_UNITS)
+LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update", wechsel="speech-spark-wechsel", **OWN_LLM_UNITS)
 PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # asr keys the vLLM engine reads; changing them restarts it
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")

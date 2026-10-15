@@ -539,4 +539,6 @@ class Seite(unittest.TestCase):
         self.assertIn('"Modelle": "Models"', en)
         self.assertNotIn("onclick=", js.replace(".onclick=", ""))
         self.assertNotIn("fetch(", js)
-        self.assertNotRegex(js, r"method:\s*'(POST|PUT|DELETE)'")   # nothing here changes anything
+        # stage E4: the page changes only through the two switch endpoints (behind Funktionen → Modelle wechseln)
+        self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))), ["/api/admin/modelle/wechseln", "/api/admin/modelle/zurueck"])
+        self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 1)

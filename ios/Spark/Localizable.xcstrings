@@ -7661,12 +7661,72 @@
         }
       }
     },
-    "Nur zum Ansehen. Messen auf dem Spark: sudo speech-spark modelle messen": {
+    "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only to look at. Measure on the Spark: sudo speech-spark modelle messen"
+            "value": "A model switch is running. Progress under Status → Logs."
+          }
+        }
+      }
+    },
+    "Wechseln: beim Modell auf „Wechseln“ tippen. Messen auf dem Spark: sudo speech-spark modelle messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switching: tap “Switch” next to a model. Measure on the Spark: sudo speech-spark modelle messen"
+          }
+        }
+      }
+    },
+    "Zum Wechseln Funktionen → Modelle wechseln einschalten. Messen auf dem Spark: sudo speech-spark modelle messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To switch, turn on Features → Switch models. Measure on the Spark: sudo speech-spark modelle messen"
+          }
+        }
+      }
+    },
+    "Vorheriges Modell zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back the previous model"
+          }
+        }
+      }
+    },
+    "Vorheriges Modell zurückholen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back the previous model?"
+          }
+        }
+      }
+    },
+    "Modell wechseln?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch the model?"
+          }
+        }
+      }
+    },
+    "Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark loads and checks the model; the old one stays 7 days to bring back."
           }
         }
       }

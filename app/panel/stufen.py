@@ -109,6 +109,8 @@ LIST = {
     ("POST", "/api/admin/esp32/fetch"): (CONFIRM, "Spark", "Lautsprecher-Firmware holen", "Fetch speaker firmware"),
     ("POST", "/api/admin/offsite/now"): (CONFIRM, "Daten", "Sicherung jetzt nach außen schicken", "Send a backup offsite now"),
     ("POST", "/api/update/rollback"): (CONFIRM, "Spark", "Zurück zur vorigen Version", "Back to the previous version"),
+    ("POST", "/api/admin/modelle/wechseln"): (CONFIRM, "Spark", "Ein Modell wechseln", "Switch a model"),
+    ("POST", "/api/admin/modelle/zurueck"): (CONFIRM, "Spark", "Das vorige Modell zurückholen", "Bring back the previous model"),
 }
 
 

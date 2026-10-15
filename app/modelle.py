@@ -827,6 +827,153 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
     return True, "ok"
 
 
+# ---------------------------------------------------------------- stage E4: switching models
+WECHSEL = os.path.join(STATE, "modelle-wechsel.json")   # per kind the model before the last switch, for 7 days
+WUNSCH = os.path.join(STATE, "modelle-wunsch.json")     # the panel's wish for the root unit speech-spark-wechsel
+ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
+TAUSCH = ("llm", "sehen", "asr", "tts", "bild")          # the kinds that switch (small CPU models come with features)
+INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild"}   # kinds install.sh sets up (wahl = its short key)
+ENTFERNBAR = ("vllm", "qwen-asr", "qwen-tts")           # models that live in the Hugging Face cache
+
+
+def gesamt_gib():
+    """The unified memory of this machine in GiB."""
+    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2**30
+
+
+def jetzt_id(art, cfg, kat=None):
+    """The catalog id of the model this configuration runs for a kind that switches, "" when none runs."""
+    kat = katalog() if kat is None else kat
+    c = cfg.get("llm", {})
+    if art == "llm":
+        return c.get("modell", "") if c.get("enabled") and c.get("modell") in kat else ""
+    if art == "sehen":
+        return c.get("sehen_modell", "") if c.get("sehen_modell") in kat else ""
+    if art == "asr":
+        a = cfg.get("asr", {})
+        if not a.get("enabled"):
+            return ""
+        m = kat.get("parakeet-primeline") if a.get("recognizer") == "parakeet" else zum_repo(a.get("model"), kat)
+    elif art == "tts":
+        t = cfg.get("tts", {})
+        m = zum_repo(t.get("model"), kat) if t.get("enabled") else None
+    elif art == "bild":
+        img = cfg.get("image", {})
+        m = zur_variante("bild", img.get("variant"), kat) if img.get("enabled") else None
+    else:
+        raise Fehler("art")
+    return m["id"] if m else ""
+
+
+def mit_wechsel(cfg, art, m):
+    """A copy of the configuration as it would be after the switch (for the budget; llm and sehen also to write)."""
+    c = json.loads(json.dumps(cfg))
+    if art in ROLLEN:
+        c.setdefault("llm", {})[ROLLEN[art][0]] = m["id"]
+    elif art == "asr":
+        a = c.setdefault("asr", {})
+        a["recognizer"] = "parakeet" if m["engine"] == "onnx-cpu" else "qwen"
+        if m["repo"] and m["engine"] != "onnx-cpu":
+            a["model"] = m["repo"]
+    elif art == "tts":
+        c.setdefault("tts", {})["model"] = m["repo"]
+    elif art == "bild":
+        c.setdefault("image", {})["variant"] = m["wahl"]
+    return c
+
+
+def wechsel_pruefen(art, mid, cfg, total_gib, lanes=(), kat=None, messung=None):
+    """The fixed rules of a switch (the panel decides, never a model): a kind that switches, an entry of that kind from
+    the catalog, for an own engine a pinned commit (catalog or measured), for the others an entry install.sh offers,
+    the language model only after the move (`modelle llm uebernehmen`), not the one running, and the budget must not
+    end up too tight. Returns the entry; raises Fehler with a fixed word."""
+    kat = katalog() if kat is None else kat
+    if art not in TAUSCH:
+        raise Fehler("art")
+    m = eintrag(mid, kat)
+    if m["art"] != art:
+        raise Fehler("art")
+    if art in ROLLEN:
+        if m["engine"] != "vllm":
+            raise Fehler("engine")
+        fest_revision(m, messung)
+        if art == "llm" and not cfg.get("llm", {}).get("enabled"):
+            raise Fehler("aus")
+    elif not m.get("wahl"):
+        raise Fehler("wahl")
+    if jetzt_id(art, cfg, kat) == mid:
+        raise Fehler("schon")
+    if budget(mit_wechsel(cfg, art, m), total_gib, lanes, kat)["regel"] == "zu_knapp":
+        raise Fehler("budget")
+    return m
+
+
+def wechsel_merken(art, alt, neu, now=None, path=WECHSEL):
+    data = read_json(path, {})
+    data[art] = {"alt": alt, "neu": neu, "zeit": int(time.time() if now is None else now)}
+    write_json(path, data, indent=1)
+
+
+def zurueck_ziel(art, now=None, path=WECHSEL):
+    """The model before the last switch of this kind, while the 7 days run."""
+    now = time.time() if now is None else now
+    w = read_json(path, {}).get(art) or {}
+    if not w.get("alt"):
+        raise Fehler("keins")
+    if now - float(w.get("zeit", 0)) > ALT_TAGE * 86400:
+        raise Fehler("frist")
+    return w["alt"]
+
+
+def alte(cfg, now=None, path=WECHSEL, kat=None):
+    """Per kind the model before the last switch: {art: {id, tage_frei}} (days left to bring it back, 0 = gone by)."""
+    now = time.time() if now is None else now
+    out = {}
+    for art, w in read_json(path, {}).items():
+        if art in TAUSCH and isinstance(w, dict) and w.get("alt") and w["alt"] != jetzt_id(art, cfg, kat):
+            out[art] = {"id": w["alt"], "tage_frei": max(0, ALT_TAGE - int((now - float(w.get("zeit", 0))) // 86400))}
+    return out
+
+
+def entfernbar(mid, cfg, now=None, path=WECHSEL, kat=None, hf_home=None):
+    """The cache folder of a catalog model that may be removed: lives in the Hugging Face cache, no kind runs it, not
+    within the 7 days to bring it back, never qwen38's own model. Returns the folder; raises Fehler."""
+    kat = katalog() if kat is None else kat
+    m = eintrag(mid, kat)
+    if m["engine"] not in ENTFERNBAR or not m["repo"]:
+        raise Fehler("art")
+    if any(jetzt_id(a, cfg, kat) == mid for a in TAUSCH) or any(x["id"] == mid for x in aktiv(cfg, 0, (), kat)):
+        raise Fehler("aktiv")
+    w = read_json(path, {}).get(m["art"]) or {}
+    if w.get("alt") == mid and (time.time() if now is None else now) - float(w.get("zeit", 0)) <= ALT_TAGE * 86400:
+        raise Fehler("frist")
+    ordner = hf_ordner(m, hf_home)
+    if not os.path.isdir(ordner) or os.path.islink(ordner):
+        raise Fehler("fehlt")
+    return ordner
+
+
+def wunsch_schreiben(art, was, path=WUNSCH):
+    """The panel's wish (switch to an id, or "zurueck"): checked again by root before anything happens."""
+    if art not in TAUSCH or not (was == "zurueck" or ID.match(str(was))):
+        raise Fehler("wunsch")
+    write_json(path, {"art": art, "was": was, "zeit": int(time.time())}, indent=1)
+
+
+def wunsch_nehmen(path=WUNSCH, now=None):
+    """Root takes the wish once (the file is gone afterwards); a wish older than 10 minutes counts as none."""
+    data = read_json(path, {})
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+    now = time.time() if now is None else now
+    art, was = str(data.get("art", "")), str(data.get("was", ""))
+    if art not in TAUSCH or not (was == "zurueck" or ID.match(was)) or not 0 <= now - float(data.get("zeit", 0)) <= 600:
+        raise Fehler("wunsch")
+    return art, was
+
+
 # ---------------------------------------------------------------- command line
 def _opt(args, name, default=""):
     return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else default
@@ -852,9 +999,9 @@ def cli(args, log=print):
             return 0
         if cmd == "feld":
             m = eintrag(args[1])
-            if args[2] not in ("repo", "revision"):
+            if args[2] not in ("repo", "revision", "wahl"):
                 raise Fehler("feld")
-            log(m[args[2]])
+            log(m.get(args[2]) or "")
             return 0
         if cmd == "messliste":
             log(" ".join(messliste(args[1:])))
@@ -866,6 +1013,11 @@ def cli(args, log=print):
             return 0
         if cmd == "vorbereiten":
             m = eintrag(args[1])
+            rev = _opt(args, "--revision")
+            if rev:                              # a switch: exactly the commit fest_revision() pins (stage E4)
+                if not REV.match(rev) or rev != fest_revision(m):
+                    raise Fehler("revision")
+                m = dict(m, revision=rev)
             try:
                 rev = vorbereiten(m)
             except Fehler:
@@ -925,6 +1077,38 @@ def cli(args, log=print):
         if cmd == "umzug-modell":
             m, _ = rolle("llm", load_config())
             log(f"{m['id']} {m['repo']} {m['revision'] or fest_revision(m)}")
+            return 0
+        if cmd == "jetzt":
+            log(jetzt_id(args[1], load_config()) or "-")
+            return 0
+        if cmd == "wechsel-pruefen":
+            # root checks again what the panel checked (the panel adds the running qwen38 lanes to the budget)
+            m = wechsel_pruefen(args[1], args[2], load_config(), gesamt_gib())
+            log(f"wahl {m['wahl']}" if args[1] in INSTALL else f"vllm {m['repo']} {fest_revision(m)}")
+            return 0
+        if cmd == "wechsel-schalten":
+            if args[1] not in ROLLEN:
+                raise Fehler("art")
+            _schreib(mit_wechsel(_roh(), args[1], eintrag(args[2])))
+            log(f"modelle: schalter {args[1]} {args[2]}")
+            return 0
+        if cmd == "wechsel-merken":
+            if args[1] not in TAUSCH or not ID.match(args[3]) or not (args[2] == "-" or ID.match(args[2])):
+                raise Fehler("aufruf")
+            if args[2] != "-":
+                wechsel_merken(args[1], args[2], args[3])
+            return 0
+        if cmd == "zurueck-ziel":
+            log(zurueck_ziel(args[1]))
+            return 0
+        if cmd == "entfernbar":
+            log(entfernbar(args[1], load_config()))
+            return 0
+        if cmd == "wunsch-schreiben":
+            wunsch_schreiben(args[1], args[2])
+            return 0
+        if cmd == "wunsch-nehmen":
+            log(" ".join(wunsch_nehmen()))
             return 0
         if cmd == "ergebnis":
             data = read_json(MESSUNG, {})

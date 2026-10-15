@@ -207,6 +207,7 @@
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Wartungspause</b><span>Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe hält der Spark kurz an: fester Satz statt Fehler, Hintergrund wartet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung"><i></i></label></div>
       <div class="setrow" data-show="chat.wartung" style="margin-left:18px"><div class="lbl"><b>Automatisch bei Neustart</b><span>Startet ein Modell neu (auch beim Umschalten in qwen38), pausiert der Spark diesen Teil selbst, bis er wieder antwortet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung_auto"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Modelle wechseln</b><span>Admins wechseln unter Zustand → Modelle das Modell einer Art; das alte bleibt 7 Tage zum Zurückholen.</span></div><label class="tgl"><input type="checkbox" id="chat.modelle_wechseln"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
       <div class="setrow" data-show="chat.bewerten" style="margin-left:36px"><div class="lbl"><b>Rückmeldung, wenn es behoben ist</b><span>Wer 👎 gemeldet hat, hört nach der Nachkontrolle, dass eine Änderung geholfen hat.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten_back"><i></i></label></div>
@@ -889,7 +890,7 @@
 </div></section>
 <section id="models"><div class="card ld-box" id="mdbox">
   <div class="ld-head"><h2>Modelle</h2></div>
-  <div class="pintro">Welche Modelle der Spark kennt, welche gerade laufen, wie viel Speicher sie brauchen und was die letzte Messung ergab. Nur zum Ansehen.</div>
+  <div class="pintro">Welche Modelle der Spark kennt, welche gerade laufen, wie viel Speicher sie brauchen und was die letzte Messung ergab. Mit Funktionen → Modelle wechseln wechselt ein Admin hier das Modell einer Art.</div>
   <div id="mdmain"></div>
   <div class="mut" id="mdmsg"></div>
 </div></section>
@@ -906,7 +907,7 @@
     <div class="lsum" id="logsum"></div>
     <div class="lasterr" id="lasterr" hidden></div>
     <div class="lchips" id="logchips"></div>
-    <div class="lbar" id="logsvcbar" hidden><select id="logsvc" class="lsel"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="llmtor">LLM-Tor</option><option value="llm">LLM-Engine</option><option value="sehen">Bildverständnis</option><option value="panel">Panel</option></select></div>
+    <div class="lbar" id="logsvcbar" hidden><select id="logsvc" class="lsel"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="llmtor">LLM-Tor</option><option value="llm">LLM-Engine</option><option value="sehen">Bildverständnis</option><option value="wechsel">Modellwechsel</option><option value="panel">Panel</option></select></div>
     <div class="lbar"><input id="logq" class="lsearch" type="search" placeholder="In der Ausgabe suchen …" autocomplete="off"><select id="loglines" class="lsel"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
       <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logrp" data-on="rpOpen" hidden>Meldungen</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lhead"><span id="loghead"></span><span id="logcount"></span></div>

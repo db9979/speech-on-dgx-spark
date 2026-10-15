@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.595** Own models stage E4: switch models in the panel (admin switch) and with `speech-spark modelle wechseln`
 - **V01.0.594** Companion morning start sorted like the chat's daily briefing (appointments, weather, mails as lists; needs a new companion build)
 - **V01.0.593** Fix: model measurement and own engines compile at most 4 kernels at a time (no more out of memory)
 - **V01.0.592** Own models stage E3: move to the own language model and back, qwen38 removed only on command
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.588** Fix: the model check follows the shared blob store of newer huggingface_hub
 - **V01.0.587** Fix: `speech-spark modelle messen` starts its unit through bash
 - **V01.0.586** Own models stage E0: model catalog and `speech-spark modelle messen`
-- **V01.0.585** Cleanup step 9: no check wrappers, PROJECT LOCK rule
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

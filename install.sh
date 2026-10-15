@@ -797,7 +797,8 @@ fi
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
     done
   done
-  printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update\n'
+  printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
+  printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel\n'   # stage E4: takes the panel's checked wish
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
@@ -1084,6 +1085,21 @@ Wants=network-online.target
 LogNamespace=speech-spark
 Type=oneshot
 ExecStart=$PREFIX/src/update.sh
+TimeoutStartSec=2h
+EOF
+
+# Stage E4: switches one model (speech-spark modelle wechseln, or the panel's Funktionen → Modelle wechseln). It takes
+# only the wish file modelle.py wrote and checks every rule again as root; nothing else can be passed in.
+cat >/etc/systemd/system/speech-spark-wechsel.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: switch one model
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle wunsch-intern
 TimeoutStartSec=2h
 EOF
 # ---------------------------------------------------------------- logs

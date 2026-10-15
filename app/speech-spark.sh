@@ -173,7 +173,8 @@ cmd_logs() {
     asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen, umzug or all" ;;
+    wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen, umzug, wechsel or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -255,6 +256,7 @@ MESS_UNIT=speech-spark-messen
 MESS_ENGINE=speech-spark-messen-engine
 MESS_PORT=31016
 UMZUG_UNIT=speech-spark-umzug
+WECHSEL_UNIT=speech-spark-wechsel   # stage E4: a fixed root unit; the panel and the command line leave a wish for it
 OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen)
 mem_gib() { awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo; }
 
@@ -462,6 +464,103 @@ run_umzug() {  # $1 = uebernehmen|zurueck: in its own unit, so a closed terminal
   sleep 1; kill "$follow" 2>/dev/null || true
 }
 
+# Stage E4 (plan plaene/eigene-modelle.md): switch the model of one kind. Runs only inside speech-spark-wechsel, which
+# takes the wish the panel (Funktionen → Modelle wechseln) or `modelle wechseln` left; modelle.py checks every rule
+# again here (catalog only, pinned commit, budget). asr, tts and bild go through install.sh with its short key; llm and
+# sehen download, check, switch the configuration and restart; the language model passes a round trip or goes back.
+install_flag() {
+  case "$1" in asr) echo --asr ;; tts) echo --tts ;; bild) echo --bild ;; *) return 1 ;; esac
+}
+
+wechsel() {  # $1 = art, $2 = id
+  local art=$1 mid=$2 alt out kind repo rev commit pause=0 ok=0
+  out=$(as_panel_user ../modelle.py wechsel-pruefen "$art" "$mid") \
+    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt"; return 1; }
+  read -r kind repo rev <<<"$(tail -n1 <<<"$out")"
+  alt=$(as_panel_user ../modelle.py jetzt "$art")
+  echo "modelle: wechsel $art startet"
+  if [ "$kind" = wahl ]; then
+    if "$PREFIX/src/install.sh" "$(install_flag "$art")" "$repo" --yes --no-smoke; then
+      ok=1
+    elif [ "$alt" != - ]; then
+      echo "modelle: wechsel $art fehler, zurueck"
+      "$PREFIX/src/install.sh" "$(install_flag "$art")" "$(as_panel_user ../modelle.py feld "$alt" wahl)" --yes --no-smoke \
+        || echo "modelle: wechsel $art zurueck fehler"
+    fi
+  else
+    [ -x "$PREFIX/venv-$(as_panel_user ../modelle.py venv "$mid")/bin/vllm" ] \
+      || { echo "modelle: wechsel $art abgelehnt venv fehlt (sudo ./install.sh --llm, für Kolibri --kolibri)"; return 1; }
+    hf_from_qwen38 "$mid" "$repo" "$rev"
+    out=$(as_panel_user ../modelle.py vorbereiten "$mid" --revision "$rev") || true
+    commit=$(tail -n1 <<<"$out")
+    [ "$commit" = "$rev" ] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; return 1; }
+    if [ "$art" = llm ] && [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+      as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: wechsel ohne wartungspause"
+    fi
+    as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; return 1; }
+    if [ "$art" = sehen ]; then
+      systemctl stop speech-spark-sehen.service || true    # on demand: the next picture starts the new model
+      ok=1
+    else
+      systemctl stop speech-spark-llm.service || true
+      mem_settle
+      systemctl start speech-spark-llm.service || true
+      if as_panel_user ../modelle.py rundlauf; then
+        ok=1
+      else
+        echo "modelle: wechsel llm fehler, zurueck"
+        as_panel_user ../modelle.py wechsel-schalten llm "$alt" || echo "modelle: wechsel llm zurueck fehler"
+        systemctl restart speech-spark-llm.service || true
+      fi
+    fi
+    [ "$pause" = 1 ] && { as_panel_user wartung.py weiter || true; }
+  fi
+  [ "$ok" = 1 ] || { echo "modelle: wechsel $art zurueckgenommen"; return 1; }
+  as_panel_user ../modelle.py wechsel-merken "$art" "$alt" "$mid" || true
+  echo "modelle: umgeschaltet $art $mid"
+}
+
+cmd_wunsch_intern() {
+  local art was out
+  out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
+  read -r art was <<<"$(tail -n1 <<<"$out")"
+  [[ "${was:-}" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: wechsel abgelehnt wunsch"; return 1; }
+  if [ "$was" = zurueck ]; then
+    out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
+    was=$(tail -n1 <<<"$out")
+    [[ "$was" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] && [[ "$was" != modelle:* ]] \
+      || { grep '^modelle: ' <<<"$out" || true; echo "modelle: zurueck $art abgelehnt"; return 1; }
+    echo "modelle: zurueck $art auf $was"
+  fi
+  wechsel "$art" "$was"
+}
+
+run_wechsel() {  # $1 = art, $2 = id or zurueck: the wish, then the fixed unit (keeps running when the terminal closes)
+  local follow rc=0
+  systemctl cat "$WECHSEL_UNIT.service" >/dev/null 2>&1 || die "the unit is missing; run sudo speech-spark update first"
+  for u in "$WECHSEL_UNIT" "$UMZUG_UNIT" "$MESS_UNIT" speech-spark-update; do
+    systemctl is-active -q "$u" && die "$u is running; switch afterwards"
+  done
+  as_panel_user ../modelle.py wunsch-schreiben "$1" "$2" || die "speech-spark modelle wechseln llm|sehen|asr|tts|bild <id> (ids: speech-spark modelle liste)"
+  echo "Wechsel läuft (auch wenn du dieses Fenster schließt): sudo speech-spark logs wechsel"
+  journalctl --namespace=speech-spark -u "$WECHSEL_UNIT" -f -n 0 --no-pager -o cat &
+  follow=$!
+  systemctl start "$WECHSEL_UNIT.service" || rc=$?
+  sleep 1; kill "$follow" 2>/dev/null || true
+  return "$rc"
+}
+
+cmd_entfernen() {  # $1 = id, $2 = --yes or empty: the cache folder of a catalog model no kind runs any more
+  local out dir svc
+  out=$(as_panel_user ../modelle.py entfernbar "$1") || true
+  dir=$(tail -n1 <<<"$out")
+  [[ "$dir" == "$VAR/hf/hub/models--"* ]] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: entfernen $1 abgelehnt"; return 1; }
+  echo "Entfernen: $dir ($(du -sh -- "$dir" 2>/dev/null | cut -f1))"
+  ask_yes "${2:-}"
+  svc=$(panel_user)
+  if runuser -u "$svc" -- rm -rf -- "$dir"; then echo "modelle: entfernt $1"; else echo "modelle: entfernen $1 fehler"; return 1; fi
+}
+
 ask_yes() {  # $1 = --yes or empty
   [ "${1:-}" = --yes ] && return 0
   [ -t 0 ] || die "this asks first; run it in a terminal (or add --yes)"
@@ -534,7 +633,11 @@ cmd_modelle() {
       esac ;;
     umzug-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_umzug_intern "$@" ;;
     qwen38-aufraeumen) cmd_qwen38_aufraeumen ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen" ;;
+    wechseln) [ $# -ge 3 ] || die "speech-spark modelle wechseln llm|sehen|asr|tts|bild <id>"; run_wechsel "$2" "$3" ;;
+    zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
+    entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;
+    wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_wunsch_intern ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
   esac
 }
 

@@ -216,6 +216,7 @@
     "svc_watch": false,
     "wartung": false,
     "wartung_auto": false,
+    "modelle_wechseln": false,
     "memory_check": false,
     "memory_ask": false,
     "memory_topics": false,
