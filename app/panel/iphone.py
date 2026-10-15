@@ -365,6 +365,9 @@ def app_settings(request: Request, prof=Depends(own_profile)):
     p = profiles.effective(prof["id"], chat)
     fields = _fields(prof["id"])
     return {"settings": {k: p[k] for k in fields},
+            # the allowed values and bounds of the fields with a fixed list (profiles.CHOICES, RANGES), for the pickers
+            "choices": {k: v for k, v in profiles.CHOICES.items() if k in fields},
+            "ranges": {k: v for k, v in profiles.RANGES.items() if k in fields},
             # which of the conversation switches the admin allows (the rest change nothing)
             "admin": {"tool_think": features.allowed("toolthink", prof["id"], chat), "route": features.allowed("routing", prof["id"], chat),
                       "fix_learn": features.allowed("fixes", prof["id"], chat)},

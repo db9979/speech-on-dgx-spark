@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.583** Cleanup step 7: setting defaults and choice lists only from the panel
 - **V01.0.582** Cleanup step 6: shared helpers for daily numbers, pairing codes, versions, events and open proposals
 - **V01.0.581** Cleanup step 5: pages ask through api(), raw requests only with a stated reason
 - **V01.0.580** Cleanup step 4: one shared reader for request bodies with a size limit
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.576** Red fix 2: the briefing test no longer depends on the clock
 - **V01.0.575** Red fix: the video call test no longer depends on the clock, „Mein Rufname“ saves reliably again
 - **V01.0.574** Three red questions in the quality test: an announced deed without a tool is not said, nothing is remembered from a plain question, an honest „keine Möglichkeit“ counts for the account balance
-- **V01.0.573** Painting pictures: a short yes after the assistant asks back paints, no web search
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

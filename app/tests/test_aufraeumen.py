@@ -15,6 +15,8 @@ starts at zero.
 - g  group and function names the same in features.py and guides.js
 - h  every translation in i18n.js and every class in the style sheets is still used
 - i  no own reader of a request body: core.json_body
+- j  the conversation settings' defaults and allowed values only in profiles.SETTINGS and profiles.CHOICES: no copy
+     in a script or another module (the browser gets them from /api/profile/settings)
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -285,6 +287,73 @@ class SameNames(unittest.TestCase):
                   for f in fs if guide[g] != (f.de, f.en)}
         self.assertEqual(sorted(differ - self.ALT_NAMES), [], "function names: one name in features.py and guides.js")
         self.assertEqual(sorted(self.ALT_NAMES - differ), [], "cleaned up, thank you: shrink ALT_NAMES")
+
+
+class SettingCopies(unittest.TestCase):
+    """profiles.SETTINGS holds the defaults, profiles.CHOICES the allowed values of the conversation settings, once.
+    No script keeps an object of defaults (three or more settings with their default) or a list of the allowed values
+    (three in a row, or two as [value, label] pairs); no other module a tuple or list equal to one of CHOICES."""
+    def setUp(self):
+        from tests import helpers
+        helpers.start()
+        import profiles
+        self.settings, self.choices = profiles.SETTINGS, profiles.CHOICES
+
+    @staticmethod
+    def lit(v):
+        s = str(v)
+        return r"['\"]?" + re.escape(s) + r"['\"]?" if s.isdigit() else r"['\"]" + re.escape(s) + r"['\"]"
+
+    def js_defaults(self, src):
+        n = 0
+        for body in re.findall(r"\{([^{}]*)\}", src):
+            same = 0
+            for k, v in re.findall(r"(?<![\w.])(\w+)\s*:\s*('[^'\n]*'|true|false|-?\d+(?:\.\d+)?)(?=\s*[,}]|$)", body):
+                if k in self.settings:
+                    d = self.settings[k][0]
+                    js = "true" if d is True else "false" if d is False else f"'{d}'" if isinstance(d, str) else None
+                    same += js == v or (js is None and not isinstance(d, (list, dict)) and v == str(d))
+            n += same >= 3
+        return n
+
+    def js_lists(self, src):
+        n = 0
+        for vals in self.choices.values():
+            if len(vals) >= 3:
+                n += len(re.findall(r"\[\s*" + r"\s*,\s*".join(self.lit(v) for v in vals[:3]), src))
+            pair = r"\[\s*\[\s*" + self.lit(vals[0]) + r"\s*,[^\]]*\]\s*,\s*\[\s*" + self.lit(vals[1]) + r"\s*,"
+            n += len(re.findall(pair, src))
+        return n
+
+    def test_no_copy_in_the_scripts(self):
+        hits = {}
+        for path in sorted(glob.glob(os.path.join(JS, "*.js"))):
+            with open(path, encoding="utf-8") as f:
+                src = f.read()
+            n = self.js_defaults(src) + self.js_lists(src)
+            if n:
+                hits[os.path.basename(path)] = n
+        self.assertEqual(hits, {}, "settings' defaults or allowed values copied into a script: use SDEF and SETC "
+                                   "(me.js loadSettings, from profiles.SETTINGS and profiles.CHOICES)")
+
+    def test_no_copy_in_other_modules(self):
+        want = {tuple(v) for v in self.choices.values() if len(v) >= 2}
+        hits = []
+        for name, src in py_files().items():
+            if name == os.path.join("panel", "profiles.py"):
+                continue
+            for node in ast.walk(ast.parse(src)):
+                if isinstance(node, (ast.Tuple, ast.List)) and all(isinstance(e, ast.Constant) for e in node.elts):
+                    if tuple(e.value for e in node.elts) in want:
+                        hits.append(f"{name}:{node.lineno}")
+        self.assertEqual(hits, [], "a copy of a list of profiles.CHOICES: use profiles.CHOICES[key]")
+
+    def test_lists_that_follow_a_module(self):
+        """Two lists name what a module has: the reMarkable models (rmpapier.MODELS) and the delivery targets."""
+        import docmake
+        import rmpapier
+        self.assertEqual(self.choices["rm_model"], ("auto",) + tuple(rmpapier.MODELS))
+        self.assertEqual(set(docmake.TARGETS), set(docmake.TARGET_NAMES))
 
 
 if __name__ == "__main__":

@@ -122,7 +122,7 @@ KINDS = {
 FORMAT_NAMES = {"docx": "Word", "pptx": "PowerPoint", "xlsx": "Excel", "pdf": "PDF", "md": "Markdown", "txt": "Text",
                 "csv": "CSV"}
 ACTIONS = ("umschreiben", "weglassen", "neu", "format", "vorlage")
-TARGETS = ("pc", "rm", "tg", "mail", "box")
+TARGETS = tuple(x for x in profiles.CHOICES["doc_deliver"] if x)   # the profile's doc_deliver, without "" (only here)
 TARGET_NAMES = {"pc": "PC", "rm": "reMarkable", "tg": "Telegram", "mail": "Mail-Entwurf", "box": "Postfach"}
 LINK_SECONDS = 10 * 60     # a download link (the Android app, another device)
 LINK_USES = 5              # a phone's browser may ask twice for one download
@@ -1332,7 +1332,7 @@ SEND_TOOL = {"type": "function", "function": {
                    "a mail with the file filed into the user's mailbox. Only when the user asks for exactly that.",
     "parameters": {"type": "object", "properties": {
         "document": {"type": "string", "description": "words of its title; empty = the newest"},
-        "to": {"type": "string", "enum": ["pc", "rm", "tg", "mail", "box"]},
+        "to": {"type": "string", "enum": list(TARGETS)},
         "format": {"type": "string", "enum": list(docrender.FORMATS)}},
         "required": ["to"]}}}
 # document_plan only shows an outline and document_change keeps every version (both stay inside the profile's own

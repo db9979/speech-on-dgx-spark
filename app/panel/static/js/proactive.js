@@ -42,7 +42,7 @@ const PROK=[['pro_events','calendar',t('Termin-Vorlauf','Upcoming appointments')
   ['pro_tips','',t('Funktion vorschlagen','Suggest a function'),t('Höchstens einmal pro Woche (10 bis 19 Uhr) ein Vorschlag für eine Funktion, die dir helfen würde, z. B. weil deine iPhone-App gekoppelt ist. Eingerichtet wird unter Ich → Überblick; er schaltet nie selbst.','At most once a week (10 am to 7 pm) a suggestion for a function that would help you, e.g. because your iPhone app is paired. You set it up under Me → Overview; it never switches anything itself.'),'']];
 let PROST=null;
 const proRow=(k,l,h,extra='')=>setRow(esc(l),esc(h),tglIn(`data-k="${k}"`,S[k]),{extra});
-async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHTML='';return}
+async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHTML='';return}await setReady();
   PROST=await (await api('/api/proactive/status')).json();const st=PROST;
   const [qa,qb]=(S.pro_quiet||'').split('-');
   const lowered=st.kinds.filter(x=>x.cap<x.full);
@@ -74,7 +74,7 @@ async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHT
   for(const f of Object.values(PROBIND))f()}
 // extra fields under a kind, and their handlers
 const PROX={
-  pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${[5,10,15,20,30,45,60].map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,
+  pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${(SETC.choices.pro_lead||[]).map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,
   pro_mail:()=>`<input id="promailfrom" style="margin-top:4px" placeholder="${t('z. B. chef@firma.de, Schule, Anna','e.g. boss@company.com, school, Anna')}" value="${esc(S.pro_mail_from||'')}" autocomplete="off"><span style="display:block">${t('Absender, mit Komma getrennt; ein Teil der Adresse oder des Namens genügt.','Senders, separated by commas; part of the address or name is enough.')}</span>`+(S1MAIL_ON?proHaSub('pro_mail_smart',t('Wichtige Mails erkennen','Recognize important mail'),t('Auch Mails von anderen Absendern, wenn die Einordnung sie nach Absender und Betreff mit mindestens 80 % für wichtig hält. Der Mailtext wird dafür nicht gelesen.','Also mail from other senders when the classification rates it important by sender and subject with at least 80 %. The mail text is not read for it.')):''),
   pro_weather:()=>`<span class="two2" style="margin-top:4px"><input id="proplace" placeholder="${t('Ort, z. B. Köln','Place, e.g. Cologne')}" value="${esc(S.pro_place||'')}" autocomplete="off"><input type="time" id="proweatherat" value="${esc(S.pro_weather_at||'18:00')}"></span>`,
   pro_ha:st=>!st.has.ha?'':proHaSubs(st)+`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}${r.src==='voice'?` <small class="mut">${t('(per Sprache)','(by voice)')}</small>`:''}</span><span><button class="b" type="button" ${onAttr('proRuleEdit',r.id)}>${t('Bearbeiten','Edit')}</button><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></span></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>

@@ -56,7 +56,6 @@ ANNOUNCE_KEEP = 10 * 60
 MAX_LIST = 50           # names in allow/block
 MAX_CHOICE = 4          # "Meinst du A oder B?": at most this many names are asked back
 MAX_SAID = 4            # names said or shown in one sentence ("an alle": A, B, C, D und 38 weitere)
-SPEAKER_MODES = ("off", "hint", "text")
 ALL_OFF = "Nachrichten an alle sind für dich aus (Ich → Gespräch → „Nachricht an alle“)."
 _lock = threading.Lock()
 _sent = collections.defaultdict(collections.deque)   # (kind, sender[, recipient]) -> send times

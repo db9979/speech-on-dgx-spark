@@ -756,28 +756,54 @@ def own_devices(uid):
 
 
 # ---------------------------------------------------------------- conversation settings
+# The allowed values of every setting with a fixed list (in this order), and the bounds of the numbers: the one list,
+# SETTINGS checks against it and /api/profile/settings hands it to the browser (me.js builds its lists from it).
+CHOICES = {
+    "follow": ("0", "4", "6", "8", "10"),
+    "barge_level": ("low", "mid", "high"),
+    "length": ("short", "normal", "long"),
+    "face": ("",) + FACES,
+    "doc_deliver": ("", "pc", "rm", "tg", "mail", "box"),
+    "rm_model": ("auto", "rm2", "pro", "move"),
+    "pro_lead": (5, 10, 15, 20, 30, 45, 60),
+    "svc_device": ("", "app", "and", "desk", "tg", "web", "all"),
+    "msg_from": ("all", "chosen"),
+    "msg_speaker": ("off", "hint", "text"),
+}
+RANGES = {"speed": (0.7, 1.4), "pro_max": (1, 30)}
+
+
+def _in(key):
+    return lambda v: not isinstance(v, bool) and v in CHOICES[key]
+
+
+def _within(key, kind):
+    lo, hi = RANGES[key]
+    return lambda v: isinstance(v, kind) and not isinstance(v, bool) and lo <= v <= hi
+
+
 # key: (default, check). The admin's defaults (config chat.defaults) apply where a profile has
 # set nothing; guests keep theirs in the browser.
 SETTINGS = {
     "hands": (False, lambda v: isinstance(v, bool)),
     "auto": (True, lambda v: isinstance(v, bool)),
     # follow-up without the wake word: seconds the microphone stays open after an answer (admin chat.follow_up)
-    "follow": ("0", lambda v: v in ("0", "4", "6", "8", "10")),
+    "follow": ("0", _in("follow")),
     # the Spark's own voice from another device is no question (admin chat.no_self_echo, echo.py)
     "echo": (True, lambda v: isinstance(v, bool)),
     "daily": (True, lambda v: isinstance(v, bool)),
     "turn": (True, lambda v: isinstance(v, bool)),
     "live": (True, lambda v: isinstance(v, bool)),
     "barge": (True, lambda v: isinstance(v, bool)),
-    "barge_level": ("mid", lambda v: v in ("low", "mid", "high")),
+    "barge_level": ("mid", _in("barge_level")),
     "voice": ("", lambda v: isinstance(v, str) and len(v) <= 64 and re.fullmatch(r"[\w .\-]*", v)),
-    "speed": (1.0, lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0.7 <= v <= 1.4),
-    "length": ("normal", lambda v: v in ("short", "normal", "long")),
+    "speed": (1.0, _within("speed", (int, float))),
+    "length": ("normal", _in("length")),
     # "Antworten vorlesen": off = answers as text only on every own screen (chat_turn.quiet), speakers keep speaking
     "speak": (True, lambda v: isinstance(v, bool)),
     "timing": (True, lambda v: isinstance(v, bool)),
     # Ich → Gespräch → Anzeige „Gesicht“: the profile's own face on all its devices, "" = the Spark's (chat.face)
-    "face": ("", lambda v: v == "" or v in FACES),
+    "face": ("", _in("face")),
     "learn": (True, lambda v: isinstance(v, bool)),
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
@@ -788,7 +814,7 @@ SETTINGS = {
     "doc_sender": ("", lambda v: isinstance(v, str) and len(v) <= 300 and v.count("\n") <= 5
                    and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]", v)),
     # where a finished document also goes on its own (docmake.deliver_of; only a target that is set up counts)
-    "doc_deliver": ("", lambda v: v in ("", "pc", "rm", "tg", "mail", "box")),
+    "doc_deliver": ("", _in("doc_deliver")),
     # more with the reMarkable (rmplus.py, admin chat.remarkable_plus)
     "rm_morning": (True, lambda v: isinstance(v, bool)),
     "rm_morning_at": ("06:30", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
@@ -796,7 +822,7 @@ SETTINGS = {
     "rm_inbox": (True, lambda v: isinstance(v, bool)),
     # paper for the reMarkable (rmpapier.py, admin chat.remarkable_paper)
     "rm_tidy": (True, lambda v: isinstance(v, bool)),
-    "rm_model": ("auto", lambda v: v in ("auto", "rm2", "pro", "move")),     # newer notes first in the document search (chat.remarkable_fresh)      # answers onto the reMarkable (admin chat.remarkable_send)
+    "rm_model": ("auto", _in("rm_model")),   # the model whose page format the paper takes (rmpapier.MODELS)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name
@@ -809,9 +835,9 @@ SETTINGS = {
     "pro_on": (True, lambda v: isinstance(v, bool)),
     "msg_all": (True, lambda v: isinstance(v, bool)),    # in the fixed group "Alle" (chats.py); leaving it switches it off
     "pro_quiet": ("22:00-07:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)?", v)),
-    "pro_max": (6, lambda v: isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 30),
+    "pro_max": (6, _within("pro_max", int)),
     "pro_events": (True, lambda v: isinstance(v, bool)),
-    "pro_lead": (20, lambda v: v in (5, 10, 15, 20, 30, 45, 60)),
+    "pro_lead": (20, _in("pro_lead")),
     "pro_ha": (True, lambda v: isinstance(v, bool)),
     # Home Assistant tells the Spark (hamelden.py, each behind its own admin switch)
     "pro_ha_live": (True, lambda v: isinstance(v, bool)),     # live connection instead of the minute check
@@ -844,7 +870,7 @@ SETTINGS = {
     "devup_night": (True, lambda v: isinstance(v, bool)), # own speakers updated at night (geraeteupdate.py)
     "svc_note": (True, lambda v: isinstance(v, bool)),    # an admin profile hears when a service is gone (dienstwacht.py)
     "svc_night": (False, lambda v: isinstance(v, bool)),   # ... at night only one summary at 7 o'clock
-    "svc_device": ("", lambda v: v in ("", "app", "and", "desk", "tg", "web", "all")),   # ... on this way (push.send to=)
+    "svc_device": ("", _in("svc_device")),   # ... on this way (push.send to=)
     # Verlauf auf allen Geräten (verlauf.py): instant sync, one conversation for all channels, offline reading
     # Einstellungs-Assistent (faelle.py, berater.py): 👍/👎 under answers, hearing when a report helped, admin notes,
     # asking it in the chat, proposals for the own settings (and the ones the profile put aside)
@@ -869,8 +895,8 @@ SETTINGS = {
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"
     # what the chats brought along from "Nachrichten" (messages.py, V01.0.488): who may write to me, the group Alle,
     # new chat messages read on my speakers, announcements of others on my speakers
-    "msg_from": ("all", lambda v: v in ("all", "chosen")),   # every profile, or only the ones picked
-    "msg_speaker": ("off", lambda v: v in ("off", "hint", "text")),   # say new ones on my speakers
+    "msg_from": ("all", _in("msg_from")),   # every profile, or only the ones picked
+    "msg_speaker": ("off", _in("msg_speaker")),   # say new ones on my speakers
     # chats (chats.py): off until the profile switches them on; "gelesen" shown both ways, the text in notifications
     "chat_receipts": (True, lambda v: isinstance(v, bool)),
     "chat_push_text": (False, lambda v: isinstance(v, bool)),

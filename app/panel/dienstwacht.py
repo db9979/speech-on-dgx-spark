@@ -71,7 +71,6 @@ NIGHT = (22, 7)           # "nachts sammeln": from 22 to 7 o'clock Spark time
 # two fixed public addresses: the internet is gone only when neither answers
 # never api.github.com: every question there counts against GitHub's 60 per hour, which the update check needs
 INET = ("https://www.google.com/generate_204", "https://www.microsoft.com/", "https://cloudflare.com/cdn-cgi/trace")
-DEVICES = ("", "app", "and", "desk", "tg", "web", "all")
 
 # id: (name, name in English, what does not work while it is gone, pace, the Live page's node)
 SVC = {
@@ -795,7 +794,7 @@ async def notes(now=None, only_due=False):
             title = "🌙 Heute Nacht: " + title.lstrip("⚠️✅ ")
         dev = str(profiles.settings(uid).get("svc_device") or "")
         try:
-            n = await push.send(uid, title, body, tag="svc", private=False, to=dev if dev in DEVICES else "")
+            n = await push.send(uid, title, body, tag="svc", private=False, to=dev if dev in profiles.CHOICES["svc_device"] else "")
         except Exception as e:
             print("dienstwacht: note", type(e).__name__, flush=True)
             n = 0

@@ -1241,6 +1241,8 @@ def profile_settings(request: Request):
     chat = load_config().get("chat", {})
     import verlauf
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
+            # the allowed values and bounds (profiles.CHOICES, RANGES): the browser builds its lists only from these
+            "choices": profiles.CHOICES, "ranges": profiles.RANGES,
             "profile": prof, "allow": _allow(prof, chat),
             # this browser may keep the conversations for reading offline (trusted, verlauf.offline_here); else it deletes them
             "offline_here": verlauf.offline_here(prof, request)}

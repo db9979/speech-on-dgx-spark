@@ -19,6 +19,8 @@ Each entry: key -> dict(stufe, art, sec, key, de, en, way, [lo, hi, step], [choi
     restart  the service that starts again when it changes ("" none)
 """
 
+import profiles
+
 A, B, C, P = "A", "B", "C", "P"
 
 ENTRIES = {
@@ -88,7 +90,7 @@ ENTRIES = {
     "erst_lokal": dict(stufe=C, art="switch", sec="chat", key="local_first",
                        de="Erst lokal suchen", en="Look locally first", way="Funktionen", restart=""),
     # ---- P: a profile's own settings (Ich → Gespräch); `need` is the function the Spark must allow
-    "p_laenge": dict(stufe=P, art="profile", key="length", choices=("short", "normal", "long"), need="",
+    "p_laenge": dict(stufe=P, art="profile", key="length", choices=profiles.CHOICES["length"], need="",
                      de="Antwortlänge", en="Answer length", way="Ich → Gespräch", restart=""),
     "p_tempo": dict(stufe=P, art="profile", key="speed", lo=0.8, hi=1.3, step=0.1, need="",
                     de="Sprechtempo", en="Speaking speed", way="Ich → Gespräch", restart=""),

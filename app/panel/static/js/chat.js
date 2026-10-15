@@ -1,8 +1,10 @@
 // The voice assistant: listening, asking, streaming answers and audio.
 // ---------------------------------------------------------------- voice chat
 // Record -> /api/test/asr -> /api/chat (LLM text and streamed TTS audio as one SSE stream) -> play.
-// Conversation settings (see renderSet). Profiles keep them on the Spark, guests in this browser.
-let S={hands:false,speak:true,auto:true,turn:true,daily:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
+// Conversation settings (see renderSet). Profiles keep them on the Spark, guests in this browser. Defaults, allowed
+// values and bounds come only from the Spark (profiles.SETTINGS, CHOICES, RANGES over /api/profile/settings, me.js
+// loadSettings): SETP is that load (a promise), SETC its choices and ranges.
+let S={},SDEF={},SETC={choices:{},ranges:{}},SETP=null;
 const BARGE={low:[0.05,6,0.8,3.5],mid:[0.03,4,0.5,2.5],high:[0.02,3,0.35,2]};   // min level, x noise floor, x own output, x room level
 // The room level (TV, radio, other people) is learned while the answer plays, in the moments the Spark itself is
 // quiet. A voice must stand out from it to interrupt, and the follow-up window and hands-free use it as well:
@@ -359,7 +361,7 @@ function whyNote(w){const d=document.createElement('div');d.className='mem whyno
 // "Hey Spark". Unlike hands-free it ends after those seconds of silence and only follows a spoken
 // question; typed questions, guests and room mode never open it.
 function followSecs(){let guest=true;try{guest=isGuest()}catch{}
-  const s=Number(S.follow)||0;return ALLOW.follow&&!guest&&!document.hidden&&!(window.room&&room.on)&&[4,6,8,10].includes(s)?s:0}
+  const s=Number(S.follow)||0;return ALLOW.follow&&!guest&&!document.hidden&&!(window.room&&room.on)&&s>0&&(SETC.choices.follow||[]).includes(String(s))?s:0}
 
 
 // Wake word "Hey Spark": while the assistant is idle the microphone keeps a short ring buffer of

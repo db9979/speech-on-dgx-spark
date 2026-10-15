@@ -54,7 +54,6 @@ MODELS = {
     "pro": {"de": "Paper Pro", "en": "Paper Pro", "px": (1620, 2160), "ppi": 229, "color": True},
     "move": {"de": "Paper Pro Move", "en": "Paper Pro Move", "px": (954, 1696), "ppi": 264, "color": True},
 }
-CHOICES = ("auto",) + tuple(MODELS)
 # folders below the base folder, one per kind (rmordner); "" = the base folder itself
 ARTEN = {"aufgaben": "Aufgaben", "morgen": "Morgenblatt", "woche": "Wochenrückblick", "besprechung": "Besprechungen", "antwort": "Antworten",
          "web": "Web und Anhänge", "eingang": "Eingang", "archiv": "Archiv"}
