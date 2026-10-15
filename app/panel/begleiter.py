@@ -74,6 +74,7 @@ import profiles
 import schreib
 import signatur
 from common import STATE, load_config, no_think, write_json
+from textnorm import plain_markdown
 from core import assistant, auth, browser_profile, confirm_code, json_body
 
 router = APIRouter()
@@ -2129,14 +2130,19 @@ async def program_daily(request: Request, kind: str = "morning"):
         import chat
         try:
             with _step("tool", "daily_briefing"):
-                text = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", "")), 200)
+                md = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", ""), markdown=True), 200)
         except notaus.NotausAktiv:
             raise
         except Exception as e:
             print("begleiter: morning", type(e).__name__, flush=True)
             raise HTTPException(502, "Der Tagesüberblick ist gerade nicht zu haben.")
     _live("Tagesstart" if kind == "morning" else "Feierabend")
-    return {"text": str(text or "Für heute liegt nichts an.")[:4000]}
+    if kind == "evening":
+        return {"text": str(text or "Für heute liegt nichts an.")[:4000]}
+    # the morning sorted like the chat's daily briefing: "md" for builds that draw it (the window of Frag Spark),
+    # "text" without signs for older builds and the notification
+    md = str(md or "").strip()[:4000]
+    return dict({"text": plain_markdown(md)[:4000] or "Für heute liegt nichts an."}, **({"md": md} if md else {}))
 
 
 # ---------------------------------------------------------------- updates (begleiter.json from GitHub Actions)

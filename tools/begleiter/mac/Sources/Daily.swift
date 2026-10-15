@@ -84,14 +84,15 @@ final class Daily: ObservableObject {
             defer { self.fetching.remove(kind) }
             let title = kind == "evening" ? "Feierabend" : "Tagesstart"
             do {
-                let text = try await client.daily(kind).trimmingCharacters(in: .whitespacesAndNewlines)
+                let (sent, md) = try await client.daily(kind)
+                let text = sent.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !manual {
                     UserDefaults.standard.set(FolderLedger.dayString(Date()),
                                               forKey: kind == "evening" ? Self.eveningLastKey : Self.morningLastKey)
                 }
                 guard !text.isEmpty else { return }
                 Notifier.plain(title: title, body: text)
-                AskController.shared.run(question: title) { _ in text }
+                AskController.shared.run(question: title, md: md) { _ in text }
             } catch is CancellationError {
             } catch {
                 let m = AppModel.shared.absorb(error)

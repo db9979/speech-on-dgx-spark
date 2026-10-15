@@ -94,11 +94,12 @@ final class AskController: ObservableObject {
 
     /// Work of another part (a file, the screen, the wake word, a reply to a note) whose answer belongs in this
     /// window: the label as own bubble, the answer as the Spark's. `notify`: also as a notification.
-    func run(question label: String, notify: Bool = false, spoken: Bool = false,
+    /// `md`: the same answer with Markdown, shown formatted (Tagesstart).
+    func run(question label: String, notify: Bool = false, spoken: Bool = false, md: String? = nil,
              work: @escaping (SparkClient) async throws -> String) {
         if busy { task?.cancel() }
         task = Task { @MainActor [weak self] in
-            await self?.perform(question: label, notify: notify, spoken: spoken, work: work)
+            await self?.perform(question: label, notify: notify, spoken: spoken, md: md, work: work)
         }
     }
 
@@ -111,7 +112,7 @@ final class AskController: ObservableObject {
     }
 
     /// The same, awaited (several files one after the other).
-    func perform(question label: String, notify: Bool = false, spoken: Bool = false,
+    func perform(question label: String, notify: Bool = false, spoken: Bool = false, md: String? = nil,
                  work: (SparkClient) async throws -> String) async {
         Self.open()
         Speaker.shared.stop()                 // a new question ends the reading aloud
@@ -134,7 +135,8 @@ final class AskController: ObservableObject {
             problem = AppModel.shared.absorb(error)
         }
         if let answer {
-            entries.append(Entry(question: label, answer: answer, failed: false))
+            let shown = md?.trimmingCharacters(in: .whitespacesAndNewlines)
+            entries.append(Entry(question: label, answer: answer, failed: false, md: shown?.isEmpty == false ? shown : nil))
             Self.speakIfWanted(answer, spoken: spoken)
             if notify { Notifier.plain(title: "Spark", body: answer) }
         } else if notify && !problem.isEmpty {

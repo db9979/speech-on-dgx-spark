@@ -406,12 +406,16 @@ internal static class SparkClient
         _ = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
     }
 
-    /// <summary>GET /api/desk/daily?kind=morning|evening – Tagesstart bzw. Feierabend als Text.</summary>
-    public static async Task<string> DailyAsync(string baseUrl, string key, bool morning, CancellationToken ct)
+    /// <summary>
+    /// GET /api/desk/daily?kind=morning|evening – Tagesstart bzw. Feierabend: Text ohne Zeichen (Hinweis), Md mit
+    /// Markdown für das Fenster „Frag Spark“ (fehlt bei älteren Sparks und beim Feierabend).
+    /// </summary>
+    public static async Task<(string Text, string? Md)> DailyAsync(string baseUrl, string key, bool morning, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/daily?kind=" + (morning ? "morning" : "evening"));
         JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
-        return Json.Str(json["text"]) ?? throw new SparkException(null, "Der Spark hat keinen Text zurückgeschickt.");
+        string text = Json.Str(json["text"]) ?? throw new SparkException(null, "Der Spark hat keinen Text zurückgeschickt.");
+        return (text, Json.Str(json["md"]));
     }
 
     private static bool? OnOff(string? state) => state switch

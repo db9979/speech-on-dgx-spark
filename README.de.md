@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.594** Tagesstart im Begleiter gegliedert wie das Tagesbriefing im Chat (Termine, Wetter, Mails als Listen; neuer Begleiter-Build nötig)
 - **V01.0.593** Fix: Messung und eigene Engines übersetzen höchstens 4 Kernel gleichzeitig (kein Speicherüberlauf mehr)
 - **V01.0.592** Eigene Modelle Stufe E3: Umzug aufs eigene Sprachmodell und zurück, qwen38 aufräumen nur auf Befehl
 - **V01.0.591** Fix: Bildwünsche mit dem Verb am Ende gehen an Bilder malen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.587** Fix: `speech-spark modelle messen` startet seine Einheit über bash
 - **V01.0.586** Eigene Modelle Stufe E0: Modell-Katalog und `speech-spark modelle messen`
 - **V01.0.585** Aufräumen Schritt 9: keine Prüf-Hüllen mehr, PROJEKT-SPERRE-Regel
-- **V01.0.584** Aufräumen Schritt 8: ein Datei-Register für alle Zustandsdateien, ein Zustandsordner
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

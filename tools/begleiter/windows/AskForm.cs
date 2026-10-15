@@ -314,9 +314,10 @@ internal sealed class AskForm : ThemedForm
 
     /// <summary>
     /// Ergebnis eines anderen Teils (Datei, Bildschirm) im Verlauf zeigen: eigene Blase mit <paramref name="mine"/>,
-    /// „denkt nach“, dann die Antwort (reiner Text, kopierbar) oder der Fehler.
+    /// „denkt nach“, dann die Antwort (reiner Text, kopierbar) oder der Fehler; <paramref name="md"/>: dieselbe Antwort
+    /// mit Markdown, gegliedert gezeigt (Tagesstart).
     /// </summary>
-    public async Task RunExternalAsync(string mine, Func<CancellationToken, Task<string>> work)
+    public async Task RunExternalAsync(string mine, Func<CancellationToken, Task<string>> work, string? md = null)
     {
         await WaitIdleAsync();
         if (IsDisposed)
@@ -337,7 +338,7 @@ internal sealed class AskForm : ThemedForm
             }
 
             _chat.Pending = false;
-            _chat.Add(mine: false, answer.Trim().Length > 0 ? answer.Trim() : "(Der Spark hat keinen Text geschickt.)");
+            _chat.Add(mine: false, answer.Trim().Length > 0 ? answer.Trim() : "(Der Spark hat keinen Text geschickt.)", md);
             SetStatus("", error: false);
         }
         catch (OperationCanceledException)

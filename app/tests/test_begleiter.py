@@ -1089,6 +1089,29 @@ class Seven(unittest.TestCase):
         self.assertIn("Müll rausbringen", r.json()["text"])
         self.assertEqual(prog.get("/api/desk/daily?kind=nacht").status_code, 400)
 
+    def test_daily_morning_sorted_for_the_window(self):
+        """Dominik 2026-10-15 "ist noch immer nicht formatiert" (Tagesstart in Frag Spark): the morning comes as
+        the chat's sorted briefing, "md" for builds that draw it, "text" without signs for older builds and the
+        notification."""
+        import chat
+        c = self.on("DqFormat")
+        _, prog = self.pair(c)
+        self.parts(c, prog, daily=True)
+        asked = []
+
+        async def fake_brief(u, tz="", markdown=False):
+            asked.append(markdown)
+            return "Guten Morgen.\n**Termine**\n- 12:00 deBug & Coffee\n**Mails**\n- App Store Connect: Version 1.0"
+        old = chat.morning_briefing
+        chat.morning_briefing = fake_brief
+        try:
+            d = prog.get("/api/desk/daily?kind=morning").json()
+        finally:
+            chat.morning_briefing = old
+        self.assertEqual(asked, [True])
+        self.assertEqual(d["md"], "Guten Morgen.\n**Termine**\n- 12:00 deBug & Coffee\n**Mails**\n- App Store Connect: Version 1.0")
+        self.assertEqual(d["text"], "Guten Morgen.\nTermine\n• 12:00 deBug & Coffee\nMails\n• App Store Connect: Version 1.0")
+
     def test_installed_programs_list(self):
         self.assertIn("/api/desk/apps", profiles.DESK_PATHS)
         c = self.on("DqJan")

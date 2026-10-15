@@ -1363,7 +1363,8 @@ internal sealed partial class TrayContext
         _dailyBusy = true;
         try
         {
-            string text = (await SparkClient.DailyAsync(creds.Base, creds.Key, morning, CancellationToken.None)).Trim();
+            (string sent, string? md) = await SparkClient.DailyAsync(creds.Base, creds.Key, morning, CancellationToken.None);
+            string text = sent.Trim();
             if (morning)
             {
                 _config.DailyMorningDone = today;
@@ -1383,7 +1384,7 @@ internal sealed partial class TrayContext
             _balloonIsNote = false;
             _balloonAction = null;
             _tray.ShowBalloonTip(10000, title, Clip(text.ReplaceLineEndings(" "), 255), ToolTipIcon.Info);
-            _ = EnsureAsk().RunExternalAsync(morning ? "Tagesstart" : "Feierabend", _ => Task.FromResult(text));
+            _ = EnsureAsk().RunExternalAsync(morning ? "Tagesstart" : "Feierabend", _ => Task.FromResult(text), md?.Trim());
         }
         catch (SparkException ex)
         {

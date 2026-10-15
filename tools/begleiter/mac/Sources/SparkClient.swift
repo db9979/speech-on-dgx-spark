@@ -424,11 +424,12 @@ extension SparkClient {
         return HomeButton.state(d["state"])
     }
 
-    /// GET /api/desk/daily?kind=morning|evening
-    func daily(_ kind: String) async throws -> String {
+    /// GET /api/desk/daily?kind=morning|evening: the text without signs (notification) and "md", the morning
+    /// with Markdown for the window of "Frag Spark" (missing from older Sparks and for the evening)
+    func daily(_ kind: String) async throws -> (text: String, md: String?) {
         let k = kind == "evening" ? "evening" : "morning"
         let d = try await get("api/desk/daily?kind=\(k)", timeout: 120)
         guard let t = d["text"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
-        return t
+        return (t, d["md"] as? String)
     }
 }

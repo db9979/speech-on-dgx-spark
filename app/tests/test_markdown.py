@@ -137,7 +137,7 @@ class Briefing(unittest.TestCase):
         c = [x for x in profiles.convos(uid) if x["id"] == "brief-20261013"][0]
         self.assertEqual(c["msgs"][-1]["content"], text)
         self.assertIn("Markdown", chat.BRIEF_MD_SYSTEM)
-        self.assertIn("ohne Listen, Markdown", chat.BRIEF_SYSTEM)      # the push, reMarkable and Begleiter text stays plain
+        self.assertIn("ohne Listen, Markdown", chat.BRIEF_SYSTEM)      # the reMarkable text stays plain
         self.assertIn("already over", chat.BRIEF_MD_SYSTEM)
         self.assertNotIn("Keine Aufzählungszeichen, keine Links", chat.BRIEFING_HINT)
 
