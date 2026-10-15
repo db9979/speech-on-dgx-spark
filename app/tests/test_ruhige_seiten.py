@@ -6,6 +6,7 @@ where Playwright and Chromium exist; no test reads the clock."""
 import asyncio
 import os
 import re
+import time
 import unittest
 
 from tests import helpers
@@ -165,6 +166,44 @@ class Browser(unittest.TestCase):
                     async with pg.expect_navigation(timeout=30000):
                         pass
                     await pg.wait_for_function("document.getElementById('pane-upd').classList.contains('on')", timeout=20000)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_update_window_ignores_the_last_updates_file(self):
+        """Dominik 2026-10-15: in the first seconds of an update the unit runs while the progress file is still the
+        one of the update before; its start must not count, or the window says „zu lange“ (102 minutes = the time
+        since then) and stops asking. Here: the old file first, then this update's, then done."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 800)
+                try:
+                    await pg.evaluate("goCfg('upd')")
+                    await self.idle(pg)
+                    steps = {"n": 0}
+
+                    async def progress(route):
+                        steps["n"] += 1
+                        n, now = steps["n"], time.time()
+                        if n <= 3:      # the last update's file, the new unit already active
+                            await route.fulfill(json={"running": True, "started": now - 6120, "now": now, "timeout": 2700,
+                                                      "done": True, "ok": True, "text": "Fertig", "percent": 100})
+                        elif n <= 5:
+                            await route.fulfill(json={"running": True, "started": now - 5, "now": now, "timeout": 2700,
+                                                      "percent": 40, "text": "Schritt"})
+                        else:
+                            await route.fulfill(json={"done": True, "ok": True, "started": now - 60, "version": "V9", "running": False})
+                    await pg.route("**/api/update/progress*", progress)
+                    # another tab sees an update running with the old file: it starts the clock now, not at the old start
+                    await pg.evaluate("ulWatch()")
+                    self.assertGreater(await pg.evaluate("ul.clicked"), (time.time() - 60) * 1000)
+                    await pg.evaluate("ulStop();ul.clicked=Date.now();ulShow()")
+                    await pg.wait_for_function("document.getElementById('ultime').textContent!==''", timeout=20000)
+                    self.assertNotIn("zu lange", await pg.evaluate("document.getElementById('updlock').innerText"))
+                    self.assertLess(await pg.evaluate("parseInt(document.getElementById('ultime').textContent)"), 5)
+                    async with pg.expect_navigation(timeout=30000):
+                        pass
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

@@ -740,12 +740,14 @@ async function ulPoll(){let p;try{const r=await /*raw: panel restarts during the
   if(!p.running){if(Date.now()-ul.clicked>15000){ulStop();   // nothing to do (already up to date) or ended without a report
       if(!fresh){$('updlock').style.display='none';loadSys&&loadSys()}else verReload()}return}
   ulSay(fresh?p.text:t('Starte …','Starting …'),fresh?p.percent:null);
-  if(p.started){const s=Math.max(0,p.now-p.started);$('ultime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  // only this update's own file: in its first seconds the unit runs while the file is still the last update's,
+  // whose start would count as „too long“ (Dominik 2026-10-15: 102 minutes = the time since the update before)
+  if(fresh&&p.started){const s=Math.max(0,p.now-p.started);$('ultime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
     if(s>p.timeout)ulFail(t('Update dauert zu lange','Update is taking too long'),t(`Nach ${Math.round(p.timeout/60)} Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; du kannst das Update auch abbrechen.`,`Not finished after ${Math.round(p.timeout/60)} minutes. Reload shows the current state; you can also cancel the update.`),p.log,true)}}
 $('ulreload').onclick=()=>verReload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
 $('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}verReload()};
-async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await api('/api/update/progress?log=false')).json();if(p.running){ul.clicked=(p.started||0)*1000;ulShow()}}catch{}}
+async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await api('/api/update/progress?log=false')).json();if(p.running){ul.clicked=p.started&&p.now-p.started<p.timeout?p.started*1000:Date.now();ulShow()}}catch{}}
 setInterval(()=>{if(ADMIN)ulWatch()},8000);   // an update started from another tab or device locks this one too
 async function ulCheck(){await ulWatch();
   let v=null;try{v=sessionStorage.getItem('upddone');sessionStorage.removeItem('upddone')}catch{}

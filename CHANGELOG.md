@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.600** · 2026-10-15 · Fix Update-Fenster: Zeit und Grenze nur an der Fortschrittsdatei dieses Updates; vorher zählte in den ersten Sekunden der Start des vorigen Updates, das Fenster meldete „Update dauert zu lange“ (102 Minuten) und fragte nicht mehr nach, obwohl das Update fertig wurde
 - **V01.0.599** · 2026-10-15 · Fix Qualitätstest: die Frage nach dem Kontostand prüft keine Formulierung mehr, nur Fakten; ein Betrag in Ziffern oder Worten (quality.MONEY) oder ein unpassendes Werkzeug fällt durch, jede ehrliche Antwort („kein Werkzeug“, „schau in deine Banking-App“) besteht
 - **V01.0.598** · 2026-10-15 · App-Ansicht (Android-App, Handy-Browser): Fragen und Antworten nutzen die Breite wie in der iPhone-App
 - **V01.0.597** · 2026-10-15 · Fix Messen: Qwen3-VL 8B bekommt im Katalog 20 % des Speichers statt 12 % (vLLM: „No available memory for the cache blocks“, −2 GiB für den Kontext); Bedarf jetzt etwa 24 GiB, nur bei Bedarf geladen
