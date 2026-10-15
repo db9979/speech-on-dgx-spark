@@ -170,7 +170,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
-          "other": "Gerät"}
+          "tui": "Terminal", "other": "Gerät"}
 VOICE = ("speaker", "telefon", "watch", "siri", "app", "car", "ha")
 LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-Dienst", "home": "Heimnetz"}
 
@@ -707,6 +707,13 @@ def _conns(now):
         n = sum(1 for d in list(getattr(begleiter, "_mic", {})) if now - seen.get(d, -1e12) < 3 * getattr(begleiter, "POLL", 30))
         if n:
             out.append({"name": "Begleiter mit Mikrofon zu", "proto": "Schalter am PC/Mac", "dir": "aus", "n": n})
+    except Exception:
+        pass
+    try:
+        import terminal
+        n = terminal.online(now)
+        if n:
+            out.append({"name": "Terminal-Client", "proto": "HTTPS · meldet sich jede Minute", "dir": "ein", "n": n})
     except Exception:
         pass
     try:

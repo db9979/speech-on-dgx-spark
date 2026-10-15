@@ -287,6 +287,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/telefon_ich.py` | Telefon → Me: what each profile sets up for itself under Me → Telefon. |
 | `app/panel/telefon_ton.py` | Telefon: the sound of a call (telefon.py). |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
+| `app/panel/terminal.py` | Terminal-Client: `spark-tui`, one Python file (app/tui/spark-tui.py, Textual) for a terminal, e.g. |
 | `app/panel/today.py` | Ich starts with "Heute". |
 | `app/panel/verbund.py` | Spark-Verbund: chats with people on other Sparks. |
 | `app/panel/verbundgruppe.py` | Gruppen über Sparks. |
@@ -735,6 +736,8 @@ flowchart TD
   s7 -->|no| s7x
   s8x(["Not now (503)"])
   s8 -->|yes| s8x
+  s9x(["terminal client: key scope „tui“, only 11 rules (chat, conversations, Today, jobs)"])
+  s9 -->|Terminal| s9x
   s10x(["Only in the own browser (403)"])
   s10 -->|yes| s10x
 ```
@@ -761,6 +764,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 |---|---|---|
 | app | iPhone app | profiles.APP_PATHS and opened areas |
 | watch | Pebble watch | only /api/watch/… |
+| tui | terminal client spark-tui | terminal.TUI_RULES: chat, conversations, Today, jobs |
 | desk, write | Spark companion, writing help | only their own paths |
 | none | speakers, Siri shortcut, own scripts | asking as the profile, never account or security |
 | no key | Android app | sign-in like a browser |
@@ -772,17 +776,21 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 - **57** fixed paths for the app key ([step 7](#kn-apps-s7))
 - **30** minutes an Android download link is valid ([step 3](#kn-apps-s3))
 - **5** downloads per Android link ([step 3](#kn-apps-s3))
+- **10** minutes a terminal pairing line is valid ([step 3](#kn-apps-s3))
+- **5** terminals per profile ([step 2](#kn-apps-s2))
 
 #### Settings
 
 - Features → iPhone app and Features → Android app: the apps for every profile (default off).
 - Features → Who may do what: block the app for single profiles.
 - Me → iPhone and Me → Android: pairing, the app's rights, removing devices.
+- Features → Terminal client and Me → Terminal: get the program, pair (pinned at home, checked as in the browser from outside), remove.
 
 #### What you see
 
 - Status → Live: a line under events when an iPhone is paired or removed.
 - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“.
+- Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“.
 
 #### In the code
 
@@ -797,8 +805,12 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 - `app/panel/core.py` `browser_profile`: only the own browser login ([step 10](#kn-apps-s10))
 - `app/panel/account.py` `profile_remove_device`: remove a device ([step 11](#kn-apps-s11))
 - `app/panel/android.py` `apk_response`: app file only with a valid link ([step 3](#kn-apps-s3))
+- `app/panel/terminal.py` `profile_pair`: terminal pairing line only from the own browser ([step 1](#kn-apps-s1), [step 2](#kn-apps-s2))
+- `app/panel/terminal.py` `setup_base`: pinned at home, outside https only ([step 3](#kn-apps-s3))
+- `app/panel/terminal.py` `program_pair`: the terminal's first contact ([step 4](#kn-apps-s4), [step 5](#kn-apps-s5))
+- `app/panel/terminal.py` `reaches`: the terminal's fixed rule list ([step 7](#kn-apps-s7))
 
-Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`
+Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`
 
 ### Telegram, Siri, watch
 
@@ -1327,7 +1339,7 @@ flowchart TD
 4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
 5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own.
 6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
-7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
+7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
 8. <a id="kn-zugang-s8"></a>**No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
 9. <a id="kn-zugang-s9"></a>**Too many requests?**: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest.
 10. <a id="kn-zugang-s10"></a>**Guest, all places taken?**: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes.

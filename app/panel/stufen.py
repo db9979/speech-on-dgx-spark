@@ -83,6 +83,7 @@ LIST = {
     ("POST", "/api/profile/pebble/pair"): (CONFIRM, "Geräte", "Pebble koppeln", "Pair a Pebble"),
     ("POST", "/api/profile/write/pair"): (CONFIRM, "Geräte", "Schreibhilfe koppeln", "Pair a writing help"),
     ("POST", "/api/profile/desk/pair"): (CONFIRM, "Geräte", "Spark-Begleiter koppeln", "Pair the Spark companion"),
+    ("POST", "/api/profile/terminal/pair"): (CONFIRM, "Geräte", "Terminal koppeln", "Pair a terminal"),
     ("POST", "/api/profile/esp32/setup"): (CONFIRM, "Geräte", "Lautsprecher einrichten", "Set up a speaker"),
     ("POST", "/api/profile/esp32/pair"): (CONFIRM, "Geräte", "Lautsprecher koppeln", "Pair a speaker"),
     ("POST", "/api/profile/handoff"): (CONFIRM, "Geräte", "Anmeldung aufs Handy geben", "Hand the login to a phone"),

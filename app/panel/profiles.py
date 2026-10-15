@@ -625,6 +625,10 @@ HAEV_GATE = [lambda uid: False]
 # the writing help and "In anderen Programmen" on (WRITE_GATE, set by schreib.py).
 WRITE_PATHS = ("/api/write", "/api/write/assist", "/api/write/plain")
 WRITE_GATE = [lambda uid: False]
+# A terminal key (scope "tui", spark-tui paired by code, terminal.py) only reaches terminal.TUI_RULES (TUI_REACH says
+# "panel" or "agent", None for anything else), and only while the admin has the terminal client on (TUI_GATE).
+TUI_GATE = [lambda uid: False]
+TUI_REACH = [lambda request: None]
 
 
 def _device(d, request):
@@ -730,7 +734,15 @@ def current(request):
             return None
         if dev.get("scope") == "desk" and not DESK_GATE[0](dev["user"]):
             return _gate_closed(request)
-        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write", "desk"):
+        if dev.get("scope") == "tui":
+            reach = TUI_REACH[0](request)
+            if not reach:
+                return None
+            if not TUI_GATE[0](dev["user"]):
+                return _gate_closed(request)
+            if reach == "agent":   # the agent's pages want the browser login: the terminal's key counts like it there
+                request.scope["speech_app_area"] = "tui"
+        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write", "desk", "tui"):
             return None
         if notaus.own(dev["user"]):
             return _gate_closed(request, "notaus")
@@ -752,7 +764,7 @@ def own_devices(uid):
     last = seen()
     return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"]),
              "app": x.get("scope") == "app", "watch": x.get("scope") == "watch", "write": x.get("scope") == "write",
-             "desk": x.get("scope") == "desk"}
+             "desk": x.get("scope") == "desk", "tui": x.get("scope") == "tui"}
             for x in _load()["devices"] if x.get("user") == uid]
 
 

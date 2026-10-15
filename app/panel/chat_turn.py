@@ -88,6 +88,8 @@ class Turn:
 
 async def prepare(request):
     body = await request.json()
+    if isinstance(body, dict) and profiles.key_scope(request) == "tui":
+        body["client"] = "tui"   # a terminal's key (terminal.py) says what it is, never the request; Markdown shown as text
     cfg = load_config()
     ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     # text only (no image links or other parts); an answer the browser marked as made from mail or
@@ -399,7 +401,7 @@ async def prepare(request):
         system = (system + "\n\n" + chat.TELEGRAM_HINT).strip()
     # the panel's own chat (browser, phone view, Android app) and the Begleiter: Markdown is shown formatted,
     # never spoken
-    if body.get("client") in (None, "", "desk") and not app_key and not mcp:
+    if body.get("client") in (None, "", "desk", "tui") and not app_key and not mcp:
         system = (system + "\n\n" + chat.WEB_HINT + " " + (
             chat.WEB_TEXT_HINT if body.get("speak") is False and body.get("client") != "desk"   # the Begleiter may read aloud
             else chat.WEB_SPOKEN_HINT)).strip()

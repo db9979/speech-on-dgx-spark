@@ -335,6 +335,7 @@
       <div class="setrow" data-show="chat.desk" style="margin-left:18px"><div class="lbl"><b>Besprechungen mitschreiben</b><span>Begleiter schreibt auf Klick mit (Mikrofon und Ton des Rechners), danach Zusammenfassung und Aufgaben; nichts bleibt gespeichert.</span></div><label class="tgl"><input type="checkbox" id="chat.desk_meeting"><i></i></label></div>
       <div data-show="chat.desk" style="margin-left:18px" id="deskadmin"><div class="fh" id="deskstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="deskfetch">Neue Version jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Pebble-Uhr koppeln</b><span>Uhr-App „Spark“ per Einrichtungscode koppeln statt Adresse und Schlüssel abzutippen. Der Uhr-Schlüssel darf nur fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.pebble"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Terminal-Client</b><span>Programm „spark-tui“ für ein Terminal, etwa die uConsole: Chat, Gespräche, Heute und Aufträge. Gekoppelt unter Ich → Terminal.</span></div><label class="tgl"><input type="checkbox" id="chat.terminal"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Geräte-Updates</b><span>Neue Firmware und App-Versionen für Lautsprecher, Android, Pebble und Begleiter: Überblick und ein Hinweis pro Version.</span></div><label class="tgl"><input type="checkbox" id="chat.dev_updates"><i></i></label></div>
       <div class="setrow" data-show="chat.dev_updates" style="margin-left:18px"><div class="lbl"><b>Lautsprecher nachts aktualisieren</b><span>Erst einer, dann die übrigen; hält an, wenn einer nicht mit der neuen Version zurückkommt.</span></div><label class="tgl"><input type="checkbox" id="chat.dev_updates_night"><i></i></label></div>
       <div data-show="chat.dev_updates_night" style="margin-left:36px"><label>Beginn des Nachtfensters (60 Minuten)</label><div class="rowin"><input type="time" id="chat.dev_updates_night_at" style="max-width:140px"></div></div>
@@ -1083,6 +1084,7 @@
     <div id="andbox" class="ptab"></div>
     <div id="deskbox" class="ptab"></div>
     <div id="pebbox" class="ptab"></div>
+    <div id="termbox" class="ptab"></div>
     <div id="mcpbox" class="ptab"></div>
     <div id="mymcpbox" class="ptab"></div>
     <div id="rpbox" class="ptab"></div>

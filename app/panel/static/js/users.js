@@ -5,12 +5,13 @@ const PL={q:'',show:'',sort:'name',page:0,open:'',names:[],timer:null};
 const pwhen=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const perr=(id,e)=>{$(id).innerHTML=`<span class="err">${esc(e.message)}</span>`};
 // The profile of a device: a list of all profiles, sorted by name. Keys a profile set up itself under Ich
-// (speaker, iPhone app, Pebble watch, Home Assistant) stay with it: they show the name and where they are managed.
+// (speaker, iPhone app, Pebble watch, terminal, Home Assistant) stay with it: they show the name and where they are managed.
 const popts=(sel,first)=>(first?`<option value="">${esc(first)}</option>`:'')+[...PL.names].sort((a,b)=>a.name.localeCompare(b.name))
   .map(u=>`<option value="${esc(u.id)}"${u.id===sel?' selected':''}>${esc(u.name)}</option>`).join('');
 const dkind=x=>x.speaker?t('Lautsprecher, eingerichtet unter Ich → Lautsprecher','Speaker, set up under Me → Speakers')
   :x.kind==='app'||x.app?t('iPhone-App, nur fragen und hören, gekoppelt unter Ich → iPhone-App','iPhone app, only asks and listens, paired under Me → iPhone app')
   :x.kind==='watch'?t('Pebble-Uhr, gekoppelt unter Ich → Pebble-Uhr','Pebble watch, paired under Me → Pebble watch')
+  :x.kind==='tui'?t('Terminal, gekoppelt unter Ich → Terminal','Terminal, paired under Me → Terminal')
   :x.kind==='room'?t('Home Assistant, erzeugt unter Ich → Raum-Modus','Home Assistant, made under Me → Room mode'):'';
 function profFilter(){if($('pfilter').dataset.done)return;$('pfilter').dataset.done='1';
   const o=(v,l)=>`<option value="${v}">${esc(l)}</option>`;

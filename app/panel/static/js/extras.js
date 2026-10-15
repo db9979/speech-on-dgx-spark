@@ -67,7 +67,7 @@ async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.in
   xbind(box,()=>showPar(true));
   if($('parrun'))$('parrun').onclick=()=>showPar(true)}
 // ---------------------------------------------------------------- tasks and shopping list (tasks.py)
-let TASK_ON=false,TG_ON=false,APP_ON=false,APP_PANEL=false,PEB_ON=false,AND_ON=false;
+let TASK_ON=false,TG_ON=false,APP_ON=false,APP_PANEL=false,PEB_ON=false,AND_ON=false,TERM_ON=false;
 async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.innerHTML='';return}
   let d={lists:{}};try{d=await (await api('/api/profile/tasks')).json()}catch{}
   const base=location.origin;
@@ -136,7 +136,7 @@ async function iupdAdmin(){if(!$('iupdadmin'))return;let d={};try{d=await (await
   $('iupdlist').querySelectorAll('input[data-u]').forEach(x=>x.onchange=async()=>{const u=x.dataset.u,q=k=>$('iupdlist').querySelector(`input[data-u="${CSS.escape(u)}"][data-k="${k}"]`).checked;
     try{await api('/api/admin/iphone-update/'+encodeURIComponent(u),xjson('PUT',{notify:q('notify'),start:q('start')}));$('iupdmsg').textContent=t('Gespeichert.','Saved.')}catch(e){$('iupdmsg').textContent=e.message}iupdAdmin()})}
 // the extra boxes of Ich with the place each one draws into; Ich loads them side by side (me.js meLoad, laden.js)
-function extrasJobs(){return [['wxbox',typeof showWx==='function'&&showWx],['conbox',typeof showCon==='function'&&showCon],['parbox',typeof showPar==='function'&&showPar],['taskbox',typeof showTasks==='function'&&showTasks],['tgbox',typeof showTg==='function'&&showTg],['appbox',typeof showApp==='function'&&showApp],['pebbox',typeof showPeb==='function'&&showPeb],['andbox',typeof showAnd==='function'&&showAnd],['deskbox',typeof showDesk==='function'&&showDesk],['agentbox',typeof showAgent==='function'&&showAgent],['espbox',typeof showEsp==='function'&&showEsp],['rmbox',typeof showRm==='function'&&showRm],['bgbox',typeof showBg==='function'&&showBg],['usebox',typeof showUse==='function'&&showUse],['telbox',typeof showTel==='function'&&showTel],['mcpbox',typeof showMcp==='function'&&showMcp],['mymcpbox',typeof showMyMcp==='function'&&showMyMcp],['storebox',typeof showStore==='function'&&showStore],['rpbox',typeof showReport==='function'&&showReport],['writebox',typeof showWrite==='function'&&showWrite],['bildbox',typeof showBilder==='function'&&showBilder]].filter(x=>x[1]).map(([id,f])=>[id,f,1])}
+function extrasJobs(){return [['wxbox',typeof showWx==='function'&&showWx],['conbox',typeof showCon==='function'&&showCon],['parbox',typeof showPar==='function'&&showPar],['taskbox',typeof showTasks==='function'&&showTasks],['tgbox',typeof showTg==='function'&&showTg],['appbox',typeof showApp==='function'&&showApp],['pebbox',typeof showPeb==='function'&&showPeb],['termbox',typeof showTerm==='function'&&showTerm],['andbox',typeof showAnd==='function'&&showAnd],['deskbox',typeof showDesk==='function'&&showDesk],['agentbox',typeof showAgent==='function'&&showAgent],['espbox',typeof showEsp==='function'&&showEsp],['rmbox',typeof showRm==='function'&&showRm],['bgbox',typeof showBg==='function'&&showBg],['usebox',typeof showUse==='function'&&showUse],['telbox',typeof showTel==='function'&&showTel],['mcpbox',typeof showMcp==='function'&&showMcp],['mymcpbox',typeof showMyMcp==='function'&&showMyMcp],['storebox',typeof showStore==='function'&&showStore],['rpbox',typeof showReport==='function'&&showReport],['writebox',typeof showWrite==='function'&&showWrite],['bildbox',typeof showBilder==='function'&&showBilder]].filter(x=>x[1]).map(([id,f])=>[id,f,1])}
 async function showExtras(){for(const [,f] of extrasJobs())await f().catch(()=>{})}
 // ---------------------------------------------------------------- iPhone app (iphone.py)
 async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_ON){box.innerHTML='';return}
@@ -193,6 +193,30 @@ async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_
     const fh=document.createElement('div');fh.className='fh';fh.textContent=t('In der Pebble-App am Handy bei „Spark“ die Einstellungen öffnen und unter „Einrichtungscode“ einfügen, dann Speichern. Gilt ','In the Pebble app on the phone open the settings of "Spark", paste under "Setup code", then Save. Valid for ')+r.minutes+t(' Minuten und nur einmal.',' minutes and once only.');c.appendChild(fh);
     cp.onclick=async()=>{try{await navigator.clipboard.writeText(r.setup);xmsg('pebmsg',t('Kopiert.','Copied.'))}catch{inp.select();xmsg('pebmsg',t('Markiert: jetzt kopieren.','Selected: copy it now.'))}}}
     catch(e){xmsg('pebmsg',e.message,true)}}}
+// ---------------------------------------------------------------- Terminal client (terminal.py)
+// spark-tui pairs with one line: the address, a one-time code and the SHA-256 of the panel's certificate it pins.
+async function showTerm(){const box=$('termbox');if(!box)return;if(!PROFILE||!TERM_ON){box.innerHTML='';return}
+  let d={devices:[],on:false,minutes:10,program:{}};try{d=await (await api('/api/profile/terminal')).json()}catch{}
+  const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
+  const p=d.program||{},get=`curl -fsSkLo spark-tui.py ${location.origin}/tui/spark-tui.py && sha256sum spark-tui.py`;
+  box.innerHTML=`<div class="intro">${t('Das Programm „spark-tui“ für ein Terminal, etwa die uConsole oder per SSH: Chat mit deinem Verlauf, Heute und deine Aufträge. Jedes Terminal bekommt einen eigenen Schlüssel, der nur diese Teile erreicht.','The "spark-tui" program for a terminal, e.g. the uConsole or over SSH: chat with your history, Today and your jobs. Each terminal gets its own key that reaches only these parts.')}</div>
+    <ul class="facts">${d.devices.map(x=>`<li><span><b>${esc(x.name)}</b><br><small class="mut">${x.online?t('gerade verbunden','connected now'):t('zuletzt','last used')+': '+esc(when(x.last))}</small></span><button class="b" type="button" data-termdel="${esc(x.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch kein Terminal gekoppelt.','No terminal paired yet.')}</span></li>`}</ul>
+    ${d.on?`<div class="fh"><b>1. ${t('Programm holen','Get the program')}</b> ${t('Im Terminal ausführen und die Prüfsumme vergleichen','Run in the terminal and compare the checksum')}${p.version?' (Version '+esc(p.version)+')':''}:</div>
+      <input readonly id="termget" value="${esc(get)}"><div class="fh mut">SHA-256 ${esc(p.sha256||'–')}</div>
+      <div class="fh"><b>2. ${t('Textual einrichten','Set up Textual')}</b> <code>python3 -m pip install --user textual</code> ${t('(nur für das Fenster; „frage“ geht ohne).','(only for the window; "frage" works without).')}</div>
+      <div class="fh"><b>3. ${t('Koppeln','Pair')}</b> ${t('„Kopplungszeile holen“ tippen, die Zeile im Terminal ausführen.','Tap "Get a pairing line" and run the line in the terminal.')}</div>
+      ${d.https||location.protocol==='https:'?`<div class="row"><button class="b p" type="button" id="termpair">${t('Kopplungszeile holen','Get a pairing line')}</button></div>`:`<div class="fh">${t('Das Panel hat kein https. Über eine externe https-Adresse geht es trotzdem: das Panel dort öffnen.','The panel has no https. An outside https address still works: open the panel there.')}</div>`}`:''}
+    <div id="termcode"></div><div class="fh" id="termmsg"></div>`;
+  xbind(box,showTerm);
+  // removing asks once more in the button itself (no browser dialog), the key stops at once
+  box.querySelectorAll('[data-termdel]').forEach(b=>b.onclick=async()=>{if(!b.dataset.sure){b.dataset.sure='1';b.textContent=t('Wirklich entfernen?','Really remove?');return}
+    try{await api('/api/profile/terminal/'+encodeURIComponent(b.dataset.termdel),{method:'DELETE'});showTerm()}catch(e){xmsg('termmsg',e.message,true)}});
+  if($('termpair'))$('termpair').onclick=async()=>{try{const r=await (await api('/api/profile/terminal/pair',xjson('POST',{origin:location.origin}))).json();
+    const c=$('termcode');c.innerHTML='';const line=`python3 spark-tui.py koppeln '${r.setup}'`;const inp=document.createElement('input');inp.readOnly=true;inp.value=line;inp.id='termsetup';c.appendChild(inp);
+    const row=document.createElement('div');row.className='row';const cp=document.createElement('button');cp.type='button';cp.className='b p';cp.textContent=t('Kopieren','Copy');row.appendChild(cp);c.appendChild(row);
+    const fh=document.createElement('div');fh.className='fh';fh.textContent=(r.pinned?t('Das Zertifikat des Panels wird festgepinnt. ','The panel\'s certificate gets pinned. '):t('Externe Adresse: das Zertifikat wird wie im Browser geprüft. ','Outside address: the certificate is checked as in the browser. '))+t('Im Terminal ausführen. Gilt ','Run it in the terminal. Valid for ')+r.minutes+t(' Minuten und nur einmal.',' minutes and once only.');c.appendChild(fh);
+    cp.onclick=async()=>{try{await navigator.clipboard.writeText(line);xmsg('termmsg',t('Kopiert.','Copied.'))}catch{inp.select();xmsg('termmsg',t('Markiert: jetzt kopieren.','Selected: copy it now.'))}}}
+    catch(e){xmsg('termmsg',e.message,true)}}}
 // ---------------------------------------------------------------- Bus und Bahn (transit.py)
 let TR_ON=false;
 const TRDAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];

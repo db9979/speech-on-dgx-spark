@@ -43,7 +43,7 @@ OWN_PREFIXES = ("tg-", "siri-", "desk-", "watch-", "esp-", "tel-", "brief-", "ag
 VIA = {"telegram": "Telegram", "siri": "Siri", "desk": "Begleiter", "watch": "Uhr", "speaker": "Lautsprecher", "telefon": "Telefon"}
 # who answers right now, by kind of device (fixed words, shown as "Handy antwortet gerade …")
 KINDS = {"web": "Browser", "phone": "Handy", "app": "iPhone-App", "car": "CarPlay", "speaker": "Lautsprecher",
-         "watch": "Uhr", "siri": "Siri", "telegram": "Telegram", "desk": "Begleiter", "telefon": "Telefon"}
+         "watch": "Uhr", "siri": "Siri", "telegram": "Telegram", "desk": "Begleiter", "telefon": "Telefon", "tui": "Terminal"}
 
 _hub = sse.Hub(QUEUE, MAX_STREAMS, BEAT)
 _subs = _hub.subs   # uid -> {stream id: (loop, queue)}
@@ -67,7 +67,7 @@ profiles.CONVO_HOOKS.append(changed)
 def kind_of(request, body):
     body = body if isinstance(body, dict) else {}
     c = body.get("client")
-    if c in ("speaker", "telefon", "watch", "siri", "telegram", "desk"):
+    if c in ("speaker", "telefon", "watch", "siri", "telegram", "desk", "tui"):
         return c
     if profiles.key_scope(request) == "app":
         return "car" if body.get("car") is True else "app"

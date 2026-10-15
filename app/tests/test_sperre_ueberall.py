@@ -401,6 +401,7 @@ ADMIN_ON_OK = {
     "onboard.py:_shown": "Spark switch; the block is checked in onboard.items",
     "parcels.py:admin_on": "Spark switch; per profile parcels.usable (features.allowed)",
     "pebblewatch.py:admin_on": "Spark switch; per profile pebblewatch.allowed, endpoints add features.blocked",
+    "terminal.py:admin_on": "Spark switch for pairing pages; per profile features.allowed terminal (TUI_GATE), endpoints add features.blocked",
     "proactive.py:enabled": "Spark switch; per profile proactive.blocked (features.blocked) and features.allowed",
     "quality.py:judge": "admin's quality test",
     "remarkable.py:due_once": "Spark-wide early out; each profile then features.allowed remarkable",

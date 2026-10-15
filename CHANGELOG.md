@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.646** · 2026-10-15 · Terminal-Client spark-tui (neu, aus): Chat, Gespräche, Heute und Aufträge im Terminal, etwa auf der uConsole; Kopplung unter Ich → Terminal mit festgepinntem Zertifikat oder externer Adresse
 - **V01.0.645** · 2026-10-15 · Verbessern: Speicher-Melder nimmt den Speicher des Modell-Rechners; Fehler beim Nachsehen nennen die Stelle im Code
 - **V01.0.644** · 2026-10-15 · Leistung messen nimmt den Speicher des Modell-Rechners; die eigene Lautsprecher-Adresse heißt nicht mehr Fehler
 - **V01.0.643** · 2026-10-15 · Panel-Rechner (Raspberry Pi) führt bei der Installation nur den Rauchtest aus; pip holt nur von PyPI, ohne pip.conf

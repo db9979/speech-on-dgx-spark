@@ -166,6 +166,7 @@ WITHOUT = {
     "androidlive": "Kanal",
     "androidupdate": "macht die App selbst",
     "pebble": "Kanal",
+    "terminal": "Kanal",
     "wyoming": "Kanal für Home Assistant Assist",
     "telefon": "Kanal: Anruf über die Telefonanlage",
     "iphonepush": "Kanal",

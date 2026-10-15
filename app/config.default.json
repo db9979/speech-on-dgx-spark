@@ -303,6 +303,7 @@
     "iphone": false,
     "iphone_panel": false,
     "pebble": false,
+    "terminal": false,
     "android": false,
     "android_live": false,
     "android_update": false,

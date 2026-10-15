@@ -51,7 +51,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
-            ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
+            ("termbox", "Terminal", "Terminal"), ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
             ("usebox", "Verbrauch", "Usage"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
@@ -299,6 +299,8 @@ FEATURES = (
     F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
       parent="begleiter", me="deskbox", guide="begleitermeeting"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), me="pebbox", guide="pebblepair"),
+    # spark-tui in a terminal (terminal.py): chat, conversations, Heute and the agent's jobs, paired by a setup line
+    F("terminal", "Terminal-Client", "Terminal client", "go", ("terminal",), me="termbox", guide="terminal"),
     # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi
     F("geraeteupdate", "Geräte-Updates", "Device updates", "go", ("dev_updates",), me="setbox", guide="geraeteupdate"),
     F("geraetenacht", "Lautsprecher nachts aktualisieren", "Update speakers at night", "go", ("dev_updates_night", "esp32"),

@@ -1,5 +1,5 @@
 """Pairing codes (Kopplung): the one-time code a profile's own browser login asks for, shown in the panel and
-typed or scanned on the new device (iPhone app, Pebble watch, Schreibhilfe programs, Begleiter), which trades
+typed or scanned on the new device (iPhone app, Pebble watch, Schreibhilfe programs, Begleiter, terminal), which trades
 it for its own device key.
 
 One mechanic for all of them: the code comes from `secrets` (made by the caller's `make`), only its sha256 is

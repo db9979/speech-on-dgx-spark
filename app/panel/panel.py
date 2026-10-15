@@ -57,6 +57,7 @@ import transit  # noqa: E402
 import esp32  # noqa: E402
 import iphone  # noqa: E402
 import pebblewatch  # noqa: E402
+import terminal  # noqa: E402
 import android  # noqa: E402
 import appupdate  # noqa: E402
 import apns  # noqa: E402
@@ -120,7 +121,7 @@ import modellseite  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, bilder, verbrauch, modellseite, telefon, telefon_ich):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, bilder, verbrauch, modellseite, telefon, telefon_ich):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -619,6 +620,15 @@ def pebble_app():
     if not os.path.exists(path):
         raise HTTPException(404, "not built")
     return FileResponse(path, media_type="application/octet-stream", filename="speech-spark.pbw")
+
+
+@app.get("/tui/spark-tui.py")
+def terminal_program():
+    """The terminal client (terminal.py), to fetch with curl on the terminal (public: it holds no data; Ich → Terminal
+    shows its SHA-256 to compare)."""
+    if not os.path.exists(terminal.PROGRAM):
+        raise HTTPException(404, "missing")
+    return FileResponse(terminal.PROGRAM, media_type="text/x-python", filename="spark-tui.py")
 
 
 @app.get("/sw.js")

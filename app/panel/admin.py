@@ -267,6 +267,7 @@ FIXED_KINDS = {
     "app": "Ein iPhone gehört zum Profil, das es gekoppelt hat. Dort entfernen und neu koppeln.",
     "watch": "Eine Pebble-Uhr gehört zum Profil, das sie gekoppelt hat. Dort entfernen und neu koppeln.",
     "room": "Der Home-Assistant-Schlüssel gehört zum Profil, das ihn erzeugt hat. Dort einen neuen erzeugen.",
+    "tui": "Ein Terminal gehört zum Profil, das es gekoppelt hat. Dort unter Ich → Terminal entfernen und neu koppeln.",
 }
 
 
@@ -280,7 +281,7 @@ async def admin_set_device(did: str, request: Request):
         raise HTTPException(400, "Ein Lautsprecher gehört zum Profil, das ihn eingerichtet hat. Dort entfernen und neu einrichten.")
     kind = next((x.get("kind") for x in profiles.admin_list()["devices"] if x["id"] == did), "")
     if kind in FIXED_KINDS:
-        # iPhone app, Pebble watch and Home Assistant room key were paired by the profile itself: they stay there
+        # iPhone app, Pebble watch, terminal and Home Assistant room key were paired by the profile itself: they stay there
         raise HTTPException(400, FIXED_KINDS[kind])
     if not profiles.set_device_user(did, str(body.get("user", ""))):
         raise HTTPException(404, "no such device or profile")

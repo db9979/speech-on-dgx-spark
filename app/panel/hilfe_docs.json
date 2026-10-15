@@ -449,6 +449,38 @@
 },
 {
 "lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Terminal-Client (spark-tui)",
+"title": "Terminal-Client (spark-tui)",
+"text": "spark-tui (app/tui/spark-tui.py, eine Python-Datei) bringt den Chat mit deinem Verlauf, *Heute* und deine Aufträge, Pläne und Routinen in ein Terminal, etwa auf die ClockworkPi uConsole oder per SSH (neu in V01.0.646, aus)."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Terminal-Client (spark-tui)",
+"title": "Terminal-Client (spark-tui)",
+"text": "1. Admin schaltet *Funktionen → Terminal-Client* ein (gilt für jedes Profil, der Admin sperrt einzelne; Gäste nie). 2. Unter *Ich → Terminal* steht die Zeile zum Holen des Programms mit Prüfsumme (curl -fsSkLo spark-tui.py …/tui/spark-tui.py und sha256sum). Für das Fenster braucht es Textual (python3 -m pip install --user textual), spark-tui frage \"…\" geht ohne. 3. „Kopplungszeile holen“ (mit Bestätigungscode) gibt eine Zeile python3 spark-tui.py koppeln 'https://…#tui=…&fp=…', die 10 Minuten und einmal gilt. Im Heimnetz pinnt das Terminal das Zertifikat des Panels (fp, SHA-256) und schickt nichts, wenn es nicht passt. Holt man die Zeile über die Adresse von außen (Reverse-Proxy mit echtem Zertifikat), steht kein fp darin und das Zertifikat wird wie im Browser geprüft. spark-tui adresse-dazu https://… fügt eine zweite Adresse hinzu; das Terminal nimmt die erste, die antwortet. Nur https geht. 4. Das Terminal speichert seinen Schlüssel in ~/.config/spark-tui/geraet.json (nur für dich lesbar). Der Schlüssel heißt „Terminal · Name“, erreicht nur Chat, Gespräche, Heute, Funktionsliste und die Aufträge-Seiten und bekommt 503, solange die Funktion aus oder das Profil gesperrt ist. Aufträ"
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Terminal-Client (spark-tui)",
+"title": "Terminal-Client (spark-tui)",
+"text": "ge folgen der Agent-Stufe des Profils. Entfernen unter *Ich → Terminal* oder bei Personen und Geräte."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Terminal-Client (spark-tui)",
+"title": "Terminal-Client (spark-tui)",
+"text": "Fenster: links Gespräche, Aufträge und Heute (unter 100 Spalten nur der Chat), rechts der Chat. F2 Gespräche, F3 Aufträge (n neuer Auftrag; im Auftrag d als Dokument, x abbrechen, Entf löschen), F4 neu laden, Strg+N neues Gespräch, Esc stoppt die Antwort, F10 Ende. spark-tui status zeigt Adresse, Profil und was das Terminal darf. Fragen erscheinen im Anfrage-Verlauf mit Eingang „Terminal“, unter *Zustand → Live* steht die Zahl offener Terminals, unter *Zustand → Logs* im Bereich „Apps“ die Zeilen terminal: …."
+},
+{
+"lang": "de",
 "src": "app-datenschutz",
 "file": "Datenschutzerklärung der iPhone-App „Spark“",
 "head": "Datenschutzerklärung der iPhone-App „Spark“",
@@ -869,7 +901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 57 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 57 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
 },
 {
 "lang": "de",
@@ -877,7 +909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus). - Funktionen → Wer darf was: die App für einzelne Profile sperren. - Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen."
+"text": "- Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus). - Funktionen → Wer darf was: die App für einzelne Profile sperren. - Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen. - Funktionen → Terminal-Client und Ich → Terminal: Programm holen, koppeln (zu Hause gepinnt, extern wie im Browser geprüft), entfernen."
 },
 {
 "lang": "de",
@@ -885,7 +917,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird. - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“."
+"text": "- Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird. - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“. - Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen."
 },
 {
 "lang": "de",
@@ -893,7 +925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/kopplung.py Codes.new: zufälliger Einmal-Code, nur der Hash (auch Pebble, Schreibhilfe, Begleiter) (Schritt 3) - app/panel/kopplung.py Codes.take: Code einmal einlösen, zeitkonstant verglichen (Schritt 4) - app/panel/iphone.py app_pair: der erste Kontakt der App (Schritt 4, Schritt 5) - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark (Schritt 9) - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern (Schritt 5) - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus (Schritt 6) - app/panel/profiles.py _app_path: die feste Pfadliste der App (Schritt 7) - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung (Schritt 10) - app/panel/account.py profile_remove_device: Gerät entfernen (Schritt 11) - app/panel/android.py apk_response: App-Datei nur mit gültigem Link (Schritt 3)"
+"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/kopplung.py Codes.new: zufälliger Einmal-Code, nur der Hash (auch Pebble, Schreibhilfe, Begleiter) (Schritt 3) - app/panel/kopplung.py Codes.take: Code einmal einlösen, zeitkonstant verglichen (Schritt 4) - app/panel/iphone.py app_pair: der erste Kontakt der App (Schritt 4, Schritt 5) - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark (Schritt 9) - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern (Schritt 5) - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus (Schritt 6) - app/panel/profiles.py _app_path: die feste Pfadliste der App (Schritt 7) - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung (Schritt 10) - app/panel/account.py profile_remove_device: Gerät entfernen (Schritt 11) - app/panel/android.py apk_response: App-Datei nur mit gültigem Link (Schritt 3) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/"
 },
 {
 "lang": "de",
@@ -901,7 +933,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung"
+"text": "terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal"
 },
 {
 "lang": "de",
@@ -1325,7 +1365,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste be"
+"text": "n Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat"
 },
 {
 "lang": "de",
@@ -1333,7 +1373,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "kommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
+"text": ". Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
 },
 {
 "lang": "de",
@@ -7321,6 +7361,38 @@
 },
 {
 "lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Terminal client (spark-tui)",
+"title": "Terminal client (spark-tui)",
+"text": "spark-tui (app/tui/spark-tui.py, one Python file) brings the chat with your history, *Today* and your jobs, plans and routines into a terminal, e.g. on the ClockworkPi uConsole or over SSH (new in V01.0.646, off)."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Terminal client (spark-tui)",
+"title": "Terminal client (spark-tui)",
+"text": "1. The admin switches on *Functions → Terminal client* (applies to every profile, the admin blocks single ones; never guests). 2. *Me → Terminal* shows the line to get the program with its checksum (curl -fsSkLo spark-tui.py …/tui/spark-tui.py and sha256sum). The window needs Textual (python3 -m pip install --user textual), spark-tui frage \"…\" works without it. 3. \"Get a pairing line\" (with confirmation code) gives a line python3 spark-tui.py koppeln 'https://…#tui=…&fp=…', valid for 10 minutes and once. In the home network the terminal pins the panel's certificate (fp, SHA-256) and sends nothing if it does not match. If you fetch the line over the outside address (reverse proxy with a real certificate), it has no fp and the certificate is checked as in the browser. spark-tui adresse-dazu https://… adds a second address; the terminal uses the first one that answers. Only https works. 4. The terminal keeps its key in ~/.config/spark-tui/geraet.json (readable only by you). The key is called \"Terminal · name\", reaches only chat, conversations, Today, the function list and the job pages, and gets 503 while the function is off or the profile is blocked. Jobs follow the profile's agent l"
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Terminal client (spark-tui)",
+"title": "Terminal client (spark-tui)",
+"text": "evel. Remove it under *Me → Terminal* or under People and devices."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Terminal client (spark-tui)",
+"title": "Terminal client (spark-tui)",
+"text": "Window: conversations, jobs and Today on the left (below 100 columns only the chat), the chat on the right. F2 conversations, F3 jobs (n new job; in a job d as document, x cancel, Del delete), F4 reload, Ctrl+N new conversation, Esc stops the answer, F10 quit. spark-tui status shows address, profile and what the terminal may do. Questions show up in the request history with input \"Terminal\", *Status → Live* shows the number of open terminals, *Status → Logs* has the terminal: … lines in the area \"Apps\"."
+},
+{
+"lang": "en",
 "src": "app-privacy",
 "file": "Privacy policy of the iPhone app \"Spark\"",
 "head": "Privacy policy of the iPhone app \"Spark\"",
@@ -7749,7 +7821,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 57 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 57 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
 },
 {
 "lang": "en",
@@ -7757,7 +7829,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → iPhone app and Features → Android app: the apps for every profile (default off). - Features → Who may do what: block the app for single profiles. - Me → iPhone and Me → Android: pairing, the app's rights, removing devices."
+"text": "- Features → iPhone app and Features → Android app: the apps for every profile (default off). - Features → Who may do what: block the app for single profiles. - Me → iPhone and Me → Android: pairing, the app's rights, removing devices. - Features → Terminal client and Me → Terminal: get the program, pair (pinned at home, checked as in the browser from outside), remove."
 },
 {
 "lang": "en",
@@ -7765,7 +7837,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Live: a line under events when an iPhone is paired or removed. - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“."
+"text": "- Status → Live: a line under events when an iPhone is paired or removed. - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“. - Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."
 },
 {
 "lang": "en",
@@ -7773,7 +7845,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/kopplung.py Codes.new: random one-time code, only the hash (also Pebble, writing help, companion) (step 3) - app/panel/kopplung.py Codes.take: redeem a code once, compared in constant time (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3)"
+"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/kopplung.py Codes.new: random one-time code, only the hash (also Pebble, writing help, companion) (step 3) - app/panel/kopplung.py Codes.take: redeem a code once, compared in constant time (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/te"
 },
 {
 "lang": "en",
@@ -7781,7 +7853,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung"
+"text": "rminal.py reaches: the terminal's fixed rule list (step 7)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal"
 },
 {
 "lang": "en",
@@ -8197,7 +8277,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places tak"
+"text": "the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all "
 },
 {
 "lang": "en",
@@ -8205,7 +8285,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
+"text": "places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
 },
 {
 "lang": "en",

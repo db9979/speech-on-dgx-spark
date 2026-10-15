@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "0c6170932e",
+        "stand": "f15d2a0932",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -485,11 +485,11 @@ SEITEN_DATEN = {
                "hash is stored), then the cookie: signature, age, session still in the list and not logged out.")),
             S("s7", "frage", ("Schlüssel für diesen Weg frei?", "Key free for this path?"),
               ("Bereich des Schlüssels", "the key's scope"),
-              ("Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter) reicht nur für "
+              ("Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für "
                "seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder "
                "hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre "
                "Kopplung behält.",
-               "A key with a scope (app, watch, room, Home Assistant, writing help, companion) only reaches its own "
+               "A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own "
                "paths and only while the admin and the profile have the function on. If it is off right now or the "
                "profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its "
                "pairing."),
@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "9ebeb8b966",
+        "stand": "a3f08d5cd0",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -2703,12 +2703,15 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "98a3fbb086",
+        "stand": "6d59c5e57f",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
             "iphone.app_hello": ["s9"], "profiles._app_path": ["s7"], "account.profile_remove_device": ["s11"],
             "android.apk_response": ["s3"], "regeln": ["s6", "s7"], "regel:ohne": ["s10"],
+            "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
+            "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
+            "regel:tui": ["s7"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -2795,7 +2798,10 @@ SEITEN_DATEN = {
                "zeigt es nur an und hält sich daran.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
-               "only shows it and follows it.")),
+               "only shows it and follows it."),
+              ("info", ("Terminal", "Terminal"),
+               ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Aufträge)",
+                "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, jobs)"))),
             S("s10", "frage", ("Konto, Geräte oder Sicherheit?", "Account, devices or security?"),
               ("nur im eigenen Browser", "only in the own browser"),
               ("Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene "
@@ -2826,6 +2832,8 @@ SEITEN_DATEN = {
             [("Schlüssel-Bereich", "Key scope"), ("Wer ihn hat", "Who has it"), ("Was er öffnet", "What it opens")],
             [("app", "app"), ("iPhone-App", "iPhone app"), ("profiles.APP_PATHS und freigegebene Bereiche", "profiles.APP_PATHS and opened areas")],
             [("watch", "watch"), ("Pebble-Uhr", "Pebble watch"), ("nur /api/watch/…", "only /api/watch/…")],
+            [("tui", "tui"), ("Terminal-Client spark-tui", "terminal client spark-tui"),
+             ("terminal.TUI_RULES: Chat, Gespräche, Heute, Aufträge", "terminal.TUI_RULES: chat, conversations, Today, jobs")],
             [("desk, write", "desk, write"), ("Spark-Begleiter, Schreibhilfe", "Spark companion, writing help"),
              ("nur ihre eigenen Pfade", "only their own paths")],
             [("ohne", "none"), ("Lautsprecher, Siri-Kurzbefehl, eigene Skripte", "speakers, Siri shortcut, own scripts"),
@@ -2839,6 +2847,9 @@ SEITEN_DATEN = {
             ("{android.TOKEN_SECONDS|min}", ("Minuten gilt ein Android-Download-Link", "minutes an Android download link is valid"),
              "android.TOKEN_SECONDS"),
             ("{android.TOKEN_USES}", ("Downloads pro Android-Link", "downloads per Android link"), "android.TOKEN_USES"),
+            ("{terminal.CODE_SECONDS|min}", ("Minuten gilt eine Kopplungszeile fürs Terminal", "minutes a terminal pairing line is valid"),
+             "terminal.CODE_SECONDS"),
+            ("{terminal.MAX_DEVICES}", ("Terminals pro Profil", "terminals per profile"), "terminal.MAX_DEVICES"),
         ],
         "einstellen": [
             ("Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).",
@@ -2847,12 +2858,18 @@ SEITEN_DATEN = {
              "Features → Who may do what: block the app for single profiles."),
             ("Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen.",
              "Me → iPhone and Me → Android: pairing, the app's rights, removing devices."),
+            ("Funktionen → Terminal-Client und Ich → Terminal: Programm holen, koppeln (zu Hause gepinnt, extern wie im "
+             "Browser geprüft), entfernen.",
+             "Features → Terminal client and Me → Terminal: get the program, pair (pinned at home, checked as in the "
+             "browser from outside), remove."),
         ],
         "sehen": [
             ("Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird.",
              "Status → Live: a line under events when an iPhone is paired or removed."),
             ("Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“.",
              "Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“."),
+            ("Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen.",
+             "Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."),
         ],
         "code": [
             ("iphone.profile_pair", ("Kopplungslink nur aus dem eigenen Browser", "pairing link only from the own browser")),
@@ -2867,8 +2884,12 @@ SEITEN_DATEN = {
             ("core.browser_profile", ("nur die eigene Browser-Anmeldung", "only the own browser login")),
             ("account.profile_remove_device", ("Gerät entfernen", "remove a device")),
             ("android.apk_response", ("App-Datei nur mit gültigem Link", "app file only with a valid link")),
+            ("terminal.profile_pair", ("Kopplungszeile fürs Terminal nur aus dem eigenen Browser", "terminal pairing line only from the own browser")),
+            ("terminal.setup_base", ("zu Hause gepinnt, extern nur https", "pinned at home, outside https only")),
+            ("terminal.program_pair", ("der erste Kontakt des Terminals", "the terminal's first contact")),
+            ("terminal.reaches", ("die feste Regelliste des Terminals", "the terminal's fixed rule list")),
         ],
-        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung"],
+        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung", "test_terminal"],
         "heute": [],
     },
 
@@ -4169,7 +4190,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "1b8f6d3a0a",
+        "stand": "d2a684d847",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
             "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],

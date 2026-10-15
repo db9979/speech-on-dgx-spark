@@ -271,7 +271,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/geraeteupdate.py` | Übersicht und Hinweise zu Geräte-Updates |
 | `app/panel/hintergrund.py` | Ich → Mein Zustand |
 | `app/panel/iphone.py` | iPhone-App: Kopplung und Rechte |
-| `app/panel/kopplung.py` | Einmal-Codes zum Koppeln: iPhone, Pebble, Schreibhilfe, Begleiter |
+| `app/panel/kopplung.py` | Einmal-Codes zum Koppeln: iPhone, Pebble, Schreibhilfe, Begleiter, Terminal |
 | `app/panel/messages.py` | Der Weg des Assistenten in die Chats |
 | `app/panel/onboard.py` | Einrichten an der Hand |
 | `app/panel/pebblewatch.py` | Kopplung der Pebble-Uhr |
@@ -287,6 +287,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/telefon_ich.py` | Ich → Telefon: eigene Rufnummern mit Code, Telefon-PIN, Telefonate |
 | `app/panel/telefon_ton.py` | Ton am Telefon: G.722, G.711 und Umrechnen der Abtastrate |
 | `app/panel/telegram.py` | Telegram-Bot für Text und Sprachnachrichten |
+| `app/panel/terminal.py` | Terminal-Client spark-tui: Kopplung mit gepinntem Zertifikat, Schlüssel nur für Chat, Heute, Aufträge |
 | `app/panel/today.py` | Die Karte „Heute“ oben in Ich |
 | `app/panel/verbund.py` | Spark-Verbund: Chats mit Menschen auf anderen Sparks, signiert, mit Fotos und Dateien |
 | `app/panel/verbundgruppe.py` | Gruppen mit anderen Sparks: die Gruppe gehört ihrem Spark, der sie an die anderen weiterreicht |
@@ -735,6 +736,8 @@ flowchart TD
   s7 -->|nein| s7x
   s8x(["Gerade nicht (503)"])
   s8 -->|ja| s8x
+  s9x(["Terminal-Client: Schlüssel-Bereich „tui“, nur 11 Regeln (Chat, Gespräche, Heute, Aufträge)"])
+  s9 -->|Terminal| s9x
   s10x(["Nur im eigenen Browser (403)"])
   s10 -->|ja| s10x
 ```
@@ -761,6 +764,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 |---|---|---|
 | app | iPhone-App | profiles.APP_PATHS und freigegebene Bereiche |
 | watch | Pebble-Uhr | nur /api/watch/… |
+| tui | Terminal-Client spark-tui | terminal.TUI_RULES: Chat, Gespräche, Heute, Aufträge |
 | desk, write | Spark-Begleiter, Schreibhilfe | nur ihre eigenen Pfade |
 | ohne | Lautsprecher, Siri-Kurzbefehl, eigene Skripte | fragen wie das Profil, nie Konto oder Sicherheit |
 | kein Schlüssel | Android-App | Anmeldung wie ein Browser |
@@ -772,17 +776,21 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 - **57** feste Pfade für den App-Schlüssel ([Schritt 7](#kn-apps-s7))
 - **30** Minuten gilt ein Android-Download-Link ([Schritt 3](#kn-apps-s3))
 - **5** Downloads pro Android-Link ([Schritt 3](#kn-apps-s3))
+- **10** Minuten gilt eine Kopplungszeile fürs Terminal ([Schritt 3](#kn-apps-s3))
+- **5** Terminals pro Profil ([Schritt 2](#kn-apps-s2))
 
 #### Einstellen
 
 - Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).
 - Funktionen → Wer darf was: die App für einzelne Profile sperren.
 - Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen.
+- Funktionen → Terminal-Client und Ich → Terminal: Programm holen, koppeln (zu Hause gepinnt, extern wie im Browser geprüft), entfernen.
 
 #### Was du siehst
 
 - Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird.
 - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“.
+- Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen.
 
 #### Im Code
 
@@ -797,8 +805,12 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 - `app/panel/core.py` `browser_profile`: nur die eigene Browser-Anmeldung ([Schritt 10](#kn-apps-s10))
 - `app/panel/account.py` `profile_remove_device`: Gerät entfernen ([Schritt 11](#kn-apps-s11))
 - `app/panel/android.py` `apk_response`: App-Datei nur mit gültigem Link ([Schritt 3](#kn-apps-s3))
+- `app/panel/terminal.py` `profile_pair`: Kopplungszeile fürs Terminal nur aus dem eigenen Browser ([Schritt 1](#kn-apps-s1), [Schritt 2](#kn-apps-s2))
+- `app/panel/terminal.py` `setup_base`: zu Hause gepinnt, extern nur https ([Schritt 3](#kn-apps-s3))
+- `app/panel/terminal.py` `program_pair`: der erste Kontakt des Terminals ([Schritt 4](#kn-apps-s4), [Schritt 5](#kn-apps-s5))
+- `app/panel/terminal.py` `reaches`: die feste Regelliste des Terminals ([Schritt 7](#kn-apps-s7))
 
-Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`
+Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`
 
 ### Telegram, Siri, Uhr
 
@@ -1327,7 +1339,7 @@ flowchart TD
 4. <a id="kn-zugang-s4"></a>**Zweiter Schritt?**: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN.
 5. <a id="kn-zugang-s5"></a>**Cookie setzen**: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung.
 6. <a id="kn-zugang-s6"></a>**Profil bestimmen**: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet.
-7. <a id="kn-zugang-s7"></a>**Schlüssel für diesen Weg frei?**: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält.
+7. <a id="kn-zugang-s7"></a>**Schlüssel für diesen Weg frei?**: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält.
 8. <a id="kn-zugang-s8"></a>**Ohne Profil und Gastzugang aus?**: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort.
 9. <a id="kn-zugang-s9"></a>**Zu viele Anfragen?**: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast.
 10. <a id="kn-zugang-s10"></a>**Gast, alle Plätze belegt?**: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei.
