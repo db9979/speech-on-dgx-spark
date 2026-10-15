@@ -921,7 +921,7 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 #### Home Assistant Assist (Wyoming)
 
 - Its own server listens on the Wyoming port (default 31003) while the switch is on. Wyoming has no password; that is why it only answers addresses from the admin's list, with an empty list nobody.
-- Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no profile, nothing personal. At most 8 connections at once; lengths are checked before reading; only sound formats a microphone sends.
+- Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no profile, nothing personal. At most 8 connections at once; lengths are checked before reading; only sound formats a microphone sends. „describe“ answers at once with the voice list from memory (read again every 10 minutes), because Home Assistant waits only 1 second.
 - Refused addresses show on Status → Live under input and as a suggestion for the list.
 
 #### Numbers (from the code)

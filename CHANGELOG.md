@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.602** · 2026-10-15 · Fix Wyoming: „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 min im Hintergrund neu gelesen, beim ersten Mal höchstens 0,5 s gewartet); vorher wartete es bis zu 5 s auf /v1/voices der Sprachausgabe, Home Assistant gibt nach 1 s auf („Unable to get info from …:31003“)
 - **V01.0.601** · 2026-10-15 · Fix: der Dienst-Wächter fragt Home Assistant unter /manifest.json statt /api/ ohne Token; HA zählte jede Probe (einmal pro Minute seit V01.0.440) als falsche Anmeldung und hätte tars mit ip_ban_enabled sperren können
 - **V01.0.597** · 2026-10-15 · Fix Messen: Qwen3-VL 8B bekommt im Katalog 20 % des Speichers statt 12 % (vLLM: „No available memory for the cache blocks“, −2 GiB für den Kontext); Bedarf jetzt etwa 24 GiB, nur bei Bedarf geladen
 - **V01.0.596** · 2026-10-15 · Eigene Modelle Stufe E5 (eigene Modelle hinzufügen): neuer Admin-Schalter Funktionen → Modelle wechseln → Eigene Modelle (aus); unter Zustand → Modelle Prüfen, Hinzufügen und Löschen eigener Modelle für Sprachmodell und Bildverständnis, nur offene Modelle mit safetensors, ohne fremden Code, bekannte Bauart, Commit gepinnt; auch in der iPhone-App

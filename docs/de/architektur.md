@@ -921,7 +921,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 #### Home Assistant Assist (Wyoming)
 
 - Ein eigener Server lauscht auf dem Wyoming-Port (Standard 31003), solange der Schalter an ist. Wyoming hat kein Passwort; deshalb antwortet er nur Adressen aus der Liste des Admins, mit leerer Liste niemandem.
-- Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt.
+- Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten neu gelesen), weil Home Assistant nur 1 Sekunde wartet.
 - Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste.
 
 #### Zahlen (aus dem Code)

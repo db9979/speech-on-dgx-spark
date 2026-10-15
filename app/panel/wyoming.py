@@ -204,16 +204,36 @@ async def synthesize(s, text, voice):
     return pcm_of(r.content) if r.content[:4] == b"RIFF" else (24000, 2, 1, r.content)
 
 
-async def voices(s):
+VOICES_TTL = 600         # seconds a read voice list is kept
+VOICES_WAIT = 0.5        # longest wait for the list while answering "describe" (HA gives up after 1 s)
+_voices = {"at": None, "list": [], "task": None}     # at: time.monotonic() of the last read, None = never
+
+
+async def _read_voices(s):
     from core import api_headers
     try:
         async with httpx.AsyncClient(timeout=5) as c:
             r = await c.get(f"http://127.0.0.1:{s['tts_port']}/v1/voices", headers=api_headers())
-        got = [v for v in (r.json() or {}).get("voices", []) if isinstance(v, str)]
+        got = [v for v in (r.json() or {}).get("voices", []) if isinstance(v, str)][:60]
     except (httpx.HTTPError, ValueError, AttributeError):
-        got = []
+        print("wyoming: voices not read", flush=True)
+        return
+    _voices["list"], _voices["at"] = got, time.monotonic()
+
+
+async def voices(s):
+    """The voices for "describe". Home Assistant waits 1 second for the answer and then marks the Spark as
+    unreachable, so the list comes from memory; a busy voice engine is asked in the background, waited for
+    at most VOICES_WAIT seconds."""
+    t = _voices["task"]
+    if t and t.get_loop() is not asyncio.get_running_loop():
+        t = _voices["task"] = None                 # left from another event loop (tests), never finishes
+    if (_voices["at"] is None or time.monotonic() - _voices["at"] > VOICES_TTL) and not (t and not t.done()):
+        t = _voices["task"] = asyncio.ensure_future(_read_voices(s))
+    if t and not t.done() and not _voices["list"]:
+        await asyncio.wait([t], timeout=VOICES_WAIT)
     first = s["voice"] or s["default_voice"]
-    return ([first] if first else []) + [v for v in got if v != first][:40]
+    return ([first] if first else []) + [v for v in _voices["list"] if v != first][:40]
 
 
 async def handle(reader, writer):
