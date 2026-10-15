@@ -91,6 +91,8 @@ DATEIEN = [
     profil("agent.json", "Aufträge und Routinen", "Jobs and routines", art="Einstellungen"),
     profil("voice.json", "Stimmabdruck", "Voiceprint", art="Stimmabdruck", schutz=("versiegelt", "sealed")),
     profil("speaker-code.json", "Codewort am Lautsprecher", "Speaker code word", art="Schlüssel", schutz=("versiegelt", "sealed")),
+    profil("telefon.json", "Rufnummern, Telefon-PIN und Telefonate", "Phone numbers, phone PIN and calls", art="Einstellungen",
+           schutz=("Nummern und PIN versiegelt", "numbers and PIN sealed")),
     profil("chatkeys.json", "Öffentliche Schlüssel der Geräte", "Devices' public keys", art="Schlüssel"),
     profil("contacts.json", "Kontakte-Zugang", "Contacts account", art="noch nicht angeboten", schutz=("Passwort versiegelt", "password sealed")),
     profil("ha-events.json", "Home-Assistant-Ereignisse", "Home Assistant events", art="Zustand"),

@@ -53,7 +53,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
             ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
-            ("usebox", "Verbrauch", "Usage"))
+            ("usebox", "Verbrauch", "Usage"), ("telbox", "Telefon", "Phone"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -270,7 +270,7 @@ FEATURES = (
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",), parent="chats", me="setbox", guide="messages_announce"),
     F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
     # Den Spark anrufen (telefon.py, plan telefon-anruf.md): the Spark as an IP phone at the home's PBX
-    F("telefon", "Den Spark anrufen", "Calling the Spark", "home", ("telefon",), guide="telefon"),
+    F("telefon", "Den Spark anrufen", "Calling the Spark", "home", ("telefon",), me="telbox", guide="telefon"),
     # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
     F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
       parent="telefon", guide="telefon"),

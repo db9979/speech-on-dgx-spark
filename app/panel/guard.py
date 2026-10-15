@@ -434,6 +434,7 @@ LIVE_WORDS = {
     "mcp_connect": ("Eingang", "Programm per MCP verbunden"), "mcp_remove": ("Eingang", "MCP-Zugang entfernt"),
     "mcp_action": ("MCP", "Aktion entschieden"), "remarkable_pair": ("Geräte", "reMarkable gekoppelt"),
     "remarkable_unpair": ("Geräte", "reMarkable entkoppelt"), "speaker_code_set": ("Sprechererkennung", "Codewort gesetzt"),
+    "telefon_pin_set": ("Sicherheit", "Telefon-PIN gesetzt"), "telefon_pin_removed": ("Sicherheit", "Telefon-PIN entfernt"),
     "profile_mfa_on": ("Sicherheit", "zweiter Schritt an (Profil)"), "profile_mfa_off": ("Sicherheit", "zweiter Schritt aus (Profil)"),
     "admin_mfa_on": ("Sicherheit", "zweiter Schritt an (Admin)"), "admin_mfa_off": ("Sicherheit", "zweiter Schritt aus (Admin)"),
     "admin_password_changed": ("Sicherheit", "Admin-Passwort geändert"),
@@ -532,7 +533,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
         "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "modelle": (0, 30), "modelle_wechsel": (0, 6), "modelle_eigen": (0, 10), "technikseite": (0, 90),
-        "aufgaben": (0, 60), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "verbrauch": (0, 60), "verbrauchset": (0, 20)}  # per minute: (guest, profile or admin)
+        "aufgaben": (0, 60), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

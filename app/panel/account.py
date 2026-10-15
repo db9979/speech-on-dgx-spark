@@ -86,7 +86,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen",
-       "chats_calls": "anrufe", "calls_turn": "anrufeturn"}
+       "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon"}
 
 
 # the Ich page of a function without a page of its own in features.py (me): reminders live under Mitteilungen

@@ -1,6 +1,7 @@
-"""Telefon (telefon.py, telefon_ton.py, plan telefon-anruf.md T1): the sound codecs, the SIP parser and digest, and whole
-calls against a PBX made up here (REGISTER with 401 and digest, INVITE with G.722 and G.711, RTP, DTMF, BYE). No telephone,
-no clock: every wait is a few hundred milliseconds."""
+"""Telefon (telefon.py, telefon_ton.py, telefon_ich.py, plan telefon-anruf.md T1 and T2): the sound codecs, the SIP parser
+and digest, whole calls against a PBX made up here (REGISTER with 401 and digest, INVITE with G.722 and G.711, RTP, DTMF,
+BYE), own numbers confirmed with a code, the Telefon-PIN with its lock, and Ich → Telefon. No telephone, no clock: every
+wait is a few hundred milliseconds, times are passed in."""
 import asyncio
 import hashlib
 import json
@@ -20,6 +21,7 @@ helpers.start()
 import esp32  # noqa: E402
 import profiles  # noqa: E402
 import telefon  # noqa: E402
+import telefon_ich  # noqa: E402
 import telefon_ton  # noqa: E402
 
 
@@ -449,6 +451,192 @@ class Calls(unittest.TestCase):
         self.assertIn("telefon: besetzt", log.text)
 
 
+    # ------------------------------------------------------------ T2: code and PIN typed on the phone
+    async def _open(self, a, pbx, number, cid):
+        loop = asyncio.get_running_loop()
+        ph = Phone()
+        pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+        to = ("127.0.0.1", a.port)
+        pbx.t.sendto(invite(a.port, number, pt_.get_extra_info("sockname")[1], cid), to)
+        ok = await self._answer(pbx, cid)
+        if ok.code != 200:
+            pt_.close()
+            return ok.code, None, None, to
+        pbx.t.sendto(ack_or_bye("ACK", cid, a.port, 1), to)
+        return 200, pt_, ("127.0.0.1", telefon.sdp_parse(ok.body)["port"]), to
+
+    @staticmethod
+    async def _keys(pt_, spark_rtp, keys, base=1000):
+        for i, k in enumerate(keys):
+            pt_.sendto(rtp(base + i, 101, bytes(["0123456789*#".index(k), 0x80, 0, 160]), ts=(base + i) * 1600), spark_rtp)
+            await asyncio.sleep(0.02)
+
+    async def _until(self, check, wait=8.0):
+        for _ in range(int(wait / 0.05)):
+            if check():
+                return True
+            await asyncio.sleep(0.05)
+        return False
+
+    def setUp_t2(self):
+        telefon_ich._fails.clear()
+        telefon_ich._locked.clear()
+        telefon_ich.clear(self.uid)
+
+    def test_an_own_number_is_confirmed_with_the_code_typed_on_a_call(self):
+        self.setUp_t2()
+        code = telefon_ich.add_number(self.uid, "0170 1234567", "Handy")
+        self.assertEqual(telefon_ich.pending_for("+491701234567"), self.uid)
+
+        async def body(a, pbx, port):
+            # a wrong code first, then the right one
+            st, pt_, sr, to = await self._open(a, pbx, "01701234567", "c1")
+            wrong = "".join(str((int(c) + 1) % 10) for c in code)
+            await asyncio.sleep(0.3)
+            await self._keys(pt_, sr, wrong, 100)
+            await asyncio.sleep(0.4)
+            await self._keys(pt_, sr, code, 200)
+            bye = await self._until(lambda: "c1" not in a.calls)
+            pt_.close()
+            # an external number without a waiting code is refused as before
+            refused, *_ = await self._open(a, pbx, "01709999999", "c2")
+            return st, bye, refused
+        with _quiet() as log:
+            st, bye, refused = self.run_with_pbx(body)
+        self.assertEqual((st, bye, refused), (200, True, 603))
+        nums = telefon_ich.view(self.uid)["nummern"]
+        self.assertTrue(nums[0]["ok"])
+        self.assertEqual(telefon_ich.owner_of("01701234567"), self.uid)
+        self.assertIn("telefon: bestaetigungscode falsch", log.text)
+        self.assertIn("telefon: nummer bestaetigt fuer Profil ", log.text)
+        self.assertNotIn("0170", log.text)            # an external number never in the log
+        self.assertNotIn(code, log.text)
+        self.assertEqual([c["art"] for c in telefon_ich.calls(self.uid)], ["bestaetigung"])
+
+    def test_the_pin_stands_for_the_voice_and_locks_after_three_wrong(self):
+        self.setUp_t2()
+        telefon_ich.set_pin(self.uid, "2580")
+        self.say_next = ["Was steht heute im Kalender?"]
+        sent = []
+
+        async def fake_push(uid, title, body, **k):
+            sent.append(uid)
+
+        async def body(a, pbx, port):
+            st, pt_, sr, to = await self._open(a, pbx, "**611", "p1")
+            await asyncio.sleep(0.3)
+            await self._keys(pt_, sr, "2580#", 300)
+            call = a.calls.get("p1")
+            unlocked = await self._until(lambda: call.pin_uid == self.uid)
+            vr = await call.voice_result(None)
+            pbx.t.sendto(ack_or_bye("BYE", "p1", a.port, 2), to)
+            await self._until(lambda: "p1" not in a.calls)
+            pt_.close()
+            st2, pt2, sr2, to2 = await self._open(a, pbx, "**611", "p2")
+            await asyncio.sleep(0.3)
+            for i, k in enumerate(("1111#", "2222#", "3333#", "2580#")):
+                await self._keys(pt2, sr2, k, 400 + 10 * i)
+                await asyncio.sleep(0.5)
+            call2 = a.calls.get("p2")
+            await asyncio.sleep(0.5)
+            locked = call2.pin_uid
+            pbx.t.sendto(ack_or_bye("BYE", "p2", a.port, 2), to2)
+            await self._until(lambda: "p2" not in a.calls)
+            pt2.close()
+            return unlocked, vr, locked
+        with _quiet() as log, mock.patch("push.send", fake_push):
+            unlocked, vr, locked = self.run_with_pbx(body)
+        self.assertTrue(unlocked)
+        self.assertEqual(vr, (self.uid, self.uid, ""))        # the PIN stands for the voice
+        self.assertEqual(locked, "")                           # the right PIN after three wrong: still locked
+        self.assertIn("telefon: pin richtig fuer Profil ", log.text)
+        self.assertIn("telefon: pin gesperrt", log.text)
+        self.assertEqual(sent, [self.uid])
+        self.assertNotIn("2580", log.text)
+        self.assertTrue(telefon_ich.locked("**611"))
+        self.assertEqual({c["art"] for c in telefon_ich.calls(self.uid)}, {"intern"})
+
+
+class OwnNumbersAndPin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.a = profiles.add_user("Tele Anna", "4721")
+        cls.b = profiles.add_user("Tele Bodo", "4722")
+
+    def setUp(self):
+        for u in (self.a, self.b):
+            telefon_ich.clear(u)
+        telefon_ich._fails.clear()
+        telefon_ich._locked.clear()
+
+    def test_numbers_in_one_form(self):
+        self.assertEqual(telefon_ich.canon("0049 170 123-4567"), "+491701234567")
+        self.assertEqual(telefon_ich.canon("0170/1234567"), "01701234567")
+        self.assertEqual(telefon_ich.canon("12"), "")
+        self.assertTrue(telefon_ich.same("01701234567", "+491701234567"))
+        self.assertTrue(telefon_ich.same("+491701234567", "00491701234567"))
+        self.assertFalse(telefon_ich.same("01701234567", "+491701234568"))
+        self.assertFalse(telefon_ich.same("01701234567", "+4912341701234567"))   # more than a country code in front
+
+    def test_a_number_belongs_to_one_profile_and_the_code_wears_out(self):
+        code = telefon_ich.add_number(self.a, "01701234567", now=1000)
+        telefon_ich.add_number(self.b, "+491701234567", now=1000)       # both may wait …
+        with self.assertRaises(ValueError):
+            telefon_ich.add_number(self.a, "**611")                      # internal ones: the admin
+        self.assertEqual(telefon_ich.try_code("01701234567", "0000" if code != "0000" else "1111", now=1001)[0], "wrong")
+        self.assertEqual(telefon_ich.try_code("01701234567", code, now=1002), ("ok", self.a))
+        self.assertEqual(telefon_ich.numbers(self.b), [])                # … only the first right code wins
+        with self.assertRaises(ValueError):
+            telefon_ich.add_number(self.b, "01701234567")
+        # a code counts CODE_SECONDS and CODE_TRIES times
+        c2 = telefon_ich.add_number(self.a, "030 1234567", now=2000)
+        self.assertEqual(telefon_ich.try_code("0301234567", c2, now=2000 + telefon_ich.CODE_SECONDS + 1)[0], "none")
+        telefon_ich.add_number(self.a, "030 1234567", now=3000)
+        res = [telefon_ich.try_code("0301234567", "99999", now=3001)[0] for _ in range(telefon_ich.CODE_TRIES)]
+        self.assertEqual(res[-1], "void")
+        self.assertEqual(telefon_ich.try_code("0301234567", c2, now=3002)[0], "none")
+        with open(telefon_ich._file(self.a)) as f:
+            raw = f.read()
+        self.assertNotIn("1701234567", raw)                              # numbers and codes sealed
+        for _ in range(3):
+            telefon_ich.add_number(self.a, f"0171{random.randint(1000000, 9999999)}")
+        with self.assertRaises(ValueError):
+            telefon_ich.add_number(self.a, "0172 7654321")                # at most MAX_NUMBERS
+
+    def test_pin_rules_lock_and_shared_phones(self):
+        for bad in ("123", "123456789", "1111", "1234", "4321", "12a4"):
+            with self.assertRaises(ValueError, msg=bad):
+                telefon_ich.set_pin(self.a, bad)
+        self.assertTrue(telefon_ich.set_pin(self.a, "2580"))
+        telefon_ich.set_pin(self.b, "7391")
+        with open(telefon_ich._file(self.a)) as f:
+            self.assertNotIn("2580", f.read())
+        both = [self.a, self.b]
+        self.assertEqual(telefon_ich.pin_attempt("**612", both, "7391", now=10), ("ok", self.b))   # a shared phone
+        self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "7391", now=10), ("wrong", ""))  # not this handset's
+        self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "0000", now=11), ("wrong", ""))
+        self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "0001", now=12), ("locked", "neu"))
+        self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "2580", now=13), ("locked", ""))
+        self.assertEqual(telefon_ich.pin_attempt("**611", [self.a], "2580", now=13 + telefon_ich.LOCK), ("ok", self.a))
+        self.assertEqual(telefon_ich.pin_attempt("**612", [], "2580"), ("none", ""))
+        self.assertFalse(any("611" in k for k in telefon_ich._fails))    # counters hold no number
+        telefon_ich.set_pin(self.a, "")
+        self.assertFalse(telefon_ich.has_pin(self.a))
+
+    def test_calls_kept_and_deleted_and_own_data(self):
+        for i in range(telefon_ich.KEEP_CALLS + 3):
+            telefon_ich.keep_call(self.a, 100 + i, 30, 2, "intern")
+        rows = telefon_ich.calls(self.a)
+        self.assertEqual(len(rows), telefon_ich.KEEP_CALLS)
+        self.assertEqual(set(rows[0]), {"id", "t", "s", "fragen", "art"})    # no number, no words
+        telefon_ich.drop_calls(self.a, rows[0]["id"])
+        self.assertEqual(len(telefon_ich.calls(self.a)), telefon_ich.KEEP_CALLS - 1)
+        count, clear = __import__("features").OWN["telefon"]
+        self.assertEqual(count(self.a), telefon_ich.KEEP_CALLS - 1)
+        clear(self.a)
+        self.assertEqual(count(self.a), 0)
+
+
 class _quiet:
     """Collects what the module prints (the journal lines)."""
 
@@ -480,6 +668,34 @@ class Endpoints(unittest.TestCase):
             bad = c.put("/api/admin/telefon/nummern", headers=dict(h, **{"Content-Type": "application/json"}),
                         content=json.dumps({"nr": "01701234567", "uid": ""}))
         self.assertEqual(bad.status_code, 400)
+
+    def test_ich_telefon_own_browser_only(self):
+        from fastapi.testclient import TestClient
+        import panel
+        admin = TestClient(panel.app)
+        admin.headers["Authorization"] = "Basic " + __import__("base64").b64encode(b"admin:secret-admin").decode()
+        self.assertIn(admin.post("/api/admin/profiles", json={"name": "Tele Emma", "pin": "4731"}).status_code, (200, 409))
+        c = TestClient(panel.app)
+        self.assertEqual(c.get("/api/profile/telefon").status_code, 401)
+        self.assertEqual(c.post("/api/profile/login", json={"name": "Tele Emma", "pin": "4731"}).status_code, 200)
+        helpers.set_config(telefon=False)
+        self.assertEqual(c.post("/api/profile/telefon/nummern", json={"nr": "01701112222"}).status_code, 403)   # off
+        helpers.set_config(telefon=True)
+        self.addCleanup(lambda: helpers.set_config(telefon=False))
+        r = c.post("/api/profile/telefon/nummern", json={"nr": "0170 1112222", "name": "Handy"})
+        self.assertEqual(r.status_code, 200, r.text)
+        row = r.json()["nummern"][0]
+        self.assertFalse(row["ok"])
+        self.assertRegex(row["code"], r"^\d{4}$")
+        self.assertEqual(c.post("/api/profile/telefon/nummern", json={"nr": "abc"}).status_code, 400)
+        self.assertEqual(c.put("/api/profile/telefon/pin", json={"pin": "1111"}).status_code, 400)
+        r = c.put("/api/profile/telefon/pin", json={"pin": "8462"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(r.json()["pin"])
+        self.assertNotIn("8462", r.text + c.get("/api/profile/telefon").text)    # never sent back
+        self.assertFalse(c.delete("/api/profile/telefon/pin").json()["pin"])
+        self.assertEqual(c.delete("/api/profile/telefon/nummern/" + row["id"]).json()["nummern"], [])
+        self.assertEqual(c.delete("/api/profile/telefon/nummern/nope").status_code, 404)
 
 
 if __name__ == "__main__":

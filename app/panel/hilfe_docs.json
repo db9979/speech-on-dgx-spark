@@ -1053,7 +1053,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Den Spark anrufen (Telefon)",
 "title": "Den Spark anrufen (Telefon)",
-"text": "- Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss. - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten. - Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen."
+"text": "- Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss. - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten. - Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen. Nur eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, nimmt er an: der Code (4 Ziffern, 15 Minuten, 3 Versuche) wird getippt, dann legt er auf. - Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. 3 falsche "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Den Spark anrufen (Telefon)",
+"title": "Den Spark anrufen (Telefon)",
+"text": "in 15 Minuten sperren sie an diesem Telefon 30 Minuten. Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log."
 },
 {
 "lang": "de",
@@ -1061,7 +1069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 2) - 30 Sekunden Ton pro Frage (Schritt 6) - 2.0 Sekunden, dann werden die Rechte neu geprüft (Schritt 5) - 10 Minuten zählen frühere Fragen am Lautsprecher (Schritt 12) - 3 falsche Codewörter bis zur Sperre (Schritt 9) - 8 Wyoming-Verbindungen gleichzeitig (Schritt 5) - 2 Anrufe gleichzeitig höchstens (Schritt 5) - 15 Minuten dauert ein Anruf höchstens (Schritt 10)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 2) - 30 Sekunden Ton pro Frage (Schritt 6) - 2.0 Sekunden, dann werden die Rechte neu geprüft (Schritt 5) - 10 Minuten zählen frühere Fragen am Lautsprecher (Schritt 12) - 3 falsche Codewörter bis zur Sperre (Schritt 9) - 8 Wyoming-Verbindungen gleichzeitig (Schritt 5) - 2 Anrufe gleichzeitig höchstens (Schritt 5) - 15 Minuten dauert ein Anruf höchstens (Schritt 10) - 3 falsche Telefon-PINs bis zur Sperre (Schritt 9)"
 },
 {
 "lang": "de",
@@ -1069,7 +1077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus). - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort. - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen. - Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen."
+"text": "- Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus). - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort. - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen. - Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen. - Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen."
 },
 {
 "lang": "de",
@@ -1085,7 +1093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update (Schritt 1) - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen (Schritt 2) - app/panel/esp32.py same_board: MAC muss passen (Schritt 3) - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen (Schritt 5) - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig (Schritt 5) - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten (Schritt 10) - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme (Schritt 9) - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück (Schritt 11) - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert (Schritt 12) - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen (Schritt 5) - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele (Schritt 5) - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton (Schritt 7, Schritt 11) - app/panel/telefon.py Call.start: wer anruft: intern, Profil, gesperrt, besetzt (Schritt 5) - app/panel/telefon.py Call.voice_result: Stimme wählt oder bestätigt das Profil (Schritt 9) - app/panel/telefon.py Call._chat: Ch"
+"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update (Schritt 1) - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen (Schritt 2) - app/panel/esp32.py same_board: MAC muss passen (Schritt 3) - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen (Schritt 5) - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig (Schritt 5) - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten (Schritt 10) - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme (Schritt 9) - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück (Schritt 11) - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert (Schritt 12) - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen (Schritt 5) - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele (Schritt 5) - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton (Schritt 7, Schritt 11) - app/panel/telefon.py Call.start: wer anruft: intern, Profil, gesperrt, besetzt (Schritt 5) - app/panel/telefon.py Call.pin: Telefon-PIN prüfen, Sperre (Schritt 9) - app/panel/telefon_ich.py try_code: Code einer eigenen Nu"
 },
 {
 "lang": "de",
@@ -1093,7 +1101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "at mit dem Profil, Ton zurück (Schritt 10, Schritt 11)"
+"text": "mmer (Schritt 5) - app/panel/telefon_ich.py pin_attempt: PIN je Telefon zählen und sperren (Schritt 9) - app/panel/telefon.py Call.voice_result: Stimme wählt oder bestätigt das Profil (Schritt 9) - app/panel/telefon.py Call._chat: Chat mit dem Profil, Ton zurück (Schritt 10, Schritt 11)"
 },
 {
 "lang": "de",
@@ -1405,7 +1413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Nachrichten lesen: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke. 2. Verlauf kürzen, Sperre übernehmen: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. 3. Gast oder fremde Stimme?: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage. 4. Weiche liest die Frage: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ih"
+"text": "1. Nachrichten lesen: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke. 2. Verlauf kürzen, Sperre übernehmen: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. 3. Gast oder fremde Stimme?: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage. 4. Weiche liest die Frage: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frag"
 },
 {
 "lang": "de",
@@ -1413,7 +1421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "re Gruppen dazu, auch neben der Wahl des Modells. 5. Systemprompt bauen: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 9. Ja zu"
+"text": "e davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. 5. Systemprompt bauen: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etw"
 },
 {
 "lang": "de",
@@ -1421,7 +1429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein: Mit „Gezielte Werkzeugwahl“ bleibt nur die Grupp"
+"text": "as aus. Lesen und Antworten gehen weiter. 9. Ja zu einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein"
 },
 {
 "lang": "de",
@@ -1429,7 +1437,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
+"text": ": Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
 },
 {
 "lang": "de",
@@ -3510,6 +3518,22 @@
 "head": "Sprach-Chat",
 "title": "Den Spark anrufen (Telefon, Stufe T1, V01.0.626, Plan `plaene/telefon-anruf.md`)",
 "text": " weist der Spark in dieser Stufe ab. Ein Anruf gleichzeitig (einstellbar bis 2), ein weiterer hört „besetzt“. Ton wird nie gespeichert; Fragen und Antworten stehen im Verlauf des Profils („Telefon TT.MM.“). Zustand → Live zeigt die Telefonanlage mit angemeldet ja/nein und den Zahlen von heute, Logs den Bereich „telefon“ (nur interne Nummern wie \\*\\*611, nie eine Nummer von außen, Profile über profiles.log_name), der Dienst-Wächter meldet eine verlorene Anmeldung. Selbsttest test_telefon mit einer nachgebauten Telefonanlage."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ich → Telefon (Telefon, Stufe T2, V01.0.627)",
+"text": "Ich → Telefon (Telefon, Stufe T2, V01.0.627): Jedes Profil richtet unter *Ich → Telefon* ein, was zu ihm gehört (app/panel/telefon_ich.py, Datei users/<id>/telefon.json, Nummern und PIN im Tresor). *Meine Rufnummern*: Handy und Festnetz eintragen (höchstens 5; Eintragen fragt nach dem Code, Stufe „Bestätigen“). Eine Nummer gilt erst, wenn sie bestätigt ist: die Seite zeigt einen Code aus 4 Ziffern (15 Minuten gültig), man ruft den Spark von dieser Nummer an und tippt ihn; nach drei falschen verfällt er. Nur für diesen Zweck nimmt der Spark in Stufe T2 einen Anruf von außen an, sonst weist er ihn weiter ab. So kann niemand die Nummer eines anderen auf sein Profil legen, und eine Nummer gehört höchstens einem Profil (0170… und +49170… gelten als dieselbe). *Telefon-PIN*: 4 bis 8 Ziffern, nicht alle gleich und nicht der Reihe nach; Ändern nur mit frischem Code (Stufe „Schutz ändern“). Am Telefon tippt man sie und dann #: am eigenen Mobilteil steht sie für den Rest des Gesprächs für die Stimme, am gemeinsamen Telefon wählt sie das Profil, dem sie gehört. Drei falsche in 15 Minuten sperren die PIN an diesem Telefon für 30 Minuten, das Profil des Mobilteils bekommt eine Mitteilung. Die P"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ich → Telefon (Telefon, Stufe T2, V01.0.627)",
+"text": "IN ist ein gesalzener PBKDF2-Hash, wird nie gesprochen, angezeigt, ans Sprachmodell gegeben oder ins Log geschrieben; erkennt der Spark die Stimme am eigenen Mobilteil nicht sicher, sagt er bei persönlichen Fragen, dass die PIN hilft. *Meine Mobilteile* zeigt die vom Admin zugeordneten Mobilteile, *Meine Telefonate* Zeit, Dauer, Art und Zahl der Fragen jedes Gesprächs (keine Nummer, keine Worte), einzeln oder alle löschbar. Die Seite steht in features.ME_PAGES und damit auch in der iPhone- und Android-App. Live zählt richtige und falsche PINs und bestätigte Nummern, Logs nur feste Wörter (telefon: pin richtig …, telefon: nummer bestaetigt …, nie Nummer, Code oder PIN)."
 },
 {
 "lang": "de",
@@ -7853,7 +7877,15 @@
 "file": "Architecture and data flow",
 "head": "Calling the Spark (phone)",
 "title": "Calling the Spark (phone)",
-"text": "- The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port 31060, digest sign-in, renewed every 10 minutes). It takes messages only from the system's address, at most 4096 bytes and 100 per second; sound (RTP) only from the address in its SDP, which has to be in the home network. - A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes. - Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside."
+"text": "- The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port 31060, digest sign-in, renewed every 10 minutes). It takes messages only from the system's address, at most 4096 bytes and 100 per second; sound (RTP) only from the address in its SDP, which has to be in the home network. - A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes. - Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside. It takes only an own number waiting for its code under Me → Phone: the code (4 digits, 15 minutes, 3 tries) is typed, then it hangs up. - The phone PIN (digits, then #) stands for the voice for the rest of the call: on a handset for its profile, at the shared phone for the profile it belongs to. 3 wrong ones in 15 minutes lock it at that phone"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Calling the Spark (phone)",
+"title": "Calling the Spark (phone)",
+"text": " for 30 minutes. Stored as a salted hash in the vault; never spoken, shown or logged."
 },
 {
 "lang": "en",
@@ -7861,7 +7893,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 2) - 30 seconds of sound per question (step 6) - 2.0 seconds, then the rights are checked again (step 5) - 10 minutes earlier questions count at a speaker (step 12) - 3 wrong code words until the lock (step 9) - 8 Wyoming connections at once (step 5) - 2 calls at once at most (step 5) - 15 minutes a call lasts at most (step 10)"
+"text": "- 10 minutes a pairing code is valid (step 2) - 30 seconds of sound per question (step 6) - 2.0 seconds, then the rights are checked again (step 5) - 10 minutes earlier questions count at a speaker (step 12) - 3 wrong code words until the lock (step 9) - 8 Wyoming connections at once (step 5) - 2 calls at once at most (step 5) - 15 minutes a call lasts at most (step 10) - 3 wrong phone PINs until the lock (step 9)"
 },
 {
 "lang": "en",
@@ -7869,7 +7901,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own speakers: speakers for every profile (default off). - Me → Speakers: set up, type the code, room, volume, check and the own code word. - Features → Home Assistant Assist: Wyoming on and the allowed addresses. - Features → Calling the Spark: wizard with four steps, assign handsets."
+"text": "- Features → Own speakers: speakers for every profile (default off). - Me → Speakers: set up, type the code, room, volume, check and the own code word. - Features → Home Assistant Assist: Wyoming on and the allowed addresses. - Features → Calling the Spark: wizard with four steps, assign handsets. - Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls."
 },
 {
 "lang": "en",
@@ -7885,7 +7917,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/esp32.py ota: start check: code, key once, update (step 1) - app/panel/esp32.py _activation: six-digit code with limits (step 2) - app/panel/esp32.py same_board: MAC must fit (step 3) - app/panel/esp32.py speaker_ws: accept the connection and keep checking (step 5) - app/panel/esp32.py still_allowed: switches and device still valid (step 5) - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer (step 10) - app/panel/esp32.py Session.code_gate: code word for an unsure voice (step 9) - app/panel/esp32.py Session.speak: chat with the key, sound back (step 11) - app/panel/esp32.py remember: day conversation, foreign voice marked (step 12) - app/panel/wyoming.py settings: switch, port, allowed addresses (step 5) - app/panel/wyoming.py handle: only allowed addresses, at most so many (step 5) - app/panel/wyoming.py _session: sound to text and text to sound (step 7, step 11) - app/panel/telefon.py Call.start: who calls: internal, profile, blocked, busy (step 5) - app/panel/telefon.py Call.voice_result: the voice picks or confirms the profile (step 9) - app/panel/telefon.py Call._chat: chat with the profile, sound back (step 10, step 11)"
+"text": "- app/panel/esp32.py ota: start check: code, key once, update (step 1) - app/panel/esp32.py _activation: six-digit code with limits (step 2) - app/panel/esp32.py same_board: MAC must fit (step 3) - app/panel/esp32.py speaker_ws: accept the connection and keep checking (step 5) - app/panel/esp32.py still_allowed: switches and device still valid (step 5) - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer (step 10) - app/panel/esp32.py Session.code_gate: code word for an unsure voice (step 9) - app/panel/esp32.py Session.speak: chat with the key, sound back (step 11) - app/panel/esp32.py remember: day conversation, foreign voice marked (step 12) - app/panel/wyoming.py settings: switch, port, allowed addresses (step 5) - app/panel/wyoming.py handle: only allowed addresses, at most so many (step 5) - app/panel/wyoming.py _session: sound to text and text to sound (step 7, step 11) - app/panel/telefon.py Call.start: who calls: internal, profile, blocked, busy (step 5) - app/panel/telefon.py Call.pin: check the phone PIN, lock (step 9) - app/panel/telefon_ich.py try_code: code of an own number (step 5) - app/panel/telefon_ich.py pin_attempt: count and lock the PI"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "N per phone (step 9) - app/panel/telefon.py Call.voice_result: the voice picks or confirms the profile (step 9) - app/panel/telefon.py Call._chat: chat with the profile, sound back (step 10, step 11)"
 },
 {
 "lang": "en",
@@ -8197,7 +8237,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Read the messages: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark. 2. Trim history, carry the lock: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. 3. Guest or unknown voice?: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request. 4. The switch reads the question: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. 5. Build the system prompt: The admin's system prompt, plus the profile's leng"
+"text": "1. Read the messages: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark. 2. Trim history, carry the lock: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. 3. Guest or unknown voice?: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request. 4. The switch reads the question: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. 5. Build the system prompt: The adm"
 },
 {
 "lang": "en",
@@ -8205,7 +8245,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "th and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. 6. Fixed sentence?: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on t"
+"text": "in's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. 6. Fixed sentence?: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list e"
 },
 {
 "lang": "en",
@@ -8213,7 +8253,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "he „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. 13. Turn ready: The system prompt goes first, with the tools and the lock ru"
+"text": "ntry, a correction), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. 13. Turn ready: The system prompt"
 },
 {
 "lang": "en",
@@ -8221,7 +8261,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "le. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off."
+"text": " goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off."
 },
 {
 "lang": "en",
@@ -10246,6 +10286,22 @@
 "head": "Voice chat",
 "title": "Calling the Spark (phone, stage T1, V01.0.626, plan `plaene/telefon-anruf.md`)",
 "text": "he profile's history (\"Telefon DD.MM.\"). Status → Live shows the telephone system with signed in yes/no and today's numbers, Logs the area \"telefon\" (only internal numbers like \\*\\*611, never a number from outside, profiles through profiles.log_name), the Dienst-Wächter reports a lost sign-in. Self-test test_telefon with a made-up telephone system."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Me → Phone (phone, stage T2, V01.0.627)",
+"text": "Me → Phone (phone, stage T2, V01.0.627): Each profile sets up under *Me → Phone* what belongs to it (app/panel/telefon_ich.py, file users/<id>/telefon.json, numbers and PIN in the vault). *My phone numbers*: add mobile and landline (at most 5; adding asks for the code, level \"confirm\"). A number counts only once it is confirmed: the page shows a code of 4 digits (valid 15 minutes), you call the Spark from that number and type it; after three wrong ones it is void. Only for this does the Spark take a call from outside in stage T2, otherwise it still refuses it. So nobody can put someone else's number on their profile, and a number belongs to at most one profile (0170… and +49170… count as the same). *Phone PIN*: 4 to 8 digits, not all the same and not in a row; changing only with a fresh code (level \"change protection\"). On the phone you type it and then #: on the own handset it stands for the voice for the rest of the call, at the shared phone it picks the profile it belongs to. Three wrong ones in 15 minutes lock the PIN at that phone for 30 minutes, the handset's profile gets a notification. The PIN is a salted PBKDF2 hash, never spoken, shown, given to the language model or writ"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Me → Phone (phone, stage T2, V01.0.627)",
+"text": "ten to the log; when the Spark does not clearly know the voice at the own handset, it says on personal questions that the PIN helps. *My handsets* shows the handsets the admin assigned, *My calls* time, length, kind and number of questions of each call (no number, no words), deletable one by one or all. The page is in features.ME_PAGES and so also in the iPhone and Android app. Live counts right and wrong PINs and confirmed numbers, Logs only fixed words (telefon: pin richtig …, telefon: nummer bestaetigt …, never a number, code or PIN)."
 },
 {
 "lang": "en",

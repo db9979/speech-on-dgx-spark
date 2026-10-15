@@ -1304,7 +1304,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "telefon":   # Telefon: signed in, calls in numbers (never a number, a name or a word)
             x["sub"] = (("angemeldet" if tel.get("ok") else "nicht angemeldet") + f" · {tel.get('calls', 0)} Gespräche jetzt · heute "
                         f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "
-                        f"{tel.get('minuten', 0)} min" + (f" · {tel['fremd']} fremde Pakete verworfen" if tel.get("fremd") else ""))
+                        f"{tel.get('minuten', 0)} min" + (f" · {tel['fremd']} fremde Pakete verworfen" if tel.get("fremd") else "")
+                        + (f" · PIN {tel.get('pin', 0)} richtig, {tel['pinfalsch']} falsch" if tel.get("pinfalsch") or tel.get("pin") else "")
+                        + (f" · {tel['bestaetigt']} Nummern bestätigt" if tel.get("bestaetigt") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

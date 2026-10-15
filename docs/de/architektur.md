@@ -283,6 +283,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/spkcode.py` | Codewort am geteilten Lautsprecher |
 | `app/panel/sse.py` | Sofort-Ereignisse an offene Seiten und Apps (Chats, Verlauf): ein Strom pro Seite |
 | `app/panel/telefon.py` | Den Spark anrufen: SIP mit der Telefonanlage, Gespräch wie am Lautsprecher |
+| `app/panel/telefon_ich.py` | Ich → Telefon: eigene Rufnummern mit Code, Telefon-PIN, Telefonate |
 | `app/panel/telefon_ton.py` | Ton am Telefon: G.722, G.711 und Umrechnen der Abtastrate |
 | `app/panel/telegram.py` | Telegram-Bot für Text und Sprachnachrichten |
 | `app/panel/today.py` | Die Karte „Heute“ oben in Ich |
@@ -448,6 +449,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/agent.json` | Aufträge und Routinen | Einstellungen | – | ja | – |
 | `users/ID/voice.json` | Stimmabdruck | Stimmabdruck | versiegelt | ja | – |
 | `users/ID/speaker-code.json` | Codewort am Lautsprecher | Schlüssel | versiegelt | ja | – |
+| `users/ID/telefon.json` | Rufnummern, Telefon-PIN und Telefonate | Einstellungen | Nummern und PIN versiegelt | ja | – |
 | `users/ID/chatkeys.json` | Öffentliche Schlüssel der Geräte | Schlüssel | – | ja | – |
 | `users/ID/contacts.json` | Kontakte-Zugang | noch nicht angeboten | Passwort versiegelt | ja | – |
 | `users/ID/ha-events.json` | Home-Assistant-Ereignisse | Zustand | – | ja | – |
@@ -979,7 +981,8 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 
 - Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss.
 - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten.
-- Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen.
+- Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen. Nur eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, nimmt er an: der Code (4 Ziffern, 15 Minuten, 3 Versuche) wird getippt, dann legt er auf.
+- Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. 3 falsche in 15 Minuten sperren sie an diesem Telefon 30 Minuten. Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.
 
 #### Zahlen (aus dem Code)
 
@@ -991,6 +994,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - **8** Wyoming-Verbindungen gleichzeitig ([Schritt 5](#kn-lautsprecher-s5))
 - **2** Anrufe gleichzeitig höchstens ([Schritt 5](#kn-lautsprecher-s5))
 - **15** Minuten dauert ein Anruf höchstens ([Schritt 10](#kn-lautsprecher-s10))
+- **3** falsche Telefon-PINs bis zur Sperre ([Schritt 9](#kn-lautsprecher-s9))
 
 #### Einstellen
 
@@ -998,6 +1002,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort.
 - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.
 - Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen.
+- Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.
 
 #### Was du siehst
 
@@ -1020,6 +1025,9 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `handle`: nur erlaubte Adressen, höchstens so viele ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: Ton zu Text und Text zu Ton ([Schritt 7](#kn-lautsprecher-s7), [Schritt 11](#kn-lautsprecher-s11))
 - `app/panel/telefon.py` `Call.start`: wer anruft: intern, Profil, gesperrt, besetzt ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon.py` `Call.pin`: Telefon-PIN prüfen, Sperre ([Schritt 9](#kn-lautsprecher-s9))
+- `app/panel/telefon_ich.py` `try_code`: Code einer eigenen Nummer ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_ich.py` `pin_attempt`: PIN je Telefon zählen und sperren ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call.voice_result`: Stimme wählt oder bestätigt das Profil ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call._chat`: Chat mit dem Profil, Ton zurück ([Schritt 10](#kn-lautsprecher-s10), [Schritt 11](#kn-lautsprecher-s11))
 
@@ -1430,7 +1438,7 @@ flowchart TD
 
 1. <a id="kn-vorbereiten-s1"></a>**Nachrichten lesen**: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke.
 2. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt.
-3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
+3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
 4. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells.
 5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest.
 6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.

@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "6736b4aa1e",
+        "stand": "0c6170932e",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "9ed74f9fde",
+        "stand": "db25548d15",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -660,13 +660,15 @@ SEITEN_DATEN = {
                "The history is trimmed to its budget. If an answer from outside text is among the last three messages, "
                "this turn starts locked; older ones are not sent at all.")),
             S("s3", "frage", ("Gast oder fremde Stimme?", "Guest or unknown voice?"),
-              ("kein Profil oder Lautsprecher/Telefon erkennt die Stimme nicht", "no profile or the speaker/phone does not know the voice"),
-              ("Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils "
-               "gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme "
-               "es war, setzt nur das Panel selbst, nie die Anfrage.",
-               "Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's "
-               "voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the "
-               "panel itself sets, never the request."),
+              ("kein Profil oder Lautsprecher/Telefon erkennt die Stimme nicht",
+               "no profile or the speaker/phone does not know the voice"),
+              ("Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme "
+               "des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: "
+               "kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die "
+               "Anfrage.",
+               "Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the "
+               "profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, "
+               "no memory, no history. Whose voice it was only the panel itself sets, never the request."),
               ("info", "ja", ("nur Frage und Antwort", "question and answer only"))),
             S("s4", "schritt", ("Weiche liest die Frage", "The switch reads the question"),
               ("intent.classify_cfg", "intent.classify_cfg"),
@@ -2506,7 +2508,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "4af4962332",
+        "stand": "fe668f07c9",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3047,14 +3049,15 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "f30cd936a9",
+        "stand": "d061955086",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
             "esp32.Session.run_answer": ["s10"], "esp32.Session.code_gate": ["s9"], "esp32.Session.speak": ["s11"],
             "esp32.remember": ["s12"], "wyoming.settings": ["s5"], "wyoming.handle": ["s5"],
             "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"],
-            "telefon.Call.start": ["s5"], "telefon.MAX_CALLS": ["s5"], "telefon.MAX_CALL": ["s10"], "telefon.Call.voice_result": ["s9"], "telefon.Call._chat": ["s10", "s11"],
+            "telefon.Call.start": ["s5"], "telefon.Call.pin": ["s9"], "telefon_ich.try_code": ["s5"], "telefon_ich.pin_attempt": ["s9"],
+            "telefon_ich.FAILS": ["s9"], "telefon.MAX_CALLS": ["s5"], "telefon.MAX_CALL": ["s10"], "telefon.Call.voice_result": ["s9"], "telefon.Call._chat": ["s10", "s11"],
         },
         "kurz": ("Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, "
                  "schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder "
@@ -3237,9 +3240,21 @@ SEITEN_DATEN = {
                  "the profile. After {telefon.QUIET_ASK} seconds of silence „Noch etwas?“, after another "
                  "{telefon.QUIET_END} it hangs up; at most {telefon.MAX_CALL|min} minutes."),
                 ("Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne "
-                 "Nummern, nie eine von außen.",
+                 "Nummern, nie eine von außen. Nur eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, "
+                 "nimmt er an: der Code ({telefon_ich.CODE_LEN} Ziffern, {telefon_ich.CODE_SECONDS|min} Minuten, "
+                 "{telefon_ich.CODE_TRIES} Versuche) wird getippt, dann legt er auf.",
                  "Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, "
-                 "never one from outside."),
+                 "never one from outside. It takes only an own number waiting for its code under Me → Phone: the code "
+                 "({telefon_ich.CODE_LEN} digits, {telefon_ich.CODE_SECONDS|min} minutes, {telefon_ich.CODE_TRIES} tries) "
+                 "is typed, then it hangs up."),
+                ("Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für "
+                 "dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. {telefon_ich.FAILS} falsche in "
+                 "{telefon_ich.FAIL_WINDOW|min} Minuten sperren sie an diesem Telefon {telefon_ich.LOCK|min} Minuten. "
+                 "Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.",
+                 "The phone PIN (digits, then #) stands for the voice for the rest of the call: on a handset for its "
+                 "profile, at the shared phone for the profile it belongs to. {telefon_ich.FAILS} wrong ones in "
+                 "{telefon_ich.FAIL_WINDOW|min} minutes lock it at that phone for {telefon_ich.LOCK|min} minutes. Stored "
+                 "as a salted hash in the vault; never spoken, shown or logged."),
             ]),
         ],
         "zahlen": [
@@ -3252,6 +3267,7 @@ SEITEN_DATEN = {
             ("{wyoming.MAX_CONNS}", ("Wyoming-Verbindungen gleichzeitig", "Wyoming connections at once"), "wyoming.MAX_CONNS"),
             ("{telefon.MAX_CALLS}", ("Anrufe gleichzeitig höchstens", "calls at once at most"), "telefon.MAX_CALLS"),
             ("{telefon.MAX_CALL|min}", ("Minuten dauert ein Anruf höchstens", "minutes a call lasts at most"), "telefon.MAX_CALL"),
+            ("{telefon_ich.FAILS}", ("falsche Telefon-PINs bis zur Sperre", "wrong phone PINs until the lock"), "telefon_ich.FAILS"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).",
@@ -3262,6 +3278,8 @@ SEITEN_DATEN = {
              "Features → Home Assistant Assist: Wyoming on and the allowed addresses."),
             ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen.",
              "Features → Calling the Spark: wizard with four steps, assign handsets."),
+            ("Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.",
+             "Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls."),
         ],
         "sehen": [
             ("Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart).",
@@ -3285,6 +3303,9 @@ SEITEN_DATEN = {
             ("wyoming.handle", ("nur erlaubte Adressen, höchstens so viele", "only allowed addresses, at most so many")),
             ("wyoming._session", ("Ton zu Text und Text zu Ton", "sound to text and text to sound")),
             ("telefon.Call.start", ("wer anruft: intern, Profil, gesperrt, besetzt", "who calls: internal, profile, blocked, busy")),
+            ("telefon.Call.pin", ("Telefon-PIN prüfen, Sperre", "check the phone PIN, lock")),
+            ("telefon_ich.try_code", ("Code einer eigenen Nummer", "code of an own number")),
+            ("telefon_ich.pin_attempt", ("PIN je Telefon zählen und sperren", "count and lock the PIN per phone")),
             ("telefon.Call.voice_result", ("Stimme wählt oder bestätigt das Profil", "the voice picks or confirms the profile")),
             ("telefon.Call._chat", ("Chat mit dem Profil, Ton zurück", "chat with the profile, sound back")),
         ],
@@ -3294,7 +3315,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "12aaf9bf28",
+        "stand": "73981ff821",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3482,7 +3503,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "9a23ee0b04",
+        "stand": "498567c7de",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],

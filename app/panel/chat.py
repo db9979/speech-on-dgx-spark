@@ -457,6 +457,9 @@ SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum oder
                         "Kontakte, Nachrichten, Pakete, Smart Home) sagst und tust du hier nur für den Inhaber selbst. "
                         "Fragt jemand danach, sag nur kurz, dass du das hier nur dem Inhaber sagst, "
                         "wenn du seine Stimme erkennst; nenne nichts davon und rate nichts.")
+# at a phone handset of the profile that has a Telefon-PIN (telefon_ich.py): how the owner shows it is them
+PHONE_PIN_HINT = ("Am Telefon kann sich der Inhaber mit seiner Telefon-PIN ausweisen: Ziffern tippen, dann die Raute. "
+                  "Sag das kurz, wenn jemand nach Persönlichem fragt; frag nie nach der PIN in Worten.")
 SHARED_SHORT_HINT = ("Die Frage war zu kurz, um die Stimme zu prüfen: Sag, dass der Inhaber sie in einem ganzen Satz "
                      "wiederholen soll.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "

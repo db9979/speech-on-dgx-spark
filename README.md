@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.627** Phone T2: Me → Phone with own phone numbers (confirmed by code), phone PIN and calls
 - **V01.0.626** Phone T1: call the Spark from a phone in the house (FRITZ!Box or another SIP PBX), setup with presets, search and check
 - **V01.0.625** Red fix: emergency mode switch only shown with Spark split
 - **V01.0.624** Quota: limits per profile for day, week and month at the language model, with a warning and an extra; fixed commands still work
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.621** Status → Architecture: overview in zones (devices, Spark, home network, internet), lines light up only on a click, boxes „Spark split“ and „Internet services“
 - **V01.0.620** Status → Monitoring: new wide tile "Answers per hour" with bars for the last 24 hours, also in the iPhone app
 - **V01.0.619** Spark split: guide and hint after the move under Status → Update
-- **V01.0.618** Spark split: move the panel and take it back (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.616** Spark split: pairing with a code (`speech-spark teilen code` and `koppeln`)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)

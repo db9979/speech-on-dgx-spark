@@ -1,4 +1,4 @@
-"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufe T1). The Spark signs in at the home's telephone system
+"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufen T1 und T2). The Spark signs in at the home's telephone system
 (FRITZ!Box or any SIP PBX) as an IP phone; a handset in the house calls its internal number (FRITZ!Box: **620) and talks
 to it like to an own speaker: question, answer, "Stopp" or #, hang up.
 
@@ -13,7 +13,10 @@ Who is calling (fixed rules here, never the model):
                                             no clear voice: questions and answers as a guest
     internal number not assigned            the Spark says so and hangs up (the admin sees the number in step 4);
                                             with chat.telefon_gaeste: questions and answers as a guest
-    external number                         refused (T3 brings calls from outside)
+    external number                         refused (T3 brings calls from outside); only an own number waiting for
+                                            its code (Ich → Telefon, telefon_ich.py) is taken to type that code
+A Telefon-PIN (telefon_ich.py, digits and #) stands for the voice for the rest of the call: on an assigned handset
+for its profile, at a shared phone for the profile whose PIN it is. Wrong ones lock the PIN at that phone.
 
 The network part, all UDP in the home network only:
     SIP  port SIP_PORT (31060)              REGISTER with digest (MD5, SHA-256), INVITE, ACK, BYE, CANCEL, OPTIONS, INFO;
@@ -370,8 +373,8 @@ def choose(sdp, ton="hd"):
 
 
 # ---------------------------------------------------------------- numbers of today (Live, admin page)
-_today = DayCounter(angenommen=0, abgelehnt=0, besetzt=0, fragen=0, sekunden=0, fremd=0, kaputt=0)
-_recent = collections.deque(maxlen=20)   # finished calls: {"t", "art", "nr" (internal only), "who", "s", "fragen"}
+_today = DayCounter(angenommen=0, abgelehnt=0, besetzt=0, fragen=0, sekunden=0, fremd=0, kaputt=0, pin=0, pinfalsch=0,
+                    bestaetigt=0)
 
 
 def _bump(k, n=1):
@@ -598,9 +601,10 @@ def _rtp_port():
 class Call:
     """An incoming call: answer, greet, listen, ask the chat, speak, until someone hangs up."""
 
-    def __init__(self, agent, invite, addr, number, uid, shared, sdp, pt, known=True):
+    def __init__(self, agent, invite, addr, number, uid, shared, sdp, pt, known=True, mode=""):
         self.agent, self.invite, self.addr = agent, invite, addr
         self.number, self.uid, self.shared, self.known = number, uid, shared, known
+        self.mode = mode                                  # "" or "bestaetigen" (an own number confirms its code)
         self.cid = invite.get("call-id")
         self.tag = secrets.token_hex(6)
         self.remote = sdp
@@ -617,7 +621,11 @@ class Call:
         self.inbuf = collections.deque(maxlen=250)      # 5 s of payloads
         self.got = asyncio.Event()
         self.outq = collections.deque()
-        self.digits = collections.deque(maxlen=20)
+        self.digits = collections.deque(maxlen=20)     # "#" alone: stop the answer
+        self.keys = ""                                    # digits typed so far (PIN or code), never a word
+        self.entered = collections.deque(maxlen=4)       # what was typed and ended with #
+        self.pin_uid = ""                                 # the profile a right PIN named, for the rest of the call
+        self.voices = set()                               # profiles the voice named at a shared phone
         self.last_dtmf = None
         self.rtp = None
         self.sock = None
@@ -644,10 +652,25 @@ class Call:
             print("telefon: anruf abgelehnt, notaus", flush=True)
             return
         if not internal(number, agent.z.get("anlage")):
-            # calls from outside come with stage T3; a hidden number is never internal
-            agent.send(response(msg, 603, "Decline"), addr)
-            _bump("abgelehnt")
-            print("telefon: anruf extern abgelehnt", flush=True)
+            # calls from outside come with stage T3; until then only to confirm an own number (Ich → Telefon) with
+            # the code the page shows; a hidden number is never internal and never waits for a code
+            import telefon_ich
+            who = telefon_ich.pending_for(number) if number else ""
+            if not who or not features.allowed("telefon", who):
+                agent.send(response(msg, 603, "Decline"), addr)
+                _bump("abgelehnt")
+                print("telefon: anruf extern abgelehnt", flush=True)
+                return
+            sdp = sdp_parse(msg.body)
+            pt = choose(sdp, s["ton"]) if sdp else None
+            if not sdp or pt is None:
+                agent.send(response(msg, 488, "Not Acceptable Here"), addr)
+                _bump("abgelehnt")
+                print("telefon: anruf abgelehnt, keine gemeinsame tonart", flush=True)
+                return
+            call = Call(agent, msg, addr, number, who, False, sdp, pt, True, mode="bestaetigen")
+            agent.calls[call.cid] = call
+            call.tasks.append(asyncio.ensure_future(call.run()))
             return
         entry = nummern().get(number)
         if entry and entry.get("uid") and not profiles.by_id(entry["uid"]):
@@ -740,8 +763,11 @@ class Call:
                 why = "ohne ack"
                 return
             _bump("angenommen")
-            print(f"telefon: anruf intern {self.number} als {_log_name(self.uid) if not self.shared else 'gemeinsames telefon'}"
-                  + (", nicht zugeordnet" if not self.known else "") + f", ton {self.codec.name}", flush=True)
+            if self.mode == "bestaetigen":      # an external number: never in the log
+                print(f"telefon: anruf extern zum bestaetigen einer nummer fuer {_log_name(self.uid)}, ton {self.codec.name}", flush=True)
+            else:
+                print(f"telefon: anruf intern {self.number} als {_log_name(self.uid) if not self.shared else 'gemeinsames telefon'}"
+                      + (", nicht zugeordnet" if not self.known else "") + f", ton {self.codec.name}", flush=True)
             self.tasks.append(asyncio.ensure_future(self._sender()))
             talk = asyncio.ensure_future(self.converse())
             done, _ = await asyncio.wait([talk, asyncio.ensure_future(self.over.wait())], timeout=MAX_CALL + 60,
@@ -774,8 +800,7 @@ class Call:
             if self.answered and self.acked.is_set():
                 secs = int(time.time() - self.t0)
                 _bump("sekunden", secs)
-                _recent.append({"t": int(self.t0), "art": "intern", "nr": self.number, "who": self.uid and _log_name(self.uid),
-                                "gemeinsam": self.shared, "s": secs, "fragen": self.questions})
+                self.keep(secs)
                 print(f"telefon: aufgelegt nach {secs} s, {self.questions} fragen ({why})", flush=True)
             elif why == "abgebrochen":
                 print("telefon: anruf vor dem abheben beendet", flush=True)
@@ -808,8 +833,33 @@ class Call:
             self.got.set()
 
     def digit(self, d):
-        self.digits.append(d)
+        """A key: digits gather (PIN or code, at most 8), * starts anew, # ends them; # alone stops the answer."""
+        if d == "#":
+            if self.keys:
+                self.entered.append(self.keys)
+                self.keys = ""
+            else:
+                self.digits.append("#")
+        elif d == "*":
+            self.keys = ""
+        elif d.isdigit():
+            import telefon_ich
+            self.keys = (self.keys + d)[-8:]
+            if self.mode == "bestaetigen" and len(self.keys) >= telefon_ich.CODE_LEN:
+                self.entered.append(self.keys)
+                self.keys = ""
         self.got.set()
+
+    def keep(self, secs):
+        """The call under Ich → Telefon → Meine Telefonate of each profile it was for (no number, no words)."""
+        import telefon_ich
+        art = "bestaetigung" if self.mode else "gemeinsam" if self.shared else "intern"
+        for uid in ({self.uid} if self.uid else set()) | ({self.pin_uid} if self.pin_uid else set()) | self.voices:
+            if profiles.by_id(uid):
+                try:
+                    telefon_ich.keep_call(uid, self.t0, secs, self.questions, art)
+                except Exception as e:
+                    print("telefon: telefonat nicht gemerkt", type(e).__name__, flush=True)
 
     async def _take(self, wait):
         """The sound that came since the last time, as 16 kHz PCM (waits up to wait seconds for some)."""
@@ -901,6 +951,8 @@ class Call:
             pcm = await self._take(0.2)
             while self.digits:
                 self.digits.popleft()                    # a key while nobody speaks: nothing to stop
+            if self.entered:
+                return "tasten", b""
             r = ear.feed(pcm) if pcm else None
             if r == "done":
                 return "frage", bytes(ear.pcm)
@@ -918,6 +970,9 @@ class Call:
                            "Der Admin ordnet es unter Funktionen, Telefon zu. Tschüss.")
             self.end("nicht zugeordnet")
             return
+        if self.mode == "bestaetigen":
+            await self.confirm_number()
+            return
         await self.say(f"Hallo {name}, hier ist der Spark." if name else "Hallo, hier ist der Spark.")
         asked = False
         while not self.over.is_set():
@@ -928,6 +983,10 @@ class Call:
             kind, pcm = await self.hear(QUIET_END if asked else QUIET_ASK)
             if kind == "ende":
                 return
+            if kind == "tasten":
+                await self.pin(self.entered.popleft())
+                asked = False
+                continue
             if kind == "still":
                 if asked:
                     await self.say("Ich lege jetzt auf. Tschüss.")
@@ -975,6 +1034,80 @@ class Call:
         _bump("fragen")
         await self.answer(text, uid, voice, why)
 
+    async def pin(self, entered):
+        """A PIN typed and ended with # (Ich → Telefon): on an assigned handset for its profile, at a shared phone for
+        the profile whose PIN it is; right: personal things for the rest of the call. Never spoken, logged or kept."""
+        import push
+        import telefon_ich
+        if self.uid and not self.shared:
+            cands = [self.uid]
+        elif self.shared:
+            cands = [u for u in profiles.user_ids() if features.allowed("telefon", u)]
+        else:
+            cands = []
+        res, who = telefon_ich.pin_attempt(self.number, cands, entered)
+        if res == "ok":
+            self.pin_uid = who
+            _bump("pin")
+            print(f"telefon: pin richtig fuer {_log_name(who)}", flush=True)
+            p = profiles.by_id(who) or {}
+            await self.say(f"Danke, {p.get('name', '')}. Jetzt weiß ich, dass du es bist." if self.shared
+                           else "Danke. Jetzt weiß ich, dass du es bist.")
+        elif res == "none":
+            print("telefon: pin getippt, keine pin eingerichtet", flush=True)
+            await self.say("Hier ist keine Telefon-PIN eingerichtet. Die PIN legst du unter Ich, Telefon fest.")
+        elif res == "wrong":
+            _bump("pinfalsch")
+            print("telefon: pin falsch", flush=True)
+            await self.say("Die PIN stimmt nicht.")
+        else:
+            _bump("pinfalsch")
+            print(f"telefon: pin gesperrt fuer {telefon_ich.LOCK // 60} min nach {telefon_ich.FAILS} falschen", flush=True)
+            await self.say("Die PIN stimmt nicht. Eine halbe Stunde lang nehme ich an diesem Telefon keine PIN an.")
+            if who == "neu" and self.uid and not self.shared:    # once, when the lock begins
+                try:
+                    await push.send(self.uid, "🔐 Spark", f"{telefon_ich.FAILS} falsche Telefon-PINs an deinem Mobilteil. "
+                                    f"{telefon_ich.LOCK // 60} Minuten lang nimmt der Spark dort keine PIN an.", tag="telefonpin")
+                except Exception as e:
+                    print("telefon: pin-mitteilung", type(e).__name__, flush=True)
+
+    async def confirm_number(self):
+        """A call from an own number waiting for its code (Ich → Telefon): type the code, then hang up."""
+        import telefon_ich
+        await self.say("Hallo, hier ist der Spark. Bitte tippe jetzt den Code aus Ich, Telefon.")
+        for _ in range(telefon_ich.CODE_TRIES):
+            got = await self.wait_keys(30)
+            if not got:
+                print("telefon: bestaetigung ohne code beendet", flush=True)
+                await self.say("Ich habe keinen Code bekommen. Tschüss.")
+                self.end("kein code")
+                return
+            res, who = telefon_ich.try_code(self.number, got)
+            if res == "ok":
+                _bump("bestaetigt")
+                print(f"telefon: nummer bestaetigt fuer {_log_name(who)}", flush=True)
+                await self.say("Danke, die Nummer ist jetzt bestätigt. Tschüss.")
+                self.end("bestaetigt")
+                return
+            if res == "wrong":
+                print("telefon: bestaetigungscode falsch", flush=True)
+                await self.say("Der Code stimmt nicht. Bitte noch einmal.")
+                continue
+            print(f"telefon: bestaetigungscode verfallen ({res})", flush=True)
+            break
+        await self.say("Der Code stimmt nicht. Hol dir bitte unter Ich, Telefon einen neuen. Tschüss.")
+        self.end("code falsch")
+
+    async def wait_keys(self, wait):
+        """What was typed next (a code or a PIN), or "" after wait seconds."""
+        until = time.time() + wait
+        while time.time() < until and not self.over.is_set():
+            if self.entered:
+                return self.entered.popleft()
+            await self._take(0.2)
+            self.digits.clear()
+        return ""
+
     def voice_check(self, pcm):
         """Whose voice this is, while the speech recognition runs: the assigned profile's (speakers.verify) or, at a
         shared phone, any profile's (speakers.identify). None when the speaker recognition is off."""
@@ -993,7 +1126,12 @@ class Call:
         return None
 
     async def voice_result(self, vt):
-        """(profile id for this question or "", the voice's profile or "", why not): fixed rules, never the model."""
+        """(profile id for this question or "", the voice's profile or "", why not): fixed rules, never the model.
+        A right PIN in this call stands for the voice."""
+        if self.pin_uid:
+            if vt is not None:
+                vt.cancel()
+            return self.pin_uid, self.pin_uid, ""
         if self.uid and not self.shared:
             if vt is None:
                 return self.uid, "", "speaker ID is off or the profile has not taught its voice"
@@ -1008,6 +1146,7 @@ class Call:
             except Exception:
                 return "", "", "voice check failed"
             if who and features.allowed("telefon", who):
+                self.voices.add(who)
                 return who, who, ""
         return "", "", ""
 
@@ -1058,6 +1197,9 @@ class Call:
         if uid:   # set only here, never by a request: the profile and whose voice it was (chat_turn.shared_stranger)
             scope.update({"speech_profile": uid, "speech_channel": "telefon", "speech_voice": voice or "",
                           "speech_voice_why": why})
+            if voice != uid and not self.shared:
+                import telefon_ich
+                scope["speech_pin_hint"] = telefon_ich.has_pin(uid)   # chat.PHONE_PIN_HINT: the owner may type it
 
         async def receive():
             return {"type": "http.request", "body": data, "more_body": False}
@@ -1210,7 +1352,8 @@ def for_live():
         return {"on": False}
     t = _today.counts()
     return {"on": True, "ok": st["ok"], "calls": st["calls"], "angenommen": t["angenommen"],
-            "abgelehnt": t["abgelehnt"] + t["besetzt"], "fragen": t["fragen"], "minuten": t["sekunden"] // 60, "fremd": t["fremd"]}
+            "abgelehnt": t["abgelehnt"] + t["besetzt"], "fragen": t["fragen"], "minuten": t["sekunden"] // 60, "fremd": t["fremd"],
+            "pin": t["pin"], "pinfalsch": t["pinfalsch"], "bestaetigt": t["bestaetigt"]}
 
 
 def probes():

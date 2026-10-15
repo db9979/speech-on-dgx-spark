@@ -283,6 +283,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/spkcode.py` | Code word at an own speaker in a room. |
 | `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
 | `app/panel/telefon.py` | Telefon: den Spark anrufen. |
+| `app/panel/telefon_ich.py` | Telefon → Me: what each profile sets up for itself under Me → Telefon. |
 | `app/panel/telefon_ton.py` | Telefon: the sound of a call (telefon.py). |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
 | `app/panel/today.py` | Ich starts with "Heute". |
@@ -448,6 +449,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/agent.json` | Jobs and routines | Settings | – | yes | – |
 | `users/ID/voice.json` | Voiceprint | Voiceprint | sealed | yes | – |
 | `users/ID/speaker-code.json` | Speaker code word | Key | sealed | yes | – |
+| `users/ID/telefon.json` | Phone numbers, phone PIN and calls | Settings | numbers and PIN sealed | yes | – |
 | `users/ID/chatkeys.json` | Devices' public keys | Key | – | yes | – |
 | `users/ID/contacts.json` | Contacts account | not offered yet | password sealed | yes | – |
 | `users/ID/ha-events.json` | Home Assistant events | State | – | yes | – |
@@ -979,7 +981,8 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 
 - The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port 31060, digest sign-in, renewed every 10 minutes). It takes messages only from the system's address, at most 4096 bytes and 100 per second; sound (RTP) only from the address in its SDP, which has to be in the home network.
 - A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes.
-- Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside.
+- Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside. It takes only an own number waiting for its code under Me → Phone: the code (4 digits, 15 minutes, 3 tries) is typed, then it hangs up.
+- The phone PIN (digits, then #) stands for the voice for the rest of the call: on a handset for its profile, at the shared phone for the profile it belongs to. 3 wrong ones in 15 minutes lock it at that phone for 30 minutes. Stored as a salted hash in the vault; never spoken, shown or logged.
 
 #### Numbers (from the code)
 
@@ -991,6 +994,7 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - **8** Wyoming connections at once ([step 5](#kn-lautsprecher-s5))
 - **2** calls at once at most ([step 5](#kn-lautsprecher-s5))
 - **15** minutes a call lasts at most ([step 10](#kn-lautsprecher-s10))
+- **3** wrong phone PINs until the lock ([step 9](#kn-lautsprecher-s9))
 
 #### Settings
 
@@ -998,6 +1002,7 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - Me → Speakers: set up, type the code, room, volume, check and the own code word.
 - Features → Home Assistant Assist: Wyoming on and the allowed addresses.
 - Features → Calling the Spark: wizard with four steps, assign handsets.
+- Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls.
 
 #### What you see
 
@@ -1020,6 +1025,9 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `handle`: only allowed addresses, at most so many ([step 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: sound to text and text to sound ([step 7](#kn-lautsprecher-s7), [step 11](#kn-lautsprecher-s11))
 - `app/panel/telefon.py` `Call.start`: who calls: internal, profile, blocked, busy ([step 5](#kn-lautsprecher-s5))
+- `app/panel/telefon.py` `Call.pin`: check the phone PIN, lock ([step 9](#kn-lautsprecher-s9))
+- `app/panel/telefon_ich.py` `try_code`: code of an own number ([step 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_ich.py` `pin_attempt`: count and lock the PIN per phone ([step 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call.voice_result`: the voice picks or confirms the profile ([step 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call._chat`: chat with the profile, sound back ([step 10](#kn-lautsprecher-s10), [step 11](#kn-lautsprecher-s11))
 
@@ -1430,7 +1438,7 @@ flowchart TD
 
 1. <a id="kn-vorbereiten-s1"></a>**Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark.
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all.
-3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
+3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick.
 5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache.
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
