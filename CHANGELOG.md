@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.599** · 2026-10-15 · Fix Qualitätstest: die Frage nach dem Kontostand prüft keine Formulierung mehr, nur Fakten; ein Betrag in Ziffern oder Worten (quality.MONEY) oder ein unpassendes Werkzeug fällt durch, jede ehrliche Antwort („kein Werkzeug“, „schau in deine Banking-App“) besteht
 - **V01.0.598** · 2026-10-15 · App-Ansicht (Android-App, Handy-Browser): Fragen und Antworten nutzen die Breite wie in der iPhone-App
 - **V01.0.597** · 2026-10-15 · Fix Messen: Qwen3-VL 8B bekommt im Katalog 20 % des Speichers statt 12 % (vLLM: „No available memory for the cache blocks“, −2 GiB für den Kontext); Bedarf jetzt etwa 24 GiB, nur bei Bedarf geladen
 - **V01.0.596** · 2026-10-15 · Eigene Modelle Stufe E5 (eigene Modelle hinzufügen): neuer Admin-Schalter Funktionen → Modelle wechseln → Eigene Modelle (aus); unter Zustand → Modelle Prüfen, Hinzufügen und Löschen eigener Modelle für Sprachmodell und Bildverständnis, nur offene Modelle mit safetensors, ohne fremden Code, bekannte Bauart, Commit gepinnt; auch in der iPhone-App

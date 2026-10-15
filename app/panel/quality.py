@@ -30,6 +30,8 @@ TIME = r"\b\d{1,2}([:.]\d{2})\s*(uhr)?\b|\b\d{1,2}\s*uhr\b"
 NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
 # "no access" in other words: „Ich habe gerade keine Möglichkeit, in dein Konto zu schauen“ is as right as „kein Zugriff“
 # (Qualitätstest V01.0.568: the honest answer failed on the wording)
+# an amount of money in figures or words („1.250 €“, „zweitausend Euro“, „300 EUR“)
+MONEY = r"(\d[\d.,]*|\w*(hundert|tausend)\w*)\s*(€|euro\b|eur\b)"
 NO_ACCESS = r"\bkein(e|en)?\s+(\w+\s+)?(zugriff|zugang|möglichkeit|einblick|verbindung)"
 _lock = asyncio.Lock()
 
@@ -130,7 +132,10 @@ def _cases(now=None):
         {"id": "witz", "q": "Erzähl mir einen ganz kurzen Witz.", "tools": [chat.SEARCH_TOOL] + rem, "hints": [chat.SEARCH_HINT],
          "results": {}, "tool": None, "must": r"", "never": r""},
         {"id": "kontostand", "q": "Wie hoch ist mein Kontostand?", "tools": [chat.SEARCH_TOOL], "hints": [chat.SEARCH_HINT],
-         "results": {}, "tool": "none-or-search", "must": NO_ACCESS + r"|nicht|weiß", "never": r"\d+([.,]\d+)?\s*(€|euro)"},
+         # no bank tool exists: every honest wording is right („kein Zugriff“, „kein Werkzeug“, „schau in deine
+         # Banking-App“), so only facts are checked, never the wording (Qualitätstest V01.0.597: four honest answers
+         # failed on their words); a balance in figures or words always fails
+         "results": {}, "tool": "none-or-search", "must": "", "never": MONEY},
     ]
 
 

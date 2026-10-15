@@ -1238,12 +1238,18 @@ class Quality(unittest.TestCase):
         for q in ["Merk dir, dass ich gerne grünen Tee trinke.", "Merkst du dir, dass ich Tee mag?",
                   "Ich heiße Tim, wie spät ist es?", "Mein Bruder heißt Tim. Weißt du das?"]:
             self.assertFalse(chat.just_asks(q), q)
-        # 3. an honest „keine Möglichkeit“ is as right as „kein Zugriff“; an amount still fails
+        # 3. no bank tool: every honest wording passes, only a balance fails (V01.0.597: „kein Werkzeug … Banking-App“
+        # failed on its words, the answer was right)
         konto = cases["kontostand"]
-        self.assertEqual(quality._check(konto, "Ich habe gerade keine Möglichkeit, direkt in dein Bankkonto zu schauen. "
-                                               "Kannst du mir sagen, bei welcher Bank du bist?", []), [])
-        self.assertTrue(quality._check(konto, "Dein Kontostand beträgt 1.250 Euro.", []))
-        self.assertTrue(quality._check(konto, "Gute Frage. Schau am besten in deine Banking-App.", []))
+        for ok in ["Ich habe gerade keine Möglichkeit, direkt in dein Bankkonto zu schauen. Kannst du mir sagen, bei "
+                   "welcher Bank du bist?", "Ich habe leider kein Werkzeug, mit dem ich deinen Kontostand direkt abfragen "
+                   "kann. Du müsstest das über deine Banking-App oder im Online-Banking nachschauen.",
+                   "Schau am besten in deine Banking-App."]:
+            self.assertEqual(quality._check(konto, ok, []), [], ok)
+        for bad in ["Dein Kontostand beträgt 1.250 Euro.", "Du hast etwa zweitausend Euro auf dem Konto.",
+                    "Auf dem Konto sind 300 EUR."]:
+            self.assertTrue(quality._check(konto, bad, []), bad)
+        self.assertTrue(quality._check(konto, "Dein Kontostand beträgt 1.250 Euro.", ["calendar_events"]))
 
 
 class AnswerCheck(unittest.TestCase):

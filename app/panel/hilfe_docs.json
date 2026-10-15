@@ -4245,7 +4245,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Drei rote Fragen im Qualitätstest (V01.0.574)",
-"text": "Drei rote Fragen im Qualitätstest (V01.0.574): (1) Angekündigte Tat: Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“, „Ich stelle dir einen Timer …“, taten.announces), wird weder gezeigt noch gesprochen, solange in dieser Antwort noch kein Werkzeug geklappt hat. Kommt danach ein Werkzeugaufruf, fällt er still weg; kommt keiner, sagt das Panel am Ende „Das habe ich nicht ausgeführt.“ Taten prüfen gilt jetzt auch, wenn gar kein Werkzeug angeboten war (dann ist jede behauptete Tat falsch). Journal: chat: action check: held back kind=ankuendigung …, chat: action check: announcement left out, a tool ran. (2) Merken nur, wenn es etwas zu merken gibt: Eine Nachricht, die nur fragt (ein Satz mit Fragezeichen, kein „merk dir“, keine Aussage über sich wie „ich heiße …“; chat.just_asks), bekommt kein memory_save angeboten (chat.offer_memory, auch im Qualitätstest), damit aus „Weißt du, wie mein Bruder heißt?“ kein erfundener Fakt gespeichert wird; Journal chat: memory_save not offered - the message only asks. (3) Kontostand: Der Qualitätstest nimmt jede ehrliche „kein Zugriff“-Antwort an, auch „keine Möglichkeit“, „keinen Einblick“ (quality."
+"text": "Drei rote Fragen im Qualitätstest (V01.0.574): (1) Angekündigte Tat: Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“, „Ich stelle dir einen Timer …“, taten.announces), wird weder gezeigt noch gesprochen, solange in dieser Antwort noch kein Werkzeug geklappt hat. Kommt danach ein Werkzeugaufruf, fällt er still weg; kommt keiner, sagt das Panel am Ende „Das habe ich nicht ausgeführt.“ Taten prüfen gilt jetzt auch, wenn gar kein Werkzeug angeboten war (dann ist jede behauptete Tat falsch). Journal: chat: action check: held back kind=ankuendigung …, chat: action check: announcement left out, a tool ran. (2) Merken nur, wenn es etwas zu merken gibt: Eine Nachricht, die nur fragt (ein Satz mit Fragezeichen, kein „merk dir“, keine Aussage über sich wie „ich heiße …“; chat.just_asks), bekommt kein memory_save angeboten (chat.offer_memory, auch im Qualitätstest), damit aus „Weißt du, wie mein Bruder heißt?“ kein erfundener Fakt gespeichert wird; Journal chat: memory_save not offered - the message only asks. (3) Kontostand: Ein Bank-Werkzeug gibt es nicht, also ist jede ehrliche Antwort richtig („kein Zugriff“, „kein Werkzeug“, „schau in de"
 },
 {
 "lang": "de",
@@ -4253,7 +4253,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Drei rote Fragen im Qualitätstest (V01.0.574)",
-"text": "NO_ACCESS, eine Quelle für die drei Fälle ohne Zugriff); ein Betrag fällt weiter durch."
+"text": "ine Banking-App“). Seit dem Fix nach V01.0.597 prüft der Qualitätstest hier keine Formulierung mehr, nur Fakten: Ein Betrag in Ziffern oder Worten (quality.MONEY) oder ein unpassendes Werkzeug fällt durch. Die beiden Fälle ohne Kalender- und Mail-Zugriff nehmen weiter jede „kein Zugriff“-Antwort an (quality.NO_ACCESS)."
 },
 {
 "lang": "de",
@@ -10573,7 +10573,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Three red questions in the quality test (V01.0.574)",
-"text": "Three red questions in the quality test (V01.0.574): (1) Announced deed: a sentence that only announces a tool call or a deed (\"I'm calling the timer tool …\", \"I'll set a timer …\", taten.announces) is neither shown nor spoken while no tool has worked in this answer. When a tool call follows, it is left out silently; when none follows, the panel says \"I did not do that.\" at the end. Check deeds now also applies when no tool at all was offered (then every claimed deed is false). Journal: chat: action check: held back kind=ankuendigung …, chat: action check: announcement left out, a tool ran. (2) Remember only what there is to remember: a message that only asks (one sentence with a question mark, no \"remember\", nothing the person says about themselves like \"I am …\"; chat.just_asks) is not offered memory_save (chat.offer_memory, in the quality test as well), so \"Do you know my brother's name?\" never saves a made-up fact; journal chat: memory_save not offered - the message only asks. (3) Account balance: the quality test accepts every honest \"no access\" answer, also \"keine Möglichkeit\", \"keinen Einblick\" (quality.NO_ACCESS, one source for the three cases without access); an amount still"
+"text": "Three red questions in the quality test (V01.0.574): (1) Announced deed: a sentence that only announces a tool call or a deed (\"I'm calling the timer tool …\", \"I'll set a timer …\", taten.announces) is neither shown nor spoken while no tool has worked in this answer. When a tool call follows, it is left out silently; when none follows, the panel says \"I did not do that.\" at the end. Check deeds now also applies when no tool at all was offered (then every claimed deed is false). Journal: chat: action check: held back kind=ankuendigung …, chat: action check: announcement left out, a tool ran. (2) Remember only what there is to remember: a message that only asks (one sentence with a question mark, no \"remember\", nothing the person says about themselves like \"I am …\"; chat.just_asks) is not offered memory_save (chat.offer_memory, in the quality test as well), so \"Do you know my brother's name?\" never saves a made-up fact; journal chat: memory_save not offered - the message only asks. (3) Account balance: there is no bank tool, so every honest answer is right (\"no access\", \"no tool\", \"check your banking app\"). Since the fix after V01.0.597 the quality test checks no wording here, only fa"
 },
 {
 "lang": "en",
@@ -10581,7 +10581,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Three red questions in the quality test (V01.0.574)",
-"text": " fails."
+"text": "cts: an amount in figures or words (quality.MONEY) or an unsuitable tool fails. The two cases without calendar and mail access still accept every \"no access\" answer (quality.NO_ACCESS)."
 },
 {
 "lang": "en",
