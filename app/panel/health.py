@@ -55,7 +55,7 @@ def check_memory(avail_gib, cfg=None):
         print(f"watchdog: memory low: {avail_gib:.1f} GiB free", flush=True)
     elif low:
         memory_state["min"] = min(memory_state["min"] or avail_gib, avail_gib)
-    elif memory_state["low"] and avail_gib >= warn + 1:  # a little hysteresis
+    elif memory_state["low"] and avail_gib is not None and avail_gib >= warn + 1:  # a little hysteresis
         memory_state.update(low=False, since=None, min=None)
     memory_state["warn_gib"] = warn
     memory_state["avail"] = avail_gib

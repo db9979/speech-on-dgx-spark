@@ -126,12 +126,12 @@ def weiter():
 
 def status():
     try:
-        mem = round(mem_available_gib(), 1)
+        mem, total = round(mem_available_gib(), 1), round(mem_available_gib("MemTotal"), 1)
     except OSError:
-        mem = None
+        mem = total = None
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
-            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
+            "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft()}
 
 

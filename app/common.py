@@ -375,10 +375,11 @@ def estimate_gib(model_id):
     return modelle.need_gib(model_id)
 
 
-def mem_available_gib():
+def mem_available_gib(key="MemAvailable"):
+    """GiB from /proc/meminfo: what is free for new work (MemAvailable), or with key="MemTotal" all of it."""
     with open("/proc/meminfo") as f:
         for line in f:
-            if line.startswith("MemAvailable:"):
+            if line.startswith(key + ":"):
                 return int(line.split()[1]) / 1024 / 1024
     return 0.0
 

@@ -332,6 +332,21 @@ class Pause(Base):
         self.w._cache.update(key=None, state=None)
         self.assertIn("noch 10 min", self.w.cli(["status"], now=now)[1], "a pause whose time runs stays")
 
+    def test_memory_is_the_model_computers(self):
+        # tars 2026-10-15: the panel on a Raspberry Pi warned "Nur noch 7.0 GiB frei" with the Pi's own 8 GB
+        import health
+        import monitor
+        self.assertIn("mem_total_gib", self.post(body()).json(), "the Wärter reports all of its memory too")
+        steuer._status.update(t=time.monotonic(), d={"einheiten": {}, "mem_avail_gib": 61.5, "mem_total_gib": 119.7})
+        s = monitor.system_stats()
+        self.assertEqual((s["mem_avail_gib"], s["mem_total_gib"], s["mem_von"]), (61.5, 119.7, "modell-rechner"))
+        steuer._status.update(t=0.0, d=None)
+        s = monitor.system_stats()
+        self.assertIsNone(s["mem_avail_gib"], "no status: no number, never this computer's")
+        self.addCleanup(health.memory_state.update, low=False, since=None, min=None)
+        health.memory_state.update(low=True, since=1.0, min=5.0)
+        self.assertTrue(health.check_memory(None)["low"], "no number changes nothing")
+
     def test_its_pause_counts_here_while_its_time_runs(self):
         now = time.time()
         self.there({"on": True, "parts": ["llm", "asr"], "since": now - 60, "until": now + 600, "channel": "kommandozeile"})

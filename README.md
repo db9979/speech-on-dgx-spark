@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.642** Fix: with the models on another computer the panel shows that computer's memory (no false 'only 7 GiB free' from the Pi)
 - **V01.0.641** Pi: a hand-typed tars address is switched to the LLM door too
 - **V01.0.640** Fix: a Wartungspause on the model computer ends with its time (no more hanging pause after an aborted measurement)
 - **V01.0.639** Spark split: after switching to the own language model the Pi reaches it at once
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.635** Move: the log names the settings check that refused
 - **V01.0.634** Move: the log says where restoring stopped
 - **V01.0.633** Red fix: the preference "the Spark may call me" is classified in the settings catalog
-- **V01.0.632** Phone T4: the Spark calls: wake-up call and reminder by call, call back for callers from outside, admin call on outages outside quiet hours, test call
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
