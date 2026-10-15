@@ -2,7 +2,9 @@
 protocol, and only for listed addresses."""
 import asyncio
 import json
+import time
 import unittest
+from unittest import mock
 
 from tests import helpers
 
@@ -88,6 +90,26 @@ class Wyoming(unittest.TestCase):
         self.assertEqual((kinds[0], kinds[-1]), ("audio-start", "audio-stop"))
         self.assertEqual(got[0][1], {"rate": 24000, "width": 2, "channels": 1})
         self.assertEqual(b"".join(e[2] for e in got if e[0] == "audio-chunk"), b"\1\0" * 2400)
+
+    def test_describe_answers_at_once_while_the_voice_engine_is_slow(self):
+        """Home Assistant gives up on "describe" after 1 second and logs "Unable to get info" (Dominik
+        2026-10-15): a slow voice engine must not hold the answer back; the list comes from memory."""
+        async def slow(s):
+            await asyncio.sleep(3)
+        wyoming._voices.update(at=None, list=[], task=None)
+        with mock.patch.object(wyoming, "_read_voices", slow):
+            t = time.monotonic()
+            info = run([("describe", {}, b"")])
+            self.assertLess(time.monotonic() - t, 2.5)     # waits VOICES_WAIT (0.5 s), never the 3 s; headroom for GitHub
+        self.assertEqual(info[0][0], "info")
+        wyoming._voices.update(at=time.monotonic(), list=["ryan", "vivian"], task=None)
+        with mock.patch.object(wyoming, "_read_voices", slow):
+            t = time.monotonic()
+            info = run([("describe", {}, b"")])
+            self.assertLess(time.monotonic() - t, 2.5)
+        names = [v["name"] for v in info[0][1]["tts"][0]["voices"]]
+        self.assertIn("vivian", names)
+        wyoming._voices.update(at=None, list=[], task=None)
 
     def test_shows_on_the_live_page(self):
         """Zustand → Live (Dominik 2026-10-10: everything that can be shown): Home Assistant's transcriptions and

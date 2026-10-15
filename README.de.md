@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.603** Fix: Home Assistant (Wyoming) bekommt die Geräteangaben sofort, auch wenn die Sprachausgabe gerade beschäftigt ist
 - **V01.0.602** Push-Regel: vor dem Push ein Schnelltest (betroffene und Wächter-Tests), den vollen Lauf macht GitHub
 - **V01.0.601** Fix: der Dienst-Wächter fragt Home Assistant ohne falsche Anmeldung (keine Login-Warnungen mehr im HA-Log)
 - **V01.0.600** Fix: das Update-Fenster meldet nicht mehr „zu lange“ wegen der Fortschrittsdatei des vorigen Updates
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.596** Eigene Modelle Stufe E5: Admins fügen eigene Hugging-Face-Modelle nach festen Regeln hinzu (Admin-Schalter)
 - **V01.0.595** Eigene Modelle Stufe E4: Modelle im Panel (Admin-Schalter) und mit `speech-spark modelle wechseln` wechseln
 - **V01.0.594** Tagesstart im Begleiter gegliedert wie das Tagesbriefing im Chat (Termine, Wetter, Mails als Listen; neuer Begleiter-Build nötig)
-- **V01.0.593** Fix: Messung und eigene Engines übersetzen höchstens 4 Kernel gleichzeitig (kein Speicherüberlauf mehr)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

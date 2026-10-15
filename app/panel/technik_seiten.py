@@ -2956,10 +2956,13 @@ SEITEN_DATEN = {
                  "password; that is why it only answers addresses from the admin's list, with an empty list nobody."),
                 ("Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein "
                  "Profil, nichts Persönliches. Höchstens {wyoming.MAX_CONNS} Verbindungen gleichzeitig; Längen werden "
-                 "geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt.",
+                 "geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der "
+                 "Stimmenliste aus dem Speicher (alle {wyoming.VOICES_TTL|min} Minuten neu gelesen), weil Home Assistant "
+                 "nur 1 Sekunde wartet.",
                  "Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no "
                  "profile, nothing personal. At most {wyoming.MAX_CONNS} connections at once; lengths are checked "
-                 "before reading; only sound formats a microphone sends."),
+                 "before reading; only sound formats a microphone sends. „describe“ answers at once with the voice list from "
+                 "memory (read again every {wyoming.VOICES_TTL|min} minutes), because Home Assistant waits only 1 second."),
                 ("Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste.",
                  "Refused addresses show on Status → Live under input and as a suggestion for the list."),
             ]),

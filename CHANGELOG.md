@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.603** · 2026-10-15 · Fix Wyoming: „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 min im Hintergrund neu gelesen, beim ersten Mal höchstens 0,5 s gewartet); vorher wartete es bis zu 5 s auf /v1/voices der Sprachausgabe, Home Assistant gibt nach 1 s auf („Unable to get info from …:31003“)
 - **V01.0.602** · 2026-10-15 · Push-Regel (Dominik): vor dem Push nur Schnelltest mit den Tests der geänderten Dateien und den Wächter-Tests; den vollen Lauf macht „Tests“ auf GitHub, rot heißt weiter PUSH-STOPP (Richtlinie Teil 10 Punkt 5, CLAUDE.md)
 - **V01.0.601** · 2026-10-15 · Fix: der Dienst-Wächter fragt Home Assistant unter /manifest.json statt /api/ ohne Token; HA zählte jede Probe (einmal pro Minute seit V01.0.440) als falsche Anmeldung und hätte tars mit ip_ban_enabled sperren können
 - **V01.0.600** · 2026-10-15 · Fix Update-Fenster: Zeit und Grenze nur an der Fortschrittsdatei dieses Updates; vorher zählte in den ersten Sekunden der Start des vorigen Updates, das Fenster meldete „Update dauert zu lange“ (102 Minuten) und fragte nicht mehr nach, obwohl das Update fertig wurde

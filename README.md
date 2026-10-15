@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.603** Fix: Home Assistant (Wyoming) gets the device info at once, even while the voice engine is busy
 - **V01.0.602** Push rule: before a push a quick test (affected and guard tests); GitHub does the full run
 - **V01.0.601** Fix: the service watch asks Home Assistant without a failed login (no more login warnings in the HA log)
 - **V01.0.600** Fix: the update window no longer says "too long" because of the previous update's progress file
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.596** Own models stage E5: admins add own Hugging Face models by fixed rules (admin switch)
 - **V01.0.595** Own models stage E4: switch models in the panel (admin switch) and with `speech-spark modelle wechseln`
 - **V01.0.594** Companion morning start sorted like the chat's daily briefing (appointments, weather, mails as lists; needs a new companion build)
-- **V01.0.593** Fix: model measurement and own engines compile at most 4 kernels at a time (no more out of memory)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

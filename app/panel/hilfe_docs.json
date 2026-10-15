@@ -989,7 +989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Home Assistant Assist (Wyoming)",
 "title": "Home Assistant Assist (Wyoming)",
-"text": "- Ein eigener Server lauscht auf dem Wyoming-Port (Standard 31003), solange der Schalter an ist. Wyoming hat kein Passwort; deshalb antwortet er nur Adressen aus der Liste des Admins, mit leerer Liste niemandem. - Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. - Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste."
+"text": "- Ein eigener Server lauscht auf dem Wyoming-Port (Standard 31003), solange der Schalter an ist. Wyoming hat kein Passwort; deshalb antwortet er nur Adressen aus der Liste des Admins, mit leerer Liste niemandem. - Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten neu gelesen), weil Home Assistant nur 1 Sekunde wartet. - Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste."
 },
 {
 "lang": "de",
@@ -3261,7 +3261,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Home Assistant Assist über Wyoming (V01.0.100)",
-"text": "Home Assistant Assist über Wyoming (V01.0.100): Home Assistant nutzt die Spracherkennung und die Stimme des Spark (Voice PE, HA-App, ESPHome-Lautsprecher). Admin: Funktionen → „Home Assistant Assist (Wyoming)“ an und die Adresse von Home Assistant eintragen (Wyoming hat kein Passwort; ohne eingetragene Adresse antwortet der Spark niemandem). Seit V01.0.106 schlägt das Feld beim Einschalten die Adresse aus der Home-Assistant-Einrichtung eines Profils vor (nur Adressen im Heimnetz; hinter einem Reverse-Proxy die echte HA-Adresse von Hand eintragen) und zeigt Adressen, die zuletzt abgewiesen wurden. In HA: Integration „Wyoming Protocol“, Host = Spark, Port 31003; im Sprachassistenten „spark“ für Sprache-zu-Text und Text-zu-Sprache wählen. Der Dienst läuft im Panel, braucht also die volle Installation. Seit V01.0.334 zeigt Zustand → Live jede Spracherkennung und jede Ansage für Home Assistant als Anfrage des Geräts „Home Assistant“ (Weg Hören → Text an Home Assistant bzw. Sprechen → zurück), abgewiesene Absender stehen unter Eingang; nie die Worte."
+"text": "Home Assistant Assist über Wyoming (V01.0.100): Home Assistant nutzt die Spracherkennung und die Stimme des Spark (Voice PE, HA-App, ESPHome-Lautsprecher). Admin: Funktionen → „Home Assistant Assist (Wyoming)“ an und die Adresse von Home Assistant eintragen (Wyoming hat kein Passwort; ohne eingetragene Adresse antwortet der Spark niemandem). Seit V01.0.106 schlägt das Feld beim Einschalten die Adresse aus der Home-Assistant-Einrichtung eines Profils vor (nur Adressen im Heimnetz; hinter einem Reverse-Proxy die echte HA-Adresse von Hand eintragen) und zeigt Adressen, die zuletzt abgewiesen wurden. In HA: Integration „Wyoming Protocol“, Host = Spark, Port 31003; im Sprachassistenten „spark“ für Sprache-zu-Text und Text-zu-Sprache wählen. Der Dienst läuft im Panel, braucht also die volle Installation. Seit V01.0.334 zeigt Zustand → Live jede Spracherkennung und jede Ansage für Home Assistant als Anfrage des Geräts „Home Assistant“ (Weg Hören → Text an Home Assistant bzw. Sprechen → zurück), abgewiesene Absender stehen unter Eingang; nie die Worte. Seit V01.0.603 beantwortet der Spark die Frage „describe“ von Home Assistant sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Home Assistant Assist über Wyoming (V01.0.100)",
+"text": "im Hintergrund neu gelesen): HA wartet darauf nur 1 Sekunde, und eine beschäftigte Sprachausgabe ließ es sonst „Unable to get info“ melden."
 },
 {
 "lang": "de",
@@ -7445,7 +7453,7 @@
 "file": "Architecture and data flow",
 "head": "Home Assistant Assist (Wyoming)",
 "title": "Home Assistant Assist (Wyoming)",
-"text": "- Its own server listens on the Wyoming port (default 31003) while the switch is on. Wyoming has no password; that is why it only answers addresses from the admin's list, with an empty list nobody. - Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no profile, nothing personal. At most 8 connections at once; lengths are checked before reading; only sound formats a microphone sends. - Refused addresses show on Status → Live under input and as a suggestion for the list."
+"text": "- Its own server listens on the Wyoming port (default 31003) while the switch is on. Wyoming has no password; that is why it only answers addresses from the admin's list, with an empty list nobody. - Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no profile, nothing personal. At most 8 connections at once; lengths are checked before reading; only sound formats a microphone sends. „describe“ answers at once with the voice list from memory (read again every 10 minutes), because Home Assistant waits only 1 second. - Refused addresses show on Status → Live under input and as a suggestion for the list."
 },
 {
 "lang": "en",
@@ -9661,7 +9669,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant Assist over Wyoming (V01.0.100)",
-"text": "Home Assistant Assist over Wyoming (V01.0.100): Home Assistant uses the Spark's speech recognition and voice (Voice PE, HA app, ESPHome speakers). Admin: Features → \"Home Assistant Assist (Wyoming)\" on and enter Home Assistant's address (Wyoming has no password; with no address listed the Spark answers nobody). Since V01.0.106 the field suggests the address from a profile's Home Assistant setup when switched on (home network addresses only; behind a reverse proxy enter the real HA address by hand) and shows addresses refused lately. In HA: integration \"Wyoming Protocol\", host = the Spark, port 31003; in the voice assistant pick \"spark\" for speech-to-text and text-to-speech. The service runs inside the panel, so it needs the full install. Since V01.0.334 Status → Live shows every transcription and every spoken answer for Home Assistant as a request of the device \"Home Assistant\" (way Hearing → text to Home Assistant, or Speaking → back), refused senders under Entrance; never the words."
+"text": "Home Assistant Assist over Wyoming (V01.0.100): Home Assistant uses the Spark's speech recognition and voice (Voice PE, HA app, ESPHome speakers). Admin: Features → \"Home Assistant Assist (Wyoming)\" on and enter Home Assistant's address (Wyoming has no password; with no address listed the Spark answers nobody). Since V01.0.106 the field suggests the address from a profile's Home Assistant setup when switched on (home network addresses only; behind a reverse proxy enter the real HA address by hand) and shows addresses refused lately. In HA: integration \"Wyoming Protocol\", host = the Spark, port 31003; in the voice assistant pick \"spark\" for speech-to-text and text-to-speech. The service runs inside the panel, so it needs the full install. Since V01.0.334 Status → Live shows every transcription and every spoken answer for Home Assistant as a request of the device \"Home Assistant\" (way Hearing → text to Home Assistant, or Speaking → back), refused senders under Entrance; never the words. Since V01.0.603 the Spark answers Home Assistant's \"describe\" at once with the voice list from memory (read again in the background every 10 minutes): HA waits only 1 second for it, and a busy voice e"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Home Assistant Assist over Wyoming (V01.0.100)",
+"text": "ngine otherwise made it report \"Unable to get info\"."
 },
 {
 "lang": "en",
