@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.630** · 2026-10-15 · install.sh: GPU-Prüfung liest config.json über cfg_json (root liest nicht direkt, test_hardening)
 - **V01.0.629** · 2026-10-15 · install.sh: Panel-Rechner ohne NVIDIA-Karte (Raspberry Pi) überspringt die GPU-Prüfung
 - **V01.0.628** · 2026-10-15 · Telefon T3: Anrufe von außen (Schalter, Standard aus): bestätigte eigene Nummern wählen ihr Profil, Persönliches nur mit sicherer Stimme oder Telefon-PIN, unbekannte Nummern als Gast höchstens 20 am Tag oder abgewiesen; behoben: die Telefon-Schalter wurden aus dem falschen Teil der Einstellungen gelesen, der Spark meldete sich nie an
 - **V01.0.627** · 2026-10-15 · Telefon T2: Ich → Telefon mit eigenen Rufnummern (bestätigt mit einem Code, den man bei einem Anruf von dieser Nummer tippt), Telefon-PIN (Ziffern und #, steht für die Stimme, Sperre nach drei falschen) und der Liste der eigenen Telefonate, auch in den Apps

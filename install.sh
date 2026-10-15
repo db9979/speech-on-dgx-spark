@@ -130,7 +130,7 @@ jqi()  { local j; j=$(cfg_json | jq "$@") && [ -n "$j" ] && printf '%s\n' "$j" |
 # update there) needs no GPU; only the computer with the models does
 gpu_needed=1
 [ -n "$MODELLE_PICK" ] && gpu_needed=0
-[ -f "$ETC/config.json" ] && [ "$(runuser -u "$SVC_USER" -- cat -- "$ETC/config.json" 2>/dev/null \
+[ -f "$ETC/config.json" ] && [ "$(cfg_json 2>/dev/null \
   | jq -r '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"' 2>/dev/null)" = false ] && gpu_needed=0
 if [ "$gpu_needed" = 1 ]; then
   command -v nvidia-smi >/dev/null || die "nvidia-smi not found; is the NVIDIA driver installed? (panel on another computer: --mode panel --modelle <dgx>)"
