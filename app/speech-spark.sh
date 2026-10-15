@@ -383,7 +383,7 @@ cmd_modelle() {
       # shellcheck disable=SC2086  # ids are catalog ids (checked words)
       systemd-run --quiet --collect --unit="$MESS_UNIT" -p LogNamespace=speech-spark -p TimeoutStopSec=180 \
         --setenv=SPEECH_SPARK_PREFIX="$PREFIX" --setenv=SPEECH_SPARK_ETC="$ETC" --setenv=SPEECH_SPARK_VAR="$VAR" \
-        "$self" modelle messen-intern $ids
+        /bin/bash "$self" modelle messen-intern $ids
       echo "Die Messung läuft (auch wenn du dieses Fenster schließt). Ergebnis: Zustand → Logs oder sudo speech-spark logs messen"
       journalctl --namespace=speech-spark -u "$MESS_UNIT" -f -n 0 --no-pager -o cat &
       follow=$!

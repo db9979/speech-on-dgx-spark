@@ -340,6 +340,13 @@ class Kommando(unittest.TestCase):
             code = line.split("#", 1)[0]
             self.assertNotRegex(code, r"(?i)qwen38.*(uninstall|disable|rm -)", line)
 
+    def test_the_own_unit_runs_the_script_through_bash(self):
+        # /opt/speech-spark/app/speech-spark.sh is not executable (the wrapper runs it with /bin/bash): systemd-run
+        # refused "$self" with "Permission denied" on tars (V01.0.586)
+        for line in self.sh.splitlines():
+            if '"$self" modelle' in line:
+                self.assertIn('/bin/bash "$self" modelle', line)
+
     def test_engine_runs_as_the_service_user_offline(self):
         eng = self.body("mess_engine")
         self.assertIn('-p User="$svc"', eng)
