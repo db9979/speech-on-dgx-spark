@@ -76,6 +76,8 @@ flowchart LR
 | `speech-spark-watch` | – | Watchdog, only without the panel |
 | `speech-spark-update` | – | Update, only on request |
 
+**Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
+
 All services run as the system user `speech` and log into the journald namespace `speech-spark`. The panel starts its background jobs itself (`panel.py`: samples, stability, inbox tidy, reading documents, reMarkable sync, learning from conversations). Background work waits while someone speaks (`vorrang.py`).
 
 ## Data flow of a request
@@ -1936,7 +1938,7 @@ flowchart TD
 
 1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
-3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute).
+3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
 6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
@@ -1992,6 +1994,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `_Capped`: cuts the answer, also unpacked ([step 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: same site for login data ([step 10](#kn-waechter-s10))
 - `app/panel/netguard.py` `own_addresses`: every address of this machine ([step 3](#kn-waechter-s3))
+- `app/panel/netguard.py` `model_addresses`: the model computer's addresses when it is another one ([step 3](#kn-waechter-s3))
 - `app/panel/netguard.py` `IMAP4_SSL`: mail over the checked address ([step 9](#kn-waechter-s9))
 - `app/panel/notaus.py` `watch`: counts blocks for the automatic kill switch ([step 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: shows each decision on Live ([step 2](#kn-waechter-s2))

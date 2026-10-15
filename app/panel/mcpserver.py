@@ -52,7 +52,7 @@ import guard
 import notaus
 import verbrauch
 import profiles
-from common import STATE, load_config, write_json
+from common import STATE, load_config, model_url, write_json
 import core
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
 
@@ -577,7 +577,7 @@ async def speech(name, args, uid):
     low = stufe.headers("hinten")   # people talking to the Spark go first
     if name == "voices":
         async with httpx.AsyncClient(timeout=10) as cl:
-            v = (await cl.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices", headers=api_headers())).json()
+            v = (await cl.get(model_url("tts", "/v1/voices", cfg), headers=api_headers())).json()
         names = [x for x in (v.get("voices") or []) if isinstance(x, str) and 0 < len(x) <= 64][:200] if isinstance(v, dict) else []
         return _result(", ".join(names) or "Keine Stimmen gefunden.")
     if name == "transcribe":
@@ -596,7 +596,7 @@ async def speech(name, args, uid):
         if re.fullmatch(r"[A-Za-z]{2,12}", lang):
             form["language"] = lang
         async with httpx.AsyncClient(timeout=300) as cl:
-            r = await cl.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+            r = await cl.post(model_url("asr", "/v1/audio/transcriptions", cfg),
                               files={"file": ("audio." + fmt, data)}, data=form, headers=dict(api_headers(), **low))
         verbrauch.heard("MCP", r, uid)
         if r.status_code != 200:
@@ -612,7 +612,7 @@ async def speech(name, args, uid):
         body["voice"] = voice
     out = bytearray()
     async with httpx.AsyncClient(timeout=300) as cl:
-        async with cl.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
+        async with cl.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body,
                              headers=dict(api_headers(), **low)) as r:
             if r.status_code != 200:
                 return _result(f"Die Sprachausgabe hat abgelehnt (HTTP {r.status_code}).", True)

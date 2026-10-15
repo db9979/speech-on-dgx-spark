@@ -30,7 +30,8 @@ import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
-from common import CONFIG_PATH, estimate_gib, journal, load_config, write_json  # noqa: E402
+from common import (CONFIG_PATH, MODEL_HOST_RE, estimate_gib, journal, load_config, model_local, model_url,  # noqa: E402
+                    write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
     json_body,
@@ -522,6 +523,13 @@ def validate(new):
     if not new["api"]["key"] and not all(new[s].get("host") in ("127.0.0.1", "::1", "localhost") for s in ("asr", "tts")):
         raise HTTPException(400, "API key: required while speech recognition or output listen in the network "
                                  "(host not 127.0.0.1); press Erzeugen")
+    # the model computer (plan Raspberry-Pi split, B1): a plain name or IP, never a path or scheme; once it is another
+    # computer the key is a must, the connection is https (common.model_url)
+    mhost = str(new["models"].get("host") or "")
+    if not MODEL_HOST_RE.fullmatch(mhost):
+        raise HTTPException(400, "Modell-Rechner: only a name or IP address, without http:// or a path")
+    if not new["api"]["key"] and not model_local(new):
+        raise HTTPException(400, "API key: required while the models run on another computer; press Erzeugen")
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
@@ -1038,7 +1046,7 @@ async def _test_asr(request, file, language, wake, room, opened=""):
     try:
         async with httpx.AsyncClient(timeout=600) as c:
             import stufe   # priority for people: the profile's own recording goes first (not at shared speakers)
-            r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+            r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
                              files={"file": (file.filename or "audio.wav", data)},
                              data=form, headers=dict(api_headers(), **stufe.headers(stufe.asr_level(request))))
     except (httpx.ConnectError, httpx.ConnectTimeout):
@@ -1128,7 +1136,7 @@ async def _test_asr(request, file, language, wake, room, opened=""):
 async def test_tts(request: Request):
     cfg = load_config()
     async with httpx.AsyncClient(timeout=600) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=await request.json(),
+        r = await c.post(model_url("tts", "/v1/audio/speech", cfg), json=await request.json(),
                          headers=api_headers())
     return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type"),
                     headers={k: v for k, v in r.headers.items() if k.lower() == "x-processing-seconds"})
@@ -1141,7 +1149,7 @@ async def test_tts_stream(request: Request):
     body = await request.json()
     body.update(stream=True, response_format="pcm")
     c = httpx.AsyncClient(timeout=600)
-    up = await c.send(c.build_request("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
+    up = await c.send(c.build_request("POST", model_url("tts", "/v1/audio/speech", cfg),
                                       json=body, headers=api_headers()), stream=True)
     if up.status_code != 200:
         content = await up.aread()
@@ -1194,7 +1202,7 @@ async def tts_voices():
     try:
         async with httpx.AsyncClient(timeout=5) as c:
             # with the key: the front end's size gate turns away keyless /v1/ calls even from here (401)
-            v = (await c.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices", headers=api_headers())).json()
+            v = (await c.get(model_url("tts", "/v1/voices", cfg), headers=api_headers())).json()
         if not isinstance(v, dict):
             raise ValueError("not a JSON object")
     except Exception:

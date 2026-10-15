@@ -414,7 +414,8 @@ class Speakers(Base):
     def test_wyoming_plays_the_clip_and_hears_nothing(self):
         import wyoming
         wartung.start(["tts", "asr"], 30, "main")
-        s = {"tts_port": 1, "asr_port": 1, "voice": "", "default_voice": "", "language": ""}
+        s = {"tts_url": "http://127.0.0.1:1", "asr_url": "http://127.0.0.1:1", "voice": "", "default_voice": "",
+             "language": ""}
         rate, width, channels, pcm = run(wyoming.synthesize(s, "Das Licht ist an.", ""))
         self.assertEqual((rate, width, channels, pcm), (24000, 2, 1, esp32.pause_tone()))
         self.assertEqual(run(wyoming.transcribe(s, b"RIFF", "de")), "")

@@ -33,7 +33,7 @@ import guard
 import notaus
 import profiles
 import wartung
-from common import DayCounter, STATE, load_config
+from common import DayCounter, STATE, load_config, model_url
 from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -423,13 +423,13 @@ def _paint_lock():
 
 
 async def call(path, body=None, timeout=JOB_SECONDS):
-    """One request to bild_server on 127.0.0.1 (the panel's API key); returns (status, JSON)."""
-    port = int(cfg()["port"])
+    """One request to bild_server on the model computer (common.model_url, the panel's API key); returns (status, JSON)."""
+    url = model_url("bild", path)
     async with httpx.AsyncClient(timeout=timeout, trust_env=False) as c:
         if body is None:
-            r = await c.get(f"http://127.0.0.1:{port}{path}", headers=api_headers())
+            r = await c.get(url, headers=api_headers())
         else:
-            r = await c.post(f"http://127.0.0.1:{port}{path}", json=body, headers=api_headers())
+            r = await c.post(url, json=body, headers=api_headers())
     try:
         d = r.json()
     except ValueError:

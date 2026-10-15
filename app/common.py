@@ -588,6 +588,36 @@ def audio_rate_ok(data):
     return ""
 
 
+# the model computer (plan Raspberry-Pi split, B1): speech recognition, speech output, pictures and the LLM-Tor live on
+# models.host, 127.0.0.1 when everything runs on one Spark. art -> its config section with the port
+MODEL_ARTS = {"asr": "asr", "tts": "tts", "bild": "image", "llm": "llm"}
+MODEL_HOST_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|[0-9A-Fa-f:]{2,39}")
+
+
+def model_host(cfg=None):
+    """models.host, checked; anything else than a plain name or IP falls back to this Spark (127.0.0.1)."""
+    cfg = load_config() if cfg is None else cfg
+    host = str((cfg.get("models") or {}).get("host") or "").strip()
+    return host if MODEL_HOST_RE.fullmatch(host) else "127.0.0.1"
+
+
+def model_local(cfg=None):
+    """True while the models run on this Spark (the all-in-one install)."""
+    host = model_host(cfg)
+    return host == "localhost" or _loopback(host)
+
+
+def model_url(art, path="", cfg=None):
+    """The one address of a model service (B1): http on this Spark; https to another computer, whose certificate the
+    pairing pins (B3), so speech, text and pictures never cross the network in plain text."""
+    cfg = load_config() if cfg is None else cfg
+    host = model_host(cfg)
+    port = int(cfg[MODEL_ARTS[art]]["port"])
+    if model_local(cfg):
+        return f"http://127.0.0.1:{port}{path}"
+    return f"https://{'[' + host + ']' if ':' in host else host}:{port}{path}"
+
+
 def _loopback(host):
     import ipaddress
     try:

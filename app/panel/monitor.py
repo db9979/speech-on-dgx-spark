@@ -9,7 +9,7 @@ import httpx
 import psutil
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import mem_available_gib  # noqa: E402
+from common import mem_available_gib, model_url  # noqa: E402
 from core import run  # noqa: E402
 history = deque(maxlen=400)  # one sample every 3 s, ~20 min
 
@@ -59,7 +59,7 @@ def system_stats():
 
 
 async def service_health(name, cfg):
-    url = f"http://127.0.0.1:{cfg[name]['port']}/health"
+    url = model_url(name, "/health", cfg)
     try:
         async with httpx.AsyncClient(timeout=2) as c:
             return (await c.get(url)).json()

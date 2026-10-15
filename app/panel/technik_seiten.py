@@ -14,11 +14,11 @@ def S(sid, art, name, sub, text, side=None):
 # node id (technik.KNOTEN) -> page
 SEITEN_DATEN = {
     "waechter": {
-        "stand": "55042873e3",
+        "stand": "0e36dcde85",
         "bezug": {
             "notaus.AUTO": ["s4"], "netguard.allowed": ["s3", "s7", "s8"], "netguard.resolve": ["s2"],
             "netguard._Transport": ["s10", "s11"], "netguard._Capped": ["s11"], "netguard.same_site": ["s10"],
-            "netguard.own_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
+            "netguard.own_addresses": ["s3"], "netguard.model_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
             "live.outgoing": ["s2"], "regeln": ["s6", "s8"], "regel:immer": ["s3", "s4", "s7"],
         },
         "kurz": ("Der Wächter entscheidet bei jeder Verbindung, die ein Werkzeug nach außen aufbaut, ob sie sein darf: "
@@ -51,9 +51,11 @@ SEITEN_DATEN = {
             S("s3", "frage", ("Eigener Dienst?", "Own service?"),
               ("Ports {netguard.OWN_PORTS|bereiche} hier", "ports {netguard.OWN_PORTS|bereiche} here"),
               ("Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen "
-               "Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu).",
+               "Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem "
+               "anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).",
                "The ports of the own services are closed on this machine: on loopback and on every own address in "
-               "the LAN or VPN (own_addresses reads them again every minute)."),
+               "the LAN or VPN (own_addresses reads them again every minute). When the models run on another "
+               "computer (models.host), its addresses count the same (model_addresses)."),
               ("stop", "ja", ("Gesperrt", "Blocked"))),
             S("s4", "frage", ("Internet und Notaus an?", "Internet and kill switch on?"),
               ("ab Notaus-Stufe {notaus.STAGE.internet} kein Internet", "from kill switch stage {notaus.STAGE.internet} no internet"),
@@ -181,6 +183,8 @@ SEITEN_DATEN = {
             ("netguard._Capped", ("schneidet die Antwort ab, auch entpackt", "cuts the answer, also unpacked")),
             ("netguard.same_site", ("gleiche Seite für Anmeldedaten", "same site for login data")),
             ("netguard.own_addresses", ("alle Adressen dieser Maschine", "every address of this machine")),
+            ("netguard.model_addresses", ("die Adressen des Modell-Rechners, wenn er ein anderer ist",
+                                          "the model computer's addresses when it is another one")),
             ("netguard.IMAP4_SSL", ("Mail über die geprüfte Adresse", "mail over the checked address")),
             ("notaus.watch", ("zählt Sperren für Notaus von selbst", "counts blocks for the automatic kill switch")),
             ("live.outgoing", ("zeigt jede Entscheidung auf Live", "shows each decision on Live")),
@@ -1079,7 +1083,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "679a024d47",
+        "stand": "fef5f1f450",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1273,7 +1277,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "24d72511e8",
+        "stand": "1da4093b59",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1444,7 +1448,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "8b6932a11a",
+        "stand": "070b41de6e",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -2267,7 +2271,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "eb7d0d379f",
+        "stand": "b20cd6b0f8",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2633,7 +2637,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "e2f185fb17",
+        "stand": "42756d9c62",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -2808,7 +2812,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "53ac88cddb",
+        "stand": "40e2c246bf",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -3198,7 +3202,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "2fbd8a2592",
+        "stand": "9c6e4ebdc4",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],

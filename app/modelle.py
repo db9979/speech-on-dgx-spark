@@ -748,7 +748,8 @@ def _schreib(raw):
 
 
 def tor_url(cfg):
-    return f"http://127.0.0.1:{int(cfg.get('llm', {}).get('port', 31006))}/v1"
+    from common import model_url
+    return model_url("llm", "/v1", cfg)
 
 
 def merken(units, cfg, path=VORHER):

@@ -73,7 +73,7 @@ import verbrauch
 import profiles
 import schreib
 import signatur
-from common import STATE, load_config, no_think, write_json
+from common import STATE, load_config, model_url, no_think, write_json
 from textnorm import plain_markdown
 from core import assistant, auth, browser_profile, confirm_code, json_body
 
@@ -1296,7 +1296,7 @@ async def _speak(cfg, body, uid, out):
     from core import api_headers
     import stufe
     async with httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5)) as c:
-        async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
+        async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body,
                             headers=dict(api_headers(), **stufe.headers(stufe.level(uid)))) as r:
             if r.status_code != 200:
                 raise HTTPException(502, "Die Sprachausgabe hat nicht geantwortet.")

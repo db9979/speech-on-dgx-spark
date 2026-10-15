@@ -57,7 +57,7 @@ def run(events, allow="127.0.0.1"):
     real = wyoming.settings
 
     def settings():
-        return dict(real(), asr_port=ASR_PORT)
+        return dict(real(), asr_url=f"http://127.0.0.1:{ASR_PORT}")
 
     async def go():
         wyoming.settings = settings

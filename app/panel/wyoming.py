@@ -24,7 +24,7 @@ import httpx
 
 from urllib.parse import urlsplit
 
-from common import load_config
+from common import load_config, model_url
 import live
 import notaus
 import verbrauch
@@ -44,7 +44,7 @@ def settings():
     ch = c.get("chat", {})
     return {"on": bool(ch.get("wyoming", False)), "port": int(ch.get("wyoming_port") or 31003),
             "allow": allowed(ch.get("wyoming_allow", "")), "voice": str(ch.get("wyoming_voice") or ""),
-            "asr_port": c["asr"]["port"], "tts_port": c["tts"]["port"],
+            "asr_url": model_url("asr", "", c), "tts_url": model_url("tts", "", c),
             "language": c["asr"].get("default_language") or "auto",
             "default_voice": c["tts"].get("default_voice") or ""}
 
@@ -174,7 +174,7 @@ async def transcribe(s, wav, language):
         return ""
     lang = language or s["language"]
     async with httpx.AsyncClient(timeout=300) as c:
-        r = await c.post(f"http://127.0.0.1:{s['asr_port']}/v1/audio/transcriptions", files={"file": ("ha.wav", wav)},
+        r = await c.post(s["asr_url"] + "/v1/audio/transcriptions", files={"file": ("ha.wav", wav)},
                          data={"language": lang or "auto", "response_format": "json"}, headers=api_headers())
     verbrauch.heard("Home Assistant Assist", r)
     r.raise_for_status()
@@ -194,7 +194,7 @@ async def synthesize(s, text, voice):
     if v:
         body["voice"] = v
     async with httpx.AsyncClient(timeout=300) as c:
-        r = await c.post(f"http://127.0.0.1:{s['tts_port']}/v1/audio/speech", json=body, headers=api_headers())
+        r = await c.post(s["tts_url"] + "/v1/audio/speech", json=body, headers=api_headers())
     r.raise_for_status()
     if r.content[:4] == b"RIFF":
         verbrauch.spoken("Home Assistant Assist", wav=r.content)
@@ -213,7 +213,7 @@ async def _read_voices(s):
     from core import api_headers
     try:
         async with httpx.AsyncClient(timeout=5) as c:
-            r = await c.get(f"http://127.0.0.1:{s['tts_port']}/v1/voices", headers=api_headers())
+            r = await c.get(s["tts_url"] + "/v1/voices", headers=api_headers())
         got = [v for v in (r.json() or {}).get("voices", []) if isinstance(v, str)][:60]
     except (httpx.HTTPError, ValueError, AttributeError):
         print("wyoming: voices not read", flush=True)

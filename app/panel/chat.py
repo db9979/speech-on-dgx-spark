@@ -52,7 +52,7 @@ import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
-from common import load_config  # noqa: E402
+from common import load_config, model_url  # noqa: E402
 from core import admin_cookie_ok, api_headers, assistant, json_body  # noqa: E402
 
 router = APIRouter()
@@ -1704,7 +1704,7 @@ async def _answer(request, turn):
     logfilter.detail("chat", f"turn: {len(messages)} messages, {sum(len(str(m.get('content') or '')) for m in messages)} "
                              f"chars of history, {len(tools or [])} tools offered, {'locked' if locked else 'not locked'}")
     lheaders = llm.headers(ccfg)
-    tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
+    tts_url = model_url("tts", "/v1/audio/speech", cfg)
     # priority for people (stufe.py): the profile's own turn goes before others in the TTS queue
     turn.stufe = stufe.turn_level(turn)
     tts_headers = dict(api_headers(), **stufe.headers(turn.stufe))

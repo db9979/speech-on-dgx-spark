@@ -26,7 +26,7 @@ import threading
 import time
 
 import llm
-from common import SPEECH_MARK, DayCounter, speech_mark
+from common import DayCounter, SPEECH_MARK, model_url, speech_mark
 
 GRACE = 20          # seconds after the last speech that still count as "speaking" (follow-up question)
 POLL = 0.25         # how often a running background request checks for speech
@@ -243,7 +243,7 @@ async def _speak(c, cfg, headers):
     """One TTS request like an answer sentence: (first audio s, real-time factor, pcm or wav)."""
     import base64
     import json
-    url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
+    url = model_url("tts", "/v1/audio/speech", cfg)
     t0 = time.time()
     if cfg["tts"].get("backend") != "vllm-omni":   # the old backend does not stream
         r = await c.post(url, headers=headers, json={"input": TEST_TEXT, "language": "German", "response_format": "wav"})
@@ -274,7 +274,7 @@ async def _hear(c, cfg, headers, wav):
     if not wav or not cfg["asr"].get("enabled", True):
         return None
     t0 = time.time()
-    r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions", headers=headers,
+    r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg), headers=headers,
                      files={"file": ("vorrang.wav", wav)}, data={"language": "German"})
     r.raise_for_status()
     return time.time() - t0

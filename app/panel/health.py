@@ -30,7 +30,7 @@ import httpx
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import llm  # noqa: E402
-from common import STATE, load_config, write_json  # noqa: E402
+from common import STATE, load_config, model_url, write_json  # noqa: E402
 from core import UNITS, api_headers, app_version, run  # noqa: E402
 from monitor import service_health  # noqa: E402
 import verbrauch  # noqa: E402
@@ -277,7 +277,7 @@ async def livecheck(reason="manual"):
             if cfg["tts"].get("enabled", True):
                 t0 = time.time()
                 try:
-                    r = await c.post(f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", headers=api_headers(),
+                    r = await c.post(model_url("tts", "/v1/audio/speech", cfg), headers=api_headers(),
                                      json={"input": LIVE_SENTENCE, "language": "German", "response_format": "wav"})
                     secs = _wav_seconds(r.content) if r.status_code == 200 else None
                     ok = bool(secs and secs > 0.5)
@@ -294,7 +294,7 @@ async def livecheck(reason="manual"):
                     steps.append({"name": "asr", "ok": None, "seconds": 0, "detail": "skipped: no audio from TTS"})
                 else:
                     try:
-                        r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+                        r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
                                          headers=api_headers(), files={"file": ("check.wav", audio)},
                                          data={"language": "German"})
                         text = r.json().get("text", "") if r.status_code == 200 else ""

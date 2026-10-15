@@ -8,7 +8,7 @@ thinking; the caller checks it with fixed rules.
 """
 import httpx
 
-from common import load_config, no_think
+from common import load_config, model_host, model_local, no_think
 
 _models = {}   # address -> the model it serves (when chat.llm_model is not set)
 
@@ -19,12 +19,20 @@ def url(ccfg):
 
 
 def own_tor(ccfg, cfg=None):
-    """True when the address is this Spark's own LLM-Tor (llm_tor.py on 127.0.0.1:llm.port, plan eigene-modelle E3)."""
-    import re
+    """True when the address is this Spark's own LLM-Tor (llm_tor.py on llm.port, plan eigene-modelle E3): on this Spark
+    (127.0.0.1) or on the model computer (models.host, plan Raspberry-Pi split B1)."""
+    from urllib.parse import urlsplit
     cfg = load_config() if cfg is None else cfg
     port = (cfg.get("llm") or {}).get("port", 31006)
-    m = re.match(r"^http://(127\.0\.0\.1|localhost):(\d+)(/|$)", str(ccfg.get("llm_url") or ""))
-    return bool(m) and int(m.group(2)) == port
+    try:
+        u = urlsplit(str(ccfg.get("llm_url") or ""))
+        at = (u.scheme, u.hostname, u.port)
+    except ValueError:
+        return False
+    own = {("http", "127.0.0.1"), ("http", "localhost")}
+    if not model_local(cfg):
+        own.add(("https", model_host(cfg).lower()))
+    return (at[0], at[1]) in own and at[2] == port
 
 
 def key(ccfg, cfg=None):

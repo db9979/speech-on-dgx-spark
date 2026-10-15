@@ -532,6 +532,14 @@
 "src": "architektur",
 "file": "Architektur und Datenfluss",
 "head": "Prozesse und Ports",
+"title": "Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1)",
+"text": "Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1): Das Panel spricht Spracherkennung, Sprachausgabe, Bilder und das LLM-Tor nur über eine Adresse an: common.model_url(art, pfad) mit der Einstellung models.host. Standard ist 127.0.0.1, dann läuft alles wie bisher auf einem Spark über http://127.0.0.1:<port>. Steht dort ein anderer Rechner (Name oder IP, nie ein Pfad oder http://), geht jede Anfrage über https und der API-Schlüssel ist Pflicht (admin.validate); eine kaputte Angabe bleibt auf dem Spark. Das LLM-Tor auf dem Modell-Rechner bekommt den Schlüssel wie das eigene (llm.own_tor), und der Wächter (netguard.model_addresses) behandelt die Ports 30000–31099 des Modell-Rechners wie die eigenen: keine MCP-, Kalender- oder Home-Assistant-Adresse kann auf sie zeigen. Eingestellt wird der Modell-Rechner erst mit der geteilten Installation (Stufe B6); das Zertifikat pinnt die Kopplung (B3). Selbsttest test_modell_rechner."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Prozesse und Ports",
 "title": "Prozesse und Ports",
 "text": "Alle Dienste laufen als Systembenutzer speech und loggen in den journald-Namespace speech-spark. Das Panel startet seine Hintergrundaufgaben selbst (panel.py: Messwerte, Stabilität, Posteingang aufräumen, Dokumente lesen, reMarkable-Abgleich, Lernen aus Gesprächen). Hintergrundarbeit wartet, solange gesprochen wird (vorrang.py)."
 },
@@ -1829,7 +1837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Meta"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, m"
 },
 {
 "lang": "de",
@@ -1837,7 +1845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "daten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort ans Werkzeug: Das Werkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab S"
+"text": "odellseite, remarkable, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort ans Werkzeug: Das Werkz"
 },
 {
 "lang": "de",
@@ -1845,7 +1853,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "chritt 2."
+"text": "eug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
 },
 {
 "lang": "de",
@@ -1893,7 +1901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schritt 2)"
+"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py model_addresses: die Adressen des Modell-Rechners, wenn er ein anderer ist (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schritt 2)"
 },
 {
 "lang": "de",
@@ -7004,6 +7012,14 @@
 "src": "architecture",
 "file": "Architecture and data flow",
 "head": "Processes and ports",
+"title": "Model computer (V01.0.606, plan \"Splitting the Spark\" stage B1)",
+"text": "Model computer (V01.0.606, plan \"Splitting the Spark\" stage B1): the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: common.model_url(art, path) with the setting models.host. The default is 127.0.0.1, and then everything runs on one Spark over http://127.0.0.1:<port> as before. With another computer there (a name or IP, never a path or http://), every request goes over https and the API key is a must (admin.validate); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (llm.own_tor), and the guard (netguard.model_addresses) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test test_modell_rechner."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Processes and ports",
 "title": "Processes and ports",
 "text": "All services run as the system user speech and log into the journald namespace speech-spark. The panel starts its background jobs itself (panel.py: samples, stability, inbox tidy, reading documents, reMarkable sync, learning from conversations). Background work waits while someone speaks (vorrang.py)."
 },
@@ -8301,7 +8317,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Never allowe"
 },
 {
 "lang": "en",
@@ -8309,7 +8325,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
+"text": "d?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
 },
 {
 "lang": "en",
@@ -8357,7 +8373,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
+"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py model_addresses: the model computer's addresses when it is another one (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
 },
 {
 "lang": "en",

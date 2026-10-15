@@ -32,6 +32,7 @@ import httpx
 PUBLIC, USER, HOME = "public", "user", "home"
 OWN_PORTS = set(range(30000, 31100)) | {31443}   # the services' ports and the panel's https port
 _own = {"t": 0.0, "ips": set()}
+_model = {"host": "", "t": 0.0, "ips": set()}
 
 
 def own_addresses():
@@ -60,6 +61,32 @@ def own_addresses():
     except (OSError, ValueError, IndexError):
         pass
     _own.update(t=time.time(), ips=ips)
+    return ips
+
+
+def model_addresses():
+    """The addresses of the model computer (models.host, plan Raspberry-Pi split B1) when the models run elsewhere:
+    its ports are the Spark's own services too, so a MCP or calendar address can never point at them. Empty on the
+    all-in-one install; a name is looked up once a minute, a name that does not resolve gives nothing."""
+    import time
+    from common import load_config, model_host, model_local
+    try:
+        cfg = load_config()
+    except (OSError, ValueError):
+        return set()
+    if model_local(cfg):
+        return set()
+    host = model_host(cfg)
+    if _model.get("host") == host and time.time() - _model["t"] < 60:
+        return _model["ips"]
+    try:
+        ips = {ipaddress.ip_address(host)}
+    except ValueError:
+        try:
+            ips = {ipaddress.ip_address(a[4][0].split("%")[0]) for a in socket.getaddrinfo(host, None)}
+        except (OSError, ValueError, UnicodeError):
+            ips = set()
+    _model.update(host=host, t=time.time(), ips=ips)
     return ips
 MAX_BYTES = 20 * 1024 * 1024
 # set by the Dienst-Wächter (dienstwacht.py) while it looks at its services: those connections are no request, so
@@ -142,7 +169,8 @@ def allowed(ip, port, level):
     ip = ipaddress.ip_address(str(ip).split("%")[0])
     if ip.version == 6 and ip.ipv4_mapped:
         ip = ip.ipv4_mapped
-    if int(port or 0) in OWN_PORTS and (ip.is_loopback or ip.is_unspecified or ip in own_addresses()):
+    if int(port or 0) in OWN_PORTS and (ip.is_loopback or ip.is_unspecified or ip in own_addresses()
+                                     or ip in model_addresses()):
         return "the Spark's own services are not reachable this way"
     if ip.is_global:
         import notaus   # Notaus stage 1 and up: nothing to the internet (notaus.py)

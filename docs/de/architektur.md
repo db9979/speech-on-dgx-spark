@@ -76,6 +76,8 @@ flowchart LR
 | `speech-spark-watch` | – | Wächter, nur ohne Panel |
 | `speech-spark-update` | – | Update, nur auf Knopfdruck |
 
+**Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1):** Das Panel spricht Spracherkennung, Sprachausgabe, Bilder und das LLM-Tor nur über eine Adresse an: `common.model_url(art, pfad)` mit der Einstellung `models.host`. Standard ist `127.0.0.1`, dann läuft alles wie bisher auf einem Spark über `http://127.0.0.1:<port>`. Steht dort ein anderer Rechner (Name oder IP, nie ein Pfad oder `http://`), geht jede Anfrage über `https` und der API-Schlüssel ist Pflicht (`admin.validate`); eine kaputte Angabe bleibt auf dem Spark. Das LLM-Tor auf dem Modell-Rechner bekommt den Schlüssel wie das eigene (`llm.own_tor`), und der Wächter (`netguard.model_addresses`) behandelt die Ports 30000–31099 des Modell-Rechners wie die eigenen: keine MCP-, Kalender- oder Home-Assistant-Adresse kann auf sie zeigen. Eingestellt wird der Modell-Rechner erst mit der geteilten Installation (Stufe B6); das Zertifikat pinnt die Kopplung (B3). Selbsttest `test_modell_rechner`.
+
 Alle Dienste laufen als Systembenutzer `speech` und loggen in den journald-Namespace `speech-spark`. Das Panel startet seine Hintergrundaufgaben selbst (`panel.py`: Messwerte, Stabilität, Posteingang aufräumen, Dokumente lesen, reMarkable-Abgleich, Lernen aus Gesprächen). Hintergrundarbeit wartet, solange gesprochen wird (`vorrang.py`).
 
 ## Datenfluss einer Anfrage
@@ -1936,7 +1938,7 @@ flowchart TD
 
 1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
-3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu).
+3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
 6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
@@ -1992,6 +1994,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `_Capped`: schneidet die Antwort ab, auch entpackt ([Schritt 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: gleiche Seite für Anmeldedaten ([Schritt 10](#kn-waechter-s10))
 - `app/panel/netguard.py` `own_addresses`: alle Adressen dieser Maschine ([Schritt 3](#kn-waechter-s3))
+- `app/panel/netguard.py` `model_addresses`: die Adressen des Modell-Rechners, wenn er ein anderer ist ([Schritt 3](#kn-waechter-s3))
 - `app/panel/netguard.py` `IMAP4_SSL`: Mail über die geprüfte Adresse ([Schritt 9](#kn-waechter-s9))
 - `app/panel/notaus.py` `watch`: zählt Sperren für Notaus von selbst ([Schritt 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: zeigt jede Entscheidung auf Live ([Schritt 2](#kn-waechter-s2))

@@ -33,7 +33,7 @@ import notaus
 import verbrauch
 import vault
 import features
-from common import STATE, load_config, write_json
+from common import STATE, load_config, model_url, write_json
 
 API = "https://api.telegram.org"
 CODE_SECONDS = 600
@@ -280,7 +280,7 @@ async def transcribe(audio):
     cfg = load_config()
     wav = await asyncio.to_thread(_ffmpeg, ["-ac", "1", "-ar", "16000", "-f", "wav"], audio)
     async with httpx.AsyncClient(timeout=600) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+        r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
                          files={"file": ("voice.wav", wav)}, data={"language": "auto", "response_format": "json"},
                          headers=api_headers())
     verbrauch.heard("Telegram", r)
@@ -297,7 +297,7 @@ async def speak(uid, text):
     if voice:
         body["voice"] = voice
     async with httpx.AsyncClient(timeout=600) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body, headers=api_headers())
+        r = await c.post(model_url("tts", "/v1/audio/speech", cfg), json=body, headers=api_headers())
     r.raise_for_status()
     verbrauch.spoken("Telegram", wav=r.content, who=uid)
     return await asyncio.to_thread(_ffmpeg, ["-c:a", "libopus", "-b:a", "32k", "-f", "ogg"], r.content)

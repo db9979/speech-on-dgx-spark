@@ -33,7 +33,7 @@ import stufen  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 import features  # noqa: E402
-from common import load_config  # noqa: E402
+from common import load_config, model_url  # noqa: E402
 from core import (  # noqa: E402
     json_body,
     spawn,
@@ -1210,7 +1210,7 @@ async def _say(cfg, req, text, who, device):
     mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
     pcm = 0                   # bytes spoken (Verbrauchszähler)
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-        async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
+        async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg),
                             json=req, headers=api_headers()) as r:
             async for line in r.aiter_lines():
                 if line.startswith("data:") and "speech.audio.delta" in line:

@@ -76,7 +76,7 @@ import profiles
 import spkcode
 import vault
 import features
-from common import STATE, load_config, read_json, write_json
+from common import STATE, load_config, model_url, read_json, write_json
 from textnorm import guess_language, speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
@@ -541,7 +541,7 @@ async def transcribe(pcm: bytes) -> str:
     pcm = louder(pcm)
     cfg = load_config()
     async with httpx.AsyncClient(timeout=120) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+        r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
                          files={"file": ("speaker.wav", wav16k(pcm))}, data={"language": "auto", "response_format": "json"},
                          headers=api_headers())
     verbrauch.heard("Lautsprecher", r)
@@ -574,7 +574,7 @@ async def tts_stream(uid, text):
     left = 60 * OUT_RATE * 2
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-            async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
+            async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body,
                                 headers=api_headers()) as r:
                 r.raise_for_status()
                 async for line in r.aiter_lines():
