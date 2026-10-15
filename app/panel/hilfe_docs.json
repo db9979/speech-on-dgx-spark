@@ -5101,7 +5101,7 @@
 "file": "Installation im Detail",
 "head": "Aktualisieren",
 "title": "Aktualisieren",
-"text": "gen → Update). Ist es nach 20 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“."
+"text": "gen → Update). Jeder Zustand zeigt nur seine Knöpfe: die Frage „Installieren“ und „Abbrechen“, ein laufendes Update keine; ist es nach 45 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“, schlägt es fehl, „Schließen“ und „Protokoll kopieren“. Das Protokoll steht eingeklappt darunter."
 },
 {
 "lang": "de",
@@ -11397,7 +11397,15 @@
 "file": "Installation in detail",
 "head": "Updating",
 "title": "Updating",
-"text": "In the panel under System you see the installed version and, when GitHub has a newer one, the list of changes. Update installieren (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. Update abbrechen cancels a running update. Packages that are already installed are not upgraded; only what the new version needs is added. The self-test runs before the new version goes live. If it or an earlier step (download, packages) fails, the update stops and the services keep running the old version unchanged. If something fails after the switch, update.sh installs the previous version again and says so in the log. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); question, progress and restart stand in this one window: behind it the page keeps still (no band \"The Spark is not answering\", no version bar), the bar only moves forward, and the window waits calmly across the panel restart. At the end the page loads once and comes back to the same place (Settings → Update). After 20 minutes without finishing it offers Reload and Cancel."
+"text": "In the panel under System you see the installed version and, when GitHub has a newer one, the list of changes. Update installieren (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. Update abbrechen cancels a running update. Packages that are already installed are not upgraded; only what the new version needs is added. The self-test runs before the new version goes live. If it or an earlier step (download, packages) fails, the update stops and the services keep running the old version unchanged. If something fails after the switch, update.sh installs the previous version again and says so in the log. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); question, progress and restart stand in this one window: behind it the page keeps still (no band \"The Spark is not answering\", no version bar), the bar only moves forward, and the window waits calmly across the panel restart. At the end the page loads once and comes back to the same place (Settings → Update). Each state shows only its own buttons: the question Install and Cancel, a running"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Updating",
+"title": "Updating",
+"text": " update none; after 45 minutes without finishing it offers Reload and Cancel update, a failed one Close and Copy log. The log stays folded below."
 },
 {
 "lang": "en",

@@ -209,6 +209,47 @@ class Browser(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_update_window_shows_only_its_buttons(self):
+        """Each state of the update window shows only its own buttons (Dominik 15.10.2026: „zuviele knöpfe“):
+        the question Installieren/Abbrechen, a running update none, a slow one Neu laden/Update abbrechen, a failed
+        one Schließen/Protokoll kopieren; the log stays folded. Before, .row beat [hidden] and all five showed."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 800)
+                try:
+                    await pg.evaluate("goCfg('upd')")
+                    await self.idle(pg)
+                    seen = "['ulyes','ulno','ulreload','ulcancel','ulclose','ulcopy'].filter(id=>document.getElementById(id).offsetParent)"
+                    await pg.evaluate("(()=>{window.__a=ulAsk('Frage','Text','Installieren');return 0})()")
+                    self.assertEqual(await pg.evaluate(seen), ["ulyes", "ulno"])
+                    await pg.evaluate("document.getElementById('ulno').click()")
+                    state = {"p": {"running": True, "started": 1e10, "now": 1e10 + 30, "timeout": 900, "percent": 40,
+                                   "text": "Schritt", "log": ["eins", "zwei"]}}
+
+                    async def progress(route):
+                        await route.fulfill(json=state["p"])
+                    await pg.route("**/api/update/progress*", progress)
+                    await pg.evaluate("ul.clicked=Date.now();ulShow()")
+                    await pg.wait_for_function("document.getElementById('ultext').textContent==='Schritt'", timeout=20000)
+                    self.assertEqual(await pg.evaluate(seen), [])
+                    self.assertTrue(await pg.evaluate("document.getElementById('ulpbox').hidden"))
+                    state["p"] = dict(state["p"], now=1e10 + 2000)
+                    await pg.wait_for_function("document.getElementById('updlock').classList.contains('fail')", timeout=20000)
+                    self.assertEqual(await pg.evaluate(seen), ["ulreload", "ulcancel"])
+                    self.assertTrue(await pg.evaluate("!document.getElementById('ulpbox').hidden&&!document.getElementById('ulpbox').open"))
+                    self.assertIn("Schritt", await pg.evaluate("document.getElementById('ultext').textContent"))
+                    await pg.evaluate("ul.clicked=Date.now();ulShow()")
+                    state["p"] = {"done": True, "ok": False, "started": 1e10, "running": False, "text": "Selbsttests rot", "log": ["eins"]}
+                    await pg.wait_for_function("document.getElementById('ultext').textContent==='Selbsttests rot'", timeout=20000)
+                    self.assertEqual(await pg.evaluate(seen), ["ulclose", "ulcopy"])
+                    self.assertEqual(await pg.evaluate("document.getElementById('ullog').textContent"), "eins")
+                    await pg.evaluate("document.getElementById('ulclose').click()")
+                    self.assertEqual(await pg.evaluate("document.getElementById('updlock').style.display"), "none")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_open_parts_stay_open(self):
         """A part the person opened stays open when its box is drawn anew (a save, a poll)."""
         async def go():

@@ -713,37 +713,41 @@ $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon instal
 // at most every 2 s, the panel's restart is one quiet line, and at the end the page loads once, back at the same place.
 const ul={iv:null,clicked:0,miss:0,max:0,said:0,ask:null};
 const ulNote=()=>t('Bitte warten. Bis das Update fertig ist, sind Änderungen gesperrt. Die Seite lädt danach von selbst neu.','Please wait. Until the update is finished, changes are locked. The page reloads by itself afterwards.');
+// each state shows only its own buttons (Dominik 15.10.2026: „zuviele knöpfe“): ask = Installieren/Abbrechen,
+// running = none, slow = Neu laden/Update abbrechen, failed = Schließen/Protokoll kopieren; the log stays folded
+function ulBtns(which,log){['ulask','ulslow','ulfail'].forEach(id=>$(id).hidden=id!==which);
+  $('ullog').textContent=log&&log.length?log.join('\n'):'';$('ulpbox').hidden=!(log&&log.length);$('ulpbox').open=false}
 // the question in the same window (before: the browser's own dialog, then a second window)
 function ulAsk(head,text,yes){return new Promise(res=>{const u=$('updlock');u.style.display='grid';u.className='modal updlock ask';
   $('ulhead').textContent=head;$('ultext').textContent=text;$('ultime').textContent='';$('ulnote').textContent='';$('ulfill').style.width='0';
-  $('ulbtns').style.display='none';$('ullog').style.display='none';$('ulask').hidden=false;$('ulyes').textContent=yes;$('ulno').textContent=t('Abbrechen','Cancel');
-  const done=ok=>{$('ulask').hidden=true;ul.ask=null;if(!ok)u.style.display='none';res(ok)};ul.ask=done;$('ulyes').focus()})}
+  ulBtns('ulask');$('ulyes').textContent=yes;$('ulno').textContent=t('Abbrechen','Cancel');
+  const done=ok=>{ulBtns(null);ul.ask=null;if(!ok)u.style.display='none';res(ok)};ul.ask=done;$('ulyes').focus()})}
 $('ulyes').onclick=()=>ul.ask&&ul.ask(true);$('ulno').onclick=()=>ul.ask&&ul.ask(false);
 $('updlock').addEventListener('keydown',e=>{if(e.key==='Escape'&&ul.ask)ul.ask(false)});
-function ulShow(){$('updlock').style.display='grid';$('updlock').className='modal updlock busy';$('ulbtns').style.display='none';$('ullog').style.display='none';$('ulask').hidden=true;
+function ulShow(){$('updlock').style.display='grid';$('updlock').className='modal updlock busy';ulBtns(null);
   $('ulhead').textContent=t('Update läuft','Update running');$('ulnote').textContent=ulNote();$('ultime').textContent='';if(!ul.iv)$('ultext').textContent=t('Starte …','Starting …');
   if(!ul.iv){ul.max=0;ul.said=0;$('ulfill').style.width='3%';ul.iv=setInterval(ulPoll,2000);ulPoll()}}
 // the line under the bar: a new text at most every 2 s, the bar never back
 function ulSay(text,pct){const now=Date.now();if(pct!=null){ul.max=Math.max(ul.max,Math.min(100,pct));$('ulfill').style.width=Math.max(3,ul.max)+'%'}
   if(text&&$('ultext').textContent!==text&&now-ul.said>=2000){$('ultext').textContent=text;ul.said=now}}
 function ulStop(){clearInterval(ul.iv);ul.iv=null}
-function ulFail(head,text,log,cancel){ulStop();$('updlock').className='modal updlock fail';$('ulhead').textContent=head;$('ultext').textContent=text;
-  $('ulnote').textContent=t('Schlägt ein Schritt vor dem Umschalten fehl, läuft die bisherige Version weiter; danach wird sie wieder eingespielt. Die Zeile oben sagt, was passiert ist.','If a step before the switch fails, the previous version keeps running; after it, the previous version is installed again. The line above says what happened.');
-  if(log&&log.length){$('ullog').textContent=log.join('\n');$('ullog').style.display='block'}
-  $('ulbtns').style.display='flex';$('ulcancel').style.display=cancel?'':'none'}
+// slow: still running past the time limit, so reload or cancel; failed: the update ended, so close (and copy the log)
+function ulFail(head,text,note,log,slow){ulStop();$('updlock').className='modal updlock fail';$('ulhead').textContent=head;$('ultext').textContent=text;
+  $('ulnote').textContent=note;ulBtns(slow?'ulslow':'ulfail',log)}
 async function ulPoll(){let p;try{const r=await /*raw: panel restarts during the update; 401/503 stay silent*/fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();if(ul.miss){ul.miss=0;$('ulnote').textContent=ulNote()}}
   catch{ul.miss++;$('ulnote').textContent=t('Das Panel startet gerade neu, das gehört dazu. Das Fenster wartet und macht von selbst weiter.','The panel is restarting right now, that is part of it. The window waits and carries on by itself.');return}
   const fresh=p.started&&p.started*1000>=ul.clicked-60000;
   if(p.done&&fresh){if(p.ok){ulStop();ul.said=0;ulSay(t('Fertig, lade neu …','Done, reloading …'),100);
       try{sessionStorage.setItem('upddone',p.version||'1')}catch{}setTimeout(()=>verReload(),1200)}
-    else ulFail(t('Update fehlgeschlagen','Update failed'),p.text||'',p.log,false);return}
+    else ulFail(t('Update fehlgeschlagen','Update failed'),p.text||'',t('Schlägt ein Schritt vor dem Umschalten fehl, läuft die bisherige Version weiter; danach wird sie wieder eingespielt.','If a step before the switch fails, the previous version keeps running; after it, the previous version is installed again.'),p.log,false);return}
   if(!p.running){if(Date.now()-ul.clicked>15000){ulStop();   // nothing to do (already up to date) or ended without a report
       if(!fresh){$('updlock').style.display='none';loadSys&&loadSys()}else verReload()}return}
   ulSay(fresh?p.text:t('Starte …','Starting …'),fresh?p.percent:null);
   // only this update's own file: in its first seconds the unit runs while the file is still the last update's,
   // whose start would count as „too long“ (Dominik 2026-10-15: 102 minutes = the time since the update before)
   if(fresh&&p.started){const s=Math.max(0,p.now-p.started);$('ultime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-    if(s>p.timeout)ulFail(t('Update dauert zu lange','Update is taking too long'),t(`Nach ${Math.round(p.timeout/60)} Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; du kannst das Update auch abbrechen.`,`Not finished after ${Math.round(p.timeout/60)} minutes. Reload shows the current state; you can also cancel the update.`),p.log,true)}}
+    if(s>p.timeout)ulFail(t('Update dauert ungewöhnlich lange','Update is taking unusually long'),t('Letzter Schritt: ','Last step: ')+(p.text||'–'),
+      t(`Nach ${Math.round(p.timeout/60)} Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; Abbrechen gibt die Sperre frei, was schon installiert ist, bleibt.`,`Not finished after ${Math.round(p.timeout/60)} minutes. Reload shows the current state; cancelling releases the lock, what is already installed stays.`),p.log,true)}}
 $('ulreload').onclick=()=>verReload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
 $('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}verReload()};
