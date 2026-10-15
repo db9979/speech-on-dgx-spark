@@ -135,6 +135,23 @@ class Umziehen(unittest.TestCase):
         self.assertEqual(self.a.profile(), ["Dominik", "Gast"])
         self.assertEqual(self.a.py(f"import vault; print(vault.open_({self.secret!r}))"), "geheim")
 
+    def test_a_refused_setting_names_the_check(self):
+        """V01.0.635: the Pi refused tars' settings ("ValueError system.py _check_config"); the line also names the
+        check of admin.validate that said no, in fixed words, never the value."""
+        p = os.path.join(self.a.dir, "config.json")
+        with open(p) as f:
+            cfg = json.load(f)
+        cfg["chat"]["max_tokens"] = 5
+        with open(p, "w") as f:
+            json.dump(cfg, f)
+        out, got = umzug(self.a, self.b, self.root)
+        self.assertIsInstance(got, teilen.Fehler)
+        err = self.b.last.stderr.decode()
+        self.assertRegex(err, r"teilen: umzug abgelehnt \| ValueError system\.py _check_config \d+ \| aus HTTPException "
+                              r"admin\.py validate \d+")
+        self.assertNotIn("max_tokens", err)
+        self.assertEqual(self.b.profile(), [])
+
     def test_a_failed_restore_changes_nothing(self):
         out, got = umzug(self.a, self.b, self.root, stoeren=lambda: False)
         self.assertIsInstance(got, teilen.Fehler)

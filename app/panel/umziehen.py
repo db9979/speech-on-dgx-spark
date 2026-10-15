@@ -135,8 +135,12 @@ def main(argv):
         # where it stopped, in fixed words (kind, file, function, line), never the message: it may name a file of a profile
         import traceback
         f = traceback.extract_tb(e.__traceback__)[-1]
-        print(f"teilen: umzug abgelehnt | {type(e).__name__} {os.path.basename(f.filename)} {f.name} {f.lineno}",
-              file=sys.stderr, flush=True)
+        where = f"{type(e).__name__} {os.path.basename(f.filename)} {f.name} {f.lineno}"
+        c = e.__context__   # a check turned into ValueError (system._check_config): also the check that said no
+        if c is not None and c.__traceback__ is not None:
+            g = traceback.extract_tb(c.__traceback__)[-1]
+            where += f" | aus {type(c).__name__} {os.path.basename(g.filename)} {g.name} {g.lineno}"
+        print(f"teilen: umzug abgelehnt | {where}", file=sys.stderr, flush=True)
         return 1
     return 0
 
