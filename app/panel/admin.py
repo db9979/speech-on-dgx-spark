@@ -30,7 +30,8 @@ import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
-from common import CONFIG_PATH, estimate_gib, journal, load_config, model_local, model_url, write_json  # noqa: E402
+from common import (CONFIG_PATH, MODEL_ID, estimate_gib, load_config, model_local, model_url,  # noqa: E402
+                    write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
     json_body,
@@ -500,8 +501,6 @@ def _is_ip(x):
         return False
 
 
-# The engines load models with --trust-remote-code: any other repo could bring its own code along.
-MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
 
 
 def validate(new):
@@ -837,6 +836,8 @@ def _save(new, old, by):
 def _save_locked(new, old, by):
     write_json(CONFIG_PATH, new, indent=2)
     undo.record(old, new, by, SENSITIVE)
+    # models on another computer (Spark teilen): it takes the speech settings before its units restart below
+    handed = steuer.einstellen(new) if steuer.remote(new) else True
     # the API key is read per request, so changing it needs no restart
     mem_changed = new["memory"] != old.get("memory")
     actions = {}  # unit name -> start | stop | restart
@@ -871,6 +872,8 @@ def _save_locked(new, old, by):
         code, out = steuer.systemctl(action, UNITS[n])
         if code != 0:
             errors.append(f"{UNITS[n]}: {out}")
+    if not handed:
+        errors.append("Modell-Rechner: Einstellungen nicht übertragen, sie folgen, sobald er antwortet")
     return {"saved": True, "restarted": [n for n, a in actions.items() if a == "restart"],
             "stopped": [n for n, a in actions.items() if a == "stop"], "errors": errors,
             "panel_restart_needed": new["panel"] != old["panel"]}
@@ -962,7 +965,7 @@ def service_action(name: str, action: str):
 def logs(name: str, lines: int = 200):
     if name not in LOG_UNITS:
         raise HTTPException(400, "bad service")
-    return Response(journal(LOG_UNITS[name], min(lines, 2000), "short-iso"), media_type="text/plain")
+    return Response(steuer.logs(name, LOG_UNITS[name], min(lines, 2000)), media_type="text/plain")
 
 
 @router.get("/api/languages", dependencies=[Depends(auth)])

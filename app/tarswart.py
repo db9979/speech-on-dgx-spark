@@ -7,8 +7,11 @@ pinned certificate, only the panel computer, tlstor.py) and signs every request 
 (STATE/waerter.key, not the API key, which other devices know too): HMAC-SHA256 over the exact body, which carries
 a time (at most WINDOW seconds off) and a one-time number (each is taken once).
 
-    status                      version, state and uptime of the model units, GPU, free memory
+    status                      version, state and uptime of the model units, GPU, free memory, settings hash
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
+    einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
+                                never addresses, ports or backends, model ids only Qwen's)
+    logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
 
 Every request writes one log line ("waerter:" with the command and the result word, never content).
 """
@@ -23,11 +26,13 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from common import (OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, mem_available_gib, run,
-                    waerter_key, waerter_sign)
+from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
+                    mem_available_gib, model_settings_hash, model_settings_take, run, shipped, waerter_key,
+                    waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
-MAX_BODY = 4096
+MAX_BODY = 64 * 1024     # the speech settings (pronunciation, context) fit easily
+MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
@@ -74,7 +79,31 @@ def status():
     except OSError:
         mem = None
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
-            "mem_avail_gib": mem}
+            "mem_avail_gib": mem, "einstellungen": model_settings_hash(load_config())}
+
+
+def einstellen(daten):
+    """Takes the panel's speech settings into this computer's config (atomic write); returns the new hash."""
+    cfg = load_config()
+    try:
+        new = model_settings_take(cfg, daten, shipped())
+    except ValueError as e:
+        print(f"waerter: einstellen abgelehnt {e}", flush=True)
+        raise ValueError("befehl")
+    with open(CONFIG_PATH) as f:
+        raw = json.load(f)
+    for sec in daten:
+        raw[sec] = dict(raw.get(sec) or {}, **{k: new[sec][k] for k in daten[sec]})
+    write_json(CONFIG_PATH, raw, indent=2)
+    print("waerter: einstellen ok", flush=True)
+    return {"ok": True, "einstellungen": model_settings_hash(load_config())}
+
+
+def logs(teil, n):
+    if teil not in WATCHED or not str(n).isdigit() or not 1 <= int(n) <= MAX_LINES:
+        raise ValueError("befehl")
+    print(f"waerter: logs {teil}", flush=True)
+    return {"text": journal(WATCHED[teil], int(n), "short-iso")[-400_000:]}
 
 
 def einheit(action, teil):
@@ -109,10 +138,11 @@ def check(raw, sig, key, now=None):
         if nonce in _seen or len(_seen) >= MAX_SEEN:
             raise ValueError("nummer")
         _seen[nonce] = now
-    cmd, args = d.get("cmd"), d.get("args") or []
-    if cmd not in ("status", "einheit") or not isinstance(args, list) or not all(isinstance(a, str) for a in args):
+    cmd, args, daten = d.get("cmd"), d.get("args") or [], d.get("daten")
+    if cmd not in ("status", "einheit", "einstellen", "logs") or not isinstance(args, list) \
+            or not all(isinstance(a, str) for a in args) or (cmd == "einstellen") != isinstance(daten, dict):
         raise ValueError("befehl")
-    return cmd, args
+    return cmd, args, daten
 
 
 def _rate(now):
@@ -132,13 +162,17 @@ async def wart(request: Request):
         raise HTTPException(429, "too many")
     raw = await request.body()
     try:
-        cmd, args = check(raw, request.headers.get("x-wart", ""), waerter_key(), now)
+        cmd, args, daten = check(raw, request.headers.get("x-wart", ""), waerter_key(), now)
     except ValueError as e:
         print(f"waerter: abgelehnt {e}", flush=True)
         raise HTTPException(403 if str(e) != "befehl" else 400, str(e))
     if cmd == "status":       # asked every few seconds: no line for a good answer, only for refusals
         return JSONResponse(status())
     try:
+        if cmd == "einstellen":
+            return JSONResponse(einstellen(daten))
+        if cmd == "logs":
+            return JSONResponse(logs(*args) if len(args) == 2 else logs("", ""))
         return JSONResponse(einheit(*args) if len(args) == 2 else einheit("", ""))
     except ValueError:
         print("waerter: abgelehnt befehl", flush=True)

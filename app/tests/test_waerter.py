@@ -24,9 +24,11 @@ SHOW = ("Id=speech-spark-asr.service\nActiveState=active\nActiveEnterTimestampMo
         "Id=speech-spark-tts.service\nActiveState=failed\nActiveEnterTimestampMonotonic=0\n")
 
 
-def body(cmd="status", args=(), ts=None, nonce=None):
-    return json.dumps({"cmd": cmd, "args": list(args), "ts": int(time.time()) if ts is None else ts,
-                       "nonce": nonce or secrets.token_hex(16)}).encode()
+def body(cmd="status", args=(), ts=None, nonce=None, daten=None):
+    d = {"cmd": cmd, "args": list(args), "ts": int(time.time()) if ts is None else ts, "nonce": nonce or secrets.token_hex(16)}
+    if daten is not None:
+        d["daten"] = daten
+    return json.dumps(d).encode()
 
 
 class FakeRun:
@@ -107,6 +109,55 @@ class Waerter(Base):
         with redirect_stdout(io.StringIO()):
             codes = [self.post(body()).status_code for _ in range(tarswart.RATE[0] + 2)]
         self.assertEqual(codes[-1], 429)
+
+
+class Settings(Base):
+    """B4b: the panel's speech settings reach the model computer; its own addresses, ports and backends never move."""
+    def setUp(self):
+        super().setUp()
+        self.old = common.load_config()
+        self.addCleanup(helpers.write_config, self.old)
+
+    def test_known_keys_are_taken(self):
+        with redirect_stdout(io.StringIO()) as out:
+            r = self.post(body("einstellen", daten={"tts": {"temperature": 0.4, "default_voice": "vivian"},
+                                                    "asr": {"context": "Spark"}}))
+        self.assertEqual(r.status_code, 200, r.text)
+        c = common.load_config()
+        self.assertEqual((c["tts"]["temperature"], c["tts"]["default_voice"], c["asr"]["context"]), (0.4, "vivian", "Spark"))
+        self.assertEqual(r.json()["einstellungen"], common.model_settings_hash(c))
+        self.assertEqual(c["tts"]["port"], self.old["tts"]["port"])
+        self.assertIn("waerter: einstellen ok", out.getvalue())
+
+    def test_never_addresses_ports_backends_or_foreign_models(self):
+        for daten in ({"tts": {"port": 31999}}, {"asr": {"host": "0.0.0.0"}}, {"tts": {"backend": "x"}},
+                      {"image": {"enabled": True}}, {"chat": {"llm_url": "http://x"}}, {"tts": {"temperature": "hot"}},
+                      {"tts": {"model": "evil/Qwen3-TTS-x"}}, {"asr": {"neu": 1}}, {"tts": {"calm": 1}}, {"tts": []}):
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(self.post(body("einstellen", daten=daten)).status_code, 400, daten)
+        self.assertEqual(common.load_config(), self.old)
+        self.assertEqual(self.post(body("einstellen")).status_code, 400, "einstellen without settings")
+
+    def test_the_panel_hands_them_over_when_they_differ(self):
+        steuer._client = self.app
+        self.addCleanup(setattr, steuer, "_client", None)
+        steuer._status.update(t=0.0, d=None, push=-steuer.PUSH)
+        self.addCleanup(steuer._status.update, t=0.0, d=None, push=-steuer.PUSH)
+        c = json.loads(json.dumps(self.old))
+        c["models"]["host"] = "192.168.178.171"
+        c["tts"]["temperature"] = 0.55
+        with redirect_stdout(io.StringIO()) as out:
+            steuer.status(c, now=1000.0)
+            self.assertEqual(common.load_config()["tts"]["temperature"], 0.55)
+            steuer.status(c, now=1010.0)                     # cached: nothing again
+        self.assertEqual(out.getvalue().count("steuer: einstellen abgleich ok"), 1)
+
+    def test_logs_of_a_model_unit(self):
+        with mock.patch.object(tarswart, "journal", lambda unit, n, fmt: f"{unit} {n}\n"), \
+                redirect_stdout(io.StringIO()):
+            self.assertEqual(self.post(body("logs", ["tts-engine", "50"])).json()["text"], "speech-spark-tts-engine 50\n")
+            for args in (["panel", "5"], ["tts", "99999"], ["tts", "-1"], ["tts"]):
+                self.assertEqual(self.post(body("logs", args)).status_code, 400, args)
 
 
 class Steuer(Base):

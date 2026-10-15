@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.610** · 2026-10-15 · Spark teilen Stufe B4b: die Spracheinstellungen gehen beim Speichern an den Modell-Rechner (nur bekannte Schlüssel, nie Adressen, Ports oder Backends, Modelle nur von Qwen) und werden nachgeholt, wenn er weg war; Zustand → Logs zeigt die Logs der Modell-Dienste über den Wärter
 - **V01.0.609** · 2026-10-15 · Spark teilen Stufe B4a: Wärter auf dem Modell-Rechner (`app/tarswart.py`, feste Befehle `status` und `einheit start|stop|restart`, HMAC mit eigenem Wärter-Schlüssel, Zeit und Einmal-Nummer); das Panel liest Zustand, Laufzeit und GPU der Modell-Einheiten und startet sie neu über `steuer.py`, lokal wie bisher oder über den Wärter
 - **V01.0.608** · 2026-10-15 · Spark teilen Stufe B3: Firewall auf dem Modell-Rechner (`speech-spark teilen firewall`, nftables aus geprüften Adressen): die Ports der Tür und des Wärters antworten nur dem Panel-Rechner; `speech-spark teilen status` zeigt Tür, Firewall und Fingerabdruck
 - **V01.0.607** · 2026-10-15 · Spark teilen Stufe B2: TLS-Tor auf dem Modell-Rechner (`app/tlstor.py`, TLS 1.3, nur vom Panel-Rechner) und im Panel genau das beim Koppeln festgehaltene Zertifikat (`models.cert`) für jede Verbindung zum Modell-Rechner, auch System One; Modell-Rechner und Tor stellen nur Installation und Kopplung ein, nie das Panel

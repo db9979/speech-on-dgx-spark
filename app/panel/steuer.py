@@ -9,6 +9,11 @@ update) are never sent there.
     active_seconds(unit)        seconds since the unit became active, None when it is not
     systemctl(action, unit)     (code, text): start, stop or restart a unit of common.UNITS
     gpu()                       the GPU (common.gpu_stats), None without one
+    einstellen(cfg)             hands the speech settings to the model computer (common.model_settings)
+    logs(name, n)               the last log lines of a model unit, here or there
+
+When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
+again, at most every PUSH seconds: a save while it was away is not lost.
 
 The status of the model computer is asked at most every CACHE seconds; when it does not answer, its units read
 "unknown" and the GPU None, which the pages show as „nicht erreichbar“. Logs ("steuer:" lines) only for actions.
@@ -20,13 +25,14 @@ import time
 
 import httpx
 
-from common import (OWN_LLM_UNITS, UNITS, gpu_stats, load_config, model_local, model_url, run, waerter_key,
-                    waerter_sign)
+from common import (OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_local, model_settings,
+                    model_settings_hash, model_url, run, waerter_key, waerter_sign)
 
 CACHE = 3              # seconds a status of the model computer is reused
+PUSH = 60              # seconds between two hand-overs of the speech settings when the hashes differ
 TIMEOUT = 5
 MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values())
-_status = {"t": 0.0, "d": None}
+_status = {"t": 0.0, "d": None, "push": -PUSH}
 _lock = threading.Lock()
 _client = None         # the self-tests put a client for the Wärter here
 
@@ -35,14 +41,16 @@ def remote(cfg=None):
     return not model_local(cfg)
 
 
-def call(cmd, args=(), cfg=None, timeout=TIMEOUT):
+def call(cmd, args=(), cfg=None, timeout=TIMEOUT, daten=None):
     """One signed request to the Wärter; its JSON answer, or None when it does not answer or refuses."""
     cfg = load_config() if cfg is None else cfg
     key = waerter_key()
     if not key:
         return None
-    body = json.dumps({"cmd": cmd, "args": list(args), "ts": int(time.time()), "nonce": secrets.token_hex(16)},
-                      separators=(",", ":")).encode()
+    d = {"cmd": cmd, "args": list(args), "ts": int(time.time()), "nonce": secrets.token_hex(16)}
+    if daten is not None:
+        d["daten"] = daten
+    body = json.dumps(d, separators=(",", ":")).encode()
     headers = {"Content-Type": "application/json", "X-Wart": waerter_sign(key, body)}
     try:
         if _client is not None:
@@ -61,11 +69,34 @@ def status(cfg=None, now=None):
     with _lock:
         if _status["d"] is not None and now - _status["t"] < CACHE:
             return _status["d"]
+    cfg = load_config() if cfg is None else cfg
     d = call("status", cfg=cfg)
     d = d if isinstance(d, dict) and isinstance(d.get("einheiten"), dict) else None
     with _lock:
         _status.update(t=now, d=d)
+        due = d is not None and d.get("einstellungen") != model_settings_hash(cfg) and now - _status["push"] >= PUSH
+        if due:
+            _status["push"] = now
+    if due:
+        einstellen(cfg, why="abgleich")
     return d
+
+
+def einstellen(cfg=None, why="gespeichert"):
+    """Hands the speech settings to the model computer; True when it took them."""
+    cfg = load_config() if cfg is None else cfg
+    d = call("einstellen", cfg=cfg, daten=model_settings(cfg), timeout=10)
+    ok = isinstance(d, dict) and d.get("ok") is True
+    print(f"steuer: einstellen {why} {'ok' if ok else 'fehler'}", flush=True)
+    return ok
+
+
+def logs(name, unit, n, cfg=None):
+    """The last n log lines of a unit: of a model unit on the model computer through the Wärter."""
+    if _remote_unit(unit, cfg):
+        d = call("logs", (name, str(n)), cfg=cfg, timeout=15)
+        return d["text"] if isinstance(d, dict) and isinstance(d.get("text"), str) else "Modell-Rechner: nicht erreichbar\n"
+    return journal(unit, n, "short-iso")
 
 
 def _remote_unit(unit, cfg=None):

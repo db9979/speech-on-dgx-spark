@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.610** Splitting the Spark B4b: speech settings and model service logs also with the panel on another computer
 - **V01.0.609** Splitting the Spark B4a: Wärter on the DGX, the panel controls the model services from another computer too
 - **V01.0.608** Splitting the Spark B3: firewall on the DGX, only the panel computer reaches the models
 - **V01.0.607** Splitting the Spark B2: secured connection to the DGX (TLS 1.3 with a pinned certificate), preparing the Raspberry Pi
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.603** Fix: Home Assistant (Wyoming) gets the device info at once, even while the voice engine is busy
 - **V01.0.602** Push rule: before a push a quick test (affected and guard tests); GitHub does the full run
 - **V01.0.601** Fix: the service watch asks Home Assistant without a failed login (no more login warnings in the HA log)
-- **V01.0.600** Fix: the update window no longer says "too long" because of the previous update's progress file
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

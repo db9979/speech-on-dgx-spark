@@ -639,6 +639,55 @@ def gpu_stats():
             "power": num(g["power.draw"]), "clock": num(g["clocks.sm"]), "processes": procs}
 
 
+# The engines load models with --trust-remote-code: any other repo could bring its own code along.
+MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
+# settings of the model side the panel sets and the model computer must know (Spark teilen, B4b): the sections and the
+# keys that stay as each computer's install made them (addresses, ports, backends, what is installed)
+SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image")
+SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend", "variant"}
+SYNC_KEEP_IMAGE = {"enabled"}
+SYNC_MODELS = {("asr", "model"), ("asr", "aligner_model"), ("tts", "model"), ("tts", "voicedesign_model")}
+
+
+def model_settings(cfg):
+    """The settings the model computer takes from the panel: SYNC_SECTIONS without the install's own keys."""
+    out = {}
+    for sec in SYNC_SECTIONS:
+        keep = SYNC_KEEP | (SYNC_KEEP_IMAGE if sec == "image" else set())
+        out[sec] = {k: v for k, v in (cfg.get(sec) or {}).items() if k not in keep}
+    return out
+
+
+def model_settings_hash(cfg):
+    import hashlib
+    return hashlib.sha256(json.dumps(model_settings(cfg), sort_keys=True).encode()).hexdigest()[:16]
+
+
+def model_settings_take(cfg, got, defaults):
+    """cfg with the panel's settings `got` taken in: only known keys of SYNC_SECTIONS of the same kind as the
+    shipped default, never the install's own keys, model ids only Qwen's (MODEL_ID). ValueError on anything else."""
+    if not isinstance(got, dict) or set(got) - set(SYNC_SECTIONS):
+        raise ValueError("abschnitt")
+    new = json.loads(json.dumps(cfg))
+    for sec, vals in got.items():
+        keep = SYNC_KEEP | (SYNC_KEEP_IMAGE if sec == "image" else set())
+        if not isinstance(vals, dict):
+            raise ValueError("abschnitt")
+        for k, v in vals.items():
+            d = (defaults.get(sec) or {}).get(k, None)
+            if k in keep or k not in (defaults.get(sec) or {}):
+                raise ValueError("schluessel")
+            num = (int, float)
+            same = (isinstance(v, bool) == isinstance(d, bool)) and (
+                isinstance(v, type(d)) or (isinstance(d, num) and isinstance(v, num)))
+            if not same or (isinstance(v, str) and len(v) > 4000):
+                raise ValueError("wert")
+            if (sec, k) in SYNC_MODELS and not MODEL_ID.fullmatch(v):
+                raise ValueError("modell")
+            new.setdefault(sec, {})[k] = v
+    return new
+
+
 def waerter_key(path=None):
     """The Wärter's shared key (32 bytes from the pairing, hex in STATE/waerter.key), b"" without one."""
     try:

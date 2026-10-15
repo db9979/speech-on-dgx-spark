@@ -549,7 +549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Prozesse und Ports",
 "title": "Wärter (V01.0.609, Stufe B4a)",
-"text": "Wärter (V01.0.609, Stufe B4a): Auf dem Modell-Rechner führt app/tarswart.py (127.0.0.1:31007, hinter dem TLS-Tor) eine feste Befehlsliste aus: status und einheit start|stop|restart <teil>. Das Panel spricht ihn über steuer.py an (unit_state, active_seconds, systemctl, gpu); bei der Komplett-Installation ruft steuer.py wie bisher systemctl und nvidia-smi selbst. Unterschrift HMAC-SHA256 mit dem Wärter-Schlüssel aus der Kopplung. Selbsttest test_waerter."
+"text": "Wärter (V01.0.609, Stufe B4a): Auf dem Modell-Rechner führt app/tarswart.py (127.0.0.1:31007, hinter dem TLS-Tor) eine feste Befehlsliste aus: status und einheit start|stop|restart <teil>. Das Panel spricht ihn über steuer.py an (unit_state, active_seconds, systemctl, gpu); bei der Komplett-Installation ruft steuer.py wie bisher systemctl und nvidia-smi selbst. Unterschrift HMAC-SHA256 mit dem Wärter-Schlüssel aus der Kopplung. Selbsttest test_waerter. Seit V01.0.610 auch einstellen (Spracheinstellungen vom Panel, common.model_settings) und logs <teil> <n>."
 },
 {
 "lang": "de",
@@ -7045,7 +7045,7 @@
 "file": "Architecture and data flow",
 "head": "Processes and ports",
 "title": "Wärter (V01.0.609, stage B4a)",
-"text": "Wärter (V01.0.609, stage B4a): on the model computer app/tarswart.py (127.0.0.1:31007, behind the TLS-Tor) runs a fixed list of commands: status and einheit start|stop|restart <part>. The panel talks to it through steuer.py (unit_state, active_seconds, systemctl, gpu); on the all-in-one install steuer.py calls systemctl and nvidia-smi itself as before. Signed with HMAC-SHA256 and the Wärter key from the pairing. Self-test test_waerter."
+"text": "Wärter (V01.0.609, stage B4a): on the model computer app/tarswart.py (127.0.0.1:31007, behind the TLS-Tor) runs a fixed list of commands: status and einheit start|stop|restart <part>. The panel talks to it through steuer.py (unit_state, active_seconds, systemctl, gpu); on the all-in-one install steuer.py calls systemctl and nvidia-smi itself as before. Signed with HMAC-SHA256 and the Wärter key from the pairing. Self-test test_waerter. Since V01.0.610 also einstellen (speech settings from the panel, common.model_settings) and logs <part> <n>."
 },
 {
 "lang": "en",
