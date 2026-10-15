@@ -108,7 +108,8 @@ NEVER = (
 )
 NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "mail_send",
                                     "mcp_server_extern", "dev_updates", "telegram_api")} \
-    | {("api", "key"), ("panel", "port"), ("panel", "https_port"), ("models", "host")}
+    | {("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),
+       ("models", "host"), ("models", "cert")}
 
 ARTS = {"weiche", "test", "pflicht", "hinweis", "extra", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}
 

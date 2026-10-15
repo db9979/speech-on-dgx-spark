@@ -30,8 +30,7 @@ import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
-from common import (CONFIG_PATH, MODEL_HOST_RE, estimate_gib, journal, load_config, model_local, model_url,  # noqa: E402
-                    write_json)
+from common import CONFIG_PATH, estimate_gib, journal, load_config, model_local, model_url, write_json  # noqa: E402
 import modelle  # noqa: E402
 from core import (  # noqa: E402
     json_body,
@@ -523,11 +522,15 @@ def validate(new):
     if not new["api"]["key"] and not all(new[s].get("host") in ("127.0.0.1", "::1", "localhost") for s in ("asr", "tts")):
         raise HTTPException(400, "API key: required while speech recognition or output listen in the network "
                                  "(host not 127.0.0.1); press Erzeugen")
-    # the model computer (plan Raspberry-Pi split, B1): a plain name or IP, never a path or scheme; once it is another
-    # computer the key is a must, the connection is https (common.model_url)
-    mhost = str(new["models"].get("host") or "")
-    if not MODEL_HOST_RE.fullmatch(mhost):
-        raise HTTPException(400, "Modell-Rechner: only a name or IP address, without http:// or a path")
+    # the model computer and the TLS-Tor (plan Raspberry-Pi split, B1/B2): set only by install.sh and the pairing,
+    # never from the panel, so a stolen login can not send speech to another computer; once the models run on
+    # another computer the key is a must (the connection is https with the pinned certificate, common.model_url)
+    for sec, keys in (("models", ("host", "cert")), ("api", ("tls_listen", "tls_from"))):
+        for k in keys:
+            if k in old.get(sec, {}):
+                new[sec][k] = old[sec][k]
+            else:
+                new[sec].pop(k, None)
     if not new["api"]["key"] and not model_local(new):
         raise HTTPException(400, "API key: required while the models run on another computer; press Erzeugen")
     ch = new["chat"]

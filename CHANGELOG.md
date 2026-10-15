@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.607** · 2026-10-15 · Spark teilen Stufe B2: TLS-Tor auf dem Modell-Rechner (`app/tlstor.py`, TLS 1.3, nur vom Panel-Rechner) und im Panel genau das beim Koppeln festgehaltene Zertifikat (`models.cert`) für jede Verbindung zum Modell-Rechner, auch System One; Modell-Rechner und Tor stellen nur Installation und Kopplung ein, nie das Panel
 - **V01.0.606** · 2026-10-15 · Spark teilen Stufe B1: eine Adresse für alle Modell-Dienste (`common.model_url` mit `models.host`, Standard 127.0.0.1 wie bisher); ein anderer Rechner nur über https mit API-Schlüssel, das LLM-Tor dort bekommt den Schlüssel, der Wächter sperrt die Modell-Ports des anderen Rechners wie die eigenen
 - **V01.0.605** · 2026-10-15 · Update-Fenster aufgeräumt: jeder Zustand zeigt nur seine Knöpfe (Frage, läuft, dauert lange, Fehler), ein Satz Erklärung, Protokoll eingeklappt; Fehler behoben, dass `.row` das Ausblenden überstimmte
 - **V01.0.604** · 2026-10-15 · reMarkable: das Morgenblatt ist gegliedert (Termine, Erinnerungen, Mails, Wetter, Themen als nummerierte Abschnitte mit Listenpunkten) statt eines Fließtext-Blocks „Überblick“

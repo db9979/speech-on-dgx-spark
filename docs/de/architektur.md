@@ -78,6 +78,8 @@ flowchart LR
 
 **Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1):** Das Panel spricht Spracherkennung, Sprachausgabe, Bilder und das LLM-Tor nur über eine Adresse an: `common.model_url(art, pfad)` mit der Einstellung `models.host`. Standard ist `127.0.0.1`, dann läuft alles wie bisher auf einem Spark über `http://127.0.0.1:<port>`. Steht dort ein anderer Rechner (Name oder IP, nie ein Pfad oder `http://`), geht jede Anfrage über `https` und der API-Schlüssel ist Pflicht (`admin.validate`); eine kaputte Angabe bleibt auf dem Spark. Das LLM-Tor auf dem Modell-Rechner bekommt den Schlüssel wie das eigene (`llm.own_tor`), und der Wächter (`netguard.model_addresses`) behandelt die Ports 30000–31099 des Modell-Rechners wie die eigenen: keine MCP-, Kalender- oder Home-Assistant-Adresse kann auf sie zeigen. Eingestellt wird der Modell-Rechner erst mit der geteilten Installation (Stufe B6); das Zertifikat pinnt die Kopplung (B3). Selbsttest `test_modell_rechner`.
 
+**TLS-Tor (V01.0.607, Stufe B2):** Läuft das Panel auf einem anderen Rechner, hören die Dienste auf dem DGX nur auf 127.0.0.1, und `app/tlstor.py` öffnet dieselben Ports auf `api.tls_listen` mit TLS 1.3 und dem Zertifikat aus `/etc/speech-spark/tls`, nur für die Adressen in `api.tls_from`. Das Panel vertraut genau dem gepinnten Zertifikat (`models.cert`); `common._pin_models` gibt es jeder httpx-Verbindung zum Modell-Rechner mit, die keinen eigenen Transport mitbringt. Selbsttest `test_teilen`.
+
 Alle Dienste laufen als Systembenutzer `speech` und loggen in den journald-Namespace `speech-spark`. Das Panel startet seine Hintergrundaufgaben selbst (`panel.py`: Messwerte, Stabilität, Posteingang aufräumen, Dokumente lesen, reMarkable-Abgleich, Lernen aus Gesprächen). Hintergrundarbeit wartet, solange gesprochen wird (`vorrang.py`).
 
 ## Datenfluss einer Anfrage
@@ -328,6 +330,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |
 | `app/textnorm.py` | Text aufräumen vor der Sprachausgabe |
+| `app/tlstor.py` | TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner) |
 | `app/tts_proxy.py` | Sprachausgabe: nimmt an und reicht an die Engine durch |
 | `app/tts_server.py` | Sprachausgabe als eigener kleiner Dienst |
 | `app/panel/vorrang.py` | Sprache zuerst: Hintergrundarbeit wartet |

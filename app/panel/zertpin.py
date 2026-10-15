@@ -101,16 +101,9 @@ def sha_of(pem):
 
 def verify(pem):
     """True (the normal check) without a pinned certificate; with one an SSLContext that trusts only it."""
+    from common import pinned_context
     pem = clean(pem)
-    if not pem:
-        return True
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-    ctx.check_hostname = False                            # the name may not fit: the certificate itself must
-    ctx.verify_mode = ssl.CERT_REQUIRED
-    ctx.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN     # the pinned (leaf) certificate is the only anchor
-    ctx.load_verify_locations(cadata=pem)
-    return ctx
+    return pinned_context(pem) if pem else True
 
 
 def problem(e):

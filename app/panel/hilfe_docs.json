@@ -540,6 +540,14 @@
 "src": "architektur",
 "file": "Architektur und Datenfluss",
 "head": "Prozesse und Ports",
+"title": "TLS-Tor (V01.0.607, Stufe B2)",
+"text": "TLS-Tor (V01.0.607, Stufe B2): Läuft das Panel auf einem anderen Rechner, hören die Dienste auf dem DGX nur auf 127.0.0.1, und app/tlstor.py öffnet dieselben Ports auf api.tls_listen mit TLS 1.3 und dem Zertifikat aus /etc/speech-spark/tls, nur für die Adressen in api.tls_from. Das Panel vertraut genau dem gepinnten Zertifikat (models.cert); common._pin_models gibt es jeder httpx-Verbindung zum Modell-Rechner mit, die keinen eigenen Transport mitbringt. Selbsttest test_teilen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Prozesse und Ports",
 "title": "Prozesse und Ports",
 "text": "Alle Dienste laufen als Systembenutzer speech und loggen in den journald-Namespace speech-spark. Das Panel startet seine Hintergrundaufgaben selbst (panel.py: Messwerte, Stabilität, Posteingang aufräumen, Dokumente lesen, reMarkable-Abgleich, Lernen aus Gesprächen). Hintergrundarbeit wartet, solange gesprochen wird (vorrang.py)."
 },
@@ -7014,6 +7022,14 @@
 "head": "Processes and ports",
 "title": "Model computer (V01.0.606, plan \"Splitting the Spark\" stage B1)",
 "text": "Model computer (V01.0.606, plan \"Splitting the Spark\" stage B1): the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: common.model_url(art, path) with the setting models.host. The default is 127.0.0.1, and then everything runs on one Spark over http://127.0.0.1:<port> as before. With another computer there (a name or IP, never a path or http://), every request goes over https and the API key is a must (admin.validate); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (llm.own_tor), and the guard (netguard.model_addresses) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test test_modell_rechner."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Processes and ports",
+"title": "TLS-Tor (V01.0.607, stage B2)",
+"text": "TLS-Tor (V01.0.607, stage B2): when the panel runs on another computer, the services on the DGX listen only on 127.0.0.1, and app/tlstor.py opens the same ports on api.tls_listen with TLS 1.3 and the certificate in /etc/speech-spark/tls, only for the addresses in api.tls_from. The panel trusts exactly the pinned certificate (models.cert); common._pin_models gives it to every httpx connection to the model computer that brings no transport of its own. Self-test test_teilen."
 },
 {
 "lang": "en",

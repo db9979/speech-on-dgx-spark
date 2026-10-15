@@ -78,6 +78,8 @@ flowchart LR
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
 
+**TLS-Tor (V01.0.607, stage B2):** when the panel runs on another computer, the services on the DGX listen only on 127.0.0.1, and `app/tlstor.py` opens the same ports on `api.tls_listen` with TLS 1.3 and the certificate in `/etc/speech-spark/tls`, only for the addresses in `api.tls_from`. The panel trusts exactly the pinned certificate (`models.cert`); `common._pin_models` gives it to every httpx connection to the model computer that brings no transport of its own. Self-test `test_teilen`.
+
 All services run as the system user `speech` and log into the journald namespace `speech-spark`. The panel starts its background jobs itself (`panel.py`: samples, stability, inbox tidy, reading documents, reMarkable sync, learning from conversations). Background work waits while someone speaks (`vorrang.py`).
 
 ## Data flow of a request
@@ -328,6 +330,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
 | `app/textnorm.py` | Text clean-up before speech synthesis. |
+| `app/tlstor.py` | TLS-Tor: the door of the model computer for the panel on another computer. |
 | `app/tts_proxy.py` | Qwen3-TTS front end for the vllm-omni engine (backend "vllm-omni"). |
 | `app/tts_server.py` | Qwen3-TTS as a small HTTP service (OpenAI-style /v1/audio/speech). |
 | `app/panel/vorrang.py` | Speech first: speech recognition and speech output always go before the panel's background work. |

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.607** Spark teilen B2: gesicherte Verbindung zum DGX (TLS 1.3 mit festem Zertifikat), Vorbereitung für den Raspberry Pi
 - **V01.0.606** Spark teilen B1: eine Adresse für alle Modell-Dienste (Vorbereitung für Panel auf dem Raspberry Pi)
 - **V01.0.605** Update-Fenster aufgeräumt: jeder Zustand zeigt nur seine Knöpfe, Protokoll eingeklappt
 - **V01.0.604** reMarkable: das Morgenblatt ist gegliedert (Termine, Mails, Wetter … als Abschnitte) statt Fließtext
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.600** Fix: das Update-Fenster meldet nicht mehr „zu lange“ wegen der Fortschrittsdatei des vorigen Updates
 - **V01.0.599** Fix Qualitätstest: die Kontostand-Frage prüft nur Fakten (ein Betrag fällt durch), nicht die Formulierung
 - **V01.0.598** App-Ansicht (Android-App, Handy-Browser): Fragen und Antworten nutzen die Breite wie in der iPhone-App
-- **V01.0.597** Fix: Qwen3-VL 8B bekommt 20 % des Speichers (bei 12 % blieb kein Platz für den Kontext)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

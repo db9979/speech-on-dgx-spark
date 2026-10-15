@@ -11,6 +11,8 @@ CONFIG_PATH = os.environ.get("SPEECH_SPARK_CONFIG", "/etc/speech-spark/config.js
 # the state folder of this Spark (keys, shared state, marks): every module takes it from here (Richtlinie Teil 17);
 # what lies in it is listed once in panel/dateien.py
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+# the TLS certificate of this machine (cert.pem, key.pem): the panel's https port and the TLS-Tor (tlstor.py)
+TLS_DIR = os.environ.get("SPEECH_SPARK_TLS", "/etc/speech-spark/tls")
 
 
 DEFAULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.default.json")
@@ -607,6 +609,68 @@ def model_local(cfg=None):
     return host == "localhost" or _loopback(host)
 
 
+def pinned_context(pem, minimum=None):
+    """An SSLContext that trusts exactly this one certificate (PEM), checked inside the handshake; the name is not
+    compared, the certificate itself must match. A missing or broken PEM trusts nothing (every handshake fails)."""
+    import ssl
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.minimum_version = minimum or ssl.TLSVersion.TLSv1_2
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    ctx.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN     # the pinned (leaf) certificate is the only anchor
+    if pem:
+        try:
+            ctx.load_verify_locations(cadata=pem)
+        except (ssl.SSLError, ValueError, TypeError):
+            pass
+    return ctx
+
+
+_mounts = {"key": None, "ctx": None}
+
+
+def model_mounts(cfg=None, sync=False):
+    """httpx mounts for the model computer (plan Raspberry-Pi split, B2): https to models.host trusts only the
+    certificate the pairing pinned (models.cert, TLS 1.3), nothing else; None on the all-in-one install."""
+    import ssl
+    import httpx
+    cfg = load_config() if cfg is None else cfg
+    if model_local(cfg):
+        return None
+    host, pem = model_host(cfg), str((cfg.get("models") or {}).get("cert") or "")
+    if _mounts["key"] != (host, pem):
+        _mounts.update(key=(host, pem), ctx=pinned_context(pem, ssl.TLSVersion.TLSv1_3))
+    kind = httpx.HTTPTransport if sync else httpx.AsyncHTTPTransport
+    return {f"https://{'[' + host + ']' if ':' in host else host}": kind(verify=_mounts["ctx"], retries=0)}
+
+
+def _pin_models():
+    """Every httpx client of this process that does not bring its own transport, mounts or verify reaches the model
+    computer only with the pinned certificate (model_mounts): one place instead of a mount at each of the ~50
+    clients that talk to speech, pictures or the language model. netguard.client brings its own transport, so a
+    tool never gets this way; on the all-in-one install nothing changes. tests/test_teilen.py checks it."""
+    try:
+        import httpx
+    except ImportError:
+        return
+    for cls, sync in ((httpx.AsyncClient, False), (httpx.Client, True)):
+        init = cls.__init__
+        if getattr(init, "pinned", False):
+            continue
+
+        def __init__(self, *args, _init=init, _sync=sync, **kw):
+            if kw.get("transport") is None and kw.get("mounts") is None and kw.get("verify", True) is True:
+                try:
+                    m = model_mounts(sync=_sync)
+                except (OSError, ValueError, KeyError):
+                    m = None
+                if m:
+                    kw["mounts"] = m
+            _init(self, *args, **kw)
+        __init__.pinned = True
+        cls.__init__ = __init__
+
+
 def model_url(art, path="", cfg=None):
     """The one address of a model service (B1): http on this Spark; https to another computer, whose certificate the
     pairing pins (B3), so speech, text and pictures never cross the network in plain text."""
@@ -743,3 +807,6 @@ def api_key_ok(scope):
         return _loopback((scope.get("client") or ("",))[0])
     got = dict(scope.get("headers") or []).get(b"authorization", b"")
     return hmac.compare_digest(got, f"Bearer {key}".encode())
+
+
+_pin_models()

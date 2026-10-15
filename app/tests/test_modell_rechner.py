@@ -69,29 +69,19 @@ class OneAddress(unittest.TestCase):
 
 
 class Validate(unittest.TestCase):
-    def base(self):
-        new = json.loads(json.dumps(common.load_config()))
-        new["api"]["key"] = "sk-test"
-        return new
-
-    def test_only_a_name_or_ip(self):
-        for good in ("127.0.0.1", "dgx", "dgx.fritz.box", "192.168.178.171", "fd00::5"):
-            new = self.base()
-            new["models"]["host"] = good
-            admin_mod.validate(new)
-        for bad in ("http://dgx", "dgx/v1", "dgx:31001", "", "a b", "dgx;rm"):
-            new = self.base()
-            new["models"]["host"] = bad
-            with self.assertRaises(HTTPException, msg=bad):
-                admin_mod.validate(new)
-
     def test_another_computer_needs_the_key(self):
-        new = self.base()
+        # models.host comes only from install.sh and the pairing (test_teilen); while it names another computer,
+        # the panel can not clear the API key
+        old = common.load_config()
+        self.addCleanup(helpers.write_config, old)
+        new = json.loads(json.dumps(old))
         new["api"]["key"] = ""
         for s in ("asr", "tts"):
             new[s]["host"] = "127.0.0.1"
         admin_mod.validate(json.loads(json.dumps(new)))      # all-in-one, services only on loopback: no key needed
-        new["models"]["host"] = "192.168.178.171"
+        remote = json.loads(json.dumps(old))
+        remote["models"]["host"] = "192.168.178.171"
+        helpers.write_config(remote)
         with self.assertRaises(HTTPException):
             admin_mod.validate(new)
 

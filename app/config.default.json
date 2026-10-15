@@ -66,10 +66,13 @@
     "max_body_mb": 32
   },
   "api": {
-    "key": ""
+    "key": "",
+    "tls_listen": "",
+    "tls_from": []
   },
   "models": {
-    "host": "127.0.0.1"
+    "host": "127.0.0.1",
+    "cert": ""
   },
   "panel": {
     "host": "0.0.0.0",

@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
+from common import TLS_DIR, BodyLimit, load_config, quiet_access_log  # noqa: E402
 from core import spawn, ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
 from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
@@ -622,7 +622,6 @@ def service_worker():  # served from / so it may control the whole panel
     return FileResponse(os.path.join(STATIC, "sw.js"), media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
 
-TLS_DIR = os.environ.get("SPEECH_SPARK_TLS", "/etc/speech-spark/tls")
 
 
 class Server(uvicorn.Server):
