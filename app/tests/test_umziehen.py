@@ -135,6 +135,20 @@ class Umziehen(unittest.TestCase):
         self.assertEqual(self.a.profile(), ["Dominik", "Gast"])
         self.assertEqual(self.a.py(f"import vault; print(vault.open_({self.secret!r}))"), "geheim")
 
+    def test_the_engine_share_of_another_backend_moves(self):
+        """V01.0.636: tars' settings (Qwen3-ASR-1.7B with a share below 0.055, fine for its backend) were refused on
+        the Pi, whose backend is vLLM; the move gives it the share install.sh gives (0.06)."""
+        p = os.path.join(self.a.dir, "config.json")
+        with open(p) as f:
+            cfg = json.load(f)
+        cfg["asr"].update(backend="transformers", model="Qwen/Qwen3-ASR-1.7B", engine_mem=0.035)
+        with open(p, "w") as f:
+            json.dump(cfg, f)
+        out, got = umzug(self.a, self.b, self.root)
+        self.assertIs(out["ok"]["umzug_ok"], True, self.b.last.stderr.decode()[-500:])
+        self.assertEqual(self.b.profile(), ["Dominik"])
+        self.assertEqual(self.b.py("import common; print(common.load_config()['asr']['engine_mem'])"), "0.06")
+
     def test_a_refused_setting_names_the_check(self):
         """V01.0.635: the Pi refused tars' settings ("ValueError system.py _check_config"); the line also names the
         check of admin.validate that said no, in fixed words, never the value."""

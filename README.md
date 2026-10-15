@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.636** Move to the Pi: the speech recognition share is adjusted instead of refused
 - **V01.0.635** Move: the log names the settings check that refused
 - **V01.0.634** Move: the log says where restoring stopped
 - **V01.0.633** Red fix: the preference "the Spark may call me" is classified in the settings catalog
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.629** Panel install on the Raspberry Pi no longer stops at the NVIDIA check
 - **V01.0.628** Phone T3: calls from outside through confirmed numbers, unknown ones as guests; phone switches did not work before
 - **V01.0.627** Phone T2: Me → Phone with own phone numbers (confirmed by code), phone PIN and calls
-- **V01.0.626** Phone T1: call the Spark from a phone in the house (FRITZ!Box or another SIP PBX), setup with presets, search and check
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -154,6 +154,13 @@ def _check_config(new):
         out[sec] = dict(vals, **{k: v for k, v in got.items() if k in vals})
     for sec in ("asr", "tts"):
         out[sec]["backend"] = cur.get(sec, {}).get("backend", out[sec]["backend"])
+    # the 1.7B recognizer under vLLM needs an engine share of 0.055 (admin.validate); a backup from a computer with
+    # another backend or an older share gets what install.sh gives it (--asr 1.7b), so a move to the Raspberry Pi
+    # never fails on it (V01.0.636: tars' settings were refused there)
+    a = out["asr"]
+    if a.get("backend") == "vllm" and "1.7B" in str(a.get("model")) and isinstance(a.get("engine_mem"), (int, float)) \
+            and not isinstance(a["engine_mem"], bool) and a["engine_mem"] < 0.055:
+        a["engine_mem"] = 0.06
     if isinstance(out["chat"].get("defaults"), dict):
         out["chat"]["defaults"] = profiles.clean_settings(out["chat"]["defaults"])
     try:

@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.636** Umzug auf den Pi: Einstellung der Spracherkennung wird angepasst statt abgelehnt
 - **V01.0.635** Umzug: das Log nennt die Einstellungs-Prüfung, die ablehnt
 - **V01.0.634** Umzug: das Log nennt, wo das Einspielen abbricht
 - **V01.0.633** Rot-Fix: Vorliebe „Der Spark darf mich anrufen“ im Einstellungs-Katalog eingeordnet
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.629** Panel-Installation auf dem Raspberry Pi bricht nicht mehr an der NVIDIA-Prüfung ab
 - **V01.0.628** Telefon T3: Anrufe von außen über bestätigte Nummern, unbekannte als Gast; Telefon-Schalter griffen vorher nicht
 - **V01.0.627** Telefon T2: Ich → Telefon mit eigenen Rufnummern (per Code bestätigt), Telefon-PIN und Telefonate
-- **V01.0.626** Telefon T1: den Spark vom Telefon im Haus anrufen (FRITZ!Box oder andere SIP-Anlage), Einrichtung mit Vorlagen, Suche und Prüfung
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.636** · 2026-10-15 · Umzug: Speicheranteil der Spracherkennung von einem anderen Backend wird angepasst statt abgelehnt
 - **V01.0.635** · 2026-10-15 · umziehen.py: abgelehnter Umzug nennt auch die Prüfung, die Nein sagte
 - **V01.0.634** · 2026-10-15 · umziehen.py: abgelehnter Umzug nennt Art, Datei, Funktion und Zeile im Log
 - **V01.0.633** · 2026-10-15 · Rot-Fix: Vorliebe „Der Spark darf mich anrufen“ im Einstellungs-Katalog eingeordnet (persönlich, nicht vom Berater verstellt)
