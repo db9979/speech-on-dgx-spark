@@ -210,7 +210,9 @@ def morning_due(uid, local, p):
 async def morning(uid, local):
     _mut(uid, lambda p: p.update(morning=local.strftime("%Y-%m-%d")))   # first: a failing model does not retry each minute
     from chat import morning_briefing
-    text = await morning_briefing(uid, profiles.settings(uid).get("tz", ""))
+    # sorted with Markdown (BRIEF_MD_SYSTEM): one section per kind on the sheet, not one block of prose
+    # (Dominik 2026-10-15 „nicht schön dargestellt aktuell auch nur fließtext“)
+    text = await morning_briefing(uid, profiles.settings(uid).get("tz", ""), markdown=True)
     if not text:
         return None
     title = f"Morgenblatt {WEEKDAY[local.weekday()]} {local:%d.%m.}"
