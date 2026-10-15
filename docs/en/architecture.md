@@ -80,6 +80,8 @@ flowchart LR
 
 **TLS-Tor (V01.0.607, stage B2):** when the panel runs on another computer, the services on the DGX listen only on 127.0.0.1, and `app/tlstor.py` opens the same ports on `api.tls_listen` with TLS 1.3 and the certificate in `/etc/speech-spark/tls`, only for the addresses in `api.tls_from`. The panel trusts exactly the pinned certificate (`models.cert`); `common._pin_models` gives it to every httpx connection to the model computer that brings no transport of its own. Self-test `test_teilen`.
 
+**Wärter (V01.0.609, stage B4a):** on the model computer `app/tarswart.py` (127.0.0.1:31007, behind the TLS-Tor) runs a fixed list of commands: `status` and `einheit start|stop|restart <part>`. The panel talks to it through `steuer.py` (`unit_state`, `active_seconds`, `systemctl`, `gpu`); on the all-in-one install `steuer.py` calls `systemctl` and `nvidia-smi` itself as before. Signed with HMAC-SHA256 and the Wärter key from the pairing. Self-test `test_waerter`.
+
 All services run as the system user `speech` and log into the journald namespace `speech-spark`. The panel starts its background jobs itself (`panel.py`: samples, stability, inbox tidy, reading documents, reMarkable sync, learning from conversations). Background work waits while someone speaks (`vorrang.py`).
 
 ## Data flow of a request
@@ -300,6 +302,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |
 | `app/panel/speicher.py` | Eigener Speicher. |
+| `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
 | `app/panel/system.py` | System page: backups, the live check of the real services and the alerts shown on top. |
 | `app/panel/technik.py` | Status → Architecture: how the Spark is built, as a page to click through and as docs/de/architektur.md + docs/en/architecture.md. |
 | `app/panel/technik_knoten.py` | Status → Architecture, Knoten-Seiten: for every box of the picture one page that says exactly how it works: what it does and why, its way as a picture with n … |
@@ -328,6 +331,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
+| `app/tarswart.py` | Wärter: the model computer's few hands for a panel on another computer. |
 | `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
 | `app/textnorm.py` | Text clean-up before speech synthesis. |
@@ -515,6 +519,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/verbrauch.json` | Usage per model, task and profile (numbers only) | – | no |
 | `state/vision.json` | Picture questions, 10 min | – | no |
 | `state/vorrang-key` | Key panel ↔ speech services | is a key | no |
+| `state/waerter.key` | Key for the model computer's Wärter | is a key | no |
 | `state/wartung-satz-de.pcm` | Maintenance sentence as sound | – | no |
 | `state/wartung-satz-en.pcm` | Maintenance sentence as sound (English) | – | no |
 | `state/wartung.json` | Maintenance pause | – | no |
@@ -2677,7 +2682,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 54). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 55). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2688,7 +2693,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **29** files in every backup ([step 7](#kn-state-s7))
-- **54** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **55** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

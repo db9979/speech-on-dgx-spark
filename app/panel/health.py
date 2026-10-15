@@ -30,8 +30,9 @@ import httpx
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import llm  # noqa: E402
+import steuer  # noqa: E402
 from common import STATE, load_config, model_url, write_json  # noqa: E402
-from core import UNITS, api_headers, app_version, run  # noqa: E402
+from core import UNITS, api_headers, app_version  # noqa: E402
 from monitor import service_health  # noqa: E402
 import verbrauch  # noqa: E402
 
@@ -62,19 +63,6 @@ def check_memory(avail_gib, cfg=None):
 
 
 # ---------------------------------------------------------------- watchdog
-def _active_seconds(unit):
-    """Seconds since the unit became active, None if it is not active."""
-    code, out = run(["systemctl", "show", unit, "-p", "ActiveState,ActiveEnterTimestampMonotonic"])
-    props = dict(x.split("=", 1) for x in out.splitlines() if "=" in x)
-    if props.get("ActiveState") != "active":
-        return None
-    try:
-        since = int(props.get("ActiveEnterTimestampMonotonic", "0")) / 1e6
-        return time.monotonic() - since if since else None
-    except ValueError:
-        return None
-
-
 def _may_restart(unit, now):
     times = [t for t in _restarts.get(unit, []) if now - t < 3600]
     _restarts[unit] = times
@@ -86,7 +74,7 @@ def _restart(name, unit, reason, now):
         item = {"t": int(now), "unit": name, "reason": reason, "done": False,
                 "note": f"schon {MAX_RESTARTS}-mal in der letzten Stunde"}
     else:
-        code, out = run(["sudo", "-n", "/usr/bin/systemctl", "restart", unit], timeout=120)
+        code, out = steuer.systemctl("restart", unit, timeout=120)
         _restarts.setdefault(unit, []).append(now)
         item = {"t": int(now), "unit": name, "reason": reason, "done": code == 0,
                 "note": "" if code == 0 else out[-200:]}
@@ -151,7 +139,7 @@ async def watch_once(update_running=lambda: False):
             continue
         health = await service_health(name, cfg)
         engine = cfg[name].get("backend") in ("vllm", "vllm-omni") and cfg[name].get("recognizer") != "parakeet"
-        front_up = await asyncio.to_thread(_active_seconds, UNITS[name])
+        front_up = await asyncio.to_thread(steuer.active_seconds, UNITS[name])
         # the front end: restarted when it does not answer (or, without an engine, when it hangs)
         reason = judge(UNITS[name], health, now, front_up, work=not engine)
         if reason:
@@ -160,7 +148,7 @@ async def watch_once(update_running=lambda: False):
         if engine and health is not None:
             # a stuck engine shows in the front end's status: loading forever or busy without progress
             unit = UNITS[name + "-engine"]
-            reason = judge(unit, health, now, await asyncio.to_thread(_active_seconds, unit), front=False)
+            reason = judge(unit, health, now, await asyncio.to_thread(steuer.active_seconds, unit), front=False)
             if reason:
                 done.append(await asyncio.to_thread(_restart, name.upper() + "-Engine", unit, reason, now))
     # the VoiceDesign engine has no front end of its own: restarted when it is switched on but has
@@ -168,8 +156,7 @@ async def watch_once(update_running=lambda: False):
     t = cfg.get("tts", {})
     if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("voicedesign_enabled") and not wartung.quiet("tts"):
         unit = UNITS["tts-design"]
-        code, out = await asyncio.to_thread(run, ["systemctl", "is-active", unit])
-        if out.strip() == "failed":
+        if await asyncio.to_thread(steuer.unit_state, unit) == "failed":
             done.append(await asyncio.to_thread(_restart, "TTS-VoiceDesign", unit, "ausgefallen", now))
     return done
 

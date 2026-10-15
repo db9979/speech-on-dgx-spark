@@ -18,7 +18,8 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import TLS_DIR, BodyLimit, load_config, quiet_access_log  # noqa: E402
 from core import spawn, ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
-from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
+from monitor import history, service_health, system_stats  # noqa: E402
+import steuer  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
 import account  # noqa: E402
@@ -277,7 +278,7 @@ async def sampler():
             try:
                 cfg = load_config()
                 # nvidia-smi and psutil block for a moment: off the event loop; both health checks at once
-                g, s = await asyncio.to_thread(lambda: (gpu_stats() or {}, system_stats()))
+                g, s = await asyncio.to_thread(lambda: (steuer.gpu() or {}, system_stats()))
                 h = dict(zip(SERVICES, await asyncio.gather(*(service_health(n, cfg) for n in SERVICES))))
                 health.check_memory(s["mem_avail_gib"], cfg)
                 live.services(h, cfg)

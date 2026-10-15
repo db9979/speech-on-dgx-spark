@@ -376,10 +376,11 @@ def traces(uid, staff, minutes, now=None, tid=None):
 def system():
     """Version, services and a few numbers (no names, no addresses)."""
     import core
+    import steuer
     out = [f"Version: {core.app_version() or '?'}"]
     try:
         for k in ("asr", "tts", "asr-engine", "tts-engine"):
-            out.append(f"Dienst {k}: {core.unit_state(core.UNITS[k])}")
+            out.append(f"Dienst {k}: {steuer.unit_state(core.UNITS[k])}")
     except Exception:
         pass
     try:

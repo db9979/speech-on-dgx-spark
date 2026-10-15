@@ -590,6 +590,72 @@ def audio_rate_ok(data):
     return ""
 
 
+# the units of the model side (speech, engines, the own language model); the panel may start/stop/restart UNITS
+# (matches /etc/sudoers.d/speech-spark); OWN_LLM_UNITS only `speech-spark modelle llm uebernehmen|zurueck` switches
+SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
+UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
+                          "tts-design": "speech-spark-tts-design"})
+OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
+# the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
+WAERTER_PORT = 31007
+WAERTER_KEY = os.path.join(STATE, "waerter.key")
+
+
+def run(cmd, timeout=10, env=None):
+    """A command without a shell: (exit code, stdout+stderr); any failure is (1, its text)."""
+    import subprocess
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
+        return p.returncode, (p.stdout + p.stderr).strip()
+    except Exception as e:
+        return 1, str(e)
+
+
+def gpu_stats():
+    """The GPU from nvidia-smi (name, load, temperature, power, clock, compute processes), None without one."""
+    import shutil
+    if not shutil.which("nvidia-smi"):
+        return None
+    fields = "name,utilization.gpu,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total"
+    code, out = run(["nvidia-smi", f"--query-gpu={fields}", "--format=csv,noheader,nounits"])
+    if code != 0 or not out:
+        return None
+    vals = [v.strip() for v in out.splitlines()[0].split(",")]
+
+    def num(v):
+        try:
+            return float(v)
+        except ValueError:
+            return None  # GB10 reports "[N/A]" for memory: it is the shared pool
+    g = dict(zip(fields.split(","), vals))
+    procs = []
+    code, out = run(["nvidia-smi", "--query-compute-apps=pid,process_name,used_memory",
+                     "--format=csv,noheader,nounits"])
+    for line in out.splitlines() if code == 0 else []:
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) == 3:
+            procs.append({"pid": parts[0], "name": parts[1].split("/")[-1], "mem_mib": num(parts[2])})
+    return {"name": g["name"], "util": num(g["utilization.gpu"]), "temp": num(g["temperature.gpu"]),
+            "power": num(g["power.draw"]), "clock": num(g["clocks.sm"]), "processes": procs}
+
+
+def waerter_key(path=None):
+    """The Wärter's shared key (32 bytes from the pairing, hex in STATE/waerter.key), b"" without one."""
+    try:
+        with open(path or WAERTER_KEY) as f:
+            k = f.read().strip()
+        return bytes.fromhex(k) if re.fullmatch(r"[0-9a-f]{64}", k) else b""
+    except (OSError, ValueError):
+        return b""
+
+
+def waerter_sign(key, body):
+    """HMAC-SHA256 of the exact request body with the Wärter key (hex); both sides use this one function."""
+    import hashlib
+    import hmac
+    return hmac.new(key, body, hashlib.sha256).hexdigest()
+
+
 # the model computer (plan Raspberry-Pi split, B1): speech recognition, speech output, pictures and the LLM-Tor live on
 # models.host, 127.0.0.1 when everything runs on one Spark. art -> its config section with the port
 MODEL_ARTS = {"asr": "asr", "tts": "tts", "bild": "image", "llm": "llm"}
@@ -676,7 +742,7 @@ def model_url(art, path="", cfg=None):
     pairing pins (B3), so speech, text and pictures never cross the network in plain text."""
     cfg = load_config() if cfg is None else cfg
     host = model_host(cfg)
-    port = int(cfg[MODEL_ARTS[art]]["port"])
+    port = WAERTER_PORT if art == "waerter" else int(cfg[MODEL_ARTS[art]]["port"])
     if model_local(cfg):
         return f"http://127.0.0.1:{port}{path}"
     return f"https://{'[' + host + ']' if ':' in host else host}:{port}{path}"

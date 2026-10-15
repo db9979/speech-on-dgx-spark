@@ -20,7 +20,6 @@ from common import TLS_DIR, load_config
 
 TABLE = "speech_spark_teilen"
 MAX_FROM = 4           # panel computers that may use the door (one, plus room for a move)
-WAERTER_PORT = 31007   # reserved for the Wärter (B4), opened with the door from the start
 
 
 class Fehler(ValueError):
@@ -46,7 +45,7 @@ def pruefen(cfg):
     if not isinstance(von, list) or not 1 <= len(von) <= MAX_FROM:
         raise Fehler("absender")
     von = sorted({_ip(a) for a in von}, key=lambda a: (a.version, int(a)))
-    ports = sorted(set(tlstor.ports(cfg)) | {WAERTER_PORT})
+    ports = sorted(set(tlstor.ports(cfg)))
     if not all(isinstance(p, int) and 1024 <= p <= 65535 for p in ports):
         raise Fehler("port")
     return listen, von, ports

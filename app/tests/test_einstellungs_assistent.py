@@ -24,6 +24,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402
 import admin  # noqa: E402
+import steuer  # noqa: E402
 import berater  # noqa: E402
 import berater_katalog as K  # noqa: E402
 import faelle  # noqa: E402
@@ -79,7 +80,7 @@ class Base(unittest.TestCase):
         faelle._live.update(day="", n={})
         berater._rt.update(wake=0.0, melder=0.0, confirm={})
         guard._rate.clear()     # the per-minute limits of the endpoints: every test starts with a fresh minute
-        sysd = mock.patch.object(admin, "run", return_value=(0, ""))   # never systemctl from a test
+        sysd = mock.patch.object(steuer, "run", return_value=(0, ""))   # never systemctl from a test
         sysd.start()
         self.addCleanup(sysd.stop)
 

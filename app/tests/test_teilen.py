@@ -230,7 +230,7 @@ class Ports(unittest.TestCase):
     def test_the_door_opens_only_what_is_installed(self):
         c = {"asr": {"enabled": True, "port": 31001}, "tts": {"enabled": True, "port": 31002},
              "llm": {"enabled": False, "port": 31006}, "image": {"enabled": True, "port": 31005}}
-        self.assertEqual(tlstor.ports(c), [31001, 31002, 31005])
+        self.assertEqual(tlstor.ports(c), [31001, 31002, 31005, 31007])
 
     def test_shut_without_an_address(self):
         cfg = config(31006)

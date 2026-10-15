@@ -60,10 +60,10 @@ from core import (  # noqa: E402
     check_password,
     password_set,
     store_password,
-    run,
-    unit_exists,
-    unit_state)
-from monitor import gpu_stats, history, lane_fraction, service_health, system_stats  # noqa: E402
+    unit_exists)
+from monitor import history, lane_fraction, service_health, system_stats  # noqa: E402
+import steuer  # noqa: E402
+from steuer import unit_state  # noqa: E402
 from chat import web_search  # noqa: E402
 
 router = APIRouter()
@@ -363,7 +363,7 @@ def _status(cfg, healths):
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
     qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": frac} for u, frac in _qwen38_lanes()]
-    return {"time": time.time(), "system": system_stats(), "gpu": gpu_stats(),
+    return {"time": time.time(), "system": system_stats(), "gpu": steuer.gpu(),
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg)}
 
@@ -868,7 +868,7 @@ def _save_locked(new, old, by):
                 actions["tts-design"] = "restart"
     errors = []
     for n, action in actions.items():
-        code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, UNITS[n]], timeout=60)
+        code, out = steuer.systemctl(action, UNITS[n])
         if code != 0:
             errors.append(f"{UNITS[n]}: {out}")
     return {"saved": True, "restarted": [n for n, a in actions.items() if a == "restart"],
@@ -952,7 +952,7 @@ def undo_one(uid: str, request: Request):
 def service_action(name: str, action: str):
     if name not in UNITS or action not in ("start", "stop", "restart"):
         raise HTTPException(400, "bad service or action")
-    code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, UNITS[name]], timeout=60)
+    code, out = steuer.systemctl(action, UNITS[name])
     if code != 0:
         raise HTTPException(500, out or f"systemctl {action} failed")
     return {"ok": True}

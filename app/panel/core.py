@@ -6,7 +6,6 @@ import hashlib
 import hmac
 import json
 import secrets
-import subprocess
 import sys
 import threading
 import time
@@ -21,18 +20,12 @@ import mfa  # noqa: E402
 import passkey  # noqa: E402
 import profiles  # noqa: E402
 import stufen  # noqa: E402
-from common import STATE, load_config  # noqa: E402
+from common import OWN_LLM_UNITS, SERVICES, STATE, UNITS, load_config, run  # noqa: E402,F401
 
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
-# units the panel may start/stop/restart (matches /etc/sudoers.d/speech-spark)
-UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
-                          "tts-design": "speech-spark-tts-design"})
-# the own language model (plan eigene-modelle, E2/E3): only `speech-spark modelle llm uebernehmen|zurueck` switches them
-OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
 LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update", wechsel="speech-spark-wechsel", **OWN_LLM_UNITS)
 PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # asr keys the vLLM engine reads; changing them restarts it
@@ -401,14 +394,6 @@ def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(sec
     auth(request, creds)
 
 
-def run(cmd, timeout=10, env=None):
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
-        return p.returncode, (p.stdout + p.stderr).strip()
-    except Exception as e:
-        return 1, str(e)
-
-
 # Tasks started with spawn(): asyncio keeps only a weak reference, so a running task could be collected
 # mid-way; and a background loop that ends with an error would vanish without a word in the log.
 _tasks = set()
@@ -427,11 +412,6 @@ def _done(task):
     if not task.cancelled() and task.exception() is not None:
         e = task.exception()
         print(f"hintergrund: background task {task.get_name()} ended: {type(e).__name__}: {str(e)[:200]}", flush=True)
-
-
-def unit_state(unit):
-    out = run(["systemctl", "is-active", unit])[1].split("\n")[0].strip()
-    return out if re.fullmatch(r"[a-z\-]+", out) else "unknown"
 
 
 def unit_exists(unit):

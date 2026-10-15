@@ -163,6 +163,9 @@ DATEIEN = [
     state("latency.json", "Wartezeiten", "Waiting times", lokal="Statistik"),
     state("verbrauch.json", "Verbrauch je Modell, Aufgabe und Profil (nur Zahlen)", "Usage per model, task and profile (numbers only)", lokal="Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)"),
     state("livecheck.json", "Echtprüfung", "Live check", lokal="letzte Echtprüfung"),
+    state("waerter.key", "Schlüssel für den Wärter des Modell-Rechners", "Key for the model computer's Wärter",
+          lokal="Schlüssel der Kopplung: nach einem Umzug wird neu gekoppelt", schutz=("ist ein Schlüssel", "is a key"),
+          sonst=True),  # Spark teilen (tarswart.py, steuer.py): written by the pairing, the same on both computers
     state("live-monitors.json", "Wandmonitore", "Wall monitors", lokal="Wandmonitore dieses Geräts"),
     state("dienste-zustand.json", "Hintergrund-Dienste", "Background services", lokal="Zustand der Hintergrund-Dienste"),
     state("weiche-stats.json", "Weiche-Statistik", "Switch statistics", lokal="Statistik", sonst=True),

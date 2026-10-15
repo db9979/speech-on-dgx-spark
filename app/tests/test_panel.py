@@ -1692,10 +1692,10 @@ class AsrRecognizer(unittest.TestCase):
     """Switching to Parakeet stops the Qwen3-ASR engine; switching back starts it again."""
 
     def test_switch(self):
-        import admin
+        import steuer   # systemctl for the speech units goes through steuer (here or the model computer)
         calls = []
-        orig = admin.run
-        admin.run = lambda cmd, **kw: (calls.append(cmd), (0, ""))[1]
+        orig = steuer.run
+        steuer.run = lambda cmd, **kw: (calls.append(cmd), (0, ""))[1]
         try:
             cfg = ADMIN.get("/api/config").json()
             cfg["asr"]["backend"] = "vllm"
@@ -1710,8 +1710,9 @@ class AsrRecognizer(unittest.TestCase):
             cfg["asr"]["recognizer"] = "qwen"
             r = ADMIN.put("/api/config", json=cfg)
             self.assertIn("asr-engine", r.json()["restarted"])
+            self.assertIn(["sudo", "-n", "/usr/bin/systemctl", "stop", "speech-spark-asr-engine"], calls)
         finally:
-            admin.run = orig
+            steuer.run = orig
 
 
 if __name__ == "__main__":

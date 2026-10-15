@@ -1,7 +1,6 @@
 """Monitoring: GPU, memory and CPU samples, and the health of the speech services."""
 import os
 import re
-import shutil
 import sys
 from collections import deque
 
@@ -23,32 +22,6 @@ def lane_fraction(unit):
     if unit == "qwen38-flash":  # the flag lives in its launch script; installer default
         return 0.85
     return None
-
-
-def gpu_stats():
-    if not shutil.which("nvidia-smi"):
-        return None
-    fields = "name,utilization.gpu,temperature.gpu,power.draw,clocks.sm,memory.used,memory.total"
-    code, out = run(["nvidia-smi", f"--query-gpu={fields}", "--format=csv,noheader,nounits"])
-    if code != 0 or not out:
-        return None
-    vals = [v.strip() for v in out.splitlines()[0].split(",")]
-
-    def num(v):
-        try:
-            return float(v)
-        except ValueError:
-            return None  # GB10 reports "[N/A]" for memory: it is the shared pool
-    g = dict(zip(fields.split(","), vals))
-    procs = []
-    code, out = run(["nvidia-smi", "--query-compute-apps=pid,process_name,used_memory",
-                     "--format=csv,noheader,nounits"])
-    for line in out.splitlines() if code == 0 else []:
-        parts = [p.strip() for p in line.split(",")]
-        if len(parts) == 3:
-            procs.append({"pid": parts[0], "name": parts[1].split("/")[-1], "mem_mib": num(parts[2])})
-    return {"name": g["name"], "util": num(g["utilization.gpu"]), "temp": num(g["temperature.gpu"]),
-            "power": num(g["power.draw"]), "clock": num(g["clocks.sm"]), "processes": procs}
 
 
 def system_stats():
