@@ -158,8 +158,16 @@ def notbetrieb():
 
 
 def paused(part):
-    """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb."""
-    return _pause(part) or notbetrieb()
+    """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb; there the
+    speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr)."""
+    if _pause(part):
+        return True
+    if not notbetrieb():
+        return False
+    if part == "asr":
+        import notbetrieb as nb
+        return not nb.hoert()
+    return True
 
 
 def quiet(part):
@@ -424,7 +432,10 @@ async def clips_tick(now=None):
     if not (admin_on() or steuer.remote()) or paused("tts") or not (c.get("esp32") or c.get("wyoming")):   # only with speakers or Assist
         return False
     import esp32
-    return await esp32.make_pause_clips(time.time() if now is None else now)
+    import notbetrieb
+    now = time.time() if now is None else now
+    made = await esp32.make_pause_clips(now)
+    return await notbetrieb.make_clips(now, lambda text: esp32.tts_stream("", text)) or made
 
 
 async def loop():

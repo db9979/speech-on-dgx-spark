@@ -39,6 +39,7 @@ class Recognizer:
         self.rec = None
         self.lock = threading.Lock()
         self.load_seconds = None
+        self.used = time.monotonic()   # the last recording (Notbetrieb on the panel computer unloads after a while)
 
     def load(self):
         t0 = time.time()
@@ -64,10 +65,17 @@ class Recognizer:
     def load_in_background(self):
         threading.Thread(target=self.load, daemon=True).start()
 
+    def unload(self):
+        """Gives the ~1 GiB back (Notbetrieb on the panel computer: loaded at the first need, unloaded when idle)."""
+        with self.lock:
+            self.rec, self.status, self.error = None, "idle", None
+        print("parakeet unloaded", flush=True)
+
     def transcribe_file(self, path):
         """Any audio ffmpeg reads -> (text, seconds of audio). Decoding happens under the lock too: two hours of
         audio are ~700 MB in memory, so only one recording is held at a time, never four."""
         with self.lock:
+            self.used = time.monotonic()
             audio = read_audio(path)
             parts = []
             for piece in split(audio):

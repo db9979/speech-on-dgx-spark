@@ -1083,7 +1083,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "fef5f1f450",
+        "stand": "403475152f",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1107,10 +1107,14 @@ SEITEN_DATEN = {
               ("chat.chat → chat_turn.prepare", "chat.chat → chat_turn.prepare"),
               ("chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt "
                "den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, "
-               "Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt.",
+               "Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert "
+               "(Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen "
+               "Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen).",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
-               "the offered tools; _answer takes over.")),
+               "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
+               "mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, "
+               "without a model (notbetrieb.antwort: Home Assistant, time, reminders).")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
@@ -1277,7 +1281,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "1da4093b59",
+        "stand": "8c90beed45",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1448,7 +1452,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "2a2cbbb781",
+        "stand": "83f179e813",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -1489,7 +1493,9 @@ SEITEN_DATEN = {
                "Neustart“ pausiert das Panel selbst, sobald ein qwen38-Dienst neu startet oder umschaltet (höchstens "
                "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet. Läuft das Modell auf einem "
                "anderen Rechner, der nicht antwortet (Notbetrieb, steuer.weg), gilt dasselbe mit dem Satz „Der Spark macht "
-               "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem.",
+               "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem. Mit Funktionen → Notbetrieb mit Parakeet "
+               "hört dann Parakeet auf dem Panel-Rechner, und feste Befehle (Home Assistant, Uhrzeit, Erinnerungen) "
+               "gehen ohne Modell (notbetrieb.antwort).",
                "When an admin paused the language model for an update, the panel does not ask it at all: the answer is "
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
@@ -1497,7 +1503,9 @@ SEITEN_DATEN = {
                "restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most "
                "{wartung.AUTO_MIN} min) and goes on once the model answers again. When the model runs on another "
                "computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark "
-               "is taking a break right now.”; the Dienst-Wächter still reports the outage."),
+               "is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency "
+               "mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, "
+               "reminders) work without a model (notbetrieb.antwort)."),
               ("stop", "ja", ("„Ich werde gerade aktualisiert …“", "„I am being updated right now …“"))),
             S("s2", "schritt", ("Verbindung für diese Antwort", "Connection for this answer"),
               ("Zeitlimit {chat.TIMEOUT_RANGE.0} bis {chat.TIMEOUT_RANGE.1} s", "time limit {chat.TIMEOUT_RANGE.0} to {chat.TIMEOUT_RANGE.1} s"),
@@ -3037,7 +3045,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "40e2c246bf",
+        "stand": "276b20be3a",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -3168,6 +3176,11 @@ SEITEN_DATEN = {
               "Spracherkennung sagt der Lautsprecher den Satz gleich nach dem Weckwort.",
               "Answer on the display, the short maintenance sentence from a file to hear (else a tone); with the speech "
               "recognition paused the speaker says the sentence right after the wake word.")),
+            (("Notbetrieb mit Parakeet", "Emergency mode with Parakeet"), ["s5", "s10", "s11"],
+             ("Modell-Rechner weg: Parakeet auf dem Panel-Rechner hört, ein fester Befehl („Licht an“, „Wie spät ist es?“) "
+              "wird ohne Modell ausgeführt; zu hören sind vorher gemachte Sätze und Bausteine (notbetrieb.ton).",
+              "Model computer gone: Parakeet on the panel computer hears, a fixed command (“lights on”, “what time is it?”) "
+              "runs without a model; to hear are sentences and building blocks made before (notbetrieb.ton).")),
         ],
         "regeln": [
             [("Weg", "Way"), ("Wer darf", "Who may"), ("Was geht", "What works"), ("Persönliches", "Personal things")],
@@ -3427,9 +3440,9 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "9c6e4ebdc4",
+        "stand": "99c3cc91c0",
         "bezug": {
-            "parakeet.MAX_AUDIO_S": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
+            "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
             "asr_proxy.transcriptions": ["s4"], "asr_proxy.engine_status": ["s6"], "parakeet.Recognizer": ["s9"],
         },
@@ -3510,11 +3523,17 @@ SEITEN_DATEN = {
               ("Mit Qwen3-ASR geht die Aufnahme an die vLLM-Engine, die nur auf dieser Maschine lauscht; nur "
                "prompt, temperature und stream reichen durch, dazu die Kontextwörter aus den Einstellungen. Mit "
                "Parakeet erkennt der Proxy selbst auf dem Prozessor, in Stücken von höchstens {parakeet.MAX_PIECE_S} "
-               "Sekunden, die an einer leisen Stelle geschnitten werden.",
+               "Sekunden, die an einer leisen Stelle geschnitten werden. Im Notbetrieb mit Parakeet (Panel-Rechner, "
+               "Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf 127.0.0.1:"
+               "{common.NOTASR_PORT}: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach "
+               "{common.NOTASR_IDLE|min} Minuten ohne eine.",
                "With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only "
                "prompt, temperature and stream pass through, plus the context words from the settings. With "
                "Parakeet the proxy recognizes itself on the CPU, in pieces of at most {parakeet.MAX_PIECE_S} seconds "
-               "cut at a quiet spot.")),
+               "cut at a quiet spot. In emergency mode with Parakeet (panel computer, model computer gone) "
+               "common.model_url takes the recording to speech-spark-notasr on 127.0.0.1:{common.NOTASR_PORT}: the same "
+               "proxy with Parakeet, loaded at the first recording, unloaded after {common.NOTASR_IDLE|min} minutes "
+               "without one.")),
             S("s10", "frage", ("Stille, Füllwort oder Echo?", "Silence, filler or echo?"),
               ("feste Regeln, kein Modell", "fixed rules, no model"),
               ("stille.check verwirft Text aus fast stummen Aufnahmen und ein einzelnes „Ja“ oder „Okay“ mit zu "
@@ -3562,6 +3581,10 @@ SEITEN_DATEN = {
                                               "speaker identification threshold at normal strictness"), "speakers.STRICTNESS"),
             ("{parakeet.MAX_AUDIO_S|min}", ("Minuten Ton liest Parakeet höchstens", "minutes of audio Parakeet reads at most"),
              "parakeet.MAX_AUDIO_S"),
+            ("{common.NOTASR_PORT}", ("Port von Parakeet im Notbetrieb, nur 127.0.0.1", "port of Parakeet in emergency mode, only 127.0.0.1"),
+             "common.NOTASR_PORT"),
+            ("{common.NOTASR_IDLE|min}", ("Minuten ohne Aufnahme, dann entlädt Parakeet im Notbetrieb",
+                                          "minutes without a recording, then Parakeet unloads in emergency mode"), "common.NOTASR_IDLE"),
         ],
         "einstellen": [
             ("Einstellungen → Spracherkennung: Qwen3-ASR auf der Grafikkarte oder Parakeet auf dem Prozessor, "

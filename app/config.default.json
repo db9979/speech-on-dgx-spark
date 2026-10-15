@@ -222,6 +222,7 @@
     "svc_watch": false,
     "wartung": false,
     "wartung_auto": false,
+    "notbetrieb_asr": false,
     "modelle_wechseln": false,
     "modelle_eigene": false,
     "memory_check": false,

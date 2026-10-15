@@ -628,10 +628,15 @@ def pause_tone():
     return (x * env * 2600).astype("<i2").tobytes()
 
 
-def pause_clip(en=False):
+def pause_clip(en=False, text=""):
     """What a speaker plays while the speech output pauses: the short sentence from its file, else pause_tone; in
-    Notbetrieb (the model computer does not answer) its own sentence."""
+    Notbetrieb (the model computer does not answer) its own sentence, or the files of a fixed answer (notbetrieb.ton)."""
     import wartung
+    if text and wartung.notbetrieb():
+        import notbetrieb
+        pcm = notbetrieb.ton(text, en)
+        if pcm:
+            return pcm
     key = ("not-" if wartung.notbetrieb() and not wartung.state()["on"] else "") + ("en" if en else "de")
     try:
         with open(CLIP[key], "rb") as f:
@@ -1346,7 +1351,7 @@ class Session:
             mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
             try:
                 import wartung
-                spoken = (_pcm_once(pause_clip()) if wartung.paused("tts") else tts_stream(self.dev["user"], text)) \
+                spoken = (_pcm_once(pause_clip(guess_language(text) == "English", text)) if wartung.paused("tts") else tts_stream(self.dev["user"], text)) \
                     if text else _nothing()
                 async for pcm in spoken:
                     if mine is None:
@@ -1523,7 +1528,7 @@ class Session:
                 await self.send({"type": "tts", "state": "sentence_start", "text": speech_markdown(answer[said:].strip())})
             import wartung
             if not pace.sent and wartung.paused("tts"):   # Wartungspause: the text on the display, the short sentence to hear
-                await pace.push(await asyncio.to_thread(enc.feed, pause_clip(guess_language(text) == "English")))
+                await pace.push(await asyncio.to_thread(enc.feed, pause_clip(guess_language(answer) == "English", answer)))
                 self.note("Wartungspause der Sprachausgabe: kurzer Satz aus der Datei")
             await pace.push(enc.feed(b"", flush=True), final=True)
             await pace.finish()

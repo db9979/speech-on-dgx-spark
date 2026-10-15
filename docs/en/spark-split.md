@@ -4,7 +4,7 @@
 
 Normally everything runs on the DGX Spark: models, APIs and the panel with the assistant. That stays the default. If you like, the panel and the small services (chats, reminders, speakers, Telegram, logs) move to a small computer of their own, for example a Raspberry Pi 5. The DGX then only serves the models: speech recognition, speech output, pictures and the own language model.
 
-**What for:** the DGX may restart, switch models or be switched off, and chats, calls, reminders, announcements and logs keep running. Voice questions get the fixed sentence "The Spark is taking a break right now." meanwhile (emergency mode), and the Dienst-Wächter reports the outage.
+**What for:** the DGX may restart, switch models or be switched off, and chats, calls, reminders, announcements and logs keep running. Voice questions get the fixed sentence "The Spark is taking a break right now." meanwhile (emergency mode), and the Dienst-Wächter reports the outage. With Features → Emergency mode with Parakeet the panel computer then hears by itself and understands a few fixed commands without a language model: lights and devices through Home Assistant, the time and your own reminders. Speakers hear sentences recorded beforehand.
 
 ## What you need
 

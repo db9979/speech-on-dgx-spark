@@ -605,6 +605,10 @@ QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-ima
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
 # the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
 WAERTER_PORT = 31007
+# Notbetrieb mit Parakeet on the panel computer (B5c, panel/notbetrieb.py): asr_proxy.py with SPEECH_SPARK_NOTASR=1
+NOTASR_PORT = 31009
+NOTASR_IDLE = 600      # seconds without a recording before Parakeet gives its memory back
+ASR_UMWEG = None       # set by panel/notbetrieb.py: callable(cfg) -> True while this computer's Parakeet hears
 WAERTER_KEY = os.path.join(STATE, "waerter.key")
 WARTUNG_FILE = os.path.join(STATE, "wartung.json")   # the Wartungspause (panel/wartung.py); on the model computer its wish
 
@@ -861,6 +865,8 @@ def model_url(art, path="", cfg=None):
     """The one address of a model service (B1): http on this Spark; https to another computer, whose certificate the
     pairing pins (B3), so speech, text and pictures never cross the network in plain text."""
     cfg = load_config() if cfg is None else cfg
+    if art == "asr" and ASR_UMWEG is not None and ASR_UMWEG(cfg):   # Notbetrieb: the model computer is gone
+        return f"http://127.0.0.1:{NOTASR_PORT}{path}"
     host = model_host(cfg)
     port = WAERTER_PORT if art == "waerter" else int(cfg[MODEL_ARTS[art]]["port"])
     if model_local(cfg):

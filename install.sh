@@ -699,6 +699,12 @@ if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && 
   DOWNLOAD=0
 fi
 MODELS_OK=1
+if [ "$PANEL_ONLY" = 1 ]; then   # Notbetrieb mit Parakeet: the model is there before the switch is ever on (offline later)
+  say "Downloading the Parakeet recognizer for the emergency mode (~640 MB)"
+  { cat "$INSTALL_FROM/app/parakeet.py"; echo 'download()'; } \
+    | sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-panel/bin/python" - \
+    || warn "Parakeet download failed; run sudo ./install.sh --mode panel again for the emergency mode"
+fi
 if [ "$DOWNLOAD" = 1 ]; then
   dl() {
     sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
@@ -1231,6 +1237,36 @@ else
   rm -f /etc/systemd/system/speech-spark-tlstor.service /etc/systemd/system/speech-spark-waerter.service \
     /etc/systemd/system/speech-spark-teilen-fw.service
 fi
+# Notbetrieb mit Parakeet (plan raspberry-split B5c), only on the panel computer: the ASR front end with Parakeet on
+# 127.0.0.1:31009 (common.NOTASR_PORT); it loads the model at the first recording, only while the model computer is
+# gone and chat.notbetrieb_asr is on (panel/notbetrieb.py), and gives the memory back after 10 minutes without one
+if [ "$PANEL_ONLY" = 1 ]; then
+cat >/etc/systemd/system/speech-spark-notasr.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Parakeet for the emergency mode (the model computer is gone)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=HF_HOME=$VAR/hf HF_HUB_OFFLINE=1 SPEECH_SPARK_NOTASR=1
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/asr_proxy.py
+Restart=on-failure
+RestartSec=10
+MemoryMax=2G
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+else
+  systemctl disable --now speech-spark-notasr.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-notasr.service
+fi
 # ---------------------------------------------------------------- logs
 # The speech units log into their own journal namespace with a size and age cap, so a chatty
 # engine can never fill the disk (and does not push other logs out of the system journal).
@@ -1300,7 +1336,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr, tts, bild, llmtor, tlstor or waerter)
+restart_front() {  # $1 = service (asr, tts, bild, llmtor, tlstor, waerter or notasr)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -1352,6 +1388,7 @@ else
   systemctl stop speech-spark-sehen.service 2>/dev/null || true
 fi
 
+[ "$PANEL_ONLY" = 1 ] && restart_front notasr
 if [ "$TEILEN" = 1 ]; then
   systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
   systemctl start speech-spark-teilen-fw.service 2>/dev/null || warn "the door's firewall did not load (sudo speech-spark teilen firewall)"

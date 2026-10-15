@@ -1198,6 +1198,11 @@ def snapshot(view="admin", now=None):
         mr = steuer.for_live(now)
     except Exception:
         mr = {"on": False}
+    try:
+        import notbetrieb
+        nbl = notbetrieb.for_live(now) or {}
+    except Exception:
+        nbl = {}
     if mr.get("on"):
         used.add("modell")
     used |= set(watch_svc)
@@ -1275,6 +1280,9 @@ def snapshot(view="admin", now=None):
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
                         + (" · Wartungspause" if mr.get("pause") else ""))
+            if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
+                x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
+                             if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

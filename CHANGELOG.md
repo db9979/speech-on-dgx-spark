@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.622** · 2026-10-15 · Spark teilen B5c: Notbetrieb mit Parakeet auf dem Panel-Rechner (feste Befehle ohne Sprachmodell, feste Sätze für Lautsprecher)
 - **V01.0.621** · 2026-10-15 · Technik · Überblick in Zonen: Geräte (Heimnetz oder unterwegs), Spark mit Panel, Modellen und Speicher, Heimnetz und Internet nach draußen; Linien rechtwinklig und blass bis zum Anklicken; neue Kästen Spark teilen und Dienste im Internet
 - **V01.0.620** · 2026-10-15 · Zustand → Monitoring: neue breite Kachel „Antworten pro Stunde“ mit Säulen der letzten 24 Stunden, auch in der iPhone-App
 - **V01.0.619** · 2026-10-15 · Spark teilen B6d: Anleitung, Sicherheits-Checkliste, Hinweis nach dem Umzug

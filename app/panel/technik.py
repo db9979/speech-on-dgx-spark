@@ -191,6 +191,7 @@ MODULE = {
     "system": ("betrieb", "Sicherung, Echtprüfung der Dienste, Hinweise oben"),
     "monitor": ("betrieb", "Messwerte: GPU, Speicher, CPU"),
     "steuer": ("teilen", "Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners"),
+    "notbetrieb": ("teilen", "Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt"),
     "umziehen": ("teilen", "Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt"),
     "health": ("betrieb", "Stabilität: Wächter für hängende Dienste, Echtprüfung"),
     "live": ("betrieb", "Live-Übersicht: was der Spark gerade tut"),

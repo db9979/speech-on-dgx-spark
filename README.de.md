@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.622** Spark teilen: Notbetrieb mit Parakeet, feste Befehle ohne Sprachmodell
 - **V01.0.621** Zustand → Technik: Überblick in Zonen (Geräte, Spark, Heimnetz, Internet), Linien leuchten erst beim Anklicken, Kästen „Spark teilen“ und „Dienste im Internet“
 - **V01.0.620** Zustand → Monitoring: neue breite Kachel „Antworten pro Stunde“ mit Säulen der letzten 24 Stunden, auch in der iPhone-App
 - **V01.0.619** Spark teilen: Anleitung und Hinweis nach dem Umzug unter Zustand → Update
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.615** Spark teilen: Notbetrieb mit festem Satz.
 - **V01.0.614** Spark teilen: Update auf zwei Rechnern.
 - **V01.0.613** Spark teilen: Wartungspause auf beiden Rechnern, Live-Kasten Modell-Rechner.
-- **V01.0.612** Spark teilen: Modellwahl und Zustand → Modelle über den Wärter.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

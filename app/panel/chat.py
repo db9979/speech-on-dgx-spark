@@ -43,6 +43,7 @@ import llm  # noqa: E402  (one way to the language model)
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
 import wartung  # noqa: E402  (Wartungspause: a fixed sentence while the model is updated)
+import notbetrieb  # noqa: E402  (Notbetrieb mit Parakeet: fixed commands without a model)
 import stufe  # noqa: E402  (priority for people)
 import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
 import systemone  # noqa: E402  (Einordnung mit Wahrscheinlichkeit: Antworten im Hintergrund prüfen)
@@ -1761,12 +1762,16 @@ async def _answer(request, turn):
         verbrauch.WHO.set(verbrauch.who_of(who))   # what this answer asks the models counts for this profile
         try:
             if wartung.paused("llm"):
-                # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out
-                note = wartung.sentence(guess_language(messages[-1]["content"]) == "English")
+                # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out; in Notbetrieb with
+                # Parakeet (notbetrieb.py) a few fixed commands first, by fixed rules, still without a model
+                en_p = guess_language(messages[-1]["content"]) == "English"
+                note = await notbetrieb.antwort(turn, en_p) if notbetrieb.hoert(cfg) else None
+                step = "Notbetrieb (Panel)" if note else "Wartungspause (Panel)"
+                note = note or wartung.sentence(en_p)
                 print("chat: wartungspause, fester satz", flush=True)
                 if tr:
-                    tr.step("prep", "Wartungspause (Panel)", time.time(), panel=True)
-                trace["calls"].append({"name": "Wartungspause (Panel)", "args": "", "result": "fester Satz"})
+                    tr.step("prep", step, time.time(), panel=True)
+                trace["calls"].append({"name": step, "args": "", "result": "fester Satz"})
                 await out.put({"type": "text", "delta": note})
                 trace["said"] += note
                 await sentences.put(note)

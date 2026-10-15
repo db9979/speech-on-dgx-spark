@@ -4,7 +4,7 @@
 
 Normalerweise läuft alles auf dem DGX Spark: Modelle, APIs und das Panel mit dem Assistenten. Das bleibt der Standard. Wer möchte, stellt das Panel und die kleinen Dienste (Chats, Erinnerungen, Lautsprecher, Telegram, Logs) auf einen eigenen kleinen Rechner, zum Beispiel einen Raspberry Pi 5. Der DGX liefert dann nur noch die Modelle: Spracherkennung, Sprachausgabe, Bilder und das eigene Sprachmodell.
 
-**Wozu:** Der DGX darf neu starten, Modelle wechseln oder ausgeschaltet sein, und Chats, Anrufe, Erinnerungen, Durchsagen und Logs laufen weiter. Sprachfragen bekommen in der Zeit den festen Satz „Der Spark macht gerade Pause.“ (Notbetrieb), und der Dienst-Wächter meldet den Ausfall.
+**Wozu:** Der DGX darf neu starten, Modelle wechseln oder ausgeschaltet sein, und Chats, Anrufe, Erinnerungen, Durchsagen und Logs laufen weiter. Sprachfragen bekommen in der Zeit den festen Satz „Der Spark macht gerade Pause.“ (Notbetrieb), und der Dienst-Wächter meldet den Ausfall. Mit Funktionen → Notbetrieb mit Parakeet hört der Panel-Rechner dann selbst und versteht ein paar feste Befehle ohne Sprachmodell: Licht und Geräte über Home Assistant, die Uhrzeit und die eigenen Erinnerungen. Lautsprecher hören dazu vorher aufgenommene Sätze.
 
 ## Was du brauchst
 

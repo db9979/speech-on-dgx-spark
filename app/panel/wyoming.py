@@ -188,7 +188,7 @@ async def synthesize(s, text, voice):
         import esp32
         from textnorm import guess_language
         print("wyoming: wartungspause sprachausgabe, satz aus datei", flush=True)
-        return 24000, 2, 1, esp32.pause_clip(guess_language(text) == "English")
+        return 24000, 2, 1, esp32.pause_clip(guess_language(text) == "English", text)
     body = {"input": text[:2000], "response_format": "pcm"}
     v = voice or s["voice"] or s["default_voice"]
     if v:

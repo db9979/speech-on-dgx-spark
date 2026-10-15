@@ -19,12 +19,17 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
 from common import (ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
-                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
+                    engine_crash_reason, load_config, NOTASR_IDLE, NOTASR_PORT, quiet_access_log, SpeechMark, stage_of, STATE)
 
 UNIT = "speech-spark-asr-engine"
 NAME_TO_ISO = {v.lower(): k for k, v in ASR_ISO.items()}
 
 cfg = load_config("asr")
+# Notbetrieb on the panel computer (plan Raspberry-Pi split B5c, chat.notbetrieb_asr): the same front end with Parakeet,
+# only on 127.0.0.1, loaded at the first recording and unloaded after NOTASR_IDLE seconds without one
+NOT = os.environ.get("SPEECH_SPARK_NOTASR") == "1"
+if NOT:
+    cfg = dict(cfg, recognizer="parakeet", host="127.0.0.1", port=NOTASR_PORT)
 app = FastAPI(title="Qwen3-ASR via vLLM (DGX Spark)")
 # innermost: only requests that passed the size limit and API key count as speech
 app.add_middleware(SpeechMark)
@@ -136,6 +141,10 @@ async def warm_up():
 
 @app.on_event("startup")
 async def watch_engine():
+    if local and NOT:
+        local.status = "idle"
+        asyncio.create_task(idle_loop())
+        return
     if local:
         local.load_in_background()
         return
@@ -148,6 +157,23 @@ async def watch_engine():
             ready = now
             await asyncio.sleep(5)
     asyncio.create_task(loop())
+
+
+async def idle_loop():
+    """Notbetrieb: the recognizer goes again when nobody spoke for NOTASR_IDLE seconds."""
+    while True:
+        await asyncio.sleep(30)
+        if local.status == "ready" and not stats["active"] and time.monotonic() - local.used > NOTASR_IDLE:
+            await asyncio.to_thread(local.unload)
+
+
+async def wake_local():
+    """Notbetrieb: the first recording loads the recognizer and waits for it (once, however many come at once)."""
+    if local.status in ("idle", "error"):
+        local.status = "loading"
+        await asyncio.to_thread(local.load)
+    while local.status == "loading":
+        await asyncio.sleep(0.2)
 
 
 @app.get("/health")
@@ -204,6 +230,8 @@ async def transcriptions(request: Request):
     upload = form.get("file")
     if upload is None or isinstance(upload, str):
         raise HTTPException(400, "field 'file' is required")
+    if NOT:
+        await wake_local()
     status, error = await engine_status()
     if status != "ready":
         raise HTTPException(503, f"ASR engine {status}: {error or ''}".strip())
