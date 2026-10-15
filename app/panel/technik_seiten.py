@@ -3524,14 +3524,14 @@ SEITEN_DATEN = {
                "prompt, temperature und stream reichen durch, dazu die Kontextwörter aus den Einstellungen. Mit "
                "Parakeet erkennt der Proxy selbst auf dem Prozessor, in Stücken von höchstens {parakeet.MAX_PIECE_S} "
                "Sekunden, die an einer leisen Stelle geschnitten werden. Im Notbetrieb mit Parakeet (Panel-Rechner, "
-               "Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf 127.0.0.1:"
-               "{common.NOTASR_PORT}: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach "
+               "Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf Port "
+               "{common.NOTASR_PORT}, nur für den Rechner selbst: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach "
                "{common.NOTASR_IDLE|min} Minuten ohne eine.",
                "With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only "
                "prompt, temperature and stream pass through, plus the context words from the settings. With "
                "Parakeet the proxy recognizes itself on the CPU, in pieces of at most {parakeet.MAX_PIECE_S} seconds "
                "cut at a quiet spot. In emergency mode with Parakeet (panel computer, model computer gone) "
-               "common.model_url takes the recording to speech-spark-notasr on 127.0.0.1:{common.NOTASR_PORT}: the same "
+               "common.model_url takes the recording to speech-spark-notasr on port {common.NOTASR_PORT}, only for the computer itself: the same "
                "proxy with Parakeet, loaded at the first recording, unloaded after {common.NOTASR_IDLE|min} minutes "
                "without one.")),
             S("s10", "frage", ("Stille, Füllwort oder Echo?", "Silence, filler or echo?"),

@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.623** Red fix: tests for the emergency mode with Parakeet
 - **V01.0.622** Spark split: emergency mode with Parakeet, fixed commands without a language model
 - **V01.0.621** Status → Architecture: overview in zones (devices, Spark, home network, internet), lines light up only on a click, boxes „Spark split“ and „Internet services“
 - **V01.0.620** Status → Monitoring: new wide tile "Answers per hour" with bars for the last 24 hours, also in the iPhone app
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.616** Spark split: pairing with a code (`speech-spark teilen code` and `koppeln`)
 - **V01.0.615** Spark split: emergency mode with a fixed sentence.
 - **V01.0.614** Spark split: updating two computers.
-- **V01.0.613** Spark split: maintenance pause on both computers, Live box for the model computer.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
