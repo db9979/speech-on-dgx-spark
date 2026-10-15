@@ -6317,7 +6317,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Selbsttest",
 "title": "Schonende Updates",
-"text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Der ganze Selbsttest läuft weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
+"text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Ein Panel-Rechner ohne eigene Modelle (Spark teilen, etwa ein Raspberry Pi 5) führt seit V01.0.643 immer nur den Rauchtest aus, der ganze Selbsttest lief dort über seine 900 s; den ganzen führt „Tests“ auf GitHub für jede Version aus. Sonst läuft der ganze Selbsttest weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Schonende Updates",
+"text": "Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
 },
 {
 "lang": "de",
@@ -12933,7 +12941,15 @@
 "file": "Security and operation",
 "head": "Self-test",
 "title": "Gentle updates",
-"text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). The whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke test checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
+"text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). Since V01.0.643 a panel computer without models of its own (Spark teilen, e.g. a Raspberry Pi 5) always runs only the smoke test; the whole self-test ran past its 900 s there, and GitHub's \"Tests\" run the whole one for every version. Otherwise the whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke t"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Gentle updates",
+"text": "est checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
 },
 {
 "lang": "en",

@@ -374,6 +374,18 @@ class Installation(unittest.TestCase):
         # on every update (models.host from the pairing)
         self.assertLess(sh.index('[ -n "$MODELLE_PICK" ] && gpu_needed=0'), sh.index("command -v nvidia-smi"))
         self.assertIn('if [ "$gpu_needed" = 1 ]; then', sh)
+        # V01.0.643: the whole self-test ran past its 900 s on the Pi; a panel computer runs the smoke test
+        i = sh.index('elif [ "$gpu_needed" = 0 ] && [ -f "$INSTALL_FROM/app/tests/test_rauchtest.py" ]; then')
+        self.assertIn("SELFTEST_ARGS=(-m unittest tests.test_rauchtest)", sh[i:i + 600])
+        self.assertLess(sh.index("gpu_needed=1"), i)
+
+    def test_pip_asks_only_pypi(self):
+        """V01.0.643: Raspberry Pi OS names piwheels in /etc/pip.conf; install.sh lets pip read no config file and
+        no index from the environment, before the first pip."""
+        sh = repo_file("install.sh")
+        first = sh.index("bin/pip\" install")
+        self.assertLess(sh.index("export PIP_CONFIG_FILE=/dev/null\n"), first)
+        self.assertLess(sh.index("unset PIP_INDEX_URL PIP_EXTRA_INDEX_URL\n"), first)
 
     def test_panel_computer_talks_to_the_door_not_to_loopback(self):
         """V01.0.637: after the move tars -> Pi the chat still asked http://127.0.0.1:30001/v1 (qwen38 on tars); on a

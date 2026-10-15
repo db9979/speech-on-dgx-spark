@@ -23,6 +23,10 @@
 # Later updates: the "Update" button in the panel, or  sudo speech-spark update
 # Without the panel: sudo speech-spark  (status, info, key, models, update, logs, panel enable)
 set -euo pipefail
+# pip asks only PyPI (and the torch index named below): Raspberry Pi OS adds piwheels in /etc/pip.conf, a second
+# index that could hand out another build or a package of the same name; no pip.conf and no index from outside counts
+export PIP_CONFIG_FILE=/dev/null
+unset PIP_INDEX_URL PIP_EXTRA_INDEX_URL
 
 PREFIX=/opt/speech-spark
 ETC=/etc/speech-spark
@@ -761,6 +765,11 @@ else
 SELFTEST_LOG="$PREFIX/selftest.log"
 if [ "$FROM_UPDATE" = 1 ] && [ "${SPEECH_SPARK_TESTED:-0}" = 1 ] && [ -f "$INSTALL_FROM/app/tests/test_rauchtest.py" ]; then
   say "Self-test of the panel: smoke test (this version passed GitHub's tests)"
+  SELFTEST_ARGS=(-m unittest tests.test_rauchtest)
+elif [ "$gpu_needed" = 0 ] && [ -f "$INSTALL_FROM/app/tests/test_rauchtest.py" ]; then
+  # A panel computer without models (Spark teilen, e.g. a Raspberry Pi 5): the whole self-test ran past the 900 s
+  # limit there; GitHub's "Tests" run the whole one for every version on main
+  say "Self-test of the panel: smoke test (panel computer; GitHub's tests run the whole self-test)"
   SELFTEST_ARGS=(-m unittest tests.test_rauchtest)
 else
   say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"

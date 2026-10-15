@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.643** Panel-Rechner (Raspberry Pi): die Installation führt nur den Rauchtest aus; pip nur von PyPI, ohne pip.conf
 - **V01.0.642** Fix: laufen die Modelle auf einem anderen Rechner, zeigt das Panel dessen Speicher (kein falsches „nur noch 7 GiB frei“ vom Pi)
 - **V01.0.641** Pi: auch eine von Hand eingetragene tars-Adresse wird aufs LLM-Tor umgestellt
 - **V01.0.640** Fix: eine Wartungspause auf dem Modell-Rechner endet mit ihrer Zeit (keine hängende Pause mehr nach abgebrochener Messung)
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.636** Umzug auf den Pi: Einstellung der Spracherkennung wird angepasst statt abgelehnt
 - **V01.0.635** Umzug: das Log nennt die Einstellungs-Prüfung, die ablehnt
 - **V01.0.634** Umzug: das Log nennt, wo das Einspielen abbricht
-- **V01.0.633** Rot-Fix: Vorliebe „Der Spark darf mich anrufen“ im Einstellungs-Katalog eingeordnet
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

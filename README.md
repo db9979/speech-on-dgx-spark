@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.643** Panel computer (Raspberry Pi): the install runs only the smoke test; pip only from PyPI, no pip.conf
 - **V01.0.642** Fix: with the models on another computer the panel shows that computer's memory (no false 'only 7 GiB free' from the Pi)
 - **V01.0.641** Pi: a hand-typed tars address is switched to the LLM door too
 - **V01.0.640** Fix: a Wartungspause on the model computer ends with its time (no more hanging pause after an aborted measurement)
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.636** Move to the Pi: the speech recognition share is adjusted instead of refused
 - **V01.0.635** Move: the log names the settings check that refused
 - **V01.0.634** Move: the log says where restoring stopped
-- **V01.0.633** Red fix: the preference "the Spark may call me" is classified in the settings catalog
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

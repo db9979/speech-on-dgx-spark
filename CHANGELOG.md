@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.643** · 2026-10-15 · Panel-Rechner (Raspberry Pi) führt bei der Installation nur den Rauchtest aus; pip holt nur von PyPI, ohne pip.conf
 - **V01.0.642** · 2026-10-15 · Fix Speicheranzeige bei geteilter Installation: Panel zeigt und warnt mit dem Speicher des Modell-Rechners (Wärter-Status mem_avail_gib/mem_total_gib), nicht mit dem des Raspberry Pi; vorher „Nur noch 7.0 GiB frei“ und earlyoom-Hinweis, obwohl tars viel frei hatte
 - **V01.0.641** · 2026-10-15 · install.sh: auch eine http-Adresse auf dem Modell-Rechner wird zum LLM-Tor
 - **V01.0.640** · 2026-10-15 · Fix Wartungspause auf dem Modell-Rechner: Wärter und `speech-spark pause status` beenden eine abgelaufene Pause; auf tars hing eine Pause (vermutlich aus einem abgebrochenen `modelle messen`) 150 Minuten, und `modelle llm uebernehmen` setzte dann keine eigene und beendete keine
