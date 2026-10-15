@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.625** · 2026-10-15 · Rot-Fix für .622/.623: Schalter Notbetrieb mit Parakeet nur bei Spark teilen sichtbar, Seitenhöhe wieder in der alten Grenze
 - **V01.0.624** · 2026-10-15 · Kontingent: Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell, mit Vorwarnung und Nachschlag; feste Befehle gehen weiter
 - **V01.0.623** · 2026-10-15 · Rot-Fix für .622: Seitenhöhe der Funktionen mit der neuen Zeile, keine feste Adresse im Technik-Text
 - **V01.0.622** · 2026-10-15 · Spark teilen B5c: Notbetrieb mit Parakeet auf dem Panel-Rechner (feste Befehle ohne Sprachmodell, feste Sätze für Lautsprecher)

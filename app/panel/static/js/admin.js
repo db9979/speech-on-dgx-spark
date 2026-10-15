@@ -319,6 +319,9 @@ window.glance=glance;
 // Details of a feature show only while it is on (they sit right below its switch).
 function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};
   document.querySelectorAll('#pane-cfg [data-show],[data-show]').forEach(x=>x.style.display=on(x.dataset.show)?'':'none');
+  // switches only for Spark teilen (the models on another computer, models.host not this one): hidden on the all-in-one
+  const h=String((CFG&&CFG.models&&CFG.models.host)||'127.0.0.1'),split=!/^(127\.|::1$|localhost$)/.test(h);
+  document.querySelectorAll('[data-teilen]').forEach(x=>x.style.display=split?'':'none');
 }
 ['chat.search','chat.speaker_id','chat.mail'].forEach(id=>$(id).addEventListener('change',cfgDeps));
 // every switch with details shows them at once when switched on (not only after saving)
