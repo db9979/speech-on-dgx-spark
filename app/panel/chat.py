@@ -1318,7 +1318,7 @@ BRIEF_SYSTEM = ("Schreibe aus den Daten unten ein kurzes Tagesbriefing für eine
 BRIEF_MD_SYSTEM = (BRIEF_SYSTEM.replace("in ganzen Sätzen ohne Listen, Markdown oder Links, höchstens etwa 90 Wörter",
                                         "gegliedert mit Markdown, ohne Links, höchstens etwa 120 Wörter")
                    + " Aufbau: ein Satz Gruß, dann je Bereich mit Inhalt eine Zeile **Termine**, **Erinnerungen**, "
-                     "**Mails**, **Themen** und darunter kurze Listenpunkte mit „- “ (Termine mit Uhrzeit vorn). "
+                     "**Mails**, **Wetter**, **Themen** und darunter kurze Listenpunkte mit „- “ (Termine mit Uhrzeit vorn). "
                      "Bereiche ohne Inhalt lässt du weg.")
 
 

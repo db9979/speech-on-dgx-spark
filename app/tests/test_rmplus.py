@@ -17,6 +17,7 @@ import mail  # noqa: E402
 import panel  # noqa: E402
 import profiles  # noqa: E402
 import remarkable  # noqa: E402
+import rmpapier  # noqa: E402
 import rmplus  # noqa: E402
 
 PLUS_DUE = rmplus.due_once   # the tests call the real one; the panel's minute loop gets a quiet one (Plus)
@@ -453,6 +454,25 @@ class SheetOnRequest(Plus):
         self.assertFalse(remarkable.answer_wanted("Schick das Morgenblatt nochmal aufs reMarkable", uid))  # off: no text
         self.assertEqual(run(rmplus.sheet_now(uid, "morgen")), "Das ist aus oder gibt es nicht.")
         self.assertEqual(run(rmplus.sheet_now(uid, "rm -rf")), "Das ist aus oder gibt es nicht.")
+
+    def test_the_morning_sheet_is_sorted_into_sections(self):
+        """Dominik 2026-10-15: the Morgenblatt was one block of prose. It asks for the sorted briefing (Markdown), and
+        its bold lines become the sheet's numbered sections with bullets."""
+        c, uid = self.on("Rpsorted", "rmmorning")
+        asked = []
+        old = chat.morning_briefing
+
+        async def brief(uid, tz="", markdown=False):
+            asked.append(markdown)
+            return "Guten Morgen!\n\n**Termine**\n- 12:00 Kaffee\n\n**Wetter**\n- bedeckt, 6 bis 18 Grad"
+        chat.morning_briefing = brief
+        try:
+            run(rmplus.sheet_now(uid, "morgen"))
+        finally:
+            chat.morning_briefing = old
+        self.assertEqual(asked, [True])
+        self.assertIn("**Wetter**", chat.BRIEF_MD_SYSTEM)
+        self.assertEqual(rmpapier.heads("**Termine**\n- 12:00 Kaffee"), "## Termine\n- 12:00 Kaffee")
 
     def test_morning_sheet_now(self):
         c, uid = self.on("Rpsheetnow", "rmmorning")

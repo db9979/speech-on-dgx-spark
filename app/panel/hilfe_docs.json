@@ -4564,6 +4564,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Morgenblatt gegliedert (Dominik 2026-10-15 „nicht schön dargestellt aktuell auch nur fließtext“): Das Morgenblatt holt den Tagesüberblick jetzt gegliedert (chat.morning_briefing(..., markdown=True), BRIEF_MD_SYSTEM): je Bereich mit Inhalt eine Zeile Termine, Erinnerungen, Mails, Wetter, Themen mit kurzen Listenpunkten; auf dem Blatt wird jede davon ein nummerierter Abschnitt (rmpapier.heads), statt eines Fließtext-Blocks „01 Überblick“. Selbsttest test_rmplus.SheetOnRequest.test_the_morning_sheet_is_sorted_into_sections."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Für neue Profile (V01.0.492)",
 "text": "Für neue Profile (V01.0.492): Steht in chat.new_profile_on eine Funktion, die es nicht mehr gibt oder die keinen eigenen Profil-Schalter mehr hat (etwa die alten „Nachrichten“ aus V01.0.488), räumt admin.get_config sie weg; vorher scheiterte damit jedes Speichern eines Admin-Schalters mit „new_profile_on: functions with an own switch, each once“. Selbsttest test_features. Seit V01.0.494 räumt admin._tidy beim Lesen der Konfiguration alles weg, was diese Version nicht mehr kennt: Schlüssel, die config.default.json nicht mehr hat, Vorgaben in chat.defaults, die profiles.clean_settings ablehnt (vorher „chat defaults: invalid value“ bei jedem Speichern), und Melder in berater_off, die es nicht mehr gibt. Was der Admin schickt, prüft validate weiter streng. Seit V01.0.509 gibt es chat.new_profile_on nicht mehr; admin._tidy entfernt den alten Eintrag, und alte Einträge in chat.deny (gelöschte Profile, entfernte Funktionen) räumt es genauso weg."
 },
@@ -10886,6 +10894,14 @@
 "head": "Voice chat",
 "title": "Note on the task sheet (V01.0.512, Dominik 2026-10-13 \"1\")",
 "text": "e it can be paused, changed and deleted; \"Take back\" removes it again. Everything is checked again when acting; if it cannot be done, the note stays open. One note per sheet (writing on replaces it), at most 6 wait. When reading, only strokes lying almost wholly in a box count for choosing the units; lines of handwriting that another scale would drag across the boxes move nothing any more. Journal numbers only (\"remarkable: task sheet note read | 42 characters\"), live \"Anmerkung gelesen\". Self-tests test_rmpapier.Tasks.test_the_anmerkung_is_read_and_comes_back_as_a_point_never_a_command, test_the_anmerkung_waits_while_reading_pictures_is_off, test_note_text_keeps_only_what_was_written, test_a_note_asking_to_watch_offers_a_task_only_by_the_panels_rule, test_a_task_ticked_after_watches_were_switched_off_does_nothing, test_a_tick_and_long_lines_of_writing_never_move_the_mapping."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Morning sheet in sections (Dominik 2026-10-15 \"not nicely laid out, currently only prose\"): the morning sheet now takes the sorted daily overview (chat.morning_briefing(..., markdown=True), BRIEF_MD_SYSTEM): per area with content a line Termine, Erinnerungen, Mails, Wetter, Themen with short bullets; on the sheet each becomes a numbered section (rmpapier.heads) instead of one prose block \"01 Überblick\". Self-test test_rmplus.SheetOnRequest.test_the_morning_sheet_is_sorted_into_sections."
 },
 {
 "lang": "en",
