@@ -3658,7 +3658,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ state/
     "state": {
-        "stand": "8c6b642130",
+        "stand": "4099a0b7b5",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -3719,12 +3719,14 @@ SEITEN_DATEN = {
                "sealed the next time they are saved.")),
             S("s7", "frage", ("Kommt in die Sicherung?", "Goes into the backup?"),
               ("STATE_FILES oder STATE_LOCAL", "STATE_FILES or STATE_LOCAL"),
-              ("Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES ({backup.STATE_FILES|anzahl}, "
-               "kommen in jede Sicherung) oder backup.STATE_LOCAL ({backup.STATE_LOCAL|anzahl}, mit ihrem Grund). "
-               "test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.",
-               "Every file in state/ is in exactly one list: backup.STATE_FILES ({backup.STATE_FILES|anzahl}, go "
-               "into every backup) or backup.STATE_LOCAL ({backup.STATE_LOCAL|anzahl}, with their reason). "
-               "test_technik finds every name the code writes there and wants it in one of the lists."),
+              ("Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in "
+               "jede Sicherung (dateien.STATE_FILES, {dateien.STATE_FILES|anzahl}), sonst steht dort ihr Grund "
+               "(dateien.STATE_LOCAL, {dateien.STATE_LOCAL|anzahl}). backup.py nimmt beide Listen von dort. "
+               "test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.",
+               "Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes "
+               "into every backup (dateien.STATE_FILES, {dateien.STATE_FILES|anzahl}), otherwise the line gives its "
+               "reason (dateien.STATE_LOCAL, {dateien.STATE_LOCAL|anzahl}). backup.py takes both lists from there. "
+               "test_technik finds every name the code writes there and wants its line."),
               ("info", "nein", ("Bleibt auf diesem Gerät: Schlüssel, Sperren, Zähler, Caches",
                                 "Stays on this device: keys, locks, counters, caches"))),
             S("s8", "frage", ("Umzugs-Sicherung?", "Move backup?"),
@@ -3769,9 +3771,9 @@ SEITEN_DATEN = {
              ("Alle Geheimnisse öffnen sich wieder, ohne Neueingabe.", "Every secret opens again, nothing to enter.")),
         ],
         "zahlen": [
-            ("{backup.STATE_FILES|anzahl}", ("Dateien in jeder Sicherung", "files in every backup"), "backup.STATE_FILES"),
-            ("{backup.STATE_LOCAL|anzahl}", ("Dateien und Ordner, die mit Grund draußen bleiben",
-                                             "files and folders that stay out with a reason"), "backup.STATE_LOCAL"),
+            ("{dateien.STATE_FILES|anzahl}", ("Dateien in jeder Sicherung", "files in every backup"), "dateien.STATE_FILES"),
+            ("{dateien.STATE_LOCAL|anzahl}", ("Dateien und Ordner, die mit Grund draußen bleiben",
+                                              "files and folders that stay out with a reason"), "dateien.STATE_LOCAL"),
             ("{backup.MAX_STATE_FILE|mb}", ("größte Datei beim Wiederherstellen", "largest file when restoring"),
              "backup.MAX_STATE_FILE"),
             ("{backup.MOVE_MIN}", ("Zeichen hat das Umzugs-Passwort mindestens", "characters the move password has at least"),
@@ -3792,8 +3794,9 @@ SEITEN_DATEN = {
             ("vault._key", ("secret.key holen oder einmal anlegen", "get secret.key or make it once")),
             ("vault.seal", ("versiegeln", "seal")),
             ("vault.open_", ("öffnen, leer bei fremdem Schlüssel", "open, empty with another key")),
-            ("backup.STATE_FILES", ("was in die Sicherung kommt", "what goes into the backup")),
-            ("backup.STATE_LOCAL", ("was mit Grund draußen bleibt", "what stays out with a reason")),
+            ("dateien.STATE_FILES", ("was in die Sicherung kommt (aus dem Datei-Register)",
+                                     "what goes into the backup (from the file register)")),
+            ("dateien.STATE_LOCAL", ("was mit Grund draußen bleibt", "what stays out with a reason")),
             ("backup._seal_keys", ("secret.key für den Umzug versiegeln", "seal secret.key for the move")),
             ("backup._check_state", ("Dateien der Sicherung prüfen", "check the files of the backup")),
             ("backup._swap", ("einsetzen mit Rückweg", "put in place with a way back")),
@@ -3805,7 +3808,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "207e9a1fa5",
+        "stand": "687de1c7c2",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "speakers._store": ["s3", "s4"],
             "speicher._key": ["s8"], "speicher.local_files": ["s7"], "speicher.seal_file": ["s8"],
@@ -3852,12 +3855,14 @@ SEITEN_DATEN = {
                "only the service can read and swaps it in one step.")),
             S("s5", "schritt", ("Jede Datei einsortiert", "Every file sorted"),
               ("speicher.AREAS oder speicher.LOCAL", "speicher.AREAS or speicher.LOCAL"),
-              ("Jeder Dateiname steht entweder in einem Bereich von speicher.AREAS (darf auf den eigenen Speicher) "
-               "oder in speicher.LOCAL (bleibt auf dem Spark, mit Grund: Schlüssel, Zugänge, Einstellungen, "
-               "Stimmabdruck, Warteschlangen). test_technik prüft jeden Namen, den der Code schreibt.",
-               "Every file name is either in an area of speicher.AREAS (may go to the own storage) or in "
-               "speicher.LOCAL (stays on the Spark, with a reason: keys, accounts, settings, voiceprint, queues). "
-               "test_technik checks every name the code writes.")),
+              ("Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich "
+               "(dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem "
+               "Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide "
+               "Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.",
+               "Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, "
+               "may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, "
+               "settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every "
+               "name the code writes.")),
             S("s6", "frage", ("Eigener Speicher eingerichtet?", "Own storage set up?"),
               ("Admin-Schalter, Profil, Ziel mit Bereichen", "admin switch, profile, target with areas"),
               ("Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem "
@@ -3926,7 +3931,8 @@ SEITEN_DATEN = {
             [("Aufgaben und Erinnerungen", "Tasks and reminders"), "tasks.json, reminders.json", "✓"],
             [("Dokumente", "Documents"), "wissen.db, docs/files/, suchpruefung.json", "✓"],
             [("Erstellte Dokumente", "Created documents"), "erstellt/", "✓"],
-            [("Zugänge, Schlüssel, Stimmabdruck", "Accounts, keys, voiceprint"), ("speicher.LOCAL", "speicher.LOCAL"), "✕"],
+            [("Gemalte Bilder", "Painted pictures"), "bilder/", "✓"],
+            [("Zugänge, Schlüssel, Stimmabdruck", "Accounts, keys, voiceprint"), ("dateien.LOCAL", "dateien.LOCAL"), "✕"],
         ],
         "zahlen": [
             ("{speicher.MAX_TARGETS}", ("Ziele pro Profil höchstens", "targets per profile at most"), "speicher.MAX_TARGETS"),
@@ -3954,7 +3960,8 @@ SEITEN_DATEN = {
             ("profiles.delete_user", ("Profil und Ordner löschen", "delete profile and folder")),
             ("vault.seal", ("versiegeln", "seal")),
             ("speakers._store", ("Stimmabdruck versiegelt", "voiceprint sealed")),
-            ("speicher.AREAS", ("was auf den eigenen Speicher darf", "what may go to the own storage")),
+            ("dateien.AREAS", ("was auf den eigenen Speicher darf (aus dem Datei-Register)",
+                               "what may go to the own storage (from the file register)")),
             ("speicher._key", ("Speicher-Schlüssel des Profils, versiegelt", "the profile's storage key, sealed")),
             ("speicher.local_files", ("nur die Liste, keine Links", "only the list, no links")),
             ("speicher.seal_file", ("AES-256-GCM in Stücken", "AES-256-GCM in pieces")),

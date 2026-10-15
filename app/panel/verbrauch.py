@@ -44,11 +44,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import CONFIG_PATH, load_config, write_json
+from common import CONFIG_PATH, STATE, load_config, write_json
 from core import assistant, auth, own_profile
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "verbrauch.json")                    # the counters (statistics, not backed up)
 QUOTA_FILE = os.path.join(STATE, "verbrauch-kontingent.json")   # the admin's own quotas per profile (backed up)
 SAVE_S = 60                  # written at most this often

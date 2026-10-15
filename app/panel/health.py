@@ -30,12 +30,11 @@ import httpx
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import llm  # noqa: E402
-from common import load_config, write_json  # noqa: E402
+from common import STATE, load_config, write_json  # noqa: E402
 from core import UNITS, api_headers, app_version, run  # noqa: E402
 from monitor import service_health  # noqa: E402
 import verbrauch  # noqa: E402
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 WATCH_EVERY, HUNG_AFTER, LOAD_LIMIT, GRACE = 30, 300, 45 * 60, 180
 MAX_RESTARTS = 3
 _seen = {}       # unit -> {"bad_since", "busy_since", "requests", "loading_since"}

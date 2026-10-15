@@ -17,6 +17,8 @@ starts at zero.
 - i  no own reader of a request body: core.json_body
 - j  the conversation settings' defaults and allowed values only in profiles.SETTINGS and profiles.CHOICES: no copy
      in a script or another module (the browser gets them from /api/profile/settings)
+- k  the state folder only from common.STATE; the panel's files only in the register dateien.py (backup, speicher
+     and technik take their lists from it)
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -354,6 +356,63 @@ class SettingCopies(unittest.TestCase):
         import rmpapier
         self.assertEqual(self.choices["rm_model"], ("auto",) + tuple(rmpapier.MODELS))
         self.assertEqual(set(docmake.TARGETS), set(docmake.TARGET_NAMES))
+
+
+class StateFolder(unittest.TestCase):
+    """The state folder comes from common.STATE (SPEECH_SPARK_STATE), no module reads the variable itself."""
+    # file -> how often it may name the variable, with the reason
+    ALLOWED = {"common.py": 1,          # STATE itself
+               "panel/update.py": 1}    # HOME for git: the state folder, else /tmp (not the state default)
+
+    def test_only_common_reads_it(self):
+        hits = count_by_file(py_files(), lambda name, src: src.count("SPEECH_SPARK_STATE"))
+        self.assertEqual(hits, self.ALLOWED, "take the state folder from common.STATE")
+
+
+class FileRegister(unittest.TestCase):
+    """Every file the panel keeps has one line in dateien.py; backup, speicher and technik only take their lists from it."""
+    LISTS = {"backup": ("STATE_FILES", "STATE_LOCAL"), "speicher": ("AREAS", "LOCAL"),
+             "technik": ("INHALT", "VERSCHLUESSELT", "USERS_SONST", "USERS_GLOBAL", "STATE_SONST")}
+
+    def test_no_own_list(self):
+        own = []
+        for mod, names in self.LISTS.items():
+            for node in ast.walk(ast.parse(py_files()[os.path.join("panel", mod + ".py")])):
+                if not isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                    continue
+                for t in node.targets if isinstance(node, ast.Assign) else [node.target]:
+                    pairs = (zip(t.elts, node.value.elts) if isinstance(t, ast.Tuple) and isinstance(node.value, ast.Tuple)
+                             else [(t, node.value)])
+                    for target, value in pairs:
+                        if isinstance(target, ast.Name) and target.id in names and ast.unparse(value) != "dateien." + target.id:
+                            own.append(f"{mod}.{target.id}")
+        self.assertEqual(own, [], "a list of files written again: give the file its line in dateien.py")
+
+    def test_the_lists_are_the_register(self):
+        from tests import helpers
+        helpers.start()
+        import importlib
+        import dateien
+        for mod, names in self.LISTS.items():
+            m = importlib.import_module(mod)
+            for n in names:
+                self.assertIs(getattr(m, n), getattr(dateien, n), f"{mod}.{n}")
+
+    def test_each_file_once(self):
+        import sys
+        sys.path.insert(0, PANEL)
+        import dateien
+        seen = [(d.ort, d.name) for d in dateien.DATEIEN]
+        self.assertEqual(sorted(k for k in set(seen) if seen.count(k) > 1), [])
+        self.assertEqual(len(dateien.INHALT), len(seen))
+        for d in dateien.DATEIEN:
+            self.assertIn(d.ort, ("state", "profil", "users", "anderswo"), d.name)
+            self.assertTrue(d.de and d.en, d.name)
+            self.assertTrue(not d.bereich or d.bereich in dateien.BEREICHE, d.name)
+            if d.ort == "state":
+                self.assertTrue(bool(d.sicherung) != bool(d.lokal), f"{d.name}: in the backup or a reason why not")
+            if d.ort == "profil":
+                self.assertTrue(bool(d.bereich) != bool(d.art), f"{d.name}: an area of the copy or its kind")
 
 
 if __name__ == "__main__":

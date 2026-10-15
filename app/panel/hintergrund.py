@@ -32,11 +32,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import write_json
+from common import STATE, write_json
 from core import assistant, auth, own_profile
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 HIST, HIST_DAYS = 50, 7
 SAVE_EVERY = 600          # service states are written at once when they change, else at most this often
 MAX_SERVICES = 2000

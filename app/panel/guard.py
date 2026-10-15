@@ -31,7 +31,7 @@ from urllib.parse import urlsplit
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from common import write_json
+from common import STATE, write_json
 
 MAX_FAILS, MAX_NAME_FAILS, WINDOW = 5, 10, 15 * 60
 LOCK_FIRST, LOCK_MAX = 60, 3600
@@ -43,7 +43,6 @@ BASIC = "\0basic"
 ADMIN = "\0admin"
 _lock = threading.Lock()
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 AUDIT = os.path.join(STATE, "audit.log")
 AUDIT_MAX = 1_000_000
 SAVED = os.path.join(STATE, "guard.json")

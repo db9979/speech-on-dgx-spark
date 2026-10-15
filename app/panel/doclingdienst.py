@@ -49,11 +49,10 @@ import netguard
 import profiles
 import vault
 import zertpin
-from common import read_json, write_json
+from common import STATE, read_json, write_json
 from core import admin_code_fresh, auth, json_body
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "docling.json")
 PREF = "doc_docling"           # the profile's preference (on unless turned off)
 WAIT_DIR = "docling-wait"      # users/<id>/docling-wait/<doc id><ext>: the file until Docling has read it

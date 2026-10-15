@@ -52,12 +52,11 @@ import guard
 import notaus
 import verbrauch
 import profiles
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 import core
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 _lock = threading.Lock()
 
 PROTOCOLS = ("2025-06-18", "2025-03-26", "2024-11-05")

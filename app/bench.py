@@ -24,11 +24,10 @@ import time
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import load_config, mem_available_gib, write_json  # noqa: E402
+from common import STATE, load_config, mem_available_gib, write_json  # noqa: E402
 
-STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
-RESULT = os.path.join(STATE_DIR, "bench-latest.json")
-HISTORY = os.path.join(STATE_DIR, "bench-history.json")
+RESULT = os.path.join(STATE, "bench-latest.json")
+HISTORY = os.path.join(STATE, "bench-history.json")
 KEEP_RUNS = 10
 TEXT = ("Guten Morgen. Dies ist ein Test der Sprachausgabe auf der DGX Spark. Wir messen, wie schnell "
         "der erste Ton kommt, wie lange der ganze Satz braucht und wie viele Anfragen gleichzeitig "

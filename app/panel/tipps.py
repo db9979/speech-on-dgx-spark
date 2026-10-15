@@ -32,10 +32,9 @@ import guard
 import notaus
 import onboard
 import profiles
-from common import write_json
+from common import STATE, write_json
 from core import assistant, browser_profile
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "tipps.json")
 WEEK = 7 * 86400
 PER_WEEK = 3          # hints in the chat and as notes, per profile and week

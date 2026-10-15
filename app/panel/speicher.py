@@ -79,6 +79,8 @@ import vault
 import zertpin
 import core
 from core import auth, browser_profile, secret_profile, spawn
+from common import STATE
+import dateien
 
 router = APIRouter()
 
@@ -112,37 +114,11 @@ KINDS = ("webdav", "folder", "sftp", "smb")
 LOGIN_KINDS = ("webdav", "sftp", "smb")     # an address, a user and a password
 HOSTKEY = re.compile(r"[a-z0-9@.\-]{3,40} SHA256:[A-Za-z0-9+/]{43}")
 STARTED = time.time()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+# the areas a profile may copy (id -> German, English, files or folders "x/" in its profile folder) and every
+# other profile file with its kind (stays on the Spark): the register dateien.py. A fixed allowlist: keys, logins,
+# passwords of other services, settings and voice prints are in none of the areas (point 7)
+AREAS, LOCAL = dateien.AREAS, dateien.LOCAL
 
-# the areas a profile may copy: id -> (German, English, files or folders "x/" in its profile folder). A fixed
-# allowlist: keys, logins, passwords of other services, settings and voice prints are in none of them (point 7)
-AREAS = {
-    "gespraeche": ("Gespräche", "Conversations", ("convos.json", "toollog.json", "room-history.json")),
-    "gedaechtnis": ("Gedächtnis", "Memory", ("memory.json", "learned.json", "zuordnungen.json")),
-    "alltag": ("Aufgaben und Erinnerungen", "Tasks and reminders", ("tasks.json", "reminders.json")),
-    "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)", ("wissen.db", "docs/files/", "suchpruefung.json")),
-    "erstellt": ("Erstellte Dokumente", "Created documents", ("erstellt/",)),
-    "bilder": ("Gemalte Bilder", "Painted pictures", ("bilder/",)),
-}
-# every other file a profile has stays on the Spark (docs/de/richtlinien.md, Teil 1 "Eigener Speicher"): keys,
-# logins, settings, voiceprint, queues and marks. A new file under users/<uid>/ goes either into AREAS or here,
-# with its reason; test_speicher checks every name the code passes to profiles._path.
-LOCAL = {
-    "settings.json": "Einstellungen", "setup.json": "Einstellungen", "speicher.json": "Einstellungen",
-    "speicher-stand.json": "Zustand", "transit.json": "Einstellungen", "weather.json": "Einstellungen",
-    "proactive.json": "Einstellungen", "proactive-rules.json": "Einstellungen", "hintergrund.json": "Einstellungen",
-    "mail.json": "Login", "nas.json": "Login", "nasquelle.json": "Einstellungen", "nasquelle-stand.json": "Zustand", "nasablage.json": "Einstellungen", "speicher.vor-nas.json": "Login", "mail-tidy.json": "Einstellungen", "mailstil.json": "Einstellungen", "calendar.json": "Login", "homeassistant.json": "Login",
-    "telegram.json": "Login", "push.json": "Gerät", "remarkable.json": "Login", "remarkable-lib.json": "Zustand",
-    "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
-    "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "chatkeys.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
-    "ha-events.json": "Zustand", "briefing-sent": "Zustand",
-    "messages.json": "Einstellungen", "messages": "alte Sprachnachrichten (bis zur Übernahme in die Chats)",
-    "agent-pending.json": "Warteschlange", "calendar-pending.json": "Warteschlange", "fix-pending.json": "Warteschlange", "memory-ask.json": "Warteschlange",
-    "mail-pending.json": "Warteschlange", "mcp-dienste-pending.json": "Warteschlange",
-    "messages-pending.json": "Warteschlange", "tasks-pending.json": "Warteschlange",
-    "tagebuch.json": "Zustand",
-    "docling-wait": "Warteschlange",
-}
 # what the owner hears (fixed words, never an address or an error text from outside)
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),
        "full": ("voll", "full"), "blocked": ("vom Wächter nicht erlaubt", "not allowed by the Wächter"),

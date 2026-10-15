@@ -37,12 +37,11 @@ import chat
 import guard
 import intent
 import werkzeuge
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 import core
 from core import auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEYS = ("route_words", "route_not", "route_extra", "route_off", "route_tests", "tool_words", "route_model", "systemone_min")
 MODELS = ("off", "on", "lean", "systemone")
 MAX_TESTS = 200

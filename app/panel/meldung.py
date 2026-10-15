@@ -39,12 +39,11 @@ import features
 import guard
 import profiles
 import vault
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 import core
 from core import admin_code_fresh, assistant, auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 DIR = os.path.join(STATE, "meldungen")
 TOKEN_FILE = os.path.join(STATE, "meldung-token.json")
 API = "https://api.github.com"

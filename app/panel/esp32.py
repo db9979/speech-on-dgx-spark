@@ -76,12 +76,11 @@ import profiles
 import spkcode
 import vault
 import features
-from common import load_config, read_json, write_json
+from common import STATE, load_config, read_json, write_json
 from textnorm import guess_language, speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FW_DIR = os.path.join(os.path.dirname(STATE.rstrip("/")), "firmware")
 CODE_SECONDS = 600
 MAX_PENDING = 30

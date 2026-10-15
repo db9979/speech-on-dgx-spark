@@ -45,14 +45,13 @@ import geraeteupdate
 import guard
 import notaus
 import profiles
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import assistant, auth, json_body, own_profile
 from account import browser_profile
 
 router = APIRouter()
 _lock = threading.Lock()
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 DIR = os.path.join(STATE, "android")
 APK = os.path.join(DIR, "spark.apk")
 META = os.path.join(DIR, "android.json")

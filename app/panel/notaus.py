@@ -42,9 +42,8 @@ import threading
 import time
 
 import guard
-from common import write_json
+from common import STATE, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "notaus.json")
 MINE_FILE = os.path.join(STATE, "notaus-mine.json")
 KEYS_FILE = os.path.join(STATE, "notaus-keys.json")   # Home Assistant keys that can only trigger

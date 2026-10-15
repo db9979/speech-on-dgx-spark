@@ -44,12 +44,11 @@ import vault
 import vorrang
 import nas
 import zertpin
-from common import write_json
+from common import STATE, write_json
 import core
 from core import spawn, admin_code, admin_code_fresh, auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "offsite.json")
 KEEP = 7
 DAILY = 86400

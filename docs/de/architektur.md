@@ -275,6 +275,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/befund.py` | Befund: die Ursache eines Falls |
 | `app/panel/berater.py` | Einstellungs-Assistent: Vorschläge aus Fällen |
 | `app/panel/berater_katalog.py` | Was der Einstellungs-Assistent vorschlagen darf |
+| `app/panel/dateien.py` | Datei-Register: jede Datei des Panels einmal, mit Inhalt, Sicherung und Kopie |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: meldet, wenn ein Dienst fehlt |
 | `app/panel/faelle.py` | Fälle: jedes Problem wird festgehalten |
 | `app/panel/ghtoken.py` | Lese-Token für GitHub |
@@ -2659,7 +2660,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ steht in genau einer Liste: backup.STATE_FILES (29, kommen in jede Sicherung) oder backup.STATE_LOCAL (48, mit ihrem Grund). test_technik findet jeden Namen, den der Code dort schreibt, und verlangt ihn in einer der Listen.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 48). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2688,8 +2689,8 @@ flowchart TD
 - `app/panel/vault.py` `_key`: secret.key holen oder einmal anlegen ([Schritt 3](#kn-state-s3))
 - `app/panel/vault.py` `seal`: versiegeln ([Schritt 4](#kn-state-s4))
 - `app/panel/vault.py` `open_`: öffnen, leer bei fremdem Schlüssel ([Schritt 6](#kn-state-s6))
-- `app/panel/backup.py` `STATE_FILES`: was in die Sicherung kommt ([Schritt 7](#kn-state-s7))
-- `app/panel/backup.py` `STATE_LOCAL`: was mit Grund draußen bleibt ([Schritt 7](#kn-state-s7))
+- `app/panel/dateien.py` `STATE_FILES`: was in die Sicherung kommt (aus dem Datei-Register) ([Schritt 7](#kn-state-s7))
+- `app/panel/dateien.py` `STATE_LOCAL`: was mit Grund draußen bleibt ([Schritt 7](#kn-state-s7))
 - `app/panel/backup.py` `_seal_keys`: secret.key für den Umzug versiegeln ([Schritt 8](#kn-state-s8))
 - `app/panel/backup.py` `_check_state`: Dateien der Sicherung prüfen ([Schritt 9](#kn-state-s9))
 - `app/panel/backup.py` `_swap`: einsetzen mit Rückweg ([Schritt 10](#kn-state-s10))
@@ -2743,7 +2744,7 @@ flowchart TD
 2. <a id="kn-users-s2"></a>**Pfad im eigenen Ordner**: Jede Datei liegt unter users/ID/ mit einem festen Namen aus dem Code. Die ID kommt aus Schritt 1, nie aus einem Text.
 3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt.
 4. <a id="kn-users-s4"></a>**Schreiben nur für den Dienst**: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.
-5. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname steht entweder in einem Bereich von speicher.AREAS (darf auf den eigenen Speicher) oder in speicher.LOCAL (bleibt auf dem Spark, mit Grund: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). test_technik prüft jeden Namen, den der Code schreibt.
+5. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.
 6. <a id="kn-users-s6"></a>**Eigener Speicher eingerichtet?**: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele).
 7. <a id="kn-users-s7"></a>**Nur Geändertes der gewählten Bereiche**: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter.
 8. <a id="kn-users-s8"></a>**Verschlüsselt, Namen zufällig**: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen.
@@ -2765,7 +2766,8 @@ Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
 | Aufgaben und Erinnerungen | tasks.json, reminders.json | ✓ |
 | Dokumente | wissen.db, docs/files/, suchpruefung.json | ✓ |
 | Erstellte Dokumente | erstellt/ | ✓ |
-| Zugänge, Schlüssel, Stimmabdruck | speicher.LOCAL | ✕ |
+| Gemalte Bilder | bilder/ | ✓ |
+| Zugänge, Schlüssel, Stimmabdruck | dateien.LOCAL | ✕ |
 
 #### Zahlen (aus dem Code)
 
@@ -2792,7 +2794,7 @@ Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
 - `app/panel/profiles.py` `delete_user`: Profil und Ordner löschen ([Schritt 11](#kn-users-s11))
 - `app/panel/vault.py` `seal`: versiegeln ([Schritt 3](#kn-users-s3))
 - `app/panel/speakers.py` `_store`: Stimmabdruck versiegelt ([Schritt 3](#kn-users-s3), [Schritt 4](#kn-users-s4))
-- `app/panel/speicher.py` `AREAS`: was auf den eigenen Speicher darf ([Schritt 5](#kn-users-s5))
+- `app/panel/dateien.py` `AREAS`: was auf den eigenen Speicher darf (aus dem Datei-Register) ([Schritt 5](#kn-users-s5))
 - `app/panel/speicher.py` `_key`: Speicher-Schlüssel des Profils, versiegelt ([Schritt 8](#kn-users-s8))
 - `app/panel/speicher.py` `local_files`: nur die Liste, keine Links ([Schritt 7](#kn-users-s7))
 - `app/panel/speicher.py` `seal_file`: AES-256-GCM in Stücken ([Schritt 8](#kn-users-s8))

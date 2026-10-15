@@ -34,7 +34,7 @@ from collections import deque
 
 import features
 import profiles
-from common import DayCounter
+from common import DayCounter, STATE
 
 RING_SECS = 45           # an unanswered call becomes a missed one
 TALK_MAX = 4 * 3600      # a call that nobody ended ends by itself
@@ -411,7 +411,7 @@ def _own():
 
 
 def _state_dir():
-    return os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+    return STATE
 
 
 def _systemctl(action):

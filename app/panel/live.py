@@ -35,11 +35,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 import guard
-from common import DayCounter, load_config, write_json
+from common import DayCounter, STATE, load_config, write_json
 from core import auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 FADE = 10                 # a finished request fades out this many seconds after a newer one came
 MAX_RUN = 40              # requests watched at once (more: the oldest go)

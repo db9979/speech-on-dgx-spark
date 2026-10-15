@@ -1,0 +1,226 @@
+"""Datei-Register: every file and folder the panel keeps, listed once (Richtlinie Teil 17, Aufräumen Schritt 8).
+
+One entry per file in state/ (common.STATE), in a profile folder users/<id>/ or directly under users/: what it holds
+(German and English, for Zustand → Technik and docs/*/architektur.md), whether it goes into a backup or why not,
+which area of „Kopie meiner Daten“ may copy it, and how it is protected. The lists the other modules work with are
+built from here and nowhere else: backup.STATE_FILES / STATE_LOCAL (what a backup holds), speicher.AREAS / LOCAL
+(what the own storage copies), technik.INHALT / VERSCHLUESSELT / USERS_SONST / USERS_GLOBAL / STATE_SONST (the
+architecture page). A new file gets one line here; tests/test_technik.py and test_speicher find every name the
+code writes and turn red while it is missing. Names never change: an update must find the data already there.
+Pure data, no imports: every module may use it.
+"""
+from collections import namedtuple
+
+# ort: "state" (state/), "profil" (users/<id>/), "users" (directly under users/), "anderswo" (only described here)
+# sicherung: state/ the kind a backup checks ("json", "pem"), "" = stays out (lokal says why); users/ "ja" or "nein"
+# bereich: the area of „Kopie meiner Daten“ (BEREICHE) that may copy it; art: the kind of a profile file that stays
+# on the Spark; helfer: written through its own helper, not profiles._path; schutz: sealed or hashed (German,
+# English); sonst: written by the shell scripts or under another name (the scan in test_technik does not see it)
+Datei = namedtuple("Datei", "name ort de en sicherung lokal bereich art helfer schutz sonst")
+
+
+def profil(name, de, en, bereich="", art="", helfer=False, schutz=None):
+    return Datei(name, "profil", de, en, "", "", bereich, art, helfer, schutz, False)
+
+
+def users(name, de, en, sicherung, schutz=None):
+    return Datei(name, "users", de, en, sicherung, "", "", "", False, schutz, False)
+
+
+def state(name, de, en, sicherung="", lokal="", schutz=None, sonst=False):
+    return Datei(name, "state", de, en, sicherung, lokal, "", "", False, schutz, sonst)
+
+
+def anderswo(name, de, en):
+    return Datei(name, "anderswo", de, en, "", "", "", "", False, None, False)
+
+
+# the areas a profile may copy to its own storage: id -> (German, English). A fixed allowlist: keys, logins,
+# passwords of other services, settings and voice prints are in none of them (speicher.py, point 7)
+BEREICHE = {
+    "gespraeche": ("Gespräche", "Conversations"),
+    "gedaechtnis": ("Gedächtnis", "Memory"),
+    "alltag": ("Aufgaben und Erinnerungen", "Tasks and reminders"),
+    "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)"),
+    "erstellt": ("Erstellte Dokumente", "Created documents"),
+    "bilder": ("Gemalte Bilder", "Painted pictures"),
+}
+
+DATEIEN = [
+    # users/<id>/: what the own storage may copy (speicher.AREAS), by area
+    profil("convos.json", "Gespräche", "Conversations", bereich="gespraeche"),
+    profil("toollog.json", "Werkzeug-Log", "Tool log", bereich="gespraeche"),
+    profil("room-history.json", "Raummodus-Verlauf", "Room mode history", bereich="gespraeche"),
+    profil("memory.json", "Gedächtnis", "Memory", bereich="gedaechtnis"),
+    profil("learned.json", "Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations", bereich="gedaechtnis"),
+    profil("zuordnungen.json", "Gemerkte Zuordnungen", "Remembered matches", bereich="gedaechtnis"),
+    profil("tasks.json", "Aufgaben", "Tasks", bereich="alltag"),
+    profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
+    profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)", bereich="dokumente"),
+    profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),
+    profil("suchpruefung.json", "Prüffragen und Läufe der Suchprüfung", "Test questions and runs of the search check", bereich="dokumente"),
+    profil("erstellt/", "Erstellte Dokumente", "Created documents", bereich="erstellt"),
+    profil("bilder/", "Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe)", "Painted pictures and their index (prompt, wish, size)", bereich="bilder"),
+    # users/<id>/: everything else stays on the Spark (speicher.LOCAL), with its kind: keys, logins, settings,
+    # voiceprint, queues and marks (Richtlinie Teil 1, "Kopie meiner Daten")
+    profil("settings.json", "Einstellungen", "Settings", art="Einstellungen"),
+    profil("setup.json", "Einrichtung", "Setup", art="Einstellungen"),
+    profil("speicher.json", "Ziele des eigenen Speichers", "Own storage targets", art="Einstellungen", schutz=("Schlüssel versiegelt", "key sealed")),
+    profil("speicher-stand.json", "Stand des Abgleichs", "Sync state", art="Zustand"),
+    profil("transit.json", "Haltestelle", "Stop", art="Einstellungen"),
+    profil("weather.json", "Wetter-Ort", "Weather place", art="Einstellungen"),
+    profil("proactive.json", "Von selbst melden", "Speak up by itself", art="Einstellungen"),
+    profil("proactive-rules.json", "Eigene Melde-Regeln", "Own notice rules", art="Einstellungen"),
+    profil("hintergrund.json", "Mein Zustand", "My status", art="Einstellungen"),
+    profil("mail.json", "Mail-Zugang", "Mail account", art="Login", schutz=("Passwort versiegelt", "password sealed")),
+    profil("nas.json", "Speicherorte des Profils (NAS, Cloud)", "Storage places of the profile (NAS, cloud)", art="Login", schutz=("Passwort versiegelt", "password sealed")),
+    profil("nasquelle.json", "Wissensordner des Profils", "Knowledge folders of the profile", art="Einstellungen"),
+    profil("nasquelle-stand.json", "Was aus den Wissensordnern gelesen ist", "What was read from the knowledge folders", art="Zustand"),
+    profil("nasablage.json", "Ablage-Ordner des Profils", "Filing folder of the profile", art="Einstellungen"),
+    profil("speicher.vor-nas.json", "Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places", art="Login"),
+    profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
+    profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
+    profil("calendar.json", "Kalender-Zugang", "Calendar account", art="Login", schutz=("Passwort versiegelt", "password sealed")),
+    profil("homeassistant.json", "Home-Assistant-Zugang", "Home Assistant account", art="Login", schutz=("Token versiegelt", "token sealed")),
+    profil("telegram.json", "Telegram-Kopplung", "Telegram link", art="Login"),
+    profil("push.json", "Push-Abos der Browser", "Browser push subscriptions", art="Gerät"),
+    profil("remarkable.json", "reMarkable-Zugang", "reMarkable account", art="Login", schutz=("Token versiegelt", "token sealed")),
+    profil("remarkable-lib.json", "reMarkable-Bibliothek", "reMarkable library", art="Zustand"),
+    profil("mcp-dienste.json", "Eigene MCP-Dienste", "Own MCP services", art="Login", schutz=("Tokens versiegelt", "tokens sealed")),
+    profil("mcp-actions.json", "MCP-Aktionen", "MCP actions", art="Zustand"),
+    profil("agent.json", "Aufträge und Routinen", "Jobs and routines", art="Einstellungen"),
+    profil("voice.json", "Stimmabdruck", "Voiceprint", art="Stimmabdruck", schutz=("versiegelt", "sealed")),
+    profil("speaker-code.json", "Codewort am Lautsprecher", "Speaker code word", art="Schlüssel", schutz=("versiegelt", "sealed")),
+    profil("chatkeys.json", "Öffentliche Schlüssel der Geräte", "Devices' public keys", art="Schlüssel"),
+    profil("contacts.json", "Kontakte-Zugang", "Contacts account", art="noch nicht angeboten", schutz=("Passwort versiegelt", "password sealed")),
+    profil("ha-events.json", "Home-Assistant-Ereignisse", "Home Assistant events", art="Zustand"),
+    profil("briefing-sent", "Briefing gesendet", "Briefing sent", art="Zustand"),
+    profil("messages.json", "Nachrichten-Einstellungen", "Message settings", art="Einstellungen", schutz=("teils versiegelt", "partly sealed")),
+    profil("messages", "Alte Sprachnachrichten", "Old voice messages", art="alte Sprachnachrichten (bis zur Übernahme in die Chats)"),
+    profil("agent-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("calendar-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("fix-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("memory-ask.json", "Offene Frage zum Gedächtnis", "Open memory question", art="Warteschlange"),
+    profil("mail-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("mcp-dienste-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("messages-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("tasks-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("tagebuch.json", "Spark-Tagebuch", "Spark diary", art="Zustand"),
+    profil("docling-wait", "Dateien, bis Docling sie gelesen hat", "Files until Docling has read them", art="Warteschlange"),
+    # users/<id>/: written through their own helper, not through profiles._path (never copied)
+    profil("mfa.json", "Zweiter Schritt des Profils", "Profile's second step", art="Schlüssel", helfer=True, schutz=("versiegelt", "sealed")),
+    profil("memory-tidy.json", "Aufräum-Vorschlag", "Tidy proposal", art="Warteschlange", helfer=True),
+    profil("memory-tidy-checked", "Letzte Aufräum-Prüfung", "Last tidy check", art="Zustand", helfer=True),
+    # directly under users/ (all profiles together); sicherung: in a backup or not
+    users("profiles.json", "Profile und Geräte", "Profiles and devices", sicherung="ja"),
+    users("sessions.json", "Anmeldungen", "Logins", sicherung="ja"),
+    users("seen.json", "Zuletzt gesehen", "Last seen", sicherung="ja"),
+    users("secret", "Schlüssel der Profil-Anmeldung", "Profile login key", sicherung="nein", schutz=("ist ein Schlüssel", "is a key")),
+    users("_chats/", "Chats zwischen Profilen", "Chats between profiles", sicherung="ja", schutz=("AES-256-GCM", "AES-256-GCM")),
+    users("_verbund/", "Spark-Verbund: andere Sparks, Kontakte, Warteschlange", "Spark network: other Sparks, contacts, queue", sicherung="ja"),
+    users("begleiter.json", "Begleiter-Geräte", "Companion devices", sicherung="ja"),
+    # state/: shared state of this Spark that goes into every backup (not the logs, counters, lockouts or
+    # login keys); sicherung: the kind backup checks on restore
+    state("nas-admin.json", "NAS-Verbindung des Spark", "The Spark's NAS connection", sicherung="json", sonst=True, schutz=("Passwort versiegelt", "password sealed")),  # the admin's NAS connection (nas.py): address, user, password sealed, pinned certificate
+    state("offsite.json", "Sicherung nach außen", "Offsite backup", sicherung="json", schutz=("versiegelt", "sealed")),  # Sicherung nach außen: WebDAV address, user, password and backup password (sealed)
+    state("docling.json", "Docling-Server: Adresse, Zertifikat, Zahlen", "Docling server: address, certificate, counts", sicherung="json", schutz=("Schlüssel versiegelt", "key sealed")),  # Docling-Server: address, key (sealed), accepted certificate
+    state("naszustand.json", "Zustand der NAS: Adresse, SNMP-Benutzer, letzte Werte", "NAS status: address, SNMP user, newest values", sicherung="json", schutz=("Passwörter versiegelt", "passwords sealed")),  # Zustand der NAS: host, SNMPv3 user, both passwords sealed, the newest values
+    state("mfa-admin.json", "Zweiter Schritt des Admins", "Admin's second step", sicherung="json", schutz=("versiegelt", "sealed")),  # the admin's second step (secret sealed with secret.key)
+    state("apns.json", "Apple-Push-Schlüssel", "Apple push key", sicherung="json", schutz=("Schlüssel versiegelt", "key sealed")),  # iPhone push: Apple key (sealed), key id, team
+    state("apns-tokens.json", "iPhone-Geräte für Push", "iPhones for push", sicherung="json"),  # iPhone push: the devices' tokens
+    state("telegram.json", "Telegram-Bot", "Telegram bot", sicherung="json", schutz=("Token versiegelt", "token sealed")),  # Telegram bot (token sealed)
+    state("github-token.json", "GitHub-Lese-Token", "GitHub read token", sicherung="json", schutz=("versiegelt", "sealed")),  # read-only GitHub token for update checks and downloads (sealed, ghtoken.py)
+    state("vapid.pem", "Web-Push-Schlüssel", "Web push key", sicherung="pem", schutz=("ist ein Schlüssel", "is a key")),  # browser push key: the browsers' push subscriptions belong to it
+    state("esp32.json", "Lautsprecher und Firmware", "Speakers and firmware", sicherung="json", schutz=("teils versiegelt", "partly sealed")),  # ESP32 speakers: board variant, firmware, automatic updates
+    state("agent.json", "Agent-Stufen, MCP-Dienste", "Agent levels, MCP services", sicherung="json", schutz=("Tokens versiegelt", "tokens sealed")),  # agent levels and MCP services (tokens sealed)
+    state("geraete-updates.json", "Geräte-Updates", "Device updates", sicherung="json"),  # Geräte-Updates: versions seen, notes due, the night round of the speakers
+    state("regel-versionen.json", "Regel-Versionen", "Rule versions", sicherung="json"),  # Einstellungs-Assistent: the own rules before each change (Version 3)
+    state("berater.json", "Vorschläge des Assistenten", "Assistant proposals", sicherung="json"),  # Einstellungs-Assistent: proposals, what was there before, Nachkontrolle
+    state("faelle.json", "Fälle", "Cases", sicherung="json", sonst=True),  # its cases (fingerprints, counts, at most three examples with consent)
+    state("gut-saetze.json", "Mit 👍 bestätigte Fragen", "Questions confirmed with 👍", sicherung="json", sonst=True),  # questions confirmed with 👍 (with consent): protected in the Prüfstand
+    state("dienstwacht.json", "Dienst-Wächter", "Service watcher", sicherung="json"),  # Dienst-Wächter: services taken off the list, their state, outages of 7 days, notes due
+    state("mcp-dienste-admin.json", "Erlaubte MCP-Ziele", "Allowed MCP hosts", sicherung="json"),  # own MCP services of profiles: hosts the admin allows, blocked services
+    state("mcp-server.json", "MCP-Programme (Token-Hashes)", "MCP programs (token hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # programs connected to the Spark as an MCP server (only hashes of their tokens)
+    state("personen-vorrang.json", "Vorrang pro Profil", "Priority per profile", sicherung="json"),  # priority for people: the stage the admin gave each profile (stufe.py)
+    state("quality-cases.json", "Eigene Testfragen", "Own test questions", sicherung="json"),  # own quality test questions
+    state("quality-history.json", "Verlauf der Qualitätstests", "Quality test history", sicherung="json"),
+    state("setup.json", "Einrichtungs-Assistent erledigt", "Setup wizard done", sicherung="json"),  # first-start wizard done
+    state("doc-quotas.json", "Dokument-Kontingente", "Document quotas", sicherung="json"),  # the admin's own document space per profile (wissen.py)
+    state("admins.json", "Profile als Admins", "Profiles as admins", sicherung="json"),  # profiles as admins: roles and the main admin profile (coadmin.py)
+    state("features-seen.json", "Wann Funktionen frei wurden", "When functions were released", sicherung="json"),  # when each function was first on („neu freigegeben“ in tipps.py, features.py)
+    state("verbrauch-kontingent.json", "eigene Tageskontingente", "Own daily quotas", sicherung="json"),  # Tageskontingent: the admin's own quota per profile (verbrauch.py)
+    state("join.json", "Einladungen (Hashes)", "Invitations (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # new people by invitation: the switch, invitations (code hashes) (join.py)
+    # state/: every other file or folder, with the reason it stays out of a backup
+    state("secret.key", "Schlüssel für alles Versiegelte", "Key for everything sealed", lokal="Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)", schutz=("ist der Schlüssel", "is the key")),
+    state("panel-password", "Admin-Passwort (Hash)", "Admin password (hash)", lokal="kommt einzeln in die Sicherung (eigener Weg in create)", schutz=("Hash", "hash")),
+    state("admin-session.key", "Schlüssel der Admin-Sitzung", "Admin session key", lokal="Schlüssel der Admin-Sitzung: nach einem Umzug neu anmelden", sonst=True, schutz=("ist ein Schlüssel", "is a key")),
+    state("vorrang-key", "Schlüssel Panel ↔ Sprachdienste", "Key panel ↔ speech services", lokal="Schlüssel zwischen Panel und Sprachdiensten, entsteht neu", schutz=("ist ein Schlüssel", "is a key")),
+    state("guard.json", "Sperren nach Fehlversuchen", "Lockouts", lokal="Sperren nach Fehlversuchen, kurzlebig"),
+    state("revoked.json", "Widerrufene Sitzungen", "Revoked sessions", lokal="widerrufene Sitzungen, kurzlebig"),
+    state("guard-xff-hinted.json", "Proxy-Hinweis gezeigt", "Proxy hint shown", lokal="Hinweis gezeigt"),
+    state("audit.log", "Admin-Protokoll, 1 MB", "Admin log, 1 MB", lokal="Protokoll dieses Geräts"),
+    state("traces.jsonl", "Logs → Anfragen, 48 h", "Logs → Requests, 48 h", lokal="Anfrage-Verlauf, 48 h"),
+    state("latency.json", "Wartezeiten", "Waiting times", lokal="Statistik"),
+    state("verbrauch.json", "Verbrauch je Modell, Aufgabe und Profil (nur Zahlen)", "Usage per model, task and profile (numbers only)", lokal="Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)"),
+    state("livecheck.json", "Echtprüfung", "Live check", lokal="letzte Echtprüfung"),
+    state("live-monitors.json", "Wandmonitore", "Wall monitors", lokal="Wandmonitore dieses Geräts"),
+    state("dienste-zustand.json", "Hintergrund-Dienste", "Background services", lokal="Zustand der Hintergrund-Dienste"),
+    state("weiche-stats.json", "Weiche-Statistik", "Switch statistics", lokal="Statistik", sonst=True),
+    state("bild-test.json", "Letztes Probebild (Bild testen)", "Last sample picture (Test a picture)", lokal="Messwert dieses Geräts (Bild testen)"),
+    state("weiche-history.json", "Weiche-Änderungen", "Switch changes", lokal="Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)", sonst=True),
+    state("bewertungen.json", "Bewertungen pro Tag", "Ratings per day", lokal="Zähler pro Tag", sonst=True),
+    state("quality.json", "Letzter Qualitätstest", "Last quality test", lokal="letztes Ergebnis"),
+    state("config-undo.json", "Rückgängig (ohne Geheimnisse)", "Undo (no secrets)", lokal="Rückgängig dieses Geräts", schutz=("ohne Geheimnisse", "without secrets")),
+    state("tipps.json", "Gezeigte Tipps", "Tips shown", lokal="gezeigte Tipps"),
+    state("iphone-update.json", "Update aus der iPhone-App", "Update from the iPhone app", lokal="Hinweise zum Update, entstehen neu"),
+    state("vision.json", "Bildfragen, 10 min", "Picture questions, 10 min", lokal="Ergebnisse von Bildfragen, 10 Minuten"),
+    state("doc-embed.json", "Vektormodell", "Vector model", lokal="Zustand des Vektormodells"),
+    state("doc-rank.json", "Nachsortier-Modell", "Re-ranking model", lokal="Prüfsummen des Nachsortier-Modells, entstehen neu"),
+    state("notaus.json", "Notaus", "Kill switch", lokal="Notaus gilt nur auf diesem Gerät"),
+    state("wartung.json", "Wartungspause", "Maintenance pause", lokal="Wartungspause gilt nur für das laufende Update"),
+    state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
+    state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
+    state("nasquelle-tmp", "Zwischendateien der Wissensordner, Sekunden", "Knowledge folder staging, seconds", lokal="Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht"),
+    state("notaus-mine.json", "Mein Notaus", "My kill switch", lokal="Notaus gilt nur auf diesem Gerät"),
+    state("notaus-keys.json", "Notaus-Auslöser", "Kill switch triggers", lokal="Auslöser gelten nur auf diesem Gerät"),
+    state("meldung-token.json", "Token für Meldungen", "Report token", lokal="Token wird neu eingetragen", schutz=("versiegelt", "sealed")),
+    state("meldungen", "Meldungs-Entwürfe", "Report drafts", lokal="Entwürfe, kurzlebig"),
+    state("ack", "Sofort-Sätze als Ton", "Instant sentences as sound", lokal="Ton-Cache, entsteht neu"),
+    state("android", "Android-App zum Download", "Android app for download", lokal="Download-Cache"),
+    state("begleiter", "Begleiter-Updates", "Companion updates", lokal="Download-Cache"),
+    state("begleiter-inbox", "Vom Handy auf den PC, 24 h", "Phone to PC, 24 h", lokal="Dateien vom Handy, 24 h"),
+    state("speicher-tmp", "Zwischenablage des eigenen Speichers", "Own storage staging", lokal="Zwischenablage", schutz=("AES-256-GCM", "AES-256-GCM")),
+    state("speech-active", "Zeitpunkt der letzten Sprache", "Time of last speech", lokal="Zeitmarke"),
+    state("speech-spark-asr-engine.json", "Zustand der ASR-Engine", "ASR engine state", lokal="Zustand der Engine"),
+    state("speech-spark-tts-*.json", "Zustand der TTS-Engines", "TTS engine state", lokal="Zustand der Engines", sonst=True),
+    state("bench-latest.json", "Letzte Messung", "Last benchmark", lokal="Messung dieses Geräts"),
+    state("bench-history.json", "Messungen", "Benchmarks", lokal="Messungen dieses Geräts"),
+    state("update-progress.json", "Update-Fortschritt", "Update progress", lokal="Update-Fortschritt"),
+    state("update-target", "Gewünschter Update-Stand", "Requested update target", lokal="Update-Auftrag", sonst=True),
+    state("update-night.json", "Nacht-Update", "Night update", lokal="Nacht-Update", sonst=True),
+    state("migrated-chunk10", "Einmalige Umstellung erledigt", "One-time migration done", lokal="Marke einer einmaligen Umstellung", sonst=True),
+    # described here, lying elsewhere: the firmware folder next to state/ (technik.SYSTEM lists the path)
+    anderswo("firmware", "ESP32-Firmware", "ESP32 firmware"),
+]
+
+# ---------------------------------------------------------------- the lists built from the register
+_NAMEN = {d.name for d in DATEIEN if d.ort in ("profil", "users")}
+
+
+def schluessel(d):
+    """The name in INHALT and VERSCHLUESSELT: a file in state/ with the name of a profile file gets "@state"."""
+    return d.name + "@state" if d.ort == "state" and d.name in _NAMEN else d.name
+
+
+# backup.py: name -> kind of every file in state/ a backup holds; every other one with the reason it stays out
+STATE_FILES = {d.name: d.sicherung for d in DATEIEN if d.ort == "state" and d.sicherung}
+STATE_LOCAL = {d.name: d.lokal for d in DATEIEN if d.ort == "state" and not d.sicherung}
+# speicher.py: area -> (German, English, files or folders "x/" in the profile folder); the rest with its kind
+AREAS = {a: (de, en, tuple(d.name for d in DATEIEN if d.bereich == a)) for a, (de, en) in BEREICHE.items()}
+LOCAL = {d.name: d.art for d in DATEIEN if d.ort == "profil" and not d.bereich and not d.helfer}
+# technik.py: what is in a file, what is sealed, the files the scans of test_technik cannot see
+INHALT = {schluessel(d): (d.de, d.en) for d in DATEIEN}
+VERSCHLUESSELT = {schluessel(d): d.schutz for d in DATEIEN if d.schutz}
+USERS_SONST = {d.name: d.art for d in DATEIEN if d.helfer}
+USERS_GLOBAL = {d.name: d.sicherung for d in DATEIEN if d.ort == "users"}
+STATE_SONST = {d.name for d in DATEIEN if d.sonst}

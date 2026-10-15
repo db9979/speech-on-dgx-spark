@@ -50,9 +50,8 @@ import notaus
 import profiles
 import vorrang
 import features
-from common import load_config, no_think, write_json
+from common import STATE, load_config, no_think, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LEVELS = ("read", "act")
 MAX_TASK = 500
 MAX_JOBS_KEPT = 30

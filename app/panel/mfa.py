@@ -32,9 +32,8 @@ from urllib.parse import quote
 
 import profiles
 import vault
-from common import write_json
+from common import STATE, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 ADMIN = "admin"
 STEP, DIGITS, DRIFT = 30, 6, 1          # 30 s codes; one step early or late still counts
 RECOVERY_COUNT = 10

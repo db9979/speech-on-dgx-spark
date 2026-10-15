@@ -602,7 +602,8 @@ class Offload(Base):
 class Classified(unittest.TestCase):
     def test_every_profile_file_is_copied_or_stays_local(self):
         """Richtlinie Teil 1, Punkt 24: each name the code passes to profiles._path(uid, "…") is in speicher.AREAS
-        (may go encrypted to the own storage) or in speicher.LOCAL with a reason (stays on the Spark)."""
+        (may go encrypted to the own storage) or in speicher.LOCAL with a reason (stays on the Spark), both built
+        from the register dateien.py."""
         import re
         panel_dir = os.path.dirname(speicher.__file__)
         names = set()
@@ -613,7 +614,7 @@ class Classified(unittest.TestCase):
         copied = {p.split("/")[0] for _de, _en, files in speicher.AREAS.values() for p in files}
         self.assertGreater(len(names), 20)
         self.assertEqual(sorted(names - copied - set(speicher.LOCAL)), [],
-                         "new file under users/<id>/: put it into speicher.AREAS or speicher.LOCAL")
+                         "new file under users/<id>/: give it its line in dateien.py (bereich= or art=)")
         self.assertEqual(sorted(copied & set(speicher.LOCAL)), [])
         self.assertTrue(all(isinstance(v, str) and v for v in speicher.LOCAL.values()))
 

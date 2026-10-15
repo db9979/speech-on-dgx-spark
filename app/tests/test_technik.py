@@ -123,15 +123,16 @@ class Parts(unittest.TestCase):
 
 class Storage(unittest.TestCase):
     def test_every_state_file_is_sorted(self):
-        """A new file in state/ goes into backup.STATE_FILES (backed up) or backup.STATE_LOCAL (with its reason)."""
+        """A new file in state/ goes into backup.STATE_FILES (backed up) or backup.STATE_LOCAL (with its reason): one line in
+        the register dateien.py."""
         found = written_names("STATE")
         self.assertGreater(len(found), 40)
         known = set(backup.STATE_FILES) | set(backup.STATE_LOCAL)
         missing = sorted(n for n in found if n not in known and not n.startswith("speech-spark-tts-"))
-        self.assertEqual(missing, [], "new file under state/: backup.STATE_FILES or backup.STATE_LOCAL")
+        self.assertEqual(missing, [], "new file under state/: give it its line in dateien.py (sicherung= or lokal=)")
         self.assertEqual(sorted(set(backup.STATE_FILES) & set(backup.STATE_LOCAL)), [])
         gone = sorted(n for n in known if n not in found and n not in technik.STATE_SONST and n != "speech-spark-tts-*.json")
-        self.assertEqual(gone, [], "no code writes these any more: take them out")
+        self.assertEqual(gone, [], "no code writes these any more: take their lines out of dateien.py")
         self.assertTrue(all(isinstance(v, str) and v for v in backup.STATE_LOCAL.values()))
 
     def test_every_profile_file_is_known(self):
@@ -139,7 +140,7 @@ class Storage(unittest.TestCase):
         copied = {p.split("/")[0] for _de, _en, files in speicher.AREAS.values() for p in files}
         known = copied | set(speicher.LOCAL) | set(technik.USERS_SONST)
         self.assertEqual(sorted(set(found) - known), [],
-                         "new file under users/<id>/: speicher.AREAS, speicher.LOCAL or technik.USERS_SONST")
+                         "new file under users/<id>/: give it its line in dateien.py (bereich=, art= or helfer=True)")
         for f in technik.USERS_SONST:
             self.assertIn(f, found, f)
             self.assertNotIn(f, speicher.LOCAL, f)
@@ -166,7 +167,7 @@ class Storage(unittest.TestCase):
             self.assertIn(v, technik.KAT_EN, v)
         unused = sorted(k for k in keys if not any(r["pfad"].rstrip("/").endswith("/" + k.split("@")[0].rstrip("/"))
                                                     or r["pfad"] == k for r in rows) and k != "firmware")
-        self.assertEqual(unused, [], "INHALT names a file no list has")
+        self.assertEqual(unused, [], "dateien.py describes a file no list has")
 
     def test_what_stays_out_of_a_backup(self):
         rows = {r["pfad"]: r for r in technik.speicherorte()}

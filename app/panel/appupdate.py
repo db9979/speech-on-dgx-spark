@@ -25,14 +25,13 @@ import guard
 import mfa
 import profiles
 import features
-from common import write_json
+from common import STATE, write_json
 from core import CODE_HEADER, admin_code, assistant, auth, confirm_code, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
 _start_lock = asyncio.Lock()     # one start at a time (the checks below await)
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 START_GAP = 600            # seconds between two starts from the app (all profiles together)
 CHECK_EVERY = 600          # the notice looks for a new version this often
 MAX_BODY = 1024

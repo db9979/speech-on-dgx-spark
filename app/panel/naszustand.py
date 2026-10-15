@@ -40,12 +40,11 @@ import features
 import guard
 import netguard
 import vault
-from common import write_json
+from common import STATE, write_json
 import core
 from core import admin_code, auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = "naszustand.json"
 PORT = 161
 READ_EVERY, RETRY = 300, 60

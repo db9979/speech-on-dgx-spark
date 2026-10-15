@@ -21,11 +21,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import vault  # noqa: E402
-from common import write_json  # noqa: E402
+from common import STATE, write_json  # noqa: E402
 from core import admin_code_fresh, auth, json_body  # noqa: E402
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 TOKEN_FILE = os.path.join(STATE, "github-token.json")
 API = "https://api.github.com/"
 TOKEN = re.compile(r"github_pat_[A-Za-z0-9_]{20,255}")

@@ -2,8 +2,8 @@
 how the Spark is built, as a page to click through and as docs/de/architektur.md + docs/en/architecture.md.
 
 One source for both: the parts (MODULE, GRUPPEN), the picture (KNOTEN, KANTEN), the way of one request (SCHRITTE)
-and where data lies (speicherorte(), built from speicher.AREAS/LOCAL, backup.STATE_FILES/STATE_LOCAL and the lists
-here). `python3 app/panel/hilfe.py --docs` writes the generated parts into both docs (between the markers
+and where data lies (speicherorte(), built from the register dateien.py and the lists here).
+`python3 app/panel/hilfe.py --docs` writes the generated parts into both docs (between the markers
 <!-- technik:… -->) before it copies the docs into hilfe_docs.json. tests/test_technik.py turns red when a module,
 a file under state/ or users/, a node or a step is missing here, or when the docs are not written again, so the
 picture stays true with every change.
@@ -21,9 +21,8 @@ import sys
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
-import backup  # noqa: E402
+import dateien  # noqa: E402
 import guard  # noqa: E402
-import speicher  # noqa: E402
 import technik_knoten  # noqa: E402
 from core import auth  # noqa: E402
 
@@ -203,6 +202,7 @@ MODULE = {
     "berater_katalog": ("betrieb", "Was der Einstellungs-Assistent vorschlagen darf"),
     "quality": ("betrieb", "Qualitätstest gegen das echte Sprachmodell"),
     "backup": ("betrieb", "Sicherungen und Wiederherstellen"),
+    "dateien": ("betrieb", "Datei-Register: jede Datei des Panels einmal, mit Inhalt, Sicherung und Kopie"),
     "offsite": ("betrieb", "Sicherung nach außen, verschlüsselt"),
     "speicher": ("betrieb", "Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt"),
     "nas": ("betrieb", "Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung"),
@@ -341,104 +341,11 @@ SCHRITTE = [
 ]
 
 # ---------------------------------------------------------------- where data lies
-# what is in a file (German, English); every file of the lists below has a line here (test_technik)
-INHALT = {
-    # users/<id>/
-    "convos.json": ("Gespräche", "Conversations"), "toollog.json": ("Werkzeug-Log", "Tool log"),
-    "room-history.json": ("Raummodus-Verlauf", "Room mode history"), "memory.json": ("Gedächtnis", "Memory"),
-    "learned.json": ("Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations"), "zuordnungen.json": ("Gemerkte Zuordnungen", "Remembered matches"),
-    "tasks.json": ("Aufgaben", "Tasks"), "reminders.json": ("Erinnerungen", "Reminders"),
-    "wissen.db": ("Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)"),
-    "docs/files/": ("Originale der Uploads", "Originals of uploads"), "suchpruefung.json": ("Prüffragen und Läufe der Suchprüfung", "Test questions and runs of the search check"), "erstellt/": ("Erstellte Dokumente", "Created documents"),
-    "bilder/": ("Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe)", "Painted pictures and their index (prompt, wish, size)"),
-    "settings.json": ("Einstellungen", "Settings"), "setup.json": ("Einrichtung", "Setup"),
-    "speicher.json": ("Ziele des eigenen Speichers", "Own storage targets"), "speicher-stand.json": ("Stand des Abgleichs", "Sync state"),
-    "transit.json": ("Haltestelle", "Stop"), "weather.json": ("Wetter-Ort", "Weather place"),
-    "proactive.json": ("Von selbst melden", "Speak up by itself"), "proactive-rules.json": ("Eigene Melde-Regeln", "Own notice rules"),
-    "hintergrund.json": ("Mein Zustand", "My status"), "mail.json": ("Mail-Zugang", "Mail account"), "nas.json": ("Speicherorte des Profils (NAS, Cloud)", "Storage places of the profile (NAS, cloud)"), "nasquelle.json": ("Wissensordner des Profils", "Knowledge folders of the profile"), "nasablage.json": ("Ablage-Ordner des Profils", "Filing folder of the profile"), "nasquelle-stand.json": ("Was aus den Wissensordnern gelesen ist", "What was read from the knowledge folders"), "docling-wait": ("Dateien, bis Docling sie gelesen hat", "Files until Docling has read them"), "speicher.vor-nas.json": ("Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places"),
-    "mail-tidy.json": ("Posteingang aufräumen", "Inbox tidy"), "mailstil.json": ("Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)"), "calendar.json": ("Kalender-Zugang", "Calendar account"),
-    "homeassistant.json": ("Home-Assistant-Zugang", "Home Assistant account"), "telegram.json": ("Telegram-Kopplung", "Telegram link"),
-    "push.json": ("Push-Abos der Browser", "Browser push subscriptions"), "remarkable.json": ("reMarkable-Zugang", "reMarkable account"),
-    "remarkable-lib.json": ("reMarkable-Bibliothek", "reMarkable library"), "mcp-dienste.json": ("Eigene MCP-Dienste", "Own MCP services"),
-    "mcp-actions.json": ("MCP-Aktionen", "MCP actions"), "agent.json": ("Aufträge und Routinen", "Jobs and routines"),
-    "voice.json": ("Stimmabdruck", "Voiceprint"), "speaker-code.json": ("Codewort am Lautsprecher", "Speaker code word"),
-    "chatkeys.json": ("Öffentliche Schlüssel der Geräte", "Devices' public keys"), "contacts.json": ("Kontakte-Zugang", "Contacts account"),
-    "ha-events.json": ("Home-Assistant-Ereignisse", "Home Assistant events"), "briefing-sent": ("Briefing gesendet", "Briefing sent"),
-    "messages.json": ("Nachrichten-Einstellungen", "Message settings"), "messages": ("Alte Sprachnachrichten", "Old voice messages"),
-    "agent-pending.json": ("Wartet auf Ja", "Waiting for yes"), "calendar-pending.json": ("Wartet auf Ja", "Waiting for yes"),
-    "fix-pending.json": ("Wartet auf Ja", "Waiting for yes"), "memory-ask.json": ("Offene Frage zum Gedächtnis", "Open memory question"),
-    "mail-pending.json": ("Wartet auf Ja", "Waiting for yes"), "mcp-dienste-pending.json": ("Wartet auf Ja", "Waiting for yes"),
-    "messages-pending.json": ("Wartet auf Ja", "Waiting for yes"), "tasks-pending.json": ("Wartet auf Ja", "Waiting for yes"),
-    "tagebuch.json": ("Spark-Tagebuch", "Spark diary"), "mfa.json": ("Zweiter Schritt des Profils", "Profile's second step"),
-    "memory-tidy.json": ("Aufräum-Vorschlag", "Tidy proposal"), "memory-tidy-checked": ("Letzte Aufräum-Prüfung", "Last tidy check"),
-    # users/ (global)
-    "profiles.json": ("Profile und Geräte", "Profiles and devices"), "sessions.json": ("Anmeldungen", "Logins"),
-    "seen.json": ("Zuletzt gesehen", "Last seen"), "secret": ("Schlüssel der Profil-Anmeldung", "Profile login key"),
-    "_chats/": ("Chats zwischen Profilen", "Chats between profiles"), "_verbund/": ("Spark-Verbund: andere Sparks, Kontakte, Warteschlange", "Spark network: other Sparks, contacts, queue"), "begleiter.json": ("Begleiter-Geräte", "Companion devices"),
-    # state/
-    "secret.key": ("Schlüssel für alles Versiegelte", "Key for everything sealed"), "panel-password": ("Admin-Passwort (Hash)", "Admin password (hash)"),
-    "admin-session.key": ("Schlüssel der Admin-Sitzung", "Admin session key"), "vorrang-key": ("Schlüssel Panel ↔ Sprachdienste", "Key panel ↔ speech services"),
-    "offsite.json": ("Sicherung nach außen", "Offsite backup"), "nas-admin.json": ("NAS-Verbindung des Spark", "The Spark's NAS connection"), "docling.json": ("Docling-Server: Adresse, Zertifikat, Zahlen", "Docling server: address, certificate, counts"), "naszustand.json": ("Zustand der NAS: Adresse, SNMP-Benutzer, letzte Werte", "NAS status: address, SNMP user, newest values"), "mfa-admin.json": ("Zweiter Schritt des Admins", "Admin's second step"),
-    "apns.json": ("Apple-Push-Schlüssel", "Apple push key"), "apns-tokens.json": ("iPhone-Geräte für Push", "iPhones for push"),
-    "github-token.json": ("GitHub-Lese-Token", "GitHub read token"), "vapid.pem": ("Web-Push-Schlüssel", "Web push key"),
-    "esp32.json": ("Lautsprecher und Firmware", "Speakers and firmware"), "geraete-updates.json": ("Geräte-Updates", "Device updates"),
-    "regel-versionen.json": ("Regel-Versionen", "Rule versions"), "berater.json": ("Vorschläge des Assistenten", "Assistant proposals"),
-    "faelle.json": ("Fälle", "Cases"), "gut-saetze.json": ("Mit 👍 bestätigte Fragen", "Questions confirmed with 👍"),
-    "bewertungen.json": ("Bewertungen pro Tag", "Ratings per day"), "dienstwacht.json": ("Dienst-Wächter", "Service watcher"),
-    "mcp-dienste-admin.json": ("Erlaubte MCP-Ziele", "Allowed MCP hosts"), "mcp-server.json": ("MCP-Programme (Token-Hashes)", "MCP programs (token hashes)"),
-    "personen-vorrang.json": ("Vorrang pro Profil", "Priority per profile"), "quality-cases.json": ("Eigene Testfragen", "Own test questions"),
-    "quality-history.json": ("Verlauf der Qualitätstests", "Quality test history"), "quality.json": ("Letzter Qualitätstest", "Last quality test"),
-    "doc-quotas.json": ("Dokument-Kontingente", "Document quotas"), "admins.json": ("Profile als Admins", "Profiles as admins"),
-    "features-seen.json": ("Wann Funktionen frei wurden", "When functions were released"), "join.json": ("Einladungen (Hashes)", "Invitations (hashes)"),
-    "guard.json": ("Sperren nach Fehlversuchen", "Lockouts"), "revoked.json": ("Widerrufene Sitzungen", "Revoked sessions"),
-    "guard-xff-hinted.json": ("Proxy-Hinweis gezeigt", "Proxy hint shown"), "audit.log": ("Admin-Protokoll, 1 MB", "Admin log, 1 MB"),
-    "traces.jsonl": ("Logs → Anfragen, 48 h", "Logs → Requests, 48 h"), "latency.json": ("Wartezeiten", "Waiting times"),
-    "verbrauch.json": ("Verbrauch je Modell, Aufgabe und Profil (nur Zahlen)", "Usage per model, task and profile (numbers only)"),
-    "verbrauch-kontingent.json": ("eigene Tageskontingente", "Own daily quotas"),
-    "livecheck.json": ("Echtprüfung", "Live check"), "live-monitors.json": ("Wandmonitore", "Wall monitors"),
-    "dienste-zustand.json": ("Hintergrund-Dienste", "Background services"), "weiche-stats.json": ("Weiche-Statistik", "Switch statistics"), "bild-test.json": ("Letztes Probebild (Bild testen)", "Last sample picture (Test a picture)"),
-    "weiche-history.json": ("Weiche-Änderungen", "Switch changes"), "config-undo.json": ("Rückgängig (ohne Geheimnisse)", "Undo (no secrets)"),
-    "tipps.json": ("Gezeigte Tipps", "Tips shown"), "iphone-update.json": ("Update aus der iPhone-App", "Update from the iPhone app"),
-    "vision.json": ("Bildfragen, 10 min", "Picture questions, 10 min"), "doc-embed.json": ("Vektormodell", "Vector model"), "doc-rank.json": ("Nachsortier-Modell", "Re-ranking model"),
-    "notaus.json": ("Notaus", "Kill switch"), "wartung.json": ("Wartungspause", "Maintenance pause"),
-    "wartung-satz-de.pcm": ("Wartungssatz als Ton", "Maintenance sentence as sound"), "wartung-satz-en.pcm": ("Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)"), "notaus-mine.json": ("Mein Notaus", "My kill switch"),
-    "notaus-keys.json": ("Notaus-Auslöser", "Kill switch triggers"), "meldung-token.json": ("Token für Meldungen", "Report token"),
-    "meldungen": ("Meldungs-Entwürfe", "Report drafts"), "ack": ("Sofort-Sätze als Ton", "Instant sentences as sound"),
-    "android": ("Android-App zum Download", "Android app for download"), "begleiter": ("Begleiter-Updates", "Companion updates"),
-    "begleiter-inbox": ("Vom Handy auf den PC, 24 h", "Phone to PC, 24 h"), "speicher-tmp": ("Zwischenablage des eigenen Speichers", "Own storage staging"), "nasquelle-tmp": ("Zwischendateien der Wissensordner, Sekunden", "Knowledge folder staging, seconds"),
-    "speech-active": ("Zeitpunkt der letzten Sprache", "Time of last speech"), "speech-spark-asr-engine.json": ("Zustand der ASR-Engine", "ASR engine state"),
-    "speech-spark-tts-*.json": ("Zustand der TTS-Engines", "TTS engine state"), "bench-latest.json": ("Letzte Messung", "Last benchmark"),
-    "bench-history.json": ("Messungen", "Benchmarks"), "update-progress.json": ("Update-Fortschritt", "Update progress"),
-    "update-target": ("Gewünschter Update-Stand", "Requested update target"), "update-night.json": ("Nacht-Update", "Night update"),
-    "setup.json@state": ("Einrichtungs-Assistent erledigt", "Setup wizard done"), "telegram.json@state": ("Telegram-Bot", "Telegram bot"),
-    "agent.json@state": ("Agent-Stufen, MCP-Dienste", "Agent levels, MCP services"),
-    "migrated-chunk10": ("Einmalige Umstellung erledigt", "One-time migration done"), "firmware": ("ESP32-Firmware", "ESP32 firmware"),
-}
-# per-profile files written through their own helper, not through profiles._path (users/<id>/, never copied)
-USERS_SONST = {"mfa.json": "Schlüssel", "memory-tidy.json": "Warteschlange", "memory-tidy-checked": "Zustand"}
-# directly under users/ (all profiles together)
-USERS_GLOBAL = {"profiles.json": "ja", "sessions.json": "ja", "seen.json": "ja", "secret": "nein", "_chats/": "ja", "_verbund/": "ja",
-                "begleiter.json": "ja"}
-# state/ files written by the shell scripts or through other names (install.sh, update.sh, engine.sh, core.py)
-STATE_SONST = {"admin-session.key", "update-target", "update-night.json", "migrated-chunk10", "speech-spark-tts-*.json",
-               "faelle.json", "gut-saetze.json", "nas-admin.json", "bewertungen.json", "weiche-stats.json", "weiche-history.json"}
-# what is sealed or hashed: path -> (German, English); the rest lies as plain JSON (0600, owner speech)
-VERSCHLUESSELT = {
-    "mail.json": ("Passwort versiegelt", "password sealed"), "nas.json": ("Passwort versiegelt", "password sealed"), "calendar.json": ("Passwort versiegelt", "password sealed"),
-    "homeassistant.json": ("Token versiegelt", "token sealed"), "remarkable.json": ("Token versiegelt", "token sealed"),
-    "mcp-dienste.json": ("Tokens versiegelt", "tokens sealed"), "contacts.json": ("Passwort versiegelt", "password sealed"),
-    "speaker-code.json": ("versiegelt", "sealed"), "speicher.json": ("Schlüssel versiegelt", "key sealed"),
-    "mfa.json": ("versiegelt", "sealed"), "voice.json": ("versiegelt", "sealed"), "_chats/": ("AES-256-GCM", "AES-256-GCM"), "secret": ("ist ein Schlüssel", "is a key"),
-    "secret.key": ("ist der Schlüssel", "is the key"), "panel-password": ("Hash", "hash"), "admin-session.key": ("ist ein Schlüssel", "is a key"),
-    "vorrang-key": ("ist ein Schlüssel", "is a key"), "offsite.json": ("versiegelt", "sealed"), "nas-admin.json": ("Passwort versiegelt", "password sealed"), "docling.json": ("Schlüssel versiegelt", "key sealed"), "naszustand.json": ("Passwörter versiegelt", "passwords sealed"), "mfa-admin.json": ("versiegelt", "sealed"),
-    "apns.json": ("Schlüssel versiegelt", "key sealed"), "telegram.json@state": ("Token versiegelt", "token sealed"),
-    "github-token.json": ("versiegelt", "sealed"), "esp32.json": ("teils versiegelt", "partly sealed"),
-    "agent.json@state": ("Tokens versiegelt", "tokens sealed"), "mcp-server.json": ("nur Hashes", "hashes only"),
-    "join.json": ("nur Hashes", "hashes only"), "meldung-token.json": ("versiegelt", "sealed"),
-    "speicher-tmp": ("AES-256-GCM", "AES-256-GCM"), "vapid.pem": ("ist ein Schlüssel", "is a key"),
-    "config-undo.json": ("ohne Geheimnisse", "without secrets"), "messages.json": ("teils versiegelt", "partly sealed"),
-}
-# the kinds of speicher.LOCAL and USERS_SONST in English
+# what is in a file (German, English), what is sealed, the profile files with their own helper, the files directly
+# under users/ and the state/ files the scans cannot see: built from the register dateien.py (one line per file)
+INHALT, VERSCHLUESSELT, USERS_SONST = dateien.INHALT, dateien.VERSCHLUESSELT, dateien.USERS_SONST
+USERS_GLOBAL, STATE_SONST = dateien.USERS_GLOBAL, dateien.STATE_SONST
+# the kinds of dateien.LOCAL and USERS_SONST in English
 KAT_EN = {"Einstellungen": "Settings", "Zustand": "State", "Login": "Login", "Gerät": "Device", "Stimmabdruck": "Voiceprint",
           "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue",
           "alte Sprachnachrichten (bis zur Übernahme in die Chats)": "old voice messages (until moved into the chats)"}
@@ -523,24 +430,24 @@ def module_files():
 def _state_rows():
     rows = []
     sealed = VERSCHLUESSELT
-    for name in sorted(set(backup.STATE_FILES) | set(backup.STATE_LOCAL)):
+    for name in sorted(set(dateien.STATE_FILES) | set(dateien.STATE_LOCAL)):
         key = name + "@state" if name + "@state" in INHALT else name
         rows.append({"pfad": "state/" + name, "ort": "global", "art": "state", "inhalt": INHALT.get(key, ("", "")),
-                     "sicherung": "ja" if name in backup.STATE_FILES or name == "panel-password" else "nein",
-                     "grund": backup.STATE_LOCAL.get(name, ""), "eigen": "", "schutz": sealed.get(key, ("", ""))})
+                     "sicherung": "ja" if name in dateien.STATE_FILES or name == "panel-password" else "nein",
+                     "grund": dateien.STATE_LOCAL.get(name, ""), "eigen": "", "schutz": sealed.get(key, ("", ""))})
     return rows
 
 
 def _user_rows():
     rows = []
-    for area, (_de, _en, files) in speicher.AREAS.items():
+    for area, (_de, _en, files) in dateien.AREAS.items():
         for f in files:
             rows.append(("users/ID/" + f, f, area))
-    for f in list(speicher.LOCAL) + list(USERS_SONST):
+    for f in list(dateien.LOCAL) + list(USERS_SONST):
         rows.append(("users/ID/" + f + ("/" if f == "messages" else ""), f, ""))
     out = []
     for pfad, f, area in rows:
-        kat = speicher.LOCAL.get(f) or USERS_SONST.get(f) or ""
+        kat = dateien.LOCAL.get(f) or USERS_SONST.get(f) or ""
         excluded = f in ("messages", "messages-pending.json")   # backup._add_dir leaves them out
         out.append({"pfad": pfad, "ort": "profil", "art": "users", "inhalt": INHALT.get(f, ("", "")),
                     "sicherung": "nein" if excluded else "ja", "grund": kat, "eigen": area,
@@ -581,7 +488,7 @@ def data(lang="de"):
     except Exception:
         version = ""
     return {"version": version, "groups": groups, "nodes": nodes, "edges": [list(e) for e in KANTEN], "steps": steps,
-            "storage": rows, "areas": {k: v[1 if en else 0] for k, v in speicher.AREAS.items()}}
+            "storage": rows, "areas": {k: v[1 if en else 0] for k, v in dateien.AREAS.items()}}
 
 
 # ---------------------------------------------------------------- the docs (generated parts)

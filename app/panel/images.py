@@ -39,11 +39,10 @@ import llm
 import profiles
 import features
 import verbrauch
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import assistant, auth, own_profile
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "vision.json")
 
 MAX_BYTES = 8 * 1024 * 1024    # one upload

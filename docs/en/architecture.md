@@ -275,6 +275,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/befund.py` | Befund: the cause of a case, worked out before any proposal. |
 | `app/panel/berater.py` | Einstellungs-Assistent: cases become proposals. |
 | `app/panel/berater_katalog.py` | The Einstellungs-Assistent's catalog: everything it may ever propose. |
+| `app/panel/dateien.py` | Datei-Register: every file and folder the panel keeps, listed once (Richtlinie Teil 17, Aufräumen Schritt 8). |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: the Spark looks at its services by itself and tells the admins when one is gone and when it is back. |
 | `app/panel/faelle.py` | Fälle: every problem becomes a case the moment it happens. |
 | `app/panel/ghtoken.py` | A read-only GitHub token for the Spark's own questions to api.github.com (Settings → Update). |
@@ -2659,7 +2660,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ is in exactly one list: backup.STATE_FILES (29, go into every backup) or backup.STATE_LOCAL (48, with their reason). test_technik finds every name the code writes there and wants it in one of the lists.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 48). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2688,8 +2689,8 @@ flowchart TD
 - `app/panel/vault.py` `_key`: get secret.key or make it once ([step 3](#kn-state-s3))
 - `app/panel/vault.py` `seal`: seal ([step 4](#kn-state-s4))
 - `app/panel/vault.py` `open_`: open, empty with another key ([step 6](#kn-state-s6))
-- `app/panel/backup.py` `STATE_FILES`: what goes into the backup ([step 7](#kn-state-s7))
-- `app/panel/backup.py` `STATE_LOCAL`: what stays out with a reason ([step 7](#kn-state-s7))
+- `app/panel/dateien.py` `STATE_FILES`: what goes into the backup (from the file register) ([step 7](#kn-state-s7))
+- `app/panel/dateien.py` `STATE_LOCAL`: what stays out with a reason ([step 7](#kn-state-s7))
 - `app/panel/backup.py` `_seal_keys`: seal secret.key for the move ([step 8](#kn-state-s8))
 - `app/panel/backup.py` `_check_state`: check the files of the backup ([step 9](#kn-state-s9))
 - `app/panel/backup.py` `_swap`: put in place with a way back ([step 10](#kn-state-s10))
@@ -2743,7 +2744,7 @@ flowchart TD
 2. <a id="kn-users-s2"></a>**Path in its own folder**: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text.
 3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read.
 4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
-5. <a id="kn-users-s5"></a>**Every file sorted**: Every file name is either in an area of speicher.AREAS (may go to the own storage) or in speicher.LOCAL (stays on the Spark, with a reason: keys, accounts, settings, voiceprint, queues). test_technik checks every name the code writes.
+5. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes.
 6. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
 7. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
 8. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.
@@ -2765,7 +2766,8 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 | Tasks and reminders | tasks.json, reminders.json | ✓ |
 | Documents | wissen.db, docs/files/, suchpruefung.json | ✓ |
 | Created documents | erstellt/ | ✓ |
-| Accounts, keys, voiceprint | speicher.LOCAL | ✕ |
+| Painted pictures | bilder/ | ✓ |
+| Accounts, keys, voiceprint | dateien.LOCAL | ✕ |
 
 #### Numbers (from the code)
 
@@ -2792,7 +2794,7 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 - `app/panel/profiles.py` `delete_user`: delete profile and folder ([step 11](#kn-users-s11))
 - `app/panel/vault.py` `seal`: seal ([step 3](#kn-users-s3))
 - `app/panel/speakers.py` `_store`: voiceprint sealed ([step 3](#kn-users-s3), [step 4](#kn-users-s4))
-- `app/panel/speicher.py` `AREAS`: what may go to the own storage ([step 5](#kn-users-s5))
+- `app/panel/dateien.py` `AREAS`: what may go to the own storage (from the file register) ([step 5](#kn-users-s5))
 - `app/panel/speicher.py` `_key`: the profile's storage key, sealed ([step 8](#kn-users-s8))
 - `app/panel/speicher.py` `local_files`: only the list, no links ([step 7](#kn-users-s7))
 - `app/panel/speicher.py` `seal_file`: AES-256-GCM in pieces ([step 8](#kn-users-s8))

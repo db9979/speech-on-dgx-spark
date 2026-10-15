@@ -26,7 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import acting_profile, assistant, auth, json_body
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
@@ -736,7 +736,7 @@ def app_pages(uid):
 
 # ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)
 _UID = re.compile(r"u_[0-9a-f]{12}")
-SEEN = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "features-seen.json")
+SEEN = os.path.join(STATE, "features-seen.json")
 
 
 def _seen(c):

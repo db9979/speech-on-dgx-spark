@@ -12,9 +12,8 @@ import statistics
 import threading
 import time
 
-from common import write_json
+from common import STATE, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEEP_DAYS, MAX_ENTRIES = 14, 5000
 DAY = 86400
 _lock = threading.Lock()

@@ -34,9 +34,8 @@ import time
 
 import mfa
 import profiles
-from common import write_json
+from common import STATE, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "admins.json")
 ROLES = ("admin", "manager")
 NAMES = {"admin": "Admin", "manager": "Verwalter"}

@@ -19,9 +19,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
 from common import (ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
-                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
+                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 
-STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UNIT = "speech-spark-asr-engine"
 NAME_TO_ISO = {v.lower(): k for k, v in ASR_ISO.items()}
 
@@ -86,7 +85,7 @@ async def engine_status():
 
 def _not_ready():
     try:
-        with open(os.path.join(STATE_DIR, "speech-spark-asr-engine.json")) as f:
+        with open(os.path.join(STATE, "speech-spark-asr-engine.json")) as f:
             st = json.load(f)
     except Exception:
         st = {}

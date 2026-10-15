@@ -33,10 +33,9 @@ import notaus
 import verbrauch
 import vault
 import features
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 
 API = "https://api.telegram.org"
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 CODE_SECONDS = 600
 FOLLOW_UP = 30 * 60          # earlier messages of the day's Telegram conversation count this long
 MAX_VOICE = 5 * 1024 * 1024

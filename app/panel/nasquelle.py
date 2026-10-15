@@ -56,7 +56,7 @@ import netguard
 import profiles
 import vault
 import zertpin
-from common import load_config
+from common import STATE, load_config
 import core
 from core import auth, browser_profile, spawn
 
@@ -524,7 +524,7 @@ async def walk(rd, skip=(), most=MAX_LIST, secs=LIST_SECS):
 
 # ---------------------------------------------------------------- one round
 def _tmp_dir():
-    return os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "nasquelle-tmp")
+    return os.path.join(STATE, "nasquelle-tmp")
 
 
 def _tmp():

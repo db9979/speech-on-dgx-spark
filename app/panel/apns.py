@@ -28,7 +28,7 @@ import httpx
 import profiles
 import vault
 import features
-from common import read_json, write_json
+from common import STATE, read_json, write_json
 
 try:
     from cryptography.hazmat.primitives import hashes, serialization
@@ -37,7 +37,6 @@ try:
 except ImportError:
     ec = None
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 HOSTS = {False: "https://api.push.apple.com", True: "https://api.sandbox.push.apple.com"}
 JWT_SECONDS = 40 * 60          # Apple wants a fresh token at least every hour, not more than every 20 minutes
 INBOX_SECONDS = 24 * 3600

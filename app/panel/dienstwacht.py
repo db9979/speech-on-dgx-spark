@@ -49,11 +49,10 @@ import features
 import guard
 import netguard
 import profiles
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import auth, json_body
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 
 LOOP = 30                 # the loop wakes this often; each service has its own pace
 EVERY, SLOW = 60, 300     # most services every minute; mail, calendar, NAS every 5 minutes (after a failure: EVERY)

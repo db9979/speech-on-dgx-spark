@@ -19,9 +19,8 @@ import httpx
 
 import llm
 import taten
-from common import load_config, no_think, write_json
+from common import STATE, load_config, no_think, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
 HISTORY = os.path.join(STATE, "quality-history.json")
 OWN = os.path.join(STATE, "quality-cases.json")   # questions profiles handed over after a correction

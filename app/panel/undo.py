@@ -16,9 +16,8 @@ import secrets
 import threading
 import time
 
-from common import write_json
+from common import STATE, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "config-undo.json")
 KEEP = 50
 MAX_CHANGES = 40

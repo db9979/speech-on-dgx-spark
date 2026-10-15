@@ -35,9 +35,9 @@ import tempfile
 import threading
 import time
 
-from common import CONFIG_PATH, write_json
+from common import CONFIG_PATH, STATE, write_json
+import dateien
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 BASE = os.path.dirname(STATE.rstrip("/"))
 BACKUP_DIR = os.environ.get("SPEECH_SPARK_BACKUPS", os.path.join(BASE, "backups"))
 USERS = os.environ.get("SPEECH_SPARK_USERS", os.path.join(BASE, "users"))
@@ -50,90 +50,8 @@ NAME = re.compile(r"speech-spark-\d{8}-\d{6}(-[a-z\-]{1,20})?\.tar\.gz")
 MAX_UPLOAD = 2 * 1024**3
 MAX_UNPACKED = 8 * 1024**3  # a small archive must not unpack into a full disk
 _lock = threading.Lock()
-# shared state of this Spark (not the logs, counters, lockouts or login keys); name -> kind
-STATE_FILES = {
-    "nas-admin.json": "json",       # the admin's NAS connection (nas.py): address, user, password sealed, pinned certificate
-    "offsite.json": "json",         # Sicherung nach außen: WebDAV address, user, password and backup password (sealed)
-    "docling.json": "json",         # Docling-Server: address, key (sealed), accepted certificate
-    "naszustand.json": "json",      # Zustand der NAS: host, SNMPv3 user, both passwords sealed, the newest values
-    "mfa-admin.json": "json",       # the admin's second step (secret sealed with secret.key)
-    "apns.json": "json",            # iPhone push: Apple key (sealed), key id, team
-    "apns-tokens.json": "json",     # iPhone push: the devices' tokens
-    "telegram.json": "json",        # Telegram bot (token sealed)
-    "github-token.json": "json",    # read-only GitHub token for update checks and downloads (sealed, ghtoken.py)
-    "vapid.pem": "pem",             # browser push key: the browsers' push subscriptions belong to it
-    "esp32.json": "json",           # ESP32 speakers: board variant, firmware, automatic updates
-    "agent.json": "json",           # agent levels and MCP services (tokens sealed)
-    "geraete-updates.json": "json",    # Geräte-Updates: versions seen, notes due, the night round of the speakers
-    "regel-versionen.json": "json",   # Einstellungs-Assistent: the own rules before each change (Version 3)
-    "berater.json": "json",          # Einstellungs-Assistent: proposals, what was there before, Nachkontrolle
-    "faelle.json": "json",           # its cases (fingerprints, counts, at most three examples with consent)
-    "gut-saetze.json": "json",       # questions confirmed with 👍 (with consent): protected in the Prüfstand
-    "dienstwacht.json": "json",     # Dienst-Wächter: services taken off the list, their state, outages of 7 days, notes due
-    "mcp-dienste-admin.json": "json",  # own MCP services of profiles: hosts the admin allows, blocked services
-    "mcp-server.json": "json",      # programs connected to the Spark as an MCP server (only hashes of their tokens)
-    "personen-vorrang.json": "json",  # priority for people: the stage the admin gave each profile (stufe.py)
-    "quality-cases.json": "json",   # own quality test questions
-    "quality-history.json": "json",
-    "setup.json": "json",           # first-start wizard done
-    "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
-    "admins.json": "json",          # profiles as admins: roles and the main admin profile (coadmin.py)
-    "features-seen.json": "json",   # when each function was first on („neu freigegeben“ in tipps.py, features.py)
-    "verbrauch-kontingent.json": "json",  # Tageskontingent: the admin's own quota per profile (verbrauch.py)
-    "join.json": "json",            # new people by invitation: the switch, invitations (code hashes) (join.py)
-}
-# every other file or folder in state/, with the reason it stays out of a backup (Zustand → Technik, technik.py;
-# test_technik finds each name the code writes there and wants it here or in STATE_FILES)
-STATE_LOCAL = {
-    "secret.key": "Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)",
-    "panel-password": "kommt einzeln in die Sicherung (eigener Weg in create)",
-    "admin-session.key": "Schlüssel der Admin-Sitzung: nach einem Umzug neu anmelden",
-    "vorrang-key": "Schlüssel zwischen Panel und Sprachdiensten, entsteht neu",
-    "guard.json": "Sperren nach Fehlversuchen, kurzlebig",
-    "revoked.json": "widerrufene Sitzungen, kurzlebig",
-    "guard-xff-hinted.json": "Hinweis gezeigt",
-    "audit.log": "Protokoll dieses Geräts",
-    "traces.jsonl": "Anfrage-Verlauf, 48 h",
-    "latency.json": "Statistik",
-    "verbrauch.json": "Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)",
-    "livecheck.json": "letzte Echtprüfung",
-    "live-monitors.json": "Wandmonitore dieses Geräts",
-    "dienste-zustand.json": "Zustand der Hintergrund-Dienste",
-    "weiche-stats.json": "Statistik",
-    "bild-test.json": "Messwert dieses Geräts (Bild testen)",
-    "weiche-history.json": "Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)",
-    "bewertungen.json": "Zähler pro Tag",
-    "quality.json": "letztes Ergebnis",
-    "config-undo.json": "Rückgängig dieses Geräts",
-    "tipps.json": "gezeigte Tipps",
-    "iphone-update.json": "Hinweise zum Update, entstehen neu",
-    "vision.json": "Ergebnisse von Bildfragen, 10 Minuten",
-    "doc-embed.json": "Zustand des Vektormodells",
-    "doc-rank.json": "Prüfsummen des Nachsortier-Modells, entstehen neu",
-    "notaus.json": "Notaus gilt nur auf diesem Gerät",
-    "wartung.json": "Wartungspause gilt nur für das laufende Update",
-    "wartung-satz-de.pcm": "Wartungssatz für Lautsprecher, macht der Spark selbst neu",
-    "wartung-satz-en.pcm": "Wartungssatz für Lautsprecher, macht der Spark selbst neu",
-    "nasquelle-tmp": "Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht",
-    "notaus-mine.json": "Notaus gilt nur auf diesem Gerät",
-    "notaus-keys.json": "Auslöser gelten nur auf diesem Gerät",
-    "meldung-token.json": "Token wird neu eingetragen",
-    "meldungen": "Entwürfe, kurzlebig",
-    "ack": "Ton-Cache, entsteht neu",
-    "android": "Download-Cache",
-    "begleiter": "Download-Cache",
-    "begleiter-inbox": "Dateien vom Handy, 24 h",
-    "speicher-tmp": "Zwischenablage",
-    "speech-active": "Zeitmarke",
-    "speech-spark-asr-engine.json": "Zustand der Engine",
-    "speech-spark-tts-*.json": "Zustand der Engines",
-    "bench-latest.json": "Messung dieses Geräts",
-    "bench-history.json": "Messungen dieses Geräts",
-    "update-progress.json": "Update-Fortschritt",
-    "update-target": "Update-Auftrag",
-    "update-night.json": "Nacht-Update",
-    "migrated-chunk10": "Marke einer einmaligen Umstellung",
-}
+# which files of state/ a backup holds (name -> kind) and why every other one stays out: the register dateien.py
+STATE_FILES, STATE_LOCAL = dateien.STATE_FILES, dateien.STATE_LOCAL
 MAX_STATE_FILE = 8 * 1024**2
 MOVE_FILE = "move-keys.json"
 MOVE_MIN, MOVE_MAX = 12, 200        # password length

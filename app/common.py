@@ -8,6 +8,9 @@ import traceback
 from collections import deque
 
 CONFIG_PATH = os.environ.get("SPEECH_SPARK_CONFIG", "/etc/speech-spark/config.json")
+# the state folder of this Spark (keys, shared state, marks): every module takes it from here (Richtlinie Teil 17);
+# what lies in it is listed once in panel/dateien.py
+STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 
 
 DEFAULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.default.json")
@@ -155,7 +158,7 @@ class DayCounter(dict):
 
 # Speech first (panel vorrang.py): every STT/TTS request touches this file, the panel holds its
 # background work (and cancels its background requests to the language model) while it is fresh.
-SPEECH_MARK = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "speech-active")
+SPEECH_MARK = os.path.join(STATE, "speech-active")
 _speech_marked = [0.0]
 
 
@@ -212,7 +215,7 @@ _stage_key = [None]
 
 
 def stage_key_path():
-    return os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "vorrang-key")
+    return os.path.join(STATE, "vorrang-key")
 
 
 def stage_key(create=False):

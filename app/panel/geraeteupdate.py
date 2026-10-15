@@ -44,14 +44,13 @@ import features
 import guard
 import notaus
 import profiles
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import auth
 
 router = APIRouter()
 _lock = threading.Lock()
 _busy = asyncio.Lock()     # one check at a time
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 CHECK_EVERY = 6 * 3600     # the modules on their own look once a day
 CHECK_GAP = 60             # "Jetzt suchen" at most this often
 LOOP = 60

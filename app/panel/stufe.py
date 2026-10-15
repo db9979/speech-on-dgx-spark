@@ -27,11 +27,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import STAGE_HEADER, STAGE_HIGH, STAGE_KEY_HEADER, STAGE_LOW, stage_key, write_json
+from common import STAGE_HEADER, STAGE_HIGH, STAGE_KEY_HEADER, STAGE_LOW, STATE, stage_key, write_json
 import core
 from core import assistant, auth
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LEVELS = {"vorrang": STAGE_HIGH, "hinten": STAGE_LOW}
 NAMES = {"vorrang": ("Vorrang", "Priority"), "": ("Normal", "Normal"), "hinten": ("Hinten", "Last")}
 MAX_HIGH = 3            # more would make Vorrang mean nothing

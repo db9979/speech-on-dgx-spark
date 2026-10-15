@@ -20,11 +20,10 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
-                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
+                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_numbers, speech_markdown)
 
-STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
              "Russian", "Portuguese", "Spanish", "Italian"]
@@ -91,7 +90,7 @@ async def engine_status(role):
 
 def _not_ready(role, unit):
     try:
-        with open(os.path.join(STATE_DIR, f"speech-spark-tts-{role}.json")) as f:
+        with open(os.path.join(STATE, f"speech-spark-tts-{role}.json")) as f:
             st = json.load(f)
     except Exception:
         st = {}

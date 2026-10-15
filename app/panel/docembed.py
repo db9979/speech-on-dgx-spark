@@ -20,9 +20,8 @@ import os
 import sys
 import time
 
-from common import read_json, write_json
+from common import STATE, read_json, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PINS = os.path.join(STATE, "doc-embed.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.py")
 DIM = 384

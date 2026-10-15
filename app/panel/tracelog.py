@@ -22,11 +22,10 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
-from common import load_config
+from common import STATE, load_config
 from core import auth
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEEP_S, MAX_TRACES, MAX_STEPS, MAX_INFO = 48 * 3600, 500, 40, 12
 SLOW_S = 5.0          # first sound later than this (or no sound and longer than this): "langsam"
 CLIENTS = ("web", "speaker", "watch", "siri", "telegram", "app", "car", "mcp", "ha", "auto", "desk", "other")

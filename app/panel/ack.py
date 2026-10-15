@@ -26,7 +26,8 @@ import re
 import threading
 import time
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+from common import STATE
+
 BRIDGE_S = 6.0          # seconds after the question without any sound of the answer: the second sentence
 MAX_CLIPS = 1000        # recordings kept at most (oldest go first); one is ~1-2 s, 50-100 KB
 MAX_CLIP_BYTES = 8 * 48000   # 8 s of 16-bit mono PCM at 24 kHz

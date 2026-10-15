@@ -73,7 +73,7 @@ import verbrauch
 import profiles
 import schreib
 import signatur
-from common import load_config, no_think, write_json
+from common import STATE, load_config, no_think, write_json
 from core import assistant, auth, browser_profile, confirm_code, json_body
 
 router = APIRouter()
@@ -116,7 +116,6 @@ COFFEE = "https://buymeacoffee.com/zquu1xu570"
 # updates: arch -> (platform, file key in begleiter.json); platform -> release tag
 ARCHS = {"x64": ("windows", "x64"), "arm64": ("windows", "arm64"), "mac": ("mac", "mac")}
 TAGS = {"windows": "begleiter-windows", "mac": "begleiter-mac"}
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UPD_DIR = os.path.join(STATE, "begleiter")
 MAX_FILE = 150 * 1024 * 1024
 MAX_META = 4096

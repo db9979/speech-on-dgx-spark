@@ -12,7 +12,7 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import journal, write_json  # noqa: E402
+from common import STATE, journal, write_json  # noqa: E402
 from core import PREFIX, admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
 import ghtoken  # noqa: E402
@@ -232,7 +232,7 @@ async def _remote_state(force=False):
 # ---------------------------------------------------------------- update lock
 # update.sh writes its progress to this file; while it runs the panel refuses changes (all
 # mutating requests except the ones the assistant needs) and the page shows a locked progress bar.
-UPDATE_PROGRESS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"),
+UPDATE_PROGRESS = os.path.join(STATE,
                                "update-progress.json")
 UPDATE_TIMEOUT = 45 * 60  # then the page offers to wait or cancel (the unit itself may run 2 h)
 # install.sh sections -> (share of the bar, German label)

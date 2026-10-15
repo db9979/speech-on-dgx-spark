@@ -33,7 +33,7 @@ import guard
 import notaus
 import profiles
 import wartung
-from common import DayCounter, load_config
+from common import DayCounter, STATE, load_config
 from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -622,7 +622,7 @@ def bilder_clear(request: Request, prof=Depends(browser_profile)):
 
 # ---------------------------------------------------------------- admin: Bild testen (Stufe 0, measuring)
 def _test_file():
-    return os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "bild-test.json")
+    return os.path.join(STATE, "bild-test.json")
 
 
 def last_test():

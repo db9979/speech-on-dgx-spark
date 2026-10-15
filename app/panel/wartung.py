@@ -33,9 +33,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script (speech-spark pause)
 import features  # noqa: E402
 import guard  # noqa: E402
-from common import load_config, write_json  # noqa: E402
+from common import STATE, load_config, write_json  # noqa: E402
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "wartung.json")
 # the parts that can pause: id -> (Dienst-Wächter id, name de, name en)
 PARTS = {"llm": ("qwen", "Sprachmodell", "Language model"), "asr": ("asr", "Spracherkennung", "Speech recognition"),

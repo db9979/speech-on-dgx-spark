@@ -57,11 +57,10 @@ import mcp
 import netguard
 import profiles
 import vault
-from common import write_json
+from common import STATE, write_json
 import core
 from core import admin_code, auth, browser_profile, secret_profile
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PREFIX = "mcpu_"
 MAX_SERVICES = 5
 MAX_TOOLS = 30

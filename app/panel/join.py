@@ -43,14 +43,13 @@ import features
 import guard
 import mfa
 import profiles
-from common import write_json
+from common import STATE, write_json
 import core
 from core import spawn, acting_profile, admin_code, auth
 
 router = APIRouter()
 _lock = threading.Lock()
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "join.json")
 MODES = ("off", "invite")
 MFA_MODES = ("off", "data")

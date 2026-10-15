@@ -55,7 +55,7 @@ import llm
 import profiles
 import vorrang
 import features
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -123,7 +123,7 @@ def _note(uid, *a, **kw):
         hintergrund.note(uid, *a, **kw)
 
 
-QUOTAS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "doc-quotas.json")
+QUOTAS = os.path.join(STATE, "doc-quotas.json")
 
 
 def _quotas():

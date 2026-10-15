@@ -46,12 +46,11 @@ import netguard
 import profiles
 import vault
 import zertpin
-from common import write_json
+from common import STATE, write_json
 import core
 from core import auth, browser_profile, secret_profile
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 ADMIN_FILE = "nas-admin.json"
 ADMIN = None                     # the owner of the Spark's own connections (STATE/nas-admin.json)
 MAX = 4                          # connections a person adds per store (two NAS, each with two users, is plenty)

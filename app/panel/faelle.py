@@ -36,11 +36,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import DayCounter, write_json
+from common import DayCounter, STATE, write_json
 from core import assistant, json_body
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEEP_S = 30 * 86400
 MAX_CASES = 1000
 MAX_EXAMPLES = 3

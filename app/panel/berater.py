@@ -46,11 +46,10 @@ import klartext
 import llm
 import profiles
 import taten
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 from core import assistant, auth, json_body
 
 router = APIRouter()
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LOOP_S = 15
 MELDER_S = 30 * 60
 QUIET_S = 60            # Punkt 13: a proposal is worked out only after a minute without speech

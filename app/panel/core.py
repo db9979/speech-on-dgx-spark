@@ -21,7 +21,7 @@ import mfa  # noqa: E402
 import passkey  # noqa: E402
 import profiles  # noqa: E402
 import stufen  # noqa: E402
-from common import load_config  # noqa: E402
+from common import STATE, load_config  # noqa: E402
 
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -52,7 +52,7 @@ security = HTTPBasic(auto_error=False)
 # else needs the panel password. The browser logs in once and keeps a cookie; scripts can still
 # send HTTP Basic. The password from the installer can be replaced in the panel; the new one is
 # stored as a PBKDF2 hash in the state directory (the panel cannot write /etc).
-PASSWORD_FILE = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "panel-password")
+PASSWORD_FILE = os.path.join(STATE, "panel-password")
 COOKIE = "speech_spark_admin"
 # Browsers keep sending HTTP Basic credentials from the old login dialog; after "log out" this
 # cookie makes the panel ignore them in that browser until the next password login.

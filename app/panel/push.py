@@ -22,6 +22,7 @@ from urllib.parse import urlsplit
 import httpx
 
 import profiles
+from common import STATE
 
 try:
     from cryptography.hazmat.primitives import hashes, serialization
@@ -32,7 +33,6 @@ try:
 except ImportError:
     ec = None
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEY_FILE = os.path.join(STATE, "vapid.pem")
 SUBJECT = "https://github.com/db9979/speech-on-dgx-spark"
 # only the push services of the browsers: the panel never posts to other addresses

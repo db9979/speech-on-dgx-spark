@@ -9,13 +9,14 @@ still read and get encrypted the next time they are saved.
 import os
 import threading
 
+from common import STATE
+
 try:
     from cryptography.fernet import Fernet, InvalidToken
 except ImportError:  # the panel still works, the secrets stay as they were
     Fernet = None
     InvalidToken = ValueError
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEY_FILE = os.path.join(STATE, "secret.key")
 PREFIX = "enc1:"
 _lock = threading.Lock()

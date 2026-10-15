@@ -21,9 +21,8 @@ import sys
 import time
 
 import features
-from common import load_config, write_json
+from common import STATE, load_config, write_json
 
-STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PINS = os.path.join(STATE, "doc-rank.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.py")
 SIZES = {"klein": ("klein", "small"), "gross": ("groß", "large")}
