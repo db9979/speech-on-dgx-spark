@@ -268,7 +268,7 @@ mem_settle() {
 # weights qwen38 already has: streamed out of its owner's cache by root, written by the service user, checked after
 # (modelle.py pruefen); a copy that fails the check is dropped and downloaded instead
 hf_from_qwen38() {  # $1 = id, $2 = repo, $3 = revision
-  local svc dir src="" h blobs=() f t
+  local svc dir src="" h blobs=() f t b hub
   svc=$(panel_user)
   dir="models--${2//\//--}"
   runuser -u "$svc" -- test -d "$VAR/hf/hub/$dir/snapshots/$3" && return 0
@@ -278,13 +278,20 @@ hf_from_qwen38() {  # $1 = id, $2 = repo, $3 = revision
   done
   [ -n "$src" ] || return 0
   echo "modelle: kopie $1 aus dem cache von qwen38"
+  # the model's blobs/<hash> may link once more into the shared hub/blobs/<2 hex>/ of newer huggingface_hub:
+  # copied as plain files (tar -h), but only blobs the snapshot names that end in one of these two folders
+  hub=$(readlink -f -- "$src/..")
   while IFS= read -r -d '' f; do
-    t=$(readlink -f -- "$f") || continue
-    [ "$(dirname -- "$t")" = "$src/blobs" ] && blobs+=("blobs/$(basename -- "$t")")
+    t=$(readlink -- "$f") || continue
+    b=$(basename -- "$t")
+    [ "$t" = "../../blobs/$b" ] || continue
+    t=$(readlink -f -- "$src/blobs/$b") || continue
+    case "$(dirname -- "$t")" in "$src/blobs"|"$hub"/blobs/??) blobs+=("blobs/$b") ;; esac
   done < <(find "$src/snapshots/$3" -type l -print0)
   [ "${#blobs[@]}" -gt 0 ] || return 0
   runuser -u "$svc" -- mkdir -p -- "$VAR/hf/hub/$dir"
-  tar -C "$src" -cf - "snapshots/$3" "${blobs[@]}" | runuser -u "$svc" -- tar -C "$VAR/hf/hub/$dir" --no-same-owner -xf - \
+  { tar -C "$src" -cf - "snapshots/$3" | runuser -u "$svc" -- tar -C "$VAR/hf/hub/$dir" --no-same-owner -xf - &&
+    tar -C "$src" -hcf - "${blobs[@]}" | runuser -u "$svc" -- tar -C "$VAR/hf/hub/$dir" --no-same-owner -xf - ; } \
     || echo "modelle: kopie $1 fehler"
   if as_panel_user ../modelle.py pruefen "$1"; then return 0; fi
   echo "modelle: kopie $1 verworfen, lade neu"
@@ -322,16 +329,19 @@ mess_restore() {
 
 # inside the unit $MESS_UNIT, as root: $@ = catalog ids
 cmd_messen_intern() {
-  local mid repo rev commit rc minutes ids=() commits=()
+  local mid repo rev commit out rc minutes ids=() commits=()
   MESS_QWEN=(); MESS_PAUSE=0
   for mid in "$@"; do
     repo=$(as_panel_user ../modelle.py feld "$mid" repo) && rev=$(as_panel_user ../modelle.py feld "$mid" revision) \
       || { echo "modelle: messung $mid abgelehnt"; continue; }
     [ -n "$rev" ] && hf_from_qwen38 "$mid" "$repo" "$rev"
     echo "modelle: lade $mid (falls noch nicht da)"
-    if commit=$(as_panel_user ../modelle.py vorbereiten "$mid" | tail -n1) && [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+    out=$(as_panel_user ../modelle.py vorbereiten "$mid") || true
+    commit=$(tail -n1 <<<"$out")
+    if [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
       ids+=("$mid"); commits+=("$commit")
     else
+      grep '^modelle: ' <<<"$out" || true      # the reason (a fixed word: download, hash, dateiart …)
       echo "modelle: messung $mid nicht geladen"
     fi
   done

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.588** · 2026-10-15 · Fix: die Modellprüfung kennt den gemeinsamen Dateispeicher neuerer huggingface_hub-Versionen (große Dateien unter hub/blobs/xx/, vorher „abgelehnt link“ nach jedem Download); die Kopie aus dem qwen38-Cache übernimmt solche Dateien als echte Dateien, die Messung nennt den Ablehnungsgrund
 - **V01.0.587** · 2026-10-15 · Fix: sudo speech-spark modelle messen startet seine eigene Einheit über /bin/bash (vorher „Permission denied“, weil speech-spark.sh nicht ausführbar ist)
 - **V01.0.586** · 2026-10-15 · Eigene Modelle Stufe E0 (Messen): Modell-Katalog app/modelle.json mit festen Regeln (vLLM, feste Revision, Speicheranteil höchstens 0,80, nie trust_remote_code, nur Safetensors), modelle.py prüft jede Datei im Hugging-Face-Speicher gegen ihre Prüfsumme; neuer Befehl sudo speech-spark modelle liste|messen misst Qwen3.8 27B NVFP4 mit MTP und Qwen3-VL 8B (fp8, gemma auf Wunsch) in einer eigenen Einheit, hält qwen38 dafür mit Wartungspause an und startet es immer wieder; Ergebnis nur als Zahlen in state/modelle-messung.json und Zeilen modelle:; Richtlinie: Modelle nur aus dem Katalog, qwen38 nie automatisch aus
 - **V01.0.585** · 2026-10-15 · Große Aufräumaktion Schritt 9: Prüf-Hüllen entfernt (33 Hüllen um features.allowed), neuer Wächter CheckWrapper, Netz-Wächter-Liste nachgezogen, Regel PROJEKT-SPERRE in der Richtlinie

@@ -192,13 +192,16 @@ def _datei_hash(path, algo, kopf=b""):
 
 
 def pruefen(ordner, rev):
-    """Checks one snapshot in a Hugging Face cache folder: every entry a link into blobs/, no file kind outside
+    """Checks one snapshot in a Hugging Face cache folder: every entry a link into blobs/ (which may link once more
+    into the shared hub/blobs/<2 hex>/ of newer huggingface_hub), no file kind outside
     ERLAUBT, every blob equal to its name (64 hex = SHA-256 of a large file, 40 hex = git blob hash of a small
     one). Returns (files, bytes); raises Fehler with a fixed word."""
     if not REV.match(rev or ""):
         raise Fehler("revision")
     snap = os.path.join(ordner, "snapshots", rev)
     blobs = os.path.realpath(os.path.join(ordner, "blobs"))
+    # newer huggingface_hub keeps large files once for all models in hub/blobs/<2 hex>/ and links the model's blob there
+    gemeinsam = os.path.realpath(os.path.join(ordner, "..", "blobs"))
     if not os.path.isdir(snap) or os.path.islink(snap):
         raise Fehler("fehlt")
     n = size = 0
@@ -213,10 +216,18 @@ def pruefen(ordner, rev):
                 raise Fehler("dateiart")
             if not os.path.islink(p):
                 raise Fehler("link")
-            ziel = os.path.realpath(p)
-            if os.path.dirname(ziel) != blobs or not os.path.isfile(ziel) or os.path.islink(ziel):
+            erst = os.path.join(root, os.readlink(p))           # one step: the model's blobs/<hash>
+            blob = os.path.basename(erst)
+            if os.path.realpath(os.path.dirname(erst)) != blobs:
                 raise Fehler("link")
-            blob = os.path.basename(ziel)
+            ziel = os.path.realpath(erst)
+            weiter = os.path.islink(os.path.join(blobs, blob))
+            if weiter and os.path.dirname(os.path.dirname(ziel)) != gemeinsam:
+                raise Fehler("link")
+            if not weiter and ziel != os.path.join(blobs, blob):
+                raise Fehler("link")
+            if not os.path.isfile(ziel) or os.path.islink(ziel):
+                raise Fehler("link")
             if re.fullmatch(r"[0-9a-f]{64}", blob):
                 ok = _datei_hash(ziel, "sha256") == blob
             elif re.fullmatch(r"[0-9a-f]{40}", blob):

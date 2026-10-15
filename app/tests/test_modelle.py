@@ -206,6 +206,38 @@ class Pruefen(unittest.TestCase):
             self.cache(d, {"model.safetensors": b"x" * 500, "config.json": b"{}"})
             self.assertEqual(modelle.pruefen(d, self.REV), (2, 502))
 
+    def test_shared_blob_store_of_newer_huggingface_hub(self):
+        with tempfile.TemporaryDirectory() as hub:
+            d = os.path.join(hub, "models--A--B")
+            self.cache(d, {"model.safetensors": b"x" * 500, "config.json": b"{}"})
+            blob = [b for b in os.listdir(os.path.join(d, "blobs")) if len(b) == 64][0]
+            os.makedirs(os.path.join(hub, "blobs", "d0"))
+            os.rename(os.path.join(d, "blobs", blob), os.path.join(hub, "blobs", "d0", "d0" + "e" * 62))
+            os.symlink(os.path.join("..", "..", "blobs", "d0", "d0" + "e" * 62), os.path.join(d, "blobs", blob))
+            self.assertEqual(modelle.pruefen(d, self.REV), (2, 502))
+            with open(os.path.join(hub, "blobs", "d0", "d0" + "e" * 62), "r+b") as f:
+                f.write(b"y")
+            with self.assertRaisesRegex(modelle.Fehler, "hash"):
+                modelle.pruefen(d, self.REV)
+        with tempfile.TemporaryDirectory() as hub, tempfile.TemporaryDirectory() as out:
+            d = os.path.join(hub, "models--A--B")
+            self.cache(d, {"model.safetensors": b"x" * 500})
+            blob = os.listdir(os.path.join(d, "blobs"))[0]
+            os.rename(os.path.join(d, "blobs", blob), os.path.join(out, blob))
+            os.symlink(os.path.join(out, blob), os.path.join(d, "blobs", blob))     # the blob links out of the cache
+            with self.assertRaisesRegex(modelle.Fehler, "link"):
+                modelle.pruefen(d, self.REV)
+
+    def test_the_copy_from_qwen38_takes_only_named_blobs_as_plain_files(self):
+        with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:
+            sh = f.read()
+        b = sh[sh.index("hf_from_qwen38() {"):]
+        b = b[:b.index("\n}\n")]
+        self.assertIn('[ "$t" = "../../blobs/$b" ] || continue', b)
+        self.assertIn('"$src/blobs"|"$hub"/blobs/??) blobs+=', b)
+        self.assertIn('tar -C "$src" -hcf - "${blobs[@]}"', b)
+        self.assertLess(b.index("-hcf"), b.index("modelle.py pruefen"))           # checked after the copy
+
     def test_changed_file(self):
         with tempfile.TemporaryDirectory() as d:
             self.cache(d, {"model.safetensors": b"x" * 500, "config.json": b"{}"})
