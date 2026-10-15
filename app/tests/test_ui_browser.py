@@ -632,6 +632,14 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.evaluate("$('ztodayh').hidden"))
                     await pg.evaluate("zustand({glance:{first_sound:3,slower:false},services:{},system:{},alerts:[]})")
                     self.assertEqual(await pg.evaluate("$('ztoday').children[1].dataset.lvl"), "acc")
+                    # stage 2: the answers per hour as a wide first tile with 24 bars, a link like the answers tile;
+                    # without any answer there is no bar tile
+                    await pg.evaluate("zustand({glance:{answers:3,hours:[...Array(21).fill(0),1,0,2]},services:{},system:{},alerts:[]})")
+                    day = await pg.evaluate("(()=>{const d=$('ztoday').firstElementChild;return [d.classList.contains('zwide'),d.querySelectorAll('.zbars i').length,d.querySelectorAll('.zbars i.z').length,d.dataset.way||'',d.querySelectorAll('.zax span').length]})()")
+                    self.assertEqual(day, [True, 24, 22, "Zustand → Logs → Anfragen", 5])
+                    await pg.evaluate("zustand({glance:{hours:Array(24).fill(0)},services:{},system:{},alerts:[]})")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#ztoday .zwide').length"), 0)
+                    await pg.evaluate("zustand({glance:{answers:3,hours:[...Array(21).fill(0),1,0,2]},services:{},system:{},alerts:[]})")
                     await pg.evaluate("markDirty($('pane-tts'),true)")
                     self.assertEqual(await pg.evaluate("$('zgo').hidden"), False)
                     await pg.evaluate("markDirty($('pane-tts'),false)")

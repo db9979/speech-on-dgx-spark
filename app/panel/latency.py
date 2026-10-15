@@ -65,14 +65,20 @@ def _stats(values):
 
 
 def summary(now=None):
-    """The last 24 hours, the six days before, and a warning sentence when answers got slower."""
+    """The last 24 hours (with answers per hour), the six days before, and a warning sentence when answers got
+    slower."""
     now = time.time() if now is None else now
     loaded = _load()
     items = [x for x in loaded if x.get("k") != "ack"]   # the answer's first sound only
     day = [x["a"] for x in items if x["t"] > now - DAY]
     week = [x["a"] for x in items if now - 7 * DAY < x["t"] <= now - DAY]
     acks = [x["a"] for x in loaded if x.get("k") == "ack" and x["t"] > now - DAY]
-    res = {"day": _stats(day), "week": _stats(week), "ack": _stats(acks), "warn": None}
+    # answers per hour of the last 24 hours, oldest first, the last one is the running hour (Zustand „Heute“ bars)
+    hours = [0] * 24
+    for x in items:
+        if now - DAY < x["t"] <= now:
+            hours[23 - min(23, int((now - x["t"]) // 3600))] += 1
+    res = {"day": _stats(day), "week": _stats(week), "ack": _stats(acks), "warn": None, "hours": hours}
     d, w = res["day"], res["week"]
     # clearly slower: at least 10 answers today, median more than 1.5 times and 1.5 s above the week's
     if d and w and d["n"] >= 10 and w["n"] >= 10 and d["median"] > 1.5 * w["median"] and d["median"] > w["median"] + 1.5:

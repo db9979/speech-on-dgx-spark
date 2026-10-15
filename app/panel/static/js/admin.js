@@ -96,6 +96,16 @@ function zCard(lvl,ic,name,big,unit,small,go,way){const b=way?wayEl('',way):docu
   const k=document.createElement('span');k.className='zk';k.textContent=name;hd.append(bub,k);if(go||way)hd.appendChild(zIco('chev','zch'));
   const v=document.createElement('b');v.textContent=big;if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
   if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}return b}
+// the wide „Heute“ tile: answers per hour of the last 24 hours (admin.glance hours, oldest first, the running hour
+// last) as bars, with the hour under every sixth bar; a jump link to the requests like the answers tile
+function zDay(hrs,way){const b=zCard('acc','bars',t('Antworten pro Stunde','Answers per hour'),'','','',null,way);b.classList.add('zwide');b.querySelector('b').remove();
+  const sum=hrs.reduce((a,x)=>a+x,0),max=Math.max(...hrs),now=Date.now(),hh=i=>String(new Date(now-(23-i)*3600e3).getHours()).padStart(2,'0');
+  b.setAttribute('aria-label',L==='en'?sum+' answers in the last 24 hours':sum+' Antworten in den letzten 24 Stunden');
+  const bars=document.createElement('span');bars.className='zbars';
+  hrs.forEach((x,i)=>{const e=document.createElement('i');if(!x)e.className='z';e.style.height=(x?Math.max(8,Math.round(100*x/max)):3)+'%';e.title=hh(i)+(L==='en'?' h: ':' Uhr: ')+x;bars.appendChild(e)});
+  const ax=document.createElement('span');ax.className='zax';
+  for(const i of [0,6,12,18]){const e=document.createElement('span');e.textContent=hh(i)+(L==='en'?':00':' Uhr');ax.appendChild(e)}
+  const e=document.createElement('span');e.textContent=t('jetzt','now');ax.appendChild(e);b.append(bars,ax);return b}
 function zSvc(v){if(!v)return['',t('nicht eingerichtet','not set up')];const h=v.health||{};
   if(['failed','error'].includes(v.state)||h.error)return['bad',t('Fehler','Error')];
   if(v.state==='active'||['ready','ok'].includes(h.status))return['ok',h.busy?t('arbeitet','working'):t('läuft','running')];
@@ -120,6 +130,8 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
   // „Heute“: each tile opens where its number comes from (way.js wayFirst): the requests, the own speakers, the logs
   const bg=g.background||{},tb=$('ztoday'),sk=g.speakers;tb.textContent='';
   const req=wayFirst(t('Zustand → Logs → Anfragen','Status → Logs → Requests'));
+  const hrs=Array.isArray(g.hours)&&g.hours.length===24?g.hours:null;
+  if(hrs&&hrs.some(x=>x>0))tb.appendChild(zDay(hrs,req));
   tb.appendChild(zCard('acc','chat',t('Antworten','Answers'),String(g.answers||0),'',g.answers?t('ansehen unter Logs','see them in the logs'):t('noch keine Antwort','no answer yet'),null,req));
   if(g.first_sound!=null)tb.appendChild(zCard(g.slower?'warn':'acc','timer',t('Erster Ton','First sound'),fmt(g.first_sound,'',1),' s',
     g.slower?t('langsamer als sonst','slower than usual'):t('im Mittel','median'),null,req));

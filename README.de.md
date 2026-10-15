@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.620** Zustand → Monitoring: neue breite Kachel „Antworten pro Stunde“ mit Säulen der letzten 24 Stunden, auch in der iPhone-App
 - **V01.0.619** Spark teilen: Anleitung und Hinweis nach dem Umzug unter Zustand → Update
 - **V01.0.618** Spark teilen: Panel umziehen und zurückholen (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.617** Spark teilen: geteilt installieren (Modell-Rechner `--teilen`, Panel-Rechner `--mode panel`)
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.613** Spark teilen: Wartungspause auf beiden Rechnern, Live-Kasten Modell-Rechner.
 - **V01.0.612** Spark teilen: Modellwahl und Zustand → Modelle über den Wärter.
 - **V01.0.611** Rot-Fix: Hilfe von speech-spark zeigt auch teilen.
-- **V01.0.610** Spark teilen B4b: Spracheinstellungen und Logs der Modell-Dienste auch mit dem Panel auf einem anderen Rechner
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

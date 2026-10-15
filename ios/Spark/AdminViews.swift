@@ -163,6 +163,24 @@ struct StatusView: View {
             // the "Heute" tiles of Zustand → Monitoring (admin.glance): counts and times only; orange by the panel's rules
             let g = d["glance"] as? [String: Any] ?? [:]
             Section("Heute (24 Std.)") {
+                // answers per hour of the last 24 hours, oldest first (admin.glance "hours"), as small bars
+                if let hrs = g["hours"] as? [NSNumber], hrs.count == 24, hrs.contains(where: { $0.intValue > 0 }) {
+                    let mx = max(1, hrs.map { $0.intValue }.max() ?? 1)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Antworten pro Stunde").font(.caption).foregroundStyle(.secondary)
+                        HStack(alignment: .bottom, spacing: 2) {
+                            ForEach(0..<24, id: \.self) { i in
+                                let n = hrs[i].intValue
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(n > 0 ? Color.accentColor : Color.secondary.opacity(0.25))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: n > 0 ? max(4, 48 * CGFloat(n) / CGFloat(mx)) : 2)
+                            }
+                        }
+                        .frame(height: 48, alignment: .bottom)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
                 LabeledContent { Text(verbatim: Self.num(g["answers"] ?? 0)) } label: { Label("Antworten", systemImage: "bubble.left") }
                 if g["first_sound"] is NSNumber {
                     LabeledContent {

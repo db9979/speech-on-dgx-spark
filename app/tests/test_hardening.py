@@ -380,6 +380,12 @@ class Measured(unittest.TestCase):
             self.assertEqual(res["week"]["median"], 1.0)
             self.assertEqual(res["day"]["median"], 4.0)
             self.assertIn("langsamer", res["warn"])
+            # answers per hour for the „Heute“ bars: 24 buckets, the running hour last, older than a day not counted
+            self.assertEqual(len(res["hours"]), 24)
+            self.assertEqual(res["hours"][23], 13)            # 12 just now + the cleaned 2.0
+            self.assertEqual(sum(res["hours"]), 13)
+            latency.add(1.0, "web", now=now - 5 * 3600 - 10)
+            self.assertEqual(latency.summary(now=now)["hours"][18], 1)
             latency.add(1.0, "web", now=now + 20 * 86400)   # old entries go after two weeks
             self.assertEqual(len(latency._load()), 1)
         finally:

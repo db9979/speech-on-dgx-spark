@@ -7840,6 +7840,16 @@
           }
         }
       }
+    },
+    "Antworten pro Stunde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answers per hour"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.620** Status → Monitoring: new wide tile "Answers per hour" with bars for the last 24 hours, also in the iPhone app
 - **V01.0.619** Spark split: guide and hint after the move under Status → Update
 - **V01.0.618** Spark split: move the panel and take it back (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.617** Spark split: split install (model computer `--teilen`, panel computer `--mode panel`)
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.613** Spark split: maintenance pause on both computers, Live box for the model computer.
 - **V01.0.612** Spark split: model choice and Status → Models through the Wärter.
 - **V01.0.611** Red fix: speech-spark help shows teilen again.
-- **V01.0.610** Splitting the Spark B4b: speech settings and model service logs also with the panel on another computer
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
