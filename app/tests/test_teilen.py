@@ -402,6 +402,21 @@ class Installation(unittest.TestCase):
                       "only an address that names the model computer, the whole host, no path")
         self.assertIn("grep -m1 -E '^[0-9]+([.][0-9]+){3}$'", block)
 
+    def test_the_door_follows_the_language_models_move(self):
+        """V01.0.639: after `modelle llm uebernehmen` on tars the door still had the port list from before (the LLM-Tor
+        only while llm.enabled), so the Pi got no answer; both ways of the move refresh the door and its firewall."""
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:
+            cli = f.read()
+        body = cli[cli.index("cmd_umzug_intern() {"):cli.index("\nrun_umzug() {")]
+        self.assertIn('echo "modelle: umgeschaltet $mid"\n  tuer_neu\n}', body)
+        self.assertIn("umzug_zurueck\n    tuer_neu\n", body)
+        fn = cli[cli.index("tuer_neu() {"):cli.index("\n}\n", cli.index("tuer_neu() {"))]
+        self.assertIn("restart_if_there speech-spark-tlstor", fn)
+        self.assertIn("cmd_teilen firewall", fn)
+        self.assertIn(".api.tls_listen", fn, "only on a model computer with its door open")
+        self.assertEqual(tlstor.ports({"llm": {"enabled": False, "port": 31006}, "asr": {"port": 31001}})[:1], [31001])
+        self.assertIn(31006, tlstor.ports({"llm": {"enabled": True, "port": 31006}}))
+
     def test_cli_finds_the_sbin_tools_with_a_short_path(self):
         """V01.0.631: teilen.py starts "teilen umzug-einspielen" with PATH=/usr/bin:/bin; runuser is in /usr/sbin."""
         import subprocess

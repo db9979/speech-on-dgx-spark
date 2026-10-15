@@ -438,6 +438,7 @@ cmd_umzug_intern() {
   if [ "$1" = zurueck ]; then
     [ -n "$(as_panel_user ../modelle.py umzug-vorher)" ] || { echo "modelle: zurueck abgelehnt keine notiz"; return 1; }
     umzug_zurueck
+    tuer_neu
     return 0
   fi
   read -r mid repo rev < <(as_panel_user ../modelle.py umzug-modell) || true
@@ -468,6 +469,7 @@ cmd_umzug_intern() {
   UMZUG_OK=1
   [ "$UMZUG_PAUSE" = 1 ] && { as_panel_user wartung.py weiter || true; }
   echo "modelle: umgeschaltet $mid"
+  tuer_neu
 }
 
 run_umzug() {  # $1 = uebernehmen|zurueck: in its own unit, so a closed terminal never leaves the chat without a model
@@ -707,6 +709,13 @@ waerter_key_setzen() {
 }
 
 restart_if_there() { local u; for u in "$@"; do systemctl try-restart "$u" 2>/dev/null || true; done; }
+# the door opens the LLM-Tor's port only while llm.enabled (tlstor.ports): after the language model's move on a model
+# computer of a split install the door and its firewall take the new port list (V01.0.639: the Pi got no answer)
+tuer_neu() {
+  [ -n "$(cfg '.api.tls_listen // ""')" ] || return 0
+  restart_if_there speech-spark-tlstor
+  cmd_teilen firewall || true
+}
 models_here() { case "$(cfg '.models.host // "127.0.0.1"')" in 127.0.0.1|localhost|::1) return 0 ;; *) return 1 ;; esac; }
 
 # the model computer after a pairing: the door opens for exactly that panel computer (its address, the Wärter key)

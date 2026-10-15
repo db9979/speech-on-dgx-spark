@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.639** Spark teilen: nach dem Wechsel aufs eigene Sprachmodell erreicht der Pi es sofort
 - **V01.0.638** Umzug: Lautsprecher-Adresse zeigt danach auf den Pi
 - **V01.0.637** Pi: Sprachmodell-Adresse zeigt nach dem Umzug auf das LLM-Tor von tars
 - **V01.0.636** Umzug auf den Pi: Einstellung der Spracherkennung wird angepasst statt abgelehnt
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.632** Telefon T4: der Spark ruft an: Weckruf und Erinnerung per Anruf, Rückruf für Anrufer von außen, Anruf an den Admin bei Dienstausfall außerhalb der Ruhezeiten, Testanruf
 - **V01.0.631** Umzug auf den Raspberry Pi: Einspielen scheiterte an fehlendem runuser
 - **V01.0.630** Pi-Installation: kleine Korrektur an der GPU-Prüfung
-- **V01.0.629** Panel-Installation auf dem Raspberry Pi bricht nicht mehr an der NVIDIA-Prüfung ab
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
