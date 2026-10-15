@@ -62,12 +62,16 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
 
 
 def for_live(now=None):
-    """For the Live view's language model box: the memory left for models and the budget's rule (numbers, fixed word)."""
+    """For the Live view's language model box: the memory left for models and the budget's rule (numbers, fixed word),
+    after the move (llm.enabled) the catalog name of the own model."""
     now = time.monotonic() if now is None else now
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
-            b = modelle.budget(load_config(), _gesamt_gib(), _lanes())
+            cfg = load_config()
+            b = modelle.budget(cfg, _gesamt_gib(), _lanes())
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
+            if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
+                _live["v"]["eigen"] = modelle.rolle("llm", cfg)[0]["name"]["de"]
         except Exception:
             _live["v"] = {"on": False}
         _live["t"] = now

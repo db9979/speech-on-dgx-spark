@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import backup  # noqa: E402
 import guard  # noqa: E402
+import llm  # noqa: E402
 import health  # noqa: E402
 import kiwix  # noqa: E402
 import profiles  # noqa: E402
@@ -286,7 +287,7 @@ async def setup_llm_test(request: Request):
     if not url.startswith(("http://", "https://")):
         raise HTTPException(400, "the address must start with http:// or https://")
     # the stored key only ever goes to the stored address, never to one typed into this test
-    stored = str(ccfg.get("llm_key") or "") if url == str(ccfg.get("llm_url", "")).rstrip("/") else ""
+    stored = llm.key(ccfg) if url == str(ccfg.get("llm_url", "")).rstrip("/") else ""
     key = str(body.get("key") or stored)
     try:
         async with httpx.AsyncClient(timeout=10) as c:

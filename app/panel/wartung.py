@@ -287,7 +287,7 @@ async def tick(now=None, answers=_answers):
 def watched():
     """{part: [systemd units]} the automatic looks at."""
     import core
-    return {"llm": [u for u in core.QWEN38_UNITS if u not in AUTO_SKIP],
+    return {"llm": [u for u in core.QWEN38_UNITS if u not in AUTO_SKIP] + [core.OWN_LLM_UNITS["llm"], core.OWN_LLM_UNITS["llmtor"]],
             "asr": [core.UNITS["asr"], core.UNITS["asr-engine"]],
             "tts": [core.UNITS["tts"], core.UNITS["tts-engine"], core.UNITS["tts-design"]]}
 

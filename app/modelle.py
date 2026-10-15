@@ -38,6 +38,8 @@ from common import STATE, load_config, mem_available_gib, read_json, write_json 
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
+VORHER = os.path.join(STATE, "qwen38-vorher.json")    # stage E3: what `modelle llm uebernehmen` switched off
+QWEN38_KEINE = ("qwen38-dashboard",)                     # qwen38 units that are no model; they keep running
 ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
          "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
          "bild": ("Bilder malen", "Painting pictures"), "klein": ("Kleine Modelle (CPU)", "Small models (CPU)")}
@@ -477,9 +479,9 @@ def vorbereiten(m, hf_home=None):
 
 
 # ---------------------------------------------------------------- measuring
-def _post(port, path, body, timeout=300):
-    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", json.dumps(body).encode(),
-                                 {"Content-Type": "application/json"})
+def _post(port, path, body, timeout=300, key=""):
+    h = {"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})}
+    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", json.dumps(body).encode(), h)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())
 
@@ -713,6 +715,114 @@ def zeile(mid, r):
     return f"modelle: ergebnis {mid} " + ", ".join(teile)
 
 
+# ---------------------------------------------------------------- the move (stage E3)
+CHAT_FELDER = ("llm_url", "llm_key", "llm_key_from", "llm_model")
+
+
+def _roh():
+    """The configuration file as it is (without the shipped defaults merged in), for a small change."""
+    from common import CONFIG_PATH
+    with open(CONFIG_PATH) as f:
+        return json.load(f)
+
+
+def _schreib(raw):
+    from common import CONFIG_PATH
+    write_json(CONFIG_PATH, raw, indent=2)
+
+
+def tor_url(cfg):
+    return f"http://127.0.0.1:{int(cfg.get('llm', {}).get('port', 31006))}/v1"
+
+
+def merken(units, cfg, path=VORHER):
+    """Notes the running qwen38 units and the chat's model address before the move. Refuses a second move."""
+    if cfg.get("llm", {}).get("enabled") or os.path.exists(path):
+        raise Fehler("schon")
+    if any(not re.fullmatch(r"qwen38-[a-z0-9-]{1,40}\.service", u) for u in units):
+        raise Fehler("unit")
+    chat = cfg.get("chat", {})
+    write_json(path, {"units": list(units), "chat": {k: chat[k] for k in CHAT_FELDER if k in chat}, "zeit": int(time.time())},
+               indent=1)
+
+
+def vorher(path=VORHER):
+    data = read_json(path, {})
+    units = [u for u in data.get("units") or [] if re.fullmatch(r"qwen38-[a-z0-9-]{1,40}\.service", str(u))]
+    return units, data.get("chat") or {}
+
+
+def schalten(was, raw, path=VORHER):
+    """The configuration for one step of the move: an = the own engine and door run (llm.enabled), um = the chat talks
+    to the door (its key is api.key, llm.key), zurueck = everything as noted before the move. Returns the new raw."""
+    raw = json.loads(json.dumps(raw))
+    llm = raw.setdefault("llm", {})
+    chat = raw.setdefault("chat", {})
+    if was == "an":
+        llm["enabled"] = True
+    elif was == "um":
+        if not llm.get("enabled"):
+            raise Fehler("aus")
+        merged = load_config()
+        chat.update(llm_url=tor_url(merged), llm_key="", llm_model="")
+        chat.pop("llm_key_from", None)
+    elif was == "zurueck":
+        _, alt = vorher(path)
+        llm["enabled"] = False
+        if alt:
+            for k in CHAT_FELDER:
+                if k in alt:
+                    chat[k] = alt[k]
+                else:
+                    chat.pop(k, None)
+    else:
+        raise Fehler("was")
+    return raw
+
+
+def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.sleep):
+    """The check before the chat switches: through the door with the API key a German sentence, a tool call, a picture
+    (when the model or the image understanding model can see) and one System One question. Returns (ok, word)."""
+    c = cfg.get("llm", {})
+    port, key = int(c.get("port", 31006)), str(cfg.get("api", {}).get("key") or "")
+    m, _ = rolle("llm", cfg)
+    t0 = now()
+    while True:
+        try:
+            if json.loads(_get(port, "/health")).get("status") == "ready":
+                break
+        except Exception:
+            pass
+        if now() - t0 > frist:
+            return False, "nicht bereit"
+        sleep(5)
+    log(f"modelle: rundlauf bereit nach {int(now() - t0)} s")
+    try:
+        satz = _text(_post(port, CHAT, {"messages": [{"role": "user", "content": FRAGEN[0]}], "max_tokens": 200}, key=key))
+        if len(re.findall(r"[a-zäöüß]{3,}", satz.lower())) < 5:
+            return False, "satz"
+        log("modelle: rundlauf satz ok")
+        if m["werkzeuge"] and not werkzeug_ok(_post(port, CHAT, {"messages": [{"role": "user", "content": WERKZEUG_FRAGE}],
+                                                                 "max_tokens": 200, "tools": [WERKZEUG], "tool_choice": "auto"},
+                                                         key=key)):
+            return False, "werkzeug"
+        log("modelle: rundlauf werkzeug ok")
+        if m["kann_sehen"] or c.get("sehen_modell"):
+            text_url, _ = testbilder()
+            if not bild_text_ok(_text(_post(port, CHAT, dict(_bild_frage(m, text_url, BILD_TEXT_FRAGE)), key=key))):
+                return False, "bild"
+            log("modelle: rundlauf bild ok")
+        so = _post(port, "/v1/systemone", {"state": "Wie wird das Wetter morgen in Hamburg?", "questions": {
+            "wetter": {"type": "noul", "instructions": "Fragt der Text nach dem Wetter?"}}}, key=key, timeout=60)
+        p = (so.get("answers") or {}).get("wetter", {}).get("noul")
+        if not isinstance(p, (int, float)) or p < 0.5:
+            return False, "systemone"
+        log("modelle: rundlauf systemone ok")
+    except Exception as e:
+        return False, type(e).__name__.lower()[:24]
+    return True, "ok"
+
+
 # ---------------------------------------------------------------- command line
 def _opt(args, name, default=""):
     return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else default
@@ -784,6 +894,30 @@ def cli(args, log=print):
                 r["mtp"] = "aus"
             merke(m["id"], r)
             return 0 if r["ok"] else 3
+        if cmd == "umzug-merken":
+            merken(args[1:], load_config())
+            log(f"modelle: qwen38 notiert {len(args) - 1} dienste")
+            return 0
+        if cmd == "umzug-vorher":
+            for u in vorher()[0]:
+                log(u)
+            return 0
+        if cmd == "umzug-schalten":
+            _schreib(schalten(args[1], _roh()))
+            log(f"modelle: schalter {args[1]}")
+            return 0
+        if cmd == "umzug-fertig":           # after the way back: the note becomes the old one, a new move may start
+            if os.path.exists(VORHER):
+                os.replace(VORHER, VORHER + ".alt")
+            return 0
+        if cmd == "rundlauf":
+            ok, wort = rundlauf(load_config(), log)
+            log(f"modelle: rundlauf {'ok' if ok else 'fehler ' + wort}")
+            return 0 if ok else 3
+        if cmd == "umzug-modell":
+            m, _ = rolle("llm", load_config())
+            log(f"{m['id']} {m['repo']} {m['revision'] or fest_revision(m)}")
+            return 0
         if cmd == "ergebnis":
             data = read_json(MESSUNG, {})
             for mid, r in (data.get("modelle") or {}).items():

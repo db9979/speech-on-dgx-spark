@@ -1200,6 +1200,9 @@ def snapshot(view="admin", now=None):
             x["sub"] = f"{x['sub']} · {vb.get('rate', 0)} Tokens/min · heute {vb.get('today', 0)}"
         if x["id"] == "qwen" and mb.get("on"):   # Modell-Budget: memory left for models (a number and a fixed word)
             x["sub"] = f"{x['sub']} · frei {mb['frei']:g} GiB" + (" · knapp" if mb["regel"] != "alle" else "")
+            if mb.get("eigen"):                  # the own model behind the LLM-Tor (its catalog name, never an address)
+                x["name"] = "Sprachmodell " + mb["eigen"]
+                x["sub"] = x["sub"].replace("LLM · auf dem Spark", "LLM-Tor · auf dem Spark", 1)
         if x["id"] == "nas" and nasl.get("on"):   # NAS: connections and how many failed their last check (no address)
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")

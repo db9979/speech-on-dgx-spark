@@ -21,6 +21,7 @@ import echo  # noqa: E402
 import stille  # noqa: E402
 import fremdstimme  # noqa: E402
 import guard  # noqa: E402
+import llm  # noqa: E402
 import kiwix  # noqa: E402
 import health  # noqa: E402
 import coadmin  # noqa: E402
@@ -449,7 +450,7 @@ async def llm_models(request: Request, fresh: bool = False):
     if hit and not fresh and time.monotonic() - hit[0] < LLM_MODELS_TTL:
         return {"models": hit[1], "current": current, "error": ""}
     try:
-        models = await _fetch_llm_models(url, str(ccfg.get("llm_key") or ""))
+        models = await _fetch_llm_models(url, llm.key(ccfg))
     except httpx.HTTPError as e:
         return {"models": [], "current": current, "error": f"Server nicht erreichbar ({type(e).__name__})."}
     except (ValueError, AttributeError) as e:   # also an answer that is no JSON object

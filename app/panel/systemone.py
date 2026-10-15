@@ -40,6 +40,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
+import llm
 from common import DayCounter, load_config
 from einordnung import MAX_OPTIONS, MAX_QUESTIONS, MAX_STATE, NAME, check_questions, clean_state  # noqa: F401  (the shared rules)
 from core import auth
@@ -83,10 +84,7 @@ def endpoint(ccfg):
 
 
 def _headers(ccfg):
-    h = {"Content-Type": "application/json"}
-    if ccfg.get("llm_key"):
-        h["Authorization"] = f"Bearer {ccfg['llm_key']}"
-    return h
+    return {"Content-Type": "application/json", **llm.headers(ccfg)}
 
 
 def choice(instructions, options):

@@ -383,6 +383,8 @@ qkey_ok() {
 for h in "$( [ -n "${SUDO_USER:-}" ] && getent passwd "$SUDO_USER" | cut -d: -f6)" /home/* /root; do
   [ -n "$h" ] && [ -d "$h" ] && qkey_ok "$h" && { qkey="$h/.config/qwen38/api-key"; break; }
 done
+# after the move to the own language model (llm.enabled) the chat talks to the LLM-Tor with api.key: no qwen38 key
+[ "$(cfgq -r '.llm.enabled // false')" = true ] && qkey=""
 if [ -n "$qkey" ]; then
   cur="$(cfgq -r '.chat.llm_key // ""')"
   from="$(cfgq -r '.chat.llm_key_from // ""')"

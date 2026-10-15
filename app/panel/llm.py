@@ -18,8 +18,27 @@ def url(ccfg):
     return str(ccfg["llm_url"]).rstrip("/") + "/chat/completions"
 
 
+def own_tor(ccfg, cfg=None):
+    """True when the address is this Spark's own LLM-Tor (llm_tor.py on 127.0.0.1:llm.port, plan eigene-modelle E3)."""
+    import re
+    cfg = load_config() if cfg is None else cfg
+    port = (cfg.get("llm") or {}).get("port", 31006)
+    m = re.match(r"^http://(127\.0\.0\.1|localhost):(\d+)(/|$)", str(ccfg.get("llm_url") or ""))
+    return bool(m) and int(m.group(2)) == port
+
+
+def key(ccfg, cfg=None):
+    """The key for the model: chat.llm_key, else for the own LLM-Tor the speech API key (api.key), so a new API key
+    (speech-spark key new, Einstellungen) never leaves the chat without its model."""
+    if ccfg.get("llm_key"):
+        return str(ccfg["llm_key"])
+    cfg = load_config() if cfg is None else cfg
+    return str((cfg.get("api") or {}).get("key") or "") if own_tor(ccfg, cfg) else ""
+
+
 def headers(ccfg):
-    return {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    k = key(ccfg)
+    return {"Authorization": f"Bearer {k}"} if k else {}
 
 
 async def model(c, ccfg, hdrs=None):

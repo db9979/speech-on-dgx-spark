@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, llm,
-#                                  llmtor, sehen, panel, watch, update, messen or all (default)
+#                                  llmtor, sehen, panel, watch, update, messen, umzug or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
@@ -18,6 +18,8 @@
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
 #   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]  measure catalog models; qwen38 pauses meanwhile
+#   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
+#   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -170,7 +172,8 @@ cmd_logs() {
     all) units=(-u 'speech-spark-*') ;;
     asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen or all" ;;
+    umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen, umzug or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -251,6 +254,8 @@ cmd_pause() {
 MESS_UNIT=speech-spark-messen
 MESS_ENGINE=speech-spark-messen-engine
 MESS_PORT=31016
+UMZUG_UNIT=speech-spark-umzug
+OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen)
 mem_gib() { awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo; }
 
 # waits until the free memory stops growing (an engine that just stopped gives it back slowly), at most 3 minutes
@@ -357,8 +362,8 @@ cmd_messen_intern() {
   if [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
     as_panel_user wartung.py llm "$minutes" && MESS_PAUSE=1 || echo "modelle: messung ohne wartungspause"
   fi
-  mapfile -t MESS_QWEN < <(systemctl list-units 'qwen38-*' --type=service --state=active,activating --plain --no-legend \
-    | awk '{print $1}' | grep -v '^qwen38-dashboard' || true)
+  mapfile -t MESS_QWEN < <(systemctl list-units 'qwen38-*' speech-spark-llm.service speech-spark-llmtor.service \
+    --type=service --state=active,activating --plain --no-legend | awk '{print $1}' | grep -v '^qwen38-dashboard' || true)
   trap mess_restore EXIT
   trap 'exit 1' INT TERM
   if [ "${#MESS_QWEN[@]}" -gt 0 ]; then
@@ -374,6 +379,110 @@ cmd_messen_intern() {
       mess_engine "${ids[$i]}" "${commits[$i]}" --ohne-mtp || true
     fi
   done
+}
+
+# ---------------------------------------------------------------- the move (stage E3), inside $UMZUG_UNIT as root
+qwen38_running() {
+  systemctl list-units 'qwen38-*' --type=service --state=active,activating --plain --no-legend \
+    | awk '{print $1}' | grep -v '^qwen38-dashboard' || true
+}
+
+umzug_zurueck() {  # everything as noted before the move; qwen38 starts again
+  local u units=()
+  systemctl disable --now "${OWN_LLM[@]}" 2>/dev/null || true
+  as_panel_user ../modelle.py umzug-schalten zurueck || echo "modelle: zurueck fehler einstellung"
+  mapfile -t units < <(as_panel_user ../modelle.py umzug-vorher)
+  for u in "${units[@]}"; do
+    systemctl enable "$u" 2>/dev/null || true
+    systemctl start --no-block "$u" || echo "modelle: qwen38 start fehler"
+  done
+  as_panel_user ../modelle.py umzug-fertig || true
+  echo "modelle: zurueck qwen38 an (${#units[@]} dienste)"
+}
+
+umzug_abbruch() {
+  [ "$UMZUG_OK" = 1 ] && return 0
+  echo "modelle: uebernahme abgebrochen ${UMZUG_GRUND:-fehler}"
+  umzug_zurueck
+  [ "$UMZUG_PAUSE" = 1 ] && { as_panel_user wartung.py weiter || true; }
+}
+
+cmd_umzug_intern() {
+  local mid repo rev units=()
+  UMZUG_OK=0; UMZUG_PAUSE=0; UMZUG_GRUND=""
+  if [ "$1" = zurueck ]; then
+    [ -n "$(as_panel_user ../modelle.py umzug-vorher)" ] || { echo "modelle: zurueck abgelehnt keine notiz"; return 1; }
+    umzug_zurueck
+    return 0
+  fi
+  read -r mid repo rev < <(as_panel_user ../modelle.py umzug-modell) || true
+  [[ "${rev:-}" =~ ^[0-9a-f]{40}$ ]] || { echo "modelle: uebernahme abgelehnt katalog (erst sudo speech-spark modelle messen)"; return 1; }
+  [ -x "$PREFIX/venv-$(as_panel_user ../modelle.py venv llm)/bin/vllm" ] \
+    || { echo "modelle: uebernahme abgelehnt venv fehlt (sudo ./install.sh --llm, für Kolibri --kolibri)"; return 1; }
+  hf_from_qwen38 "$mid" "$repo" "$rev"
+  echo "modelle: lade $mid (falls noch nicht da)"
+  as_panel_user ../modelle.py vorbereiten "$mid" >/dev/null || { echo "modelle: uebernahme abgelehnt nicht geladen"; return 1; }
+  mapfile -t units < <(qwen38_running)
+  as_panel_user ../modelle.py umzug-merken "${units[@]}" || { echo "modelle: uebernahme abgelehnt schon umgezogen"; return 1; }
+  trap umzug_abbruch EXIT
+  trap 'exit 1' INT TERM
+  if [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+    as_panel_user wartung.py llm 60 && UMZUG_PAUSE=1 || echo "modelle: uebernahme ohne wartungspause"
+  fi
+  if [ "${#units[@]}" -gt 0 ]; then
+    echo "modelle: qwen38 aus (${#units[@]} dienste, bleiben installiert)"
+    systemctl stop "${units[@]}" || true
+    systemctl disable "${units[@]}" 2>/dev/null || true
+  fi
+  mem_settle
+  as_panel_user ../modelle.py umzug-schalten an || { UMZUG_GRUND=einstellung; return 1; }
+  systemctl enable --now speech-spark-llm.service speech-spark-llmtor.service || { UMZUG_GRUND=start; return 1; }
+  echo "modelle: $mid startet, frei $(mem_gib) GiB"
+  as_panel_user ../modelle.py rundlauf || { UMZUG_GRUND=rundlauf; return 1; }
+  as_panel_user ../modelle.py umzug-schalten um || { UMZUG_GRUND=einstellung; return 1; }
+  UMZUG_OK=1
+  [ "$UMZUG_PAUSE" = 1 ] && { as_panel_user wartung.py weiter || true; }
+  echo "modelle: umgeschaltet $mid"
+}
+
+run_umzug() {  # $1 = uebernehmen|zurueck: in its own unit, so a closed terminal never leaves the chat without a model
+  local self follow
+  systemctl is-active -q "$UMZUG_UNIT" && die "a move is running already: sudo speech-spark logs umzug"
+  systemctl is-active -q "$MESS_UNIT" && die "a measurement is running; move afterwards"
+  systemctl is-active -q speech-spark-update && die "an update is running; move afterwards"
+  self=$(readlink -f -- "$0")
+  systemd-run --quiet --collect --unit="$UMZUG_UNIT" -p LogNamespace=speech-spark -p TimeoutStopSec=180 \
+    --setenv=SPEECH_SPARK_PREFIX="$PREFIX" --setenv=SPEECH_SPARK_ETC="$ETC" --setenv=SPEECH_SPARK_VAR="$VAR" \
+    /bin/bash "$self" modelle umzug-intern "$1"
+  journalctl --namespace=speech-spark -u "$UMZUG_UNIT" -f -n 0 --no-pager -o cat &
+  follow=$!
+  while systemctl is-active -q "$UMZUG_UNIT"; do sleep 5; done
+  sleep 1; kill "$follow" 2>/dev/null || true
+}
+
+ask_yes() {  # $1 = --yes or empty
+  [ "${1:-}" = --yes ] && return 0
+  [ -t 0 ] || die "this asks first; run it in a terminal (or add --yes)"
+  local a; read -r -p "Weiter? [j/N] " a
+  case "$a" in j|J|ja|Ja|y|Y|yes) ;; *) echo "Abgebrochen, nichts geändert."; exit 1 ;; esac
+}
+
+cmd_qwen38_aufraeumen() {
+  local d="" h tor port
+  port=$(cfg '.llm.port // 31006'); [[ "$port" =~ ^[0-9]{4,5}$ ]] || port=31006
+  tor=$(curl -fs "http://127.0.0.1:$port/health" | jq -r .status 2>/dev/null || true)
+  [ "$(cfg '.llm.enabled // false')" = true ] && [ "$tor" = ready ] \
+    || die "first move to the own language model (sudo speech-spark modelle llm uebernehmen); it must answer"
+  for h in /root $(getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 {print $6}'); do
+    [ -f "$h/dgx-spark-qwen38/uninstall.sh" ] && [ ! -L "$h/dgx-spark-qwen38/uninstall.sh" ] && { d="$h/dgx-spark-qwen38"; break; }
+  done
+  [ -n "$d" ] || die "qwen38's uninstall.sh not found (looked for ~/dgx-spark-qwen38/uninstall.sh); remove it by hand"
+  echo "qwen38 liegt in $d. Was seine Deinstallation entfernt:"
+  bash "$d/uninstall.sh" --list || true
+  echo "Das löscht qwen38 (Dienste, Modelle im Cache von qwen38). Das eigene Sprachmodell bleibt."
+  ask_yes ""
+  echo "modelle: qwen38 aufraeumen start"
+  if bash "$d/uninstall.sh"; then echo "modelle: qwen38 aufraeumen fertig"; else echo "modelle: qwen38 aufraeumen fehler"; return 1; fi
 }
 
 cmd_modelle() {
@@ -408,7 +517,22 @@ cmd_modelle() {
       sleep 1; kill "$follow" 2>/dev/null || true
       ;;
     messen-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_intern "$@" ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]" ;;
+    llm)
+      case "${2:-}" in
+        uebernehmen)
+          [ -x "$PREFIX/venv-llm/bin/vllm" ] || die "vLLM for the own model is not installed; run sudo ./install.sh --llm first"
+          systemctl cat speech-spark-llm.service >/dev/null 2>&1 || die "the units are missing; run sudo speech-spark update first"
+          echo "Umzug: qwen38 wird gestoppt und deaktiviert (nicht gelöscht), das eigene Sprachmodell startet und wird geprüft."
+          echo "Klappt die Prüfung nicht, geht alles von selbst zurück. Etwa 5 bis 20 Minuten ohne Sprachmodell."
+          ask_yes "${3:-}"; run_umzug uebernehmen ;;
+        zurueck)
+          echo "Zurück: das eigene Sprachmodell geht aus, qwen38 startet wieder mit der alten Adresse."
+          ask_yes "${3:-}"; run_umzug zurueck ;;
+        *) die "speech-spark modelle llm uebernehmen|zurueck [--yes]" ;;
+      esac ;;
+    umzug-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_umzug_intern "$@" ;;
+    qwen38-aufraeumen) cmd_qwen38_aufraeumen ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen" ;;
   esac
 }
 
@@ -425,6 +549,6 @@ case "${1:-}" in
   pause) shift; cmd_pause "$@" ;;
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
-  ""|-h|--help|help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

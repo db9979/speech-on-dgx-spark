@@ -373,7 +373,9 @@ class Kommando(unittest.TestCase):
         self.assertIn('systemctl start --no-block "$u"', self.body("mess_restore"))
         self.assertIn("as_panel_user wartung.py weiter", self.body("mess_restore"))
         self.assertIn('[ "${INVOCATION_ID:-}" ]', self.body("cmd_modelle"))
-        for line in self.sh.splitlines():
+        # qwen38 is removed only by its own uninstall, only in cmd_qwen38_aufraeumen (Dominik's command, asks first)
+        rest = self.sh.replace(self.body("cmd_qwen38_aufraeumen"), "")
+        for line in rest.splitlines():
             code = line.split("#", 1)[0]
             self.assertNotRegex(code, r"(?i)qwen38.*(uninstall|disable|rm -)", line)
 

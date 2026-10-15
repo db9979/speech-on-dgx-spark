@@ -47,6 +47,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import features
 import guard
+import llm
 import netguard
 import profiles
 from common import STATE, load_config, write_json
@@ -249,7 +250,7 @@ def active(c=None, cfg=None):
     out = {}
     url = str(c.get("llm_url") or "").rstrip("/")
     if url.startswith(("http://", "https://")):
-        out["qwen"] = {"llm": {"url": url + "/models", "key": str(c.get("llm_key") or "")}}
+        out["qwen"] = {"llm": {"url": url + "/models", "key": llm.key(c, cfg)}}
     for name in ("asr", "tts"):
         if (cfg.get(name) or {}).get("enabled", True) and (cfg.get(name) or {}).get("port"):
             out[name] = {"own": {"name": name}}
