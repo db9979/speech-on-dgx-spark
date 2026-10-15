@@ -328,6 +328,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle |
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
+| `app/teilen.py` | Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |
 | `app/textnorm.py` | Text aufräumen vor der Sprachausgabe |
 | `app/tlstor.py` | TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner) |

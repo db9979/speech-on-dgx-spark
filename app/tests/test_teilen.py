@@ -20,6 +20,7 @@ import httpx  # noqa: E402
 import llm  # noqa: E402
 import netguard  # noqa: E402
 import systemone  # noqa: E402
+import teilen  # noqa: E402
 import tlstor  # noqa: E402
 
 DIR = tempfile.mkdtemp(dir=helpers.TMP)
@@ -187,6 +188,42 @@ class Clients(unittest.TestCase):
         old = common.load_config()
         self.assertEqual((new["models"], new["api"]["tls_listen"], new["api"]["tls_from"]),
                          (old["models"], old["api"]["tls_listen"], old["api"]["tls_from"]))
+
+
+class Firewall(unittest.TestCase):
+    """B3: the door's ports answer only the panel computer; the rules come from checked addresses only."""
+    def cfg(self, listen="192.168.178.171", von=("192.168.178.20",)):
+        c = json.loads(json.dumps(common.load_config()))
+        c["llm"]["enabled"] = True
+        for sec, port in (("asr", 31001), ("tts", 31002), ("llm", 31006)):
+            c[sec]["port"] = port
+        c["api"].update(tls_listen=listen, tls_from=list(von))
+        return c
+
+    def test_only_the_panel_computer(self):
+        r = teilen.regeln(self.cfg(von=("192.168.178.20", "fd00::20")))
+        ports = "{ 31001, 31002, 31006, 31007 }"
+        self.assertIn('iif "lo" accept', r)
+        self.assertIn("ip saddr { 192.168.178.20 } tcp dport " + ports + " accept", r)
+        self.assertIn("ip6 saddr { fd00::20 } tcp dport " + ports + " accept", r)
+        self.assertTrue(r.rstrip().endswith("tcp dport " + ports + " drop\n  }\n}"), r)
+        self.assertEqual([x.strip() for x in r.splitlines() if x.endswith(" accept")][0], 'iif "lo" accept')
+        self.assertEqual(sum(x.endswith(" accept") for x in r.splitlines()), 3, "lo, v4 and v6 only")
+
+    def test_nothing_but_addresses(self):
+        for listen, von in (("0.0.0.0", ["192.168.178.20"]), ("dgx", ["192.168.178.20"]),
+                            ("192.168.178.171", []), ("192.168.178.171", ["0.0.0.0"]),
+                            ("192.168.178.171", ["127.0.0.1"]), ("192.168.178.171", ["1.2.3.4; drop"]),
+                            ("192.168.178.171", ["192.168.178.2%s" % i for i in range(5)]),
+                            ("", ["192.168.178.20"])):
+            with self.assertRaises(teilen.Fehler, msg=(listen, von)):
+                teilen.regeln(self.cfg(listen, von))
+
+    def test_fingerprint(self):
+        fp = teilen.fingerabdruck(CERT)
+        self.assertRegex(fp, r"^([0-9A-F]{2}:){31}[0-9A-F]{2}$")
+        self.assertNotEqual(fp, teilen.fingerabdruck(OTHER))
+        self.assertEqual(teilen.fingerabdruck(os.path.join(DIR, "fehlt.pem")), "")
 
 
 class Ports(unittest.TestCase):

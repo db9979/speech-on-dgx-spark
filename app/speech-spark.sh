@@ -20,6 +20,8 @@
 #   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [eigen-…] [--yes]  measure catalog models; qwen38 pauses meanwhile
 #   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
+#   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
+#   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -641,6 +643,33 @@ cmd_modelle() {
   esac
 }
 
+teilen_py() {  # app/teilen.py with the system python (stdlib only; the DGX in --mode api has no panel venv)
+  env -i PATH=/usr/bin:/bin LANG=C.UTF-8 SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_TLS="$ETC/tls" \
+    python3 "$PREFIX/app/teilen.py" "$@"
+}
+
+cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state and its firewall
+  need_root teilen "$@"
+  local rules="$ETC/teilen.nft" n
+  case "${1:-status}" in
+    status)
+      n=$(cfg '.api.tls_from // [] | length')
+      if [ -n "$(cfg '.api.tls_listen // ""')" ]; then echo "Tür (TLS-Tor):      an, für $n Panel-Rechner"; else echo "Tür (TLS-Tor):      aus (alles auf diesem Rechner)"; fi
+      echo "Dienst:             $(systemctl is-active speech-spark-tlstor 2>/dev/null || true)"
+      if nft list table inet speech_spark_teilen >/dev/null 2>&1; then echo "Firewall:           an"; else echo "Firewall:           aus"; fi
+      echo "Fingerabdruck:      $(teilen_py fingerabdruck)" ;;
+    firewall)
+      if [ "${2:-}" = aus ]; then
+        nft delete table inet speech_spark_teilen 2>/dev/null || true
+        rm -f "$rules"; echo "teilen: firewall aus"; return 0
+      fi
+      teilen_py regeln >"$rules.part" || { rm -f "$rules.part"; echo "teilen: firewall abgelehnt"; return 1; }
+      if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
+      else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
+    *) die "speech-spark teilen [status]|firewall [aus]" ;;
+  esac
+}
+
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
 case "${1:-}" in
   status) shift; cmd_status ;;
@@ -654,6 +683,7 @@ case "${1:-}" in
   pause) shift; cmd_pause "$@" ;;
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
+  teilen) shift; cmd_teilen "$@" ;;
   ""|-h|--help|help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

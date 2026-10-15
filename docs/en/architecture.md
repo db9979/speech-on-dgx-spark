@@ -328,6 +328,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
+| `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
 | `app/textnorm.py` | Text clean-up before speech synthesis. |
 | `app/tlstor.py` | TLS-Tor: the door of the model computer for the panel on another computer. |

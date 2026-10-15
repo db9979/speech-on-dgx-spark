@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.608** Splitting the Spark B3: firewall on the DGX, only the panel computer reaches the models
 - **V01.0.607** Splitting the Spark B2: secured connection to the DGX (TLS 1.3 with a pinned certificate), preparing the Raspberry Pi
 - **V01.0.606** Splitting the Spark B1: one address for all model services (preparing the panel on a Raspberry Pi)
 - **V01.0.605** Update window tidied: each state shows only its buttons, log folded away
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.601** Fix: the service watch asks Home Assistant without a failed login (no more login warnings in the HA log)
 - **V01.0.600** Fix: the update window no longer says "too long" because of the previous update's progress file
 - **V01.0.599** Fix quality test: the account balance question checks only facts (an amount fails), not the wording
-- **V01.0.598** App view (Android app, phone browser): questions and answers use the width like the iPhone app
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
