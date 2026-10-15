@@ -876,6 +876,13 @@ if [ -n "$MODELLE_PICK" ] && { [ "$(cfg '.models.host // ""')" != "$MODELLE_PICK
   SPEECH_SPARK_PREFIX="$PREFIX" SPEECH_SPARK_ETC="$ETC" SPEECH_SPARK_VAR="$VAR" \
     bash "$PREFIX/app/speech-spark.sh" teilen koppeln "$MODELLE_PICK" || die "the pairing did not work; run the install again with a new code"
 fi
+# a panel computer reaches the language model only through the model computer's LLM-Tor: a chat address on this
+# computer (127.0.0.1, such as qwen38's from a move) becomes the door's, on every install and update (V01.0.637)
+if [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" = false ]; then
+  jqi 'if ((.chat.llm_url // "") | test("^https?://(127[.]0[.]0[.]1|localhost|[[]::1[]])([:/]|$)")) then
+         .chat.llm_url = "https://\(.models.host | if test(":") then "[\(.)]" else . end):\(.llm.port // 31006)/v1"
+         | .chat.llm_key = "" | .chat.llm_model = "" | del(.chat.llm_key_from) else . end'
+fi
 
 # ---------------------------------------------------------------- systemd
 say "systemd units"

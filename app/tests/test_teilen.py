@@ -375,6 +375,21 @@ class Installation(unittest.TestCase):
         self.assertLess(sh.index('[ -n "$MODELLE_PICK" ] && gpu_needed=0'), sh.index("command -v nvidia-smi"))
         self.assertIn('if [ "$gpu_needed" = 1 ]; then', sh)
 
+    def test_panel_computer_talks_to_the_door_not_to_loopback(self):
+        """V01.0.637: after the move tars -> Pi the chat still asked http://127.0.0.1:30001/v1 (qwen38 on tars); on a
+        panel computer install.sh turns such an address into the model computer's LLM-Tor, as common.model_url does."""
+        sh = repo_file("install.sh")
+        i = sh.index('.chat.llm_url = "https://')
+        self.assertLess(sh.index('teilen koppeln "$MODELLE_PICK"'), i, "after the pairing knows models.host")
+        self.assertLess(i, sh.index('say "systemd units"'), "before the panel starts")
+        block = sh[sh.rindex("\nif ", 0, i):sh.index("\nfi\n", i)]
+        self.assertIn('. == "127.0.0.1" or . == "localhost" or . == "::1"\')" = false ]', block, "only on a panel computer")
+        self.assertIn("127[.]0[.]0[.]1|localhost|[[]::1[]]", block, "only an address on this computer is changed")
+        self.assertIn(":\\(.llm.port // 31006)/v1", block)
+        self.assertIn('.chat.llm_key = ""', block, "the door takes api.key (llm.key)")
+        cfg = {"models": {"host": "192.168.178.171"}, "llm": {"port": 31006}}
+        self.assertEqual(common.model_url("llm", "/v1", cfg), "https://192.168.178.171:31006/v1")
+
     def test_cli_finds_the_sbin_tools_with_a_short_path(self):
         """V01.0.631: teilen.py starts "teilen umzug-einspielen" with PATH=/usr/bin:/bin; runuser is in /usr/sbin."""
         import subprocess
@@ -383,7 +398,7 @@ class Installation(unittest.TestCase):
         line = next(x for x in cli.splitlines() if x.startswith("export PATH="))
         self.assertLess(cli.index(line), cli.index("runuser -u"), "set before any use")
         got = subprocess.run(["/bin/bash", "-c", line + '; printf %s "$PATH"'], env={"PATH": "/usr/bin:/bin"},
-                             capture_output=True, text=True, timeout=10).stdout.split(":")
+                             stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10).stdout.split(":")
         self.assertEqual(got[:2], ["/usr/bin", "/bin"], "the caller's order stays first")
         self.assertIn("/usr/sbin", got)
         self.assertIn("/sbin", got)
