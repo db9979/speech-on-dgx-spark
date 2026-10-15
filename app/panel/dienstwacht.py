@@ -98,6 +98,8 @@ SVC = {
     # Zustand der NAS (naszustand.py): its own SNMPv3 reading every few minutes; the probe only looks at the newest one
     "naszustand": ("Zustand der NAS", "NAS status", "Speicherplatz, RAID und Festplatten der NAS werden gerade nicht beobachtet.",
                    SLOW, "naszustand"),
+    # Den Spark anrufen (telefon.py): signed in at the PBX; the SIP part renews it itself, the probe only looks at it
+    "telefon": ("Telefonanlage", "Telephone system", "Anrufe beim Spark gehen gerade nicht; alles andere läuft weiter.", EVERY, "telefon"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Bilder malen (bild_server.py on 127.0.0.1): the service, not the engine; an engine unloaded after idling is no outage
@@ -290,6 +292,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import telefon
+        p = telefon.probes()
+        if p:
+            out["telefon"] = p
+    except Exception:
+        pass
+    try:
         import doclingdienst
         d = doclingdienst._read()
         if doclingdienst.admin_on(c) and _origin(d.get("url")):
@@ -451,6 +460,9 @@ async def probe(sid, key, p, cfg):
         if p.get("snmp"):    # Zustand der NAS: the newest reading of naszustand.py, no question of its own
             import naszustand
             return Probe(naszustand.reachable())
+        if p.get("sip"):     # Telefon: signed in at the PBX right now (telefon.py renews it), no question of its own
+            import telefon
+            return Probe(telefon.signed_in())
         if p.get("tcp"):
             return await _tcp(p)
         if p.get("turn"):    # Anrufe von unterwegs: the unit runs with the panel's settings (anrufe.relay_ok)
@@ -462,7 +474,7 @@ async def probe(sid, key, p, cfg):
 
 
 def _host(sid, p):
-    if sid == "mail" or p.get("tcp") or p.get("snmp") or p.get("turn"):
+    if sid == "mail" or p.get("tcp") or p.get("snmp") or p.get("turn") or p.get("sip"):
         return p.get("host", "")
     return urlsplit(p.get("url", "")).hostname or ""
 

@@ -131,6 +131,7 @@ DATEIEN = [
     state("telegram.json", "Telegram-Bot", "Telegram bot", sicherung="json", schutz=("Token versiegelt", "token sealed")),  # Telegram bot (token sealed)
     state("github-token.json", "GitHub-Lese-Token", "GitHub read token", sicherung="json", schutz=("versiegelt", "sealed")),  # read-only GitHub token for update checks and downloads (sealed, ghtoken.py)
     state("vapid.pem", "Web-Push-Schlüssel", "Web push key", sicherung="pem", schutz=("ist ein Schlüssel", "is a key")),  # browser push key: the browsers' push subscriptions belong to it
+    state("telefon.json", "Telefon: Zugang zur Anlage, Mobilteile", "Phone: access to the PBX, handsets", sicherung="json", schutz=("Kennwort versiegelt", "password sealed")),  # Den Spark anrufen (telefon.py): PBX access (password sealed), handsets → profiles, numbers seen lately (internal only)
     state("esp32.json", "Lautsprecher und Firmware", "Speakers and firmware", sicherung="json", schutz=("teils versiegelt", "partly sealed")),  # ESP32 speakers: board variant, firmware, automatic updates
     state("agent.json", "Agent-Stufen, MCP-Dienste", "Agent levels, MCP services", sicherung="json", schutz=("Tokens versiegelt", "tokens sealed")),  # agent levels and MCP services (tokens sealed)
     state("geraete-updates.json", "Geräte-Updates", "Device updates", sicherung="json"),  # Geräte-Updates: versions seen, notes due, the night round of the speakers

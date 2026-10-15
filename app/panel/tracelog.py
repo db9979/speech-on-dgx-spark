@@ -28,7 +28,9 @@ from core import auth
 router = APIRouter()
 KEEP_S, MAX_TRACES, MAX_STEPS, MAX_INFO = 48 * 3600, 500, 40, 12
 SLOW_S = 5.0          # first sound later than this (or no sound and longer than this): "langsam"
-CLIENTS = ("web", "speaker", "watch", "siri", "telegram", "app", "car", "mcp", "ha", "auto", "desk", "other")
+CLIENTS = ("web", "speaker", "telefon", "watch", "siri", "telegram", "app", "car", "mcp", "ha", "auto", "desk", "other")
+# channels that only speak, without a screen (an own speaker, a call: telefon.py): no buttons, no cards, short answers
+NO_SCREEN = ("speaker", "telefon")
 KINDS = ("in", "prep", "asr", "weiche", "llm", "tool", "check", "tts", "ack", "err")
 MARKS = ("first", "sound", "ack", "end")   # ack: the ready-made sentence (ack.py), never the answer
 SAFE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_ .,:+()/äöüÄÖÜß-]{0,59}")

@@ -26,7 +26,7 @@ router = APIRouter()
 AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("chat", r"^(chat|vorab|ack|latency|rolle|briefing|extras|images|schreib|quality|hilfe|aendern):"),
          ("weiche", r"^(weiche|systemone|taten):"), ("ha", r"^(homeassistant|hamelden):"),
-         ("room", r"^room:"), ("esp32", r"^(esp32|wyoming):"), ("watch", r"^(watch|pebble):"), ("telegram", r"^telegram:"),
+         ("room", r"^room:"), ("esp32", r"^(esp32|wyoming):"), ("telefon", r"^telefon:"), ("watch", r"^(watch|pebble):"), ("telegram", r"^telegram:"),
          ("mail", r"^(mail|tidy|imap|mailstil)\b"), ("vorrang", r"^(vorrang|hintergrund|sampler):"),
          ("wissen", r"^(kiwix|lokal|wissen|docembed|documents|docling):"), ("anfrage", r"^anfrage:"),
          ("speicher", r"^(speicher|offsite|backup):"), ("nas", r"^(nas|nasquelle|nasablage|naszustand):"), ("gedaechtnis", r"^(gedaechtnis|memtidy|learning|fixes|profiles):"),

@@ -19,7 +19,7 @@ flowchart TB
     geraet["Browser und Handy<br/>static/js"]
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, Uhr<br/>Kanäle"]
-    lautsprecher["Lautsprecher, HA<br/>esp32 · :31003"]
+    lautsprecher["Lautsprecher, HA, Telefon<br/>esp32 · :31003 · :31060"]
     mcpc["MCP-Programme<br/>/mcp"]
   end
   subgraph z_spark["DGX Spark · intern"]
@@ -91,6 +91,7 @@ flowchart TB
 | `speech-spark-asr` → `speech-spark-asr-engine` | 31001 → 31011 (nur lokal) | Spracherkennung |
 | `speech-spark-tts` → `speech-spark-tts-engine` | 31002 → 31012 (nur lokal) | Sprachausgabe; optional VoiceDesign auf 31013 |
 | Wyoming im Panel | 31003 | Home Assistant Assist |
+| Telefon im Panel | UDP 31060, Ton UDP 31062–31068 | Den Spark anrufen (SIP und RTP nur mit der Telefonanlage im Heimnetz) |
 | `dgx-spark-qwen38` (fremdes Projekt) | 30001 | Sprachmodell; Ports 30000–30099 gehören ihm |
 | `speech-spark-watch` | – | Wächter, nur ohne Panel |
 | `speech-spark-update` | – | Update, nur auf Knopfdruck |
@@ -281,6 +282,8 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/speakers.py` | Sprechererkennung pro Profil |
 | `app/panel/spkcode.py` | Codewort am geteilten Lautsprecher |
 | `app/panel/sse.py` | Sofort-Ereignisse an offene Seiten und Apps (Chats, Verlauf): ein Strom pro Seite |
+| `app/panel/telefon.py` | Den Spark anrufen: SIP mit der Telefonanlage, Gespräch wie am Lautsprecher |
+| `app/panel/telefon_ton.py` | Ton am Telefon: G.722, G.711 und Umrechnen der Abtastrate |
 | `app/panel/telegram.py` | Telegram-Bot für Text und Sprachnachrichten |
 | `app/panel/today.py` | Die Karte „Heute“ oben in Ich |
 | `app/panel/verbund.py` | Spark-Verbund: Chats mit Menschen auf anderen Sparks, signiert, mit Fotos und Dateien |
@@ -539,6 +542,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/speech-spark-asr-engine.json` | Zustand der ASR-Engine | – | nein |
 | `state/speech-spark-tts-*.json` | Zustand der TTS-Engines | – | nein |
 | `state/speicher-tmp` | Zwischenablage des eigenen Speichers | AES-256-GCM | nein |
+| `state/telefon.json` | Telefon: Zugang zur Anlage, Mobilteile | Kennwort versiegelt | ja |
 | `state/telegram.json` | Telegram-Bot | Token versiegelt | ja |
 | `state/tipps.json` | Gezeigte Tipps | – | nein |
 | `state/traces.jsonl` | Logs → Anfragen, 48 h | – | nein |
@@ -893,7 +897,7 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 
 Selbsttests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
 
-### Lautsprecher, HA
+### Lautsprecher, HA, Telefon
 
 Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder Lautsprecher ist ein Geräteschlüssel seines Profils. Home Assistant Assist nutzt über Wyoming nur Spracherkennung und Stimme des Spark.
 
@@ -961,12 +965,21 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 |---|---|---|---|
 | ESP32-Lautsprecher | Schlüssel eines Lautsprechers, Profil nicht gesperrt | Fragen wie das Profil | nur bei sicherer Stimme oder Codewort |
 | Home Assistant Assist | Adressen in der Erlaubt-Liste des Admins | nur Ton zu Text und Text zu Ton | nie |
+| Telefon, Mobilteil eines Profils | interne Nummer, vom Admin zugeordnet | Fragen wie das Profil | nur bei sicherer Stimme |
+| Telefon, gemeinsames Mobilteil | interne Nummer als gemeinsam | die Stimme wählt das Profil, sonst Gast | nur bei sicherer Stimme |
+| Telefon von außen oder nicht zugeordnet | niemand (Gast nur mit Admin-Schalter) | abgewiesen oder ein Satz | nie |
 
 #### Home Assistant Assist (Wyoming)
 
 - Ein eigener Server lauscht auf dem Wyoming-Port (Standard 31003), solange der Schalter an ist. Wyoming hat kein Passwort; deshalb antwortet er nur Adressen aus der Liste des Admins, mit leerer Liste niemandem.
 - Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten neu gelesen), weil Home Assistant nur 1 Sekunde wartet.
 - Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste.
+
+#### Den Spark anrufen (Telefon)
+
+- Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss.
+- Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten.
+- Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen.
 
 #### Zahlen (aus dem Code)
 
@@ -976,17 +989,21 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - **10** Minuten zählen frühere Fragen am Lautsprecher ([Schritt 12](#kn-lautsprecher-s12))
 - **3** falsche Codewörter bis zur Sperre ([Schritt 9](#kn-lautsprecher-s9))
 - **8** Wyoming-Verbindungen gleichzeitig ([Schritt 5](#kn-lautsprecher-s5))
+- **2** Anrufe gleichzeitig höchstens ([Schritt 5](#kn-lautsprecher-s5))
+- **15** Minuten dauert ein Anruf höchstens ([Schritt 10](#kn-lautsprecher-s10))
 
 #### Einstellen
 
 - Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).
 - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort.
 - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.
+- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen.
 
 #### Was du siehst
 
 - Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart).
 - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang.
+- Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen.
 
 #### Im Code
 
@@ -1002,8 +1019,11 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `settings`: Schalter, Port, erlaubte Adressen ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `handle`: nur erlaubte Adressen, höchstens so viele ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: Ton zu Text und Text zu Ton ([Schritt 7](#kn-lautsprecher-s7), [Schritt 11](#kn-lautsprecher-s11))
+- `app/panel/telefon.py` `Call.start`: wer anruft: intern, Profil, gesperrt, besetzt ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon.py` `Call.voice_result`: Stimme wählt oder bestätigt das Profil ([Schritt 9](#kn-lautsprecher-s9))
+- `app/panel/telefon.py` `Call._chat`: Chat mit dem Profil, Ton zurück ([Schritt 10](#kn-lautsprecher-s10), [Schritt 11](#kn-lautsprecher-s11))
 
-Selbsttests: `test_esp32`, `test_wyoming`, `test_notaus`, `test_echo`
+Selbsttests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
 
 ### MCP-Programme
 
@@ -1410,9 +1430,9 @@ flowchart TD
 
 1. <a id="kn-vorbereiten-s1"></a>**Nachrichten lesen**: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke.
 2. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt.
-3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
+3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
 4. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells.
-5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest.
+5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest.
 6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
 7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten.
 8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
@@ -1978,7 +1998,7 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 30 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
@@ -2002,7 +2022,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 | nur Internet | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
 | Nutzer | calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| je nach Ziel | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, zertpin | wie das Ziel eingestellt ist | – |
+| je nach Ziel | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, telefon, zertpin | wie das Ziel eingestellt ist | – |
 | immer | alle | ✕ bei Notaus | ✕ eigene Dienste, 169.254, Multicast |
 
 #### Wenn gesperrt
@@ -2088,7 +2108,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -2869,7 +2889,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 60). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 60). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2879,7 +2899,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **29** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **30** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **60** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
@@ -3155,7 +3175,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -3171,7 +3191,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **29** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **30** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

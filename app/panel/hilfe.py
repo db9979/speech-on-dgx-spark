@@ -158,9 +158,9 @@ STATUS_ASK = re.compile(r"(?i)\b(was (heißt|bedeutet|ist) (das|der|die|da)|waru
 # where a question comes from (plan 10): only from the panel itself (the key, the login, the client the panel set)
 ORIGINS = {"panel": ("Panel-Chat", "panel chat"), "kopf": ("Kopf auf einer Seite", "face on a page"),
            "iphone": ("iPhone-App", "iPhone app"), "android": ("Android-App", "Android app"), "telegram": ("Telegram", "Telegram"),
-           "speaker": ("Lautsprecher", "speaker"), "watch": ("Uhr", "watch"), "siri": ("Siri", "Siri"),
+           "speaker": ("Lautsprecher", "speaker"), "telefon": ("Telefon", "phone"), "watch": ("Uhr", "watch"), "siri": ("Siri", "Siri"),
            "mcp": ("MCP", "MCP"), "geraet": ("Gerät", "device")}
-SPOKEN = {"speaker", "watch", "siri"}
+SPOKEN = {"speaker", "telefon", "watch", "siri"}
 
 # ---------------------------------------------------------------- what a card may switch (fixed, never the model's)
 # Functions whose switches only change how the assistant works for the person: no security switch, nothing that
@@ -406,7 +406,7 @@ def origin(body, request):
     page of the face. Never from the question or the model; it only narrows what the answer looks like."""
     body = body if isinstance(body, dict) else {}
     client = body.get("client")
-    if client in ("telegram", "speaker", "watch", "siri", "mcp"):
+    if client in ("telegram", "speaker", "telefon", "watch", "siri", "mcp"):
         return client
     try:
         if request.scope.get("speech_mcp"):

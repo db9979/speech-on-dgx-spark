@@ -39,11 +39,11 @@ BUSY_MAX = 10 * 60       # an answer that never said "done" stops counting as ru
 
 # conversations of the channels themselves (Telegram "tg-", speaker "esp-", ...) and of the Spark's own work:
 # never "today's main conversation"
-OWN_PREFIXES = ("tg-", "siri-", "desk-", "watch-", "esp-", "brief-", "agent-", "meet-")
-VIA = {"telegram": "Telegram", "siri": "Siri", "desk": "Begleiter", "watch": "Uhr", "speaker": "Lautsprecher"}
+OWN_PREFIXES = ("tg-", "siri-", "desk-", "watch-", "esp-", "tel-", "brief-", "agent-", "meet-")
+VIA = {"telegram": "Telegram", "siri": "Siri", "desk": "Begleiter", "watch": "Uhr", "speaker": "Lautsprecher", "telefon": "Telefon"}
 # who answers right now, by kind of device (fixed words, shown as "Handy antwortet gerade …")
 KINDS = {"web": "Browser", "phone": "Handy", "app": "iPhone-App", "car": "CarPlay", "speaker": "Lautsprecher",
-         "watch": "Uhr", "siri": "Siri", "telegram": "Telegram", "desk": "Begleiter"}
+         "watch": "Uhr", "siri": "Siri", "telegram": "Telegram", "desk": "Begleiter", "telefon": "Telefon"}
 
 _hub = sse.Hub(QUEUE, MAX_STREAMS, BEAT)
 _subs = _hub.subs   # uid -> {stream id: (loop, queue)}
@@ -67,7 +67,7 @@ profiles.CONVO_HOOKS.append(changed)
 def kind_of(request, body):
     body = body if isinstance(body, dict) else {}
     c = body.get("client")
-    if c in ("speaker", "watch", "siri", "telegram", "desk"):
+    if c in ("speaker", "telefon", "watch", "siri", "telegram", "desk"):
         return c
     if profiles.key_scope(request) == "app":
         return "car" if body.get("car") is True else "app"

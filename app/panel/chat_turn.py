@@ -241,8 +241,11 @@ async def prepare(request):
     # profile's own voice in this very recording; anyone else gets what a guest gets. Fixed rule, no switch.
     stranger = shared_stranger(request, body, who)
     if stranger:   # Zustand → Logs, area "Lautsprecher", yellow: only the reason, never what was asked
-        print("esp32: personal data withheld at", (profiles.device_name(request) or "speaker")[:40],
-              "-", stranger, "- guest rights for this question", flush=True)
+        if body.get("client") == "telefon":
+            print("telefon: persoenliches zurueckgehalten -", stranger, "- guest rights for this question", flush=True)
+        else:
+            print("esp32: personal data withheld at", (profiles.device_name(request) or "speaker")[:40],
+                  "-", stranger, "- guest rights for this question", flush=True)
     sound_of = who      # voice, speed and length of the answer stay the speaker's own
     # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
     # profile for this turn; its own settings apply then, not the ones this browser sends.
@@ -337,6 +340,8 @@ async def prepare(request):
         system = (system + "\n\n" + chat.SIRI_HINT).strip()
     if body.get("client") == "speaker":
         system = (system + "\n\n" + chat.SPEAKER_HINT).strip()
+    if body.get("client") == "telefon":
+        system = (system + "\n\n" + chat.PHONE_HINT).strip()
     # a voice recognized at someone else's device gets no personal data at all (it could be a recording
     # of that person): no memory, history, documents, calendar, contacts, lists or reminders
     prof = who if who and ccfg.get("memory", True) and own_browser and not mcp and features.allowed("memory", who["id"], ccfg) else None
@@ -891,7 +896,7 @@ async def prepare(request):
     tip_kind = None
     if who and own_browser and messages[-1]["role"] == "user":
         import tipps
-        tipps.record(who["id"], route.names, body.get("spoken") is True or hilfe_origin in ("speaker", "watch", "siri"))
+        tipps.record(who["id"], route.names, body.get("spoken") is True or hilfe_origin in hilfe.SPOKEN)
         if explain:
             convo = body.get("convo") if isinstance(body.get("convo"), str) else ""
             explain["tip"] = tipps.wish(who["id"], explain, convo[:80], hilfe_origin, outside=bool(carry),

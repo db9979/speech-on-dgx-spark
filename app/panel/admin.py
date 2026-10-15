@@ -29,6 +29,7 @@ import features  # noqa: E402
 import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
+import telefon  # noqa: E402
 import profiles  # noqa: E402
 from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, load_config, model_local, model_url, qwen38_lanes,  # noqa: E402
                     write_json)
@@ -245,6 +246,7 @@ def admin_delete_profile(uid: str, request: Request):
     verbund.forget(uid)   # its contacts on other Sparks, its address, what still waited to go out from it
     import anrufe
     anrufe.forget(uid)    # its calls end
+    telefon.forget(uid)   # its handsets are no longer assigned
     return {"ok": True}
 
 
@@ -703,6 +705,11 @@ def validate(new):
         raise HTTPException(400, "Wyoming port is already used by another service")
     if not isinstance(ch.get("wyoming_voice", ""), str) or len(ch.get("wyoming_voice", "")) > 64:
         raise HTTPException(400, "Wyoming voice: invalid")
+    # Den Spark anrufen (telefon.py): sound "hd" (G.722 first) or "schmal" (G.711 only), 1 or 2 calls at once
+    if ch.get("telefon_ton", "hd") not in ("hd", "schmal"):
+        raise HTTPException(400, "telefon_ton must be hd or schmal")
+    if isinstance(ch.get("telefon_max", 1), bool) or ch.get("telefon_max", 1) not in range(1, telefon.MAX_CALLS + 1):
+        raise HTTPException(400, f"telefon_max must be 1..{telefon.MAX_CALLS}")
     if not isinstance(ch["max_tokens"], int) or not 16 <= ch["max_tokens"] <= 32768:
         raise HTTPException(400, "chat max_tokens must be 16..32768")
     if not isinstance(ch.get("temperature", 0.3), (int, float)) or not 0 <= ch.get("temperature", 0.3) <= 1.5:

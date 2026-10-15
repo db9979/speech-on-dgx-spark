@@ -48,6 +48,7 @@ import llm
 import mcp
 import notaus
 import profiles
+import tracelog
 import vorrang
 import features
 from common import STATE, load_config, no_think, write_json
@@ -1204,7 +1205,7 @@ async def answer(ctx, latest):
                 "outside": p["kind"] == "mcp"}
     # „Sag mir Bescheid, wenn es eine neue Firmware für … gibt“: the panel makes the proposal from the person's own
     # words (beobachten.parse), with a fixed sentence; the model only asks it (plan „Eigene Aufgaben“)
-    if ctx.get("client") != "speaker" and watch_on(uid):
+    if ctx.get("client") not in tracelog.NO_SCREEN and watch_on(uid):
         w = beobachten.parse(latest)
         if w:
             return _watch_proposal(uid, w, ctx)
@@ -1413,7 +1414,7 @@ HINT_MCP = ("Werkzeuge, die mit mcp_ beginnen, kommen von verbundenen Diensten; 
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or ctx.get("client") == "speaker":
+    if not who or not ctx.get("own") or ctx.get("client") in tracelog.NO_SCREEN:
         return None
     uid = who["id"]
     lv = level(uid)

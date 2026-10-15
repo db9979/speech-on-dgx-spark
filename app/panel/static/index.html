@@ -276,6 +276,20 @@
         <label>Erlaubte Adressen</label><input id="chat.wyoming_allow" data-req placeholder="192.168.1.20" autocomplete="off"><div class="fh">Die Adresse deines Home Assistant, mehrere mit Komma, auch Netze wie 192.168.1.0/24. Leer = niemand.</div>
         <div class="row" style="margin-top:6px"><button class="b" type="button" id="wysuggest">Adresse von Home Assistant übernehmen</button></div><div class="fh" id="wymsg"></div>
         <div class="two2"><div><label>Port</label><input id="chat.wyoming_port" type="number" min="1024" max="65535"></div><div><label>Stimme</label><input id="chat.wyoming_voice" placeholder="Standardstimme" autocomplete="off"></div></div></div>
+      <div class="setrow"><div class="lbl"><b>Den Spark anrufen</b><span>Vom Telefon im Haus (DECT-Mobilteil, IP-Telefon) den Spark anrufen und mit ihm sprechen; er meldet sich an deiner Telefonanlage als IP-Telefon an.</span></div><label class="tgl"><input type="checkbox" id="chat.telefon"><i></i></label></div>
+      <div data-show="chat.telefon" style="margin-left:18px" id="teladmin">
+        <div class="fh" id="telstate"></div>
+        <label>1. Telefonanlage wählen</label><div class="rowin"><select id="telanlage" data-nodirty="1"></select><button class="b" type="button" id="telsuchen">Im Heimnetz suchen</button></div><div class="fh" id="telfound"></div>
+        <label>2. Den Spark in der Anlage anlegen</label><ol class="fh" id="telwie"></ol><div class="fh" id="telhint"></div>
+        <div class="fh">Vorschlag: Benutzername <code id="telvuser"></code>, Kennwort <code id="telvpw"></code> <button class="b" type="button" id="telcopy">Kopieren</button></div>
+        <label>3. Zugang eintragen und prüfen</label>
+        <div class="two2"><div><label>Adresse der Anlage</label><input id="telhost" data-nodirty="1" placeholder="fritz.box" autocomplete="off" autocapitalize="off"></div><div><label>Port</label><input id="telport" data-nodirty="1" type="number" min="1" max="65535" placeholder="5060"></div></div>
+        <div class="two2"><div><label>Benutzername</label><input id="teluser" data-nodirty="1" autocomplete="off" autocapitalize="off"></div><div><label>Kennwort</label><input id="telpw" data-nodirty="1" type="password" autocomplete="new-password"></div></div>
+        <div class="row" style="margin-top:6px"><button class="b" type="button" id="telsave">Speichern und prüfen</button><button class="b" type="button" id="telcheck">Verbindung prüfen</button></div><div class="fh" id="telmsg"></div>
+        <label>4. Testanruf und Mobilteile zuordnen</label><div class="fh">Ruf vom Mobilteil die interne Nummer des Spark an (FRITZ!Box: meist **620). Die Nummer erscheint hier; ordne sie einem Profil zu oder als gemeinsames Telefon. Dort wählt die Stimme das Profil.</div>
+        <div id="telnums"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="telreload">Neu laden</button></div>
+        <div class="setrow" style="margin-top:6px"><div class="lbl"><b>Nicht zugeordnete Mobilteile als Gast</b><span>Sonst sagt der Spark nur, dass das Telefon noch keinem Profil zugeordnet ist, und legt auf.</span></div><label class="tgl"><input type="checkbox" id="chat.telefon_gaeste"><i></i></label></div>
+        <div class="two2"><div><label>Ton</label><select id="chat.telefon_ton"><option value="hd">HD (G.722), sonst G.711</option><option value="schmal">nur G.711 (spart Rechenzeit)</option></select></div><div><label>Gespräche gleichzeitig</label><input id="chat.telefon_max" type="number" min="1" max="2"></div></div></div>
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Neue Mails nennen und vorlesen; der Assistent sendet, löscht und markiert nie.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Postfach aufräumen</b><span>Werbung und Newsletter in eigene Ordner sortieren; nie löschen, nie senden, alles umkehrbar.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_tidy"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Mailstil lernen</b><span>Lernt aus den gesendeten Mails, wie jemand schreibt, damit Mail-Entwürfe nach ihm klingen; nur lesend, keine Mail wird gespeichert.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_style"><i></i></label></div>
@@ -1140,6 +1154,7 @@
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>
 <script src="/static/js/anrufe.js"></script>
+<script src="/static/js/telefon.js"></script>
 <script src="/static/js/verbund.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>

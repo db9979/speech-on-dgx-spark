@@ -995,15 +995,15 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Lautsprecher, HA",
-"title": "Lautsprecher, HA",
+"head": "Lautsprecher, HA, Telefon",
+"title": "Lautsprecher, HA, Telefon",
 "text": "Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder Lautsprecher ist ein Geräteschlüssel seines Profils. Home Assistant Assist nutzt über Wyoming nur Spracherkennung und Stimme des Spark."
 },
 {
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Lautsprecher, HA",
+"head": "Lautsprecher, HA, Telefon",
 "title": "Warum",
 "text": "Warum: Ein Lautsprecher steht im Raum, jeder kann mit ihm reden. Deshalb bekommt Persönliches nur die Stimme, die sicher als die des Profils erkannt ist (oder das Codewort sagt), und ein Board bekommt seinen Schlüssel nur einmal und nur an die Adresse, die den Code gezeigt hat."
 },
@@ -1051,9 +1051,17 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Den Spark anrufen (Telefon)",
+"title": "Den Spark anrufen (Telefon)",
+"text": "- Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss. - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten. - Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 2) - 30 Sekunden Ton pro Frage (Schritt 6) - 2.0 Sekunden, dann werden die Rechte neu geprüft (Schritt 5) - 10 Minuten zählen frühere Fragen am Lautsprecher (Schritt 12) - 3 falsche Codewörter bis zur Sperre (Schritt 9) - 8 Wyoming-Verbindungen gleichzeitig (Schritt 5)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 2) - 30 Sekunden Ton pro Frage (Schritt 6) - 2.0 Sekunden, dann werden die Rechte neu geprüft (Schritt 5) - 10 Minuten zählen frühere Fragen am Lautsprecher (Schritt 12) - 3 falsche Codewörter bis zur Sperre (Schritt 9) - 8 Wyoming-Verbindungen gleichzeitig (Schritt 5) - 2 Anrufe gleichzeitig höchstens (Schritt 5) - 15 Minuten dauert ein Anruf höchstens (Schritt 10)"
 },
 {
 "lang": "de",
@@ -1061,7 +1069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus). - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort. - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen."
+"text": "- Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus). - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort. - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen. - Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen."
 },
 {
 "lang": "de",
@@ -1069,7 +1077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart). - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang."
+"text": "- Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart). - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang. - Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen."
 },
 {
 "lang": "de",
@@ -1077,7 +1085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update (Schritt 1) - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen (Schritt 2) - app/panel/esp32.py same_board: MAC muss passen (Schritt 3) - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen (Schritt 5) - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig (Schritt 5) - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten (Schritt 10) - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme (Schritt 9) - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück (Schritt 11) - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert (Schritt 12) - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen (Schritt 5) - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele (Schritt 5) - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton (Schritt 7, Schritt 11)"
+"text": "- app/panel/esp32.py ota: Start-Prüfung: Code, Schlüssel einmal, Update (Schritt 1) - app/panel/esp32.py _activation: sechsstelliger Code mit Grenzen (Schritt 2) - app/panel/esp32.py same_board: MAC muss passen (Schritt 3) - app/panel/esp32.py speaker_ws: Verbindung annehmen und laufend prüfen (Schritt 5) - app/panel/esp32.py still_allowed: Schalter und Gerät noch gültig (Schritt 5) - app/panel/esp32.py Session.run_answer: erkennen, filtern, Codewort, antworten (Schritt 10) - app/panel/esp32.py Session.code_gate: Codewort bei unsicherer Stimme (Schritt 9) - app/panel/esp32.py Session.speak: Chat mit dem Schlüssel, Ton zurück (Schritt 11) - app/panel/esp32.py remember: Tagesgespräch, fremde Stimme markiert (Schritt 12) - app/panel/wyoming.py settings: Schalter, Port, erlaubte Adressen (Schritt 5) - app/panel/wyoming.py handle: nur erlaubte Adressen, höchstens so viele (Schritt 5) - app/panel/wyoming.py _session: Ton zu Text und Text zu Ton (Schritt 7, Schritt 11) - app/panel/telefon.py Call.start: wer anruft: intern, Profil, gesperrt, besetzt (Schritt 5) - app/panel/telefon.py Call.voice_result: Stimme wählt oder bestätigt das Profil (Schritt 9) - app/panel/telefon.py Call._chat: Ch"
 },
 {
 "lang": "de",
@@ -1085,7 +1093,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_esp32, test_wyoming, test_notaus, test_echo"
+"text": "at mit dem Profil, Ton zurück (Schritt 10, Schritt 11)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_esp32, test_wyoming, test_telefon, test_notaus, test_echo"
 },
 {
 "lang": "de",
@@ -1389,7 +1405,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Nachrichten lesen: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke. 2. Verlauf kürzen, Sperre übernehmen: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. 3. Gast oder fremde Stimme?: Ohne Profil, oder am eigenen Lautsprecher, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage. 4. Weiche liest die Frage: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen da"
+"text": "1. Nachrichten lesen: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke. 2. Verlauf kürzen, Sperre übernehmen: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. 3. Gast oder fremde Stimme?: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat, gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage. 4. Weiche liest die Frage: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ih"
 },
 {
 "lang": "de",
@@ -1397,7 +1413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "zu, auch neben der Wahl des Modells. 5. Systemprompt bauen: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 9. Ja zu einem Vorschlag: Wart"
+"text": "re Gruppen dazu, auch neben der Wahl des Modells. 5. Systemprompt bauen: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 9. Ja zu"
 },
 {
 "lang": "de",
@@ -1405,7 +1421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "et ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Dan"
+"text": " einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein: Mit „Gezielte Werkzeugwahl“ bleibt nur die Grupp"
 },
 {
 "lang": "de",
@@ -1413,7 +1429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
+"text": "e der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
 },
 {
 "lang": "de",
@@ -1885,7 +1901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, m"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 30 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, m"
 },
 {
 "lang": "de",
@@ -1981,7 +1997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: F"
+"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: F"
 },
 {
 "lang": "de",
@@ -2677,7 +2693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 60). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 60). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -2701,7 +2717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 60 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 30 Dateien in jeder Sicherung (Schritt 7) - 60 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2917,7 +2933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (29 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -2941,7 +2957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 29 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 30 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -3470,6 +3486,30 @@
 "head": "Sprach-Chat",
 "title": "Home Assistant Assist über Wyoming (V01.0.100)",
 "text": "im Hintergrund neu gelesen): HA wartet darauf nur 1 Sekunde, und eine beschäftigte Sprachausgabe ließ es sonst „Unable to get info“ melden."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Den Spark anrufen (Telefon, Stufe T1, V01.0.626, Plan `plaene/telefon-anruf.md`)",
+"text": "Den Spark anrufen (Telefon, Stufe T1, V01.0.626, Plan plaene/telefon-anruf.md): Vom Telefon im Haus (DECT-Mobilteil der FRITZ!Box, IP-Telefon) den Spark anrufen und mit ihm sprechen wie mit einem eigenen Lautsprecher. Der Spark meldet sich an der Telefonanlage als IP-Telefon an (app/panel/telefon.py, eigener kleiner SIP-Teil im Panel, keine fremde Software): REGISTER mit Digest-Anmeldung (MD5 oder SHA-256), eingehende Anrufe mit INVITE, ACK, BYE, CANCEL, OPTIONS und INFO; Ton als RTP in G.722 (HD, 16 kHz) oder G.711 (a-law, µ-law), eigener Code in app/panel/telefon_ton.py; Tasten nach RFC 4733. Admin: *Funktionen → Den Spark anrufen* an; darunter ein Assistent in vier Schritten: 1. Anlage wählen oder „Im Heimnetz suchen“ (fragt fritz.box, speedport.ip und das Gateway mit SIP OPTIONS, nur im Heimnetz), 2. die Klicks, um den Spark dort als IP-Telefon anzulegen, mit einem vorgeschlagenen Benutzernamen und Kennwort zum Kopieren, 3. Zugang eintragen (Adresse, Port, Benutzername, Kennwort im Tresor; Speichern fragt nach dem Code, Stufe „Bestätigen“) und „Verbindung prüfen“ mit klarer Antwort statt Fehlercode („Benutzername oder Kennwort falsch“, „Die Anlage antwortet nicht“ …), 4. vom Mo"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Den Spark anrufen (Telefon, Stufe T1, V01.0.626, Plan `plaene/telefon-anruf.md`)",
+"text": "bilteil die interne Nummer des Spark anrufen (FRITZ!Box meist \\*\\*620): die anrufende Nummer erscheint und wird einem Profil oder als „Gemeinsames Telefon“ zugeordnet. Die Vorlagen der Anlagen (FRITZ!Box, Telekom Speedport, Gigaset, Asterisk/FreePBX, 3CX, UniFi Talk, andere SIP-Anlage) stehen in app/telefonanlagen.json; eine neue Anlage ist ein neuer Eintrag. Ein Anruf: „Hallo Anna, hier ist der Spark.“, Frage, Antwort (Weiche und Chat wie am Lautsprecher, kurze Antworten ohne Listen), wieder zuhören; nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 Sekunden legt er auf; „Stopp“ oder die Taste # unterbricht die Antwort, „Tschüss“ beendet das Gespräch; höchstens 15 Minuten. Wer anruft, entscheiden feste Regeln: ein Mobilteil, das einem Profil gehört, nutzt dieses Profil, Persönliches aber nur, wenn die Sprechererkennung die Stimme sicher als die des Profils erkennt (wie am geteilten Lautsprecher); am gemeinsamen Telefon wählt die Stimme das Profil für jede Frage, sonst Frage und Antwort als Gast; ein nicht zugeordnetes Mobilteil hört nur, dass es noch keinem Profil gehört (mit *Telefon: Gäste annehmen* bekommt es Frage und Antwort als Gast, nie ein Werkzeug); Anrufe von außen"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Den Spark anrufen (Telefon, Stufe T1, V01.0.626, Plan `plaene/telefon-anruf.md`)",
+"text": " weist der Spark in dieser Stufe ab. Ein Anruf gleichzeitig (einstellbar bis 2), ein weiterer hört „besetzt“. Ton wird nie gespeichert; Fragen und Antworten stehen im Verlauf des Profils („Telefon TT.MM.“). Zustand → Live zeigt die Telefonanlage mit angemeldet ja/nein und den Zahlen von heute, Logs den Bereich „telefon“ (nur interne Nummern wie \\*\\*611, nie eine Nummer von außen, Profile über profiles.log_name), der Dienst-Wächter meldet eine verlorene Anmeldung. Selbsttest test_telefon mit einer nachgebauten Telefonanlage."
 },
 {
 "lang": "de",
@@ -7755,15 +7795,15 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "Speakers, HA",
-"title": "Speakers, HA",
+"head": "Speakers, HA, phone",
+"title": "Speakers, HA, phone",
 "text": "Own speakers are ESP32 boards with the open XiaoZhi firmware. They listen for their wake word, send the sound to the Spark over a WebSocket connection and play the answer. Every speaker is a device key of its profile. Home Assistant Assist only uses the Spark's speech recognition and voice over Wyoming."
 },
 {
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "Speakers, HA",
+"head": "Speakers, HA, phone",
 "title": "Why",
 "text": "Why: A speaker stands in the room, anyone can talk to it. That is why personal things only go to the voice that is surely recognized as the profile's (or says the code word), and a board gets its key only once and only at the address that showed the code."
 },
@@ -7811,9 +7851,17 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Calling the Spark (phone)",
+"title": "Calling the Spark (phone)",
+"text": "- The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port 31060, digest sign-in, renewed every 10 minutes). It takes messages only from the system's address, at most 4096 bytes and 100 per second; sound (RTP) only from the address in its SDP, which has to be in the home network. - A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes. - Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 2) - 30 seconds of sound per question (step 6) - 2.0 seconds, then the rights are checked again (step 5) - 10 minutes earlier questions count at a speaker (step 12) - 3 wrong code words until the lock (step 9) - 8 Wyoming connections at once (step 5)"
+"text": "- 10 minutes a pairing code is valid (step 2) - 30 seconds of sound per question (step 6) - 2.0 seconds, then the rights are checked again (step 5) - 10 minutes earlier questions count at a speaker (step 12) - 3 wrong code words until the lock (step 9) - 8 Wyoming connections at once (step 5) - 2 calls at once at most (step 5) - 15 minutes a call lasts at most (step 10)"
 },
 {
 "lang": "en",
@@ -7821,7 +7869,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own speakers: speakers for every profile (default off). - Me → Speakers: set up, type the code, room, volume, check and the own code word. - Features → Home Assistant Assist: Wyoming on and the allowed addresses."
+"text": "- Features → Own speakers: speakers for every profile (default off). - Me → Speakers: set up, type the code, room, volume, check and the own code word. - Features → Home Assistant Assist: Wyoming on and the allowed addresses. - Features → Calling the Spark: wizard with four steps, assign handsets."
 },
 {
 "lang": "en",
@@ -7829,7 +7877,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart). - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input."
+"text": "- Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart). - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input. - Status → Live: the telephone system with signed in yes/no and today's calls in numbers."
 },
 {
 "lang": "en",
@@ -7837,7 +7885,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/esp32.py ota: start check: code, key once, update (step 1) - app/panel/esp32.py _activation: six-digit code with limits (step 2) - app/panel/esp32.py same_board: MAC must fit (step 3) - app/panel/esp32.py speaker_ws: accept the connection and keep checking (step 5) - app/panel/esp32.py still_allowed: switches and device still valid (step 5) - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer (step 10) - app/panel/esp32.py Session.code_gate: code word for an unsure voice (step 9) - app/panel/esp32.py Session.speak: chat with the key, sound back (step 11) - app/panel/esp32.py remember: day conversation, foreign voice marked (step 12) - app/panel/wyoming.py settings: switch, port, allowed addresses (step 5) - app/panel/wyoming.py handle: only allowed addresses, at most so many (step 5) - app/panel/wyoming.py _session: sound to text and text to sound (step 7, step 11)"
+"text": "- app/panel/esp32.py ota: start check: code, key once, update (step 1) - app/panel/esp32.py _activation: six-digit code with limits (step 2) - app/panel/esp32.py same_board: MAC must fit (step 3) - app/panel/esp32.py speaker_ws: accept the connection and keep checking (step 5) - app/panel/esp32.py still_allowed: switches and device still valid (step 5) - app/panel/esp32.py Session.run_answer: recognize, filter, code word, answer (step 10) - app/panel/esp32.py Session.code_gate: code word for an unsure voice (step 9) - app/panel/esp32.py Session.speak: chat with the key, sound back (step 11) - app/panel/esp32.py remember: day conversation, foreign voice marked (step 12) - app/panel/wyoming.py settings: switch, port, allowed addresses (step 5) - app/panel/wyoming.py handle: only allowed addresses, at most so many (step 5) - app/panel/wyoming.py _session: sound to text and text to sound (step 7, step 11) - app/panel/telefon.py Call.start: who calls: internal, profile, blocked, busy (step 5) - app/panel/telefon.py Call.voice_result: the voice picks or confirms the profile (step 9) - app/panel/telefon.py Call._chat: chat with the profile, sound back (step 10, step 11)"
 },
 {
 "lang": "en",
@@ -7845,7 +7893,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_esp32, test_wyoming, test_notaus, test_echo"
+"text": "Self-tests: test_esp32, test_wyoming, test_telefon, test_notaus, test_echo"
 },
 {
 "lang": "en",
@@ -8149,7 +8197,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Read the messages: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark. 2. Trim history, carry the lock: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. 3. Guest or unknown voice?: Without a profile, or at an own speaker when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request. 4. The switch reads the question: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. 5. Build the system prompt: The admin's system prompt, plus the profile's length and st"
+"text": "1. Read the messages: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark. 2. Trim history, carry the lock: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. 3. Guest or unknown voice?: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request. 4. The switch reads the question: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. 5. Build the system prompt: The admin's system prompt, plus the profile's leng"
 },
 {
 "lang": "en",
@@ -8157,7 +8205,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "yle and a note per channel (watch, Siri, speaker, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. 6. Fixed sentence?: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on the „yes“. One ye"
+"text": "th and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. 6. Fixed sentence?: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on t"
 },
 {
 "lang": "en",
@@ -8165,7 +8213,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. 13. Turn ready: The system prompt goes first, with the tools and the lock rule. The kill swi"
+"text": "he „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. 13. Turn ready: The system prompt goes first, with the tools and the lock ru"
 },
 {
 "lang": "en",
@@ -8173,7 +8221,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tch is read again for every tool call: triggered during an answer, it holds the next call off."
+"text": "le. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off."
 },
 {
 "lang": "en",
@@ -8645,7 +8693,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Never allowe"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Never allowe"
 },
 {
 "lang": "en",
@@ -8733,7 +8781,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (29 areas), profiles only through profiles.log_name. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace request"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (30 areas), profiles only through profiles.log_name. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace request"
 },
 {
 "lang": "en",
@@ -9413,7 +9461,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -9429,7 +9477,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 29 files in every backup (step 7) - 60 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 30 files in every backup (step 7) - 60 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -9637,7 +9685,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (29 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (30 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -9661,7 +9709,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 29 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 30 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -10174,6 +10222,30 @@
 "head": "Voice chat",
 "title": "Home Assistant Assist over Wyoming (V01.0.100)",
 "text": "ngine otherwise made it report \"Unable to get info\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Calling the Spark (phone, stage T1, V01.0.626, plan `plaene/telefon-anruf.md`)",
+"text": "Calling the Spark (phone, stage T1, V01.0.626, plan plaene/telefon-anruf.md): Call the Spark from a phone in the house (DECT handset of the FRITZ!Box, IP phone) and talk to it like to an own speaker. The Spark signs in at the telephone system as an IP phone (app/panel/telefon.py, a small SIP part of its own in the panel, no foreign software): REGISTER with digest sign-in (MD5 or SHA-256), incoming calls with INVITE, ACK, BYE, CANCEL, OPTIONS and INFO; sound as RTP in G.722 (HD, 16 kHz) or G.711 (a-law, µ-law), own code in app/panel/telefon_ton.py; keys after RFC 4733. Admin: *Features → Calling the Spark* on; below, a wizard in four steps: 1. pick the system or \"Search the home network\" (asks fritz.box, speedport.ip and the gateway with SIP OPTIONS, home network only), 2. the clicks to add the Spark there as an IP phone, with a suggested user name and password to copy, 3. enter the access (address, port, user name, password in the vault; saving asks for the code, level \"confirm\") and \"Check connection\" with a plain answer instead of an error code (\"User name or password wrong\", \"The system does not answer\" …), 4. call the Spark's internal number from a handset (FRITZ!Box usually \\*"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Calling the Spark (phone, stage T1, V01.0.626, plan `plaene/telefon-anruf.md`)",
+"text": "\\*620): the calling number shows up and is assigned to a profile or as a \"Shared phone\". The systems' templates (FRITZ!Box, Telekom Speedport, Gigaset, Asterisk/FreePBX, 3CX, UniFi Talk, other SIP system) are in app/telefonanlagen.json; a new system is a new entry. A call: \"Hallo Anna, hier ist der Spark.\", question, answer (Weiche and chat as at a speaker, short answers without lists), listening again; after 20 seconds of silence \"Noch etwas?\", after another 10 seconds it hangs up; \"Stopp\" or the key # interrupts the answer, \"Tschüss\" ends the call; at most 15 minutes. Fixed rules decide who is calling: a handset that belongs to a profile uses that profile, but personal things only when the speaker recognition clearly knows the profile's voice (as at a shared speaker); at the shared phone the voice picks the profile for each question, else questions and answers as a guest; a handset nobody assigned only hears that it belongs to no profile yet (with *Phone: take guests* it gets questions and answers as a guest, never a tool); calls from outside are refused in this stage. One call at a time (up to 2), another caller hears \"busy\". Sound is never stored; questions and answers are in t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Calling the Spark (phone, stage T1, V01.0.626, plan `plaene/telefon-anruf.md`)",
+"text": "he profile's history (\"Telefon DD.MM.\"). Status → Live shows the telephone system with signed in yes/no and today's numbers, Logs the area \"telefon\" (only internal numbers like \\*\\*611, never a number from outside, profiles through profiles.log_name), the Dienst-Wächter reports a lost sign-in. Self-test test_telefon with a made-up telephone system."
 },
 {
 "lang": "en",

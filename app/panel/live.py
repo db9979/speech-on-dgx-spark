@@ -153,6 +153,8 @@ TARGETS = {
     "taten": ("Taten-Prüfung", "zurückgehalten und gestoppt · auf dem Spark", "spark", False),
     # Suchprüfung (suchpruefung.py): shown while it is on, test questions and the share found in the first five
     "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
+    # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
+    "telefon": ("Telefonanlage", "SIP · Heimnetz", "lan", False),
     # Spark teilen (steuer.py): the DGX with the models while the panel runs on another computer; reachable, counts
     "modell": ("Modell-Rechner", "Sprache, LLM und Bilder · Heimnetz", "lan", False),
 }
@@ -163,11 +165,11 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
-           "geraete": "Versionsnummern und geprüfte Dateien"}
-CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
+           "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton"}
+CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "other": "Gerät"}
-VOICE = ("speaker", "watch", "siri", "app", "car", "ha")
+VOICE = ("speaker", "telefon", "watch", "siri", "app", "car", "ha")
 LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-Dienst", "home": "Heimnetz"}
 
 _run = {}                         # request id -> tracelog.Rec while it runs and FADE seconds after
@@ -687,6 +689,13 @@ def _conns(now):
     except Exception:
         pass
     try:
+        import telefon
+        n = telefon.state()["calls"]
+        if n:
+            out.append({"name": "Telefon", "proto": "SIP und RTP", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
         import begleiter
         n = sum(1 for t in list(getattr(begleiter, "_seen", {}).values()) if now - t < 3 * getattr(begleiter, "POLL", 30))
         if n:
@@ -1142,6 +1151,13 @@ def snapshot(view="admin", now=None):
     if spr.get("on"):
         used.add("pruef")
     try:
+        import telefon
+        tel = telefon.for_live()
+    except Exception:
+        tel = {"on": False}
+    if tel.get("on"):
+        used.add("telefon")
+    try:
         import doclingdienst
         dlg = doclingdienst.for_live()
     except Exception:
@@ -1285,6 +1301,10 @@ def snapshot(view="admin", now=None):
             if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
                 x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
                              if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
+        if x["id"] == "telefon":   # Telefon: signed in, calls in numbers (never a number, a name or a word)
+            x["sub"] = (("angemeldet" if tel.get("ok") else "nicht angemeldet") + f" · {tel.get('calls', 0)} Gespräche jetzt · heute "
+                        f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "
+                        f"{tel.get('minuten', 0)} min" + (f" · {tel['fremd']} fremde Pakete verworfen" if tel.get("fremd") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

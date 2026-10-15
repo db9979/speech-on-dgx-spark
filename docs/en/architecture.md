@@ -19,7 +19,7 @@ flowchart TB
     geraet["Browser and phone<br/>static/js"]
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, watch<br/>Kanäle"]
-    lautsprecher["Speakers, HA<br/>esp32 · :31003"]
+    lautsprecher["Speakers, HA, phone<br/>esp32 · :31003 · :31060"]
     mcpc["MCP programs<br/>/mcp"]
   end
   subgraph z_spark["DGX Spark · inside"]
@@ -91,6 +91,7 @@ flowchart TB
 | `speech-spark-asr` → `speech-spark-asr-engine` | 31001 → 31011 (local only) | Speech recognition |
 | `speech-spark-tts` → `speech-spark-tts-engine` | 31002 → 31012 (local only) | Speech output; optional VoiceDesign on 31013 |
 | Wyoming in the panel | 31003 | Home Assistant Assist |
+| Phone in the panel | UDP 31060, sound UDP 31062–31068 | Calling the Spark (SIP and RTP only with the telephone system in the home network) |
 | `dgx-spark-qwen38` (other project) | 30001 | Language model; ports 30000–30099 belong to it |
 | `speech-spark-watch` | – | Watchdog, only without the panel |
 | `speech-spark-update` | – | Update, only on request |
@@ -281,6 +282,8 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/speakers.py` | Speaker identification for profiles (optional; off unless the admin enables it). |
 | `app/panel/spkcode.py` | Code word at an own speaker in a room. |
 | `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
+| `app/panel/telefon.py` | Telefon: den Spark anrufen. |
+| `app/panel/telefon_ton.py` | Telefon: the sound of a call (telefon.py). |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
 | `app/panel/today.py` | Ich starts with "Heute". |
 | `app/panel/verbund.py` | Spark-Verbund: chats with people on other Sparks. |
@@ -539,6 +542,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/speech-spark-asr-engine.json` | ASR engine state | – | no |
 | `state/speech-spark-tts-*.json` | TTS engine state | – | no |
 | `state/speicher-tmp` | Own storage staging | AES-256-GCM | no |
+| `state/telefon.json` | Phone: access to the PBX, handsets | password sealed | yes |
 | `state/telegram.json` | Telegram bot | token sealed | yes |
 | `state/tipps.json` | Tips shown | – | no |
 | `state/traces.jsonl` | Logs → Requests, 48 h | – | no |
@@ -893,7 +897,7 @@ Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-ka
 
 Self-tests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
 
-### Speakers, HA
+### Speakers, HA, phone
 
 Own speakers are ESP32 boards with the open XiaoZhi firmware. They listen for their wake word, send the sound to the Spark over a WebSocket connection and play the answer. Every speaker is a device key of its profile. Home Assistant Assist only uses the Spark's speech recognition and voice over Wyoming.
 
@@ -961,12 +965,21 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 |---|---|---|---|
 | ESP32 speaker | a speaker's key, profile not blocked | questions as the profile | only with a sure voice or code word |
 | Home Assistant Assist | addresses in the admin's allow list | only sound to text and text to sound | never |
+| phone, a profile's handset | internal number, assigned by the admin | questions as the profile | only with a sure voice |
+| phone, shared handset | internal number as shared | the voice picks the profile, else guest | only with a sure voice |
+| phone from outside or not assigned | nobody (guest only with the admin switch) | refused or one sentence | never |
 
 #### Home Assistant Assist (Wyoming)
 
 - Its own server listens on the Wyoming port (default 31003) while the switch is on. Wyoming has no password; that is why it only answers addresses from the admin's list, with an empty list nobody.
 - Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no profile, nothing personal. At most 8 connections at once; lengths are checked before reading; only sound formats a microphone sends. „describe“ answers at once with the voice list from memory (read again every 10 minutes), because Home Assistant waits only 1 second.
 - Refused addresses show on Status → Live under input and as a suggestion for the list.
+
+#### Calling the Spark (phone)
+
+- The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port 31060, digest sign-in, renewed every 10 minutes). It takes messages only from the system's address, at most 4096 bytes and 100 per second; sound (RTP) only from the address in its SDP, which has to be in the home network.
+- A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes.
+- Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, never one from outside.
 
 #### Numbers (from the code)
 
@@ -976,17 +989,21 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - **10** minutes earlier questions count at a speaker ([step 12](#kn-lautsprecher-s12))
 - **3** wrong code words until the lock ([step 9](#kn-lautsprecher-s9))
 - **8** Wyoming connections at once ([step 5](#kn-lautsprecher-s5))
+- **2** calls at once at most ([step 5](#kn-lautsprecher-s5))
+- **15** minutes a call lasts at most ([step 10](#kn-lautsprecher-s10))
 
 #### Settings
 
 - Features → Own speakers: speakers for every profile (default off).
 - Me → Speakers: set up, type the code, room, volume, check and the own code word.
 - Features → Home Assistant Assist: Wyoming on and the allowed addresses.
+- Features → Calling the Spark: wizard with four steps, assign handsets.
 
 #### What you see
 
 - Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart).
 - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input.
+- Status → Live: the telephone system with signed in yes/no and today's calls in numbers.
 
 #### In the code
 
@@ -1002,8 +1019,11 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `settings`: switch, port, allowed addresses ([step 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `handle`: only allowed addresses, at most so many ([step 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: sound to text and text to sound ([step 7](#kn-lautsprecher-s7), [step 11](#kn-lautsprecher-s11))
+- `app/panel/telefon.py` `Call.start`: who calls: internal, profile, blocked, busy ([step 5](#kn-lautsprecher-s5))
+- `app/panel/telefon.py` `Call.voice_result`: the voice picks or confirms the profile ([step 9](#kn-lautsprecher-s9))
+- `app/panel/telefon.py` `Call._chat`: chat with the profile, sound back ([step 10](#kn-lautsprecher-s10), [step 11](#kn-lautsprecher-s11))
 
-Self-tests: `test_esp32`, `test_wyoming`, `test_notaus`, `test_echo`
+Self-tests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
 
 ### MCP programs
 
@@ -1410,9 +1430,9 @@ flowchart TD
 
 1. <a id="kn-vorbereiten-s1"></a>**Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark.
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all.
-3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
+3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice, there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick.
-5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache.
+5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache.
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
@@ -1978,7 +1998,7 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
@@ -2002,7 +2022,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 | internet only | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
 | user | calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| by target | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, zertpin | as the target is set | – |
+| by target | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
 
 #### When blocked
@@ -2088,7 +2108,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (29 areas), profiles only through profiles.log_name. A self-test checks both.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (30 areas), profiles only through profiles.log_name. A self-test checks both.
 6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
 7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
 8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
@@ -2869,7 +2889,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2879,7 +2899,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **29** files in every backup ([step 7](#kn-state-s7))
+- **30** files in every backup ([step 7](#kn-state-s7))
 - **60** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
@@ -3155,7 +3175,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (29 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (30 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
 5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
@@ -3171,7 +3191,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **29** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **30** areas of the diagnosis ([step 2](#kn-journal-s2))
 - **20000** lines read per call at most ([step 8](#kn-journal-s8))
 - **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
 - **1000** lines shown at most ([step 7](#kn-journal-s7))

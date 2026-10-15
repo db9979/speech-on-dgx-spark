@@ -50,6 +50,7 @@ import extras  # noqa: E402
 import telegram  # noqa: E402
 import tasks  # noqa: E402
 import wyoming  # noqa: E402
+import telefon  # noqa: E402
 import vorrang  # noqa: E402
 import transit  # noqa: E402
 import esp32  # noqa: E402
@@ -118,7 +119,7 @@ import modellseite  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, bilder, verbrauch, modellseite):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, nasablage, naszustand, verlauf, klaeren, technik, bilder, verbrauch, modellseite, telefon):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -383,6 +384,7 @@ async def stability():
     spawn(reminders())
     spawn(telegram.loop())
     spawn(wyoming.loop())
+    spawn(telefon.loop())
     spawn(esp32.fetch_loop())
     spawn(android.fetch_loop())
     spawn(begleiter.fetch_loop())

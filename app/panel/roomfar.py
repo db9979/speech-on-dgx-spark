@@ -187,6 +187,8 @@ def _from(ctx):
     """Who started it, said by the speaker: the device the request came from."""
     if ctx.get("client") == "speaker":
         return ("dem Lautsprecher " + ctx["device"]) if ctx.get("device") else "einem Lautsprecher"
+    if ctx.get("client") == "telefon":
+        return "einem Telefonanruf"
     if ctx.get("app"):
         return "der iPhone-App"
     return "dem Panel"

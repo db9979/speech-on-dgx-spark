@@ -14,7 +14,7 @@ import netguard  # noqa: E402
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CALLS = {("httpx", n) for n in ("AsyncClient", "Client", "get", "post", "put", "patch", "delete", "head", "stream", "request")} | {
-    ("socket", "create_connection"), ("asyncio", "open_connection"), ("imaplib", "IMAP4_SSL"), ("imaplib", "IMAP4"),
+    ("socket", "create_connection"), ("socket", "socket"), ("asyncio", "open_connection"), ("imaplib", "IMAP4_SSL"), ("imaplib", "IMAP4"),
     ("smtplib", "SMTP"), ("smtplib", "SMTP_SSL"), ("websockets", "connect"), ("request", "urlopen"), ("urllib", "urlopen"),
     ("aiohttp", "ClientSession"), ("requests", "get"), ("requests", "post"), ("requests", "Session")}
 NAMES = {n for _, n in CALLS}

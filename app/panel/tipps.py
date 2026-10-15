@@ -44,7 +44,7 @@ KEEP_DAYS = 14        # the counts per kind of question
 NEW_DAYS = 14         # a "new" hint ends this many days after the admin released the function, set up or not
 MAX_CONVS = 40
 TID = re.compile(r"[fg]:[a-z0-9_]{1,24}")
-QUIET_ORIGINS = {"speaker", "watch", "siri", "telegram", "mcp"}
+QUIET_ORIGINS = {"speaker", "telefon", "watch", "siri", "telegram", "mcp"}
 
 _lock = threading.RLock()
 # what tipps.json keeps per profile; "done": hints whose "Prüfen" said it works (they do not come again)

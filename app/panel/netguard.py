@@ -144,6 +144,7 @@ DIRECT_OK = {
     "weather": ("fest", "Wetter-Dienst (chat.weather_url, chat.geocode_url)"),
     "wiki": ("fest", "Wikipedia-API (chat.wiki_url)"),
     "wyoming": ("lokal", "eigene Sprachdienste auf localhost"),
+    "telefon": ("geprueft", "SIP und Ton (UDP) nur mit der Telefonanlage nach resolve() im Heimnetz und der Ton-Adresse aus ihrem SDP"),
     "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
     "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),
     "tts_proxy": ("lokal", "Sprachausgabe: Proxy zur Engine auf localhost"),

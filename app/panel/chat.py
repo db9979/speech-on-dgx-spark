@@ -448,11 +448,14 @@ WEB_SPOKEN_HINT = "Keine Tabellen und keine Codeblöcke, die Antwort wird auch v
 WEB_TEXT_HINT = "Die Antwort wird nicht vorgelesen: Tabellen und Codeblöcke sind erlaubt, wo sie helfen."
 SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der deine Antwort vorliest. Antworte "
                 "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
+# a call (telefon.py): the answer is only heard, through a handset
+PHONE_HINT = ("Die Frage kommt über einen Telefonanruf, der Anrufer hört deine Antwort nur. Antworte kurz, meist in "
+              "ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
 # a shared speaker (chat_turn.shared_stranger): the voice was not clearly the profile's own
-SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum, und die Stimme wurde nicht sicher als die "
+SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum oder ein Telefon, und die Stimme wurde nicht sicher als die "
                         "des Inhabers erkannt. Persönliches (E-Mails, Termine, Erinnerungen, Gedächtnis, Dokumente, "
                         "Kontakte, Nachrichten, Pakete, Smart Home) sagst und tust du hier nur für den Inhaber selbst. "
-                        "Fragt jemand danach, sag nur kurz, dass du das an diesem Lautsprecher nur dem Inhaber sagst, "
+                        "Fragt jemand danach, sag nur kurz, dass du das hier nur dem Inhaber sagst, "
                         "wenn du seine Stimme erkennst; nenne nichts davon und rate nichts.")
 SHARED_SHORT_HINT = ("Die Frage war zu kurz, um die Stimme zu prüfen: Sag, dass der Inhaber sie in einem ganzen Satz "
                      "wiederholen soll.")
@@ -1442,9 +1445,9 @@ def prompt_parts(ccfg):
         import roles
         parts.append({"label": "Gewählte Rolle (je Profil unter Ich → Gespräch, per Sprache gewechselt)",
                       "text": roles.INTRO + "(Name und Text der aktiven Rolle)", "fixed": False})
-    parts.append({"label": "Nur je nach Gerät (Chat im Panel, Uhr, Siri, Lautsprecher, Telegram)",
+    parts.append({"label": "Nur je nach Gerät (Chat im Panel, Uhr, Siri, Lautsprecher, Telefon, Telegram)",
                   "text": "\n".join((WEB_HINT + " " + WEB_SPOKEN_HINT + " / " + WEB_TEXT_HINT, WATCH_HINT, SIRI_HINT,
-                                     SPEAKER_HINT, TELEGRAM_HINT)), "fixed": True})
+                                     SPEAKER_HINT, PHONE_HINT, TELEGRAM_HINT)), "fixed": True})
     parts.append({"label": "Je nach Profil und eingeschalteten Funktionen",
                   "text": "(Gemerktes, frühere Gespräche, Smart Home, Erinnerungen, Kalender, Mails, Wetter … "
                           "mit ihren festen Werkzeughinweisen)", "fixed": True})
@@ -1568,7 +1571,7 @@ def start_trace(request, turn, t_req, t0):
     tr.intent = route.label() if route else ""
     ask_text = getattr(turn, "ask_text", "") or ""
     tr.quiet = body.get("speak") is False   # text only: asked so, or "Antworten vorlesen" off (chat_turn.quiet)
-    tr.step("in", {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
+    tr.step("in", {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
                    "app": "iPhone-App", "car": "CarPlay"}.get(client, "Gerät"), t_req,
             chars=len(ask_text), voice=bool(turn.heard) or None, pictures=len(getattr(turn, "pics", None) or []) or None,
             attachment=bool(getattr(turn, "attach", None)) or None, stufe=getattr(turn, "stufe", "") or None,

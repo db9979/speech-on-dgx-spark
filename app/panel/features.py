@@ -269,6 +269,11 @@ FEATURES = (
       parent="room", me="roombox", guide="roomfar"),
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",), parent="chats", me="setbox", guide="messages_announce"),
     F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
+    # Den Spark anrufen (telefon.py, plan telefon-anruf.md): the Spark as an IP phone at the home's PBX
+    F("telefon", "Den Spark anrufen", "Calling the Spark", "home", ("telefon",), guide="telefon"),
+    # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
+    F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
+      parent="telefon", guide="telefon"),
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),

@@ -162,6 +162,7 @@ WITHOUT = {
     "androidupdate": "macht die App selbst",
     "pebble": "Kanal",
     "wyoming": "Kanal für Home Assistant Assist",
+    "telefon": "Kanal: Anruf über die Telefonanlage",
     "iphonepush": "Kanal",
     "iphonepanel": "Kanal",
     "iphoneupdate": "nur mit Code in der App",

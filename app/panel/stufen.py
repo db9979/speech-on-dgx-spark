@@ -71,6 +71,7 @@ LIST = {
     ("POST", "/api/profile/room/ha"): (CONFIRM, "Geräte", "Schlüssel für den Raum-Modus", "Key for room mode"),
     ("POST", "/api/profile/voice"): (CONFIRM, "Geräte", "Stimme anlernen", "Teach my voice"),
     ("POST", "/api/chats/keys"): (CONFIRM, "Geräte", "Gerät für private Chats eintragen", "Add a device for private chats"),
+    ("PUT", "/api/admin/telefon/zugang"): (CONFIRM, "Spark", "Zugang zur Telefonanlage", "Access to the telephone system"),
     ("PUT", "/api/admin/naszustand"): (CONFIRM, "Spark", "Zugang zum Zustand der NAS (SNMP)", "Access to the NAS status (SNMP)"),
     ("POST", "/api/admin/verbund/pair"): (CONFIRM, "Geräte", "Kopplungs-Code für einen anderen Spark", "Pairing code for another Spark"),
     ("POST", "/api/admin/verbund/connect"): (CONFIRM, "Geräte", "Mit einem anderen Spark koppeln", "Pair with another Spark"),

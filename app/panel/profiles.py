@@ -689,11 +689,12 @@ def current(request):
             return None
         u = next((u for u in d["users"] if u["id"] == mcp.get("uid")), None)
         return {"id": u["id"], "name": u["name"]} if u else None
-    inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py)
+    inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py; telefon.py)
     if inner:
         if notaus.own(inner):
             return None
-        used(inner, "tg")
+        if request.scope.get("speech_channel") != "telefon":   # a call is no device push could go to
+            used(inner, "tg")
         u = next((u for u in d["users"] if u["id"] == inner), None)
         return {"id": u["id"], "name": u["name"]} if u else None
     token = request.headers.get(DEVICE_HEADER, "")
@@ -1004,7 +1005,7 @@ def save_convo(uid, c):
 
 # called with (uid, conversation id, gone) after a conversation was stored or deleted (verlauf.py: Sofort-Abgleich)
 CONVO_HOOKS = []
-VIA = ("telegram", "siri", "desk", "watch", "speaker")   # the channel a message came through (verlauf.target)
+VIA = ("telegram", "siri", "desk", "watch", "speaker", "telefon")   # the channel a message came through (verlauf.target)
 MAX_ATT = 8
 
 
