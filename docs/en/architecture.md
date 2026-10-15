@@ -286,6 +286,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/live.py` | Status → Live: what the Spark does right now, for the admin and for a wall monitor. |
 | `app/panel/logfilter.py` | Diagnose filters for Status → Logs: the journal lines threads usually ask for ("room:", "esp32:", "chat: web search", ...), so nobody has to type journalctl … |
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
+| `app/panel/modellseite.py` | Status → Models: the model catalog (app/modelle.py) to look at, for admins only. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
 | `app/panel/nas.py` | NAS-Verbindung. |
 | `app/panel/nasablage.py` | Ablage-Ordner. |

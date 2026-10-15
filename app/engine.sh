@@ -70,6 +70,18 @@ for o in "${others[@]}"; do
   done
 done
 
+# Preflight (lesson from dgx-spark-qwen38): an engine that just stopped gives its memory back over some seconds;
+# wait until the free memory stops growing (three calm looks two seconds apart, at most a minute), so this start
+# sizes its KV cache from the real free memory and the guard below does not refuse it too early.
+prev_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo); calm=0
+for _ in $(seq 1 30); do
+  sleep 2
+  now_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+  if [ $((now_kib - prev_kib)) -lt 524288 ]; then calm=$((calm + 1)); else calm=0; fi
+  [ "$calm" -ge 3 ] && break
+  prev_kib=$now_kib
+done
+
 # Memory guard: vLLM claims its share of the whole unified pool up front.
 total_kib=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
 avail_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)

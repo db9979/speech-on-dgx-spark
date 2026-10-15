@@ -6445,7 +6445,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Fehlersuche",
 "title": "Fehlersuche",
-"text": "Die Speicherschätzungen pro Modell (MODEL_GIB in app/common.py) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden."
+"text": "Die Speicherschätzungen pro Modell stehen als need_gib im Modell-Katalog app/modelle.json (mit gemessen ja oder nein). Werte, die sudo speech-spark modelle messen auf dem Spark ermittelt, ersetzen dort die Schätzung."
 },
 {
 "lang": "en",
@@ -12637,6 +12637,6 @@
 "file": "Technical details and troubleshooting",
 "head": "Troubleshooting",
 "title": "Troubleshooting",
-"text": "The per-model memory estimates (MODEL_GIB in app/common.py) are rough assumptions; correct them with the values the panel shows."
+"text": "The per-model memory estimates are need_gib in the model catalog app/modelle.json (with gemessen yes or no). Values that sudo speech-spark modelle messen finds on the Spark replace the estimate there."
 }
 ]

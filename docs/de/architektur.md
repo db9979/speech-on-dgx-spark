@@ -286,6 +286,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/live.py` | Live-Übersicht: was der Spark gerade tut |
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
+| `app/panel/modellseite.py` | Zustand → Modelle: Katalog, aktive Modelle, Speicher-Budget, letzte Messung |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
 | `app/panel/nasablage.py` | Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten |

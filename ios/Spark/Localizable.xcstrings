@@ -7610,6 +7610,66 @@
           }
         }
       }
+    },
+    "Modelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Models"
+          }
+        }
+      }
+    },
+    "Feste Modelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed models"
+          }
+        }
+      }
+    },
+    "Modelle bei Bedarf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Models on demand"
+          }
+        }
+      }
+    },
+    "Frei für Modelle bei Bedarf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free for models on demand"
+          }
+        }
+      }
+    },
+    "Speicher-Budget": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory budget"
+          }
+        }
+      }
+    },
+    "Nur zum Ansehen. Messen auf dem Spark: sudo speech-spark modelle messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only to look at. Measure on the Spark: sudo speech-spark modelle messen"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

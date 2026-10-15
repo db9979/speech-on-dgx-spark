@@ -1,10 +1,13 @@
 {
-  "hinweis": "Modell-Katalog (plaene/eigene-modelle.md): eine Zeile je Modell, gelesen nur von app/modelle.py. Revision leer = noch nicht festgelegt, nur zum Messen. Nie trust_remote_code, nie Pickle-Dateien.",
+  "hinweis": "Modell-Katalog (plaene/eigene-modelle.md): eine Zeile je Modell, gelesen nur von app/modelle.py. Revision leer = noch nicht festgelegt (vLLM-Einträge nur zum Messen). Nie trust_remote_code, nie Pickle-Dateien.",
   "modelle": [
     {
       "id": "qwen38-27b-nvfp4",
       "art": "llm",
-      "name": {"de": "Qwen3.8 27B NVFP4", "en": "Qwen3.8 27B NVFP4"},
+      "name": {
+        "de": "Qwen3.8 27B NVFP4",
+        "en": "Qwen3.8 27B NVFP4"
+      },
       "engine": "vllm",
       "repo": "RadixArk/Qwen3.8-27B-NVFP4",
       "revision": "52d1adc5f38aa5ebf099c29ed7025ba34cfbb854",
@@ -13,18 +16,32 @@
       "platte_gb": 20,
       "need_gib": 36,
       "gemessen": false,
-      "anteil": 0.30,
+      "anteil": 0.3,
       "kontext": 131072,
       "kann_sehen": true,
       "werkzeuge": true,
-      "vllm": {"reasoning_parser": "qwen3", "tool_call_parser": "qwen3_coder", "mtp": 3, "max_seqs": 8},
-      "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
-      "messen": "immer"
+      "vllm": {
+        "reasoning_parser": "qwen3",
+        "tool_call_parser": "qwen3_coder",
+        "mtp": 3,
+        "max_seqs": 8
+      },
+      "anfrage": {
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "top_k": 20
+      },
+      "messen": "immer",
+      "betrieb": "resident"
     },
     {
       "id": "qwen38-27b-fp8",
       "art": "llm",
-      "name": {"de": "Qwen3.8 27B FP8 (Vergleich)", "en": "Qwen3.8 27B FP8 (reference)"},
+      "name": {
+        "de": "Qwen3.8 27B FP8 (Vergleich)",
+        "en": "Qwen3.8 27B FP8 (reference)"
+      },
       "engine": "vllm",
       "repo": "Qwen/Qwen3.8-27B-FP8",
       "revision": "017b9c7af6b5689d5dd426a76e0bc077eb5ca20a",
@@ -37,14 +54,47 @@
       "kontext": 131072,
       "kann_sehen": true,
       "werkzeuge": true,
-      "vllm": {"reasoning_parser": "qwen3", "tool_call_parser": "qwen3_coder", "mtp": 3, "max_seqs": 8},
-      "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
-      "messen": "auf_wunsch"
+      "vllm": {
+        "reasoning_parser": "qwen3",
+        "tool_call_parser": "qwen3_coder",
+        "mtp": 3,
+        "max_seqs": 8
+      },
+      "anfrage": {
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "top_k": 20
+      },
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen38-extern",
+      "art": "llm",
+      "name": {
+        "de": "qwen38 (dgx-spark-qwen38, bisher)",
+        "en": "qwen38 (dgx-spark-qwen38, so far)"
+      },
+      "engine": "extern",
+      "repo": "",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 500,
+      "need_gib": 91,
+      "betrieb": "resident",
+      "kann_sehen": true,
+      "hinweis": "Speicher aus dem Anteil der laufenden qwen38-Dienste"
     },
     {
       "id": "qwen3-vl-8b-fp8",
       "art": "sehen",
-      "name": {"de": "Qwen3-VL 8B FP8", "en": "Qwen3-VL 8B FP8"},
+      "name": {
+        "de": "Qwen3-VL 8B FP8",
+        "en": "Qwen3-VL 8B FP8"
+      },
       "engine": "vllm",
       "repo": "Qwen/Qwen3-VL-8B-Instruct-FP8",
       "revision": "",
@@ -57,14 +107,23 @@
       "kontext": 32768,
       "kann_sehen": true,
       "werkzeuge": false,
-      "vllm": {"max_seqs": 4, "bilder_pro_frage": 4},
-      "anfrage": {"top_k": 20},
-      "messen": "immer"
+      "vllm": {
+        "max_seqs": 4,
+        "bilder_pro_frage": 4
+      },
+      "anfrage": {
+        "top_k": 20
+      },
+      "messen": "immer",
+      "betrieb": "bei_bedarf"
     },
     {
       "id": "gemma-4-26b-a4b",
       "art": "sehen",
-      "name": {"de": "Gemma 4 26B A4B (FP8 beim Laden)", "en": "Gemma 4 26B A4B (FP8 while loading)"},
+      "name": {
+        "de": "Gemma 4 26B A4B (FP8 beim Laden)",
+        "en": "Gemma 4 26B A4B (FP8 while loading)"
+      },
       "engine": "vllm",
       "repo": "google/gemma-4-26B-A4B-it",
       "revision": "",
@@ -73,13 +132,328 @@
       "platte_gb": 52,
       "need_gib": 34,
       "gemessen": false,
-      "anteil": 0.30,
+      "anteil": 0.3,
       "kontext": 32768,
       "kann_sehen": true,
       "werkzeuge": true,
-      "vllm": {"reasoning_parser": "gemma4", "tool_call_parser": "gemma4", "quantization": "fp8", "max_seqs": 4, "bilder_pro_frage": 4},
+      "vllm": {
+        "reasoning_parser": "gemma4",
+        "tool_call_parser": "gemma4",
+        "quantization": "fp8",
+        "max_seqs": 4,
+        "bilder_pro_frage": 4
+      },
       "anfrage": {},
-      "messen": "auf_wunsch"
+      "messen": "auf_wunsch",
+      "betrieb": "bei_bedarf"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-asr-1.7b",
+      "art": "asr",
+      "name": {
+        "de": "Qwen3-ASR 1.7B",
+        "en": "Qwen3-ASR 1.7B"
+      },
+      "engine": "qwen-asr",
+      "repo": "Qwen/Qwen3-ASR-1.7B",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 4.5,
+      "need_gib": 6,
+      "betrieb": "resident",
+      "wahl": "1.7b",
+      "text": {
+        "de": "am genauesten",
+        "en": "most accurate"
+      }
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-asr-0.6b",
+      "art": "asr",
+      "name": {
+        "de": "Qwen3-ASR 0.6B",
+        "en": "Qwen3-ASR 0.6B"
+      },
+      "engine": "qwen-asr",
+      "repo": "Qwen/Qwen3-ASR-0.6B",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 1.9,
+      "need_gib": 3,
+      "betrieb": "resident",
+      "wahl": "0.6b",
+      "text": {
+        "de": "",
+        "en": ""
+      }
+    },
+    {
+      "revision": "d548e25b9bfe559aa274f361892dc4ed5d64743a",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "parakeet-primeline",
+      "art": "asr",
+      "name": {
+        "de": "Parakeet (primeline, CPU)",
+        "en": "Parakeet (primeline, CPU)"
+      },
+      "engine": "onnx-cpu",
+      "repo": "flozen1981/parakeet-primeline-onnx",
+      "lizenz": "CC-BY-4.0",
+      "platte_gb": 0.7,
+      "need_gib": 1.5,
+      "betrieb": "resident",
+      "wahl": "parakeet",
+      "text": {
+        "de": "auf Deutsch trainiert, läuft auf der CPU",
+        "en": "trained on German, runs on the CPU"
+      }
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-forcedaligner-0.6b",
+      "art": "asr",
+      "rolle": "zeitstempel",
+      "name": {
+        "de": "Qwen3-ForcedAligner 0.6B (Zeitstempel)",
+        "en": "Qwen3-ForcedAligner 0.6B (timestamps)"
+      },
+      "engine": "qwen-asr",
+      "repo": "Qwen/Qwen3-ForcedAligner-0.6B",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 1.9,
+      "need_gib": 2,
+      "betrieb": "resident"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-tts-0.6b",
+      "art": "tts",
+      "name": {
+        "de": "Qwen3-TTS 0.6B",
+        "en": "Qwen3-TTS 0.6B"
+      },
+      "engine": "qwen-tts",
+      "repo": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 2.5,
+      "need_gib": 4,
+      "betrieb": "resident",
+      "wahl": "0.6b",
+      "text": {
+        "de": "eingebaute Stimmen",
+        "en": "built-in voices"
+      }
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-tts-1.7b",
+      "art": "tts",
+      "name": {
+        "de": "Qwen3-TTS 1.7B",
+        "en": "Qwen3-TTS 1.7B"
+      },
+      "engine": "qwen-tts",
+      "repo": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 4.5,
+      "need_gib": 7,
+      "betrieb": "resident",
+      "wahl": "1.7b",
+      "text": {
+        "de": "folgt auch Stil-Anweisungen",
+        "en": "also follows style instructions"
+      }
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-tts-0.6b-base",
+      "art": "tts",
+      "rolle": "klonen",
+      "name": {
+        "de": "Qwen3-TTS 0.6B Base (eigene Stimmen)",
+        "en": "Qwen3-TTS 0.6B Base (own voices)"
+      },
+      "engine": "qwen-tts",
+      "repo": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 2.5,
+      "need_gib": 4,
+      "betrieb": "resident"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-tts-1.7b-base",
+      "art": "tts",
+      "rolle": "klonen",
+      "name": {
+        "de": "Qwen3-TTS 1.7B Base (eigene Stimmen)",
+        "en": "Qwen3-TTS 1.7B Base (own voices)"
+      },
+      "engine": "qwen-tts",
+      "repo": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 4.5,
+      "need_gib": 7,
+      "betrieb": "resident"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "qwen3-tts-1.7b-voicedesign",
+      "art": "tts",
+      "rolle": "entwurf",
+      "name": {
+        "de": "Qwen3-TTS 1.7B VoiceDesign (Stimmen-Entwurf)",
+        "en": "Qwen3-TTS 1.7B VoiceDesign (voice design)"
+      },
+      "engine": "qwen-tts",
+      "repo": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 4.5,
+      "need_gib": 7,
+      "betrieb": "resident"
+    },
+    {
+      "gemessen": false,
+      "id": "flux2-klein-4b-q8",
+      "art": "bild",
+      "variante": "4b-q8",
+      "engine": "sdcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "4b-q8",
+      "text": {
+        "de": "Empfehlung",
+        "en": "recommended"
+      }
+    },
+    {
+      "gemessen": false,
+      "id": "flux2-klein-4b-q4",
+      "art": "bild",
+      "variante": "4b-q4",
+      "engine": "sdcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "4b-q4",
+      "text": {
+        "de": "",
+        "en": ""
+      }
+    },
+    {
+      "gemessen": false,
+      "id": "flux2-klein-9b-q8",
+      "art": "bild",
+      "variante": "9b-q8",
+      "engine": "sdcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "9b-q8",
+      "text": {
+        "de": "nur privat",
+        "en": "private use only"
+      }
+    },
+    {
+      "gemessen": false,
+      "id": "flux2-klein-9b-q4",
+      "art": "bild",
+      "variante": "9b-q4",
+      "engine": "sdcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "9b-q4",
+      "text": {
+        "de": "nur privat",
+        "en": "private use only"
+      }
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "e5-small",
+      "art": "klein",
+      "rolle": "suche",
+      "name": {
+        "de": "multilingual-e5-small (Bedeutungssuche)",
+        "en": "multilingual-e5-small (meaning search)"
+      },
+      "engine": "onnx-cpu",
+      "repo": "Xenova/multilingual-e5-small",
+      "lizenz": "MIT",
+      "platte_gb": 0.12,
+      "need_gib": 0.3,
+      "betrieb": "resident"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "rerank-klein",
+      "art": "klein",
+      "rolle": "nachsortieren",
+      "variante": "klein",
+      "name": {
+        "de": "mMiniLM (Nachsortieren, klein)",
+        "en": "mMiniLM (re-ranking, small)"
+      },
+      "engine": "onnx-cpu",
+      "repo": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 0.12,
+      "need_gib": 4.0,
+      "betrieb": "bei_bedarf"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "rerank-gross",
+      "art": "klein",
+      "rolle": "nachsortieren",
+      "variante": "gross",
+      "name": {
+        "de": "bge-reranker-v2-m3 (Nachsortieren, groß)",
+        "en": "bge-reranker-v2-m3 (re-ranking, large)"
+      },
+      "engine": "onnx-cpu",
+      "repo": "onnx-community/bge-reranker-v2-m3-ONNX",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 0.57,
+      "need_gib": 6.0,
+      "betrieb": "bei_bedarf"
+    },
+    {
+      "revision": "",
+      "gewerblich": true,
+      "gemessen": false,
+      "id": "nsfw-pruefung",
+      "art": "klein",
+      "rolle": "bildpruefung",
+      "name": {
+        "de": "ViT-Bildprüfung (CPU)",
+        "en": "ViT picture check (CPU)"
+      },
+      "engine": "onnx-cpu",
+      "repo": "AdamCodd/vit-base-nsfw-detector",
+      "lizenz": "Apache-2.0",
+      "platte_gb": 0.09,
+      "need_gib": 0.5,
+      "betrieb": "bei_bedarf"
     }
   ]
 }

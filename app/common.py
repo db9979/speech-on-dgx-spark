@@ -353,14 +353,6 @@ class PrioGate:
         return {"X-Spark-Wait-Ms": str(ticket["waited_ms"]), "X-Spark-Overtook": str(ticket["overtook"])}
 
 
-# Rough unified-memory footprint per model incl. CUDA context and activations (GiB).
-# Estimates, not measurements; refine them on the box via the panel's numbers.
-MODEL_GIB = {
-    "Qwen3-ASR-1.7B": 6, "Qwen3-ASR-0.6B": 3, "Qwen3-ForcedAligner-0.6B": 2,
-    "Qwen3-TTS-12Hz-1.7B": 7, "Qwen3-TTS-12Hz-0.6B": 4,
-}
-
-
 # Qwen3-ASR languages by ISO 639-1 code (OpenAI clients send codes, qwen-asr wants names).
 ASR_ISO = {"zh": "Chinese", "en": "English", "yue": "Cantonese", "ar": "Arabic", "de": "German",
            "fr": "French", "es": "Spanish", "pt": "Portuguese", "id": "Indonesian", "it": "Italian",
@@ -371,11 +363,10 @@ ASR_ISO = {"zh": "Chinese", "en": "English", "yue": "Cantonese", "ar": "Arabic",
 
 
 def estimate_gib(model_id):
-    name = model_id.rstrip("/").split("/")[-1]
-    for prefix, gib in MODEL_GIB.items():
-        if name.startswith(prefix):
-            return gib
-    return 8
+    """Unified memory a speech model needs while loaded (GiB, incl. CUDA context): its need_gib in the model catalog
+    (modelle.json), 8 for a repository the catalog lacks."""
+    import modelle
+    return modelle.need_gib(model_id)
 
 
 def mem_available_gib():

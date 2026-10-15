@@ -98,7 +98,8 @@ class Katalog(unittest.TestCase):
         self.assertIn("qwen38-27b-nvfp4", kat)
         self.assertTrue(any(m["art"] == "sehen" for m in kat.values()))
         for mid, m in kat.items():
-            self.assertLessEqual(m["anteil"], modelle.ANTEIL_MAX, mid)
+            if m["engine"] == "vllm":
+                self.assertLessEqual(m["anteil"], modelle.ANTEIL_MAX, mid)
             self.assertNotIn("trust_remote_code", json.dumps(m), mid)
             self.assertRegex(m["revision"], r"^([0-9a-f]{40})?$", mid)
             self.assertTrue(m["name"]["de"] and m["name"]["en"], mid)
@@ -155,6 +156,10 @@ class VllmArgs(unittest.TestCase):
         self.assertEqual(json.loads(a[a.index("--speculative-config") + 1]), {"method": "mtp", "num_speculative_tokens": 3})
         self.assertNotIn("--speculative-config", modelle.vllm_args(qwen(), mtp=False))
         for kat in modelle.katalog().values():
+            if kat["engine"] != "vllm":
+                with self.assertRaises(modelle.Fehler):
+                    modelle.vllm_args(kat, revision="a" * 40)   # the other kinds run in their own services
+                continue
             rev = kat["revision"] or "a" * 40
             self.assertNotIn("--trust-remote-code", modelle.vllm_args(kat, revision=rev))
 
@@ -393,3 +398,123 @@ class Kommando(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Budget(unittest.TestCase):
+    """Stufe E1: one catalog for every kind, the memory budget as a fixed rule from numbers."""
+    CFG = {"chat": {"llm_url": "http://127.0.0.1:30001/v1", "doc_semantic": False, "rerank": False},
+           "asr": {"enabled": True, "recognizer": "qwen", "backend": "transformers", "model": "Qwen/Qwen3-ASR-1.7B",
+                   "timestamps": False},
+           "tts": {"enabled": True, "backend": "transformers", "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"},
+           "image": {"enabled": False}, "memory": {"reserve_gib": 10}}
+
+    def cfg(self, **change):
+        c = copy.deepcopy(self.CFG)
+        for k, v in change.items():
+            c[k].update(v)
+        return c
+
+    def test_memory_need_comes_from_the_catalog(self):
+        import common
+        self.assertEqual(common.estimate_gib("Qwen/Qwen3-ASR-1.7B"), 6)
+        self.assertEqual(common.estimate_gib("Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"), 7)
+        self.assertEqual(common.estimate_gib("Qwen/Qwen3-TTS-12Hz-0.6B-Base"), 4)
+        self.assertEqual(common.estimate_gib("someone/unknown"), 8)
+        self.assertFalse(hasattr(common, "MODEL_GIB"))     # the old table is gone (one source)
+
+    def test_pictures_and_rerankers_have_one_source(self):
+        import bildmodell
+        import nachsortieren
+        for v, meta in bildmodell.VARIANTS.items():
+            m = modelle.zur_variante("bild", v)
+            self.assertEqual((m["need_gib"], m["lizenz"], m["gewerblich"]), (meta["need_gib"], meta["license"], meta["commercial"]))
+            self.assertEqual(m["platte_gb"], bildmodell.disk_gb(v))
+        for size, gib in nachsortieren.NEED_GIB.items():
+            self.assertEqual(modelle.zur_variante("klein", size)["need_gib"], gib)
+
+    def test_which_models_run(self):
+        ids = [x["id"] for x in modelle.aktiv(self.cfg(), 120, [0.76])]
+        self.assertEqual(ids, ["qwen38-extern", "qwen3-asr-1.7b", "qwen3-tts-0.6b"])
+        a = modelle.aktiv(self.cfg(asr={"recognizer": "parakeet"}, image={"enabled": True, "variant": "9b-q4"},
+                                   tts={"voicedesign_enabled": True, "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"},
+                                   chat={"llm_url": "http://192.168.1.5:8000/v1", "rerank": True, "rerank_model": "gross"}), 120)
+        self.assertEqual([x["id"] for x in a], ["parakeet-primeline", "qwen3-tts-0.6b", "qwen3-tts-1.7b-voicedesign",
+                                                "flux2-klein-9b-q4", "nsfw-pruefung", "rerank-gross"])
+        self.assertEqual(modelle.aktiv(self.cfg(), 120, [0.76])[0]["gib"], 91.2)   # the lane's share of the pool
+
+    def test_the_rule_follows_the_numbers(self):
+        c = self.cfg(image={"enabled": True, "variant": "4b-q8"})
+        self.assertEqual(modelle.budget(c, 120, [0.76])["regel"], "zu_knapp")     # qwen38 in its 1M mode
+        self.assertEqual(modelle.budget(c, 120, [0.30])["regel"], "alle")
+        c["chat"]["rerank"] = True                                                 # 11 + 0.5 + 4 GiB on demand
+        b = modelle.budget(c, 120, [0.66])
+        self.assertEqual((b["frei"], b["bedarf"], b["bedarf_max"]), (14.8, 15.5, 11))
+        self.assertEqual(b["regel"], "ein_platz", b)
+        self.assertEqual(b["fest"], round(0.66 * 120 + 6 + 4, 1))
+
+    def test_install_questions_come_from_the_catalog(self):
+        self.assertEqual([m["wahl"] for m in modelle.wahl("asr")], ["1.7b", "0.6b", "parakeet"])
+        self.assertEqual([m["wahl"] for m in modelle.wahl("tts")], ["0.6b", "1.7b"])
+        self.assertEqual([m["wahl"] for m in modelle.wahl("bild")], ["4b-q8", "4b-q4", "9b-q8", "9b-q4"])
+        lines = modelle.wahl_zeilen("bild")
+        self.assertIn("(private use only)", lines[2])
+        self.assertIn("(recommended)", lines[0])
+        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
+            sh = f.read()
+        self.assertNotIn("most accurate, ~6 GiB", sh)
+        self.assertIn('pick_model asr "$(cur_asr)"', sh)
+
+    def test_pick_model_maps_the_answer(self):
+        import subprocess
+        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
+            sh = f.read()
+        fn = sh[sh.index("pick_model() {"):]
+        fn = fn[:fn.index("\n}\n") + 3]
+        for answer, cur, keep, want in (("", "0.6b", "", "0.6b"), ("3", "1.7b", "", "parakeet"), ("4", "x", "", "none"),
+                                        ("", "keep", "Qwen/X", "keep"), ("2", "keep", "Qwen/X", "1.7b")):
+            art = "tts" if keep or want == "1.7b" and cur == "keep" else "asr"
+            script = (f'INSTALL_FROM={os.path.join(helpers.APP, "..")!r}\n'
+                      'ask() { local a; read -r a; a=${a:-$2}; echo "$a"; }\n' + fn +
+                      f'pick_model {art} {cur} {keep!r} >/dev/null; echo "$PICKED"')
+            out = subprocess.run(["bash", "-c", script], input=answer + "\n", capture_output=True, text=True, timeout=30)
+            self.assertEqual(out.stdout.strip(), want, (answer, cur, keep, out.stderr))
+
+
+class Seite(unittest.TestCase):
+    """Zustand → Modelle (modellseite.py, modelle.js): only for admins, only to look at, names and numbers."""
+
+    def test_page_data(self):
+        import modellseite
+        d = modellseite.seite(Budget.CFG, 120, [0.76], {"zeit": 5, "modelle": {"qwen38-27b-nvfp4": {
+            "ok": True, "tok_s": 24.7, "grund": "x", "frei_start_gib": 90}}})
+        arten = {a["art"]: a for a in d["arten"]}
+        self.assertEqual(set(arten), set(modelle.ARTEN))
+        q = next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen38-27b-nvfp4")
+        self.assertEqual(q["messung"], {"ok": True, "tok_s": 24.7})     # only the fixed numbers, nothing else
+        self.assertTrue(next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen38-extern")["aktiv"])
+        self.assertEqual((d["budget"]["frei"], d["budget"]["regel"]), (2.8, "alle"))
+        self.assertNotIn("teile", d["budget"])
+        en = modellseite.seite(Budget.CFG, 120, [], {}, lang="en")
+        self.assertEqual(en["arten"][0]["name"], "Language model")
+
+    def test_admin_only(self):
+        import panel
+        from fastapi.testclient import TestClient
+        c = TestClient(panel.app, client=("192.168.178.20", 50000))
+        self.assertIn(c.get("/api/admin/modelle").status_code, (401, 403))
+
+    def test_wired_into_the_panel(self):
+        def read(*p):
+            with open(os.path.join(helpers.APP, "panel", *p), encoding="utf-8") as f:
+                return f.read()
+        html, base, js, co, en = (read("static", "index.html"), read("static", "js", "base.js"), read("static", "js", "modelle.js"),
+                                  read("static", "js", "coadmin.js"), read("static", "js", "i18n.js"))
+        self.assertIn('<section id="models">', html)
+        self.assertIn('<script src="/static/js/modelle.js"></script>', html)
+        self.assertIn("['models',t('Modelle','Models')]", base)
+        self.assertIn("lzb($('mdbox'),loadModelle)", base)
+        self.assertIn("x[0]!=='models'", co)          # a Verwalter does not see it
+        self.assertIn('"Modelle": "Models"', en)
+        self.assertNotIn("onclick=", js.replace(".onclick=", ""))
+        self.assertNotIn("fetch(", js)
+        self.assertNotRegex(js, r"method:\s*'(POST|PUT|DELETE)'")   # nothing here changes anything

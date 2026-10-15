@@ -231,6 +231,19 @@ cur_tts() {
   cfgq -r 'if .tts.enabled != true then "none" elif .tts.model == "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice" then "0.6b"
          elif .tts.model == "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" then "1.7b" else "keep" end'
 }
+# One model question: the lines and their keys come from the model catalog (app/modelle.py wahl), then "none"
+# (and "keep" for a model chosen by hand). pick_model <art> <current key> [kept model]; the answer lands in PICKED.
+pick_model() {
+  local art=$1 cur=$2 keep=${3:-} keys=() opts=() i d
+  read -r -a keys <<<"$(python3 "$INSTALL_FROM/app/modelle.py" wahl-keys "$art")"
+  python3 "$INSTALL_FROM/app/modelle.py" wahl "$art"
+  keys+=(none); echo "  ${#keys[@]}) none"
+  if [ -n "$keep" ]; then keys+=(keep); echo "  ${#keys[@]}) keep $keep"; fi
+  d=${#keys[@]}   # none, or keep when a model was chosen by hand
+  for i in "${!keys[@]}"; do opts+=($((i + 1))); [ "${keys[$i]}" = "$cur" ] && d=$((i + 1)); done
+  i=$(ask "Choice" "$d" "${opts[@]}")
+  PICKED=${keys[$((i - 1))]}
+}
 if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$ASR_PICK$TTS_PICK" ] \
      && [ "$SMALL$WITH_ASR$WITH_TTS" = 011 ]; }; }; then
   echo
@@ -238,30 +251,17 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
   [ -n "$big_lane" ] && echo "(found $big_lane: the 0.6B models are recommended next to it)"
   if [ -z "$ASR_PICK" ]; then
     echo "Speech recognition (ASR, port $(cfgq -r '.asr.port // 31001' 2>/dev/null || echo 31001)):"
-    echo "  1) Qwen3-ASR 1.7B      most accurate, ~6 GiB"
-    echo "  2) Qwen3-ASR 0.6B      ~3 GiB"
-    echo "  3) Parakeet            trained on German, runs on the CPU, ~1 GiB"
-    echo "  4) none"
-    d=$(cur_asr); case "$d" in 1.7b) d=1 ;; 0.6b) d=2 ;; parakeet) d=3 ;; *) d=4 ;; esac
-    case "$(ask "Choice" "$d" 1 2 3 4)" in 1) ASR_PICK=1.7b ;; 2) ASR_PICK=0.6b ;; 3) ASR_PICK=parakeet ;; 4) ASR_PICK=none ;; esac
+    pick_model asr "$(cur_asr)"; ASR_PICK=$PICKED
   fi
   if [ -z "$TTS_PICK" ]; then
     echo "Speech output (TTS, port $(cfgq -r '.tts.port // 31002' 2>/dev/null || echo 31002)):"
-    echo "  1) Qwen3-TTS 0.6B      built-in voices, ~4 GiB"
-    echo "  2) Qwen3-TTS 1.7B      also follows style instructions, ~7 GiB"
-    echo "  3) none"
-    d=$(cur_tts); opts="1 2 3"
-    if [ "$d" = keep ]; then
-      echo "  4) keep $(cfgq -r .tts.model)"; opts="1 2 3 4"; d=4
-    else
-      case "$d" in 0.6b) d=1 ;; 1.7b) d=2 ;; *) d=3 ;; esac
-    fi
-    # shellcheck disable=SC2086
-    case "$(ask "Choice" "$d" $opts)" in 1) TTS_PICK=0.6b ;; 2) TTS_PICK=1.7b ;; 3) TTS_PICK=none ;; 4) TTS_PICK=keep ;; esac
+    d=$(cur_tts)
+    if [ "$d" = keep ]; then pick_model tts keep "$(cfgq -r .tts.model)"; else pick_model tts "$d"; fi
+    TTS_PICK=$PICKED
   fi
   if [ "$TTS_PICK" != none ] && [ -z "$VD_PICK" ]; then
     d=n; [ "$FIRST" = 0 ] && [ "$(cfgq -r .tts.voicedesign_enabled)" = true ] && d=y
-    echo "VoiceDesign: design new voices from a description (extra 1.7B model, ~7 GiB)."
+    echo "VoiceDesign: design new voices from a description (extra 1.7B model, ~$(python3 "$INSTALL_FROM/app/modelle.py" gib qwen3-tts-1.7b-voicedesign) GiB)."
     case "$(ask "Install it? (y/n)" "$d" y n j)" in y|j) VD_PICK=yes ;; n) VD_PICK=no ;; esac
   fi
 fi
@@ -269,14 +269,9 @@ fi
 if [ "$ASK" = 1 ] && [ "$MODE" = full ] && { [ "$FIRST" = 1 ] || [ "$CHOOSE_MODELS" = 1 ]; } && [ -z "$BILD_PICK" ]; then
   echo
   echo "Bilder malen: the Spark paints pictures itself with FLUX.2 [klein] (loaded only while painting)."
-  echo "  1) 4B, Q8   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 4b-q8) GB disk, ~11 GiB while painting, Apache 2.0 (recommended)"
-  echo "  2) 4B, Q4   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 4b-q4) GB disk, ~7 GiB while painting, Apache 2.0"
-  echo "  3) 9B, Q8   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 9b-q8) GB disk, ~22 GiB while painting, FLUX Non-Commercial (private use only)"
-  echo "  4) 9B, Q4   ~$(python3 "$INSTALL_FROM/app/bildmodell.py" gb 9b-q4) GB disk, ~13 GiB while painting, FLUX Non-Commercial (private use only)"
-  echo "  5) none"
   echo "  ($(gib_free) GiB are free right now.)"
-  d=5; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.image.enabled // false')" = true ] && d=1
-  case "$(ask "Choice" "$d" 1 2 3 4 5)" in 1) BILD_PICK=4b-q8 ;; 2) BILD_PICK=4b-q4 ;; 3) BILD_PICK=9b-q8 ;; 4) BILD_PICK=9b-q4 ;; 5) BILD_PICK=none ;; esac
+  d=none; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.image.enabled // false')" = true ] && d=4b-q8
+  pick_model bild "$d"; BILD_PICK=$PICKED
 fi
 if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ]; then
   echo

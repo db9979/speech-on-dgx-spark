@@ -34,8 +34,13 @@ from common import STATE, load_config, mem_available_gib, read_json, write_json 
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
-ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding")}
-ENGINES = ("vllm",)
+ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
+         "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
+         "bild": ("Bilder malen", "Painting pictures"), "klein": ("Kleine Modelle (CPU)", "Small models (CPU)")}
+# vllm: an engine this installation starts itself (the strict rules below); the others are run as before by their
+# own services and are listed for the budget: extern (qwen38), the speech models, sd.cpp, ONNX on the CPU
+ENGINES = ("vllm", "extern", "qwen-asr", "qwen-tts", "sdcpp", "onnx-cpu")
+BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
@@ -79,22 +84,41 @@ def pruefe_eintrag(m):
         raise Fehler("eintrag")
     if not ID.match(str(m.get("id", ""))):
         raise Fehler("id")
-    if m.get("art") not in ARTEN or m.get("engine") not in ENGINES or m.get("messen") not in MESSEN:
+    if m.get("art") not in ARTEN or m.get("engine") not in ENGINES or m.get("betrieb") not in BETRIEB:
         raise Fehler("art")
-    if not REPO.match(str(m.get("repo", ""))) or ".." in m["repo"]:
+    if not (m["engine"] == "extern" and m.get("repo") == "") and (not REPO.match(str(m.get("repo", ""))) or ".." in m["repo"]):
         raise Fehler("repo")
     if not (m.get("revision") == "" or REV.match(str(m.get("revision")))):
         raise Fehler("revision")
+    name = m.get("name")
+    if not isinstance(name, dict) or not all(isinstance(name.get(x), str) and name[x] for x in ("de", "en")):
+        raise Fehler("name")
+    for key in ("need_gib", "platte_gb"):
+        if isinstance(m.get(key), bool) or not isinstance(m.get(key), (int, float)) or m[key] <= 0:
+            raise Fehler(key)
+    if not all(isinstance(m.get(x), bool) for x in ("gewerblich", "gemessen")):
+        raise Fehler("schalter")
+    if m["engine"] == "sdcpp" and not isinstance(m.get("variante"), str):
+        raise Fehler("variante")
+    if "trust_remote_code" in json.dumps(m):
+        raise Fehler("trust_remote_code")
+    if m["engine"] == "vllm":
+        _pruefe_vllm(m)
+    return m
+
+
+def _pruefe_vllm(m):
+    """An engine started by this installation: only llm or sehen, a memory share within ANTEIL_MAX, only the known
+    flags and request fields."""
+    if m["art"] not in ("llm", "sehen") or m.get("messen") not in MESSEN:
+        raise Fehler("art")
     a = m.get("anteil")
     if isinstance(a, bool) or not isinstance(a, (int, float)) or not 0.02 <= a <= ANTEIL_MAX:
         raise Fehler("anteil")
     k = m.get("kontext")
     if isinstance(k, bool) or not isinstance(k, int) or not 2048 <= k <= 262144:
         raise Fehler("kontext")
-    for key in ("need_gib", "platte_gb"):
-        if isinstance(m.get(key), bool) or not isinstance(m.get(key), (int, float)) or m[key] <= 0:
-            raise Fehler(key)
-    if not all(isinstance(m.get(x), bool) for x in ("gewerblich", "gemessen", "kann_sehen", "werkzeuge")):
+    if not all(isinstance(m.get(x), bool) for x in ("kann_sehen", "werkzeuge")):
         raise Fehler("schalter")
     if m["art"] == "sehen" and not m["kann_sehen"]:
         raise Fehler("sehen")
@@ -109,9 +133,20 @@ def pruefe_eintrag(m):
             raise Fehler(key)
     if "quantization" in v and v["quantization"] not in QUANT:
         raise Fehler("quantization")
-    if "trust_remote_code" in json.dumps(m):
-        raise Fehler("trust_remote_code")
-    return m
+
+
+def _aus_bildmodell(m):
+    """A picture entry (engine sdcpp) takes name, licence, memory, repository and disk size from bildmodell.VARIANTS:
+    the files with their checksums live there, and install.sh hands that file alone to the service user."""
+    if m.get("engine") != "sdcpp":
+        return m
+    import bildmodell
+    v = bildmodell.VARIANTS.get(m.get("variante"))
+    if v is None:
+        raise Fehler("variante")
+    return dict(m, name={"de": v["name"], "en": v["name"]}, lizenz=v["license"], gewerblich=v["commercial"],
+                need_gib=v["need_gib"], repo=v["model"].repo, revision=v["model"].revision,
+                platte_gb=bildmodell.disk_gb(m["variante"]))
 
 
 def katalog(path=KATALOG):
@@ -120,6 +155,7 @@ def katalog(path=KATALOG):
         data = json.load(f)
     out = {}
     for m in data.get("modelle", []):
+        m = _aus_bildmodell(m)
         pruefe_eintrag(m)
         if m["id"] in out:
             raise Fehler("doppelt")
@@ -134,22 +170,136 @@ def eintrag(mid, kat=None):
     return kat[mid]
 
 
+def zum_repo(repo, kat=None):
+    """The entry of a Hugging Face repository (exact name), None when the catalog does not have it."""
+    kat = katalog() if kat is None else kat
+    return next((m for m in kat.values() if m["repo"] and m["repo"] == str(repo).rstrip("/")), None)
+
+
+def need_gib(repo, default=8):
+    """Unified memory a model needs while loaded (GiB, catalog), default for a repository the catalog lacks."""
+    m = zum_repo(repo)
+    return m["need_gib"] if m else default
+
+
+def zur_variante(art, v, kat=None):
+    """The entry of a picture variant or a small model's size (field "variante")."""
+    kat = katalog() if kat is None else kat
+    return next((m for m in kat.values() if m["art"] == art and v and m.get("variante") == v), None)
+
+
+def _url_qwen38(url):
+    """True when the language model's address is qwen38's own range on this machine (ports 30000-30099)."""
+    m = re.match(r"^https?://(127\.0\.0\.1|localhost)(?::(\d+))?(/|$)", str(url or ""))
+    return bool(m) and 30000 <= int(m.group(2) or 0) <= 30099
+
+
+def aktiv(cfg, total_gib, lanes=(), kat=None):
+    """The models the configuration runs now: [{id, art, gib, betrieb}], gib from the engines' memory shares where
+    the configuration sets them (vLLM), else from the catalog. lanes: the memory shares of the running qwen38 lanes."""
+    kat = katalog() if kat is None else kat
+    out = []
+
+    def add(m, gib=None, betrieb=None):
+        if m:
+            out.append({"id": m["id"], "art": m["art"], "gib": round(float(gib if gib is not None else m["need_gib"]), 1),
+                        "betrieb": betrieb or m["betrieb"]})
+    chat = cfg.get("chat", {})
+    if _url_qwen38(chat.get("llm_url")):
+        share = sum(f for f in lanes if f)
+        add(kat.get("qwen38-extern"), share * total_gib if share else None)
+    a = cfg.get("asr", {})
+    if a.get("enabled"):
+        if a.get("recognizer") == "parakeet":
+            add(kat.get("parakeet-primeline"))
+        else:
+            gib = a["engine_mem"] * total_gib + 1.5 if a.get("backend") == "vllm" and "engine_mem" in a else None
+            add(zum_repo(a.get("model"), kat), gib)
+            if a.get("timestamps"):
+                add(zum_repo(a.get("aligner_model"), kat))
+    t = cfg.get("tts", {})
+    if t.get("enabled"):
+        omni = t.get("backend") == "vllm-omni" and "engine_mem_talker" in t
+        gib = (t["engine_mem_talker"] + t.get("engine_mem_code2wav", 0)) * total_gib + 1.5 if omni else None
+        add(zum_repo(t.get("model"), kat), gib)
+        if t.get("voicedesign_enabled"):
+            add(zum_repo(t.get("voicedesign_model"), kat), gib)
+    img = cfg.get("image", {})
+    if img.get("enabled"):
+        add(zur_variante("bild", img.get("variant"), kat) or zur_variante("bild", "4b-q8", kat))
+        add(kat.get("nsfw-pruefung"))
+    if chat.get("doc_semantic"):
+        add(kat.get("e5-small"))
+    if chat.get("rerank"):
+        add(zur_variante("klein", chat.get("rerank_model"), kat) or zur_variante("klein", "klein", kat))
+    return out
+
+
+SYSTEM_GIB = 6     # DGX OS, the panel and the small services next to the models (plan: Speicher-Budget)
+
+
+def budget(cfg, total_gib, lanes=(), kat=None):
+    """The memory budget (plan „Speicher-Budget“): fixed = the resident models + system + reserve; on demand = the
+    models loaded when needed. "alle" when all of them fit at once, "ein_platz" when only one on-demand model fits
+    beside the fixed ones (they then run one after the other through vorrang), "zu_knapp" when not even that fits.
+    A fixed rule from numbers; the model decides nothing."""
+    teile = aktiv(cfg, total_gib, lanes, kat)
+    reserve = float(cfg.get("memory", {}).get("reserve_gib", 10))
+    fest = round(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), 1)
+    bedarf = [x["gib"] for x in teile if x["betrieb"] == "bei_bedarf"]
+    frei = round(total_gib - SYSTEM_GIB - reserve - fest, 1)
+    if frei >= sum(bedarf):
+        regel = "alle"
+    elif frei >= max(bedarf, default=0):
+        regel = "ein_platz"
+    else:
+        regel = "zu_knapp"
+    return {"gesamt": round(total_gib, 1), "system": SYSTEM_GIB, "reserve": reserve, "fest": fest,
+            "bedarf": round(sum(bedarf), 1), "bedarf_max": round(max(bedarf, default=0), 1), "frei": frei,
+            "regel": regel, "teile": teile}
+
+
+def wahl(art, kat=None):
+    """The entries install.sh offers for a kind, in catalog order (field "wahl" = the install's short key)."""
+    if art not in ("asr", "tts", "bild"):
+        raise Fehler("art")
+    kat = katalog() if kat is None else kat
+    return [m for m in kat.values() if m["art"] == art and m.get("wahl")]
+
+
+def wahl_zeilen(art, kat=None):
+    """The numbered lines of install.sh's question for one kind (English, like the install)."""
+    out = []
+    for i, m in enumerate(wahl(art, kat), 1):
+        text = (m.get("text") or {}).get("en", "")
+        if art == "bild":
+            extra = "" if m["gewerblich"] else " (private use only)"
+            extra += f" ({text})" if text and text != "private use only" else ""
+            out.append(f"  {i}) {m['name']['en']:<24} ~{m['platte_gb']:g} GB disk, ~{m['need_gib']:g} GiB while painting, "
+                       f"{m['lizenz']}{extra}")
+        else:
+            out.append(f"  {i}) {m['name']['en']:<26} {text + ', ' if text else ''}~{m['need_gib']:g} GiB")
+    return out
+
+
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma
     (one entry each that is measured only on request); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b"}
-    if any(w not in ARTEN and w not in wunsch for w in was):
+    if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
     ids = [w for w in (wunsch.get(x) for x in was) if w]
-    return [i for i, m in kat.items() if i in ids or (m["art"] in was and m["messen"] == "immer")]
+    return [i for i, m in kat.items() if m["engine"] == "vllm" and (i in ids or (m["art"] in was and m["messen"] == "immer"))]
 
 
 def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
     """The arguments after `vllm serve`: only from the catalog's checked fields, never trust_remote_code, always
     on 127.0.0.1. revision may stand in only for an entry without one (a measurement after the download)."""
     pruefe_eintrag(m)
+    if m["engine"] != "vllm":
+        raise Fehler("engine")
     rev = m["revision"] or revision
     if not REV.match(rev or "") or (m["revision"] and revision and revision != m["revision"]):
         raise Fehler("revision")
@@ -512,7 +662,17 @@ def cli(args, log=print):
         cmd = args[0] if args else ""
         if cmd == "liste":
             for mid, m in katalog().items():
-                log(f"{mid:20} {m['art']:6} {m['need_gib']:>3} GiB  {'fest' if m['revision'] else 'offen'}  {m['name']['de']}")
+                log(f"{mid:27} {m['art']:6} {m['need_gib']:>3} GiB  {'fest' if m['revision'] else 'offen'}  {m['name']['de']}")
+            return 0
+        if cmd == "wahl":
+            for line in wahl_zeilen(args[1]):
+                log(line)
+            return 0
+        if cmd == "wahl-keys":
+            log(" ".join(m["wahl"] for m in wahl(args[1])))
+            return 0
+        if cmd == "gib":
+            log(f"{eintrag(args[1])['need_gib']:g}")
             return 0
         if cmd == "feld":
             m = eintrag(args[1])

@@ -93,6 +93,7 @@ struct AdminView: View {
                     NavigationLink("Logs") { LogsView() }
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                     if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
+                    if s.role != "manager" { NavigationLink("Modelle") { ModelsView() } }
                     if s.role != "manager" { NavigationLink("Wartungspause") { WartungView() } }
                 } header: { Text("Zustand") }
                 Section {
@@ -227,6 +228,57 @@ struct StatusView: View {
 }
 
 // ---------------------------------------------------------------- Zustand → Verbrauch (verbrauch.py, admin only)
+
+/// Zustand → Modelle (stage E1): the model catalog, the models that run, the memory budget and the last measurement.
+/// Only to look at; nothing here switches a model.
+struct ModelsView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var error: String?
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            let b = d["budget"] as? [String: Any] ?? [:]
+            Section {
+                LabeledContent("Feste Modelle") { Text(verbatim: Self.gib(b["fest"])) }
+                LabeledContent("Modelle bei Bedarf") { Text(verbatim: Self.gib(b["bedarf"])) }
+                LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
+            } header: { Text("Speicher-Budget") } footer: {
+                Text("Nur zum Ansehen. Messen auf dem Spark: sudo speech-spark modelle messen")
+            }
+            ForEach(Array((d["arten"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, a in
+                let rows = a["modelle"] as? [[String: Any]] ?? []
+                if !rows.isEmpty {
+                    Section {
+                        ForEach(Array(rows.enumerated()), id: \.offset) { _, m in
+                            LabeledContent {
+                                Text(verbatim: ((m["gemessen"] as? Bool ?? false) ? "" : "~") + Self.gib(m["aktiv"] as? Bool == true ? (m["gib"] ?? m["need_gib"]) : m["need_gib"]))
+                            } label: {
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: m["name"] as? String ?? "")
+                                    if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
+                                }
+                            }
+                        }
+                    } header: { Text(verbatim: a["name"] as? String ?? "") }
+                }
+            }
+        }
+        .navigationTitle("Modelle")
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private func load() async {
+        do { d = try await AdminSession.shared.object("GET", "api/admin/modelle", query: ["lang": UsageView.de ? "de" : "en"]); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    static func gib(_ v: Any?) -> String {
+        guard let n = (v as? NSNumber)?.doubleValue else { return "–" }
+        return String(format: "%.1f GiB", n)
+    }
+}
 
 struct UsageView: View {
     @State private var d: [String: Any] = [:]

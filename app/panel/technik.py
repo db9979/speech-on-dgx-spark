@@ -216,6 +216,7 @@ MODULE = {
     "undo": ("betrieb", "Rückgängig im Admin-Protokoll"),
     "hilfe": ("betrieb", "Spark-Hilfe und Index der Doku"),
     "wege": ("betrieb", "Sprung-Links in Texten außerhalb des Panels"),
+    "modellseite": ("betrieb", "Zustand → Modelle: Katalog, aktive Modelle, Speicher-Budget, letzte Messung"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
     "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),
     "technik_seiten": ("betrieb", "Die Texte der Knoten-Seiten, Zahlen als Platzhalter aus dem Code"),

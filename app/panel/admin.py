@@ -30,6 +30,7 @@ import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, write_json  # noqa: E402
+import modelle  # noqa: E402
 from core import (  # noqa: E402
     json_body,
     spawn,
@@ -340,7 +341,7 @@ def _status(cfg, healths):
     total_gib = psutil.virtual_memory().total / 2**30
     a = cfg["asr"]
     if a.get("recognizer") == "parakeet":
-        services["asr"]["estimate_gib"] = 1.5  # CPU model, no engine
+        services["asr"]["estimate_gib"] = modelle.eintrag("parakeet-primeline")["need_gib"]  # CPU model, no engine
     elif a.get("backend") == "vllm":
         gib = round(a["engine_mem"] * total_gib + 1.5, 1)
         services["asr"]["backend"] = "vllm"

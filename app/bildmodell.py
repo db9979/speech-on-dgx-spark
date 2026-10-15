@@ -1,7 +1,7 @@
 """Bilder malen (plan plaene/bildgenerierung.md, Dominik 2026-10-14 „1c 2a 3a 4a 5a 6a 7a 8b“): the one list of
 the image models, where they lie and how they are fetched and checked. install.sh downloads with it
 (`python3 bildmodell.py download VARIANT FOLDER`), bild_server.py starts the engine with its paths, the panel
-shows names, sizes and licences from it.
+shows names, sizes and licences from it, and the model catalog (modelle.py) takes them for its picture entries.
 
 FLUX.2 [klein] by Black Forest Labs as GGUF for stable-diffusion.cpp (sd-server), the text encoder Qwen3 (4B for
 the 4B model, 8B for the 9B model) and the FLUX.2 VAE. Every file is pinned by its SHA-256 (the Git LFS id of the
@@ -145,8 +145,5 @@ def download(v, folder):
 if __name__ == "__main__":
     if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in VARIANTS:
         sys.exit(0 if download(sys.argv[2], sys.argv[3]) else 1)
-    if len(sys.argv) == 3 and sys.argv[1] == "gb" and sys.argv[2] in VARIANTS:
-        print(disk_gb(sys.argv[2]))
-        sys.exit(0)
-    print("usage: bildmodell.py download|gb VARIANT [FOLDER]", file=sys.stderr)
+    print("usage: bildmodell.py download VARIANT FOLDER", file=sys.stderr)
     sys.exit(2)

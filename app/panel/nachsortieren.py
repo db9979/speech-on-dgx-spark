@@ -22,11 +22,12 @@ import time
 
 import features
 from common import STATE, load_config, write_json
+import modelle
 
 PINS = os.path.join(STATE, "doc-rank.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.py")
 SIZES = {"klein": ("klein", "small"), "gross": ("groß", "large")}
-NEED_GIB = {"klein": 4.0, "gross": 6.0}
+NEED_GIB = {v: modelle.zur_variante("klein", v)["need_gib"] for v in SIZES}   # from the model catalog
 IDLE_STOP = 600
 START_TIMEOUT = 600            # the first start downloads the model
 CANDIDATES = 30                # what the mix hands over (documents.search's own depth)
