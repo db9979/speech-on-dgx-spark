@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, llm,
-#                                  llmtor, sehen, panel, watch, update, messen, umzug or all (default)
+#                                  llmtor, sehen, tlstor, waerter, panel, watch, update, messen, umzug or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
@@ -24,6 +24,7 @@
 #   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
 #   speech-spark teilen code       on the model computer: show a pairing code (10 min, once) and wait for the panel
 #   speech-spark teilen koppeln <dgx>  on the panel computer: pair with the model computer (asks for the code)
+#   speech-spark teilen rundlauf   on the panel computer: Wärter, TTS speaks and ASR hears, through the door
 #   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 set -euo pipefail
 
@@ -180,11 +181,11 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update|tlstor|waerter) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen, umzug, wechsel or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, tlstor, waerter, panel, watch, update, messen, umzug, wechsel or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -678,7 +679,7 @@ restart_if_there() { local u; for u in "$@"; do systemctl try-restart "$u" 2>/de
 # B6a: the model computer shows a pairing code and waits; on a fit the door opens for exactly that panel computer
 teilen_code() {
   local res
-  [ -s "$ETC/tls/cert.pem" ] && [ -s "$ETC/tls/key.pem" ] || die "no certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
+  [ -s "$ETC/tls/tor-cert.pem" ] && [ -s "$ETC/tls/tor-key.pem" ] || die "no door certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
   res=$(mktemp "$(dirname "$ETC")/.speech-spark-koppeln.XXXXXX")   # root's /etc, never the service user's $ETC
   if ! teilen_py warten "$res"; then rm -f "$res"; return 1; fi
   waerter_key_setzen "$res"
@@ -702,18 +703,24 @@ teilen_koppeln() {
   rm -f "$res"
   restart_if_there speech-spark-panel
   echo "teilen: gekoppelt mit dem Modell-Rechner"
+  as_panel_user steuer.py rundlauf || echo "teilen: rundlauf noch nicht grün (Modelle laden noch?): sudo speech-spark teilen rundlauf"
 }
 
 cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state and its firewall
   need_root teilen "$@"
-  local rules="$ETC/teilen.nft" n
+  local rules n
+  rules="$(dirname "$ETC")/speech-spark-teilen.nft"   # root's /etc: the unit speech-spark-teilen-fw loads it at boot
   case "${1:-status}" in
     status)
       n=$(cfg '.api.tls_from // [] | length')
       if [ -n "$(cfg '.api.tls_listen // ""')" ]; then echo "Tür (TLS-Tor):      an, für $n Panel-Rechner"; else echo "Tür (TLS-Tor):      aus (alles auf diesem Rechner)"; fi
       echo "Dienst:             $(systemctl is-active speech-spark-tlstor 2>/dev/null || true)"
       if nft list table inet speech_spark_teilen >/dev/null 2>&1; then echo "Firewall:           an"; else echo "Firewall:           aus"; fi
-      echo "Fingerabdruck:      $(teilen_py fingerabdruck)" ;;
+      echo "Fingerabdruck:      $(teilen_py fingerabdruck)"
+      case "$(cfg '.models.host // "127.0.0.1"')" in
+        127.0.0.1|localhost|::1) ;;
+        *) echo "Modell-Rechner:     $(cfg '.models.host') (Zertifikat gemerkt: $([ -n "$(cfg '.models.cert // ""')" ] && echo ja || echo nein))" ;;
+      esac ;;
     firewall)
       if [ "${2:-}" = aus ]; then
         nft delete table inet speech_spark_teilen 2>/dev/null || true
@@ -723,11 +730,12 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
       if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
       else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
     code) teilen_code ;;
+    rundlauf) as_panel_user steuer.py rundlauf ;;
     koppeln) teilen_koppeln "${2:-}" ;;
     modelle-update)   # B5: the model computer updates itself (its own rules) and this one waits for it
       [ "$(mode)" = full ] || die "no web panel installed"
       as_panel_user steuer.py update ;;
-    *) die "speech-spark teilen [status]|firewall [aus]|code|koppeln <dgx>|modelle-update" ;;
+    *) die "speech-spark teilen [status]|firewall [aus]|code|koppeln <dgx>|rundlauf|modelle-update" ;;
   esac
 }
 
@@ -745,6 +753,6 @@ case "${1:-}" in
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
   teilen) shift; cmd_teilen "$@" ;;
-  ""|-h|--help|help) sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

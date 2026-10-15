@@ -4,6 +4,8 @@
 #
 #   sudo ./install.sh                  # install (the first run asks what to install), or update
 #   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
+#   sudo ./install.sh --mode api --teilen   # Spark teilen: only the models, for a panel on another computer (pairing code)
+#   sudo ./install.sh --mode panel --modelle HOST  # Spark teilen: only the panel (Raspberry Pi 5), models on HOST
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
 #   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
@@ -41,6 +43,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -53,6 +56,8 @@ while [ $# -gt 0 ]; do
     --no-download) DOWNLOAD=0 ;;
     --no-smoke) SMOKE=0 ;;
     --mode) MODE="$2"; shift ;;
+    --teilen) TEILEN_PICK=1 ;;            # Spark teilen: the model computer (plan raspberry-split B6b)
+    --modelle) MODELLE_PICK="$2"; shift ;;  # Spark teilen: the panel computer, models on this host
     --asr) ASR_PICK="$2"; shift ;;
     --tts) TTS_PICK="$2"; shift ;;
     --voicedesign) VD_PICK=yes ;;
@@ -66,14 +71,24 @@ while [ $# -gt 0 ]; do
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 case "$TTS_BACKEND" in ""|vllm-omni|transformers) ;; *) echo "--tts-backend must be vllm-omni or transformers" >&2; exit 2 ;; esac
 case "$ASR_BACKEND" in ""|vllm|transformers) ;; *) echo "--asr-backend must be vllm or transformers" >&2; exit 2 ;; esac
-case "$MODE" in ""|full|api) ;; *) echo "--mode must be full or api" >&2; exit 2 ;; esac
+case "$MODE" in ""|full|api|panel) ;; *) echo "--mode must be full, api or panel" >&2; exit 2 ;; esac
+# Spark teilen: "panel" is the complete install without models of its own (they run on --modelle), written as full
+[ "$MODE" = panel ] && { MODE=full; PANEL_PICK=1; }
+if [ -n "$MODELLE_PICK" ] && ! [[ "$MODELLE_PICK" =~ ^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$ ]]; then
+  echo "--modelle needs the name or IP address of the model computer" >&2; exit 2
+fi
+[ "$PANEL_PICK" = 1 ] && [ -z "$MODELLE_PICK" ] && { echo "--mode panel needs --modelle <name-or-ip of the model computer>" >&2; exit 2; }
+[ -n "$MODELLE_PICK" ] && [ "$TEILEN_PICK" = 1 ] && { echo "--teilen (model computer) and --modelle (panel computer) exclude each other" >&2; exit 2; }
+[ "$TEILEN_PICK" = 1 ] && [ "$MODE" = full ] && { echo "--teilen goes with --mode api" >&2; exit 2; }
+[ "$TEILEN_PICK" = 1 ] && MODE=api
+[ -n "$MODELLE_PICK" ] && MODE=full
 case "$ASR_PICK" in ""|1.7b|0.6b|parakeet|none) ;; *) echo "--asr must be 1.7b, 0.6b, parakeet or none" >&2; exit 2 ;; esac
 case "$TTS_PICK" in ""|0.6b|1.7b|none) ;; *) echo "--tts must be 0.6b, 1.7b or none" >&2; exit 2 ;; esac
 case "$BILD_PICK" in ""|4b-q8|4b-q4|9b-q8|9b-q4|none) ;; *) echo "--bild must be 4b-q8, 4b-q4, 9b-q8, 9b-q4 or none" >&2; exit 2 ;; esac
@@ -115,6 +130,13 @@ command -v nvidia-smi >/dev/null || die "nvidia-smi not found; is the NVIDIA dri
 nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
   || warn "GPU is not a GB10: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 
+# Spark teilen: the panel computer (Raspberry Pi 5 or another) needs a 64-bit system and Python 3.11 or newer; the
+# panel's environment is built from the lock file, which the self-test covers for 3.11 to 3.13
+if [ -n "$MODELLE_PICK" ]; then
+  case "$(uname -m)" in aarch64|x86_64) ;; *) die "the panel computer needs a 64-bit system (e.g. Raspberry Pi OS Lite 64-bit)" ;; esac
+  python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null || die "the panel computer needs Python 3.11 or newer"
+fi
+
 # ---------------------------------------------------------------- packages
 say "System packages"
 export DEBIAN_FRONTEND=noninteractive
@@ -130,6 +152,8 @@ apt_wait() {
   return 1
 }
 PKGS="python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg libopus0 sox libsox-fmt-all libsndfile1 curl jq iproute2"
+# Spark teilen: the model computer's firewall for the door (teilen.py regeln)
+{ [ "$TEILEN_PICK" = 1 ] || [ -f "$ETC/teilen" ]; } && PKGS="$PKGS nftables"
 # ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
 # An update leaves apt alone when every package is there already (security updates come from the
 # system's own unattended-upgrades): apt update costs CPU and time while somebody may be talking.
@@ -227,6 +251,10 @@ if [ "$ASK" = 1 ] && [ -z "$MODE" ] && [ -z "$OLD_MODE" ]; then
   case "$(ask "Choice" 1 1 2)" in 1) MODE=full ;; 2) MODE=api ;; esac
 fi
 MODE=${MODE:-${OLD_MODE:-full}}
+# Spark teilen (plan raspberry-split B6b): the model computer of a split install keeps the door, the Wärter and the
+# firewall in every update ($ETC/teilen, like $ETC/mode root's file); the complete install never has them
+TEILEN=0
+{ [ "$TEILEN_PICK" = 1 ] || { [ -f "$ETC/teilen" ] && [ ! -L "$ETC/teilen" ]; }; } && [ "$MODE" = api ] && TEILEN=1
 
 # current choice, as the defaults of the questions
 cur_asr() {
@@ -252,7 +280,8 @@ pick_model() {
   i=$(ask "Choice" "$d" "${opts[@]}")
   PICKED=${keys[$((i - 1))]}
 }
-if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$ASR_PICK$TTS_PICK" ] \
+[ "$CHOOSE_MODELS" = 1 ] && [ -n "$MODELLE_PICK" ] && die "the models are chosen on the model computer (sudo speech-spark models there)"
+if [ "$ASK" = 1 ] && [ -z "$MODELLE_PICK" ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$ASR_PICK$TTS_PICK" ] \
      && [ "$SMALL$WITH_ASR$WITH_TTS" = 011 ]; }; }; then
   echo
   echo "Which models? Memory figures are rough estimates; $(gib_free) GiB are free right now."
@@ -273,15 +302,16 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
     case "$(ask "Install it? (y/n)" "$d" y n j)" in y|j) VD_PICK=yes ;; n) VD_PICK=no ;; esac
   fi
 fi
-# Bilder malen (plan bildgenerierung): only with the panel, it is the only caller; off unless asked for
-if [ "$ASK" = 1 ] && [ "$MODE" = full ] && { [ "$FIRST" = 1 ] || [ "$CHOOSE_MODELS" = 1 ]; } && [ -z "$BILD_PICK" ]; then
+# Bilder malen (plan bildgenerierung): only with the panel, it is the only caller (on a split install the model
+# computer paints for the panel on the other computer); off unless asked for
+if [ "$ASK" = 1 ] && { { [ "$MODE" = full ] && [ -z "$MODELLE_PICK" ]; } || [ "$TEILEN" = 1 ]; } && { [ "$FIRST" = 1 ] || [ "$CHOOSE_MODELS" = 1 ]; } && [ -z "$BILD_PICK" ]; then
   echo
   echo "Bilder malen: the Spark paints pictures itself with FLUX.2 [klein] (loaded only while painting)."
   echo "  ($(gib_free) GiB are free right now.)"
   d=none; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.image.enabled // false')" = true ] && d=4b-q8
   pick_model bild "$d"; BILD_PICK=$PICKED
 fi
-if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ]; then
+if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ] && [ "$TEILEN" = 0 ] && [ -z "$MODELLE_PICK" ]; then
   echo
   echo "Should other computers in the network reach the APIs? (An API key is required either way.)"
   echo "  y) yes, on all network interfaces"
@@ -331,6 +361,9 @@ case "$NET_PICK" in
   local) jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1"' ;;
   network) jqi '.asr.host="0.0.0.0" | .tts.host="0.0.0.0"' ;;
 esac
+# Spark teilen: on the model computer the services listen only on 127.0.0.1; the door (tlstor.py) takes the same
+# ports on the network address, with TLS and only for the panel computer
+[ "$TEILEN" = 1 ] && jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1" | .llm.host="127.0.0.1"'
 # an old configuration that never went through the panel's check (admin.validate): speech APIs that listen in
 # the network get a key; without one the services answer only this machine itself (common.api_key_dependency)
 if [ -z "$(cfgq -r '.api.key // ""')" ] \
@@ -340,6 +373,7 @@ if [ -z "$(cfgq -r '.api.key // ""')" ] \
 fi
 # api: only the models with their APIs; full: with the web panel
 echo "$MODE" | put_file "$ETC/mode" 644 root:root
+if [ "$TEILEN" = 1 ]; then echo 1 | put_file "$ETC/teilen" 644 root:root; else no_links "$ETC/teilen"; rm -f -- "$ETC/teilen"; fi
 # Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
 case "$(cfgq -r .asr.engine_mem)" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
 # (0.03 + 0.015 left no room for the KV cache on the Spark)
@@ -406,40 +440,63 @@ cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v
 # Browsers only allow the microphone on https (or localhost), so the panel also listens on an
 # https port with a self-signed certificate for the voice chat.
 TLS="$ETC/tls"
+tls_san() {  # the names and addresses of this machine for a certificate
+  local san ip
+  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
+  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
+  echo "$san"
+}
 if [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
   say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
   [ -L "$TLS" ] && rm -f -- "$TLS"
   as_svc mkdir -p "$TLS"
-  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
-  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
   # made by the service user in its own folder (root never writes through a link there)
   as_svc openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$(hostname) speech-spark" \
-    -addext "subjectAltName=$san" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
+    -addext "subjectAltName=$(tls_san)" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
     || warn "could not create the certificate; the voice chat then only works on http://localhost"
+fi
+# Spark teilen: the door's own certificate (EC P-256, common.TOR_CERT), apart from the panel's; the panel computer
+# pins exactly this one at the pairing (teilen.py)
+if [ "$TEILEN" = 1 ] && [ ! -s "$TLS/tor-cert.pem" ]; then
+  say "Creating the door's own certificate (Spark teilen; the panel computer pins it at the pairing)"
+  [ -L "$TLS" ] && rm -f -- "$TLS"
+  as_svc mkdir -p "$TLS"
+  as_svc openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 \
+    -subj "/CN=$(hostname) speech-spark tor" -addext "subjectAltName=$(tls_san)" \
+    -keyout "$TLS/tor-key.pem" -out "$TLS/tor-cert.pem" >/dev/null 2>&1 || die "could not create the door's certificate"
 fi
 [ -L "$TLS" ] && rm -f -- "$TLS"
 if [ -d "$TLS" ]; then
   chown -R "$SVC_USER:$SVC_USER" "$TLS"   # -R never follows links; an old root-made folder becomes the service user's
-  as_svc chmod 700 "$TLS"; as_svc chmod 600 "$TLS"/key.pem 2>/dev/null || true
+  as_svc chmod 700 "$TLS"; as_svc chmod 600 "$TLS"/key.pem "$TLS"/tor-key.pem 2>/dev/null || true
 fi
 HTTPS_PORT=$(cfg_int '.panel.https_port // 0' 0)
 ASR_PORT=$(cfg_int .asr.port 31001); TTS_PORT=$(cfg_int .tts.port 31002); PANEL_PORT=$(cfg_int .panel.port 31080)
 BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
-WITH_BILD=0; [ "$MODE" = full ] && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
+WITH_BILD=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
 # venv-llm / venv-kolibri: once installed, every update keeps them current; the services run only with llm.enabled
 WITH_LLM=$LLM_PICK; [ -x "$PREFIX/venv-llm/bin/vllm" ] && WITH_LLM=1
 WITH_KOLIBRI=$KOLIBRI_PICK; [ -x "$PREFIX/venv-kolibri/bin/vllm" ] && WITH_KOLIBRI=1
 LLM_ON=0; [ "$WITH_LLM" = 1 ] && [ "$(cfg '.llm.enabled // false')" = true ] && LLM_ON=1
+# Spark teilen: the panel computer (models.host on another computer, set by the pairing) installs no model, engine or
+# model service of its own; its pages read what runs from the model computer
+PANEL_ONLY=0
+if [ "$MODE" = full ] && { [ -n "$MODELLE_PICK" ] \
+     || [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" != true ]; }; then
+  PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0; SMOKE=0
+fi
 
 # ---------------------------------------------------------------- ports
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
-ports="$ASR_PORT $TTS_PORT"
+ports=""
+[ "$PANEL_ONLY" = 0 ] && ports="$ASR_PORT $TTS_PORT"
 [ "$MODE" = full ] && ports="$ports $PANEL_PORT"
 [ "$MODE" = full ] && [ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
-[ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
-[ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
+[ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
+[ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
+[ "$TEILEN" = 1 ] && ports="$ports 31007"   # the Wärter (common.WAERTER_PORT); the door shares the services' ports
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
 [ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017)"
 for p in $ports; do
@@ -803,6 +860,16 @@ fi
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
 
+# ---------------------------------------------------------------- Spark teilen: pairing of the panel computer
+# with the model computer named by --modelle (its code: sudo speech-spark teilen code there); nothing of the panel
+# starts before, so it never talks to the models without the pinned certificate
+if [ -n "$MODELLE_PICK" ] && { [ "$(cfg '.models.host // ""')" != "$MODELLE_PICK" ] || [ -z "$(cfg '.models.cert // ""')" ]; }; then
+  say "Pairing with the model computer $MODELLE_PICK (show the code there: sudo speech-spark teilen code)"
+  { [ -t 0 ] || [ -n "${SPEECH_SPARK_CODE:-}" ]; } || die "the pairing needs the code: run in a terminal, or give SPEECH_SPARK_CODE"
+  SPEECH_SPARK_PREFIX="$PREFIX" SPEECH_SPARK_ETC="$ETC" SPEECH_SPARK_VAR="$VAR" \
+    bash "$PREFIX/app/speech-spark.sh" teilen koppeln "$MODELLE_PICK" || die "the pairing did not work; run the install again with a new code"
+fi
+
 # ---------------------------------------------------------------- systemd
 say "systemd units"
 QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qwen38-video.service qwen38-llamacpp.service"
@@ -1102,6 +1169,75 @@ Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle wunsch-intern
 TimeoutStartSec=2h
 EOF
+
+# Spark teilen (plan raspberry-split B6b), only on the model computer: the door (tlstor.py, TLS 1.3 on api.tls_listen,
+# only api.tls_from), the Wärter (tarswart.py on 127.0.0.1:31007, only with the key from the pairing) and the door's
+# firewall at boot (the rules speech-spark teilen firewall wrote into root's /etc after the pairing)
+if [ "$TEILEN" = 1 ]; then
+cat >/etc/systemd/system/speech-spark-tlstor.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: TLS-Tor (the door for the panel on another computer)
+After=network-online.target speech-spark-teilen-fw.service
+Wants=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=SPEECH_SPARK_TLS=$ETC/tls
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/tlstor.py
+Restart=on-failure
+RestartSec=10
+MemoryMax=512M
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+cat >/etc/systemd/system/speech-spark-waerter.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Wärter (fixed commands from the panel on another computer)
+After=network-online.target
+ConditionPathExists=$VAR/state/waerter.key
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=SPEECH_SPARK_PREFIX=$PREFIX
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/tarswart.py
+Restart=on-failure
+RestartSec=10
+MemoryMax=512M
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+cat >/etc/systemd/system/speech-spark-teilen-fw.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: firewall of the door (only the panel computer)
+Before=speech-spark-tlstor.service
+ConditionPathExists=$(dirname "$ETC")/speech-spark-teilen.nft
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-teilen.nft
+
+[Install]
+WantedBy=multi-user.target
+EOF
+else
+  systemctl disable --now speech-spark-tlstor.service speech-spark-waerter.service speech-spark-teilen-fw.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-tlstor.service /etc/systemd/system/speech-spark-waerter.service \
+    /etc/systemd/system/speech-spark-teilen-fw.service
+fi
 # ---------------------------------------------------------------- logs
 # The speech units log into their own journal namespace with a size and age cap, so a chatty
 # engine can never fill the disk (and does not push other logs out of the system journal).
@@ -1171,7 +1307,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr, tts or bild)
+restart_front() {  # $1 = service (asr, tts, bild, llmtor, tlstor or waerter)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -1221,6 +1357,13 @@ if [ "$LLM_ON" = 1 ]; then
 else
   systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
   systemctl stop speech-spark-sehen.service 2>/dev/null || true
+fi
+
+if [ "$TEILEN" = 1 ]; then
+  systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
+  systemctl start speech-spark-teilen-fw.service 2>/dev/null || warn "the door's firewall did not load (sudo speech-spark teilen firewall)"
+  restart_front tlstor
+  restart_front waerter
 fi
 
 wait_ready() {  # $1 = name, $2 = port, $3 = minutes; the last status stays in st_$1
@@ -1309,14 +1452,16 @@ IP=$(hostname -I | awk '{print $1}')
 if [ "$FROM_UPDATE" = 1 ]; then
   PASSWORD="(unchanged; sudo cat $ETC/panel.env)"; KEY="(unchanged; sudo speech-spark key)"
 fi
+APIS="ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
+ TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)"
+[ "$PANEL_ONLY" = 1 ] && APIS="Models:    on $(cfg '.models.host') (Spark teilen; check: sudo speech-spark teilen rundlauf)"
 if [ "$MODE" = full ]; then
 cat <<EOF
 
 ------------------------------------------------------------------
  Panel:     http://$IP:$PANEL_PORT   (opens with the assistant; settings need the password: $PASSWORD)
  Voice chat: https://$IP:$HTTPS_PORT  (panel page "Assistent"; accept the self-signed certificate once)
- ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
- TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
+ $APIS
  API key:   ${KEY:-none}
  Config:    $ETC/config.json     Logs: sudo speech-spark logs
  Update:    panel: Übersicht -> System und Update, or: sudo speech-spark update
@@ -1332,4 +1477,14 @@ else
   echo " Installed without the web panel. Status: sudo speech-spark status   Update: sudo speech-spark update"
   echo " Add the panel later: sudo speech-spark panel enable"
   echo "------------------------------------------------------------------"
+fi
+# Spark teilen: the model computer waits for its panel computer (a new code later: sudo speech-spark teilen code)
+if [ "$TEILEN" = 1 ] && [ "$FROM_UPDATE" = 0 ] && [ "$(cfg '.api.tls_from // [] | length')" = 0 ]; then
+  if [ "$ASK" = 1 ]; then
+    echo
+    echo " Now on the panel computer: sudo ./install.sh --mode panel --modelle $IP  (it asks for this code)"
+    bash "$PREFIX/app/speech-spark.sh" teilen code || warn "not paired yet: sudo speech-spark teilen code"
+  else
+    echo " Spark teilen: show the pairing code with  sudo speech-spark teilen code"
+  fi
 fi

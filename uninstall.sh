@@ -30,11 +30,14 @@ if [ "$YES" = 0 ]; then
   case "$ans" in y|Y|j|J|yes|ja) ;; *) echo "Aborted."; exit 1 ;; esac
 fi
 
-for s in asr asr-engine tts tts-engine tts-design turn bild llm llmtor sehen panel watch update wechsel; do
+for s in asr asr-engine tts tts-engine tts-design turn bild llm llmtor sehen panel watch update wechsel tlstor waerter teilen-fw; do
   systemctl disable --now "speech-spark-$s.service" 2>/dev/null || true
   rm -f "/etc/systemd/system/speech-spark-$s.service"
 done
 systemctl daemon-reload
+# Spark teilen: the door's firewall (its rules lie in root's /etc)
+nft delete table inet speech_spark_teilen 2>/dev/null || true
+rm -f /etc/speech-spark-teilen.nft
 systemctl reset-failed 'speech-spark-*' 2>/dev/null || true
 rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench /usr/local/bin/speech-spark /etc/systemd/journald@speech-spark.conf
 systemctl stop systemd-journald@speech-spark.service systemd-journald@speech-spark.socket 2>/dev/null || true

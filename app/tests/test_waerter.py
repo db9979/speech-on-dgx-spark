@@ -568,3 +568,45 @@ class Steuer(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Rundlauf(unittest.TestCase):
+    """B6b: after the pairing the panel computer checks the way once: the Wärter answers, TTS speaks a sentence and
+    ASR hears it, through the door with the pinned certificate."""
+    def setUp(self):
+        self.cfg = json.loads(json.dumps(common.load_config()))
+        self.cfg["models"]["host"] = "192.168.178.171"
+        self.cfg.setdefault("api", {})["key"] = "sk-test1234567890"
+
+    def _client(self, heard, wav=b"RIFF" + b"\0" * 9000):
+        import httpx
+        seen = []
+
+        def handle(req):
+            seen.append((req.url.path, req.headers.get("authorization"), req.url.scheme))
+            if req.url.path == "/v1/audio/speech":
+                return httpx.Response(200, content=wav)
+            return httpx.Response(200, json={"text": heard})
+        return httpx.Client(transport=httpx.MockTransport(handle)), seen
+
+    def test_heard_is_green(self):
+        c, seen = self._client("Heute ist ein schöner Tag und der Spark spricht wieder")
+        with mock.patch.object(steuer, "call", return_value={"einheiten": {}}), redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(steuer.rundlauf(self.cfg, client=c), (True, ""))
+        self.assertEqual([p for p, _, _ in seen], ["/v1/audio/speech", "/v1/audio/transcriptions"])
+        self.assertTrue(all(a == "Bearer sk-test1234567890" and s == "https" for _, a, s in seen))
+        self.assertIn("steuer: rundlauf ok", out.getvalue())
+
+    def test_each_failure_names_its_part(self):
+        with mock.patch.object(steuer, "call", return_value=None), redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(steuer.rundlauf(self.cfg, client=self._client("x")[0]), (False, "waerter"))
+        self.assertIn("steuer: rundlauf fehler waerter", out.getvalue())
+        with mock.patch.object(steuer, "call", return_value={"einheiten": {}}), redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(steuer.rundlauf(self.cfg, client=self._client("ganz anders")[0]), (False, "asr"))
+            self.assertEqual(steuer.rundlauf(self.cfg, client=self._client("x", wav=b"kurz")[0]), (False, "tts"))
+        self.assertIn("steuer: rundlauf fehler asr", out.getvalue())
+        self.assertIn("steuer: rundlauf fehler tts", out.getvalue())
+
+    def test_all_in_one_has_nothing_to_check(self):
+        cfg = dict(self.cfg, models={"host": "127.0.0.1", "cert": ""})
+        self.assertEqual(steuer.rundlauf(cfg), (False, "lokal"))

@@ -16,6 +16,7 @@ update) are never sent there.
     weg()                       Notbetrieb: the model computer has not answered for GONE seconds
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
     update_modell_rechner()     its own update first, then this computer's (update.sh: python3 steuer.py update)
+    rundlauf()                  after the pairing: Wärter, then TTS speaks a sentence and ASR hears it, through the pin
 
 When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
 again, at most every PUSH seconds: a save while it was away is not lost. Which model runs (common.MODEL_CHOICE) goes
@@ -268,9 +269,52 @@ def update_modell_rechner(cfg=None, sleep=time.sleep, now=time.monotonic):
     return False
 
 
+RUND_SATZ = "Heute ist ein schöner Tag, und der Spark spricht wieder."
+RUND_TIMEOUT = 180     # the first request may wait for a model to load
+
+
+def rundlauf(cfg=None, client=None):
+    """The round trip after the pairing (B6b): the Wärter answers, TTS speaks RUND_SATZ and ASR hears at least 60 % of
+    its words, all through the door with the pinned certificate. (ok, the first part that failed or "")."""
+    import re
+    cfg = load_config() if cfg is None else cfg
+    if not remote(cfg):
+        return False, "lokal"
+    if not isinstance(call("status", cfg=cfg), dict):
+        print("steuer: rundlauf fehler waerter", flush=True)
+        return False, "waerter"
+    key = str((cfg.get("api") or {}).get("key") or "")
+    auth = {"Authorization": f"Bearer {key}"} if key else {}
+    c = client or httpx.Client(timeout=RUND_TIMEOUT, trust_env=False, follow_redirects=False)
+    try:
+        r = c.post(model_url("tts", "/v1/audio/speech", cfg), headers=auth,
+                   json={"input": RUND_SATZ, "language": "German", "response_format": "wav"})
+        if r.status_code != 200 or len(r.content) < 8000:
+            print("steuer: rundlauf fehler tts", flush=True)
+            return False, "tts"
+        r = c.post(model_url("asr", "/v1/audio/transcriptions", cfg), headers=auth,
+                   files={"file": ("rundlauf.wav", r.content, "audio/wav")}, data={"language": "German"})
+        text = str(r.json().get("text") or "") if r.status_code == 200 else ""
+    except (httpx.HTTPError, OSError, ValueError, AttributeError):
+        print("steuer: rundlauf fehler verbindung", flush=True)
+        return False, "verbindung"
+    finally:
+        if client is None:
+            c.close()
+    words = set(re.findall(r"\w+", RUND_SATZ.lower()))
+    share = int(100 * len(words & set(re.findall(r"\w+", text.lower()))) / len(words))
+    if share < 60:
+        print(f"steuer: rundlauf fehler asr {share}", flush=True)
+        return False, "asr"
+    print(f"steuer: rundlauf ok {share}", flush=True)
+    return True, ""
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["update"]:
         update_modell_rechner()
         sys.exit(0)
-    print("steuer.py update", file=sys.stderr)
+    if sys.argv[1:] == ["rundlauf"]:
+        sys.exit(0 if rundlauf()[0] else 1)
+    print("steuer.py update|rundlauf", file=sys.stderr)
     sys.exit(2)

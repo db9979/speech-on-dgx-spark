@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.617** · 2026-10-15 · Spark teilen B6b: Installation geteilt (`--mode api --teilen` und `--mode panel --modelle`)
 - **V01.0.616** · 2026-10-15 · Spark teilen B6a: Kopplung mit Code zwischen Panel-Rechner und Modell-Rechner
 - **V01.0.615** · 2026-10-15 · Spark teilen B5: Notbetrieb, wenn der Modell-Rechner nicht antwortet: fester Satz sofort, Lautsprecher aus Datei, Dienst-Wächter meldet.
 - **V01.0.614** · 2026-10-15 · Spark teilen B5: Das Update des Panel-Rechners aktualisiert zuerst den Modell-Rechner nach dessen eigenen Regeln; Zustand → Update zeigt beide Versionen.

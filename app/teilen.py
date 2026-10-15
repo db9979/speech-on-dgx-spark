@@ -1,6 +1,6 @@
 """Spark teilen (plan Raspberry-Pi split, B3): what the model computer needs besides the TLS-Tor (tlstor.py).
 
-- Its own certificate in TLS_DIR (self-signed, made by install.sh like the panel's https certificate): the pairing
+- Its own certificate (common.TOR_CERT, self-signed EC P-256, made by install.sh --teilen, apart from the panel's): the pairing
   hands its SHA-256 fingerprint to the panel computer, which then trusts exactly that one (models.cert).
 - A firewall (nftables, table inet speech_spark_teilen): the ports of the door answer only the panel computer
   (api.tls_from), everyone else is dropped before the handshake. Loopback stays open for the DGX itself.
@@ -18,7 +18,7 @@ carry counts and fixed words, never addresses.
   Nothing listens on KOPPEL_PORT outside these 10 minutes, the code lives only in memory.
 
     python3 teilen.py regeln           the nftables rules for this config (printed, applied by speech-spark teilen)
-    python3 teilen.py fingerabdruck    the fingerprint of the certificate in TLS_DIR
+    python3 teilen.py fingerabdruck    the fingerprint of the door's certificate (TOR_CERT)
     python3 teilen.py warten <datei>   model computer: show a code, wait for the pairing, the result into <datei>
     python3 teilen.py koppeln <dgx> <datei>  panel computer: ask for the code, pair, the result into <datei>
 """
@@ -34,7 +34,7 @@ import ssl
 import sys
 import time
 
-from common import TLS_DIR, load_config, write_json
+from common import TOR_CERT, TOR_KEY, load_config, write_json
 
 TABLE = "speech_spark_teilen"
 MAX_FROM = 4           # panel computers that may use the door (one, plus room for a move)
@@ -99,7 +99,7 @@ def fingerabdruck(path=None):
     """SHA-256 of the certificate like browsers show it (AB:CD:…), or "" without one."""
     import hashlib
     try:
-        with open(path or os.path.join(TLS_DIR, "cert.pem")) as f:
+        with open(path or TOR_CERT) as f:
             der = ssl.PEM_cert_to_DER_cert(f.read())
     except (OSError, ValueError):
         return ""
@@ -302,7 +302,7 @@ def main(argv):
         elif cmd == "fingerabdruck":
             print(fingerabdruck())
         elif cmd == "warten" and len(argv) == 2:
-            ctx = _Ctx(os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem"))
+            ctx = _Ctx(TOR_CERT, TOR_KEY)
             code = code_neu()
             with lauschen() as sock:
                 print(f"Kopplungscode: {zeigen(code)}  (10 Minuten gültig, einmal nutzbar)", flush=True)

@@ -38,6 +38,7 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark teilen modelle-update` | On the panel computer: start the model computer's own update and wait for it (`update.sh` does this first by itself) |
 | `sudo speech-spark teilen code` | On the model computer: show a pairing code (10 minutes, one use) and wait for the panel computer |
 | `sudo speech-spark teilen koppeln <name-or-ip>` | On the panel computer: pair with the model computer (asks for the code, remembers its certificate) |
+| `sudo speech-spark teilen rundlauf` | On the panel computer: ask the Wärter, TTS speaks a sentence, ASR hears it, all through the door |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
 
 The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The chat model (qwen38) is not part of this repo and is not touched. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).
@@ -62,6 +63,8 @@ The installer keeps its own git checkout in `/opt/speech-spark/src`, so it no lo
 | Option | Effect |
 |---|---|
 | `--mode full` / `--mode api` | complete with the web panel / only the models with their APIs (see above) |
+| `--mode api --teilen` | Spark split, model computer: only the models, services only on 127.0.0.1, plus the TLS-Tor, the Wärter, the firewall and the door's own certificate (`tor-cert.pem`); shows the pairing code at the end |
+| `--mode panel --modelle <name-or-ip>` | Spark split, panel computer (e.g. Raspberry Pi 5): only the panel with `venv-panel` and coturn, no model, no engine; checks 64 bit and Python ≥ 3.11, asks for the code (or `SPEECH_SPARK_CODE`) and runs the round trip afterwards |
 | `--asr 1.7b\|0.6b\|parakeet\|none`, `--tts 0.6b\|1.7b\|none`, `--voicedesign` | choose the models without questions |
 | `--local` / `--network` | APIs only on `127.0.0.1` / in the whole network (default) |
 | `--yes` | ask nothing; what is not given stays as it is (new: complete) |

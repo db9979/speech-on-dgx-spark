@@ -3,7 +3,7 @@
 When the panel runs on a Raspberry Pi (or another computer) and the models stay on the DGX, speech, text and pictures
 cross the home network. They never do that in plain text: the services (speech recognition, speech output, the
 LLM-Tor, pictures, the Wärter) then listen only on 127.0.0.1, and this door listens on the DGX's network address
-(api.tls_listen) on the same port numbers with TLS 1.3 and the DGX's own certificate (TLS_DIR). The panel trusts
+(api.tls_listen) on the same port numbers with TLS 1.3 and the DGX's own certificate (common.TOR_CERT). The panel trusts
 exactly that certificate (common.model_mounts, pinned at the pairing), so a stranger in the network can neither
 read along nor pose as the DGX. Only the addresses in api.tls_from (the panel computer) are let in; the API key
 is still checked by every service itself. The door only passes bytes on, it never reads or changes a request.
@@ -22,7 +22,7 @@ import os
 import ssl
 import sys
 
-from common import TLS_DIR, WAERTER_PORT, load_config
+from common import TOR_CERT, TOR_KEY, WAERTER_PORT, load_config
 
 MAX_CONN = 64          # open connections at once; one more is closed at once
 IDLE = 900             # seconds without a byte in either direction before a connection is closed
@@ -144,7 +144,7 @@ async def serve(cfg, cert=None, key=None):
     if not listen:
         print("tlstor: aus (keine adresse)", flush=True)
         return []
-    ctx = server_context(cert or os.path.join(TLS_DIR, "cert.pem"), key or os.path.join(TLS_DIR, "key.pem"))
+    ctx = server_context(cert or TOR_CERT, key or TOR_KEY)
     servers = []
     for port in ports(cfg):
         async def on(r, w, _port=port):

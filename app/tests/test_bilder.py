@@ -472,7 +472,9 @@ class Install(unittest.TestCase):
             self.skipTest("install.sh is not part of this copy")
         sh = open(path).read()
         self.assertIn('case "$BILD_PICK" in ""|4b-q8|4b-q4|9b-q8|9b-q4|none)', sh)
-        self.assertIn('WITH_BILD=0; [ "$MODE" = full ] && [ "$(cfg \'.image.enabled // false\')" = true ] && WITH_BILD=1', sh)
+        # with the panel here, or on the model computer of a split install (Spark teilen), never without image.enabled
+        self.assertIn('WITH_BILD=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg \'.image.enabled // false\')" = true ] && WITH_BILD=1', sh)
+        self.assertIn('PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0', sh)
         self.assertIn('checkout --quiet "$SDCPP_COMMIT"', sh)
         self.assertIn("-DCMAKE_CUDA_ARCHITECTURES=121", sh)
         self.assertIn("systemctl disable --now speech-spark-bild.service", sh)

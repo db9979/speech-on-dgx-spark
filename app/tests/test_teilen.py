@@ -22,6 +22,7 @@ import netguard  # noqa: E402
 import systemone  # noqa: E402
 import teilen  # noqa: E402
 import tlstor  # noqa: E402
+from tests.test_richtlinie import repo_file  # noqa: E402
 
 DIR = tempfile.mkdtemp(dir=helpers.TMP)
 CERT, KEY = os.path.join(DIR, "dgx.pem"), os.path.join(DIR, "dgx.key")
@@ -338,3 +339,39 @@ class Kopplung(unittest.TestCase):
         self.assertIn("code) teilen_code", sh)
         self.assertIn("koppeln) teilen_koppeln", sh)
         self.assertEqual(sh.count("chown --reference=\"$CONFIG\""), 1)     # one config writer (cfg_put)
+
+
+class Installation(unittest.TestCase):
+    """B6b: install.sh --mode api --teilen (the model computer) and --mode panel --modelle <host> (the panel computer).
+    Read from the scripts; install.sh and uninstall.sh are not part of the app/-only copy (skipped there like
+    test_richtlinie does), speech-spark.sh is."""
+
+    def test_model_computer(self):
+        sh = repo_file("install.sh")
+        self.assertIn("""[ "$TEILEN" = 1 ] && jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1" | .llm.host="127.0.0.1"'""", sh)
+        self.assertIn('-newkey ec -pkeyopt ec_paramgen_curve:prime256v1', sh)
+        self.assertIn('-keyout "$TLS/tor-key.pem" -out "$TLS/tor-cert.pem"', sh)
+        self.assertIn("ConditionPathExists=$VAR/state/waerter.key", sh)
+        self.assertIn('ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-teilen.nft', sh)
+        self.assertIn("restart_front tlstor", sh)
+        self.assertIn("restart_front waerter", sh)
+        self.assertEqual(os.path.basename(common.TOR_CERT), "tor-cert.pem")
+        self.assertNotEqual(common.TOR_CERT, os.path.join(common.TLS_DIR, "cert.pem"), "the panel's certificate moves")
+
+    def test_panel_computer(self):
+        sh = repo_file("install.sh")
+        self.assertIn("PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0", sh)
+        self.assertIn("sys.version_info < (3, 11)", sh)
+        self.assertIn("aarch64|x86_64", sh)
+        # paired before any unit is written or started: the panel never talks to the models without the pin
+        self.assertLess(sh.index("teilen koppeln \"$MODELLE_PICK\""), sh.index('say "systemd units"'))
+        self.assertIn('die "the pairing needs the code', sh)
+
+    def test_uninstall_and_rules_place(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:
+            cli = f.read()
+        self.assertNotIn('"$ETC/teilen.nft"', cli, "root never writes into the service user's $ETC")
+        self.assertIn('rules="$(dirname "$ETC")/speech-spark-teilen.nft"', cli)
+        un = repo_file("uninstall.sh")
+        self.assertIn("tlstor waerter teilen-fw", un)
+        self.assertIn("nft delete table inet speech_spark_teilen", un)

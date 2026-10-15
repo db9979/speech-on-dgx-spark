@@ -14,6 +14,9 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # the TLS certificate of this machine (cert.pem, key.pem): the panel's https port and the TLS-Tor (tlstor.py)
 TLS_DIR = os.environ.get("SPEECH_SPARK_TLS", "/etc/speech-spark/tls")
+# the door's own certificate (Spark teilen, tlstor.py): apart from the panel's https certificate, which apps pin and
+# which moves with the panel (umziehen); the door's stays on the model computer and is only ever seen in the LAN
+TOR_CERT, TOR_KEY = os.path.join(TLS_DIR, "tor-cert.pem"), os.path.join(TLS_DIR, "tor-key.pem")
 
 
 DEFAULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.default.json")

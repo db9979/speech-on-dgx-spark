@@ -38,6 +38,7 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark teilen modelle-update` | Auf dem Panel-Rechner: das eigene Update des Modell-Rechners anstoßen und darauf warten (macht `update.sh` von selbst zuerst) |
 | `sudo speech-spark teilen code` | Auf dem Modell-Rechner: Kopplungscode zeigen (10 Minuten, einmal nutzbar) und auf den Panel-Rechner warten |
 | `sudo speech-spark teilen koppeln <name-oder-ip>` | Auf dem Panel-Rechner: mit dem Modell-Rechner koppeln (fragt nach dem Code, merkt sich sein Zertifikat) |
+| `sudo speech-spark teilen rundlauf` | Auf dem Panel-Rechner: Wärter fragen, TTS spricht einen Satz, ASR hört ihn, alles über die Tür |
 | `sudo speech-spark teilen firewall [aus]` | die Ports der Tür nur vom Panel-Rechner (`api.tls_from`) erreichbar machen (nftables, Tabelle `speech_spark_teilen`), oder wieder aus |
 
 Den Wächter für hängende Dienste, der sonst im Portal läuft, übernimmt ohne Portal der Dienst `speech-spark-watch` mit denselben Regeln. Nach einem Update spricht die Sprachausgabe einen Satz, und die Spracherkennung muss ihn verstehen; klappt das nicht, spielt das Update die vorige Version wieder ein. Die Selbsttests laufen in beiden Arten vor jedem Update. Das Chat-Modell (qwen38) gehört nicht zu diesem Repo und bleibt davon unberührt. Läuft Open WebUI in Docker auf derselben Spark, müssen die APIs im Netz erreichbar sein (`127.0.0.1` im Container ist der Container selbst).
@@ -62,6 +63,8 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 | Option | Wirkung |
 |---|---|
 | `--mode full` / `--mode api` | komplett mit Webportal / nur die Modelle mit ihren APIs (siehe oben) |
+| `--mode api --teilen` | Spark teilen, Modell-Rechner: nur die Modelle, Dienste nur auf 127.0.0.1, dazu TLS-Tor, Wärter, Firewall und ein eigenes Zertifikat der Tür (`tor-cert.pem`); zeigt am Ende den Kopplungscode |
+| `--mode panel --modelle <name-oder-ip>` | Spark teilen, Panel-Rechner (z. B. Raspberry Pi 5): nur das Panel mit `venv-panel` und coturn, kein Modell, keine Engine; prüft 64 Bit und Python ≥ 3.11, fragt nach dem Code (oder `SPEECH_SPARK_CODE`) und macht danach den Rundlauf |
 | `--asr 1.7b\|0.6b\|parakeet\|none`, `--tts 0.6b\|1.7b\|none`, `--voicedesign` | Modelle ohne Rückfrage wählen |
 | `--local` / `--network` | APIs nur auf `127.0.0.1` / im ganzen Netz (Standard) |
 | `--yes` | nichts fragen; was nicht angegeben ist, bleibt wie es ist (neu: komplett) |
