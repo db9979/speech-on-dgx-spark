@@ -2,6 +2,8 @@
 
 ← [README](../../README.de.md)
 
+Geteilt installieren (Panel auf einem eigenen Rechner wie einem Raspberry Pi 5), umziehen und zurückholen: [Spark teilen](spark-teilen.md).
+
 ## Nur die Modelle bereitstellen (ohne Webportal)
 
 Die erste Installation fragt im Terminal, was installiert werden soll:

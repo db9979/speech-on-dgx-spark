@@ -2,6 +2,8 @@
 
 ← [README](../../README.md)
 
+Split install (the panel on a computer of its own such as a Raspberry Pi 5), moving and taking back: [Spark split](spark-split.md).
+
 ## Only the models (without the web panel)
 
 The first install asks in the terminal what to install:

@@ -65,6 +65,11 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] New packages are installed with a fixed version.
 - [ ] Nothing from the configuration ends up unchecked in a root script.
 
+## Connection between two computers (Spark split)
+- [ ] Everything between panel computer and model computer goes through the TLS-Tor (`common.model_url`, TLS 1.3, pinned certificate), never in plain text and never with "accept anything".
+- [ ] New commands to the model computer only as fixed Wärter commands (`tarswart.COMMANDS`), signed, with a time stamp and a one-time number; values checked, never a version or a path from the panel.
+- [ ] A pairing or moving step changes a computer's role only after a signed result from the other side and deletes nothing.
+
 ## Before the commit
 - [ ] New switches are off by default: one admin switch, no new profile switch; only the admin blocks single profiles.
 - [ ] Every new protection rule has a self-test.

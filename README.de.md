@@ -18,6 +18,7 @@ Das Skript fragt, was installiert werden soll:
 
 - **Komplett**: Modelle, APIs und das Webportal mit dem Assistenten.
 - **Nur die Modelle mit ihren APIs**: für Open WebUI, eigene Apps oder Home Assistant, ohne Portal. Verwaltet wird dann mit `sudo speech-spark`.
+- **Geteilt** (Spark teilen): das Panel auf einem eigenen Rechner wie einem Raspberry Pi 5, der DGX liefert nur die Modelle. Anleitung, auch zum Umziehen: [Spark teilen](docs/de/spark-teilen.md).
 
 Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach spricht die Sprachausgabe einen Satz und die Spracherkennung prüft ihn. Das Portal liegt auf `https://SPARK:31443` (https ist nötig, damit der Browser das Mikrofon freigibt).
 
@@ -33,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.619** Spark teilen: Anleitung und Hinweis nach dem Umzug unter Zustand → Update
 - **V01.0.618** Spark teilen: Panel umziehen und zurückholen (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.617** Spark teilen: geteilt installieren (Modell-Rechner `--teilen`, Panel-Rechner `--mode panel`)
 - **V01.0.616** Spark teilen: Kopplung mit Code (`speech-spark teilen code` und `koppeln`)
@@ -42,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.612** Spark teilen: Modellwahl und Zustand → Modelle über den Wärter.
 - **V01.0.611** Rot-Fix: Hilfe von speech-spark zeigt auch teilen.
 - **V01.0.610** Spark teilen B4b: Spracheinstellungen und Logs der Modell-Dienste auch mit dem Panel auf einem anderen Rechner
-- **V01.0.609** Spark teilen B4a: Wärter auf dem DGX, das Panel steuert die Modell-Dienste auch von einem anderen Rechner
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

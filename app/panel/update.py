@@ -17,6 +17,7 @@ from core import admin_code, app_version, auth, browser_profile, is_admin, run, 
 import backup  # noqa: E402
 import ghtoken  # noqa: E402
 import guard  # noqa: E402
+import umziehen  # noqa: E402
 
 router = APIRouter()
 
@@ -299,7 +300,8 @@ async def update_status(check: bool = False):
     return {"installed": inst, "previous": previous_version(), "remote": await remote_state(force=check),
             "running": props.get("ActiveState") in ("activating", "active"),
             "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None,
-            "talking": talking(), "night": night_on(), "modell": await asyncio.to_thread(_modell_rechner, inst)}
+            "talking": talking(), "night": night_on(), "modell": await asyncio.to_thread(_modell_rechner, inst),
+            "umzug": umziehen.hinweis()}
 
 
 def _modell_rechner(inst):

@@ -190,6 +190,7 @@ DATEIEN = [
     state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("notbetrieb-satz-de.pcm", "Notbetrieb-Satz als Ton", "Emergency sentence as sound", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),
+    state("umzug-hinweis.json", "Hinweis nach dem Umzug (nur die Zeit)", "Hint after the move (time only)", lokal="gilt nur für den Rechner, auf den das Panel umgezogen ist (14 Tage)"),
     state("notbetrieb-satz-en.pcm", "Notbetrieb-Satz als Ton (Englisch)", "Emergency sentence as sound (English)", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),
     state("nasquelle-tmp", "Zwischendateien der Wissensordner, Sekunden", "Knowledge folder staging, seconds", lokal="Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht"),
     state("notaus-mine.json", "Mein Notaus", "My kill switch", lokal="Notaus gilt nur auf diesem Gerät"),

@@ -2517,7 +2517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 57). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 58). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -2541,7 +2541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 57 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 58 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5091,6 +5091,14 @@
 "lang": "de",
 "src": "installation",
 "file": "Installation im Detail",
+"head": "Installation im Detail",
+"title": "Installation im Detail",
+"text": "Geteilt installieren (Panel auf einem eigenen Rechner wie einem Raspberry Pi 5), umziehen und zurückholen: Spark teilen."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
 "head": "Nur die Modelle bereitstellen (ohne Webportal)",
 "title": "Nur die Modelle bereitstellen (ohne Webportal)",
 "text": "Die erste Installation fragt im Terminal, was installiert werden soll:"
@@ -6166,6 +6174,86 @@
 "head": "Logs",
 "title": "Ausführliche Diagnose pro Bereich",
 "text": "Ausführliche Diagnose pro Bereich (Logs → Erweitert): Raum-Modus, Lautsprecher, Home Assistant und Gespräch lassen sich für 15 min, 1 h oder 4 h einschalten; danach und bei jedem Neustart sind sie wieder aus. Sie schreiben zusätzliche … detail …-Zeilen nur mit Zahlen und Entscheidungen (Erkennungszeit, Antwortzeit, Wortzahl, Dauer eines Home-Assistant-Aufrufs, Größe des Verlaufs, angebotene Werkzeuge), nie gehörte oder geschriebene Texte, Namen oder Geheimnisse; die Schwärzung läuft trotzdem. Nur für den Admin, mit Rate-Limit."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Spark teilen: Panel auf einem eigenen Rechner",
+"title": "Spark teilen: Panel auf einem eigenen Rechner",
+"text": "Normalerweise läuft alles auf dem DGX Spark: Modelle, APIs und das Panel mit dem Assistenten. Das bleibt der Standard. Wer möchte, stellt das Panel und die kleinen Dienste (Chats, Erinnerungen, Lautsprecher, Telegram, Logs) auf einen eigenen kleinen Rechner, zum Beispiel einen Raspberry Pi 5. Der DGX liefert dann nur noch die Modelle: Spracherkennung, Sprachausgabe, Bilder und das eigene Sprachmodell."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Spark teilen: Panel auf einem eigenen Rechner",
+"title": "Wozu",
+"text": "Wozu: Der DGX darf neu starten, Modelle wechseln oder ausgeschaltet sein, und Chats, Anrufe, Erinnerungen, Durchsagen und Logs laufen weiter. Sprachfragen bekommen in der Zeit den festen Satz „Der Spark macht gerade Pause.“ (Notbetrieb), und der Dienst-Wächter meldet den Ausfall."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Was du brauchst",
+"title": "Was du brauchst",
+"text": "- Rechner für das Panel: Raspberry Pi 5 mit 8 GB, NVMe-SSD statt SD-Karte, Kabel-LAN und eine feste IP-Adresse im Router. Als System Raspberry Pi OS Lite 64-bit in der aktuellen Version (Trixie, Python 3.13), Start von der NVMe. Ein Gehäuse wie das SunFounder Pironman 5 bringt den M.2-Steckplatz gleich mit; dann ohne zusätzliche NVMe-Platine. Andere 64-Bit-Rechner mit Debian oder Ubuntu und Python ab 3.11 gehen genauso. - Auf dem DGX das eigene Sprachmodell: Spark teilen erreicht das Sprachmodell über das LLM-Tor. qwen38 ist vom Panel-Rechner aus nicht erreichbar, also vorher sudo speech-spark modelle llm uebernehmen (siehe Installation). - Beide Rechner im selben Heimnetz."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Neu installieren, geteilt",
+"title": "Neu installieren, geteilt",
+"text": "1. Auf dem DGX: bash sudo ./install.sh --mode api --teilen Das installiert die Modelle, das TLS-Tor, den Wärter und die Firewall und zeigt am Ende einen Kopplungscode (6 Zeichen, 10 Minuten gültig, einmal nutzbar). Einen neuen Code gibt es jederzeit mit sudo speech-spark teilen code. 2. Auf dem Panel-Rechner: bash git clone https://github.com/db9979/speech-on-dgx-spark cd speech-on-dgx-spark sudo ./install.sh --mode panel --modelle <IP-des-DGX> Er fragt nach dem Code, koppelt, installiert nur das Panel (ohne torch, vLLM oder CUDA) und macht danach den Rundlauf: Sprachausgabe spricht einen Satz, die Spracherkennung muss ihn verstehen."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Bestehenden Spark umziehen",
+"title": "Bestehenden Spark umziehen",
+"text": "Das Panel mit allen Profilen, Gedächtnis, Chats, Stimmen und Einstellungen zieht in einem Rutsch um."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Bestehenden Spark umziehen",
+"title": "Bestehenden Spark umziehen",
+"text": "1. Auf dem neuen Panel-Rechner das Panel installieren wie oben in Schritt 2, aber erst, wenn der DGX den Code zeigt. 2. Auf dem DGX: sudo speech-spark umziehen --code. Er macht eine Umzugs-Sicherung mit dem Tresor-Schlüssel (versiegelt mit einem Zufallspasswort) und dem https-Zertifikat des Panels und zeigt den Code. 3. Der neue Rechner holt beim Koppeln den Umzug, spielt ihn ein, zählt die Profile und meldet „fertig“. Bei einem schon installierten Panel-Rechner geht das auch mit sudo speech-spark umziehen --von <IP-des-DGX>. 4. Erst nach diesem „fertig“ schaltet der DGX sein Panel ab und läuft als Modell-Rechner weiter. Bricht etwas ab, bleibt der DGX unverändert. Keiner der Schritte löscht etwas. 5. Von Hand danach (steht auch unter Zustand → Update, 14 Tage lang): - im Router die Weiterleitung 31443 und die Ports für Anrufe (Funktionen → Chats → „Anrufe von unterwegs“) auf den neuen Rechner, - in Home Assistant Wyoming auf <neuer-Rechner>:31003, - bei jedem ESP32-Lautsprecher die neue Server-Adresse."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Bestehenden Spark umziehen",
+"title": "Bestehenden Spark umziehen",
+"text": "Die Apps bleiben angemeldet, weil das Zertifikat des Panels mitzieht. Was zwischen Sicherung und Umschalten im alten Panel geändert wird, geht nicht mit; am besten umziehen, wenn gerade niemand spricht."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Zurückholen",
+"title": "Zurückholen",
+"text": "Auf dem Panel-Rechner sudo speech-spark umziehen --code, auf dem DGX sudo speech-spark zurueckholen --von <IP-des-Panel-Rechners>. Derselbe Ablauf in die Gegenrichtung; danach läuft wieder alles auf dem DGX, und der Panel-Rechner schaltet nur sein Panel ab (seine Daten bleiben)."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Wie die Verbindung geschützt ist",
+"title": "Wie die Verbindung geschützt ist",
+"text": "- Zwischen den Rechnern geht nichts im Klartext: das TLS-Tor auf dem DGX spricht nur TLS 1.3 mit seinem eigenen Zertifikat, und der Panel-Rechner vertraut genau diesem einen (beim Koppeln gemerkt). - Der Kopplungscode beweist beim Koppeln, dass beide dasselbe Zertifikat sehen. Wer sich dazwischen stellt, zeigt ein anderes und bekommt nichts. - Die Firewall des DGX lässt die Ports der Tür nur für den Panel-Rechner zu. Jeder Befehl an den Wärter ist mit einem eigenen Schlüssel unterschrieben, hat einen Zeitstempel und gilt nur einmal. - Welche Version der DGX installiert, entscheidet er nach seinen eigenen Regeln, nie der Panel-Rechner."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Prüfen und Fehler suchen",
+"title": "Prüfen und Fehler suchen",
+"text": "Der Live-Kasten „Modell-Rechner“ zeigt, ob der DGX erreichbar ist, wie viele Dienste laufen, seine Version und eine Pause. Technik dazu: Sicherheit und Betrieb und Architektur."
 },
 {
 "lang": "de",
@@ -9013,7 +9101,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 57). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 58). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -9029,7 +9117,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 29 files in every backup (step 7) - 57 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 29 files in every backup (step 7) - 58 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -11451,6 +11539,14 @@
 "lang": "en",
 "src": "installation",
 "file": "Installation in detail",
+"head": "Installation in detail",
+"title": "Installation in detail",
+"text": "Split install (the panel on a computer of its own such as a Raspberry Pi 5), moving and taking back: Spark split."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
 "head": "Only the models (without the web panel)",
 "title": "Only the models (without the web panel)",
 "text": "1. Complete: models, APIs and the web panel with the assistant (as before). 2. Only the models with their APIs: for other services (Open WebUI, your own apps, Home Assistant …), without web panel, password and certificate."
@@ -12446,6 +12542,86 @@
 "head": "Logs",
 "title": "Detailed diagnosis per area",
 "text": "Detailed diagnosis per area (Logs → Advanced): room mode, speakers, Home Assistant and conversation can be switched on for 15 min, 1 h or 4 h; afterwards and on every restart they are off again. They add … detail … lines with numbers and decisions only (recognition time, answer time, word count, duration of a Home Assistant call, history size, offered tools), never heard or written text, names or secrets; redaction still runs. Admin only, rate limited."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Spark split: the panel on a computer of its own",
+"title": "Spark split: the panel on a computer of its own",
+"text": "Normally everything runs on the DGX Spark: models, APIs and the panel with the assistant. That stays the default. If you like, the panel and the small services (chats, reminders, speakers, Telegram, logs) move to a small computer of their own, for example a Raspberry Pi 5. The DGX then only serves the models: speech recognition, speech output, pictures and the own language model."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Spark split: the panel on a computer of its own",
+"title": "What for",
+"text": "What for: the DGX may restart, switch models or be switched off, and chats, calls, reminders, announcements and logs keep running. Voice questions get the fixed sentence \"The Spark is taking a break right now.\" meanwhile (emergency mode), and the Dienst-Wächter reports the outage."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "What you need",
+"title": "What you need",
+"text": "- Computer for the panel: Raspberry Pi 5 with 8 GB, an NVMe SSD instead of an SD card, wired LAN and a fixed IP address in the router. As the system Raspberry Pi OS Lite 64-bit in the current version (Trixie, Python 3.13), booting from the NVMe. A case like the SunFounder Pironman 5 brings the M.2 slot along; then without an extra NVMe board. Other 64-bit computers with Debian or Ubuntu and Python 3.11 or newer work the same way. - The own language model on the DGX: Spark split reaches the language model through the LLM-Tor. qwen38 cannot be reached from the panel computer, so first sudo speech-spark modelle llm uebernehmen (see Installation). - Both computers in the same home network."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "New install, split",
+"title": "New install, split",
+"text": "1. On the DGX: bash sudo ./install.sh --mode api --teilen This installs the models, the TLS-Tor, the Wärter and the firewall and shows a pairing code at the end (6 characters, valid 10 minutes, one use). A new code any time with sudo speech-spark teilen code. 2. On the panel computer: bash git clone https://github.com/db9979/speech-on-dgx-spark cd speech-on-dgx-spark sudo ./install.sh --mode panel --modelle <IP-of-the-DGX> It asks for the code, pairs, installs only the panel (without torch, vLLM or CUDA) and then runs the round trip: speech output speaks a sentence, speech recognition has to understand it."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Moving an existing Spark",
+"title": "Moving an existing Spark",
+"text": "The panel with all profiles, memory, chats, voices and settings moves in one go."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Moving an existing Spark",
+"title": "Moving an existing Spark",
+"text": "1. On the new panel computer install the panel as in step 2 above, but only once the DGX shows the code. 2. On the DGX: sudo speech-spark umziehen --code. It makes a move backup with the vault key (sealed with a random password) and the panel's https certificate and shows the code. 3. While pairing, the new computer fetches the move, restores it, counts the profiles and reports \"fertig\". On a panel computer that is already installed this also works with sudo speech-spark umziehen --von <IP-of-the-DGX>. 4. Only after this \"fertig\" does the DGX switch its panel off and run on as the model computer. If something breaks off, the DGX stays as it was. No step deletes anything. 5. By hand afterwards (also listed under Status → Update for 14 days): - in the router the forward of 31443 and the ports for calls (Features → Chats → \"Calls when away\") to the new computer, - in Home Assistant Wyoming to <new-computer>:31003, - on every ESP32 speaker the new server address."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Moving an existing Spark",
+"title": "Moving an existing Spark",
+"text": "The apps stay signed in because the panel's certificate moves along. What is changed in the old panel between the backup and the switch does not move; best move while nobody is talking."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Taking it back",
+"title": "Taking it back",
+"text": "On the panel computer sudo speech-spark umziehen --code, on the DGX sudo speech-spark zurueckholen --von <IP-of-the-panel-computer>. The same way in the other direction; afterwards everything runs on the DGX again, and the panel computer only switches its panel off (its data stays)."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "How the connection is protected",
+"title": "How the connection is protected",
+"text": "- Nothing crosses between the computers in plain text: the TLS-Tor on the DGX speaks only TLS 1.3 with its own certificate, and the panel computer trusts exactly that one (remembered at the pairing). - The pairing code proves while pairing that both see the same certificate. Whoever stands in between shows another one and gets nothing. - The DGX's firewall lets only the panel computer reach the door's ports. Every command to the Wärter is signed with a key of its own, carries a time stamp and counts only once. - Which version the DGX installs is decided by its own rules, never by the panel computer."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Checking and finding faults",
+"title": "Checking and finding faults",
+"text": "The Live box \"Model computer\" shows whether the DGX is reachable, how many services run, its version and a pause. Technical details: Security and operation and Architecture."
 },
 {
 "lang": "en",

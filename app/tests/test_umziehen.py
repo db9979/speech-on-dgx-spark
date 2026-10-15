@@ -121,6 +121,11 @@ class Umziehen(unittest.TestCase):
         with open(os.path.join(self.a.dir, "tls", "cert.pem")) as fa, open(os.path.join(self.b.dir, "tls", "cert.pem")) as fb:
             self.assertEqual(fa.read(), fb.read(), "the apps' pin stays valid")
         self.assertEqual(self.a.profile(), ["Dominik"], "nothing is deleted on the giving side")
+        # Zustand → Update lists what stays to do by hand, on the new computer only and for 14 days
+        self.assertEqual(self.b.py("import umziehen; print(umziehen.hinweis())"), "True")
+        self.assertEqual(self.b.py("import json, umziehen; s = json.load(open(umziehen.HINWEIS))['seit']; "
+                                   "print(umziehen.hinweis(s + 15 * 86400))"), "False")
+        self.assertEqual(self.a.py("import umziehen; print(umziehen.hinweis())"), "False")
         self.assertFalse([n for n in os.listdir(os.path.join(self.a.dir, "backups")) if n.endswith("-move.tar.gz")],
                          "the move backup sealed with a password nobody keeps does not stay in the list")
         # on B life goes on, then everything comes back to A (zurueckholen)

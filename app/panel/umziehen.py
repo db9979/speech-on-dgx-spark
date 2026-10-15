@@ -21,13 +21,24 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
-from common import TLS_DIR  # noqa: E402
+from common import STATE, TLS_DIR, read_json, write_json  # noqa: E402
 
 MAX_HEAD = 64 * 1024
 PEM_MAX = 16 * 1024
 CERT, KEY = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
+HINWEIS = os.path.join(STATE, "umzug-hinweis.json")
+HINWEIS_TAGE = 14
+
+
+def hinweis(now=None):
+    """True for HINWEIS_TAGE days after a move to this computer: Zustand → Update lists what stays to do by hand
+    (port forwards, Home Assistant, speakers), each with its way in the panel."""
+    now = time.time() if now is None else now
+    seit = (read_json(HINWEIS, {}) or {}).get("seit")
+    return isinstance(seit, int) and 0 <= now - seit < HINWEIS_TAGE * 86400
 
 
 def _read(path):
@@ -101,6 +112,7 @@ def auspacken(stdin, stdout):
         tmp.seek(0)
         done = backup.restore(tmp, system._check_config, head["passwort"])
     cert = _cert_setzen(head.get("cert"), head.get("key"))
+    write_json(HINWEIS, {"seit": int(time.time())})      # Zustand → Update: what stays to do by hand
     n = len(profiles.user_ids())
     out = {"profile": n, "wiederhergestellt": list(done), "zertifikat": cert}
     stdout.write(json.dumps(out).encode() + b"\n")

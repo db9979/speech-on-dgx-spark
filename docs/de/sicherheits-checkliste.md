@@ -65,6 +65,11 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Neue Pakete werden mit fester Version installiert.
 - [ ] Nichts aus der Konfiguration landet ungeprüft in einem root-Skript.
 
+## Verbindung zwischen zwei Rechnern (Spark teilen)
+- [ ] Alles zwischen Panel-Rechner und Modell-Rechner geht über das TLS-Tor (`common.model_url`, TLS 1.3, gepinntes Zertifikat), nie im Klartext und nie mit „alles annehmen“.
+- [ ] Neue Befehle an den Modell-Rechner nur als feste Wärter-Befehle (`tarswart.COMMANDS`), unterschrieben, mit Zeitstempel und Einmal-Nummer; Werte geprüft, nie eine Version oder ein Pfad vom Panel.
+- [ ] Ein Kopplungs- oder Umzugsschritt ändert die Rolle eines Rechners erst nach einem unterschriebenen Ergebnis der Gegenseite und löscht nichts.
+
 ## Vor dem Commit
 - [ ] Neue Schalter stehen standardmäßig auf aus: ein Admin-Schalter, kein neuer Profilschalter; eine Sperre für einzelne Profile setzt nur der Admin.
 - [ ] Jede neue Schutzregel hat einen Selbsttest.

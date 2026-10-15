@@ -18,6 +18,7 @@ The script asks what to install:
 
 - **Complete**: models, APIs and the web panel with the assistant.
 - **Only the models with their APIs**: for Open WebUI, your own apps or Home Assistant, without the panel. Managed with `sudo speech-spark`.
+- **Split** (Spark split): the panel on a computer of its own such as a Raspberry Pi 5, the DGX only serves the models. Guide, also for moving: [Spark split](docs/en/spark-split.md).
 
 At the end it prints the address, password and API key, then TTS speaks a sentence and ASR checks it. The panel is at `https://SPARK:31443` (https is needed so the browser allows the microphone).
 
@@ -33,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.619** Spark split: guide and hint after the move under Status → Update
 - **V01.0.618** Spark split: move the panel and take it back (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.617** Spark split: split install (model computer `--teilen`, panel computer `--mode panel`)
 - **V01.0.616** Spark split: pairing with a code (`speech-spark teilen code` and `koppeln`)
@@ -42,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.612** Spark split: model choice and Status → Models through the Wärter.
 - **V01.0.611** Red fix: speech-spark help shows teilen again.
 - **V01.0.610** Splitting the Spark B4b: speech settings and model service logs also with the panel on another computer
-- **V01.0.609** Splitting the Spark B4a: Wärter on the DGX, the panel controls the model services from another computer too
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
