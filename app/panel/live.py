@@ -1272,7 +1272,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
                         + (" · prüft gerade" if spr.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
-            x["sub"] = ("nicht erreichbar" if not mr.get("ok") else
+            x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
                         + (" · Wartungspause" if mr.get("pause") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)

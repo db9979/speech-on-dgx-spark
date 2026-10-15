@@ -58,6 +58,8 @@ MOVING = ("activating", "deactivating", "reloading")
 CLIP_DAYS = 1                  # the speakers' sentence is made anew once a day (voice or model may have changed)
 # the short sentence (no minutes): when the time is over and for the speakers' file
 SHORT = ("Ich werde gerade aktualisiert und bin gleich wieder da.", "I am being updated right now and will be back shortly.")
+# Notbetrieb (plan Raspberry-Pi split B5): the model computer does not answer (off, restarting); its own file too
+NOTBETRIEB = ("Der Spark macht gerade Pause.", "The Spark is taking a break right now.")
 
 _cache = {"key": None, "state": None}
 _seen = {"since": None, "bad": False}   # what the loop already wrote into the journal
@@ -137,8 +139,7 @@ def _local():
     return d
 
 
-def paused(part):
-    """True while this part (llm, asr, tts, bild) is paused and the admin switch is on."""
+def _pause(part):
     try:
         s = state()
         return bool(s["on"] and part in s["parts"] and admin_on())
@@ -146,9 +147,24 @@ def paused(part):
         return False
 
 
+def notbetrieb():
+    """Notbetrieb: the models run on another computer that has not answered lately (steuer.weg); every part counts
+    as paused (the fixed sentence at once, background work waits), but the Dienst-Wächter reports it (not quiet)."""
+    try:
+        import steuer
+        return steuer.weg()
+    except Exception:
+        return False
+
+
+def paused(part):
+    """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb."""
+    return _pause(part) or notbetrieb()
+
+
 def quiet(part):
-    """The Dienst-Wächter and the watchdog leave the part alone: paused and its time not yet over."""
-    return paused(part) and not state()["overdue"]
+    """The Dienst-Wächter and the watchdog leave the part alone: paused on purpose and its time not yet over."""
+    return _pause(part) and not state()["overdue"]
 
 
 def left_min(now=None):
@@ -160,6 +176,8 @@ def left_min(now=None):
 def sentence(en=False, now=None):
     """The fixed answer while the language model pauses (chat.py), counted for Zustand."""
     _n["asked"] += 1
+    if not state()["on"] and notbetrieb():
+        return NOTBETRIEB[1 if en else 0]
     m = left_min(now)
     if state()["overdue"] or m < 1:
         return SHORT[1 if en else 0]
@@ -402,7 +420,8 @@ async def auto_tick(now=None, look=_look):
 async def clips_tick(now=None):
     """Keeps the speakers' file of the short sentence fresh while the speech output works (esp32.pause_clip)."""
     c = load_config().get("chat", {})
-    if not admin_on() or paused("tts") or not (c.get("esp32") or c.get("wyoming")):   # only with speakers or Assist
+    import steuer
+    if not (admin_on() or steuer.remote()) or paused("tts") or not (c.get("esp32") or c.get("wyoming")):   # only with speakers or Assist
         return False
     import esp32
     return await esp32.make_pause_clips(time.time() if now is None else now)

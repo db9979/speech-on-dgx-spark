@@ -1448,7 +1448,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "070b41de6e",
+        "stand": "2a2cbbb781",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -1487,13 +1487,17 @@ SEITEN_DATEN = {
                "Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der "
                "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet. Mit „Automatisch bei "
                "Neustart“ pausiert das Panel selbst, sobald ein qwen38-Dienst neu startet oder umschaltet (höchstens "
-               "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet.",
+               "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet. Läuft das Modell auf einem "
+               "anderen Rechner, der nicht antwortet (Notbetrieb, steuer.weg), gilt dasselbe mit dem Satz „Der Spark macht "
+               "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem.",
                "When an admin paused the language model for an update, the panel does not ask it at all: the answer is "
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
                "time the pause only ends once the model answers {wartung.OK_N} times in a row. With “Automatically on "
                "restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most "
-               "{wartung.AUTO_MIN} min) and goes on once the model answers again."),
+               "{wartung.AUTO_MIN} min) and goes on once the model answers again. When the model runs on another "
+               "computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark "
+               "is taking a break right now.”; the Dienst-Wächter still reports the outage."),
               ("stop", "ja", ("„Ich werde gerade aktualisiert …“", "„I am being updated right now …“"))),
             S("s2", "schritt", ("Verbindung für diese Antwort", "Connection for this answer"),
               ("Zeitlimit {chat.TIMEOUT_RANGE.0} bis {chat.TIMEOUT_RANGE.1} s", "time limit {chat.TIMEOUT_RANGE.0} to {chat.TIMEOUT_RANGE.1} s"),

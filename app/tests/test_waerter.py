@@ -61,6 +61,8 @@ class Base(unittest.TestCase):
         self.addCleanup(p.stop)
         tarswart._seen.clear()
         tarswart._times.clear()
+        steuer._status.update(**{"try": 0.0, "ok": 0.0, "weg": False})
+        self.addCleanup(steuer._status.update, **{"try": 0.0, "ok": 0.0, "weg": False})
         self.app = TestClient(tarswart.app)
 
     def post(self, raw, key=KEY):
@@ -357,7 +359,7 @@ class Pause(Base):
     def test_live_shows_the_model_computer_in_counts(self):
         import live
         self.assertIn("modell", live.TARGETS)
-        self.assertEqual(steuer.for_live(), {"on": True, "ok": False})
+        self.assertEqual(steuer.for_live(), {"on": True, "ok": False, "notbetrieb": False})
         steuer._status.update(t=time.monotonic(), d={"version": "V01.0.612", "pause": {"on": True},
                                                       "einheiten": {"a": {"state": "active"}, "b": {"state": "failed"},
                                                                     "c": {"state": "unknown"}}})
@@ -366,6 +368,66 @@ class Pause(Base):
         c["models"]["host"] = "127.0.0.1"
         helpers.write_config(c)
         self.assertEqual(steuer.for_live(), {"on": False})
+
+
+class Notbetrieb(Base):
+    """B5: the model computer does not answer: every part counts as paused (the fixed sentence at once, the speakers'
+    file), but the Dienst-Wächter reports it; the panel never asks it on a question."""
+    def setUp(self):
+        super().setUp()
+        import wartung
+        self.w = wartung
+        self.old = common.load_config()
+        self.addCleanup(helpers.write_config, self.old)
+        c = json.loads(json.dumps(self.old))
+        c["models"]["host"] = "192.168.178.171"
+        c["chat"]["wartung"] = False                  # Notbetrieb needs no switch: it is the failure path
+        helpers.write_config(c)
+        self.addCleanup(steuer._status.update, t=0.0, d=None)
+
+    def gone(self):
+        t = time.monotonic()
+        with mock.patch.object(steuer, "call", return_value=None), redirect_stdout(io.StringIO()) as out:
+            steuer.status(now=t)
+        return out.getvalue()
+
+    def test_silence_turns_it_on_and_an_answer_off(self):
+        self.assertFalse(steuer.weg())
+        self.assertIn("steuer: notbetrieb an", self.gone())
+        self.assertTrue(steuer.weg())
+        self.assertTrue(self.w.paused("llm") and self.w.paused("asr") and self.w.paused("tts"))
+        self.assertFalse(self.w.quiet("llm"), "the Dienst-Wächter reports the outage")
+        self.assertEqual(self.w.sentence(), self.w.NOTBETRIEB[0])
+        self.assertEqual(self.w.sentence(en=True), self.w.NOTBETRIEB[1])
+        steuer._client = self.app
+        self.addCleanup(setattr, steuer, "_client", None)
+        with redirect_stdout(io.StringIO()) as out:
+            steuer.status(now=time.monotonic() + steuer.CACHE + 1)
+        self.assertIn("steuer: notbetrieb aus", out.getvalue())
+        self.assertFalse(steuer.weg() or self.w.paused("llm"))
+
+    def test_all_in_one_never(self):
+        self.gone()
+        helpers.write_config(self.old)
+        self.assertFalse(steuer.weg())
+        self.assertFalse(self.w.paused("llm"))
+
+    def test_a_question_never_asks(self):
+        self.gone()
+        with mock.patch.object(steuer, "call", side_effect=AssertionError("asked")):
+            self.assertTrue(self.w.paused("llm"))
+            self.w.sentence()
+
+    def test_the_speakers_play_its_own_sentence(self):
+        import esp32
+        pcm = b"\x01\x00" * esp32.OUT_RATE
+        with open(esp32.CLIP["not-de"], "wb") as f:
+            f.write(pcm)
+        self.addCleanup(os.remove, esp32.CLIP["not-de"])
+        self.gone()
+        self.assertEqual(esp32.pause_clip(), pcm)
+        with open(os.path.join(helpers.APP, "panel", "dateien.py")) as f:
+            self.assertIn("notbetrieb-satz-de.pcm", f.read())
 
 
 class Update(Base):

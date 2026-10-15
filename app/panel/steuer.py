@@ -13,6 +13,7 @@ update) are never sent there.
     logs(name, n)               the last log lines of a model unit, here or there
     modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
     cached()                    the last status without asking (the Wartungspause reads the model computer's pause)
+    weg()                       Notbetrieb: the model computer has not answered for GONE seconds
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
     update_modell_rechner()     its own update first, then this computer's (update.sh: python3 steuer.py update)
 
@@ -42,7 +43,8 @@ CACHE = 3              # seconds a status of the model computer is reused
 PUSH = 60              # seconds between two hand-overs of the speech settings when the hashes differ
 TIMEOUT = 5
 MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values())
-_status = {"t": 0.0, "d": None, "push": -PUSH, "wahl": None}
+_status = {"t": 0.0, "d": None, "push": -PUSH, "wahl": None, "try": 0.0, "ok": 0.0, "weg": False}
+GONE = 30              # seconds without an answer of the model computer before the panel runs in Notbetrieb
 _lock = threading.Lock()
 _client = None         # the self-tests put a client for the Wärter here
 UPDATE_WAIT = 2400     # seconds the panel computer's update waits for the model computer's
@@ -86,10 +88,14 @@ def status(cfg=None, now=None):
     d = call("status", cfg=cfg)
     d = d if isinstance(d, dict) and isinstance(d.get("einheiten"), dict) else None
     with _lock:
-        _status.update(t=now, d=d)
+        _status.update(t=now, d=d, **{"try": now}, **({"ok": now} if d is not None else {}))
+        gone, was = now - _status["ok"] > GONE, _status["weg"]
+        _status["weg"] = gone
         due = d is not None and d.get("einstellungen") != model_settings_hash(cfg) and now - _status["push"] >= PUSH
         if due:
             _status["push"] = now
+    if gone != was:
+        print(f"steuer: notbetrieb {'an' if gone else 'aus'}", flush=True)
     if due:
         einstellen(cfg, why="abgleich")
     if d is not None and d.get("modellwahl") != model_choice(cfg):
@@ -133,6 +139,17 @@ def modelle(cfg=None):
     return d if ok else None
 
 
+def weg(now=None):
+    """Notbetrieb (plan Raspberry-Pi split B5): the models run on another computer, it was asked lately and has not
+    answered for GONE seconds. Never asks it itself (the pause loop does, every few seconds)."""
+    if not remote():
+        return False
+    now = time.monotonic() if now is None else now
+    with _lock:
+        tried, ok = _status["try"], _status["ok"]
+    return bool(tried) and now - tried < 120 and now - ok > GONE
+
+
 def cached(max_age=60, now=None):
     """The last status of the model computer without asking it (None when older than max_age seconds): for paths that
     must never wait, like the Wartungspause on every question. The pause loop keeps it fresh (wartung.tick)."""
@@ -148,7 +165,7 @@ def for_live(now=None):
         return {"on": False}
     d = cached(now=now)
     if d is None:
-        return {"on": True, "ok": False}
+        return {"on": True, "ok": False, "notbetrieb": weg(now)}
     units = [u for u in (d.get("einheiten") or {}).values() if isinstance(u, dict) and u.get("state") != "unknown"]
     v = str(d.get("version") or "")
     return {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),

@@ -613,7 +613,8 @@ def tone_pcm():
 # ---------------------------------------------------------------- Wartungspause (wartung.py)
 # While the speech output pauses, a speaker and Home Assistant (wyoming.py) play the short sentence (wartung.SHORT)
 # from a file made while it still worked, else a short falling tone. No profile voice, nothing personal in it.
-CLIP = {"de": os.path.join(STATE, "wartung-satz-de.pcm"), "en": os.path.join(STATE, "wartung-satz-en.pcm")}   # 16-bit PCM, 24 kHz, mono
+CLIP = {"de": os.path.join(STATE, "wartung-satz-de.pcm"), "en": os.path.join(STATE, "wartung-satz-en.pcm"),   # 16-bit PCM, 24 kHz, mono
+        "not-de": os.path.join(STATE, "notbetrieb-satz-de.pcm"), "not-en": os.path.join(STATE, "notbetrieb-satz-en.pcm")}
 CLIP_MAX = 15 * OUT_RATE * 2
 CLIP_RETRY = 600            # seconds between two tries to make the file when the speech output failed
 _clip_try = {"t": 0.0}
@@ -628,9 +629,12 @@ def pause_tone():
 
 
 def pause_clip(en=False):
-    """What a speaker plays while the speech output pauses: the short sentence from its file, else pause_tone."""
+    """What a speaker plays while the speech output pauses: the short sentence from its file, else pause_tone; in
+    Notbetrieb (the model computer does not answer) its own sentence."""
+    import wartung
+    key = ("not-" if wartung.notbetrieb() and not wartung.state()["on"] else "") + ("en" if en else "de")
     try:
-        with open(CLIP["en" if en else "de"], "rb") as f:
+        with open(CLIP[key], "rb") as f:
             pcm = f.read(CLIP_MAX)
         if len(pcm) >= OUT_RATE:   # at least half a second
             return pcm[:len(pcm) // 2 * 2]
@@ -643,7 +647,7 @@ async def make_pause_clips(now):
     """Makes the files of the short sentence anew when one is missing or older than wartung.CLIP_DAYS (the loop of
     wartung.py, only while the speech output is not paused). True when it made them."""
     import wartung
-    paths = [CLIP["de"], CLIP["en"]]
+    paths = [CLIP["de"], CLIP["en"], CLIP["not-de"], CLIP["not-en"]]
     try:
         if all(now - os.path.getmtime(f) < wartung.CLIP_DAYS * 86400 for f in paths):
             return False
@@ -652,7 +656,7 @@ async def make_pause_clips(now):
     if now - _clip_try["t"] < CLIP_RETRY:
         return False
     _clip_try["t"] = now
-    for path, text in zip(paths, wartung.SHORT):
+    for path, text in zip(paths, wartung.SHORT + wartung.NOTBETRIEB):
         pcm = b""
         try:
             async for piece in tts_stream("", text):
@@ -667,7 +671,7 @@ async def make_pause_clips(now):
         with open(tmp, "wb") as f:
             f.write(pcm[:CLIP_MAX])
         os.replace(tmp, path)
-    print("wartung: satzdatei erneuert 2", flush=True)
+    print(f"wartung: satzdatei erneuert {len(paths)}", flush=True)
     return True
 
 

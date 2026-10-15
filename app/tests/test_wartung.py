@@ -362,7 +362,7 @@ class Speakers(Base):
         with mock.patch.object(esp32, "tts_stream", tts):
             self.assertTrue(run(esp32.make_pause_clips(T0)))
             self.assertFalse(run(esp32.make_pause_clips(T0 + 60)))   # fresh files are kept
-        self.assertEqual(made, [("", wartung.SHORT[0]), ("", wartung.SHORT[1])])   # no profile, no profile voice
+        self.assertEqual(made, [("", x) for x in wartung.SHORT + wartung.NOTBETRIEB])   # no profile, no profile voice
         self.assertEqual(esp32.pause_clip(), b"\x01\x00" * esp32.OUT_RATE)
         self.assertEqual(esp32.pause_clip(en=True), b"\x01\x00" * esp32.OUT_RATE)
 
