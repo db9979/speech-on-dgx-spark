@@ -209,7 +209,7 @@ OHNE_PROFIL = (
         "pro_lead", "pro_learn", "pro_mail", "pro_mail_from", "pro_mail_smart", "pro_max", "pro_on", "pro_parcel",
         "pro_place", "pro_quiet", "pro_tidy", "pro_tips", "pro_transit", "pro_weather", "pro_weather_at", "rate_back",
         "report_notify", "rm_inbox", "rm_morning", "rm_morning_at", "rm_week", "rm_tidy", "rm_model", "role", "roles",
-        "room_tell", "speak", "style", "svc_device", "svc_night", "svc_note", "tg_ha", "tg_images", "tg_private",
+        "room_tell", "speak", "style", "svc_device", "svc_night", "svc_note", "telefon_anrufbar", "tg_ha", "tg_images", "tg_private",
         "tg_push", "tg_voice", "timing", "trace_name", "turn", "tz", "voice",
 )
 

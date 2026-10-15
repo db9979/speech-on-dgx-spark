@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.633** Rot-Fix: Vorliebe „Der Spark darf mich anrufen“ im Einstellungs-Katalog eingeordnet
 - **V01.0.632** Telefon T4: der Spark ruft an: Weckruf und Erinnerung per Anruf, Rückruf für Anrufer von außen, Anruf an den Admin bei Dienstausfall außerhalb der Ruhezeiten, Testanruf
 - **V01.0.631** Umzug auf den Raspberry Pi: Einspielen scheiterte an fehlendem runuser
 - **V01.0.630** Pi-Installation: kleine Korrektur an der GPU-Prüfung
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.626** Telefon T1: den Spark vom Telefon im Haus anrufen (FRITZ!Box oder andere SIP-Anlage), Einrichtung mit Vorlagen, Suche und Prüfung
 - **V01.0.625** Rot-Fix: Notbetrieb-Schalter nur bei Spark teilen sichtbar
 - **V01.0.624** Kontingent: Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell, mit Vorwarnung und Nachschlag; feste Befehle gehen weiter
-- **V01.0.623** Rot-Fix: Tests für Notbetrieb mit Parakeet
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
