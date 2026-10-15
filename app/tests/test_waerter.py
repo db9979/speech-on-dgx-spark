@@ -74,8 +74,8 @@ class Waerter(Base):
         d = r.json()
         self.assertEqual(d["einheiten"]["speech-spark-asr"]["state"], "active")
         self.assertAlmostEqual(d["einheiten"]["speech-spark-asr"]["seit"], 90, delta=3)
-        self.assertEqual(d["einheiten"]["speech-spark-tts"], {"state": "failed", "seit": None})
-        self.assertEqual(d["einheiten"]["speech-spark-llm"], {"state": "unknown", "seit": None})
+        self.assertEqual(d["einheiten"]["speech-spark-tts"], {"state": "failed", "seit": None, "eintritt": 0})
+        self.assertEqual(d["einheiten"]["speech-spark-llm"], {"state": "unknown", "seit": None, "eintritt": 0})
         self.assertEqual(d["gpu"]["name"], "GB10")
         self.assertEqual(len([c for c in self.run.calls if c[:2] == ["systemctl", "show"]]), 1, "one call for all")
 
@@ -264,6 +264,108 @@ class Modelle(Base):
         self.assertIn(bad["fehler"], self.seite.GRUND)
         self.assertIn(f"waerter: eigen_dazu abgelehnt {bad['fehler']}", out.getvalue())
         self.assertEqual(self.m.eigene(), [])
+
+
+class Pause(Base):
+    """B4c: a Wartungspause on the model computer pauses the same parts in the panel; "Weiter" ends both; the Live view
+    shows the model computer in counts. The panel never waits for it on a question (only its last status counts)."""
+    def setUp(self):
+        super().setUp()
+        import wartung
+        self.w = wartung
+        self.old = common.load_config()
+        self.addCleanup(helpers.write_config, self.old)
+        c = json.loads(json.dumps(self.old))
+        c["models"]["host"] = "192.168.178.171"
+        c["chat"]["wartung"] = True
+        helpers.write_config(c)
+        steuer._client = self.app
+        self.addCleanup(setattr, steuer, "_client", None)
+        self.addCleanup(steuer._status.update, t=0.0, d=None)
+        for f in (common.WARTUNG_FILE,):
+            self.addCleanup(lambda f=f: os.path.exists(f) and os.remove(f))
+        wartung._cache.update(key=None, state=None)
+        self.addCleanup(wartung._cache.update, key=None, state=None)
+
+    def there(self, pause, age=0.0):
+        steuer._status.update(t=time.monotonic() - age, d={"einheiten": {}, "pause": pause})
+
+    def test_the_waerter_reports_only_what_the_panel_needs(self):
+        with open(common.WARTUNG_FILE, "w") as f:
+            json.dump({"on": True, "parts": ["llm"], "since": 1.0, "until": 2.0, "by": "kommandozeile",
+                       "channel": "kommandozeile"}, f)
+        d = self.post(body()).json()
+        self.assertEqual(set(d["pause"]), {"on", "parts", "since", "until", "channel"}, "never who")
+        self.assertIn("eintritt", d["einheiten"]["speech-spark-asr"])
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.post(body("weiter")).json(), {"ok": True, "war": True})
+            self.assertEqual(self.post(body("weiter")).json(), {"ok": True, "war": False})
+        self.assertFalse(os.path.exists(common.WARTUNG_FILE))
+        self.assertIn("waerter: weiter ok", out.getvalue())
+        self.assertIn("waerter: weiter keine", out.getvalue())
+
+    def test_its_pause_counts_here_while_its_time_runs(self):
+        now = time.time()
+        self.there({"on": True, "parts": ["llm", "asr"], "since": now - 60, "until": now + 600, "channel": "kommandozeile"})
+        s = self.w.state()
+        self.assertTrue(s["on"] and s.get("fern"))
+        self.assertTrue(self.w.paused("llm") and self.w.quiet("asr"))
+        self.assertFalse(self.w.paused("tts"))
+        self.assertTrue(self.w.view()["fern"])
+        helpers.set_config(wartung=False)
+        self.assertFalse(self.w.paused("llm"), "the panel's own switch decides")
+        helpers.set_config(wartung=True)
+        self.there({"on": True, "parts": ["llm"], "since": now - 900, "until": now - 1, "channel": "kommandozeile"})
+        self.assertFalse(self.w.paused("llm"), "its time is over: no pause here")
+        self.there({"on": True, "parts": ["llm"], "since": now, "until": now + 600}, age=steuer.PUSH + 5)
+        self.assertFalse(self.w.paused("llm"), "an old status counts as none")
+        self.there({"on": True, "parts": ["musik"], "since": now, "until": now + 600})
+        self.assertFalse(self.w.state()["on"], "a strange pause counts as none")
+
+    def test_a_question_never_waits_for_the_model_computer(self):
+        steuer._client = None
+        steuer._status.update(t=0.0, d=None)
+        with mock.patch.object(steuer, "call", side_effect=AssertionError("asked")):
+            self.assertFalse(self.w.paused("llm"))
+
+    def test_weiter_ends_both(self):
+        now = time.time()
+        self.there({"on": True, "parts": ["llm"], "since": now - 120, "until": now + 600})
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.w.end("weiter", now), 2)
+        self.assertIn("wartung: modell-rechner weiter ok", out.getvalue())
+        self.assertEqual(steuer._status["t"], 0.0, "its next status is asked fresh")
+
+    def test_the_automatic_looks_there(self):
+        steuer._status.update(t=time.monotonic(), d={"einheiten": {"speech-spark-asr": {"state": "active", "eintritt": 123},
+                                                                   "speech-spark-tts": {"state": "unknown"}}})
+        self.assertEqual(self.w._look("speech-spark-asr"), ("active", "123"))
+        self.assertIsNone(self.w._look("speech-spark-tts"))
+
+    def test_the_shell_on_the_model_computer_needs_no_panel_switch(self):
+        helpers.set_config(wartung=False)
+        c = common.load_config()
+        c["models"]["host"] = "127.0.0.1"
+        helpers.write_config(c)
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.w.cli(["llm", "30"])[0], 1, "an all-in-one Spark: its switch decides")
+            c["api"]["tls_listen"] = "192.168.178.171"
+            helpers.write_config(c)
+            self.assertEqual(self.w.cli(["llm", "30"])[0], 0)
+        self.assertTrue(os.path.exists(common.WARTUNG_FILE))
+
+    def test_live_shows_the_model_computer_in_counts(self):
+        import live
+        self.assertIn("modell", live.TARGETS)
+        self.assertEqual(steuer.for_live(), {"on": True, "ok": False})
+        steuer._status.update(t=time.monotonic(), d={"version": "V01.0.612", "pause": {"on": True},
+                                                      "einheiten": {"a": {"state": "active"}, "b": {"state": "failed"},
+                                                                    "c": {"state": "unknown"}}})
+        self.assertEqual(steuer.for_live(), {"on": True, "ok": True, "aktiv": 1, "n": 2, "version": "V01.0.612", "pause": True})
+        c = common.load_config()
+        c["models"]["host"] = "127.0.0.1"
+        helpers.write_config(c)
+        self.assertEqual(steuer.for_live(), {"on": False})
 
 
 class Steuer(Base):

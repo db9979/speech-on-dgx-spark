@@ -12,6 +12,8 @@ update) are never sent there.
     einstellen(cfg)             hands the speech settings to the model computer (common.model_settings)
     logs(name, n)               the last log lines of a model unit, here or there
     modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
+    cached()                    the last status without asking (the Wartungspause reads the model computer's pause)
+    for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
 
 When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
 again, at most every PUSH seconds: a save while it was away is not lost. Which model runs (common.MODEL_CHOICE) goes
@@ -122,6 +124,28 @@ def modelle(cfg=None):
     except KeyError:
         ok = False
     return d if ok else None
+
+
+def cached(max_age=60, now=None):
+    """The last status of the model computer without asking it (None when older than max_age seconds): for paths that
+    must never wait, like the Wartungspause on every question. The pause loop keeps it fresh (wartung.tick)."""
+    now = time.monotonic() if now is None else now
+    with _lock:
+        d, t = _status["d"], _status["t"]
+    return d if d is not None and t and now - t <= max_age else None
+
+
+def for_live(now=None):
+    """Zustand → Live, box „Modell-Rechner“ (only with the models on another computer): kind, counts and status only."""
+    if not remote():
+        return {"on": False}
+    d = cached(now=now)
+    if d is None:
+        return {"on": True, "ok": False}
+    units = [u for u in (d.get("einheiten") or {}).values() if isinstance(u, dict) and u.get("state") != "unknown"]
+    v = str(d.get("version") or "")
+    return {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
+            "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}
 
 
 def einstellen(cfg=None, why="gespeichert"):

@@ -549,7 +549,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Prozesse und Ports",
 "title": "Wärter (V01.0.609, Stufe B4a)",
-"text": "Wärter (V01.0.609, Stufe B4a): Auf dem Modell-Rechner führt app/tarswart.py (127.0.0.1:31007, hinter dem TLS-Tor) eine feste Befehlsliste aus: status und einheit start|stop|restart <teil>. Das Panel spricht ihn über steuer.py an (unit_state, active_seconds, systemctl, gpu); bei der Komplett-Installation ruft steuer.py wie bisher systemctl und nvidia-smi selbst. Unterschrift HMAC-SHA256 mit dem Wärter-Schlüssel aus der Kopplung. Selbsttest test_waerter. Seit V01.0.610 auch einstellen (Spracheinstellungen vom Panel, common.model_settings) und logs <teil> <n>. Seit V01.0.612 meldet der Status die Modellwahl (common.MODEL_CHOICE), die das Panel übernimmt; dazu modelle, wechseln <art> <id|zurueck>, eigen_dazu und eigen_weg für Zustand → Modelle (modelle.wechsel_anfragen ist die eine Quelle für beide Wege). Die qwen38-Spuren (common.qwen38_lanes) liegen jetzt in common."
+"text": "Wärter (V01.0.609, Stufe B4a): Auf dem Modell-Rechner führt app/tarswart.py (127.0.0.1:31007, hinter dem TLS-Tor) eine feste Befehlsliste aus: status und einheit start|stop|restart <teil>. Das Panel spricht ihn über steuer.py an (unit_state, active_seconds, systemctl, gpu); bei der Komplett-Installation ruft steuer.py wie bisher systemctl und nvidia-smi selbst. Unterschrift HMAC-SHA256 mit dem Wärter-Schlüssel aus der Kopplung. Selbsttest test_waerter. Seit V01.0.610 auch einstellen (Spracheinstellungen vom Panel, common.model_settings) und logs <teil> <n>. Seit V01.0.612 meldet der Status die Modellwahl (common.MODEL_CHOICE), die das Panel übernimmt; dazu modelle, wechseln <art> <id|zurueck>, eigen_dazu und eigen_weg für Zustand → Modelle (modelle.wechsel_anfragen ist die eine Quelle für beide Wege). Die qwen38-Spuren (common.qwen38_lanes) liegen jetzt in common. Dazu meldet der Status die Wartungspause des Modell-Rechners (common.WARTUNG_FILE, nur Teile und Zeiten) und je Einheit den Startzeitpunkt (eintritt, für die Automatik); weiter beendet sie. wartung.state legt sie mit der eigenen Pause zusammen (steuer.cached, nie eine Anfrage im Fragepfad); Live-Kasten „Modell-Rechner“ au"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Prozesse und Ports",
+"title": "Wärter (V01.0.609, Stufe B4a)",
+"text": "s steuer.for_live."
 },
 {
 "lang": "de",
@@ -7045,7 +7053,7 @@
 "file": "Architecture and data flow",
 "head": "Processes and ports",
 "title": "Wärter (V01.0.609, stage B4a)",
-"text": "Wärter (V01.0.609, stage B4a): on the model computer app/tarswart.py (127.0.0.1:31007, behind the TLS-Tor) runs a fixed list of commands: status and einheit start|stop|restart <part>. The panel talks to it through steuer.py (unit_state, active_seconds, systemctl, gpu); on the all-in-one install steuer.py calls systemctl and nvidia-smi itself as before. Signed with HMAC-SHA256 and the Wärter key from the pairing. Self-test test_waerter. Since V01.0.610 also einstellen (speech settings from the panel, common.model_settings) and logs <part> <n>. Since V01.0.612 the status reports the model choice (common.MODEL_CHOICE), which the panel takes over; plus modelle, wechseln <kind> <id|zurueck>, eigen_dazu and eigen_weg for Status → Models (modelle.wechsel_anfragen is the one source for both ways). The qwen38 lanes (common.qwen38_lanes) now live in common."
+"text": "Wärter (V01.0.609, stage B4a): on the model computer app/tarswart.py (127.0.0.1:31007, behind the TLS-Tor) runs a fixed list of commands: status and einheit start|stop|restart <part>. The panel talks to it through steuer.py (unit_state, active_seconds, systemctl, gpu); on the all-in-one install steuer.py calls systemctl and nvidia-smi itself as before. Signed with HMAC-SHA256 and the Wärter key from the pairing. Self-test test_waerter. Since V01.0.610 also einstellen (speech settings from the panel, common.model_settings) and logs <part> <n>. Since V01.0.612 the status reports the model choice (common.MODEL_CHOICE), which the panel takes over; plus modelle, wechseln <kind> <id|zurueck>, eigen_dazu and eigen_weg for Status → Models (modelle.wechsel_anfragen is the one source for both ways). The qwen38 lanes (common.qwen38_lanes) now live in common. The status also reports the model computer's Wartungspause (common.WARTUNG_FILE, parts and times only) and per unit when it started (eintritt, for the automatic); weiter ends it. wartung.state merges it with the own pause (steuer.cached, never a request on the question path); Live box \"Model computer\" from steuer.for_live."
 },
 {
 "lang": "en",

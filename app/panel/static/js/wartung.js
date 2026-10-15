@@ -8,7 +8,7 @@ function wpRender(){const d=WP.d,box=$('zwart');if(!box||!d)return;box.hidden=!d
   const list=$('zwartlist');
   if(d.paused){
     const names=(d.parts||[]).map(k=>wpPart(d,k)).join(', ');
-    const meta=[t('seit ','since ')+wpHM(d.since),d.by?t('von ','by ')+d.by:'',d.overdue?t('Zeit um, wartet auf Antwort','time is up, waiting for an answer'):t('endet spätestens ','ends at the latest ')+wpHM(d.until)].filter(Boolean).join(' · ');
+    const meta=[t('seit ','since ')+wpHM(d.since),d.by?t('von ','by ')+d.by:'',d.fern?t('auch auf dem Modell-Rechner','also on the model computer'):'',d.overdue?t('Zeit um, wartet auf Antwort','time is up, waiting for an answer'):t('endet spätestens ','ends at the latest ')+wpHM(d.until)].filter(Boolean).join(' · ');
     list.innerHTML=`<div class="zrow"><span class="pill ${d.overdue?'warn':'ok'}">${esc(t('Pause','Paused'))}</span><span><b>${esc(names)}</b><div class="mut">${esc(meta)}</div></span></div>`+
       `<div class="zrow"><span class="pill">${d.asked}</span><span>${esc(t('Anfragen mit dem Wartungssatz beantwortet','Requests answered with the maintenance sentence'))}</span></div>`+
       `<div class="zrow"><span class="pill">${d.held}</span><span>${esc(t('Hintergrundarbeit wartet und läuft danach','Background work waits and runs afterwards'))}</span></div>`;

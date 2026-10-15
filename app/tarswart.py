@@ -8,7 +8,8 @@ pinned certificate, only the panel computer, tlstor.py) and signs every request 
 a time (at most WINDOW seconds off) and a one-time number (each is taken once).
 
     status                      version, state and uptime of the model units, GPU, free memory, settings hash,
-                                the model choice (common.MODEL_CHOICE: which model runs is this computer's)
+                                the model choice (common.MODEL_CHOICE: which model runs is this computer's), its
+                                Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
@@ -18,6 +19,7 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     wechseln <art> <id|zurueck> a switch with the fixed rules (modelle.wechsel_anfragen), then speech-spark-wechsel
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
+    weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -35,7 +37,7 @@ from fastapi.responses import JSONResponse
 
 import modelle
 from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
-                    mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
+                    WARTUNG_FILE, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     run, shipped, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
@@ -44,7 +46,8 @@ MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
-COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg")
+COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg", "weiter")
+PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS)
@@ -79,8 +82,25 @@ def _states(units):
             t = int(props.get("ActiveEnterTimestampMonotonic", "0")) / 1e6
         except ValueError:
             t = 0
-        got[unit] = {"state": state, "seit": round(time.monotonic() - t) if state == "active" and t else None}
-    return {u: got.get(u, {"state": "unknown", "seit": None}) for u in units}
+        got[unit] = {"state": state, "seit": round(time.monotonic() - t) if state == "active" and t else None,
+                     "eintritt": int(t * 1e6)}
+    return {u: got.get(u, {"state": "unknown", "seit": None, "eintritt": 0}) for u in units}
+
+
+def pause():
+    """This computer's Wartungspause as the file says (only PAUSE_KEYS); the panel checks it (wartung._clean)."""
+    d = read_json(WARTUNG_FILE, {})
+    return {k: d[k] for k in PAUSE_KEYS if k in d} if isinstance(d, dict) and d.get("on") is True else {}
+
+
+def weiter():
+    try:
+        os.remove(WARTUNG_FILE)
+        print("waerter: weiter ok", flush=True)
+        return {"ok": True, "war": True}
+    except FileNotFoundError:
+        print("waerter: weiter keine", flush=True)
+        return {"ok": True, "war": False}
 
 
 def status():
@@ -90,7 +110,7 @@ def status():
         mem = None
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
-            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg)}
+            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause()}
 
 
 def einstellen(daten):
@@ -239,6 +259,8 @@ async def wart(request: Request):
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":
             return JSONResponse(eigen_dazu(daten))
+        if cmd == "weiter":
+            return JSONResponse(weiter())
         if cmd == "eigen_weg":
             return JSONResponse(eigen_weg(*args) if len(args) == 1 else eigen_weg(""))
         two = {"logs": logs, "wechseln": wechseln, "einheit": einheit}[cmd]

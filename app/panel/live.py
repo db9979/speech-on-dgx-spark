@@ -153,6 +153,8 @@ TARGETS = {
     "taten": ("Taten-Prüfung", "zurückgehalten und gestoppt · auf dem Spark", "spark", False),
     # Suchprüfung (suchpruefung.py): shown while it is on, test questions and the share found in the first five
     "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
+    # Spark teilen (steuer.py): the DGX with the models while the panel runs on another computer; reachable, counts
+    "modell": ("Modell-Rechner", "Sprache, LLM und Bilder · Heimnetz", "lan", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -1191,6 +1193,13 @@ def snapshot(view="admin", now=None):
         mb = modellseite.for_live()
     except Exception:
         mb = {"on": False}
+    try:
+        import steuer
+        mr = steuer.for_live(now)
+    except Exception:
+        mr = {"on": False}
+    if mr.get("on"):
+        used.add("modell")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1262,6 +1271,10 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{spr.get('fragen', 0)} Prüffragen · {spr.get('profile', 0)} Profile"
                         + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
                         + (" · prüft gerade" if spr.get("running") else ""))
+        if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
+            x["sub"] = ("nicht erreichbar" if not mr.get("ok") else
+                        f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
+                        + (" · Wartungspause" if mr.get("pause") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

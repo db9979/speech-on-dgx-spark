@@ -478,7 +478,7 @@ class Shown(Base):
         wartung.start(["llm"], 30, "main", now=time.time())
         d = wartung.view()
         self.assertEqual(set(d), {"on", "paused", "parts", "since", "until", "left", "overdue", "channel", "by", "asked",
-                                  "held", "choices"})
+                                  "held", "choices", "fern"})
 
 
 if __name__ == "__main__":

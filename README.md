@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.613** Spark split: maintenance pause on both computers, Live box for the model computer.
 - **V01.0.612** Spark split: model choice and Status → Models through the Wärter.
 - **V01.0.611** Red fix: speech-spark help shows teilen again.
 - **V01.0.610** Splitting the Spark B4b: speech settings and model service logs also with the panel on another computer
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.606** Splitting the Spark B1: one address for all model services (preparing the panel on a Raspberry Pi)
 - **V01.0.605** Update window tidied: each state shows only its buttons, log folded away
 - **V01.0.604** reMarkable: the morning sheet is sorted into sections (appointments, mails, weather …) instead of prose
-- **V01.0.603** Fix: Home Assistant (Wyoming) gets the device info at once, even while the voice engine is busy
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

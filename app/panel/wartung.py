@@ -19,6 +19,12 @@ It ends with "Weiter" (Zustand, sudo speech-spark weiter) or by itself: at the e
 paused parts; once they answer OK_N times in a row the pause ends. Do they not answer, the pause stays, the admins get
 one push and from then on the Dienst-Wächter counts it as an outage again (overdue).
 
+Models on another computer (plan Raspberry-Pi split, B4c): a pause there (its `speech-spark pause`, `modelle messen`,
+a switch) pauses the same parts here too, as long as its time runs; its status brings it (steuer.cached, kept fresh
+by the loop), so a question never waits for that computer. "Weiter" here ends both. The automatic looks at the
+model units there through the Wärter. On the model computer itself the shell command writes the pause without the
+panel's switch: the panel decides with its own switch whether it counts.
+
 It is no safety switch: it never lifts or eases a Notaus, the Notaus always goes first. A damaged file means no pause
 (the Spark goes on as usual). STATE/wartung.json is run time state (backup.STATE_LOCAL). Journal lines start with
 "wartung:" and hold only fixed words and numbers.
@@ -33,9 +39,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script (speech-spark pause)
 import features  # noqa: E402
 import guard  # noqa: E402
-from common import STATE, load_config, write_json  # noqa: E402
+from common import WARTUNG_FILE, load_config, model_side, write_json  # noqa: E402
 
-FILE = os.path.join(STATE, "wartung.json")
+FILE = WARTUNG_FILE
 # the parts that can pause: id -> (Dienst-Wächter id, name de, name en)
 PARTS = {"llm": ("qwen", "Sprachmodell", "Language model"), "asr": ("asr", "Spracherkennung", "Speech recognition"),
          "tts": ("tts", "Sprachausgabe", "Speech output"), "bild": ("bild", "Bilder malen", "Painting pictures")}
@@ -84,7 +90,31 @@ def _clean(d):
             "overdue": d.get("overdue") is True, "told": d.get("told") is True}
 
 
-def state():
+def _fern(now=None):
+    """The model computer's pause while its time runs (from its last status, never asked here), else None."""
+    try:
+        import steuer
+        if not steuer.remote():
+            return None
+        p = _clean((steuer.cached() or {}).get("pause") or {})
+    except Exception:
+        return None
+    return p if p and p["on"] and (time.time() if now is None else now) < p["until"] else None
+
+
+def state(now=None):
+    """The pause here, together with the model computer's (fern=True) when the models run there."""
+    s = _local()
+    f = _fern(now)
+    if not f:
+        return s
+    if not s["on"]:
+        return dict(f, fern=True, overdue=False, told=False)
+    return dict(s, parts=[p for p in PARTS if p in s["parts"] or p in f["parts"]], until=max(s["until"], f["until"]),
+                fern=True)
+
+
+def _local():
     """The pause as the file says (read anew when it changed; a stat per call). Damaged: no pause."""
     try:
         st = os.stat(FILE)
@@ -170,7 +200,7 @@ def start(parts, minutes, by="", channel="panel", now=None):
         raise ValueError("parts")
     if not isinstance(minutes, int) or isinstance(minutes, bool) or not MIN_MIN <= minutes <= MAX_MIN:
         raise ValueError("minutes")
-    old = state()
+    old = _local()
     d = {"on": True, "parts": parts, "since": old["since"] if old["on"] else now, "until": now + minutes * 60,
          "by": str(by or "")[:40], "channel": channel if channel in CHANNELS else "panel", "overdue": False, "told": False}
     if not old["on"]:
@@ -185,7 +215,7 @@ def start(parts, minutes, by="", channel="panel", now=None):
 def more(minutes=MORE, now=None):
     """"+15 min": the running pause lasts longer (never more than MAX_MIN from now)."""
     now = time.time() if now is None else now
-    s = state()
+    s = _local()
     if not s["on"]:
         raise ValueError("off")
     d = dict(s, until=min(max(s["until"], now) + minutes * 60, now + MAX_MIN * 60), overdue=False, told=False)
@@ -195,11 +225,20 @@ def more(minutes=MORE, now=None):
 
 
 def end(why, now=None):
-    """Ends the pause (why: weiter, geprueft, schalter_aus). Returns the minutes it lasted, None when none ran."""
+    """Ends the pause (why: weiter, geprueft, schalter_aus) and, with "weiter", the model computer's too. Returns the
+    minutes it lasted, None when none ran."""
     now = time.time() if now is None else now
-    s = state()
+    s, f = _local(), _fern(now)
+    if f and why == "weiter":
+        import steuer
+        d = steuer.call("weiter")
+        ok = isinstance(d, dict) and d.get("ok") is True
+        print(f"wartung: modell-rechner weiter {'ok' if ok else 'fehler'}", flush=True)
+        if ok:
+            with steuer._lock:
+                steuer._status.update(t=0.0)       # its next status is asked fresh
     if not s["on"]:
-        return None
+        return int((now - f["since"]) // 60) if f and why == "weiter" else None
     try:
         os.remove(FILE)
     except FileNotFoundError:
@@ -240,7 +279,13 @@ async def tick(now=None, answers=_answers):
     time over (an automatic pause: as soon as its units stopped starting): the parts are looked at, OK_N good looks in a
     row end it; not answering when the time is over: the pause stays, one push."""
     now = time.time() if now is None else now
-    s = state()
+    try:            # models on another computer: its status (with its pause) stays fresh without a question waiting
+        import steuer
+        if steuer.remote():
+            await asyncio.to_thread(steuer.status)
+    except Exception as e:
+        print("wartung: modell-rechner status fehlgeschlagen", type(e).__name__, flush=True)
+    s = _local()
     if not s["on"]:
         return None
     if not admin_on():
@@ -293,8 +338,13 @@ def watched():
 
 
 def _look(unit):
-    """(ActiveState, when it last became active) of a unit, None when it is not installed."""
+    """(ActiveState, when it last became active) of a unit, None when it is not installed. A model unit on another
+    computer: from its Wärter's status."""
     import core
+    import steuer
+    if steuer._remote_unit(unit):
+        u = ((steuer.status() or {}).get("einheiten") or {}).get(unit) or {}
+        return None if u.get("state") in (None, "unknown") else (u["state"], str(u.get("eintritt", "")))
     code, out = core.run(["systemctl", "show", unit, "-p", "LoadState,ActiveState,ActiveEnterTimestampMonotonic"])
     props = dict(x.split("=", 1) for x in out.splitlines() if "=" in x)
     if code != 0 or props.get("LoadState") != "loaded":
@@ -374,6 +424,7 @@ def view(now=None):
     s = state()
     out = {"on": admin_on(), "paused": s["on"], "parts": s["parts"], "since": s["since"] or None, "until": s["until"] or None,
            "left": left_min(now), "overdue": s["overdue"], "channel": s["channel"], "by": _by_name(s["by"]),
+           "fern": s.get("fern", False),
            "asked": _n["asked"] if s["on"] else 0, "held": _n["held"] if s["on"] else 0,
            "choices": {"parts": [[k, v[1], v[2]] for k, v in PARTS.items()], "minutes": list(MINUTES), "more": MORE}}
     return out
@@ -398,7 +449,7 @@ def for_live(now=None):
     if not s["on"] or not admin_on():
         return {"on": False}
     return {"on": True, "parts": s["parts"], "left": left_min(now), "overdue": s["overdue"],
-            "asked": _n["asked"], "held": _n["held"]}
+            "asked": _n["asked"], "held": _n["held"], "fern": s.get("fern", False)}
 
 
 # ---------------------------------------------------------------- API (admin)
@@ -474,7 +525,7 @@ def cli(args, now=None):
         if mins is not None:
             guard.log("wartung", by="kommandozeile", detail="Wartungspause beendet")
         return 0, "Keine Wartungspause lief." if mins is None else f"Wartungspause beendet nach {mins} min."
-    if not admin_on():
+    if not admin_on() and not model_side():   # on the model computer the panel's own switch decides
         print("wartung: kommandozeile abgelehnt schalter_aus", flush=True)
         return 1, "Die Wartungspause ist aus. Einschalten unter Funktionen → Wartungspause."
     what = args[0] if args else "llm"

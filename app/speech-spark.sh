@@ -246,9 +246,13 @@ as_panel_user() {
 }
 
 # Wartungspause (app/panel/wartung.py): while qwen38, ASR or TTS is updated the Spark pauses on purpose.
+# the Wartungspause works with the panel here, or on the model computer of a split install (its panel elsewhere
+# honours it, plan Raspberry-Pi split B4c)
+can_pause() { [ "$(mode)" = full ] || [ -n "$(cfg '.api.tls_listen // ""')" ]; }
+
 cmd_pause() {
   need_root pause "$@"
-  [ "$(mode)" = full ] || die "no web panel installed"
+  can_pause || die "no web panel installed"
   as_panel_user wartung.py "$@"
 }
 
@@ -365,7 +369,7 @@ cmd_messen_intern() {
   [ "${#ids[@]}" -gt 0 ] || { echo "modelle: messung ende nichts geladen"; return 1; }
   if ss -Hltn "sport = :$MESS_PORT" | grep -q .; then echo "modelle: messung abgelehnt port belegt"; return 1; fi
   minutes=$(( ${#ids[@]} * 25 + 10 )); [ "$minutes" -gt 240 ] && minutes=240
-  if [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+  if can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
     as_panel_user wartung.py llm "$minutes" && MESS_PAUSE=1 || echo "modelle: messung ohne wartungspause"
   fi
   mapfile -t MESS_QWEN < <(systemctl list-units 'qwen38-*' speech-spark-llm.service speech-spark-llmtor.service \
@@ -432,7 +436,7 @@ cmd_umzug_intern() {
   as_panel_user ../modelle.py umzug-merken "${units[@]}" || { echo "modelle: uebernahme abgelehnt schon umgezogen"; return 1; }
   trap umzug_abbruch EXIT
   trap 'exit 1' INT TERM
-  if [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+  if can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
     as_panel_user wartung.py llm 60 && UMZUG_PAUSE=1 || echo "modelle: uebernahme ohne wartungspause"
   fi
   if [ "${#units[@]}" -gt 0 ]; then
@@ -496,7 +500,7 @@ wechsel() {  # $1 = art, $2 = id
     out=$(as_panel_user ../modelle.py vorbereiten "$mid" --revision "$rev") || true
     commit=$(tail -n1 <<<"$out")
     [ "$commit" = "$rev" ] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; return 1; }
-    if [ "$art" = llm ] && [ "$(mode)" = full ] && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+    if [ "$art" = llm ] && can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
       as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: wechsel ohne wartungspause"
     fi
     as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; return 1; }

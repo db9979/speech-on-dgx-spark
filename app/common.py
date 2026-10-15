@@ -602,6 +602,7 @@ QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-ima
 # the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
 WAERTER_PORT = 31007
 WAERTER_KEY = os.path.join(STATE, "waerter.key")
+WARTUNG_FILE = os.path.join(STATE, "wartung.json")   # the Wartungspause (panel/wartung.py); on the model computer its wish
 
 
 def run(cmd, timeout=10, env=None):
@@ -835,6 +836,12 @@ def _pin_models():
             _init(self, *args, **kw)
         __init__.pinned = True
         cls.__init__ = __init__
+
+
+def model_side(cfg=None):
+    """True on the model computer of a split install: its TLS-Tor serves a panel on another computer (api.tls_listen)."""
+    cfg = load_config() if cfg is None else cfg
+    return bool(str((cfg.get("api") or {}).get("tls_listen") or "").strip())
 
 
 def model_url(art, path="", cfg=None):

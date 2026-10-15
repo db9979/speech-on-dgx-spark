@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.613** · 2026-10-15 · Spark teilen B4c: Wartungspause des Modell-Rechners gilt auch im Panel, Weiter beendet beide; Live-Kasten Modell-Rechner.
 - **V01.0.612** · 2026-10-15 · Spark teilen B4c: Welches Modell läuft, bestimmt der Modell-Rechner; Zustand → Modelle mit Wechseln und eigenen Modellen über den Wärter.
 - **V01.0.611** · 2026-10-15 · Rot-Fix: Hilfetext von speech-spark reicht wieder bis zu den neuen Zeilen für teilen.
 - **V01.0.610** · 2026-10-15 · Spark teilen Stufe B4b: die Spracheinstellungen gehen beim Speichern an den Modell-Rechner (nur bekannte Schlüssel, nie Adressen, Ports oder Backends, Modelle nur von Qwen) und werden nachgeholt, wenn er weg war; Zustand → Logs zeigt die Logs der Modell-Dienste über den Wärter
