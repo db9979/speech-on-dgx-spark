@@ -89,10 +89,6 @@ def admin_on():
     return features.admin_on("mymcp")
 
 
-def allowed(uid):
-    return bool(uid) and features.allowed("mymcp", uid)
-
-
 # ---------------------------------------------------------------- stored services
 def _file(uid):
     return profiles._path(uid, "mcp-dienste.json")
@@ -379,7 +375,7 @@ def describe(p):
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not ctx.get("private", True) or not allowed(who["id"]):
+    if not who or not ctx.get("own") or not ctx.get("private", True) or not features.allowed("mymcp", who["id"]):
         return None
     st = admin_state()
     services = load(who["id"])
@@ -400,7 +396,7 @@ def _clip(text, most):
 
 async def tool(name, args, ctx):
     uid = ctx["who"]["id"]
-    if not allowed(uid):
+    if not features.allowed("mymcp", uid):
         return "Nicht verfügbar."
     hit = next(((s, t) for n, s, t in tools_for(uid, ("read", "act")) if n == name), None)
     if not hit:
@@ -447,7 +443,7 @@ async def answer(ctx, latest):
                 "system": f"Eigener MCP-Dienst: {what} wurde NICHT ausgeführt, weil der Nutzer nicht zugestimmt hat."}
     try:
         notaus.stop("aktion", uid)
-        if not allowed(uid):
+        if not features.allowed("mymcp", uid):
             raise ValueError("eigene MCP-Dienste sind für dich aus")
         # still released for acting, unchanged since the proposal
         hit = next(((s, t) for n, s, t in tools_for(uid, ("act",)) if n == p["name"] and t["name"] == p["tool"]
@@ -681,7 +677,7 @@ def _on(prof=Depends(browser_profile)):
 
 
 def _may(prof):
-    if not allowed(prof["id"]):
+    if not features.allowed("mymcp", prof["id"]):
         raise HTTPException(403, features.missing_text("mymcp", prof["id"]) or "„Eigene MCP-Dienste“ ist für dein Profil nicht freigegeben.")
 
 
@@ -695,7 +691,7 @@ def public(uid, s, st=None):
 
 def _view(uid):
     st = admin_state()
-    return {"admin": admin_on(), "on": allowed(uid), "why": features.reason("mymcp", uid),
+    return {"admin": admin_on(), "on": features.allowed("mymcp", uid), "why": features.reason("mymcp", uid),
             "oauth": features.allowed("mymcpoauth", uid), "jobs": features.allowed("mymcpjobs", uid),
             "lan": netguard.lan_allowed(), "hosts": st["hosts"], "max": MAX_SERVICES, "max_tools": MAX_TOOLS,
             "services": [public(uid, s, st) for s in load(uid)]}

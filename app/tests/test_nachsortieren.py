@@ -81,10 +81,10 @@ class Defaults(Base):
         self.assertNotIn("nachsortieren", features.DEFAULT_ON)
         self.assertEqual(features.BY_KEY["nachsortieren"].parent, "documents")
         helpers.set_config(rerank=False)
-        self.assertFalse(nachsortieren.allowed(uid_of("Nachsortieren Aus")))
-        self.assertFalse(nachsortieren.allowed(None))      # a guest has no profile
+        self.assertFalse(features.allowed("nachsortieren", uid_of("Nachsortieren Aus")))
+        self.assertFalse(features.allowed("nachsortieren", None))      # a guest has no profile
         helpers.set_config(rerank=True)
-        self.assertTrue(nachsortieren.allowed(uid_of("Nachsortieren Aus")))
+        self.assertTrue(features.allowed("nachsortieren", uid_of("Nachsortieren Aus")))
 
     def test_the_admin_validates_model_and_budget(self):
         for key, bad in (("rerank_ms", 299), ("rerank_ms", 2001), ("rerank_ms", "800"), ("rerank_model", "riesig")):

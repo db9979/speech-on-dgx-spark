@@ -142,10 +142,6 @@ def admin_on(c=None):
     return features.admin_on("speicher", c)
 
 
-def allowed(uid):
-    return bool(uid) and features.allowed("speicher", uid)
-
-
 def _chat():
     return features.chat_cfg()
 
@@ -1410,7 +1406,7 @@ def bring_back(uid, rel):
     except RuntimeError:
         pass
     tid = offloaded(uid, rel)
-    if not tid or not allowed(uid):
+    if not tid or not features.allowed("speicher", uid):
         return False
     lk = _back_locks.setdefault(uid, threading.Lock())
     with lk:
@@ -1552,7 +1548,7 @@ async def _note(uid, t, kind):
 
 
 def profiles_on(uid):
-    return admin_on() and allowed(uid)
+    return admin_on() and features.allowed("speicher", uid)
 
 
 # ---------------------------------------------------------------- the loop
@@ -1596,7 +1592,7 @@ async def round_once(now=None):
         _slots = asyncio.Semaphore(AT_ONCE)
     jobs = []
     for uid in profiles.user_ids():
-        if not allowed(uid):
+        if not features.allowed("speicher", uid):
             continue
         for t in targets(uid):
             if due(uid, t, _state(uid, t["id"]), now):
@@ -1627,7 +1623,7 @@ def probes():
     if not admin_on():
         return out
     for uid in profiles.user_ids():
-        if not allowed(uid):
+        if not features.allowed("speicher", uid):
             continue
         for t in targets(uid):
             if t["kind"] in LOGIN_KINDS:
@@ -1682,7 +1678,7 @@ def public(uid, t, st=None):
 
 def _view(uid):
     c = _chat()
-    return {"admin": admin_on(c), "on": allowed(uid), "why": features.reason("speicher", uid),
+    return {"admin": admin_on(c), "on": features.allowed("speicher", uid), "why": features.reason("speicher", uid),
             "lan": lan_ok(c), "folder": folder_ok(c), "offload": offload_ok(c), "offload_days": OFFLOAD_DAYS, "root": root(c) if folder_ok(c) else "", "max": MAX_TARGETS,
             "key": bool(load(uid)["key"]) and _key(uid) is not None or not load(uid)["key"],
             "areas": [{"id": k, "name": [v[0], v[1]]} for k, v in AREAS.items()],
@@ -1702,7 +1698,7 @@ def overview():
                          "bytes": sum(int(x.get("size") or 0) for x in st["files"].values()),
                          "pending": (st["last"] or {}).get("pending", 0), "offload": t["offload"],
                          "away": sum(1 for x in st["files"].values() if x.get("off")), "errors_today": sum(1 for x in day if not x.get("ok")),
-                         "allowed": allowed(uid), "running": bool(_running.get((uid, t["id"])))})
+                         "allowed": features.allowed("speicher", uid), "running": bool(_running.get((uid, t["id"])))})
     return {"on": admin_on(), "lan": lan_ok(), "folder": folder_ok(), "root": root(), "rows": rows,
             "sum": {"targets": len(rows), "bytes": sum(r["bytes"] for r in rows), "failing": sum(1 for r in rows if r["fail"]),
                     "errors_today": sum(r["errors_today"] for r in rows)}}
@@ -1717,7 +1713,7 @@ def _on(prof=Depends(browser_profile)):
 
 
 def _may(prof):
-    if not allowed(prof["id"]):
+    if not features.allowed("speicher", prof["id"]):
         raise HTTPException(403, features.missing_text("speicher", prof["id"]) or "Kopie meiner Daten ist ausgeschaltet.")
 
 

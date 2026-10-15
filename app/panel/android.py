@@ -88,20 +88,6 @@ def profile_on(uid):
     return features.profile_on("android", uid)
 
 
-def allowed(uid):
-    return features.allowed("android", uid)
-
-
-def live_ok(uid):
-    """Notes at once over a lasting connection (admin switch, not blocked, the profile's preference)."""
-    return features.allowed("androidlive", uid)
-
-
-def update_ok(uid):
-    """The app may load and install its own update (admin switch android_update, not blocked)."""
-    return features.allowed("androidupdate", uid)
-
-
 def newer(have, kept):
     """True when the Spark keeps a newer version than `have`, None when one of them is unknown."""
     if not all(v and VERSION.fullmatch(v) for v in (have, kept)):
@@ -300,7 +286,7 @@ def _base(body):
 # ---------------------------------------------------------------- notes while the app is closed
 def reachable(uid, now=None):
     now = time.time() if now is None else now
-    return allowed(uid) and now - _polled.get(uid, -1e12) < POLLED_KEEP
+    return features.allowed("android", uid) and now - _polled.get(uid, -1e12) < POLLED_KEEP
 
 
 def keep(uid, title, body, tag="", now=None):
@@ -347,7 +333,7 @@ def profile_get(request: Request, prof=Depends(own_profile)):
         waiting = bool(_waiters.get(uid))
     return {"enabled": admin_on(), "on": profile_on(uid), "app": meta() if admin_on() else None,
             "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive") and not features.blocked("androidlive", uid),
-            "live": live_ok(uid), "connected": waiting, "update": update_ok(uid)}
+            "live": features.allowed("androidlive", uid), "connected": waiting, "update": features.allowed("androidupdate", uid)}
 
 
 @router.post("/api/profile/android/link", dependencies=[Depends(assistant)])
@@ -374,7 +360,7 @@ async def profile_link(request: Request, prof=Depends(_on)):
 def app_notes(request: Request, after: int = 0, prof=Depends(browser_profile)):
     """The app's question every 15 minutes: notes since number `after` (the app keeps the last one)."""
     guard.limit(request, "android", prof["id"])
-    if not allowed(prof["id"]):
+    if not features.allowed("android", prof["id"]):
         raise HTTPException(403, "the Android app is turned off")
     saw(request, prof)
     return _answer(prof["id"], after)
@@ -384,8 +370,9 @@ def _answer(uid, after):
     items, last = notes(uid, max(0, min(after, 10 ** 9)))
     m = meta()
     return {"notes": [{"n": x["n"], "title": x["title"], "body": x["body"], "tag": x["tag"]} for x in items],
-            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None, "live": live_ok(uid),
-            "update": update_ok(uid)}
+            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None,
+            "live": features.allowed("androidlive", uid),
+            "update": features.allowed("androidupdate", uid)}
 
 
 @router.get("/api/android/wait", dependencies=[Depends(assistant)])
@@ -395,7 +382,7 @@ async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profil
     import asyncio
     uid = prof["id"]
     guard.limit(request, "androidwait", uid)
-    if not allowed(uid) or not live_ok(uid):
+    if not features.allowed("android", uid) or not features.allowed("androidlive", uid):
         raise HTTPException(403, "notes at once are turned off")
     saw(request, prof)
     after = max(0, min(after, 10 ** 9))
@@ -444,7 +431,7 @@ def app_apk(request: Request, prof=Depends(browser_profile)):
     checks the file itself before Android installs it; this only hands out what the Spark checked when fetching."""
     uid = prof["id"]
     guard.limit(request, "android", uid)
-    if not update_ok(uid):
+    if not features.allowed("androidupdate", uid):
         print("android: app update refused for", profiles.log_name(prof), "reason switched off or blocked", flush=True)
         raise HTTPException(403, "Update in der App hat der Admin nicht freigegeben.")
     m = meta()
@@ -463,7 +450,7 @@ def apk_response(request: Request, t: str = ""):
     guard.limit(request, "pair")
     uid = use_token(t)
     m = meta()
-    if not uid or not m or not allowed(uid):
+    if not uid or not m or not features.allowed("android", uid):
         raise HTTPException(404, "Der Download-Link passt nicht oder ist abgelaufen. Im Spark einen neuen holen.")
     return FileResponse(APK, media_type="application/vnd.android.package-archive",
                         filename=f"spark-{m['version']}.apk", headers={"Cache-Control": "no-store"})

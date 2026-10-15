@@ -208,11 +208,6 @@ def find_shared(uid, doc_id):
     return None
 
 
-def fresh_on(uid):
-    """"Neueste zuerst" (under reMarkable-Notizen): newer pieces gain a little in the search, hits carry their date."""
-    return bool(uid) and features.allowed("rmfresh", uid)
-
-
 async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True, trace=None):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
     only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
@@ -221,11 +216,11 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     keep=False: the meaning model is used only if it runs anyway and is not held awake by it. With "Treffer
     nachsortieren" (nachsortieren.py, Stufe 3) the mix hands over its 30 best and the cross-encoder picks k."""
     import nachsortieren
-    rerank = nachsortieren.allowed(uid)
+    rerank = features.allowed("nachsortieren", uid)
     want, k = k, (nachsortieren.CANDIDATES if rerank else k)
     qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
-    fresh = fresh_on(uid)
+    fresh = features.allowed("rmfresh", uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
     hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh)
     for o in _sharers(uid):

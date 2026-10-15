@@ -93,7 +93,7 @@ class Tipps(unittest.TestCase):
         self.assertNotIn("tips_on", profiles.SETTINGS)                 # no release switch per profile any more
         self.assertIs(profiles.SETTINGS["pro_tips"][0], True)          # the note by itself: a preference, on unless off
         self.assertFalse(features.allowed("tipps", None))
-        self.assertFalse(tipps.on(None))
+        self.assertFalse(features.allowed("tipps", None))
         self.assertIsNone(tipps.wish(None, WISH))
         helpers.set_config(feature_tips=False)
         self.assertIsNone(tipps.wish(self.uid, WISH, now=T0))
@@ -101,15 +101,15 @@ class Tipps(unittest.TestCase):
         self.assertEqual(self.p.post("/api/profile/tipps/f:tasks", json={"do": "setup"}).status_code, 403)
         self.assertFalse(self.p.get("/api/whoami").json()["tipps"])
         helpers.set_config(feature_tips=True, spark_help=False)   # it lives under "Hilfe zum Spark"
-        self.assertFalse(tipps.on(self.uid))
+        self.assertFalse(features.allowed("tipps", self.uid))
         helpers.set_config(spark_help=True)
-        self.assertTrue(tipps.on(self.uid))                        # released: on for the profile at once
+        self.assertTrue(features.allowed("tipps", self.uid))                        # released: on for the profile at once
         # the admin blocks it for this one profile
         block(self, "tipps", self.uid)
         self.assertIsNone(tipps.wish(self.uid, WISH, now=T0))
         self.assertFalse(self.p.get("/api/whoami").json()["tipps"])
         self.assertEqual(self.p.post("/api/profile/tipps/f:tasks", json={"do": "setup"}).status_code, 403)
-        self.assertTrue(tipps.on(self.ouid))                       # only that one
+        self.assertTrue(features.allowed("tipps", self.ouid))                       # only that one
         block(self, "tipps", self.uid, on=True)
         self.assertTrue(self.p.get("/api/whoami").json()["tipps"])
         guest = TestClient(panel.app)

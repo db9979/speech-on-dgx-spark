@@ -29,6 +29,7 @@ helpers.start()
 import panel  # noqa: E402
 import documents  # noqa: E402
 import extras  # noqa: E402
+import features  # noqa: E402
 import guard  # noqa: E402
 import profiles  # noqa: E402
 import remarkable  # noqa: E402
@@ -253,7 +254,7 @@ class Switches(Base):
         self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # the admin blocked this profile
         c.put("/api/profile/settings", json={"rm_on": True, "deny": {}})
         self.assertEqual(c.get("/api/profile/remarkable").status_code, 403)        # the profile cannot lift it
-        self.assertFalse(remarkable.allowed(uid))
+        self.assertFalse(features.allowed("remarkable", uid))
         self.block("remarkable", uid, on=True)
         self.assertEqual(c.get("/api/profile/remarkable").status_code, 200)
         self.block("docpics", uid)
@@ -270,7 +271,7 @@ class Switches(Base):
                              ("post", "/api/profile/remarkable/send"), ("delete", "/api/profile/remarkable")):
             r = getattr(g, method)(path, **({"json": {}} if method in ("post", "put") else {}))
             self.assertIn(r.status_code, (401, 403), path)
-        self.assertFalse(remarkable.allowed(""))
+        self.assertFalse(features.allowed("remarkable", ""))
 
     def test_device_keys_cannot_manage_it(self):
         c, uid = self.ready("Rmkey")
@@ -613,20 +614,20 @@ class Fresh(Base):
             self.assertIs(json.load(f)["chat"]["remarkable_fresh"], False)
         self.assertNotIn("rm_fresh", profiles.SETTINGS)                      # no release switch of its own
         c, uid = self.paired("Rmfreshoff")
-        self.assertFalse(wissen.fresh_on(uid))
+        self.assertFalse(features.allowed("rmfresh", uid))
         helpers.set_config(remarkable_fresh=True)
-        self.assertTrue(wissen.fresh_on(uid))                                # released: works at once
+        self.assertTrue(features.allowed("rmfresh", uid))                            # released: works at once
         self.block("rmfresh", uid)
-        self.assertFalse(wissen.fresh_on(uid))                               # the admin blocked this profile
+        self.assertFalse(features.allowed("rmfresh", uid))                           # the admin blocked this profile
         c.put("/api/profile/settings", json={"rm_fresh": True})
-        self.assertFalse(wissen.fresh_on(uid))                               # the profile cannot lift it
+        self.assertFalse(features.allowed("rmfresh", uid))                           # the profile cannot lift it
         self.block("rmfresh", uid, on=True)
-        self.assertTrue(wissen.fresh_on(uid))
+        self.assertTrue(features.allowed("rmfresh", uid))
         helpers.set_config(remarkable=False)
-        self.assertFalse(wissen.fresh_on(uid))                               # sits under "reMarkable-Notizen"
+        self.assertFalse(features.allowed("rmfresh", uid))                           # sits under "reMarkable-Notizen"
         helpers.set_config(remarkable=True, remarkable_fresh=False)
-        self.assertFalse(wissen.fresh_on(uid))
-        self.assertFalse(wissen.fresh_on(""))                                # a guest never
+        self.assertFalse(features.allowed("rmfresh", uid))
+        self.assertFalse(features.allowed("rmfresh", ""))                            # a guest never
         self.assertEqual(TestClient(panel.app).put("/api/profile/settings", json={"rm_fresh": True}).status_code, 401)
 
     def test_page_times_from_the_content(self):

@@ -289,18 +289,6 @@ def chat_cfg():
     return features.chat_cfg()
 
 
-def on(uid, c=None):
-    return bool(uid) and features.allowed("hilfe", uid, c)
-
-
-def suggest_on(uid, c=None):
-    return bool(uid) and features.allowed("hilfevorschlag", uid, c)
-
-
-def page_on(uid, c=None):
-    return bool(uid) and features.allowed("hilfeseite", uid, c)
-
-
 LEVELS = ("profile", "manager", "admin")
 # docs a profile without admin rights is answered from (the rest is about running the Spark)
 USER_DOCS = {"assistent", "assistant", "iphone-app", "android-app", "app-datenschutz", "app-privacy"}
@@ -1302,10 +1290,10 @@ SUGGEST_HINT = (" Passt eine Einstellung, biete sie mit spark_vorschlag als Kart
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not on(who["id"]) or ctx.get("client") == "mcp":
+    if not who or not ctx.get("own") or not features.allowed("hilfe", who["id"]) or ctx.get("client") == "mcp":
         return None   # (over MCP a program asks, the help is for people)
     tools, hint, changes = [TOOL], HINT, set()
-    if suggest_on(who["id"]):
+    if features.allowed("hilfevorschlag", who["id"]):
         tools.append(SUGGEST)
         hint += SUGGEST_HINT
         changes = {"spark_vorschlag"}   # locked after outside text and by the Notaus like any change
@@ -1324,7 +1312,7 @@ def _lang(ctx, text):
 async def tool(name, args, ctx):
     who = ctx.get("who")
     uid = who and who["id"]
-    if not uid or not on(uid):
+    if not uid or not features.allowed("hilfe", uid):
         return "Die Hilfe zum Spark ist für dieses Profil aus."
     page = ctx.get("page") if isinstance(ctx.get("page"), str) and PAGE.fullmatch(ctx.get("page")) else None
     if name == "spark_hilfe":
@@ -1333,7 +1321,7 @@ async def tool(name, args, ctx):
         return answer_text(q, uid, _lvl(ctx.get("admin")), page, _lang(ctx, q), ctx.get("request"), ctx.get("private") is not False,
                            org, bool(ctx.get("app")), ctx.get("focus"))
     if name == "spark_vorschlag":
-        if not suggest_on(uid):
+        if not features.allowed("hilfevorschlag", uid):
             return "Vorschläge sind hier aus."
         wanted = args.get("functions") if isinstance(args.get("functions"), list) else []
         recipe = args.get("recipe") if args.get("recipe") in RECIPES else None
@@ -1367,7 +1355,7 @@ async def briefing(uid, zone=None):
 def focus_of(body, uid, c=None):
     """The switch a "?" asked about (sw:<id> or me:<key>), when this profile may use the page help."""
     f = body.get("focus") if isinstance(body, dict) else None
-    if isinstance(f, str) and re.fullmatch(r"(sw|me):[\w.]{1,40}", f) and page_on(uid, c):
+    if isinstance(f, str) and re.fullmatch(r"(sw|me):[\w.]{1,40}", f) and features.allowed("hilfeseite", uid, c):
         return f
     return None
 
@@ -1375,7 +1363,7 @@ def focus_of(body, uid, c=None):
 def page_of(body, uid, c=None):
     """The page "Frag Spark" asked from, when this profile may use it there (else None)."""
     page = body.get("page") if isinstance(body, dict) else None
-    if isinstance(page, str) and PAGE.fullmatch(page) and page_on(uid, c):
+    if isinstance(page, str) and PAGE.fullmatch(page) and features.allowed("hilfeseite", uid, c):
         return page
     return None
 
@@ -1414,7 +1402,7 @@ def known_ids():
 def ids(request: Request, prof=Depends(browser_profile)):
     """Only names of switches and fields of the page itself, the same for everybody; only with the page help on."""
     guard.limit(request, "hilfe", prof["id"])
-    if not page_on(prof["id"]):
+    if not features.allowed("hilfeseite", prof["id"]):
         return {"ids": []}
     return {"ids": known_ids()}
 
@@ -1436,7 +1424,8 @@ async def card_action(cid: str, request: Request, prof=Depends(browser_profile))
             _live("Vorschlag abgelehnt")
         return {"state": card["state"]}
     import tipps   # a card from "Funktionen vorschlagen" (tipps.py) is its own: only the profile's own switch, one tap
-    if not (suggest_on(prof["id"]) or (card.get("src") == "tipp" and tipps.on(prof["id"]))):
+    if not (features.allowed("hilfevorschlag", prof["id"])
+            or (card.get("src") == "tipp" and features.allowed("tipps", prof["id"]))):
         raise HTTPException(403, "Einstellungen vorschlagen ist aus")
     if notaus.refuse("aktion"):
         raise HTTPException(423, f"Notaus Stufe {notaus.level()}: Änderungen sind angehalten")

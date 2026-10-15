@@ -121,13 +121,9 @@ def admin_on():
     return features.admin_on("schreib")
 
 
-def allowed(uid):
-    return bool(uid) and features.allowed("schreib", uid)
-
-
 def apps_ok(uid):
     """May paired programs and the iPhone app use it for this profile ("In anderen Programmen")?"""
-    return allowed(uid) and features.allowed("schreibapps", uid)
+    return features.allowed("schreib", uid) and features.allowed("schreibapps", uid)
 
 
 profiles.WRITE_GATE[0] = apps_ok
@@ -136,7 +132,7 @@ profiles.WRITE_GATE[0] = apps_ok
 def draft_ok(uid):
     """May this profile put a draft into a mailbox from here (Mail lesen + Postfach aufräumen, with a mailbox
     whose "Entwürfe" switch is on)?"""
-    if not allowed(uid) or not features.allowed("mail", uid) or not features.allowed("tidy", uid):
+    if not features.allowed("schreib", uid) or not features.allowed("mail", uid) or not features.allowed("tidy", uid):
         return False
     try:
         import mail
@@ -149,7 +145,7 @@ def draft_ok(uid):
 
 def pics_ok(uid):
     import images
-    return allowed(uid) and images.allowed(uid, "web")
+    return features.allowed("schreib", uid) and images.allowed(uid, "web")
 
 
 def clean(v, most, name, need=False):
@@ -389,7 +385,7 @@ async def picture_text(uid, iid):
 
 # ---------------------------------------------------------------- endpoints
 def _mine(request, prof):
-    if not allowed(prof["id"]):
+    if not features.allowed("schreib", prof["id"]):
         raise HTTPException(403, "Die Schreibhilfe ist aus (Funktionen → Schreibhilfe, Ich → Schreibhilfe).")
     guard.limit(request, "write", prof["id"])
 
@@ -410,7 +406,7 @@ def writer(request):
         return prof, "web", "Browser"
     if dev["scope"] == "desk":   # the Spark-Begleiter (begleiter.py): its own part switch per device
         import begleiter
-        if not allowed(prof["id"]) or not begleiter.part_on(prof["id"], dev["id"], "write"):
+        if not features.allowed("schreib", prof["id"]) or not begleiter.part_on(prof["id"], dev["id"], "write"):
             raise HTTPException(403, "Die Schreibhilfe ist für dieses Gerät aus (Ich → Begleiter).")
         return prof, "desk", begleiter.kind_of(profiles.device_name(request))
     if dev["scope"] not in ("write", "app"):
@@ -432,7 +428,7 @@ def _short(name):
 def write_info(request: Request):
     try:
         who, client, _ = writer(request)
-        on = allowed(who["id"])
+        on = features.allowed("schreib", who["id"])
     except HTTPException:
         who, client, on = None, "", False
     own = client == "web"

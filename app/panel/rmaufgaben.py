@@ -58,7 +58,7 @@ RES_DE = {"erledigt": "✓ erledigt", "abgelehnt": "✓ abgelehnt", "spaeter": "
 
 
 def on(uid):
-    return rmpapier.on("rmaufgaben", uid) and rmpapier.paper_on(uid)
+    return rmpapier.on("rmaufgaben", uid) and features.allowed("rmpapier", uid)
 
 
 def admin(uid):
@@ -87,7 +87,7 @@ def items(uid):
         for t in rmplus.plus(uid).get("todos", [])[-6:]:
             out.append({"src": "todo", "id": t["id"], "text": t["text"], "sub": f"aus {t.get('doc', '')}".strip()})
     import gedaechtnis
-    if gedaechtnis.on(uid):
+    if features.allowed("gedpruefen", uid):
         for f in gedaechtnis.view(uid):
             if f.get("mark") in ("stale", "contra"):
                 why = "widerspricht etwas Neuerem" if f["mark"] == "contra" else "vielleicht veraltet"
@@ -415,7 +415,7 @@ def _do(uid, it, choice, now):
         return "abgelehnt", {"todo": todo}
     if src == "ged":
         import gedaechtnis
-        if not gedaechtnis.on(uid):
+        if not features.allowed("gedpruefen", uid):
             return "aus", None
         fact = next((f for f in gedaechtnis.view(uid) if f["id"] == iid), None)
         if not fact:

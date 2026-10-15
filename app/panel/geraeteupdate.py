@@ -79,10 +79,6 @@ def admin_on():
     return features.admin_on("geraeteupdate")
 
 
-def allowed(uid):
-    return features.allowed("geraeteupdate", uid)
-
-
 def night_on():
     return features.admin_on("geraetenacht")
 
@@ -216,10 +212,6 @@ def _watches(uid):
     return [{"id": x["id"], "name": x.get("name", ""), "user": uid} for x in pebblewatch.watches(uid)]
 
 
-def has_android(uid):
-    return features.allowed("android", uid)
-
-
 def devices(uid):
     """The devices of one profile per kind, with what is known of their version (fixed words, numbers, names)."""
     out = {k: [] for k in KINDS}
@@ -228,7 +220,7 @@ def devices(uid):
                            "auto": bool(s.get("auto", True)), "online": bool(s.get("online"))})
     for x in _desks(uid):
         out[x["kind"]].append({"id": x["id"], "name": x["name"], "have": x["have"], "newer": x["newer"]})
-    if has_android(uid):
+    if features.allowed("android", uid):
         import android
         have = android.seen(uid)
         if have:   # the version the profile's app named lately (user agent), kept in memory only
@@ -251,7 +243,7 @@ def overview(uid=None, now=None):
         for kind, rows in devices(u).items():
             for r in rows:
                 devs[kind].append(dict(r, owner=names.get(u, "") if not uid else ""))
-        if "android" in k and has_android(u):
+        if "android" in k and features.allowed("android", u):
             android_users += 1
     kinds = []
     for kind, (name, go) in KINDS.items():
@@ -350,7 +342,7 @@ def _recipients(kind):
     if kind == "esp":
         return sorted({s["user"] for s in speakers()})
     if kind == "android":
-        return [u for u in profiles.user_ids() if has_android(u)]
+        return [u for u in profiles.user_ids() if features.allowed("android", u)]
     if kind == "pebble":
         return [u for u in profiles.user_ids() if _watches(u)]
     return []
@@ -399,7 +391,7 @@ async def notes(now=None):
             continue
         v, left, admin = e["v"], [], e.get("admin") or ""
         for uid in e.get("uids") or []:
-            if not allowed(uid):
+            if not features.allowed("geraeteupdate", uid):
                 continue
             if notaus.blocks("auto", uid):
                 left.append(uid)

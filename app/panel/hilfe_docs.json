@@ -2301,7 +2301,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in bilder.start. 2. Funktion frei?: bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. 5. Warten auf eine Pause: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. 6. Modell geladen?: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungest"
+"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in bilder.start. 2. Funktion frei?: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. 5. Warten auf eine Pause: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. 6. Modell geladen?: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere"
 },
 {
 "lang": "de",
@@ -2309,7 +2309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ört. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei."
+"text": " ungestört. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei."
 },
 {
 "lang": "de",
@@ -2349,7 +2349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/bilder.py start: Wunsch annehmen (Schritt 1) - app/panel/bilder.py on: Freigabe für das Profil (Schritt 2) - app/panel/bilder.py refuse_text: Wortliste und Personen (Schritt 3) - app/panel/bilder.py _work: Auftrag im Hintergrund (Schritt 5) - app/panel/bilder.py keep: Bild ablegen (Schritt 10) - app/bild_server.py Engine.start: Engine laden (Schritt 6) - app/bild_server.py Engine.paint: Malen (Schritt 7) - app/bild_server.py nsfw_share: Bildprüfung (Schritt 8) - app/bild_server.py finish: Kennzeichnen und neu kodieren (Schritt 9)"
+"text": "- app/panel/bilder.py start: Wunsch annehmen (Schritt 1) - app/panel/features.py allowed: Freigabe für das Profil (Schritt 2) - app/panel/bilder.py refuse_text: Wortliste und Personen (Schritt 3) - app/panel/bilder.py _work: Auftrag im Hintergrund (Schritt 5) - app/panel/bilder.py keep: Bild ablegen (Schritt 10) - app/bild_server.py Engine.start: Engine laden (Schritt 6) - app/bild_server.py Engine.paint: Malen (Schritt 7) - app/bild_server.py nsfw_share: Bildprüfung (Schritt 8) - app/bild_server.py finish: Kennzeichnen und neu kodieren (Schritt 9)"
 },
 {
 "lang": "de",
@@ -8725,7 +8725,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Both end in bilder.start. 2. Feature released?: bilder.on asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. 5. Wait for a pause: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. 6. Model loaded?: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. 7. Paint: The engine paints the picture in 4 steps at the chos"
+"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Both end in bilder.start. 2. Feature released?: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. 5. Wait for a pause: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. 6. Model loaded?: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. 7. Paint: The engine paints the picture in 4 steps at t"
 },
 {
 "lang": "en",
@@ -8733,7 +8733,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory."
+"text": "he chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory."
 },
 {
 "lang": "en",
@@ -8773,7 +8773,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/bilder.py start: accept a wish (step 1) - app/panel/bilder.py on: release for the profile (step 2) - app/panel/bilder.py refuse_text: word list and people (step 3) - app/panel/bilder.py _work: job in the background (step 5) - app/panel/bilder.py keep: store the picture (step 10) - app/bild_server.py Engine.start: load the engine (step 6) - app/bild_server.py Engine.paint: paint (step 7) - app/bild_server.py nsfw_share: image check (step 8) - app/bild_server.py finish: mark and re-encode (step 9)"
+"text": "- app/panel/bilder.py start: accept a wish (step 1) - app/panel/features.py allowed: release for the profile (step 2) - app/panel/bilder.py refuse_text: word list and people (step 3) - app/panel/bilder.py _work: job in the background (step 5) - app/panel/bilder.py keep: store the picture (step 10) - app/bild_server.py Engine.start: load the engine (step 6) - app/bild_server.py Engine.paint: paint (step 7) - app/bild_server.py nsfw_share: image check (step 8) - app/bild_server.py finish: mark and re-encode (step 9)"
 },
 {
 "lang": "en",

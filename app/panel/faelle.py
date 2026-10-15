@@ -120,10 +120,6 @@ def wanted(c=None):
     return features.admin_on("berater", c)
 
 
-def can_rate(uid, c=None):
-    return bool(uid) and features.allowed("bewerten", uid, c)
-
-
 # ---------------------------------------------------------------- the fingerprint (shared with „Probleme melden“)
 def fingerprint(kind, group="", tool="", code=""):
     """Kind + group + tool or error: never words, so the same problem lands on one case."""
@@ -216,7 +212,7 @@ def turn_end(tr, who, ask, said, outside=False, now=None, off=False):
         s["bad"] = any(k in ("tool", "absage") for k, _, _ in found)
         for kind, tool, code in found:
             add(kind, s, tool=tool, code=code, now=now)
-        return rid if can_rate(s["who"], c) else None
+        return rid if features.allowed("bewerten", s["who"], c) else None
     except Exception as e:
         print("faelle:", type(e).__name__, flush=True)
         return None
@@ -543,7 +539,7 @@ def by_phrase(uid, verdict, now=None):
     """"Das war falsch" / "Gut so": rates the person's last answer of the last 10 minutes. Returns the sentence to say
     (German)."""
     now = time.time() if now is None else now
-    if not can_rate(uid):
+    if not features.allowed("bewerten", uid):
         return "Bewerten geht für dich gerade nicht. " + features.missing_text("bewerten", uid)
     with _lock:
         last = _last_of(uid, now, within=PHRASE_S)
@@ -583,7 +579,7 @@ async def post_rate(request: Request):
     b = await json_body(request, 2048)
     if not RID.fullmatch(str(b.get("id"))) or not isinstance(b.get("good"), bool):
         raise HTTPException(400, "id and good")
-    if not can_rate(prof["id"]):
+    if not features.allowed("bewerten", prof["id"]):
         raise HTTPException(403, "Bewerten ist aus.")
     grund = b.get("grund") if b.get("grund") in REASONS else ""
     note = b.get("text") if isinstance(b.get("text"), str) else ""

@@ -680,7 +680,6 @@ def needed(text, offered, extra=""):
     return list(dict.fromkeys(built + mine))
 
 
-
 # chat.tool_hints (R2, plan vorschlaege-besser.md): the admin's own hint per tool, one line each,
 # "document_status: Fragt jemand, ob etwas erstellt wurde, schau hier zuerst nach." Added to a turn only for the tools
 # it offers. The admin writes it; the Einstellungs-Assistent only fills a template (HINT_TPL), never free text.
@@ -738,7 +737,6 @@ def hint_lines(text, offered):
     """The admin's hints for the tools this turn offers, as one line for the system prompt ("" when none)."""
     rows = [f"{n}: {h}" for n, h in own_hints(text).items() if n in offered]
     return ("Hinweise des Admins zu Werkzeugen: " + " ".join(rows)) if rows else ""
-
 
 
 def appointment(args, tz):
@@ -1036,7 +1034,7 @@ def memory_hint(prof):
     hint = (f"Du sprichst mit {prof['name']}. Mit memory_save merkst du dir dauerhaft, was {prof['name']} dir "
             "zum Merken sagt oder was für spätere Gespräche nützlich ist, mit memory_forget vergisst du es "
             "auf Wunsch. Sag kurz, dass du es dir gemerkt hast.")
-    if facts and gedaechtnis.on(prof["id"]):
+    if facts and features.allowed("gedpruefen", prof["id"]):
         # Gedächtnis prüfen (gedaechtnis.py): the panel sorts the facts into sure, learned and maybe out of date
         hint += "\n" + gedaechtnis.hint_lines(prof, facts)
     elif facts:

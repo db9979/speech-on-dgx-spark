@@ -752,9 +752,8 @@ async def answer(ctx, latest):
 def choice_event(uid, cands):
     """The names as buttons in the chat (Rückfrage statt Raten, klaeren.py); a tap sends the name, which pick()
     takes like a typed answer. None while that switch is off for the profile."""
-    import klaeren
     import uuid
-    if not klaeren.on(uid):
+    if not features.allowed("klaeren", uid):
         return None
     return {"type": "choice", "id": uuid.uuid4().hex[:12], "area": "nachricht", "list": False,
             "options": [{"n": i + 1, "label": label(x), "send": x["name"], "room": "", "info": ""} for i, x in enumerate(cands)],

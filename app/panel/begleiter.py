@@ -166,7 +166,7 @@ def _docs(uid):
 def may(uid):
     """The parts the switches allow at all for this profile: the writing help (and what builds on it) has its
     own, the folder needs the own documents, acting its admin switch (Funktionen → Darf am PC handeln)."""
-    w = schreib.allowed(uid)
+    w = features.allowed("schreib", uid)
     need = {"write": w, "context": w, "mail": w, "folder": _docs(uid), "act": features.allowed("begleitertun", uid),
             # writing along needs its own admin switch; the buttons the profile's own Home Assistant
             "meeting": features.allowed("begleitermeeting", uid), "home": _ha_ok(uid),
@@ -1863,7 +1863,7 @@ async def program_meet_end(request: Request):
 
 def _rm_ok(uid):
     import remarkable
-    return remarkable.send_allowed(uid) and bool(remarkable.device_token(uid))
+    return features.allowed("rmsend", uid) and bool(remarkable.device_token(uid))
 
 
 def _tomorrow_nine(zone, now):
@@ -2101,7 +2101,7 @@ async def evening(uid, now=None):
         if rems:
             parts.append("Erinnerungen:\n" + "\n".join(
                 f"• {datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%d.%m. %H:%M} {x['text']}" for x in rems))
-    if tasks.usable(uid):
+    if features.allowed("tasks", uid):
         try:
             have = await asyncio.wait_for(tasks.items(uid, "aufgaben"), 30)
             if have:

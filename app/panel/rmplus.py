@@ -214,7 +214,7 @@ async def morning(uid, local):
     if not text:
         return None
     title = f"Morgenblatt {WEEKDAY[local.weekday()]} {local:%d.%m.}"
-    if rmpapier.paper_on(uid):      # designed, in the device's format, today's reminders with boxes (rmpapier.py)
+    if features.allowed("rmpapier", uid):      # designed, in the device's format, today's reminders with boxes (rmpapier.py)
         end = local.replace(hour=23, minute=59, second=59).timestamp() * 1000
         todo = [{"id": x["id"], "text": x["text"],
                  "at": datetime.datetime.fromtimestamp(x["due"] / 1000, _zone(uid)).strftime("%H:%M")}
@@ -294,7 +294,7 @@ async def answer(uid, q, page):
         return None
     short = " ".join(q.split()[:7]).rstrip("?.!,")
     body = f"Frage (aus „{page['name']}“, Seite {page['page']}):\n{q}\n\n{text}"
-    if rmpapier.paper_on(uid):
+    if features.allowed("rmpapier", uid):
         return await rmpapier.place(uid, "antwort", f"Antwort: {short}", rmpapier.built_text(
             uid, "Antwort", short, f"## Deine Frage\n{q}\n\naus „{page['name']}“, Seite {page['page']}\n\n## Antwort\n{text}"),
             "text")
@@ -329,7 +329,7 @@ async def meeting(uid, doc, name, pages):
     if not out:
         return None
     title = f"Zusammenfassung {name.rsplit('/', 1)[-1]}"[:80]
-    if rmpapier.paper_on(uid):
+    if features.allowed("rmpapier", uid):
         r = await rmpapier.place(uid, "besprechung", title, rmpapier.built_text(
             uid, "Besprechung", name.rsplit("/", 1)[-1][:70], out), "text")
     else:
@@ -399,7 +399,7 @@ async def week(uid, local):
     if not out:
         return None
     title = f"Wochenrückblick KW {local:%V}"
-    if rmpapier.paper_on(uid):
+    if features.allowed("rmpapier", uid):
         return await rmpapier.place(uid, "woche", title, rmpapier.built_text(
             uid, "Wochenrückblick", f"Kalenderwoche {local:%V}", out, f"{monday:%d.%m.} bis {local:%d.%m.%Y}"), "text")
     return await remarkable.place(uid, title, sheet(title, out), "pdf", auto=True, art="woche")
@@ -416,7 +416,7 @@ async def inbox_add(uid, title, text):
     items = (box["items"] + [item])[-INBOX_MAX:]
     body = "\n\n".join(f"{x['t']} · {x['title']}\n{x['text']}" for x in items)[-remarkable.MAX_SEND:]
     title = f"Eingang {local:%d.%m.%Y}"
-    if rmpapier.paper_on(uid):
+    if features.allowed("rmpapier", uid):
         r = await rmpapier.place(uid, "eingang", title, rmpapier.built_text(
             uid, "Eingang", f"Eingang {local:%d.%m.%Y}", "\n\n".join(f"## {x['t']} · {x['title']}\n{x['text']}" for x in items)),
             "text", own="inbox-" + day, auto=False)
@@ -560,12 +560,12 @@ async def guide(uid, force=False):
         return None
     stamp = datetime.datetime.now(_zone(uid)).strftime("%d.%m.%Y")
     body = re.sub(r"(?m)^## ", "", text) + f"\n\nStand: {stamp}"
-    if rmpapier.paper_on(uid):      # on top as a favourite with "Ordner nach Art"
+    if features.allowed("rmpapier", uid):      # on top as a favourite with "Ordner nach Art"
         r = await rmpapier.place(uid, "", "Spark-Anleitung", rmpapier.built_text(
             uid, "Anleitung", "Spark-Anleitung", text, "Stand: " + stamp), "text", own="guide", pinned=True)
     else:
         r = await remarkable.place(uid, "Spark-Anleitung", remarkable.epub("Spark-Anleitung", body), own="guide",
-                                   auto=True, pinned=rmpapier.folders_on(uid))
+                                   auto=True, pinned=features.allowed("rmordner", uid))
     _mut(uid, lambda x: x.update(guide=k))
     print("remarkable: guide " + ("renewed" if r["renewed"] else "added"), flush=True)
     return r
@@ -606,7 +606,7 @@ async def due_once(idle=True, now=None, uids=None):
         return None
     now = now or time.time()
     for uid in uids or profiles.user_ids():
-        if not remarkable.allowed(uid) or uid in remarkable._busy or not remarkable.load(uid).get("token"):
+        if not features.allowed("remarkable", uid) or uid in remarkable._busy or not remarkable.load(uid).get("token"):
             continue
         p = plus(uid)
         local = datetime.datetime.fromtimestamp(now, _zone(uid))

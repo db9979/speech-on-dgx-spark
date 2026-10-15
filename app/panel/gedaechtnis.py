@@ -69,11 +69,6 @@ _live = [0.0, None]       # the Live node's numbers, at most once every LIVE_S
 LIVE_S = 30
 
 
-def on(uid, c=None):
-    """The admin's chat.memory_check, unless the admin blocked this profile (features.py); never guests."""
-    return bool(uid) and features.allowed("gedpruefen", uid, c)
-
-
 def months(c=None):
     c = load_config().get("chat", {}) if c is None else c
     v = c.get("memory_stale_months", STALE_MONTHS)
@@ -234,7 +229,7 @@ def marks_of(uid, facts=None, now=None, c=None):
 def view(uid, now=None):
     """The facts for Ich → Gedächtnis with source, confirmation and mark (only with the switches on)."""
     facts = profiles.memory(uid)
-    if not on(uid):
+    if not features.allowed("gedpruefen", uid):
         return facts
     m = marks_of(uid, facts, now)
     return [dict(f, src=source(f), confirmed=confirmed(f), mark=m[f["id"]]["mark"], rule=m[f["id"]]["rule"],
@@ -297,7 +292,7 @@ def for_live(now=None):
         return dict(_live[1])
     total = {"facts": 0, "ok": 0, "learned": 0, "stale": 0, "contra": 0, "ask": 0, "untagged": 0}
     for uid in profiles.user_ids():
-        if not on(uid, c):
+        if not features.allowed("gedpruefen", uid, c):
             continue
         with _lock:
             x = _counts.get(uid)
@@ -345,7 +340,7 @@ ASK = {"de": "Kurz nachgefragt: Stimmt das noch: „{text}“?", "en": "Quick ch
 
 def ask_on(uid, c=None):
     """The question in a conversation: admin chat.memory_ask (below Gedächtnis prüfen), unless the admin blocked this profile."""
-    return bool(uid) and on(uid, c) and features.allowed("gedfragen", uid, c)
+    return bool(uid) and features.allowed("gedpruefen", uid, c) and features.allowed("gedfragen", uid, c)
 
 
 def _ask_file(uid):
@@ -457,7 +452,7 @@ _topic_tried = {}
 
 def topics_on(uid, c=None):
     """Themen: admin chat.memory_topics (below Gedächtnis prüfen), unless the admin blocked this profile."""
-    return bool(uid) and on(uid, c) and features.allowed("gedthemen", uid, c)
+    return bool(uid) and features.allowed("gedpruefen", uid, c) and features.allowed("gedthemen", uid, c)
 
 
 def untagged(uid, facts=None):

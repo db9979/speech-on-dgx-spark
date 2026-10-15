@@ -72,8 +72,11 @@ class FollowUp(unittest.TestCase):
         js = read("chat.js")
         fn = js[js.index("function followSecs()"):]
         fn = fn[:fn.index("\n", fn.index("return"))]
-        for need in ("ALLOW.follow", "!guest", "room.on", "document.hidden", "[4,6,8,10].includes(s)"):
+        for need in ("ALLOW.follow", "!guest", "room.on", "document.hidden", "s>0",
+                     "(SETC.choices.follow||[]).includes(String(s))"):
             self.assertIn(need, fn, need)
+        # the allowed seconds come from the one list in profiles.CHOICES (Aufräumaktion step 7)
+        self.assertEqual(profiles.CHOICES["follow"], ("0", "4", "6", "8", "10"))
         self.assertIn("else if(spoken&&followSecs())startListening({follow:followSecs()})", js)
         self.assertRegex(js, r"async function ask\(text,asrS,spk\)\{const spoken=!!chat\.nextSpoken;chat\.nextSpoken=false;")
         # spoken: after speech recognition and after "Hey Spark, …"; typed questions reset it

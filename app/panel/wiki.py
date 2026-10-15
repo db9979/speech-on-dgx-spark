@@ -40,10 +40,6 @@ def base():
     return (load_config().get("chat", {}).get("wiki_url") or DEFAULT_URL).rstrip("/")
 
 
-def usable(uid):
-    return features.allowed("wiki", uid)
-
-
 def _query(text):
     """The search words: printable text only, one line, at most 120 characters."""
     return re.sub(r"\s+", " ", re.sub(r"[\x00-\x1f\x7f<>{}\[\]|]", " ", str(text or ""))).strip()[:120]
@@ -201,7 +197,7 @@ def offer(ctx):
     who = ctx.get("who")
     if not who or not ctx.get("own"):
         return None
-    online_ok, own = usable(who["id"]), kiwix.usable(who["id"])
+    online_ok, own = features.allowed("wiki", who["id"]), kiwix.usable(who["id"])
     if not online_ok and not own:
         return None
     tools, hint = [TOOL, MORE], HINT
@@ -222,7 +218,7 @@ async def tool(name, args, ctx):
             except (TypeError, ValueError):
                 part = 2
             k = str(args.get("article") or "").strip()[:20]
-            if k.startswith("w") and usable(uid):
+            if k.startswith("w") and features.allowed("wiki", uid):
                 return await online_more(k, part)
             if not kiwix.usable(uid):
                 return "Weiterlesen geht hier nicht."
@@ -235,7 +231,7 @@ async def tool(name, args, ctx):
                 return "Kein Suchbegriff angegeben."
             text, _ = await kiwix.search(q, _query(args.get("book"))[:120])
             return text
-        return await search(args.get("query"), uid, use_online=usable(uid))
+        return await search(args.get("query"), uid, use_online=features.allowed("wiki", uid))
     except (httpx.HTTPError, ValueError) as e:
         where = "Wikipedia" if name == "wikipedia" and not kiwix.usable(uid) else "Das Archiv"
         return f"{where} ist gerade nicht erreichbar ({type(e).__name__})."

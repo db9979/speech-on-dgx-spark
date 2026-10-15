@@ -621,7 +621,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "77c0a6813c",
+        "stand": "2252223476",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -1659,7 +1659,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "28753c1b13",
+        "stand": "261db60fd1",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -2090,7 +2090,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
-        "stand": "135bdb737d",
+        "stand": "a8e91ff6da",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -2265,7 +2265,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "e7b859d3c7",
+        "stand": "88807efdf8",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -2460,7 +2460,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "a845090fe6",
+        "stand": "68ec91a7f4",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -3525,7 +3525,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen
     "bild": {
-        "stand": "2981d47109",
+        "stand": "69c1c54df0",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
@@ -3552,9 +3552,9 @@ SEITEN_DATEN = {
                "the conversation; the model writes an English prompt for it. Both end in bilder.start.")),
             S("s2", "frage", ("Funktion frei?", "Feature released?"),
               ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
-              ("bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
+              ("features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
                "gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.",
-               "bilder.on asks the release: the admin switched painting pictures on and did not block this profile. "
+               "features.allowed asks the release: the admin switched painting pictures on and did not block this profile. "
                "Guests never get the tool; after outside text and at kill switch stage 2 it is locked."),
               ("stop", "nein", ("Hinweis mit Weg zum Schalter", "Hint with the way to the switch"))),
             S("s3", "frage", ("Wunsch erlaubt?", "Wish allowed?"),
@@ -3643,7 +3643,7 @@ SEITEN_DATEN = {
         ],
         "code": [
             ("bilder.start", ("Wunsch annehmen", "accept a wish")),
-            ("bilder.on", ("Freigabe für das Profil", "release for the profile")),
+            ("features.allowed", ("Freigabe für das Profil", "release for the profile")),
             ("bilder.refuse_text", ("Wortliste und Personen", "word list and people")),
             ("bilder._work", ("Auftrag im Hintergrund", "job in the background")),
             ("bilder.keep", ("Bild ablegen", "store the picture")),

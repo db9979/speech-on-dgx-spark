@@ -18,7 +18,7 @@ Verbindlich ist die **Coding-Richtlinie**: [docs/de/richtlinien.md](docs/de/rich
 13. Jede Funktion auch in den Apps: einstellen, ansehen, löschen. Ich-Seiten nur aus `features.ME_PAGES` (iPhone über `/api/features` `pages`, Android über die Panel-Ansicht), Ausnahmen mit Grund in `features.APP_SKIP`, App-Texte mit Englisch (`test_app_gleichstand`).
 
 ## Arbeitsablauf
-- Direkt auf `main`, der Reihe nach über die Push-Warteschlange (Sammel-Push): wer oben steht, pusht sofort, auch während ein „Tests“-Lauf läuft; vorher `git pull --rebase`, nächste freie Nummer in `app/VERSION`, Selbsttests grün. GitHub testet nur den neuesten Stand; wird er rot, gilt PUSH-STOPP und der Koordinator bestimmt den Verursacher.
+- Direkt auf `main`, der Reihe nach über die Push-Warteschlange (Sammel-Push): wer oben steht, pusht sofort, auch während ein „Tests“-Lauf läuft; vorher `git pull --rebase`, nächste freie Nummer in `app/VERSION`, Selbsttests grün. GitHub testet nur den neuesten Stand; wird er rot, gilt PUSH-STOPP und der Koordinator bestimmt den Verursacher. Bei PROJEKT-SPERRE pusht nur der genannte Thread.
 - Selbsttests: `cd app && python selftest.py discover -s tests` (ein zweiter Versuch je rotem Test, mehr als 5 Fehler ohne zweiten Versuch). Neue Tests auch in einer Kopie nur mit `app/` laufen lassen.
 - Pro Version eine Zeile oben in `CHANGELOG.md` (`- **V01.0.NNN** · JJJJ-MM-TT · Text`) und in „Letzte Änderungen“/„Latest changes“ beider READMEs (genau 10 Zeilen); Details nur in `docs/de` und `docs/en`, danach `python3 app/panel/hilfe.py --docs`. `test_richtlinie` prüft den Einklang.
 - Alte GitHub-Releases löschen, nur das neueste pro Reihe behalten.

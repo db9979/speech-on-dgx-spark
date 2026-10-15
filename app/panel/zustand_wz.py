@@ -44,10 +44,6 @@ ROW_WORD = {"run": ("läuft gerade", "running now"), "wait": ("wartet", "waiting
             "bad": ("Problem", "problem"), "idle": ("ruht", "idle")}
 
 
-def on(uid):
-    return bool(uid) and features.allowed("sparkzustand", uid)
-
-
 def is_admin(uid):
     import notaus
     return bool(uid) and uid in notaus.admin_uids()
@@ -126,7 +122,7 @@ def emergency(uid, admin):
 
 def mine(uid, now):
     import hintergrund
-    if not hintergrund.on(uid):
+    if not features.allowed("mystatus", uid):
         return "Mein Zustand: aus (Ich → Mein Zustand), dazu weiß ich nichts."
     rows = hintergrund.rows(uid, now)
     if not rows:
@@ -166,7 +162,8 @@ def text(uid, part="alles", now=None):
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp" or not on(who["id"]):
+    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp" \
+            or not features.allowed("sparkzustand", who["id"]):
         return None
     if not WORDS.search(str(ctx.get("text") or "")):
         return None
@@ -176,7 +173,7 @@ def offer(ctx):
 
 async def tool(name, args, ctx):
     who = ctx.get("who") or {}
-    if name != "spark_zustand" or not on(who.get("id")):
+    if name != "spark_zustand" or not features.allowed("sparkzustand", who.get("id")):
         return "Zustand per Sprache ist für dieses Profil aus."
     args = args if isinstance(args, dict) else {}
     out = text(who["id"], str(args.get("teil") or "alles"))

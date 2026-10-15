@@ -78,10 +78,6 @@ _lock = threading.Lock()
 _svc = {"d": None, "saved": 0.0}
 
 
-def on(uid):
-    return bool(uid) and features.allowed("mystatus", uid)
-
-
 # ---------------------------------------------------------------- what the modules report
 def reason_of(text):
     """A module's free error text → one fixed reason (the text itself is never shown)."""
@@ -166,7 +162,7 @@ def note(uid, key, ok, n=0, now=None, per_day=False):
             live.mark("Hintergrund", f"{LIVE[key]} " + (f"fertig ({int(n)})" if ok and n else "fertig" if ok else "nicht geklappt"))
         except Exception:
             pass
-    if key not in JOBS or not on(uid):
+    if key not in JOBS or not features.allowed("mystatus", uid):
         return
     now = int(now or time.time())
     day = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
@@ -523,7 +519,7 @@ def summary(rs):
 def profile_state(request: Request, brief: bool = False, prof=Depends(own_profile)):
     uid = prof["id"]
     guard.limit(request, "bg", uid)
-    if not on(uid):
+    if not features.allowed("mystatus", uid):
         raise HTTPException(403, ("Mein Zustand geht für dich gerade nicht. " + features.missing_text("mystatus", uid)).strip())
     rs = rows(uid)
     if brief:   # the dot at "Ich": only how many need the person
@@ -539,7 +535,7 @@ def admin_state(request: Request):
         return {"on": False}
     out = {"on": True, "profiles": 0, "jobs": dict.fromkeys(STATES, 0), "services": dict.fromkeys(STATES, 0), "need": 0}
     for uid in profiles.user_ids():
-        if not on(uid):
+        if not features.allowed("mystatus", uid):
             continue
         out["profiles"] += 1
         rs = rows(uid)

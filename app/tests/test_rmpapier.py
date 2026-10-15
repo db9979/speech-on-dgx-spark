@@ -146,18 +146,17 @@ class Switches(Paper):
         self.assertNotIn("rmpapier", features.DEFAULT_ON)
         self.assertIn("remarkable_send", features.chain_switches("rmpapier"))
         c, uid = self.paired("Ppoff")
-        self.assertTrue(rmpapier.paper_on(uid) and rmpapier.folders_on(uid))   # released: works at once
-        for key, on, path, name in (("rmpapier", rmpapier.paper_on, "abgleich", "rm_paper"),
-                                    ("rmordner", rmpapier.folders_on, "einsortieren", "rm_folders")):
+        self.assertTrue(features.allowed("rmpapier", uid) and features.allowed("rmordner", uid))   # released: works at once
+        for key, path, name in (("rmpapier", "abgleich", "rm_paper"), ("rmordner", "einsortieren", "rm_folders")):
             self.block(key, uid)
-            self.assertFalse(on(uid), key)                                      # the admin blocked this profile
+            self.assertFalse(features.allowed(key, uid), key)                               # the admin blocked this profile
             self.assertEqual(c.post(f"/api/profile/remarkable/papier/{path}").status_code, 403)
             c.put("/api/profile/settings", json={name: True})
-            self.assertFalse(on(uid), key)                                      # the profile cannot lift it
+            self.assertFalse(features.allowed(key, uid), key)                               # the profile cannot lift it
             self.block(key, uid, on=True)
-            self.assertTrue(on(uid), key)
+            self.assertTrue(features.allowed(key, uid), key)
         self.block("rmsend", uid)                                               # blocked what it builds on
-        self.assertFalse(rmpapier.paper_on(uid) or rmpapier.folders_on(uid))
+        self.assertFalse(features.allowed("rmpapier", uid) or features.allowed("rmordner", uid))
         self.block("rmsend", uid, on=True)
         # "Selbst aufräumen" does something unasked: a preference, on unless the profile switches it off
         self.assertIs(profiles.SETTINGS["rm_tidy"][0], True)
@@ -166,12 +165,12 @@ class Switches(Paper):
         c.put("/api/profile/settings", json={"rm_tidy": False})
         self.assertFalse(features.allowed("rmaufraeumen", uid))
         helpers.set_config(remarkable_paper=False)
-        self.assertFalse(rmpapier.paper_on(uid))
+        self.assertFalse(features.allowed("rmpapier", uid))
         self.assertEqual(c.post("/api/profile/remarkable/papier/abgleich").status_code, 403)
         helpers.set_config(remarkable_paper=True, remarkable_send=False)      # builds on "Aufs reMarkable schicken"
-        self.assertFalse(rmpapier.paper_on(uid) or rmpapier.folders_on(uid))
+        self.assertFalse(features.allowed("rmpapier", uid) or features.allowed("rmordner", uid))
         helpers.set_config(remarkable_send=True)
-        self.assertFalse(rmpapier.paper_on(""))
+        self.assertFalse(features.allowed("rmpapier", ""))
         g = TestClient(panel.app)
         for method, path in (("get", "/api/profile/remarkable/papier"), ("post", "/api/profile/remarkable/papier/abgleich"),
                              ("post", "/api/profile/remarkable/papier/einsortieren"),

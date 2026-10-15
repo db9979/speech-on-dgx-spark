@@ -142,11 +142,10 @@ class Check(unittest.TestCase):
         # learning from corrections needs the memory (the page said so, the check did not: V01.0.267)
         helpers.set_config(learn_fixes=True, memory=False)
         self.assertFalse(features.allowed("fixes", uid))
-        import fixes
-        self.assertFalse(fixes.on(features.chat_cfg(), uid))
+        self.assertFalse(features.allowed("fixes", uid, features.chat_cfg()))
         helpers.set_config(memory=True)
-        self.assertTrue(fixes.on(features.chat_cfg(), uid))
-        self.assertFalse(fixes.on(features.chat_cfg(), None))            # never for guests
+        self.assertTrue(features.allowed("fixes", uid, features.chat_cfg()))
+        self.assertFalse(features.allowed("fixes", None, features.chat_cfg()))   # never for guests
         # room mode from afar needs own speakers; push needs the app
         helpers.set_config(room=True, room_remote=True, esp32=False)
         self.assertFalse(features.admin_on("roomfar"))

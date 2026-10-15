@@ -850,12 +850,8 @@ def propose_shopping(uid, r):
     return f"Soll ich {names} auf die Einkaufsliste setzen?", ", ".join(items)
 
 
-def _timers_on(uid):
-    return features.allowed("reminders", uid)
-
-
 def propose_timer(uid, r, cue):
-    if not _timers_on(uid):
+    if not features.allowed("reminders", uid):
         return None, "timers are turned off"
     n = cue["minutes"]
     span = f"{n} Minuten" if n % 60 or n < 60 else ("eine Stunde" if n == 60 else f"{n // 60} Stunden")
@@ -865,7 +861,7 @@ def propose_timer(uid, r, cue):
 
 
 def propose_reminder(uid, r, cue, tz):
-    if not _timers_on(uid):
+    if not features.allowed("reminders", uid):
         return None, "reminders are turned off"
     from chat import user_zone
     now = datetime.datetime.now(user_zone(tz))

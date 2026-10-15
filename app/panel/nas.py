@@ -83,10 +83,6 @@ def admin_on(c=None):
     return features.admin_on("nas", c)
 
 
-def allowed(uid):
-    return bool(uid) and features.allowed("nas", uid)
-
-
 # ---------------------------------------------------------------- addresses
 def home_name(host):
     import ipaddress
@@ -405,7 +401,7 @@ def public(owner, c, used=None):
 
 def _view(uid):
     used = uses(uid)
-    return {"admin": admin_on(), "on": allowed(uid), "why": features.reason("nas", uid), "max": MAX,
+    return {"admin": admin_on(), "on": features.allowed("nas", uid), "why": features.reason("nas", uid), "max": MAX,
             "items": [public(uid, c, used) for c in load(uid)]}
 
 
@@ -450,7 +446,7 @@ def _on(prof=Depends(browser_profile)):
     """Only the profile's own browser login, never a device key."""
     if not admin_on():
         raise HTTPException(403, "NAS connections are turned off")
-    if not allowed(prof["id"]):
+    if not features.allowed("nas", prof["id"]):
         raise HTTPException(403, "NAS connections are not allowed for this profile")
     return prof
 

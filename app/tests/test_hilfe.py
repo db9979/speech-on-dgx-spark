@@ -89,7 +89,7 @@ class Hilfe(unittest.TestCase):
             self.assertIn("NO TOOL", text)
         finally:
             helpers.set_config(public=False)
-        self.assertFalse(hilfe.on(None))
+        self.assertFalse(features.allowed("hilfe", None))
         self.assertEqual(self.p.get("/api/whoami").json()["hilfe"], None)
         self.assertEqual(self.o.get("/api/whoami").json()["hilfe"], {"suggest": True, "page": True})   # only that one
         self.block("hilfe", self.uid, on=True)

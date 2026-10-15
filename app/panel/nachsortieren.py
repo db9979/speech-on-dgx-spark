@@ -49,10 +49,6 @@ def admin_on(c=None):
     return features.admin_on("nachsortieren", c)
 
 
-def allowed(uid):
-    return bool(uid) and features.allowed("nachsortieren", uid)
-
-
 def size(c=None):
     s = _chat(c).get("rerank_model", "klein")
     return s if s in SIZES else "klein"

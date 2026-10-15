@@ -11,6 +11,7 @@ from unittest import mock
 from tests import helpers
 
 helpers.start()
+import features  # noqa: E402
 import guard  # noqa: E402
 import mfa  # noqa: E402
 import panel  # noqa: E402
@@ -188,7 +189,7 @@ class Stream(unittest.TestCase):
         switched(a)
         self.assertEqual(a.get("/api/profile/convos/stream").status_code, 403)
         helpers.set_config(history_live=True)        # released: at once for every profile
-        self.assertTrue(verlauf.live_on(uid_of(a)))
+        self.assertTrue(features.allowed("verlaufsync", uid_of(a)))
         block(self, uid_of(a), "verlaufsync")        # the admin blocked it for this profile
         self.assertEqual(a.get("/api/profile/convos/stream").status_code, 403)
         a.put("/api/profile/settings", json={"sync_live": True})   # the profile cannot lift it

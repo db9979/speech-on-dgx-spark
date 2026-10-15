@@ -40,10 +40,6 @@ OUTSIDE = ("web", "mail")
 _lock = threading.Lock()
 
 
-def on(uid):
-    return bool(uid) and features.allowed("tagebuch", uid)
-
-
 def _file(uid):
     return profiles._path(uid, "tagebuch.json")
 
@@ -65,7 +61,7 @@ def _clean(s, n):
 def note(uid, art, title, ref="", before=None, src="", now=None):
     """Notes one thing the Spark did. Never raises (a module's action must not fail over its diary entry)."""
     try:
-        if art not in ARTEN or not on(uid):
+        if art not in ARTEN or not features.allowed("tagebuch", uid):
             return False
         now = time.time() if now is None else now
         b = None
@@ -143,7 +139,8 @@ def offer(ctx):
     who = ctx.get("who")
     # like the other personal tools: only the profile's own login or device key (not a voice recognized at someone
     # else's browser, it could be a recording) and not over Telegram without tg_private
-    if not who or not on(who["id"]) or ctx.get("client") == "mcp" or not ctx.get("own") or ctx.get("private") is False:
+    if not who or not features.allowed("tagebuch", who["id"]) or ctx.get("client") == "mcp" or not ctx.get("own") \
+            or ctx.get("private") is False:
         return None
     import chat
     words = str(ctx.get("text") or "")
@@ -154,7 +151,7 @@ def offer(ctx):
 
 async def tool(name, args, ctx):
     who = ctx.get("who") or {}
-    if name != "spark_tagebuch" or not on(who.get("id")):
+    if name != "spark_tagebuch" or not features.allowed("tagebuch", who.get("id")):
         return "Das Spark-Tagebuch ist für dieses Profil aus."
     args = args if isinstance(args, dict) else {}
     art = args.get("art") if args.get("art") in ARTEN else None

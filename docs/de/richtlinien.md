@@ -301,6 +301,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   4. Wird der Lauf auf main rot: PUSH-STOPP für alle; der Koordinator bestimmt den Verursacher und setzt dessen ROT-FIX nach oben.
 - **Tests in Teilen (V01.0.502):** „Tests“ läuft in vier Teilen gleichzeitig (`selftest.py --part K/4`), geschnitten nach Testmodulen und ihrer Dauer in `app/tests/dauer.json` (ein Modul bleibt zusammen, weil manche Tests auf frühere Klassen ihres Moduls bauen; nur eine sehr lange Klasse mit Einträgen je Test wird Test für Test verteilt); zusammen enthalten die Teile jeden Test genau einmal. Der Job „Ergebnis“ zählt die Fehler aller Teile zusammen, die Grenze von 5 Fehlern gilt für den ganzen Lauf. Wird ein Teil deutlich länger als die anderen, `dauer.json` neu messen. (🧪 test_selftest_runner)
 - **PUSH-STOPP:** Sagt der Koordinator „PUSH-STOPP“, wird nicht gepusht, bis er die Sperre ausdrücklich aufhebt. (M)
+- **PROJEKT-SPERRE:** Steht eine Zeile „PROJEKT-SPERRE …“ oben in der Warteschlange, pusht nur der dort genannte Thread nach main; andere planen nur, dringende Fehler gehen über den Koordinator an diesen Thread. Die Sperre endet, wenn der Koordinator die Zeile entfernt. (M)
 - **Commit-Nachricht:** `V01.0.541 Kurzbeschreibung`. Die CHANGELOG-Zeilen entstehen daraus. Ein einfaches „merge main“ als Nachricht vermeiden. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):
   - Jedes `uses:` ist auf einen 40-stelligen SHA mit `# vN` gepinnt. `contents: write` nur auf Job-Ebene. `persist-credentials: false`.
@@ -431,6 +432,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 4. **Standardwerte nur an einer Stelle:** `config.default.json` für den Spark, `profiles.SETTINGS` für Profile, deren erlaubte Werte und Grenzen in `profiles.CHOICES`/`RANGES`. Kein zweiter Standardwert im Code; der Browser bekommt Vorgaben, Listen und Grenzen von `/api/profile/settings` (me.js `loadSettings`, `SDEF`, `SETC`).
 5. **Keine neuen Doppel, die alten werden weniger.** `test_aufraeumen` führt je Prüfung eine Altlastenliste mit dem Stand vom 14.10.2026. Eine Datei darf nie mehr Treffer haben als ihr Eintrag; hat sie weniger, wird ihr Eintrag im selben Commit gesenkt. Die Liste wird also nur kürzer. Ein Import, der nur für seine Nebenwirkung da ist, bekommt `# noqa: F401`.
 6. **Die große Aufräumaktion** (Abbau der Altlastenliste) startet erst, wenn kein anderer Thread mehr auf main baut (Dominik 2026-10-14), damit der ganze Code einmal einen sauberen Stand bekommt. Bis dahin räumt niemand Altlasten in Dateien auf, an denen ein anderer Thread arbeitet.
+7. **Keine Prüf-Hüllen.** Keine einzeilige Funktion, die nur `features.allowed(…)` weiterreicht: direkt `features.allowed` aufrufen (für Gäste ist es schon falsch, ein `bool(uid) and` davor ist unnötig). Ausnahme nur, wo die Funktion als Rückruf übergeben wird (`profiles.*_GATE`) oder ein Test sie ersetzt. Die Hüllen um `features.admin_on` bleiben: sie sind die geprüften Stellen der Liste `ADMIN_ON_OK` (test_sperre_ueberall).
 
 | Prüfung in test_aufraeumen | Gemeinsame Stelle |
 |---|---|
@@ -444,3 +446,4 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | SettingCopies | Vorgaben und erlaubte Werte aus `profiles.SETTINGS`/`CHOICES` (Browser: `SDEF`, `SETC`) |
 | StateFolder | Zustandsordner nur aus `common.STATE` |
 | FileRegister | Dateilisten nur aus dem Datei-Register `dateien.py` |
+| CheckWrapper | `features.allowed` direkt, keine Hülle |

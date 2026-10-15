@@ -118,14 +118,6 @@ def _said(r):
 
 
 # ---------------------------------------------------------------- switches and state
-def allowed(uid):
-    return bool(uid) and features.allowed("remarkable", uid)
-
-
-def send_allowed(uid):
-    return bool(uid) and features.allowed("rmsend", uid)
-
-
 def _file(uid):
     return profiles._path(uid, "remarkable.json")
 
@@ -718,7 +710,7 @@ async def due_once(idle=True, now=None):
     if not idle or not features.admin_on("remarkable"):
         return None
     for uid in profiles.user_ids():
-        if not allowed(uid) or uid in _busy:
+        if not features.allowed("remarkable", uid) or uid in _busy:
             continue
         d = load(uid)
         if not d.get("token") or not (d.get("picked") or d.get("all")):
@@ -916,7 +908,7 @@ async def send(uid, title, text):
         raise ValueError("nothing to send")
     title = _clean(title, 80) or "Vom Spark"
     import rmpapier
-    if rmpapier.paper_on(uid):      # a designed sheet in the device's format, in "Antworten" (rmpapier.py)
+    if features.allowed("rmpapier", uid):      # a designed sheet in the device's format, in "Antworten" (rmpapier.py)
         return await rmpapier.place(uid, "antwort", title, rmpapier.built_text(uid, "Antwort", title, text), "text",
                                     auto=False)
     return await place(uid, title, epub(title, text), art="antwort")
@@ -1005,10 +997,10 @@ async def place(uid, title, data, kind="epub", own="", auto=False, src="", art="
         did, path = renew, path_of(items, items[renew].get("parent")) if items[renew].get("parent") else ""
     else:
         folder, path, lost = await base_folder(uid, items, new)
-        if art in rmpapier.ARTEN and rmpapier.folders_on(uid):
+        if art in rmpapier.ARTEN and features.allowed("rmordner", uid):
             folder = await rmpapier.art_folder(uid, items, folder, art, new)
             path = (path or "Spark") + "/" + rmpapier.ARTEN[art]
-        if marked and rmpapier.folders_on(uid):
+        if marked and features.allowed("rmordner", uid):
             base, _, _ = await base_folder(uid, items, new)
             swap.update(await rmpapier.set_meta(uid, items, {marked: {
                 "parent": await rmpapier.art_folder(uid, items, base, "archiv", new), "pinned": False}}))
@@ -1131,12 +1123,12 @@ def answer_title(text):
 
 def answer_ok(who, own, private):
     """May this answer go to the reMarkable at all (same rule as the tool)."""
-    return bool(who and own and private is not False and send_allowed(who["id"]) and load(who["id"]).get("token"))
+    return bool(who and own and private is not False and features.allowed("rmsend", who["id"]) and load(who["id"]).get("token"))
 
 
 async def send_answer(uid, question, answer):
     """After the answer: the panel puts it on the reMarkable. Returns (ok, sentence to say)."""
-    if not send_allowed(uid):
+    if not features.allowed("rmsend", uid):
         return False, "Aufs reMarkable schicken ist aus."
     if not str(answer or "").strip():
         return False, "Es gab keine Antwort zum Ablegen."
@@ -1159,7 +1151,7 @@ def offer(ctx):
     who = ctx.get("who")
     if not who or not ctx.get("own") or ctx.get("private") is False:
         return None
-    if not send_allowed(who["id"]) or not load(who["id"]).get("token"):
+    if not features.allowed("rmsend", who["id"]) or not load(who["id"]).get("token"):
         return None
     if not WORDS.search(str(ctx.get("text") or "")) or answer_wanted(ctx.get("text"), who["id"]):
         return None   # the whole answer: the panel sends it afterwards (answer_wanted), no tool
@@ -1181,7 +1173,7 @@ def offer(ctx):
 async def tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
     if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sent", "remarkable_sheet") \
-            or not send_allowed(uid):
+            or not features.allowed("rmsend", uid):
         return "Aufs reMarkable schicken ist aus."
     if name == "remarkable_sent":       # reading only: what the Spark already put there
         return recent_text(uid)
@@ -1210,7 +1202,7 @@ async def briefing(uid, zone=None):
 
 # ---------------------------------------------------------------- routes
 def _on(prof=Depends(browser_profile)):
-    if not allowed(prof["id"]):
+    if not features.allowed("remarkable", prof["id"]):
         raise HTTPException(403, "reMarkable ist aus (Funktionen → reMarkable-Notizen)")
     return prof
 
@@ -1230,12 +1222,12 @@ def public(uid):
     lib.sort(key=lambda x: (not x["folder"], x["path"].lower()))
     return {"connected": bool(d.get("token")), "since": d.get("paired", 0), "last": d.get("last", 0),
             "error": d.get("error", ""), "count": len(d["docs"]), "all": bool(d.get("all")), "library": lib,
-            "pictures": _pictures(uid), "send": send_allowed(uid), "connect_url": CONNECT_URL,
+            "pictures": _pictures(uid), "send": features.allowed("rmsend", uid), "connect_url": CONNECT_URL,
             "target": where(uid, items)[0], "target_path": where(uid, items)[1],
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
             "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or []),
             "plus": rmplus.public(uid),
-            "paper": rmpapier.public(uid) if features.admin_on("rmpapier") and send_allowed(uid) else None}
+            "paper": rmpapier.public(uid) if features.admin_on("rmpapier") and features.allowed("rmsend", uid) else None}
 
 
 @router.get("/api/profile/remarkable", dependencies=[Depends(assistant)])
@@ -1246,7 +1238,7 @@ def info(prof=Depends(_on)):
 @router.post("/api/profile/remarkable/pair", dependencies=[Depends(assistant)])
 async def pair(request: Request, prof=Depends(secret_profile)):
     uid = prof["id"]
-    if not allowed(uid):
+    if not features.allowed("remarkable", uid):
         raise HTTPException(403, "reMarkable ist aus")
     guard.limit(request, "rmpair", uid)
     body = await core.json_body(request, 1024, lenient=True)
@@ -1345,7 +1337,7 @@ async def target(request: Request, prof=Depends(browser_profile)):
     """Ich → reMarkable → "Ablegen in": one folder of the own account ("" = "Spark"). Only where new documents go."""
     uid = prof["id"]
     _on(prof)
-    if not send_allowed(uid):
+    if not features.allowed("rmsend", uid):
         raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rm", uid)
     body = await core.json_body(request, 1024, lenient=True)
@@ -1392,7 +1384,7 @@ def _live_job(uid, t0, ok):
 @router.post("/api/profile/remarkable/send", dependencies=[Depends(assistant)])
 async def send_route(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
-    if not send_allowed(uid):
+    if not features.allowed("rmsend", uid):
         raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen → Aufs reMarkable schicken)")
     guard.limit(request, "rmsend", uid)
     body = await core.json_body(request, 4 * MAX_SEND + 4096, lenient=True)

@@ -131,17 +131,17 @@ class Panel(unittest.TestCase):
         d = c.get("/api/profile/memory").json()
         self.assertFalse(d["check"])
         helpers.set_config(memory_check=True)
-        self.assertTrue(g.on(uid))                                    # released by the admin: on for the profile at once
+        self.assertTrue(features.allowed("gedpruefen", uid))                  # released by the admin: on for the profile at once
         self.assertTrue(c.get("/api/profile/settings").json()["allow"]["mem_check"])
         helpers.set_config(deny={"gedpruefen": [uid]})                # the admin blocks this one profile
-        self.assertFalse(g.on(uid))
+        self.assertFalse(features.allowed("gedpruefen", uid))
         self.assertFalse(c.get("/api/profile/memory").json()["check"])
         self.assertFalse(c.get("/api/profile/settings").json()["allow"]["mem_check"])
         helpers.set_config(deny={"memory": [uid]})                    # ... or the Gedächtnis it builds on
-        self.assertFalse(g.on(uid))
+        self.assertFalse(features.allowed("gedpruefen", uid))
         self.assertEqual(TestClient(panel.app).get("/api/profile/memory").status_code, 401)
         self.assertEqual(TestClient(panel.app).post("/api/profile/memory/x/confirm", json={}).status_code, 401)
-        self.assertFalse(g.on(None))
+        self.assertFalse(features.allowed("gedpruefen", None))
 
     def test_evidence_kept_even_while_off(self):
         c, uid = profile("Gedb")

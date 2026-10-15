@@ -82,14 +82,6 @@ def on(key, uid):
     return bool(uid) and features.allowed(key, uid) and bool(remarkable.load(uid).get("token"))
 
 
-def folders_on(uid):
-    return bool(uid) and features.allowed("rmordner", uid)
-
-
-def paper_on(uid):
-    return bool(uid) and features.allowed("rmpapier", uid)
-
-
 # ---------------------------------------------------------------- the device
 def model_key(uid, d=None):
     """The model the sheets are made for: the profile's choice, else the one its pages showed (auto), else rm2."""
@@ -939,7 +931,8 @@ async def tidy(uid, now=None):
 async def place(uid, art, title, built, kind, own="", pinned=False, auto=True):
     """Puts a built sheet (pdf, fields, pages) there and records its boxes. kind: what it is (morgen, text, kalib)."""
     data, fields, pages = built
-    r = await remarkable.place(uid, title, data, "pdf", own=own, auto=auto, art=art, pinned=pinned and folders_on(uid))
+    r = await remarkable.place(uid, title, data, "pdf", own=own, auto=auto, art=art,
+                               pinned=pinned and features.allowed("rmordner", uid))
     m = model(model_key(uid))
     d = remarkable.load(uid)
     pp = d.get("papers") if isinstance(d.get("papers"), dict) else {}
@@ -1078,7 +1071,7 @@ async def _act(uid, did, it, pp, states, ink, items, new, changes):
             continue
         if f["k"] == "weg" and st == "an":
             if ink >= NOTES_MM:
-                if folders_on(uid):
+                if features.allowed("rmordner", uid):
                     new_base, _, _ = await remarkable.base_folder(uid, items, new)
                     changes[did] = {"parent": await art_folder(uid, items, new_base, "archiv", new)}
                     pp["did"] = "archiv"
@@ -1184,7 +1177,7 @@ CLOUD = (remarkable.CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooL
 @router.get("/api/profile/remarkable/papier", dependencies=[Depends(assistant)])
 def info(prof=Depends(browser_profile)):
     uid = prof["id"]
-    if not remarkable.allowed(uid):
+    if not features.allowed("remarkable", uid):
         raise HTTPException(403, "reMarkable ist aus")
     return public(uid)
 

@@ -52,12 +52,8 @@ FIELDS = (("never", []), ("done", []), ("shown", []), ("convs", []), ("gaps", {}
 router = APIRouter()
 
 
-def on(uid, c=None):
-    return bool(uid) and features.allowed("tipps", uid, c)
-
-
 def push_on(uid, c=None):
-    return on(uid, c) and features.allowed("tippspush", uid, c)
+    return features.allowed("tipps", uid, c) and features.allowed("tippspush", uid, c)
 
 
 # ---------------------------------------------------------------- per profile: counts and what was shown
@@ -110,7 +106,7 @@ def forget(uid):
 
 def record(uid, names, spoken, now=None):
     """Counts the kinds of this question (the Weiche's groups, spoken or typed) for "repeat"; never the words."""
-    if not on(uid):
+    if not features.allowed("tipps", uid):
         return
     kinds = [n for n in names if n in ("websuche", "dokument", "erinnerung")][:3] + (["spoken"] if spoken else [])
     if not kinds:
@@ -193,7 +189,7 @@ WISH_WHY = {"profile": ("Das kann ich, wenn du es einschaltest.", "I can do that
 def wish(uid, explain, conv="", org="panel", outside=False, admin=False, now=None):
     """Plan 1: the person asked for something whose function is off (intent.explain). The hint or None."""
     now = now or time.time()
-    if not explain or not on(uid) or _quiet(uid, org, outside) or explain.get("why") not in WISH_WHY:
+    if not explain or not features.allowed("tipps", uid) or _quiet(uid, org, outside) or explain.get("why") not in WISH_WHY:
         return None
     key = explain.get("key")
     if key not in features.BY_KEY:
@@ -348,7 +344,7 @@ def candidates(uid, admin=False, c=None, now=None):
 
 def listing(uid, admin=False, c=None):
     """Ich → Überblick "Für dich vorgeschlagen": at most three, each with its reason."""
-    if not on(uid, c):
+    if not features.allowed("tipps", uid, c):
         return []
     return candidates(uid, admin, c)[:MAX_LIST]
 
@@ -440,7 +436,7 @@ def _event(what):
 def api_list(request: Request, prof=Depends(browser_profile)):
     import hilfe
     admin = hilfe.admin_here(request) != "profile"
-    return {"on": on(prof["id"]), "items": listing(prof["id"], admin)}
+    return {"on": features.allowed("tipps", prof["id"]), "items": listing(prof["id"], admin)}
 
 
 @router.post("/api/profile/tipps/{tid}", dependencies=[Depends(assistant)])
@@ -454,7 +450,7 @@ async def api_do(tid: str, request: Request, prof=Depends(browser_profile)):
     lang = "en" if isinstance(body, dict) and body.get("lang") == "en" else "de"
     if do not in ("setup", "check", "never", "ask"):
         raise HTTPException(400, "do: setup, check, never or ask")
-    if not on(uid):
+    if not features.allowed("tipps", uid):
         raise HTTPException(403, "Funktionen vorschlagen ist aus")
     admin = hilfe.admin_here(request) != "profile"
     x = _find(uid, tid, admin)

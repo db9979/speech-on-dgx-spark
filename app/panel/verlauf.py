@@ -51,10 +51,6 @@ _send = _hub.send
 _busy = {}   # uid -> {token: {"kind", "convo", "tab", "since"}}
 
 
-def live_on(uid):
-    return bool(uid) and features.allowed("verlaufsync", uid)
-
-
 streams = _hub.count   # open streams (for the live view: only the number)
 
 
@@ -112,11 +108,11 @@ def running(uid):
 @router.get("/api/profile/convos/stream", dependencies=[Depends(assistant)])
 async def stream(request: Request, prof=Depends(own_profile)):
     uid = prof["id"]
-    if not live_on(uid):
+    if not features.allowed("verlaufsync", uid):
         raise HTTPException(403, ("Sofort-Abgleich geht für dich gerade nicht. " + features.missing_text("verlaufsync", uid)).strip())
     guard.limit(request, "convostream", uid)
     # the oldest page gives way past MAX_STREAMS (it asks ?since= every 30 s anyway)
-    return _hub.stream(uid, lambda: live_on(uid), STREAM_SECONDS, first=lambda: running(uid))
+    return _hub.stream(uid, lambda: features.allowed("verlaufsync", uid), STREAM_SECONDS, first=lambda: running(uid))
 
 
 # ---------------------------------------------------------------- one conversation for all channels

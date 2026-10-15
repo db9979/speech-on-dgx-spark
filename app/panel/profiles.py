@@ -1195,12 +1195,13 @@ def remember(uid, text, auto=False, src=None, convo=None, version=None):
     it, the time it counts as confirmed. version (fix, nachfrage): with „Gedächtnis prüfen“ on, a fact about the same
     thing (the same fixed key, e.g. „wohnt in“) gets the new wording and keeps the old one as an earlier version,
     instead of a second fact beside it."""
+    import features
     import gedaechtnis
     text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
     if not text:
         return None
     src = src if src in gedaechtnis.SRC else "auto" if auto else "said"
-    kv = gedaechtnis.key_of(text) if version in ("fix", "nachfrage") and gedaechtnis.on(uid) else None
+    kv = gedaechtnis.key_of(text) if version in ("fix", "nachfrage") and features.allowed("gedpruefen", uid) else None
     with _lock:
         facts = [x for x in memory(uid) if x["text"].lower() != text.lower()]
         now = int(time.time())

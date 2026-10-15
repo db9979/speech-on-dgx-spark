@@ -105,11 +105,6 @@ _running = set()               # profiles with a run going
 _day = DayCounter()            # per day: learned, failed, restyled, used (Zustand → Live)
 
 
-def allowed(uid, c=None):
-    """The function for this profile: admin switch on, not blocked, a mailbox (features.allowed knows the chain)."""
-    return bool(uid) and features.allowed("mailstil", uid, c)
-
-
 # ---------------------------------------------------------------- the stored style
 def _file(uid):
     return profiles._path(uid, "mailstil.json")
@@ -157,7 +152,7 @@ def _key(salt, v):
 
 def public(uid):
     d = load(uid)
-    return {"on": allowed(uid), "groups": {g: d["groups"][g] for g in GROUP_KEYS if g in d["groups"]},
+    return {"on": features.allowed("mailstil", uid), "groups": {g: d["groups"][g] for g in GROUP_KEYS if g in d["groups"]},
             "names": [{"id": g, "de": de, "en": en} for g, de, en in GROUPS],
             "learned": int(d.get("t") or 0), "mails": int(d.get("mails") or 0), "state": d.get("state") or "",
             "why": d.get("why") or "", "running": uid in _running,
@@ -466,7 +461,7 @@ TASK = ("\nSchreib im Stil des Nutzers (zwischen <<<STIL und STIL>>>): nur Anred
 
 def for_reply(uid, mail_text, want=True):
     """(extra task line, style block) for the Begleiter's reply draft; ("", "") when the style does not apply."""
-    if not want or not allowed(uid):
+    if not want or not features.allowed("mailstil", uid):
         return "", ""
     b, g = block(uid, sender_of(mail_text), mail_text)
     if not b:
@@ -479,7 +474,7 @@ def for_reply(uid, mail_text, want=True):
 async def restyle(uid, text, who):
     """A voice or chat draft (mail_draft) in the profile's style; the draft itself when there is no style or
     the model fails. One plain request without tools."""
-    if not allowed(uid):
+    if not features.allowed("mailstil", uid):
         return text
     b, g = block(uid, who)
     if not b:
@@ -525,7 +520,7 @@ def _live(text):
 
 # ---------------------------------------------------------------- endpoints
 def _mine(request, prof, rate="mailstil"):
-    if not allowed(prof["id"]):
+    if not features.allowed("mailstil", prof["id"]):
         raise HTTPException(403, features.missing_text("mailstil", prof["id"]) or "Der Mailstil ist aus.")
     guard.limit(request, rate, prof["id"])
 

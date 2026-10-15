@@ -136,7 +136,7 @@ class Switches(Base):
         self.assertIs(profiles.SETTINGS["devup_night"][0], True)   # a preference: on unless the profile opts out
         helpers.set_config(dev_updates=False)
         self.assertFalse(gu.admin_on())
-        self.assertFalse(gu.allowed(self.anna))
+        self.assertFalse(features.allowed("geraeteupdate", self.anna))
         self.assertEqual(ADMIN.post("/api/admin/devup/check").status_code, 403)
         run(gu.tick(now=local(5, 20)))
         self.assertEqual(self.notes, [])

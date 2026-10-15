@@ -2458,7 +2458,7 @@ flowchart TD
 ```
 
 1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in bilder.start.
-2. <a id="kn-bild-s2"></a>**Funktion frei?**: bilder.on fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
+2. <a id="kn-bild-s2"></a>**Funktion frei?**: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
 3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen.
 4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge.
 5. <a id="kn-bild-s5"></a>**Warten auf eine Pause**: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang.
@@ -2490,7 +2490,7 @@ flowchart TD
 #### Im Code
 
 - `app/panel/bilder.py` `start`: Wunsch annehmen ([Schritt 1](#kn-bild-s1))
-- `app/panel/bilder.py` `on`: Freigabe für das Profil ([Schritt 2](#kn-bild-s2))
+- `app/panel/features.py` `allowed`: Freigabe für das Profil ([Schritt 2](#kn-bild-s2))
 - `app/panel/bilder.py` `refuse_text`: Wortliste und Personen ([Schritt 3](#kn-bild-s3))
 - `app/panel/bilder.py` `_work`: Auftrag im Hintergrund ([Schritt 5](#kn-bild-s5))
 - `app/panel/bilder.py` `keep`: Bild ablegen ([Schritt 10](#kn-bild-s10))

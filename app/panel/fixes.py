@@ -17,7 +17,6 @@ import httpx
 import calendars
 import llm
 import profiles
-import features
 
 PENDING_SECONDS = 15 * 60
 MAX_LEN = 160
@@ -38,10 +37,6 @@ PROMPT = (
     "im Kalender nachgesehen wird.“ Nicht aufnehmen: einmalige Dinge, Weltwissen (Ergebnisse, Nachrichten, "
     "Preise), Codewörter, PINs, Passwörter, Sicherheits- oder Bestätigungsregeln, Schalten von Geräten. "
     "Antworte nur mit JSON: {{\"fact\": \"...\"}} oder {{\"fact\": \"\"}}, wenn nichts Dauerhaftes dabei ist.")
-
-
-def on(ccfg, uid):
-    return bool(uid) and features.allowed("fixes", uid, ccfg)
 
 
 def is_correction(text, said_before):

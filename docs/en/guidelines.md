@@ -301,6 +301,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
   4. If the run on main turns red: PUSH-STOPP for everyone; the coordinator finds the cause and puts its ROT-FIX on top.
 - **Tests in parts (V01.0.502):** "Tests" runs in four parts at the same time (`selftest.py --part K/4`), cut by test module and its duration in `app/tests/dauer.json` (a module stays together because some tests build on earlier classes of their module; only a very long class with entries per test is spread test by test); together the parts hold every test exactly once. The job "Ergebnis" adds up the failures of all parts; the limit of 5 failures counts for the whole run. If one part gets clearly longer than the others, measure `dauer.json` again. (🧪 test_selftest_runner)
 - **PUSH STOP:** if the coordinator says "PUSH-STOPP", nothing is pushed until they explicitly lift the block. (M)
+- **PROJECT LOCK:** while a "PROJEKT-SPERRE …" line is on top of the queue, only the thread named there pushes to main; others only plan, urgent fixes go through the coordinator to that thread. The lock ends when the coordinator removes the line. (M)
 - **Commit message:** `V01.0.541 short description`. The CHANGELOG lines are made from it. Avoid a plain "merge main" as the message. (📝)
 - **Workflows** (repo-absichern, 2026-10-11):
   - Every `uses:` is pinned to a 40-character SHA with `# vN`. `contents: write` only at job level. `persist-credentials: false`.
@@ -431,6 +432,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 4. **Defaults in one place only:** `config.default.json` for the Spark, `profiles.SETTINGS` for profiles, their allowed values and bounds in `profiles.CHOICES`/`RANGES`. No second default in the code; the browser gets defaults, lists and bounds from `/api/profile/settings` (me.js `loadSettings`, `SDEF`, `SETC`).
 5. **No new duplicates, the old ones get fewer.** `test_aufraeumen` keeps a legacy list per check with the state of 14.10.2026. A file may never have more hits than its entry; if it has fewer, its entry is lowered in the same commit. So the list only gets shorter. An import kept only for its side effect gets `# noqa: F401`.
 6. **The big cleanup** (working off the legacy list) starts only when no other thread builds on main anymore (Dominik 2026-10-14), so the whole code gets one clean state. Until then nobody cleans up legacy in files another thread is working on.
+7. **No check wrappers.** No one-line function that only passes on `features.allowed(…)`: call `features.allowed` directly (it is already false for guests, a `bool(uid) and` in front is not needed). Only where the function is handed over as a callback (`profiles.*_GATE`) or a test replaces it. The wrappers around `features.admin_on` stay: they are the audited places of the list `ADMIN_ON_OK` (test_sperre_ueberall).
 
 | Check in test_aufraeumen | Shared place |
 |---|---|
@@ -444,3 +446,4 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | SettingCopies | defaults and allowed values from `profiles.SETTINGS`/`CHOICES` (browser: `SDEF`, `SETC`) |
 | StateFolder | state folder only from `common.STATE` |
 | FileRegister | file lists only from the file register `dateien.py` |
+| CheckWrapper | `features.allowed` directly, no wrapper |

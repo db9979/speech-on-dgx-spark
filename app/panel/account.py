@@ -749,7 +749,7 @@ async def profile_mfa_recovery(request: Request, prof=Depends(browser_profile)):
 @router.get("/api/profile/memory", dependencies=[Depends(assistant)])
 def profile_memory(prof=Depends(own_profile)):
     # Gedächtnis prüfen (gedaechtnis.py): with the switches on every fact carries its source, confirmation and mark
-    check = gedaechtnis.on(prof["id"])
+    check = features.allowed("gedpruefen", prof["id"])
     return {"profile": prof, "facts": gedaechtnis.view(prof["id"]), "tidy": memtidy.pending(prof["id"]),
             "check": check, "months": gedaechtnis.months() if check else None,
             "topics": {k: v for k, v in gedaechtnis.TOPICS.items()} if gedaechtnis.topics_on(prof["id"]) else None}
@@ -760,7 +760,7 @@ async def profile_confirm_fact(fact_id: str, request: Request, prof=Depends(brow
     """Ich → Gedächtnis → „Stimmt noch“: the fact counts as right from now on (the panel's rules, no model)."""
     guard.limit(request, "memory", uid=prof["id"])
     await json_body(request, 256)
-    if not gedaechtnis.on(prof["id"]):
+    if not features.allowed("gedpruefen", prof["id"]):
         raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     if not gedaechtnis.confirm(prof["id"], str(fact_id)[:40]):
         raise HTTPException(404, "Eintrag nicht gefunden")
@@ -772,7 +772,7 @@ async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(brow
     """Ich → Gedächtnis → „Zurückholen“: {"i": n} makes the fact's earlier version n its wording again."""
     guard.limit(request, "memory", uid=prof["id"])
     body = await json_body(request, 256)
-    if not gedaechtnis.on(prof["id"]):
+    if not features.allowed("gedpruefen", prof["id"]):
         raise HTTPException(403, "Gedächtnis prüfen ist für dich nicht freigegeben (Funktionen → Gedächtnis prüfen).")
     i = body.get("i") if isinstance(body, dict) else None
     if not isinstance(i, int) or isinstance(i, bool) or not 0 <= i < profiles.MAX_PREV:

@@ -343,7 +343,7 @@ async def prepare(request):
     memcheck = None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + chat.memory_hint(prof)).strip()
-        memcheck = chat.gedaechtnis.for_turn(prof["id"]) if chat.gedaechtnis.on(prof["id"], ccfg) else None
+        memcheck = chat.gedaechtnis.for_turn(prof["id"]) if features.allowed("gedpruefen", prof["id"], ccfg) else None
     past = bool(prof and ccfg.get("history", True) and features.allowed("history", prof["id"], ccfg))
     if past:
         system = (system + "\n\n" + chat.HISTORY_HINT).strip()
@@ -435,7 +435,7 @@ async def prepare(request):
     # read by fixed rules before anything else; it carries the code word of the command it answers
     import klaeren
     src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
-    kl_on = bool(who and own_browser and private_ok and not mcp and klaeren.on(who["id"]))
+    kl_on = bool(who and own_browser and private_ok and not mcp and features.allowed("klaeren", who["id"]))
     kl = klaeren.answer(who["id"], src, messages[-1]["content"], own_browser) \
         if kl_on and messages[-1]["role"] == "user" and not room_far else None
     kl_took = bool(kl)
@@ -635,7 +635,7 @@ async def prepare(request):
             cal_note.append(basis[1])
             system = per_turn(system, basis[0])
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
-    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, who["id"])
+    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and features.allowed("fixes", who["id"], ccfg)
                   and messages[-1]["role"] == "user" and not mcp and not act_held)
     fix_fix, fix_prev = False, ""
     if fix_ok and not prop and not mprop and not xprop and not pro and not kl_took:
@@ -860,7 +860,7 @@ async def prepare(request):
     # own words; the first round must look in the documents, which then lists the pages changed last
     recent_ask = None
     if docs and own_browser and private_ok and ask_text and "document_search" in {t["function"]["name"] for t in tools} \
-            and wissen.fresh_on(who["id"]):
+            and features.allowed("rmfresh", who["id"]):
         recent_ask = wissen.recent_window(ask_text, chat.user_zone(body.get("tz")))
         if recent_ask is not None:
             force, need = "document_search", ["document_search"]

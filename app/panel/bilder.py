@@ -114,10 +114,6 @@ def admin_on():
     return features.admin_on(KEY)
 
 
-def on(uid):
-    return bool(uid) and features.allowed(KEY, uid)
-
-
 def limits(c=None):
     c = cfg() if c is None else c
     return {"day": int(c["day_limit"]), "store_mb": int(c["store_mb"]), "max_side": int(c["max_side"]),
@@ -337,7 +333,7 @@ def _say(why, prof):
 def start(prof, prompt, wish, fmt, src="chat", client="web"):
     """Checks everything with fixed rules and starts a job; raises ValueError((de, en)) with the reason."""
     uid = prof["id"]
-    if not on(uid):
+    if not features.allowed(KEY, uid):
         _say("aus", prof)
         raise ValueError(("Bilder malen ist für dich nicht freigegeben.", "Painting pictures is not released for you."))
     try:
@@ -512,7 +508,7 @@ def offer(ctx):
         return None
     if asked:
         _recent[uid] = time.time()   # the wish itself: the assistant may ask back, the answer still paints
-    if not on(uid):
+    if not features.allowed(KEY, uid):
         return {"tools": [], "hint": off_hint(uid)} if asked else None
     return {"tools": [TOOL], "hint": HINT, "changes": {"bild_malen"}, "keep": {"bild_malen"},
             "filler": {"bild_malen": ("Ich male das Bild.", "Painting the picture.")}}
@@ -540,7 +536,7 @@ async def tool(name, args, ctx):
 
 # ---------------------------------------------------------------- routes
 def _prof(request, prof):
-    if not on(prof["id"]):
+    if not features.allowed(KEY, prof["id"]):
         raise HTTPException(403, "Bilder malen ist aus (Funktionen → Bilder malen)")
     return prof
 

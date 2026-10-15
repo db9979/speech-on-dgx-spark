@@ -147,12 +147,8 @@ def admin_on():
     return features.admin_on("erstellen")
 
 
-def on(uid):
-    return bool(uid) and features.allowed("erstellen", uid)
-
-
 def templates_on(uid):
-    return on(uid) and features.allowed("erstellenvorlagen", uid)
+    return features.allowed("erstellen", uid) and features.allowed("erstellenvorlagen", uid)
 
 
 # ---------------------------------------------------------------- checking what comes in
@@ -959,7 +955,7 @@ async def material(uid, plan, own, tr=None):
 
 
 def pictures_on(uid):
-    return on(uid) and features.allowed("erstellenbilder", uid)
+    return features.allowed("erstellen", uid) and features.allowed("erstellenbilder", uid)
 
 
 def _pic_dir(uid):
@@ -1256,7 +1252,7 @@ def status_text(uid):
                      + "".join(f", geschickt an {TARGET_NAMES[s['to']]} {_when(s.get('t'))}" for s in sent))
     out = ("; ".join(parts) or "Noch keine Dokumente erstellt.") + " Alles liegt unter Ich → Dokumente."
     import remarkable
-    if remarkable.send_allowed(uid) and remarkable.load(uid).get("token"):
+    if features.allowed("rmsend", uid) and remarkable.load(uid).get("token"):
         out += " " + remarkable.recent_text(uid)
     return out
 
@@ -1378,7 +1374,7 @@ def offer(ctx):
         and str(ctx.get("before") or "").rstrip().endswith("?")
     if asked:
         _wish[uid] = (time.time(), src)
-    if not on(uid):
+    if not features.allowed("erstellen", uid):
         # switched off: no tools, but the model says where to switch it on instead of writing slides as text
         if asked or follow:
             return {"tools": [], "hint": off_hint(uid), "route": ("erstellen", "aus") if follow else None}
@@ -1416,7 +1412,7 @@ def plan_public(p):
 async def tool(name, args, ctx):
     who = ctx.get("who") or {}
     uid = who.get("id")
-    if not on(uid):
+    if not features.allowed("erstellen", uid):
         return "Dokumente erstellen ist für dieses Profil aus."
     args = args if isinstance(args, dict) else {}
     if name == "document_plan":
@@ -1549,7 +1545,7 @@ def send_targets(uid):
         pass
     try:
         import remarkable
-        if remarkable.send_allowed(uid) and remarkable.load(uid).get("token"):
+        if features.allowed("rmsend", uid) and remarkable.load(uid).get("token"):
             out.append("rm")
     except Exception:
         pass
@@ -1771,7 +1767,7 @@ def check_template(name, data):
 
 # ---------------------------------------------------------------- routes
 def _prof(request, prof):
-    if not on(prof["id"]):
+    if not features.allowed("erstellen", prof["id"]):
         raise HTTPException(403, "Dokumente erstellen ist aus (Funktionen → Eigene Dokumente → Dokumente erstellen)")
     return prof
 
@@ -1928,7 +1924,7 @@ async def doc_dl(request: Request, t: str = ""):
     link and once the function is off for the profile, like a missing file."""
     guard.limit(request, "makedl")
     x = use_link(t)
-    d = load(x["uid"], x["doc"]) if x and on(x["uid"]) and ID.fullmatch(x["doc"]) else None
+    d = load(x["uid"], x["doc"]) if x and features.allowed("erstellen", x["uid"]) and ID.fullmatch(x["doc"]) else None
     try:      # Live-Bild: the link is an entry without a login (fixed words, never the title or the link)
         import live
         live.mark("Eingang", ("Download-Link benutzt" if d else "Download-Link abgewiesen")

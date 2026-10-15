@@ -45,10 +45,6 @@ def admin_on():
     return features.admin_on("tasks")
 
 
-def usable(uid):
-    return features.allowed("tasks", uid)
-
-
 def _file(uid):
     return profiles._path(uid, "tasks.json")
 
@@ -370,7 +366,7 @@ HINT = ("Für die Einkaufsliste und die Aufgabenliste nutzt du tasks_show, tasks
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not usable(who["id"]):
+    if not who or not ctx.get("own") or not features.allowed("tasks", who["id"]):
         return None  # a voice recognized at someone else's device reads no lists either
     tools = TOOLS
     outside = {"tasks_show"} if _load(who["id"])["targets"] else set()   # shared CalDAV lists hold others' words
@@ -409,7 +405,7 @@ async def tool(name, args, ctx):
 
 
 async def briefing(uid, zone=None):
-    if not usable(uid):
+    if not features.allowed("tasks", uid):
         return ""
     try:
         have = await items(uid, "aufgaben")
@@ -537,7 +533,7 @@ def _inbox(request, list, take, format):
     if not prof:
         raise HTTPException(401, "no profile")
     wait = {"Retry-After": str(OFF_RETRY)}
-    if not usable(prof["id"]):
+    if not features.allowed("tasks", prof["id"]):
         raise HTTPException(403, "tasks are turned off", headers=wait)
     try:
         _app_ios(request, prof["id"])

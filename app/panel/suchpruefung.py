@@ -278,7 +278,8 @@ async def run(uid, now=None, why="nacht"):
                 vecs = None
                 print("wissen: suchpruefung ohne bedeutung |", docembed.reason(e), flush=True)
         mixed = {}
-        res, summary = await vorrang.in_thread("Suchprüfung", _measure, uid, qs, vecs, wissen.fresh_on(uid), embed_ms, mixed)
+        res, summary = await vorrang.in_thread("Suchprüfung", _measure, uid, qs, vecs, features.allowed("rmfresh", uid),
+                                               embed_ms, mixed)
         await _reranked(uid, qs, mixed, res, summary)
         summary["at"], summary["why"] = int(now), why
 
@@ -305,7 +306,7 @@ async def _reranked(uid, qs, mixed, res, summary):
     """With "Treffer nachsortieren" (Stufe 3): the mixed hits once more through the cross-encoder, as the assistant
     gets them. Only when every question was re-ranked in time; else this kind is left out of the run."""
     import nachsortieren
-    if not nachsortieren.allowed(uid):
+    if not features.allowed("nachsortieren", uid):
         return
     if not nachsortieren.running():
         await nachsortieren._start()
@@ -468,7 +469,7 @@ async def probe(qid: str, request: Request, prof=Depends(browser_profile)):
         raise HTTPException(404, "no such question")
     import wissen
     vec = await docembed.query(q["q"]) if wissen.on(uid, "semantic") else None
-    hits = await asyncio.to_thread(documents.search, uid, q["q"], DEPTH, vec, False, None, wissen.fresh_on(uid))
+    hits = await asyncio.to_thread(documents.search, uid, q["q"], DEPTH, vec, False, None, features.allowed("rmfresh", uid))
     names = await asyncio.to_thread(_docs, uid)
     place = _place(hits, q["doc"])
     print(f"wissen: pruefrage probiert | platz {place}", flush=True)

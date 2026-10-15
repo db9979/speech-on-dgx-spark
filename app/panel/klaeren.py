@@ -60,12 +60,8 @@ def tool_area(area, de, en, tool, slot):
     TOOLS[area] = (tool, slot)
 
 
-def on(uid, c=None, s=None):
-    return bool(uid) and features.allowed("klaeren", uid, c, s)
-
-
 def merken_on(uid, c=None, s=None):
-    return on(uid, c, s) and features.allowed("klaerenmerken", uid, c, s)
+    return features.allowed("klaeren", uid, c, s) and features.allowed("klaerenmerken", uid, c, s)
 
 
 # ---------------------------------------------------------------- words
@@ -288,7 +284,8 @@ def answer(uid, src, text, own=True):
 def _usable(ctx):
     """Asking and mappings only for the profile's own login or voice, never on outside text (a mail, a page)."""
     who = (ctx or {}).get("who")
-    return bool(who and ctx.get("own") and not ctx.get("outside_before", ctx.get("outside")) and on(who["id"]))
+    return bool(who and ctx.get("own") and not ctx.get("outside_before", ctx.get("outside"))
+                and features.allowed("klaeren", who["id"]))
 
 
 def pinned(ctx, area, said):
@@ -356,7 +353,7 @@ def _save(uid, rows):
 
 def lookup(uid, area, ws, touch=True):
     """The mapping for exactly these words in this area, or None."""
-    if not ws or not on(uid):
+    if not ws or not features.allowed("klaeren", uid):
         return None
     with _lock:
         rows = load(uid)
@@ -419,7 +416,7 @@ def _prof(request, write=False):
     prof = browser_profile(request) if write else profiles.current(request)
     if not prof:
         raise HTTPException(403, "Zuordnungen gibt es nur mit Profil.")
-    if not on(prof["id"]):
+    if not features.allowed("klaeren", prof["id"]):
         raise HTTPException(403, "Rückfrage und Merken ist aus.")
     return prof
 

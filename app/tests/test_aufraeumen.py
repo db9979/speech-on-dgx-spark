@@ -19,6 +19,8 @@ starts at zero.
      in a script or another module (the browser gets them from /api/profile/settings)
 - k  the state folder only from common.STATE; the panel's files only in the register dateien.py (backup, speicher
      and technik take their lists from it)
+- l  no one-line wrapper around features.allowed (a function that only returns it): call features.allowed
+     directly; the features.admin_on wrappers are the audited places of test_sperre_ueberall.ADMIN_ON_OK
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -202,6 +204,52 @@ class RawFetch(Ratchet, unittest.TestCase):
             if n:
                 out[name] = n
         return out
+
+
+class CheckWrapper(Ratchet, unittest.TestCase):
+    WHAT = "a one-line wrapper around features.allowed, call features.allowed directly"
+    # kept on purpose (big cleanup step 9): handed over as a gate callback (profiles.*_GATE), or a test patches it.
+    # Wrappers of features.admin_on are not counted: they are the audited places of test_sperre_ueberall.ADMIN_ON_OK.
+    ALT = {"panel/begleiter.py": 1,       # allowed: profiles.DESK_GATE
+           "panel/iphone.py": 2,          # allowed, area_on: profiles.APP_GATE, profiles.APP_AREA_GATE
+           "panel/kiwix.py": 1,           # usable: test_folien patches it
+           "panel/pebblewatch.py": 1,     # allowed: profiles.WATCH_GATE
+           "panel/rmliste.py": 1,         # on: test_werkzeug_abdeckung patches it
+           "panel/roomlive.py": 1}        # _gate: profiles.ROOM_GATE
+
+    @staticmethod
+    def wrappers(src):
+        """Names of the module's functions whose body (besides a docstring) is only `return features.allowed(...)`
+        with plain names and constants, also behind a `bool(uid) and` guard (features.allowed is False for no uid)."""
+        def check(e):
+            return (isinstance(e, ast.Call) and isinstance(e.func, ast.Attribute) and isinstance(e.func.value, ast.Name)
+                    and e.func.value.id == "features" and e.func.attr == "allowed" and not e.keywords
+                    and all(isinstance(a, (ast.Name, ast.Constant)) for a in e.args))
+        out = []
+        for node in ast.parse(src).body:
+            if not isinstance(node, ast.FunctionDef) or node.decorator_list:
+                continue
+            body = node.body[1:] if ast.get_docstring(node) is not None else node.body
+            if len(body) != 1 or not isinstance(body[0], ast.Return) or body[0].value is None:
+                continue
+            e = body[0].value
+            if isinstance(e, ast.BoolOp) and isinstance(e.op, ast.And) and len(e.values) == 2 \
+                    and isinstance(e.values[0], ast.Call) and getattr(e.values[0].func, "id", "") == "bool" \
+                    and all(isinstance(a, ast.Name) for a in e.values[0].args):
+                e = e.values[1]
+            if check(e):
+                out.append(node.name)
+        return out
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: 0 if name == "panel/features.py" else len(self.wrappers(src)))
+
+    def test_the_scan_sees_a_wrapper(self):
+        self.assertEqual(self.wrappers('def a(uid):\n    return features.allowed("x", uid)\n'), ["a"])
+        self.assertEqual(self.wrappers('def d():\n    return features.admin_on("x")\n'), [])   # ADMIN_ON_OK
+        src = 'def b(uid, c=None):\n    """Doc."""\n    return bool(uid) and features.allowed("x", uid, c)\n'
+        self.assertEqual(self.wrappers(src), ["b"])
+        self.assertEqual(self.wrappers('def c(uid):\n    return features.allowed("x", uid) and has(uid)\n'), [])
 
 
 def panel_text(py=True):

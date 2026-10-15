@@ -2458,7 +2458,7 @@ flowchart TD
 ```
 
 1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Both end in bilder.start.
-2. <a id="kn-bild-s2"></a>**Feature released?**: bilder.on asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
+2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
 3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it.
 4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait.
 5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds.
@@ -2490,7 +2490,7 @@ flowchart TD
 #### In the code
 
 - `app/panel/bilder.py` `start`: accept a wish ([step 1](#kn-bild-s1))
-- `app/panel/bilder.py` `on`: release for the profile ([step 2](#kn-bild-s2))
+- `app/panel/features.py` `allowed`: release for the profile ([step 2](#kn-bild-s2))
 - `app/panel/bilder.py` `refuse_text`: word list and people ([step 3](#kn-bild-s3))
 - `app/panel/bilder.py` `_work`: job in the background ([step 5](#kn-bild-s5))
 - `app/panel/bilder.py` `keep`: store the picture ([step 10](#kn-bild-s10))

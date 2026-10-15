@@ -122,7 +122,7 @@ class Off(unittest.TestCase):
         self.assertEqual(c.get("/api/bilder").status_code, 403)
         helpers.set_config(bilder=True)            # switched on, but the model is not installed
         try:
-            self.assertFalse(bilder.on(prof["id"]))
+            self.assertFalse(features.allowed(bilder.KEY, prof["id"]))
             self.assertEqual(c.get("/api/bilder").status_code, 403)
             self.assertIn("einzurichten", features.missing_text("bilder", prof["id"]))
         finally:
@@ -140,7 +140,7 @@ class Access(On):
         self.assertEqual(c.get("/api/bilder").status_code, 200)
         block(prof["id"])
         try:
-            self.assertFalse(bilder.on(prof["id"]))
+            self.assertFalse(features.allowed(bilder.KEY, prof["id"]))
             self.assertEqual(c.get("/api/bilder").status_code, 403)
             self.assertEqual(c.post("/api/bilder", json={"wunsch": "Ein Haus"}).status_code, 403)
             o = bilder.offer({"who": prof, "own": True, "text": "Mal mir eine Katze"})
