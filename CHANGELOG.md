@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.634** · 2026-10-15 · umziehen.py: abgelehnter Umzug nennt Art, Datei, Funktion und Zeile im Log
 - **V01.0.633** · 2026-10-15 · Rot-Fix: Vorliebe „Der Spark darf mich anrufen“ im Einstellungs-Katalog eingeordnet (persönlich, nicht vom Berater verstellt)
 - **V01.0.632** · 2026-10-15 · Telefon T4: der Spark ruft an (Schalter, Standard aus): Weckruf und Erinnerung per Anruf über das Werkzeug „Anrufen lassen“, nur an das eigene Mobilteil oder die bestätigte Nummer, höchstens 5 am Tag; Rückruf statt PIN für Anrufer von außen; Anruf an den Admin bei Dienstausfall ab 10 Minuten, höchstens stündlich, nie in Ruhezeiten; Testanruf im Assistenten
 - **V01.0.631** · 2026-10-15 · speech-spark.sh: /usr/sbin und /sbin im PATH, Umzug auf den Pi fand runuser nicht

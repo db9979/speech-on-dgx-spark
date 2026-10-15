@@ -155,7 +155,11 @@ class Umziehen(unittest.TestCase):
         with open(os.path.join(nimm, "umzug.json"), "w") as f:
             json.dump({"passwort": "falschespasswort-2", "cert": "", "key": ""}, f)
         self.assertFalse(self.b.einspielen(nimm))
-        self.assertIn("teilen: umzug abgelehnt", self.b.last.stderr.decode())
+        err = self.b.last.stderr.decode()
+        self.assertIn("teilen: umzug abgelehnt", err)
+        # V01.0.632: the line says where it stopped (the Pi refused a real move without a hint), never a message text
+        self.assertRegex(err, r"teilen: umzug abgelehnt \| \w+Error \w+\.py \w+ \d+")
+        self.assertNotIn("passwort", err.lower())
         self.assertEqual(self.b.profile(), [])
 
     def test_a_changed_file_is_not_restored(self):

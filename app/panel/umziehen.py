@@ -131,8 +131,12 @@ def main(argv):
         else:
             print("teilen: umzug befehl unbekannt (umziehen.py packen|auspacken)", file=sys.stderr)
             return 2
-    except (ValueError, OSError, EOFError):
-        print("teilen: umzug abgelehnt", file=sys.stderr, flush=True)
+    except (ValueError, OSError, EOFError) as e:
+        # where it stopped, in fixed words (kind, file, function, line), never the message: it may name a file of a profile
+        import traceback
+        f = traceback.extract_tb(e.__traceback__)[-1]
+        print(f"teilen: umzug abgelehnt | {type(e).__name__} {os.path.basename(f.filename)} {f.name} {f.lineno}",
+              file=sys.stderr, flush=True)
         return 1
     return 0
 
