@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.638** Move: the speakers' address then points to the Pi
 - **V01.0.637** Pi: after the move the language model address points to tars' LLM door
 - **V01.0.636** Move to the Pi: the speech recognition share is adjusted instead of refused
 - **V01.0.635** Move: the log names the settings check that refused
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.631** Move to the Raspberry Pi: restoring failed because runuser was not found
 - **V01.0.630** Pi install: small fix to the GPU check
 - **V01.0.629** Panel install on the Raspberry Pi no longer stops at the NVIDIA check
-- **V01.0.628** Phone T3: calls from outside through confirmed numbers, unknown ones as guests; phone switches did not work before
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

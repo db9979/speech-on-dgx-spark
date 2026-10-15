@@ -882,6 +882,12 @@ if [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost
   jqi 'if ((.chat.llm_url // "") | test("^https?://(127[.]0[.]0[.]1|localhost|[[]::1[]])([:/]|$)")) then
          .chat.llm_url = "https://\(.models.host | if test(":") then "[\(.)]" else . end):\(.llm.port // 31006)/v1"
          | .chat.llm_key = "" | .chat.llm_model = "" | del(.chat.llm_key_from) else . end'
+  # the speakers' address of the panel (Funktionen → Eigene Lautsprecher) moved with the panel: the model computer's
+  # name in it becomes this computer's first IPv4 address, scheme and port stay (V01.0.638)
+  here=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -m1 -E '^[0-9]+([.][0-9]+){3}$' || true)
+  [ -n "$here" ] && jqi --arg ip "$here" '.models.host as $h
+         | if ((.chat.esp32_url // "") | test("^https?://" + ($h | gsub("[.]"; "[.]")) + "(:[0-9]+)?/?$"))
+           then .chat.esp32_url |= sub("^(?<s>https?://)[^:/]+"; "\(.s)\($ip)") else . end'
 fi
 
 # ---------------------------------------------------------------- systemd

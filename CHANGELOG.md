@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.638** · 2026-10-15 · install.sh: Lautsprecher-Adresse zieht beim Umzug auf den Panel-Rechner mit
 - **V01.0.637** · 2026-10-15 · install.sh: Panel-Rechner fragt das Sprachmodell über das LLM-Tor des Modell-Rechners statt 127.0.0.1
 - **V01.0.636** · 2026-10-15 · Umzug: Speicheranteil der Spracherkennung von einem anderen Backend wird angepasst statt abgelehnt
 - **V01.0.635** · 2026-10-15 · umziehen.py: abgelehnter Umzug nennt auch die Prüfung, die Nein sagte

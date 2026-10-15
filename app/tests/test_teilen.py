@@ -390,6 +390,18 @@ class Installation(unittest.TestCase):
         cfg = {"models": {"host": "192.168.178.171"}, "llm": {"port": 31006}}
         self.assertEqual(common.model_url("llm", "/v1", cfg), "https://192.168.178.171:31006/v1")
 
+    def test_speakers_address_moves_with_the_panel(self):
+        """V01.0.638: after the move the speakers' address (chat.esp32_url) still named tars; on a panel computer
+        install.sh puts this computer's IPv4 address in place of the model computer's, nothing else."""
+        sh = repo_file("install.sh")
+        i = sh.index(".chat.esp32_url |= sub(")
+        self.assertLess(sh.index('teilen koppeln "$MODELLE_PICK"'), i)
+        self.assertLess(i, sh.index('say "systemd units"'))
+        block = sh[sh.rindex("\nif ", 0, i):sh.index("\nfi\n", i)]
+        self.assertIn('test("^https?://" + ($h | gsub("[.]"; "[.]")) + "(:[0-9]+)?/?$")', block,
+                      "only an address that names the model computer, the whole host, no path")
+        self.assertIn("grep -m1 -E '^[0-9]+([.][0-9]+){3}$'", block)
+
     def test_cli_finds_the_sbin_tools_with_a_short_path(self):
         """V01.0.631: teilen.py starts "teilen umzug-einspielen" with PATH=/usr/bin:/bin; runuser is in /usr/sbin."""
         import subprocess
