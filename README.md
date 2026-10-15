@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.644** Leistung messen shows tars' memory; the panel's own speaker address no longer reads as an error
 - **V01.0.643** Panel computer (Raspberry Pi): the install runs only the smoke test; pip only from PyPI, no pip.conf
 - **V01.0.642** Fix: with the models on another computer the panel shows that computer's memory (no false 'only 7 GiB free' from the Pi)
 - **V01.0.641** Pi: a hand-typed tars address is switched to the LLM door too
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.637** Pi: after the move the language model address points to tars' LLM door
 - **V01.0.636** Move to the Pi: the speech recognition share is adjusted instead of refused
 - **V01.0.635** Move: the log names the settings check that refused
-- **V01.0.634** Move: the log says where restoring stopped
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

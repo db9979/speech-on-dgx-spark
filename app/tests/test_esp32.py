@@ -3,6 +3,7 @@ pairing by code and over USB, and a whole spoken question over the WebSocket lik
 import asyncio
 import ctypes
 import hashlib
+import ipaddress
 import json
 import os
 import time
@@ -17,6 +18,7 @@ helpers.start()
 import panel  # noqa: E402
 import esp32  # noqa: E402
 import features  # noqa: E402
+import netguard  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -539,6 +541,15 @@ class Speakers(unittest.TestCase):
         self.assertIn("127.0.0.1", other[-1][1])
         self.assertFalse(asyncio.run(esp32.net_check("http://spark.invalid"))[0][0])
         self.assertIn("Spark-Adresse", asyncio.run(esp32.net_check("http://spark.invalid"))[0][1])
+
+    def test_its_own_address_is_not_called_a_mistake(self):
+        """V01.0.644: after the move to the Pi, http://<Pi>:31080 (the address the speakers need) read as "zeigt auf
+        seine eigenen Dienste oder ist nicht erlaubt"; the guard still refuses it, the text says why."""
+        with unittest.mock.patch.object(netguard, "own_addresses", lambda: {ipaddress.ip_address("192.0.2.7")}):
+            res = asyncio.run(esp32.net_check("http://192.0.2.7:31080"))
+        self.assertFalse(res[-1][0])
+        self.assertIn("Adresse dieses Rechners selbst", res[-1][1])
+        self.assertIn("eigenen Dienste oder ist nicht erlaubt", esp32._blocked_text("http://192.0.2.8:31080"))
 
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_speaker_test(self):

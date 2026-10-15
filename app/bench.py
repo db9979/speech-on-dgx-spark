@@ -61,7 +61,16 @@ def avg(xs):
 
 
 def memory_snapshot():
-    """Per unit: cgroup memory (CPU side) and GPU memory of its processes as nvidia-smi reports it."""
+    """Per unit: cgroup memory (CPU side) and GPU memory of its processes as nvidia-smi reports it. With the models on
+    another computer (Spark teilen) only its free memory from the Wärter's status (V01.0.644: a Raspberry Pi's own
+    8 GB read as "Frei auf dem Spark 6,7 GiB, kritisch"); no number when it does not answer."""
+    from common import model_local
+    if not model_local():
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "panel"))
+        import steuer
+        x = (steuer.status() or {}).get("mem_avail_gib")
+        ok = isinstance(x, (int, float)) and not isinstance(x, bool) and x >= 0
+        return {"mem_available_gib": x if ok else None, "units": {}, "von": "modell-rechner"}
     gpu = {}
     for line in run(["nvidia-smi", "--query-compute-apps=pid,used_memory",
                      "--format=csv,noheader,nounits"]).splitlines():

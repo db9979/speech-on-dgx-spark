@@ -2213,6 +2213,23 @@ async def _ws_probe(base):
         w.close()
 
 
+def _blocked_text(base):
+    """Why the Spark did not try an address. Its own panel address (http://<this computer>:31080, after the move to a
+    Raspberry Pi the address every speaker needs) read like a mistake (V01.0.644): it is the guard (netguard refuses the
+    own ports), not the address; the board's own "Prüfen" shows whether it gets through."""
+    import ipaddress
+    import netguard
+    host = re.sub(r"^https?://", "", base).split(":")[0]
+    try:
+        own = ipaddress.ip_address(host) in netguard.own_addresses()
+    except ValueError:
+        own = False
+    if own:
+        return ("Das ist die Adresse dieses Rechners selbst: über sie prüft sich der Spark nicht (Schutz der eigenen "
+                "Dienste). Ob der Lautsprecher sie erreicht, zeigt „Prüfen“ beim Lautsprecher.")
+    return "Diese Adresse prüft der Spark nicht (sie zeigt auf seine eigenen Dienste oder ist nicht erlaubt)."
+
+
 async def net_check(base):
     """The board's way to this Spark, tried from the Spark: [(ok, text)]."""
     import netguard
@@ -2237,7 +2254,7 @@ async def net_check(base):
             out.append((False, f"{base} antwortet mit Status {r.status_code}, aber das ist nicht dieser Spark."))
             return out
     except netguard.Blocked:
-        out.append((False, "Diese Adresse prüft der Spark nicht (sie zeigt auf seine eigenen Dienste oder ist nicht erlaubt)."))
+        out.append((False, _blocked_text(base)))
         return out
     except Exception as e:
         cause = e.__cause__ or e.__context__ or e

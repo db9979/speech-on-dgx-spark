@@ -3,12 +3,15 @@ the ASR part counts the words it got right, and the last ten runs are kept for t
 import json
 import os
 import unittest
+from unittest import mock
 
 from tests import helpers
 
 helpers.start()
 import bench  # noqa: E402
+import common  # noqa: E402
 import panel  # noqa: E402
+import steuer  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 
@@ -38,6 +41,17 @@ class Rating(unittest.TestCase):
             self.assertIn(x["level"], bench.LEVELS)
             self.assertTrue(x["why"].endswith("."), x)
             self.assertTrue(x["word"])
+
+    def test_the_memory_of_the_model_computer(self):
+        """V01.0.644: on the Raspberry Pi the measurement rated the Pi's own 8 GB ("Frei auf dem Spark 6,7 GiB,
+        kritisch"); with the models elsewhere the number comes from the Wärter, none when it does not answer."""
+        with mock.patch.object(common, "model_local", lambda cfg=None: False):
+            with mock.patch.object(steuer, "status", lambda cfg=None: {"mem_avail_gib": 41.5}):
+                self.assertEqual(bench.memory_snapshot(), {"mem_available_gib": 41.5, "units": {}, "von": "modell-rechner"})
+            with mock.patch.object(steuer, "status", lambda cfg=None: None):
+                m = bench.memory_snapshot()
+        self.assertIsNone(m["mem_available_gib"])
+        self.assertNotIn("mem_free", rows(dict(result(), memory_after=m)))
 
     def test_borders(self):
         cases = [("tts_first", dict(ttfa=0.5), "top"), ("tts_first", dict(ttfa=0.9), "ok"),
