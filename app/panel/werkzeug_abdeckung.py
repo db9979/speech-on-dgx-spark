@@ -38,6 +38,7 @@ TOOLS = {
     "erstellenvorlagen": ("document_plan",),
     "erstellenbilder": ("document_plan",),
     "bilder": ("bild_malen",),
+    "telefonanrufen": ("anruf_planen",),
     "tagebuch": ("spark_tagebuch",),
     "sparkzustand": ("spark_zustand",),
     # everyday
@@ -93,6 +94,10 @@ RULES = {
 }
 
 WITHOUT = {
+    # Telefon: who may call and when the Spark calls, fixed rules in telefon.py and telefon_anruf.py
+    "telefongast": "Gäste am Telefon: nur Frage und Antwort",
+    "telefonaussen": "Anrufe von außen: die bestätigte Nummer wählt das Profil",
+    "telefonalarm": "Alarm-Anruf an den Admin, vom Dienst-Wächter ausgelöst",
     # how answers come about: settings, not a request
     "style": "wirkt auf jede Antwort",
     "follow": "Verhalten am Lautsprecher",
@@ -227,6 +232,7 @@ SENTENCES = {
     "document_list": "Welche Dokumente habe ich?",
     "document_plan": "Mach eine Präsentation über den Mauerfall",
     "bild_malen": "Mal mir eine Katze auf einem Skateboard",
+    "anruf_planen": "Ruf mich morgen um sieben an",
     "spark_tagebuch": "Was hast du heute für mich gemacht?",
     "reminder_set": "Erinnere mich in zehn Minuten an den Tee",
     "reminder_list": "Welche Erinnerungen habe ich?",

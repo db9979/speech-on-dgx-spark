@@ -260,7 +260,8 @@ async def prepare(request):
         who, own_browser = None, False
         system = (system + "\n\n" + chat.SHARED_STRANGER_HINT
                   + (" " + chat.SHARED_SHORT_HINT if stranger.startswith("too little speech") else "")
-                  + (" " + chat.PHONE_PIN_HINT if request.scope.get("speech_pin_hint") else "")).strip()
+                  + (" " + chat.PHONE_PIN_HINT if request.scope.get("speech_pin_hint") else "")
+                  + (" " + chat.PHONE_CALLBACK_HINT if request.scope.get("speech_callback_hint") else "")).strip()
     if not own_browser:
         # someone else's voice at this browser: the browser's conversation is not theirs, so it is
         # not sent along (and the browser keeps this turn out of its own history, see "foreign")

@@ -84,6 +84,8 @@ TOOLS = {
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
     "bild_malen": "bild", "Bild malen": "bild",
+    # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
+    "anruf_planen": "telefon", "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built
     "document_write": "make", "document_build": "make",
     # before writing: the Kiwix article for the fact check and pictures (folien.py), the own documents
@@ -1307,7 +1309,11 @@ def snapshot(view="admin", now=None):
                         f"{tel.get('minuten', 0)} min" + (f" · {tel['fremd']} fremde Pakete verworfen" if tel.get("fremd") else "")
                         + (f" · PIN {tel.get('pin', 0)} richtig, {tel['pinfalsch']} falsch" if tel.get("pinfalsch") or tel.get("pin") else "")
                         + (f" · {tel['bestaetigt']} Nummern bestätigt" if tel.get("bestaetigt") else "")
-                        + (f" · von außen {tel['extern']}, davon {tel.get('gaeste', 0)} Gäste" if tel.get("extern") else ""))
+                        + (f" · von außen {tel['extern']}, davon {tel.get('gaeste', 0)} Gäste" if tel.get("extern") else "")
+                        + (f" · der Spark rief {tel['raus']}-mal an, {tel.get('angerufen', 0)} abgehoben" if tel.get("raus") else "")
+                        + (f" · {tel['rueckruf']} Rückrufe" if tel.get("rueckruf") else "")
+                        + (f" · {tel['alarm']} Alarm-Anrufe" if tel.get("alarm") else "")
+                        + (f" · {tel['geplant']} Anrufe geplant" if tel.get("geplant") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

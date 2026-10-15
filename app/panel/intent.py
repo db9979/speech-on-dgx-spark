@@ -73,7 +73,7 @@ CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|a
 MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?|"
                            r"ruf(e)? alle|antworte? [A-ZÄÖÜ]\w+,? dass)\b")
 AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*|auftr(a|ä)g\w*|beobachtung\w*)\b")
-REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|"
+REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|ruf\w* mich\b.{0,40}\ban|per anruf|call me at|"
                             r"sag mir (in|um|heute|morgen|gleich) .{1,40}(bescheid|,? dass))\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
                            r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast|"
@@ -145,7 +145,7 @@ GROUPS = {
     "mail": ({"mail_list", "mail_search", "mail_read", "mail_tidy_overview", "mail_tidy_propose", "mail_draft"},
              MAIL_WORDS),
     "websuche": ({"web_search"}, SEARCH_WORDS),
-    "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel"}, REMINDER_WORDS),
+    "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel", "anruf_planen"}, REMINDER_WORDS),
     "liste": ({"tasks_show", "tasks_add", "tasks_change", "home_assistant_todo"}, LIST_WORDS),
     "wetter": ({"weather"}, WEATHER_WORDS),
     "bahn": ({"transit"}, TRANSIT_WORDS),

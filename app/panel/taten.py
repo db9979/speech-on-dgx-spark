@@ -24,6 +24,7 @@ KIND = {
     "agent_change": "aenderung", "agent_watch": "aenderung", "home_rule_delete": "aenderung", "proactive_pause": "aenderung", "undo_last": "aenderung",
     "nas_ablegen": "ablegen",
     "bild_malen": "bild",
+    "anruf_planen": "erinnerung",
 }
 # kind -> the tool that knows what was done earlier (R4 "Nein zu eigenem Tun", thread "Einstellungen optimieren")
 STATUS = {"dokument": "document_status", "remarkable": "remarkable_sent", "erinnerung": "reminder_list",

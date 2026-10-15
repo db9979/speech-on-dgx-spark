@@ -74,6 +74,7 @@ BENCH = [
     ("Stell einen Timer auf 5 Minuten", "erinnerung"),
     ("Welche Erinnerungen habe ich?", "erinnerung"),
     ("Weck mich morgen um sieben", "erinnerung"),
+    ("Ruf mich morgen um sieben an", "erinnerung"),
     ("Lösch die Erinnerung für den Müll", "erinnerung"),
     ("Remind me in ten minutes", "erinnerung"),
     ("Setz Milch auf die Einkaufsliste", "liste"),

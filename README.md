@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.632** Phone T4: the Spark calls: wake-up call and reminder by call, call back for callers from outside, admin call on outages outside quiet hours, test call
 - **V01.0.631** Move to the Raspberry Pi: restoring failed because runuser was not found
 - **V01.0.630** Pi install: small fix to the GPU check
 - **V01.0.629** Panel install on the Raspberry Pi no longer stops at the NVIDIA check
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.625** Red fix: emergency mode switch only shown with Spark split
 - **V01.0.624** Quota: limits per profile for day, week and month at the language model, with a warning and an extra; fixed commands still work
 - **V01.0.623** Red fix: tests for the emergency mode with Parakeet
-- **V01.0.622** Spark split: emergency mode with Parakeet, fixed commands without a language model
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

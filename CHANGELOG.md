@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.632** · 2026-10-15 · Telefon T4: der Spark ruft an (Schalter, Standard aus): Weckruf und Erinnerung per Anruf über das Werkzeug „Anrufen lassen“, nur an das eigene Mobilteil oder die bestätigte Nummer, höchstens 5 am Tag; Rückruf statt PIN für Anrufer von außen; Anruf an den Admin bei Dienstausfall ab 10 Minuten, höchstens stündlich, nie in Ruhezeiten; Testanruf im Assistenten
 - **V01.0.631** · 2026-10-15 · speech-spark.sh: /usr/sbin und /sbin im PATH, Umzug auf den Pi fand runuser nicht
 - **V01.0.630** · 2026-10-15 · install.sh: GPU-Prüfung liest config.json über cfg_json (root liest nicht direkt, test_hardening)
 - **V01.0.629** · 2026-10-15 · install.sh: Panel-Rechner ohne NVIDIA-Karte (Raspberry Pi) überspringt die GPU-Prüfung

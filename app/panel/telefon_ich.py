@@ -15,8 +15,12 @@
     Meine Telefonate   the profile's calls: when, how long, how many questions, of which kind (no number, no
                        words; the questions themselves are in the profile's history). Delete one or all.
 
+    Anrufe vom Spark   (T4, telefon_anruf.py) the preference "Der Spark darf mich anrufen" and the calls the profile
+                       ordered (Weckruf, Erinnerung): see and delete.
+
     users/<id>/telefon.json  {"nummern": [{"id", "nr" (vault), "name", "ok", "code" (vault), "bis", "t"}],
-                              "pin" (vault: {"salt", "hash"}), "anrufe": [{"id", "t", "s", "fragen", "art"}]}
+                              "pin" (vault: {"salt", "hash"}), "anrufe": [{"id", "t", "s", "fragen", "art"}],
+                              "geplant": [{"id", "t", "art", "text"}], "heute": {"d", "n"} (calls from the Spark today)}
 
 The wrong PINs and codes are counted in memory per phone number (hashed), like the code word at a speaker
 (spkcode.py). Everything here is part of "Den Spark anrufen" (features.py "telefon"): no switch of its own.
@@ -50,7 +54,9 @@ FAILS = 3                       # wrong PINs at one phone in FAIL_WINDOW ...
 LOCK = 30 * 60                  # ... and no PIN there for this long
 KEEP_CALLS = 50
 ROUNDS = 100_000                # PBKDF2 rounds of the PIN hash
-ARTEN = ("intern", "gemeinsam", "extern", "bestaetigung")
+ARTEN = ("intern", "gemeinsam", "extern", "bestaetigung", "spark")
+PLAN_MAX = 10                   # calls a profile has ordered and that are still to come (telefon_anruf.py)
+PLAN_ARTEN = ("weckruf", "erinnerung")
 
 _lock = threading.Lock()
 _fails = {}                     # hashed phone number -> [times]
@@ -305,9 +311,51 @@ def drop_calls(uid, aid=""):
     return n
 
 
+# ---------------------------------------------------------------- calls the profile ordered (T4, telefon_anruf.py)
+def planned(uid):
+    return sorted((r for r in _read(uid).get("geplant", []) if isinstance(r, dict) and r.get("art") in PLAN_ARTEN),
+                  key=lambda r: r.get("t", 0))
+
+
+def plan_add(uid, t, art, text):
+    """A wake-up call or reminder by call at t (epoch seconds); ValueError("voll") with PLAN_MAX to come."""
+    with _lock:
+        d = _read(uid)
+        rows = [r for r in d.get("geplant", []) if isinstance(r, dict)]
+        if len(rows) >= PLAN_MAX:
+            raise ValueError("voll")
+        row = {"id": secrets.token_hex(4), "t": int(t), "art": art if art in PLAN_ARTEN else "erinnerung",
+               "text": re.sub(r"[\x00-\x1f<>]", " ", str(text or ""))[:120].strip()}
+        d["geplant"] = rows + [row]
+        _write(uid, d)
+    return row
+
+
+def plan_drop(uid, pid=""):
+    """Removes one ordered call (pid) or all; the number removed."""
+    with _lock:
+        d = _read(uid)
+        old = [r for r in d.get("geplant", []) if isinstance(r, dict)]
+        d["geplant"] = [r for r in old if pid and r.get("id") != pid]
+        _write(uid, d)
+    return len(old) - len(d["geplant"])
+
+
+def day_calls(uid, day, add=0):
+    """How many calls the Spark placed to the profile on day ("YYYY-MM-DD"), after adding add."""
+    with _lock:
+        d = _read(uid)
+        h = d.get("heute") if isinstance(d.get("heute"), dict) and d["heute"].get("d") == day else {"d": day, "n": 0}
+        if add:
+            h["n"] = int(h.get("n", 0)) + add
+            d["heute"] = h
+            _write(uid, d)
+    return int(h.get("n", 0))
+
+
 def count(uid):
-    """features.OWN: what the profile keeps here (numbers, PIN, calls)."""
-    return len(numbers(uid)) + int(has_pin(uid)) + len(calls(uid))
+    """features.OWN: what the profile keeps here (numbers, PIN, calls, ordered calls)."""
+    return len(numbers(uid)) + int(has_pin(uid)) + len(calls(uid)) + len(planned(uid))
 
 
 def clear(uid):
@@ -330,7 +378,9 @@ def view(uid, now=None):
     hs = [{"nr": n, "name": x.get("name", "")} for n, x in sorted(telefon.nummern().items()) if x.get("uid") == uid]
     return {"on": features.allowed("telefon", uid), "nummern": out, "pin": has_pin(uid), "mobilteile": hs,
             "anrufe": list(reversed(calls(uid))), "max": MAX_NUMBERS, "pin_len": [PIN_MIN, PIN_MAX],
-            "code_min": CODE_SECONDS // 60, "angemeldet": telefon.signed_in()}
+            "code_min": CODE_SECONDS // 60, "angemeldet": telefon.signed_in(),
+            "anrufen": features.reason("telefonanrufen", uid) in (None, "profile"), "anrufbar": features.pref_on("telefonanrufen", uid),
+            "geplant": [{"id": r["id"], "t": r["t"], "art": r["art"], "text": r.get("text", "")} for r in planned(uid)]}
 
 
 # ---------------------------------------------------------------- Ich → Telefon
@@ -396,6 +446,15 @@ def profile_pin_remove(request: Request, prof=Depends(browser_profile)):
     set_pin(prof["id"], "")
     guard.log("telefon_pin_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     print(f"telefon: pin entfernt fuer {profiles.log_name(prof)}", flush=True)
+    return view(prof["id"])
+
+
+@router.delete("/api/profile/telefon/geplant", dependencies=[Depends(assistant)])
+def profile_planned_clear(request: Request, id: str = "", prof=Depends(browser_profile)):
+    """Deletes one ordered call (?id=) or all."""
+    guard.limit(request, "telefonich", prof["id"])
+    n = plan_drop(prof["id"], re.sub(r"[^0-9a-f]", "", id)[:8])
+    print(f"telefon: {n} geplante anrufe geloescht fuer {profiles.log_name(prof)}", flush=True)
     return view(prof["id"])
 
 

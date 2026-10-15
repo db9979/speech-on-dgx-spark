@@ -283,6 +283,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/spkcode.py` | Codewort am geteilten Lautsprecher |
 | `app/panel/sse.py` | Sofort-Ereignisse an offene Seiten und Apps (Chats, Verlauf): ein Strom pro Seite |
 | `app/panel/telefon.py` | Den Spark anrufen: SIP mit der Telefonanlage, Gespräch wie am Lautsprecher |
+| `app/panel/telefon_anruf.py` | Der Spark ruft an: Weckruf, Erinnerung, Rückruf, Alarm bei Dienstausfall |
 | `app/panel/telefon_ich.py` | Ich → Telefon: eigene Rufnummern mit Code, Telefon-PIN, Telefonate |
 | `app/panel/telefon_ton.py` | Ton am Telefon: G.722, G.711 und Umrechnen der Abtastrate |
 | `app/panel/telegram.py` | Telegram-Bot für Text und Sprachnachrichten |
@@ -983,6 +984,8 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten.
 - Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn (4 Ziffern, 15 Minuten, 3 Versuche), dann legt er auf. Mit „Anrufe von außen“ wählt eine bestätigte Nummer ihr Profil, Persönliches aber nur bei sicherer Stimme oder PIN, weil sich Nummern fälschen lassen; mit „Gäste“ auch unbekannte Nummern als Gast, höchstens 20 am Tag. Logs und Live nennen nie eine Nummer von außen.
 - Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. 3 falsche in 15 Minuten sperren sie an diesem Telefon 30 Minuten. Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.
+- Der Spark ruft an (Schalter „Der Spark ruft an“): Weckruf und Erinnerung, die ein Profil selbst bestellt (Werkzeug anruf_planen, nur Zeit, Art und Text, nie eine Nummer), der Rückruf und der Alarm. Er ruft nur das zugeordnete Mobilteil oder, mit „auch bestätigte eigene Nummern“, die bestätigte Nummer des Profils an; höchstens 5 Anrufe je Profil und Tag, nie bei „Nicht stören“; nicht abgehoben einmal nach 5 Minuten, dann eine Mitteilung. Eine Erinnerung liest er erst vor, wenn Stimme oder PIN passen. Rückruf: Wer von außen mit unsicherer Stimme „Ruf mich zurück“ sagt, wird unter der hinterlegten bestätigten Nummer angerufen, eine gefälschte Nummer erreicht so nie den Fälscher.
+- Alarm bei Dienstausfall: Ist ein Dienst 10 Minuten oder länger weg, ruft der Spark den Admin an, höchstens einmal in 60 Minuten. Nie zwischen 22 und 7 Uhr (dienstwacht.NIGHT, für Anrufe immer), in den Ruhezeiten des Admins oder bei „Nicht stören“; ist der Dienst danach noch weg, kommt der Anruf dann.
 
 #### Zahlen (aus dem Code)
 
@@ -995,14 +998,16 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - **2** Anrufe gleichzeitig höchstens ([Schritt 5](#kn-lautsprecher-s5))
 - **15** Minuten dauert ein Anruf höchstens ([Schritt 10](#kn-lautsprecher-s10))
 - **3** falsche Telefon-PINs bis zur Sperre ([Schritt 9](#kn-lautsprecher-s9))
+- **5** Anrufe vom Spark je Profil und Tag ([Schritt 5](#kn-lautsprecher-s5))
+- **10** Minuten Ausfall bis zum Alarm-Anruf ([Schritt 5](#kn-lautsprecher-s5))
 
 #### Einstellen
 
 - Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).
 - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort.
 - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.
-- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Anrufe von außen, unbekannte Anrufer als Gast.
-- Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.
+- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von außen, unbekannte Anrufer als Gast, der Spark ruft an, Anruf bei Dienstausfall.
+- Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Anrufe vom Spark erlauben und geplante löschen, Telefonate löschen.
 
 #### Was du siehst
 
@@ -1031,6 +1036,10 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/telefon_ich.py` `pin_attempt`: PIN je Telefon zählen und sperren ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call.voice_result`: Stimme wählt oder bestätigt das Profil ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call._chat`: Chat mit dem Profil, Ton zurück ([Schritt 10](#kn-lautsprecher-s10), [Schritt 11](#kn-lautsprecher-s11))
+- `app/panel/telefon.py` `Call.dial`: der Spark ruft an: INVITE, Digest, Abbruch ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_anruf.py` `target`: wen er anruft: Mobilteil oder bestätigte Nummer ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_anruf.py` `call_back`: Rückruf nur an die bestätigte Nummer ([Schritt 9](#kn-lautsprecher-s9))
+- `app/panel/telefon_anruf.py` `alarm_tick`: Alarm-Anruf mit Ruhezeiten ([Schritt 5](#kn-lautsprecher-s5))
 
 Selbsttests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
 
@@ -1578,11 +1587,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (140) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (141) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (183) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (80 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (81 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1592,7 +1601,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **140** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **141** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **183** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -1804,7 +1813,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **80** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **81** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 

@@ -171,15 +171,16 @@ class SpokenNames(Base):
         self.assertIsNone(messages.pick(cands, "den fünften"))
 
     def test_too_many_and_unknown_say_few_names(self):
+        # a name no other test module gives a profile ("Xaver" exists in test_panel and test_kontext_trennung)
         for i in range(6):
-            profile(f"Xaver Nr{i}")
-        r, why, cands = messages.find_all(self.ua, "Xaver")
+            profile(f"Xandor Nr{i}")
+        r, why, cands = messages.find_all(self.ua, "Xandor")
         self.assertIsNone(r)
         self.assertEqual(cands, [])
         self.assertIn("Zu viele", why)
-        r, why, _ = messages.find_all(self.ua, "Xavier")
+        r, why, _ = messages.find_all(self.ua, "Xandro")
         self.assertIsNone(r)
-        self.assertLessEqual(why.count("Xaver"), 3)
+        self.assertLessEqual(why.count("Xandor"), 3)
         # never the list of everybody
         r, why, _ = messages.find_all(self.ua, "Gibtesnicht")
         self.assertTrue(why.startswith("Unbekannter Empfänger."))

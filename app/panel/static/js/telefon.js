@@ -61,6 +61,10 @@ if($('telanlage')){
   $('telcheck').onclick=async()=>{telMsg(t('Prüfe …','Checking …'));
     try{const r=await (await api('/api/admin/telefon/pruefen',{method:'POST'})).json();telMsg(telSay(r.why,r.text),!r.ok);telLoad()}catch(e){telMsg(e.message,true)}};
   $('telreload').onclick=telLoad;
+  // "Spark ruft an" (T4, telefon_anruf.test_call): an internal number, a fixed sentence
+  $('teltest').onclick=async()=>{const m=$('teltestmsg');m.classList.remove('err');m.textContent=t('Der Spark ruft an …','The Spark is calling …');
+    const {r,d:x}=await apiTry('/api/admin/telefon/testanruf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nr:telVal('teltestnr')})});
+    m.textContent=r.ok?t(x.text,x.text_en):String(x.detail||r.status);m.classList.toggle('err',!r.ok||!x.ok)};
   $('telnums').onclick=async ev=>{const b=ev.target.closest('button[data-act]');if(!b)return;const row=b.closest('[data-nr]');
     const body=b.dataset.act==='weg'?{nr:row.dataset.nr,weg:true}:{nr:row.dataset.nr,uid:row.querySelector('select').value,name:row.querySelector('input').value.trim()};
     try{telShow(await (await api('/api/admin/telefon/nummern',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json())}catch(e){telMsg(e.message,true)}};
@@ -70,7 +74,8 @@ if($('telanlage')){
 // confirmed with a code typed on a call from that number, the Telefon-PIN (fresh code, never shown), the handsets the
 // admin assigned (read only) and the profile's calls (when, how long, how many questions; delete one or all).
 let TEL_ON=false;
-const TEL_ART={intern:['Mobilteil','Handset'],gemeinsam:['Gemeinsames Telefon','Shared phone'],extern:['Von außen','From outside'],bestaetigung:['Nummer bestätigt','Number confirmed']};
+const TEL_ART={intern:['Mobilteil','Handset'],gemeinsam:['Gemeinsames Telefon','Shared phone'],extern:['Von außen','From outside'],bestaetigung:['Nummer bestätigt','Number confirmed'],spark:['Der Spark rief an','The Spark called']};
+const TEL_PLAN={weckruf:['Weckruf','Wake-up call'],erinnerung:['Erinnerung','Reminder']};
 const telWhen=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const telDur=s=>s<60?t(`${s} s`,`${s} s`):t(`${Math.round(s/60)} min`,`${Math.round(s/60)} min`);
 function telMeNums(d){const now=Date.now()/1000;
@@ -92,6 +97,9 @@ async function showTel(){const box=$('telbox');if(!box)return;if(!PROFILE||!TEL_
     +`<div class="two2"><div><label for="telmypin">${esc(d.pin?t('Neue PIN','New PIN'):t('PIN','PIN'))}</label><input id="telmypin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="${d.pin_len[1]}" placeholder="${esc(d.pin?t('gesetzt','set'):t('keine PIN','no PIN'))}"></div><div><label>&nbsp;</label><button class="b" type="button" id="telmypinset">${esc(t('PIN speichern','Save PIN'))}</button></div></div>`
     +(d.pin?`<div class="row"><button class="b" type="button" id="telmypinweg">${esc(t('PIN entfernen','Remove PIN'))}</button></div>`:'')+`<div class="fh" id="telmypinmsg"></div></div>`
     +((d.mobilteile||[]).length?`<div class="card"><h3>${esc(t('Meine Mobilteile','My handsets'))}</h3>${d.mobilteile.map(h=>`<div class="rowin"><b>${esc(h.nr)}</b><span class="mut">${esc(h.name||'')}</span></div>`).join('')}<div class="mut">${esc(t('Mobilteile ordnet der Admin zu (Funktionen → Den Spark anrufen).','The admin assigns handsets (Features → Calling the Spark).'))}</div></div>`:'')
+    +(d.anrufen?`<div class="card"><h3>${esc(t('Anrufe vom Spark','Calls from the Spark'))}</h3><div class="setrow"><div class="lbl"><b>${esc(t('Der Spark darf mich anrufen','The Spark may call me'))}</b><span>${esc(t('Weckruf und Erinnerung per Anruf, die du selbst bestellst („Ruf mich morgen um 7 an“), und der Rückruf, wenn du von unterwegs anrufst. Er ruft nur dein Mobilteil oder deine bestätigte Nummer an, höchstens 5-mal am Tag, nie bei „Nicht stören“.','Wake-up call and reminder by call that you order yourself (“Call me tomorrow at 7”), and the call back when you call from on the go. It only calls your handset or your confirmed number, at most 5 times a day, never during “Do not disturb”.'))}</span></div><label class="tgl"><input type="checkbox" id="telmyanrufbar"${d.anrufbar?' checked':''}><i></i></label></div>`
+      +((d.geplant||[]).length?d.geplant.map(g=>`<div class="rowin" data-gid="${esc(g.id)}"><b style="min-width:7em">${esc(telWhen(g.t))}</b><span>${esc(t(...(TEL_PLAN[g.art]||TEL_PLAN.erinnerung)))}${g.text?' · '+esc(g.text):''}</span><button class="b" type="button" data-act="del">${esc(t('Löschen','Delete'))}</button></div>`).join('')
+        :`<div class="mut">${esc(t('Kein Anruf geplant. Sag dem Assistenten zum Beispiel „Ruf mich morgen um 7 an“.','No call planned. Tell the assistant for example “Call me tomorrow at 7”.'))}</div>`)+`<div class="fh" id="telmyplanmsg"></div></div>`:'')
     +`<div class="card"><h3>${esc(t('Meine Telefonate','My calls'))}</h3>`+((d.anrufe||[]).length?d.anrufe.map(a=>`<div class="rowin" data-aid="${esc(a.id)}"><b style="min-width:7em">${esc(telWhen(a.t))}</b><span>${esc(t(...(TEL_ART[a.art]||TEL_ART.intern)))} · ${esc(telDur(a.s))} · ${esc(t(`${a.fragen} Fragen`,`${a.fragen} questions`))}</span><button class="b" type="button" data-act="del">${esc(t('Löschen','Delete'))}</button></div>`).join('')
       +`<div class="row"><button class="b" type="button" id="telmycallsdel">${esc(t('Alle löschen','Delete all'))}</button></div><div class="mut">${esc(t('Nur wann, wie lange und wie viele Fragen. Die Fragen selbst stehen in deinem Verlauf.','Only when, how long and how many questions. The questions themselves are in your history.'))}</div>`
       :`<div class="mut">${esc(t('Noch kein Telefonat.','No call yet.'))}</div>`)+`</div>`;
@@ -110,6 +118,10 @@ async function showTel(){const box=$('telbox');if(!box)return;if(!PROFILE||!TEL_
     const {r,d:x}=await apiTry('/api/profile/telefon/pin',{method:'DELETE'});if(!r.ok){msg('telmypinmsg',String(x.detail||r.status),true);return}showTel()};
   box.querySelectorAll('[data-aid] button[data-act="del"]').forEach(b=>b.onclick=async()=>{
     await apiTry('/api/profile/telefon/anrufe?id='+encodeURIComponent(b.closest('[data-aid]').dataset.aid),{method:'DELETE'});showTel()});
+  if($('telmyanrufbar'))$('telmyanrufbar').onchange=async e=>{const {r,d:x}=await apiTry('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({'telefon_anrufbar':e.target.checked})});
+    msg('telmyplanmsg',r.ok?(e.target.checked?t('Der Spark darf dich anrufen.','The Spark may call you.'):t('Der Spark ruft dich nicht mehr an.','The Spark no longer calls you.')):String(x.detail||r.status),!r.ok)};
+  box.querySelectorAll('[data-gid] button[data-act="del"]').forEach(b=>b.onclick=async()=>{
+    await apiTry('/api/profile/telefon/geplant?id='+encodeURIComponent(b.closest('[data-gid]').dataset.gid),{method:'DELETE'});showTel()});
   if($('telmycallsdel'))$('telmycallsdel').onclick=async()=>{if(!confirm(t('Alle Telefonate aus dieser Liste löschen?','Delete all calls from this list?')))return;
     await apiTry('/api/profile/telefon/anrufe',{method:'DELETE'});showTel()};
   if(typeof labelTables==='function')labelTables()}

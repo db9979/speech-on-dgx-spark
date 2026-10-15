@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "db25548d15",
+        "stand": "9ebeb8b966",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -823,7 +823,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "aa0b89014a",
+        "stand": "d91ec6851d",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -3049,7 +3049,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "bbd3d36d5d",
+        "stand": "aa3d819766",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -3058,6 +3058,8 @@ SEITEN_DATEN = {
             "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"],
             "telefon.Call.start": ["s5"], "telefon.Call.outside": ["s5"], "telefon.Call.pin": ["s9"], "telefon_ich.try_code": ["s5"], "telefon_ich.pin_attempt": ["s9"],
             "telefon_ich.FAILS": ["s9"], "telefon.MAX_CALLS": ["s5"], "telefon.MAX_CALL": ["s10"], "telefon.Call.voice_result": ["s9"], "telefon.Call._chat": ["s10", "s11"],
+            "telefon.Call.dial": ["s5"], "telefon_anruf.target": ["s5"], "telefon_anruf.call_back": ["s9"],
+            "telefon_anruf.alarm_tick": ["s5"], "telefon_anruf.DAY_LIMIT": ["s5"], "telefon_anruf.ALARM_AFTER": ["s5"],
         },
         "kurz": ("Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, "
                  "schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder "
@@ -3258,6 +3260,29 @@ SEITEN_DATEN = {
                  "profile, at the shared phone for the profile it belongs to. {telefon_ich.FAILS} wrong ones in "
                  "{telefon_ich.FAIL_WINDOW|min} minutes lock it at that phone for {telefon_ich.LOCK|min} minutes. Stored "
                  "as a salted hash in the vault; never spoken, shown or logged."),
+                ("Der Spark ruft an (Schalter „Der Spark ruft an“): Weckruf und Erinnerung, die ein Profil selbst "
+                 "bestellt (Werkzeug anruf_planen, nur Zeit, Art und Text, nie eine Nummer), der Rückruf und der Alarm. "
+                 "Er ruft nur das zugeordnete Mobilteil oder, mit „auch bestätigte eigene Nummern“, die bestätigte "
+                 "Nummer des Profils an; höchstens {telefon_anruf.DAY_LIMIT} Anrufe je Profil und Tag, nie bei „Nicht "
+                 "stören“; nicht abgehoben einmal nach {telefon_anruf.RETRY|min} Minuten, dann eine Mitteilung. Eine "
+                 "Erinnerung liest er erst vor, wenn Stimme oder PIN passen. Rückruf: Wer von außen mit unsicherer "
+                 "Stimme „Ruf mich zurück“ sagt, wird unter der hinterlegten bestätigten Nummer angerufen, eine "
+                 "gefälschte Nummer erreicht so nie den Fälscher.",
+                 "The Spark calls (switch „Der Spark ruft an“): wake-up call and reminder a profile orders itself (tool "
+                 "anruf_planen, only time, kind and text, never a number), the call back and the alarm. It only calls the "
+                 "assigned handset or, with „also confirmed own numbers“, the profile's confirmed number; at most "
+                 "{telefon_anruf.DAY_LIMIT} calls per profile and day, never during „Nicht stören“; not answered once more "
+                 "after {telefon_anruf.RETRY|min} minutes, then a note. It reads a reminder only once voice or PIN fit. "
+                 "Call back: whoever calls from outside with an unsure voice and says „Ruf mich zurück“ is called at the "
+                 "stored confirmed number, so a forged number never reaches the forger."),
+                ("Alarm bei Dienstausfall: Ist ein Dienst {telefon_anruf.ALARM_AFTER|min} Minuten oder länger weg, ruft "
+                 "der Spark den Admin an, höchstens einmal in {telefon_anruf.ALARM_EVERY|min} Minuten. Nie zwischen 22 "
+                 "und 7 Uhr (dienstwacht.NIGHT, für Anrufe immer), in den Ruhezeiten des Admins oder bei „Nicht "
+                 "stören“; ist der Dienst danach noch weg, kommt der Anruf dann.",
+                 "Alarm on outages: if a service is gone {telefon_anruf.ALARM_AFTER|min} minutes or longer, the Spark "
+                 "calls the admin, at most once in {telefon_anruf.ALARM_EVERY|min} minutes. Never between 10 pm and 7 am "
+                 "(dienstwacht.NIGHT, always for calls), in the admin's quiet hours or during „Nicht stören“; if the "
+                 "service is still gone afterwards, the call comes then."),
             ]),
         ],
         "zahlen": [
@@ -3271,6 +3296,10 @@ SEITEN_DATEN = {
             ("{telefon.MAX_CALLS}", ("Anrufe gleichzeitig höchstens", "calls at once at most"), "telefon.MAX_CALLS"),
             ("{telefon.MAX_CALL|min}", ("Minuten dauert ein Anruf höchstens", "minutes a call lasts at most"), "telefon.MAX_CALL"),
             ("{telefon_ich.FAILS}", ("falsche Telefon-PINs bis zur Sperre", "wrong phone PINs until the lock"), "telefon_ich.FAILS"),
+            ("{telefon_anruf.DAY_LIMIT}", ("Anrufe vom Spark je Profil und Tag", "calls from the Spark per profile and day"),
+             "telefon_anruf.DAY_LIMIT"),
+            ("{telefon_anruf.ALARM_AFTER|min}", ("Minuten Ausfall bis zum Alarm-Anruf", "minutes of outage until the alarm call"),
+             "telefon_anruf.ALARM_AFTER"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).",
@@ -3279,12 +3308,14 @@ SEITEN_DATEN = {
              "Me → Speakers: set up, type the code, room, volume, check and the own code word."),
             ("Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.",
              "Features → Home Assistant Assist: Wyoming on and the allowed addresses."),
-            ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Anrufe von außen, "
-             "unbekannte Anrufer als Gast.",
-             "Features → Calling the Spark: wizard with four steps, assign handsets, calls from outside, unknown callers "
-             "as guests."),
-            ("Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.",
-             "Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls."),
+            ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von "
+             "außen, unbekannte Anrufer als Gast, der Spark ruft an, Anruf bei Dienstausfall.",
+             "Features → Calling the Spark: wizard with four steps, assign handsets, test call, calls from outside, "
+             "unknown callers as guests, the Spark calls, call on outages."),
+            ("Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Anrufe vom Spark erlauben und geplante "
+             "löschen, Telefonate löschen.",
+             "Me → Phone: confirm own phone numbers with a code, phone PIN, allow calls from the Spark and delete planned "
+             "ones, delete calls."),
         ],
         "sehen": [
             ("Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart).",
@@ -3314,6 +3345,10 @@ SEITEN_DATEN = {
             ("telefon_ich.pin_attempt", ("PIN je Telefon zählen und sperren", "count and lock the PIN per phone")),
             ("telefon.Call.voice_result", ("Stimme wählt oder bestätigt das Profil", "the voice picks or confirms the profile")),
             ("telefon.Call._chat", ("Chat mit dem Profil, Ton zurück", "chat with the profile, sound back")),
+            ("telefon.Call.dial", ("der Spark ruft an: INVITE, Digest, Abbruch", "the Spark calls: INVITE, digest, cancel")),
+            ("telefon_anruf.target", ("wen er anruft: Mobilteil oder bestätigte Nummer", "whom it calls: handset or confirmed number")),
+            ("telefon_anruf.call_back", ("Rückruf nur an die bestätigte Nummer", "call back only to the confirmed number")),
+            ("telefon_anruf.alarm_tick", ("Alarm-Anruf mit Ruhezeiten", "alarm call with quiet hours")),
         ],
         "tests": ["test_esp32", "test_wyoming", "test_telefon", "test_notaus", "test_echo"],
         "heute": [],

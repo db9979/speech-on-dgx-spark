@@ -460,6 +460,8 @@ SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum oder
 # at a phone handset of the profile that has a Telefon-PIN (telefon_ich.py): how the owner shows it is them
 PHONE_PIN_HINT = ("Am Telefon kann sich der Inhaber mit seiner Telefon-PIN ausweisen: Ziffern tippen, dann die Raute. "
                   "Sag das kurz, wenn jemand nach Persönlichem fragt; frag nie nach der PIN in Worten.")
+PHONE_CALLBACK_HINT = ("Von unterwegs geht auch ein Rückruf: Sagt der Inhaber „Ruf mich zurück“, legt der Spark auf und ruft "
+                       "die bestätigte Nummer des Profils an. Sag das kurz, wenn jemand nach Persönlichem fragt.")
 SHARED_SHORT_HINT = ("Die Frage war zu kurz, um die Stimme zu prüfen: Sag, dass der Inhaber sie in einem ganzen Satz "
                      "wiederholen soll.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "

@@ -31,8 +31,9 @@ import rmliste
 import nasablage
 import naszustand
 import aendern
+import telefon_anruf
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf]
 
 
 def offer(ctx):

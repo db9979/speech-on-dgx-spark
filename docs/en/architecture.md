@@ -283,6 +283,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/spkcode.py` | Code word at an own speaker in a room. |
 | `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
 | `app/panel/telefon.py` | Telefon: den Spark anrufen. |
+| `app/panel/telefon_anruf.py` | Der Spark ruft an: the SIP part (telefon.Call.dial) places the call, this module decides with fixed rules whom, when and why; never the model, a mail or the … |
 | `app/panel/telefon_ich.py` | Telefon → Me: what each profile sets up for itself under Me → Telefon. |
 | `app/panel/telefon_ton.py` | Telefon: the sound of a call (telefon.py). |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
@@ -983,6 +984,8 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - A call runs like a question at a speaker: end of sentence with the same level check, speech recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks the profile. After 20 seconds of silence „Noch etwas?“, after another 10 it hangs up; at most 15 minutes.
 - From outside: an own number waiting for its code under Me → Phone types it (4 digits, 15 minutes, 3 tries), then it hangs up. With „Anrufe von außen“ a confirmed number picks its profile, but personal things only with a sure voice or the PIN, because numbers can be forged; with guests also unknown numbers as a guest, at most 20 a day. Logs and Live never name a number from outside.
 - The phone PIN (digits, then #) stands for the voice for the rest of the call: on a handset for its profile, at the shared phone for the profile it belongs to. 3 wrong ones in 15 minutes lock it at that phone for 30 minutes. Stored as a salted hash in the vault; never spoken, shown or logged.
+- The Spark calls (switch „Der Spark ruft an“): wake-up call and reminder a profile orders itself (tool anruf_planen, only time, kind and text, never a number), the call back and the alarm. It only calls the assigned handset or, with „also confirmed own numbers“, the profile's confirmed number; at most 5 calls per profile and day, never during „Nicht stören“; not answered once more after 5 minutes, then a note. It reads a reminder only once voice or PIN fit. Call back: whoever calls from outside with an unsure voice and says „Ruf mich zurück“ is called at the stored confirmed number, so a forged number never reaches the forger.
+- Alarm on outages: if a service is gone 10 minutes or longer, the Spark calls the admin, at most once in 60 minutes. Never between 10 pm and 7 am (dienstwacht.NIGHT, always for calls), in the admin's quiet hours or during „Nicht stören“; if the service is still gone afterwards, the call comes then.
 
 #### Numbers (from the code)
 
@@ -995,14 +998,16 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - **2** calls at once at most ([step 5](#kn-lautsprecher-s5))
 - **15** minutes a call lasts at most ([step 10](#kn-lautsprecher-s10))
 - **3** wrong phone PINs until the lock ([step 9](#kn-lautsprecher-s9))
+- **5** calls from the Spark per profile and day ([step 5](#kn-lautsprecher-s5))
+- **10** minutes of outage until the alarm call ([step 5](#kn-lautsprecher-s5))
 
 #### Settings
 
 - Features → Own speakers: speakers for every profile (default off).
 - Me → Speakers: set up, type the code, room, volume, check and the own code word.
 - Features → Home Assistant Assist: Wyoming on and the allowed addresses.
-- Features → Calling the Spark: wizard with four steps, assign handsets, calls from outside, unknown callers as guests.
-- Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls.
+- Features → Calling the Spark: wizard with four steps, assign handsets, test call, calls from outside, unknown callers as guests, the Spark calls, call on outages.
+- Me → Phone: confirm own phone numbers with a code, phone PIN, allow calls from the Spark and delete planned ones, delete calls.
 
 #### What you see
 
@@ -1031,6 +1036,10 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - `app/panel/telefon_ich.py` `pin_attempt`: count and lock the PIN per phone ([step 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call.voice_result`: the voice picks or confirms the profile ([step 9](#kn-lautsprecher-s9))
 - `app/panel/telefon.py` `Call._chat`: chat with the profile, sound back ([step 10](#kn-lautsprecher-s10), [step 11](#kn-lautsprecher-s11))
+- `app/panel/telefon.py` `Call.dial`: the Spark calls: INVITE, digest, cancel ([step 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_anruf.py` `target`: whom it calls: handset or confirmed number ([step 5](#kn-lautsprecher-s5))
+- `app/panel/telefon_anruf.py` `call_back`: call back only to the confirmed number ([step 9](#kn-lautsprecher-s9))
+- `app/panel/telefon_anruf.py` `alarm_tick`: alarm call with quiet hours ([step 5](#kn-lautsprecher-s5))
 
 Self-tests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
 
@@ -1578,11 +1587,11 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (140) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (141) hold every reported wrong turn and must all pass. The everyday sentences (183) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (80 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (81 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -1592,7 +1601,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **140** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **141** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **183** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -1804,7 +1813,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **80** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **81** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 

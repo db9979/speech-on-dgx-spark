@@ -1,4 +1,5 @@
-"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufen T1 bis T3). The Spark signs in at the home's telephone system
+"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufen T1 bis T4; the Spark calling: Call.dial here, the
+rules in telefon_anruf.py). The Spark signs in at the home's telephone system
 (FRITZ!Box or any SIP PBX) as an IP phone; a handset in the house calls its internal number (FRITZ!Box: **620) and talks
 to it like to an own speaker: question, answer, "Stopp" or #, hang up.
 
@@ -72,6 +73,7 @@ PER_SECOND = 100                # SIP messages from the PBX per second, more are
 REG_EXPIRES = 600               # seconds the registration is asked for; renewed after half
 REG_RETRY = 60                  # seconds until a failed registration is tried again
 RING = 0.8                      # seconds the caller hears ringing before the Spark answers
+RING_OUT = 30                   # seconds the Spark lets a phone ring when it calls (T4) before it gives up
 MAX_CALL = 15 * 60              # one call ends after this
 QUIET_ASK, QUIET_END = 20, 10   # silence: "Noch etwas?" after the first, hang up after the second
 MAX_CALLS = 2                   # chat.telefon_max at most
@@ -82,6 +84,7 @@ METHODS = ("INVITE", "ACK", "BYE", "CANCEL", "OPTIONS", "INFO", "NOTIFY")
 DTMF = "0123456789*#ABCD"
 BYE_WORDS = re.compile(r"(?i)^\W*(?:(?:ok|okay|gut|danke)\W+)*(?:tschüss|tschüs|ciao|auf wiederhören|auf wiedersehen|bis dann|"
                        r"bis später|leg auf|auflegen|das war'?s|das wars|ende|bye|goodbye)\W*(?:danke|spark)?\W*$")
+CALLBACK_WORDS = re.compile(r"(?i)\b(?:ruf|rufe|rufst)\s+(?:mich|du mich)\s+(?:bitte\s+)?(?:gleich\s+)?zurück|\brückruf\b|\bcall me back\b")
 _lock = threading.Lock()
 
 
@@ -186,6 +189,13 @@ SAY = {"ok": ("Angemeldet.", "Signed in."),
 
 
 # ---------------------------------------------------------------- SIP messages
+TEST_SAY = {"angenommen": ("Abgehoben: Der Spark hat den Testsatz gesagt.", "Answered: the Spark said the test sentence."),
+            "besetzt": ("Besetzt oder kein Gespräch mehr frei.", "Busy, or no call free."),
+            "abgelehnt": ("Die Anlage hat den Anruf abgelehnt. Darf das IP-Telefon „Spark“ anrufen?",
+                          "The system refused the call. May the IP phone “Spark” place calls?"),
+            "keine antwort": ("Niemand hat abgehoben.", "Nobody answered."),
+            "abgemeldet": ("Der Spark ist nicht angemeldet.", "The Spark is not signed in."),
+            "fehler": ("Der Anruf ging nicht.", "The call did not work.")}
 COMPACT = {"v": "via", "f": "from", "t": "to", "i": "call-id", "m": "contact", "l": "content-length", "c": "content-type",
            "k": "supported"}
 
@@ -380,7 +390,7 @@ def choose(sdp, ton="hd"):
 
 # ---------------------------------------------------------------- numbers of today (Live, admin page)
 _today = DayCounter(angenommen=0, abgelehnt=0, besetzt=0, fragen=0, sekunden=0, fremd=0, kaputt=0, pin=0, pinfalsch=0,
-                    bestaetigt=0, extern=0, gaeste=0)
+                    bestaetigt=0, extern=0, gaeste=0, angerufen=0, raus=0, rueckruf=0, alarm=0)
 
 
 def _bump(k, n=1):
@@ -408,6 +418,7 @@ class Agent(asyncio.DatagramProtocol):
         self.reg_cid = secrets.token_hex(10)
         self.tag = secrets.token_hex(6)
         self.pending = {}           # (call-id, cseq, method) -> Future of the final answer
+        self.watch = {}             # call-id -> function: every answer to an INVITE the Spark sent (Call.dial)
         self.calls = {}             # call-id -> Call
         self.sec = [0.0, 0]         # the second and the messages in it
         self.closing = False
@@ -465,6 +476,10 @@ class Agent(asyncio.DatagramProtocol):
             return
         if msg.code:
             num, meth = msg.cseq()
+            w = self.watch.get(msg.get("call-id"))
+            if w and meth == "INVITE":
+                w(msg)
+                return
             f = self.pending.get((msg.get("call-id"), num, meth))
             if f and not f.done() and msg.code >= 200:
                 f.set_result(msg)
@@ -547,7 +562,7 @@ class Agent(asyncio.DatagramProtocol):
             return
         if meth == "INVITE":
             if call:
-                if msg.cseq() == call.invite.cseq():          # the same INVITE again: the answer again
+                if not call.out and msg.cseq() == call.invite.cseq():    # the same INVITE again: the answer again
                     if call.last:
                         self.send(call.last, addr)
                 else:                                          # a new offer in the call (hold, other codec): same answer
@@ -610,7 +625,10 @@ class Call:
     def __init__(self, agent, invite, addr, number, uid, shared, sdp, pt, known=True, mode=""):
         self.agent, self.invite, self.addr = agent, invite, addr
         self.number, self.uid, self.shared, self.known = number, uid, shared, known
-        self.mode = mode                                  # "", "extern" (from outside) or "bestaetigen" (a code)
+        self.mode = mode                                  # "", "extern" (from outside) or "bestaetigen" (a code); the Spark
+        #                                                   calling (T4): "weckruf", "erinnerung", "rueckruf", "alarm", "test"
+        self.out = None                                   # the Spark called: {"target", "from", "to", "routes"} of the dialog
+        self.text = ""                                    # what the Spark called to say (reminder, alarm), never logged
         self.cid = invite.get("call-id")
         self.tag = secrets.token_hex(6)
         self.remote = sdp
@@ -728,6 +746,131 @@ class Call:
         print("telefon: anruf extern unbekannt als gast", flush=True)
         return "extern", ""
 
+    @staticmethod
+    async def dial(agent, target, uid, mode, text="", ring=RING_OUT):
+        """The Spark calls (T4). target is an internal number or a confirmed own number of uid, never anything else:
+        telefon_anruf.target picks it with fixed rules, never from the model, a mail or the conversation. Returns
+        "angenommen" (the call runs on as a task), "besetzt", "abgelehnt", "keine antwort" or "fehler"."""
+        s = settings()
+        if not agent.reg.get("ok") or not agent.transport:
+            return "fehler"
+        if len(agent.calls) >= s["max"]:
+            return "besetzt"
+        sock = _rtp_port()
+        if not sock:
+            return "besetzt"
+        cid, tag = secrets.token_hex(12), secrets.token_hex(6)
+        user, dom = agent.z["user"], agent._domain()
+        uri, me = f"sip:{target}@{dom}", f"<sip:{user}@{dom}>;tag={tag}"
+        pts = [p for p in telefon_ton.PREFER if s["ton"] == "hd" or p != 9]
+        offer = sdp_offer(agent.local, sock.getsockname()[1], pts, random.randint(1000, 10 ** 9))
+        got = asyncio.Queue()
+        agent.watch[cid] = got.put_nowait
+        cseq, auth, nc, ok = random.randint(1, 1000), "", 0, None
+        try:
+            for _ in range(2):
+                via = f"Via: SIP/2.0/UDP {agent.local}:{agent.port};branch={branch()};rport"
+                heads = [via, "Max-Forwards: 70", "From: " + me, f"To: <{uri}>", f"Call-ID: {cid}", f"CSeq: {cseq} INVITE",
+                         f"Contact: <sip:{user}@{agent.local}:{agent.port}>", "Allow: " + ", ".join(METHODS)] + ([auth] if auth else [])
+                inv = request("INVITE", uri, heads, offer)
+                final = await Call._ring(agent, inv, got, cseq, via, uri, me, cid, ring)
+                if final is None:
+                    return "keine antwort"
+                if 200 <= final.code < 300:
+                    ok = final
+                    break
+                agent.send(Call._ack_failed(via, uri, me, final, cid, cseq))
+                if final.code in (401, 407) and not auth:
+                    try:
+                        nc += 1
+                        head = "Authorization" if final.code == 401 else "Proxy-Authorization"
+                        chal = final.get("www-authenticate" if final.code == 401 else "proxy-authenticate")
+                        auth = f"{head}: " + digest(chal, "INVITE", uri, user, agent.z["pw"], nc)
+                    except ValueError:
+                        return "abgelehnt"
+                    cseq += 1
+                    continue
+                return "besetzt" if final.code in (486, 600) else "keine antwort" if final.code in (408, 480, 487) else "abgelehnt"
+            if ok is None:
+                return "abgelehnt"
+            routes = list(reversed(ok.all("record-route")))
+            far = uri_of(ok.get("contact")) or uri
+            ack_heads = [f"Via: SIP/2.0/UDP {agent.local}:{agent.port};branch={branch()};rport", "Max-Forwards: 70"] \
+                + ["Route: " + r for r in routes] + ["From: " + me, "To: " + ok.get("to"), f"Call-ID: {cid}", f"CSeq: {cseq} ACK"]
+            ack = request("ACK", far, ack_heads, "")
+            agent.send(ack)
+            agent.watch[cid] = lambda m: agent.send(ack) if 200 <= m.code < 300 else None   # the 200 again: the ACK again
+            sdp = sdp_parse(ok.body)
+            pt = choose(sdp, s["ton"]) if sdp else None
+            if not sdp or pt is None or not lan_ip(sdp["ip"]) and sdp["ip"] != agent.pbx[0]:
+                print("telefon: anruf raus beendet, keine gemeinsame tonart oder adresse nicht im heimnetz", flush=True)
+                call = Call(agent, parse(inv), agent.pbx, target, uid, False, {"ip": "", "port": 0, "dtmf": None}, 0, mode=mode)
+                call.out, call.tag, call.ours = {"target": far, "from": me, "to": ok.get("to"), "routes": routes}, tag, cseq
+                await call._bye()
+                return "abgelehnt"
+            call = Call(agent, parse(inv), agent.pbx, target, uid, False, sdp, pt, mode=mode)
+            call.out, call.tag, call.ours, call.text = {"target": far, "from": me, "to": ok.get("to"), "routes": routes}, tag, cseq, text
+            call.sock, sock = sock, None
+            call.answered = True
+            call.acked.set()
+            agent.calls[cid] = call
+            call.tasks.append(asyncio.ensure_future(call.run()))
+            return "angenommen"
+        except Exception as e:
+            print("telefon: anruf raus", type(e).__name__, str(e)[:120], flush=True)
+            return "fehler"
+        finally:
+            if sock:
+                sock.close()
+            if cid not in agent.calls:
+                agent.watch.pop(cid, None)
+
+    @staticmethod
+    async def _ring(agent, inv, got, cseq, via, uri, me, cid, ring):
+        """Sends our INVITE (again until the PBX answers at all) and waits for the final answer; after ring seconds a
+        CANCEL. The final answer or None when none came."""
+        end, wait, heard = time.monotonic() + ring, 0.5, False
+        next_send = time.monotonic()
+        while True:
+            now = time.monotonic()
+            if now >= end:
+                break
+            if not heard and now >= next_send:
+                agent.send(inv)
+                next_send, wait = now + wait, min(wait * 2, 4.0)
+            try:
+                m = await asyncio.wait_for(got.get(), min(0.5, max(0.05, end - now)))
+            except asyncio.TimeoutError:
+                continue
+            if m.cseq()[0] != cseq:
+                continue
+            if m.code >= 200:
+                return m
+            heard = True
+        if not heard:
+            return None
+        cancel = request("CANCEL", uri, [via, "Max-Forwards: 70", "From: " + me, f"To: <{uri}>", f"Call-ID: {cid}",
+                                         f"CSeq: {cseq} CANCEL"], "")
+        await agent.transact(cancel, (cid, cseq, "CANCEL"), total=4.0)
+        until = time.monotonic() + 4.0
+        while time.monotonic() < until:
+            try:
+                m = await asyncio.wait_for(got.get(), 0.5)
+            except asyncio.TimeoutError:
+                continue
+            if m.cseq()[0] == cseq and m.code >= 200:
+                if 200 <= m.code < 300:            # answered just then: take the call after all
+                    return m
+                agent.send(Call._ack_failed(via, uri, me, m, cid, cseq))
+                return None
+        return None
+
+    @staticmethod
+    def _ack_failed(via, uri, me, final, cid, cseq):
+        """The ACK for a final answer that is not a 2xx: the same branch as the INVITE (RFC 3261 17.1.1.3)."""
+        return request("ACK", uri, [via, "Max-Forwards: 70", "From: " + me, "To: " + final.get("to"), f"Call-ID: {cid}",
+                                    f"CSeq: {cseq} ACK"], "")
+
     def contact(self):
         return [f"Contact: <sip:{self.agent.z.get('user', 'spark')}@{self.agent.local}:{self.agent.port}>"]
 
@@ -737,61 +880,77 @@ class Call:
             self.over.set()
 
     async def _bye(self):
-        inv = self.invite
-        target = uri_of(inv.get("contact")) or uri_of(inv.get("from"))
-        if not target:
-            return
         self.ours += 1
         heads = [f"Via: SIP/2.0/UDP {self.agent.local}:{self.agent.port};branch={branch()};rport", "Max-Forwards: 70"]
-        heads += ["Route: " + r for r in inv.all("record-route")]
-        to = inv.get("to")
-        heads += [f"From: {to};tag={self.tag}" if not tag_of(to) else f"From: {to}", "To: " + inv.get("from"),
-                  f"Call-ID: {self.cid}", f"CSeq: {self.ours} BYE"]
+        if self.out:                                    # our own dialog: as in the ACK (Call.dial)
+            target = self.out["target"]
+            heads += ["Route: " + r for r in self.out["routes"]]
+            heads += ["From: " + self.out["from"], "To: " + self.out["to"]]
+        else:
+            inv = self.invite
+            target = uri_of(inv.get("contact")) or uri_of(inv.get("from"))
+            heads += ["Route: " + r for r in inv.all("record-route")]
+            to = inv.get("to")
+            heads += [f"From: {to};tag={self.tag}" if not tag_of(to) else f"From: {to}", "To: " + inv.get("from")]
+        if not target:
+            return
+        heads += [f"Call-ID: {self.cid}", f"CSeq: {self.ours} BYE"]
         await self.agent.transact(request("BYE", target, heads), (self.cid, self.ours, "BYE"), total=4.0)
+
+    async def _pick_up(self):
+        """An incoming call: Trying, Ringing, then the 200 with our SDP until the ACK; "" when the call stands, else why not."""
+        a = self.agent
+        a.send(response(self.invite, 100, "Trying"), self.addr)
+        a.send(response(self.invite, 180, "Ringing", self.tag), self.addr)
+        try:
+            await asyncio.wait_for(self.over.wait(), RING)
+        except asyncio.TimeoutError:
+            pass
+        if self.over.is_set():
+            return self.why or "abgebrochen"
+        self.sock = _rtp_port()
+        if not self.sock:
+            a.send(response(self.invite, 486, "Busy Here", self.tag), self.addr)
+            _bump("besetzt")
+            print("telefon: besetzt, kein ton-port frei", flush=True)
+            return "besetzt"
+        loop = asyncio.get_running_loop()
+        self.rtp = Rtp(self)
+        await loop.create_datagram_endpoint(lambda: self.rtp, sock=self.sock)
+        port = self.sock.getsockname()[1]
+        self.sdp = sdp_offer(a.local, port, [self.codec.pt], random.randint(1000, 10 ** 9))
+        self.last = response(self.invite, 200, "OK", self.tag, self.contact(), self.sdp)
+        self.answered = True
+        wait = 0.5
+        for _ in range(7):                      # the 200 again until the ACK comes (RFC 3261 timer G)
+            a.send(self.last, self.addr)
+            try:
+                await asyncio.wait_for(self.acked.wait(), wait)
+                break
+            except asyncio.TimeoutError:
+                wait = min(wait * 2, 4.0)
+            if self.over.is_set():
+                break
+        if not self.acked.is_set() and not self.over.is_set():
+            print("telefon: keine bestaetigung der anlage, aufgelegt", flush=True)
+            return "ohne ack"
+        return ""
 
     async def run(self):
         a = self.agent
         why = "fehler"
         try:
-            a.send(response(self.invite, 100, "Trying"), self.addr)
-            a.send(response(self.invite, 180, "Ringing", self.tag), self.addr)
-            try:
-                await asyncio.wait_for(self.over.wait(), RING)
-            except asyncio.TimeoutError:
-                pass
-            if self.over.is_set():
-                why = self.why
-                return
-            self.sock = _rtp_port()
-            if not self.sock:
-                a.send(response(self.invite, 486, "Busy Here", self.tag), self.addr)
-                _bump("besetzt")
-                print("telefon: besetzt, kein ton-port frei", flush=True)
-                why = "besetzt"
-                return
-            loop = asyncio.get_running_loop()
-            self.rtp = Rtp(self)
-            await loop.create_datagram_endpoint(lambda: self.rtp, sock=self.sock)
-            port = self.sock.getsockname()[1]
-            self.sdp = sdp_offer(a.local, port, [self.codec.pt], random.randint(1000, 10 ** 9))
-            self.last = response(self.invite, 200, "OK", self.tag, self.contact(), self.sdp)
-            self.answered = True
-            wait = 0.5
-            for _ in range(7):                      # the 200 again until the ACK comes (RFC 3261 timer G)
-                a.send(self.last, self.addr)
-                try:
-                    await asyncio.wait_for(self.acked.wait(), wait)
-                    break
-                except asyncio.TimeoutError:
-                    wait = min(wait * 2, 4.0)
-                if self.over.is_set():
-                    break
-            if not self.acked.is_set() and not self.over.is_set():
-                print("telefon: keine bestaetigung der anlage, aufgelegt", flush=True)
-                why = "ohne ack"
-                return
-            _bump("angenommen")
-            if self.mode == "bestaetigen":      # an external number: never in the log
+            if self.out:                           # we called: the dialog stands, the sound socket waits
+                self.rtp = Rtp(self)
+                await asyncio.get_running_loop().create_datagram_endpoint(lambda: self.rtp, sock=self.sock)
+            else:
+                why = await self._pick_up()
+                if why:
+                    return
+            _bump("angerufen" if self.out else "angenommen")
+            if self.out:                        # the Spark called: the kind and the profile, never the number
+                print(f"telefon: anruf raus angenommen ({self.mode}) von {_log_name(self.uid)}, ton {self.codec.name}", flush=True)
+            elif self.mode == "bestaetigen":      # an external number: never in the log
                 print(f"telefon: anruf extern zum bestaetigen einer nummer fuer {_log_name(self.uid)}, ton {self.codec.name}", flush=True)
             elif self.mode == "extern":
                 print(f"telefon: anruf extern angenommen als {_log_name(self.uid) if self.uid else 'gast'}, ton {self.codec.name}", flush=True)
@@ -827,6 +986,7 @@ class Call:
             elif self.sock:
                 self.sock.close()
             a.calls.pop(self.cid, None)
+            a.watch.pop(self.cid, None)
             if self.answered and self.acked.is_set():
                 secs = int(time.time() - self.t0)
                 _bump("sekunden", secs)
@@ -883,7 +1043,8 @@ class Call:
     def keep(self, secs):
         """The call under Ich → Telefon → Meine Telefonate of each profile it was for (no number, no words)."""
         import telefon_ich
-        art = "bestaetigung" if self.mode == "bestaetigen" else "extern" if self.mode else "gemeinsam" if self.shared else "intern"
+        art = "spark" if self.out else "bestaetigung" if self.mode == "bestaetigen" else "extern" if self.mode \
+            else "gemeinsam" if self.shared else "intern"
         for uid in ({self.uid} if self.uid else set()) | ({self.pin_uid} if self.pin_uid else set()) | self.voices:
             if profiles.by_id(uid):
                 try:
@@ -1003,7 +1164,11 @@ class Call:
         if self.mode == "bestaetigen":
             await self.confirm_number()
             return
-        await self.say(f"Hallo {name}, hier ist der Spark." if name else "Hallo, hier ist der Spark.")
+        if self.out:
+            if not await self.called():
+                return
+        else:
+            await self.say(f"Hallo {name}, hier ist der Spark." if name else "Hallo, hier ist der Spark.")
         asked = False
         while not self.over.is_set():
             if time.time() - self.t0 > MAX_CALL:
@@ -1027,6 +1192,77 @@ class Call:
                 continue
             asked = False
             await self.question(pcm)
+
+    async def called(self):
+        """The Spark called (T4): says what it called for; True when the conversation goes on afterwards."""
+        p = profiles.by_id(self.uid) or {}
+        name = p.get("name", "")
+        if self.mode == "test":
+            await self.say("Hallo, hier ist der Spark. Das ist der Testanruf, das Telefon klappt. Tschüss.")
+            self.end("test")
+            return False
+        if self.mode == "alarm":
+            await self.say("Hallo, hier ist der Spark mit einer Meldung für den Admin. " + self.text + " Tschüss.")
+            self.end("alarm")
+            return False
+        if self.mode == "rueckruf":       # the stored, confirmed number answered: that is the proof (plan T3/T4)
+            self.pin_uid = self.uid
+            await self.say(f"Hallo {name}, hier ist der Spark, wie versprochen. Was möchtest du wissen?")
+            return True
+        if self.mode == "weckruf":
+            import chat
+            local = datetime.datetime.now(chat.user_zone(profiles.settings(self.uid).get("tz", "")))
+            hello = "Guten Morgen" if local.hour < 11 else "Guten Tag" if local.hour < 18 else "Guten Abend"
+            clock = f"{local.hour} Uhr" + (f" {local.minute}" if local.minute else "")
+            await self.say(f"{hello}, hier ist der Spark. Es ist {clock}." + (f" {self.text}." if self.text else "")
+                           + " Wenn du magst, frag mich etwas.")
+            return True
+        # a reminder: its words only for the profile itself (the voice, the Telefon-PIN; nothing to check: the own phone)
+        if await self.prove(f"Hallo, hier ist der Spark mit einer Erinnerung für {name}." if name
+                            else "Hallo, hier ist der Spark mit einer Erinnerung."):
+            await self.say("Du wolltest erinnert werden: " + self.text + ". Noch etwas?")
+            return True
+        await self.say("Ich konnte nicht prüfen, dass du es bist. Die Erinnerung steht in deinen Mitteilungen. Tschüss.")
+        print(f"telefon: erinnerung per anruf nicht vorgelesen fuer {_log_name(self.uid)}, nur mitteilung", flush=True)
+        try:
+            import push
+            await push.send(self.uid, "📞 Erinnerung", self.text, tag="telefonanruf", why="Erinnerung")
+        except Exception as e:
+            print("telefon: erinnerung mitteilung", type(e).__name__, flush=True)
+        self.end("nicht geprueft")
+        return False
+
+    async def prove(self, hello):
+        """Whether the profile itself answered: its voice (speakers.verify) or its Telefon-PIN; True at once when
+        neither can be checked (the profile's own phone, nothing to compare with)."""
+        import speakers
+        import telefon_ich
+        cc = load_config().get("chat", {})
+        can_voice = bool(cc.get("speaker_id", False)) and speakers.has_voice(self.uid)
+        can_pin = telefon_ich.has_pin(self.uid)
+        if not can_voice and not can_pin:
+            await self.say(hello)
+            return True
+        ask = "Sag bitte kurz etwas" if can_voice else ""
+        ask += ((" oder tippe" if ask else "Tippe bitte") + " deine Telefon-PIN und Raute.") if can_pin else "."
+        await self.say(hello + " " + ask)
+        for _ in range(2):
+            kind, pcm = await self.hear(QUIET_ASK)
+            if kind == "tasten":
+                await self.pin(self.entered.popleft())
+                if self.pin_uid == self.uid:
+                    return True
+                continue
+            if kind == "frage" and can_voice:
+                vt = self.voice_check(pcm)
+                _uid, voice, _why = await self.voice_result(vt)
+                if voice == self.uid:
+                    return True
+                if can_pin:
+                    await self.say("Ich bin mir bei der Stimme nicht sicher. Tippe bitte deine Telefon-PIN und Raute.")
+                continue
+            break
+        return False
 
     async def question(self, pcm):
         import esp32
@@ -1059,10 +1295,28 @@ class Call:
             await self.say("Tschüss!")
             self.end("verabschiedet")
             return
+        if self.mode == "extern" and self.uid and not self.pin_uid and CALLBACK_WORDS.search(text):
+            if vt:
+                vt.cancel()
+            await self.call_back()
+            return
         uid, voice, why = await self.voice_result(vt)
         self.questions += 1
         _bump("fragen")
         await self.answer(text, uid, voice, why)
+
+    async def call_back(self):
+        """From outside with an unsure voice: the caller asked for a call back. The Spark hangs up and calls the
+        profile's confirmed number that matches this call (telefon_anruf.call_back): a forged number never reaches
+        the one who forged it."""
+        import telefon_anruf
+        res = telefon_anruf.call_back(self.uid, self.number)
+        if res == "ok":
+            _bump("rueckruf")
+            await self.say("Gut. Ich lege auf und rufe dich gleich unter deiner Nummer zurück. Tschüss.")
+            self.end("rueckruf")
+            return
+        await self.say(telefon_anruf.NO_CALLBACK.get(res, telefon_anruf.NO_CALLBACK["aus"]))
 
     async def pin(self, entered):
         """A PIN typed and ended with # (Ich → Telefon): on an assigned handset for its profile, at a shared phone for
@@ -1231,8 +1485,11 @@ class Call:
             scope.update({"speech_profile": uid, "speech_channel": "telefon", "speech_voice": voice or "",
                           "speech_voice_why": why})
             if voice != uid and not self.shared:
+                import telefon_anruf
                 import telefon_ich
                 scope["speech_pin_hint"] = telefon_ich.has_pin(uid)   # chat.PHONE_PIN_HINT: the owner may type it
+                # chat.PHONE_CALLBACK_HINT: from outside the owner may ask for a call back to the confirmed number
+                scope["speech_callback_hint"] = self.mode == "extern" and telefon_anruf.call_back(uid, self.number, dry=True) == "ok"
 
         async def receive():
             return {"type": "http.request", "body": data, "more_body": False}
@@ -1356,11 +1613,16 @@ async def tick(now=None):
 
 
 async def loop():
+    import telefon_anruf
     while True:
         try:
             await tick()
         except Exception as e:
             print("telefon: schleife", type(e).__name__, str(e)[:120], flush=True)
+        try:
+            await telefon_anruf.tick()        # the Spark calls (T4): ordered calls, call backs, the alarm
+        except Exception as e:
+            print("telefon: anrufe raus", type(e).__name__, str(e)[:120], flush=True)
         await asyncio.sleep(5)
 
 
@@ -1386,7 +1648,15 @@ def for_live():
     t = _today.counts()
     return {"on": True, "ok": st["ok"], "calls": st["calls"], "angenommen": t["angenommen"],
             "abgelehnt": t["abgelehnt"] + t["besetzt"], "fragen": t["fragen"], "minuten": t["sekunden"] // 60, "fremd": t["fremd"],
-            "pin": t["pin"], "pinfalsch": t["pinfalsch"], "bestaetigt": t["bestaetigt"], "extern": t["extern"], "gaeste": t["gaeste"]}
+            "pin": t["pin"], "pinfalsch": t["pinfalsch"], "bestaetigt": t["bestaetigt"], "extern": t["extern"], "gaeste": t["gaeste"],
+            "raus": t["raus"], "angerufen": t["angerufen"], "rueckruf": t["rueckruf"], "alarm": t["alarm"],
+            "geplant": _planned()}
+
+
+def _planned():
+    """Calls the profiles ordered and still to come (T4), a number only."""
+    import telefon_ich
+    return sum(len(telefon_ich.planned(u)) for u in profiles.user_ids())
 
 
 def probes():
@@ -1577,6 +1847,22 @@ async def admin_numbers(request: Request):
         _write(d)
     print(f"telefon: nummer {nr} " + ("entfernt" if b.get("weg") else "zugeordnet " + ("gemeinsam" if not uid else _log_name(uid))), flush=True)
     return _view()
+
+
+@router.post("/api/admin/telefon/testanruf", dependencies=[Depends(auth)])
+async def admin_test_call(request: Request):
+    """"Spark ruft mich an" (step 4): a call to an internal number with a fixed sentence."""
+    import telefon_anruf
+    guard.limit(request, "telefonsuchen", admin=True)
+    b = await json_body(request, 256)
+    nr = clean_number(b.get("nr"))
+    if not nr or not internal(nr):
+        raise HTTPException(400, "Nur interne Nummern der Anlage (z. B. **611).")
+    if not settings()["on"] or not signed_in():
+        raise HTTPException(409, "Der Spark ist nicht an der Anlage angemeldet (Schritt 3).")
+    res = await telefon_anruf.test_call(nr)
+    de, en = TEST_SAY.get(res, TEST_SAY["fehler"])
+    return {"ok": res == "angenommen", "why": res, "text": de, "text_en": en}
 
 
 def forget(uid):

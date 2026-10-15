@@ -1,4 +1,4 @@
-"""Telefon (telefon.py, telefon_ton.py, telefon_ich.py, plan telefon-anruf.md T1 and T2): the sound codecs, the SIP parser
+"""Telefon (telefon.py, telefon_ton.py, telefon_ich.py, telefon_anruf.py, plan telefon-anruf.md T1 to T4): the sound codecs, the SIP parser
 and digest, whole calls against a PBX made up here (REGISTER with 401 and digest, INVITE with G.722 and G.711, RTP, DTMF,
 BYE), own numbers confirmed with a code, the Telefon-PIN with its lock, and Ich → Telefon. No telephone, no clock: every
 wait is a few hundred milliseconds, times are passed in."""
@@ -21,6 +21,7 @@ helpers.start()
 import esp32  # noqa: E402
 import profiles  # noqa: E402
 import telefon  # noqa: E402
+import telefon_anruf  # noqa: E402
 import telefon_ich  # noqa: E402
 import telefon_ton  # noqa: E402
 
@@ -615,6 +616,249 @@ class Calls(unittest.TestCase):
         self.assertIn("extern", {c["art"] for c in telefon_ich.calls(self.uid)})
 
 
+    # ------------------------------------------------------------ T4: the Spark calls
+    @staticmethod
+    async def _req(pbx, meth, check=lambda m: True, wait=6.0):
+        """The next request of this method from the Spark (others are skipped)."""
+        while True:
+            m, addr = await asyncio.wait_for(pbx.q.get(), wait)
+            if m and m.method == meth and check(m):
+                return m, addr
+
+    @staticmethod
+    def _reply(pbx, m, addr, status, extra="", body=""):
+        tag = ";tag=ph" if not status.startswith("100") else ""
+        pbx.t.sendto((f"SIP/2.0 {status}\r\nVia: {m.get('via')}\r\nFrom: {m.get('from')}\r\nTo: {m.get('to')}{tag}\r\n"
+                      f"Call-ID: {m.get('call-id')}\r\nCSeq: {m.get('cseq')}\r\n{extra}Content-Length: {len(body)}\r\n\r\n{body}").encode(), addr)
+
+    def test_the_spark_calls_with_digest_and_says_the_test_sentence(self):
+        helpers.TTS_TEXT.clear()
+
+        async def body(a, pbx, port):
+            loop = asyncio.get_running_loop()
+            ph = Phone()
+            pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+            rport = pt_.get_extra_info("sockname")[1]
+            with mock.patch.dict(telefon._agent, {"a": a}):
+                task = asyncio.ensure_future(telefon_anruf.test_call("**611"))
+                m, addr = await self._req(pbx, "INVITE")
+                first = (m.uri, m.get("authorization"), telefon.sdp_parse(m.body)["pts"])
+                self._reply(pbx, m, addr, "401 Unauthorized", 'WWW-Authenticate: Digest realm="fritz.box", nonce="n2", qop="auth"\r\n')
+                ack1, _ = await self._req(pbx, "ACK")
+                m2, addr = await self._req(pbx, "INVITE", lambda x: bool(x.get("authorization")))
+                p = dict((k, x or y) for k, x, y in re.findall(r'(\w+)=(?:"([^"]*)"|([^\s,]+))', m2.get("authorization")))
+                h = lambda v: hashlib.md5(v.encode()).hexdigest()  # noqa: E731
+                want = h(f"{h(p['username'] + ':fritz.box:geheim-1234')}:n2:{p['nc']}:{p['cnonce']}:auth:{h('INVITE:' + p['uri'])}")
+                self._reply(pbx, m2, addr, "180 Ringing")
+                sdp = (f"v=0\r\no=ph 1 1 IN IP4 127.0.0.1\r\ns=-\r\nc=IN IP4 127.0.0.1\r\nt=0 0\r\nm=audio {rport} RTP/AVP 8 101\r\n"
+                       "a=rtpmap:8 PCMA/8000\r\na=rtpmap:101 telephone-event/8000\r\n")
+                self._reply(pbx, m2, addr, "200 OK", "Contact: <sip:611@127.0.0.1>\r\nContent-Type: application/sdp\r\n", sdp)
+                res = await task
+                ack2, _ = await self._req(pbx, "ACK", lambda x: x.cseq() == m2.cseq()[:1] + ("ACK",))
+                bye, addr = await self._req(pbx, "BYE", wait=15)
+                self._reply(pbx, bye, addr, "200 OK")
+                gone = await self._until(lambda: not a.calls and not a.watch)
+            pt_.close()
+            return first, ack1, p["response"] == want, res, ack2, bye, len(ph.packets), gone
+        with _quiet() as log:
+            first, ack1, digest_ok, res, ack2, bye, n, gone = self.run_with_pbx(body)
+        self.assertEqual(first[0], "sip:**611@127.0.0.1")
+        self.assertFalse(first[1])
+        self.assertEqual(first[2], [9, 8, 0, 101])
+        self.assertEqual(ack1.get("to").endswith(";tag=ph"), True)        # the 401 is acknowledged
+        self.assertTrue(digest_ok)
+        self.assertEqual(res, "angenommen")
+        self.assertEqual(ack2.uri, "sip:611@127.0.0.1")                    # the ACK goes to the phone's Contact
+        self.assertTrue(bye.get("to").endswith(";tag=ph"))
+        self.assertGreater(n, 3)                                          # sound went to the phone
+        self.assertTrue(gone)
+        self.assertTrue(any("Testanruf" in t for t in helpers.TTS_TEXT))
+        self.assertIn("telefon: anruf raus angenommen (test)", log.text)
+        self.assertIn("telefon: testanruf an **611: angenommen", log.text)
+
+    def test_nobody_answers_the_spark_cancels(self):
+        async def body(a, pbx, port):
+            task = asyncio.ensure_future(telefon.Call.dial(a, "**611", self.uid, "weckruf", ring=0.6))
+            m, addr = await self._req(pbx, "INVITE")
+            self._reply(pbx, m, addr, "180 Ringing")
+            c, caddr = await self._req(pbx, "CANCEL", wait=4)
+            self._reply(pbx, c, caddr, "200 OK")
+            self._reply(pbx, m, addr, "487 Request Terminated")
+            ack, _ = await self._req(pbx, "ACK")
+            res = await task
+            busy = asyncio.ensure_future(telefon.Call.dial(a, "**611", self.uid, "weckruf", ring=2))
+            m, addr = await self._req(pbx, "INVITE", lambda x: x.get("call-id") != c.get("call-id"))
+            self._reply(pbx, m, addr, "486 Busy Here")
+            return c, ack, res, await busy, a.watch, a.calls
+        with _quiet():
+            c, ack, res, busy, watch, calls = self.run_with_pbx(body)
+        self.assertEqual(c.cseq()[1], "CANCEL")
+        self.assertEqual(ack.cseq()[1], "ACK")
+        self.assertEqual((res, busy), ("keine antwort", "besetzt"))
+        self.assertEqual((watch, calls), ({}, {}))
+
+
+class SparkCalls(unittest.TestCase):
+    """T4 rules without a PBX: whom, when, how often (the call itself is replaced, the clock passed in)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.uid = profiles.add_user("Tele Ruth", "4741")
+        cls.admin = profiles.add_user("Tele Adam", "4742")
+
+    def setUp(self):
+        for u in (self.uid, self.admin):
+            telefon_ich.clear(u)
+            profiles.save_settings(u, {"telefon_anrufbar": True})
+        telefon_anruf._queue.clear()
+        telefon_anruf._alarm["held"] = False
+        helpers.set_config(telefon=True, telefon_anrufen=True, telefon_ziel="intern", telefon_alarm=True, svc_watch=True)
+        self.addCleanup(lambda: helpers.set_config(telefon=False, telefon_anrufen=False, telefon_alarm=False, telefon_ziel="intern"))
+        self.dialed = []
+
+        async def dial(agent, nr, uid, mode, text="", ring=30):
+            self.dialed.append((nr, uid, mode, text))
+            return self.answer
+        self.answer = "angenommen"
+        self.notes = []
+
+        async def note(uid, title, body, **k):
+            self.notes.append((uid, title, body))
+        for p in (mock.patch.object(telefon.Call, "dial", dial), mock.patch.object(telefon, "signed_in", lambda: True),
+                  mock.patch.object(telefon, "nummern", lambda: {"**611": {"uid": self.uid}, "**615": {"uid": self.admin}}),
+                  mock.patch("push.send", note), mock.patch("begleiter.busy", lambda uid, now=None: False)):
+            p.start()
+            self.addCleanup(p.stop)
+
+    def _confirmed(self, uid, nr):
+        code = telefon_ich.add_number(uid, nr)
+        self.assertEqual(telefon_ich.try_code(nr, code)[0], "ok")
+
+    def test_the_tool_plans_only_the_own_phone_and_the_clock_calls(self):
+        ctx = {"who": profiles.by_id(self.uid), "own": True, "tz": "Europe/Berlin", "client": "web"}
+        self.assertIsNone(telefon_anruf.offer(dict(ctx, text="Wie wird das Wetter?")))
+        o = telefon_anruf.offer(dict(ctx, text="Ruf mich morgen um 7 an"))
+        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["anruf_planen"])
+        self.assertNotIn("nr", json.dumps(o["tools"][0]["function"]["parameters"]["properties"]))   # no number to give
+        self.assertIsNone(telefon_anruf.offer(dict(ctx, text="Ruf mich morgen um 7 an", client="mcp")))
+        said = asyncio.run(telefon_anruf.tool("anruf_planen", {"art": "erinnerung", "text": "Zahnarzt", "minutes": 10,
+                                                               "nummer": "0900123456"}, ctx))
+        self.assertTrue(said.startswith("Planned"), said)
+        rows = telefon_ich.planned(self.uid)
+        self.assertEqual([(r["art"], r["text"]) for r in rows], [("erinnerung", "Zahnarzt")])
+        self.assertNotIn("0900", json.dumps(rows))
+        # not yet due: nothing; due: the own handset, the text along
+        with _quiet():
+            asyncio.run(telefon_anruf.tick(now=rows[0]["t"] - 5))
+            self.assertEqual(self.dialed, [])
+            asyncio.run(telefon_anruf.tick(now=rows[0]["t"] + 1))
+        self.assertEqual(self.dialed, [("**611", self.uid, "erinnerung", "Zahnarzt")])
+        self.assertEqual(telefon_ich.planned(self.uid), [])
+        # the preference says no: no call, the tool says so
+        profiles.save_settings(self.uid, {"telefon_anrufbar": False})
+        self.assertIsNone(telefon_anruf.offer(dict(ctx, text="Ruf mich morgen um 7 an")))
+        self.assertIn("Not done", asyncio.run(telefon_anruf.tool("anruf_planen", {"art": "weckruf", "minutes": 5}, ctx)))
+        profiles.save_settings(self.uid, {"telefon_anrufbar": True})
+
+    def test_day_limit_retry_and_note(self):
+        with _quiet() as log:
+            for i in range(telefon_anruf.DAY_LIMIT):
+                asyncio.run(telefon_anruf.place(self.uid, "weckruf", now=1_000_000 + i))
+            self.assertEqual(asyncio.run(telefon_anruf.place(self.uid, "weckruf", now=1_000_100)), "limit")
+            self.assertEqual(len(self.dialed), telefon_anruf.DAY_LIMIT)
+            self.assertEqual(len(self.notes), 1)                       # instead of the sixth call: a note
+            telefon_ich.clear(self.uid)
+            self.answer = "keine antwort"
+            asyncio.run(telefon_anruf.place(self.uid, "erinnerung", "Müll", now=2_000_000))
+            self.assertEqual(len(telefon_anruf._queue), 1)              # once more later …
+            asyncio.run(telefon_anruf.tick(now=2_000_000 + telefon_anruf.RETRY + 1))
+            self.assertEqual(len(self.dialed), telefon_anruf.DAY_LIMIT + 2)
+            self.assertEqual(self.notes[-1][2], "Müll")                 # … then the reminder as a note
+        self.assertNotIn("Müll", log.text)
+        self.assertNotIn("611", log.text)
+
+    def test_call_back_only_to_the_confirmed_number_that_called(self):
+        self._confirmed(self.uid, "0170 5550001")
+        self.assertEqual(telefon_anruf.call_back(self.uid, "+491705550001", dry=True), "ziel")     # only internal allowed
+        helpers.set_config(telefon_ziel="eigene")
+        self.assertEqual(telefon_anruf.call_back(self.uid, "01709999999"), "aus")               # not its number
+        self.assertEqual(telefon_anruf.call_back(self.admin, "+491705550001"), "aus")           # not this profile's
+        self.assertEqual(telefon_anruf.call_back(self.uid, "+491705550001", dry=True), "ok")
+        self.assertEqual(telefon_anruf._queue, [])
+        with _quiet() as log:
+            self.assertEqual(telefon_anruf.call_back(self.uid, "+491705550001", now=5000), "ok")
+            asyncio.run(telefon_anruf.tick(now=5000 + telefon_anruf.CALLBACK_WAIT))
+        self.assertEqual(self.dialed, [("01705550001", self.uid, "rueckruf", "")])   # the stored number, not the shown one
+        self.assertNotIn("0170", log.text)
+
+    def _call(self, mode, text=""):
+        c = telefon.Call(None, telefon.parse(invite(5060, "**611", 4000, "x1")), ("127.0.0.1", 5060), "**611", self.uid, False,
+                         {"ip": "127.0.0.1", "port": 4000, "dtmf": 101}, 8, mode=mode)
+        c.out, c.text, c.said = {"target": "", "from": "", "to": "", "routes": []}, text, []
+
+        async def say(t):
+            c.said.append(t)
+        c.say = say
+        return c
+
+    def test_a_reminder_is_read_only_to_the_profile_itself(self):
+        telefon_ich.set_pin(self.uid, "2580")
+        c = self._call("erinnerung", "Zahnarzt um 10")
+
+        async def nothing(wait):
+            return "still", b""
+        c.hear = nothing
+        with _quiet() as log:
+            self.assertFalse(asyncio.run(c.called()))
+        self.assertFalse(any("Zahnarzt" in t for t in c.said))            # nobody proved: never said …
+        self.assertEqual(self.notes[-1][2], "Zahnarzt um 10")              # … the note instead
+        self.assertIn("telefon: erinnerung per anruf nicht vorgelesen", log.text)
+        c = self._call("erinnerung", "Zahnarzt um 10")
+        keys = iter([("tasten", b"")])
+
+        async def typed(wait):
+            c.entered.append("2580")
+            return next(keys)
+        c.hear = typed
+        with _quiet():
+            self.assertTrue(asyncio.run(c.called()))
+        self.assertTrue(any("Zahnarzt" in t for t in c.said))              # the right PIN: read out
+        telefon_ich.set_pin(self.uid, "")
+        c = self._call("rueckruf")
+        self.assertTrue(asyncio.run(c.called()))
+        self.assertEqual(c.pin_uid, self.uid)                               # the call back reached the stored number
+
+    def test_alarm_waits_for_the_end_of_the_quiet_hours(self):
+        import dienstwacht
+        day = 1_800_000_000
+        svc = {"svc": {"ha": {"st": "down", "since": day - 3600 * 9}}}
+        hours = {"h": 23}
+        patches = [mock.patch.object(dienstwacht, "_read", lambda: svc), mock.patch.object(dienstwacht, "_hour", lambda now: hours["h"]),
+                   mock.patch("notaus.admin_uids", lambda: [self.admin]), mock.patch("room.night", lambda uid, local=None: False)]
+        for p in patches:
+            p.start()
+            self.addCleanup(p.stop)
+        store = {}
+        with mock.patch.object(telefon, "_read", lambda: dict(store)), mock.patch.object(telefon, "_write", store.update), _quiet() as log:
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day)), "ruhe")       # 23 o'clock: only the note
+            hours["h"] = 3
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day + 4 * 3600)), "ruhe")
+            self.assertEqual(self.dialed, [])
+            hours["h"] = 7
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day + 8 * 3600)), "angenommen")
+            self.assertEqual(self.dialed[0][:3], ("**615", self.admin, "alarm"))
+            hours["h"] = 7
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day + 8 * 3600 + 600)), "")   # at most one an hour
+            svc["svc"]["ha"]["since"] = day + 9 * 3600 - 300                                       # gone only 5 min
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day + 9 * 3600 + 1)), "")
+            helpers.set_config(telefon_alarm=False)
+            svc["svc"]["ha"]["since"] = day
+            self.assertEqual(asyncio.run(telefon_anruf.alarm_tick(day + 12 * 3600)), "")       # switch off: never
+        self.assertEqual(len(self.dialed), 1)
+        self.assertEqual(log.text.count("telefon: alarm in ruhezeit, nur push"), 1)
+        self.assertIn("telefon: alarm nach ruhezeit angerufen", log.text)
+
+
 class OwnNumbersAndPin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -754,6 +998,21 @@ class Endpoints(unittest.TestCase):
         self.assertFalse(c.delete("/api/profile/telefon/pin").json()["pin"])
         self.assertEqual(c.delete("/api/profile/telefon/nummern/" + row["id"]).json()["nummern"], [])
         self.assertEqual(c.delete("/api/profile/telefon/nummern/nope").status_code, 404)
+        emma = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Tele Emma")
+        telefon_ich.plan_add(emma, 2_000_000_000, "weckruf", "")
+        self.assertEqual(len(c.get("/api/profile/telefon").json()["geplant"]), 1)
+        self.assertEqual(c.delete("/api/profile/telefon/geplant").json()["geplant"], [])
+
+    def test_admin_test_call_only_to_internal_numbers(self):
+        from fastapi.testclient import TestClient
+        import panel
+        c = TestClient(panel.app)
+        self.assertEqual(c.post("/api/admin/telefon/testanruf", json={"nr": "**611"}).status_code, 401)
+        c.headers["Authorization"] = "Basic " + __import__("base64").b64encode(b"admin:secret-admin").decode()
+        with mock.patch.object(telefon, "zugang", lambda: {"anlage": "fritzbox"}):
+            self.assertEqual(c.post("/api/admin/telefon/testanruf", json={"nr": "01701234567"}).status_code, 400)
+            helpers.set_config(telefon=False)
+            self.assertEqual(c.post("/api/admin/telefon/testanruf", json={"nr": "**611"}).status_code, 409)
 
 
 if __name__ == "__main__":

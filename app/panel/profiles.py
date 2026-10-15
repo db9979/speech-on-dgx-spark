@@ -818,6 +818,8 @@ SETTINGS = {
     "doc_deliver": ("", _in("doc_deliver")),
     # more with the reMarkable (rmplus.py, admin chat.remarkable_plus)
     "rm_morning": (True, lambda v: isinstance(v, bool)),
+    # "Der Spark darf mich anrufen" (telefon_anruf.py): ordered wake-up calls, reminders by call, call backs
+    "telefon_anrufbar": (True, lambda v: isinstance(v, bool)),
     "rm_morning_at": ("06:30", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
     "rm_week": (True, lambda v: isinstance(v, bool)),
     "rm_inbox": (True, lambda v: isinstance(v, bool)),

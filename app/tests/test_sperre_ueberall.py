@@ -297,6 +297,7 @@ class OwnData(Base):
 ADMIN_ON_OK = {
     "verbrauch.py:on": "Spark-wide counter (admin switch); each profile's own view asks features.allowed verbrauch",
     "telefon.py:settings": "Spark-wide SIP part (admin switches); each call asks features.allowed telefon for its profile",
+    "telefon_anruf.py:alarm_tick": "Spark-wide early out; the admin who gets the call is picked with features.allowed telefonalarm (_admin)",
     "verbrauch.py:quota_on": "Spark-wide early out; each profile then features.allowed kontingent (verbrauch.limit)",
     "account.py:whoami": "page flags: admin switch and not features.blocked for the profile",
     "account.py:profile_voice": "display flag: admin switch and not features.blocked",

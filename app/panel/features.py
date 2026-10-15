@@ -48,12 +48,12 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"),
             ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
             ("parbox", "Pakete", "Parcels"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
-            ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"),
+            ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
             ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
-            ("usebox", "Verbrauch", "Usage"), ("telbox", "Telefon", "Phone"))
+            ("usebox", "Verbrauch", "Usage"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -273,10 +273,17 @@ FEATURES = (
     F("telefon", "Den Spark anrufen", "Calling the Spark", "home", ("telefon",), me="telbox", guide="telefon"),
     # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
     F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
-      parent="telefon", guide="telefon"),
+      parent="telefon", guide="telefongast"),
     # calls from outside through the PBX: confirmed own numbers (Ich → Telefon) as their profile, with Gäste also unknown ones
     F("telefonaussen", "Telefon: Anrufe von außen", "Phone: calls from outside", "home", ("telefon_aussen", "telefon"),
-      parent="telefon", guide="telefon"),
+      parent="telefon", guide="telefonaussen"),
+    # the Spark calls (telefon_anruf.py, T4): wake-up calls and reminders the profile ordered, call backs; the
+    # preference telefon_anrufbar lets each profile say no
+    F("telefonanrufen", "Telefon: der Spark ruft an", "Phone: the Spark calls", "home", ("telefon_anrufen", "telefon"),
+      pref="telefon_anrufbar", parent="telefon", me="telbox", guide="telefonanrufen"),
+    # a service gone 10 minutes or more: a call to the admin besides the note, never in the quiet hours
+    F("telefonalarm", "Telefon: Anruf bei Dienstausfall", "Phone: call on outages", "home",
+      ("telefon_alarm", "telefon_anrufen", "telefon", "svc_watch"), parent="telefonanrufen", guide="telefonalarm"),
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
