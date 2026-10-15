@@ -181,11 +181,15 @@ class Access(On):
 
     def test_weiche_keeps_painting_apart(self):
         for q in ("Mal mir eine Katze auf einem Skateboard", "Erstell ein Logo für unseren Fußballverein",
-                  "Mal mir ein Haus mit Garten", "Zeichne einen Drachen im Comicstil"):
+                  "Mal mir ein Haus mit Garten", "Zeichne einen Drachen im Comicstil",
+                  # the verb at the end (Dominik 2026-10-15: answered „kein Bildwerkzeug“ and offered a mail draft)
+                  "Kannst du mir mal ein Bild erstellen von einem Mann im Auto, der durch den Wald fährt und an einer "
+                  "Unfallstelle vorbei?", "Kannst du ein Logo für mich entwerfen?"):
             self.assertEqual(intent.classify(q).names, ["bild"], q)
         for q, want in (("Was ist auf dem Bild?", []), ("Schalt mal bitte das Licht an", ["smarthome"]),
                         ("Mal eine Frage: wie spät ist es?", []), ("Schreib mal eine Mail an Anna", ["mail"]),
-                        ("Mach eine Präsentation mit Bildern über Rom", ["erstellen"])):
+                        ("Mach eine Präsentation mit Bildern über Rom", ["erstellen"]),
+                        ("Ich schicke dir ein Bild, kannst du es beschreiben?", [])):
             self.assertEqual(intent.classify(q).names, want, q)
 
 
