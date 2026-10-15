@@ -539,6 +539,11 @@ class Seite(unittest.TestCase):
         self.assertIn('"Modelle": "Models"', en)
         self.assertNotIn("onclick=", js.replace(".onclick=", ""))
         self.assertNotIn("fetch(", js)
-        # stage E4: the page changes only through the two switch endpoints (behind Funktionen → Modelle wechseln)
-        self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))), ["/api/admin/modelle/wechseln", "/api/admin/modelle/zurueck"])
-        self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 1)
+        # stage E4: the page changes only through the two switch endpoints (behind Funktionen → Modelle wechseln);
+        # stage E5 adds the own models (behind Funktionen → Eigene Modelle): add, delete, and the check that keeps nothing
+        self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
+                         ["/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/wechseln",
+                          "/api/admin/modelle/zurueck"])
+        self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js), ["/api/admin/modelle/eigen/pruefen"])
+        self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 1)        # the check
+        self.assertEqual(len(re.findall(r"\bmethod='POST'", js)), 1)                          # mdPost's default

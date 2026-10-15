@@ -168,8 +168,10 @@ def _aus_bildmodell(m):
                 platte_gb=bildmodell.disk_gb(m["variante"]))
 
 
-def katalog(path=KATALOG):
-    """{id: entry} from modelle.json; every entry checked, ids unique."""
+def katalog(path=KATALOG, eigene=None):
+    """{id: entry} from modelle.json; every entry checked, ids unique. Then the admin's own entries (stage E5,
+    STATE/modelle-eigene.json, only with the shipped catalog): each checked by the same rules plus eigen_ok();
+    one that fails is left out, so a broken file never breaks the catalog."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     out = {}
@@ -179,6 +181,15 @@ def katalog(path=KATALOG):
         if m["id"] in out:
             raise Fehler("doppelt")
         out[m["id"]] = m
+    if eigene is None and path == KATALOG:
+        eigene = EIGENE
+    for m in (read_json(eigene, {}).get("modelle") or [])[:EIGENE_MAX] if eigene else []:
+        try:
+            eigen_ok(m)
+        except Fehler:
+            continue
+        if m["id"] not in out:
+            out[m["id"]] = m
     return out
 
 
@@ -313,6 +324,7 @@ def messliste(was, kat=None):
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4"}
+    wunsch.update({i: i for i, m in kat.items() if m.get("eigen")})     # stage E5: an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
     ids = [w for w in (wunsch.get(x) for x in was) if w]
@@ -901,6 +913,10 @@ def wechsel_pruefen(art, mid, cfg, total_gib, lanes=(), kat=None, messung=None):
             raise Fehler("aus")
     elif not m.get("wahl"):
         raise Fehler("wahl")
+    if m.get("eigen") and art == "sehen":      # stage E5: no round trip on demand, so an own one is measured first
+        messung = read_json(MESSUNG, {}) if messung is None else messung
+        if not ((messung.get("modelle") or {}).get(mid) or {}).get("ok"):
+            raise Fehler("ungeprueft")
     if jetzt_id(art, cfg, kat) == mid:
         raise Fehler("schon")
     if budget(mit_wechsel(cfg, art, m), total_gib, lanes, kat)["regel"] == "zu_knapp":
@@ -972,6 +988,138 @@ def wunsch_nehmen(path=WUNSCH, now=None):
     if art not in TAUSCH or not (was == "zurueck" or ID.match(was)) or not 0 <= now - float(data.get("zeit", 0)) <= 600:
         raise Fehler("wunsch")
     return art, was
+
+
+# ---------------------------------------------------------------- stage E5: the admin's own models
+EIGENE = os.path.join(STATE, "modelle-eigene.json")     # own entries the admin added (Zustand → Modelle)
+EIGENE_MAX = 20
+HF_API = "https://huggingface.co/api/models/{repo}/revision/{rev}?blobs=true"
+HF_INFO_MAX = 4 * 1024 * 1024    # bytes of the metadata answer at most
+# architectures the engine runs without code from the repository (vLLM's own model classes); nothing else is added
+VLLM_ARCH = {
+    "llm": ("Qwen3ForCausalLM", "Qwen3MoeForCausalLM", "Qwen2ForCausalLM", "Qwen2MoeForCausalLM", "LlamaForCausalLM",
+            "MistralForCausalLM", "MixtralForCausalLM", "Gemma2ForCausalLM", "Gemma3ForCausalLM", "Phi3ForCausalLM",
+            "GraniteForCausalLM", "OlmoForCausalLM", "Olmo2ForCausalLM", "GptOssForCausalLM"),
+    "sehen": ("Qwen2VLForConditionalGeneration", "Qwen2_5_VLForConditionalGeneration", "Qwen3VLForConditionalGeneration",
+              "Qwen3VLMoeForConditionalGeneration", "Gemma3ForConditionalGeneration", "Mistral3ForConditionalGeneration",
+              "LlavaForConditionalGeneration", "Idefics3ForConditionalGeneration", "InternVLChatModel"),
+}
+# the engine's parsers per family (fixed; a family without one gets no tools, the round trip then decides)
+PARSER_FAMILIE = {"Qwen3": {"reasoning_parser": "qwen3", "tool_call_parser": "hermes"},
+                  "Qwen2": {"tool_call_parser": "hermes"}, "Llama": {"tool_call_parser": "llama3_json"},
+                  "Mistral": {"tool_call_parser": "mistral"}, "Mixtral": {"tool_call_parser": "mistral"}}
+FREI = ("apache-2.0", "mit", "bsd-2-clause", "bsd-3-clause", "openrail", "cc-by-4.0", "llama3.1", "llama3.2", "llama3.3",
+        "gemma", "qwen")                # licences that allow commercial use (others are shown as "nur privat")
+KV_GIB = {"llm": 12, "sehen": 4}      # room for the context beside the weights (32K tokens)
+EIGEN_KONTEXT = 32768
+
+
+def eigen_ok(m):
+    """The extra rules for an own entry: an own id, an engine of this installation on a pinned commit, only measured
+    on request, never a picture or speech model (those need their own code and come as catalog entries)."""
+    pruefe_eintrag(m)
+    if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == "vllm"
+            and m["art"] in VLLM_ARCH and REV.match(m["revision"]) and m.get("messen") == "auf_wunsch"
+            and m.get("vllm", {}).get("venv", "llm") == "llm" and "quantization" not in m.get("vllm", {})):
+        raise Fehler("eigen")
+    return m
+
+
+def _wort(text, n=40):
+    return re.sub(r"[^a-z0-9.-]+", "-", str(text or "").lower()).strip("-.")[:n]
+
+
+def eigen_vorschlag(info, art, repo, total_gib):
+    """An own catalog entry from the Hugging Face metadata of one commit (the panel reads it, the model never):
+    weights only as safetensors, no code from the repository, an architecture the engine knows, it must fit within
+    ANTEIL_MAX. Returns the entry; raises Fehler with a fixed word."""
+    if art not in VLLM_ARCH:
+        raise Fehler("art")
+    if not REPO.match(str(repo)) or ".." in repo:
+        raise Fehler("repo")
+    if not isinstance(info, dict) or not REV.match(str(info.get("sha", ""))):
+        raise Fehler("antwort")
+    if info.get("private") or info.get("gated") or info.get("disabled"):
+        raise Fehler("zugang")
+    files = [x for x in info.get("siblings") or [] if isinstance(x, dict) and isinstance(x.get("rfilename"), str)]
+    weights = [x for x in files if x["rfilename"].endswith(".safetensors")]
+    if not weights or len(files) > 2000:
+        raise Fehler("format")
+    cfg = info.get("config") if isinstance(info.get("config"), dict) else {}
+    if any(w in json.dumps(cfg) for w in ('"auto_map"', "trust_remote_code")):     # also a tokenizer's own code
+        raise Fehler("code")
+    arch = (cfg.get("architectures") or [""])[0]
+    if arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
+        raise Fehler("architektur")
+
+    def size(x):
+        lfs = x.get("lfs") if isinstance(x.get("lfs"), dict) else {}
+        v = lfs.get("size", x.get("size"))
+        return v if isinstance(v, int) and v >= 0 else None
+    sizes = [size(x) for x in weights]
+    if None in sizes:
+        raise Fehler("format")
+    gib = sum(sizes) / 2**30
+    need = gib + KV_GIB[art]
+    if need / total_gib > ANTEIL_MAX:
+        raise Fehler("budget")
+    sehen = arch in VLLM_ARCH["sehen"]
+    fam = next((v for k, v in PARSER_FAMILIE.items() if arch.startswith(k)), {})
+    card = info.get("cardData") if isinstance(info.get("cardData"), dict) else {}
+    lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+    name = re.sub(r"[^A-Za-z0-9 ._-]+", "", repo.split("/", 1)[1])[:48] or "Modell"
+    m = {"id": ("eigen-" + _wort(repo.split("/", 1)[1], 41)).rstrip("-."), "art": art, "name": {"de": name, "en": name},
+         "engine": "vllm", "repo": repo, "revision": info["sha"], "lizenz": lizenz, "gewerblich": lizenz in FREI,
+         "platte_gb": max(1, round(sum(sizes) / 1e9)), "need_gib": max(1, round(need)), "gemessen": False,
+         "anteil": round(min(ANTEIL_MAX, max(0.02, need / total_gib + 0.01)), 2), "kontext": EIGEN_KONTEXT,
+         "kann_sehen": sehen, "werkzeuge": art == "llm" and "tool_call_parser" in fam,
+         "vllm": dict(fam if art == "llm" else {}, max_seqs=4), "anfrage": {}, "messen": "auf_wunsch",
+         "betrieb": "resident" if art == "llm" else "bei_bedarf", "eigen": True}
+    return eigen_ok(m)
+
+
+def eigene(path=EIGENE):
+    return [m for m in read_json(path, {}).get("modelle") or [] if isinstance(m, dict)]
+
+
+def eigen_speichern(m, path=EIGENE, kat=None):
+    """Adds an own entry (checked again); refuses a second one for the same id or repository, and more than EIGENE_MAX."""
+    eigen_ok(m)
+    kat = katalog() if kat is None else kat
+    alle = eigene(path)
+    if m["id"] in kat or any(x.get("repo") == m["repo"] for x in alle) or any(x["repo"] == m["repo"] for x in kat.values()):
+        raise Fehler("schon")
+    if len(alle) >= EIGENE_MAX:
+        raise Fehler("voll")
+    write_json(path, {"modelle": alle + [dict(m, zeit=int(time.time()))]}, indent=1)
+
+
+def eigen_loeschen(mid, cfg, now=None, path=EIGENE, wechsel=WECHSEL, hf_home=None):
+    """Takes an own entry off the list; never one that runs or that can still be brought back (7 days). Returns its
+    cache folder, which the caller removes (it belongs to the service user, like the whole cache)."""
+    alle = eigene(path)
+    m = next((x for x in alle if x.get("id") == mid), None)
+    if m is None:
+        raise Fehler("unbekannt")
+    if any(jetzt_id(a, cfg) == mid for a in TAUSCH):
+        raise Fehler("aktiv")
+    w = read_json(wechsel, {}).get(m.get("art")) or {}
+    if w.get("alt") == mid and (time.time() if now is None else now) - float(w.get("zeit", 0)) <= ALT_TAGE * 86400:
+        raise Fehler("frist")
+    write_json(path, {"modelle": [x for x in alle if x.get("id") != mid]}, indent=1)
+    return hf_ordner(m, hf_home)
+
+
+def ordner_weg(ordner, hf_home=None):
+    """Removes one model folder of the Hugging Face cache (never a link, never anything outside hub/models--*)."""
+    import shutil
+    hub = os.path.realpath(os.path.join(hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"), "hub"))
+    if os.path.islink(ordner) or not os.path.isdir(ordner):
+        return False
+    if os.path.dirname(os.path.realpath(ordner)) != hub or not os.path.basename(ordner).startswith("models--"):
+        raise Fehler("ordner")
+    shutil.rmtree(ordner)
+    return True
 
 
 # ---------------------------------------------------------------- command line

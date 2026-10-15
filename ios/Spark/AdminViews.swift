@@ -235,11 +235,15 @@ struct ModelsView: View {
     @State private var d: [String: Any] = [:]
     @State private var error: String?
     @State private var ask: [String: String]?      // stage E4: {art, id, name} to switch, or {art, zurueck} to bring back
+    @State private var eArt = "llm"                // stage E5: an own model from Hugging Face
+    @State private var eRepo = ""
+    @State private var vorschlag: [String: Any]?
 
     var body: some View {
         let w = d["wechsel"] as? [String: Any] ?? [:]
         let an = w["an"] as? Bool == true, laeuft = w["laeuft"] as? Bool == true
         let alte = w["alte"] as? [String: Any] ?? [:]
+        let eigene = an && w["eigene"] as? Bool == true
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if laeuft {
@@ -269,9 +273,15 @@ struct ModelsView: View {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: m["name"] as? String ?? "")
                                     if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
+                                    if m["eigen"] as? Bool == true { Text("eigenes").font(.caption).foregroundStyle(.secondary) }
                                     if an && !laeuft && m["waehlbar"] as? Bool == true && m["aktiv"] as? Bool != true {
                                         Button("Wechseln") {
                                             ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""]
+                                        }.font(.caption).buttonStyle(.borderless)
+                                    }
+                                    if eigene && !laeuft && m["eigen"] as? Bool == true && m["aktiv"] as? Bool != true {
+                                        Button("Löschen", role: .destructive) {
+                                            ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "loeschen": "1"]
                                         }.font(.caption).buttonStyle(.borderless)
                                     }
                                 }
@@ -283,15 +293,41 @@ struct ModelsView: View {
                     } header: { Text(verbatim: a["name"] as? String ?? "") }
                 }
             }
+            if eigene && !laeuft {
+                Section {
+                    Picker("Art", selection: $eArt) {
+                        Text("Sprachmodell").tag("llm")
+                        Text("Bildverständnis").tag("sehen")
+                    }
+                    TextField(text: $eRepo) { Text(verbatim: "besitzer/modell") }
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    Button("Prüfen") { Task { await pruefen() } }.disabled(eRepo.trimmingCharacters(in: .whitespaces).isEmpty)
+                    if let v = vorschlag {
+                        LabeledContent("Stand") { Text(verbatim: String((v["revision"] as? String ?? "").prefix(12))) }
+                        LabeledContent("Lizenz") { Text(verbatim: v["lizenz"] as? String ?? "") }
+                        LabeledContent("Speicher") { Text(verbatim: "~" + Self.gib(v["need_gib"])) }
+                        Button("Hinzufügen") { ask = ["dazu": "1", "name": eRepo] }
+                    }
+                } header: { Text("Eigenes Modell hinzufügen") } footer: {
+                    Text("Nur offene Modelle mit safetensors, ohne eigenen Code. Geladen wird erst beim Wechseln.")
+                }
+            }
         }
         .navigationTitle("Modelle")
         .refreshable { await load() }
         .task { await load() }
-        .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : "Modell wechseln?"),
+        .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : ask?["loeschen"] != nil
+                                               ? "Eigenes Modell löschen?" : ask?["dazu"] != nil ? "Eigenes Modell hinzufügen?" : "Modell wechseln?"),
                             isPresented: Binding(get: { ask != nil }, set: { if !$0 { ask = nil } }), titleVisibility: .visible) {
             Button("Ja") { if let a = ask { Task { await send(a) } } }
         } message: {
-            Text("Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.")
+            if ask?["loeschen"] != nil {
+                Text("Das Modell kommt aus der Liste und von der Platte.")
+            } else if ask?["dazu"] != nil {
+                Text("Geladen wird erst beim Wechseln.")
+            } else {
+                Text("Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.")
+            }
         }
     }
 
@@ -303,7 +339,15 @@ struct ModelsView: View {
     private func send(_ a: [String: String]) async {
         let lang = ["lang": UsageView.de ? "de" : "en"]
         do {
-            if a["zurueck"] != nil {
+            if a["loeschen"] != nil {
+                let id = (a["id"] ?? "").addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+                d = try await AdminSession.shared.object("DELETE", "api/admin/modelle/eigen/" + id, query: lang)
+            } else if a["dazu"] != nil, let v = vorschlag {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen", query: lang,
+                                                         body: ["art": eArt, "repo": eRepo.trimmingCharacters(in: .whitespaces),
+                                                                "revision": v["revision"] as? String ?? ""])
+                vorschlag = nil; eRepo = ""
+            } else if a["zurueck"] != nil {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/zurueck", query: lang, body: ["art": a["art"] ?? ""])
             } else {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/wechseln", query: lang,
@@ -312,6 +356,15 @@ struct ModelsView: View {
             error = nil
         } catch { self.error = error.localizedDescription }
         ask = nil
+    }
+
+    private func pruefen() async {
+        vorschlag = nil
+        do {
+            let r = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen/pruefen",
+                                                         body: ["art": eArt, "repo": eRepo.trimmingCharacters(in: .whitespaces)])
+            vorschlag = r["vorschlag"] as? [String: Any]; error = nil
+        } catch { self.error = error.localizedDescription }
     }
 
     static func gib(_ v: Any?) -> String {

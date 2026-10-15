@@ -345,6 +345,7 @@ ADMIN_ON_OK = {
     "wartung.py:admin_on": "Spark-wide maintenance pause, only admins start it",
     "wartung.py:auto_on": "Spark-wide: the panel pauses a restarting part by itself, no profile involved",
     "modellseite.py:_an": "Spark-wide model switch, admin-only endpoints (Zustand → Modelle), no profile involved",
+    "modellseite.py:_eigen_an": "Spark-wide own models, admin-only endpoints (Zustand → Modelle), no profile involved",
     "dienstwacht.py:active": "Spark-wide: which services are watched",
     "dienstwacht.py:_affected": "Spark-wide: which functions a gone service touches",
     "docmake.py:admin_on": "Spark switch for Live; per profile features.allowed erstellen",

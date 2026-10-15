@@ -10,6 +10,12 @@ for 7 days. The panel checks the fixed rules (modelle.wechsel_pruefen, with the 
 leaves a wish file and starts the root unit speech-spark-wechsel, which checks everything again and does the work
 (download, check, switch, restart, round trip). Only names, numbers and fixed words; never an address, a key or a
 text of an answer.
+
+Stage E5 (admin switch Funktionen → Modelle wechseln → Eigene Modelle, default off): the admin adds a Hugging Face
+model for the language model or image understanding. The panel reads only the metadata of one commit (netguard,
+public internet), modelle.eigen_vorschlag applies the fixed rules (safetensors only, no code from the repository, an
+architecture the engine knows, within the memory share), and the entry is kept with its commit pinned. It downloads
+only when a switch picks it, through the same root unit.
 """
 import os
 import subprocess
@@ -21,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import core  # noqa: E402
 import features  # noqa: E402
+import netguard  # noqa: E402
 import guard  # noqa: E402
 import modelle  # noqa: E402
 from common import load_config, read_json  # noqa: E402
@@ -39,7 +46,20 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "wahl": "Dieses Modell kommt nur zusammen mit einem anderen.", "schon": "Dieses Modell läuft schon.",
          "budget": "Zu knapp: mit diesem Modell bleibt weniger als die Reserve frei.",
          "keins": "Es gibt kein voriges Modell zum Zurückholen.", "frist": "Das vorige Modell ist älter als 7 Tage.",
-         "wunsch": "ungültig"}
+         "wunsch": "ungültig", "ungeprueft": "Erst messen: sudo speech-spark modelle messen <id>",
+         # stage E5: an own model
+         "repo": "Name wie besitzer/modell.", "antwort": "Hugging Face kennt dieses Modell nicht.",
+         "zugang": "Das Modell ist privat oder braucht eine Freigabe; nur offene Modelle gehen.",
+         "format": "Keine Gewichte als safetensors (Pickle-Dateien nimmt der Spark nie).",
+         "code": "Das Modell braucht eigenen Code aus dem Repository; das läuft hier nie.",
+         "architektur": "Diese Bauart kennt die Engine nicht.", "eigen": "ungültig", "voll": "Schon 20 eigene Modelle.",
+         "aktiv": "Das Modell läuft gerade.", "netz": "Hugging Face ist gerade nicht erreichbar."}
+EIGEN_BODY = 512
+
+
+def _eigen_an(cfg=None):
+    """Funktionen → Modelle wechseln → Eigene Modelle (stage E5)."""
+    return features.admin_on("modelleeigen", None if cfg is None else cfg.get("chat", {}))
 
 
 def _an(cfg=None):
@@ -89,12 +109,13 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
             nein = _waehlbar(art, mid, cfg, total_gib, lanes, kat, messung) if an and art in modelle.TAUSCH else "art"
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
+                         "eigen": bool(m.get("eigen")),
                          "gemessen": m["gemessen"], "betrieb": m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
                          "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]) or m["engine"] == "extern",
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     wechsel = {"an": an, "laeuft": _laeuft() if an else False, "alte": modelle.alte(cfg, kat=kat) if an else {},
-               "tage": modelle.ALT_TAGE}
+               "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
 
@@ -180,3 +201,94 @@ async def admin_zurueck(request: Request):
         print("modelle: zurueck abgelehnt art", flush=True)
         raise HTTPException(400, GRUND["art"])
     return _wunsch(request, art, "zurueck", mid)
+
+
+# ---------------------------------------------------------------- stage E5: own models
+async def _hf_info(repo, rev=""):
+    """The metadata of one commit (or the newest) from Hugging Face, through netguard (public internet only)."""
+    if not modelle.REPO.match(repo) or ".." in repo or not (rev == "" or modelle.REV.match(rev)):
+        raise modelle.Fehler("repo")
+    import httpx
+    try:
+        async with netguard.client(netguard.PUBLIC, max_bytes=modelle.HF_INFO_MAX, timeout=20, follow_redirects=False) as c:
+            r = await c.get(modelle.HF_API.format(repo=repo, rev=rev or "main"))
+    except (httpx.HTTPError, OSError, ValueError):
+        raise modelle.Fehler("netz")
+    if r.status_code in (401, 403):
+        raise modelle.Fehler("zugang")
+    if r.status_code != 200:
+        raise modelle.Fehler("antwort")
+    try:
+        return r.json()
+    except ValueError:
+        raise modelle.Fehler("antwort")
+
+
+def _eigen_tor(request):
+    if not _eigen_an():
+        print("modelle: eigenes abgelehnt aus", flush=True)
+        raise HTTPException(409, "Eigene Modelle sind aus (Funktionen → Modelle wechseln → Eigene Modelle).")
+
+
+def _zeige(m):
+    return {k: m[k] for k in ("id", "art", "name", "repo", "revision", "lizenz", "gewerblich", "platte_gb", "need_gib",
+                              "kann_sehen", "werkzeuge")}
+
+
+@router.post("/api/admin/modelle/eigen/pruefen", dependencies=[Depends(auth)])
+async def eigen_pruefen(request: Request):
+    """Prüfen: what the Spark would add for this Hugging Face name (nothing is kept or downloaded)."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    body = await core.json_body(request, EIGEN_BODY)
+    art, repo = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200]
+    try:
+        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, modelle.gesamt_gib())
+    except modelle.Fehler as e:
+        print(f"modelle: eigenes abgelehnt {e}", flush=True)
+        raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
+    print("modelle: eigenes geprueft", flush=True)
+    return {"vorschlag": _zeige(m)}
+
+
+@router.post("/api/admin/modelle/eigen", dependencies=[Depends(auth), Depends(admin_code)])
+async def eigen_dazu(request: Request):
+    """Hinzufügen: the checked commit becomes an own catalog entry (downloaded only when a switch picks it)."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    body = await core.json_body(request, EIGEN_BODY)
+    art, repo, rev = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200], str(body.get("revision", ""))[:40]
+    try:
+        if not modelle.REV.match(rev):
+            raise modelle.Fehler("repo")
+        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, modelle.gesamt_gib())
+        if m["revision"] != rev:
+            raise modelle.Fehler("antwort")
+        modelle.eigen_speichern(m)
+    except modelle.Fehler as e:
+        print(f"modelle: eigenes abgelehnt {e}", flush=True)
+        raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
+    print(f"modelle: eigenes hinzugefuegt {m['art']}", flush=True)
+    guard.log("modelle_eigen", detail=f"hinzugefügt: {m['name']['de']}")
+    _live["t"] = None
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.delete("/api/admin/modelle/eigen/{mid}", dependencies=[Depends(auth), Depends(admin_code)])
+def eigen_weg(request: Request, mid: str):
+    """Löschen: an own model off the list and its files off the disk; never one that runs or can still come back."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    try:
+        if not modelle.ID.match(mid):
+            raise modelle.Fehler("unbekannt")
+        weg = modelle.ordner_weg(modelle.eigen_loeschen(mid, load_config()))
+    except modelle.Fehler as e:
+        print(f"modelle: eigenes loeschen abgelehnt {e}", flush=True)
+        raise HTTPException(404 if str(e) == "unbekannt" else 409, GRUND.get(str(e), "ungültig"))
+    except OSError:
+        print("modelle: eigenes loeschen dateien fehler", flush=True)
+        raise HTTPException(500, "Die Dateien ließen sich nicht ganz löschen. Auf dem Spark: sudo speech-spark modelle liste")
+    print(f"modelle: eigenes geloescht {'mit dateien' if weg else 'ohne dateien'}", flush=True)
+    guard.log("modelle_eigen", detail=f"gelöscht: {mid}")
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")

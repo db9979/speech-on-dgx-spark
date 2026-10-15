@@ -801,6 +801,16 @@
         }
       }
     },
+    "Bildverständnis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image understanding"
+          }
+        }
+      }
+    },
     "Braucht dich": {
       "localizations": {
         "en": {
@@ -917,6 +927,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I cannot load the photo."
+          }
+        }
+      }
+    },
+    "Das Modell kommt aus der Liste und von der Platte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model goes off the list and off the disk."
           }
         }
       }
@@ -1641,6 +1661,46 @@
         }
       }
     },
+    "eigenes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "own"
+          }
+        }
+      }
+    },
+    "Eigenes Modell hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an own model"
+          }
+        }
+      }
+    },
+    "Eigenes Modell hinzufügen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add an own model?"
+          }
+        }
+      }
+    },
+    "Eigenes Modell löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the own model?"
+          }
+        }
+      }
+    },
     "Ein Kalender war nicht erreichbar.": {
       "localizations": {
         "en": {
@@ -2217,6 +2277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off for you"
+          }
+        }
+      }
+    },
+    "Geladen wird erst beim Wechseln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It downloads only when switching."
           }
         }
       }
@@ -3171,6 +3241,16 @@
         }
       }
     },
+    "Lizenz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licence"
+          }
+        }
+      }
+    },
     "Logs": {
       "localizations": {
         "en": {
@@ -3807,6 +3887,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Only for me"
+          }
+        }
+      }
+    },
+    "Nur offene Modelle mit safetensors, ohne eigenen Code. Geladen wird erst beim Wechseln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only open models with safetensors, without code of their own. It downloads only when switching."
           }
         }
       }
@@ -4541,6 +4631,16 @@
         }
       }
     },
+    "Speicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory"
+          }
+        }
+      }
+    },
     "Speicher frei": {
       "localizations": {
         "en": {
@@ -4637,6 +4737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Speaking … tap to stop"
+          }
+        }
+      }
+    },
+    "Stand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit"
           }
         }
       }

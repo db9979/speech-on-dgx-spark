@@ -182,6 +182,7 @@ DATEIEN = [
     state("qwen38-vorher.json", "Vor dem Umzug: laufende qwen38-Dienste und alte Adresse des Sprachmodells", "Before the move: running qwen38 services and the language model's old address", lokal="gilt nur für dieses Gerät (speech-spark modelle llm uebernehmen, zurueck)"),
     state("qwen38-vorher.json.alt", "Die Notiz des letzten Umzugs nach dem Weg zurück", "The last move's note after the way back", lokal="gilt nur für dieses Gerät", sonst=True),
     state("modelle-wechsel.json", "Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar)", "Per kind the model before the last switch (7 days to bring back)", lokal="gilt nur für dieses Gerät (speech-spark modelle wechseln, zurueckholen)"),
+    state("modelle-eigene.json", "Eigene Modelle des Admins (Hugging-Face-Name, fester Commit, Speicherbedarf)", "The admin's own models (Hugging Face name, pinned commit, memory need)", lokal="gilt nur für dieses Gerät (Zustand → Modelle, Eigene Modelle)"),
     state("modelle-wunsch.json", "Wunsch des Panels für den nächsten Modellwechsel, Sekunden", "The panel's wish for the next model switch, seconds", lokal="wird vom Wechsel sofort gelesen und gelöscht"),
     state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
