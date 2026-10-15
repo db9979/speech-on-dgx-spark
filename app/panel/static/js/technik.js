@@ -3,28 +3,27 @@
 // one request in 8 steps (the way lights up), every storage place (filters, search, list with detail) and the
 // building blocks. Admin only; names of modules and paths, never contents. Only text from the data, always esc().
 const TK={d:null,lang:'',view:'bild',sel:'antwort',step:0,filt:'alle',q:'',row:null,full:false,zoom:1,page:null,pd:{},play:null,mk:null,blink:false};
-const TKW=156,TKH=52,TKZ=[1,1.5,2,3];
+const TKZ=[1,1.5,2,3];
 async function loadTechnik(){const lang=L==='en'?'en':'de';
   if(!TK.d||TK.lang!==lang){TK.d=await (await api('/api/admin/technik'+(lang==='en'?'?lang=en':''))).json();TK.lang=lang}
   if(TK.view==='knoten'&&TK.page){await knOpen(TK.page);return}
   tkRender();tkFocusPic()}
 const tkNode=id=>TK.d.nodes.find(n=>n.id===id);
 const tkGroup=id=>TK.d.groups.find(g=>g.id===id);
-function tkCenter(n){return[n.x+TKW/2,n.y+TKH/2]}
-// a line from the side of one box to the side of the other (the back way to the device goes over the top)
-function tkPath(a,b){const A=tkNode(a),B=tkNode(b);if(!A||!B)return'';const[ax,ay]=tkCenter(A),[bx,by]=tkCenter(B);
-  if(a==='antwort'&&b==='geraet')return`M${ax},${A.y}V10H${bx}V${B.y}`;
-  if(Math.abs(bx-ax)>Math.abs(by-ay)*1.2){const r=bx>ax,x1=r?A.x+TKW:A.x,x2=r?B.x:B.x+TKW,m=(x1+x2)/2;return`M${x1},${ay}C${m},${ay} ${m},${by} ${x2},${by}`}
-  const d=by>ay,y1=d?A.y+TKH:A.y,y2=d?B.y:B.y+TKH,m=(y1+y2)/2;return`M${ax},${y1}C${ax},${m} ${bx},${m} ${bx},${y2}`}
-function tkSvg(lit,litEdges,dim){const d=TK.d;
-  const boxes=[[t('Geräte','Devices'),4,20,180,385],[t('Panel :31080 / :31443','Panel :31080 / :31443'),188,20,552,325],
-    [t('Dienste','Services'),752,20,184,325],['/var/lib/speech-spark · journald',188,355,748,85]];
+// the overview (technik.py BILD, ZONEN, LINIEN): zones for where a part lives (devices, the Spark inside, the home
+// network and the internet going out), lines at right angles from the data. Plan ueberblick 1+3: the lines stay pale
+// until a box is picked, then only its ways light up.
+function tkLine(a,b){const p=(TK.d.pic.lines||{})[a+'>'+b];return p?'M'+p.map(q=>q.join(',')).join('L'):''}
+function tkSvg(lit,litEdges,dim){const d=TK.d,P=d.pic,[W,H]=P.size,[BW,BH]=P.box;
   const has=(a,b)=>litEdges.includes(a+'>'+b)||litEdges.includes(b+'>'+a);
-  return`<svg class="tk-svg" viewBox="0 0 940 445" role="img" aria-label="${esc(t('Teile des Spark und ihre Verbindungen','Parts of the Spark and their connections'))}">`+
-    boxes.map(b=>`<rect class="tk-grp" x="${b[1]}" y="${b[2]}" width="${b[3]}" height="${b[4]}" rx="14"/><text class="tk-glab" x="${b[1]+12}" y="${b[2]+16}">${esc(b[0])}</text>`).join('')+
-    d.edges.map(([a,b])=>`<path class="tk-edge${has(a,b)?' on':''}" d="${tkPath(a,b)}"/>`).join('')+
-    d.nodes.map(n=>`<g class="tk-node${n.store?' store':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
-      `<rect x="${n.x}" y="${n.y}" width="${TKW}" height="${TKH}" rx="${n.store?6:12}"/><text x="${n.x+12}" y="${n.y+22}">${esc(n.name)}</text><text class="tk-sub" x="${n.x+12}" y="${n.y+39}">${esc(n.sub)}</text></g>`).join('')+'</svg>'}
+  const way={lan:t('Heimnetz','home'),net:t('unterwegs','on the way')};
+  const pills=n=>(P.rein[n.id]||[]).map((k,j)=>`<g class="tk-pill ${esc(k)}"><rect x="${n.x+j*74}" y="${n.y+BH+5}" width="70" height="14" rx="7"/><text x="${n.x+j*74+35}" y="${n.y+BH+15}">${esc(way[k]||k)}</text></g>`).join('');
+  return`<svg class="tk-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('Teile des Spark, wo sie liegen, und ihre Verbindungen','Parts of the Spark, where they live, and their connections'))}">`+
+    P.zones.map(z=>`<g class="tk-zone ${esc(z.kind)}"><rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="14"/><text x="${z.lx}" y="${z.y+16}">${esc(z.name)}</text></g>`).join('')+
+    `<g class="tk-edges${litEdges.length?' pick':''}">`+d.edges.map(([a,b])=>`<path class="tk-edge${has(a,b)?' on':''}${b==='internet'?' net':b==='aussen'?' lan':''}" d="${tkLine(a,b)}"/>`).join('')+`</g>`+
+    P.doors.map(r=>`<g class="tk-door ${esc(r.kind)}"><rect x="${r.x}" y="${r.y-9}" width="${Math.round(r.name.length*6.3+20)}" height="18" rx="9"/><text x="${r.x+10}" y="${r.y+4}">${esc(r.name)}</text></g>`).join('')+
+    d.nodes.map(n=>`<g class="tk-node${n.store?' store':''}${n.id==='teilen'?' opt':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
+      `<rect x="${n.x}" y="${n.y}" width="${BW}" height="${BH}" rx="${n.store?6:12}"/><text x="${n.x+12}" y="${n.y+22}">${esc(n.name)}</text><text class="tk-sub" x="${n.x+12}" y="${n.y+39}">${esc(n.sub)}</text></g>`+pills(n)).join('')+'</svg>'}
 function tkRows(n){return TK.d.storage.filter(r=>tkWriter(r)===n.id)}
 // which box of the picture writes a storage place (for the jump from the list and the count in the detail)
 function tkWriter(r){if(r.art==='state')return'state';if(r.art==='system')return/journald/.test(r.pfad)?'journal':/voices|backups/.test(r.pfad)?'ablage':'';return'users'}

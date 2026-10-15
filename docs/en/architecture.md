@@ -8,34 +8,52 @@ The sections between the markers `<!-- technik:… -->` are generated from the c
 
 ## Overview
 
-Devices and programs only talk to the panel. The panel checks every request, asks the language model, calls tools through the guard and writes into the folders under `/var/lib/speech-spark`. Speech recognition and speech output are services of their own. The language model belongs to `dgx-spark-qwen38` and is not part of this repo.
+Devices and programs only talk to the panel. The panel checks every request, asks the language model, calls tools through the guard and writes into the folders under `/var/lib/speech-spark`. Speech recognition, speech output, pictures and the language model are services of their own.
+
+The picture is split into zones so you can see where a part lives: at the top the devices, which can be at home or on the way (small marks „home“ and „on the way“; they come in directly at :31080/:31443 or through the reverse proxy), in the middle the DGX Spark with panel, models and storage, at the bottom what goes out, split into home network and internet and only through the guard or fixed ways. With the [Spark split](spark-split.md) the panel zone runs with the storage on its own computer, the models stay on the DGX and are reached through the TLS-Tor (box „Spark split“). In the panel the lines stay pale until you click a box; then only its ways light up. Places, zones and lines are in `technik.py` (`ZONEN`, `LINIEN`); `test_technik` checks that no box covers another, every box lies in its zone and every line runs at right angles from box to box.
 
 <!-- technik:bild -->
 ```mermaid
-flowchart LR
-  geraet["Browser and phone<br/>static/js"]
-  apps["Apps<br/>iPhone, Android"]
-  kanaele["Telegram, Siri, watch<br/>Kanäle"]
-  lautsprecher["Speakers, HA<br/>esp32 · :31003"]
-  mcpc["MCP programs<br/>/mcp"]
-  middleware["Middleware<br/>panel.py"]
-  zugang["Login, profile<br/>guard · profiles"]
-  vorbereiten["Prepare request<br/>chat_turn.prepare"]
-  weiche["Switch<br/>intent.py"]
-  antwort["Build answer<br/>chat._answer"]
-  werkzeuge["Tools<br/>chat_tools.run"]
-  wissen["Knowledge<br/>documents · wissen"]
-  waechter["Guard<br/>netguard.py"]
-  betrieb["Logs and live<br/>tracelog · live"]
-  llm["Language model<br/>:30001 qwen38 · :31006 eigenes"]
-  asr["Speech recognition<br/>:31001 → :31011"]
-  tts["Speech output<br/>:31002 → :31012"]
-  bild["Painting pictures<br/>:31005 → :31015"]
-  aussen["Outside services<br/>HA, Mail, Suche …"]
-  state[("state/<br/>global")]
-  users[("users/ID/<br/>pro Profil")]
-  ablage[("voices/, backups/<br/>Stimmen, Sicherungen")]
-  journal[("journald<br/>speech-spark")]
+flowchart TB
+  subgraph z_geraete["Devices · at home or on the way"]
+    geraet["Browser and phone<br/>static/js"]
+    apps["Apps<br/>iPhone, Android"]
+    kanaele["Telegram, Siri, watch<br/>Kanäle"]
+    lautsprecher["Speakers, HA<br/>esp32 · :31003"]
+    mcpc["MCP programs<br/>/mcp"]
+  end
+  subgraph z_spark["DGX Spark · inside"]
+    subgraph z_panel["Panel :31080 / :31443 · with the Spark split on its own computer"]
+      middleware["Middleware<br/>panel.py"]
+      zugang["Login, profile<br/>guard · profiles"]
+      vorbereiten["Prepare request<br/>chat_turn.prepare"]
+      weiche["Switch<br/>intent.py"]
+      antwort["Build answer<br/>chat._answer"]
+      werkzeuge["Tools<br/>chat_tools.run"]
+      wissen["Knowledge<br/>documents · wissen"]
+      waechter["Guard<br/>netguard.py"]
+      betrieb["Logs and live<br/>tracelog · live"]
+    end
+    subgraph z_modelle["Models · on the DGX"]
+      llm["Language model<br/>:31006 · :30001"]
+      asr["Speech recognition<br/>:31001 → :31011"]
+      tts["Speech output<br/>:31002 → :31012"]
+      bild["Painting pictures<br/>:31005 → :31015"]
+      teilen["Spark split<br/>TLS-Tor · :31007"]
+    end
+    subgraph z_speicher["Storage"]
+      state[("state/<br/>global")]
+      users[("users/ID/<br/>pro Profil")]
+      ablage[("voices/, backups/<br/>Stimmen, Sicherungen")]
+      journal[("journald<br/>speech-spark")]
+    end
+  end
+  subgraph z_heimnetz["Home network · going out"]
+    aussen["Services at home<br/>HA, NAS, Kiwix …"]
+  end
+  subgraph z_internet["Internet · going out"]
+    internet["Internet services<br/>IMAP, CalDAV, Web"]
+  end
   geraet --> middleware
   apps --> middleware
   kanaele --> middleware
@@ -50,6 +68,7 @@ flowchart LR
   antwort --> werkzeuge
   werkzeuge --> waechter
   waechter --> aussen
+  waechter --> internet
   werkzeuge --> wissen
   antwort --> tts
   werkzeuge --> bild
@@ -94,7 +113,7 @@ The way of a spoken question in the browser, from input to storage:
 3. **Prepare**: Speech first (vorrang), other devices see "answering", then rights, locks, system prompt. In the code: `chat_turn.prepare()`
 4. **Switch**: Fixed rules narrow the tools; a clear reading request runs directly. In the code: `intent.classify_cfg() · intent.narrow()`
 5. **Model**: Instant sentence, request trace, then rounds with the language model, streamed. In the code: `chat._answer()`
-6. **Tools**: Tool call, guard, outside service or own knowledge; the result comes back as data. In the code: `chat_tools.run() · netguard`
+6. **Tools**: Tool call, guard, a service in the home network or on the internet, or own knowledge; the result comes back as data. In the code: `chat_tools.run() · netguard`
 7. **Answer**: Sentences go to speech output; text and sound reach the device as one stream. In the code: `SSE · /v1/audio/speech`
 8. **Store**: The device stores the history, the panel the tool log, memory, diary, request trace and journal. In the code: `PUT /api/profile/convos · tracelog.finish`
 <!-- /technik:datenfluss -->
@@ -302,13 +321,11 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |
 | `app/panel/speicher.py` | Eigener Speicher. |
-| `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
 | `app/panel/system.py` | System page: backups, the live check of the real services and the alerts shown on top. |
 | `app/panel/technik.py` | Status → Architecture: how the Spark is built, as a page to click through and as docs/de/architektur.md + docs/en/architecture.md. |
 | `app/panel/technik_knoten.py` | Status → Architecture, Knoten-Seiten: for every box of the picture one page that says exactly how it works: what it does and why, its way as a picture with n … |
 | `app/panel/technik_seiten.py` | Status → Architecture, Knoten-Seiten: the texts of every box's page. |
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
-| `app/panel/umziehen.py` | Umziehen: the panel moves to another computer, or comes back, in one go. |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
 | `app/panel/verbrauch.py` | Verbrauchszähler. |
@@ -332,14 +349,23 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
-| `app/tarswart.py` | Wärter: the model computer's few hands for a panel on another computer. |
-| `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
 | `app/textnorm.py` | Text clean-up before speech synthesis. |
-| `app/tlstor.py` | TLS-Tor: the door of the model computer for the panel on another computer. |
 | `app/tts_proxy.py` | Qwen3-TTS front end for the vllm-omni engine (backend "vllm-omni"). |
 | `app/tts_server.py` | Qwen3-TTS as a small HTTP service (OpenAI-style /v1/audio/speech). |
 | `app/panel/vorrang.py` | Speech first: speech recognition and speech output always go before the panel's background work. |
+
+### Spark split
+
+Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the move.
+
+| Module | Task |
+|---|---|
+| `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
+| `app/tarswart.py` | Wärter: the model computer's few hands for a panel on another computer. |
+| `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
+| `app/tlstor.py` | TLS-Tor: the door of the model computer for the panel on another computer. |
+| `app/panel/umziehen.py` | Umziehen: the panel moves to another computer, or comes back, in one go. |
 <!-- /technik:bausteine -->
 
 ## Data storage
@@ -2528,9 +2554,9 @@ flowchart TD
 
 Self-tests: `test_bilder`
 
-### Outside services
+### Services at home
 
-Outside services are everything the Spark asks over the network: Home Assistant, calendars, contacts, mail, SearXNG, Kiwix, reMarkable and MCP services. Addresses from settings go through the guard (netguard) with a fixed level; fixed services like SearXNG, weather, transit and Wikipedia go directly.
+Services at home are what the Spark asks in the own network: Home Assistant, NAS, Kiwix, SearXNG and MCP services, on request also calendars, contacts and mail. Addresses from settings go through the guard (netguard) with a fixed level; fixed services like SearXNG go directly. The way of a tool call is the same as for the internet services (own box).
 
 **Why:** A tool call comes from the model, and the model can be steered by outside text. So the panel checks by fixed rules before every call whether it may happen, and treats every answer from outside as data.
 
@@ -2640,6 +2666,156 @@ Applies at: [step 7](#kn-aussen-s7), [step 8](#kn-aussen-s8)
 - `app/panel/chat.py` `web_search`: SearXNG directly ([step 6](#kn-aussen-s6), [step 9](#kn-aussen-s9))
 
 Self-tests: `test_waechter_umgehung`, `test_notaus`, `test_sperre_ueberall`, `test_dienstwacht`, `test_kiwix`, `test_meinmcp`, `test_remarkable`
+
+### Internet services
+
+Internet services are everything the Spark asks outside the house: mail and calendars at the provider, pages from search, weather, transit, Wikipedia, reMarkable, plus Telegram, Apple push and the update check. Tools go through the guard or a fixed address; the kill switch turns them off.
+
+**Why:** What goes to the internet leaves the house. So only by fixed rules, only to checked addresses, with a limited answer, and a kill switch that stops all internet at once.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. A tool wants to the internet"])
+  s2{{"2. Kill switch stops the internet?"}}
+  s3{{"3. Fixed address?"}}
+  s4["4. Through the guard"]
+  s5{{"5. Address allowed?"}}
+  s6(["6. Answer as data"])
+  s7["7. What the Spark sends by itself"]
+  s1 --> s2
+  s2 -->|no| s3
+  s3 -->|no| s4
+  s4 --> s5
+  s5 -->|yes| s6
+  s6 --> s7
+  s2x(["Blocked (kill switch)"])
+  s2 -->|yes| s2x
+  s3 -.->|yes| s6
+  s5x(["Blocked"])
+  s5 -->|no| s5x
+```
+
+1. <a id="kn-internet-s1"></a>**A tool wants to the internet**: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already.
+2. <a id="kn-internet-s2"></a>**Kill switch stops the internet?**: From stage 1 the 7 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call.
+3. <a id="kn-internet-s3"></a>**Fixed address?**: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK.
+4. <a id="kn-internet-s4"></a>**Through the guard**: Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and contacts at level user. The level is in the code.
+5. <a id="kn-internet-s5"></a>**Address allowed?**: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only.
+6. <a id="kn-internet-s6"></a>**Answer as data**: The answer is cut at the limit and goes to the model as data, never as a command.
+7. <a id="kn-internet-s7"></a>**What the Spark sends by itself**: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK.
+
+**Examples:** Read a page from search: Through the guard at level internet only; read. · Ask the weather: Fixed address, without the guard. · Kill switch stage 1, web search: Blocked, nothing goes out.
+
+#### Rules
+
+Applies at: [step 4](#kn-internet-s4), [step 5](#kn-internet-s5)
+
+| Service | Way |
+|---|---|
+| Pages from search | guard, internet only |
+| Mail, calendars, contacts | guard, level user |
+| reMarkable | guard, allowed hosts only |
+| Weather, transit, Wikipedia | fixed address |
+| Telegram | fixed address, bot API |
+| Update check | GitHub, fixed |
+| Apple push | fixed |
+
+#### Numbers (from the code)
+
+- **7** tools that go to the internet by themselves ([step 2](#kn-internet-s2))
+- **20 MB** largest answer through the guard ([step 6](#kn-internet-s6))
+
+#### Settings
+
+- Settings → Security, kill switch: stage 1 stops all internet of the tools.
+
+#### What you see
+
+- Status → Live: every way to the internet in amber, blocked ones with the reason.
+
+#### In the code
+
+- `app/panel/notaus.py` `INTERNET_TOOLS`: tools that go to the internet by themselves ([step 2](#kn-internet-s2))
+- `app/panel/notaus.py` `locked_tools`: what the kill switch locks ([step 2](#kn-internet-s2))
+- `app/panel/netguard.py` `DIRECT_OK`: fixed ways with a reason ([step 3](#kn-internet-s3), [step 7](#kn-internet-s7))
+- `app/panel/netguard.py` `client`: the way through the guard ([step 4](#kn-internet-s4))
+- `app/panel/netguard.py` `allowed`: allowed address per level ([step 5](#kn-internet-s5))
+
+Self-tests: `test_waechter_umgehung`, `test_notaus`
+
+### Spark split
+
+The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting services or switching models are done there by the Wärter. Without the split everything runs on the DGX and this box does nothing.
+
+**Why:** Speech, text and pictures then cross the home network. No one in the network should read along, pose as the DGX or give the DGX commands.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. Shared install"])
+  s2["2. Pairing code"]
+  s3{{"3. Proof fits the certificate?"}}
+  s4["4. Certificate pinned, firewall shut"]
+  s5{{"5. Connection to the TLS-Tor allowed?"}}
+  s6["6. Command to the Wärter"]
+  s7{{"7. Signature, time, number, command valid?"}}
+  s8(["8. Notbetrieb when the DGX is missing"])
+  s1 --> s2
+  s2 --> s3
+  s3 -->|yes| s4
+  s4 --> s5
+  s5 -->|yes| s6
+  s6 --> s7
+  s7 -->|yes| s8
+  s3x(["Not paired"])
+  s3 -->|no| s3x
+  s5x(["Refused"])
+  s5 -->|no| s5x
+  s7x(["Refused"])
+  s7 -->|no| s7x
+```
+
+1. <a id="kn-teilen-s1"></a>**Shared install**: The DGX gets its own certificate, the TLS-Tor, the Wärter and the firewall. The services then listen on 127.0.0.1 only.
+2. <a id="kn-teilen-s2"></a>**Pairing code**: The DGX shows a code and waits on port 31008, only while the code lives; after 3 wrong tries it is gone.
+3. <a id="kn-teilen-s3"></a>**Proof fits the certificate?**: The panel computer proves the code with a key from the code and the fingerprint of the certificate it sees. Whoever stands in between shows another certificate, and the proof does not fit.
+4. <a id="kn-teilen-s4"></a>**Certificate pinned, firewall shut**: The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall (teilen.regeln) opens the door's ports for it only.
+5. <a id="kn-teilen-s5"></a>**Connection to the TLS-Tor allowed?**: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the content.
+6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
+7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names.
+8. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
+
+**Examples:** Pair a Pi: Paired, certificate pinned. · Wrong computer in between: The proof does not fit, no pairing. · Switch the model from the Pi: The Wärter starts the switch by its own rules. · A stranger asks the door: Refused before the handshake.
+
+#### Numbers (from the code)
+
+- **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
+- **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
+- **10** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
+- **30 s** without an answer until Notbetrieb ([step 8](#kn-teilen-s8))
+
+#### Settings
+
+- On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen (guide „Spark split“).
+
+#### What you see
+
+- Status → Live: box „Model computer“ with reachable, services, version and pause.
+
+#### In the code
+
+- `app/teilen.py` `CODE_SECS`: life of the code ([step 2](#kn-teilen-s2))
+- `app/teilen.py` `schluessel`: key from code and fingerprint ([step 3](#kn-teilen-s3))
+- `app/teilen.py` `regeln`: firewall for the panel computer only ([step 4](#kn-teilen-s4))
+- `app/tlstor.py` `server_context`: TLS 1.3 with its own certificate ([step 5](#kn-teilen-s5))
+- `app/tlstor.py` `allowed`: only the panel computer ([step 5](#kn-teilen-s5))
+- `app/panel/steuer.py` `call`: signed command ([step 6](#kn-teilen-s6))
+- `app/tarswart.py` `check`: signature, time, number, command ([step 7](#kn-teilen-s7))
+- `app/tarswart.py` `COMMANDS`: the fixed commands ([step 7](#kn-teilen-s7))
+- `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 8](#kn-teilen-s8))
+
+Self-tests: `test_teilen`, `test_umziehen`
 
 ### state/
 

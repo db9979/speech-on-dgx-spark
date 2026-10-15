@@ -8,34 +8,52 @@ Die Abschnitte zwischen den Markierungen `<!-- technik:… -->` entstehen aus de
 
 ## Überblick
 
-Geräte und Programme sprechen nur mit dem Panel. Das Panel prüft jede Anfrage, fragt das Sprachmodell, ruft Werkzeuge über den Wächter auf und schreibt in die Ordner unter `/var/lib/speech-spark`. Spracherkennung und Sprachausgabe sind eigene Dienste. Das Sprachmodell gehört zu `dgx-spark-qwen38` und ist nicht Teil dieses Repos.
+Geräte und Programme sprechen nur mit dem Panel. Das Panel prüft jede Anfrage, fragt das Sprachmodell, ruft Werkzeuge über den Wächter auf und schreibt in die Ordner unter `/var/lib/speech-spark`. Spracherkennung, Sprachausgabe, Bilder und das Sprachmodell sind eigene Dienste.
+
+Das Bild ist in Zonen geteilt, damit man sieht, wo etwas liegt: oben die Geräte, die im Heimnetz oder unterwegs sein können (kleine Marken „Heimnetz“ und „unterwegs“; sie kommen direkt an :31080/:31443 oder über den Reverse-Proxy herein), in der Mitte der DGX Spark mit Panel, Modellen und Speicher, unten was hinausgeht, getrennt nach Heimnetz und Internet und nur über den Wächter oder feste Wege. Bei [Spark teilen](spark-teilen.md) läuft die Zone Panel mit dem Speicher auf einem eigenen Rechner, die Modelle bleiben auf dem DGX und werden über das TLS-Tor erreicht (Kasten „Spark teilen“). Im Panel sind die Linien blass, bis man einen Kasten anklickt; dann leuchten nur seine Wege. Lage, Zonen und Linien stehen in `technik.py` (`ZONEN`, `LINIEN`); `test_technik` prüft, dass kein Kasten einen anderen überdeckt, jeder in seiner Zone liegt und jede Linie rechtwinklig von Kasten zu Kasten läuft.
 
 <!-- technik:bild -->
 ```mermaid
-flowchart LR
-  geraet["Browser und Handy<br/>static/js"]
-  apps["Apps<br/>iPhone, Android"]
-  kanaele["Telegram, Siri, Uhr<br/>Kanäle"]
-  lautsprecher["Lautsprecher, HA<br/>esp32 · :31003"]
-  mcpc["MCP-Programme<br/>/mcp"]
-  middleware["Middleware<br/>panel.py"]
-  zugang["Anmeldung, Profil<br/>guard · profiles"]
-  vorbereiten["Anfrage vorbereiten<br/>chat_turn.prepare"]
-  weiche["Weiche<br/>intent.py"]
-  antwort["Antwort bauen<br/>chat._answer"]
-  werkzeuge["Werkzeuge<br/>chat_tools.run"]
-  wissen["Wissen<br/>documents · wissen"]
-  waechter["Wächter<br/>netguard.py"]
-  betrieb["Logs und Live<br/>tracelog · live"]
-  llm["Sprachmodell<br/>:30001 qwen38 · :31006 eigenes"]
-  asr["Spracherkennung<br/>:31001 → :31011"]
-  tts["Sprachausgabe<br/>:31002 → :31012"]
-  bild["Bilder malen<br/>:31005 → :31015"]
-  aussen["Dienste draußen<br/>HA, Mail, Suche …"]
-  state[("state/<br/>global")]
-  users[("users/ID/<br/>pro Profil")]
-  ablage[("voices/, backups/<br/>Stimmen, Sicherungen")]
-  journal[("journald<br/>speech-spark")]
+flowchart TB
+  subgraph z_geraete["Geräte · im Heimnetz oder unterwegs"]
+    geraet["Browser und Handy<br/>static/js"]
+    apps["Apps<br/>iPhone, Android"]
+    kanaele["Telegram, Siri, Uhr<br/>Kanäle"]
+    lautsprecher["Lautsprecher, HA<br/>esp32 · :31003"]
+    mcpc["MCP-Programme<br/>/mcp"]
+  end
+  subgraph z_spark["DGX Spark · intern"]
+    subgraph z_panel["Panel :31080 / :31443 · bei Spark teilen auf eigenem Rechner"]
+      middleware["Middleware<br/>panel.py"]
+      zugang["Anmeldung, Profil<br/>guard · profiles"]
+      vorbereiten["Anfrage vorbereiten<br/>chat_turn.prepare"]
+      weiche["Weiche<br/>intent.py"]
+      antwort["Antwort bauen<br/>chat._answer"]
+      werkzeuge["Werkzeuge<br/>chat_tools.run"]
+      wissen["Wissen<br/>documents · wissen"]
+      waechter["Wächter<br/>netguard.py"]
+      betrieb["Logs und Live<br/>tracelog · live"]
+    end
+    subgraph z_modelle["Modelle · auf dem DGX"]
+      llm["Sprachmodell<br/>:31006 · :30001"]
+      asr["Spracherkennung<br/>:31001 → :31011"]
+      tts["Sprachausgabe<br/>:31002 → :31012"]
+      bild["Bilder malen<br/>:31005 → :31015"]
+      teilen["Spark teilen<br/>TLS-Tor · :31007"]
+    end
+    subgraph z_speicher["Speicher"]
+      state[("state/<br/>global")]
+      users[("users/ID/<br/>pro Profil")]
+      ablage[("voices/, backups/<br/>Stimmen, Sicherungen")]
+      journal[("journald<br/>speech-spark")]
+    end
+  end
+  subgraph z_heimnetz["Heimnetz · geht raus"]
+    aussen["Dienste im Heimnetz<br/>HA, NAS, Kiwix …"]
+  end
+  subgraph z_internet["Internet · geht raus"]
+    internet["Dienste im Internet<br/>IMAP, CalDAV, Web"]
+  end
   geraet --> middleware
   apps --> middleware
   kanaele --> middleware
@@ -50,6 +68,7 @@ flowchart LR
   antwort --> werkzeuge
   werkzeuge --> waechter
   waechter --> aussen
+  waechter --> internet
   werkzeuge --> wissen
   antwort --> tts
   werkzeuge --> bild
@@ -94,7 +113,7 @@ Der Weg einer gesprochenen Frage im Browser, von der Eingabe bis zur Speicherung
 3. **Vorbereiten**: Sprache zuerst (vorrang), andere Geräte sehen „antwortet gerade“, dann Rechte, Sperren, Systemprompt. Im Code: `chat_turn.prepare()`
 4. **Weiche**: Feste Regeln grenzen die Werkzeuge ein; ein klarer Lesewunsch läuft direkt. Im Code: `intent.classify_cfg() · intent.narrow()`
 5. **Modell**: Sofort-Satz, Anfrage-Verlauf, dann Runden mit dem Sprachmodell, gestreamt. Im Code: `chat._answer()`
-6. **Werkzeuge**: Werkzeugaufruf, Wächter, Dienst draußen oder eigenes Wissen; das Ergebnis geht als Daten zurück. Im Code: `chat_tools.run() · netguard`
+6. **Werkzeuge**: Werkzeugaufruf, Wächter, Dienst im Heimnetz oder im Internet oder eigenes Wissen; das Ergebnis geht als Daten zurück. Im Code: `chat_tools.run() · netguard`
 7. **Antwort**: Sätze gehen an die Sprachausgabe; Text und Ton kommen als ein Strom zum Gerät. Im Code: `SSE · /v1/audio/speech`
 8. **Speichern**: Das Gerät legt den Verlauf ab, das Panel Werkzeug-Log, Gedächtnis, Tagebuch, Anfrage-Verlauf und Journal. Im Code: `PUT /api/profile/convos · tracelog.finish`
 <!-- /technik:datenfluss -->
@@ -302,13 +321,11 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/offsite.py` | Sicherung nach außen, verschlüsselt |
 | `app/panel/quality.py` | Qualitätstest gegen das echte Sprachmodell |
 | `app/panel/speicher.py` | Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt |
-| `app/panel/steuer.py` | Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners |
 | `app/panel/system.py` | Sicherung, Echtprüfung der Dienste, Hinweise oben |
 | `app/panel/technik.py` | Diese Seite: Zustand → Technik und die Architektur-Doku |
 | `app/panel/technik_knoten.py` | Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code |
 | `app/panel/technik_seiten.py` | Die Texte der Knoten-Seiten, Zahlen als Platzhalter aus dem Code |
 | `app/panel/tracelog.py` | Logs → Anfragen: der Weg jeder Anfrage |
-| `app/panel/umziehen.py` | Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll |
 | `app/panel/update.py` | Updates von GitHub, nur nach grünem Test |
 | `app/panel/verbrauch.py` | Verbrauchszähler je Modell, Aufgabe und Profil, Tageskontingent |
@@ -332,14 +349,23 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle |
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
-| `app/tarswart.py` | Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo |
-| `app/teilen.py` | Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |
 | `app/textnorm.py` | Text aufräumen vor der Sprachausgabe |
-| `app/tlstor.py` | TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner) |
 | `app/tts_proxy.py` | Sprachausgabe: nimmt an und reicht an die Engine durch |
 | `app/tts_server.py` | Sprachausgabe als eigener kleiner Dienst |
 | `app/panel/vorrang.py` | Sprache zuerst: Hintergrundarbeit wartet |
+
+### Spark teilen
+
+Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter und Umzug.
+
+| Modul | Aufgabe |
+|---|---|
+| `app/panel/steuer.py` | Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners |
+| `app/tarswart.py` | Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo |
+| `app/teilen.py` | Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats |
+| `app/tlstor.py` | TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner) |
+| `app/panel/umziehen.py` | Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt |
 <!-- /technik:bausteine -->
 
 ## Datenspeicherung
@@ -2528,9 +2554,9 @@ flowchart TD
 
 Selbsttests: `test_bilder`
 
-### Dienste draußen
+### Dienste im Heimnetz
 
-Dienste draußen sind alles, was der Spark über das Netz fragt: Home Assistant, Kalender, Kontakte, Mail, SearXNG, Kiwix, reMarkable und MCP-Dienste. Adressen aus Einstellungen gehen über den Wächter (netguard) mit einer festen Stufe; feste Dienste wie SearXNG, Wetter, Fahrplan und Wikipedia gehen direkt.
+Dienste im Heimnetz sind, was der Spark im eigenen Netz fragt: Home Assistant, NAS, Kiwix, SearXNG und MCP-Dienste, auf Wunsch auch Kalender, Kontakte und Mail. Adressen aus Einstellungen gehen über den Wächter (netguard) mit einer festen Stufe; feste Dienste wie SearXNG gehen direkt. Der Weg eines Werkzeugaufrufs ist derselbe wie für die Dienste im Internet (eigener Kasten).
 
 **Warum:** Ein Werkzeugaufruf kommt vom Modell, und das Modell kann von fremdem Text gelenkt sein. Deshalb prüft das Panel vor jedem Aufruf mit festen Regeln, ob er sein darf, und behandelt jede Antwort von draußen als Daten.
 
@@ -2640,6 +2666,156 @@ Gilt bei: [Schritt 7](#kn-aussen-s7), [Schritt 8](#kn-aussen-s8)
 - `app/panel/chat.py` `web_search`: SearXNG direkt ([Schritt 6](#kn-aussen-s6), [Schritt 9](#kn-aussen-s9))
 
 Selbsttests: `test_waechter_umgehung`, `test_notaus`, `test_sperre_ueberall`, `test_dienstwacht`, `test_kiwix`, `test_meinmcp`, `test_remarkable`
+
+### Dienste im Internet
+
+Dienste im Internet sind alles, was der Spark außerhalb des Hauses fragt: Mail und Kalender beim Anbieter, Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, dazu Telegram, Apple-Push und die Update-Prüfung. Werkzeuge gehen über den Wächter oder eine feste Adresse; der Notaus schaltet sie ab.
+
+**Warum:** Was ins Internet geht, verlässt das Haus. Deshalb nur mit festen Regeln, nur an geprüfte Adressen, mit begrenzter Antwort, und ein Notaus, der alles Internet auf einmal anhält.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Werkzeug will ins Internet"])
+  s2{{"2. Notaus hält das Internet an?"}}
+  s3{{"3. Feste Adresse?"}}
+  s4["4. Über den Wächter"]
+  s5{{"5. Adresse erlaubt?"}}
+  s6(["6. Antwort als Daten"])
+  s7["7. Was der Spark selbst schickt"]
+  s1 --> s2
+  s2 -->|nein| s3
+  s3 -->|nein| s4
+  s4 --> s5
+  s5 -->|ja| s6
+  s6 --> s7
+  s2x(["Gesperrt (Notaus)"])
+  s2 -->|ja| s2x
+  s3 -.->|ja| s6
+  s5x(["Gesperrt"])
+  s5 -->|nein| s5x
+```
+
+1. <a id="kn-internet-s1"></a>**Werkzeug will ins Internet**: Das Modell hat ein angebotenes Werkzeug gerufen, das einen Dienst im Internet braucht. Welche Werkzeuge überhaupt angeboten werden, haben Rechte und Weiche schon entschieden.
+2. <a id="kn-internet-s2"></a>**Notaus hält das Internet an?**: Ab Stufe 1 ruhen die 7 Werkzeuge, die selbst ins Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen.
+3. <a id="kn-internet-s3"></a>**Feste Adresse?**: Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK.
+4. <a id="kn-internet-s4"></a>**Über den Wächter**: Seiten aus der Suche und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Mail, Kalender und Kontakte mit Stufe Nutzer. Die Stufe steht im Code.
+5. <a id="kn-internet-s5"></a>**Adresse erlaubt?**: netguard.allowed prüft jede aufgelöste Adresse: keine eigenen Dienste, kein 169.254, kein Heimnetz auf Stufe nur Internet.
+6. <a id="kn-internet-s6"></a>**Antwort als Daten**: Die Antwort wird an der Grenze abgeschnitten und geht als Daten ans Modell, nie als Befehl.
+7. <a id="kn-internet-s7"></a>**Was der Spark selbst schickt**: Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK.
+
+**Beispiele:** Seite aus der Suche lesen: Über den Wächter mit Stufe nur Internet; gelesen. · Wetter fragen: Feste Adresse, ohne Wächter. · Notaus Stufe 1, Websuche: Gesperrt, nichts geht hinaus.
+
+#### Regeln
+
+Gilt bei: [Schritt 4](#kn-internet-s4), [Schritt 5](#kn-internet-s5)
+
+| Dienst | Weg |
+|---|---|
+| Seiten aus der Suche | Wächter, nur Internet |
+| Mail, Kalender, Kontakte | Wächter, Stufe Nutzer |
+| reMarkable | Wächter, nur erlaubte Hosts |
+| Wetter, Fahrplan, Wikipedia | feste Adresse |
+| Telegram | feste Adresse, Bot-API |
+| Update-Prüfung | GitHub, fest |
+| Apple-Push | fest |
+
+#### Zahlen (aus dem Code)
+
+- **7** Werkzeuge, die selbst ins Internet gehen ([Schritt 2](#kn-internet-s2))
+- **20 MB** größte Antwort über den Wächter ([Schritt 6](#kn-internet-s6))
+
+#### Einstellen
+
+- Einstellungen → Sicherheit, Notaus: Stufe 1 hält alles Internet der Werkzeuge an.
+
+#### Was du siehst
+
+- Zustand → Live: jeder Weg ins Internet in Bernstein, gesperrte mit Grund.
+
+#### Im Code
+
+- `app/panel/notaus.py` `INTERNET_TOOLS`: Werkzeuge, die selbst ins Internet gehen ([Schritt 2](#kn-internet-s2))
+- `app/panel/notaus.py` `locked_tools`: was der Notaus sperrt ([Schritt 2](#kn-internet-s2))
+- `app/panel/netguard.py` `DIRECT_OK`: feste Wege mit Grund ([Schritt 3](#kn-internet-s3), [Schritt 7](#kn-internet-s7))
+- `app/panel/netguard.py` `client`: der Weg über den Wächter ([Schritt 4](#kn-internet-s4))
+- `app/panel/netguard.py` `allowed`: erlaubte Adresse je Stufe ([Schritt 5](#kn-internet-s5))
+
+Selbsttests: `test_waechter_umgehung`, `test_notaus`
+
+### Spark teilen
+
+Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten oder Modelle wechseln erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts.
+
+**Warum:** Sprache, Text und Bilder gehen dann durch das Heimnetz. Niemand im Netz soll mitlesen, sich als DGX ausgeben oder dem DGX Befehle geben können.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Installation geteilt"])
+  s2["2. Kopplungscode"]
+  s3{{"3. Beweis passt zum Zertifikat?"}}
+  s4["4. Zertifikat angeheftet, Firewall zu"]
+  s5{{"5. Verbindung zum TLS-Tor erlaubt?"}}
+  s6["6. Befehl an den Wärter"]
+  s7{{"7. Unterschrift, Zeit, Nummer, Befehl gültig?"}}
+  s8(["8. Notbetrieb, wenn der DGX fehlt"])
+  s1 --> s2
+  s2 --> s3
+  s3 -->|ja| s4
+  s4 --> s5
+  s5 -->|ja| s6
+  s6 --> s7
+  s7 -->|ja| s8
+  s3x(["Nicht gekoppelt"])
+  s3 -->|nein| s3x
+  s5x(["Abgewiesen"])
+  s5 -->|nein| s5x
+  s7x(["Abgelehnt"])
+  s7 -->|nein| s7x
+```
+
+1. <a id="kn-teilen-s1"></a>**Installation geteilt**: Der DGX bekommt ein eigenes Zertifikat, das TLS-Tor, den Wärter und die Firewall. Die Dienste hören dann nur noch auf 127.0.0.1.
+2. <a id="kn-teilen-s2"></a>**Kopplungscode**: Der DGX zeigt einen Code und wartet auf Port 31008, nur solange der Code gilt; nach 3 falschen Versuchen ist er weg.
+3. <a id="kn-teilen-s3"></a>**Beweis passt zum Zertifikat?**: Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das er sieht. Wer sich dazwischenstellt, zeigt ein anderes Zertifikat, und der Beweis passt nicht.
+4. <a id="kn-teilen-s4"></a>**Zertifikat angeheftet, Firewall zu**: Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu.
+5. <a id="kn-teilen-s5"></a>**Verbindung zum TLS-Tor erlaubt?**: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.
+6. <a id="kn-teilen-s6"></a>**Befehl an den Wärter**: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel.
+7. <a id="kn-teilen-s7"></a>**Unterschrift, Zeit, Nummer, Befehl gültig?**: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen.
+8. <a id="kn-teilen-s8"></a>**Notbetrieb, wenn der DGX fehlt**: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz.
+
+**Beispiele:** Pi koppeln: Gekoppelt, Zertifikat angeheftet. · Falscher Rechner dazwischen: Der Beweis passt nicht, keine Kopplung. · Modell wechseln vom Pi: Der Wärter startet den Wechsel mit seinen eigenen Regeln. · Fremdes Gerät fragt das Tor: Abgewiesen vor dem Handshake.
+
+#### Zahlen (aus dem Code)
+
+- **600 s** lebt ein Kopplungscode ([Schritt 2](#kn-teilen-s2))
+- **60 s** darf die Zeit eines Befehls daneben liegen ([Schritt 7](#kn-teilen-s7))
+- **10** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
+- **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 8](#kn-teilen-s8))
+
+#### Einstellen
+
+- Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen (Anleitung „Spark teilen“).
+
+#### Was du siehst
+
+- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.
+
+#### Im Code
+
+- `app/teilen.py` `CODE_SECS`: Lebensdauer des Codes ([Schritt 2](#kn-teilen-s2))
+- `app/teilen.py` `schluessel`: Schlüssel aus Code und Fingerabdruck ([Schritt 3](#kn-teilen-s3))
+- `app/teilen.py` `regeln`: Firewall nur für den Panel-Rechner ([Schritt 4](#kn-teilen-s4))
+- `app/tlstor.py` `server_context`: TLS 1.3 mit eigenem Zertifikat ([Schritt 5](#kn-teilen-s5))
+- `app/tlstor.py` `allowed`: nur der Panel-Rechner ([Schritt 5](#kn-teilen-s5))
+- `app/panel/steuer.py` `call`: unterschriebener Befehl ([Schritt 6](#kn-teilen-s6))
+- `app/tarswart.py` `check`: Unterschrift, Zeit, Nummer, Befehl ([Schritt 7](#kn-teilen-s7))
+- `app/tarswart.py` `COMMANDS`: die festen Befehle ([Schritt 7](#kn-teilen-s7))
+- `app/panel/steuer.py` `weg`: Notbetrieb erkennen ([Schritt 8](#kn-teilen-s8))
+
+Selbsttests: `test_teilen`, `test_umziehen`
 
 ### state/
 

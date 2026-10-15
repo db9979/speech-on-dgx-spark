@@ -27,9 +27,23 @@ html.tk-lock{overflow:hidden}
 @media (min-width:1000px){#tkbox.tk-full .tk-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
   #tkbox.tk-full .tk-det{margin-top:0;position:sticky;top:0}
   #tkbox.tk-full .tk-pic{max-height:calc(100vh - 80px);overflow:auto}}
-.tk-grp{fill:color-mix(in srgb,var(--line) 30%,transparent);stroke:var(--line);stroke-dasharray:4 4}
-.tk-glab{fill:var(--mut);font:600 10.5px var(--font,system-ui);letter-spacing:.07em;text-transform:uppercase}
-.tk-edge{stroke:var(--line);stroke-width:1.6;fill:none}
+/* zones of the overview: amber is the internet (as on the Live page), teal the home network, violet the Spark */
+#tkview{--tk-net:var(--warn);--tk-lan:#0d9488;--tk-spark:var(--acc)}
+.tk-zone rect{fill:color-mix(in srgb,var(--line) 25%,transparent);stroke:var(--mut);stroke-opacity:.5;stroke-dasharray:5 4}
+.tk-zone text{fill:var(--mut);font:600 10.5px var(--font,system-ui);letter-spacing:.07em;text-transform:uppercase}
+.tk-zone.net rect{fill:color-mix(in srgb,var(--tk-net) 9%,transparent);stroke:var(--tk-net);stroke-opacity:.8}
+.tk-zone.lan rect{fill:color-mix(in srgb,var(--tk-lan) 9%,transparent);stroke:var(--tk-lan);stroke-opacity:.8}
+.tk-zone.spark rect{fill:color-mix(in srgb,var(--tk-spark) 5%,transparent);stroke:var(--tk-spark);stroke-opacity:.7;stroke-dasharray:none}
+.tk-zone.panel rect,.tk-zone.modelle rect{fill:none;stroke:var(--tk-spark);stroke-opacity:.6}
+.tk-zone.net text{fill:var(--tk-net)}.tk-zone.lan text{fill:var(--tk-lan)}.tk-zone.spark text,.tk-zone.panel text,.tk-zone.modelle text{fill:var(--tk-spark)}
+.tk-door rect{fill:var(--card);stroke-width:1.4}.tk-door text{font:600 10.5px var(--font,system-ui)}
+.tk-door.lan rect{stroke:var(--tk-lan)}.tk-door.lan text{fill:var(--tk-lan)}.tk-door.net rect{stroke:var(--tk-net)}.tk-door.net text{fill:var(--tk-net)}
+.tk-pill rect{fill:none;stroke-width:1}.tk-pill text{font:600 9.5px var(--font,system-ui);text-anchor:middle}
+.tk-pill.lan rect{stroke:var(--tk-lan)}.tk-pill.lan text{fill:var(--tk-lan)}.tk-pill.net rect{stroke:var(--tk-net)}.tk-pill.net text{fill:var(--tk-net)}
+.tk-node.opt rect{stroke-dasharray:5 4}
+.tk-edge{stroke:var(--mut);stroke-opacity:.7;stroke-width:1.6;fill:none;stroke-linejoin:round}
+.tk-edge.lan{stroke:var(--tk-lan)}.tk-edge.net{stroke:var(--tk-net)}
+.tk-edges.pick .tk-edge:not(.on){stroke-opacity:.16}
 .tk-edge.on{stroke:var(--acc2);stroke-width:2.6;stroke-dasharray:7 5;animation:tkflow 1s linear infinite}
 @keyframes tkflow{to{stroke-dashoffset:-24}}
 @media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none}}

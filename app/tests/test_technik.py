@@ -100,11 +100,39 @@ class Parts(unittest.TestCase):
     def test_every_group_is_in_the_picture(self):
         self.assertEqual(set(technik.ORT), set(technik.GRUPPEN))
         for k, v in technik.KNOTEN.items():
-            self.assertTrue(0 <= v[0] <= 780 and 0 <= v[1] <= 460, k)
+            self.assertTrue(0 <= v[0] <= technik.BILD[0] - technik.KASTEN[0] and 0 <= v[1] <= technik.BILD[1] - technik.KASTEN[1], k)
             for f in v[8]:
                 self.assertTrue(os.path.exists(os.path.join(PANEL, f)) or os.path.exists(os.path.join(APP, f))
                                 or os.path.exists(os.path.join(APP, "..", f)) or os.path.exists(os.path.join(PANEL, "static", "js", os.path.basename(f))),
                                 f"{k}: {f}")
+
+    def test_picture_zones_and_lines(self):
+        """Dominik 2026-10-14 „überlappung, nicht ersichtlich wo es sich befindet“: no box overlaps another, every box
+        lies in its zone, every line runs at right angles from the edge of one box to the edge of the other."""
+        W, H = technik.KASTEN
+        box = {k: (v[0], v[1], v[0] + W, v[1] + H) for k, v in technik.KNOTEN.items()}
+        ks = sorted(box)
+        for i, a in enumerate(ks):
+            for b in ks[i + 1:]:
+                A, B = box[a], box[b]
+                self.assertFalse(A[0] < B[2] and B[0] < A[2] and A[1] < B[3] and B[1] < A[3], f"{a} overlaps {b}")
+        zone = {z: (v[3], v[4], v[3] + v[5], v[4] + v[6]) for z, v in technik.ZONEN.items()}
+        inside = lambda b, z: z[0] <= b[0] and b[2] <= z[2] and z[1] <= b[1] and b[3] <= z[3]
+        for k, b in box.items():
+            self.assertTrue(any(inside(b, z) for z in zone.values()), f"{k} lies in a zone")
+        for k in technik.REIN:
+            self.assertTrue(inside(box[k], zone["geraete"]), f"{k} comes in, so it is a device")
+        self.assertTrue(inside(box["aussen"], zone["heimnetz"]) and inside(box["internet"], zone["internet"]))
+        for k in ("state", "users", "ablage", "journal"):
+            self.assertTrue(inside(box[k], zone["speicher"]), k)
+        self.assertEqual(set(technik.LINIEN), {f"{a}>{b}" for a, b in technik.KANTEN}, "one line for every edge")
+        on_edge = lambda p, b: (b[0] <= p[0] <= b[2] and p[1] in (b[1], b[3])) or (b[1] <= p[1] <= b[3] and p[0] in (b[0], b[2]))
+        for e, pts in technik.LINIEN.items():
+            a, b = e.split(">")
+            self.assertTrue(on_edge(pts[0], box[a]) and on_edge(pts[-1], box[b]), f"{e} starts and ends on its boxes")
+            for p, q in zip(pts, pts[1:]):
+                self.assertTrue(p[0] == q[0] or p[1] == q[1], f"{e}: right angles only")
+                self.assertTrue(all(0 <= c[0] <= technik.BILD[0] and 0 <= c[1] <= technik.BILD[1] for c in (p, q)), e)
 
     def test_edges_and_steps_name_real_nodes(self):
         for a, b in technik.KANTEN:
@@ -229,7 +257,7 @@ class Endpoint(unittest.TestCase):
             r = admin.get("/api/admin/technik" + ("?lang=en" if lang == "en" else ""))
             self.assertEqual(r.status_code, 200)
             d = r.json()
-            self.assertEqual(set(d), {"version", "groups", "nodes", "edges", "steps", "storage", "areas"})
+            self.assertEqual(set(d), {"version", "groups", "nodes", "edges", "steps", "pic", "storage", "areas"})
             raw = json.dumps(d)
             self.assertNotIn("secret-admin", raw)
             self.assertNotIn("Technikgast", raw)

@@ -58,6 +58,9 @@ GRUPPEN = {
     "sprache": ("Sprachdienste", "Speech services",
                 "Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem anderen.",
                 "Speech recognition and speech output as their own services, ahead of everything else."),
+    "teilen": ("Spark teilen", "Spark split",
+               "Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter und Umzug.",
+               "Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the move."),
 }
 
 # every module of app/panel and app/: name -> (group, German line). English comes from the module's docstring.
@@ -187,8 +190,8 @@ MODULE = {
     "admin": ("betrieb", "Admin-Seiten: Zustand, Einstellungen, Dienste, Stimmen"),
     "system": ("betrieb", "Sicherung, Echtprüfung der Dienste, Hinweise oben"),
     "monitor": ("betrieb", "Messwerte: GPU, Speicher, CPU"),
-    "steuer": ("betrieb", "Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners"),
-    "umziehen": ("betrieb", "Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt"),
+    "steuer": ("teilen", "Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners"),
+    "umziehen": ("teilen", "Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt"),
     "health": ("betrieb", "Stabilität: Wächter für hängende Dienste, Echtprüfung"),
     "live": ("betrieb", "Live-Übersicht: was der Spark gerade tut"),
     "tracelog": ("betrieb", "Logs → Anfragen: der Weg jeder Anfrage"),
@@ -232,9 +235,9 @@ MODULE = {
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
     "modelle": ("sprache", "Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle"),
     "llm_tor": ("sprache", "LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe"),
-    "tlstor": ("sprache", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
-    "teilen": ("sprache", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
-    "tarswart": ("sprache", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
+    "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
+    "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
+    "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "einordnung": ("sprache", "Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor"),
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
     "textnorm": ("sprache", "Text aufräumen vor der Sprachausgabe"),
@@ -248,75 +251,130 @@ NO_MODULE = {"selftest"}   # app/selftest.py runs the tests, it is not part of t
 # ---------------------------------------------------------------- the picture
 # id -> x, y, German, English, small line, group (its modules are listed), German text, English text, extra files
 KNOTEN = {
-    "geraet": (16, 40, "Browser und Handy", "Browser and phone", "static/js", "", "Nimmt Sprache auf, zeigt Text, spielt Ton.",
+    "geraet": (24, 34, "Browser und Handy", "Browser and phone", "static/js", "", "Nimmt Sprache auf, zeigt Text, spielt Ton.",
                "Records speech, shows text, plays sound.", ["static/js/chat.js"]),
-    "apps": (16, 115, "Apps", "Apps", "iPhone, Android", "", "Eigene Apps: iPhone mit Geräteschlüssel, Android mit Anmeldung wie im Browser.",
+    "apps": (194, 34, "Apps", "Apps", "iPhone, Android", "", "Eigene Apps: iPhone mit Geräteschlüssel, Android mit Anmeldung wie im Browser.",
              "Own apps: iPhone with a device key, Android signed in like the browser.", ["ios/", "android/"]),
-    "kanaele": (16, 190, "Telegram, Siri, Uhr", "Telegram, Siri, watch", "Kanäle", "geraete",
+    "kanaele": (704, 34, "Telegram, Siri, Uhr", "Telegram, Siri, watch", "Kanäle", "geraete",
                 "Kurze Fragen ohne Browser; den Verlauf speichert das Panel selbst.",
                 "Short questions without a browser; the panel keeps the history itself.", []),
-    "lautsprecher": (16, 265, "Lautsprecher, HA", "Speakers, HA", "esp32 · :31003", "",
+    "lautsprecher": (364, 34, "Lautsprecher, HA", "Speakers, HA", "esp32 · :31003", "",
                      "ESP32-Lautsprecher und Home Assistant Assist.", "ESP32 speakers and Home Assistant Assist.",
                      ["esp32.py", "wyoming.py"]),
-    "mcpc": (16, 340, "MCP-Programme", "MCP programs", "/mcp", "", "Claude, n8n, Open WebUI fragen über den MCP-Server.",
+    "mcpc": (534, 34, "MCP-Programme", "MCP programs", "/mcp", "", "Claude, n8n, Open WebUI fragen über den MCP-Server.",
              "Claude, n8n, Open WebUI ask through the MCP server.", ["mcpserver.py"]),
-    "middleware": (200, 60, "Middleware", "Middleware", "panel.py", "",
+    "middleware": (24, 222, "Middleware", "Middleware", "panel.py", "",
                    "Notaus, Herkunft (CSRF) und Größenlimit, in dieser Reihenfolge, bevor ein Endpunkt die Anfrage liest.",
                    "Kill switch, origin (CSRF) and size limit, in this order, before an endpoint reads the request.", ["panel.py", "notaus.py"]),
-    "zugang": (200, 165, "Anmeldung, Profil", "Login, profile", "guard · profiles", "zugang",
+    "zugang": (194, 222, "Anmeldung, Profil", "Login, profile", "guard · profiles", "zugang",
                "Rate-Limit, Anmeldung per Cookie oder Geräteschlüssel, Freigaben; Admin-Rechte nur aus einer Profil-Anmeldung mit zweitem Schritt. Das Profil kommt nie vom Modell.",
                "Rate limit, login by cookie or device key, releases; admin rights only from a profile login with the second step. The profile never comes from the model.", []),
-    "vorbereiten": (380, 60, "Anfrage vorbereiten", "Prepare request", "chat_turn.prepare", "",
+    "vorbereiten": (364, 222, "Anfrage vorbereiten", "Prepare request", "chat_turn.prepare", "",
                     "Rechte und Sperren, Systemprompt, Rückfrage und die angebotenen Werkzeuge.",
                     "Rights and locks, system prompt, question back and the offered tools.", ["chat_turn.py", "klaeren.py"]),
-    "weiche": (380, 165, "Weiche", "Switch", "intent.py", "weiche",
+    "weiche": (534, 222, "Weiche", "Switch", "intent.py", "weiche",
                "Grenzt die Werkzeuge mit festen Regeln ein. Passt keine, wählt das Modell höchstens eine Gruppe, die nur eingrenzt.",
                "Narrows the tools by fixed rules. If none fits, the model picks one group at most, which only narrows.", []),
-    "antwort": (560, 60, "Antwort bauen", "Build answer", "chat._answer", "gespraech",
+    "antwort": (704, 222, "Antwort bauen", "Build answer", "chat._answer", "gespraech",
                 "Runden mit dem Sprachmodell, Prüfungen, Text und Ton als ein Strom.",
                 "Rounds with the language model, checks, text and sound as one stream.", []),
-    "werkzeuge": (560, 165, "Werkzeuge", "Tools", "chat_tools.run", "dienste",
+    "werkzeuge": (704, 330, "Werkzeuge", "Tools", "chat_tools.run", "dienste",
                   "Nur angebotene Werkzeuge laufen; Ergebnisse sind Daten, nie Befehle.",
                   "Only offered tools run; results are data, never commands.", ["chat_tools.py"]),
-    "wissen": (380, 270, "Wissen", "Knowledge", "documents · wissen", "wissen",
+    "wissen": (534, 330, "Wissen", "Knowledge", "documents · wissen", "wissen",
                "Eigene Dokumente, Gedächtnis, Kiwix, erstellte Dokumente.", "Own documents, memory, Kiwix, created documents.", []),
-    "waechter": (560, 270, "Wächter", "Guard", "netguard.py", "",
+    "waechter": (704, 436, "Wächter", "Guard", "netguard.py", "",
                  "Öffentlich, Heimnetz nur mit Erlaubnis, nie Metadaten oder eigene Ports.",
                  "Public, home network only when allowed, never metadata or own ports.", ["netguard.py"]),
-    "betrieb": (200, 270, "Logs und Live", "Logs and live", "tracelog · live", "betrieb",
+    "betrieb": (364, 330, "Logs und Live", "Logs and live", "tracelog · live", "betrieb",
                 "Anfrage-Verlauf, Live-Übersicht, Wächter, Sicherung. Nur feste Wörter und Zahlen.",
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
-    "llm": (766, 30, "Sprachmodell", "Language model", ":30001 qwen38 · :31006 eigenes", "",
+    "llm": (896, 326, "Sprachmodell", "Language model", ":31006 · :30001", "",
             "Qwen3.8 aus dgx-spark-qwen38, oder das eigene Modell hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), "
             "sobald speech-spark modelle llm uebernehmen es einschaltet.",
             "Qwen3.8 from dgx-spark-qwen38, or the own model behind the LLM-Tor (:31006 → :31016, image understanding :31017 on demand), "
             "once speech-spark modelle llm uebernehmen switches it on.", ["llm_tor.py", "einordnung.py", "modelle.py"]),
-    "asr": (766, 92, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
+    "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
-    "tts": (766, 154, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
+    "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
             "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "textnorm.py"]),
-    "bild": (766, 216, "Bilder malen", "Painting pictures", ":31005 → :31015", "",
+    "bild": (896, 450, "Bilder malen", "Painting pictures", ":31005 → :31015", "",
              "FLUX.2 klein auf dem Spark, nur lokal; lädt beim ersten Bild, entlädt nach Ruhe.",
              "FLUX.2 klein on the Spark, local only; loads at the first picture, unloads when idle.",
              ["bilder.py", "bild_server.py", "bildmodell.py"]),
-    "aussen": (766, 280, "Dienste draußen", "Outside services", "HA, Mail, Suche …", "",
-               "Home Assistant, Kalender, Mail, SearXNG, Kiwix, reMarkable, MCP. Über den Wächter; feste Dienste mit Grund in netguard.DIRECT_OK.",
-               "Home Assistant, calendar, mail, SearXNG, Kiwix, reMarkable, MCP. Through the guard; fixed services with a reason in netguard.DIRECT_OK.", []),
-    "state": (200, 375, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
+    "aussen": (620, 646, "Dienste im Heimnetz", "Services at home", "HA, NAS, Kiwix …", "",
+               "Home Assistant, NAS, Kiwix, SearXNG und MCP-Dienste im eigenen Netz. Über den Wächter mit Stufe Heimnetz; "
+               "feste Dienste mit Grund in netguard.DIRECT_OK.",
+               "Home Assistant, NAS, Kiwix, SearXNG and MCP services in the own network. Through the guard at level home; "
+               "fixed services with a reason in netguard.DIRECT_OK.", []),
+    "internet": (780, 734, "Dienste im Internet", "Internet services", "IMAP, CalDAV, Web", "",
+                 "Mail und Kalender beim Anbieter, Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, Telegram, "
+                 "Update-Prüfung. Über den Wächter oder feste Adressen; der Notaus schaltet sie ab.",
+                 "Mail and calendars at the provider, pages from search, weather, transit, Wikipedia, reMarkable, Telegram, "
+                 "update check. Through the guard or fixed addresses; the kill switch turns them off.", []),
+    "teilen": (896, 258, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
+               "Nur wenn das Panel auf einem eigenen Rechner läuft: jeder Weg zu den Modellen geht durch das TLS-Tor "
+               "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben.",
+               "Only when the panel runs on its own computer: every way to the models goes through the TLS-Tor "
+               "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed.", ["tlstor.py", "tarswart.py", "teilen.py"]),
+    "state": (194, 550, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
               "Global state: keys, statistics, watchers.", []),
-    "users": (380, 375, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",
+    "users": (534, 550, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",
               "Everything of one profile; no profile sees another one's folder.", []),
-    "ablage": (560, 375, "voices/, backups/", "voices/, backups/", "Stimmen, Sicherungen", "",
+    "ablage": (896, 550, "voices/, backups/", "voices/, backups/", "Stimmen, Sicherungen", "",
                "Geklonte Stimmen und Sicherungen.", "Cloned voices and backups.", []),
-    "journal": (766, 375, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
+    "journal": (364, 550, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
                 "All services; how long and how much is set by the admin (default 14 days, 500 MB).", []),
 }
 KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middleware"), ("lautsprecher", "middleware"),
           ("mcpc", "middleware"), ("middleware", "zugang"), ("middleware", "asr"), ("zugang", "vorbereiten"),
           ("vorbereiten", "weiche"), ("weiche", "antwort"), ("antwort", "llm"), ("antwort", "werkzeuge"),
-          ("werkzeuge", "waechter"), ("waechter", "aussen"), ("werkzeuge", "wissen"), ("antwort", "tts"), ("werkzeuge", "bild"),
+          ("werkzeuge", "waechter"), ("waechter", "aussen"), ("waechter", "internet"), ("werkzeuge", "wissen"), ("antwort", "tts"), ("werkzeuge", "bild"),
           ("antwort", "geraet"), ("antwort", "betrieb"), ("betrieb", "state"), ("betrieb", "journal"),
           ("wissen", "users"), ("zugang", "users"), ("zugang", "state"), ("tts", "ablage")]
+# the picture's size and one box (the browser draws from these, test_technik checks every box and line inside)
+BILD = (1084, 802)
+KASTEN = (156, 52)
+# zones (Dominik 2026-10-14 „lan, internet, intern“, plan technische-doku/ueberblick 1+3): id -> kind (colour), German,
+# English, x, y, width, height, x of the label (left of it a line passes)
+ZONEN = {
+    "geraete": ("geraet", "Geräte · im Heimnetz oder unterwegs", "Devices · at home or on the way", 8, 8, 864, 100, 20),
+    "spark": ("spark", "DGX Spark · intern", "DGX Spark · inside", 8, 154, 1068, 464, 560),
+    "panel": ("panel", "Panel :31080 / :31443 · bei Spark teilen auf eigenem Rechner",
+              "Panel :31080 / :31443 · with the Spark split on its own computer", 16, 178, 860, 342, 200),
+    "modelle": ("modelle", "Modelle · auf dem DGX", "Models · on the DGX", 888, 178, 180, 342, 900),
+    "speicher": ("speicher", "Speicher", "Storage", 16, 528, 1052, 82, 28),
+    "heimnetz": ("lan", "Heimnetz · geht raus", "Home network · going out", 8, 626, 1068, 80, 20),
+    "internet": ("net", "Internet · geht raus", "Internet · going out", 8, 714, 1068, 80, 20),
+}
+# how a device comes in: "lan" directly in the home network, "net" on the way through the reverse proxy or a bot
+REIN = {"geraet": ("lan", "net"), "apps": ("lan", "net"), "lautsprecher": ("lan",), "mcpc": ("lan", "net"), "kanaele": ("net",)}
+# the two doors where the devices' way enters the Spark: kind, German, English, x, y (on the edge of the zone spark)
+TUEREN = [("lan", "Heimnetz: direkt", "Home network: directly", 112, 154),
+          ("net", "Unterwegs: über den Reverse-Proxy", "On the way: through the reverse proxy", 290, 154)]
+# every line drawn at right angles, from the edge of one box to the edge of the other ("a>b": points)
+_BUS = 128
+LINIEN = {
+    **{f"{k}>middleware": [(x + 150, 86), (x + 150, _BUS), (102, _BUS), (102, 222)]
+       for k, x in (("geraet", 24), ("apps", 194), ("lautsprecher", 364), ("mcpc", 534), ("kanaele", 704))},
+    "middleware>zugang": [(180, 248), (194, 248)], "zugang>vorbereiten": [(350, 248), (364, 248)],
+    "vorbereiten>weiche": [(520, 248), (534, 248)], "weiche>antwort": [(690, 248), (704, 248)],
+    "middleware>asr": [(154, 222), (154, 208), (896, 208)],
+    "antwort>geraet": [(742, 222), (742, _BUS), (174, _BUS), (174, 86)],
+    "antwort>llm": [(860, 236), (884, 236), (884, 352), (896, 352)],
+    "antwort>tts": [(860, 262), (876, 262), (876, 414), (896, 414)],
+    "werkzeuge>bild": [(860, 356), (868, 356), (868, 476), (896, 476)],
+    "antwort>werkzeuge": [(782, 274), (782, 330)], "werkzeuge>wissen": [(704, 356), (690, 356)],
+    "werkzeuge>waechter": [(782, 382), (782, 436)],
+    "waechter>aussen": [(762, 488), (762, 646)], "waechter>internet": [(822, 488), (822, 734)],
+    "antwort>betrieb": [(730, 274), (730, 312), (480, 312), (480, 330)],
+    "betrieb>journal": [(442, 382), (442, 550)], "betrieb>state": [(380, 382), (380, 530), (300, 530), (300, 550)],
+    "zugang>state": [(240, 274), (240, 550)],
+    "zugang>users": [(330, 274), (330, 300), (527, 300), (527, 538), (560, 538), (560, 550)],
+    "wissen>users": [(612, 382), (612, 550)],
+    "tts>ablage": [(1052, 414), (1060, 414), (1060, 576), (1052, 576)],
+}
+
 # where a group lives in the picture (the node that lists it)
 ORT = {g: k for k, v in KNOTEN.items() for g in [v[5]] if g}
 
@@ -338,10 +396,11 @@ SCHRITTE = [
     ("Modell", "Model", "Sofort-Satz, Anfrage-Verlauf, dann Runden mit dem Sprachmodell, gestreamt.",
      "Instant sentence, request trace, then rounds with the language model, streamed.", "chat._answer()",
      ["weiche", "antwort", "llm"], ["weiche>antwort", "antwort>llm"]),
-    ("Werkzeuge", "Tools", "Werkzeugaufruf, Wächter, Dienst draußen oder eigenes Wissen; das Ergebnis geht als Daten zurück.",
-     "Tool call, guard, outside service or own knowledge; the result comes back as data.", "chat_tools.run() · netguard",
-     ["antwort", "werkzeuge", "waechter", "aussen", "wissen"],
-     ["antwort>werkzeuge", "werkzeuge>waechter", "waechter>aussen", "werkzeuge>wissen"]),
+    ("Werkzeuge", "Tools", "Werkzeugaufruf, Wächter, Dienst im Heimnetz oder im Internet oder eigenes Wissen; das Ergebnis geht als Daten zurück.",
+     "Tool call, guard, a service in the home network or on the internet, or own knowledge; the result comes back as data.",
+     "chat_tools.run() · netguard",
+     ["antwort", "werkzeuge", "waechter", "aussen", "internet", "wissen"],
+     ["antwort>werkzeuge", "werkzeuge>waechter", "waechter>aussen", "waechter>internet", "werkzeuge>wissen"]),
     ("Antwort", "Answer", "Sätze gehen an die Sprachausgabe; Text und Ton kommen als ein Strom zum Gerät.",
      "Sentences go to speech output; text and sound reach the device as one stream.", "SSE · /v1/audio/speech",
      ["antwort", "tts", "geraet"], ["antwort>tts", "antwort>geraet"]),
@@ -499,7 +558,12 @@ def data(lang="de"):
         version = update.app_version()
     except Exception:
         version = ""
-    return {"version": version, "groups": groups, "nodes": nodes, "edges": [list(e) for e in KANTEN], "steps": steps,
+    pic = {"size": list(BILD), "box": list(KASTEN), "rein": {k: list(v) for k, v in REIN.items()},
+           "zones": [{"id": z, "kind": v[0], "name": v[1 + i], "x": v[3], "y": v[4], "w": v[5], "h": v[6], "lx": v[7]}
+                     for z, v in ZONEN.items()],
+           "doors": [{"kind": t[0], "name": t[1 + i], "x": t[3], "y": t[4]} for t in TUEREN],
+           "lines": {k: [list(p) for p in v] for k, v in LINIEN.items()}}
+    return {"version": version, "groups": groups, "nodes": nodes, "edges": [list(e) for e in KANTEN], "steps": steps, "pic": pic,
             "storage": rows, "areas": {k: v[1 if en else 0] for k, v in dateien.AREAS.items()}}
 
 
@@ -520,13 +584,42 @@ def _cell(s):
     return str(s).replace("|", "\\|").replace("\n", " ")
 
 
+def zone_of(nid):
+    """The innermost zone a box lies in (the smallest one around it)."""
+    x, y = KNOTEN[nid][:2]
+    w, h = KASTEN
+    around = [z for z, v in ZONEN.items() if v[3] <= x and x + w <= v[3] + v[5] and v[4] <= y and y + h <= v[4] + v[6]]
+    return min(around, key=lambda z: ZONEN[z][5] * ZONEN[z][6]) if around else ""
+
+
+def _inner(z, y):
+    """True when zone z lies inside zone y."""
+    a, b = ZONEN[z], ZONEN[y]
+    return z != y and b[3] <= a[3] and a[3] + a[5] <= b[3] + b[5] and b[4] <= a[4] and a[4] + a[6] <= b[4] + b[6]
+
+
 def mermaid(lang="de"):
-    """The picture of the page as a Mermaid flowchart (same nodes and edges)."""
+    """The picture of the page as a Mermaid flowchart (same zones, nodes and edges)."""
     i = 1 if lang == "en" else 0
-    lines = ["```mermaid", "flowchart LR"]
-    for k, v in KNOTEN.items():
+
+    def node(k):
+        v = KNOTEN[k]
         shape = ('[("', '")]') if k in ("state", "users", "ablage", "journal") else ('["', '"]')
-        lines.append(f'  {k}{shape[0]}{v[2 + i]}<br/>{v[4]}{shape[1]}')
+        return f'{k}{shape[0]}{v[2 + i]}<br/>{v[4]}{shape[1]}'
+
+    def parent(z):
+        outer = [y for y in ZONEN if _inner(z, y)]
+        return min(outer, key=lambda y: ZONEN[y][5] * ZONEN[y][6]) if outer else ""
+
+    def sub(z, ind):
+        out = [f'{ind}subgraph z_{z}["{ZONEN[z][1 + i]}"]']
+        out += [sub(c, ind + "  ") for c in ZONEN if parent(c) == z]
+        out += [f"{ind}  {node(k)}" for k in KNOTEN if zone_of(k) == z]
+        return "\n".join(out + [f"{ind}end"])
+
+    lines = ["```mermaid", "flowchart TB"]
+    lines += [sub(z, "  ") for z in ZONEN if not parent(z)]
+    lines += [f"  {node(k)}" for k in KNOTEN if not zone_of(k)]
     for a, b in KANTEN:
         lines.append(f"  {a} --> {b}")
     lines.append("```")

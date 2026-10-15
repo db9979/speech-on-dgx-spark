@@ -2114,14 +2114,14 @@ SEITEN_DATEN = {
             "chat.web_search": ["s6", "s9"], "regeln": ["s7", "s8"], "regel:SearXNG": ["s6"],
             "regel:Wetter, Fahrplan, Wikipedia": ["s6"], "regel:Sprachmodell": ["s6"],
         },
-        "kurz": ("Dienste draußen sind alles, was der Spark über das Netz fragt: Home Assistant, Kalender, Kontakte, "
-                 "Mail, SearXNG, Kiwix, reMarkable und MCP-Dienste. Adressen aus Einstellungen gehen über den Wächter "
-                 "(netguard) mit einer festen Stufe; feste Dienste wie SearXNG, Wetter, Fahrplan und Wikipedia gehen "
-                 "direkt.",
-                 "Outside services are everything the Spark asks over the network: Home Assistant, calendars, "
-                 "contacts, mail, SearXNG, Kiwix, reMarkable and MCP services. Addresses from settings go through the "
-                 "guard (netguard) with a fixed level; fixed services like SearXNG, weather, transit and Wikipedia go "
-                 "directly."),
+        "kurz": ("Dienste im Heimnetz sind, was der Spark im eigenen Netz fragt: Home Assistant, NAS, Kiwix, SearXNG und "
+                 "MCP-Dienste, auf Wunsch auch Kalender, Kontakte und Mail. Adressen aus Einstellungen gehen über den "
+                 "Wächter (netguard) mit einer festen Stufe; feste Dienste wie SearXNG gehen direkt. Der Weg eines "
+                 "Werkzeugaufrufs ist derselbe wie für die Dienste im Internet (eigener Kasten).",
+                 "Services at home are what the Spark asks in the own network: Home Assistant, NAS, Kiwix, SearXNG "
+                 "and MCP services, on request also calendars, contacts and mail. Addresses from settings go through "
+                 "the guard (netguard) with a fixed level; fixed services like SearXNG go directly. The way of a tool "
+                 "call is the same as for the internet services (own box)."),
         "warum": ("Ein Werkzeugaufruf kommt vom Modell, und das Modell kann von fremdem Text gelenkt sein. Deshalb "
                   "prüft das Panel vor jedem Aufruf mit festen Regeln, ob er sein darf, und behandelt jede Antwort von "
                   "draußen als Daten.",
@@ -2278,6 +2278,221 @@ SEITEN_DATEN = {
         "tests": ["test_waechter_umgehung", "test_notaus", "test_sperre_ueberall", "test_dienstwacht", "test_kiwix",
                   "test_meinmcp", "test_remarkable"],
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
+    },
+    "internet": {
+        "stand": "0337ab29a9",
+        "bezug": {
+            "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
+            "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
+            "regel:Update-Prüfung": ["s7"], "regel:Apple-Push": ["s7"],
+        },
+        "kurz": ("Dienste im Internet sind alles, was der Spark außerhalb des Hauses fragt: Mail und Kalender beim Anbieter, "
+                 "Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, dazu Telegram, Apple-Push und die "
+                 "Update-Prüfung. Werkzeuge gehen über den Wächter oder eine feste Adresse; der Notaus schaltet sie ab.",
+                 "Internet services are everything the Spark asks outside the house: mail and calendars at the provider, "
+                 "pages from search, weather, transit, Wikipedia, reMarkable, plus Telegram, Apple push and the update "
+                 "check. Tools go through the guard or a fixed address; the kill switch turns them off."),
+        "warum": ("Was ins Internet geht, verlässt das Haus. Deshalb nur mit festen Regeln, nur an geprüfte Adressen, mit "
+                  "begrenzter Antwort, und ein Notaus, der alles Internet auf einmal anhält.",
+                  "What goes to the internet leaves the house. So only by fixed rules, only to checked addresses, with a "
+                  "limited answer, and a kill switch that stops all internet at once."),
+        "ablauf": [
+            S("s1", "start", ("Werkzeug will ins Internet", "A tool wants to the internet"),
+              ("chat_tools.run", "chat_tools.run"),
+              ("Das Modell hat ein angebotenes Werkzeug gerufen, das einen Dienst im Internet braucht. Welche Werkzeuge "
+               "überhaupt angeboten werden, haben Rechte und Weiche schon entschieden.",
+               "The model called an offered tool that needs a service on the internet. Which tools are offered at all "
+               "was decided by the rights and the switch already.")),
+            S("s2", "frage", ("Notaus hält das Internet an?", "Kill switch stops the internet?"),
+              ("ab Stufe {notaus.STAGE.internet}", "from stage {notaus.STAGE.internet}"),
+              ("Ab Stufe {notaus.STAGE.internet} ruhen die {notaus.INTERNET_TOOLS|anzahl} Werkzeuge, die selbst ins "
+               "Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen.",
+               "From stage {notaus.STAGE.internet} the {notaus.INTERNET_TOOLS|anzahl} tools that go to the internet by "
+               "themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call."),
+              ("stop", "ja", ("Gesperrt (Notaus)", "Blocked (kill switch)"))),
+            S("s3", "frage", ("Feste Adresse?", "Fixed address?"),
+              ("netguard.DIRECT_OK", "netguard.DIRECT_OK"),
+              ("Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie "
+               "eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK.",
+               "Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from "
+               "outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK."),
+              ("ok", "ja", "s6")),
+            S("s4", "schritt", ("Über den Wächter", "Through the guard"),
+              ("netguard.client mit fester Stufe", "netguard.client with a fixed level"),
+              ("Seiten aus der Suche und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Mail, Kalender und "
+               "Kontakte mit Stufe Nutzer. Die Stufe steht im Code.",
+               "Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and "
+               "contacts at level user. The level is in the code.")),
+            S("s5", "frage", ("Adresse erlaubt?", "Address allowed?"),
+              ("Kasten Wächter", "box Guard"),
+              ("netguard.allowed prüft jede aufgelöste Adresse: keine eigenen Dienste, kein 169.254, kein Heimnetz auf "
+               "Stufe nur Internet.",
+               "netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level "
+               "internet only."),
+              ("stop", "nein", ("Gesperrt", "Blocked"))),
+            S("s6", "ende", ("Antwort als Daten", "Answer as data"),
+              ("höchstens {netguard.MAX_BYTES|mb}", "at most {netguard.MAX_BYTES|mb}"),
+              ("Die Antwort wird an der Grenze abgeschnitten und geht als Daten ans Modell, nie als Befehl.",
+               "The answer is cut at the limit and goes to the model as data, never as a command.")),
+            S("s7", "schritt", ("Was der Spark selbst schickt", "What the Spark sends by itself"),
+              ("Telegram, Push, Update", "Telegram, push, update"),
+              ("Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte "
+               "Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK.",
+               "Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services "
+               "and the update check at GitHub, each with a reason in netguard.DIRECT_OK.")),
+        ],
+        "beispiele": [
+            (("Seite aus der Suche lesen", "Read a page from search"), ["s1", "s2", "s3", "s4", "s5", "s6"],
+             ("Über den Wächter mit Stufe nur Internet; gelesen.", "Through the guard at level internet only; read.")),
+            (("Wetter fragen", "Ask the weather"), ["s1", "s2", "s3", "s3!", "s6"],
+             ("Feste Adresse, ohne Wächter.", "Fixed address, without the guard.")),
+            (("Notaus Stufe 1, Websuche", "Kill switch stage 1, web search"), ["s1", "s2", "s2!"],
+             ("Gesperrt, nichts geht hinaus.", "Blocked, nothing goes out.")),
+        ],
+        "regeln": [
+            [("Dienst", "Service"), ("Weg", "Way")],
+            [("Seiten aus der Suche", "Pages from search"), ("Wächter, nur Internet", "guard, internet only")],
+            [("Mail, Kalender, Kontakte", "Mail, calendars, contacts"), ("Wächter, Stufe Nutzer", "guard, level user")],
+            [("reMarkable", "reMarkable"), ("Wächter, nur erlaubte Hosts", "guard, allowed hosts only")],
+            [("Wetter, Fahrplan, Wikipedia", "Weather, transit, Wikipedia"), ("feste Adresse", "fixed address")],
+            [("Telegram", "Telegram"), ("feste Adresse, Bot-API", "fixed address, bot API")],
+            [("Update-Prüfung", "Update check"), ("GitHub, fest", "GitHub, fixed")],
+            [("Apple-Push", "Apple push"), ("fest", "fixed")],
+        ],
+        "zahlen": [
+            ("{notaus.INTERNET_TOOLS|anzahl}", ("Werkzeuge, die selbst ins Internet gehen", "tools that go to the internet by themselves"), "notaus.INTERNET_TOOLS"),
+            ("{netguard.MAX_BYTES|mb}", ("größte Antwort über den Wächter", "largest answer through the guard"), "netguard.MAX_BYTES"),
+        ],
+        "einstellen": [
+            ("Einstellungen → Sicherheit, Notaus: Stufe {notaus.STAGE.internet} hält alles Internet der Werkzeuge an.",
+             "Settings → Security, kill switch: stage {notaus.STAGE.internet} stops all internet of the tools."),
+        ],
+        "sehen": [
+            ("Zustand → Live: jeder Weg ins Internet in Bernstein, gesperrte mit Grund.",
+             "Status → Live: every way to the internet in amber, blocked ones with the reason."),
+        ],
+        "code": [
+            ("notaus.INTERNET_TOOLS", ("Werkzeuge, die selbst ins Internet gehen", "tools that go to the internet by themselves")),
+            ("notaus.locked_tools", ("was der Notaus sperrt", "what the kill switch locks")),
+            ("netguard.DIRECT_OK", ("feste Wege mit Grund", "fixed ways with a reason")),
+            ("netguard.client", ("der Weg über den Wächter", "the way through the guard")),
+            ("netguard.allowed", ("erlaubte Adresse je Stufe", "allowed address per level")),
+        ],
+        "tests": ["test_waechter_umgehung", "test_notaus"],
+        "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
+    },
+    "teilen": {
+        "stand": "534cd3572b",
+        "bezug": {
+            "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
+            "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
+            "steuer.weg": ["s8"], "steuer.GONE": ["s8"], "tarswart.WINDOW": ["s7"],
+        },
+        "kurz": ("Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle "
+                 "bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie "
+                 "Dienste starten oder Modelle wechseln erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem "
+                 "DGX, und dieser Kasten tut nichts.",
+                 "The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on "
+                 "the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting "
+                 "services or switching models are done there by the Wärter. Without the split everything runs on the "
+                 "DGX and this box does nothing."),
+        "warum": ("Sprache, Text und Bilder gehen dann durch das Heimnetz. Niemand im Netz soll mitlesen, sich als DGX "
+                  "ausgeben oder dem DGX Befehle geben können.",
+                  "Speech, text and pictures then cross the home network. No one in the network should read along, pose "
+                  "as the DGX or give the DGX commands."),
+        "ablauf": [
+            S("s1", "start", ("Installation geteilt", "Shared install"),
+              ("install.sh --mode api --teilen", "install.sh --mode api --teilen"),
+              ("Der DGX bekommt ein eigenes Zertifikat, das TLS-Tor, den Wärter und die Firewall. Die Dienste hören dann "
+               "nur noch auf 127.0.0.1.",
+               "The DGX gets its own certificate, the TLS-Tor, the Wärter and the firewall. The services then listen on "
+               "127.0.0.1 only.")),
+            S("s2", "schritt", ("Kopplungscode", "Pairing code"),
+              ("{teilen.CODE_LEN} Zeichen, {teilen.CODE_SECS} s, einmal", "{teilen.CODE_LEN} characters, {teilen.CODE_SECS} s, once"),
+              ("Der DGX zeigt einen Code und wartet auf Port {teilen.KOPPEL_PORT}, nur solange der Code gilt; nach "
+               "{teilen.CODE_TRIES} falschen Versuchen ist er weg.",
+               "The DGX shows a code and waits on port {teilen.KOPPEL_PORT}, only while the code lives; after "
+               "{teilen.CODE_TRIES} wrong tries it is gone.")),
+            S("s3", "frage", ("Beweis passt zum Zertifikat?", "Proof fits the certificate?"),
+              ("scrypt(Code, Fingerabdruck)", "scrypt(code, fingerprint)"),
+              ("Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das "
+               "er sieht. Wer sich dazwischenstellt, zeigt ein anderes Zertifikat, und der Beweis passt nicht.",
+               "The panel computer proves the code with a key from the code and the fingerprint of the certificate it "
+               "sees. Whoever stands in between shows another certificate, and the proof does not fit."),
+              ("stop", "nein", ("Nicht gekoppelt", "Not paired"))),
+            S("s4", "schritt", ("Zertifikat angeheftet, Firewall zu", "Certificate pinned, firewall shut"),
+              ("nur der Panel-Rechner", "only the panel computer"),
+              ("Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die "
+               "Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu.",
+               "The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall "
+               "(teilen.regeln) opens the door's ports for it only.")),
+            S("s5", "frage", ("Verbindung zum TLS-Tor erlaubt?", "Connection to the TLS-Tor allowed?"),
+              ("TLS 1.3, nur api.tls_from", "TLS 1.3, only api.tls_from"),
+              ("Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es "
+               "spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.",
+               "Every request to speech recognition, speech output, the language model, pictures and the Wärter goes "
+               "through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the "
+               "content."),
+              ("stop", "nein", ("Abgewiesen", "Refused"))),
+            S("s6", "schritt", ("Befehl an den Wärter", "Command to the Wärter"),
+              ("unterschrieben, mit Zeit und Nummer", "signed, with time and number"),
+              ("steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben "
+               "mit dem Wärter-Schlüssel.",
+               "steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter "
+               "key.")),
+            S("s7", "frage", ("Unterschrift, Zeit, Nummer, Befehl gültig?", "Signature, time, number, command valid?"),
+              ("{tarswart.COMMANDS|anzahl} feste Befehle", "{tarswart.COMMANDS|anzahl} fixed commands"),
+              ("tarswart.check prüft die Unterschrift, eine Zeit höchstens {tarswart.WINDOW} s daneben, die Nummer nur "
+               "einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen.",
+               "tarswart.check checks the signature, a time at most {tarswart.WINDOW} s off, the number only once and a "
+               "command from the fixed list. No shell, no free names."),
+              ("stop", "nein", ("Abgelehnt", "Refused"))),
+            S("s8", "ende", ("Notbetrieb, wenn der DGX fehlt", "Notbetrieb when the DGX is missing"),
+              ("nach {steuer.GONE} s ohne Antwort", "after {steuer.GONE} s without an answer"),
+              ("Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und "
+               "Sprachfragen bekommen einen festen Satz.",
+               "When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech "
+               "questions get a fixed sentence.")),
+        ],
+        "beispiele": [
+            (("Pi koppeln", "Pair a Pi"), ["s1", "s2", "s3", "s4"],
+             ("Gekoppelt, Zertifikat angeheftet.", "Paired, certificate pinned.")),
+            (("Falscher Rechner dazwischen", "Wrong computer in between"), ["s1", "s2", "s3", "s3!"],
+             ("Der Beweis passt nicht, keine Kopplung.", "The proof does not fit, no pairing.")),
+            (("Modell wechseln vom Pi", "Switch the model from the Pi"), ["s5", "s6", "s7"],
+             ("Der Wärter startet den Wechsel mit seinen eigenen Regeln.", "The Wärter starts the switch by its own rules.")),
+            (("Fremdes Gerät fragt das Tor", "A stranger asks the door"), ["s5", "s5!"],
+             ("Abgewiesen vor dem Handshake.", "Refused before the handshake.")),
+        ],
+        "zahlen": [
+            ("{teilen.CODE_SECS} s", ("lebt ein Kopplungscode", "a pairing code lives"), "teilen.CODE_SECS"),
+            ("{tarswart.WINDOW} s", ("darf die Zeit eines Befehls daneben liegen", "a command's time may be off"), "tarswart.WINDOW"),
+            ("{tarswart.COMMANDS|anzahl}", ("feste Befehle des Wärters", "fixed commands of the Wärter"), "tarswart.COMMANDS"),
+            ("{steuer.GONE} s", ("ohne Antwort bis zum Notbetrieb", "without an answer until Notbetrieb"), "steuer.GONE"),
+        ],
+        "einstellen": [
+            ("Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen "
+             "(Anleitung „Spark teilen“).",
+             "On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen "
+             "(guide „Spark split“)."),
+        ],
+        "sehen": [
+            ("Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.",
+             "Status → Live: box „Model computer“ with reachable, services, version and pause."),
+        ],
+        "code": [
+            ("teilen.CODE_SECS", ("Lebensdauer des Codes", "life of the code")),
+            ("teilen.schluessel", ("Schlüssel aus Code und Fingerabdruck", "key from code and fingerprint")),
+            ("teilen.regeln", ("Firewall nur für den Panel-Rechner", "firewall for the panel computer only")),
+            ("tlstor.server_context", ("TLS 1.3 mit eigenem Zertifikat", "TLS 1.3 with its own certificate")),
+            ("tlstor.allowed", ("nur der Panel-Rechner", "only the panel computer")),
+            ("steuer.call", ("unterschriebener Befehl", "signed command")),
+            ("tarswart.check", ("Unterschrift, Zeit, Nummer, Befehl", "signature, time, number, command")),
+            ("tarswart.COMMANDS", ("die festen Befehle", "the fixed commands")),
+            ("steuer.weg", ("Notbetrieb erkennen", "spot Notbetrieb")),
+        ],
+        "tests": ["test_teilen", "test_umziehen"],
+        "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
