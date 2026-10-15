@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.631** Umzug auf den Raspberry Pi: Einspielen scheiterte an fehlendem runuser
 - **V01.0.630** Pi-Installation: kleine Korrektur an der GPU-Prüfung
 - **V01.0.629** Panel-Installation auf dem Raspberry Pi bricht nicht mehr an der NVIDIA-Prüfung ab
 - **V01.0.628** Telefon T3: Anrufe von außen über bestätigte Nummern, unbekannte als Gast; Telefon-Schalter griffen vorher nicht
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.624** Kontingent: Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell, mit Vorwarnung und Nachschlag; feste Befehle gehen weiter
 - **V01.0.623** Rot-Fix: Tests für Notbetrieb mit Parakeet
 - **V01.0.622** Spark teilen: Notbetrieb mit Parakeet, feste Befehle ohne Sprachmodell
-- **V01.0.621** Zustand → Technik: Überblick in Zonen (Geräte, Spark, Heimnetz, Internet), Linien leuchten erst beim Anklicken, Kästen „Spark teilen“ und „Dienste im Internet“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -30,6 +30,9 @@
 #   speech-spark zurueckholen --von <host>  on the model computer: take the panel back, everything on one computer
 #   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 set -euo pipefail
+# runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
+# runs "teilen umzug-einspielen" that way) would not find them
+export PATH="$PATH:/usr/local/sbin:/usr/sbin:/sbin"
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
 ETC=${SPEECH_SPARK_ETC:-/etc/speech-spark}

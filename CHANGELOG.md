@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.631** · 2026-10-15 · speech-spark.sh: /usr/sbin und /sbin im PATH, Umzug auf den Pi fand runuser nicht
 - **V01.0.630** · 2026-10-15 · install.sh: GPU-Prüfung liest config.json über cfg_json (root liest nicht direkt, test_hardening)
 - **V01.0.629** · 2026-10-15 · install.sh: Panel-Rechner ohne NVIDIA-Karte (Raspberry Pi) überspringt die GPU-Prüfung
 - **V01.0.628** · 2026-10-15 · Telefon T3: Anrufe von außen (Schalter, Standard aus): bestätigte eigene Nummern wählen ihr Profil, Persönliches nur mit sicherer Stimme oder Telefon-PIN, unbekannte Nummern als Gast höchstens 20 am Tag oder abgewiesen; behoben: die Telefon-Schalter wurden aus dem falschen Teil der Einstellungen gelesen, der Spark meldete sich nie an
