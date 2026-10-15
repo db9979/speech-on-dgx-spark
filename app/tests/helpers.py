@@ -81,6 +81,7 @@ from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # 
 
 LLM_CALLS = []   # every request body the fake LLM got
 HA_CALLS = []
+HA_UNAUTH = []     # paths the fake Home Assistant saw without a valid token (a failed login there)
 
 
 def _sse(obj):
@@ -340,7 +341,12 @@ def fake_ha():
 
     def auth(r):
         if r.headers.get("authorization") != "Bearer " + HA_TOKEN:
+            HA_UNAUTH.append(r.url.path)
             raise HTTPException(401)
+
+    @app.get("/manifest.json")
+    def manifest():            # Home Assistant's frontend serves this without a token
+        return {"name": "Home Assistant", "short_name": "Home Assistant"}
 
     @app.get("/api/")
     def root(request: Request):

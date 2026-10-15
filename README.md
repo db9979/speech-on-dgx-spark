@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.601** Fix: the service watch asks Home Assistant without a failed login (no more login warnings in the HA log)
 - **V01.0.597** Fix: Qwen3-VL 8B gets 20 % of the memory (12 % left no room for its context)
 - **V01.0.596** Own models stage E5: admins add own Hugging Face models by fixed rules (admin switch)
 - **V01.0.595** Own models stage E4: switch models in the panel (admin switch) and with `speech-spark modelle wechseln`
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.591** Fix: picture wishes with the verb at the end go to painting pictures
 - **V01.0.590** Own models stage E2: LLM-Tor and own vLLM prepared (off until stage E3), Kolibri-1 in the catalog
 - **V01.0.589** Own models stage E1: one catalog for every model, memory budget, page Status → Models
-- **V01.0.588** Fix: the model check follows the shared blob store of newer huggingface_hub
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

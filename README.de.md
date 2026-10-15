@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.601** Fix: der Dienst-Wächter fragt Home Assistant ohne falsche Anmeldung (keine Login-Warnungen mehr im HA-Log)
 - **V01.0.597** Fix: Qwen3-VL 8B bekommt 20 % des Speichers (bei 12 % blieb kein Platz für den Kontext)
 - **V01.0.596** Eigene Modelle Stufe E5: Admins fügen eigene Hugging-Face-Modelle nach festen Regeln hinzu (Admin-Schalter)
 - **V01.0.595** Eigene Modelle Stufe E4: Modelle im Panel (Admin-Schalter) und mit `speech-spark modelle wechseln` wechseln
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.591** Fix: Bildwünsche mit dem Verb am Ende gehen an Bilder malen
 - **V01.0.590** Eigene Modelle Stufe E2: LLM-Tor und eigenes vLLM vorbereitet (aus bis Stufe E3), Kolibri-1 im Katalog
 - **V01.0.589** Eigene Modelle Stufe E1: ein Katalog für alle Modelle, Speicher-Budget, Seite Zustand → Modelle
-- **V01.0.588** Fix: die Modellprüfung folgt dem gemeinsamen Dateispeicher neuerer huggingface_hub-Versionen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
