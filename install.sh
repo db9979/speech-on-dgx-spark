@@ -877,9 +877,11 @@ if [ -n "$MODELLE_PICK" ] && { [ "$(cfg '.models.host // ""')" != "$MODELLE_PICK
     bash "$PREFIX/app/speech-spark.sh" teilen koppeln "$MODELLE_PICK" || die "the pairing did not work; run the install again with a new code"
 fi
 # a panel computer reaches the language model only through the model computer's LLM-Tor: a chat address on this
-# computer (127.0.0.1, such as qwen38's from a move) becomes the door's, on every install and update (V01.0.637)
+# computer (127.0.0.1, such as qwen38's from a move) or a plain http address on the model computer (its old ports are
+# closed, V01.0.640) becomes the door's, on every install and update (V01.0.637)
 if [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" = false ]; then
-  jqi 'if ((.chat.llm_url // "") | test("^https?://(127[.]0[.]0[.]1|localhost|[[]::1[]])([:/]|$)")) then
+  jqi '.models.host as $h | if ((.chat.llm_url // "") | test("^https?://(127[.]0[.]0[.]1|localhost|[[]::1[]])([:/]|$)")
+                                or test("^http://(" + ($h | gsub("[.]"; "[.]")) + "|[[]" + $h + "[]])([:/]|$)")) then
          .chat.llm_url = "https://\(.models.host | if test(":") then "[\(.)]" else . end):\(.llm.port // 31006)/v1"
          | .chat.llm_key = "" | .chat.llm_model = "" | del(.chat.llm_key_from) else . end'
   # the speakers' address of the panel (Funktionen → Eigene Lautsprecher) moved with the panel: the model computer's

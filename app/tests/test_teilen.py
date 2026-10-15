@@ -384,7 +384,10 @@ class Installation(unittest.TestCase):
         self.assertLess(i, sh.index('say "systemd units"'), "before the panel starts")
         block = sh[sh.rindex("\nif ", 0, i):sh.index("\nfi\n", i)]
         self.assertIn('. == "127.0.0.1" or . == "localhost" or . == "::1"\')" = false ]', block, "only on a panel computer")
-        self.assertIn("127[.]0[.]0[.]1|localhost|[[]::1[]]", block, "only an address on this computer is changed")
+        self.assertIn("127[.]0[.]0[.]1|localhost|[[]::1[]]", block, "an address on this computer is changed")
+        # V01.0.640: also plain http to the model computer (http://192.168.178.171:30001/v1 typed by hand): its old
+        # ports are closed, only the door answers; https (the door itself) and other computers stay
+        self.assertIn('test("^http://(" + ($h | gsub("[.]"; "[.]")) + "|[[]" + $h + "[]])([:/]|$)")', block)
         self.assertIn(":\\(.llm.port // 31006)/v1", block)
         self.assertIn('.chat.llm_key = ""', block, "the door takes api.key (llm.key)")
         cfg = {"models": {"host": "192.168.178.171"}, "llm": {"port": 31006}}
