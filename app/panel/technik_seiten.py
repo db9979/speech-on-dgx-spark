@@ -3049,14 +3049,14 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "d061955086",
+        "stand": "bbd3d36d5d",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
             "esp32.Session.run_answer": ["s10"], "esp32.Session.code_gate": ["s9"], "esp32.Session.speak": ["s11"],
             "esp32.remember": ["s12"], "wyoming.settings": ["s5"], "wyoming.handle": ["s5"],
             "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"],
-            "telefon.Call.start": ["s5"], "telefon.Call.pin": ["s9"], "telefon_ich.try_code": ["s5"], "telefon_ich.pin_attempt": ["s9"],
+            "telefon.Call.start": ["s5"], "telefon.Call.outside": ["s5"], "telefon.Call.pin": ["s9"], "telefon_ich.try_code": ["s5"], "telefon_ich.pin_attempt": ["s9"],
             "telefon_ich.FAILS": ["s9"], "telefon.MAX_CALLS": ["s5"], "telefon.MAX_CALL": ["s10"], "telefon.Call.voice_result": ["s9"], "telefon.Call._chat": ["s10", "s11"],
         },
         "kurz": ("Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, "
@@ -3239,14 +3239,17 @@ SEITEN_DATEN = {
                  "A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks "
                  "the profile. After {telefon.QUIET_ASK} seconds of silence „Noch etwas?“, after another "
                  "{telefon.QUIET_END} it hangs up; at most {telefon.MAX_CALL|min} minutes."),
-                ("Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne "
-                 "Nummern, nie eine von außen. Nur eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, "
-                 "nimmt er an: der Code ({telefon_ich.CODE_LEN} Ziffern, {telefon_ich.CODE_SECONDS|min} Minuten, "
-                 "{telefon_ich.CODE_TRIES} Versuche) wird getippt, dann legt er auf.",
-                 "Calls from outside are refused (a later stage brings them); logs and Live name only internal numbers, "
-                 "never one from outside. It takes only an own number waiting for its code under Me → Phone: the code "
-                 "({telefon_ich.CODE_LEN} digits, {telefon_ich.CODE_SECONDS|min} minutes, {telefon_ich.CODE_TRIES} tries) "
-                 "is typed, then it hangs up."),
+                ("Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn "
+                 "({telefon_ich.CODE_LEN} Ziffern, {telefon_ich.CODE_SECONDS|min} Minuten, {telefon_ich.CODE_TRIES} "
+                 "Versuche), dann legt er auf. Mit „Anrufe von außen“ wählt eine bestätigte Nummer ihr Profil, "
+                 "Persönliches aber nur bei sicherer Stimme oder PIN, weil sich Nummern fälschen lassen; mit „Gäste“ "
+                 "auch unbekannte Nummern als Gast, höchstens {telefon.GUESTS} am Tag. Logs und Live nennen nie eine "
+                 "Nummer von außen.",
+                 "From outside: an own number waiting for its code under Me → Phone types it ({telefon_ich.CODE_LEN} "
+                 "digits, {telefon_ich.CODE_SECONDS|min} minutes, {telefon_ich.CODE_TRIES} tries), then it hangs up. "
+                 "With „Anrufe von außen“ a confirmed number picks its profile, but personal things only with a sure "
+                 "voice or the PIN, because numbers can be forged; with guests also unknown numbers as a guest, at most "
+                 "{telefon.GUESTS} a day. Logs and Live never name a number from outside."),
                 ("Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für "
                  "dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. {telefon_ich.FAILS} falsche in "
                  "{telefon_ich.FAIL_WINDOW|min} Minuten sperren sie an diesem Telefon {telefon_ich.LOCK|min} Minuten. "
@@ -3276,8 +3279,10 @@ SEITEN_DATEN = {
              "Me → Speakers: set up, type the code, room, volume, check and the own code word."),
             ("Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.",
              "Features → Home Assistant Assist: Wyoming on and the allowed addresses."),
-            ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen.",
-             "Features → Calling the Spark: wizard with four steps, assign handsets."),
+            ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Anrufe von außen, "
+             "unbekannte Anrufer als Gast.",
+             "Features → Calling the Spark: wizard with four steps, assign handsets, calls from outside, unknown callers "
+             "as guests."),
             ("Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.",
              "Me → Phone: confirm own phone numbers with a code, phone PIN, delete calls."),
         ],
@@ -3303,6 +3308,7 @@ SEITEN_DATEN = {
             ("wyoming.handle", ("nur erlaubte Adressen, höchstens so viele", "only allowed addresses, at most so many")),
             ("wyoming._session", ("Ton zu Text und Text zu Ton", "sound to text and text to sound")),
             ("telefon.Call.start", ("wer anruft: intern, Profil, gesperrt, besetzt", "who calls: internal, profile, blocked, busy")),
+            ("telefon.Call.outside", ("von außen: Code, bekannte Nummer, Gast", "from outside: code, known number, guest")),
             ("telefon.Call.pin", ("Telefon-PIN prüfen, Sperre", "check the phone PIN, lock")),
             ("telefon_ich.try_code", ("Code einer eigenen Nummer", "code of an own number")),
             ("telefon_ich.pin_attempt", ("PIN je Telefon zählen und sperren", "count and lock the PIN per phone")),

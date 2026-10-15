@@ -1306,7 +1306,8 @@ def snapshot(view="admin", now=None):
                         f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "
                         f"{tel.get('minuten', 0)} min" + (f" · {tel['fremd']} fremde Pakete verworfen" if tel.get("fremd") else "")
                         + (f" · PIN {tel.get('pin', 0)} richtig, {tel['pinfalsch']} falsch" if tel.get("pinfalsch") or tel.get("pin") else "")
-                        + (f" · {tel['bestaetigt']} Nummern bestätigt" if tel.get("bestaetigt") else ""))
+                        + (f" · {tel['bestaetigt']} Nummern bestätigt" if tel.get("bestaetigt") else "")
+                        + (f" · von außen {tel['extern']}, davon {tel.get('gaeste', 0)} Gäste" if tel.get("extern") else ""))
         if x["id"] == "docling":   # Docling-Server: files in numbers (never a name or a text)
             x["sub"] = (f"{dlg.get('wait', 0)} warten · heute {dlg.get('ok', 0)} gelesen, {dlg.get('pages', 0)} Seiten"
                         + (f" · {dlg['failed']} Fehler" if dlg.get("failed") else "")

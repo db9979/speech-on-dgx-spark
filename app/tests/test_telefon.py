@@ -557,6 +557,64 @@ class Calls(unittest.TestCase):
         self.assertEqual({c["art"] for c in telefon_ich.calls(self.uid)}, {"intern"})
 
 
+    def test_settings_follow_the_switches(self):
+        helpers.set_config(telefon=False, telefon_gaeste=True, telefon_aussen=True)
+        self.assertEqual({k: v for k, v in telefon.settings().items() if k in ("on", "gaeste", "aussen")},
+                         {"on": False, "gaeste": False, "aussen": False})       # nothing without the main switch
+        helpers.set_config(telefon=True, telefon_gaeste=True, telefon_aussen=False, telefon_max=5, telefon_ton="schmal")
+        st = telefon.settings()
+        self.assertEqual((st["on"], st["gaeste"], st["aussen"], st["max"], st["ton"]), (True, True, False, telefon.MAX_CALLS, "schmal"))
+        helpers.set_config(telefon_ton="hd")
+
+    # ------------------------------------------------------------ T3: calls from outside
+    def test_calls_from_outside_known_number_guest_and_refused(self):
+        self.setUp_t2()
+        code = telefon_ich.add_number(self.uid, "0170 1234567")
+        self.assertEqual(telefon_ich.try_code("01701234567", code)[0], "ok")
+        helpers.set_config(telefon=True, telefon_gaeste=False, telefon_aussen=True, telefon_max=1, speaker_id=False,
+                           deny={"telefon": [self.blocked]})
+        self.addCleanup(lambda: helpers.set_config(telefon=False, telefon_aussen=False, telefon_gaeste=False, deny={}))
+        helpers.TTS_TEXT.clear()
+
+        async def hang(a, pbx, cid, pt_, to):
+            pbx.t.sendto(ack_or_bye("BYE", cid, a.port, 2), to)
+            await self._until(lambda: cid not in a.calls)
+            pt_.close()
+
+        async def body(a, pbx, port):
+            out = {}
+            st, pt_, sr, to = await self._open(a, pbx, "+491701234567", "o1")      # the confirmed number, international
+            call = a.calls.get("o1")
+            out["known"] = (st, call.mode, call.uid, call.shared)
+            await asyncio.sleep(0.4)
+            await hang(a, pbx, "o1", pt_, to)
+            out["unknown_off"], *_ = await self._open(a, pbx, "01709999999", "o2")
+            out["hidden_off"], *_ = await self._open(a, pbx, "anonymous", "o3")
+            helpers.set_config(telefon=True, telefon_gaeste=True, telefon_aussen=True, telefon_max=1, speaker_id=False)
+            st, pt_, sr, to = await self._open(a, pbx, "01709999999", "o4")
+            call = a.calls.get("o4")
+            out["guest"] = (st, call.mode, call.uid)
+            await hang(a, pbx, "o4", pt_, to)
+            with mock.patch.object(telefon, "GUESTS", 0):
+                out["guest_full"], *_ = await self._open(a, pbx, "01708888888", "o5")
+            helpers.set_config(telefon=True, telefon_gaeste=True, telefon_aussen=False, telefon_max=1, speaker_id=False)
+            out["switch_off"], *_ = await self._open(a, pbx, "01701234567", "o6")
+            return out
+        with _quiet() as log:
+            out = self.run_with_pbx(body)
+        self.assertEqual(out["known"], (200, "extern", self.uid, False))
+        self.assertEqual((out["unknown_off"], out["hidden_off"]), (603, 603))
+        self.assertEqual(out["guest"], (200, "extern", ""))
+        self.assertEqual((out["guest_full"], out["switch_off"]), (603, 603))
+        self.assertIn("telefon: anruf extern bekannt als Profil ", log.text)
+        self.assertIn("telefon: anruf extern unbekannt abgelehnt", log.text)
+        self.assertIn("telefon: anruf extern unbekannt als gast", log.text)
+        for nr in ("0170", "+49", "anonymous"):
+            self.assertNotIn(nr, log.text)                        # an external number never in the log
+        self.assertFalse(any("Tele Toni" in t for t in helpers.TTS_TEXT))   # a forged number learns no name
+        self.assertIn("extern", {c["art"] for c in telefon_ich.calls(self.uid)})
+
+
 class OwnNumbersAndPin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

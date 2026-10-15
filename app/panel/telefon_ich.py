@@ -50,7 +50,7 @@ FAILS = 3                       # wrong PINs at one phone in FAIL_WINDOW ...
 LOCK = 30 * 60                  # ... and no PIN there for this long
 KEEP_CALLS = 50
 ROUNDS = 100_000                # PBKDF2 rounds of the PIN hash
-ARTEN = ("intern", "gemeinsam", "bestaetigung")
+ARTEN = ("intern", "gemeinsam", "extern", "bestaetigung")
 
 _lock = threading.Lock()
 _fails = {}                     # hashed phone number -> [times]

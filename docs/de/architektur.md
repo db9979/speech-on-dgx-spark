@@ -981,7 +981,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 
 - Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss.
 - Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten.
-- Anrufe von außen weist er ab (eine spätere Stufe bringt sie); Logs und Live nennen nur interne Nummern, nie eine von außen. Nur eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, nimmt er an: der Code (4 Ziffern, 15 Minuten, 3 Versuche) wird getippt, dann legt er auf.
+- Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn (4 Ziffern, 15 Minuten, 3 Versuche), dann legt er auf. Mit „Anrufe von außen“ wählt eine bestätigte Nummer ihr Profil, Persönliches aber nur bei sicherer Stimme oder PIN, weil sich Nummern fälschen lassen; mit „Gäste“ auch unbekannte Nummern als Gast, höchstens 20 am Tag. Logs und Live nennen nie eine Nummer von außen.
 - Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. 3 falsche in 15 Minuten sperren sie an diesem Telefon 30 Minuten. Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.
 
 #### Zahlen (aus dem Code)
@@ -1001,7 +1001,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).
 - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort.
 - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.
-- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen.
+- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Anrufe von außen, unbekannte Anrufer als Gast.
 - Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Telefonate löschen.
 
 #### Was du siehst
@@ -1025,6 +1025,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `handle`: nur erlaubte Adressen, höchstens so viele ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: Ton zu Text und Text zu Ton ([Schritt 7](#kn-lautsprecher-s7), [Schritt 11](#kn-lautsprecher-s11))
 - `app/panel/telefon.py` `Call.start`: wer anruft: intern, Profil, gesperrt, besetzt ([Schritt 5](#kn-lautsprecher-s5))
+- `app/panel/telefon.py` `Call.outside`: von außen: Code, bekannte Nummer, Gast ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/telefon.py` `Call.pin`: Telefon-PIN prüfen, Sperre ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon_ich.py` `try_code`: Code einer eigenen Nummer ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/telefon_ich.py` `pin_attempt`: PIN je Telefon zählen und sperren ([Schritt 9](#kn-lautsprecher-s9))

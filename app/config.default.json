@@ -292,6 +292,7 @@
     "telefon": false,
     "telefon_ton": "hd",
     "telefon_gaeste": false,
+    "telefon_aussen": false,
     "telefon_max": 1,
     "telegram_api": "",
     "telegram_panel_url": "",

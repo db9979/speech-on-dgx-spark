@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.628** Telefon T3: Anrufe von außen über bestätigte Nummern, unbekannte als Gast; Telefon-Schalter griffen vorher nicht
 - **V01.0.627** Telefon T2: Ich → Telefon mit eigenen Rufnummern (per Code bestätigt), Telefon-PIN und Telefonate
 - **V01.0.626** Telefon T1: den Spark vom Telefon im Haus anrufen (FRITZ!Box oder andere SIP-Anlage), Einrichtung mit Vorlagen, Suche und Prüfung
 - **V01.0.625** Rot-Fix: Notbetrieb-Schalter nur bei Spark teilen sichtbar
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.622** Spark teilen: Notbetrieb mit Parakeet, feste Befehle ohne Sprachmodell
 - **V01.0.621** Zustand → Technik: Überblick in Zonen (Geräte, Spark, Heimnetz, Internet), Linien leuchten erst beim Anklicken, Kästen „Spark teilen“ und „Dienste im Internet“
 - **V01.0.620** Zustand → Monitoring: neue breite Kachel „Antworten pro Stunde“ mit Säulen der letzten 24 Stunden, auch in der iPhone-App
-- **V01.0.619** Spark teilen: Anleitung und Hinweis nach dem Umzug unter Zustand → Update
 - **V01.0.616** Spark teilen: Kopplung mit Code (`speech-spark teilen code` und `koppeln`)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

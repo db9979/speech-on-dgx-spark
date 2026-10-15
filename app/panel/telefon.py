@@ -1,4 +1,4 @@
-"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufen T1 und T2). The Spark signs in at the home's telephone system
+"""Telefon: den Spark anrufen (plan plaene/telefon-anruf.md, Stufen T1 bis T3). The Spark signs in at the home's telephone system
 (FRITZ!Box or any SIP PBX) as an IP phone; a handset in the house calls its internal number (FRITZ!Box: **620) and talks
 to it like to an own speaker: question, answer, "Stopp" or #, hang up.
 
@@ -13,8 +13,12 @@ Who is calling (fixed rules here, never the model):
                                             no clear voice: questions and answers as a guest
     internal number not assigned            the Spark says so and hangs up (the admin sees the number in step 4);
                                             with chat.telefon_gaeste: questions and answers as a guest
-    external number                         refused (T3 brings calls from outside); only an own number waiting for
-                                            its code (Ich → Telefon, telefon_ich.py) is taken to type that code
+    external number waiting for its code    taken only to type that code (Ich → Telefon, telefon_ich.py)
+    external, a confirmed own number        with chat.telefon_aussen: that profile, but personal things only with a
+                                            sure voice or the Telefon-PIN (a shown number can be forged); no name
+                                            in the greeting
+    external, unknown or hidden             with chat.telefon_aussen and chat.telefon_gaeste: a guest (at most
+                                            GUESTS a day); else refused. A PIN makes no profile out of it.
 A Telefon-PIN (telefon_ich.py, digits and #) stands for the voice for the rest of the call: on an assigned handset
 for its profile, at a shared phone for the profile whose PIN it is. Wrong ones lock the PIN at that phone.
 
@@ -72,6 +76,7 @@ MAX_CALL = 15 * 60              # one call ends after this
 QUIET_ASK, QUIET_END = 20, 10   # silence: "Noch etwas?" after the first, hang up after the second
 MAX_CALLS = 2                   # chat.telefon_max at most
 SEEN_MAX = 10
+GUESTS = 20                     # calls from unknown numbers outside a day at most (chat.telefon_gaeste and _aussen)
 UA = "Speech-on-DGX-Spark"
 METHODS = ("INVITE", "ACK", "BYE", "CANCEL", "OPTIONS", "INFO", "NOTIFY")
 DTMF = "0123456789*#ABCD"
@@ -88,8 +93,9 @@ def settings(c=None):
         most = max(1, min(MAX_CALLS, int(ch.get("telefon_max") or 1)))
     except (TypeError, ValueError):
         most = 1
-    return {"on": features.admin_on("telefon", c), "ton": "schmal" if ch.get("telefon_ton") == "schmal" else "hd",
-            "gaeste": features.admin_on("telefongast", c), "max": most}
+    # features.admin_on takes the chat section, not the whole config
+    return {"on": features.admin_on("telefon", ch), "ton": "schmal" if ch.get("telefon_ton") == "schmal" else "hd",
+            "gaeste": features.admin_on("telefongast", ch), "aussen": features.admin_on("telefonaussen", ch), "max": most}
 
 
 def _read():
@@ -374,7 +380,7 @@ def choose(sdp, ton="hd"):
 
 # ---------------------------------------------------------------- numbers of today (Live, admin page)
 _today = DayCounter(angenommen=0, abgelehnt=0, besetzt=0, fragen=0, sekunden=0, fremd=0, kaputt=0, pin=0, pinfalsch=0,
-                    bestaetigt=0)
+                    bestaetigt=0, extern=0, gaeste=0)
 
 
 def _bump(k, n=1):
@@ -604,7 +610,7 @@ class Call:
     def __init__(self, agent, invite, addr, number, uid, shared, sdp, pt, known=True, mode=""):
         self.agent, self.invite, self.addr = agent, invite, addr
         self.number, self.uid, self.shared, self.known = number, uid, shared, known
-        self.mode = mode                                  # "" or "bestaetigen" (an own number confirms its code)
+        self.mode = mode                                  # "", "extern" (from outside) or "bestaetigen" (a code)
         self.cid = invite.get("call-id")
         self.tag = secrets.token_hex(6)
         self.remote = sdp
@@ -651,44 +657,32 @@ class Call:
             _bump("abgelehnt")
             print("telefon: anruf abgelehnt, notaus", flush=True)
             return
+        mode, uid, shared, known = "", "", False, True
         if not internal(number, agent.z.get("anlage")):
-            # calls from outside come with stage T3; until then only to confirm an own number (Ich → Telefon) with
-            # the code the page shows; a hidden number is never internal and never waits for a code
-            import telefon_ich
-            who = telefon_ich.pending_for(number) if number else ""
-            if not who or not features.allowed("telefon", who):
+            mode, uid = Call.outside(number, s)
+            if mode is None:
                 agent.send(response(msg, 603, "Decline"), addr)
                 _bump("abgelehnt")
-                print("telefon: anruf extern abgelehnt", flush=True)
                 return
-            sdp = sdp_parse(msg.body)
-            pt = choose(sdp, s["ton"]) if sdp else None
-            if not sdp or pt is None:
-                agent.send(response(msg, 488, "Not Acceptable Here"), addr)
-                _bump("abgelehnt")
-                print("telefon: anruf abgelehnt, keine gemeinsame tonart", flush=True)
-                return
-            call = Call(agent, msg, addr, number, who, False, sdp, pt, True, mode="bestaetigen")
-            agent.calls[call.cid] = call
-            call.tasks.append(asyncio.ensure_future(call.run()))
-            return
-        entry = nummern().get(number)
-        if entry and entry.get("uid") and not profiles.by_id(entry["uid"]):
-            entry = None                       # its profile is gone: as not assigned
-        if not entry:
-            seen(number)
-        uid, shared = "", False
-        if entry:
-            shared = not entry.get("uid")
-            if entry.get("uid"):
-                p = profiles.by_id(entry["uid"])
-                if p and features.allowed("telefon", p["id"]):
-                    uid = p["id"]
-                else:
-                    agent.send(response(msg, 403, "Forbidden"), addr)
-                    _bump("abgelehnt")
-                    print(f"telefon: anruf intern {number} abgelehnt, telefon fuer {_log_name(p['id'])} gesperrt", flush=True)
-                    return
+            known = bool(uid) or mode == "bestaetigen"
+        else:
+            entry = nummern().get(number)
+            if entry and entry.get("uid") and not profiles.by_id(entry["uid"]):
+                entry = None                       # its profile is gone: as not assigned
+            if not entry:
+                seen(number)
+            known = bool(entry)
+            if entry:
+                shared = not entry.get("uid")
+                if entry.get("uid"):
+                    p = profiles.by_id(entry["uid"])
+                    if p and features.allowed("telefon", p["id"]):
+                        uid = p["id"]
+                    else:
+                        agent.send(response(msg, 403, "Forbidden"), addr)
+                        _bump("abgelehnt")
+                        print(f"telefon: anruf intern {number} abgelehnt, telefon fuer {_log_name(p['id'])} gesperrt", flush=True)
+                        return
         sdp = sdp_parse(msg.body)
         pt = choose(sdp, s["ton"]) if sdp else None
         if not sdp or pt is None or not lan_ip(sdp["ip"]) and sdp["ip"] != agent.pbx[0]:
@@ -696,9 +690,43 @@ class Call:
             _bump("abgelehnt")
             print("telefon: anruf abgelehnt, keine gemeinsame tonart oder adresse nicht im heimnetz", flush=True)
             return
-        call = Call(agent, msg, addr, number, uid, shared, sdp, pt, bool(entry))
+        if mode == "extern":
+            _bump("extern")
+        call = Call(agent, msg, addr, number, uid, shared, sdp, pt, known, mode=mode)
         agent.calls[call.cid] = call
         call.tasks.append(asyncio.ensure_future(call.run()))
+
+    @staticmethod
+    def outside(number, s):
+        """A call from outside (fixed rules, never the model; the number is never logged):
+            an own number waiting for its code (Ich → Telefon)          ("bestaetigen", that profile)
+            a confirmed own number, with "Anrufe von außen" on          ("extern", that profile): personal things
+                                                                        only with a sure voice or the Telefon-PIN
+            any other or a hidden number, with also "Gäste annehmen"    ("extern", ""): a guest, at most GUESTS a day
+            else                                                        (None, "") refused"""
+        import telefon_ich
+        who = telefon_ich.pending_for(number) if number else ""
+        if who and features.allowed("telefon", who):
+            return "bestaetigen", who
+        if not s["aussen"]:
+            print("telefon: anruf extern abgelehnt", flush=True)
+            return None, ""
+        owner = telefon_ich.owner_of(number) if number else ""
+        if owner and features.allowed("telefon", owner):
+            print(f"telefon: anruf extern bekannt als {_log_name(owner)}", flush=True)
+            return "extern", owner
+        if owner:
+            print(f"telefon: anruf extern abgelehnt, telefon fuer {_log_name(owner)} gesperrt", flush=True)
+            return None, ""
+        if not s["gaeste"]:
+            print("telefon: anruf extern unbekannt abgelehnt", flush=True)
+            return None, ""
+        if _today.counts()["gaeste"] >= GUESTS:
+            print(f"telefon: anruf extern unbekannt abgelehnt, schon {GUESTS} gaeste heute", flush=True)
+            return None, ""
+        _bump("gaeste")
+        print("telefon: anruf extern unbekannt als gast", flush=True)
+        return "extern", ""
 
     def contact(self):
         return [f"Contact: <sip:{self.agent.z.get('user', 'spark')}@{self.agent.local}:{self.agent.port}>"]
@@ -765,6 +793,8 @@ class Call:
             _bump("angenommen")
             if self.mode == "bestaetigen":      # an external number: never in the log
                 print(f"telefon: anruf extern zum bestaetigen einer nummer fuer {_log_name(self.uid)}, ton {self.codec.name}", flush=True)
+            elif self.mode == "extern":
+                print(f"telefon: anruf extern angenommen als {_log_name(self.uid) if self.uid else 'gast'}, ton {self.codec.name}", flush=True)
             else:
                 print(f"telefon: anruf intern {self.number} als {_log_name(self.uid) if not self.shared else 'gemeinsames telefon'}"
                       + (", nicht zugeordnet" if not self.known else "") + f", ton {self.codec.name}", flush=True)
@@ -853,7 +883,7 @@ class Call:
     def keep(self, secs):
         """The call under Ich → Telefon → Meine Telefonate of each profile it was for (no number, no words)."""
         import telefon_ich
-        art = "bestaetigung" if self.mode else "gemeinsam" if self.shared else "intern"
+        art = "bestaetigung" if self.mode == "bestaetigen" else "extern" if self.mode else "gemeinsam" if self.shared else "intern"
         for uid in ({self.uid} if self.uid else set()) | ({self.pin_uid} if self.pin_uid else set()) | self.voices:
             if profiles.by_id(uid):
                 try:
@@ -961,7 +991,7 @@ class Call:
 
     async def converse(self):
         name = ""
-        if self.uid and not self.shared:
+        if self.uid and not self.shared and self.mode != "extern":   # from outside the number may be forged: no name
             p = profiles.by_id(self.uid)
             name = (p or {}).get("name", "")
         s = settings()
@@ -1053,6 +1083,9 @@ class Call:
             p = profiles.by_id(who) or {}
             await self.say(f"Danke, {p.get('name', '')}. Jetzt weiß ich, dass du es bist." if self.shared
                            else "Danke. Jetzt weiß ich, dass du es bist.")
+        elif res == "none" and not cands:
+            print("telefon: pin getippt, kein profil an diesem telefon", flush=True)
+            await self.say("Hier gilt keine Telefon-PIN. Sie geht nur an deinem eigenen Mobilteil oder von deiner bestätigten Nummer.")
         elif res == "none":
             print("telefon: pin getippt, keine pin eingerichtet", flush=True)
             await self.say("Hier ist keine Telefon-PIN eingerichtet. Die PIN legst du unter Ich, Telefon fest.")
@@ -1353,7 +1386,7 @@ def for_live():
     t = _today.counts()
     return {"on": True, "ok": st["ok"], "calls": st["calls"], "angenommen": t["angenommen"],
             "abgelehnt": t["abgelehnt"] + t["besetzt"], "fragen": t["fragen"], "minuten": t["sekunden"] // 60, "fremd": t["fremd"],
-            "pin": t["pin"], "pinfalsch": t["pinfalsch"], "bestaetigt": t["bestaetigt"]}
+            "pin": t["pin"], "pinfalsch": t["pinfalsch"], "bestaetigt": t["bestaetigt"], "extern": t["extern"], "gaeste": t["gaeste"]}
 
 
 def probes():

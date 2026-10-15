@@ -70,7 +70,7 @@ if($('telanlage')){
 // confirmed with a code typed on a call from that number, the Telefon-PIN (fresh code, never shown), the handsets the
 // admin assigned (read only) and the profile's calls (when, how long, how many questions; delete one or all).
 let TEL_ON=false;
-const TEL_ART={intern:['Mobilteil','Handset'],gemeinsam:['Gemeinsames Telefon','Shared phone'],bestaetigung:['Nummer bestätigt','Number confirmed']};
+const TEL_ART={intern:['Mobilteil','Handset'],gemeinsam:['Gemeinsames Telefon','Shared phone'],extern:['Von außen','From outside'],bestaetigung:['Nummer bestätigt','Number confirmed']};
 const telWhen=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const telDur=s=>s<60?t(`${s} s`,`${s} s`):t(`${Math.round(s/60)} min`,`${Math.round(s/60)} min`);
 function telMeNums(d){const now=Date.now()/1000;

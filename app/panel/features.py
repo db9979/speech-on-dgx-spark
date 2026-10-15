@@ -274,6 +274,9 @@ FEATURES = (
     # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
     F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
       parent="telefon", guide="telefon"),
+    # calls from outside through the PBX: confirmed own numbers (Ich → Telefon) as their profile, with Gäste also unknown ones
+    F("telefonaussen", "Telefon: Anrufe von außen", "Phone: calls from outside", "home", ("telefon_aussen", "telefon"),
+      parent="telefon", guide="telefon"),
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
