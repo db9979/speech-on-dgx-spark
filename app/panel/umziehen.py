@@ -132,15 +132,10 @@ def main(argv):
             print("teilen: umzug befehl unbekannt (umziehen.py packen|auspacken)", file=sys.stderr)
             return 2
     except (ValueError, OSError, EOFError) as e:
-        # where it stopped, in fixed words (kind, file, function, line), never the message: it may name a file of a profile
-        import traceback
-        f = traceback.extract_tb(e.__traceback__)[-1]
-        where = f"{type(e).__name__} {os.path.basename(f.filename)} {f.name} {f.lineno}"
-        c = e.__context__   # a check turned into ValueError (system._check_config): also the check that said no
-        if c is not None and c.__traceback__ is not None:
-            g = traceback.extract_tb(c.__traceback__)[-1]
-            where += f" | aus {type(c).__name__} {os.path.basename(g.filename)} {g.name} {g.lineno}"
-        print(f"teilen: umzug abgelehnt | {where}", file=sys.stderr, flush=True)
+        # where it stopped, never the message; a check turned into ValueError (system._check_config) also names the
+        # check that said no
+        from common import fehler_stelle
+        print(f"teilen: umzug abgelehnt | {fehler_stelle(e)}", file=sys.stderr, flush=True)
         return 1
     return 0
 

@@ -365,9 +365,11 @@ def _m_dienst(now):
 
 
 def _m_speicher(now):
-    from common import mem_available_gib
+    """The memory where the models run (monitor.system_stats: the model computer's with Spark teilen, V01.0.645: the
+    Raspberry Pi's 8 GB made a case "Speicher knapp"); no number, no case."""
+    from monitor import system_stats
     reserve = float(load_config().get("memory", {}).get("reserve_gib", 10))
-    free = mem_available_gib()
+    free = system_stats().get("mem_avail_gib")
     if free is not None and free < reserve:
         return "", f"{free:.1f} GiB frei, Reserve {reserve:.0f} GiB"
     return None
@@ -2528,7 +2530,8 @@ async def loop():
         try:
             await round_once()
         except Exception as e:
-            print("berater: loop", type(e).__name__, flush=True)
+            from common import fehler_stelle   # V01.0.645: "loop KeyError" alone did not say where
+            print("berater: loop", fehler_stelle(e), flush=True)
 
 
 # ---------------------------------------------------------------- routes: admin (Zustand → Verbessern)
@@ -2636,7 +2639,12 @@ def admin_get(request: Request):
 async def admin_run(request: Request):
     guard.limit(request, "beraterrun", None, True)
     _need_on()
-    made = await round_once(force=True)
+    try:
+        made = await round_once(force=True)
+    except Exception as e:
+        from common import fehler_stelle
+        print("berater: jetzt", fehler_stelle(e), flush=True)
+        raise HTTPException(500, "Nachsehen fehlgeschlagen, die Stelle steht im Log (berater: jetzt).")
     return dict(overview(), made=made)
 
 

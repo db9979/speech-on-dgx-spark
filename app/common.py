@@ -375,6 +375,18 @@ def estimate_gib(model_id):
     return modelle.need_gib(model_id)
 
 
+def fehler_stelle(e):
+    """Where an exception stopped, in fixed words (kind, file, function, line) for a log line, never its message (it
+    may name a profile's file or words); with the exception it came from ("aus ...") when there is one."""
+    f = traceback.extract_tb(e.__traceback__)[-1] if e.__traceback__ is not None else None
+    out = type(e).__name__ + (f" {os.path.basename(f.filename)} {f.name} {f.lineno}" if f else "")
+    c = e.__context__
+    if c is not None and c.__traceback__ is not None:
+        g = traceback.extract_tb(c.__traceback__)[-1]
+        out += f" | aus {type(c).__name__} {os.path.basename(g.filename)} {g.name} {g.lineno}"
+    return out
+
+
 def mem_available_gib(key="MemAvailable"):
     """GiB from /proc/meminfo: what is free for new work (MemAvailable), or with key="MemTotal" all of it."""
     with open("/proc/meminfo") as f:

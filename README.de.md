@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.645** Verbessern: Speicher von tars, Fehler nennen ihre Stelle im Log
 - **V01.0.644** Leistung messen zeigt den Speicher von tars; eigene Lautsprecher-Adresse ohne Fehlermeldung
 - **V01.0.643** Panel-Rechner (Raspberry Pi): die Installation führt nur den Rauchtest aus; pip nur von PyPI, ohne pip.conf
 - **V01.0.642** Fix: laufen die Modelle auf einem anderen Rechner, zeigt das Panel dessen Speicher (kein falsches „nur noch 7 GiB frei“ vom Pi)
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.638** Umzug: Lautsprecher-Adresse zeigt danach auf den Pi
 - **V01.0.637** Pi: Sprachmodell-Adresse zeigt nach dem Umzug auf das LLM-Tor von tars
 - **V01.0.636** Umzug auf den Pi: Einstellung der Spracherkennung wird angepasst statt abgelehnt
-- **V01.0.635** Umzug: das Log nennt die Einstellungs-Prüfung, die ablehnt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

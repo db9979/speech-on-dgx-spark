@@ -11,10 +11,12 @@ depends on the wall clock: times are passed in.
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import asyncio
+import io
 import json
 import os
 import types
 import unittest
+from contextlib import redirect_stdout
 from unittest import mock
 
 from fastapi.testclient import TestClient
@@ -528,6 +530,29 @@ class Melders(Base):
             self.assertIsNone(berater._m_unklar(T0))
         helpers.set_config(berater_off=["quote", "unklar", "langsam", "fehler", "qualitaet", "dienst", "speicher"])
         self.assertEqual(berater.melders(T0), [])
+
+    def test_memory_of_the_computer_with_the_models(self):
+        """V01.0.645: on the Raspberry Pi the melder read the Pi's own 8 GB and opened "Speicher knapp"."""
+        with mock.patch("monitor.system_stats", return_value={"mem_avail_gib": 6.7}):
+            self.assertEqual(berater._m_speicher(T0)[0], "")
+        with mock.patch("monitor.system_stats", return_value={"mem_avail_gib": None}):   # model computer silent
+            self.assertIsNone(berater._m_speicher(T0))
+        with mock.patch("monitor.system_stats", return_value={"mem_avail_gib": 40.0}):
+            self.assertIsNone(berater._m_speicher(T0))
+
+    def test_a_failed_round_names_where(self):
+        """V01.0.645: on the Pi "Jetzt nachsehen" answered "Internal Server Error" and the log said only "loop KeyError";
+        both lines now name file, function and line, never a message."""
+        self.on()
+
+        def broken(**kw):
+            {}["geheim"]
+        with mock.patch.object(berater, "round_once", side_effect=lambda **kw: broken()), \
+                redirect_stdout(io.StringIO()) as out:
+            r = ADMIN.post("/api/admin/berater/run")
+        self.assertEqual(r.status_code, 500)
+        self.assertRegex(out.getvalue(), r"berater: jetzt KeyError test_einstellungs_assistent\.py broken \d+")
+        self.assertNotIn("geheim", out.getvalue() + r.text)
 
     def test_same_finding_is_not_counted_again(self):
         """V01.0.492 wrote "faelle: melder | - | fehler | 9×" every 30 minutes for one unchanged finding."""
