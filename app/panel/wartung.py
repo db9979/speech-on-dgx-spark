@@ -543,7 +543,13 @@ USAGE = "speech-spark pause [llm|asr|tts|bild|alles][,…] [Minuten]  ·  speech
 
 
 def cli(args, now=None):
-    """Runs as the panel's service user (speech-spark.sh). Returns (exit code, German line)."""
+    """Runs as the panel's service user (speech-spark.sh). Returns (exit code, German line).
+    On the model computer no panel loop looks at the parts at the end of the time (tick), so a pause there ends with
+    its time: one left behind by an aborted `modelle messen` would otherwise block every later pause and its end."""
+    now = time.time() if now is None else now
+    s = _local()
+    if s["on"] and now >= s["until"] and model_side():
+        end("abgelaufen", now)
     if args[:1] == ["status"]:
         s = state()
         if not s["on"]:

@@ -91,8 +91,16 @@ def _states(units):
 
 
 def pause():
-    """This computer's Wartungspause as the file says (only PAUSE_KEYS); the panel checks it (wartung._clean)."""
+    """This computer's Wartungspause as the file says (only PAUSE_KEYS); the panel checks it (wartung._clean).
+    No panel here ends it after its time (wartung.tick), so the Wärter drops a pause whose time is over."""
     d = read_json(WARTUNG_FILE, {})
+    if isinstance(d, dict) and d.get("on") is True and isinstance(d.get("until"), (int, float)) and d["until"] <= time.time():
+        try:
+            os.remove(WARTUNG_FILE)
+            print("waerter: pause abgelaufen", flush=True)
+        except OSError:
+            print("waerter: pause abgelaufen fehler", flush=True)
+        return {}
     return {k: d[k] for k in PAUSE_KEYS if k in d} if isinstance(d, dict) and d.get("on") is True else {}
 
 

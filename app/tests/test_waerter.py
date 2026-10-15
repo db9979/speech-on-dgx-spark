@@ -294,7 +294,7 @@ class Pause(Base):
 
     def test_the_waerter_reports_only_what_the_panel_needs(self):
         with open(common.WARTUNG_FILE, "w") as f:
-            json.dump({"on": True, "parts": ["llm"], "since": 1.0, "until": 2.0, "by": "kommandozeile",
+            json.dump({"on": True, "parts": ["llm"], "since": time.time(), "until": time.time() + 600, "by": "kommandozeile",
                        "channel": "kommandozeile"}, f)
         d = self.post(body()).json()
         self.assertEqual(set(d["pause"]), {"on", "parts", "since", "until", "channel"}, "never who")
@@ -305,6 +305,32 @@ class Pause(Base):
         self.assertFalse(os.path.exists(common.WARTUNG_FILE))
         self.assertIn("waerter: weiter ok", out.getvalue())
         self.assertIn("waerter: weiter keine", out.getvalue())
+
+    def test_a_pause_whose_time_is_over_ends_on_the_model_computer(self):
+        # tars 2026-10-15: a pause left behind (aborted `modelle messen`) stayed on for 150 minutes; no panel there ends
+        # it after its time, and `modelle llm uebernehmen` then neither set nor ended one
+        now = time.time()
+        with open(common.WARTUNG_FILE, "w") as f:
+            json.dump({"on": True, "parts": ["llm"], "since": now - 9000, "until": now - 60, "channel": "kommandozeile"}, f)
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.post(body()).json()["pause"], {}, "the Wärter reports none")
+        self.assertFalse(os.path.exists(common.WARTUNG_FILE))
+        self.assertIn("waerter: pause abgelaufen", out.getvalue())
+        c = common.load_config()
+        c["models"]["host"] = "127.0.0.1"
+        c["api"]["tls_listen"] = "192.168.178.171"
+        helpers.write_config(c)
+        with open(common.WARTUNG_FILE, "w") as f:
+            json.dump({"on": True, "parts": ["llm"], "since": now - 9000, "until": now - 60, "channel": "kommandozeile"}, f)
+        self.w._cache.update(key=None, state=None)
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.w.cli(["status"], now=now)[1], "Keine Wartungspause.", "the shell sees none either")
+        self.assertIn("abgelaufen", out.getvalue())
+        self.assertFalse(os.path.exists(common.WARTUNG_FILE))
+        with open(common.WARTUNG_FILE, "w") as f:
+            json.dump({"on": True, "parts": ["llm"], "since": now - 60, "until": now + 600, "channel": "kommandozeile"}, f)
+        self.w._cache.update(key=None, state=None)
+        self.assertIn("noch 10 min", self.w.cli(["status"], now=now)[1], "a pause whose time runs stays")
 
     def test_its_pause_counts_here_while_its_time_runs(self):
         now = time.time()
