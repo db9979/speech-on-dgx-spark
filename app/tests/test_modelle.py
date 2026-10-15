@@ -10,6 +10,8 @@ import io
 import json
 import os
 import re
+import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -365,6 +367,21 @@ class Kommando(unittest.TestCase):
         rng = re.search(r"sed -n '2,(\d+)p'", self.sh).group(1)
         self.assertIn("speech-spark modelle messen", "\n".join(head[1:int(rng)]))
         self.assertTrue(head[int(rng)].startswith("set -euo"))
+
+    def test_few_kernel_compilers_at_a_time(self):
+        # Dominik 2026-10-15: the first start ran one CUDA compiler per core and the kernel killed it (out of memory)
+        for k in ("MAX_JOBS", "NVCC_THREADS", "TORCHINDUCTOR_COMPILE_THREADS"):
+            self.assertTrue(1 <= int(modelle.KOMPILIEREN[k]) <= 4, k)
+        out = subprocess.run([sys.executable, os.path.join(helpers.APP, "modelle.py"), "kompilieren"],
+                             capture_output=True, text=True, timeout=60).stdout.split()
+        self.assertEqual(out, [f"{k}={v}" for k, v in modelle.KOMPILIEREN.items()])
+        mess = self.body("mess_engine")
+        self.assertIn("as_panel_user ../modelle.py kompilieren", mess)
+        self.assertIn('"${env[@]}"', mess.split("vllm\" serve")[0])
+        with open(os.path.join(helpers.APP, "engine.sh")) as f:
+            eng = f.read()
+        self.assertIn('modelle.py" kompilieren', eng)
+        self.assertLess(eng.index('modelle.py" kompilieren'), eng.index("elif [ \"$ROLE\" = asr ]"))
 
     def test_qwen38_comes_back_and_stays_installed(self):
         intern = self.body("cmd_messen_intern")

@@ -67,6 +67,10 @@ PARSER = re.compile(r"^[a-z0-9_]{2,32}$")
 QUANT = ("fp8",)
 CHAT = "/v1/chat/completions"   # the engine itself on its measuring port, never the panel's model (llm.py)
 GESUND_S = 1200                  # an engine has this long to load (first start compiles kernels)
+# the first start compiles CUDA kernels for the GB10 (FlashInfer, torch); unbounded it runs one compiler (cicc, about
+# 6 GB each) per CPU core at once and fills the unified memory (Dominik 2026-10-15: OOM kill of cicc while measuring).
+# The engine units and the measurement take these; the compiled kernels stay in the cache under HOME, so it is once.
+KOMPILIEREN = {"MAX_JOBS": "4", "NVCC_THREADS": "1", "TORCHINDUCTOR_COMPILE_THREADS": "4"}
 
 # fixed German questions (TTFT and tokens per second), one tool call, two test pictures
 FRAGEN = ("Erkläre in vier Sätzen, warum der Himmel blau ist.",
@@ -879,6 +883,10 @@ def cli(args, log=print):
             return 0
         if cmd == "venv":
             log(venv(eintrag(args[1]) if args[1] not in ROLLEN else rolle(args[1], load_config())[0]))
+            return 0
+        if cmd == "kompilieren":
+            for k, v in KOMPILIEREN.items():
+                log(f"{k}={v}")
             return 0
         if cmd == "start-args":
             for a in start_args(args[1], load_config()):

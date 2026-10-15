@@ -34,6 +34,8 @@ if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ]; then
   arg() { local i; for i in "${!LLM_ARGS[@]}"; do [ "${LLM_ARGS[$i]}" = "$1" ] && { echo "${LLM_ARGS[$((i + 1))]}"; return; }; done; }
   MODEL=${LLM_ARGS[0]}; PORT=$(arg --port); SEQS=$(arg --max-num-seqs); MEM0=$(arg --gpu-memory-utilization); MEM1=0.0
   export HF_HUB_OFFLINE=1 VLLM_NO_USAGE_STATS=1 DO_NOT_TRACK=1
+  # a few kernel compilers at a time, never one per core (modelle.KOMPILIEREN)
+  while read -r kv; do [[ "$kv" =~ ^[A-Z_]+=[0-9]+$ ]] && export "${kv?}"; done < <("$PY" "$APP_DIR/modelle.py" kompilieren)
 elif [ "$ROLE" = asr ]; then
   # with the Parakeet recognizer (CPU, inside the ASR front end) this engine is not needed
   if [ "$(jq -r '.asr.recognizer // "qwen"' "$CONFIG")" = parakeet ]; then

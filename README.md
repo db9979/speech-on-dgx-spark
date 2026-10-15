@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.593** Fix: model measurement and own engines compile at most 4 kernels at a time (no more out of memory)
 - **V01.0.592** Own models stage E3: move to the own language model and back, qwen38 removed only on command
 - **V01.0.591** Fix: picture wishes with the verb at the end go to painting pictures
 - **V01.0.590** Own models stage E2: LLM-Tor and own vLLM prepared (off until stage E3), Kolibri-1 in the catalog
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.586** Own models stage E0: model catalog and `speech-spark modelle messen`
 - **V01.0.585** Cleanup step 9: no check wrappers, PROJECT LOCK rule
 - **V01.0.584** Cleanup step 8: one register of all state files, one state folder
-- **V01.0.583** Cleanup step 7: setting defaults and choice lists only from the panel
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

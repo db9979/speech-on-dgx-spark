@@ -305,9 +305,11 @@ hf_from_qwen38() {  # $1 = id, $2 = repo, $3 = revision
 
 # one catalog model in its own engine unit, measured, stopped again; returns 3 when it did not work
 mess_engine() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
-  local svc rc=0 args=() extra=() venv
+  local svc rc=0 args=() extra=() venv kv env=()
   svc=$(panel_user)
   [ -n "${3:-}" ] && extra=("$3")
+  # a few kernel compilers at a time (modelle.KOMPILIEREN), else the first start fills the memory
+  while read -r kv; do [[ "$kv" =~ ^[A-Z_]+=[0-9]+$ ]] && env+=("--setenv=$kv"); done < <(as_panel_user ../modelle.py kompilieren)
   mapfile -t args < <(as_panel_user ../modelle.py vllm-args "$1" --port "$MESS_PORT" --revision "$2" "${extra[@]}")
   [ "${#args[@]}" -gt 4 ] || { echo "modelle: messung $1 abgelehnt"; return 2; }
   # the entry's own venv (venv-llm, venv-kolibri); before install.sh --llm the engines' venv measures the others
@@ -320,7 +322,7 @@ mess_engine() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
   systemd-run --quiet --collect --unit="$MESS_ENGINE" -p LogNamespace=speech-spark -p User="$svc" -p Group="$svc" \
     -p WorkingDirectory="$VAR" -p OOMScoreAdjust=500 -p KillMode=control-group -p TimeoutStopSec=30 \
     --setenv=HF_HOME="$VAR/hf" --setenv=HOME="$VAR" --setenv=HF_HUB_OFFLINE=1 --setenv=VLLM_NO_USAGE_STATS=1 \
-    --setenv=DO_NOT_TRACK=1 --setenv=PATH="$venv/bin:/usr/local/cuda/bin:/usr/bin:/bin" \
+    --setenv=DO_NOT_TRACK=1 --setenv=PATH="$venv/bin:/usr/local/cuda/bin:/usr/bin:/bin" "${env[@]}" \
     "$venv/bin/vllm" serve "${args[@]}"
   as_panel_user ../modelle.py messen-lauf "$1" --port "$MESS_PORT" --einheit "$MESS_ENGINE" --revision "$2" "${extra[@]}" || rc=$?
   systemctl stop "$MESS_ENGINE" 2>/dev/null || true
