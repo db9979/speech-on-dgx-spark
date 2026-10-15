@@ -2807,6 +2807,38 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_app_chat_bubbles_use_the_width(self):
+        """Android 2026-10-15 (questions and answers were narrow): in the app view (Android app, phone browser) a
+        long question and a long answer fill the line up to a small gap on the other side, like the iPhone app
+        (padding 16 pt, Spacer 40 pt). The read-again and delete buttons take no room until the message is tapped, and tapping
+        never makes the bubble narrower."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 412, 900)
+                self.assertIn("appview", await pg.evaluate("document.body.className"))
+                long = "Ein langer Satz, der sicher mehr als eine Zeile braucht, damit die Blase so breit wird wie sie darf. " * 3
+                await pg.evaluate("""t=>{const q=chatLog('user',t),a=chatLog('assistant',t);
+                  deletable(q,{role:'user',content:t});deletable(a,{role:'assistant',content:t});document.body.classList.add('apmsgs')}""", long)
+                await pg.wait_for_timeout(300)
+                size = """()=>{const l=$('chatlog'),cs=getComputedStyle(l),w=l.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+                  const b=[...l.querySelectorAll('.msg')].slice(-2).map(m=>m.querySelector('.bubble').getBoundingClientRect().width);
+                  const e=[...l.querySelectorAll('.msg')].slice(-2).map(m=>m.querySelector('.bubble').getBoundingClientRect());
+                  return {w,user:b[0],bot:b[1],gapRight:l.getBoundingClientRect().left+l.clientLeft+l.clientWidth-e[0].right,gapLeft:e[1].left}}"""
+                m = await pg.evaluate(size)
+                self.assertGreaterEqual(m["user"], m["w"] - 48, m)
+                self.assertGreaterEqual(m["bot"], m["w"] - 48, m)
+                self.assertLessEqual(m["gapLeft"], 24, m)   # 20px from the edge, about like the iPhone app (16 pt)
+                self.assertLessEqual(m["gapRight"], 8, m)   # up to the row's edge (left of a scroll bar, if any)
+                # tapped: the buttons show, the bubble keeps its width
+                await pg.click("#chatlog .msg.bot:last-child .bubble")
+                self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#chatlog .msg.bot.sel .mdel')].every(b=>b.offsetParent!==null)"))
+                tapped = await pg.evaluate(size)
+                self.assertGreaterEqual(tapped["bot"], m["bot"] - 1, (m, tapped))
+                self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 1)
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_undo_in_the_admin_log(self):
         """C5 (V01.0.286): the admin log lists the last settings change with its old value; Rückgängig puts it back."""
         helpers.set_config(weather=False)
