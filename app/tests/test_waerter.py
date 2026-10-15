@@ -39,6 +39,10 @@ class FakeRun:
         self.calls.append(cmd)
         if cmd[:2] == ["systemctl", "show"]:
             return 0, SHOW.format(t=int((time.monotonic() - 90) * 1e6))
+        if cmd[:2] == ["systemctl", "is-active"]:
+            return 3, "inactive"
+        if cmd[:2] == ["systemctl", "list-unit-files"]:
+            return 1, ""
         return 0, ""
 
 
@@ -152,12 +156,114 @@ class Settings(Base):
             steuer.status(c, now=1010.0)                     # cached: nothing again
         self.assertEqual(out.getvalue().count("steuer: einstellen abgleich ok"), 1)
 
+    def test_the_model_choice_goes_the_other_way(self):
+        # B4c: which model runs is the model computer's; it reports it and the panel takes it over
+        c = common.load_config()
+        self.assertEqual(self.post(body()).json()["modellwahl"], common.model_choice(c))
+        for sec, keys in common.MODEL_CHOICE.items():
+            self.assertFalse(set(keys) & set(common.model_settings(c).get(sec, {})), sec)
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.post(body("einstellen", daten={"asr": {"recognizer": "parakeet"}})).status_code, 400)
+        panel = json.loads(json.dumps(c))
+        panel["models"]["host"] = "192.168.178.171"
+        got = common.model_choice(c)
+        got["tts"]["model"] = "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
+        got["llm"]["modell"] = "qwen3-30b-a3b"
+        steuer._status["wahl"] = None
+        self.addCleanup(steuer._status.update, wahl=None)
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertTrue(steuer.modellwahl(panel, got))
+            self.assertFalse(steuer.modellwahl(panel, got), "the same report once")
+        now = common.load_config()
+        self.assertEqual((now["tts"]["model"], now["llm"]["modell"]), ("Qwen/Qwen3-TTS-12Hz-0.6B-Base", "qwen3-30b-a3b"))
+        self.assertIn("steuer: modellwahl uebernommen 2", out.getvalue())
+
+    def test_a_strange_model_choice_is_not_taken(self):
+        c = common.load_config()
+        for sec, k, v in (("tts", "model", "evil/Qwen3-TTS-x"), ("asr", "model", 5), ("llm", "enabled", "ja"),
+                          ("llm", "modell", "../../etc"), ("tts", "port", 1), ("chat", "llm_url", "http://x")):
+            got = common.model_choice(c)
+            got.setdefault(sec, {})[k] = v
+            with self.assertRaises(ValueError, msg=(sec, k)):
+                common.model_choice_take(c, got, common.shipped())
+            steuer._status["wahl"] = None
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertFalse(steuer.modellwahl(c, got))
+            self.assertIn("steuer: modellwahl abgelehnt", out.getvalue())
+        steuer._status["wahl"] = None
+        self.assertEqual(common.load_config(), self.old)
+
     def test_logs_of_a_model_unit(self):
         with mock.patch.object(tarswart, "journal", lambda unit, n, fmt: f"{unit} {n}\n"), \
                 redirect_stdout(io.StringIO()):
             self.assertEqual(self.post(body("logs", ["tts-engine", "50"])).json()["text"], "speech-spark-tts-engine 50\n")
             for args in (["panel", "5"], ["tts", "99999"], ["tts", "-1"], ["tts"]):
                 self.assertEqual(self.post(body("logs", args)).status_code, 400, args)
+
+
+class Modelle(Base):
+    """B4c: Zustand → Modelle with the models on another computer: its numbers, its switch, its own models."""
+    def setUp(self):
+        super().setUp()
+        import features
+        import modellseite
+        import modelle
+        self.m, self.seite = modelle, modellseite
+        steuer._client = self.app
+        self.addCleanup(setattr, steuer, "_client", None)
+        self.old = common.load_config()
+        self.addCleanup(helpers.write_config, self.old)
+        helpers.set_config(modelle_wechseln=True)
+        self.addCleanup(helpers.set_config, modelle_wechseln=False)
+        self.assertTrue(features.admin_on("modellwechsel", common.load_config()["chat"]))
+        self.cfg = json.loads(json.dumps(common.load_config()))
+        self.cfg["models"]["host"] = "192.168.178.171"
+        p = mock.patch.object(modelle, "gesamt_gib", return_value=128.0)
+        p.start()
+        self.addCleanup(p.stop)
+        self.addCleanup(lambda: os.path.exists(modelle.WUNSCH) and os.remove(modelle.WUNSCH))
+
+    def test_the_page_comes_from_the_model_computer(self):
+        d = self.post(body("modelle")).json()
+        self.assertEqual(set(d), {"gesamt_gib", "lanes", "messung", "wechsel", "eigene", "laeuft"})
+        with mock.patch.object(self.seite, "_laeuft", side_effect=AssertionError("asked here")):
+            page = self.seite.seite(cfg=self.cfg)
+        self.assertTrue(page["wechsel"]["an"])
+        self.assertFalse(page["wechsel"]["laeuft"])
+        steuer._client = None
+        with mock.patch.object(steuer, "call", return_value=None), self.assertRaises(Exception) as e:
+            self.seite.seite(cfg=self.cfg)
+        self.assertEqual(getattr(e.exception, "status_code", None), 503)
+
+    def test_a_switch_runs_there_with_its_own_rules(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            for args in (["musik", "x"], ["asr", "x; reboot"], ["asr"]):
+                self.assertEqual(self.post(body("wechseln", args)).status_code, 400, args)
+            bad = self.post(body("wechseln", ["asr", "qwen3-forcedaligner-0.6b"])).json()
+        self.assertEqual(bad["ok"], False)
+        self.assertIn(bad["fehler"], self.seite.GRUND)
+        self.assertFalse([c for c in self.run.calls if "sudo" in c])
+        self.assertFalse(os.path.exists(self.m.WUNSCH))
+        cur = self.m.jetzt_id("asr", common.load_config())
+        target = "qwen3-asr-0.6b" if cur != "qwen3-asr-0.6b" else "qwen3-asr-1.7b"
+        with redirect_stdout(out):
+            good = self.post(body("wechseln", ["asr", target])).json()
+        self.assertEqual(good["ok"], True, good)
+        self.assertIn(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-wechsel"], self.run.calls)
+        self.assertEqual(self.m.wunsch_nehmen(), ("asr", target))
+        self.assertIn("waerter: wechseln asr ok", out.getvalue())
+
+    def test_own_models_are_checked_there_again(self):
+        with redirect_stdout(io.StringIO()) as out:
+            bad = self.post(body("eigen_dazu", daten={"id": "eigen-x", "art": "llm"})).json()
+            self.assertEqual(self.post(body("eigen_weg", ["eigen-gibtsnicht"])).json(), {"ok": False, "fehler": "unbekannt"})
+            self.assertEqual(self.post(body("eigen_weg", ["../x"])).status_code, 400)
+            self.assertEqual(self.post(body("eigen_dazu")).status_code, 400, "eigen_dazu without an entry")
+        self.assertEqual(bad["ok"], False)
+        self.assertIn(bad["fehler"], self.seite.GRUND)
+        self.assertIn(f"waerter: eigen_dazu abgelehnt {bad['fehler']}", out.getvalue())
+        self.assertEqual(self.m.eigene(), [])
 
 
 class Steuer(Base):

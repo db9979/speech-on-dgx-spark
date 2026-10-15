@@ -58,9 +58,9 @@ class OffTheLoop(unittest.TestCase):
             seen.append(threading.get_ident())
             return "active"
         calls = []
-        with mock.patch.object(admin, "unit_state", state), mock.patch.object(admin, "QWEN38_UNITS", ["qwen38-a"]), \
-                mock.patch.object(admin, "unit_exists", lambda u: calls.append(u) or True), \
-                mock.patch.object(admin, "lane_fraction", lambda u: 0.5), \
+        with mock.patch.object(admin, "unit_state", state), mock.patch.object(common, "QWEN38_UNITS", ["qwen38-a"]), \
+                mock.patch.object(common, "unit_exists", lambda u: calls.append(u) or True), \
+                mock.patch.object(common, "lane_fraction", lambda u: 0.5), \
                 mock.patch.dict(admin._lanes, {"t": None, "units": []}):
             c = TestClient(panel.app)
             c.post("/api/login", json={"password": "secret-admin"})

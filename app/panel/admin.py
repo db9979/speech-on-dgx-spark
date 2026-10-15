@@ -30,7 +30,7 @@ import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
-from common import (CONFIG_PATH, MODEL_ID, estimate_gib, load_config, model_local, model_url,  # noqa: E402
+from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, load_config, model_local, model_url, qwen38_lanes,  # noqa: E402
                     write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
@@ -45,7 +45,6 @@ from core import (  # noqa: E402
     ENGINE_KEYS,
     LANGS,
     LOG_UNITS,
-    QWEN38_UNITS,
     SERVICES,
     UNITS,
     VOICES_DIR,
@@ -60,9 +59,8 @@ from core import (  # noqa: E402
     main_auth,
     check_password,
     password_set,
-    store_password,
-    unit_exists)
-from monitor import history, lane_fraction, service_health, system_stats  # noqa: E402
+    store_password)
+from monitor import history, service_health, system_stats  # noqa: E402
 import steuer  # noqa: E402
 from steuer import unit_state  # noqa: E402
 from chat import web_search  # noqa: E402
@@ -329,7 +327,8 @@ _lanes = {"t": None, "units": []}
 def _qwen38_lanes():
     now = time.monotonic()
     if _lanes["t"] is None or now - _lanes["t"] > LANES_EVERY:
-        _lanes["units"] = [(u, lane_fraction(u)) for u in QWEN38_UNITS if unit_exists(u)]
+        # models on another computer: its lanes count only in its own budget (Zustand → Modelle, through the Wärter)
+        _lanes["units"] = qwen38_lanes() if model_local() else []
         _lanes["t"] = now
     return _lanes["units"]
 
@@ -532,6 +531,12 @@ def validate(new):
                 new[sec].pop(k, None)
     if not new["api"]["key"] and not model_local(new):
         raise HTTPException(400, "API key: required while the models run on another computer; press Erzeugen")
+    # which model runs is then the model computer's (B4c, common.MODEL_CHOICE): the panel only shows it
+    if not model_local(new):
+        for sec, keys in MODEL_CHOICE.items():
+            for k in keys:
+                if k in old.get(sec, {}):
+                    new[sec][k] = old[sec][k]
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")

@@ -85,6 +85,22 @@ class Validate(unittest.TestCase):
         with self.assertRaises(HTTPException):
             admin_mod.validate(new)
 
+    def test_another_computer_keeps_its_model_choice(self):
+        # B4c: which model runs is the model computer's (common.MODEL_CHOICE); the panel's settings never change it
+        old = common.load_config()
+        self.addCleanup(helpers.write_config, old)
+        remote = json.loads(json.dumps(old))
+        remote["models"]["host"] = "192.168.178.171"
+        remote["api"]["key"] = "k" * 32
+        helpers.write_config(remote)
+        new = json.loads(json.dumps(remote))
+        new["asr"]["model"] = "Qwen/Qwen3-ASR-0.6B" if old["asr"]["model"] != "Qwen/Qwen3-ASR-0.6B" else "Qwen/Qwen3-ASR-1.7B"
+        new["llm"]["modell"] = "anderes"
+        new["tts"]["temperature"] = 0.33
+        admin_mod.validate(new)
+        self.assertEqual((new["asr"]["model"], new["llm"]["modell"]), (remote["asr"]["model"], remote["llm"]["modell"]))
+        self.assertEqual(new["tts"]["temperature"], 0.33, "the speech settings stay the panel's")
+
 
 class OwnTor(unittest.TestCase):
     def test_the_tor_on_the_model_computer_gets_the_key(self):

@@ -16,6 +16,11 @@ model for the language model or image understanding. The panel reads only the me
 public internet), modelle.eigen_vorschlag applies the fixed rules (safetensors only, no code from the repository, an
 architecture the engine knows, within the memory share), and the entry is kept with its commit pinned. It downloads
 only when a switch picks it, through the same root unit.
+
+Models on another computer (plan Raspberry-Pi split, B4c): the catalog, the memory, the measurement, the switches and
+the own models are that computer's. The page then takes them from its Wärter (steuer.modelle), and Wechseln,
+Zurückholen and the own models go there (tarswart.py), which checks the same fixed rules again with its own numbers
+and starts its speech-spark-wechsel. The switch Funktionen → Modelle wechseln stays the panel's.
 """
 import os
 import subprocess
@@ -30,13 +35,13 @@ import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
 import modelle  # noqa: E402
+import steuer  # noqa: E402
 from common import load_config, read_json  # noqa: E402
 from core import admin_code, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
 MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "werkzeug", "bild_text", "bild_szene", "bild_ok", "ok")
 _live = {"t": None, "v": None}
-UNIT = "speech-spark-wechsel"
 MAX_BODY = 256
 # why a switch is refused (modelle.Fehler words): a sentence for the page
 GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Modell steht nicht im Katalog.",
@@ -53,7 +58,12 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "format": "Keine Gewichte als safetensors (Pickle-Dateien nimmt der Spark nie).",
          "code": "Das Modell braucht eigenen Code aus dem Repository; das läuft hier nie.",
          "architektur": "Diese Bauart kennt die Engine nicht.", "eigen": "ungültig", "voll": "Schon 20 eigene Modelle.",
-         "aktiv": "Das Modell läuft gerade.", "netz": "Hugging Face ist gerade nicht erreichbar."}
+         "aktiv": "Das Modell läuft gerade.", "netz": "Hugging Face ist gerade nicht erreichbar.",
+         # plan Raspberry-Pi split: the model computer's answers
+         "laeuft": "Ein Modellwechsel läuft schon.",
+         "start": "Der Wechsel ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
+         "rechner": "Der Modell-Rechner antwortet gerade nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
+STATUS = {"laeuft": 409, "start": 503, "rechner": 503}
 EIGEN_BODY = 512
 
 
@@ -69,9 +79,36 @@ def _an(cfg=None):
 
 def _laeuft():
     try:
-        return subprocess.run(["systemctl", "is-active", "-q", UNIT], timeout=5).returncode == 0
+        return subprocess.run(["systemctl", "is-active", "-q", modelle.WECHSEL_UNIT], timeout=5).returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
+
+
+def _starten():
+    try:
+        r = subprocess.run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT],
+                           capture_output=True, timeout=20)
+        return r.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _quelle(cfg):
+    """(total_gib, lanes, messung, laeuft, kat, alte switches) of the computer the models run on; HTTPException 503
+    when that is another one and it does not answer."""
+    if steuer.remote(cfg):
+        d = steuer.modelle(cfg)
+        if d is None:
+            raise HTTPException(503, GRUND["rechner"])
+        return d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"]
+    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None
+
+
+def _fehler(e):
+    """The HTTP answer for a refused switch (a fixed word from here or from the model computer)."""
+    word = str(e)
+    print(f"modelle: wechsel abgelehnt {word}", flush=True)
+    raise HTTPException(STATUS.get(word, 400), GRUND.get(word, "ungültig"))
 
 
 def _waehlbar(art, mid, cfg, total_gib, lanes, kat, messung):
@@ -90,11 +127,11 @@ def _lanes():
 def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    total_gib = modelle.gesamt_gib() if total_gib is None else total_gib
-    lanes = _lanes() if lanes is None else lanes
-    messung = read_json(modelle.MESSUNG, {}) if messung is None else messung
+    q_gib, q_lanes, q_messung, laeuft, kat, wechsel = _quelle(cfg)
+    total_gib = q_gib if total_gib is None else total_gib
+    lanes = q_lanes if lanes is None else lanes
+    messung = q_messung if messung is None else messung
     i = 1 if lang == "en" else 0
-    kat = modelle.katalog()
     an = _an(cfg)
     b = modelle.budget(cfg, total_gib, lanes, kat)
     laufend = {x["id"]: x["gib"] for x in b["teile"]}
@@ -114,7 +151,8 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
                          "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]) or m["engine"] == "extern",
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
-    wechsel = {"an": an, "laeuft": _laeuft() if an else False, "alte": modelle.alte(cfg, kat=kat) if an else {},
+    laeuft = (_laeuft() if laeuft is None else laeuft) if an else False
+    wechsel = {"an": an, "laeuft": laeuft, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
@@ -127,11 +165,12 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            b = modelle.budget(cfg, modelle.gesamt_gib(), _lanes())
+            total_gib, lanes, _, laeuft, kat, _ = _quelle(cfg)
+            b = modelle.budget(cfg, total_gib, lanes, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
-                _live["v"]["eigen"] = modelle.rolle("llm", cfg)[0]["name"]["de"]
-            if _an(cfg) and _laeuft():              # stage E4: a switch runs (only that it runs, never which model)
+                _live["v"]["eigen"] = modelle.rolle("llm", cfg, kat)[0]["name"]["de"]
+            if _an(cfg) and (_laeuft() if laeuft is None else laeuft):   # stage E4: a switch runs (never which model)
                 _live["v"]["wechsel"] = True
         except Exception:
             _live["v"] = {"on": False}
@@ -149,30 +188,30 @@ def admin_modelle(request: Request, lang: str = "de"):
     return seite(lang="en" if lang == "en" else "de")
 
 
-def _wunsch(request, art, was, mid):
-    """Checks the rules for switching art to mid, leaves the wish and starts the root unit."""
+def _wunsch(request, art, was, mid=""):
+    """Checks the rules for switching art to was (an id or "zurueck"), leaves the wish and starts the root unit: here,
+    or through the Wärter on the model computer."""
     if not _an():
         print("modelle: wechsel abgelehnt aus", flush=True)
         raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
-    if _laeuft():
-        print("modelle: wechsel abgelehnt laeuft", flush=True)
-        raise HTTPException(409, "Ein Modellwechsel läuft schon.")
-    try:
-        modelle.wechsel_pruefen(art, mid, load_config(), modelle.gesamt_gib(), _lanes())
-        modelle.wunsch_schreiben(art, was)
-    except modelle.Fehler as e:
-        print(f"modelle: wechsel abgelehnt {e}", flush=True)
-        raise HTTPException(400, GRUND.get(str(e), "ungültig"))
-    try:
-        r = subprocess.run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", UNIT], capture_output=True, timeout=20)
-        ok = r.returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        ok = False
-    if not ok:
-        print("modelle: wechsel start fehler", flush=True)
-        raise HTTPException(503, "Der Wechsel ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = steuer.call("wechseln", (art, was), cfg=cfg, timeout=30)
+        if not isinstance(d, dict):
+            _fehler("rechner")
+        if d.get("ok") is not True:
+            _fehler(d.get("fehler") if d.get("fehler") in GRUND else "wunsch")
+        name = str(d.get("name") or "")[:48]
+    else:
+        try:
+            name = modelle.wechsel_anfragen(art, was, cfg, modelle.gesamt_gib(), _lanes(), _starten, _laeuft())["name"]["de"]
+        except modelle.Fehler as e:
+            if str(e) == "start":
+                print("modelle: wechsel start fehler", flush=True)
+                raise HTTPException(503, GRUND["start"])
+            _fehler(e)
     print(f"modelle: wechsel {art} angefragt", flush=True)
-    guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]}: {modelle.eintrag(mid)['name']['de']}")
+    guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]}: {name}")
     _live["t"] = None
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
 
@@ -183,7 +222,7 @@ async def admin_wechseln(request: Request):
     guard.limit(request, "modelle_wechsel", None, True)
     body = await core.json_body(request, MAX_BODY)
     art, mid = str(body.get("art", ""))[:16], str(body.get("id", ""))[:48]
-    return _wunsch(request, art, mid, mid)
+    return _wunsch(request, art, mid)
 
 
 @router.post("/api/admin/modelle/zurueck", dependencies=[Depends(auth), Depends(admin_code)])
@@ -192,15 +231,10 @@ async def admin_zurueck(request: Request):
     guard.limit(request, "modelle_wechsel", None, True)
     body = await core.json_body(request, MAX_BODY)
     art = str(body.get("art", ""))[:16]
-    try:
-        mid = modelle.zurueck_ziel(art) if art in modelle.TAUSCH else ""
-    except modelle.Fehler as e:
-        print(f"modelle: zurueck abgelehnt {e}", flush=True)
-        raise HTTPException(400, GRUND.get(str(e), "ungültig"))
-    if not mid:
+    if art not in modelle.TAUSCH:
         print("modelle: zurueck abgelehnt art", flush=True)
         raise HTTPException(400, GRUND["art"])
-    return _wunsch(request, art, "zurueck", mid)
+    return _wunsch(request, art, "zurueck")
 
 
 # ---------------------------------------------------------------- stage E5: own models
@@ -242,8 +276,9 @@ async def eigen_pruefen(request: Request):
     _eigen_tor(request)
     body = await core.json_body(request, EIGEN_BODY)
     art, repo = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200]
+    total_gib = _quelle(load_config())[0]
     try:
-        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, modelle.gesamt_gib())
+        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, total_gib)
     except modelle.Fehler as e:
         print(f"modelle: eigenes abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
@@ -258,16 +293,23 @@ async def eigen_dazu(request: Request):
     _eigen_tor(request)
     body = await core.json_body(request, EIGEN_BODY)
     art, repo, rev = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200], str(body.get("revision", ""))[:40]
+    cfg = load_config()
+    total_gib = _quelle(cfg)[0]
     try:
         if not modelle.REV.match(rev):
             raise modelle.Fehler("repo")
-        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, modelle.gesamt_gib())
+        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, total_gib)
         if m["revision"] != rev:
             raise modelle.Fehler("antwort")
-        modelle.eigen_speichern(m)
+        if steuer.remote(cfg):              # the model computer keeps the list and checks the entry again
+            d = steuer.call("eigen_dazu", cfg=cfg, daten=m, timeout=15)
+            if not isinstance(d, dict) or d.get("ok") is not True:
+                raise modelle.Fehler(d.get("fehler") if isinstance(d, dict) and d.get("fehler") in GRUND else "rechner")
+        else:
+            modelle.eigen_speichern(m)
     except modelle.Fehler as e:
         print(f"modelle: eigenes abgelehnt {e}", flush=True)
-        raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
+        raise HTTPException(503 if str(e) in ("netz", "rechner") else 400, GRUND.get(str(e), "ungültig"))
     print(f"modelle: eigenes hinzugefuegt {m['art']}", flush=True)
     guard.log("modelle_eigen", detail=f"hinzugefügt: {m['name']['de']}")
     _live["t"] = None
@@ -279,13 +321,22 @@ def eigen_weg(request: Request, mid: str):
     """Löschen: an own model off the list and its files off the disk; never one that runs or can still come back."""
     guard.limit(request, "modelle_eigen", None, True)
     _eigen_tor(request)
+    cfg = load_config()
     try:
         if not modelle.ID.match(mid):
             raise modelle.Fehler("unbekannt")
-        weg = modelle.ordner_weg(modelle.eigen_loeschen(mid, load_config()))
+        if steuer.remote(cfg):              # the list and the files are the model computer's
+            d = steuer.call("eigen_weg", (mid,), cfg=cfg, timeout=60)
+            if isinstance(d, dict) and d.get("fehler") == "dateien":
+                raise OSError("dateien")
+            if not isinstance(d, dict) or d.get("ok") is not True:
+                raise modelle.Fehler(d.get("fehler") if isinstance(d, dict) and d.get("fehler") in GRUND else "rechner")
+            weg = d.get("dateien") is True
+        else:
+            weg = modelle.ordner_weg(modelle.eigen_loeschen(mid, cfg))
     except modelle.Fehler as e:
         print(f"modelle: eigenes loeschen abgelehnt {e}", flush=True)
-        raise HTTPException(404 if str(e) == "unbekannt" else 409, GRUND.get(str(e), "ungültig"))
+        raise HTTPException({"unbekannt": 404, "rechner": 503}.get(str(e), 409), GRUND.get(str(e), "ungültig"))
     except OSError:
         print("modelle: eigenes loeschen dateien fehler", flush=True)
         raise HTTPException(500, "Die Dateien ließen sich nicht ganz löschen. Auf dem Spark: sudo speech-spark modelle liste")

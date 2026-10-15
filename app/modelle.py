@@ -183,7 +183,9 @@ def katalog(path=KATALOG, eigene=None):
         out[m["id"]] = m
     if eigene is None and path == KATALOG:
         eigene = EIGENE
-    for m in (read_json(eigene, {}).get("modelle") or [])[:EIGENE_MAX] if eigene else []:
+    # eigene: the file, or the list itself (from the model computer's Wärter, plan Raspberry-Pi split B4c)
+    rows = eigene if isinstance(eigene, list) else (read_json(eigene, {}).get("modelle") or []) if eigene else []
+    for m in rows[:EIGENE_MAX]:
         try:
             eigen_ok(m)
         except Fehler:
@@ -843,6 +845,7 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
 # ---------------------------------------------------------------- stage E4: switching models
 WECHSEL = os.path.join(STATE, "modelle-wechsel.json")   # per kind the model before the last switch, for 7 days
 WUNSCH = os.path.join(STATE, "modelle-wunsch.json")     # the panel's wish for the root unit speech-spark-wechsel
+WECHSEL_UNIT = "speech-spark-wechsel"
 ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
 TAUSCH = ("llm", "sehen", "asr", "tts", "bild")          # the kinds that switch (small CPU models come with features)
 INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild"}   # kinds install.sh sets up (wahl = its short key)
@@ -942,11 +945,12 @@ def zurueck_ziel(art, now=None, path=WECHSEL):
     return w["alt"]
 
 
-def alte(cfg, now=None, path=WECHSEL, kat=None):
-    """Per kind the model before the last switch: {art: {id, tage_frei}} (days left to bring it back, 0 = gone by)."""
+def alte(cfg, now=None, path=WECHSEL, kat=None, daten=None):
+    """Per kind the model before the last switch: {art: {id, tage_frei}} (days left to bring it back, 0 = gone by).
+    daten: the switches as the model computer reports them, instead of the file."""
     now = time.time() if now is None else now
     out = {}
-    for art, w in read_json(path, {}).items():
+    for art, w in (read_json(path, {}) if daten is None else daten).items():
         if art in TAUSCH and isinstance(w, dict) and w.get("alt") and w["alt"] != jetzt_id(art, cfg, kat):
             out[art] = {"id": w["alt"], "tage_frei": max(0, ALT_TAGE - int((now - float(w.get("zeit", 0))) // 86400))}
     return out
@@ -975,6 +979,19 @@ def wunsch_schreiben(art, was, path=WUNSCH):
     if art not in TAUSCH or not (was == "zurueck" or ID.match(str(was))):
         raise Fehler("wunsch")
     write_json(path, {"art": art, "was": was, "zeit": int(time.time())}, indent=1)
+
+
+def wechsel_anfragen(art, was, cfg, total_gib, lanes, starten, laeuft=False):
+    """A switch asked for (an id, or "zurueck" for the model before the last switch): the fixed rules, the wish for
+    root, then starten() starts WECHSEL_UNIT. Used by the panel on this computer and by the Wärter (tarswart.py) for
+    a panel on another one. Returns the entry; raises Fehler (laeuft, the rule's word, start)."""
+    if laeuft:
+        raise Fehler("laeuft")
+    m = wechsel_pruefen(art, zurueck_ziel(art) if was == "zurueck" else was, cfg, total_gib, lanes)
+    wunsch_schreiben(art, was)
+    if not starten():
+        raise Fehler("start")
+    return m
 
 
 def wunsch_nehmen(path=WUNSCH, now=None):

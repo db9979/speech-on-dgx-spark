@@ -11,9 +11,12 @@ update) are never sent there.
     gpu()                       the GPU (common.gpu_stats), None without one
     einstellen(cfg)             hands the speech settings to the model computer (common.model_settings)
     logs(name, n)               the last log lines of a model unit, here or there
+    modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
 
 When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
-again, at most every PUSH seconds: a save while it was away is not lost.
+again, at most every PUSH seconds: a save while it was away is not lost. Which model runs (common.MODEL_CHOICE) goes
+the other way: the model computer reports it in its status and the panel takes it into its own configuration
+(checked by common.model_choice_take), so its pages show what really runs.
 
 The status of the model computer is asked at most every CACHE seconds; when it does not answer, its units read
 "unknown" and the GPU None, which the pages show as „nicht erreichbar“. Logs ("steuer:" lines) only for actions.
@@ -25,14 +28,15 @@ import time
 
 import httpx
 
-from common import (OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_local, model_settings,
-                    model_settings_hash, model_url, run, waerter_key, waerter_sign)
+from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
+                    model_local, model_settings, model_settings_hash, model_url, run, shipped, waerter_key, waerter_sign,
+                    write_json)
 
 CACHE = 3              # seconds a status of the model computer is reused
 PUSH = 60              # seconds between two hand-overs of the speech settings when the hashes differ
 TIMEOUT = 5
 MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values())
-_status = {"t": 0.0, "d": None, "push": -PUSH}
+_status = {"t": 0.0, "d": None, "push": -PUSH, "wahl": None}
 _lock = threading.Lock()
 _client = None         # the self-tests put a client for the Wärter here
 
@@ -79,7 +83,45 @@ def status(cfg=None, now=None):
             _status["push"] = now
     if due:
         einstellen(cfg, why="abgleich")
+    if d is not None and d.get("modellwahl") != model_choice(cfg):
+        modellwahl(cfg, d.get("modellwahl"))
     return d
+
+
+def modellwahl(cfg, got):
+    """Takes the model computer's model choice into this computer's configuration (one line per new report)."""
+    seen = json.dumps(got, sort_keys=True)
+    with _lock:
+        if _status["wahl"] == seen:
+            return False
+        _status["wahl"] = seen
+    try:
+        diff = model_choice_take(cfg, got, shipped())
+        with open(CONFIG_PATH) as f:
+            raw = json.load(f)
+        for sec, vals in diff.items():
+            raw[sec] = dict(raw.get(sec) or {}, **vals)
+        if diff:
+            write_json(CONFIG_PATH, raw, indent=2)
+    except (ValueError, OSError):
+        print("steuer: modellwahl abgelehnt", flush=True)
+        return False
+    print(f"steuer: modellwahl uebernommen {len(diff)}", flush=True)
+    return True
+
+
+def modelle(cfg=None):
+    """Zustand → Modelle from the model computer: {gesamt_gib, lanes, messung, wechsel, eigene, laeuft}, checked;
+    None when it does not answer or sends something else."""
+    d = call("modelle", cfg=cfg, timeout=15)
+    try:
+        ok = (isinstance(d, dict) and isinstance(d["gesamt_gib"], (int, float)) and 1 <= d["gesamt_gib"] <= 8192
+              and isinstance(d["lanes"], list) and all(isinstance(x, (int, float)) and 0 < x <= 1 for x in d["lanes"])
+              and isinstance(d["messung"], dict) and isinstance(d["wechsel"], dict)
+              and isinstance(d["eigene"], list) and isinstance(d["laeuft"], bool))
+    except KeyError:
+        ok = False
+    return d if ok else None
 
 
 def einstellen(cfg=None, why="gespeichert"):

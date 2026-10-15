@@ -596,6 +596,9 @@ SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
+# Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
+QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
+                "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
 # the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
 WAERTER_PORT = 31007
 WAERTER_KEY = os.path.join(STATE, "waerter.key")
@@ -609,6 +612,27 @@ def run(cmd, timeout=10, env=None):
         return p.returncode, (p.stdout + p.stderr).strip()
     except Exception as e:
         return 1, str(e)
+
+
+def unit_exists(unit):
+    code, out = run(["systemctl", "list-unit-files", unit + ".service", "--no-legend"])
+    return code == 0 and out.startswith(unit + ".service")
+
+
+def lane_fraction(unit):
+    """The static share of the unified pool a qwen38 lane claims (0.50 / 0.76 / 0.85)."""
+    code, out = run(["systemctl", "cat", unit])
+    m = re.search(r"--mem-fraction-static\s+([0-9.]+)", out)
+    if m:
+        return float(m.group(1))
+    if unit == "qwen38-flash":  # the flag lives in its launch script; installer default
+        return 0.85
+    return None
+
+
+def qwen38_lanes():
+    """[(unit, share)] of the qwen38 lanes installed on this computer."""
+    return [(u, lane_fraction(u)) for u in QWEN38_UNITS if unit_exists(u)]
 
 
 def gpu_stats():
@@ -642,20 +666,23 @@ def gpu_stats():
 # The engines load models with --trust-remote-code: any other repo could bring its own code along.
 MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
 # settings of the model side the panel sets and the model computer must know (Spark teilen, B4b): the sections and the
-# keys that stay as each computer's install made them (addresses, ports, backends, what is installed)
+# keys that stay as each computer's install made them (addresses, ports, backends)
 SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image")
-SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend", "variant"}
-SYNC_KEEP_IMAGE = {"enabled"}
-SYNC_MODELS = {("asr", "model"), ("asr", "aligner_model"), ("tts", "model"), ("tts", "voicedesign_model")}
+SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend"}
+# which model runs (B4c): the model computer decides (install.sh, Zustand → Modelle, `speech-spark modelle`) and
+# reports it in its status; the panel takes it over, never the other way round
+MODEL_CHOICE = {"asr": ("model", "aligner_model", "recognizer"), "tts": ("model", "voicedesign_model"),
+                "image": ("enabled", "variant"), "llm": ("enabled", "modell", "sehen_modell")}
+
+
+def _keep(sec):
+    return SYNC_KEEP | set(MODEL_CHOICE.get(sec, ()))
 
 
 def model_settings(cfg):
-    """The settings the model computer takes from the panel: SYNC_SECTIONS without the install's own keys."""
-    out = {}
-    for sec in SYNC_SECTIONS:
-        keep = SYNC_KEEP | (SYNC_KEEP_IMAGE if sec == "image" else set())
-        out[sec] = {k: v for k, v in (cfg.get(sec) or {}).items() if k not in keep}
-    return out
+    """The settings the model computer takes from the panel: SYNC_SECTIONS without the install's own keys and
+    without the model choice."""
+    return {sec: {k: v for k, v in (cfg.get(sec) or {}).items() if k not in _keep(sec)} for sec in SYNC_SECTIONS}
 
 
 def model_settings_hash(cfg):
@@ -665,27 +692,51 @@ def model_settings_hash(cfg):
 
 def model_settings_take(cfg, got, defaults):
     """cfg with the panel's settings `got` taken in: only known keys of SYNC_SECTIONS of the same kind as the
-    shipped default, never the install's own keys, model ids only Qwen's (MODEL_ID). ValueError on anything else."""
+    shipped default, never the install's own keys or the model choice. ValueError on anything else."""
     if not isinstance(got, dict) or set(got) - set(SYNC_SECTIONS):
         raise ValueError("abschnitt")
     new = json.loads(json.dumps(cfg))
     for sec, vals in got.items():
-        keep = SYNC_KEEP | (SYNC_KEEP_IMAGE if sec == "image" else set())
         if not isinstance(vals, dict):
             raise ValueError("abschnitt")
         for k, v in vals.items():
             d = (defaults.get(sec) or {}).get(k, None)
-            if k in keep or k not in (defaults.get(sec) or {}):
+            if k in _keep(sec) or k not in (defaults.get(sec) or {}):
                 raise ValueError("schluessel")
             num = (int, float)
             same = (isinstance(v, bool) == isinstance(d, bool)) and (
                 isinstance(v, type(d)) or (isinstance(d, num) and isinstance(v, num)))
             if not same or (isinstance(v, str) and len(v) > 4000):
                 raise ValueError("wert")
-            if (sec, k) in SYNC_MODELS and not MODEL_ID.fullmatch(v):
-                raise ValueError("modell")
             new.setdefault(sec, {})[k] = v
     return new
+
+
+def model_choice(cfg):
+    """{section: {key: value}} of MODEL_CHOICE as this configuration has it."""
+    return {sec: {k: (cfg.get(sec) or {}).get(k) for k in keys} for sec, keys in MODEL_CHOICE.items()}
+
+
+def model_choice_take(cfg, got, defaults):
+    """The changes of the model choice the model computer reports, checked: only MODEL_CHOICE keys of the same kind
+    as the shipped default, the speech models only Qwen's (MODEL_ID), names short. {section: {key: value}} of what
+    differs from cfg; ValueError("wahl") on anything else."""
+    if not isinstance(got, dict) or set(got) - set(MODEL_CHOICE):
+        raise ValueError("wahl")
+    out = {}
+    for sec, vals in got.items():
+        if not isinstance(vals, dict) or set(vals) - set(MODEL_CHOICE[sec]):
+            raise ValueError("wahl")
+        for k, v in vals.items():
+            d = (defaults.get(sec) or {}).get(k)
+            if isinstance(d, bool) != isinstance(v, bool) or not isinstance(v, type(d)) \
+                    or (isinstance(v, str) and not re.fullmatch(r"([A-Za-z0-9][\w.\-]{0,47}(/[A-Za-z0-9][\w.\-]{0,95})?)?", v)):
+                raise ValueError("wahl")
+            if k.endswith("model") and sec in ("asr", "tts") and not MODEL_ID.fullmatch(v):
+                raise ValueError("wahl")
+            if (cfg.get(sec) or {}).get(k) != v:
+                out.setdefault(sec, {})[k] = v
+    return out
 
 
 def waerter_key(path=None):

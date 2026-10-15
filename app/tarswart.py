@@ -7,13 +7,20 @@ pinned certificate, only the panel computer, tlstor.py) and signs every request 
 (STATE/waerter.key, not the API key, which other devices know too): HMAC-SHA256 over the exact body, which carries
 a time (at most WINDOW seconds off) and a one-time number (each is taken once).
 
-    status                      version, state and uptime of the model units, GPU, free memory, settings hash
+    status                      version, state and uptime of the model units, GPU, free memory, settings hash,
+                                the model choice (common.MODEL_CHOICE: which model runs is this computer's)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
     logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
+    modelle                     what Zustand → Modelle needs from here: memory, qwen38 lanes, measurement, switches,
+                                own models, whether a switch runs
+    wechseln <art> <id|zurueck> a switch with the fixed rules (modelle.wechsel_anfragen), then speech-spark-wechsel
+    eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
+    eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
 
-Every request writes one log line ("waerter:" with the command and the result word, never content).
+Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
+status and modelle only when refused.
 """
 import json
 import os
@@ -26,9 +33,10 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+import modelle
 from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
-                    mem_available_gib, model_settings_hash, model_settings_take, run, shipped, waerter_key,
-                    waerter_sign, write_json)
+                    mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
+                    run, shipped, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
 MAX_BODY = 64 * 1024     # the speech settings (pronunciation, context) fit easily
@@ -36,6 +44,8 @@ MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
+COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg")
+WITH_DATA = ("einstellen", "eigen_dazu")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS)
 
@@ -78,8 +88,9 @@ def status():
         mem = round(mem_available_gib(), 1)
     except OSError:
         mem = None
+    cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
-            "mem_avail_gib": mem, "einstellungen": model_settings_hash(load_config())}
+            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg)}
 
 
 def einstellen(daten):
@@ -104,6 +115,59 @@ def logs(teil, n):
         raise ValueError("befehl")
     print(f"waerter: logs {teil}", flush=True)
     return {"text": journal(WATCHED[teil], int(n), "short-iso")[-400_000:]}
+
+
+def _wechsel_laeuft():
+    return run(["systemctl", "is-active", "-q", modelle.WECHSEL_UNIT])[0] == 0
+
+
+def modelle_daten():
+    """Read only, asked by the page and the Live view: no line, like status."""
+    return {"gesamt_gib": round(modelle.gesamt_gib(), 1), "lanes": [f for _, f in qwen38_lanes() if f],
+            "messung": read_json(modelle.MESSUNG, {}), "wechsel": read_json(modelle.WECHSEL, {}),
+            "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft()}
+
+
+def wechseln(art, was):
+    if art not in modelle.TAUSCH or not (was == "zurueck" or modelle.ID.match(was)):
+        raise ValueError("befehl")
+
+    def starten():
+        return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT], timeout=20)[0] == 0
+    try:
+        m = modelle.wechsel_anfragen(art, was, load_config(), modelle.gesamt_gib(), [f for _, f in qwen38_lanes() if f],
+                                     starten, _wechsel_laeuft())
+    except modelle.Fehler as e:
+        print(f"waerter: wechseln abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print(f"waerter: wechseln {art} ok", flush=True)
+    return {"ok": True, "name": m["name"]["de"]}
+
+
+def eigen_dazu(m):
+    try:
+        modelle.eigen_speichern(m)
+    except (modelle.Fehler, KeyError, TypeError, AttributeError) as e:
+        word = str(e) if isinstance(e, modelle.Fehler) else "eigen"
+        print(f"waerter: eigen_dazu abgelehnt {word}", flush=True)
+        return {"ok": False, "fehler": word}
+    print("waerter: eigen_dazu ok", flush=True)
+    return {"ok": True}
+
+
+def eigen_weg(mid):
+    if not modelle.ID.match(mid):
+        raise ValueError("befehl")
+    try:
+        weg = modelle.ordner_weg(modelle.eigen_loeschen(mid, load_config()))
+    except modelle.Fehler as e:
+        print(f"waerter: eigen_weg abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    except OSError:
+        print("waerter: eigen_weg dateien fehler", flush=True)
+        return {"ok": False, "fehler": "dateien"}
+    print("waerter: eigen_weg ok", flush=True)
+    return {"ok": True, "dateien": weg}
 
 
 def einheit(action, teil):
@@ -139,8 +203,8 @@ def check(raw, sig, key, now=None):
             raise ValueError("nummer")
         _seen[nonce] = now
     cmd, args, daten = d.get("cmd"), d.get("args") or [], d.get("daten")
-    if cmd not in ("status", "einheit", "einstellen", "logs") or not isinstance(args, list) \
-            or not all(isinstance(a, str) for a in args) or (cmd == "einstellen") != isinstance(daten, dict):
+    if cmd not in COMMANDS or not isinstance(args, list) or not all(isinstance(a, str) for a in args) \
+            or (cmd in WITH_DATA) != isinstance(daten, dict):
         raise ValueError("befehl")
     return cmd, args, daten
 
@@ -168,12 +232,17 @@ async def wart(request: Request):
         raise HTTPException(403 if str(e) != "befehl" else 400, str(e))
     if cmd == "status":       # asked every few seconds: no line for a good answer, only for refusals
         return JSONResponse(status())
+    if cmd == "modelle":
+        return JSONResponse(modelle_daten())
     try:
         if cmd == "einstellen":
             return JSONResponse(einstellen(daten))
-        if cmd == "logs":
-            return JSONResponse(logs(*args) if len(args) == 2 else logs("", ""))
-        return JSONResponse(einheit(*args) if len(args) == 2 else einheit("", ""))
+        if cmd == "eigen_dazu":
+            return JSONResponse(eigen_dazu(daten))
+        if cmd == "eigen_weg":
+            return JSONResponse(eigen_weg(*args) if len(args) == 1 else eigen_weg(""))
+        two = {"logs": logs, "wechseln": wechseln, "einheit": einheit}[cmd]
+        return JSONResponse(two(*args) if len(args) == 2 else two("", ""))
     except ValueError:
         print("waerter: abgelehnt befehl", flush=True)
         raise HTTPException(400, "befehl")

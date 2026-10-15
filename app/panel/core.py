@@ -35,9 +35,6 @@ ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav
                "engine_max_model_len", "initial_chunk_frames")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
                "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len", "initial_chunk_frames")
-# Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
-QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
-                "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
 LANGS = ["auto", "Chinese", "English", "German", "French", "Spanish", "Italian", "Portuguese",
          "Russian", "Japanese", "Korean", "Dutch", "Polish", "Turkish", "Arabic"]
 security = HTTPBasic(auto_error=False)
@@ -412,11 +409,6 @@ def _done(task):
     if not task.cancelled() and task.exception() is not None:
         e = task.exception()
         print(f"hintergrund: background task {task.get_name()} ended: {type(e).__name__}: {str(e)[:200]}", flush=True)
-
-
-def unit_exists(unit):
-    code, out = run(["systemctl", "list-unit-files", unit + ".service", "--no-legend"])
-    return code == 0 and out.startswith(unit + ".service")
 
 
 def app_version():

@@ -286,10 +286,10 @@ async def tick(now=None, answers=_answers):
 # ---------------------------------------------------------------- automatic (P2)
 def watched():
     """{part: [systemd units]} the automatic looks at."""
-    import core
-    return {"llm": [u for u in core.QWEN38_UNITS if u not in AUTO_SKIP] + [core.OWN_LLM_UNITS["llm"], core.OWN_LLM_UNITS["llmtor"]],
-            "asr": [core.UNITS["asr"], core.UNITS["asr-engine"]],
-            "tts": [core.UNITS["tts"], core.UNITS["tts-engine"], core.UNITS["tts-design"]]}
+    from common import OWN_LLM_UNITS, QWEN38_UNITS, UNITS
+    return {"llm": [u for u in QWEN38_UNITS if u not in AUTO_SKIP] + [OWN_LLM_UNITS["llm"], OWN_LLM_UNITS["llmtor"]],
+            "asr": [UNITS["asr"], UNITS["asr-engine"]],
+            "tts": [UNITS["tts"], UNITS["tts-engine"], UNITS["tts-design"]]}
 
 
 def _look(unit):
