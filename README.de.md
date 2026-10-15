@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.586** Eigene Modelle Stufe E0: Modell-Katalog und `speech-spark modelle messen`
 - **V01.0.585** Aufräumen Schritt 9: keine Prüf-Hüllen mehr, PROJEKT-SPERRE-Regel
 - **V01.0.584** Aufräumen Schritt 8: ein Datei-Register für alle Zustandsdateien, ein Zustandsordner
 - **V01.0.583** Aufräumen Schritt 7: Standardwerte und Auswahllisten der Einstellungen nur noch vom Panel
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.579** Aufräumen Schritt 3: ein gemeinsamer Weg zum Sprachmodell (llm.py)
 - **V01.0.578** Aufräumen Schritt 2: alle JSON-Dateien über einen gemeinsamen Schreiber, keine festen .tmp-Namen mehr
 - **V01.0.577** Aufräumen Schritt 1: tote Imports, Funktionen, Texte und CSS weg, eine Liste entfernter Schlüssel, Schalter-Prüfung aus den Vorgaben
-- **V01.0.576** ROT-FIX 2: Briefing-Test hängt nicht mehr an der Uhrzeit
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

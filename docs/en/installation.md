@@ -25,10 +25,12 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark key new` | new API key (the old one stops working at once) |
 | `sudo speech-spark models` | choose the models again, same questions as the install |
 | `sudo speech-spark update` | update like the panel's button (`--check` only shows what is new) |
-| `sudo speech-spark logs tts -n 100` | last log lines (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, all) |
+| `sudo speech-spark logs tts -n 100` | last log lines (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, messen, all) |
 | `sudo speech-spark panel enable` | add the web panel later; models and API key stay |
 | `sudo speech-spark panel disable` | remove the web panel; profiles and data stay on disk |
 | `sudo speech-spark notzugang` | locked out: new panel password (shown once), the emergency access's second step off (old file kept as `.bak`), the main admin profile unlinked (roles stay); asks first, noted in the change log, push to the admins. Then `https://…/#admin` without a code, set the second step up again, choose the main admin again |
+| `sudo speech-spark modelle liste` | the model catalog (`app/modelle.json`): models, kind, memory, whether the revision is pinned |
+| `sudo speech-spark modelle messen` | measures the catalog models on this Spark (default: Qwen3.8 27B NVFP4 and Qwen3-VL 8B; `fp8`, `gemma` on request). Fetches missing models (Qwen3.8 is copied from qwen38's cache and every file checked), stops qwen38 with a maintenance pause, measures speed, first answer, memory, a tool call and test pictures per model and always starts qwen38 again. Switches nothing, deletes nothing. Result in *Status → Logs* (area System) or `sudo speech-spark logs messen` |
 
 The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The chat model (qwen38) is not part of this repo and is not touched. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).
 

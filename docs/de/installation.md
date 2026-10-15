@@ -25,10 +25,12 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark key new` | neuer API-Schlüssel (der alte gilt sofort nicht mehr) |
 | `sudo speech-spark models` | Modelle neu wählen, gleiche Fragen wie bei der Installation |
 | `sudo speech-spark update` | Update wie der Knopf im Portal (`--check` zeigt nur, was neu ist) |
-| `sudo speech-spark logs tts -n 100` | letzte Log-Zeilen (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, all) |
+| `sudo speech-spark logs tts -n 100` | letzte Log-Zeilen (asr, tts, asr-engine, tts-engine, tts-design, bild, watch, update, messen, all) |
 | `sudo speech-spark panel enable` | Webportal nachrüsten; Modelle und API-Schlüssel bleiben |
 | `sudo speech-spark panel disable` | Webportal entfernen; Profile und Daten bleiben auf der Platte |
 | `sudo speech-spark notzugang` | ausgesperrt: neues Panel-Passwort (einmal angezeigt), zweiter Schritt des Notzugangs aus (alte Datei als `.bak`), Haupt-Admin gelöst (Rollen bleiben); fragt vorher, steht im Änderungsprotokoll, Push an die Admins. Danach `https://…/#admin` ohne Code, zweiten Schritt neu einrichten, Haupt-Admin wieder wählen |
+| `sudo speech-spark modelle liste` | der Modell-Katalog (`app/modelle.json`): Modelle, Art, Speicher, ob die Revision festgelegt ist |
+| `sudo speech-spark modelle messen` | misst die Katalog-Modelle auf diesem Spark (Standard: Qwen3.8 27B NVFP4 und Qwen3-VL 8B; dazu `fp8`, `gemma` auf Wunsch). Lädt fehlende Modelle (Qwen3.8 kopiert es aus dem Speicher von qwen38 und prüft jede Datei), stoppt qwen38 mit Wartungspause, misst je Modell Tempo, erste Antwort, Speicher, Werkzeugaufruf und Testbilder und startet qwen38 danach immer wieder. Schaltet nichts um, löscht nichts. Ergebnis in *Zustand → Logs* (Bereich System) oder `sudo speech-spark logs messen` |
 
 Den Wächter für hängende Dienste, der sonst im Portal läuft, übernimmt ohne Portal der Dienst `speech-spark-watch` mit denselben Regeln. Nach einem Update spricht die Sprachausgabe einen Satz, und die Spracherkennung muss ihn verstehen; klappt das nicht, spielt das Update die vorige Version wieder ein. Die Selbsttests laufen in beiden Arten vor jedem Update. Das Chat-Modell (qwen38) gehört nicht zu diesem Repo und bleibt davon unberührt. Läuft Open WebUI in Docker auf derselben Spark, müssen die APIs im Netz erreichbar sein (`127.0.0.1` im Container ist der Container selbst).
 

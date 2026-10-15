@@ -178,6 +178,7 @@ DATEIEN = [
     state("doc-rank.json", "Nachsortier-Modell", "Re-ranking model", lokal="Prüfsummen des Nachsortier-Modells, entstehen neu"),
     state("notaus.json", "Notaus", "Kill switch", lokal="Notaus gilt nur auf diesem Gerät"),
     state("wartung.json", "Wartungspause", "Maintenance pause", lokal="Wartungspause gilt nur für das laufende Update"),
+    state("modelle-messung.json", "Messung der Modelle (nur Zahlen)", "Model measurement (numbers only)", lokal="Messwert dieses Geräts (speech-spark modelle messen)"),
     state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("nasquelle-tmp", "Zwischendateien der Wissensordner, Sekunden", "Knowledge folder staging, seconds", lokal="Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht"),

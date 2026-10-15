@@ -227,6 +227,7 @@ MODULE = {
     "tts_server": ("sprache", "Sprachausgabe als eigener kleiner Dienst"),
     "tempo": ("sprache", "Sprechtempo für gestreamte Sprache"),
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
+    "modelle": ("sprache", "Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen mit festen Fragen"),
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
     "textnorm": ("sprache", "Text aufräumen vor der Sprachausgabe"),
     "common": ("sprache", "Gemeinsame Helfer für die Dienste: Einstellungen, Zustand"),

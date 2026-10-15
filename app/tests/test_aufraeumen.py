@@ -157,7 +157,8 @@ class OwnJsonWrite(Ratchet, unittest.TestCase):
 class OwnModelCall(Ratchet, unittest.TestCase):
     WHAT = "an own call of the language model (chat/completions); planned: one shared llm.complete"
     ALT = {}   # all through llm.py since the big cleanup step 3
-    OWN = {"panel/llm.py": "the one way to the language model"}
+    OWN = {"panel/llm.py": "the one way to the language model",
+           "modelle.py": "measures one engine directly on its own port (stage E0), never the panel's language model"}
 
     def hits(self):
         return {k: v for k, v in count_by_file(py_files(), lambda name, src: src.count("chat/completions")).items()

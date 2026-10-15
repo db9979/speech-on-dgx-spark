@@ -87,6 +87,7 @@ DIRECT_OK = {
     "docmake": ("sprachmodell", "Sprachmodell beim Erstellen von Dokumenten"),
     "bild_server": ("lokal", "eigene Bild-Engine (sd-server) auf 127.0.0.1 (image.engine_port), nur der Bild-Dienst fragt sie"),
     "bilder": ("lokal", "eigener Bild-Dienst auf 127.0.0.1 (image.port), malt ohne Netz"),
+    "modelle": ("lokal", "misst die eigene Engine auf 127.0.0.1 (modelle.MESS_PORT) und malt dabei über den Bild-Dienst auf 127.0.0.1"),
     "esp32": ("fest", "eigene Sprachdienste auf localhost, Firmware-Release von GitHub (SHA-256 geprüft), Lautsprecher nach resolve()"),
     "hamelden": ("sprachmodell", "Sprachmodell; Home Assistant geht über client()"),
     "health": ("sprachmodell", "Gesundheitstest: Sprachmodell, eigene Sprachdienste, SearXNG"),

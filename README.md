@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.586** Own models stage E0: model catalog and `speech-spark modelle messen`
 - **V01.0.585** Cleanup step 9: no check wrappers, PROJECT LOCK rule
 - **V01.0.584** Cleanup step 8: one register of all state files, one state folder
 - **V01.0.583** Cleanup step 7: setting defaults and choice lists only from the panel
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.579** Cleanup step 3: one shared way to the language model (llm.py)
 - **V01.0.578** Cleanup step 2: every JSON file through one shared writer, no fixed .tmp names any more
 - **V01.0.577** Cleanup step 1: dead imports, functions, texts and CSS gone, one list of removed keys, switch checks from the defaults
-- **V01.0.576** Red fix 2: the briefing test no longer depends on the clock
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

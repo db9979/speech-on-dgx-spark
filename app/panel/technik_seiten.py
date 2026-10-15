@@ -2090,7 +2090,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
-        "stand": "a8e91ff6da",
+        "stand": "f0f1bdb474",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
