@@ -370,6 +370,10 @@ class Installation(unittest.TestCase):
         # paired before any unit is written or started: the panel never talks to the models without the pin
         self.assertLess(sh.index("teilen koppeln \"$MODELLE_PICK\""), sh.index('say "systemd units"'))
         self.assertIn('die "the pairing needs the code', sh)
+        # no GPU on the panel computer (V01.0.626: the Pi stopped at "nvidia-smi not found"), on the first install and
+        # on every update (models.host from the pairing)
+        self.assertLess(sh.index('[ -n "$MODELLE_PICK" ] && gpu_needed=0'), sh.index("command -v nvidia-smi"))
+        self.assertIn('if [ "$gpu_needed" = 1 ]; then', sh)
 
     def test_uninstall_and_rules_place(self):
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:

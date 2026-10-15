@@ -126,9 +126,17 @@ jqi()  { local j; j=$(cfg_json | jq "$@") && [ -n "$j" ] && printf '%s\n' "$j" |
 
 [ "$(id -u)" = 0 ] || die "run with sudo"
 [ "$(uname -m)" = aarch64 ] || warn "this is $(uname -m), not aarch64; the script targets the DGX Spark"
-command -v nvidia-smi >/dev/null || die "nvidia-smi not found; is the NVIDIA driver installed?"
-nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
-  || warn "GPU is not a GB10: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
+# Spark teilen: the panel computer (--modelle, or models.host on another computer from an earlier pairing, as in every
+# update there) needs no GPU; only the computer with the models does
+gpu_needed=1
+[ -n "$MODELLE_PICK" ] && gpu_needed=0
+[ -f "$ETC/config.json" ] && [ "$(runuser -u "$SVC_USER" -- cat -- "$ETC/config.json" 2>/dev/null \
+  | jq -r '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"' 2>/dev/null)" = false ] && gpu_needed=0
+if [ "$gpu_needed" = 1 ]; then
+  command -v nvidia-smi >/dev/null || die "nvidia-smi not found; is the NVIDIA driver installed? (panel on another computer: --mode panel --modelle <dgx>)"
+  nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
+    || warn "GPU is not a GB10: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
+fi
 
 # Spark teilen: the panel computer (Raspberry Pi 5 or another) needs a 64-bit system and Python 3.11 or newer; the
 # panel's environment is built from the lock file, which the self-test covers for 3.11 to 3.13
