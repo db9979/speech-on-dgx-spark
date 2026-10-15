@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.601** Fix: der Dienst-Wächter fragt Home Assistant ohne falsche Anmeldung (keine Login-Warnungen mehr im HA-Log)
 - **V01.0.600** Fix: das Update-Fenster meldet nicht mehr „zu lange“ wegen der Fortschrittsdatei des vorigen Updates
 - **V01.0.599** Fix Qualitätstest: die Kontostand-Frage prüft nur Fakten (ein Betrag fällt durch), nicht die Formulierung
 - **V01.0.598** App-Ansicht (Android-App, Handy-Browser): Fragen und Antworten nutzen die Breite wie in der iPhone-App
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.594** Tagesstart im Begleiter gegliedert wie das Tagesbriefing im Chat (Termine, Wetter, Mails als Listen; neuer Begleiter-Build nötig)
 - **V01.0.593** Fix: Messung und eigene Engines übersetzen höchstens 4 Kernel gleichzeitig (kein Speicherüberlauf mehr)
 - **V01.0.592** Eigene Modelle Stufe E3: Umzug aufs eigene Sprachmodell und zurück, qwen38 aufräumen nur auf Befehl
-- **V01.0.591** Fix: Bildwünsche mit dem Verb am Ende gehen an Bilder malen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

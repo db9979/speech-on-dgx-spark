@@ -5,7 +5,9 @@ What is looked at (only what is switched on, every minute; mail, calendar and NA
 every minute): the language model (/models of the stored address), Hören and Sprechen (/health of the front ends),
 the internet (two fixed public addresses), SearXNG (/healthz), the own Kiwix, Home Assistant, the mail servers, the
 calendar servers and the NAS of the backup. A probe never sends a login: an HTTP answer below 500 (401 included)
-counts as "answers", for mail the TLS greeting of the IMAP server. Addresses come only from the stored settings,
+counts as "answers", for mail the TLS greeting of the IMAP server. Home Assistant is asked for HA_PATH, which it
+serves without a token: /api/ without a token is a failed login there (one line in its log a minute, and with
+ip_ban_enabled it would lock the Spark out). Addresses come only from the stored settings,
 never from a request, through netguard at the level each module uses (Kiwix, Home Assistant, NAS: home network;
 mail and calendar: user rules; the internet: public), 5 seconds and 64 KB at most. Probes do not count on the
 Live page's Wächter list and never start the Selbst-Notaus.
@@ -206,13 +208,16 @@ def _json(path):
         return {}
 
 
+HA_PATH = "/manifest.json"     # served by Home Assistant without a token; /api/ would count as a failed login
+
+
 def _ha_parts():
     out = {}
     for uid in profiles.user_ids():
         d = _json(profiles._path(uid, "homeassistant.json"))     # read raw: the token is never opened here
         o = _origin(d.get("url")) if d.get("token") else ""
         if o:
-            out.setdefault(_key(o), {"url": str(d["url"]).rstrip("/") + "/api/", "level": netguard.HOME,
+            out.setdefault(_key(o), {"url": str(d["url"]).rstrip("/") + HA_PATH, "level": netguard.HOME,
                                      "verify": d.get("verify", True) is not False, "uids": []})["uids"].append(uid)
     return out
 

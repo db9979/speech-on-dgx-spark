@@ -2068,7 +2068,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 
 #### Service watch
 
-- A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, mail, calendar and NAS, each every minute or every 5 minutes, without login: an HTTP answer below 500 counts as „answers“.
+- A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, mail, calendar and NAS, each every minute or every 5 minutes, without login: an HTTP answer below 500 counts as „answers“. Home Assistant is asked for /manifest.json, which it answers without a token; /api/ without a token counted there as a failed login.
 - A service is gone after 3 failed probes over at least 3 minutes, back after 2 good ones. With the internet gone there is one note for everything behind it. During update, start and kill switch stage 2 nothing counts, nor for a part in the maintenance pause until its time is up.
 - The probes go through the guard but do not count on the live list and never trigger the automatic kill switch.
 

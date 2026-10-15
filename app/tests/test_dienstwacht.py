@@ -349,12 +349,14 @@ class Probes(Base):
             self.assertIn("ha", acts)
             part = next(iter(acts["ha"].values()))
             self.assertNotIn("token", json.dumps(part).lower())
-            self.assertEqual(part["url"], f"http://127.0.0.1:{helpers.HA_PORT}/api/")
+            self.assertEqual(part["url"], f"http://127.0.0.1:{helpers.HA_PORT}{dw.HA_PATH}")
             before = list(live._guard)
             calls = len(helpers.HA_CALLS)
+            unauth = len(helpers.HA_UNAUTH)
             with mock.patch.object(live, "on", lambda: True):   # the Live page is on: a request would be listed
                 r = run(REAL_PROBE("ha", "x", part, {}))
-            self.assertTrue(r.ok)                         # answers (without a token it would say 401, still "answers")
+            self.assertTrue(r.ok)
+            self.assertEqual(helpers.HA_UNAUTH[unauth:], [])   # no failed login in Home Assistant's log (ban.py)
             self.assertEqual(list(live._guard), before, [x["to"] for x in live._guard])   # no line on the Wächter list
             for c in helpers.HA_CALLS[calls:]:
                 self.assertNotIn("sealed-token", json.dumps(c))

@@ -2044,10 +2044,12 @@ SEITEN_DATEN = {
             (("Dienst-Wächter", "Service watch"), [
                 ("Eine Schleife prüft Sprachmodell, Hören, Sprechen, Internet, SearXNG, Kiwix, Home Assistant, Mail, "
                  "Kalender und NAS, je nach Dienst jede Minute oder alle {dienstwacht.SLOW|min} Minuten, ohne "
-                 "Anmeldung: eine HTTP-Antwort unter 500 gilt als „antwortet“.",
+                 "Anmeldung: eine HTTP-Antwort unter 500 gilt als „antwortet“. Home Assistant wird unter {dienstwacht.HA_PATH} "
+                 "gefragt, das es ohne Token beantwortet; /api/ ohne Token zählte dort als falsche Anmeldung.",
                  "A loop looks at the language model, listening, speaking, internet, SearXNG, Kiwix, Home Assistant, "
                  "mail, calendar and NAS, each every minute or every {dienstwacht.SLOW|min} minutes, without login: "
-                 "an HTTP answer below 500 counts as „answers“."),
+                 "an HTTP answer below 500 counts as „answers“. Home Assistant is asked for {dienstwacht.HA_PATH}, which it "
+                 "answers without a token; /api/ without a token counted there as a failed login."),
                 ("Weg ist ein Dienst nach {dienstwacht.FAIL_N} Fehlproben über mindestens {dienstwacht.FAIL_S|min} "
                  "Minuten, zurück nach {dienstwacht.OK_N} guten. Ist das Internet weg, gibt es eine Meldung für alles "
                  "dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts, ebenso nicht für einen Teil in der "
