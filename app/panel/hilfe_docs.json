@@ -557,7 +557,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Prozesse und Ports",
 "title": "Wärter (V01.0.609, Stufe B4a)",
-"text": "s steuer.for_live. Seit V01.0.614 startet update das eigene Update des Modell-Rechners; der Status trägt commit und update, update.sh des Panel-Rechners wartet über speech-spark teilen modelle-update darauf. PREFIX und installed_version liegen jetzt in common. Notbetrieb: steuer.weg (30 s ohne Antwort) macht wartung.paused für alle Teile wahr, wartung.quiet nicht; eigener Satz wartung.NOTBETRIEB und Lautsprecher-Dateien notbetrieb-satz-*.pcm. Kopplung (V01.0.616, B6a): teilen.py warten|koppeln auf Port 31008 nur während ein Code gezeigt wird; Schlüssel scrypt(Code, SHA-256 des Zertifikats), Beweis und Antwort mit HMAC-SHA256; speech-spark teilen code|koppeln schreibt Ergebnis mit cfg_put (die eine Stelle, die die Konfiguration in der Shell ändert) und STATE/waerter.key. Installation (V01.0.617, B6b): install.sh --mode api --teilen (Marke $ETC/teilen, Dienste auf 127.0.0.1, Tür-Zertifikat common.TOR_CERT, Einheiten speech-spark-tlstor, -waerter, -teilen-fw, beide in restart-map) und --mode panel --modelle (PANEL_ONLY: kein Modell, keine Engine, Kopplung vor den Einheiten); steuer.rundlauf prüft danach den Weg."
+"text": "s steuer.for_live. Seit V01.0.614 startet update das eigene Update des Modell-Rechners; der Status trägt commit und update, update.sh des Panel-Rechners wartet über speech-spark teilen modelle-update darauf. PREFIX und installed_version liegen jetzt in common. Notbetrieb: steuer.weg (30 s ohne Antwort) macht wartung.paused für alle Teile wahr, wartung.quiet nicht; eigener Satz wartung.NOTBETRIEB und Lautsprecher-Dateien notbetrieb-satz-*.pcm. Kopplung (V01.0.616, B6a): teilen.py warten|koppeln auf Port 31008 nur während ein Code gezeigt wird; Schlüssel scrypt(Code, SHA-256 des Zertifikats), Beweis und Antwort mit HMAC-SHA256; speech-spark teilen code|koppeln schreibt Ergebnis mit cfg_put (die eine Stelle, die die Konfiguration in der Shell ändert) und STATE/waerter.key. Installation (V01.0.617, B6b): install.sh --mode api --teilen (Marke $ETC/teilen, Dienste auf 127.0.0.1, Tür-Zertifikat common.TOR_CERT, Einheiten speech-spark-tlstor, -waerter, -teilen-fw, beide in restart-map) und --mode panel --modelle (PANEL_ONLY: kein Modell, keine Engine, Kopplung vor den Einheiten); steuer.rundlauf prüft danach den Weg. Umziehen (V01.0.618, B6c): panel/umziehen.py packen|auspacken (Umzugs-Sic"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Prozesse und Ports",
+"title": "Wärter (V01.0.609, Stufe B4a)",
+"text": "herung über stdin/stdout, system._check_config), teilen.warten(umzug=…)/koppeln(umzug_ordner, einspielen) mit unterschriebenem „fertig“; speech-spark umziehen --code|--von, zurueckholen --von; das Tür-Zertifikat macht nur speech-spark teilen zertifikat."
 },
 {
 "lang": "de",
@@ -7061,7 +7069,15 @@
 "file": "Architecture and data flow",
 "head": "Processes and ports",
 "title": "Wärter (V01.0.609, stage B4a)",
-"text": " update starts the model computer's own update; the status carries commit and update, the panel computer's update.sh waits for it through speech-spark teilen modelle-update. PREFIX and installed_version now live in common. Emergency mode: steuer.weg (30 s without an answer) makes wartung.paused true for every part, wartung.quiet not; own sentence wartung.NOTBETRIEB and speaker files notbetrieb-satz-*.pcm. Pairing (V01.0.616, B6a): teilen.py warten|koppeln on port 31008 only while a code is shown; key scrypt(code, SHA-256 of the certificate), proof and answer with HMAC-SHA256; speech-spark teilen code|koppeln writes the result with cfg_put (the one place that changes the config in the shell) and STATE/waerter.key. Install (V01.0.617, B6b): install.sh --mode api --teilen (marker $ETC/teilen, services on 127.0.0.1, door certificate common.TOR_CERT, units speech-spark-tlstor, -waerter, -teilen-fw, both in restart-map) and --mode panel --modelle (PANEL_ONLY: no model, no engine, pairing before the units); steuer.rundlauf checks the way afterwards."
+"text": " update starts the model computer's own update; the status carries commit and update, the panel computer's update.sh waits for it through speech-spark teilen modelle-update. PREFIX and installed_version now live in common. Emergency mode: steuer.weg (30 s without an answer) makes wartung.paused true for every part, wartung.quiet not; own sentence wartung.NOTBETRIEB and speaker files notbetrieb-satz-*.pcm. Pairing (V01.0.616, B6a): teilen.py warten|koppeln on port 31008 only while a code is shown; key scrypt(code, SHA-256 of the certificate), proof and answer with HMAC-SHA256; speech-spark teilen code|koppeln writes the result with cfg_put (the one place that changes the config in the shell) and STATE/waerter.key. Install (V01.0.617, B6b): install.sh --mode api --teilen (marker $ETC/teilen, services on 127.0.0.1, door certificate common.TOR_CERT, units speech-spark-tlstor, -waerter, -teilen-fw, both in restart-map) and --mode panel --modelle (PANEL_ONLY: no model, no engine, pairing before the units); steuer.rundlauf checks the way afterwards. Moving (V01.0.618, B6c): panel/umziehen.py packen|auspacken (move backup through stdin/stdout, system._check_config), teilen.warten(umzug=…)/"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Processes and ports",
+"title": "Wärter (V01.0.609, stage B4a)",
+"text": "koppeln(umzug_ordner, einspielen) with a signed \"fertig\"; speech-spark umziehen --code|--von, zurueckholen --von; only speech-spark teilen zertifikat makes the door's certificate."
 },
 {
 "lang": "en",

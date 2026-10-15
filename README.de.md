@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.618** Spark teilen: Panel umziehen und zurückholen (`speech-spark umziehen`, `zurueckholen`)
 - **V01.0.617** Spark teilen: geteilt installieren (Modell-Rechner `--teilen`, Panel-Rechner `--mode panel`)
 - **V01.0.616** Spark teilen: Kopplung mit Code (`speech-spark teilen code` und `koppeln`)
 - **V01.0.615** Spark teilen: Notbetrieb mit festem Satz.
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.611** Rot-Fix: Hilfe von speech-spark zeigt auch teilen.
 - **V01.0.610** Spark teilen B4b: Spracheinstellungen und Logs der Modell-Dienste auch mit dem Panel auf einem anderen Rechner
 - **V01.0.609** Spark teilen B4a: Wärter auf dem DGX, das Panel steuert die Modell-Dienste auch von einem anderen Rechner
-- **V01.0.608** Spark teilen B3: Firewall auf dem DGX, nur der Panel-Rechner erreicht die Modelle
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -349,8 +349,12 @@ class Installation(unittest.TestCase):
     def test_model_computer(self):
         sh = repo_file("install.sh")
         self.assertIn("""[ "$TEILEN" = 1 ] && jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1" | .llm.host="127.0.0.1"'""", sh)
-        self.assertIn('-newkey ec -pkeyopt ec_paramgen_curve:prime256v1', sh)
-        self.assertIn('-keyout "$TLS/tor-key.pem" -out "$TLS/tor-cert.pem"', sh)
+        self.assertIn('bash "$PREFIX/app/speech-spark.sh" teilen zertifikat', sh)
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:
+            cli = f.read()
+        self.assertIn('-newkey ec -pkeyopt ec_paramgen_curve:prime256v1', cli)      # the one place for it
+        self.assertIn('-keyout "$ETC/tls/tor-key.pem" -out "$ETC/tls/tor-cert.pem"', cli)
+        self.assertNotIn("tor-key.pem\" -out", sh)
         self.assertIn("ConditionPathExists=$VAR/state/waerter.key", sh)
         self.assertIn('ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-teilen.nft', sh)
         self.assertIn("restart_front tlstor", sh)

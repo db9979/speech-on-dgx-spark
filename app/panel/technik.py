@@ -188,6 +188,7 @@ MODULE = {
     "system": ("betrieb", "Sicherung, Echtprüfung der Dienste, Hinweise oben"),
     "monitor": ("betrieb", "Messwerte: GPU, Speicher, CPU"),
     "steuer": ("betrieb", "Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners"),
+    "umziehen": ("betrieb", "Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt"),
     "health": ("betrieb", "Stabilität: Wächter für hängende Dienste, Echtprüfung"),
     "live": ("betrieb", "Live-Übersicht: was der Spark gerade tut"),
     "tracelog": ("betrieb", "Logs → Anfragen: der Weg jeder Anfrage"),

@@ -25,6 +25,9 @@
 #   speech-spark teilen code       on the model computer: show a pairing code (10 min, once) and wait for the panel
 #   speech-spark teilen koppeln <dgx>  on the panel computer: pair with the model computer (asks for the code)
 #   speech-spark teilen rundlauf   on the panel computer: Wärter, TTS speaks and ASR hears, through the door
+#   speech-spark umziehen --code   give the panel to another computer (shows the code, sends the move backup)
+#   speech-spark umziehen --von <host>  take the panel from <host> (asks for its code, restores, checks)
+#   speech-spark zurueckholen --von <host>  on the model computer: take the panel back, everything on one computer
 #   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 set -euo pipefail
 
@@ -657,9 +660,35 @@ cmd_modelle() {
 }
 
 teilen_py() {  # app/teilen.py with the system python (stdlib only; the DGX in --mode api has no panel venv)
-  env -i PATH=/usr/bin:/bin LANG=C.UTF-8 SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_TLS="$ETC/tls" \
+  env -i PATH=/usr/bin:/bin LANG=C.UTF-8 SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_TLS="${TEILEN_TLS:-$ETC/tls}" \
     SPEECH_SPARK_STATE="$VAR/state" ${SPEECH_SPARK_CODE:+SPEECH_SPARK_CODE="$SPEECH_SPARK_CODE"} \
     python3 "$PREFIX/app/teilen.py" "$@"
+}
+
+# the certificate the pairing shows, copied as the service user into root's own folder <dir> (root never reads a path
+# in the service user's $ETC): the door's (tor-*), or on a panel computer that gives the panel back the panel's own
+tls_kopie() {
+  local svc f
+  svc=$(panel_user)
+  for f in tor-cert.pem tor-key.pem cert.pem key.pem; do
+    runuser -u "$svc" -- cat -- "$ETC/tls/$f" >"$1/$f" 2>/dev/null || rm -f "$1/$f"
+  done
+  [ -s "$1/tor-cert.pem" ] || [ -s "$1/cert.pem" ] || die "no certificate in $ETC/tls"
+}
+
+# B6b/B6c: the door's own certificate (EC P-256, common.TOR_CERT), made once by the service user in its own folder;
+# the one place that makes it (install.sh --teilen and umziehen --code use this)
+tor_zertifikat() {
+  local svc san ip
+  [ -s "$ETC/tls/tor-cert.pem" ] && return 0
+  svc=$(panel_user)
+  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
+  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
+  runuser -u "$svc" -- sh -c 'umask 077; mkdir -p "$1"' sh "$ETC/tls"
+  runuser -u "$svc" -- openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 \
+    -subj "/CN=$(hostname) speech-spark tor" -addext "subjectAltName=$san" \
+    -keyout "$ETC/tls/tor-key.pem" -out "$ETC/tls/tor-cert.pem" >/dev/null 2>&1 || die "could not create the door's certificate"
+  echo "teilen: zertifikat erstellt"
 }
 
 # the Wärter key from a pairing result (teilen.py warten|koppeln) into STATE/waerter.key, 0600; written by the owner
@@ -675,35 +704,132 @@ waerter_key_setzen() {
 }
 
 restart_if_there() { local u; for u in "$@"; do systemctl try-restart "$u" 2>/dev/null || true; done; }
+models_here() { case "$(cfg '.models.host // "127.0.0.1"')" in 127.0.0.1|localhost|::1) return 0 ;; *) return 1 ;; esac; }
+
+# the model computer after a pairing: the door opens for exactly that panel computer (its address, the Wärter key)
+tuer_oeffnen() {
+  waerter_key_setzen "$1"
+  cfg_put '.api.tls_from=[$r.von] | .api.key=$r.api_key | .api.tls_listen=(if (.api.tls_listen // "") == "" then $r.hier else .api.tls_listen end)' \
+    --argjson r "$(jq -c '{von, hier, api_key}' "$1")"
+  cmd_teilen firewall || true
+}
 
 # B6a: the model computer shows a pairing code and waits; on a fit the door opens for exactly that panel computer
 teilen_code() {
-  local res
-  [ -s "$ETC/tls/tor-cert.pem" ] && [ -s "$ETC/tls/tor-key.pem" ] || die "no door certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
-  res=$(mktemp "$(dirname "$ETC")/.speech-spark-koppeln.XXXXXX")   # root's /etc, never the service user's $ETC
-  if ! teilen_py warten "$res"; then rm -f "$res"; return 1; fi
-  waerter_key_setzen "$res"
-  cfg_put '.api.tls_from=[$r.von] | .api.key=$r.api_key | .api.tls_listen=(if (.api.tls_listen // "") == "" then $r.hier else .api.tls_listen end)' \
-    --argjson r "$(jq -c '{von, hier, api_key}' "$res")"
-  rm -f "$res"
-  cmd_teilen firewall || true
+  local tmp
+  [ -s "$ETC/tls/tor-cert.pem" ] || die "no door certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
+  tmp=$(mktemp -d)   # root's own folder, never the service user's $ETC
+  tls_kopie "$tmp"
+  if ! TEILEN_TLS="$tmp" teilen_py warten "$tmp/ergebnis.json"; then rm -rf "$tmp"; return 1; fi
+  tuer_oeffnen "$tmp/ergebnis.json"
+  rm -rf "$tmp"
   restart_if_there speech-spark-tlstor speech-spark-waerter   # the services read api.key at every request
   echo "teilen: gekoppelt, die Tür ist offen für den Panel-Rechner"
 }
 
-# B6a: the panel computer pairs with the model computer <host> (asks for the code) and pins its certificate
+# B6a/B6c: pair with <host> (asks for the code). rolle panel: this computer runs the panel and pins the model
+# computer's certificate; rolle zurueck: the model computer takes the panel back and runs everything again. A move
+# the other side sends is restored on the way (teilen umzug-einspielen), before anything else changes here.
 teilen_koppeln() {
-  local host=${1:-} res
+  local host=${1:-} rolle=${2:-panel} tmp
   [[ "$host" =~ ^[A-Za-z0-9.:-]{1,253}$ ]] || die "speech-spark teilen koppeln <name-oder-ip des Modell-Rechners>"
-  res=$(mktemp "$(dirname "$ETC")/.speech-spark-koppeln.XXXXXX")   # root's /etc, never the service user's $ETC
-  if ! teilen_py koppeln "$host" "$res"; then rm -f "$res"; return 1; fi
-  waerter_key_setzen "$res"
+  tmp=$(mktemp -d)   # root's own folder
+  if ! teilen_py koppeln "$host" "$tmp/ergebnis.json" "$tmp" -- /bin/bash "$PREFIX/app/speech-spark.sh" teilen umzug-einspielen; then
+    rm -rf "$tmp"; return 1
+  fi
+  if [ "$rolle" = zurueck ]; then
+    cfg_put '.models.host="127.0.0.1" | .models.cert="" | .api.tls_from=[] | .api.tls_listen=""'
+    rm -rf "$tmp"
+    nft delete table inet speech_spark_teilen 2>/dev/null || true
+    rm -f "$(dirname "$ETC")/speech-spark-teilen.nft"
+    echo "teilen: panel zurück, alles läuft wieder auf diesem Rechner"
+    "$PREFIX/src/install.sh" --mode full --yes --no-smoke
+    return
+  fi
+  waerter_key_setzen "$tmp/ergebnis.json"
   cfg_put '.models.host=$h | .models.cert=$r.pem | .api.key=$r.api_key' \
-    --arg h "$host" --argjson r "$(jq -c '{pem, api_key}' "$res")"
-  rm -f "$res"
+    --arg h "$host" --argjson r "$(jq -c '{pem, api_key}' "$tmp/ergebnis.json")"
+  local umzug
+  umzug=$(jq -r '.umzug // false' "$tmp/ergebnis.json")
+  rm -rf "$tmp"
   restart_if_there speech-spark-panel
   echo "teilen: gekoppelt mit dem Modell-Rechner"
+  if [ "$umzug" = true ]; then
+    # the model computer switches to the door now (install.sh --teilen, its services restart): wait for it
+    echo "teilen: der Modell-Rechner stellt um, Rundlauf wartet höchstens 20 Minuten"
+    local i
+    for i in $(seq 1 40); do as_panel_user steuer.py rundlauf >/dev/null 2>&1 && break; sleep 30; done
+    umzug_handgriffe
+  fi
   as_panel_user steuer.py rundlauf || echo "teilen: rundlauf noch nicht grün (Modelle laden noch?): sudo speech-spark teilen rundlauf"
+}
+
+# B6c: restore the move the pairing brought (<dir>/umzug.json and umzug.tar.gz, root's folder) as the panel's user
+umzug_einspielen() {
+  local dir=${1:-}
+  [ -s "$dir/umzug.json" ] && [ -s "$dir/umzug.tar.gz" ] || die "no move in $dir"
+  { cat "$dir/umzug.json"; echo; cat "$dir/umzug.tar.gz"; } | as_panel_user umziehen.py auspacken
+}
+
+# B6c: what stays to do by hand after a move, for the computer that runs the panel now
+umzug_handgriffe() {
+  local ip
+  ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+  echo
+  echo "Noch von Hand (das Panel läuft jetzt auf $ip):"
+  echo "  - Router: Weiterleitung 31443 und TURN (UDP 3478, 49160-49200) auf $ip"
+  echo "  - Home Assistant: Wyoming auf $ip:31003"
+  echo "  - ESP32-Lautsprecher: Server-Adresse $ip"
+}
+
+# B6c: give the panel to another computer (it runs: sudo speech-spark umziehen --von <this>). Only after its signed
+# "fertig ok" does this computer change its role: the model computer then runs as --mode api --teilen, a panel
+# computer just stops its panel. A failed or broken-off move changes nothing here; nothing is ever deleted.
+umzug_geben() {
+  local tmp pw
+  [ "$(mode)" = full ] || die "there is no panel on this computer to move"
+  models_here && tor_zertifikat
+  tmp=$(mktemp -d)   # root's own folder
+  tls_kopie "$tmp"
+  pw=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)
+  printf '%s\n' "$pw" >"$tmp/passwort"
+  if ! printf '%s\n' "$pw" | as_panel_user umziehen.py packen >"$tmp/umzug.bin"; then
+    rm -rf "$tmp"; die "the move backup could not be made"
+  fi
+  echo "Auf dem neuen Rechner: sudo speech-spark umziehen --von $(hostname -I 2>/dev/null | awk '{print $1}')"
+  if ! TEILEN_TLS="$tmp" teilen_py warten "$tmp/ergebnis.json" "$tmp" \
+     || [ "$(jq -r '.umzug_ok // false' "$tmp/ergebnis.json")" != true ]; then
+    rm -rf "$tmp"
+    echo "teilen: umzug abgebrochen, auf diesem Rechner bleibt alles, wie es war"
+    return 1
+  fi
+  if models_here; then
+    tuer_oeffnen "$tmp/ergebnis.json"
+    rm -rf "$tmp"
+    echo "teilen: umzug fertig, dieser Rechner läuft jetzt nur noch mit den Modellen"
+    "$PREFIX/src/install.sh" --mode api --teilen --yes --no-smoke
+  else
+    rm -rf "$tmp"
+    systemctl disable --now speech-spark-panel.service 2>/dev/null || true
+    echo "teilen: umzug fertig, das Panel auf diesem Rechner ist aus (seine Daten bleiben)"
+  fi
+}
+
+cmd_umziehen() {
+  need_root umziehen "$@"
+  case "${1:-}" in
+    --code) umzug_geben ;;
+    --von) [ "$(mode)" = full ] || die "install the panel first: sudo ./install.sh --mode panel --modelle <host>"
+           teilen_koppeln "${2:-}" panel ;;
+    *) die "speech-spark umziehen --code (where the panel is now) | --von <host> (where it goes)" ;;
+  esac
+}
+
+cmd_zurueckholen() {
+  need_root zurueckholen "$@"
+  [ "${1:-}" = --von ] || die "speech-spark zurueckholen --von <panel computer> (there: sudo speech-spark umziehen --code)"
+  { [ "$(mode)" = api ] && [ -f "$ETC/teilen" ]; } || die "only the model computer of a split install takes the panel back"
+  teilen_koppeln "${2:-}" zurueck
 }
 
 cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state and its firewall
@@ -730,6 +856,8 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
       if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
       else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
     code) teilen_code ;;
+    zertifikat) tor_zertifikat ;;
+    umzug-einspielen) umzug_einspielen "${2:-}" ;;
     rundlauf) as_panel_user steuer.py rundlauf ;;
     koppeln) teilen_koppeln "${2:-}" ;;
     modelle-update)   # B5: the model computer updates itself (its own rules) and this one waits for it
@@ -753,6 +881,8 @@ case "${1:-}" in
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
   teilen) shift; cmd_teilen "$@" ;;
-  ""|-h|--help|help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' ;;
+  umziehen) shift; cmd_umziehen "$@" ;;
+  zurueckholen) shift; cmd_zurueckholen "$@" ;;
+  ""|-h|--help|help) sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

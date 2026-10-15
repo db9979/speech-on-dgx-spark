@@ -440,30 +440,16 @@ cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v
 # Browsers only allow the microphone on https (or localhost), so the panel also listens on an
 # https port with a self-signed certificate for the voice chat.
 TLS="$ETC/tls"
-tls_san() {  # the names and addresses of this machine for a certificate
-  local san ip
-  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
-  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
-  echo "$san"
-}
 if [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
   say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
   [ -L "$TLS" ] && rm -f -- "$TLS"
   as_svc mkdir -p "$TLS"
+  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
+  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
   # made by the service user in its own folder (root never writes through a link there)
   as_svc openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$(hostname) speech-spark" \
-    -addext "subjectAltName=$(tls_san)" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
+    -addext "subjectAltName=$san" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
     || warn "could not create the certificate; the voice chat then only works on http://localhost"
-fi
-# Spark teilen: the door's own certificate (EC P-256, common.TOR_CERT), apart from the panel's; the panel computer
-# pins exactly this one at the pairing (teilen.py)
-if [ "$TEILEN" = 1 ] && [ ! -s "$TLS/tor-cert.pem" ]; then
-  say "Creating the door's own certificate (Spark teilen; the panel computer pins it at the pairing)"
-  [ -L "$TLS" ] && rm -f -- "$TLS"
-  as_svc mkdir -p "$TLS"
-  as_svc openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 \
-    -subj "/CN=$(hostname) speech-spark tor" -addext "subjectAltName=$(tls_san)" \
-    -keyout "$TLS/tor-key.pem" -out "$TLS/tor-cert.pem" >/dev/null 2>&1 || die "could not create the door's certificate"
 fi
 [ -L "$TLS" ] && rm -f -- "$TLS"
 if [ -d "$TLS" ]; then
@@ -859,6 +845,13 @@ fi
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
+
+# Spark teilen: the door's own certificate (EC P-256, common.TOR_CERT, apart from the panel's), which the panel
+# computer pins at the pairing; speech-spark teilen zertifikat is the one place that makes it
+if [ "$TEILEN" = 1 ]; then
+  SPEECH_SPARK_PREFIX="$PREFIX" SPEECH_SPARK_ETC="$ETC" SPEECH_SPARK_VAR="$VAR" \
+    bash "$PREFIX/app/speech-spark.sh" teilen zertifikat || die "could not create the door's certificate"
+fi
 
 # ---------------------------------------------------------------- Spark teilen: pairing of the panel computer
 # with the model computer named by --modelle (its code: sudo speech-spark teilen code there); nothing of the panel

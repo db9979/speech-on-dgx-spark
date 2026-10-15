@@ -39,6 +39,9 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark teilen code` | On the model computer: show a pairing code (10 minutes, one use) and wait for the panel computer |
 | `sudo speech-spark teilen koppeln <name-or-ip>` | On the panel computer: pair with the model computer (asks for the code, remembers its certificate) |
 | `sudo speech-spark teilen rundlauf` | On the panel computer: ask the Wärter, TTS speaks a sentence, ASR hears it, all through the door |
+| `sudo speech-spark umziehen --code` | On the computer that has the panel now: offer the move (code, move backup with the vault key and the panel's certificate); it changes its role only after "fertig" from the other computer |
+| `sudo speech-spark umziehen --von <name-or-ip>` | On the new panel computer: fetch the move, restore, check (also happens when pairing with `install.sh --mode panel`) |
+| `sudo speech-spark zurueckholen --von <name-or-ip>` | On the model computer: take the panel back; everything runs on one computer again |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
 
 The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The chat model (qwen38) is not part of this repo and is not touched. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).

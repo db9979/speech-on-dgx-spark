@@ -19,8 +19,14 @@ carry counts and fixed words, never addresses.
 
     python3 teilen.py regeln           the nftables rules for this config (printed, applied by speech-spark teilen)
     python3 teilen.py fingerabdruck    the fingerprint of the door's certificate (TOR_CERT)
-    python3 teilen.py warten <datei>   model computer: show a code, wait for the pairing, the result into <datei>
-    python3 teilen.py koppeln <dgx> <datei>  panel computer: ask for the code, pair, the result into <datei>
+    python3 teilen.py warten <datei> [<ordner>]   show a code, wait for the pairing, the result into <datei>; with
+                                       <ordner> (umzug.bin, passwort from umziehen.py packen) the move goes along
+    python3 teilen.py koppeln <host> <datei> [<ordner> -- <einspielen …>]  ask for the code, pair, the result into
+                                       <datei>; a move the other side sends lands in <ordner> and <einspielen> restores it
+
+- The move (B6c, umziehen): the computer that gives the panel adds its move backup to the pairing; the other one
+  checks size and SHA-256 (inside the signed answer), restores it and answers with a signed "fertig". Only after a
+  "fertig ok" does the giving computer change its role; a failed move changes nothing there.
 """
 import hashlib
 import hmac
@@ -34,17 +40,20 @@ import ssl
 import sys
 import time
 
-from common import TOR_CERT, TOR_KEY, load_config, write_json
+from common import TLS_DIR, TOR_CERT, TOR_KEY, load_config, write_json
 
 TABLE = "speech_spark_teilen"
 MAX_FROM = 4           # panel computers that may use the door (one, plus room for a move)
 KOPPEL_PORT = 31008    # only while a pairing code is shown
+PANEL_CERT, PANEL_KEY = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
 CODE_ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # 32 signs, no I/O/0/1: 30 bits in 6 characters
 CODE_LEN = 6
 CODE_SECS = 600        # a code lives 10 minutes
 CODE_TRIES = 3         # wrong proofs before the code is gone
 CONN_SECS = 30         # one pairing conversation at most
-MAX_MSG = 8192         # bytes of one message
+MAX_MSG = 65536        # bytes of one message (the move's answer carries the panel's certificate and key)
+UMZUG_SECS = 1800      # the other side restores the move backup at most this long
+MAX_UMZUG = 8 * 1024 ** 3
 SCRYPT = {"n": 2 ** 15, "r": 8, "p": 1, "maxmem": 64 * 1024 * 1024, "dklen": 32}
 SALT = b"speech-spark-koppeln-1"
 HOST_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|[0-9A-Fa-f:.]{2,45}")
@@ -144,7 +153,8 @@ def antwort_mac(k, n_pi, n_dgx, daten):
     return _mac(k, b"dgx", n_pi.encode(), n_dgx.encode(), _daten_bytes(daten))
 
 
-def _lesen(conn):
+def _lesen(conn, rest=False):
+    """One JSON line; with rest=True also the bytes that came after it in the same reads."""
     buf = b""
     while b"\n" not in buf:
         chunk = conn.recv(1024)
@@ -153,13 +163,14 @@ def _lesen(conn):
         buf += chunk
         if len(buf) > MAX_MSG:
             raise Fehler("gross")
+    line, _, after = buf.partition(b"\n")
     try:
-        d = json.loads(buf.split(b"\n", 1)[0] or b"null")
+        d = json.loads(line or b"null")
     except ValueError:
         raise Fehler("form")
     if not isinstance(d, dict):
         raise Fehler("form")
-    return d
+    return (d, after) if rest else d
 
 
 def _schreiben(conn, d):
@@ -179,12 +190,34 @@ def _log(text):
     print(f"teilen: kopplung {text}", file=sys.stderr, flush=True)
 
 
-def warten(cfg, code, ctx, sock, uhr=time.monotonic, fertig=None):
-    """Model computer: wait on the listening socket until a panel computer proves the code (dict with its address,
-    our address, a fresh Wärter key and the API key), or Fehler("abgelaufen"|"abgelehnt"). One conversation at a
-    time; the code is gone after the first fit, after CODE_TRIES misses or after CODE_SECS."""
+def _umzug_kopf(pfad):
+    """The move file of umziehen.py packen: (header dict, offset of the backup, its size, its SHA-256)."""
+    h = hashlib.sha256()
+    with open(pfad, "rb") as f:
+        kopf = json.loads(f.readline(MAX_MSG) or b"null")
+        start = f.tell()
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+        size = f.tell() - start
+    if not isinstance(kopf, dict):
+        raise Fehler("umzug")
+    return kopf, start, size, h.hexdigest()
+
+
+def _fertig_mac(k, n_dgx, ok):
+    return _mac(k, b"fertig", n_dgx.encode(), b"ok" if ok else b"nein")
+
+
+def warten(cfg, code, ctx, sock, uhr=time.monotonic, umzug=None):
+    """Model computer (or, with umzug, the computer that gives the panel): wait on the listening socket until the
+    other computer proves the code. Returns its address, our address, a fresh Wärter key and the API key, or
+    Fehler("abgelaufen"|"abgelehnt"). One conversation at a time; the code is gone after the first fit, after
+    CODE_TRIES misses or after CODE_SECS. umzug = {"pfad", "passwort"}: the move file goes along (size and SHA-256
+    inside the signed answer), then the other side reports with a signed "fertig" whether it restored it
+    ("umzug_ok" in the result); only then may this computer change its role."""
     k = schluessel(code, ssl.PEM_cert_to_DER_cert(ctx.pem))
     ende, falsch = uhr() + CODE_SECS, 0
+    kopf = _umzug_kopf(umzug["pfad"]) if umzug else None
     while True:
         rest = ende - uhr()
         if rest <= 0:
@@ -220,10 +253,30 @@ def warten(cfg, code, ctx, sock, uhr=time.monotonic, fertig=None):
                     hier = str(hip.ipv4_mapped)
                 api_key = str((cfg.get("api") or {}).get("key") or "") or api_key_neu()
                 daten = {"waerter_key": secrets.token_hex(32), "api_key": api_key}
+                if kopf:
+                    head, start, size, sha = kopf
+                    daten["umzug"] = {"groesse": size, "sha256": sha, "passwort": umzug["passwort"],
+                                      "cert": str(head.get("cert") or ""), "key": str(head.get("key") or "")}
                 n_dgx = secrets.token_hex(16)
                 _schreiben(conn, {"ok": True, "n": n_dgx, "daten": daten, "mac": antwort_mac(k, n_pi, n_dgx, daten)})
                 _log("ok")
-                return {"von": von, "hier": hier, **daten}
+                out = {"von": von, "hier": hier, "waerter_key": daten["waerter_key"], "api_key": api_key}
+                if kopf:
+                    with open(umzug["pfad"], "rb") as f:
+                        f.seek(start)
+                        for chunk in iter(lambda: f.read(256 * 1024), b""):
+                            conn.sendall(chunk)
+                    _log("umzug gesendet")
+                    conn.settimeout(UMZUG_SECS)
+                    try:
+                        e = _lesen(conn)
+                    except (Fehler, OSError):
+                        e = {}
+                    ok = e.get("fertig") is True and isinstance(e.get("mac"), str) \
+                        and hmac.compare_digest(e["mac"], _fertig_mac(k, n_dgx, True))
+                    out["umzug_ok"] = ok
+                    _log("umzug fertig ok" if ok else "umzug fertig fehler")
+                return out
         except Fehler as e:
             if str(e) == "abgelehnt":
                 raise
@@ -232,9 +285,26 @@ def warten(cfg, code, ctx, sock, uhr=time.monotonic, fertig=None):
             _log("fehler verbindung")
 
 
-def koppeln(host, port, code, ctx=None):
-    """Panel computer: connect, prove the code for the certificate we see, check the signed answer. Returns
-    {pem, waerter_key, api_key} or Fehler("adresse"|"verbindung"|"code"|"antwort")."""
+def _umzug_pruefen(u):
+    if not isinstance(u, dict):
+        raise Fehler("antwort")
+    size, sha, pw = u.get("groesse"), u.get("sha256"), u.get("passwort")
+    if not isinstance(size, int) or not 0 < size <= MAX_UMZUG or not _hexn(sha, 64):
+        raise Fehler("antwort")
+    if not isinstance(pw, str) or not 12 <= len(pw) <= 200:
+        raise Fehler("antwort")
+    for f in ("cert", "key"):
+        if not isinstance(u.get(f), str) or len(u[f]) > 16384:
+            raise Fehler("antwort")
+    return u
+
+
+def koppeln(host, port, code, ctx=None, umzug_ordner=None, einspielen=None):
+    """Panel computer (or, with a move, the computer that takes the panel): connect, prove the code for the
+    certificate we see, check the signed answer. Returns {pem, waerter_key, api_key} (and "umzug": True after a
+    restored move) or Fehler("adresse"|"verbindung"|"code"|"antwort"|"umzug"). When the other side sends a move, it
+    lands in umzug_ordner (umzug.tar.gz and umzug.json, 0600), is checked against the signed size and SHA-256, and
+    einspielen() restores it; the signed "fertig" tells the other side whether that worked."""
     if not HOST_RE.fullmatch(str(host or "")):
         raise Fehler("adresse")
     code = code_lesen(code)
@@ -255,20 +325,56 @@ def koppeln(host, port, code, ctx=None):
             k = schluessel(code, der)
             n_pi = secrets.token_hex(16)
             _schreiben(conn, {"v": 1, "n": n_pi, "beweis": beweis(k, n_pi)})
-            d = _lesen(conn)
+            d, rest = _lesen(conn, rest=True)
+            if d.get("ok") is not True:
+                raise Fehler("code")
+            daten, n_dgx, mac = d.get("daten"), d.get("n"), d.get("mac")
+            if not isinstance(daten, dict) or not _hexn(n_dgx) or not isinstance(mac, str):
+                raise Fehler("antwort")
+            if not hmac.compare_digest(mac, antwort_mac(k, n_pi, n_dgx, daten)):
+                raise Fehler("antwort")
+            wk, ak = daten.get("waerter_key"), daten.get("api_key")
+            if not _hexn(wk, 64) or not isinstance(ak, str) or not re.fullmatch(r"[A-Za-z0-9_\-]{16,128}", ak):
+                raise Fehler("antwort")
+            out = {"pem": ssl.DER_cert_to_PEM_cert(der), "waerter_key": wk, "api_key": ak}
+            if "umzug" in daten:
+                u = _umzug_pruefen(daten["umzug"])
+                ok = False
+                if umzug_ordner and einspielen:
+                    ok = _umzug_holen(conn, rest, u, umzug_ordner) and bool(einspielen())
+                _schreiben(conn, {"fertig": ok, "mac": _fertig_mac(k, n_dgx, ok)})
+                _log("umzug eingespielt" if ok else "umzug fehler")
+                if not ok:
+                    raise Fehler("umzug")
+                out["umzug"] = True
     except (OSError, ssl.SSLError):
         raise Fehler("verbindung")
-    if d.get("ok") is not True:
-        raise Fehler("code")
-    daten, n_dgx, mac = d.get("daten"), d.get("n"), d.get("mac")
-    if not isinstance(daten, dict) or not _hexn(n_dgx) or not isinstance(mac, str):
-        raise Fehler("antwort")
-    if not hmac.compare_digest(mac, antwort_mac(k, n_pi, n_dgx, daten)):
-        raise Fehler("antwort")
-    wk, ak = daten.get("waerter_key"), daten.get("api_key")
-    if not _hexn(wk, 64) or not isinstance(ak, str) or not re.fullmatch(r"[A-Za-z0-9_\-]{16,128}", ak):
-        raise Fehler("antwort")
-    return {"pem": ssl.DER_cert_to_PEM_cert(der), "waerter_key": wk, "api_key": ak}
+    return out
+
+
+def _umzug_holen(conn, rest, u, ordner):
+    """The move file from the connection into ordner, checked against the signed size and SHA-256."""
+    h, size = hashlib.sha256(), u["groesse"]
+    pfad = os.path.join(ordner, "umzug.tar.gz")
+    with open(os.open(pfad, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as f:
+        got = rest[:size]
+        f.write(got)
+        h.update(got)
+        n = len(got)
+        while n < size:
+            chunk = conn.recv(min(256 * 1024, size - n))
+            if not chunk:
+                return False
+            f.write(chunk)
+            h.update(chunk)
+            n += len(chunk)
+    if not hmac.compare_digest(h.hexdigest(), u["sha256"]):
+        _log("umzug pruefsumme falsch")
+        return False
+    head = {"passwort": u["passwort"], "cert": u["cert"], "key": u["key"]}
+    with open(os.open(os.path.join(ordner, "umzug.json"), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w") as f:
+        json.dump(head, f)
+    return True
 
 
 class _Ctx:
@@ -301,23 +407,35 @@ def main(argv):
             sys.stdout.write(regeln(cfg))
         elif cmd == "fingerabdruck":
             print(fingerabdruck())
-        elif cmd == "warten" and len(argv) == 2:
-            ctx = _Ctx(TOR_CERT, TOR_KEY)
+        elif cmd == "warten" and len(argv) in (2, 3):
+            # the door's certificate; a panel computer that gives the panel back has only the panel's own
+            cert, key = (TOR_CERT, TOR_KEY) if os.path.exists(TOR_CERT) else (PANEL_CERT, PANEL_KEY)
+            ctx = _Ctx(cert, key)
+            umzug = None
+            if len(argv) == 3:
+                with open(os.path.join(argv[2], "passwort")) as f:
+                    umzug = {"pfad": os.path.join(argv[2], "umzug.bin"), "passwort": f.read().strip()}
             code = code_neu()
             with lauschen() as sock:
                 print(f"Kopplungscode: {zeigen(code)}  (10 Minuten gültig, einmal nutzbar)", flush=True)
-                print(f"Fingerabdruck: {fingerabdruck()}", flush=True)
+                print(f"Fingerabdruck: {fingerabdruck(cert)}", flush=True)
                 _log("code gezeigt")
-                write_json(argv[1], warten(cfg, code, ctx, sock), mode=0o600)
-        elif cmd == "koppeln" and len(argv) == 3:
-            code = os.environ.get("SPEECH_SPARK_CODE") or input("Kopplungscode vom Modell-Rechner: ")
-            res = koppeln(argv[1], KOPPEL_PORT, code)
+                write_json(argv[1], warten(cfg, code, ctx, sock, umzug=umzug), mode=0o600)
+        elif cmd == "koppeln" and (len(argv) == 3 or (len(argv) > 5 and argv[4] == "--")):
+            code = os.environ.get("SPEECH_SPARK_CODE") or input("Kopplungscode vom anderen Rechner: ")
+            ordner, befehl = (argv[3], argv[5:]) if len(argv) > 3 else (None, None)
+
+            def einspielen():
+                import subprocess
+                return subprocess.run(befehl + [ordner], check=False).returncode == 0
+            res = koppeln(argv[1], KOPPEL_PORT, code, umzug_ordner=ordner, einspielen=einspielen if befehl else None)
             der = ssl.PEM_cert_to_DER_cert(res["pem"])
             print("Fingerabdruck:", ":".join(f"{b:02X}" for b in hashlib.sha256(der).digest()), flush=True)
             _log("ok")
             write_json(argv[2], res, mode=0o600)
         else:
-            print("teilen.py regeln|fingerabdruck|warten <datei>|koppeln <dgx> <datei>", file=sys.stderr)
+            print("teilen.py regeln|fingerabdruck|warten <datei> [<umzug-ordner>]|"
+                  "koppeln <host> <datei> [<umzug-ordner> -- <einspielen …>]", file=sys.stderr)
             return 2
     except Fehler as e:
         print(f"teilen: abgelehnt {e}", flush=True)

@@ -39,6 +39,9 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark teilen code` | Auf dem Modell-Rechner: Kopplungscode zeigen (10 Minuten, einmal nutzbar) und auf den Panel-Rechner warten |
 | `sudo speech-spark teilen koppeln <name-oder-ip>` | Auf dem Panel-Rechner: mit dem Modell-Rechner koppeln (fragt nach dem Code, merkt sich sein Zertifikat) |
 | `sudo speech-spark teilen rundlauf` | Auf dem Panel-Rechner: Wärter fragen, TTS spricht einen Satz, ASR hört ihn, alles über die Tür |
+| `sudo speech-spark umziehen --code` | Auf dem Rechner, der das Panel jetzt hat: Umzug anbieten (Code, Umzugs-Sicherung mit Tresor-Schlüssel und Panel-Zertifikat); erst nach „fertig“ vom anderen Rechner wechselt er die Rolle |
+| `sudo speech-spark umziehen --von <name-oder-ip>` | Auf dem neuen Panel-Rechner: Umzug holen, einspielen, prüfen (geht auch beim Koppeln mit `install.sh --mode panel`) |
+| `sudo speech-spark zurueckholen --von <name-oder-ip>` | Auf dem Modell-Rechner: das Panel zurückholen, danach läuft wieder alles auf einem Rechner |
 | `sudo speech-spark teilen firewall [aus]` | die Ports der Tür nur vom Panel-Rechner (`api.tls_from`) erreichbar machen (nftables, Tabelle `speech_spark_teilen`), oder wieder aus |
 
 Den Wächter für hängende Dienste, der sonst im Portal läuft, übernimmt ohne Portal der Dienst `speech-spark-watch` mit denselben Regeln. Nach einem Update spricht die Sprachausgabe einen Satz, und die Spracherkennung muss ihn verstehen; klappt das nicht, spielt das Update die vorige Version wieder ein. Die Selbsttests laufen in beiden Arten vor jedem Update. Das Chat-Modell (qwen38) gehört nicht zu diesem Repo und bleibt davon unberührt. Läuft Open WebUI in Docker auf derselben Spark, müssen die APIs im Netz erreichbar sein (`127.0.0.1` im Container ist der Container selbst).
