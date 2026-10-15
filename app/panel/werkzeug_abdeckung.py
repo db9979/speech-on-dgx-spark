@@ -145,6 +145,7 @@ WITHOUT = {
     "dienstwacht": "meldet sich von selbst",
     "wartung": "Zustand → Wartungspause; in der Pause sagt das Panel einen festen Satz statt einer Antwort",
     "wartungauto": "wartung.py: das Panel pausiert selbst, wenn ein Modell neu startet; kein Werkzeug",
+    "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "notbetriebasr": "notbetrieb.py: feste Befehle nach festen Regeln, nur im Notbetrieb, kein Sprachmodell und kein Werkzeug",
     "modellwechsel": "Zustand → Modelle, nur Admins mit frischem Code; der Wechsel läuft als root in speech-spark-wechsel, kein Werkzeug",
     "modelleeigen": "Zustand → Modelle, nur Admins; das Panel liest nur Metadaten von Hugging Face, kein Werkzeug",

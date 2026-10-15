@@ -100,6 +100,9 @@ SVC = {
                    SLOW, "naszustand"),
     # Den Spark anrufen (telefon.py): signed in at the PBX; the SIP part renews it itself, the probe only looks at it
     "telefon": ("Telefonanlage", "Telephone system", "Anrufe beim Spark gehen gerade nicht; alles andere läuft weiter.", EVERY, "telefon"),
+    # Gehäuse (gehaeuse.py): the display of the panel computer's case answers on I2C; the probe only looks at the loop
+    "gehaeuse": ("Display am Gehäuse", "Display on the case", "Das Display am Gehäuse zeigt gerade nichts; alles andere läuft weiter.",
+                 SLOW, "gehaeuse"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Bilder malen (bild_server.py on 127.0.0.1): the service, not the engine; an engine unloaded after idling is no outage
@@ -299,6 +302,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import gehaeuse
+        p = gehaeuse.probes()
+        if p:
+            out["gehaeuse"] = p
+    except Exception:
+        pass
+    try:
         import doclingdienst
         d = doclingdienst._read()
         if doclingdienst.admin_on(c) and _origin(d.get("url")):
@@ -463,6 +473,9 @@ async def probe(sid, key, p, cfg):
         if p.get("sip"):     # Telefon: signed in at the PBX right now (telefon.py renews it), no question of its own
             import telefon
             return Probe(telefon.signed_in())
+        if p.get("oled"):    # Gehäuse: the display answered in the panel's own loop (gehaeuse.py), no question of its own
+            import gehaeuse
+            return Probe(gehaeuse.oled_ok())
         if p.get("tcp"):
             return await _tcp(p)
         if p.get("turn"):    # Anrufe von unterwegs: the unit runs with the panel's settings (anrufe.relay_ok)

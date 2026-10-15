@@ -6,6 +6,7 @@
 #   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
 #   sudo ./install.sh --mode api --teilen   # Spark teilen: only the models, for a panel on another computer (pairing code)
 #   sudo ./install.sh --mode panel --modelle HOST  # Spark teilen: only the panel (Raspberry Pi 5), models on HOST
+#   sudo ./install.sh --gehaeuse pironman5  # the panel computer's case: display, status LEDs, fans (then restart)
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
 #   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
@@ -47,7 +48,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -68,6 +69,7 @@ while [ $# -gt 0 ]; do
     --no-voicedesign) VD_PICK=no ;;
     --bild) BILD_PICK="$2"; shift ;;
     --llm) LLM_PICK=1 ;;
+    --gehaeuse) GEHAEUSE_PICK="${2:-}"; shift ;;
     --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
@@ -75,7 +77,7 @@ while [ $# -gt 0 ]; do
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -88,6 +90,7 @@ case "$MODE" in ""|full|api|panel) ;; *) echo "--mode must be full, api or panel
 if [ -n "$MODELLE_PICK" ] && ! [[ "$MODELLE_PICK" =~ ^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$ ]]; then
   echo "--modelle needs the name or IP address of the model computer" >&2; exit 2
 fi
+case "$GEHAEUSE_PICK" in ""|pironman5) ;; *) echo "--gehaeuse: pironman5" >&2; exit 2 ;; esac
 [ "$PANEL_PICK" = 1 ] && [ -z "$MODELLE_PICK" ] && { echo "--mode panel needs --modelle <name-or-ip of the model computer>" >&2; exit 2; }
 [ -n "$MODELLE_PICK" ] && [ "$TEILEN_PICK" = 1 ] && { echo "--teilen (model computer) and --modelle (panel computer) exclude each other" >&2; exit 2; }
 [ "$TEILEN_PICK" = 1 ] && [ "$MODE" = full ] && { echo "--teilen goes with --mode api" >&2; exit 2; }
@@ -864,7 +867,8 @@ fi
     done
   done
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
-  printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel\n'   # stage E4: takes the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse\n'   # B7: the case, from the panel's checked wish
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
@@ -900,6 +904,8 @@ if [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost
          | if ((.chat.esp32_url // "") | test("^https?://" + ($h | gsub("[.]"; "[.]")) + "(:[0-9]+)?/?$"))
            then .chat.esp32_url |= sub("^(?<s>https?://)[^:/]+"; "\(.s)\($ip)") else . end'
 fi
+# plan raspberry-split B7: the case of the panel computer (Funktionen → Gehäuse)
+[ -n "$GEHAEUSE_PICK" ] && jqi --arg a "$GEHAEUSE_PICK" '.chat.gehaeuse = true | .chat.gehaeuse_art = $a'
 
 # ---------------------------------------------------------------- systemd
 say "systemd units"
@@ -1200,6 +1206,26 @@ Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle wunsch-intern
 TimeoutStartSec=2h
 EOF
+
+# Plan raspberry-split B7: sets up or removes the case of the panel computer (Funktionen → Gehäuse). It takes only the
+# wish gehaeuse.py checked and writes the config.txt block itself from two numbers; nothing else can be passed in.
+cat >/etc/systemd/system/speech-spark-gehaeuse.service <<UNIT
+[Unit]
+Description=Speech on DGX Spark: set up the case of the panel computer
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+MemoryMax=256M
+PrivateTmp=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh gehaeuse wunsch-intern
+TimeoutStartSec=5min
+UNIT
+if [ -n "$GEHAEUSE_PICK" ]; then
+  say "Case $GEHAEUSE_PICK: display, LEDs and fans (active after a restart)"
+  bash "$PREFIX/app/speech-spark.sh" gehaeuse ein || warn "case: setup failed, see speech-spark gehaeuse status"
+fi
 
 # Spark teilen (plan raspberry-split B6b), only on the model computer: the door (tlstor.py, TLS 1.3 on api.tls_listen,
 # only api.tls_from), the Wärter (tarswart.py on 127.0.0.1:31007, only with the key from the pairing) and the door's

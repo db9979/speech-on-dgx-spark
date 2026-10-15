@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.647** Gehäuse des Panel-Rechners (Pironman 5): Display, Status-LEDs und Lüfter, Funktionen → Gehäuse (neu, aus)
 - **V01.0.646** Terminal-Client spark-tui (neu, aus): Chat, Gespräche, Heute und Aufträge im Terminal, etwa auf der uConsole
 - **V01.0.645** Verbessern: Speicher von tars, Fehler nennen ihre Stelle im Log
 - **V01.0.644** Leistung messen zeigt den Speicher von tars; eigene Lautsprecher-Adresse ohne Fehlermeldung
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.640** Fix: eine Wartungspause auf dem Modell-Rechner endet mit ihrer Zeit (keine hängende Pause mehr nach abgebrochener Messung)
 - **V01.0.639** Spark teilen: nach dem Wechsel aufs eigene Sprachmodell erreicht der Pi es sofort
 - **V01.0.638** Umzug: Lautsprecher-Adresse zeigt danach auf den Pi
-- **V01.0.637** Pi: Sprachmodell-Adresse zeigt nach dem Umzug auf das LLM-Tor von tars
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

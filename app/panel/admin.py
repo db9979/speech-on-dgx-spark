@@ -577,6 +577,10 @@ def validate(new):
         v = ch.get(k, d)
         if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
             raise HTTPException(400, f"{k}: {lo} bis {hi}")
+    import gehaeuse
+    why = gehaeuse.check(ch)
+    if why:
+        raise HTTPException(400, why)
     import berater
     off = ch.get("berater_off", [])
     if not isinstance(off, list) or len(off) > len(berater.MELDER) or any(x not in berater.MELDER for x in off):

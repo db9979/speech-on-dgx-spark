@@ -341,6 +341,8 @@ FEATURES = (
       guide="wartungauto"),
     # notbetrieb.py: with the models on another computer, Parakeet on this one hears while they are gone (fixed commands)
     F("notbetriebasr", "Notbetrieb mit Parakeet", "Emergency mode with Parakeet", "sec", ("notbetrieb_asr",), guide="notbetriebasr"),
+    # gehaeuse.py: the case of a panel computer (Pironman 5): OLED pages for the admin, status LEDs, fan thresholds
+    F("gehaeuse", "Gehäuse", "Case", "sec", ("gehaeuse",), guide="gehaeuse"),
     # modelle.py stage E4: admins switch the model of one kind under Zustand → Modelle (root unit speech-spark-wechsel)
     F("modellwechsel", "Modelle wechseln", "Switch models", "sec", ("modelle_wechseln",), guide="modellwechsel"),
     # modelle.py stage E5: the admin adds own Hugging Face models (language model, image understanding) under fixed rules
@@ -441,7 +443,7 @@ OWN = {}
 DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "modellwechsel", "modelleeigen"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "modellwechsel", "modelleeigen"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.

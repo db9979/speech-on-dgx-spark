@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.647** Case of the panel computer (Pironman 5): display, status LEDs and fans, Funktionen → Gehäuse (new, off)
 - **V01.0.646** Terminal client spark-tui (new, off): chat, conversations, Today and jobs in a terminal such as the uConsole
 - **V01.0.645** Verbessern: tars' memory, failures name their place in the log
 - **V01.0.644** Leistung messen shows tars' memory; the panel's own speaker address no longer reads as an error
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.640** Fix: a Wartungspause on the model computer ends with its time (no more hanging pause after an aborted measurement)
 - **V01.0.639** Spark split: after switching to the own language model the Pi reaches it at once
 - **V01.0.638** Move: the speakers' address then points to the Pi
-- **V01.0.637** Pi: after the move the language model address points to tars' LLM door
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

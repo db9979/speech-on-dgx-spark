@@ -219,6 +219,7 @@ MODULE = {
     "nas": ("betrieb", "Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung"),
     "nasquelle": ("betrieb", "Wissensordner und Haushaltsordner: Ordner an einem Speicherort nur lesen und in die Dokumentensuche bringen"),
     "nasablage": ("betrieb", "Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten"),
+    "gehaeuse": ("teilen", "Gehäuse des Panel-Rechners (Pironman 5): OLED-Seiten für den Admin, Status-LEDs, Lüftergrenzen"),
     "naszustand": ("betrieb", "Zustand der NAS: Belegung, RAID, Festplatten und Temperatur über SNMPv3 (nur lesen, nur Admin)"),
     "nashilfe": ("betrieb", "NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto"),
     "update": ("betrieb", "Updates von GitHub, nur nach grünem Test"),

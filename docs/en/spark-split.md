@@ -53,6 +53,17 @@ On the panel computer `sudo speech-spark umziehen --code`, on the DGX `sudo spee
 - The DGX's firewall lets only the panel computer reach the door's ports. Every command to the Wärter is signed with a key of its own, carries a time stamp and counts only once.
 - Which version the DGX installs is decided by its own rules, never by the panel computer.
 
+## Case of the panel computer (Pironman 5)
+
+When the Raspberry Pi sits in the Pironman 5 case, the small display shows the state, the four LEDs light in the status colour and the fans run by temperature. Switch it on under Funktionen → Gehäuse (admin only, shown only on a split Spark): pick "Pironman 5", "Set up" (admin code), then "Restart". Or at install time `sudo ./install.sh --gehaeuse pironman5` and restart the Pi afterwards.
+
+- **Set up** writes a marked block into `/boot/firmware/config.txt` (I2C, SPI, fan on GPIO 6 with on and off threshold), loads `i2c-dev` and gives the service user the groups `i2c`, `spi`, `gpio`. A copy of the old file stays as `config.txt.speech-spark-alt`. **Remove** takes only this block out again.
+- **Display** (SSD1306, 128×64) changes every few seconds between the pages Spark, Services and maintenance, Pi (temperature, load, memory), DGX gone or paused, Network. When the DGX is gone or paused that page comes first; on a problem the services. Pages can be left out, the picture turned by 180°, "only on problems" keeps it dark otherwise. Night mode: off, dim or fully off between two hours.
+- **LEDs**: green = all running, yellow = pause, a hint or a service missing, red = DGX not reachable.
+- **Fans** are driven by the kernel itself (overlay `gpio-fan`); the thresholds apply after the next setup and restart.
+
+The panel never writes system files itself: it leaves a wish and starts the fixed unit `speech-spark-gehaeuse`, which checks the wish again and writes the block itself from two numbers. Check with `sudo speech-spark gehaeuse status`; the Live box "Gehäuse" shows display, LEDs and page, the logs are in the area "gehaeuse".
+
 ## Checking and finding faults
 
 | What | Command |

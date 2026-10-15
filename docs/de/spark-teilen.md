@@ -53,6 +53,17 @@ Auf dem Panel-Rechner `sudo speech-spark umziehen --code`, auf dem DGX `sudo spe
 - Die Firewall des DGX lässt die Ports der Tür nur für den Panel-Rechner zu. Jeder Befehl an den Wärter ist mit einem eigenen Schlüssel unterschrieben, hat einen Zeitstempel und gilt nur einmal.
 - Welche Version der DGX installiert, entscheidet er nach seinen eigenen Regeln, nie der Panel-Rechner.
 
+## Gehäuse des Panel-Rechners (Pironman 5)
+
+Steckt der Raspberry Pi im Pironman-5-Gehäuse, zeigt das kleine Display den Zustand, die vier LEDs leuchten in der Statusfarbe und die Lüfter laufen nach der Temperatur. Einschalten unter Funktionen → Gehäuse (nur Admin, nur auf einem geteilten Spark sichtbar): „Pironman 5“ wählen, „Einrichten“ (Admin-Code), dann „Neu starten“. Oder bei der Installation `sudo ./install.sh --gehaeuse pironman5` und danach den Pi neu starten.
+
+- **Einrichten** schreibt einen markierten Block in `/boot/firmware/config.txt` (I2C, SPI, Lüfter an GPIO 6 mit Ein- und Ausschaltgrenze), lädt `i2c-dev` und gibt dem Dienstbenutzer die Gruppen `i2c`, `spi`, `gpio`. Eine Kopie der alten Datei bleibt als `config.txt.speech-spark-alt`. **Entfernen** nimmt nur diesen Block wieder heraus.
+- **Display** (SSD1306, 128×64) wechselt alle paar Sekunden zwischen den Seiten Spark, Dienste und Wartung, Pi (Temperatur, Last, Speicher), DGX weg oder in Pause, Netz. Ist der DGX weg oder pausiert, kommt diese Seite zuerst; bei einem Problem die Dienste. Seiten lassen sich abwählen, das Bild um 180° drehen, „nur bei Problemen“ hält es sonst dunkel. Nachtbetrieb: aus, dunkel oder ganz aus zwischen zwei Stunden.
+- **LEDs**: grün = alles läuft, gelb = Pause, Hinweis oder ein Dienst fehlt, rot = DGX nicht erreichbar.
+- **Lüfter** steuert der Kernel selbst (Overlay `gpio-fan`); die Grenzen gelten nach dem nächsten Einrichten und Neustart.
+
+Das Panel schreibt nie selbst in Systemdateien: es legt einen Wunsch ab und startet die feste Einheit `speech-spark-gehaeuse`, die den Wunsch noch einmal prüft und den Block aus zwei Zahlen selbst schreibt. Prüfen mit `sudo speech-spark gehaeuse status`; der Live-Kasten „Gehäuse“ zeigt Display, LEDs und Seite, die Logs stehen im Bereich „gehaeuse“.
+
 ## Prüfen und Fehler suchen
 
 | Was | Befehl |

@@ -212,6 +212,22 @@
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Wartungspause</b><span>Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe hält der Spark kurz an: fester Satz statt Fehler, Hintergrund wartet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung"><i></i></label></div>
       <div class="setrow" data-show="chat.wartung" style="margin-left:18px"><div class="lbl"><b>Automatisch bei Neustart</b><span>Startet ein Modell neu (auch beim Umschalten in qwen38), pausiert der Spark diesen Teil selbst, bis er wieder antwortet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung_auto"><i></i></label></div>
+      <div class="setrow" data-teilen="1"><div class="lbl"><b>Gehäuse</b><span>Pironman 5 am Panel-Rechner: das Display zeigt dem Admin Zustand und Zahlen, die LEDs die Statusfarbe, die Lüfter laufen nach Temperatur.</span></div><label class="tgl"><input type="checkbox" id="chat.gehaeuse"><i></i></label></div>
+      <div data-show="chat.gehaeuse" style="margin-left:36px">
+        <label for="chat.gehaeuse_art">Gehäuse</label><select id="chat.gehaeuse_art"><option value="keins">Keins</option><option value="pironman5">SunFounder Pironman 5</option></select>
+        <label for="chat.gehaeuse_wechsel_s">Seitenwechsel (Sekunden)</label><input class="num" id="chat.gehaeuse_wechsel_s" type="number" min="3" max="60"><div class="fh">3 bis 60, Standard 6.</div>
+        <label for="chat.gehaeuse_hell">Helligkeit des Displays (%)</label><input class="num" id="chat.gehaeuse_hell" type="number" min="1" max="100"><div class="fh">1 bis 100, Standard 60.</div>
+        <label for="chat.gehaeuse_led_hell">Helligkeit der LEDs (%)</label><input class="num" id="chat.gehaeuse_led_hell" type="number" min="0" max="100"><div class="fh">0 bis 100, Standard 30; 0 schaltet sie aus.</div>
+        <label for="chat.gehaeuse_anzeige">Display</label><select id="chat.gehaeuse_anzeige"><option value="immer">Immer an</option><option value="probleme">Nur bei Problemen</option></select>
+        <label for="chat.gehaeuse_nacht">Nachts</label><select id="chat.gehaeuse_nacht"><option value="aus">Display und LEDs aus</option><option value="dunkel">Gedimmt</option><option value="an">Wie am Tag</option></select>
+        <label for="chat.gehaeuse_nacht_von">Nacht von (Uhr)</label><input class="num" id="chat.gehaeuse_nacht_von" type="number" min="0" max="23">
+        <label for="chat.gehaeuse_nacht_bis">Nacht bis (Uhr)</label><input class="num" id="chat.gehaeuse_nacht_bis" type="number" min="0" max="23"><div class="fh">Standard 22 bis 7 Uhr.</div>
+        <label for="chat.gehaeuse_drehung">Drehung des Displays</label><select id="chat.gehaeuse_drehung" data-num><option value="0">0°</option><option value="180">180°</option></select>
+        <label for="chat.gehaeuse_seiten_aus">Seiten aus</label><input class="wide" id="chat.gehaeuse_seiten_aus" data-list placeholder="z. B. netz, pi"><div class="fh">Seiten: spark, dienste, pi, dgx, netz. Mindestens eine bleibt an.</div>
+        <label for="chat.gehaeuse_luefter_an">Lüfter an ab (°C)</label><input class="num" id="chat.gehaeuse_luefter_an" type="number" min="40" max="80"><div class="fh">40 bis 80, Standard 55.</div>
+        <label for="chat.gehaeuse_luefter_aus">Lüfter aus unter (°C)</label><input class="num" id="chat.gehaeuse_luefter_aus" type="number" min="30" max="75"><div class="fh">30 bis 75, Standard 48. Eine neue Grenze gilt nach „Einrichten“ und einem Neustart.</div>
+        <div class="mainonly" id="gehbox" data-nodirty><div class="row"><button class="b p" id="gehein" type="button">Einrichten</button><button class="b" id="gehaus" type="button">Entfernen</button><button class="b" id="gehneu" type="button" hidden>Neu starten</button></div><div class="fh" id="gehmsg" role="status"></div></div>
+      </div>
       <div class="setrow" data-teilen="1"><div class="lbl"><b>Notbetrieb mit Parakeet</b><span>Panel auf eigenem Rechner, DGX weg: Parakeet hört, feste Befehle (Licht, Uhrzeit, Erinnerungen) gehen ohne Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.notbetrieb_asr"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Modelle wechseln</b><span>Admins wechseln unter Zustand → Modelle das Modell einer Art; das alte bleibt 7 Tage zum Zurückholen.</span></div><label class="tgl"><input type="checkbox" id="chat.modelle_wechseln"><i></i></label></div>
       <div class="setrow" data-show="chat.modelle_wechseln" style="margin-left:18px"><div class="lbl"><b>Eigene Modelle</b><span>Admins fügen Sprach- und Bildverständnis-Modelle von Hugging Face hinzu, nur nach festen Regeln (safetensors, kein fremder Code).</span></div><label class="tgl"><input type="checkbox" id="chat.modelle_eigene"><i></i></label></div>
@@ -1158,6 +1174,7 @@
 <script src="/static/js/nashilfe.js"></script>
 <script src="/static/js/nasablage.js"></script>
 <script src="/static/js/naszustand.js"></script>
+<script src="/static/js/gehaeuse.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/chats.js"></script>
 <script src="/static/js/chatsec.js"></script>

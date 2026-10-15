@@ -879,6 +879,90 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
   esac
 }
 
+# Gehäuse (plan Raspberry-Pi split B7, gehaeuse.py): the case of a panel computer. Root writes everything itself from
+# two whole numbers (the fan thresholds), never a line from the panel: the block between the markers in config.txt,
+# the module i2c-dev and the groups of the service user. A change needs a restart: GEHAEUSE_NEUSTART in /run says so
+# (gone after it), and only then the panel's "Neu starten" restarts the Pi.
+GEHAEUSE_TXT=${SPEECH_SPARK_CONFIG_TXT:-/boot/firmware/config.txt}
+GEHAEUSE_NEUSTART=${SPEECH_SPARK_GEHAEUSE_NEUSTART:-/run/speech-spark-gehaeuse-neustart}
+GEHAEUSE_MODULE=${SPEECH_SPARK_MODULES_D:-/etc/modules-load.d}/speech-spark-gehaeuse.conf
+GEHAEUSE_BEGIN="# speech-spark gehaeuse begin"
+GEHAEUSE_END="# speech-spark gehaeuse end"
+
+gehaeuse_ohne() {  # config.txt without our block (stdin -> stdout), trailing empty lines dropped
+  awk -v b="$GEHAEUSE_BEGIN" -v e="$GEHAEUSE_END" '$0 == b { skip = 1; next } $0 == e { skip = 0; next } !skip' \
+    | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+}
+
+gehaeuse_schreiben() {  # $1 = the new content of config.txt; written next to it and renamed (a copy of the old stays)
+  local new="$GEHAEUSE_TXT.speech-spark.part"
+  if [ "$1" = "$(cat "$GEHAEUSE_TXT")" ]; then return 1; fi
+  cp -p -- "$GEHAEUSE_TXT" "$GEHAEUSE_TXT.speech-spark-alt"
+  printf '%s\n' "$1" >"$new" && mv -f -- "$new" "$GEHAEUSE_TXT"
+  : >"$GEHAEUSE_NEUSTART"
+}
+
+gehaeuse_ein() {  # $1 = fan on at (°C), $2 = fan off below (°C)
+  local an=$1 aus=$2 svc g new
+  [[ "$an" =~ ^[0-9]{2}$ && "$aus" =~ ^[0-9]{2}$ ]] && [ "$an" -ge 40 ] && [ "$an" -le 80 ] && [ "$aus" -ge 30 ] \
+    && [ "$aus" -lt "$an" ] || { echo "gehaeuse: abgelehnt grenzen"; return 1; }
+  [ -f "$GEHAEUSE_TXT" ] || { echo "gehaeuse: abgelehnt kein raspberry pi"; return 1; }
+  new="$(gehaeuse_ohne <"$GEHAEUSE_TXT")
+$GEHAEUSE_BEGIN
+[all]
+dtparam=i2c_arm=on
+dtparam=spi=on
+dtoverlay=gpio-fan,gpiopin=6,temp=$((an * 1000)),hyst=$(((an - aus) * 1000))
+$GEHAEUSE_END"
+  if gehaeuse_schreiben "$new"; then echo "gehaeuse: config.txt geschrieben"; else echo "gehaeuse: config.txt unveraendert"; fi
+  mkdir -p -- "$(dirname "$GEHAEUSE_MODULE")"
+  printf 'i2c-dev\n' >"$GEHAEUSE_MODULE"
+  modprobe i2c-dev 2>/dev/null || true
+  svc=$(panel_user)
+  for g in i2c spi gpio; do
+    getent group "$g" >/dev/null && usermod -aG "$g" "$svc" && echo "gehaeuse: gruppe $g"
+  done
+  echo "gehaeuse: eingerichtet"
+}
+
+gehaeuse_aus() {
+  [ -f "$GEHAEUSE_TXT" ] || { echo "gehaeuse: abgelehnt kein raspberry pi"; return 1; }
+  if gehaeuse_schreiben "$(gehaeuse_ohne <"$GEHAEUSE_TXT")"; then echo "gehaeuse: config.txt geschrieben"
+  else echo "gehaeuse: config.txt unveraendert"; fi
+  rm -f -- "$GEHAEUSE_MODULE"
+  echo "gehaeuse: entfernt"
+}
+
+gehaeuse_neustart() {
+  [ -e "$GEHAEUSE_NEUSTART" ] || { echo "gehaeuse: neustart abgelehnt nicht noetig"; return 1; }
+  echo "gehaeuse: neustart"
+  systemctl reboot
+}
+
+cmd_gehaeuse() {
+  local out w an aus
+  case "${1:-status}" in
+    wunsch-intern)   # only inside speech-spark-gehaeuse: the panel's wish, checked again by gehaeuse.py
+      [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"
+      out=$(as_panel_user gehaeuse.py wunsch-nehmen) || true
+      read -r w an aus <<<"$(tail -n1 <<<"$out")"
+      case "$w" in
+        ein) gehaeuse_ein "$an" "$aus" ;;
+        aus) gehaeuse_aus ;;
+        neustart) gehaeuse_neustart ;;
+        *) echo "gehaeuse: abgelehnt wunsch"; return 1 ;;
+      esac ;;
+    ein) need_root gehaeuse ein; gehaeuse_ein "${2:-$(cfg '.chat.gehaeuse_luefter_an // 55')}" "${3:-$(cfg '.chat.gehaeuse_luefter_aus // 48')}" ;;
+    aus) need_root gehaeuse aus; gehaeuse_aus ;;
+    status)
+      if grep -qxF "$GEHAEUSE_BEGIN" "$GEHAEUSE_TXT" 2>/dev/null; then echo "Gehäuse: eingerichtet"; else echo "Gehäuse: nicht eingerichtet"; fi
+      [ -e "$GEHAEUSE_NEUSTART" ] && echo "Neustart nötig"
+      [ -e /dev/i2c-1 ] && echo "I2C: an" || echo "I2C: aus"
+      [ -e /dev/spidev0.0 ] && echo "SPI: an" || echo "SPI: aus" ;;
+    *) die "speech-spark gehaeuse [status]|ein [AN AUS]|aus" ;;
+  esac
+}
+
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
 case "${1:-}" in
   status) shift; cmd_status ;;
@@ -895,6 +979,7 @@ case "${1:-}" in
   teilen) shift; cmd_teilen "$@" ;;
   umziehen) shift; cmd_umziehen "$@" ;;
   zurueckholen) shift; cmd_zurueckholen "$@" ;;
+  gehaeuse) shift; cmd_gehaeuse "$@" ;;
   ""|-h|--help|help) sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

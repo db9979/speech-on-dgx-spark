@@ -129,6 +129,8 @@ TARGETS = {
     "nasablage": ("Ablage-Ordner", "spark_ablage im Heimnetz · schreibt nur dort", "lan", False),
     # Zustand der NAS (naszustand.py): SNMPv3 reading of the own NAS, admin only; numbers only
     "naszustand": ("Zustand der NAS", "SNMPv3 · nur lesen · Heimnetz", "lan", False),
+    # Gehäuse (gehaeuse.py): OLED and LEDs of the panel computer's case; numbers and status only
+    "gehaeuse": ("Gehäuse", "Pironman 5 · am Panel-Rechner", "spark", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
@@ -1201,6 +1203,13 @@ def snapshot(view="admin", now=None):
         nzs = {"on": False}
     if nzs.get("on"):
         used.add("naszustand")
+    try:
+        import gehaeuse
+        geh = gehaeuse.for_live()
+    except Exception:
+        geh = {"on": False}
+    if geh.get("on"):
+        used.add("gehaeuse")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1257,6 +1266,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "nasablage" and nab.get("on"):   # Ablage-Ordner: profiles, files put there and taken in (no path, no name)
             x["sub"] = (f"{nab.get('profiles', 0)} Profile · {nab.get('made', 0)} abgelegt · {nab.get('fetched', 0)} aus dem Eingang"
                         + (f" · {nab['bad']} mit Fehler" if nab.get("bad") else ""))
+        if x["id"] == "gehaeuse" and geh.get("on"):   # Gehäuse: display, LEDs, temperature, fan (no page content)
+            x["sub"] = (f"Display {geh.get('oled', '-')} · LEDs {geh.get('led', '-')} · {geh.get('temp', '?')} °C"
+                        + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
         if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, disks, open problems (no address)
             x["sub"] = (f"{nzs.get('vols', 0)} Speicherbereiche · {nzs.get('disks', 0)} Festplatten"
                         + ("" if nzs.get("ok") else " · antwortet nicht") + (f" · {nzs['warn']} Hinweise" if nzs.get("warn") else ""))
