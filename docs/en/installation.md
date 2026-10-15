@@ -36,6 +36,8 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark modelle qwen38-aufraeumen` | only after a working move and only on your command: shows what qwen38's own uninstall removes, asks, then runs it. Never automatic, not in an update either |
 | `sudo speech-spark teilen [status]` | split install (panel on another computer, since V01.0.608): whether the door (TLS-Tor) is open, for how many panel computers, whether the firewall is set, and the certificate's fingerprint |
 | `sudo speech-spark teilen modelle-update` | On the panel computer: start the model computer's own update and wait for it (`update.sh` does this first by itself) |
+| `sudo speech-spark teilen code` | On the model computer: show a pairing code (10 minutes, one use) and wait for the panel computer |
+| `sudo speech-spark teilen koppeln <name-or-ip>` | On the panel computer: pair with the model computer (asks for the code, remembers its certificate) |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
 
 The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The chat model (qwen38) is not part of this repo and is not touched. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).

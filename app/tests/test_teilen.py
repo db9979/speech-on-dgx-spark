@@ -240,3 +240,101 @@ class Ports(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Kopplung(unittest.TestCase):
+    """B6a: the pairing code. Only a panel computer that knows the code and sees the real certificate gets the keys;
+    a wrong code three times, an old code or a man in the middle with his own certificate get nothing."""
+    CFG = {"api": {"key": "sk-alt0123456789abcdef"}}
+
+    def _dgx(self, code, cert=CERT, key=KEY, shown=None, cfg=None, uhr=None):
+        """The model computer in a thread; shown: the certificate the handshake shows (a man in the middle)."""
+        ctx = teilen._Ctx(cert, key)
+        if shown:
+            ctx.ctx = teilen._Ctx(*shown).ctx
+        sock = teilen.lauschen(0, "127.0.0.1")
+        out = {}
+
+        def run():
+            try:
+                out["ok"] = teilen.warten(cfg or self.CFG, code, ctx, sock, **({"uhr": uhr} if uhr else {}))
+            except teilen.Fehler as e:
+                out["fehler"] = str(e)
+            finally:
+                sock.close()
+        import threading
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+        return sock.getsockname()[1], t, out
+
+    def test_the_right_code_hands_over_keys_and_pin(self):
+        port, t, out = self._dgx("ABCDEF")
+        got = teilen.koppeln("127.0.0.1", port, "abc-def")
+        t.join(10)
+        self.assertEqual(got["pem"].strip(), PEM.strip())
+        self.assertEqual(got["waerter_key"], out["ok"]["waerter_key"])
+        self.assertEqual(len(bytes.fromhex(got["waerter_key"])), 32)
+        self.assertEqual(got["api_key"], "sk-alt0123456789abcdef")
+        self.assertEqual((out["ok"]["von"], out["ok"]["hier"]), ("127.0.0.1", "127.0.0.1"))
+        self.assertEqual(common.pinned_context(got["pem"]).verify_mode, ssl.CERT_REQUIRED)
+
+    def test_without_an_api_key_a_new_one(self):
+        port, t, out = self._dgx("ABCDEF", cfg={"api": {"key": ""}})
+        got = teilen.koppeln("127.0.0.1", port, "ABCDEF")
+        t.join(10)
+        self.assertRegex(got["api_key"], r"^sk-[0-9a-f]{48}$")
+        self.assertEqual(out["ok"]["api_key"], got["api_key"])
+
+    def test_three_wrong_codes_end_it(self):
+        port, t, out = self._dgx("ABCDEF")
+        for _ in range(teilen.CODE_TRIES):
+            with self.assertRaises(teilen.Fehler) as e:
+                teilen.koppeln("127.0.0.1", port, "ABCDEG")
+            self.assertEqual(str(e.exception), "code")
+        t.join(10)
+        self.assertEqual(out, {"fehler": "abgelehnt"})
+        with self.assertRaises(teilen.Fehler):       # nothing listens any more
+            teilen.koppeln("127.0.0.1", port, "ABCDEF")
+
+    def test_a_man_in_the_middle_gets_nothing(self):
+        """He shows his own certificate: the proof the panel makes for it does not fit the real one."""
+        port, t, out = self._dgx("ABCDEF", shown=(OTHER, OTHER_KEY))
+        with self.assertRaises(teilen.Fehler) as e:
+            teilen.koppeln("127.0.0.1", port, "ABCDEF")
+        self.assertEqual(str(e.exception), "code")
+        for _ in range(teilen.CODE_TRIES - 1):
+            with self.assertRaises(teilen.Fehler):
+                teilen.koppeln("127.0.0.1", port, "ABCDEF")
+        t.join(10)
+        self.assertEqual(out, {"fehler": "abgelehnt"})
+
+    def test_an_old_code_is_gone(self):
+        ticks = iter([0, teilen.CODE_SECS + 1])
+        port, t, out = self._dgx("ABCDEF", uhr=lambda: next(ticks))
+        t.join(10)
+        self.assertEqual(out, {"fehler": "abgelaufen"})
+
+    def test_a_changed_answer_is_refused(self):
+        k = teilen.schluessel("ABCDEF", b"x")
+        daten = {"waerter_key": "a" * 64, "api_key": "sk-123456789012345678"}
+        mac = teilen.antwort_mac(k, "1" * 32, "2" * 32, daten)
+        self.assertNotEqual(mac, teilen.antwort_mac(k, "1" * 32, "2" * 32, dict(daten, api_key="sk-other1234567890")))
+        self.assertNotEqual(mac, teilen.antwort_mac(teilen.schluessel("ABCDEG", b"x"), "1" * 32, "2" * 32, daten))
+
+    def test_code_shape_and_strength(self):
+        self.assertEqual(teilen.code_lesen(" abc-def "), "ABCDEF")
+        for bad in ("ABCDE", "ABCDE0", "ABCDEFG", "ABCDE1", ""):
+            with self.assertRaises(teilen.Fehler):
+                teilen.code_lesen(bad)
+        self.assertEqual(len(teilen.CODE_ABC), 32)
+        self.assertTrue(all(teilen.code_lesen(teilen.code_neu()) for _ in range(20)))
+        self.assertGreaterEqual(teilen.SCRYPT["n"], 2 ** 15)
+        self.assertLessEqual(teilen.CODE_SECS, 600)
+        self.assertLessEqual(teilen.CODE_TRIES, 3)
+
+    def test_the_shell_writes_only_checked_values(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:
+            sh = f.read()
+        self.assertIn("code) teilen_code", sh)
+        self.assertIn("koppeln) teilen_koppeln", sh)
+        self.assertEqual(sh.count("chown --reference=\"$CONFIG\""), 1)     # one config writer (cfg_put)

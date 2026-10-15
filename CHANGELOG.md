@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.616** · 2026-10-15 · Spark teilen B6a: Kopplung mit Code zwischen Panel-Rechner und Modell-Rechner
 - **V01.0.615** · 2026-10-15 · Spark teilen B5: Notbetrieb, wenn der Modell-Rechner nicht antwortet: fester Satz sofort, Lautsprecher aus Datei, Dienst-Wächter meldet.
 - **V01.0.614** · 2026-10-15 · Spark teilen B5: Das Update des Panel-Rechners aktualisiert zuerst den Modell-Rechner nach dessen eigenen Regeln; Zustand → Update zeigt beide Versionen.
 - **V01.0.613** · 2026-10-15 · Spark teilen B4c: Wartungspause des Modell-Rechners gilt auch im Panel, Weiter beendet beide; Live-Kasten Modell-Rechner.

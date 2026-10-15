@@ -22,6 +22,8 @@
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
 #   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
+#   speech-spark teilen code       on the model computer: show a pairing code (10 min, once) and wait for the panel
+#   speech-spark teilen koppeln <dgx>  on the panel computer: pair with the model computer (asks for the code)
 #   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 set -euo pipefail
 
@@ -33,6 +35,16 @@ CONFIG="$ETC/config.json"
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 need_root() { [ "$(id -u)" = 0 ] || die "run with sudo: sudo speech-spark $*"; }
 cfg() { jq -r "$1" "$CONFIG"; }
+# change the config with jq (cfg_put <filter> [jq args]); the file belongs to the service user (the panel writes it
+# too), so owner and mode stay, and the temporary file lies in root's /etc where nobody else can swap it
+cfg_put() {
+  local tmp
+  [ -f "$CONFIG" ] && [ ! -L "$CONFIG" ] || die "$CONFIG is not a plain file"
+  tmp=$(mktemp "$(dirname "$ETC")/.speech-spark-config.XXXXXX")
+  jq "${@:2}" "$1" "$CONFIG" >"$tmp" || { rm -f "$tmp"; die "cannot change $CONFIG"; }
+  chown --reference="$CONFIG" "$tmp"; chmod --reference="$CONFIG" "$tmp"
+  mv -fT -- "$tmp" "$CONFIG"
+}
 mode() { local m; m=$(cat "$ETC/mode" 2>/dev/null || true); case "$m" in api) echo api ;; *) echo full ;; esac; }
 version() { head -1 "$PREFIX/app/VERSION" 2>/dev/null || echo "?"; }
 health() { curl -fs --max-time 3 "http://127.0.0.1:$1/health" 2>/dev/null || true; }
@@ -148,14 +160,9 @@ cmd_key() {
   case "${1:-show}" in
     show) echo "$(cfg '.api.key // ""')" ;;
     new)
-      local k tmp
+      local k
       k="sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-      [ -f "$CONFIG" ] && [ ! -L "$CONFIG" ] || die "$CONFIG is not a plain file"
-      # the file belongs to the service user (the panel writes it too); keep owner and mode
-      tmp=$(mktemp "$(dirname "$ETC")/.speech-spark-config.XXXXXX")   # in root's /etc: nobody else can swap it
-      jq --arg k "$k" '.api.key=$k' "$CONFIG" >"$tmp"
-      chown --reference="$CONFIG" "$tmp"; chmod --reference="$CONFIG" "$tmp"
-      mv -fT -- "$tmp" "$CONFIG"
+      cfg_put '.api.key=$k' --arg k "$k"
       echo "New API key (works at once, the old one no longer does):"
       echo "$k"
       cmd_info --save >/dev/null
@@ -650,7 +657,51 @@ cmd_modelle() {
 
 teilen_py() {  # app/teilen.py with the system python (stdlib only; the DGX in --mode api has no panel venv)
   env -i PATH=/usr/bin:/bin LANG=C.UTF-8 SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_TLS="$ETC/tls" \
+    SPEECH_SPARK_STATE="$VAR/state" ${SPEECH_SPARK_CODE:+SPEECH_SPARK_CODE="$SPEECH_SPARK_CODE"} \
     python3 "$PREFIX/app/teilen.py" "$@"
+}
+
+# the Wärter key from a pairing result (teilen.py warten|koppeln) into STATE/waerter.key, 0600; written by the owner
+# of STATE itself (root never writes into a folder another user can plant links in)
+waerter_key_setzen() {
+  local own wk
+  own=$(stat -c %U "$VAR/state")
+  [ -n "$own" ] && [ "$own" != root ] || die "cannot tell the owner of $VAR/state"
+  wk=$(jq -r '.waerter_key' "$1")
+  [[ "$wk" =~ ^[0-9a-f]{64}$ ]] || die "pairing result without a Wärter key"
+  printf '%s\n' "$wk" | runuser -u "$own" -- sh -c \
+    'umask 077; t=$(mktemp "$1/.waerter.key.XXXXXX") && cat >"$t" && mv -fT -- "$t" "$1/waerter.key"' sh "$VAR/state"
+}
+
+restart_if_there() { local u; for u in "$@"; do systemctl try-restart "$u" 2>/dev/null || true; done; }
+
+# B6a: the model computer shows a pairing code and waits; on a fit the door opens for exactly that panel computer
+teilen_code() {
+  local res
+  [ -s "$ETC/tls/cert.pem" ] && [ -s "$ETC/tls/key.pem" ] || die "no certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
+  res=$(mktemp "$(dirname "$ETC")/.speech-spark-koppeln.XXXXXX")   # root's /etc, never the service user's $ETC
+  if ! teilen_py warten "$res"; then rm -f "$res"; return 1; fi
+  waerter_key_setzen "$res"
+  cfg_put '.api.tls_from=[$r.von] | .api.key=$r.api_key | .api.tls_listen=(if (.api.tls_listen // "") == "" then $r.hier else .api.tls_listen end)' \
+    --argjson r "$(jq -c '{von, hier, api_key}' "$res")"
+  rm -f "$res"
+  cmd_teilen firewall || true
+  restart_if_there speech-spark-tlstor speech-spark-waerter   # the services read api.key at every request
+  echo "teilen: gekoppelt, die Tür ist offen für den Panel-Rechner"
+}
+
+# B6a: the panel computer pairs with the model computer <host> (asks for the code) and pins its certificate
+teilen_koppeln() {
+  local host=${1:-} res
+  [[ "$host" =~ ^[A-Za-z0-9.:-]{1,253}$ ]] || die "speech-spark teilen koppeln <name-oder-ip des Modell-Rechners>"
+  res=$(mktemp "$(dirname "$ETC")/.speech-spark-koppeln.XXXXXX")   # root's /etc, never the service user's $ETC
+  if ! teilen_py koppeln "$host" "$res"; then rm -f "$res"; return 1; fi
+  waerter_key_setzen "$res"
+  cfg_put '.models.host=$h | .models.cert=$r.pem | .api.key=$r.api_key' \
+    --arg h "$host" --argjson r "$(jq -c '{pem, api_key}' "$res")"
+  rm -f "$res"
+  restart_if_there speech-spark-panel
+  echo "teilen: gekoppelt mit dem Modell-Rechner"
 }
 
 cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state and its firewall
@@ -671,10 +722,12 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
       teilen_py regeln >"$rules.part" || { rm -f "$rules.part"; echo "teilen: firewall abgelehnt"; return 1; }
       if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
       else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
+    code) teilen_code ;;
+    koppeln) teilen_koppeln "${2:-}" ;;
     modelle-update)   # B5: the model computer updates itself (its own rules) and this one waits for it
       [ "$(mode)" = full ] || die "no web panel installed"
       as_panel_user steuer.py update ;;
-    *) die "speech-spark teilen [status]|firewall [aus]|modelle-update" ;;
+    *) die "speech-spark teilen [status]|firewall [aus]|code|koppeln <dgx>|modelle-update" ;;
   esac
 }
 
@@ -692,6 +745,6 @@ case "${1:-}" in
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
   teilen) shift; cmd_teilen "$@" ;;
-  ""|-h|--help|help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac
