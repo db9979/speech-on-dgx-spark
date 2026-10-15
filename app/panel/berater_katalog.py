@@ -167,7 +167,7 @@ OHNE = {
         "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",
         "svc_watch", "svc_watch_users", "wartung", "wartung_auto", "notbetrieb_asr", "modelle_wechseln", "modelle_eigene", "system_prompt", "systemone", "systemone_berater",
         "systemone_check", "systemone_klage", "systemone_mail", "systemone_min", "systemone_quality", "systemone_tidy", "tasks", "telegram", "thinking", "tool_thinking", "top_p", "transit",
-        "transit_url", "usage_count", "usage_quota", "usage_quota_k", "weather", "weather_url", "wiki", "wiki_url", "write_apps", "write_help", "wyoming",
+        "transit_url", "usage_count", "usage_quota", "usage_quota_k", "usage_quota_mk", "usage_quota_warn", "usage_quota_wk", "weather", "weather_url", "wiki", "wiki_url", "write_apps", "write_help", "wyoming",
         "wyoming_allow", "wyoming_port", "wyoming_voice",
     ),
     # Bilder malen (bilder.py, bild_server.py): installed by install.sh, limits nobody tunes from a case

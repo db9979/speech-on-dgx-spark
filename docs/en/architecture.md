@@ -547,7 +547,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/update-progress.json` | Update progress | – | no |
 | `state/update-target` | Requested update target | – | no |
 | `state/vapid.pem` | Web push key | is a key | yes |
-| `state/verbrauch-kontingent.json` | Own daily quotas | – | yes |
+| `state/verbrauch-kontingent.json` | Own quotas and extras | – | yes |
+| `state/verbrauch-stand.json` | Running totals of the quotas (day, week, month; numbers only) | – | no |
 | `state/verbrauch.json` | Usage per model, task and profile (numbers only) | – | no |
 | `state/vision.json` | Picture questions, 10 min | – | no |
 | `state/vorrang-key` | Key panel ↔ speech services | is a key | no |
@@ -2213,7 +2214,7 @@ flowchart TD
 3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
 4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
 5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache.
-6. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the daily quota is checked: a profile over its quota gets a fixed sentence instead of an answer.
+6. <a id="kn-llm-s5"></a>**Someone with priority waiting?**: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the quota (day, week, month) is checked: a profile over it gets a fixed sentence instead of an answer, fixed commands without a model still work.
 7. <a id="kn-llm-s6"></a>**One round to the model**: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it.
 8. <a id="kn-llm-s7"></a>**Too long for the model?**: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more.
 9. <a id="kn-llm-s8"></a>**First line in time?**: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence.
@@ -2242,7 +2243,7 @@ flowchart TD
 - Settings → Language model, under Advanced: Time limit for an answer.
 - Features → Priority for people: chosen profiles get their answer first.
 - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30).
-- Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile.
+- Features → Usage counter: counts tokens per model, task and profile; below it the quota per profile for day, week and month.
 - Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts.
 
 #### What you see
@@ -2272,7 +2273,8 @@ flowchart TD
 - `app/panel/wartung.py` `auto_tick`: maintenance pause by itself when qwen38 restarts ([step 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: the fixed sentence with the time left ([step 2](#kn-llm-s1w))
 - `app/panel/verbrauch.py` `llm`: counts the tokens of a round ([step 12](#kn-llm-s11))
-- `app/panel/verbrauch.py` `over`: daily quota reached? ([step 6](#kn-llm-s5))
+- `app/panel/verbrauch.py` `over`: which limit is full: day, week or month? ([step 6](#kn-llm-s5))
+- `app/panel/verbrauch.py` `warn`: the warning under the answer, once per period ([step 12](#kn-llm-s11))
 
 Self-tests: `test_panel`, `test_llm_settings`, `test_vorrang`, `test_stufe`, `test_fast_start`, `test_wartung`
 
@@ -2867,7 +2869,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 59). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2878,7 +2880,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **29** files in every backup ([step 7](#kn-state-s7))
-- **59** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **60** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

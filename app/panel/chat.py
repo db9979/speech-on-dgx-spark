@@ -1282,9 +1282,7 @@ def llm_error_code(e, status=None):
 LLM_GONE = {"llm_down": {"de": "Mein Sprachmodell ist gerade nicht erreichbar. Versuch es bitte gleich noch einmal.",
                          "en": "My language model cannot be reached right now. Please try again in a moment."},
             "llm_slow": {"de": "Mein Sprachmodell antwortet gerade nicht. Versuch es bitte gleich noch einmal.",
-                         "en": "My language model is not answering right now. Please try again in a moment."},
-            # Tageskontingent (verbrauch.py): the profile used up its tokens for today
-            "quota": {"de": verbrauch.QUOTA_TEXT[0], "en": verbrauch.QUOTA_TEXT[1]}}
+                         "en": "My language model is not answering right now. Please try again in a moment."}}
 
 
 class ContextFull(RuntimeError):
@@ -1776,8 +1774,19 @@ async def _answer(request, turn):
                 trace["said"] += note
                 await sentences.put(note)
                 return
-            if who and verbrauch.over(who["id"]):    # Tageskontingent used up: one fixed sentence, no model
-                raise verbrauch.Quota()
+            zeit = verbrauch.over(who["id"]) if who else ""
+            if zeit:   # Kontingent used up (verbrauch.py): fixed commands by fixed rules, else one fixed sentence, no model
+                note = await notbetrieb.antwort(turn, guess_language(messages[-1]["content"]) == "English", zaehlen=False)
+                if not note:
+                    raise verbrauch.Quota(zeit)
+                print("verbrauch: Kontingent voll, fester Befehl ohne Sprachmodell", flush=True)
+                if tr:
+                    tr.step("prep", "Fester Befehl (Panel)", time.time(), panel=True)
+                trace["calls"].append({"name": "Fester Befehl (Panel)", "args": "", "result": "Kontingent voll"})
+                await out.put({"type": "text", "delta": note})
+                trace["said"] += note
+                await sentences.put(note)
+                return
             model = await llm.model(c, ccfg, lheaders)
             fix_task = asyncio.create_task(fixes.extract(
                 ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None
@@ -2148,6 +2157,13 @@ async def _answer(request, turn):
             # "Vorab holen bei Rückfrage" (vorab.py): the answer asks back, the panel already fetches by fixed rules
             # what the next answer will most likely read, while the question is being spoken
             vorab.after(turn, trace["said"], st, trace["calls"], tr)
+            zeit = verbrauch.warn(who["id"]) if who else ""
+            if zeit:   # Kontingent (verbrauch.py): one fixed sentence under the answer, once per period
+                note = verbrauch.warn_text(zeit, guess_language(messages[-1]["content"]) == "English")
+                trace["calls"].append({"name": "Kontingent-Vorwarnung (Panel)", "args": "", "result": zeit})
+                await out.put({"type": "text", "delta": "\n\n" + note})
+                trace["said"] += " " + note
+                await sentences.put(note)
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))
@@ -2155,11 +2171,12 @@ async def _answer(request, turn):
             code = "quota" if isinstance(e, verbrauch.Quota) else llm_error_code(e, status)
             if tr:
                 tr.fail(code)
-            if code in LLM_GONE and not trace["said"].strip():
+            if (code in LLM_GONE or code == "quota") and not trace["said"].strip():
                 # said out loud as well: on a speaker, the watch or in the car nobody reads the error
-                note = LLM_GONE[code]["en" if guess_language(messages[-1]["content"]) == "English" else "de"]
-                print("chat: language model " + ("not asked: daily quota" if code == "quota" else "not reachable:"),
-                      "" if code == "quota" else code, flush=True)
+                en_q = guess_language(messages[-1]["content"]) == "English"
+                note = verbrauch.quota_text(e.zeit, en_q) if code == "quota" else LLM_GONE[code]["en" if en_q else "de"]
+                print("chat: language model " + ("not asked: quota" if code == "quota" else "not reachable:"),
+                      e.zeit if code == "quota" else code, flush=True)
                 await out.put({"type": "text", "delta": note})
                 trace["said"] += note
                 await sentences.put(note)

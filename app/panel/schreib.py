@@ -43,6 +43,7 @@ import kopplung
 import llm
 import notaus
 import profiles
+import verbrauch
 from common import DayCounter, load_config, no_think
 import core
 from core import assistant, browser_profile, confirm_code
@@ -271,6 +272,16 @@ def _trace(uid, client, label, chars, where):
         return None
 
 
+def _quota(uid):
+    """Kontingent (verbrauch.py): the model counts for this profile, and a used-up limit gets the fixed sentence."""
+    verbrauch.WHO.set(uid)
+    try:
+        verbrauch.stop(uid)
+    except verbrauch.Quota as e:
+        print("schreib: kontingent voll, nicht gefragt", flush=True)
+        raise HTTPException(429, str(e))
+
+
 async def _model(msgs, temperature, max_tokens, job):
     import stufe
     import wartung
@@ -312,6 +323,7 @@ class Slot:
 async def assist(uid, body, client="web", where="Browser", request=None):
     """The improved text for a checked profile; ValueError for a request that does not fit."""
     notaus.stop("gespraech")
+    _quota(uid)
     art, text, mail, lang, wish = request_of(body)
     app = body.get("_app") if body.get("_app") in APP_HINT else ""
     style = ("", "")
@@ -361,6 +373,7 @@ async def picture_text(uid, iid):
     import base64
     import images
     notaus.stop("gespraech")
+    _quota(uid)
     if not isinstance(iid, str) or not images.ID.fullmatch(iid):
         raise ValueError("id: die Nummer eines Bildes von /api/chat/image")
     try:

@@ -1510,7 +1510,8 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .vb-tab th{border-top:0;color:var(--mut);font-weight:500;font-size:12px}.vb-tab .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .vb-area{cursor:pointer}.vb-area:hover td{background:color-mix(in srgb,var(--line) 40%,transparent)}.vb-task td{font-size:12px;padding-left:22px;border-top:0}
 .vb-hb{height:7px;border-radius:4px;background:var(--line);overflow:hidden;min-width:60px}.vb-hb i{display:block;height:100%;background:#5b5bf0}.vb-qbar{height:10px;margin-top:6px}.vb-hb i.full{background:var(--bad)}
-.vb-qin{width:7em}.vb-tab td.vb-qc{white-space:nowrap}.vb-note{margin-top:8px;font-size:12px}.vb-del{margin-top:4px}
+.vb-hb i.warn{background:var(--warn)}.vb-qrow{margin:10px 0}.vb-qrow b{font-size:13px}.vb-qline{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px}
+.vb-quota .vb-qin{width:6.5em}.vb-quota .vb-qbar{margin-top:0}.vb-qin{width:7em}.vb-tab td.vb-qc{white-space:nowrap}.vb-note{margin-top:8px;font-size:12px}.vb-del{margin-top:4px}
 @media (max-width:760px){.vb-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.vb-tile .v{font-size:19px}
   .vb-tab.stack td.vb-qc{flex-wrap:wrap;white-space:normal;justify-content:flex-end;word-break:normal}.vb-tab.stack td.vb-qc::before{flex:1 0 100%}.vb-task td{padding-left:0}}
 /* Bilder malen (bilder.js): the gallery under Ich → Bilder, the picture in the chat card and in the details */

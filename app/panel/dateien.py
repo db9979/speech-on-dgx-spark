@@ -148,7 +148,7 @@ DATEIEN = [
     state("doc-quotas.json", "Dokument-Kontingente", "Document quotas", sicherung="json"),  # the admin's own document space per profile (wissen.py)
     state("admins.json", "Profile als Admins", "Profiles as admins", sicherung="json"),  # profiles as admins: roles and the main admin profile (coadmin.py)
     state("features-seen.json", "Wann Funktionen frei wurden", "When functions were released", sicherung="json"),  # when each function was first on („neu freigegeben“ in tipps.py, features.py)
-    state("verbrauch-kontingent.json", "eigene Tageskontingente", "Own daily quotas", sicherung="json"),  # Tageskontingent: the admin's own quota per profile (verbrauch.py)
+    state("verbrauch-kontingent.json", "eigene Kontingente und Nachschlag", "Own quotas and extras", sicherung="json"),  # Kontingent: the admin's own limits per profile (verbrauch.py)
     state("join.json", "Einladungen (Hashes)", "Invitations (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # new people by invitation: the switch, invitations (code hashes) (join.py)
     # state/: every other file or folder, with the reason it stays out of a backup
     state("secret.key", "Schlüssel für alles Versiegelte", "Key for everything sealed", lokal="Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)", schutz=("ist der Schlüssel", "is the key")),
@@ -162,6 +162,7 @@ DATEIEN = [
     state("traces.jsonl", "Logs → Anfragen, 48 h", "Logs → Requests, 48 h", lokal="Anfrage-Verlauf, 48 h"),
     state("latency.json", "Wartezeiten", "Waiting times", lokal="Statistik"),
     state("verbrauch.json", "Verbrauch je Modell, Aufgabe und Profil (nur Zahlen)", "Usage per model, task and profile (numbers only)", lokal="Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)"),
+    state("verbrauch-stand.json", "Stand der Kontingente (Tag, Woche, Monat; nur Zahlen)", "Running totals of the quotas (day, week, month; numbers only)", lokal="Zählt bis zum Ende des Zeitraums, Löschen der eigenen Zahlen setzt es nicht zurück"),
     state("livecheck.json", "Echtprüfung", "Live check", lokal="letzte Echtprüfung"),
     state("waerter.key", "Schlüssel für den Wärter des Modell-Rechners", "Key for the model computer's Wärter",
           lokal="Schlüssel der Kopplung: nach einem Umzug wird neu gekoppelt", schutz=("ist ein Schlüssel", "is a key"),

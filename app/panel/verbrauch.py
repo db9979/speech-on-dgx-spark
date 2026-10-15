@@ -20,16 +20,23 @@ An answer without "usage" counts its characters / CHARS_PER_TOKEN, marked as est
 Who: the context variable WHO, set for every API request (panel middleware) and every turn (chat.llm), or the job's
 own profile passed as who (vorrang.post); else "Spark selbst". Profiles that no longer exist are folded into "Gelöschte Profile" when the file is written.
 
-Daily quota (Tageskontingent, chat.usage_quota): language model tokens a profile may use per day, for all its own
-requests together (chat.usage_quota_k thousand, per profile in state/verbrauch-kontingent.json, 0 = no limit).
-Admin profiles are never limited. Reached: the conversation answers with one fixed sentence until midnight;
-background work keeps running (nobody asked for it, it would only go stale).
+Quota (Kontingent, chat.usage_quota; plan plaene/token-grenzen.md, Dominik 2026-10-15 „1a … 6a“): language model
+tokens a profile may use per day, per week (Monday 0:00 to Sunday 24:00) and per calendar month, for all its own
+requests together. Each limit on its own: chat.usage_quota_k / _wk / _mk thousand tokens (0 = no limit), per profile
+and period in state/verbrauch-kontingent.json; the admin may add a „Nachschlag“ for today. Admin profiles, guests and
+the Spark itself are never limited. The running totals are kept apart from the statistics (state/verbrauch-stand.json),
+so deleting the own numbers never resets a limit. Reached: what the profile asks the model itself (the conversation,
+the Schreibhilfe, Dokumente erstellen) gets one fixed sentence naming when it goes on; fixed commands without a
+model (Home Assistant, the time, the own reminders: notbetrieb.antwort) still work; background work keeps running
+(nobody asked for it, it would only go stale). At chat.usage_quota_warn percent (0 = never) one fixed sentence under
+the answer warns once per period.
 
     GET    /api/admin/verbrauch?zeit=24h|30t|12m   Zustand → Verbrauch, the iPhone app's admin part
     POST   /api/admin/verbrauch/leeren             empties every counter (admin protocol)
-    PUT    /api/admin/verbrauch/kontingent         {"uid", "k"}: one profile's own daily quota (None: the default)
+    PUT    /api/admin/verbrauch/kontingent         {"uid", "zeit", "k"}: one profile's own limit (None: the default)
+    POST   /api/admin/verbrauch/nachschlag         {"uid", "k"}: k thousand tokens more for this profile, today only
     GET    /api/profile/verbrauch?zeit=30t|12m      Ich → Verbrauch, own numbers only
-    DELETE /api/profile/verbrauch                  own history (today's tokens stay for the quota)
+    DELETE /api/profile/verbrauch                  own history (the running totals of the limits stay)
 """
 import atexit
 import contextvars
@@ -49,13 +56,20 @@ from core import assistant, auth, own_profile
 
 router = APIRouter()
 FILE = os.path.join(STATE, "verbrauch.json")                    # the counters (statistics, not backed up)
-QUOTA_FILE = os.path.join(STATE, "verbrauch-kontingent.json")   # the admin's own quotas per profile (backed up)
+QUOTA_FILE = os.path.join(STATE, "verbrauch-kontingent.json")   # the admin's own limits per profile (backed up)
+STAND_FILE = os.path.join(STATE, "verbrauch-stand.json")        # the running totals of the limits (numbers only)
 SAVE_S = 60                  # written at most this often
 KEEP_DAYS, KEEP_MONTHS, KEEP_HOURS = 35, 13, 48
 MAX_KEYS = 600               # rows per day or month; more fold into "Sonstige" (a bound for the file)
 CHARS_PER_TOKEN = 3.5        # for an answer without "usage"
 RATE_S = 60                  # Live: tokens per minute over the last minute
-QUOTA_MAX_K = 100000         # 100 million tokens a day: the largest quota the admin may set
+# the periods of a limit: key -> (German, English, config key of the default in thousand tokens, largest value)
+ZEITRAEUME = {"tag": ("Tag", "day", "usage_quota_k", 100000),
+              "woche": ("Woche", "week", "usage_quota_wk", 700000),
+              "monat": ("Monat", "month", "usage_quota_mk", 3100000)}
+QUOTA_DEFAULT_K = {"tag": 2000, "woche": 0, "monat": 0}
+WARN_DEFAULT = 80            # percent of a limit for the warning (chat.usage_quota_warn, 0 = never)
+EXTRA_MAX_K = 100000         # the largest Nachschlag in one step
 GUEST, SPARK, GONE = "g", "s", "x"
 
 # the models: key -> (name de, name en, unit); the unit says what "amount" counts
@@ -102,24 +116,26 @@ AUFGABEN = {
 WHO = contextvars.ContextVar("verbrauch_who", default=SPARK)
 _lock = threading.Lock()
 _days, _months, _hours = {}, {}, {}      # "2026-10-14" / "2026-10" -> {"model|aufgabe|who": [n, in, cached, out, amount, ms, est]}
-_today = {"day": "", "who": {}}          # tokens of the language model per who today (the quota, fast)
+_stand = {z: ["", {}] for z in ZEITRAEUME}   # period -> [its key, {who: tokens of the language model}] (the limits)
 _rate = deque(maxlen=4000)               # (time, tokens) of the language model, the last RATE_S seconds (Live)
-_said = set()                            # (day, uid) whose reached quota was logged already (one line a day)
+_said = set()                            # (period key, uid) whose reached limit was logged already
+_warned = set()                          # (period key, uid) warned already (once per period)
 _unknown = set()                         # task names logged once as unknown
-_st = {"loaded": False, "dirty": False, "timer": None, "cfg": (None, None)}
+_st = {"loaded": False, "dirty": False, "timer": None, "cfg": (None, None), "stand": False}
 N, IN, CACHED, OUT, AMOUNT, MS, EST = range(7)
 
 
 # ---------------------------------------------------------------- switches
 def _chat():
-    """The chat section, read again only when config.json changed (a stat per count, no file read)."""
+    """The chat section, parsed again only when config.json changed (its bytes, read per count: an inode and a
+    coarse time can repeat after a fast rewrite, the bytes cannot)."""
     try:
-        st = os.stat(CONFIG_PATH)
-        m = (st.st_mtime_ns, st.st_ino, st.st_size)
+        with open(CONFIG_PATH, "rb") as f:
+            raw = f.read()
     except OSError:
-        m = None
-    if _st["cfg"][0] != m or m is None:
-        _st["cfg"] = (m, load_config().get("chat", {}))
+        raw = None
+    if _st["cfg"][0] != raw or raw is None:
+        _st["cfg"] = (raw, load_config().get("chat", {}))
     return _st["cfg"][1]
 
 
@@ -146,6 +162,12 @@ def who_of(prof):
 # ---------------------------------------------------------------- counting (no file, no network, never raises)
 def _day(now):
     return time.strftime("%Y-%m-%d", time.localtime(now))
+
+
+def _keys(now):
+    """The key of each period for this moment: day, ISO week (Monday first), calendar month."""
+    t = time.localtime(now)
+    return {"tag": time.strftime("%Y-%m-%d", t), "woche": time.strftime("%G-W%V", t), "monat": time.strftime("%Y-%m", t)}
 
 
 def _row(table, period, key):
@@ -185,10 +207,13 @@ def add(model, aufgabe, who=None, prompt=0, cached=0, out=0, amount=0.0, ms=0, e
                 r[MS] += ms
                 r[EST] += 1 if est else 0
             if model == "llm":
-                if _today["day"] != d:
-                    _today["day"], _today["who"] = d, {}
-                _today["who"][who] = _today["who"].get(who, 0) + tok
+                for z, k in _keys(now).items():
+                    st = _stand[z]
+                    if st[0] != k:
+                        st[0], st[1] = k, {}
+                    st[1][who] = st[1].get(who, 0) + tok
                 _rate.append((now, tok))
+                _st["stand"] = True
             _st["dirty"] = True
             if _st["timer"] is None:
                 t = threading.Timer(SAVE_S, _flush_later)
@@ -291,13 +316,34 @@ def _load():
                     table[str(period)[:13]] = {str(key)[:200]: [float(x) if i == AMOUNT else int(x) for i, x in enumerate(v[:7])]
                                                for key, v in list(rows.items())[:MAX_KEYS]
                                                if isinstance(v, list) and len(v) >= 7 and all(isinstance(x, (int, float)) for x in v[:7])}
-        today = _day(time.time())
-        _today["day"], _today["who"] = today, {}
-        for key, v in (_days.get(today) or {}).items():
-            m, _, w = key.split("|")
-            if m == "llm":
-                _today["who"][w] = _today["who"].get(w, 0) + v[IN] + v[OUT]
+        _load_stand(time.time())
         _st["loaded"] = True
+
+
+def _load_stand(now):
+    """The running totals of the limits from their file; without it (the first start) from the statistics. Under _lock."""
+    keys = _keys(now)
+    d = _read(STAND_FILE, {})
+    for z, k in keys.items():
+        got = d.get(z) if isinstance(d.get(z), dict) else {}
+        who = got.get("who") if got.get("p") == k and isinstance(got.get("who"), dict) else None
+        if who is not None:
+            _stand[z] = [k, {str(w)[:40]: int(v) for w, v in list(who.items())[:5000]
+                             if isinstance(v, int) and not isinstance(v, bool) and v >= 0}]
+            continue
+        tot = {}
+        if z == "monat":
+            tables = [(_months.get(k) or {})]
+        elif z == "woche":
+            tables = [rows for day, rows in _days.items() if time.strftime("%G-W%V", time.strptime(day, "%Y-%m-%d")) == k]
+        else:
+            tables = [(_days.get(k) or {})]
+        for rows in tables:
+            for key, v in rows.items():
+                m, _, w = key.split("|")
+                if m == "llm":
+                    tot[w] = tot.get(w, 0) + v[IN] + v[OUT]
+        _stand[z] = [k, tot]
 
 
 def _trim(now):
@@ -337,9 +383,12 @@ def save(now=None):
         _trim(time.time() if now is None else now)
         data = {"v": 1, "days": _days, "months": _months, "hours": _hours}
         text = json.loads(json.dumps(data))
-        _st["dirty"] = False
+        stand = {z: {"p": st[0], "who": dict(st[1])} for z, st in _stand.items()} if _st["stand"] else None
+        _st["dirty"] = _st["stand"] = False
     try:
         write_json(FILE, text)
+        if stand is not None:
+            write_json(STAND_FILE, stand)
     except OSError as e:
         print("verbrauch: Speichern fehlgeschlagen,", type(e).__name__, flush=True)
         return False
@@ -358,88 +407,185 @@ def _at_exit():
         save()
 
 
-def clear(who=None, keep_today=False):
-    """Empties every counter (who None) or one profile's rows (who), today's tokens kept for the quota."""
+def clear(who=None):
+    """Empties every counter and every running total of the limits (who None, the admin) or one profile's rows (who):
+    its running totals stay, so deleting the own numbers never resets a limit."""
     _load()
-    today = _day(time.time())
     with _lock:
         if who is None:
-            for x in (_days, _months, _hours, _rate, _today["who"]):
+            for x in (_days, _months, _hours, _rate):
                 x.clear()
+            for z in _stand:
+                _stand[z] = ["", {}]
+            _st["stand"] = True
         else:
             for table in (_days, _months):
-                for period, rows in table.items():
+                for rows in table.values():
                     for key in [k for k in rows if k.rsplit("|", 1)[-1] == who]:
-                        v = rows.pop(key)
-                        if keep_today and key.startswith("llm|") and period in (today, today[:7]):
-                            # what the quota counts today stays: today's row, and in the month only today's part
-                            day = v if period == today else (_days.get(today) or {}).get(key)
-                            if day:
-                                rows[key] = list(day)
+                        rows.pop(key)
         _st["dirty"] = True
     save()
 
 
 # ---------------------------------------------------------------- quota
+def _int(v, lo, hi):
+    return v if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi else None
+
+
 def quotas():
+    """The admin's own limits per profile: {uid: {zeit: thousand tokens}} (an old plain number is the day)."""
     d = _read(QUOTA_FILE, {})
     own = d.get("own") if isinstance(d.get("own"), dict) else {}
-    return {u: int(k) for u, k in own.items() if isinstance(k, int) and not isinstance(k, bool) and 0 <= k <= QUOTA_MAX_K}
+    out = {}
+    for u, v in own.items():
+        v = {"tag": v} if isinstance(v, int) else v
+        if isinstance(v, dict):
+            got = {z: _int(v.get(z), 0, ZEITRAEUME[z][3]) for z in ZEITRAEUME}
+            got = {z: k for z, k in got.items() if k is not None}
+            if got:
+                out[str(u)] = got
+    return out
 
 
-def limit(uid, c=None):
-    """Tokens a day for this profile (0: no limit). Admin profiles are never limited, nor a profile the admin took
-    out of the quota (Funktionen → Wer darf was: „Tageskontingent“ gesperrt heißt, es gilt nicht für dieses Profil)."""
+def extra(uid, now=None):
+    """The admin's Nachschlag for this profile today, in tokens."""
+    d = _read(QUOTA_FILE, {})
+    e = (d.get("extra") or {}).get(uid) if isinstance(d.get("extra"), dict) else None
+    if isinstance(e, dict) and e.get("tag") == _day(time.time() if now is None else now):
+        return (_int(e.get("k"), 0, 10 * EXTRA_MAX_K) or 0) * 1000
+    return 0
+
+
+def defaults(c=None):
+    """The default of each period in thousand tokens (0 = no limit)."""
+    c = _chat() if c is None else c
+    return {z: _int(c.get(v[2], QUOTA_DEFAULT_K[z]), 0, v[3]) or 0 for z, v in ZEITRAEUME.items()}
+
+
+def limits(uid, c=None):
+    """Tokens per period for this profile, {zeit: tokens} (0: no limit). Admin profiles are never limited, nor a profile
+    the admin took out (Funktionen → Wer darf was: „Kontingent“ gesperrt heißt, es gilt nicht für dieses Profil)."""
+    none = {z: 0 for z in ZEITRAEUME}
     if not uid or uid in (GUEST, SPARK) or not features.allowed("kontingent", uid, c):
-        return 0
+        return none
     try:
         import coadmin
         if coadmin.acts(uid) == "admin":
-            return 0
+            return none
     except Exception:
         pass
-    own = quotas()
-    if uid in own:
-        return own[uid] * 1000
-    c = _chat() if c is None else c
-    k = c.get("usage_quota_k", 2000)
-    return int(k) * 1000 if isinstance(k, int) and not isinstance(k, bool) and k > 0 else 0
+    own, base = quotas().get(uid, {}), defaults(c)
+    return {z: own.get(z, base[z]) * 1000 for z in ZEITRAEUME}
 
 
-def used_today(who, now=None):
+def used(who, now=None):
+    """Tokens of the language model in the running day, week and month: {zeit: tokens}."""
     _load()
-    d = _day(time.time() if now is None else now)
+    keys = _keys(time.time() if now is None else now)
     with _lock:
-        return _today["who"].get(who, 0) if _today["day"] == d else 0
+        return {z: (_stand[z][1].get(who, 0) if _stand[z][0] == k else 0) for z, k in keys.items()}
+
+
+def _state(uid, now):
+    lim = limits(uid)
+    if not any(lim.values()):
+        return lim, {}, 0
+    return lim, used(uid, now), extra(uid, now)
+
+
+def _full(uid, now):
+    """(period, used, limit) of the longest used-up limit, or None. No log."""
+    lim, use, more = _state(uid, now)
+    for z in ("monat", "woche", "tag"):
+        if lim[z] and use[z] >= lim[z] + more:
+            return z, use[z], lim[z] + more
+    return None
 
 
 def over(uid, now=None):
-    """True when the profile used up its daily quota (the conversation then says QUOTA_TEXT)."""
+    """The longest period whose limit the profile used up ("monat", "woche", "tag"), or "" (then the model may run)."""
     try:
-        lim = limit(uid)
-        if not lim:
-            return False
-        used = used_today(uid, now)
-        if used < lim:
-            return False
-        day = _day(time.time() if now is None else now)
-        if (day, uid) not in _said:
-            _said.add((day, uid))
-            print(f"verbrauch: Kontingent erreicht | {profiles.log_name(profiles.by_id(uid))} | {used} von {lim} Tokens", flush=True)
-        return True
+        now = time.time() if now is None else now
+        got = _full(uid, now)
+        if not got:
+            return ""
+        z, use, lim = got
+        k = (_keys(now)[z], uid)
+        if k not in _said:
+            _said.add(k)
+            print(f"verbrauch: Kontingent erreicht | {profiles.log_name(profiles.by_id(uid))} | {z} | "
+                  f"{use} von {lim} Tokens", flush=True)
+        return z
     except Exception as e:
         print("verbrauch: Kontingent nicht prüfbar,", type(e).__name__, flush=True)
-        return False
+        return ""
+
+
+def warn(uid, now=None, c=None):
+    """The period whose warning percent the profile just passed (once per period), or ""."""
+    try:
+        c = _chat() if c is None else c
+        pct = _int(c.get("usage_quota_warn", WARN_DEFAULT), 0, 99)
+        if not pct:
+            return ""
+        now = time.time() if now is None else now
+        lim, use, more = _state(uid, now)
+        for z in ("monat", "woche", "tag"):
+            if lim[z] and pct * (lim[z] + more) <= 100 * use[z] < 100 * (lim[z] + more):
+                k = (_keys(now)[z], uid)
+                if k in _warned:
+                    continue
+                _warned.add(k)
+                print(f"verbrauch: Vorwarnung | {profiles.log_name(profiles.by_id(uid))} | {z} | {pct} Prozent", flush=True)
+                return z
+        return ""
+    except Exception as e:
+        print("verbrauch: Vorwarnung nicht prüfbar,", type(e).__name__, flush=True)
+        return ""
+
+
+def stop(uid=None):
+    """For the profile's own requests outside the conversation (Schreibhilfe, Dokumente erstellen): raises Quota when
+    a limit is used up. uid None: the profile of this request (WHO)."""
+    uid = uid or WHO.get()
+    z = over(uid) if uid and uid not in (GUEST, SPARK) else ""
+    if z:
+        raise Quota(z)
+
+
+MONATE = ("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember")
+MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+QUOTA_TEXT = {"tag": ("Für heute sind deine Tokens aufgebraucht. Morgen geht es weiter",
+                      "Your tokens for today are used up. It goes on tomorrow"),
+              "woche": ("Für diese Woche sind deine Tokens aufgebraucht. Ab Montag geht es weiter",
+                        "Your tokens for this week are used up. It goes on from Monday"),
+              "monat": ("Für diesen Monat sind deine Tokens aufgebraucht. Ab dem 1. {m} geht es weiter",
+                        "Your tokens for this month are used up. It goes on from {m} 1")}
+QUOTA_TAIL = ("; wie viel du verbraucht hast, steht unter Ich → Verbrauch.", "; how much you used is under Me → Usage.")
+WARN_TEXT = {"tag": ("{p} % deines Tageskontingents sind verbraucht.", "{p} % of your daily quota is used."),
+             "woche": ("{p} % deines Wochenkontingents sind verbraucht.", "{p} % of your weekly quota is used."),
+             "monat": ("{p} % deines Monatskontingents sind verbraucht.", "{p} % of your monthly quota is used.")}
+
+
+def quota_text(zeit, en=False, now=None):
+    """The fixed sentence for a used-up limit: when it goes on, and where the numbers are."""
+    i = 1 if en else 0
+    t = time.localtime(time.time() if now is None else now)
+    nxt = MONTHS[t.tm_mon % 12] if en else MONATE[t.tm_mon % 12]
+    return QUOTA_TEXT.get(zeit, QUOTA_TEXT["tag"])[i].format(m=nxt) + QUOTA_TAIL[i]
+
+
+def warn_text(zeit, en=False, c=None):
+    c = _chat() if c is None else c
+    return WARN_TEXT.get(zeit, WARN_TEXT["tag"])[1 if en else 0].format(p=_int(c.get("usage_quota_warn", WARN_DEFAULT), 0, 99) or WARN_DEFAULT)
 
 
 class Quota(RuntimeError):
-    """The profile's daily quota is used up (chat.py answers with QUOTA_TEXT)."""
+    """A limit of the profile is used up (zeit: "tag", "woche" or "monat"); the caller says quota_text(zeit)."""
 
-
-QUOTA_TEXT = ("Für heute ist dein Kontingent beim Sprachmodell aufgebraucht. Ab Mitternacht geht es weiter; "
-              "wie viel du verbraucht hast, steht unter Ich → Verbrauch.",
-              "Your daily quota for the language model is used up. It goes on after midnight; how much you used is "
-              "under Me → Usage.")
+    def __init__(self, zeit="tag"):
+        self.zeit = zeit if zeit in ZEITRAEUME else "tag"
+        super().__init__(quota_text(self.zeit))
 
 
 # ---------------------------------------------------------------- reading
@@ -536,14 +682,22 @@ def report(zeit="30t", who=None, now=None):
                          "name": names.get(w, ""), "tokens": llm_v[IN] + llm_v[OUT],
                          "heard": round((ms.get("asr") or _empty())[AMOUNT], 1), "spoken": round((ms.get("tts") or _empty())[AMOUNT], 1),
                          "pictures": int((ms.get("bild") or _empty())[AMOUNT]),
-                         "limit": limit(w) if w in names else 0, "today": used_today(w, now) if w in names else 0})
+                         **(_quota_row(w, now) if w in names else {"limits": {}, "used": {}, "extra": 0})})
         out["profiles"] = sorted(rows, key=lambda r: -r["tokens"])
-        out["quota"] = {"on": quota_on(c), "k": c.get("usage_quota_k", 2000), "own": {u: k for u, k in quotas().items() if u in names}}
+        out["quota"] = {"on": quota_on(c), "k": defaults(c), "warn": _int(c.get("usage_quota_warn", WARN_DEFAULT), 0, 99) or 0,
+                        "own": {u: k for u, k in quotas().items() if u in names}, "zeiten": {z: list(v[:2]) for z, v in ZEITRAEUME.items()}}
         out["rate"] = rate(now)
     else:
-        lim = limit(who)
-        out["quota"] = {"on": bool(lim), "limit": lim, "used": used_today(who, now)}
+        q = _quota_row(who, now)
+        out["quota"] = dict(q, on=any(q["limits"].values()), zeiten={z: list(v[:2]) for z, v in ZEITRAEUME.items()},
+                            warn=_int(c.get("usage_quota_warn", WARN_DEFAULT), 0, 99) or 0)
     return out
+
+
+def _quota_row(uid, now):
+    """One profile's limits ({zeit: tokens}, 0 = none, the Nachschlag already in), what it used and the Nachschlag."""
+    lim, use, more = _state(uid, now)
+    return {"limits": {z: (v + more if v else 0) for z, v in lim.items()}, "used": use or used(uid, now), "extra": more}
 
 
 def rate(now=None):
@@ -574,7 +728,18 @@ def for_live(now=None):
         return {"on": False}
     h = heute(now)
     return {"on": True, "rate": rate(now), "today": h.get("vb_llm_in", 0) + h.get("vb_llm_out", 0),
-            "calls": h.get("vb_llm_calls", 0)}
+            "calls": h.get("vb_llm_calls", 0), "full": full_count(now)}
+
+
+def full_count(now=None):
+    """How many profiles are at a used-up limit right now (Live: a number, never who)."""
+    if not quota_on():
+        return 0
+    now = time.time() if now is None else now
+    try:
+        return sum(1 for u in profiles.user_ids() if _full(u, now))
+    except Exception:
+        return 0
 
 
 def for_zustand(now=None):
@@ -602,7 +767,7 @@ def own_count(uid):
 
 
 def _own_clear(uid):
-    clear(uid, keep_today=True)
+    clear(uid)
     print(f"verbrauch: eigene Zahlen gelöscht | {profiles.log_name(profiles.by_id(uid))}", flush=True)
 
 
@@ -640,21 +805,61 @@ def admin_clear(request: Request):
 async def admin_quota(request: Request):
     guard.limit(request, "verbrauchset", admin=True)
     body = await request.json()
-    uid, k = (body or {}).get("uid"), (body or {}).get("k")
+    body = body if isinstance(body, dict) else {}
+    uid, k, zeit = body.get("uid"), body.get("k"), body.get("zeit", "tag")
     if not isinstance(uid, str) or uid not in profiles.user_ids():
         raise HTTPException(404, "Dieses Profil gibt es nicht.")
-    if k is not None and (not isinstance(k, int) or isinstance(k, bool) or not 0 <= k <= QUOTA_MAX_K):
-        raise HTTPException(400, f"Kontingent: 0 bis {QUOTA_MAX_K} Tausend Tokens oder leer für die Vorgabe.")
-    d = _read(QUOTA_FILE, {})
-    own = {u: v for u, v in (d.get("own") or {}).items() if u in profiles.user_ids()} if isinstance(d.get("own"), dict) else {}
-    if k is None:
-        own.pop(uid, None)
-    else:
-        own[uid] = k
-    write_json(QUOTA_FILE, {"own": own})
-    print(f"verbrauch: Kontingent gesetzt | {profiles.log_name(profiles.by_id(uid))} | "
+    if zeit not in ZEITRAEUME:
+        raise HTTPException(400, "Zeitraum: tag, woche oder monat.")
+    top = ZEITRAEUME[zeit][3]
+    if k is not None and _int(k, 0, top) is None:
+        raise HTTPException(400, f"Kontingent: 0 bis {top} Tausend Tokens oder leer für die Vorgabe.")
+    with _quota_lock:
+        d = _read(QUOTA_FILE, {})
+        own = quotas()
+        own = {u: v for u, v in own.items() if u in profiles.user_ids()}
+        mine = own.setdefault(uid, {})
+        if k is None:
+            mine.pop(zeit, None)
+        else:
+            mine[zeit] = k
+        if not mine:
+            own.pop(uid, None)
+        write_json(QUOTA_FILE, {"own": own, "extra": _extra_now(d)})
+    print(f"verbrauch: Kontingent gesetzt | {profiles.log_name(profiles.by_id(uid))} | {zeit} | "
           + ("Vorgabe" if k is None else f"{k} Tausend Tokens"), flush=True)
     return {"ok": True}
+
+
+_quota_lock = threading.Lock()
+
+
+def _extra_now(d, now=None):
+    """The Nachschlag entries of today only (yesterday's go when the file is written)."""
+    today = _day(time.time() if now is None else now)
+    e = d.get("extra") if isinstance(d.get("extra"), dict) else {}
+    have = profiles.user_ids()
+    return {u: v for u, v in e.items() if isinstance(v, dict) and v.get("tag") == today and u in have}
+
+
+@router.post("/api/admin/verbrauch/nachschlag", dependencies=[Depends(auth)])
+async def admin_extra(request: Request):
+    guard.limit(request, "verbrauchset", admin=True)
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    uid, k = body.get("uid"), body.get("k")
+    if not isinstance(uid, str) or uid not in profiles.user_ids():
+        raise HTTPException(404, "Dieses Profil gibt es nicht.")
+    if _int(k, 1, EXTRA_MAX_K) is None:
+        raise HTTPException(400, f"Nachschlag: 1 bis {EXTRA_MAX_K} Tausend Tokens.")
+    with _quota_lock:
+        d = _read(QUOTA_FILE, {})
+        e = _extra_now(d)
+        now_k = _int((e.get(uid) or {}).get("k"), 0, 10 * EXTRA_MAX_K) or 0
+        e[uid] = {"tag": _day(time.time()), "k": min(10 * EXTRA_MAX_K, now_k + k)}
+        write_json(QUOTA_FILE, {"own": {u: v for u, v in quotas().items() if u in profiles.user_ids()}, "extra": e})
+    print(f"verbrauch: Nachschlag | {profiles.log_name(profiles.by_id(uid))} | {k} Tausend Tokens bis Mitternacht", flush=True)
+    return {"ok": True, "extra": e[uid]["k"]}
 
 
 @router.get("/api/profile/verbrauch", dependencies=[Depends(assistant)])

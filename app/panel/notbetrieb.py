@@ -107,15 +107,16 @@ def merken(text, blocks):
     return text
 
 
-async def antwort(turn, en, now=None):
+async def antwort(turn, en, now=None, zaehlen=True):
     """The fixed answer for this turn in Notbetrieb, or None (then the fixed sentence). Runs no model: HA through the
-    panel's own path (chat._ha_panel), the time, the own reminders."""
+    panel's own path (chat._ha_panel), the time, the own reminders. Also for a used-up Kontingent (verbrauch.py, chat.py):
+    zaehlen=False keeps it out of the Notbetrieb's own numbers."""
     import chat
     who = turn.who
     text = str(turn.messages[-1].get("content") or "") if turn.messages else ""
     zone = chat.user_zone(turn.body.get("tz"))
     if turn.ha_direct and turn.ha:
-        _n["commands"] += 1
+        _n["commands"] += 1 if zaehlen else 0
         try:
             ok, _answer, _targets, *_ = await chat._ha_panel(turn, turn.ha, turn.ha_direct, en, who, turn.src)
         except (httpx.HTTPError, ValueError) as e:   # also a proxy page instead of JSON: a fixed sentence, never the error
@@ -127,17 +128,18 @@ async def antwort(turn, en, now=None):
         print("notbetrieb: befehl", "ok" if ok else "nicht_ok", flush=True)
         return merken(*satz("erledigt" if ok else "fehler", en))
     if UHR.fullmatch(text):
-        _n["commands"] += 1
+        _n["commands"] += 1 if zaehlen else 0
         print("notbetrieb: uhrzeit", flush=True)
         return merken(*uhrzeit(now or datetime.datetime.now(zone), en))
     if getattr(turn, "direct", None) == "reminder_list" and who:   # offered only with the profile's own reminders
         import profiles
         items = profiles.reminders(who["id"])
-        _n["commands"] += 1
+        _n["commands"] += 1 if zaehlen else 0
         print(f"notbetrieb: erinnerungen {len(items)}", flush=True)
         return merken(*erinnerungen(items, zone, en))
-    _n["fixed"] += 1
-    print("notbetrieb: fester satz", flush=True)
+    if zaehlen:
+        _n["fixed"] += 1
+        print("notbetrieb: fester satz", flush=True)
     return None
 
 

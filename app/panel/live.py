@@ -1212,6 +1212,8 @@ def snapshot(view="admin", now=None):
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
         if x["id"] == "qwen" and vb.get("on"):   # Verbrauchszähler: tokens of the last minute and today (numbers only)
             x["sub"] = f"{x['sub']} · {vb.get('rate', 0)} Tokens/min · heute {vb.get('today', 0)}"
+            if vb.get("full"):   # Kontingent: how many profiles are at a used-up limit
+                x["sub"] += f" · {vb['full']} am Kontingent"
         if x["id"] == "qwen" and mb.get("on"):   # Modell-Budget: memory left for models (a number and a fixed word)
             x["sub"] = f"{x['sub']} · frei {mb['frei']:g} GiB" + (" · knapp" if mb["regel"] != "alle" else "")
             if mb.get("eigen"):                  # the own model behind the LLM-Tor (its catalog name, never an address)

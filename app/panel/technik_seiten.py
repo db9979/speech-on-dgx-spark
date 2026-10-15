@@ -1083,7 +1083,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "403475152f",
+        "stand": "d180a49ed4",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1281,7 +1281,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "8c90beed45",
+        "stand": "bc0ceb8857",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1452,13 +1452,13 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "83f179e813",
+        "stand": "6937cc23ce",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
             "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
-            "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"],
+            "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"], "verbrauch.warn": ["s11"],
             "wartung.auto_tick": ["s1w"], "wartung.AUTO_MIN": ["s1w"],
         },
         "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
@@ -1533,12 +1533,12 @@ SEITEN_DATEN = {
               ("Vorrang für Personen", "priority for people"),
               ("Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens "
                "die eingestellte Zeit (bis {stufe.WAIT_RANGE.1} Sekunden). Eine Antwort mit Vorrang hält andere "
-               "höchstens {stufe.FIRST_MAX} Sekunden auf. Davor prüft das Panel das Tageskontingent: ein Profil darüber "
-               "bekommt einen festen Satz statt einer Antwort.",
+               "höchstens {stufe.FIRST_MAX} Sekunden auf. Davor prüft das Panel das Kontingent (Tag, Woche, Monat): ein "
+               "Profil darüber bekommt einen festen Satz statt einer Antwort, feste Befehle ohne Modell gehen weiter.",
                "When another person has priority and their answer has no first sentence yet, this round waits at most "
                "the configured time (up to {stufe.WAIT_RANGE.1} seconds). An answer with priority holds others up "
-               "for at most {stufe.FIRST_MAX} seconds. Before that the daily quota is checked: a profile over its "
-               "quota gets a fixed sentence instead of an answer."),
+               "for at most {stufe.FIRST_MAX} seconds. Before that the quota (day, week, month) is checked: a profile "
+               "over it gets a fixed sentence instead of an answer, fixed commands without a model still work."),
               ("info", "ja", ("kurz warten, dann weiter", "wait shortly, then go on"))),
             S("s6", "schritt", ("Eine Runde an das Modell", "One round to the model"),
               ("gestreamt (SSE)", "streamed (SSE)"),
@@ -1632,9 +1632,10 @@ SEITEN_DATEN = {
              "Features → Priority for people: chosen profiles get their answer first."),
             ("Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30).",
              "Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30)."),
-            ("Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent "
-             "je Profil.",
-             "Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile."),
+            ("Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Kontingent "
+             "je Profil für Tag, Woche und Monat.",
+             "Features → Usage counter: counts tokens per model, task and profile; below it the quota per profile for "
+             "day, week and month."),
             ("Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet.",
              "Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts."),
         ],
@@ -1673,7 +1674,8 @@ SEITEN_DATEN = {
             ("wartung.auto_tick", ("Wartungspause von selbst, wenn qwen38 neu startet", "maintenance pause by itself when qwen38 restarts")),
             ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
             ("verbrauch.llm", ("zählt Tokens einer Runde", "counts the tokens of a round")),
-            ("verbrauch.over", ("Tageskontingent erreicht?", "daily quota reached?")),
+            ("verbrauch.over", ("welche Grenze ist voll: Tag, Woche oder Monat?", "which limit is full: day, week or month?")),
+            ("verbrauch.warn", ("Vorwarnung unter der Antwort, einmal je Zeitraum", "the warning under the answer, once per period")),
         ],
         "tests": ["test_panel", "test_llm_settings", "test_vorrang", "test_stufe", "test_fast_start", "test_wartung"],
         "heute": [("vb_llm_calls", ("Anfragen", "requests")), ("vb_llm_in", ("Tokens gelesen", "tokens read")),

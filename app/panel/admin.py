@@ -769,9 +769,13 @@ def validate(new):
     if ch.get("rerank_model", "klein") not in ("klein", "gross"):
         raise HTTPException(400, "rerank_model: klein or gross")
     import verbrauch
-    uq = ch.get("usage_quota_k", 2000)
-    if not isinstance(uq, int) or isinstance(uq, bool) or not 1 <= uq <= verbrauch.QUOTA_MAX_K:
-        raise HTTPException(400, f"usage_quota_k: 1 to {verbrauch.QUOTA_MAX_K}")
+    for z, (_de, _en, key, top) in verbrauch.ZEITRAEUME.items():   # Kontingent: 0 = no limit in this period
+        uq = ch.get(key, verbrauch.QUOTA_DEFAULT_K[z])
+        if not isinstance(uq, int) or isinstance(uq, bool) or not 0 <= uq <= top:
+            raise HTTPException(400, f"{key}: 0 to {top}")
+    uw = ch.get("usage_quota_warn", verbrauch.WARN_DEFAULT)
+    if not isinstance(uw, int) or isinstance(uw, bool) or not 0 <= uw <= 99:
+        raise HTTPException(400, "usage_quota_warn: 0 to 99")
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")

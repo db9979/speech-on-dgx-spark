@@ -1,11 +1,13 @@
-"""Verbrauchszähler and Tageskontingent (verbrauch.py).
+"""Verbrauchszähler and Kontingent for day, week and month (verbrauch.py).
 
 Off by default; counts only numbers (never a question or an answer) per model, task and profile; a conversation's
 "usage" (read, from the cache, written) comes from the last streamed piece, without it the characters are
 estimated and marked; every task name the code counts under is in AUFGABEN (and so in an area); the file keeps 35
 days and 13 months and folds profiles that are gone; each profile sees only its own numbers and can delete them;
-the daily quota answers with one fixed sentence; endpoints need the admin or the own profile.
-No test depends on the wall clock: the day is fixed by patching verbrauch._day where it matters.
+a used-up limit (day, week, month) answers with one fixed sentence naming the restart, fixed commands still work,
+the warning comes once, the Nachschlag holds for today, deleting the own numbers resets no limit; endpoints need
+the admin or the own profile.
+No test depends on the wall clock: the periods are fixed by patching verbrauch._day and verbrauch._keys or by `now`.
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
@@ -32,6 +34,7 @@ ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
 DAY = "2026-10-14"
+KEYS = {"tag": DAY, "woche": "2026-W42", "monat": "2026-10"}
 T = 1792000000.0   # a fixed moment for the tables (its own day per local time zone, used consistently)
 
 
@@ -69,10 +72,14 @@ class Answer:
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(usage_count=True, usage_quota=False, usage_quota_k=2000)
+        helpers.set_config(usage_count=True, usage_quota=False, usage_quota_k=2000, usage_quota_wk=0, usage_quota_mk=0,
+                           usage_quota_warn=80)
         verbrauch.clear()
-        self.addCleanup(helpers.set_config, usage_count=False, usage_quota=False, usage_quota_k=2000)
+        self.addCleanup(helpers.set_config, usage_count=False, usage_quota=False, usage_quota_k=2000, usage_quota_wk=0,
+                        usage_quota_mk=0, usage_quota_warn=80)
         self.addCleanup(verbrauch.clear)
+        self.addCleanup(verbrauch._warned.clear)
+        self.addCleanup(lambda: __import__("common").write_json(verbrauch.QUOTA_FILE, {}))
 
 
 class OffByDefault(unittest.TestCase):
@@ -188,6 +195,7 @@ class TheFile(Base):
         self.assertEqual(keys, {"llm|Gespräch|" + verbrauch.GONE})
         self.assertIn("verbrauch.json", __import__("backup").STATE_LOCAL)
         self.assertIn("verbrauch-kontingent.json", __import__("backup").STATE_FILES)
+        self.assertIn("verbrauch-stand.json", __import__("backup").STATE_LOCAL)
 
     def test_a_broken_file_starts_empty(self):
         verbrauch.save()
@@ -213,8 +221,9 @@ class OwnNumbers(Base):
             self.assertNotIn("profiles", ra)                      # no other profile, no names
             self.assertEqual(a.delete("/api/profile/verbrauch").json(), {"ok": True})
             ra = a.get("/api/profile/verbrauch").json()
-            self.assertEqual(ra["today"].get("llm", {}).get("read"), 100)   # today's tokens stay for the quota
-            self.assertNotIn("asr", ra["today"])
+            self.assertEqual(ra["today"], {})
+            self.assertEqual(verbrauch.used(ua)["tag"], 110)             # the running totals of the limits stay
+            self.assertEqual(ra["quota"]["used"]["tag"], 110)
             self.assertEqual(b.get("/api/profile/verbrauch").json()["today"]["llm"]["read"], 7000)
         self.assertGreater(verbrauch.own_count(ub), 0)
 
@@ -227,44 +236,164 @@ class OwnNumbers(Base):
         self.assertIn(c.post("/api/admin/verbrauch/leeren", json={}).status_code, (401, 403))
 
 
-class DailyQuota(Base):
-    def test_over_the_quota_the_conversation_says_the_fixed_sentence(self):
+class Quota(Base):
+    def test_over_the_day_limit_the_conversation_says_the_fixed_sentence(self):
         helpers.set_config(usage_quota=True, usage_quota_k=1)        # 1000 tokens a day
         c = profile("Vbdora")
         uid = uid_of("Vbdora")
-        with mock.patch.object(verbrauch, "_day", lambda now: DAY):
-            verbrauch._today.update(day=DAY, who={})
+        with mock.patch.object(verbrauch, "_day", lambda now: DAY), mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
             self.assertFalse(verbrauch.over(uid))
             verbrauch.add("llm", "Gespräch", uid, 900, 0, 200)
-            self.assertTrue(verbrauch.over(uid))
-            ev = chat(c, "Wie spät ist es?")
-            text = json.dumps(ev, ensure_ascii=False)
-            self.assertIn(verbrauch.QUOTA_TEXT[0][:40], text)
-            r = ADMIN.put("/api/admin/verbrauch/kontingent", json={"uid": uid, "k": 0})   # 0: no limit for this one
+            self.assertEqual(verbrauch.over(uid), "tag")
+            text = json.dumps(chat(c, "Erzähl mir was über Rom."), ensure_ascii=False)
+            self.assertIn("Für heute sind deine Tokens aufgebraucht. Morgen geht es weiter", text)
+            r = ADMIN.put("/api/admin/verbrauch/kontingent", json={"uid": uid, "zeit": "tag", "k": 0})   # 0: no limit
             self.assertEqual(r.status_code, 200, r.text)
             self.assertFalse(verbrauch.over(uid))
-            self.assertNotIn(verbrauch.QUOTA_TEXT[0][:40], json.dumps(chat(c, "Und jetzt?"), ensure_ascii=False))
+            self.assertNotIn("aufgebraucht", json.dumps(chat(c, "Und jetzt?"), ensure_ascii=False))
             q = c.get("/api/profile/verbrauch").json()["quota"]
-            self.assertEqual(q, {"on": False, "limit": 0, "used": q["used"]})
-            ADMIN.put("/api/admin/verbrauch/kontingent", json={"uid": uid, "k": None})
-            self.assertEqual(verbrauch.limit(uid), 1000)
+            self.assertFalse(q["on"])
+            self.assertEqual(q["limits"], {"tag": 0, "woche": 0, "monat": 0})
+            ADMIN.put("/api/admin/verbrauch/kontingent", json={"uid": uid, "zeit": "tag", "k": None})
+            self.assertEqual(verbrauch.limits(uid)["tag"], 1000)
             helpers.set_config(usage_quota=False)
-            self.assertEqual(verbrauch.limit(uid), 0)                 # switched off: no limit at all
+            self.assertEqual(verbrauch.limits(uid), {"tag": 0, "woche": 0, "monat": 0})   # switched off: no limit
+
+    def test_week_and_month_name_their_restart_and_the_longest_wins(self):
+        helpers.set_config(usage_quota=True, usage_quota_k=0, usage_quota_wk=2, usage_quota_mk=3)
+        profile("Vbwoche")
+        uid = uid_of("Vbwoche")
+        with mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Gespräch", uid, 2000, 0, 0, now=T)
+            self.assertEqual(verbrauch.over(uid, now=T), "woche")
+            verbrauch.add("llm", "Gespräch", uid, 1000, 0, 0, now=T)
+            self.assertEqual(verbrauch.over(uid, now=T), "monat")
+        self.assertIn("Ab Montag geht es weiter", verbrauch.quota_text("woche"))
+        oct14 = 1791979200.0   # 2026-10-14 12:00 UTC: the next month is November in every time zone
+        self.assertIn("Ab dem 1. November geht es weiter", verbrauch.quota_text("monat", now=oct14))
+        self.assertIn("from November 1", verbrauch.quota_text("monat", en=True, now=oct14))
+        for z in verbrauch.ZEITRAEUME:
+            self.assertIn("Ich → Verbrauch", verbrauch.quota_text(z))
+        self.assertEqual(verbrauch._keys(oct14)["woche"], "2026-W42")
+
+    def test_fixed_commands_still_work_without_the_model(self):
+        helpers.set_config(usage_quota=True, usage_quota_k=1)
+        c = profile("Vbuhr")
+        uid = uid_of("Vbuhr")
+        with mock.patch.object(verbrauch, "_day", lambda now: DAY), mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Gespräch", uid, 5000, 0, 0)
+            text = json.dumps(chat(c, "Wie spät ist es?"), ensure_ascii=False)
+        self.assertIn("Es ist", text)
+        self.assertNotIn("aufgebraucht", text)
+
+    def test_the_warning_comes_once_per_period(self):
+        helpers.set_config(usage_quota=True, usage_quota_k=10, usage_quota_warn=80)   # 10000 a day, warned from 8000
+        c = profile("Vbwarn")
+        uid = uid_of("Vbwarn")
+        with mock.patch.object(verbrauch, "_day", lambda now: DAY), mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Gespräch", uid, 7000, 0, 0)
+            self.assertEqual(verbrauch.warn(uid), "")
+            verbrauch.add("llm", "Gespräch", uid, 900, 0, 0)    # the answer itself counts about 1000 more
+            text = json.dumps(chat(c, "Sag hallo."), ensure_ascii=False)
+            self.assertIn("80 % deines Tageskontingents sind verbraucht.", text)
+            self.assertNotIn("Tageskontingents", json.dumps(chat(c, "Noch mal."), ensure_ascii=False))
+        helpers.set_config(usage_quota_warn=0)
+        verbrauch._warned.clear()
+        with mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            self.assertEqual(verbrauch.warn(uid), "")
+
+    def test_the_extra_holds_for_today_only(self):
+        helpers.set_config(usage_quota=True, usage_quota_k=1)
+        profile("Vbmehr")
+        uid = uid_of("Vbmehr")
+        with mock.patch.object(verbrauch, "_day", lambda now: DAY), mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Gespräch", uid, 1500, 0, 0)
+            self.assertEqual(verbrauch.over(uid), "tag")
+            r = ADMIN.post("/api/admin/verbrauch/nachschlag", json={"uid": uid, "k": 1})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(verbrauch.over(uid), "")
+            self.assertEqual(verbrauch.extra(uid), 1000)
+            row = next(p for p in ADMIN.get("/api/admin/verbrauch").json()["profiles"] if p["id"] == uid)
+            self.assertEqual((row["limits"]["tag"], row["extra"]), (2000, 1000))
+        with mock.patch.object(verbrauch, "_day", lambda now: "2026-10-15"):
+            self.assertEqual(verbrauch.extra(uid), 0)
+        for body, code in (({"uid": "u_nobody00000", "k": 5}, 404), ({"uid": uid, "k": 0}, 400),
+                           ({"uid": uid, "k": verbrauch.EXTRA_MAX_K + 1}, 400), ({"uid": uid, "k": True}, 400)):
+            self.assertEqual(ADMIN.post("/api/admin/verbrauch/nachschlag", json=body).status_code, code, body)
+        c = profile("Vbmehr")
+        self.assertIn(c.post("/api/admin/verbrauch/nachschlag", json={"uid": uid, "k": 5}).status_code, (401, 403))
 
     def test_the_quota_endpoint_checks_its_input(self):
-        uid = uid_of("Vbdora") if any(u["name"] == "Vbdora" for u in ADMIN.get("/api/admin/profiles").json()["users"]) else None
-        if uid is None:
-            profile("Vbdora")
-            uid = uid_of("Vbdora")
+        profile("Vbdora")
+        uid = uid_of("Vbdora")
         for body, code in (({"uid": "u_nobody00000", "k": 5}, 404), ({"uid": uid, "k": -1}, 400),
                            ({"uid": uid, "k": "viel"}, 400), ({"uid": uid, "k": True}, 400),
-                           ({"uid": uid, "k": verbrauch.QUOTA_MAX_K + 1}, 400)):
+                           ({"uid": uid, "zeit": "jahr", "k": 5}, 400),
+                           ({"uid": uid, "zeit": "tag", "k": verbrauch.ZEITRAEUME["tag"][3] + 1}, 400),
+                           ({"uid": uid, "zeit": "monat", "k": verbrauch.ZEITRAEUME["monat"][3]}, 200)):
             self.assertEqual(ADMIN.put("/api/admin/verbrauch/kontingent", json=body).status_code, code, body)
+        self.assertEqual(verbrauch.quotas()[uid], {"monat": verbrauch.ZEITRAEUME["monat"][3]})
+        import admin
+        from fastapi import HTTPException
+        cfg = ADMIN.get("/api/config").json()
+        for key, bad in (("usage_quota_wk", -1), ("usage_quota_mk", True), ("usage_quota_warn", 100), ("usage_quota_k", "x")):
+            new = json.loads(json.dumps(cfg))
+            new["chat"][key] = bad
+            with self.assertRaises(HTTPException, msg=key):
+                admin.validate(new)
 
     def test_the_quota_is_never_for_guests_or_the_spark(self):
         helpers.set_config(usage_quota=True)
-        self.assertEqual(verbrauch.limit(verbrauch.GUEST), 0)
-        self.assertEqual(verbrauch.limit(verbrauch.SPARK), 0)
+        none = {"tag": 0, "woche": 0, "monat": 0}
+        self.assertEqual(verbrauch.limits(verbrauch.GUEST), none)
+        self.assertEqual(verbrauch.limits(verbrauch.SPARK), none)
+        verbrauch.add("llm", "Gespräch", verbrauch.SPARK, 10 ** 9, 0, 0)
+        self.assertEqual(verbrauch.over(verbrauch.SPARK), "")
+
+    def test_writing_help_and_documents_stop_at_a_full_limit(self):
+        import docmake
+        import schreib
+        from fastapi import HTTPException
+        helpers.set_config(usage_quota=True, usage_quota_k=1)
+        profile("Vbschreib")
+        uid = uid_of("Vbschreib")
+        with mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Schreibhilfe", uid, 2000, 0, 0)
+            with self.assertRaises(HTTPException) as e:
+                schreib._quota(uid)
+            self.assertEqual(e.exception.status_code, 429)
+            self.assertIn("aufgebraucht", e.exception.detail)
+            with self.assertRaises(ValueError) as e:
+                docmake._can_start(uid)
+            self.assertIn("aufgebraucht", str(e.exception))
+
+    def test_the_running_totals_survive_a_restart_and_come_from_the_days_once(self):
+        profile("Vbstand")
+        uid = uid_of("Vbstand")
+        with mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
+            verbrauch.add("llm", "Gespräch", uid, 400, 0, 100, now=T)
+            verbrauch.save(now=T)
+            with open(verbrauch.STAND_FILE) as f:
+                self.assertEqual(json.load(f)["woche"], {"p": "2026-W42", "who": {uid: 500}})
+            verbrauch._st["loaded"] = False
+            for z in verbrauch.ZEITRAEUME:
+                verbrauch._stand[z] = ["", {}]
+            self.assertEqual(verbrauch.used(uid)["woche"], 500)
+            os.remove(verbrauch.STAND_FILE)                      # the first start: from the stored months
+            verbrauch._st["loaded"] = False
+            verbrauch._stand["monat"] = ["", {}]
+            verbrauch._load()
+        self.assertEqual(verbrauch._stand["monat"][1].get(uid, 0), sum(v[verbrauch.IN] + v[verbrauch.OUT]
+                         for k, v in verbrauch._months.get("2026-10", {}).items() if k == f"llm|Gespräch|{uid}"))
+
+    def test_live_counts_the_profiles_at_a_full_limit(self):
+        helpers.set_config(usage_quota=True, usage_quota_k=1)
+        profile("Vblive")
+        uid = uid_of("Vblive")
+        with mock.patch.object(verbrauch, "_keys", lambda now: KEYS), mock.patch.object(verbrauch, "_day", lambda now: DAY):
+            self.assertEqual(verbrauch.for_live()["full"], 0)
+            verbrauch.add("llm", "Gespräch", uid, 2000, 0, 0)
+            self.assertEqual(verbrauch.for_live()["full"], 1)
 
 
 class Live(Base):
@@ -274,7 +403,7 @@ class Live(Base):
         self.assertTrue(d["on"])
         self.assertGreaterEqual(d["today"], 320)
         self.assertGreaterEqual(d["rate"], 320)
-        self.assertEqual(set(d), {"on", "rate", "today", "calls"})
+        self.assertEqual(set(d), {"on", "rate", "today", "calls", "full"})
 
 
 WIDE = "document.documentElement.scrollWidth<=document.documentElement.clientWidth"
@@ -339,6 +468,7 @@ class Pages(unittest.TestCase):
                 await self._until(pg, "!!document.querySelector('#usgmain .vb-tile')&&!!window.lzIdle&&lzIdle()")
                 self.assertEqual(await pg.evaluate("document.querySelectorAll('#usgmain .vb-bar').length"), 30)
                 self.assertIn("Vbseite", await pg.inner_text("#usgmain"))
+                self.assertIn("+500 heute", await pg.inner_text("#usgmain"))   # the card „Kontingent“
                 self.assertTrue(await pg.evaluate(WIDE), f"{w}: Zustand → Verbrauch")
                 await pg.click("#usgmain [data-vbarea='hintergrund']")
                 await self._until(pg, "!!document.querySelector('#usgmain .vb-task')")
@@ -351,7 +481,8 @@ class Pages(unittest.TestCase):
                 await pg.evaluate("openMe('usebox')")
                 await self._until(pg, "!!document.querySelector('#usebox .vb-tile')")
                 text = await pg.inner_text("#usebox")
-                self.assertIn("Tageskontingent", text)
+                self.assertIn("Diese Woche", text)
+                self.assertIn("neu um 0 Uhr", text)
                 self.assertNotIn("Steckbrief", text)
                 self.assertTrue(await pg.evaluate(WIDE), f"{w}: Ich → Verbrauch")
                 self.assertEqual(errors, [])

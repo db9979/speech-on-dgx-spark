@@ -198,7 +198,7 @@ MODULE = {
     "tracelog": ("betrieb", "Logs → Anfragen: der Weg jeder Anfrage"),
     "logfilter": ("betrieb", "Diagnose-Filter und Hinweise für die Logs"),
     "latency": ("betrieb", "Wartezeit bis zum ersten Ton"),
-    "verbrauch": ("betrieb", "Verbrauchszähler je Modell, Aufgabe und Profil, Tageskontingent"),
+    "verbrauch": ("betrieb", "Verbrauchszähler je Modell, Aufgabe und Profil, Kontingent für Tag, Woche und Monat"),
     "dienstwacht": ("betrieb", "Dienst-Wächter: meldet, wenn ein Dienst fehlt"),
     "wartung": ("betrieb", "Wartungspause: Spark hält an, während ein Modell neu eingespielt wird"),
     "faelle": ("betrieb", "Fälle: jedes Problem wird festgehalten"),

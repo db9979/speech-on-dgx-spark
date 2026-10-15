@@ -7850,6 +7850,76 @@
           }
         }
       }
+    },
+    "Kontingent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quota"
+          }
+        }
+      }
+    },
+    "Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language model limits per profile for day, week and month."
+          }
+        }
+      }
+    },
+    "Tausend Tokens": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thousand tokens"
+          }
+        }
+      }
+    },
+    "Leer gilt die Vorgabe, 0 heißt keine Grenze.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty uses the default, 0 means no limit."
+          }
+        }
+      }
+    },
+    "+500 heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+500 today"
+          }
+        }
+      }
+    },
+    "500 Tausend Tokens mehr bis Mitternacht, für jede Grenze.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "500 thousand tokens more until midnight, for every limit."
+          }
+        }
+      }
+    },
+    "Gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

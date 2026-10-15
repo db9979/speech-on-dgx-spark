@@ -312,9 +312,9 @@ FEATURES = (
     F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
       parent="melden", me="rpbox", guide="meldenadmin"),
     # verbrauch.py (plan plaene/token-zaehler.md): how much the models do, numbers only; each profile sees its own
-    # under Ich → Verbrauch; the daily quota limits a profile's language model tokens (admin profiles never)
+    # under Ich → Verbrauch; the quota limits a profile's language model tokens per day, week and month (admins never)
     F("verbrauch", "Verbrauchszähler", "Usage counter", "sec", ("usage_count",), me="usebox", guide="verbrauch"),
-    F("kontingent", "Tageskontingent", "Daily quota", "sec", ("usage_quota",), parent="verbrauch", me="usebox",
+    F("kontingent", "Kontingent", "Quota", "sec", ("usage_quota",), parent="verbrauch", me="usebox",
       guide="kontingent"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),

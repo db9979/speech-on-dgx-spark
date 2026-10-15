@@ -756,6 +756,10 @@ def _sweep(now):
 def _can_start(uid):
     """Raises ValueError with the reason when this profile may not start another job now."""
     notaus.stop("auftrag", uid)
+    zeit = verbrauch.over(uid)
+    if zeit:   # Kontingent (verbrauch.py): a used-up limit starts no job; a running one is finished
+        print("docmake: kontingent voll, kein auftrag", flush=True)
+        raise ValueError(verbrauch.quota_text(zeit))
     _sweep(time.time())
     with _lock:
         if any(j["uid"] == uid and j["state"] in ("wait", "run") for j in _jobs.values()):
@@ -771,6 +775,7 @@ def _can_start(uid):
 def start_job(uid, what, plan, doc=None, todo=None, wish="", client="web"):
     """what: "neu" (a new document from plan) or "aendern" (sections todo of doc rewritten with wish)."""
     _can_start(uid)
+    verbrauch.WHO.set(uid)   # the job's model calls count for this profile (the task copies this context)
     jid = secrets.token_hex(6)
     steps = len(todo) if todo is not None else len(plan["sections"])
     j = {"id": jid, "uid": uid, "what": what, "state": "wait", "step": 0, "steps": steps + 1, "t0": time.time(),

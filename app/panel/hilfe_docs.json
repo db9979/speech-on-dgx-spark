@@ -2093,7 +2093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " (notbetrieb.antwort). 3. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 4. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 5. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs oder Verbrauchszähler meldet der Server am Ende, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam. 6. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. Davor prüft das Panel das Tageskontingent: ein Profil darüber bekommt einen festen Satz statt einer Antwort. 7. Eine Runde an das Mod"
+"text": " (notbetrieb.antwort). 3. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 4. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 5. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Bei eingeschalteten Logs oder Verbrauchszähler meldet der Server am Ende, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam. 6. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. Davor prüft das Panel das Kontingent (Tag, Woche, Monat): ein Profil darüber bekommt einen festen Satz statt einer Antwort, feste Bef"
 },
 {
 "lang": "de",
@@ -2101,7 +2101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 8. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 9. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 10. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 11. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 12. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. Der Verb"
+"text": "ehle ohne Modell gehen weiter. 7. Eine Runde an das Modell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 8. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 9. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 10. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 11. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 12. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit"
 },
 {
 "lang": "de",
@@ -2109,7 +2109,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers geschätzt, rund 3.5 Zeichen je Token). 13. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 14. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
+"text": " bis zum ersten Wort, Wartezeit wegen Vorrang. Der Verbrauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers geschätzt, rund 3.5 Zeichen je Token). 13. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 14. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
 },
 {
 "lang": "de",
@@ -2133,7 +2133,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge einer Antwort. - Einstellungen → Sprachmodell, unter Erweitert: Zeitlimit für eine Antwort. - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst. - Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30). - Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Tageskontingent je Profil. - Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet."
+"text": "- Einstellungen → Sprachmodell: Adresse, Schlüssel und Modell; dazu Vorher nachdenken, Temperatur und Länge einer Antwort. - Einstellungen → Sprachmodell, unter Erweitert: Zeitlimit für eine Antwort. - Funktionen → Vorrang für Personen: ausgewählte Profile bekommen ihre Antwort zuerst. - Zustand → Wartungspause: das Sprachmodell vor einem Update anhalten (auch sudo speech-spark pause llm 30). - Funktionen → Verbrauchszähler: zählt Tokens je Modell, Aufgabe und Profil; darunter das Kontingent je Profil für Tag, Woche und Monat. - Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet."
 },
 {
 "lang": "de",
@@ -2157,7 +2157,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "chritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn qwen38 neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: Tageskontingent erreicht? (Schritt 6)"
+"text": "chritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn qwen38 neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: welche Grenze ist voll: Tag, Woche oder Monat? (Schritt 6) - app/panel/verbrauch.py warn: Vorwarnung unter der Antwort, einmal je Zeitraum (Schritt 12)"
 },
 {
 "lang": "de",
@@ -2677,7 +2677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 59). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 29), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 60). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -2701,7 +2701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 59 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 29 Dateien in jeder Sicherung (Schritt 7) - 60 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -8837,7 +8837,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tbetrieb.antwort). 3. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 4. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 5. Build the request: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache. 6. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the daily quota is checked: a profile over its quota gets a fixed sentence instead of an answer. 7. One round to the model: The round goes to the configured address. When the server refuses the forced tool "
+"text": "tbetrieb.antwort). 3. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 4. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 5. Build the request: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache. 6. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the quota (day, week, month) is checked: a profile over it gets a fixed sentence instead of an answer, fixed commands without a model still work. 7. One round to the model: The round goes to the configured "
 },
 {
 "lang": "en",
@@ -8845,7 +8845,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "choice, the same round goes once without it. 8. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 9. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 10. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 11. Only answer text goes on: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 12. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. The usage counter counts tokens read and written per task and profile (estimated without the server's report, about 3.5 characters per token). 13. Error on the way?: An error "
+"text": "address. When the server refuses the forced tool choice, the same round goes once without it. 8. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 9. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 10. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 11. Only answer text goes on: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 12. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. The usage counter counts tokens read and written per task and profile (estimated without the server's report, about 3.5 charac"
 },
 {
 "lang": "en",
@@ -8853,7 +8853,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 14. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
+"text": "ters per token). 13. Error on the way?: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 14. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
 },
 {
 "lang": "en",
@@ -8877,7 +8877,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Settings → Language model: Address, Key and Model; also Think first, Temperature and Length of an answer. - Settings → Language model, under Advanced: Time limit for an answer. - Features → Priority for people: chosen profiles get their answer first. - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30). - Features → Usage counter: counts tokens per model, task and profile; below it the daily quota per profile. - Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts."
+"text": "- Settings → Language model: Address, Key and Model; also Think first, Temperature and Length of an answer. - Settings → Language model, under Advanced: Time limit for an answer. - Features → Priority for people: chosen profiles get their answer first. - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30). - Features → Usage counter: counts tokens per model, task and profile; below it the quota per profile for day, week and month. - Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts."
 },
 {
 "lang": "en",
@@ -8901,7 +8901,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "itself when qwen38 restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: daily quota reached? (step 6)"
+"text": "itself when qwen38 restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: which limit is full: day, week or month? (step 6) - app/panel/verbrauch.py warn: the warning under the answer, once per period (step 12)"
 },
 {
 "lang": "en",
@@ -9413,7 +9413,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 59). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 29), otherwise the line gives its reason (dateien.STATE_LOCAL, 60). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -9429,7 +9429,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 29 files in every backup (step 7) - 59 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 29 files in every backup (step 7) - 60 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",

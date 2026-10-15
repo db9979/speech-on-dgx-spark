@@ -426,6 +426,18 @@ struct UsageView: View {
                         LabeledContent { Text(verbatim: Self.n(Self.d(p["tokens"])) + " Tokens") } label: { Text(verbatim: Self.who(p)) }
                     }
                 }
+                let quota = d["quota"] as? [String: Any] ?? [:]
+                if quota["on"] as? Bool == true {
+                    Section {
+                        ForEach(Array((d["profiles"] as? [[String: Any]] ?? []).filter { $0["kind"] as? String == "profil" }.enumerated()), id: \.offset) { _, p in
+                            NavigationLink {
+                                QuotaEditView(profile: p, quota: quota) { await load() }
+                            } label: {
+                                LabeledContent { Text(verbatim: Self.state(p)) } label: { Text(verbatim: Self.who(p)) }
+                            }
+                        }
+                    } header: { Text("Kontingent") } footer: { Text("Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell.") }
+                }
                 Section {
                     Button("Zähler leeren", role: .destructive) { asking = true }
                 } footer: { Text("Nur Zahlen, nie Fragen oder Antworten.") }
@@ -473,6 +485,17 @@ struct UsageView: View {
         default: return n(d(m["amount"])) + " " + word(m["unit_name"])
         }
     }
+    /// The fullest limit of a profile: "1,2 Mio / 2 Mio · Tag", "Woche voll" or "keine Grenze".
+    static func state(_ p: [String: Any]) -> String {
+        let lim = p["limits"] as? [String: Any] ?? [:], used = p["used"] as? [String: Any] ?? [:]
+        var top: (String, Double, Double)?
+        for z in ["tag", "woche", "monat"] where d(lim[z]) > 0 {
+            if top == nil || d(used[z]) / d(lim[z]) > top!.1 / top!.2 { top = (z, d(used[z]), d(lim[z])) }
+        }
+        guard let t = top else { return de ? "keine Grenze" : "no limit" }
+        let name = ["tag": de ? "Tag" : "day", "woche": de ? "Woche" : "week", "monat": de ? "Monat" : "month"][t.0] ?? t.0
+        return t.1 >= t.2 ? name + (de ? " voll" : " full") : n(t.1) + " / " + n(t.2) + " · " + name
+    }
     static func who(_ p: [String: Any]) -> String {
         switch p["kind"] as? String {
         case "gast": return de ? "Gäste" : "Guests"
@@ -480,6 +503,71 @@ struct UsageView: View {
         case "geloescht": return de ? "Gelöschte Profile" : "Deleted profiles"
         default: return p["name"] as? String ?? ""
         }
+    }
+}
+
+/// One profile's own limits (thousand tokens; empty: the default, 0: none) and „+500 heute“, like Zustand → Verbrauch.
+struct QuotaEditView: View {
+    let profile: [String: Any]
+    let quota: [String: Any]
+    let reload: () async -> Void
+    @State private var values: [String: String] = [:]
+    @State private var error: String?
+    @State private var done = false
+    private let zeiten = ["tag", "woche", "monat"]
+
+    var body: some View {
+        Form {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            Section {
+                ForEach(zeiten, id: \.self) { z in
+                    LabeledContent {
+                        TextField(String(describing: (quota["k"] as? [String: Any])?[z] ?? ""), text: Binding(get: { values[z] ?? "" }, set: { values[z] = $0 }))
+                            .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                    } label: { Text(verbatim: label(z)) }
+                }
+                Button("Setzen") { Task { await save() } }
+            } header: { Text("Tausend Tokens") } footer: { Text("Leer gilt die Vorgabe, 0 heißt keine Grenze.") }
+            Section {
+                LabeledContent("Stand") { Text(verbatim: UsageView.state(profile)) }
+                Button("+500 heute") { Task { await more() } }
+            } footer: { Text("500 Tausend Tokens mehr bis Mitternacht, für jede Grenze.") }
+            if done { Text("Gespeichert.").foregroundStyle(.secondary) }
+        }
+        .navigationTitle(Text(verbatim: profile["name"] as? String ?? ""))
+        .onAppear {
+            let own = ((quota["own"] as? [String: Any])?[profile["id"] as? String ?? ""] as? [String: Any]) ?? [:]
+            for z in zeiten { if let v = own[z] as? Int { values[z] = String(v) } }
+        }
+    }
+
+    private func label(_ z: String) -> String {
+        let a = (quota["zeiten"] as? [String: Any])?[z] as? [String] ?? [z, z]
+        return a.count == 2 ? (UsageView.de ? a[0] : a[1]) : z
+    }
+
+    private func save() async {
+        let own = ((quota["own"] as? [String: Any])?[profile["id"] as? String ?? ""] as? [String: Any]) ?? [:]
+        do {
+            for z in zeiten {
+                let text = (values[z] ?? "").trimmingCharacters(in: .whitespaces)
+                let old = (own[z] as? Int).map(String.init) ?? ""
+                if text == old { continue }
+                var body: [String: Any] = ["uid": profile["id"] as? String ?? "", "zeit": z]
+                if let v = Int(text) { body["k"] = v } else { body["k"] = NSNull() }
+                _ = try await AdminSession.shared.call("PUT", "api/admin/verbrauch/kontingent", body: body)
+            }
+            error = nil; done = true
+            await reload()
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func more() async {
+        do {
+            _ = try await AdminSession.shared.call("POST", "api/admin/verbrauch/nachschlag", body: ["uid": profile["id"] as? String ?? "", "k": 500])
+            error = nil; done = true
+            await reload()
+        } catch { self.error = error.localizedDescription }
     }
 }
 

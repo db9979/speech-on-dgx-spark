@@ -1,5 +1,5 @@
 // Verbrauchszähler (verbrauch.py): how much each model works. Zustand → Verbrauch (admin: per model, area, task and
-// profile, quotas, empty), the card „Verbrauch heute“ under Monitoring and Ich → Verbrauch (each profile its own
+// profile, quotas per day, week and month with an extra for today, empty), the card „Verbrauch heute“ under Monitoring and Ich → Verbrauch (each profile its own
 // numbers, its quota, delete). The server sends numbers and fixed names only; profile names go in with esc().
 let VB_ON=false,VBZ='30t',VBZME='30t',VBAREA=null;
 const VBCOL={gespraech:1,weiche:2,hintergrund:3,assistent:4,pruefen:5,agent:6,begleiter:7,dokumente:8,sonstige:9,alle:1};
@@ -45,22 +45,38 @@ function vbAreas(d){const a=d.areas||[];if(!a.length)return '';const tot=a.reduc
         tasks.map(k=>`<tr class="vb-task"><td>${esc(k.name)}${k.estimated?' <span class="mut">'+esc(t('(geschätzt)','(estimated)'))+'</span>':''}</td><td class="n">${esc(vbN(k.read))}</td><td class="n">${esc(vbN(k.written))}</td><td class="mut">${esc(t(vbN(k.calls)+' Aufrufe',vbN(k.calls)+' calls'))}</td></tr>`).join('')}).join('')+
     `</tbody></table></div><div class="mut vb-note">${esc(t('Ein Klick auf einen Bereich zeigt seine Aufgaben.','A click on an area shows its tasks.'))}</div></div>`}
 const VBKIND={gast:['Gäste','Guests'],spark:['Spark selbst','The Spark itself'],geloescht:['Gelöschte Profile','Deleted profiles']};
-function vbPeople(d){const p=d.profiles||[],q=d.quota||{};if(!p.length)return '';
-  return `<div class="card"><h3>${esc(t('Nach Profil','By profile'))} · ${esc(t(...VBSPAN[d.zeit]))}</h3><div class="vb-tw"><table class="vb-tab"><thead><tr><th>${esc(t('Profil','Profile'))}</th><th class="n">Tokens</th><th class="n">${esc(t('Sprache','Speech'))}</th><th class="n">${esc(t('Bilder','Pictures'))}</th>${q.on?`<th>${esc(t('Heute / Kontingent','Today / quota'))}</th>`:''}</tr></thead><tbody>`+
-    p.map(r=>`<tr><td>${esc(r.kind==='profil'?r.name:t(...VBKIND[r.kind]))}</td><td class="n">${esc(vbN(r.tokens))}</td><td class="n">${esc(vbSec(r.heard+r.spoken))}</td><td class="n">${r.pictures?esc(vbN(r.pictures)):'–'}</td>`+
-      (q.on?`<td class="vb-qc">${r.kind!=='profil'?'<span class="mut">–</span>':r.limit?`<span class="vb-q">${esc(vbN(r.today))} / ${esc(vbN(r.limit))}</span>`:`<span class="mut">${esc(t('ohne Grenze','no limit'))}</span>`}`+
-        (r.kind==='profil'?` <input class="num vb-qin" type="number" min="0" max="100000" data-vbq="${esc(r.id)}" value="${q.own[r.id]??''}" placeholder="${esc(String(q.k))}" aria-label="${esc(t('Tausend Tokens am Tag','Thousand tokens a day'))}"> <button class="b" type="button" data-vbqset="${esc(r.id)}">${esc(t('Setzen','Set'))}</button>`:'')+`</td>`:'')+`</tr>`).join('')+
-    `</tbody></table></div><div class="mut vb-note">${esc(t('Nur Zahlen, nie Fragen oder Antworten. „Spark selbst“: Arbeit ohne Profil (Prüfungen, Messungen, Lernen).','Numbers only, never questions or answers. "The Spark itself": work without a profile (checks, measuring, learning).'))}`+
-    (q.on?' '+esc(t(`Kontingent in Tausend Tokens am Tag; leer gilt die Vorgabe (${q.k}), 0 heißt ohne Grenze. Admin-Profile haben keine Grenze.`,`Quota in thousand tokens a day; empty uses the default (${q.k}), 0 means no limit. Admin profiles have no limit.`)):'')+`</div></div>`}
+function vbPeople(d){const p=d.profiles||[];if(!p.length)return '';
+  return `<div class="card"><h3>${esc(t('Nach Profil','By profile'))} · ${esc(t(...VBSPAN[d.zeit]))}</h3><div class="vb-tw"><table class="vb-tab"><thead><tr><th>${esc(t('Profil','Profile'))}</th><th class="n">Tokens</th><th class="n">${esc(t('Sprache','Speech'))}</th><th class="n">${esc(t('Bilder','Pictures'))}</th></tr></thead><tbody>`+
+    p.map(r=>`<tr><td>${esc(r.kind==='profil'?r.name:t(...VBKIND[r.kind]))}</td><td class="n">${esc(vbN(r.tokens))}</td><td class="n">${esc(vbSec(r.heard+r.spoken))}</td><td class="n">${r.pictures?esc(vbN(r.pictures)):'–'}</td></tr>`).join('')+
+    `</tbody></table></div><div class="mut vb-note">${esc(t('Nur Zahlen, nie Fragen oder Antworten. „Spark selbst“: Arbeit ohne Profil (Prüfungen, Messungen, Lernen).','Numbers only, never questions or answers. "The Spark itself": work without a profile (checks, measuring, learning).'))}</div></div>`}
+// Kontingent: per period how much is used of the limit; the fullest one decides the bar (full, warned, fine)
+const VBZT=['tag','woche','monat'],VBNEU={tag:['neu um 0 Uhr','new at midnight'],woche:['neu am Montag','new on Monday'],monat:['neu am 1.','new on the 1st']};
+const VBVOLL={tag:['Tag voll · morgen','Day full · tomorrow'],woche:['Woche voll · ab Montag','Week full · from Monday'],monat:['Monat voll · ab dem 1.','Month full · from the 1st']};
+function vbFull(r){const l=r.limits||{},u=r.used||{};let top=null;
+  for(const z of VBZT){if(!l[z])continue;const f=(u[z]||0)/l[z];if(!top||f>top.f)top={z,f,u:u[z]||0,l:l[z]}}return top}
+function vbBarCls(f,warn){return f>=1?'full':warn&&f*100>=warn?'warn':''}
+function vbQuota(d){const q=d.quota||{},p=(d.profiles||[]).filter(r=>r.kind==='profil');if(!q.on||!p.length)return '';
+  const head=VBZT.map(z=>`<th class="n">${esc(t(...(q.zeiten||{})[z]||[z,z]))}</th>`).join('');
+  return `<div class="card"><h3>${esc(t('Kontingent','Quota'))}</h3><div class="vb-tw"><table class="vb-tab vb-quota"><thead><tr><th>${esc(t('Profil','Profile'))}</th>${head}<th>${esc(t('Stand','Status'))}</th><th></th></tr></thead><tbody>`+
+    p.map(r=>{const own=(q.own||{})[r.id]||{},top=vbFull(r);
+      const cells=VBZT.map(z=>`<td class="n"><input class="num vb-qin" type="number" min="0" data-vbq="${esc(r.id)}" data-vbqz="${z}" value="${own[z]??''}" placeholder="${esc(String((q.k||{})[z]??''))}" aria-label="${esc(t('Tausend Tokens je ','Thousand tokens per ')+t(...(q.zeiten||{})[z]||[z,z]))}"></td>`).join('');
+      const st=!top?`<span class="mut">${esc(t('keine Grenze','no limit'))}</span>`:
+        `<div class="vb-hb vb-qbar"><i class="${vbBarCls(top.f,q.warn)}" style="width:${Math.min(100,Math.round(100*top.f))}%"></i></div><span class="mut">${esc(top.f>=1?t(...VBVOLL[top.z]):vbN(top.u)+' / '+vbN(top.l)+' · '+t(...(q.zeiten||{})[top.z]||[top.z,top.z]))}</span>`;
+      return `<tr><td>${esc(r.name)}</td>${cells}<td class="vb-qc">${st}${r.extra?` <span class="pill">${esc(t('+'+vbN(r.extra)+' heute','+'+vbN(r.extra)+' today'))}</span>`:''}</td><td class="vb-qc"><button class="b" type="button" data-vbqset="${esc(r.id)}">${esc(t('Setzen','Set'))}</button> <button class="b" type="button" data-vbextra="${esc(r.id)}">${esc(t('+500 heute','+500 today'))}</button></td></tr>`}).join('')+
+    `</tbody></table></div><div class="mut vb-note">${esc(t(`Tausend Tokens; leer gilt die Vorgabe, 0 heißt keine Grenze. „+500 heute“ gibt 500 Tausend Tokens mehr bis Mitternacht, für jede Grenze. Admin-Profile haben keine Grenze.`,`Thousand tokens; empty uses the default, 0 means no limit. "+500 today" gives 500 thousand tokens more until midnight, for every limit. Admin profiles have no limit.`))}</div></div>`}
 // ---------------------------------------------------------------- Zustand → Verbrauch (admin)
 async function loadUsage(){const main=$('usgmain'),off=$('usgoff'),msg=$('usgmsg');if(!main)return;msg.textContent='';
   let d;try{d=await (await api('/api/admin/verbrauch?zeit='+encodeURIComponent(VBZ))).json()}catch(e){msg.textContent=e.message;return}
   off.hidden=!!d.on;main.hidden=!d.on;$('usgseg').hidden=!d.on;$('usgclear').hidden=!d.on;if(!d.on){main.innerHTML='';return}
   main.innerHTML=vbTiles(d.today||{})+`<div class="vb-two"><div class="card"><h3>${esc(VBZ==='24h'?t('Tokens pro Stunde','Tokens per hour'):VBZ==='12m'?t('Tokens pro Monat, nach Bereich','Tokens per month, by area'):t('Tokens pro Tag, nach Bereich','Tokens per day, by area'))}</h3>${vbBars(d,VBZ)}<div class="mut vb-note">${esc(t(`Jetzt ${vbN(d.rate)} Tokens in der letzten Minute.`,`Now ${vbN(d.rate)} tokens in the last minute.`))}</div></div>${vbModels(d)}</div>`+
-    `<div class="vb-two">${VBZ==='24h'?'':vbAreas(d)}${VBZ==='24h'?'':vbPeople(d)}</div>`;
+    `<div class="vb-two">${VBZ==='24h'?'':vbAreas(d)}${VBZ==='24h'?'':vbPeople(d)}</div>`+vbQuota(d);
   main.querySelectorAll('[data-vbarea]').forEach(r=>{const go=()=>{VBAREA=VBAREA===r.dataset.vbarea?null:r.dataset.vbarea;loadUsage()};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
-  main.querySelectorAll('[data-vbqset]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.vbqset,inp=main.querySelector(`[data-vbq="${CSS.escape(uid)}"]`),v=inp.value.trim();
-    b.disabled=true;try{await api('/api/admin/verbrauch/kontingent',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid,k:v===''?null:Number(v)})});await loadUsage()}catch(e){msg.textContent=e.message;b.disabled=false}})}
+  main.querySelectorAll('[data-vbqset]').forEach(b=>b.onclick=async()=>{const uid=b.dataset.vbqset;b.disabled=true;
+    try{for(const inp of main.querySelectorAll(`[data-vbq="${CSS.escape(uid)}"]`)){if(inp.value===inp.defaultValue)continue;const v=inp.value.trim();
+        await api('/api/admin/verbrauch/kontingent',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid,zeit:inp.dataset.vbqz,k:v===''?null:Number(v)})})}
+      await loadUsage()}catch(e){msg.textContent=e.message;b.disabled=false}});
+  main.querySelectorAll('[data-vbextra]').forEach(b=>b.onclick=async()=>{b.disabled=true;
+    try{await api('/api/admin/verbrauch/nachschlag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:b.dataset.vbextra,k:500})});await loadUsage()}catch(e){msg.textContent=e.message;b.disabled=false}})}
 function usageInit(){const seg=$('usgseg');if(!seg)return;seg.outerHTML=vbSeg('usgseg',VBZ,true);
   $('usgseg').onclick=e=>{const b=e.target.closest('[data-vbz]');if(!b)return;VBZ=b.dataset.vbz;$('usgseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));lzb($('usgbox'),loadUsage)};
   $('usgclear').onclick=async()=>{if(!confirm(t('Alle Zähler leeren? Die Zahlen aller Tage und Monate sind dann weg.','Empty all counters? The numbers of every day and month are gone then.')))return;
@@ -77,14 +93,17 @@ async function zUsage(){const box=$('zverbrauch');if(!box||document.hidden)retur
 async function showUse(){const box=$('usebox');if(!box)return;if(!PROFILE||!VB_ON){box.innerHTML='';return}
   let d;try{d=await (await api('/api/profile/verbrauch?zeit='+encodeURIComponent(VBZME))).json()}catch(e){box.innerHTML=`<div class="fh">${esc(e.message)}</div>`;return}
   const q=d.quota||{},l=(d.today||{}).llm||{},a=(d.today||{}).asr||{},s=(d.today||{}).tts||{};
-  const qbar=q.on?`<div class="card"><h3>${esc(t('Tageskontingent','Daily quota'))}</h3><div class="vb-hb vb-qbar"><i class="${q.used>=q.limit?'full':''}" style="width:${Math.min(100,vbPct(q.used,q.limit))}%"></i></div>`+
-    `<div class="mut vb-note">${esc(t(`${vbN(q.used)} von ${vbN(q.limit)} Tokens heute. Ist es aufgebraucht, antwortet der Assistent bis Mitternacht mit einem festen Satz.`,`${vbN(q.used)} of ${vbN(q.limit)} tokens today. When it is used up, the assistant answers with a fixed sentence until midnight.`))}</div></div>`:'';
+  const lim=q.limits||{},use=q.used||{},ZN={tag:['Heute','Today'],woche:['Diese Woche','This week'],monat:['Dieser Monat','This month']};
+  const qbar=q.on?`<div class="card"><h3>${esc(t('Kontingent','Quota'))}</h3>`+VBZT.map(z=>lim[z]?
+      `<div class="vb-qrow"><b>${esc(t(...ZN[z]))}</b><div class="vb-hb vb-qbar"><i class="${vbBarCls((use[z]||0)/lim[z],q.warn)}" style="width:${Math.min(100,vbPct(use[z]||0,lim[z]))}%"></i></div><div class="mut vb-qline"><span>${esc(t(`${vbN(use[z])} von ${vbN(lim[z])} Tokens`,`${vbN(use[z])} of ${vbN(lim[z])} tokens`))}</span><span>${esc(t(...VBNEU[z]))}</span></div></div>`:
+      `<div class="vb-qrow"><b>${esc(t(...ZN[z]))}</b><div class="mut vb-qline"><span>${esc(t('keine Grenze','no limit'))}</span><span>${esc(t(`${vbN(use[z])} verbraucht`,`${vbN(use[z])} used`))}</span></div></div>`).join('')+
+    `<div class="mut vb-note">${esc(t('Ist eine Grenze aufgebraucht, antwortet der Assistent mit einem festen Satz, bis sie neu beginnt. Feste Befehle wie Licht und Uhrzeit gehen weiter.','When a limit is used up, the assistant answers with a fixed sentence until it starts again. Fixed commands such as lights and the time still work.'))}</div></div>`:'';
   box.innerHTML=`<div class="intro">${esc(t('Wie viel der Spark für dich gerechnet hat: Tokens beim Sprachmodell, Sekunden beim Hören und Sprechen. Nur Zahlen, nie Fragen oder Antworten.','How much the Spark computed for you: tokens at the language model, seconds of listening and speaking. Numbers only, never questions or answers.'))}</div>`+
     `<div class="vb-tiles vb-me"><div class="card vb-tile"><div class="k">${esc(t('Tokens heute','Tokens today'))}</div><div class="v">${esc(vbN((l.read||0)+(l.written||0)))}</div></div><div class="card vb-tile"><div class="k">${esc(t('Sprache heute','Speech today'))}</div><div class="v">${esc(vbSec((a.amount||0)+(s.amount||0)))}</div></div></div>`+qbar+
     `<div class="card"><div class="vb-h">${vbSeg('usemeseg',VBZME,false)}<h3>${esc(VBZME==='12m'?t('Tokens pro Monat','Tokens per month'):t('Tokens pro Tag','Tokens per day'))}</h3></div>${vbBars(d,VBZME)}</div>`+vbModels(d)+vbAreas(d)+
     `<div class="row vb-del"><button class="b" type="button" id="usemedel">${esc(t('Meine Zahlen löschen','Delete my numbers'))}</button><span class="mut" id="usememsg"></span></div>`;
   $('usemeseg').onclick=e=>{const b=e.target.closest('[data-vbz]');if(!b)return;VBZME=b.dataset.vbz;showUse()};
   box.querySelectorAll('[data-vbarea]').forEach(r=>{const go=()=>{VBAREA=VBAREA===r.dataset.vbarea?null:r.dataset.vbarea;showUse()};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
-  $('usemedel').onclick=async()=>{if(!confirm(t('Deine Zahlen aller Tage und Monate löschen? Heute zählt für das Kontingent weiter.','Delete your numbers of every day and month? Today still counts for the quota.')))return;
+  $('usemedel').onclick=async()=>{if(!confirm(t('Deine Zahlen aller Tage und Monate löschen? Für das Kontingent zählt weiter, was schon verbraucht ist.','Delete your numbers of every day and month? What is used already still counts for the quota.')))return;
     try{await api('/api/profile/verbrauch',{method:'DELETE'});showUse()}catch(e){$('usememsg').textContent=e.message}};
   if(typeof labelTables==='function')labelTables()}   // Ich lies outside main: its tables get their column names here (phone.js)

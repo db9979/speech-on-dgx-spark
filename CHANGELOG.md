@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.624** · 2026-10-15 · Kontingent: Grenzen je Profil für Tag, Woche und Monat beim Sprachmodell, mit Vorwarnung und Nachschlag; feste Befehle gehen weiter
 - **V01.0.623** · 2026-10-15 · Rot-Fix für .622: Seitenhöhe der Funktionen mit der neuen Zeile, keine feste Adresse im Technik-Text
 - **V01.0.622** · 2026-10-15 · Spark teilen B5c: Notbetrieb mit Parakeet auf dem Panel-Rechner (feste Befehle ohne Sprachmodell, feste Sätze für Lautsprecher)
 - **V01.0.621** · 2026-10-15 · Technik · Überblick in Zonen: Geräte (Heimnetz oder unterwegs), Spark mit Panel, Modellen und Speicher, Heimnetz und Internet nach draußen; Linien rechtwinklig und blass bis zum Anklicken; neue Kästen Spark teilen und Dienste im Internet
