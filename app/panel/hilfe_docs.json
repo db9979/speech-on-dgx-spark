@@ -2885,7 +2885,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Wie die App (V01.0.296)",
-"text": "echte wie bisher."
+"text": "echte wie bisher. Fragen und Antworten nutzen die Breite wie in der iPhone-App: Die Blasen beginnen gut 16 Pixel vom Rand und laufen bis 40 Pixel vor den anderen Rand; „Nochmal vorlesen“ und „Löschen“ erscheinen erst nach einem Tipp auf die Nachricht unter der Blase und machen sie nie schmaler."
 },
 {
 "lang": "de",
@@ -9285,7 +9285,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Like the app (V01.0.296)",
-"text": "Like the app (V01.0.296): on a phone (below 760 px) the page looks like the iPhone app, the same on iPhone and Android. At the bottom are the tabs *Spark* (conversation), *Today* (setup and the same cards and sentences as Me → Today), *Documents*, *Me* and *Manage*; you only see what your role allows (guests only Spark, Manage only with admin rights, Documents only when allowed). Spark shows the face at the top (smaller once there are bubbles), the history below, the big mic button and always the text field; top left \"History\" (earlier conversations as a sheet from below, swipe down closes) and \"New\". Me and Manage are lists like the iOS settings; sub-pages slide in from the right, \"‹ Back\" top left, the Android or Safari back gesture goes exactly one level back. Manage starts with the status, then Features, People and devices, Settings, Logs, Update, Backups and Appearance. Under Appearance (Manage or Me) \"Show the computer layout\" switches back to the old phone view (this browser only); the menu's \"Show like the app\" returns. It is only another presentation: no new endpoints, the server checks rights as before."
+"text": "Like the app (V01.0.296): on a phone (below 760 px) the page looks like the iPhone app, the same on iPhone and Android. At the bottom are the tabs *Spark* (conversation), *Today* (setup and the same cards and sentences as Me → Today), *Documents*, *Me* and *Manage*; you only see what your role allows (guests only Spark, Manage only with admin rights, Documents only when allowed). Spark shows the face at the top (smaller once there are bubbles), the history below, the big mic button and always the text field; top left \"History\" (earlier conversations as a sheet from below, swipe down closes) and \"New\". Me and Manage are lists like the iOS settings; sub-pages slide in from the right, \"‹ Back\" top left, the Android or Safari back gesture goes exactly one level back. Manage starts with the status, then Features, People and devices, Settings, Logs, Update, Backups and Appearance. Under Appearance (Manage or Me) \"Show the computer layout\" switches back to the old phone view (this browser only); the menu's \"Show like the app\" returns. It is only another presentation: no new endpoints, the server checks rights as before. Questions and answers use the width like the iPhone app: bubbles star"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Like the app (V01.0.296)",
+"text": "t about 16 px from the edge and run up to 40 px before the other edge; \"Read again\" and \"Delete\" show only after a tap on the message, below the bubble, and never make it narrower."
 },
 {
 "lang": "en",
