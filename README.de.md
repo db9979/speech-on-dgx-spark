@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.611** Rot-Fix: Hilfe von speech-spark zeigt auch teilen.
 - **V01.0.610** Spark teilen B4b: Spracheinstellungen und Logs der Modell-Dienste auch mit dem Panel auf einem anderen Rechner
 - **V01.0.609** Spark teilen B4a: Wärter auf dem DGX, das Panel steuert die Modell-Dienste auch von einem anderen Rechner
 - **V01.0.608** Spark teilen B3: Firewall auf dem DGX, nur der Panel-Rechner erreicht die Modelle
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.604** reMarkable: das Morgenblatt ist gegliedert (Termine, Mails, Wetter … als Abschnitte) statt Fließtext
 - **V01.0.603** Fix: Home Assistant (Wyoming) bekommt die Geräteangaben sofort, auch wenn die Sprachausgabe gerade beschäftigt ist
 - **V01.0.602** Push-Regel: vor dem Push ein Schnelltest (betroffene und Wächter-Tests), den vollen Lauf macht GitHub
-- **V01.0.601** Fix: der Dienst-Wächter fragt Home Assistant ohne falsche Anmeldung (keine Login-Warnungen mehr im HA-Log)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

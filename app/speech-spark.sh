@@ -684,6 +684,6 @@ case "${1:-}" in
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
   teilen) shift; cmd_teilen "$@" ;;
-  ""|-h|--help|help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac
