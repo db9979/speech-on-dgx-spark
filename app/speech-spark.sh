@@ -22,6 +22,7 @@
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
 #   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
+#   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -670,7 +671,10 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
       teilen_py regeln >"$rules.part" || { rm -f "$rules.part"; echo "teilen: firewall abgelehnt"; return 1; }
       if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
       else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
-    *) die "speech-spark teilen [status]|firewall [aus]" ;;
+    modelle-update)   # B5: the model computer updates itself (its own rules) and this one waits for it
+      [ "$(mode)" = full ] || die "no web panel installed"
+      as_panel_user steuer.py update ;;
+    *) die "speech-spark teilen [status]|firewall [aus]|modelle-update" ;;
   esac
 }
 
@@ -688,6 +692,6 @@ case "${1:-}" in
   weiter) shift; cmd_pause weiter ;;
   modelle) shift; cmd_modelle "$@" ;;
   teilen) shift; cmd_teilen "$@" ;;
-  ""|-h|--help|help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

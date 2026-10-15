@@ -20,6 +20,8 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
+    update                      starts this computer's own update (speech-spark-update with its own rules: the newest
+                                version with passed GitHub tests, never a version the panel names)
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -37,7 +39,7 @@ from fastapi.responses import JSONResponse
 
 import modelle
 from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
-                    WARTUNG_FILE, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
+                    WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     run, shipped, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
@@ -46,7 +48,8 @@ MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
-COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg", "weiter")
+COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg", "weiter", "update")
+UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu")
 # what status reports: the units the panel shows and watches
@@ -93,6 +96,16 @@ def pause():
     return {k: d[k] for k in PAUSE_KEYS if k in d} if isinstance(d, dict) and d.get("on") is True else {}
 
 
+def _update_laeuft():
+    return run(["systemctl", "is-active", "-q", UPDATE_UNIT])[0] == 0
+
+
+def update():
+    ok = run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", UPDATE_UNIT], timeout=20)[0] == 0
+    print(f"waerter: update {'angefragt' if ok else 'fehler'}", flush=True)
+    return {"ok": ok}
+
+
 def weiter():
     try:
         os.remove(WARTUNG_FILE)
@@ -110,7 +123,8 @@ def status():
         mem = None
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
-            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause()}
+            "mem_avail_gib": mem, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
+            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft()}
 
 
 def einstellen(daten):
@@ -261,6 +275,8 @@ async def wart(request: Request):
             return JSONResponse(eigen_dazu(daten))
         if cmd == "weiter":
             return JSONResponse(weiter())
+        if cmd == "update":
+            return JSONResponse(update())
         if cmd == "eigen_weg":
             return JSONResponse(eigen_weg(*args) if len(args) == 1 else eigen_weg(""))
         two = {"logs": logs, "wechseln": wechseln, "einheit": einheit}[cmd]

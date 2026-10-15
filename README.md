@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.614** Spark split: updating two computers.
 - **V01.0.613** Spark split: maintenance pause on both computers, Live box for the model computer.
 - **V01.0.612** Spark split: model choice and Status → Models through the Wärter.
 - **V01.0.611** Red fix: speech-spark help shows teilen again.
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.607** Splitting the Spark B2: secured connection to the DGX (TLS 1.3 with a pinned certificate), preparing the Raspberry Pi
 - **V01.0.606** Splitting the Spark B1: one address for all model services (preparing the panel on a Raspberry Pi)
 - **V01.0.605** Update window tidied: each state shows only its buttons, log folded away
-- **V01.0.604** reMarkable: the morning sheet is sorted into sections (appointments, mails, weather …) instead of prose
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

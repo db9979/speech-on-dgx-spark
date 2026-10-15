@@ -1635,6 +1635,12 @@ SEITEN_DATEN = {
              "Status → Usage: tokens per day, model, area and profile."),
             ("Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet.",
              "Status → Checks → Speech first: whether speech output stays smooth while the model computes."),
+            ("Spark teilen: Läuft das Panel auf einem anderen Rechner, stehen Sprachmodell, Spracherkennung, Sprachausgabe "
+             "und Bilder auf dem Modell-Rechner (Zustand → Live, Kasten „Modell-Rechner“); das Panel erreicht sie nur über "
+             "das TLS-Tor mit festem Zertifikat und steuert sie über den Wärter.",
+             "Spark split: when the panel runs on another computer, language model, speech recognition, speech output "
+             "and pictures are on the model computer (Status → Live, box \"Model computer\"); the panel reaches them only "
+             "through the TLS-Tor with a pinned certificate and controls them through the Wärter."),
         ],
         "code": [
             ("chat.chat", ("setzt „Sprache läuft“ bei jedem Stück", "sets „speech is running“ with every piece")),

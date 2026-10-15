@@ -163,6 +163,13 @@ finish() {  # ok message
 trap 'finish false "Update abgebrochen"' TERM INT
 
 echo
+# Spark teilen (plan raspberry-split B5): with the models on another computer that one updates first, by its own
+# rules (the newest version with passed GitHub tests); this computer waits for it, then goes on either way
+mhost=$(jq -r '.models.host // "127.0.0.1"' /etc/speech-spark/config.json 2>/dev/null || echo 127.0.0.1)
+if [ "$CHECK" = 0 ] && [ -n "$mhost" ] && [ "$mhost" != 127.0.0.1 ] && [ "$mhost" != localhost ] && [ "$mhost" != ::1 ]; then
+  echo "Updating the model computer first ..."
+  /usr/local/bin/speech-spark teilen modelle-update || echo "The model computer did not update; going on (two versions only give a hint)."
+fi
 echo "Updating ..."
 # the version running now becomes "the previous version" the panel can go back to
 [ -f "$(dirname "$SRC")/VERSION.json" ] && cp "$(dirname "$SRC")/VERSION.json" "$(dirname "$SRC")/VERSION.prev.json.new"

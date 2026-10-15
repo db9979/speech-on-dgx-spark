@@ -20,14 +20,13 @@ import mfa  # noqa: E402
 import passkey  # noqa: E402
 import profiles  # noqa: E402
 import stufen  # noqa: E402
-from common import OWN_LLM_UNITS, SERVICES, STATE, UNITS, load_config, run  # noqa: E402,F401
+from common import OWN_LLM_UNITS, PREFIX, SERVICES, STATE, UNITS, load_config, run  # noqa: E402,F401
 
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update", wechsel="speech-spark-wechsel", **OWN_LLM_UNITS)
-PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # asr keys the vLLM engine reads; changing them restarts it
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine

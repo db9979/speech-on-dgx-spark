@@ -11,6 +11,7 @@ CONFIG_PATH = os.environ.get("SPEECH_SPARK_CONFIG", "/etc/speech-spark/config.js
 # the state folder of this Spark (keys, shared state, marks): every module takes it from here (Richtlinie Teil 17);
 # what lies in it is listed once in panel/dateien.py
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # the TLS certificate of this machine (cert.pem, key.pem): the panel's https port and the TLS-Tor (tlstor.py)
 TLS_DIR = os.environ.get("SPEECH_SPARK_TLS", "/etc/speech-spark/tls")
 
@@ -603,6 +604,15 @@ QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-ima
 WAERTER_PORT = 31007
 WAERTER_KEY = os.path.join(STATE, "waerter.key")
 WARTUNG_FILE = os.path.join(STATE, "wartung.json")   # the Wartungspause (panel/wartung.py); on the model computer its wish
+
+
+def installed_version():
+    """What update.sh / install.sh installed (PREFIX/VERSION.json: commit, short, subject, date, …)."""
+    try:
+        with open(os.path.join(PREFIX, "VERSION.json")) as f:
+            return json.load(f)
+    except Exception:
+        return {"commit": None, "subject": "unknown"}
 
 
 def run(cmd, timeout=10, env=None):

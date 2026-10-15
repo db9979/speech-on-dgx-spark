@@ -12,8 +12,8 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import STATE, journal, write_json  # noqa: E402
-from core import PREFIX, admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
+from common import PREFIX, STATE, installed_version, journal, write_json  # noqa: E402
+from core import admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
 import ghtoken  # noqa: E402
 import guard  # noqa: E402
@@ -26,14 +26,6 @@ _remote_cache = {"time": 0, "data": None}
 # by itself (page views, the app's notice) GitHub is asked at most this often; "Jetzt prüfen", the night
 # update and an update start from the app always ask (Dominik, 2026-10-12: the 60 per hour ran out)
 AUTO_EVERY = 3 * 3600
-
-
-def installed_version():
-    try:
-        with open(os.path.join(PREFIX, "VERSION.json")) as f:
-            return json.load(f)
-    except Exception:
-        return {"commit": None, "subject": "unknown"}
 
 
 def previous_version():
@@ -303,10 +295,25 @@ async def update_status(check: bool = False):
     code, out = await asyncio.to_thread(run, ["systemctl", "show", "speech-spark-update", "-p",
                                               "ActiveState,Result,ExecMainExitTimestamp"])
     props = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
-    return {"installed": installed_version(), "previous": previous_version(), "remote": await remote_state(force=check),
+    inst = installed_version()
+    return {"installed": inst, "previous": previous_version(), "remote": await remote_state(force=check),
             "running": props.get("ActiveState") in ("activating", "active"),
             "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None,
-            "talking": talking(), "night": night_on()}
+            "talking": talking(), "night": night_on(), "modell": await asyncio.to_thread(_modell_rechner, inst)}
+
+
+def _modell_rechner(inst):
+    """Spark teilen: the model computer's version next to this one's (two versions are only a hint), None when the
+    models run here."""
+    import steuer
+    if not steuer.remote():
+        return None
+    s = steuer.status()
+    if not isinstance(s, dict):
+        return {"ok": False}
+    v, c = str(s.get("version") or ""), str(s.get("commit") or "")
+    return {"ok": True, "version": v if v.startswith("V") and len(v) <= 20 else "", "update": s.get("update") is True,
+            "gleich": bool(c) and c == inst.get("commit")}
 
 
 def _backup_first(why):

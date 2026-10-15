@@ -553,7 +553,7 @@ $('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$(
 let updPoll=null;
 async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   const i=u.installed||{},r=u.remote||{};
-  $('sysver').innerHTML=kvp([[t('Installiert','Installed'),i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],[t('Änderung','Change'),i.subject||'–'],['Engines',i.engine||'–'],[t('Quelle','Source'),i.remote||'–'],[t('Zuletzt geprüft','Last checked'),r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
+  $('sysver').innerHTML=kvp([[t('Installiert','Installed'),i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],[t('Änderung','Change'),i.subject||'–'],['Engines',i.engine||'–'],[t('Quelle','Source'),i.remote||'–'],[t('Zuletzt geprüft','Last checked'),r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']].concat(u.modell?[[t('Modell-Rechner','Model computer'),!u.modell.ok?t('nicht erreichbar','not reachable'):(u.modell.version||'–')+(u.modell.update?t(' · Update läuft',' · update running'):u.modell.gleich?t(' · gleiche Version',' · same version'):t(' · andere Version, das nächste Update gleicht an',' · other version, the next update evens it out'))]]:[]));
   updBadge(r);loadBak();
   const pv=u.previous;$('updprevrow').style.display=pv&&!u.running?'flex':'none';
   if(pv)$('updprevtxt').textContent=(pv.version||pv.short||'')+(pv.subject?' · '+pv.subject:'');

@@ -14,6 +14,7 @@ update) are never sent there.
     modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
     cached()                    the last status without asking (the Wartungspause reads the model computer's pause)
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
+    update_modell_rechner()     its own update first, then this computer's (update.sh: python3 steuer.py update)
 
 When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
 again, at most every PUSH seconds: a save while it was away is not lost. Which model runs (common.MODEL_CHOICE) goes
@@ -24,12 +25,15 @@ The status of the model computer is asked at most every CACHE seconds; when it d
 "unknown" and the GPU None, which the pages show as „nicht erreichbar“. Logs ("steuer:" lines) only for actions.
 """
 import json
+import os
 import secrets
+import sys
 import threading
 import time
 
 import httpx
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
 from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
                     model_local, model_settings, model_settings_hash, model_url, run, shipped, waerter_key, waerter_sign,
                     write_json)
@@ -41,6 +45,9 @@ MODEL_UNITS = set(UNITS.values()) | set(OWN_LLM_UNITS.values())
 _status = {"t": 0.0, "d": None, "push": -PUSH, "wahl": None}
 _lock = threading.Lock()
 _client = None         # the self-tests put a client for the Wärter here
+UPDATE_WAIT = 2400     # seconds the panel computer's update waits for the model computer's
+UPDATE_SEEN = 90       # seconds to see its update start (a quick "nothing new" may be over before)
+POLL = 10
 
 
 def remote(cfg=None):
@@ -212,3 +219,41 @@ def gpu(cfg=None):
         g = (status(cfg) or {}).get("gpu")
         return g if isinstance(g, dict) else None
     return gpu_stats()
+
+
+def update_modell_rechner(cfg=None, sleep=time.sleep, now=time.monotonic):
+    """The model computer's own update (its update.sh, its own rules), waited for before the panel computer updates
+    itself (plan Raspberry-Pi split B5). True when it ran and ended; the panel's update goes on either way, two
+    different versions are only a hint (between panel and models there is only the API)."""
+    cfg = load_config() if cfg is None else cfg
+    if not remote(cfg):
+        return True
+    d = call("update", cfg=cfg, timeout=30)
+    if not (isinstance(d, dict) and d.get("ok") is True):
+        print("steuer: update modell-rechner fehler", flush=True)
+        return False
+    print("steuer: update modell-rechner angefragt", flush=True)
+    t0, seen = now(), False
+    while now() - t0 < UPDATE_WAIT:
+        sleep(POLL)
+        s = call("status", cfg=cfg)
+        if not isinstance(s, dict):
+            continue                  # restarting its services (and the Wärter itself): ask again
+        seen = seen or s.get("update") is True
+        if s.get("update") is not True and (seen or now() - t0 >= UPDATE_SEEN):
+            v = str(s.get("version") or "")
+            v = v if v.startswith("V") and len(v) <= 20 else "-"
+            print(f"steuer: update modell-rechner fertig {v}", flush=True)
+            with _lock:
+                _status.update(t=0.0)
+            return True
+    print("steuer: update modell-rechner zeitlimit", flush=True)
+    return False
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["update"]:
+        update_modell_rechner()
+        sys.exit(0)
+    print("steuer.py update", file=sys.stderr)
+    sys.exit(2)

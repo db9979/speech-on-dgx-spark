@@ -368,6 +368,77 @@ class Pause(Base):
         self.assertEqual(steuer.for_live(), {"on": False})
 
 
+class Update(Base):
+    """B5: the model computer updates itself first, by its own rules (never a version the panel names); the panel
+    computer waits for it and goes on either way; Zustand → Update shows both versions."""
+    def setUp(self):
+        super().setUp()
+        steuer._client = self.app
+        self.addCleanup(setattr, steuer, "_client", None)
+        self.cfg = json.loads(json.dumps(common.load_config()))
+        self.cfg["models"]["host"] = "192.168.178.171"
+
+    def test_the_waerter_starts_only_its_own_update(self):
+        d = self.post(body()).json()
+        self.assertIn("commit", d)
+        self.assertIs(d["update"], False)
+        with redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(self.post(body("update")).json(), {"ok": True})
+            self.assertEqual(self.post(body("update", ["0" * 40])).json(), {"ok": True}, "a version from outside is not taken")
+        self.assertIn(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-update"], self.run.calls)
+        self.assertFalse([c for c in self.run.calls if "update-target" in " ".join(c)])
+        self.assertIn("waerter: update angefragt", out.getvalue())
+
+    def test_the_panel_computer_waits_for_it(self):
+        clock = [0.0]
+        with redirect_stdout(io.StringIO()) as out:
+            ok = steuer.update_modell_rechner(self.cfg, sleep=lambda s: clock.__setitem__(0, clock[0] + s), now=lambda: clock[0])
+        self.assertTrue(ok)
+        self.assertGreaterEqual(clock[0], steuer.UPDATE_SEEN)
+        self.assertLess(clock[0], steuer.UPDATE_WAIT)
+        self.assertIn("steuer: update modell-rechner angefragt", out.getvalue())
+        self.assertIn("steuer: update modell-rechner fertig", out.getvalue())
+
+    def test_a_silent_model_computer_does_not_hold_the_update(self):
+        clock = [0.0]
+        with mock.patch.object(steuer, "call", return_value=None), redirect_stdout(io.StringIO()) as out:
+            self.assertFalse(steuer.update_modell_rechner(self.cfg, sleep=lambda s: None, now=lambda: clock[0]))
+        self.assertIn("steuer: update modell-rechner fehler", out.getvalue())
+        answers = iter([{"ok": True}] + [None] * 1000)
+        with mock.patch.object(steuer, "call", side_effect=lambda *a, **k: next(answers)), redirect_stdout(io.StringIO()) as out:
+            self.assertFalse(steuer.update_modell_rechner(self.cfg, sleep=lambda s: clock.__setitem__(0, clock[0] + s),
+                                                          now=lambda: clock[0]))
+        self.assertIn("steuer: update modell-rechner zeitlimit", out.getvalue())
+        local = json.loads(json.dumps(self.cfg))
+        local["models"]["host"] = "127.0.0.1"
+        with mock.patch.object(steuer, "call", side_effect=AssertionError("asked")):
+            self.assertTrue(steuer.update_modell_rechner(local))
+
+    def test_both_versions_on_the_update_page(self):
+        import update
+        old = common.load_config()
+        self.addCleanup(helpers.write_config, old)
+        helpers.write_config(self.cfg)
+        steuer._status.update(t=0.0, d=None)
+        self.addCleanup(steuer._status.update, t=0.0, d=None)
+        with mock.patch.object(tarswart, "installed_version", return_value={"commit": "a" * 40}):
+            self.assertEqual(update._modell_rechner({"commit": "a" * 40})["gleich"], True)
+            steuer._status.update(t=0.0, d=None)
+            self.assertEqual(update._modell_rechner({"commit": "b" * 40})["gleich"], False)
+        helpers.write_config(old)
+        self.assertIsNone(update._modell_rechner({"commit": "a" * 40}))
+
+    def test_update_sh_asks_the_model_computer_first(self):
+        p = os.path.join(os.path.dirname(helpers.APP), "update.sh")
+        if not os.path.exists(p):         # a copy with only app/ has no update.sh
+            return
+        with open(p) as f:
+            sh = f.read()
+        self.assertLess(sh.index("speech-spark teilen modelle-update"), sh.index('git reset --hard --quiet "$new"'))
+        with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:
+            self.assertIn("modelle-update)", f.read())
+
+
 class Steuer(Base):
     def setUp(self):
         super().setUp()

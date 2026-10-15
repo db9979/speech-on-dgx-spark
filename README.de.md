@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.614** Spark teilen: Update auf zwei Rechnern.
 - **V01.0.613** Spark teilen: Wartungspause auf beiden Rechnern, Live-Kasten Modell-Rechner.
 - **V01.0.612** Spark teilen: Modellwahl und Zustand → Modelle über den Wärter.
 - **V01.0.611** Rot-Fix: Hilfe von speech-spark zeigt auch teilen.
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.607** Spark teilen B2: gesicherte Verbindung zum DGX (TLS 1.3 mit festem Zertifikat), Vorbereitung für den Raspberry Pi
 - **V01.0.606** Spark teilen B1: eine Adresse für alle Modell-Dienste (Vorbereitung für Panel auf dem Raspberry Pi)
 - **V01.0.605** Update-Fenster aufgeräumt: jeder Zustand zeigt nur seine Knöpfe, Protokoll eingeklappt
-- **V01.0.604** reMarkable: das Morgenblatt ist gegliedert (Termine, Mails, Wetter … als Abschnitte) statt Fließtext
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
