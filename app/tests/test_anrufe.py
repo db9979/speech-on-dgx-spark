@@ -293,7 +293,7 @@ class Vermittler(Base):
             ins = f.read()
         self.assertIn("systemctl mask --now coturn.service", ins)   # stopped too when it already ran
         self.assertIn("speech-spark-turn.service", ins)
-        self.assertIn("tts-design turn; do", ins)                           # sudoers: start/stop/restart only
+        self.assertRegex(ins, r"for u in [^;\n]*\bturn\b[^;\n]*; do")              # sudoers: start/stop/restart only
         self.assertNotIn("enable speech-spark-turn", ins)
 
 

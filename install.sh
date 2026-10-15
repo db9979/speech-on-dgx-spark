@@ -6,6 +6,7 @@
 #   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
+#   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
 #   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
@@ -31,11 +32,16 @@ TORCH_INDEX=https://download.pytorch.org/whl/cu130
 # Both ship aarch64 wheels on PyPI built for CUDA 13; installed natively, no Docker.
 VLLM_VERSION=0.30.0
 VLLM_OMNI_VERSION=0.30.0
+# The own language model (plan eigene-modelle.md, E2) has its own vLLM in venv-llm, apart from vllm-omni's; Kolibri-1
+# needs vLLM 0.29 with Aleph Alpha's plugin (pinned by its wheel's SHA-256, installed without its dependencies).
+VLLM_LLM_VERSION=0.30.0
+VLLM_KOLIBRI_VERSION=0.29.0
+KOLIBRI_PLUGIN="aleph-alpha-inference==1.0.0 --hash=sha256:5a0ca118e67924f10c4f9c04dd64bef117007a17dd820233a8841b9cb8d6f211"
 DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0
+MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
@@ -52,13 +58,15 @@ while [ $# -gt 0 ]; do
     --voicedesign) VD_PICK=yes ;;
     --no-voicedesign) VD_PICK=no ;;
     --bild) BILD_PICK="$2"; shift ;;
+    --llm) LLM_PICK=1 ;;
+    --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -418,6 +426,10 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
 WITH_BILD=0; [ "$MODE" = full ] && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
+# venv-llm / venv-kolibri: once installed, every update keeps them current; the services run only with llm.enabled
+WITH_LLM=$LLM_PICK; [ -x "$PREFIX/venv-llm/bin/vllm" ] && WITH_LLM=1
+WITH_KOLIBRI=$KOLIBRI_PICK; [ -x "$PREFIX/venv-kolibri/bin/vllm" ] && WITH_KOLIBRI=1
+LLM_ON=0; [ "$WITH_LLM" = 1 ] && [ "$(cfg '.llm.enabled // false')" = true ] && LLM_ON=1
 
 # ---------------------------------------------------------------- ports
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
@@ -427,6 +439,7 @@ ports="$ASR_PORT $TTS_PORT"
 [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
 [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
+[ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -570,6 +583,29 @@ if [ "$USE_ENGINE" = 1 ]; then
   rm -f -- "$v/.pkgs"; printf '%s\n' "engine $VLLM_VERSION $VLLM_OMNI_VERSION" >"$v/.pkgs"
   fi
 fi
+
+# ---------------------------------------------------------------- the own language model (optional, plan eigene-modelle)
+llm_venv() {  # $1 = name (llm, kolibri), $2 = vLLM version, rest = the plugin's requirement line with its hash
+  local v="$PREFIX/venv-$1" ver="$2" sig; shift 2
+  sig="llm-r1 $ver $*"
+  if same_pkgs "$v" "$sig"; then echo "   venv-${v##*/venv-}: same versions, nothing to install"; return 0; fi
+  say "Python env for the own language model: venv-${v##*/venv-} with vllm $ver (large, takes a while the first time)"
+  [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
+  "$v/bin/pip" install -q -U pip uv
+  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm==$ver"
+  if [ $# -gt 0 ]; then
+    # the plugin alone, by its hash and without dependencies: vLLM, torch and transformers stay as vLLM brought them
+    rm -f -- "$v/.plugin-req"; printf '%s\n' "$*" >"$v/.plugin-req"
+    "$v/bin/pip" install -q --no-deps --require-hashes -r "$v/.plugin-req"
+  fi
+  "$v/bin/python" -c 'import torch; assert torch.version.cuda and torch.cuda.is_available()' \
+    || die "torch in venv-${v##*/venv-} has no CUDA. Re-run; if it persists, see docs/en/technical.md (Troubleshooting)."
+  "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-${v##*/venv-} does not start; see the output above"
+  rm -f -- "$v/.pkgs"; printf '%s\n' "$sig" >"$v/.pkgs"
+}
+[ "$WITH_LLM" = 1 ] && llm_venv llm "$VLLM_LLM_VERSION"
+# shellcheck disable=SC2086  # the requirement line with its hash, split on purpose
+[ "$WITH_KOLIBRI" = 1 ] && llm_venv kolibri "$VLLM_KOLIBRI_VERSION" $KOLIBRI_PLUGIN
 
 # ---------------------------------------------------------------- Bilder malen (optional, plan bildgenerierung)
 # The engine is stable-diffusion.cpp's sd-server, built here once per pinned commit (bildmodell.SDCPP_COMMIT) for the
@@ -753,7 +789,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild tts-design turn; do
+  for u in asr asr-engine tts tts-engine bild tts-design turn llm llmtor sehen; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -892,6 +928,35 @@ EOF
 engine_unit tts-engine main
 engine_unit tts-design design
 engine_unit asr-engine asr
+# the own language model and, on demand, the image understanding model (engine.sh reads the catalog, modelle.py);
+# speech-spark-sehen is never enabled: the LLM-Tor starts it for a picture question and stops it when idle
+engine_unit llm llm
+engine_unit sehen sehen
+sed -i 's/^Restart=on-failure$/Restart=no/' /etc/systemd/system/speech-spark-sehen.service
+
+# The LLM-Tor (llm_tor.py) on llm.port: API key, field guard, System One, canary; the engines stay on 127.0.0.1.
+cat >/etc/systemd/system/speech-spark-llmtor.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: LLM-Tor (the own language model's door)
+After=network-online.target speech-spark-llm.service
+Wants=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/llm_tor.py
+Restart=on-failure
+RestartSec=10
+MemoryMax=1G
+Nice=-5
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 cat >/etc/systemd/system/speech-spark-panel.service <<EOF
 [Unit]
@@ -1128,6 +1193,16 @@ if [ "$WITH_BILD" = 1 ]; then
   restart_front bild
 else
   systemctl disable --now speech-spark-bild.service 2>/dev/null || true
+fi
+
+# The own language model runs only once `speech-spark modelle llm uebernehmen` switched llm.enabled on; until then
+# qwen38 stays the language model and these units stay off.
+if [ "$LLM_ON" = 1 ]; then
+  restart_engine llm "$VLLM_LLM_VERSION $(cfgq -c '.llm | {modell, engine_port}') $(sha256sum "$PREFIX/app/modelle.json" | cut -c1-16)"
+  restart_front llmtor
+else
+  systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
+  systemctl stop speech-spark-sehen.service 2>/dev/null || true
 fi
 
 wait_ready() {  # $1 = name, $2 = port, $3 = minutes; the last status stays in st_$1

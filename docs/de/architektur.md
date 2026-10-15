@@ -27,7 +27,7 @@ flowchart LR
   wissen["Wissen<br/>documents · wissen"]
   waechter["Wächter<br/>netguard.py"]
   betrieb["Logs und Live<br/>tracelog · live"]
-  llm["Sprachmodell<br/>:30001 qwen38"]
+  llm["Sprachmodell<br/>:30001 qwen38 · :31006 eigenes"]
   asr["Spracherkennung<br/>:31001 → :31011"]
   tts["Sprachausgabe<br/>:31002 → :31012"]
   bild["Bilder malen<br/>:31005 → :31015"]
@@ -320,6 +320,8 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/bild_server.py` | Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild |
 | `app/bildmodell.py` | Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation |
 | `app/common.py` | Gemeinsame Helfer für die Dienste: Einstellungen, Zustand |
+| `app/einordnung.py` | Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor |
+| `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen mit festen Fragen |
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |

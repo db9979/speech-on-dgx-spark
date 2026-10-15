@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.590** Own models stage E2: LLM-Tor and own vLLM prepared (off until stage E3), Kolibri-1 in the catalog
 - **V01.0.589** Own models stage E1: one catalog for every model, memory budget, page Status → Models
 - **V01.0.588** Fix: the model check follows the shared blob store of newer huggingface_hub
 - **V01.0.587** Fix: `speech-spark modelle messen` starts its unit through bash
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.583** Cleanup step 7: setting defaults and choice lists only from the panel
 - **V01.0.582** Cleanup step 6: shared helpers for daily numbers, pairing codes, versions, events and open proposals
 - **V01.0.581** Cleanup step 5: pages ask through api(), raw requests only with a stated reason
-- **V01.0.580** Cleanup step 4: one shared reader for request bodies with a size limit
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

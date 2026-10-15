@@ -8,8 +8,8 @@
 #   speech-spark key [new]         show the API key, or make a new one (the old one stops working)
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
-#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild,
-#                                  panel, watch, update, messen or all (default)
+#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, llm,
+#                                  llmtor, sehen, panel, watch, update, messen or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
@@ -17,7 +17,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [--yes]  measure catalog models; qwen38 pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]  measure catalog models; qwen38 pauses meanwhile
 set -euo pipefail
 
 PREFIX=${SPEECH_SPARK_PREFIX:-/opt/speech-spark}
@@ -168,9 +168,9 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|bild|panel|watch|update) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, panel, watch, update, messen or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, panel, watch, update, messen or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -300,18 +300,24 @@ hf_from_qwen38() {  # $1 = id, $2 = repo, $3 = revision
 
 # one catalog model in its own engine unit, measured, stopped again; returns 3 when it did not work
 mess_engine() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
-  local svc rc=0 args=() extra=()
+  local svc rc=0 args=() extra=() venv
   svc=$(panel_user)
   [ -n "${3:-}" ] && extra=("$3")
   mapfile -t args < <(as_panel_user ../modelle.py vllm-args "$1" --port "$MESS_PORT" --revision "$2" "${extra[@]}")
   [ "${#args[@]}" -gt 4 ] || { echo "modelle: messung $1 abgelehnt"; return 2; }
+  # the entry's own venv (venv-llm, venv-kolibri); before install.sh --llm the engines' venv measures the others
+  venv="$PREFIX/venv-$(as_panel_user ../modelle.py venv "$1")"
+  if [ ! -x "$venv/bin/vllm" ]; then
+    if [ "$venv" = "$PREFIX/venv-llm" ] && [ -x "$PREFIX/venv-engine/bin/vllm" ]; then venv="$PREFIX/venv-engine"
+    else echo "modelle: messung $1 abgelehnt venv fehlt"; return 2; fi
+  fi
   echo "modelle: messung $1 start${3:+ ohne mtp}"
   systemd-run --quiet --collect --unit="$MESS_ENGINE" -p LogNamespace=speech-spark -p User="$svc" -p Group="$svc" \
     -p WorkingDirectory="$VAR" -p OOMScoreAdjust=500 -p KillMode=control-group -p TimeoutStopSec=30 \
     --setenv=HF_HOME="$VAR/hf" --setenv=HOME="$VAR" --setenv=HF_HUB_OFFLINE=1 --setenv=VLLM_NO_USAGE_STATS=1 \
-    --setenv=DO_NOT_TRACK=1 --setenv=PATH="$PREFIX/venv-engine/bin:/usr/local/cuda/bin:/usr/bin:/bin" \
-    "$PREFIX/venv-engine/bin/vllm" serve "${args[@]}"
-  as_panel_user ../modelle.py messen-lauf "$1" --port "$MESS_PORT" --einheit "$MESS_ENGINE" "${extra[@]}" || rc=$?
+    --setenv=DO_NOT_TRACK=1 --setenv=PATH="$venv/bin:/usr/local/cuda/bin:/usr/bin:/bin" \
+    "$venv/bin/vllm" serve "${args[@]}"
+  as_panel_user ../modelle.py messen-lauf "$1" --port "$MESS_PORT" --einheit "$MESS_ENGINE" --revision "$2" "${extra[@]}" || rc=$?
   systemctl stop "$MESS_ENGINE" 2>/dev/null || true
   mem_settle
   return "$rc"
@@ -378,10 +384,11 @@ cmd_modelle() {
       shift
       local yes=0 was=() ids self follow
       for a in "$@"; do [ "$a" = --yes ] && yes=1 || was+=("$a"); done
-      [ -x "$PREFIX/venv-engine/bin/vllm" ] || die "vLLM is not installed ($PREFIX/venv-engine); run the install with a vLLM engine first"
+      [ -x "$PREFIX/venv-llm/bin/vllm" ] || [ -x "$PREFIX/venv-engine/bin/vllm" ] \
+        || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
       systemctl is-active -q "$MESS_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
       systemctl is-active -q speech-spark-update && die "an update is running; measure afterwards"
-      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [--yes]"
+      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]"
       echo "Messen: $ids"
       echo "Das lädt fehlende Modelle, stoppt qwen38 für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
@@ -401,7 +408,7 @@ cmd_modelle() {
       sleep 1; kill "$follow" 2>/dev/null || true
       ;;
     messen-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_intern "$@" ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [--yes]" ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [--yes]" ;;
   esac
 }
 

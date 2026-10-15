@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.590** Eigene Modelle Stufe E2: LLM-Tor und eigenes vLLM vorbereitet (aus bis Stufe E3), Kolibri-1 im Katalog
 - **V01.0.589** Eigene Modelle Stufe E1: ein Katalog für alle Modelle, Speicher-Budget, Seite Zustand → Modelle
 - **V01.0.588** Fix: die Modellprüfung folgt dem gemeinsamen Dateispeicher neuerer huggingface_hub-Versionen
 - **V01.0.587** Fix: `speech-spark modelle messen` startet seine Einheit über bash
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.583** Aufräumen Schritt 7: Standardwerte und Auswahllisten der Einstellungen nur noch vom Panel
 - **V01.0.582** Aufräumen Schritt 6: gemeinsame Helfer für Tageszahlen, Kopplungscodes, Versionen, Ereignisse und offene Vorschläge
 - **V01.0.581** Aufräumen Schritt 5: Seiten fragen über api(), rohe Aufrufe nur noch mit festem Grund
-- **V01.0.580** Aufräumen Schritt 4: ein gemeinsamer Leser für den Anfrage-Inhalt mit Größenlimit
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

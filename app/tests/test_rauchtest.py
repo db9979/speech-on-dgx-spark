@@ -17,7 +17,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 APP = helpers.APP
 # the scripts each front end starts (both kinds: the proxy in front of an engine, the transformers server)
-ENTRY = {"asr": ("asr_proxy.py", "asr_server.py"), "tts": ("tts_proxy.py", "tts_server.py"), "bild": ("bild_server.py",)}
+ENTRY = {"asr": ("asr_proxy.py", "asr_server.py"), "tts": ("tts_proxy.py", "tts_server.py"), "bild": ("bild_server.py",),
+         "llmtor": ("llm_tor.py",)}
 SAFE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]*")
 
 
@@ -60,7 +61,7 @@ class Smoke(unittest.TestCase):
         for path in sorted(glob.glob(os.path.join(APP, "panel", "*.py"))):
             with self.subTest(module=os.path.basename(path)):
                 importlib.import_module(os.path.basename(path)[:-3])
-        for name in ("common", "textnorm", "tempo", "parakeet", "asr_proxy", "tts_proxy"):
+        for name in ("common", "textnorm", "tempo", "parakeet", "asr_proxy", "tts_proxy", "llm_tor", "einordnung", "modelle"):
             with self.subTest(module=name):
                 importlib.import_module(name)
 
@@ -86,7 +87,7 @@ class RestartMap(unittest.TestCase):
 
     def test_listed_files_exist_and_stay_inside_app(self):
         for svc, files in restart_map().items():
-            self.assertIn(svc, ENTRY, "install.sh only knows asr, tts and bild")
+            self.assertIn(svc, ENTRY, "install.sh only knows asr, tts, bild and llmtor")
             for f in files:
                 self.assertTrue(SAFE.fullmatch(f) and ".." not in f, f)
                 self.assertTrue(os.path.isfile(os.path.join(APP, f)), f"app/restart-map: {f} does not exist")

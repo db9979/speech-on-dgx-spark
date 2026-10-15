@@ -27,7 +27,7 @@ flowchart LR
   wissen["Knowledge<br/>documents · wissen"]
   waechter["Guard<br/>netguard.py"]
   betrieb["Logs and live<br/>tracelog · live"]
-  llm["Language model<br/>:30001 qwen38"]
+  llm["Language model<br/>:30001 qwen38 · :31006 eigenes"]
   asr["Speech recognition<br/>:31001 → :31011"]
   tts["Speech output<br/>:31002 → :31012"]
   bild["Painting pictures<br/>:31005 → :31015"]
@@ -320,6 +320,8 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/bild_server.py` | Bilder malen: the image service. |
 | `app/bildmodell.py` | Bilder malen: the one list of the image models, where they lie and how they are fetched and checked. |
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |
+| `app/einordnung.py` | Einordnung mit Wahrscheinlichkeit, the shared rules of a question (System One): the panel's systemone.py builds questions with them, and the LLM-Tor (llm_tor … |
+| `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |

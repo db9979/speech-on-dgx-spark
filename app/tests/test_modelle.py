@@ -388,7 +388,10 @@ class Kommando(unittest.TestCase):
         eng = self.body("mess_engine")
         self.assertIn('-p User="$svc"', eng)
         self.assertIn("--setenv=HF_HUB_OFFLINE=1", eng)
-        self.assertIn('"$PREFIX/venv-engine/bin/vllm" serve "${args[@]}"', eng)
+        # the entry's own venv from the catalog (venv-llm, venv-kolibri), never a path the catalog does not name
+        self.assertIn('venv="$PREFIX/venv-$(as_panel_user ../modelle.py venv "$1")"', eng)
+        self.assertIn('"$venv/bin/vllm" serve "${args[@]}"', eng)
+        self.assertIn('--revision "$2"', eng.split("messen-lauf", 1)[1])   # the result names the checked commit
         # the copy out of qwen38's cache is written by the service user and checked before use
         cp = self.body("hf_from_qwen38")
         self.assertIn('runuser -u "$svc" -- tar -C', cp)

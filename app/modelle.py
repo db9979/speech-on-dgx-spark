@@ -15,7 +15,11 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
-[--einheit unit] · ergebnis.
+[--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh).
+
+Stage E2 starts the own language model: speech-spark-llm (engine.sh llm) and, on demand, speech-spark-sehen
+(engine.sh sehen) run `vllm serve` with start_args(): config llm.modell / llm.sehen_modell, a pinned commit only
+(the catalog's or the one `modelle messen` checked), on 127.0.0.1 behind the LLM-Tor (llm_tor.py, llm.port).
 """
 import base64
 import hashlib
@@ -44,7 +48,12 @@ BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
-VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage")
+VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
+             "venv")
+VENVS = ("llm", "kolibri")       # $PREFIX/venv-<name>: venv-llm (install.sh --llm), venv-kolibri (install.sh --kolibri)
+KV = ("fp8",)
+LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--max-logprobs; System One in llm_tor.py)
+ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017)}   # config llm.*
 ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
 # the only file kinds a model download takes: weights as safetensors, the rest is text; never *.bin/*.pt/*.pkl
 ERLAUBT = ("*.safetensors", "*.json", "*.txt", "*.jinja", "*.model", "*.tiktoken", "*.md", "LICENSE*")
@@ -133,6 +142,10 @@ def _pruefe_vllm(m):
             raise Fehler(key)
     if "quantization" in v and v["quantization"] not in QUANT:
         raise Fehler("quantization")
+    if "kv_cache_dtype" in v and v["kv_cache_dtype"] not in KV:
+        raise Fehler("kv_cache_dtype")
+    if v.get("venv", "llm") not in VENVS:
+        raise Fehler("venv")
 
 
 def _aus_bildmodell(m):
@@ -208,6 +221,12 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
     if _url_qwen38(chat.get("llm_url")):
         share = sum(f for f in lanes if f)
         add(kat.get("qwen38-extern"), share * total_gib if share else None)
+    own = cfg.get("llm", {})
+    if own.get("enabled"):
+        m = kat.get(own.get("modell"))
+        add(m, m["anteil"] * total_gib + 1.5 if m and m["engine"] == "vllm" else None)
+        if m and not m.get("kann_sehen"):
+            add(kat.get(own.get("sehen_modell")), None, "bei_bedarf")
     a = cfg.get("asr", {})
     if a.get("enabled"):
         if a.get("recognizer") == "parakeet":
@@ -287,7 +306,7 @@ def messliste(was, kat=None):
     (one entry each that is measured only on request); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
-    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b"}
+    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4"}
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
     ids = [w for w in (wunsch.get(x) for x in was) if w]
@@ -313,17 +332,57 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
          "--disable-uvicorn-access-log"]   # stats stay on: /metrics counts the MTP hits
     if v.get("quantization"):
         a += ["--quantization", v["quantization"]]
+    if v.get("kv_cache_dtype"):
+        a += ["--kv-cache-dtype", v["kv_cache_dtype"]]
     if v.get("reasoning_parser"):
         a += ["--reasoning-parser", v["reasoning_parser"]]
     if v.get("tool_call_parser"):
         a += ["--tool-call-parser", v["tool_call_parser"], "--enable-auto-tool-choice"]
-    if m["kann_sehen"]:
+    if m["kann_sehen"]:      # a text-only model (Kolibri) gets no picture flag at all
         a += ["--limit-mm-per-prompt.image", str(v.get("bilder_pro_frage", 2))]
-    else:
-        a += ["--language-model-only"]
     if mtp and v.get("mtp"):
         a += ["--speculative-config", json.dumps({"method": "mtp", "num_speculative_tokens": v["mtp"]})]
     return a
+
+
+def venv(m):
+    """The venv folder name an entry's engine runs from ($PREFIX/venv-<name>)."""
+    return m["vllm"].get("venv", "llm") if m["engine"] == "vllm" else ""
+
+
+def fest_revision(m, messung=None):
+    """The commit an engine of this installation starts: the catalog's, else the one a successful measurement
+    downloaded and checked (an entry still open is pinned by `modelle messen`, never by a newer download)."""
+    if m["revision"]:
+        return m["revision"]
+    messung = read_json(MESSUNG, {}) if messung is None else messung
+    r = (messung.get("modelle") or {}).get(m["id"]) or {}
+    rev = r.get("revision", "") if r.get("ok") else ""
+    if not REV.match(rev):
+        raise Fehler("revision")
+    return rev
+
+
+def rolle(art, cfg, kat=None):
+    """(entry, port) of the engine speech-spark-llm (art llm) or speech-spark-sehen (art sehen), from config llm.*."""
+    if art not in ROLLEN:
+        raise Fehler("art")
+    feld, port_feld, port_std = ROLLEN[art]
+    c = cfg.get("llm", {})
+    m = eintrag(c.get(feld), kat)
+    port = c.get(port_feld, port_std)
+    if m["engine"] != "vllm" or m["art"] != art or isinstance(port, bool) or not isinstance(port, int) or port == MESS_PORT and art != "llm":
+        raise Fehler("art")
+    return m, port
+
+
+def start_args(art, cfg, messung=None, kat=None, hf_home=None):
+    """The arguments after `vllm serve` for speech-spark-llm / speech-spark-sehen (engine.sh llm|sehen): the
+    pinned commit, its files checked (kinds and links; the hashes were checked at the download), offline."""
+    m, port = rolle(art, cfg, kat)
+    rev = fest_revision(m, messung)
+    pruefen(hf_ordner(m, hf_home), rev, hashes=False)
+    return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
 
 
 # ---------------------------------------------------------------- files in the Hugging Face cache
@@ -341,11 +400,12 @@ def _datei_hash(path, algo, kopf=b""):
     return h.hexdigest()
 
 
-def pruefen(ordner, rev):
+def pruefen(ordner, rev, hashes=True):
     """Checks one snapshot in a Hugging Face cache folder: every entry a link into blobs/ (which may link once more
     into the shared hub/blobs/<2 hex>/ of newer huggingface_hub), no file kind outside
     ERLAUBT, every blob equal to its name (64 hex = SHA-256 of a large file, 40 hex = git blob hash of a small
-    one). Returns (files, bytes); raises Fehler with a fixed word."""
+    one; hashes=False skips only this last step, for the start of an engine after the download was checked).
+    Returns (files, bytes); raises Fehler with a fixed word."""
     if not REV.match(rev or ""):
         raise Fehler("revision")
     snap = os.path.join(ordner, "snapshots", rev)
@@ -378,7 +438,9 @@ def pruefen(ordner, rev):
                 raise Fehler("link")
             if not os.path.isfile(ziel) or os.path.islink(ziel):
                 raise Fehler("link")
-            if re.fullmatch(r"[0-9a-f]{64}", blob):
+            if not hashes:
+                ok = bool(re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", blob))
+            elif re.fullmatch(r"[0-9a-f]{64}", blob):
                 ok = _datei_hash(ziel, "sha256") == blob
             elif re.fullmatch(r"[0-9a-f]{40}", blob):
                 ok = _datei_hash(ziel, "sha1", b"blob %d\0" % os.path.getsize(ziel)) == blob
@@ -705,9 +767,19 @@ def cli(args, log=print):
             n, size = pruefen(hf_ordner(m), args[2] if len(args) > 2 else m["revision"])
             log(f"modelle: geprueft {m['id']} {n} dateien {size // 2**30} GiB")
             return 0
+        if cmd == "venv":
+            log(venv(eintrag(args[1]) if args[1] not in ROLLEN else rolle(args[1], load_config())[0]))
+            return 0
+        if cmd == "start-args":
+            for a in start_args(args[1], load_config()):
+                log(a)
+            return 0
         if cmd == "messen-lauf":
             m = eintrag(args[1])
+            rev = _opt(args, "--revision")
             r = messen_lauf(m, int(_opt(args, "--port", MESS_PORT)), _opt(args, "--einheit"), log)
+            if REV.match(rev) and rev == (m["revision"] or rev):
+                r["revision"] = rev
             if "--ohne-mtp" in args:
                 r["mtp"] = "aus"
             merke(m["id"], r)

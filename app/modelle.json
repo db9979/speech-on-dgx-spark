@@ -70,6 +70,40 @@
       "betrieb": "resident"
     },
     {
+      "id": "kolibri-1-nvfp4",
+      "art": "llm",
+      "name": {
+        "de": "Kolibri-1 NVFP4 (Aleph Alpha, für Deutsch)",
+        "en": "Kolibri-1 NVFP4 (Aleph Alpha, built for German)"
+      },
+      "engine": "vllm",
+      "repo": "Aleph-Alpha/Kolibri-1",
+      "revision": "",
+      "lizenz": "Apache-2.0",
+      "gewerblich": true,
+      "platte_gb": 45,
+      "need_gib": 55,
+      "gemessen": false,
+      "anteil": 0.46,
+      "kontext": 65536,
+      "kann_sehen": false,
+      "werkzeuge": true,
+      "vllm": {
+        "reasoning_parser": "kolibri1",
+        "tool_call_parser": "kolibri1",
+        "kv_cache_dtype": "fp8",
+        "max_seqs": 8,
+        "venv": "kolibri"
+      },
+      "anfrage": {
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        }
+      },
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
       "revision": "",
       "gewerblich": true,
       "gemessen": false,

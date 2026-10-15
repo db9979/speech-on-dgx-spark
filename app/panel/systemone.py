@@ -41,15 +41,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 from common import DayCounter, load_config
+from einordnung import MAX_OPTIONS, MAX_QUESTIONS, MAX_STATE, NAME, check_questions, clean_state  # noqa: F401  (the shared rules)
 from core import auth
 
 router = APIRouter()
 MODEL = "jev-latest"
-MAX_STATE = 4000              # characters of the text being judged
-MAX_QUESTIONS = 8
-MAX_OPTIONS = 40
 MAX_BYTES = 64 * 1024         # of the answer
-NAME = re.compile(r"[a-z][a-z0-9_]{0,31}")
 USES = {"weiche": "Werkzeugwahl", "mail": "Postfach aufräumen", "wichtig": "Wichtige Mail",
         "qualitaet": "Qualitätstest", "test": "Prüfen", "messen": "Messen", "berater": "Einstellungs-Assistent",
         "pruefen": "Antwort prüfen", "klage": "Beschwerde"}
@@ -92,12 +89,6 @@ def _headers(ccfg):
     return h
 
 
-def clean_state(text):
-    """The text being judged: control characters out, at most MAX_STATE characters."""
-    t = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", str(text or ""))
-    return t[:MAX_STATE]
-
-
 def choice(instructions, options):
     return {"type": "choice", "instructions": instructions, "criteria": dict(options)}
 
@@ -111,18 +102,8 @@ def noul(instructions):
 
 
 def body(state, questions):
-    """The request: the questions are the panel's own (checked here), the state is data."""
-    if not isinstance(questions, dict) or not 0 < len(questions) <= MAX_QUESTIONS:
-        raise ValueError("questions")
-    for name, q in questions.items():
-        if not NAME.fullmatch(name) or not isinstance(q, dict) or q.get("type") not in ("choice", "score", "noul"):
-            raise ValueError("question " + str(name)[:32])
-        crit = q.get("criteria")
-        if q["type"] == "choice" and not (isinstance(crit, dict) and 1 < len(crit) <= MAX_OPTIONS
-                                           and all(NAME.fullmatch(k) for k in crit)):
-            raise ValueError("choice " + name)
-        if q["type"] == "score" and not (isinstance(crit, list) and 1 < len(crit) <= 10):
-            raise ValueError("score " + name)
+    """The request: the questions are the panel's own (checked here with einordnung's rules), the state is data."""
+    check_questions(questions)
     return {"model": MODEL, "state": clean_state(state), "questions": questions}
 
 

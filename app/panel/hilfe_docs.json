@@ -5124,6 +5124,14 @@
 "src": "installation",
 "file": "Installation im Detail",
 "head": "Bilder malen (optional)",
+"title": "Eigenes Sprachmodell (vorbereiten, ab V01.0.590)",
+"text": "Eigenes Sprachmodell (vorbereiten, ab V01.0.590): sudo ./install.sh --llm legt venv-llm mit vLLM für das eigene Sprachmodell an, sudo ./install.sh --kolibri dazu venv-kolibri (vLLM 0.29 mit dem Aleph-Alpha-Plugin, fest über seine Prüfsumme). Beides bleibt bei jedem Update aktuell. Die Dienste speech-spark-llm, speech-spark-llmtor und speech-spark-sehen sind eingerichtet, laufen aber erst, wenn sudo speech-spark modelle llm uebernehmen (Stufe E3) das eigene Modell einschaltet; bis dahin bleibt qwen38 das Sprachmodell. Logs: sudo speech-spark logs llm, llmtor, sehen."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Bilder malen (optional)",
 "title": "Bilder malen (optional)",
 "text": "Sie baut einmal stable-diffusion.cpp (sd-server, fester Commit, CUDA für den GB10, braucht nvcc und cmake) nach /opt/speech-spark/sdcpp, lädt die Modelldateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/bild und richtet den Dienst speech-spark-bild ein (nur 127.0.0.1, Ports image.port 31005 und image.engine_port 31015). Das Modell belegt nur beim Malen Speicher. Danach im Portal Funktionen → Bilder malen einschalten und „Bild testen“ drücken. Einzelheiten: Assistent."
 },
@@ -11382,6 +11390,14 @@
 "head": "Painting pictures (optional)",
 "title": "Painting pictures (optional)",
 "text": "With --bild the installation also installs the picture model FLUX.2 [klein] (only with the web panel; the first install asks, the default is none, sudo speech-spark models asks again):"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Painting pictures (optional)",
+"title": "Own language model (preparation, since V01.0.590)",
+"text": "Own language model (preparation, since V01.0.590): sudo ./install.sh --llm creates venv-llm with vLLM for the own language model, sudo ./install.sh --kolibri also venv-kolibri (vLLM 0.29 with Aleph Alpha's plugin, pinned by its hash). Both stay current with every update. The services speech-spark-llm, speech-spark-llmtor and speech-spark-sehen are set up but only run once sudo speech-spark modelle llm uebernehmen (stage E3) switches the own model on; until then qwen38 stays the language model. Logs: sudo speech-spark logs llm, llmtor, sehen."
 },
 {
 "lang": "en",

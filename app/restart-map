@@ -5,3 +5,4 @@
 asr: asr_proxy.py asr_server.py common.py parakeet.py modelle.py modelle.json bildmodell.py config.default.json
 tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py modelle.py modelle.json bildmodell.py config.default.json
 bild: bild_server.py bildmodell.py common.py modelle.py modelle.json config.default.json
+llmtor: llm_tor.py einordnung.py modelle.py modelle.json bildmodell.py common.py config.default.json

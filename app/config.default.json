@@ -54,6 +54,17 @@
     "store_mb": 500,
     "max_side": 1024
   },
+  "llm": {
+    "enabled": false,
+    "host": "0.0.0.0",
+    "port": 31006,
+    "engine_port": 31016,
+    "modell": "qwen38-27b-nvfp4",
+    "sehen_port": 31017,
+    "sehen_modell": "qwen3-vl-8b-fp8",
+    "sehen_leerlauf_min": 10,
+    "max_body_mb": 32
+  },
   "api": {
     "key": ""
   },

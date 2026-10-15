@@ -3,15 +3,18 @@
 #   speech-spark-tts-engine.service  -> engine.sh main    (vllm-omni, CustomVoice / Base model)
 #   speech-spark-tts-design.service  -> engine.sh design  (vllm-omni, VoiceDesign model)
 #   speech-spark-asr-engine.service  -> engine.sh asr     (plain vLLM, Qwen3-ASR)
-# Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr on the public ports sit in front.
+#   speech-spark-llm.service         -> engine.sh llm     (plain vLLM, the own language model, modelle.py start-args)
+#   speech-spark-sehen.service       -> engine.sh sehen   (plain vLLM, image understanding, started on demand)
+# Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr / speech-spark-llmtor on the public ports sit in front.
 set -euo pipefail
 
-ROLE="${1:?usage: engine.sh main|design|asr}"
+ROLE="${1:?usage: engine.sh main|design|asr|llm|sehen}"
 CONFIG="${SPEECH_SPARK_CONFIG:-/etc/speech-spark/config.json}"
 STATE_DIR="${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}"
 VENV="${SPEECH_SPARK_ENGINE_VENV:-/opt/speech-spark/venv-engine}"
 STATE="$STATE_DIR/speech-spark-tts-$ROLE.json"
 [ "$ROLE" = asr ] && STATE="$STATE_DIR/speech-spark-asr-engine.json"
+case "$ROLE" in llm|sehen) STATE="$STATE_DIR/speech-spark-$ROLE.json" ;; esac
 mkdir -p "$STATE_DIR"
 
 state() {  # $1 = status, $2 = message
@@ -19,7 +22,19 @@ state() {  # $1 = status, $2 = message
 }
 fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
-if [ "$ROLE" = asr ]; then
+LLM_ARGS=()
+if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ]; then
+  # The catalog builds the whole command (pinned commit, files checked, never trust_remote_code); this script adds
+  # only the order, the preflight and the memory guard below. The panel's Python reads the catalog.
+  PREFIX="${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}"
+  PY="$PREFIX/venv-panel/bin/python"; APP_DIR="$(dirname "$(readlink -f "$0")")"
+  mapfile -t LLM_ARGS < <("$PY" "$APP_DIR/modelle.py" start-args "$ROLE")
+  [ "${#LLM_ARGS[@]}" -gt 8 ] || fail "the catalog refuses this model (see: speech-spark logs $ROLE)"
+  VENV="$PREFIX/venv-$("$PY" "$APP_DIR/modelle.py" venv "$ROLE" | tail -n1)"
+  arg() { local i; for i in "${!LLM_ARGS[@]}"; do [ "${LLM_ARGS[$i]}" = "$1" ] && { echo "${LLM_ARGS[$((i + 1))]}"; return; }; done; }
+  MODEL=${LLM_ARGS[0]}; PORT=$(arg --port); SEQS=$(arg --max-num-seqs); MEM0=$(arg --gpu-memory-utilization); MEM1=0.0
+  export HF_HUB_OFFLINE=1 VLLM_NO_USAGE_STATS=1 DO_NOT_TRACK=1
+elif [ "$ROLE" = asr ]; then
   # with the Parakeet recognizer (CPU, inside the ASR front end) this engine is not needed
   if [ "$(jq -r '.asr.recognizer // "qwen"' "$CONFIG")" = parakeet ]; then
     state off "not needed: speech recognition uses Parakeet"
@@ -38,8 +53,10 @@ else
 fi
 
 # only Qwen's own speech models: the engine runs with --trust-remote-code, so any other repo could
-# bring its own Python code along (the config belongs to the service user, so check it here too)
-[[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] || fail "model '$MODEL' is not one of Qwen's speech models"
+# bring its own Python code along (the config belongs to the service user, so check it here too); the language
+# models run without it, from the catalog's checked entries only
+[ "${#LLM_ARGS[@]}" -gt 0 ] || [[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] \
+  || fail "model '$MODEL' is not one of Qwen's speech models"
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"
 for m in "$MEM0" "$MEM1"; do
@@ -51,13 +68,17 @@ export PATH="$VENV/bin:/usr/local/cuda/bin:$PATH"
 
 # One engine at a time: vLLM sizes its KV cache from device-wide memory use while it starts,
 # so an engine loading at the same moment eats into this one's budget (seen on GB10:
-# "Available KV cache memory: 0.0 GiB"). Order: asr, main, design; each waits for the ones
+# "Available KV cache memory: 0.0 GiB"). Order: llm, asr, main, design, sehen; each waits for the ones
 # before it that are running but not ready yet, at most 20 minutes.
 others=()
+own_llm="speech-spark-llm $(jq -r '.llm.engine_port // 31016' "$CONFIG")"
 case "$ROLE" in
-  main) others=("speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")") ;;
-  design) others=("speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
+  asr) others=("$own_llm") ;;
+  main) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")") ;;
+  design) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
                   "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
+  sehen) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
+                 "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
 esac
 for o in "${others[@]}"; do
   read -r ounit oport <<<"$o"
@@ -100,6 +121,10 @@ cached="${HF_HOME:-$HOME/.cache/huggingface}/hub/models--${MODEL//\//--}"
 if [ -d "$cached/snapshots" ]; then what="loading $MODEL and warming up"
 else what="downloading and loading $MODEL"; fi
 state loading "$what, reserves ~$need_gib GiB"
+
+if [ "${#LLM_ARGS[@]}" -gt 0 ]; then
+  exec "$VENV/bin/vllm" serve "${LLM_ARGS[@]}"
+fi
 
 if [ "$ROLE" = asr ]; then
   # Plain vLLM: OpenAI /v1/audio/transcriptions incl. streaming, batches parallel requests.

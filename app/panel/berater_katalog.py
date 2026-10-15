@@ -173,6 +173,11 @@ OHNE = {
     "image": (
         "day_limit", "enabled", "engine_port", "idle_min", "max_side", "port", "store_mb", "variant",
     ),
+    # Eigene Modelle (llm_tor.py, modelle.py): ports, model and the switch come from install and the model commands
+    "llm": (
+        "enabled", "engine_port", "host", "max_body_mb", "modell", "port", "sehen_leerlauf_min", "sehen_modell",
+        "sehen_port",
+    ),
     "logs": (
         "keep_days", "live", "live_monitor", "live_names", "live_screens", "max_mb", "trace",
     ),
