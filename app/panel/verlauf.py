@@ -16,18 +16,16 @@ Three functions, each off until the admin and the profile switch them on, never 
                    keeps a copy of the conversations and the questions asked without the Spark. Every other browser
                    keeps nothing and deletes what it had (/api/profile/settings says "offline_here").
 """
-import asyncio
-import json
 import secrets
 import threading
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
 
 import features
 import guard
 import profiles
+import sse
 from core import assistant, own_profile
 
 router = APIRouter()
@@ -47,7 +45,9 @@ VIA = {"telegram": "Telegram", "siri": "Siri", "desk": "Begleiter", "watch": "Uh
 KINDS = {"web": "Browser", "phone": "Handy", "app": "iPhone-App", "car": "CarPlay", "speaker": "Lautsprecher",
          "watch": "Uhr", "siri": "Siri", "telegram": "Telegram", "desk": "Begleiter"}
 
-_subs = {}   # uid -> {stream id: (loop, queue)}
+_hub = sse.Hub(QUEUE, MAX_STREAMS, BEAT)
+_subs = _hub.subs   # uid -> {stream id: (loop, queue)}
+_send = _hub.send
 _busy = {}   # uid -> {token: {"kind", "convo", "tab", "since"}}
 
 
@@ -55,27 +55,7 @@ def live_on(uid):
     return bool(uid) and features.allowed("verlaufsync", uid)
 
 
-def streams():
-    """Open streams (for the live view: only the number)."""
-    with _lock:
-        return sum(len(x) for x in _subs.values())
-
-
-def _send(uid, ev):
-    with _lock:
-        subs = list(_subs.get(uid, {}).values())
-    for loop, q in subs:
-        def put(q=q):
-            if q.full():
-                try:
-                    q.get_nowait()
-                except asyncio.QueueEmpty:
-                    pass
-            q.put_nowait(ev)
-        try:
-            loop.call_soon_threadsafe(put)
-        except RuntimeError:   # the stream's loop is gone
-            pass
+streams = _hub.count   # open streams (for the live view: only the number)
 
 
 def changed(uid, cid, gone=False):
@@ -135,33 +115,8 @@ async def stream(request: Request, prof=Depends(own_profile)):
     if not live_on(uid):
         raise HTTPException(403, ("Sofort-Abgleich geht für dich gerade nicht. " + features.missing_text("verlaufsync", uid)).strip())
     guard.limit(request, "convostream", uid)
-    loop, q, sid = asyncio.get_running_loop(), asyncio.Queue(maxsize=QUEUE), secrets.token_hex(6)
-    with _lock:
-        mine = _subs.setdefault(uid, {})
-        if len(mine) >= MAX_STREAMS:   # the oldest page gives way (it asks ?since= every 30 s anyway)
-            mine.pop(next(iter(mine)))
-        mine[sid] = (loop, q)
-
-    async def events():
-        end_at = time.monotonic() + STREAM_SECONDS
-        try:
-            yield "retry: 5000\n\n"
-            for ev in running(uid):
-                yield f"data: {json.dumps(ev)}\n\n"
-            while time.monotonic() < end_at and live_on(uid):
-                try:
-                    ev = await asyncio.wait_for(q.get(), BEAT)
-                except asyncio.TimeoutError:
-                    yield ": .\n\n"
-                    continue
-                yield f"data: {json.dumps(ev)}\n\n"
-        finally:
-            with _lock:
-                (_subs.get(uid) or {}).pop(sid, None)
-                if uid in _subs and not _subs[uid]:
-                    _subs.pop(uid)
-    return StreamingResponse(events(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+    # the oldest page gives way past MAX_STREAMS (it asks ?since= every 30 s anyway)
+    return _hub.stream(uid, lambda: live_on(uid), STREAM_SECONDS, first=lambda: running(uid))
 
 
 # ---------------------------------------------------------------- one conversation for all channels

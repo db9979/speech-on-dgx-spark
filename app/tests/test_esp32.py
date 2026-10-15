@@ -1093,9 +1093,9 @@ class Speakers(unittest.TestCase):
         up = np.frombuffer(esp32.louder(soft), dtype="<i2")
         self.assertGreater(int(np.max(np.abs(up))), 8000)
         self.assertEqual(esp32.louder(loud * 0 + quiet), quiet)
-        self.assertTrue(esp32.newer("2.5.1.10", "2.5.1.9"))
-        self.assertFalse(esp32.newer("2.5.1", "2.5.1.0"))
-        self.assertFalse(esp32.newer("abc", "1.0"))
+        self.assertTrue(esp32.geraeteupdate.newer("2.5.1.10", "2.5.1.9"))
+        self.assertFalse(esp32.geraeteupdate.newer("2.5.1", "2.5.1.0"))
+        self.assertFalse(esp32.geraeteupdate.newer("abc", "1.0"))
 
 
 class SharedSpeaker(unittest.TestCase):

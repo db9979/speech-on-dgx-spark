@@ -28,6 +28,7 @@ import features
 import guard
 import profiles
 import core
+from common import DayCounter
 from core import assistant, browser_profile
 
 router = APIRouter()
@@ -393,22 +394,19 @@ def forget_target(uid, area, target_id):
 
 
 # ---------------------------------------------------------------- numbers for Zustand → Live
-_stats = {"day": "", "n": {}}
+_stats = DayCounter(n={})
 
 
 def _count(kind):
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        if _stats["day"] != day:
-            _stats.update(day=day, n={})
-        _stats["n"][kind] = _stats["n"].get(kind, 0) + 1
+        n = _stats.today()["n"]
+        n[kind] = n.get(kind, 0) + 1
 
 
 def for_live():
     """Kinds and counts only: questions waiting, choices, mappings remembered and used today."""
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        n = dict(_stats["n"]) if _stats["day"] == day else {}
+        n = _stats.counts()["n"]
         now = time.time()
         open_ = sum(1 for w in _waiting.values() if now - w["t"] <= (ASK_SECONDS if w["kind"] == "choice" else REMEMBER_SECONDS))
     return {"offen": open_, "fragen": n.get("frage", 0), "auswahl": n.get("auswahl", 0), "korrektur": n.get("korrektur", 0),

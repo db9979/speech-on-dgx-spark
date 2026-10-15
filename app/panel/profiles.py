@@ -40,6 +40,33 @@ def _write(path, data):
     write_json(path, data, indent=1, mode=0o600, ensure_ascii=False, dir_mode=0o700)
 
 
+# One proposal per profile and module waiting for a yes: USERS_DIR/<uid>/<name>-pending.json with "t" (when) and
+# "src" (where it was proposed; only a yes from there confirms it). calendars, tidy, tasks, agent, meinmcp, fixes, messages.
+def pending_file(uid, name):
+    return _path(uid, f"{name}-pending.json")
+
+
+def pending_set(uid, name, data, src=""):
+    _write(pending_file(uid, name), dict(data, t=int(time.time()), src=str(src or "")[:120]))
+
+
+def pending_get(uid, name, seconds):
+    """The proposal, or None when there is none or it is older than seconds."""
+    try:
+        with open(pending_file(uid, name)) as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < seconds else None
+    except (OSError, ValueError):
+        return None
+
+
+def pending_drop(uid, name):
+    try:
+        os.remove(pending_file(uid, name))
+    except OSError:
+        pass
+
+
 def _load():
     try:
         with open(_path("profiles.json")) as f:

@@ -161,7 +161,7 @@ def allow_each_other(a, b):
 
 def forget(uid):
     """Everything of the profile here (profile deleted)."""
-    for p in (_file(uid), _pending_file(uid)):
+    for p in (_file(uid), profiles.pending_file(uid, "messages")):
         try:
             os.remove(p)
         except OSError:
@@ -633,17 +633,8 @@ def take_announcement(c, now=None):
 
 
 # ---------------------------------------------------------------- "Ja" before sending
-def _pending_file(uid):
-    return profiles._path(uid, "messages-pending.json")
-
-
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "messages", PENDING_SECONDS)
 
 
 def drop_pending(uid):
@@ -651,17 +642,13 @@ def drop_pending(uid):
     settles every proposal) only loses that mark, so the next message can confirm it."""
     p = pending(uid)
     if p and p.pop("fresh", False):
-        profiles._write(_pending_file(uid), p)
+        profiles._write(profiles.pending_file(uid, "messages"), p)
         return
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "messages")
 
 
 def _propose(uid, p, src, fresh=False):
-    profiles._write(_pending_file(uid), dict(p, t=int(time.time()), src=str(src or "")[:120],
-                                            **({"fresh": True} if fresh else {})))
+    profiles.pending_set(uid, "messages", dict(p, **({"fresh": True} if fresh else {})), src)
 
 
 def describe(p):
@@ -736,10 +723,7 @@ async def answer(ctx, latest):
     p = pending(uid)
     if p and p.get("src", src) == src:
         import calendars
-        try:
-            os.remove(_pending_file(uid))   # answered: gone, whatever its mark
-        except OSError:
-            pass
+        profiles.pending_drop(uid, "messages")   # answered: gone, whatever its mark
         if p.get("kind") == "choose":
             return _answer_which(uid, p, latest, src)
         if calendars.confirms(latest):

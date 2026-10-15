@@ -749,7 +749,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
+"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
 },
 {
 "lang": "de",
@@ -781,7 +781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Kopplung anfordern: Nur die eigene Browser-Anmeldung des Profils darf koppeln, nie ein Geräteschlüssel. Hat das Profil einen zweiten Anmeldeschritt, braucht es dafür einen Code, denn ein neuer Weg ins Profil entsteht. 2. App frei und Platz da?: Die App muss vom Admin eingeschaltet und für das Profil nicht gesperrt sein, und das Profil darf höchstens 5 iPhones haben. Die Panel-Adresse muss mit https beginnen und ohne Pfad sein. 3. Einmal-Link als QR-Code: new_code macht einen zufälligen Code; im Speicher liegt nur sein Hash. Ein Profil hat höchstens 3 offene Codes, der Spark höchstens 20. Der Link spark-app://pair öffnet die App mit Adresse und Code. 4. Code gültig?: Die App schickt den Code. Der Spark prüft das Rate-Limit (10 pro Minute und Adresse), vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon benutzter Code passt nie. 5. Eigener Geräteschlüssel: profiles.add_device erzeugt den Schlüssel und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüss"
+"text": "1. Kopplung anfordern: Nur die eigene Browser-Anmeldung des Profils darf koppeln, nie ein Geräteschlüssel. Hat das Profil einen zweiten Anmeldeschritt, braucht es dafür einen Code, denn ein neuer Weg ins Profil entsteht. 2. App frei und Platz da?: Die App muss vom Admin eingeschaltet und für das Profil nicht gesperrt sein, und das Profil darf höchstens 5 iPhones haben. Die Panel-Adresse muss mit https beginnen und ohne Pfad sein. 3. Einmal-Link als QR-Code: kopplung.py macht einen zufälligen Code (144 Bit); im Speicher liegt nur sein Hash. Ein Profil hat höchstens 3 offene Codes, der Spark höchstens 20. Der Link spark-app://pair öffnet die App mit Adresse und Code. 4. Code gültig?: Die App schickt den Code. Der Spark prüft das Rate-Limit (10 pro Minute und Adresse), vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon benutzter Code passt nie. 5. Eigener Geräteschlüssel: profiles.add_device erzeugt den Schlüssel und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein "
 },
 {
 "lang": "de",
@@ -789,7 +789,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "el geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 57 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats …), ein paar Lese-Muster und die Panel-Bereiche, die das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freige"
+"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 57 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats …), ein paar Lese-Muster und die Panel-Bereiche, die das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil d"
 },
 {
 "lang": "de",
@@ -797,7 +797,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "geben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "er App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -837,7 +837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/iphone.py new_code: zufälliger Einmal-Code, nur der Hash (Schritt 3) - app/panel/iphone.py take_code: Code einmal einlösen (Schritt 4) - app/panel/iphone.py app_pair: der erste Kontakt der App (Schritt 4, Schritt 5) - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark (Schritt 9) - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern (Schritt 5) - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus (Schritt 6) - app/panel/profiles.py _app_path: die feste Pfadliste der App (Schritt 7) - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung (Schritt 10) - app/panel/account.py profile_remove_device: Gerät entfernen (Schritt 11) - app/panel/android.py apk_response: App-Datei nur mit gültigem Link (Schritt 3)"
+"text": "- app/panel/iphone.py profile_pair: Kopplungslink nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/kopplung.py Codes.new: zufälliger Einmal-Code, nur der Hash (auch Pebble, Schreibhilfe, Begleiter) (Schritt 3) - app/panel/kopplung.py Codes.take: Code einmal einlösen, zeitkonstant verglichen (Schritt 4) - app/panel/iphone.py app_pair: der erste Kontakt der App (Schritt 4, Schritt 5) - app/panel/iphone.py app_hello: was die App darf, entscheidet der Spark (Schritt 9) - app/panel/profiles.py add_device: Schlüssel erzeugen, Hash speichern (Schritt 5) - app/panel/profiles.py current: Profil aus Schlüssel oder Cookie, Bereiche, Schalter, Notaus (Schritt 6) - app/panel/profiles.py _app_path: die feste Pfadliste der App (Schritt 7) - app/panel/core.py browser_profile: nur die eigene Browser-Anmeldung (Schritt 10) - app/panel/account.py profile_remove_device: Gerät entfernen (Schritt 11) - app/panel/android.py apk_response: App-Datei nur mit gültigem Link (Schritt 3)"
 },
 {
 "lang": "de",
@@ -845,7 +845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus"
+"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung"
 },
 {
 "lang": "de",
@@ -7181,7 +7181,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
+"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/sse.py Hub.stream: one stream per page: queue, keep-alive, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
 },
 {
 "lang": "en",
@@ -7213,7 +7213,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Ask for pairing: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made. 2. App allowed and room left?: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path. 3. One-time link as QR code: new_code makes a random code; only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code. 4. Code valid?: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits. 5. Own device key: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path"
+"text": "1. Ask for pairing: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made. 2. App allowed and room left?: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path. 3. One-time link as QR code: kopplung.py makes a random code (144 bits); only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code. 4. Code valid?: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits. 5. Own device key: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app w"
 },
 {
 "lang": "en",
@@ -7221,7 +7221,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " allowed for the app?: An app key only works for the 57 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's nex"
+"text": "rites. 7. Path allowed for the app?: An app key only works for the 57 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list."
 },
 {
 "lang": "en",
@@ -7229,7 +7229,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t request finds no profile any more."
+"text": " The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -7269,7 +7269,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/iphone.py new_code: random one-time code, only the hash (step 3) - app/panel/iphone.py take_code: redeem a code once (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3)"
+"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/kopplung.py Codes.new: random one-time code, only the hash (also Pebble, writing help, companion) (step 3) - app/panel/kopplung.py Codes.take: redeem a code once, compared in constant time (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3)"
 },
 {
 "lang": "en",
@@ -7277,7 +7277,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus"
+"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung"
 },
 {
 "lang": "en",

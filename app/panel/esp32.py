@@ -68,6 +68,7 @@ import httpx
 import numpy as np
 
 import echo
+import geraeteupdate
 import logfilter
 import notaus
 import verbrauch
@@ -232,18 +233,6 @@ def manifest():
         return None
 
 
-def version_tuple(v):
-    try:
-        return tuple(int(x) for x in str(v).split("."))
-    except ValueError:
-        return ()
-
-
-def newer(new, old):
-    a, b = version_tuple(new), version_tuple(old)
-    return bool(a) and bool(b) and a > b
-
-
 SAFE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.\-]{0,120}")
 
 
@@ -325,7 +314,7 @@ async def _fetch_firmware(c=None):
         await _signed(c, assets, "manifest.json", raw)
         m = json.loads(raw)
         ver = str(m.get("version", ""))
-        if not version_tuple(ver) or not isinstance(m.get("variants"), dict):
+        if not geraeteupdate.vt(ver) or not isinstance(m.get("variants"), dict):
             raise FetchError("manifest.json ist ungültig.")
         cur = manifest()
         if cur and cur["version"] == ver:
@@ -1664,7 +1653,7 @@ async def ota(request: Request):
     if rep and rep != var and rep in (m or {}).get("variants", {}) and not var.startswith(rep):
         var = rep   # another board type was written over USB: updates follow what the board says it is
     fw = (m or {}).get("variants", {}).get(var)
-    offer = bool(fw and newer(m["version"], info["fw"]) and (known.get("auto", True) or known.get("update")))
+    offer = bool(fw and geraeteupdate.newer(m["version"], info["fw"]) and (known.get("auto", True) or known.get("update")))
     held = offer and not ota_allowed(plain)
     if held:
         # over http the board would take any file someone in the network hands it: no update there unless
@@ -1867,7 +1856,7 @@ def _list(uid=None):
             continue
         out.append({"id": d["id"], "name": d["name"], "user": d["user"], "variant": c.get("variant", ""),
                     "fw": c.get("fw", ""), "auto": c.get("auto", True), "update": bool(c.get("update")),
-                    "newer": bool(m and newer(m["version"], c.get("fw", ""))), "online": d["id"] in _live,
+                    "newer": bool(m and geraeteupdate.newer(m["version"], c.get("fw", ""))), "online": d["id"] in _live,
                     "seen": max(int(c.get("seen") or 0), int((last.get(d["id"]) or {}).get("t") or 0)) or None,
                     "created": d.get("created"), "volume": c.get("volume"), "mic": c.get("mic") or "normal",
                     "board": board_label(c.get("variant", ""), m), "plain": bool(c.get("plain")),

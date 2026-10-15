@@ -1450,28 +1450,16 @@ def confirms(text):
         re.sub(r"(?i)^\W*leg (ihn|es|den entwurf) ab\b", "ja", str(text or "").strip()) or "")
 
 
-def _pending_file(uid):
-    return profiles._path(uid, "mail-pending.json")
-
-
 def propose(uid, item, src=""):
-    profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
+    profiles.pending_set(uid, "mail", item, src)
 
 
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "mail", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "mail")
 
 
 def _inbox_uids_of(uid, aid, senders, days=BACKLOG_DAYS):
@@ -1693,7 +1681,7 @@ async def _notes(uid, d):
 
 
 def forget(uid):
-    for f in (_file(uid), _pending_file(uid)):
+    for f in (_file(uid), profiles.pending_file(uid, "mail")):
         try:
             os.remove(f)
         except OSError:

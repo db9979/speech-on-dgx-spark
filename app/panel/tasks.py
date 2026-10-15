@@ -311,24 +311,12 @@ def inbox(uid, lst, take):
 
 
 # ---------------------------------------------------------------- "Ja" before ticking off or deleting
-def _pending_file(uid):
-    return profiles._path(uid, "tasks-pending.json")
-
-
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "tasks", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "tasks")
 
 
 def describe(p):
@@ -412,7 +400,7 @@ async def tool(name, args, ctx):
             if not picked:
                 return f"Nicht gefunden auf der Liste {label}: {', '.join(clean(x) for x in wanted) or 'nichts genannt'}."
             p = {"list": lst, "action": action, "items": picked, "t": int(time.time()), "src": ctx.get("src", "")}
-            profiles._write(_pending_file(uid), p)
+            profiles._write(profiles.pending_file(uid, "tasks"), p)
             return (f"Noch NICHT geändert. Frag den Nutzer: „Soll ich {describe(p)}?“ Erst sein Ja in der nächsten "
                     "Nachricht führt es aus.")
     except (httpx.HTTPError, ValueError) as e:

@@ -40,7 +40,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
-from common import load_config
+from common import DayCounter, load_config
 from core import auth
 
 router = APIRouter()
@@ -63,7 +63,7 @@ BERATER_MIN = 0.60            # the settings assistant proposes the catalog entr
 CHECK_MIN = 0.90              # an answer becomes a case "erfunden" in the case inbox from here
 KLAGE_MIN = 0.80              # a message counts as a complaint about the last deed from here
 _lock = threading.Lock()
-_count = {}                   # per day: use -> n, "busy", "fail", "ms" (sum)
+_count = DayCounter()         # per day: use -> n, "busy", "fail", "ms" (sum)
 _last = {}                    # use -> (time, ok, ms)
 _orders = [0]                 # option orders qwen38 asked in at its last answer (1, 2; 0 = unknown)
 _transport = None             # the self-tests put an httpx.MockTransport here
@@ -195,17 +195,12 @@ def _read(r):
 
 
 def _note(use, ok, ms, why=""):
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        if _count.get("day") != day:
-            _count.clear()
-            _count["day"] = day
         if ok:
-            _count[use] = _count.get(use, 0) + 1
-            _count["ms"] = _count.get("ms", 0) + ms
+            _count.bump(use)
+            _count.bump("ms", ms)
         else:
-            k = {"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail")
-            _count[k] = _count.get(k, 0) + 1
+            _count.bump({"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail"))
         _last[use] = (time.time(), ok, ms)
     if ok:   # Verbrauchszähler: one question to the model, under the use's own name
         import verbrauch
@@ -292,9 +287,8 @@ def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
 
 def for_live(now=None):
     """Zustand → Live: how often today, per use, and how often it was busy or failed. Numbers only."""
-    day = time.strftime("%Y-%m-%d", time.localtime(now or time.time()))
     with _lock:
-        c = dict(_count) if _count.get("day") == day else {}
+        c = _count.counts(now or time.time())
     uses = {k: c.get(k, 0) for k in USES if k not in ("test", "messen")}
     n = sum(uses.values())
     return {"n": n, "uses": uses, "busy": c.get("busy", 0), "fail": c.get("fail", 0), "unsure": c.get("unsure", 0),
@@ -382,9 +376,8 @@ async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, no
     on „erfunden“ the panel makes a case „Erfundenes vermutet“ (faelle.add); the model only gives the number."""
     import faelle
     import vorrang
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        done = _count.get("pruefen", 0) if _count.get("day") == day else 0
+        done = _count.counts().get("pruefen", 0)
     if done >= CHECK_DAY:
         return None
     res = "\n".join(r[:800] for r in results)

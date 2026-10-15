@@ -41,6 +41,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 
 import features
+import geraeteupdate
 import guard
 import notaus
 import profiles
@@ -102,14 +103,11 @@ def update_ok(uid):
     return features.allowed("androidupdate", uid)
 
 
-def _ver(v):
-    return tuple(int(x) for x in v.split(".")) if v and VERSION.fullmatch(v) else ()
-
-
 def newer(have, kept):
     """True when the Spark keeps a newer version than `have`, None when one of them is unknown."""
-    a, b = _ver(have), _ver(kept)
-    return (b > a) if a and b else None
+    if not all(v and VERSION.fullmatch(v) for v in (have, kept)):
+        return None
+    return geraeteupdate.newer(kept, have)
 
 
 def saw(request, prof, now=None):

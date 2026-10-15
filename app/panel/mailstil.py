@@ -45,7 +45,7 @@ import guard
 import mail
 import notaus
 import profiles
-from common import no_think
+from common import DayCounter, no_think
 from core import assistant, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -102,7 +102,7 @@ RESTYLE = ("Du bringst einen Mail-Entwurf in den Stil des Nutzers. Der Entwurf s
 
 _lock = threading.Lock()
 _running = set()               # profiles with a run going
-_day = {}                      # per day: learned, failed, restyled, used (Zustand → Live)
+_day = DayCounter()            # per day: learned, failed, restyled, used (Zustand → Live)
 
 
 def allowed(uid, c=None):
@@ -507,17 +507,12 @@ async def restyle(uid, text, who):
 
 # ---------------------------------------------------------------- counts for Zustand → Live
 def _bump(kind):
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        if _day.get("day") != day:
-            _day.clear()
-            _day["day"] = day
-        _day[kind] = _day.get(kind, 0) + 1
+        _day.bump(kind)
 
 
 def today():
-    day = time.strftime("%Y-%m-%d")
-    return {k: v for k, v in _day.items() if k != "day"} if _day.get("day") == day else {}
+    return _day.counts()
 
 
 def _live(text):

@@ -422,29 +422,17 @@ def confirms(text):
     return bool(YES.search(t)) and not NO.search(t) and len(t.split()) <= 8 and bool(PLAIN.fullmatch(t))
 
 
-def _pending_file(uid):
-    return profiles._path(uid, "calendar-pending.json")
-
-
 def propose(uid, item, src=""):
     """src: where it was proposed (client and conversation); only a yes from there confirms it."""
-    profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
+    profiles.pending_set(uid, "calendar", item, src)
 
 
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "calendar", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "calendar")
 
 
 def describe(item):

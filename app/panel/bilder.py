@@ -33,7 +33,7 @@ import guard
 import notaus
 import profiles
 import wartung
-from common import load_config
+from common import DayCounter, load_config
 from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -101,7 +101,7 @@ _paint = []                 # [asyncio.Lock] of the running loop: one picture at
 _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last picture or wish, also a refused one (FOLLOW_SECONDS)
-_count = {"day": "", "done": 0, "failed": 0, "refused": 0}
+_count = DayCounter(done=0, failed=0, refused=0)
 BACKGROUND = True           # tests run _work themselves
 
 
@@ -289,19 +289,8 @@ def public(x):
 
 
 # ---------------------------------------------------------------- jobs
-def _day():
-    d = time.strftime("%Y-%m-%d")
-    if _count["day"] != d:
-        _count.update(day=d, done=0, failed=0, refused=0)
-
-
-def _bump(k):
-    _day()
-    _count[k] += 1
-
-
 def stats():
-    _day()
+    _count.today()
     with _lock:
         run = sum(1 for j in _jobs.values() if j["state"] == "run")
         wait = sum(1 for j in _jobs.values() if j["state"] == "wait")
@@ -366,7 +355,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web"):
         raise ValueError(("Was soll ich malen?", "What shall I paint?"))
     why = refuse_text(uid, prompt, wish)
     if why:
-        _bump("refused")
+        _count.bump("refused")
         _say(why, prof)
         raise ValueError(REFUSED[why])
     lim = limits()
@@ -410,7 +399,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web"):
 def _fail(j, why):
     de, en = REFUSED.get(why, REFUSED["dienst"])
     j.update(state="error", error=de, error_en=en, end=time.time())
-    _bump("refused" if why in ("pruefung", "ohne_pruefung") else "failed")
+    _count.bump("refused" if why in ("pruefung", "ohne_pruefung") else "failed")
     _live(f"Bild nicht gemalt: {why}")
     print(f"bilder: nicht gemalt {why} fuer {j['log']}", flush=True)
 
@@ -491,7 +480,7 @@ async def _work(j):
                                "wish": j["wish"], "format": j["format"], "seconds": d.get("seconds"), "src": j["src"],
                                "model": str(cfg().get("variant") or "")[:10], "job": j["id"]})
     j.update(state="done", pic=row, end=time.time())
-    _bump("done")
+    _count.bump("done")
     import verbrauch   # Verbrauchszähler: one picture and its time (does nothing while the counter is off)
     verbrauch.add("bild", "Bild malen", who=j["uid"], amount=1, ms=int((d.get("seconds") or 0) * 1000))
     _live(f"Bild {row['w']}x{row['h']} gemalt")

@@ -118,6 +118,41 @@ def write_json(path, data, indent=None, mode=None, ensure_ascii=True, dir_mode=0
         raise
 
 
+class DayCounter(dict):
+    """Numbers of today (Live page, Zustand → Technik): a dict with "day" (local date) and the counts, back to a
+    fresh copy of the given zeros on a new local day. The one helper for every "today: n" counter in memory."""
+
+    def __init__(self, **zero):
+        import copy
+        super().__init__(day="", **copy.deepcopy(zero))
+        self._zero = zero
+
+    @staticmethod
+    def date(now=None):
+        return time.strftime("%Y-%m-%d", time.localtime(now))
+
+    def today(self, now=None):
+        """Itself, reset first when the local date changed (now: epoch seconds, None = the clock)."""
+        day = self.date(now)
+        if self.get("day") != day:
+            import copy
+            self.clear()
+            self.update(copy.deepcopy(self._zero), day=day)
+        return self
+
+    def bump(self, key, n=1, now=None):
+        t = self.today(now)
+        t[key] = t.get(key, 0) + n
+        return t[key]
+
+    def counts(self, now=None):
+        """Today's counts without "day", read only: the zeros when nothing was counted today yet."""
+        import copy
+        if self.get("day") != self.date(now):
+            return copy.deepcopy(self._zero)
+        return {k: copy.deepcopy(v) for k, v in self.items() if k != "day"}
+
+
 # Speech first (panel vorrang.py): every STT/TTS request touches this file, the panel holds its
 # background work (and cancels its background requests to the language model) while it is fresh.
 SPEECH_MARK = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "speech-active")

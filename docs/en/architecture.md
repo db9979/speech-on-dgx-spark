@@ -245,6 +245,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/geraeteupdate.py` | Geräte-Updates: an overview of what the Spark keeps for the devices, a note when a new version is there, the speakers updated at night and a note when XiaoZh … |
 | `app/panel/hintergrund.py` | Me → My status. |
 | `app/panel/iphone.py` | The iPhone app "Spark" (ios/ in the repo): pairing and what the app may do. |
+| `app/panel/kopplung.py` | Pairing codes (Kopplung): the one-time code a profile's own browser login asks for, shown in the panel and typed or scanned on the new device (iPhone app, Pe … |
 | `app/panel/messages.py` | The assistant's way into the chats (chats.py) and what the chats bring along from the old "Nachrichten": "Sag Anna, das Essen ist fertig", "Habe ich neue Nac … |
 | `app/panel/onboard.py` | Einrichten an der Hand. |
 | `app/panel/pebblewatch.py` | Pairing the Pebble watch app "Spark" (pebble/ in the repo) with a profile. |
@@ -254,6 +255,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/roomlive.py` | Where room mode listens right now. |
 | `app/panel/speakers.py` | Speaker identification for profiles (optional; off unless the admin enables it). |
 | `app/panel/spkcode.py` | Code word at an own speaker in a room. |
+| `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
 | `app/panel/today.py` | Ich starts with "Heute". |
 | `app/panel/verbund.py` | Spark-Verbund: chats with people on other Sparks. |
@@ -625,6 +627,7 @@ Applies at: [step 6](#kn-geraet-s6), [step 10](#kn-geraet-s10)
 - `app/panel/profiles.py` `append_convo`: appends under a lock ([step 10](#kn-geraet-s10))
 - `app/panel/profiles.py` `_clean_convo`: checks and trims a conversation ([step 10](#kn-geraet-s10))
 - `app/panel/verlauf.py` `stream`: instant sync per open page ([step 11](#kn-geraet-s11))
+- `app/panel/sse.py` `Hub.stream`: one stream per page: queue, keep-alive, cleanup ([step 11](#kn-geraet-s11))
 - `app/panel/verlauf.py` `begin`: „answering“ for the other pages ([step 6](#kn-geraet-s6), [step 11](#kn-geraet-s11))
 
 Self-tests: `test_verlauf_sync`, `test_stille`, `test_echo`, `test_fremdstimme`, `test_follow_up`
@@ -676,7 +679,7 @@ flowchart TD
 
 1. <a id="kn-apps-s1"></a>**Ask for pairing**: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made.
 2. <a id="kn-apps-s2"></a>**App allowed and room left?**: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path.
-3. <a id="kn-apps-s3"></a>**One-time link as QR code**: new_code makes a random code; only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code.
+3. <a id="kn-apps-s3"></a>**One-time link as QR code**: kopplung.py makes a random code (144 bits); only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code.
 4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits.
 5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
@@ -722,8 +725,8 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 #### In the code
 
 - `app/panel/iphone.py` `profile_pair`: pairing link only from the own browser ([step 1](#kn-apps-s1), [step 2](#kn-apps-s2))
-- `app/panel/iphone.py` `new_code`: random one-time code, only the hash ([step 3](#kn-apps-s3))
-- `app/panel/iphone.py` `take_code`: redeem a code once ([step 4](#kn-apps-s4))
+- `app/panel/kopplung.py` `Codes.new`: random one-time code, only the hash (also Pebble, writing help, companion) ([step 3](#kn-apps-s3))
+- `app/panel/kopplung.py` `Codes.take`: redeem a code once, compared in constant time ([step 4](#kn-apps-s4))
 - `app/panel/iphone.py` `app_pair`: the app's first contact ([step 4](#kn-apps-s4), [step 5](#kn-apps-s5))
 - `app/panel/iphone.py` `app_hello`: what the app may, the Spark decides ([step 9](#kn-apps-s9))
 - `app/panel/profiles.py` `add_device`: make a key, store its hash ([step 5](#kn-apps-s5))
@@ -733,7 +736,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 - `app/panel/account.py` `profile_remove_device`: remove a device ([step 11](#kn-apps-s11))
 - `app/panel/android.py` `apk_response`: app file only with a valid link ([step 3](#kn-apps-s3))
 
-Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`
+Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`
 
 ### Telegram, Siri, watch
 

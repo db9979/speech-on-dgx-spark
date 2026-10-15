@@ -10,9 +10,7 @@ The question that got corrected can go to the quality test (quality.py, own case
 own wish from Ich → Protokoll.
 """
 import json
-import os
 import re
-import time
 
 import httpx
 
@@ -86,28 +84,16 @@ def question(lesson, en=False):
     return (f"Soll ich mir merken: {lesson}" if not en else f"Shall I remember: {lesson}").rstrip(".") + "?"
 
 
-def _file(uid):
-    return profiles._path(uid, "fix-pending.json")
-
-
 def propose(uid, lesson, src=""):
-    profiles._write(_file(uid), {"text": lesson, "t": int(time.time()), "src": str(src)[:120]})
+    profiles.pending_set(uid, "fix", {"text": lesson}, src)
 
 
 def pending(uid):
-    try:
-        with open(_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "fix", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "fix")
 
 
 def confirms(text):

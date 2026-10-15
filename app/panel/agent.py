@@ -1054,24 +1054,12 @@ async def run_routine(ha, r):
 
 
 # ---------------------------------------------------------------- proposals waiting for "Ja"
-def _pending_file(uid):
-    return profiles._path(uid, "agent-pending.json")
-
-
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "agent", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "agent")
 
 
 def propose(uid, item, src):
@@ -1083,7 +1071,7 @@ def propose(uid, item, src):
     for mod in (calendars, tidy, tasks, meinmcp):
         mod.drop_pending(uid)
     hamelden._PENDING.pop(uid, None)
-    profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
+    profiles.pending_set(uid, "agent", item, src)
 
 
 CHANGE_WORDS = {"pause": "pausieren", "resume": "wieder laufen lassen", "delete": "löschen"}

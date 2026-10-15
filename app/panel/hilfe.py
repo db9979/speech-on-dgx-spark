@@ -39,6 +39,7 @@ import features  # noqa: E402
 import guard  # noqa: E402
 import notaus  # noqa: E402
 import profiles  # noqa: E402
+from common import DayCounter  # noqa: E402
 from core import assistant, browser_profile, is_main_admin  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -280,7 +281,7 @@ SECRET = re.compile(r"(?i)\b(key|token|passw\w*|secret|pin|cookie|salt|schlüsse
 
 _lock = threading.RLock()
 _cards = {}            # card id -> card (see _card)
-_count = {}            # per day: asked, shown, applied, declined, undone
+_count = DayCounter()  # per day: asked, shown, applied, declined, undone
 _index = {"key": None, "items": [], "df": {}, "avg": 1.0}
 
 
@@ -471,17 +472,13 @@ def visible(it, level, c=None):
 
 
 def _bump(k):
-    day = time.strftime("%Y-%m-%d")
     with _lock:
-        if _count.get("day") != day:
-            _count.clear()
-            _count["day"] = day
-        _count[k] = _count.get(k, 0) + 1
+        _count.bump(k)
 
 
 def counts():
     with _lock:
-        return {k: v for k, v in _count.items() if k != "day"}
+        return _count.counts()
 
 
 def _live(text):

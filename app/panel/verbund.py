@@ -60,6 +60,7 @@ from fastapi.responses import JSONResponse
 import features
 import profiles
 import verbundgruppe
+from common import DayCounter
 
 VERSION = 1
 MAX_BODY = 32 * 1024     # one request between Sparks
@@ -103,7 +104,8 @@ _peer_rate = collections.defaultdict(collections.deque)   # domain -> request ti
 _fetches = collections.deque()                            # look-ups of keys (a minute)
 _kick = None             # asyncio.Event: something new to send
 _kick_loop = None        # ... and the event loop it belongs to
-_count = {"day": "", "in": 0, "out": 0, "refused": 0, "failed": 0}   # today, numbers only (Live)
+_count = DayCounter(**{"in": 0, "out": 0, "refused": 0, "failed": 0, "files_in": 0, "files_out": 0, "bytes": {}})   # today (Live)
+_today = _count.today
 
 
 # ---------------------------------------------------------------- switches
@@ -225,13 +227,6 @@ def _read(name):
 def _save(name, d):
     os.makedirs(_dir(), mode=0o700, exist_ok=True)
     profiles._write(os.path.join(_dir(), name), d)
-
-
-def _today():
-    day = time.strftime("%Y-%m-%d")
-    if _count["day"] != day:
-        _count.update(day=day, **{"in": 0, "out": 0, "refused": 0, "failed": 0, "files_in": 0, "files_out": 0, "bytes": {}})
-    return _count
 
 
 def _log(what, **nums):

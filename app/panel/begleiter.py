@@ -66,6 +66,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, Response
 
 import features
+import geraeteupdate
 import guard
 import notaus
 import verbrauch
@@ -2140,10 +2141,6 @@ async def program_daily(request: Request, kind: str = "morning"):
 
 
 # ---------------------------------------------------------------- updates (begleiter.json from GitHub Actions)
-def _vt(v):
-    return tuple(int(x) for x in v.split("."))
-
-
 def _mic_said(did, mic):
     """The program's switch "Mikrofon offen/zu" (older programs send nothing: open). One log line per change."""
     if mic not in ("open", "closed"):
@@ -2199,7 +2196,7 @@ def newer(arch, version):
     platform, key = ARCHS[arch]
     m = kept(platform)
     f = m and m["files"].get(key)
-    if not f or _vt(m["version"]) <= _vt(version):
+    if not f or not geraeteupdate.newer(m["version"], version):
         return None
     return {"version": m["version"], "size": f["size"], "sha256": f["sha256"]}
 
@@ -2280,7 +2277,7 @@ async def fetch(platform, c=None):
         if not clean:
             raise ValueError("begleiter.json nennt keine Datei für diesen Rechner.")
         cur = kept(platform)
-        if cur and _vt(cur["version"]) >= _vt(ver) and set(cur["files"]) >= set(clean):
+        if cur and not geraeteupdate.newer(ver, cur["version"]) and set(cur["files"]) >= set(clean):
             return cur["version"]
         os.makedirs(folder, exist_ok=True)
         for k, v in clean.items():

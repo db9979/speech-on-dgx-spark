@@ -93,6 +93,8 @@ def upstream_on():
 
 
 def vt(v):
+    """(1, 2, 3) from "1.2.3"; () when it is no dotted number. The one version compare of all devices
+    (esp32, android, begleiter, pebblewatch use it)."""
     try:
         return tuple(int(x) for x in str(v).split("."))
     except ValueError:
@@ -100,6 +102,7 @@ def vt(v):
 
 
 def newer(new, old):
+    """True when both are versions and `new` is above `old`."""
     a, b = vt(new), vt(old)
     return bool(a) and bool(b) and a > b
 

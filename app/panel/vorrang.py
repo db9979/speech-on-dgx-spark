@@ -26,7 +26,7 @@ import threading
 import time
 
 import llm
-from common import SPEECH_MARK, speech_mark
+from common import SPEECH_MARK, DayCounter, speech_mark
 
 GRACE = 20          # seconds after the last speech that still count as "speaking" (follow-up question)
 POLL = 0.25         # how often a running background request checks for speech
@@ -36,7 +36,7 @@ MARK = SPEECH_MARK
 
 _local = [0.0]      # this process: the last time an answer streamed
 _sem = {}           # event loop -> Semaphore(1): one background request at a time
-stats = {}          # per day: held, waited_max, cancelled, gave_up, behind
+stats = DayCounter(held=0, waited_max=0, cancelled=0, gave_up=0, behind=0)   # today (Zustand → Prüfen)
 
 
 class Busy(Exception):
@@ -63,17 +63,8 @@ def mark(now=None, end=False):
     speech_mark(now, MARK, end=end)
 
 
-def _day(now=None):
-    t = time.localtime(time.time() if now is None else now)
-    d = f"{t.tm_year:04d}-{t.tm_mon:02d}-{t.tm_mday:02d}"
-    if d not in stats:
-        stats.clear()
-        stats[d] = {"held": 0, "waited_max": 0, "cancelled": 0, "gave_up": 0, "behind": 0}
-    return stats[d]
-
-
 def count(key, now=None, value=1):
-    s = _day(now)
+    s = stats.today(now)
     if key == "waited_max":
         s[key] = max(s[key], int(value))
     else:
@@ -81,7 +72,7 @@ def count(key, now=None, value=1):
 
 
 def today(now=None):
-    return dict(_day(now), speaking=speaking(now))
+    return dict(stats.counts(now), speaking=speaking(now))
 
 
 def paused():

@@ -35,7 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 import guard
-from common import load_config, write_json
+from common import DayCounter, load_config, write_json
 from core import auth
 
 router = APIRouter()
@@ -177,7 +177,7 @@ REWIND = 15 * 60
 _guard = deque(maxlen=60)         # Wächter decisions
 _door = deque(maxlen=60)          # who came in from the internet or was turned away
 _rets = deque(maxlen=40)          # what tools gave back
-_count = {}                       # per day: guard_ok, guard_bad, guard_cut, door_in, door_out
+_count = DayCounter()             # per day: guard_ok, guard_bad, guard_cut, door_in, door_out
 _codes = {}                       # hash of a pairing code -> (until, name)
 _seen = {}                        # monitor id -> (last time, address)
 _saved = [0.0]                    # last time live-monitors.json was written for "last seen"
@@ -211,18 +211,13 @@ def screens():
 
 
 def _bump(key, now=None):
-    day = time.strftime("%Y-%m-%d", time.localtime(now or time.time()))
-    if _count.get("day") != day:
-        _count.clear()
-        _count["day"] = day
-    _count[key] = _count.get(key, 0) + 1
+    _count.bump(key, now=now or time.time())
 
 
 def counts_today(now=None):
     """Zustand → Technik, Knoten-Seiten („heute“, technik_knoten.heute): today's counts, numbers only."""
-    day = time.strftime("%Y-%m-%d", time.localtime(now or time.time()))
     with _lock:
-        return {k: v for k, v in _count.items() if k != "day"} if _count.get("day") == day else {}
+        return _count.counts(now or time.time())
 
 
 def event(area, text, now=None):
@@ -1054,7 +1049,7 @@ def snapshot(view="admin", now=None):
         for k in [k for k, r in _run.items() if (g := _gone_from(r)) and now - g > FADE]:
             _run.pop(k, None)
         reqs = [_req(r, view, now) for r in sorted(_run.values(), key=lambda r: r.t0)]
-        cnt = dict(_count) if _count.get("day") == time.strftime("%Y-%m-%d", time.localtime(now)) else {}
+        cnt = _count.counts(now)
         guard_items, door_items = list(_guard)[-12:][::-1], list(_door)[-12:][::-1]
         rets, events = list(_rets)[-12:][::-1], list(_events)[-(60 if view == "admin" else 14):][::-1]
     try:

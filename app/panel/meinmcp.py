@@ -355,24 +355,12 @@ async def call(uid, s, t, args, job=False):
 
 
 # ---------------------------------------------------------------- the assistant (extras.py)
-def _pending_file(uid):
-    return profiles._path(uid, "mcp-dienste-pending.json")
-
-
 def pending(uid):
-    try:
-        with open(_pending_file(uid)) as f:
-            d = json.load(f)
-        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
-    except (OSError, ValueError):
-        return None
+    return profiles.pending_get(uid, "mcp-dienste", PENDING_SECONDS)
 
 
 def drop_pending(uid):
-    try:
-        os.remove(_pending_file(uid))
-    except OSError:
-        pass
+    profiles.pending_drop(uid, "mcp-dienste")
 
 
 def propose(uid, item, src):
@@ -383,7 +371,7 @@ def propose(uid, item, src):
     import tidy
     for mod in (calendars, tidy, tasks, agent):
         mod.drop_pending(uid)
-    profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
+    profiles.pending_set(uid, "mcp-dienste", item, src)
 
 
 def describe(p):

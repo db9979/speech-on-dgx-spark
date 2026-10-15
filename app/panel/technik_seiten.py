@@ -2265,12 +2265,13 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "2d8c585a96",
+        "stand": "e7b859d3c7",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
             "account.profile_convos": ["s11"], "profiles.append_convo": ["s10"], "profiles._clean_convo": ["s10"],
-            "verlauf.stream": ["s11"], "verlauf.begin": ["s6", "s11"], "regeln": ["s6", "s10"],
+            "verlauf.stream": ["s11"], "sse.Hub.stream": ["s11"], "verlauf.begin": ["s6", "s11"],
+            "regeln": ["s6", "s10"],
         },
         "kurz": ("Die Seite im Browser (static/js/chat.js) ist das Gerät: sie nimmt die Frage auf, schickt den Ton zur "
                  "Spracherkennung, schickt den Text an /api/chat und spielt Text und Ton aus einem einzigen Strom ab. "
@@ -2449,6 +2450,8 @@ SEITEN_DATEN = {
             ("profiles.append_convo", ("hängt unter Sperre an", "appends under a lock")),
             ("profiles._clean_convo", ("prüft und kürzt ein Gespräch", "checks and trims a conversation")),
             ("verlauf.stream", ("der Sofort-Abgleich je offener Seite", "instant sync per open page")),
+            ("sse.Hub.stream", ("ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen",
+                                "one stream per page: queue, keep-alive, cleanup")),
             ("verlauf.begin", ("„antwortet gerade“ für die anderen Seiten", "„answering“ for the other pages")),
         ],
         "tests": ["test_verlauf_sync", "test_stille", "test_echo", "test_fremdstimme", "test_follow_up"],
@@ -2457,10 +2460,10 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "b681ba5a38",
+        "stand": "a845090fe6",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
-            "iphone.new_code": ["s3"], "iphone.take_code": ["s4"], "iphone.app_pair": ["s4", "s5"],
+            "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
             "iphone.app_hello": ["s9"], "profiles._app_path": ["s7"], "account.profile_remove_device": ["s11"],
             "android.apk_response": ["s3"], "regeln": ["s6", "s7"], "regel:ohne": ["s10"],
         },
@@ -2494,10 +2497,10 @@ SEITEN_DATEN = {
               ("stop", "nein", ("Abgelehnt", "Refused"))),
             S("s3", "schritt", ("Einmal-Link als QR-Code", "One-time link as QR code"),
               ("gilt {iphone.CODE_SECONDS|min} Minuten, einmal", "valid {iphone.CODE_SECONDS|min} minutes, once"),
-              ("new_code macht einen zufälligen Code; im Speicher liegt nur sein Hash. Ein Profil hat höchstens "
+              ("kopplung.py macht einen zufälligen Code (144 Bit); im Speicher liegt nur sein Hash. Ein Profil hat höchstens "
                "{iphone.PER_PROFILE} offene Codes, der Spark höchstens {iphone.MAX_PENDING}. Der Link "
                "{iphone.SCHEME}://pair öffnet die App mit Adresse und Code.",
-               "new_code makes a random code; only its hash is kept in memory. A profile has at most "
+               "kopplung.py makes a random code (144 bits); only its hash is kept in memory. A profile has at most "
                "{iphone.PER_PROFILE} open codes, the Spark at most {iphone.MAX_PENDING}. The link {iphone.SCHEME}://pair "
                "opens the app with address and code.")),
             S("s4", "frage", ("Code gültig?", "Code valid?"),
@@ -2610,8 +2613,9 @@ SEITEN_DATEN = {
         ],
         "code": [
             ("iphone.profile_pair", ("Kopplungslink nur aus dem eigenen Browser", "pairing link only from the own browser")),
-            ("iphone.new_code", ("zufälliger Einmal-Code, nur der Hash", "random one-time code, only the hash")),
-            ("iphone.take_code", ("Code einmal einlösen", "redeem a code once")),
+            ("kopplung.Codes.new", ("zufälliger Einmal-Code, nur der Hash (auch Pebble, Schreibhilfe, Begleiter)",
+                                    "random one-time code, only the hash (also Pebble, writing help, companion)")),
+            ("kopplung.Codes.take", ("Code einmal einlösen, zeitkonstant verglichen", "redeem a code once, compared in constant time")),
             ("iphone.app_pair", ("der erste Kontakt der App", "the app's first contact")),
             ("iphone.app_hello", ("was die App darf, entscheidet der Spark", "what the app may, the Spark decides")),
             ("profiles.add_device", ("Schlüssel erzeugen, Hash speichern", "make a key, store its hash")),
@@ -2621,7 +2625,7 @@ SEITEN_DATEN = {
             ("account.profile_remove_device", ("Gerät entfernen", "remove a device")),
             ("android.apk_response", ("App-Datei nur mit gültigem Link", "app file only with a valid link")),
         ],
-        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus"],
+        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung"],
         "heute": [],
     },
 
@@ -2802,7 +2806,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "28676b9ee3",
+        "stand": "53ac88cddb",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -3521,7 +3525,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen
     "bild": {
-        "stand": "3b4351b131",
+        "stand": "2981d47109",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],

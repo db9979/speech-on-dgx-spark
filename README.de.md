@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.582** Aufräumen Schritt 6: gemeinsame Helfer für Tageszahlen, Kopplungscodes, Versionen, Ereignisse und offene Vorschläge
 - **V01.0.581** Aufräumen Schritt 5: Seiten fragen über api(), rohe Aufrufe nur noch mit festem Grund
 - **V01.0.580** Aufräumen Schritt 4: ein gemeinsamer Leser für den Anfrage-Inhalt mit Größenlimit
 - **V01.0.579** Aufräumen Schritt 3: ein gemeinsamer Weg zum Sprachmodell (llm.py)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.575** ROT-FIX: Videoanruf-Test hängt nicht mehr an der Uhrzeit, „Mein Rufname“ speichert wieder zuverlässig
 - **V01.0.574** Drei rote Fragen im Qualitätstest: angekündigte Tat ohne Werkzeug wird nicht gesagt, kein Merken bei einer reinen Frage, ehrliches „keine Möglichkeit“ zählt beim Kontostand
 - **V01.0.573** Bilder malen: ein kurzes „ja“ nach der Rückfrage malt, keine Websuche
-- **V01.0.572** Lautsprecher mit Codewort: kurze Fragen der sicher erkannten Stimme kommen nicht mehr als Gast
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

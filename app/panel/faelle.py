@@ -36,7 +36,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
-from common import write_json
+from common import DayCounter, write_json
 from core import assistant, json_body
 
 router = APIRouter()
@@ -558,20 +558,17 @@ def by_phrase(uid, verdict, now=None):
 
 
 # ---------------------------------------------------------------- Live (counts only)
-_live = {"day": "", "n": {}}
+_live = DayCounter(n={})
 
 
 def _live_mark(kind):
-    day = _day(time.time())
-    if _live["day"] != day:
-        _live.update(day=day, n={})
-    _live["n"][kind] = _live["n"].get(kind, 0) + 1
+    n = _live.today()["n"]
+    n[kind] = n.get(kind, 0) + 1
 
 
 def for_live(now=None):
     """Today: 👍, 👎 and new cases (numbers only)."""
-    day = _day(time.time() if now is None else now)
-    n = _live["n"] if _live["day"] == day else {}
+    n = _live.counts(now)["n"]
     return {"gut": n.get("gut", 0), "schlecht": n.get("schlecht", 0),
             "faelle": sum(v for k, v in n.items() if k in KINDS)}
 

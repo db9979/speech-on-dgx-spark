@@ -24,14 +24,11 @@ The text is data, never an instruction (fixed rules, the panel decides):
 """
 import asyncio
 import difflib
-import hashlib
-import hmac
 import io
 import os
 import plistlib
 import re
 import secrets
-import threading
 import time
 import uuid
 import zipfile
@@ -42,10 +39,11 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response
 
 import features
 import guard
+import kopplung
 import llm
 import notaus
 import profiles
-from common import load_config, no_think
+from common import DayCounter, load_config, no_think
 import core
 from core import assistant, browser_profile, confirm_code
 
@@ -114,11 +112,9 @@ OFFICE_CSP = ("default-src 'self'; script-src 'self' https://appsforoffice.micro
               "https://*.officeapps.live.com https://*.outlook.com https://outlook.live.com https://*.microsoft.com "
               "https://*.sharepoint.com https://*.cloud.microsoft https://*.live.com")
 
-_lock = threading.Lock()
-_pending = {}               # sha256(code) -> {"uid", "t"}
 _busy = set()               # profiles with a request running
 _all = [0]
-_count = {}                 # per day: kind -> number (Zustand → Live, the hint under the switch)
+_count = DayCounter()       # per day: kind -> number (Zustand → Live, the hint under the switch)
 
 
 def admin_on():
@@ -248,15 +244,11 @@ def diff(old, new):
 
 
 def _bump(kind):
-    day = time.strftime("%Y-%m-%d")
-    if _count.get("day") != day:
-        _count.clear()
-        _count["day"] = day
-    _count[kind] = _count.get(kind, 0) + 1
+    _count.bump(kind)
 
 
 def today():
-    return {k: v for k, v in _count.items() if k != "day"}
+    return _count.counts()
 
 
 def _live(text):
@@ -546,47 +538,16 @@ async def write_plain(request: Request, art: str = "korrigieren", sprache: str =
 
 
 # ---------------------------------------------------------------- pairing programs (scope "write")
-def _hash(code):
-    return hashlib.sha256(code.encode()).hexdigest()
-
-
-def _clean_codes(now):
-    for k in [k for k, v in _pending.items() if now - v["t"] > CODE_SECONDS]:
-        _pending.pop(k, None)
-
-
 def norm_code(v):
     """XXXX-XXXX, case and dashes as typed; None when it cannot be a code."""
     v = re.sub(r"[\s\-]", "", str(v or "")).upper()
     return v if len(v) == 8 and all(c in ALPHABET for c in v) else None
 
 
-def new_code(uid, now=None, what="schreib"):
-    """A one-time code for one program; what: "schreib" (this module) or "begleiter" (begleiter.py)."""
-    now = time.time() if now is None else now
-    code = "".join(secrets.choice(ALPHABET) for _ in range(8))
-    with _lock:
-        _clean_codes(now)
-        mine = sorted((v["t"], k) for k, v in _pending.items() if v["uid"] == uid)
-        for _, k in mine[:max(0, len(mine) - PER_PROFILE + 1)]:
-            _pending.pop(k, None)
-        if len(_pending) >= MAX_PENDING:
-            raise HTTPException(429, "Zu viele offene Kopplungen. Bitte in zehn Minuten noch einmal.")
-        _pending[_hash(code)] = {"uid": uid, "t": now, "w": what}
-    return code
-
-
-def take_code(code, now=None, what="schreib"):
-    """The profile id the code was made for, once; None when unknown, used or expired."""
-    now = time.time() if now is None else now
-    code = norm_code(code)
-    if not code:
-        return None
-    h = _hash(code)
-    with _lock:
-        _clean_codes(now)
-        hit = next((k for k in _pending if hmac.compare_digest(k, h) and _pending[k].get("w") == what), None)
-        return _pending.pop(hit)["uid"] if hit else None
+# one-time codes typed by hand (kopplung.py); what: "schreib" (this module) or "begleiter" (begleiter.py), one pool
+_codes = kopplung.Codes(lambda: "".join(secrets.choice(ALPHABET) for _ in range(8)), norm_code, CODE_SECONDS, MAX_PENDING,
+                        PER_PROFILE, kind="schreib")
+new_code, take_code = _codes.new, _codes.take
 
 
 def helpers(uid):

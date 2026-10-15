@@ -40,6 +40,8 @@ import time
 
 import features
 import profiles
+import sse
+from common import DayCounter
 
 MAX_TEXT = 4000          # characters per message
 MAX_ITEMS = 5000         # messages kept per chat (the oldest go first)
@@ -80,8 +82,9 @@ MEDIA_WORD = {"photo": "📷 Foto", "file": "📄 Datei", "voice": "🎤 Sprachn
 
 _lock = threading.RLock()
 _sent = collections.defaultdict(collections.deque)   # uid -> send times (the last hour)
-_subs = {}               # uid -> {stream id: (loop, queue)}
-_count = {"day": "", "sent": 0, "pushed": 0, "push_failed": 0, "media": 0}   # today, numbers only (Live)
+_hub = sse.Hub(QUEUE, MAX_STREAMS, BEAT)
+_subs = _hub.subs        # uid -> {stream id: (loop, queue)}
+_count = DayCounter(sent=0, pushed=0, push_failed=0, media=0, private=0, spoken=0, far_group_in=0)   # today, numbers only (Live)
 _ckey = None             # the AES-GCM key (backup._forget_cached drops it after a restore)
 
 
@@ -361,45 +364,15 @@ def _last(cid, x):
 
 
 # ---------------------------------------------------------------- events (open pages and apps)
-def streams():
-    """Open event streams (for the live view: only the number)."""
-    with _lock:
-        return sum(len(x) for x in _subs.values())
-
-
-def listening(uid):
-    with _lock:
-        return bool(_subs.get(uid))
-
-
-def _send_event(uid, ev):
-    with _lock:
-        subs = list(_subs.get(uid, {}).values())
-    for loop, q in subs:
-        def put(q=q):
-            if q.full():
-                try:
-                    q.get_nowait()
-                except asyncio.QueueEmpty:
-                    pass
-            q.put_nowait(ev)
-        try:
-            loop.call_soon_threadsafe(put)
-        except RuntimeError:
-            pass
+streams = _hub.count     # open event streams (for the live view: only the number)
+listening = _hub.listening
+_send_event = _hub.send
 
 
 def _tell(members, ev, but=None):
     for u in members:
         if u != but:
             _send_event(u, ev)
-
-
-def _today():
-    day = time.strftime("%Y-%m-%d")
-    if _count["day"] != day:
-        _count.update(day=day, sent=0, pushed=0, push_failed=0, media=0, private=0, spoken=0, far_group_in=0)
-    return _count
 
 
 def _log(what, **nums):
@@ -776,7 +749,7 @@ def _far_notify(uids, cid, meta, sender, text, now, kind=""):
                     import messages
                     if await messages.speak_now(u, _names().get(sender) or "Jemand", "" if meta.get("kind") in TWO else
                                                 _title(cid, meta, u, {}), " ".join(p for p in (MEDIA_WORD.get(kind, ""), text) if p), now):
-                        _today()["spoken"] = _today().get("spoken", 0) + 1
+                        _count.bump("spoken")
             except Exception as e:
                 _log("notify failed", error=type(e).__name__)
     try:
@@ -918,7 +891,7 @@ def _far_put(cid, rid, mid, text, reply, now, need=None):
         return None
     _tell(_locals(meta), {"type": "chat", "id": cid})
     _far_notify(_locals(meta), cid, meta, rid, text, now)
-    _today()["far_group_in"] = _today().get("far_group_in", 0) + 1
+    _count.bump("far_group_in")
     _log("far group message", chars=len(text))
     return meta
 
@@ -1286,11 +1259,11 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
     except Exception:
         _sweep(cid, _chat(cid).get("items", []))   # the sealed parts written above go again
         raise
-    _today()["sent"] += 1
+    _count.today()["sent"] += 1
     if media or blob is not None:
-        _today()["media"] = _today().get("media", 0) + 1
+        _count.bump("media")
     if box is not None:
-        _today()["private"] = _today().get("private", 0) + 1
+        _count.bump("private")
     _tell(meta["members"], {"type": "chat", "id": cid})
     if meta.get("kind") == "far":      # to the other Spark (verbund.py): the queue sends it, the second tick comes from there
         try:
@@ -1329,7 +1302,7 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
                 if await messages.speak_now(u, name_of(uid), "" if meta.get("kind") in TWO else
                                             _title(cid, meta, u, {}), "" if box is not None else
                                             " ".join(p for p in (MEDIA_WORD.get(media["kind"], "") if media else "", text) if p), now):
-                    _today()["spoken"] = _today().get("spoken", 0) + 1
+                    _count.bump("spoken")
         except Exception as e:
             _log("speaker failed", error=type(e).__name__)
     names = _names()
@@ -1354,7 +1327,7 @@ async def _notify(u, cid, meta, sender, text, now):
     body = ("🔒 Neue Nachricht" if meta.get("kind") == "priv" else
             text[:200] if profiles.settings(u).get("chat_push_text") is True else "Neue Nachricht")
     n = await push.send(u, title, body, tag="chat-" + cid, private=True, why="Chat", to="every")
-    _today()["pushed" if n else "push_failed"] += 1
+    _count.today()["pushed" if n else "push_failed"] += 1
     if n:
         def got(m, d, chats):
             _map(m, "got")[u] = max(float(_map(m, "got").get(u) or 0), now)
@@ -1729,7 +1702,7 @@ def for_live(now=None):
     if not admin_on():
         return {"on": False}
     chats = _index()
-    c = _today()
+    c = _count.today()
     return {"on": True, "chats": sum(1 for x in chats.values() if x.get("kind") == "one"),
             "groups": sum(1 for x in chats.values() if x.get("kind") == "group"), "sent": c["sent"],
             "pushed": c["pushed"], "push_failed": c["push_failed"], "streams": streams(), "media_on": media_on(),
@@ -1759,7 +1732,7 @@ def _far_group_live():
     except Exception:
         g = {}
     return {"far_groups": bool(g.get("on")), "far_groups_home": int(g.get("home") or 0),
-            "far_groups_there": int(g.get("there") or 0), "far_group_in": int(_today().get("far_group_in") or 0)}
+            "far_groups_there": int(g.get("there") or 0), "far_group_in": int(_count.today().get("far_group_in") or 0)}
 
 
 def _call_live():
@@ -2045,7 +2018,7 @@ def waiting(uid, since, now=None):
 
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
-from fastapi.responses import Response, StreamingResponse  # noqa: E402
+from fastapi.responses import Response  # noqa: E402
 
 from core import assistant, json_body, own_profile  # noqa: E402
 
@@ -2446,28 +2419,4 @@ async def api_stream(request: Request, prof=Depends(_on)):
     import guard
     uid = prof["id"]
     guard.limit(request, "chatsstream", uid)
-    loop, q, sid = asyncio.get_running_loop(), asyncio.Queue(maxsize=QUEUE), secrets.token_hex(6)
-    with _lock:
-        subs = _subs.setdefault(uid, {})
-        if len(subs) >= MAX_STREAMS:   # the oldest page gives way (it asks again now and then anyway)
-            subs.pop(next(iter(subs)))
-        subs[sid] = (loop, q)
-
-    async def events():
-        end_at = time.monotonic() + STREAM_SECONDS
-        try:
-            yield "retry: 5000\n\n"
-            while time.monotonic() < end_at and usable(uid):
-                try:
-                    ev = await asyncio.wait_for(q.get(), BEAT)
-                except asyncio.TimeoutError:
-                    yield ": .\n\n"
-                    continue
-                yield f"data: {json.dumps(ev)}\n\n"
-        finally:
-            with _lock:
-                (_subs.get(uid) or {}).pop(sid, None)
-                if uid in _subs and not _subs[uid]:
-                    _subs.pop(uid)
-    return StreamingResponse(events(), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+    return _hub.stream(uid, lambda: usable(uid), STREAM_SECONDS)

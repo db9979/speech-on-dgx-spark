@@ -9,19 +9,16 @@ A key with scope "watch" only asks (profiles.WATCH_PREFIX: /api/watch/...) and o
 switch chat.pebble is on and the profile is not blocked. Removing the watch in the panel stops its key.
 Keys made by hand in the admin's device list keep working as before.
 """
-import hashlib
-import hmac
 import json
 import os
 import re
-import secrets
-import threading
-import time
 import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import geraeteupdate
 import guard
+import kopplung
 import profiles
 import features
 from account import browser_profile
@@ -30,7 +27,6 @@ import core
 from core import assistant, confirm_code, own_profile
 
 router = APIRouter()
-_lock = threading.Lock()
 
 CODE_SECONDS = 600
 MAX_PENDING = 20          # open codes on the whole Spark
@@ -38,7 +34,8 @@ PER_PROFILE = 3           # open codes of one profile (a new one replaces the ol
 MAX_WATCHES = 5           # paired watches per profile
 MAX_BODY = 1024
 
-_pending = {}             # sha256(code) -> {"uid", "t"}
+_codes = kopplung.Codes(kopplung.link_code, kopplung.link_form, CODE_SECONDS, MAX_PENDING, PER_PROFILE)
+new_code, take_code, _pending = _codes.new, _codes.take, _codes.pending   # one-time pairing codes (kopplung.py)
 
 
 def admin_on():
@@ -54,41 +51,6 @@ def allowed(uid):
 
 
 profiles.WATCH_GATE[0] = allowed
-
-
-def _hash(code):
-    return hashlib.sha256(code.encode()).hexdigest()
-
-
-def _clean(now):
-    for k in [k for k, v in _pending.items() if now - v["t"] > CODE_SECONDS]:
-        _pending.pop(k, None)
-
-
-def new_code(uid, now=None):
-    now = time.time() if now is None else now
-    code = secrets.token_urlsafe(18)
-    with _lock:
-        _clean(now)
-        mine = sorted((v["t"], k) for k, v in _pending.items() if v["uid"] == uid)
-        for _, k in mine[:max(0, len(mine) - PER_PROFILE + 1)]:
-            _pending.pop(k, None)
-        if len(_pending) >= MAX_PENDING:
-            raise HTTPException(429, "Zu viele offene Kopplungen. Bitte in zehn Minuten noch einmal.")
-        _pending[_hash(code)] = {"uid": uid, "t": now}
-    return code
-
-
-def take_code(code, now=None):
-    """The profile id the code was made for, once; None when unknown, used or expired."""
-    now = time.time() if now is None else now
-    if not isinstance(code, str) or not re.fullmatch(r"[A-Za-z0-9_\-]{20,40}", code):
-        return None
-    h = _hash(code)
-    with _lock:
-        _clean(now)
-        hit = next((k for k in _pending if hmac.compare_digest(k, h)), None)
-        return _pending.pop(hit)["uid"] if hit else None
 
 
 APP_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pebble", "speech-spark.pbw")
@@ -111,16 +73,12 @@ def app_version():
     return _app_cache["label"]
 
 
-def _parts(v):
-    return tuple(int(x) for x in v.split("."))
-
-
 def newer_app(have):
     """True when the panel serves a newer watch app than the one asking (the phone sends its version)."""
     served = app_version()
     if not served or not isinstance(have, str) or not re.fullmatch(r"\d{1,3}(\.\d{1,3}){0,2}", have):
         return False
-    return _parts(served) > _parts(have)
+    return geraeteupdate.newer(served, have)
 
 
 def watches(uid):

@@ -11,12 +11,7 @@ question, hello). It works only while the admin switch chat.iphone is on and the
 Switching the smart home from the app needs the profile's app_ha as well (chat.py), plus the code word
 as everywhere. Removing the iPhone in the panel stops its key at once.
 """
-import hashlib
-import hmac
 import re
-import secrets
-import threading
-import time
 import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -24,6 +19,7 @@ from fastapi.responses import JSONResponse
 
 import appupdate
 import guard
+import kopplung
 import images
 import profiles
 import features
@@ -32,7 +28,6 @@ from common import load_config
 from core import app_version, assistant, confirm_code, json_body, own_profile
 
 router = APIRouter()
-_lock = threading.Lock()
 
 CODE_SECONDS = 600
 MAX_PENDING = 20          # open codes on the whole Spark
@@ -41,7 +36,8 @@ MAX_PHONES = 5            # paired iPhones per profile
 MAX_BODY = 4096
 SCHEME = "spark-app"
 
-_pending = {}             # sha256(code) -> {"uid", "t"}
+_codes = kopplung.Codes(kopplung.link_code, kopplung.link_form, CODE_SECONDS, MAX_PENDING, PER_PROFILE)
+new_code, take_code, _pending = _codes.new, _codes.take, _codes.pending   # one-time pairing codes (kopplung.py)
 
 
 def admin_on():
@@ -135,41 +131,6 @@ profiles.APP_AREA_GATE[0] = area_on
 def panel_rights(uid):
     """What hello tells the app: which panel areas it shows."""
     return {r: area_on(uid, r) for r in RIGHTS_PANEL}
-
-
-def _hash(code):
-    return hashlib.sha256(code.encode()).hexdigest()
-
-
-def _clean(now):
-    for k in [k for k, v in _pending.items() if now - v["t"] > CODE_SECONDS]:
-        _pending.pop(k, None)
-
-
-def new_code(uid, now=None):
-    now = time.time() if now is None else now
-    code = secrets.token_urlsafe(18)
-    with _lock:
-        _clean(now)
-        mine = sorted((v["t"], k) for k, v in _pending.items() if v["uid"] == uid)
-        for _, k in mine[:max(0, len(mine) - PER_PROFILE + 1)]:
-            _pending.pop(k, None)
-        if len(_pending) >= MAX_PENDING:
-            raise HTTPException(429, "Zu viele offene Kopplungen. Bitte in zehn Minuten noch einmal.")
-        _pending[_hash(code)] = {"uid": uid, "t": now}
-    return code
-
-
-def take_code(code, now=None):
-    """The profile id the code was made for, once; None when unknown, used or expired."""
-    now = time.time() if now is None else now
-    if not isinstance(code, str) or not re.fullmatch(r"[A-Za-z0-9_\-]{20,40}", code):
-        return None
-    h = _hash(code)
-    with _lock:
-        _clean(now)
-        hit = next((k for k in _pending if hmac.compare_digest(k, h)), None)
-        return _pending.pop(hit)["uid"] if hit else None
 
 
 def phones(uid):

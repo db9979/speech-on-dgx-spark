@@ -245,6 +245,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/geraeteupdate.py` | Übersicht und Hinweise zu Geräte-Updates |
 | `app/panel/hintergrund.py` | Ich → Mein Zustand |
 | `app/panel/iphone.py` | iPhone-App: Kopplung und Rechte |
+| `app/panel/kopplung.py` | Einmal-Codes zum Koppeln: iPhone, Pebble, Schreibhilfe, Begleiter |
 | `app/panel/messages.py` | Der Weg des Assistenten in die Chats |
 | `app/panel/onboard.py` | Einrichten an der Hand |
 | `app/panel/pebblewatch.py` | Kopplung der Pebble-Uhr |
@@ -254,6 +255,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/roomlive.py` | Wo der Raummodus gerade zuhört |
 | `app/panel/speakers.py` | Sprechererkennung pro Profil |
 | `app/panel/spkcode.py` | Codewort am geteilten Lautsprecher |
+| `app/panel/sse.py` | Sofort-Ereignisse an offene Seiten und Apps (Chats, Verlauf): ein Strom pro Seite |
 | `app/panel/telegram.py` | Telegram-Bot für Text und Sprachnachrichten |
 | `app/panel/today.py` | Die Karte „Heute“ oben in Ich |
 | `app/panel/verbund.py` | Spark-Verbund: Chats mit Menschen auf anderen Sparks, signiert, mit Fotos und Dateien |
@@ -625,6 +627,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - `app/panel/profiles.py` `append_convo`: hängt unter Sperre an ([Schritt 10](#kn-geraet-s10))
 - `app/panel/profiles.py` `_clean_convo`: prüft und kürzt ein Gespräch ([Schritt 10](#kn-geraet-s10))
 - `app/panel/verlauf.py` `stream`: der Sofort-Abgleich je offener Seite ([Schritt 11](#kn-geraet-s11))
+- `app/panel/sse.py` `Hub.stream`: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen ([Schritt 11](#kn-geraet-s11))
 - `app/panel/verlauf.py` `begin`: „antwortet gerade“ für die anderen Seiten ([Schritt 6](#kn-geraet-s6), [Schritt 11](#kn-geraet-s11))
 
 Selbsttests: `test_verlauf_sync`, `test_stille`, `test_echo`, `test_fremdstimme`, `test_follow_up`
@@ -676,7 +679,7 @@ flowchart TD
 
 1. <a id="kn-apps-s1"></a>**Kopplung anfordern**: Nur die eigene Browser-Anmeldung des Profils darf koppeln, nie ein Geräteschlüssel. Hat das Profil einen zweiten Anmeldeschritt, braucht es dafür einen Code, denn ein neuer Weg ins Profil entsteht.
 2. <a id="kn-apps-s2"></a>**App frei und Platz da?**: Die App muss vom Admin eingeschaltet und für das Profil nicht gesperrt sein, und das Profil darf höchstens 5 iPhones haben. Die Panel-Adresse muss mit https beginnen und ohne Pfad sein.
-3. <a id="kn-apps-s3"></a>**Einmal-Link als QR-Code**: new_code macht einen zufälligen Code; im Speicher liegt nur sein Hash. Ein Profil hat höchstens 3 offene Codes, der Spark höchstens 20. Der Link spark-app://pair öffnet die App mit Adresse und Code.
+3. <a id="kn-apps-s3"></a>**Einmal-Link als QR-Code**: kopplung.py macht einen zufälligen Code (144 Bit); im Speicher liegt nur sein Hash. Ein Profil hat höchstens 3 offene Codes, der Spark höchstens 20. Der Link spark-app://pair öffnet die App mit Adresse und Code.
 4. <a id="kn-apps-s4"></a>**Code gültig?**: Die App schickt den Code. Der Spark prüft das Rate-Limit (10 pro Minute und Adresse), vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon benutzter Code passt nie.
 5. <a id="kn-apps-s5"></a>**Eigener Geräteschlüssel**: profiles.add_device erzeugt den Schlüssel und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab.
 6. <a id="kn-apps-s6"></a>**Jede Anfrage mit Schlüssel**: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt.
@@ -722,8 +725,8 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 #### Im Code
 
 - `app/panel/iphone.py` `profile_pair`: Kopplungslink nur aus dem eigenen Browser ([Schritt 1](#kn-apps-s1), [Schritt 2](#kn-apps-s2))
-- `app/panel/iphone.py` `new_code`: zufälliger Einmal-Code, nur der Hash ([Schritt 3](#kn-apps-s3))
-- `app/panel/iphone.py` `take_code`: Code einmal einlösen ([Schritt 4](#kn-apps-s4))
+- `app/panel/kopplung.py` `Codes.new`: zufälliger Einmal-Code, nur der Hash (auch Pebble, Schreibhilfe, Begleiter) ([Schritt 3](#kn-apps-s3))
+- `app/panel/kopplung.py` `Codes.take`: Code einmal einlösen, zeitkonstant verglichen ([Schritt 4](#kn-apps-s4))
 - `app/panel/iphone.py` `app_pair`: der erste Kontakt der App ([Schritt 4](#kn-apps-s4), [Schritt 5](#kn-apps-s5))
 - `app/panel/iphone.py` `app_hello`: was die App darf, entscheidet der Spark ([Schritt 9](#kn-apps-s9))
 - `app/panel/profiles.py` `add_device`: Schlüssel erzeugen, Hash speichern ([Schritt 5](#kn-apps-s5))
@@ -733,7 +736,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 - `app/panel/account.py` `profile_remove_device`: Gerät entfernen ([Schritt 11](#kn-apps-s11))
 - `app/panel/android.py` `apk_response`: App-Datei nur mit gültigem Link ([Schritt 3](#kn-apps-s3))
 
-Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`
+Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`
 
 ### Telegram, Siri, Uhr
 

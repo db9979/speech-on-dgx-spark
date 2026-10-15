@@ -34,6 +34,7 @@ from collections import deque
 
 import features
 import profiles
+from common import DayCounter
 
 RING_SECS = 45           # an unanswered call becomes a missed one
 TALK_MAX = 4 * 3600      # a call that nobody ended ends by itself
@@ -58,7 +59,7 @@ DENIED = ("0.0.0.0-0.255.255.255", "10.0.0.0-10.255.255.255", "100.64.0.0-100.12
 _lock = threading.RLock()
 _calls = {}              # call id -> {"a", "b", "cid", "video", "t", "state", "adev", "bdev", "talk"}
 _started = {}            # uid -> deque of start times (PER_HOUR)
-_count = {"day": "", "calls": 0, "talked": 0, "missed": 0, "secs": 0}
+_count = DayCounter(calls=0, talked=0, missed=0, secs=0)
 _tkey = None             # the Vermittler's shared secret (cached; backup._forget_cached drops it)
 _turn = {"conf": "", "ip": "", "on": False, "why": ""}
 
@@ -92,13 +93,6 @@ features.READY["anrufeturn"] = lambda c: bool(turn_host(c))   # needs the addres
 
 
 # ---------------------------------------------------------------- numbers for Live, words for the journal
-def _today():
-    day = time.strftime("%Y-%m-%d")
-    if _count["day"] != day:
-        _count.update(day=day, calls=0, talked=0, missed=0, secs=0)
-    return _count
-
-
 def _log(what, **nums):
     """A journal line in the area of the chats: fixed words and numbers only (never a name, an address or an SDP)."""
     import chats
@@ -108,7 +102,7 @@ def _log(what, **nums):
 def for_live():
     if not admin_on():
         return {"on": False}
-    t = _today()
+    t = _count.today()
     with _lock:
         now = sum(1 for x in _calls.values() if x["state"] == "talk")
         ring = sum(1 for x in _calls.values() if x["state"] == "ring")
@@ -192,7 +186,7 @@ async def start(uid, cid, video, dev, now=None):
              "talk": 0.0}
         _calls[call] = x
         busy = any(y["state"] in ("ring", "talk") and other in (y["a"], y["b"]) for k, y in _calls.items() if k != call)
-    _today()["calls"] += 1
+    _count.today()["calls"] += 1
     _live("📞 Anruf beginnt")
     if busy or _quiet(other):
         await end(other, call, "busy" if busy else "quiet", now=now)
@@ -256,7 +250,7 @@ def answer(uid, call, dev, now=None):
         x.update(state="talk", bdev=dev, talk=now)
     chats._send_event(x["a"], {"type": "call_ok", "id": x["cid"], "call": call, "dev": dev})
     chats._send_event(x["b"], {"type": "call_taken", "id": x["cid"], "call": call, "dev": dev})
-    _today()["talked"] += 1
+    _count.today()["talked"] += 1
     _live("📞 Anruf angenommen")
     _log("answered", secs=int(now - x["t"]))
     return x
@@ -315,12 +309,12 @@ async def end(uid, call, why="hangup", now=None):
         _calls.pop(call, None)
     secs = int(now - x["talk"]) if talked else 0
     if talked:
-        _today()["secs"] += secs
+        _count.today()["secs"] += secs
         what, extra = "call", {"secs": secs, "video": x["video"]}
         _log("ended", secs=secs)
     else:
         if why in ("missed", "busy", "quiet") or (why == "hangup" and uid == x["a"]):
-            _today()["missed"] += 1
+            _count.today()["missed"] += 1
             what = "call_missed"
         else:
             what = "call_rejected"
