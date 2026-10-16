@@ -4,7 +4,11 @@
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zquu1xu570)
 
-Spracherkennung (**Qwen3-ASR**) und Sprachausgabe (**Qwen3-TTS**) als Dienste auf einer NVIDIA DGX Spark (GB10), dazu ein Webportal mit Sprach-Assistent, Profilen und Monitoring. Läuft nativ mit systemd, ohne Docker, neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38), das das Sprachmodell liefert.
+Spracherkennung (**Qwen3-ASR**), Sprachausgabe (**Qwen3-TTS**), Bilder (**FLUX.2 klein**) und ein eigenes Sprachmodell (**vLLM**) als Dienste auf einer NVIDIA DGX Spark (GB10), dazu ein Webportal mit Sprach-Assistent, Profilen und Monitoring. Läuft nativ mit systemd, ohne Docker. Das Portal läuft auf dem Spark selbst oder auf einem kleinen eigenen Rechner wie einem Raspberry Pi 5. Statt des eigenen Sprachmodells kann weiterhin [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38) es liefern.
+
+| Assistent | Zustand | Technik |
+|---|---|---|
+| [![Assistent](docs/bilder/de-chat.png)](docs/bilder/de-chat.png) | [![Zustand](docs/bilder/de-zustand.png)](docs/bilder/de-zustand.png) | [![Technik](docs/bilder/de-technik.png)](docs/bilder/de-technik.png) |
 
 ## Installation
 
@@ -26,6 +30,8 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 |---|---|
 | Aktualisieren | Knopf im Portal unter *Einstellungen → Update und Sicherung* oder `sudo speech-spark update` |
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
+| Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
+| Portal auf einen anderen Rechner umziehen | `sudo speech-spark umziehen --code`, siehe [Spark teilen](docs/de/spark-teilen.md) |
 | Deinstallieren | `sudo ./uninstall.sh` (Konfiguration, Modelle und Stimmen bleiben; `--purge` löscht alles) |
 
 Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) stehen in [Installation im Detail](docs/de/installation.md).
@@ -34,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.667** README: neues Schaubild mit Panel-Rechner und Modellrechner, eigenes Sprachmodell, drei Bildschirmfotos
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** Terminal-Client: spark-tui update (Prüfsumme vom Spark geprüft); das Fenster zeigt neue Versionen an
 - **V01.0.664** Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für die neuen Funktionen, Lücken zu, Foto ändern als Bilder, Lernen aus unklaren Fragen
@@ -43,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.660** Ich → Gedächtnis: kein Fehlerkasten mehr bei veralteten Einträgen
 - **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
 - **V01.0.658** ROT-FIX .657: Zustand-Kacheltest ohne Rennen mit der 3-s-Aktualisierung
-- **V01.0.657** Schnellknöpfe für Bilder: drehen, heller, schwarzweiß und mehr, sofort ohne Modell
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -52,66 +58,62 @@ Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 ```mermaid
 flowchart LR
   subgraph Clients["Geräte und Apps"]
-    B["Browser und Handy<br/>App-Ansicht, Mitteilungen"]
-    APP["iPhone-App mit CarPlay,<br/>Android-App"]
-    X["Pebble, Telegram, Siri,<br/>Raumlautsprecher ESP32"]
-    W["HA Assist<br/>Wyoming :31003"]
+    B["Browser und Handy,<br/>iPhone- und Android-App,<br/>Begleiter für Windows/Mac"]
+    T["Terminal-Client spark-tui<br/>z. B. auf der uConsole"]
+    X["ESP32-Lautsprecher, HA Assist,<br/>Telefon (SIP), Telegram,<br/>Siri, Pebble"]
     M["MCP-Programme<br/>Claude, n8n, Open WebUI"]
-    A["Open WebUI, eigene Apps"]
   end
-  subgraph Spark["DGX Spark"]
-    subgraph P["Webportal :31443"]
-      G["Anmeldung, 2FA, Passkeys,<br/>Profile, Rollen, Einladungen"]
-      R["Weiche: Werkzeugwahl<br/>nach festen Regeln"]
-      V["Vorrang für Sprache<br/>und Personen"]
-      K["Eigenes Wissen: Uploads,<br/>reMarkable, Gedächtnis"]
-      LOG["Anfragen-Log, Sicherung,<br/>Update nach grünem Test"]
-      S["Wächter netguard<br/>nur erlaubte Ziele"]
-    end
-    ASR["ASR :31001<br/>Qwen3-ASR oder Parakeet"]
-    TTS["TTS :31002<br/>Qwen3-TTS, eigene Stimmen"]
-    subgraph Q38["dgx-spark-qwen38"]
-      LLM["Sprachmodell :30001<br/>Text und Bilder"]
-    end
+  subgraph Panel["Panel-Rechner: der Spark oder ein Raspberry Pi 5"]
+    G["Anmeldung, 2FA, Passkeys,<br/>Profile, Freigaben"]
+    R["Weiche: Werkzeugwahl<br/>nach festen Regeln"]
+    K["Eigenes Wissen: Dokumente,<br/>reMarkable, Gedächtnis"]
+    S["Wächter netguard<br/>nur erlaubte Ziele"]
+    LOG["Anfrage-Verlauf, Live,<br/>Sicherung, Update nach Test"]
+    NB["Notbetrieb mit Parakeet,<br/>wenn der DGX weg ist"]
+  end
+  subgraph Spark["DGX Spark: Modellrechner"]
+    ASR["Spracherkennung :31001<br/>Qwen3-ASR oder Parakeet"]
+    TTS["Sprachausgabe :31002<br/>Qwen3-TTS, eigene Stimmen"]
+    LLM["LLM-Tor :31006<br/>eigenes Sprachmodell (vLLM)"]
+    IMG["Bilder :31005<br/>FLUX.2 klein"]
   end
   subgraph Out["Dienste und Quellen"]
-    E["Home Assistant, Kalender, Mail,<br/>Wetter, Pakete, Nahverkehr"]
+    E["Home Assistant, Kalender,<br/>Mail, Wetter, Pakete, ÖPNV"]
     Q["SearXNG, Kiwix, Wikipedia,<br/>reMarkable-Cloud, MCP-Server"]
   end
+  A["Open WebUI, eigene Apps"]
   B --> G
-  APP --> G
+  T --> G
   X --> G
-  W --> G
   M -->|"MCP-Server /mcp"| G
-  A --> ASR
-  A --> TTS
-  G --> V
   G --> R
-  V --> ASR
-  V --> TTS
-  R --> LLM
   R --> K
   R --> S
   S --> E
   S --> Q
+  G ==>|"Ton, Text, Bilder;<br/>getrennt über das TLS-Tor"| Spark
+  A -->|"API-Schlüssel"| Spark
 ```
 
-1. Du sprichst ins Handy, in den Browser, in eine der Apps oder einen Lautsprecher. Das Portal meldet dich an, schickt den Ton an die **Spracherkennung** und bekommt Text zurück.
-2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** von qwen38.
-3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung.
+1. Du sprichst ins Handy, in den Browser, in eine der Apps, den Terminal-Client, einen Lautsprecher oder ins Telefon. Das Portal meldet dich an, schickt den Ton an die **Spracherkennung** und bekommt Text zurück.
+2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** hinter dem LLM-Tor (oder an qwen38, wenn du es behältst).
+3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung. Bilder malt und ändert FLUX.2 klein auf dem Spark.
 4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt. Der Vorrang sorgt dafür, dass gesprochene Antworten und wichtige Personen zuerst drankommen.
-5. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang.
+5. Mit **Spark teilen** liegen Portal, Profile, Chats und Anrufe auf dem kleinen Rechner und erreichen die Modelle nur über das TLS-Tor. Startet der DGX neu oder ist er aus, laufen Chats, Erinnerungen und Anrufe weiter, und der Notbetrieb versteht ein paar feste Befehle ohne Sprachmodell.
+6. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang.
 
-Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen erst nach grünem Selbsttest und lassen sich zurücknehmen.
+Jede neue Funktion ist ab Werk aus. Gibt der Admin sie frei, gilt sie sofort für jedes Profil; nur der Admin kann einzelne Profile sperren. Gäste bekommen nur Frage und Antwort, nie ein Werkzeug. Updates laufen erst nach grünem Selbsttest und lassen sich zurücknehmen.
 
 ## Weiterlesen
 
 - [Installation im Detail](docs/de/installation.md): Installationsarten, Befehl `speech-spark`, alle Optionen, Update, Deinstallieren
+- [Spark teilen](docs/de/spark-teilen.md): das Portal auf einem eigenen Rechner wie einem Raspberry Pi 5, Umziehen, Notbetrieb
 - [Assistent und Oberfläche](docs/de/assistent.md): Sprach-Chat, Handy, Funktionen, Menü
-- [APIs und Einbinden](docs/de/apis-und-einbinden.md): Transkription, Sprachausgabe, Streaming, Open WebUI, Siri, Pebble
+- [APIs und Einbinden](docs/de/apis-und-einbinden.md): Transkription, Sprachausgabe, Streaming, Open WebUI, Siri, Pebble, Terminal-Client
+- [iPhone-App](docs/de/iphone-app.md) und [Android-App](docs/de/android-app.md): Chat, Anrufe, Panel-Bereiche auf dem Handy
 - [Sicherheit und Betrieb](docs/de/sicherheit-und-betrieb.md): Anmeldung, Sperren, Sicherungen, Wächter, Selbsttest, Logs
 - [Architektur](docs/de/architektur.md): Bausteine, Weg einer Anfrage, alle Speicherorte (auch im Panel unter Zustand → Technik)
-- [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, neben qwen38, Fehlersuche
+- [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, eigenes Sprachmodell oder qwen38, Fehlersuche
 - [Coding-Richtlinie](docs/de/richtlinien.md) und [Sicherheits-Checkliste](docs/de/sicherheits-checkliste.md): Regeln für jede Änderung, Pflichtliste für neue Funktionen
 
 Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Funktionen → Anleitungen*.

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.667** · 2026-10-16 · README: neues Schaubild mit Panel-Rechner (Spark oder Raspberry Pi 5) und Modellrechner, eigenes Sprachmodell statt qwen38, Freigabe durch den Admin, drei Bildschirmfotos aus dem Panel mit Demodaten
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** · 2026-10-16 · Terminal-Client: spark-tui update holt die neue Version vom Spark und ersetzt das Programm nur bei passender Prüfsumme; das Fenster zeigt neue Versionen an
 - **V01.0.664** · 2026-10-16 · Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für Telefon, Chats, Bilder, NAS und Co., bekannte Lücken zu, Foto mit Änderungswunsch als Gruppe Bilder, Lernen aus unklaren Fragen (Hinweiswort übernehmen)
