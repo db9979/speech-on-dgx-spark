@@ -9,7 +9,9 @@ since V01.0.296) and adds only what a page cannot do:
 - **Notes at once** (1.2.0 and later, V01.0.473): admin: Features → Android app → "Android: notes at once" (off).
   On for every profile at once; it can be switched off under Me → Android app → "Notes at once". Then open the app once. The app then keeps a connection to the
   Spark open (`/api/android/wait`: the Spark answers at once when a notification is there, otherwise empty after
-  50 seconds, and the app asks again). Chat messages, reminders and notes come without delay, without a Google
+  4 minutes, and the app asks again; from 1.3.3, before 50 seconds). For this to work through the reverse proxy, set its
+  timeout to at least 5 minutes there (Synology: Login Portal → Reverse Proxy → Edit → Advanced / timeout); if the proxy
+  cuts after a minute, the app falls back to 50 seconds by itself for a day. Chat messages, reminders and notes come without delay, without a Google
   service. Android shows a quiet lasting notice "Mit dem Spark verbunden" for it (a foreground service). So Android
   does not put the connection to sleep: in the Android settings under Apps, Spark, Battery pick "Unrestricted".
   After the phone restarts the connection starts when the app is opened first; until then the app asks every
@@ -21,6 +23,7 @@ since V01.0.296) and adds only what a page cannot do:
 - **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
 - **Calm during a Spark update** (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows "Spark startet neu … Die Seite kommt gleich wieder." (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, "Adresse ändern" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place.
+- **Save the battery** (from 1.3.3, V01.0.668): in the background the app pauses its page (no polling, no open connections of the page); coming back it catches up. During a call the page stays awake. "Mitteilungen sofort" keeps running independently.
 - **Camera for video calls** (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound.
 - **Update in the app** (1.3.0 and later, V01.0.533): admin: Features → Android app → "Android: update in the app" (off).
   Once released the app shows a strip "New app version … · Update now" at the top (✕ hides it until the next

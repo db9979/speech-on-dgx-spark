@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.668** Save the battery: pages, Android and iPhone app sleep in the background
 - **V01.0.667** README: new diagram with panel computer and model computer, own language model, three screenshots
 - **V01.0.666** · 2026-10-16 · Task sheet with five parts of one's choice: today's appointments, task and shopping list, waiting mail with a draft reply, quick note and note; each profile picks under Me → reMarkable → Paper
 - **V01.0.665** Terminal client: spark-tui update (checksum from the Spark checked); the window shows a new version
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.661** Terminal client: Me → Terminal sets up the command spark-tui (checksum checked); Textual in its own environment
 - **V01.0.660** Ich → Gedächtnis: no more error box when entries look out of date
 - **V01.0.659** Changing pictures: “Take the beard off” and similar phrasings are understood
-- **V01.0.658** RED-FIX .657: the Zustand tile test no longer races the 3 s refresh
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

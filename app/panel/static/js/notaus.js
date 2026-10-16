@@ -91,7 +91,7 @@ $('znmrows').addEventListener('click',async e=>{const b=e.target.closest('[data-
     NA.s=await r.json();$('znmpw').value='';naRender()}catch(e2){$('znmmsg').textContent=e2.message;b.disabled=false}});
 $('nalogin').addEventListener('click',()=>{if(window.showLogin)showLogin()});
 // the stage of other devices: looked at every 15 seconds and when the page comes back
-notausLoad();NA.timer=setInterval(notausLoad,15000);
+notausLoad();NA.timer=setInterval(()=>{if(!document.hidden)notausLoad()},15000);   // Akku: hidden pages do not ask
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')notausLoad()});
 
 // Home Assistant keys (notaus.py key_new): only the admin, made with a fresh code, shown once with a ready snippet

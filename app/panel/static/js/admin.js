@@ -767,7 +767,8 @@ $('ulreload').onclick=()=>verReload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
 $('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}verReload()};
 async function ulWatch(){if(ul.iv||ul.ask)return;try{const p=await (await api('/api/update/progress?log=false')).json();if(p.running){ul.clicked=p.started&&p.now-p.started<p.timeout?p.started*1000:Date.now();ulShow()}}catch{}}
-setInterval(()=>{if(ADMIN)ulWatch()},8000);   // an update started from another tab or device locks this one too
+setInterval(()=>{if(ADMIN&&!document.hidden)ulWatch()},8000);   // an update started from another tab or device locks this one too
+document.addEventListener('visibilitychange',()=>{if(ADMIN&&!document.hidden)ulWatch()});   // Akku: hidden pages ask on coming back
 async function ulCheck(){await ulWatch();
   let v=null;try{v=sessionStorage.getItem('upddone');sessionStorage.removeItem('upddone')}catch{}
   if(v)sayToast(t('Update fertig','Update finished')+(v!=='1'?': '+v:'')+'.',6000)}

@@ -25,6 +25,16 @@ class Store(ctx: Context) {
         get() = prefs.getInt("skip_code", 0)
         set(v) = prefs.edit().putInt("skip_code", v).apply()
 
+    /** Akku: how long the Spark holds one question of "Mitteilungen sofort" (LiveConn), and since when a proxy
+     *  forced the short hold (after a day the app tries the long one again). */
+    var liveHold: Int
+        get() = prefs.getInt("live_hold", 0)
+        set(v) = prefs.edit().putInt("live_hold", v).apply()
+
+    var liveShortSince: Long
+        get() = prefs.getLong("live_short_since", 0)
+        set(v) = prefs.edit().putLong("live_short_since", v).apply()
+
     companion object {
         private val BASE = Regex("https://[A-Za-z0-9.\\-]+(:\\d{1,5})?")
 

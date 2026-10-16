@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.668** · 2026-10-16 · Akku schonen: verdeckte Seiten fragen nicht mehr im Takt und schließen den Verlauf-Strom, die Android-App (1.3.3) pausiert ihre Seite im Hintergrund (außer im Anruf), die iPhone-App stoppt im Hintergrund die Audio-Engine; „Mitteilungen sofort“ hält eine Frage 4 statt 1 Minute (Rückfall auf 50 s, wenn der Proxy abschneidet), das iPhone-Weckwort hört am Akku standardmäßig nur am Ladekabel
 - **V01.0.667** · 2026-10-16 · README: neues Schaubild mit Panel-Rechner (Spark oder Raspberry Pi 5) und Modellrechner, eigenes Sprachmodell statt qwen38, Freigabe durch den Admin, drei Bildschirmfotos aus dem Panel mit Demodaten
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** · 2026-10-16 · Terminal-Client: spark-tui update holt die neue Version vom Spark und ersetzt das Programm nur bei passender Prüfsumme; das Fenster zeigt neue Versionen an

@@ -109,8 +109,16 @@ class MainActivity : Activity() {
         web.saveState(outState)
     }
 
+    /** Akku (2026-10-16): in the background the page sleeps (its timers, polls and streams), except during a call. */
+    private var front = false
+
     override fun onResume() {
         super.onResume()
+        front = true
+        if (::web.isInitialized) {
+            web.onResume()
+            web.resumeTimers()
+        }
         if (waitingForPermission && packageManager.canRequestPackageInstalls()) {
             waitingForPermission = false
             startUpdate()   // back from "Unbekannte Apps installieren" with the permission: go on
@@ -121,6 +129,15 @@ class MainActivity : Activity() {
     override fun onPause() {
         super.onPause()
         CookieManager.getInstance().flush()
+        front = false
+        if (!::web.isInitialized) return
+        // anrufe.js: AN.call is set while a call rings or runs; then the page keeps its sound and picture
+        web.evaluateJavascript("typeof AN!=='undefined'&&!!AN.call") { r ->
+            if (!front && r != "true") {
+                web.onPause()
+                web.pauseTimers()
+            }
+        }
     }
 
     @Deprecated("Android 12 and older")

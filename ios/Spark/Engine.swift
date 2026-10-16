@@ -20,6 +20,8 @@ final class AudioEngine {
     private var generation = 0
     private var tapOn = false
     private var configured = false
+    /// Stopped on purpose (sleep()): a route change or the end of an interruption then does not start it again.
+    private var sleeping = false
     /// When the engine last started: right after a start iOS may still switch the route (voice processing)
     /// and stop it again, which threw away the first answer. Pieces wait until the start has settled.
     private var startedAt = Date.distantPast
@@ -59,12 +61,12 @@ final class AudioEngine {
         NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt else { return }
             Self.note(raw == AVAudioSession.InterruptionType.ended.rawValue ? "Unterbrechung vorbei" : "Unterbrechung")
-            guard AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
+            guard AVAudioSession.InterruptionType(rawValue: raw) == .ended, !self.sleeping else { return }
             try? self.ensureRunning()
             self.resume()
         }
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
-            guard let self else { return }
+            guard let self, !self.sleeping else { return }
             Self.note("Konfiguration geändert, offen \(self.pending.count)")
             let wasListening = self.tapOn
             self.removeTap()
@@ -104,6 +106,7 @@ final class AudioEngine {
     }
 
     func ensureRunning() throws {
+        sleeping = false
         try configure()
         if !engine.isRunning {
             try AVAudioSession.sharedInstance().setActive(true)
@@ -146,6 +149,19 @@ final class AudioEngine {
 
     func stopInput() {
         removeTap()
+    }
+
+    /// Akku (2026-10-16): nothing listens and nothing plays any more and the app is in the background: stop the
+    /// engine and let go of the audio session. A running engine (voice processing, microphone) keeps the app awake
+    /// through the "audio" background mode; stopped, iOS can put it to sleep. The next answer or listening starts
+    /// it again (ensureRunning, with the usual settle time).
+    func sleep() {
+        guard engine.isRunning, !tapOn, queued == 0, pending.isEmpty, !holding else { return }
+        sleeping = true
+        node.stop()
+        engine.stop()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        Self.note("Engine schläft (Hintergrund)")
     }
 
     private func removeTap() {

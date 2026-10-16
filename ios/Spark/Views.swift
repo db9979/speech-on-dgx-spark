@@ -824,7 +824,7 @@ struct SettingsView: View {
     @AppStorage("wake") private var wake = false
     @AppStorage("wakeWord") private var wakeWord: WakeWord.Word = .spark
     @AppStorage("stand") private var stand = false
-    @AppStorage("batteryMinutes") private var batteryMinutes = 30
+    @AppStorage("batteryMinutes") private var batteryMinutes = Prefs.batteryDefault
     @AppStorage("speakNotes") private var speakNotes = true
     @Environment(\.dismiss) private var dismiss
     @State private var confirm = false

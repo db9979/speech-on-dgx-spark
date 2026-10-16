@@ -47,7 +47,7 @@ In the app under **Settings (gear)**:
 | Interrupt | Just start talking to stop the answer and be heard. The iPhone filters the Spark's own voice out of the microphone. |
 | Read answers aloud | Off: answers as text only. The switch belongs to the profile (like in the browser, all devices). "Read aloud on this iPhone" applies to this iPhone only. In CarPlay the app always speaks (since V01.0.409). |
 | Wake word | "Hey Spark", "Jarvis" or "Computer". The iPhone recognizes it itself, offline and without Apple's servers; only then does anything go to your Spark. If the iPhone cannot do German offline, it stays off. |
-| On battery | How long the wake word listens on battery after the last use (charger only, 30 minutes, 1 or 3 hours). Always on the charger. |
+| On battery | How long the wake word listens on battery after the last use (charger only, 30 minutes, 1 or 3 hours). Always on the charger. Default since V01.0.668: charger only (battery). |
 | Stand mode | On the charger: big face, clock, last answer, screen stays on, dimmed at night. |
 | Speak on its own | The app says the Spark's notes aloud while it is open. |
 
@@ -62,6 +62,7 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 - **Save to "My documents":** With "Store documents from the app" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel.
 - **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.
 - **Calm, nothing jumps** (since V01.0.570): the note "Spark not reachable" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page under Settings stays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view.
+- **Save the battery** (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under "On battery") or CarPlay runs.
 - **English:** On an iPhone set to English the app is in English, including the wake word and Siri ("Ask Spark", "Start Spark").
 
 ## My profile

@@ -15,7 +15,9 @@ enum Prefs {
     }
     static var stand: Bool { get { d.bool(forKey: "stand") } set { d.set(newValue, forKey: "stand") } }
     /// minutes the wake word keeps listening on battery (0 = only on the charger)
-    static var batteryMinutes: Int { get { d.object(forKey: "batteryMinutes") as? Int ?? 30 } set { d.set(newValue, forKey: "batteryMinutes") } }
+    /// Akku (Dominik 2026-10-16): on battery the wake word listens only when chosen (Einstellungen → Am Akku)
+    static let batteryDefault = 0
+    static var batteryMinutes: Int { get { d.object(forKey: "batteryMinutes") as? Int ?? batteryDefault } set { d.set(newValue, forKey: "batteryMinutes") } }
     /// Antworten vorlesen: off for the profile (speakAnswers, the Spark checks it too) or only on this iPhone (speakHere)
     static var speakAnswers: Bool { (d.object(forKey: "speakAnswers") as? Bool ?? true) && (d.object(forKey: "speakHere") as? Bool ?? true) }
     static var speakNotes: Bool { get { d.object(forKey: "speakNotes") as? Bool ?? true } set { d.set(newValue, forKey: "speakNotes") } }

@@ -256,6 +256,30 @@ class Live(unittest.TestCase):
         android.WAIT_SECONDS = 0.2
         self.assertEqual(a.get("/api/android/wait", params={"after": got["r"]["last"]}).json()["notes"], [])
 
+    def test_the_app_chooses_a_longer_hold_within_limits(self):
+        # Akku (2026-10-16): ?hold= lets the app wait longer per question (fewer radio wake-ups), never past WAIT_MAX
+        import time
+        helpers.set_config(android_live=True)
+        a = profile("Mara")
+        last = a.get("/api/android/notes").json()["last"]
+        self.assertEqual((android.WAIT_MIN, android.WAIT_MAX), (20, 280))
+        lo, hi = android.WAIT_MIN, android.WAIT_MAX
+        self.addCleanup(setattr, android, "WAIT_MIN", lo)
+        self.addCleanup(setattr, android, "WAIT_MAX", hi)
+        android.WAIT_MIN, android.WAIT_MAX, android.WAIT_SECONDS = 0.1, 0.3, 30
+        t0 = time.monotonic()
+        self.assertEqual(a.get("/api/android/wait", params={"after": last, "hold": 240}).json()["notes"], [])
+        self.assertLess(time.monotonic() - t0, 5)                    # capped at WAIT_MAX, not 240 s
+        android.WAIT_SECONDS = 0.2
+        self.assertEqual(a.get("/api/android/wait", params={"after": last}).json()["notes"], [])   # old apps: WAIT_SECONDS
+        root = os.path.join(helpers.APP, "..", "android", "app", "src", "main", "java", "io", "github", "db9979", "spark")
+        if os.path.isdir(root):
+            with open(os.path.join(root, "LiveConn.kt"), encoding="utf-8") as f:
+                live = f.read()
+            self.assertIn("&hold=$hold", live)
+            self.assertIn("LONG_HOLD = 240", live)
+            self.assertIn("SHORT_HOLD = 50", live)                   # a proxy that cuts: back to 50 s by itself
+
     def test_waiting_is_not_a_slow_page_and_the_app_has_its_service(self):
         self.assertIsNone(panel.slow_read("GET", "/api/android/wait", 50.0, 1000.0))
         self.assertIsNotNone(panel.slow_read("GET", "/api/android/notes", 50.0, 1000.0))

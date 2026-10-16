@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.668** Akku schonen: Seiten, Android- und iPhone-App schlafen im Hintergrund
 - **V01.0.667** README: neues Schaubild mit Panel-Rechner und Modellrechner, eigenes Sprachmodell, drei Bildschirmfotos
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** Terminal-Client: spark-tui update (Prüfsumme vom Spark geprüft); das Fenster zeigt neue Versionen an
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
 - **V01.0.660** Ich → Gedächtnis: kein Fehlerkasten mehr bei veralteten Einträgen
 - **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
-- **V01.0.658** ROT-FIX .657: Zustand-Kacheltest ohne Rennen mit der 3-s-Aktualisierung
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

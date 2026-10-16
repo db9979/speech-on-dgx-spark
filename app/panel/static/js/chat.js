@@ -421,7 +421,7 @@ function stopWake(){wake.on=false;if(wake.node){wake.node.onaudioprocess=null;tr
   if(wake.lock){wake.lock.release().catch(()=>{});wake.lock=null}$('wakeind').hidden=true}
 async function keepAwake(){if(wake.on&&'wakeLock' in navigator&&!document.hidden)try{wake.lock=await navigator.wakeLock.request('screen')}catch{}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake()});
-setInterval(()=>{$('wakeind').classList.toggle('paused',!wakeIdle())},300);
+setInterval(()=>{if(wake.on&&!document.hidden)$('wakeind').classList.toggle('paused',!wakeIdle())},300);
 // "Vorlesen": answers aloud on this device (switch below the face, kept in this browser) and for the profile
 // (Gespräch einstellen → Antworten vorlesen, S.speak, also checked by the Spark itself). Off = text only:
 // the Spark makes no sound for the answer, notes, messages and reminders only chime.

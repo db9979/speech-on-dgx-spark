@@ -48,7 +48,7 @@ In der App unter **Einstellungen (Zahnrad)**:
 | Ins Wort fallen | Einfach losreden hält die Antwort an und hört zu. Das iPhone filtert die eigene Spark-Stimme aus dem Mikrofon. |
 | Antworten vorlesen | Aus: Antworten nur als Text. Der Schalter gehört zum Profil (wie im Browser, alle Geräte). „Auf diesem iPhone vorlesen“ gilt nur für dieses iPhone. In CarPlay spricht die App immer (seit V01.0.409). |
 | Weckwort | „Hey Spark“, „Jarvis“ oder „Computer“. Das iPhone erkennt das Wort selbst, ohne Internet und ohne Apple-Server; erst danach geht etwas an deinen Spark. Kann das iPhone kein Deutsch ohne Internet, bleibt es aus (Einstellungen → Allgemein → Tastatur → Diktat). |
-| Am Akku | Wie lange das Weckwort am Akku nach der letzten Nutzung zuhört (nur am Ladekabel, 30 Minuten, 1 oder 3 Stunden). Am Ladekabel immer. |
+| Am Akku | Wie lange das Weckwort am Akku nach der letzten Nutzung zuhört (nur am Ladekabel, 30 Minuten, 1 oder 3 Stunden). Am Ladekabel immer. Standard seit V01.0.668: nur am Ladekabel (Akku). |
 | Ständer-Modus | Am Ladekabel: großes Gesicht, Uhr, letzte Antwort, Bildschirm bleibt an, nachts gedimmt. |
 | Von selbst sprechen | Hinweise des Spark sagt die App laut, solange sie offen ist. |
 
@@ -63,6 +63,7 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 - **In „Meine Dokumente“ speichern:** Ist im Panel unter Ich → iPhone-App „Dokumente aus der App ablegen“ an, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel.
 - **Ohne Netz:** Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt.
 - **Ruhig, nichts springt** (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachrichten von einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen.
+- **Akku schonen** (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft.
 - **Englisch:** Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“).
 
 ## Mein Profil

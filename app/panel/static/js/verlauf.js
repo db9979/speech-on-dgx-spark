@@ -8,7 +8,9 @@ const vsync={es:null,busy:{},t:null,keepT:null};
 const OFFL='offl:',OFFQ='offq:',SHELL='spark-shell';
 
 // ---------------------------------------------------------------- Sofort-Abgleich
-function syncSettings(){const want=!!(PROFILE&&typeof ALLOW!=='undefined'&&ALLOW.sync_live&&typeof EventSource!=='undefined');
+// Akku: a hidden page closes the stream (its beat woke the phone every 25 s) and opens it again on coming back;
+// chat.js asks ?since= then, so nothing is missed
+function syncSettings(){const want=!!(PROFILE&&typeof ALLOW!=='undefined'&&ALLOW.sync_live&&typeof EventSource!=='undefined'&&!document.hidden);
   if(want&&!vsync.es)syncStart();else if(!want&&vsync.es)syncStop();offlineKeep()}
 function syncStart(){const es=new EventSource('/api/profile/convos/stream');vsync.es=es;
   es.onmessage=e=>{let ev;try{ev=JSON.parse(e.data)}catch{return}if(!ev||typeof ev!=='object')return;
@@ -18,6 +20,7 @@ function syncStart(){const es=new EventSource('/api/profile/convos/stream');vsyn
   // the browser opens it again by itself (retry 5 s); switched off (403) or signed out it stays closed
   es.onerror=()=>{if(es.readyState===2&&vsync.es===es){vsync.es=null;vsync.busy={};syncBusy()}}}
 function syncStop(){if(vsync.es){vsync.es.close();vsync.es=null}vsync.busy={};syncBusy()}
+document.addEventListener('visibilitychange',syncSettings);
 // another device answers in the open conversation: a pale bubble with the kind of device, never the question
 function syncBusy(){const log=$('chatlog');log.querySelectorAll('.msg.elsewhere').forEach(x=>x.remove());
   const here=Object.values(vsync.busy).filter(x=>!x.convo||x.convo===chat.cid);if(!here.length)return;

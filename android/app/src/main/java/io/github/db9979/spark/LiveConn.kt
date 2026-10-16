@@ -17,13 +17,15 @@ import java.net.URL
 /**
  * "Mitteilungen sofort" (android.py, admin switch and the profile's own): one lasting connection to the own Spark
  * instead of a question every 15 minutes. The app asks GET /api/android/wait, which answers as soon as a note is
- * there or after 50 seconds with nothing, and asks again. Android shows a quiet lasting notice for it (a
+ * there or after 4 minutes with nothing, and asks again (Akku, 1.3.3: before every 50 seconds). A reverse proxy that
+ * cuts quiet connections after about a minute makes the app fall back to 50 seconds by itself, for a day. Android shows a quiet lasting notice for it (a
  * foreground service); no Google service, no key: the same login (the WebView's cookie) as NotePoll.
  * The connection ends when the Spark answers 401/403 or "live": false, and when the app is signed out.
  */
 class LiveConn : Service() {
     @Volatile private var run = true
     private var worker: Thread? = null
+    private var cuts = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -103,22 +105,47 @@ class LiveConn : Service() {
         val store = Store(this)
         val base = store.base ?: return false
         val c = NotePoll.cookie(base) ?: return false
-        val conn = URL("$base/api/android/wait?after=${store.lastNote}").openConnection() as HttpURLConnection
+        val hold = hold(store)
+        val conn = URL("$base/api/android/wait?after=${store.lastNote}&hold=$hold").openConnection() as HttpURLConnection
         conn.connectTimeout = 15000
-        conn.readTimeout = 75000   // the Spark answers after 50 seconds at the latest
+        conn.readTimeout = (hold + 25) * 1000   // the Spark answers after `hold` seconds at the latest
         conn.instanceFollowRedirects = false
         conn.setRequestProperty("Cookie", c)
         conn.setRequestProperty("User-Agent", "SparkAndroid/${BuildConfig.VERSION_NAME}")
+        val t0 = System.currentTimeMillis()
         try {
             val code = conn.responseCode
             if (code == 401 || code == 403) return false
-            if (code != 200) return null
+            if (code != 200) return cut(store, hold, t0)
             val d = JSONObject(conn.inputStream.use { s -> NotePoll.readSome(s) })
             NotePoll.handle(this, store, base, d)
+            cuts = 0
             return d.optBoolean("live", false)
+        } catch (e: InterruptedException) {
+            throw e
+        } catch (_: Exception) {
+            return cut(store, hold, t0)
         } finally {
             conn.disconnect()
         }
+    }
+
+    /** The long hold, unless a proxy cut it within the last day. */
+    private fun hold(store: Store): Int {
+        if (store.liveHold == SHORT_HOLD && System.currentTimeMillis() - store.liveShortSince < DAY) return SHORT_HOLD
+        return LONG_HOLD
+    }
+
+    /** Long questions that broke after about a minute twice in a row: a proxy cuts quiet connections (one break
+     *  alone may be a network change). Ask short at once. */
+    private fun cut(store: Store, hold: Int, t0: Long): Boolean? {
+        if (hold > SHORT_HOLD && System.currentTimeMillis() - t0 >= CUT_AFTER && ++cuts >= 2) {
+            cuts = 0
+            store.liveHold = SHORT_HOLD
+            store.liveShortSince = System.currentTimeMillis()
+            return true
+        }
+        return null
     }
 
     companion object {
@@ -126,6 +153,10 @@ class LiveConn : Service() {
         private const val ID = 7001
         private const val FIRST_PAUSE = 5_000L
         private const val MAX_PAUSE = 300_000L
+        private const val LONG_HOLD = 240        // seconds; the Spark allows at most android.WAIT_MAX
+        private const val SHORT_HOLD = 50        // below the usual 60 s of a reverse proxy
+        private const val CUT_AFTER = 45_000L
+        private const val DAY = 86_400_000L
 
         /** True while the connection runs in this process (NotePoll then does not ask itself). */
         @Volatile var running = false

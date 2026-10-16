@@ -66,6 +66,8 @@ NOTE_SECONDS = 24 * 3600
 NOTE_MAX = 30
 POLLED_KEEP = 3 * 3600    # the app asks every 15 minutes; after 3 hours without, notes go elsewhere
 WAIT_SECONDS = 50         # /api/android/wait holds the question this long (below the usual 60 s of a proxy)
+WAIT_MIN, WAIT_MAX = 20, 280   # Akku (2026-10-16): from 1.3.3 the app asks for a longer hold (?hold=240) and falls
+                               # back to 50 s by itself when a proxy cuts it; old apps send nothing and get WAIT_SECONDS
 MAX_WAITERS = 2           # open waits per profile (a second phone); the oldest gives way
 VERSION = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}")
 UA = re.compile(r"SparkAndroid/(\d{1,3}\.\d{1,3}\.\d{1,3})")
@@ -376,8 +378,9 @@ def _answer(uid, after):
 
 
 @router.get("/api/android/wait", dependencies=[Depends(assistant)])
-async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profile)):
-    """The lasting connection: answers as soon as there is a note after `after`, else after WAIT_SECONDS empty.
+async def app_wait(request: Request, after: int = 0, hold: int = 0, prof=Depends(browser_profile)):
+    """The lasting connection: answers as soon as there is a note after `after`, else after `hold` seconds (within
+    WAIT_MIN..WAIT_MAX; without it WAIT_SECONDS) empty. A longer hold wakes the phone's radio less often.
     403 when the app or "Mitteilungen sofort" is off (the app then ends its connection)."""
     import asyncio
     uid = prof["id"]
@@ -386,6 +389,7 @@ async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profil
         raise HTTPException(403, "notes at once are turned off")
     saw(request, prof)
     after = max(0, min(after, 10 ** 9))
+    wait = max(WAIT_MIN, min(hold, WAIT_MAX)) if hold > 0 else WAIT_SECONDS
     if _seq.get(uid, 0) > after or _seq.get(uid, 0) < after:   # something new, or the Spark started over
         return _answer(uid, after)
     loop, ev = asyncio.get_running_loop(), asyncio.Event()
@@ -398,7 +402,7 @@ async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profil
             old[0].call_soon_threadsafe(old[1].set)
         box.append(me)
     try:
-        await asyncio.wait_for(ev.wait(), WAIT_SECONDS)
+        await asyncio.wait_for(ev.wait(), wait)
     except asyncio.TimeoutError:
         pass
     finally:

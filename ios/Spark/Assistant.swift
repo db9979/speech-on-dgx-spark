@@ -288,7 +288,16 @@ final class Conversation: ObservableObject {
         } else if !canWake && !inCar {
             // no listening in the background unless the wake word is on
             if phase == .listening || phase == .waiting { stop() }
+            sleepAudio()
         }
+    }
+
+    /// Akku: in the background with nothing to hear or say the audio engine stops, so iOS can put the app to sleep
+    /// (an answer still playing finishes first: it ends in base(), which comes back here). Never during a call (CallKit owns the
+    /// sound then) and never while the wake word or CarPlay listens.
+    private func sleepAudio() {
+        guard !foreground, !canWake, !inCar, phase == .idle, !CallCenter.shared.active else { return }
+        audio.sleep()
     }
 
     func settingsChanged() {
@@ -374,6 +383,7 @@ final class Conversation: ObservableObject {
             phase = .idle
         }
         if !notes.isEmpty { sayNote() }
+        sleepAudio()   // in the background with nothing left to do (after an answer, a timed-out question)
     }
 
     func tap() {

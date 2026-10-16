@@ -8,8 +8,10 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
   ist oder kein anderer Weg (iPhone-App) eingerichtet ist.
 - **Mitteilungen sofort** (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus).
   Für jedes Profil gleich an; abschalten lässt es sich unter Ich → Android-App → „Mitteilungen sofort“. Dann die App einmal öffnen. Die App hält dann eine Verbindung
-  zum Spark offen (`/api/android/wait`: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 50 Sekunden
-  leer, und die App fragt wieder). Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne
+  zum Spark offen (`/api/android/wait`: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 4 Minuten
+  leer, und die App fragt wieder; ab 1.3.3, vorher 50 Sekunden). Damit das über den Reverse Proxy klappt, dort den Timeout
+  auf mindestens 5 Minuten setzen (Synology: Anmeldeportal → Reverse Proxy → Bearbeiten → Erweitert/Benutzerdefinierter
+  Header bzw. Timeout); schneidet der Proxy nach einer Minute ab, fällt die App von selbst für einen Tag auf 50 Sekunden zurück. Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne
   Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark verbunden“ (Dienst im Vordergrund). Damit
   Android die Verbindung nicht schlafen legt: in den Android-Einstellungen bei Apps, Spark, Akku „Nicht eingeschränkt“.
   Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle
@@ -21,6 +23,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Notaus-Kachel** (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe [Sicherheit und Betrieb](sicherheit-und-betrieb.md)).
 - **Neue Version:** Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat.
 - **Ruhig beim Update des Spark** (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die App „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa fünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle.
+- **Akku schonen** (ab 1.3.3, V01.0.668): Im Hintergrund pausiert die App ihre Seite (keine Abfragen, keine offenen Verbindungen der Seite); beim Zurückholen holt sie nach. Während eines Anrufs bleibt die Seite wach. „Mitteilungen sofort“ läuft unabhängig davon weiter.
 - **Kamera für Videoanrufe** (ab 1.3.1, V01.0.556): Die App fragt beim ersten Videoanruf in Chats nach der Kamera, beim ersten Anruf nach dem Mikrofon; nur für die Seite des eigenen Sparks. Ohne Kamera geht der Anruf mit Ton weiter.
 - **Update in der App** (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus).
   Freigegeben zeigt die App oben einen Streifen „Neue App-Version … · Jetzt aktualisieren“ (✕ blendet ihn bis zur

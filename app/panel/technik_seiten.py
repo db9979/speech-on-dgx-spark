@@ -2635,13 +2635,15 @@ SEITEN_DATEN = {
             S("s11", "schritt", ("Abgleich mit anderen Geräten", "Sync with other devices"),
               ("?since= · Sofort-Abgleich", "?since= · instant sync"),
               ("Kommt die Seite wieder nach vorn und regelmäßig dazwischen, fragt sie, was sich seit dem letzten Mal "
-               "geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede Seite "
-               "einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte "
-               "(höchstens {verlauf.MAX_STREAMS} pro Profil, je {verlauf.STREAM_SECONDS|min} Minuten).",
+               "geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare "
+               "Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie "
+               "Inhalte (höchstens {verlauf.MAX_STREAMS} pro Profil, je {verlauf.STREAM_SECONDS|min} Minuten); eine "
+               "verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach.",
                "When the page comes to the front again, and regularly in between, it asks what changed since last "
-               "time; a conversation deleted elsewhere closes. With instant sync every page keeps an event stream open "
-               "that only reports „conversation changed“ and „answering“, never contents (at most "
-               "{verlauf.MAX_STREAMS} per profile, {verlauf.STREAM_SECONDS|min} minutes each).")),
+               "time; a conversation deleted elsewhere closes. With instant sync every visible page keeps an event "
+               "stream open that only reports „conversation changed“ and „answering“, never contents (at most "
+               "{verlauf.MAX_STREAMS} per profile, {verlauf.STREAM_SECONDS|min} minutes each); a hidden page closes "
+               "it to save the battery and asks again on coming back.")),
             S("s12", "ende", ("Bereit", "Ready"),
               ("wartet, bis der Ton zu Ende ist", "waits until the sound has ended"),
               ("Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage "
