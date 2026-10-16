@@ -48,7 +48,9 @@ QUIET_ORIGINS = {"speaker", "telefon", "watch", "siri", "telegram", "mcp"}
 
 _lock = threading.RLock()
 # what tipps.json keeps per profile; "done": hints whose "Prüfen" said it works (they do not come again)
-FIELDS = (("never", []), ("done", []), ("shown", []), ("convs", []), ("gaps", {}), ("ask", {}), ("count", {}))
+# "used", "said", "zahl": saetze.py („Das kannst du auch sagen“): the tools used, when a sentence was last shown, numbers
+FIELDS = (("never", []), ("done", []), ("shown", []), ("convs", []), ("gaps", {}), ("ask", {}), ("count", {}),
+          ("used", {}), ("said", {}), ("zahl", {}))
 router = APIRouter()
 
 
@@ -358,8 +360,13 @@ def weekly_text(uid, now=None):
     if now - st.get("push", 0) < WEEK:
         return "", None
     items = [x for x in candidates(uid) if _may(st, x["id"], "", now)]
-    if not items:
-        return "", None
+    if not items:   # nothing to set up: the sentence of the week (saetze.py, plan funktionen-zeigen 9)
+        import saetze
+        text = saetze.week_text(uid, now) if features.allowed(saetze.KEY, uid) else ""
+        if text:
+            _mut(uid, lambda s: s.update(push=int(now)))
+            _event("push")
+        return text, None
     x = items[0]
 
     def put(s):

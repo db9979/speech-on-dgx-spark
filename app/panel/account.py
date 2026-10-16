@@ -86,7 +86,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen",
-       "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon"}
+       "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze"}
 
 
 # the Ich page of a function without a page of its own in features.py (me): reminders live under Mitteilungen
@@ -1251,7 +1251,7 @@ def profile_settings(request: Request):
 # which functions the admin released for this profile (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
+         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "voice_tips": "tippsstimme", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "bilder": "bilder", "bilder_aendern": "bildaendern", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
          "mem_check": "gedpruefen", "mem_ask": "gedfragen", "mem_topics": "gedthemen",

@@ -102,6 +102,7 @@ MODULE = {
     "schreib": ("gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen"),
     "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38)"),
     "tipps": ("gespraech", "Schlägt passende Funktionen vor, die noch aus sind"),
+    "saetze": ("gespraech", "Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden"),
     "stufe": ("gespraech", "Vorrang für Personen in der Warteschlange der Sprachausgabe"),
     # Weiche
     "intent": ("weiche", "Die Weiche: feste Regeln für die eigene letzte Nachricht"),

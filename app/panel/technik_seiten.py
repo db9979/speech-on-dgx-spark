@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "37a9485312",
+        "stand": "714ab734b4",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -1091,7 +1091,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "1282a200e4",
+        "stand": "c715f3d179",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1220,10 +1220,14 @@ SEITEN_DATEN = {
               ("Korrektur, Gedächtnis, reMarkable, Vorab holen", "correction, memory, reMarkable, fetch ahead"),
               ("Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus "
                "dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn "
-               "gewünscht, und holt bei einer Rückfrage schon vorab. Das Werkzeug-Log des Profils wird geschrieben.",
+               "gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel "
+               "feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen "
+               "höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben.",
                "Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in "
                "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead "
-               "for a question back. The profile's tool log is written.")),
+               "for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, "
+               "on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The "
+               "profile's tool log is written.")),
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),
               ("Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem "
@@ -1291,7 +1295,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "be7bbfd053",
+        "stand": "b66f353a82",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1462,7 +1466,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "ddcb5c7f69",
+        "stand": "5dba6d97dd",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -2958,7 +2962,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "42756d9c62",
+        "stand": "012ae2c21d",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -3039,10 +3043,12 @@ SEITEN_DATEN = {
               ("Text, Rücknahmen, Herkunft", "text, retractions, origin"),
               ("Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie "
                "so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu "
-               "Knöpfen, die wie eine getippte Antwort zurückkommen.",
+               "Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das "
+               "kannst du auch sagen“ zu Antworttasten.",
                "From the stream, pieces of text and retractions count. If the answer came from mail or outside text it "
                "is marked so, so the next question starts locked. A question back from the panel becomes buttons in "
-               "Telegram that come back like a typed answer.")),
+               "Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ "
+               "become reply buttons.")),
             S("s9", "schritt", ("Ausgabe je Kanal", "Output per channel"),
               ("Text ohne Markdown · Ton für die Uhr", "text without Markdown · sound for the watch"),
               ("Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri "

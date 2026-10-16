@@ -124,13 +124,20 @@ function whLearn(){const L2=WH.d.lernen;if(!L2||!L2.rows.length)return '';const 
   return `<div class="wh-small wh-learn"><b>${esc(t('Gelernt aus unklaren Fragen','Learned from unclear questions'))}</b> <span class="mut">${esc(t('(nur Gruppe und festes Hinweiswort, nie ein Wort der Frage)','(only the group and a fixed hint word, never a word of the question)'))}</span></div>`
     +L2.rows.map(r=>`<div class="wh-tool">${esc(t(`${r.label}: ${r.n}× vom Modell gewählt`,`${r.label}: picked ${r.n}× by the model`))}`
       +r.offer.filter(o=>!(own[r.group]||[]).includes(o.word)).map(o=>` <button type="button" class="wh-chip hint" data-wh="learnuse" data-g="${esc(r.group)}" data-w="${esc(o.word)}" title="${esc(t(`„${o.word}“ führte ${o.n}× hierher: als Wort der Gruppe übernehmen`,`„${o.word}“ led here ${o.n}×: take it as a word of the group`))}">＋ ${esc(o.word)} (${o.n}×)</button>`).join('')+'</div>').join('')}
-function whStats(){const s=WH.d.stats,tot=s.total;if(!tot.n){$('whstats').innerHTML=`<div class="mut wh-small">${esc(t('Noch keine Fragen gezählt. Gezählt wird nur die Gruppe und die Zahl der Werkzeuge, nie ein Wort der Frage.','No questions counted yet. Only the group and the number of tools are counted, never a word of the question.'))}</div>`+whLearn();return}
+function whStats(){const s=WH.d.stats,tot=s.total;if(!tot.n){$('whstats').innerHTML=`<div class="mut wh-small">${esc(t('Noch keine Fragen gezählt. Gezählt wird nur die Gruppe und die Zahl der Werkzeuge, nie ein Wort der Frage.','No questions counted yet. Only the group and the number of tools are counted, never a word of the question.'))}</div>`+whLearn()+whFinds();return}
   const p=x=>Math.round(100*x/tot.n),rules=p(tot.rules),model=p(tot.model),unk=p(tot.unklar);
   const rows=Object.entries(s.groups).sort((a,b)=>b[1].n-a[1].n).slice(0,8);
   $('whstats').innerHTML=`<div class="wh-small">${esc(t(`${tot.n} Fragen in 7 Tagen`,`${tot.n} questions in 7 days`))}</div><div class="wh-bar"><i style="width:${rules}%" class="r"></i><i style="width:${model}%" class="m"></i><i style="width:${unk}%" class="u"></i></div>`
     +`<div class="wh-small wh-legend"><span><i class="r"></i>${esc(t(`von Regeln erkannt ${rules} %`,`recognized by rules ${rules} %`))}</span><span><i class="m"></i>${esc(t(`vom Modell eingeordnet ${model} %`,`sorted by the model ${model} %`))}</span><span><i class="u"></i>${esc(t(`unklar ${unk} %`,`unclear ${unk} %`))}</span></div>`
     +`<table class="wh-tab"><tr><th>${esc(t('Gruppe','Group'))}</th><th>${esc(t('Fragen','Questions'))}</th><th>${esc(t('Ø Werkzeuge','Ø tools'))}</th><th>${esc(t('direkt','direct'))}</th></tr>`
-    +rows.map(([k,v])=>`<tr><td>${esc(whName(k))}</td><td>${v.n}</td><td>${esc(t(`${v.avg} von ${v.avg_of}`,`${v.avg} of ${v.avg_of}`))}</td><td>${v.direct||'–'}</td></tr>`).join('')+'</table>'+whLearn()}
+    +rows.map(([k,v])=>`<tr><td>${esc(whName(k))}</td><td>${v.n}</td><td>${esc(t(`${v.avg} von ${v.avg_of}`,`${v.avg} of ${v.avg_of}`))}</td><td>${v.direct||'–'}</td></tr>`).join('')+'</table>'+whLearn()+whFinds()}
+// „Was keiner findet“ (saetze.py): released functions nobody used for 30 days, and how often their sentences came and
+// were tapped; numbers only, never a question
+function whFinds(){const f=WH.d.finden;if(!f||!f.on)return '';const n=x=>(x.name||[])[L==='en'?1:0]||'';
+  return `<div class="wh-small wh-learn"><b>${esc(t('Was keiner findet','What nobody finds'))}</b> <span class="mut">${esc(t(`(freigegeben, ${f.days} Tage von niemandem benutzt; nur Zahlen)`,`(released, used by nobody for ${f.days} days; numbers only)`))}</span></div>`
+    +(f.unused.length?`<div class="wh-tool">${esc(f.unused.map(n).join(', '))}</div>`:`<div class="mut wh-small">${esc(t('Jede freigegebene Funktion wurde benutzt.','Every released function was used.'))}</div>`)
+    +(f.rows.length?`<table class="wh-tab"><tr><th>${esc(t('Beispielsatz für','Example sentence for'))}</th><th>${esc(t('gezeigt','shown'))}</th><th>${esc(t('getippt','tapped'))}</th></tr>`
+      +f.rows.map(r=>`<tr><td>${esc(n(r))}</td><td>${r.shown}</td><td>${r.tap}</td></tr>`).join('')+'</table>':'')}
 function whLocks(){$('whlocks').innerHTML=WH.d.locks.map(x=>`<div class="wh-tool">🔒 ${esc(x.t)}</div>`).join('')+`<div class="mut wh-small">${esc(t('Schutzregeln gelten immer und lassen sich hier nicht abschalten.','Protection rules always apply and cannot be switched off here.'))}</div>`}
 function whBar(){const bar=$('whbar');bar.hidden=!whDirty()}
 // ---------------------------------------------------------------- saving

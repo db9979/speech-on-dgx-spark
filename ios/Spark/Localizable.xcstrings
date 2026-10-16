@@ -9250,6 +9250,36 @@
           }
         }
       }
+    },
+    "Meintest du:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Did you mean:"
+          }
+        }
+      }
+    },
+    "Neu bei dir:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New for you:"
+          }
+        }
+      }
+    },
+    "Das kannst du auch sagen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also say:"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

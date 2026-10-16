@@ -21,6 +21,9 @@ final class Conversation: ObservableObject {
         /// a picture painted for this answer (bilder.py): its job, and its prompt for the conversation list
         var picJob: String?
         var picPrompt: String?
+        /// „Das kannst du auch sagen“ (saetze.py): the Spark's sentences under this answer and their kind
+        var more: [MoreItem]?
+        var moreKind: String?
     }
 
     /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
@@ -104,6 +107,9 @@ final class Conversation: ObservableObject {
     @Published var inCar = false
     /// text read from a photo or document; goes along with every question until removed or a new conversation
     @Published var attachment: Attachment?
+    /// a tapped sentence („Das kannst du auch sagen“) for the text field; the view takes it and sets it back to nil
+    @Published var suggestion: String?
+    private var suggested: MoreItem?
     @Published var reading = false
     /// the attachment was stored under "Meine Dokumente" (or is being stored)
     @Published var stored = false
@@ -596,6 +602,12 @@ final class Conversation: ObservableObject {
         task = Task { await send(text, api, typed: true) }
     }
 
+    /// A tap on a suggested sentence: it goes into the text field, the person sends it themselves.
+    func suggest(_ item: MoreItem) {
+        suggested = item
+        suggestion = item.text
+    }
+
     /// typed: a typed question that waits in the outbox when the Spark cannot be reached.
     private func send(_ text: String, _ api: SparkAPI, typed: Bool = false) async {
         if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
@@ -620,8 +632,11 @@ final class Conversation: ObservableObject {
             if let i = messages.firstIndex(where: { $0.id == answer.id }) { change(&messages[i]) }
         }
         var got = false
+        // sent exactly as suggested: the tool's name goes along (counted by the Spark, nothing else)
+        let more = suggested?.text == text ? suggested?.tool : nil
+        suggested = nil
         do {
-            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers) {
+            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers, more: more) {
                 got = true
                 unreachable = false
                 switch ev {
@@ -643,6 +658,7 @@ final class Conversation: ObservableObject {
                 case .action(let kind, let target): Task { await propose(kind, target) }
                 case .rate(let id): edit { $0.rateId = id }
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
+                case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 }
             }
             streamDone = true

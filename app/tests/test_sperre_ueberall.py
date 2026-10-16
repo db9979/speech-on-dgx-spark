@@ -295,6 +295,7 @@ class OwnData(Base):
 # Every features.admin_on call left in the panel (file:function) and why it may stay: it is admin-only, Spark-wide
 # (no profile), a module's own Spark switch next to its per-profile check, or a display flag combined with the block.
 ADMIN_ON_OK = {
+    "saetze.py:admin_view": "admin-only numbers for Funktionen → Weiche (Spark-wide switch, no profile acts)",
     "verbrauch.py:on": "Spark-wide counter (admin switch); each profile's own view asks features.allowed verbrauch",
     "telefon.py:settings": "Spark-wide SIP part (admin switches); each call asks features.allowed telefon for its profile",
     "telefon_anruf.py:alarm_tick": "Spark-wide early out; the admin who gets the call is picked with features.allowed telefonalarm (_admin)",

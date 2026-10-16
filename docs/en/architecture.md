@@ -185,6 +185,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken. |
 | `app/panel/llm.py` | One way to the language model (Große Aufräumaktion step 3, Richtlinie Teil 17): its address, key, model name and the plain call. |
 | `app/panel/roles.py` | Roles: each profile keeps a few ways the assistant should answer ("Butler: höflich und trocken", "Erklärbär: erklär alles wie für Kinder") and switches betwe … |
+| `app/panel/saetze.py` | Das kannst du auch sagen. |
 | `app/panel/schreib.py` | Schreibhilfe: the Spark corrects, smooths, shortens, translates or drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...). |
 | `app/panel/stille.py` | Silence never becomes words (fixed rule, no switch). |
 | `app/panel/stufe.py` | Priority for people: a profile the admin gives "Vorrang" gets its answer first when several people talk to the Spark at once. |
@@ -760,7 +761,7 @@ flowchart TD
   s7 -->|no| s7x
   s8x(["Not now (503)"])
   s8 -->|yes| s8x
-  s9x(["terminal client: key scope „tui“, only 11 rules (chat, conversations, Today, jobs)"])
+  s9x(["terminal client: key scope „tui“, only 12 rules (chat, conversations, Today, jobs)"])
   s9 -->|Terminal| s9x
   s10x(["Only in the own browser (403)"])
   s10 -->|yes| s10x
@@ -882,7 +883,7 @@ flowchart TD
 5. <a id="kn-kanaele-s5"></a>**Voice message to text**: A Telegram voice message is loaded with a size limit, turned into WAV by ffmpeg (length capped) and read by the Spark's speech recognition. With Siri the iPhone dictates, with the watch the phone.
 6. <a id="kn-kanaele-s6"></a>**Short history**: For follow-ups the last eight messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of).
 7. <a id="kn-kanaele-s7"></a>**Request to /api/chat**: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser.
-8. <a id="kn-kanaele-s8"></a>**Collect the answer**: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer.
+8. <a id="kn-kanaele-s8"></a>**Collect the answer**: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ become reply buttons.
 9. <a id="kn-kanaele-s9"></a>**Output per channel**: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets.
 10. <a id="kn-kanaele-s10"></a>**Black out the code word**: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it.
 11. <a id="kn-kanaele-s11"></a>**In the profile's history**: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel.
@@ -1728,7 +1729,7 @@ flowchart TD
 10. <a id="kn-antwort-s10"></a>**Tool wanted?**: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped.
 11. <a id="kn-antwort-s11"></a>**Run the tools**: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question.
 12. <a id="kn-antwort-s12"></a>**Honest closing sentences**: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model.
-13. <a id="kn-antwort-s13"></a>**The panel's own questions**: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. The profile's tool log is written.
+13. <a id="kn-antwort-s13"></a>**The panel's own questions**: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written.
 14. <a id="kn-antwort-s14"></a>**Stream ends**: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once.
 
 **Examples:** Small talk without a tool: Spoken from the first sentence, no check steps in. · Tomorrow's appointments: The model calls the calendar, the next round answers from the result. · Made-up time: The sentence with the time is never said, an honest sentence instead. · „Light is on“, switching failed: Instead of the claim: „That did not work: …“.

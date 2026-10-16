@@ -64,6 +64,7 @@ TUI_RULES = (
     (("GET", "PUT"), r"/api/profile/convos"),
     (("DELETE",), r"/api/profile/convos/[\w\-]{1,40}"),
     (("GET",), r"/api/profile/today"),
+    (("GET",), r"/api/profile/saetze"),   # /tipps: what this profile can say (saetze.py)
     (("GET",), r"/api/features"),
     (("GET",), r"/api/tui/hello"),
     (("GET",), r"/api/profile/agent"),

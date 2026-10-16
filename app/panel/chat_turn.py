@@ -920,6 +920,9 @@ async def prepare(request):
     if who and own_browser and messages[-1]["role"] == "user":
         import tipps
         tipps.record(who["id"], route.names, body.get("spoken") is True or hilfe_origin in hilfe.SPOKEN)
+        if body.get("more"):   # a suggested sentence was sent (saetze.py): only the tool's name is counted
+            import saetze
+            saetze.tapped(who["id"], body.get("more"))
         if explain:
             convo = body.get("convo") if isinstance(body.get("convo"), str) else ""
             explain["tip"] = tipps.wish(who["id"], explain, convo[:80], hilfe_origin, outside=bool(carry),

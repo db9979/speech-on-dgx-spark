@@ -554,10 +554,21 @@ def _view(ch, english=False):
         "steps": list(_steps()),
         "must_tools": sorted(chat.rule_tools()),
         "stats": stats, "rules": rules_of(ch), "lernen": learned(ch),
+        "finden": _finden(),
         "history": [{"t": x.get("t"), "by": x.get("by")} for x in _history()][-5:][::-1],
         "limits": {"words": intent.MAX_ROUTE_WORDS, "extra": intent.MAX_EXTRA, "tests": MAX_TESTS, "q": MAX_Q,
                    "must": chat.MAX_TOOL_WORDS_CHARS},
     }
+
+
+def _finden():
+    """„Was keiner findet“ (saetze.py, „Das kannst du auch sagen“): numbers only, or {"on": False}."""
+    import saetze
+    try:
+        return saetze.admin_view()
+    except Exception as e:
+        print("weiche: Was keiner findet", type(e).__name__, flush=True)
+        return {"on": False}
 
 
 def _steps():

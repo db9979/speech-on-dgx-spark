@@ -981,7 +981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "en. Bei Siri diktiert das iPhone, bei der Uhr das Handy. 6. Kurzer Verlauf: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of). 7. Anfrage an /api/chat: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser. 8. Antwort einsammeln: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen. 9. Ausgabe je Kanal: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-"
+"text": "en. Bei Siri diktiert das iPhone, bei der Uhr das Handy. 6. Kurzer Verlauf: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of). 7. Anfrage an /api/chat: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser. 8. Antwort einsammeln: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten. 9. Ausgabe je Kanal: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes"
 },
 {
 "lang": "de",
@@ -989,7 +989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
+"text": " je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
 },
 {
 "lang": "de",
@@ -1701,7 +1701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ie ein Wort der Frage. 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort."
+"text": "ie ein Wort der Frage. 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort."
 },
 {
 "lang": "de",
@@ -5204,6 +5204,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
+"text": "Das kannst du auch sagen (V01.0.684, standardmäßig aus): Funktionen, die bei dir schon an sind, die du aber nie benutzt, weil du das Wort nicht kennst („Mal mir …“, „Ruf mich morgen um sieben an“), zeigt der Spark mit einem Beispielsatz zum Antippen. Ein Tipp setzt den Satz nur ins Eingabefeld, du schickst ihn selbst ab; er läuft dann wie getippt durch die Weiche und jede Regel. Welche Sätze kommen, entscheiden feste Regeln im Panel (saetze.py), nie das Modell; die Sätze stehen fest im Code, deutsch und englisch, in derselben Liste, die test_werkzeug_abdeckung prüft (werkzeug_abdeckung.SENTENCES, jeder Satz landet wirklich beim Werkzeug). Vorgeschlagen wird nur, was features.allowed für dein Profil erlaubt, was eingerichtet ist (Kalender, Postfach) und was am Gerät geht. Wo es auftaucht: (1) unter der Antwort bis zu drei passende Folgesätze (feste Tabelle, z. B. nach dem Wetter „Erinnere mich morgen früh an den Schirm“, nach einem Bild „Mach den Hintergrund blau“), nur Werkzeuge, die du noch nie benutzt hast; (2) „Probier mal“ im leeren Chat: drei Sätze, jede Woche andere; (3) „Meintest du …?“ bei Wörtern, die die Weiche nicht kennt, aber nahe liegen (z. B. „klingel mich“ → Anruf, "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
+"text": "„denk an …“ → Erinnerung); das ist nur ein Vorschlag, die Weiche schaltet dadurch nichts; (4) „Was kannst du?“ nennt Beispielsätze, die bei dir gehen; (5) Ich → Was ich kann: alle Sätze nach Bereichen, mit Suchfeld, „neu“ und „noch nie benutzt“, auch in den Apps; (6) neu freigegeben ohne Einrichten: einmal „Neu bei dir: …“ unter der nächsten Antwort; (7) beim Sprechen (Lautsprecher, Telefon, Uhr, Siri, CarPlay) höchstens ein kurzer Satz am Ende einer Antwort pro Tag, nur Funktionen, die per Stimme gehen (eigener Schalter „Tipps beim Sprechen“, je Profil unter Ich → Gespräch abschaltbar); (8) Telegram als Antworttasten, TUI als Zeile „Tipp: …“ und /tipps; (9) der Wochenhinweis unter Von selbst bringt einen „Satz der Woche“, wenn es nichts einzurichten gibt; (10) für den Admin zeigt Funktionen → Weiche „Was keiner findet“: freigegebene Funktionen, die 30 Tage niemand benutzt hat, und wie oft Vorschläge gezeigt und getippt wurden. Sparsam: eine Zeile pro Antwort, ein Satz pro Werkzeug höchstens alle 14 Tage, sechs am Tag, nie nach Text aus Mail oder Web, nie im Notaus, nie für Gäste. Gespeichert wird pro Profil nur, welches Werkzeug wann benutzt und welcher Satz gezeigt wurde (tipps.j"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
+"text": "son, Namen und Zahlen, nie Fragen); Ich → Was ich kann → „Meine Zählung löschen“ löscht es. Schalter: Funktionen → unter „Funktionen vorschlagen“ „Das kannst du auch sagen“ und darunter „Tipps beim Sprechen“. Protokoll: Zeilen tipps:; Zustand → Live Ereignisse „Funktionen vorschlagen“ (gezeigt, getippt), nie Inhalte. Plan: plaene/funktionen-zeigen.md; Tests: app/tests/test_saetze.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Werkzeug-Abdeckung (Plan `plaene/werkzeug-abdeckung.md`, Dominik 13.10.)",
 "text": "Werkzeug-Abdeckung (Plan plaene/werkzeug-abdeckung.md, Dominik 13.10.): Jede Funktion steht in werkzeug_abdeckung.py mit ihren Werkzeugen, mit der festen Regel des Panels, die sie beantwortet, oder mit dem Grund, warum es nichts zu fragen gibt; ein Selbsttest hält die Liste vollständig. Die Weiche wirft keine Werkzeuge mehr weg, die ein Modul nur anbietet, weil die Person sie beim Namen nennt („… aufs reMarkable“, der Name eines eigenen MCP-Dienstes): Sie bleiben, welche Gruppe der Rest des Satzes auch ist („Leg meine Einkaufsliste aufs reMarkable“). Neu erkannt: Türen, Fenster, Waschmaschine, Trockner, Spülmaschine, Strom, Akku und Kamera (Smart Home), „Ruf Mama an“ und „Navigiere nach Hause“ (iPhone), „Hak Milch ab“ (Liste), „Was hab ich heute vor?“ und zusammengesetzte Termine (Kalender), „Postfach“ (Mail), „Bestellung“ (Pakete). „Schalte die Websuche ein“ geht als Frage zum Spark an die Hilfe mit ihrer Karte, nie an die Websuche. Behoben: „Lösch die Erinnerung …“ löschte nie etwas; „Ist der Raummodus im Wohnzimmer an?“ wurde zu einem Startvorschlag und sagt jetzt, welche Geräte gerade zuhören."
 },
@@ -8181,7 +8205,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of). 7. Request to /api/chat: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser. 8. Collect the answer: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer. 9. Output per channel: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fe"
+"text": " messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of). 7. Request to /api/chat: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser. 8. Collect the answer: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ become reply buttons. 9. Output per channel: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown a"
 },
 {
 "lang": "en",
@@ -8189,7 +8213,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "wer secrets. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel."
+"text": "nd also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel."
 },
 {
 "lang": "en",
@@ -8893,7 +8917,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once."
+"text": "s own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once."
 },
 {
 "lang": "en",
@@ -12230,6 +12254,30 @@
 "head": "Voice chat",
 "title": "Suggesting functions (V01.0.380, off by default)",
 "text": " speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), released for every profile; the note by itself can be switched off under Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Suggesting functions\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "You can also say (V01.0.684, off by default)",
+"text": "You can also say (V01.0.684, off by default): functions that are already on for you but that you never use because you do not know the word (\"Draw me …\", \"Call me tomorrow at seven\") are shown with an example sentence to tap. A tap only puts the sentence into the input field; you send it yourself, and it then goes through the Weiche and every rule like a typed question. Which sentences come is decided by fixed rules in the panel (saetze.py), never by the model; the sentences are fixed in the code, German and English, in the same list test_werkzeug_abdeckung checks (werkzeug_abdeckung.SENTENCES, every sentence really reaches its tool). Only what features.allowed permits for your profile, what is set up (calendar, mailbox) and what works on the device is suggested. Where it shows: (1) under the answer up to three matching follow-up sentences (a fixed table, e.g. after the weather \"Remind me of the umbrella tomorrow morning\", after a picture \"Make the background blue\"), only tools you never used; (2) \"Try this\" in an empty chat: three sentences, different ones each week; (3) \"Did you mean …?\" for words the Weiche does not know but that are close (e.g. \"ring me\" → call, \"think of …\" → "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "You can also say (V01.0.684, off by default)",
+"text": "reminder); this is only a suggestion, the Weiche switches nothing because of it; (4) \"What can you do?\" names example sentences that work for you; (5) Me → What I can do: all sentences by area, with a search field, \"new\" and \"never used\", in the apps too; (6) newly released without setup: once \"New for you: …\" under the next answer; (7) while talking (speaker, phone, watch, Siri, CarPlay) at most one short sentence at the end of an answer per day, only functions that work by voice (own switch \"Tips while talking\", each profile can switch it off under Me → Conversation); (8) Telegram as reply buttons, TUI as a line \"Tip: …\" and /tipps; (9) the weekly note under On its own brings a \"sentence of the week\" when there is nothing to set up; (10) for the admin Features → Weiche shows \"Nobody finds it\": released functions nobody used for 30 days, and how often suggestions were shown and tapped. Sparing: one row per answer, one sentence per tool at most every 14 days, six a day, never after text from mail or web, never in the emergency stop, never for guests. Stored per profile is only which tool was used when and which sentence was shown (tipps.json, names and numbers, never questions); Me"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "You can also say (V01.0.684, off by default)",
+"text": " → What I can do → \"Delete my count\" deletes it. Switches: Features → below \"Suggesting functions\" \"You can also say\" and below it \"Tips while talking\". Log: lines tipps:; Status → Live events \"Funktionen vorschlagen\" (shown, tapped), never contents. Plan: plaene/funktionen-zeigen.md; tests: app/tests/test_saetze.py."
 },
 {
 "lang": "en",

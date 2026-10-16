@@ -185,6 +185,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken von Zuordnungen |
 | `app/panel/llm.py` | Der eine Weg zum Sprachmodell: Adresse, Schlüssel, Modellname, Aufruf |
 | `app/panel/roles.py` | Rollen: wie der Assistent antworten soll |
+| `app/panel/saetze.py` | Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden |
 | `app/panel/schreib.py` | Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen |
 | `app/panel/stille.py` | Aus Stille werden nie Wörter |
 | `app/panel/stufe.py` | Vorrang für Personen in der Warteschlange der Sprachausgabe |
@@ -760,7 +761,7 @@ flowchart TD
   s7 -->|nein| s7x
   s8x(["Gerade nicht (503)"])
   s8 -->|ja| s8x
-  s9x(["Terminal-Client: Schlüssel-Bereich „tui“, nur 11 Regeln (Chat, Gespräche, Heute, Aufträge)"])
+  s9x(["Terminal-Client: Schlüssel-Bereich „tui“, nur 12 Regeln (Chat, Gespräche, Heute, Aufträge)"])
   s9 -->|Terminal| s9x
   s10x(["Nur im eigenen Browser (403)"])
   s10 -->|ja| s10x
@@ -882,7 +883,7 @@ flowchart TD
 5. <a id="kn-kanaele-s5"></a>**Sprachnachricht in Text**: Eine Telegram-Sprachnachricht wird mit Größengrenze geladen, mit ffmpeg zu WAV gewandelt (Länge begrenzt) und von der Spracherkennung des Spark gelesen. Bei Siri diktiert das iPhone, bei der Uhr das Handy.
 6. <a id="kn-kanaele-s6"></a>**Kurzer Verlauf**: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of).
 7. <a id="kn-kanaele-s7"></a>**Anfrage an /api/chat**: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser.
-8. <a id="kn-kanaele-s8"></a>**Antwort einsammeln**: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen.
+8. <a id="kn-kanaele-s8"></a>**Antwort einsammeln**: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten.
 9. <a id="kn-kanaele-s9"></a>**Ausgabe je Kanal**: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind.
 10. <a id="kn-kanaele-s10"></a>**Codewort schwärzen**: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen.
 11. <a id="kn-kanaele-s11"></a>**Im Verlauf des Profils**: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal.
@@ -1728,7 +1729,7 @@ flowchart TD
 10. <a id="kn-antwort-s10"></a>**Werkzeug gewünscht?**: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg.
 11. <a id="kn-antwort-s11"></a>**Werkzeuge ausführen**: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage.
 12. <a id="kn-antwort-s12"></a>**Ehrliche Schlusssätze**: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell.
-13. <a id="kn-antwort-s13"></a>**Nachfragen des Panels**: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Das Werkzeug-Log des Profils wird geschrieben.
+13. <a id="kn-antwort-s13"></a>**Nachfragen des Panels**: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben.
 14. <a id="kn-antwort-s14"></a>**Strom endet**: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort.
 
 **Beispiele:** Plaudern ohne Werkzeug: Gesprochen ab dem ersten Satz, keine Prüfung greift. · Termine von morgen: Das Modell ruft den Kalender, die nächste Runde antwortet aus dem Ergebnis. · Erfundene Uhrzeit: Der Satz mit der Uhrzeit wird nie gesagt, dafür ein ehrlicher Satz. · „Licht ist an“, Schalten scheiterte: Statt der Behauptung: „Das hat nicht geklappt: …“.

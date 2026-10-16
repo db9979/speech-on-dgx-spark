@@ -1094,6 +1094,12 @@ def answer_text(question, uid, level="profile", page=None, lang="de", request=No
     if can and private:   # "Was kannst du?": what is on for this person, from the function register
         mine = [(f.de, f.en)[li] for f in features.FEATURES if not f.parent and features.reason(f.key, uid, c) is None]
         lines.append(("Bei dir an: " if li == 0 else "On for you: ") + (", ".join(mine[:40]) or "-"))
+        import saetze   # „Das kannst du auch sagen“: per area one sentence the person can say, the panel's fixed ones
+        if uid and features.allowed(saetze.KEY, uid, c):
+            ex = [f"{(a['name'][li])}: „{a['items'][0]['text'][li]}“" for a in saetze.kann(uid, c, org)]
+            if ex:
+                lines.append(("Beispielsätze, die bei dir gehen (nenne einige davon): " if li == 0 else
+                              "Example sentences that work for you (name some of them): ") + "; ".join(ex[:10]))
         if level == "profile":
             ask = [(f.de, f.en)[li] for f in features.FEATURES if f.pref and features.reason(f.key, uid, c) == "profile"]
             if ask:

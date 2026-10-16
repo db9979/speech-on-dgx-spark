@@ -176,6 +176,7 @@ def push_on(uid, private=False):
 
 # ---------------------------------------------------------------- talking to the assistant
 _keys = {}   # uid -> the buttons for the panel's question in the answer just made (sent with it, then gone)
+_offered = {}   # uid -> {sentence: tool} of the last „Das kannst du auch sagen“ keys: a tap counts for that tool
 MAX_KEYS = 24
 
 
@@ -194,6 +195,14 @@ def keyboard(ev):
     return {"keyboard": rows, "one_time_keyboard": True, "resize_keyboard": True} if rows else None
 
 
+def more_keys(ev):
+    """„Das kannst du auch sagen“ (saetze.py) in Telegram: the panel's sentences as a one-time reply keyboard. saetze.row
+    already left out every sentence that changes something, since a tap here sends it at once like a typed message."""
+    rows = [[{"text": str((x.get("text") or [""])[0])[:60]}] for x in (ev.get("items") or [])[:MAX_KEYS]
+            if isinstance(x, dict) and (x.get("text") or [""])[0]]
+    return {"keyboard": rows, "one_time_keyboard": True, "resize_keyboard": True} if rows else None
+
+
 def take_keys(uid):
     return _keys.pop(uid, None)
 
@@ -203,6 +212,7 @@ async def ask(uid, text, pictures=None):
     import chat
     from starlette.requests import Request
     _keys.pop(uid, None)
+    tapped = _offered.pop(uid, {}).get(text)
     now = time.time()
     last = _history.get(uid)
     history = last[1][-8:] if last and now - last[0] < FOLLOW_UP else []
@@ -211,6 +221,8 @@ async def ask(uid, text, pictures=None):
             "tz": s.get("tz", "")}
     if pictures:
         body["images"] = pictures
+    if tapped:
+        body["more"] = tapped
     data = json.dumps(body).encode()
     # the profile is set by the panel itself (an HTTP request can never put this key into its scope)
     scope = {"type": "http", "method": "POST", "path": "/api/chat", "headers": [], "query_string": b"",
@@ -240,6 +252,10 @@ async def ask(uid, text, pictures=None):
                 error = "Der Spark konnte gerade nicht antworten."
             elif ev.get("type") == "choice":   # the panel asks which one (klaeren.py): buttons under the answer
                 _keys[uid] = keyboard(ev)
+            elif ev.get("type") == "more" and uid not in _keys:   # a question of the panel's own goes first
+                _keys[uid] = more_keys(ev)
+                _offered[uid] = {str((x.get("text") or [""])[0])[:60]: x.get("tool") for x in (ev.get("items") or [])
+                                 if isinstance(x, dict)}
     # Telegram shows no Markdown (no parse_mode): the text without its signs (textnorm.plain_markdown)
     answer = plain_markdown(answer.strip()) or error or "Dazu habe ich keine Antwort."
     import homeassistant

@@ -42,6 +42,7 @@ GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkei
 # the pages of Ich, in their order: the one list for the panel (me.js meAll, guides.js ME_NAME) and the apps
 # (/api/features "pages"); test_app_gleichstand keeps the copies equal (Richtlinie Teil 1 Zeile 18, Dominik 2026-10-14)
 ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My status"), ("gobox", "Los geht's", "Let's go"),
+            ("kannbox", "Was ich kann", "What I can do"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
@@ -113,6 +114,11 @@ FEATURES = (
       parent="hilfe", me="setbox", guide="tipps"),
     F("tippspush", "Funktionen vorschlagen von selbst", "Suggesting functions by itself", "day",
       ("feature_tips_push", "feature_tips"), pref="pro_tips", parent="proactive", me="probox", guide="tippspush"),
+    # saetze.py: functions that are on but never used, with a sentence to say (Ich → Was ich kann)
+    F("tippssaetze", "Das kannst du auch sagen", "You can also say", "talk", ("feature_sentences",),
+      parent="tipps", me="kannbox", guide="tippssaetze"),
+    F("tippsstimme", "Tipps beim Sprechen", "Tips while talking", "talk", ("feature_sentences_voice",),
+      pref="voice_tips", parent="tippssaetze", me="setbox", guide="tippsstimme"),
     # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
     F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",), me="setbox", guide="einordnung"),
     F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "speed",

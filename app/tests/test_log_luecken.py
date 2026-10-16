@@ -182,6 +182,7 @@ PRINT_OK = {
 }
 # functions behind a Notaus gate that write no line themselves, each with where its line comes from
 ACTION_OK = {
+    ("saetze.py", "start"): "liest nur und gibt drei feste Sätze zurück, nichts geschieht; die Notaus-Frage hält nur Vorschläge zurück",
     ("aendern.py", "set_volume"): "volume schreibt „aendern: lautstaerke …“, das Rückgängig answer seine Zeile",
     ("aendern.py", "undo"): "answer schreibt „aendern: rueckgaengig … ok|fehler“",
     ("begleiter.py", "asked"): "startet begleiter.check, das seine Zeile schreibt",

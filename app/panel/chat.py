@@ -2168,6 +2168,15 @@ async def _answer(request, turn):
             # "Vorab holen bei Rückfrage" (vorab.py): the answer asks back, the panel already fetches by fixed rules
             # what the next answer will most likely read, while the question is being spoken
             vorab.after(turn, trace["said"], st, trace["calls"], tr)
+            # „Tipps beim Sprechen“ (saetze.py): at a speaker, phone or in the car one fixed sentence a day at the end
+            if trace["said"].strip() and not st["mail"] and not st["outside"]:
+                import saetze
+                tip = saetze.spoken(turn, trace["calls"], guess_language(messages[-1]["content"]) == "English")
+                if tip:
+                    trace["calls"].append({"name": "Beispielsatz (Panel)", "args": "", "result": "gesagt"})
+                    await out.put({"type": "text", "delta": " " + tip})
+                    trace["said"] += " " + tip
+                    await sentences.put(tip)
             zeit = verbrauch.warn(who["id"]) if who else ""
             if zeit:   # Kontingent (verbrauch.py): one fixed sentence under the answer, once per period
                 note = verbrauch.warn_text(zeit, guess_language(messages[-1]["content"]) == "English")
@@ -2698,6 +2707,15 @@ async def _answer(request, turn):
                 systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
+            # „Das kannst du auch sagen“ (saetze.py): the panel's fixed sentences under the answer, never the model's
+            try:
+                import saetze
+                more = await asyncio.to_thread(saetze.row, turn, trace["calls"], outside) if trace["said"].strip() else None
+            except Exception as e:
+                print("tipps: Beispielsätze", type(e).__name__, flush=True)
+                more = None
+            if more:
+                yield f"data: {json.dumps(more)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:

@@ -19,6 +19,14 @@ enum ChatEvent {
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
+    case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
+}
+
+/// „Das kannst du auch sagen“ (saetze.py): a sentence the person can say, and the tool it is for (only its name
+/// goes back when the sentence is sent as it was suggested).
+struct MoreItem: Hashable {
+    let text: String
+    let tool: String
 }
 
 struct Reminder {
@@ -753,7 +761,7 @@ struct SparkAPI {
     }
 
     func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil,
-              speak: Bool = true) -> AsyncThrowingStream<ChatEvent, Error> {
+              speak: Bool = true, more: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -769,6 +777,7 @@ struct SparkAPI {
                         var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
                         if car { body["car"] = true }
                         if !speak { body["speak"] = false }
+                        if let m = more { body["more"] = m }
                         if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars)),
                                                                 "cut": a.text.count > Reader.chatChars] }
                         if !ids.isEmpty { body["images"] = ids }
@@ -823,6 +832,17 @@ struct SparkAPI {
                             if let j = ev["job"] as? String, Self.isJob(j) {
                                 cont.yield(.picture(job: j, prompt: String((ev["prompt"] as? String ?? "").prefix(300))))
                             }
+                        case "more":
+                            // only plain sentences in the app's language and tool names of letters and "_", at most 12
+                            let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
+                            let items = (ev["items"] as? [[String: Any]] ?? []).prefix(12).compactMap { x -> MoreItem? in
+                                guard let t = x["text"] as? [String], t.count == 2, let tool = x["tool"] as? String,
+                                      (1...40).contains(tool.count), tool.allSatisfy({ $0.isASCII && ($0.isLowercase || $0 == "_") })
+                                else { return nil }
+                                let s = String((de ? t[0] : t[1]).prefix(200))
+                                return s.isEmpty ? nil : MoreItem(text: s, tool: tool)
+                            }
+                            if !items.isEmpty { cont.yield(.more(kind: String((ev["kind"] as? String ?? "").prefix(10)), items: items)) }
                         case "rate":
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),

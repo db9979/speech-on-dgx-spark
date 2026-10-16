@@ -295,6 +295,9 @@ struct ChatView: View {
                             Bubble(message: m).id(m.id)
                             if m.role != "user", let j = m.picJob { PictureCard(job: j) }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
+                            if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
+                                MoreRow(kind: m.moreKind ?? "", items: more)
+                            }
                         }
                     }
                     .padding()
@@ -332,6 +335,9 @@ struct ChatView: View {
                     .disabled(talk.reading)
                     TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
                         .textFieldStyle(.roundedBorder)
+                        .onChange(of: talk.suggestion) {
+                            if let s = talk.suggestion { typed = s; talk.suggestion = nil }
+                        }
                         .submitLabel(.send)
                         .onSubmit(send)
                     Button(action: send) { Image(systemName: "paperplane.fill") }
@@ -689,6 +695,32 @@ struct PictureCard: View {
 
 /// 👍/👎 under an answer (Einstellungs-Assistent, only when the Spark sent an id for it): 👎 opens five reasons,
 /// a short text and „Frage mitschicken“ (off: the case keeps no words of the question).
+/// „Das kannst du auch sagen“ (saetze.py): the Spark's sentences under the last answer; a tap puts one into the field.
+struct MoreRow: View {
+    let kind: String
+    let items: [MoreItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(kind == "near" ? LocalizedStringKey("Meintest du:") : kind == "new" ? LocalizedStringKey("Neu bei dir:")
+                 : LocalizedStringKey("Das kannst du auch sagen:"))
+                .font(.caption).foregroundStyle(.secondary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(items, id: \.self) { x in
+                        Button { Conversation.shared.suggest(x) } label: {
+                            Text(verbatim: x.text).font(.footnote).lineLimit(1)
+                        }
+                        .buttonStyle(.bordered)
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+        }
+        .padding(.leading, 6)
+    }
+}
+
 struct RateBar: View {
     let message: Conversation.Message
     @State private var sheet = false

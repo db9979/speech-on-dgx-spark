@@ -65,7 +65,7 @@ window.pageIcon=icon;
 const MEG={talk:['violet','M4 5h16v11H9l-5 4z'],speed:['violet','M13 3L5 14h6l-1 7 8-11h-6z'],data:['blue','M5 6c0-1.7 3-3 7-3s7 1.3 7 3-3 3-7 3-7-1.3-7-3zM5 6v12c0 1.7 3 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3 3 7 3s7-1.3 7-3'],
   day:['amber','M4 6h16v14H4zM4 10h16M9 3v4M15 3v4'],post:['blue','M3 6h18v12H3zM3 7l9 6 9-6'],home:['green','M4 11l8-7 8 7M6 10v10h12V10'],
   go:['teal','M8 3h8v18H8zM11 18h2'],sec:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4']};
-const MEI={overbox:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],gobox:['green','M5 21V4h11l-2 4 2 4H5'],setbox:['violet','M4 5h16v11H9l-5 4z'],
+const MEI={overbox:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],gobox:['green','M5 21V4h11l-2 4 2 4H5'],kannbox:['amber','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],setbox:['violet','M4 5h16v11H9l-5 4z'],
   loginbox:['gray','M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0'],bgbox:['red','M3 12h4l3-7 4 14 3-7h4'],usebox:['blue','M4 20V10M10 20V4M16 20v-7M22 20H2'],telbox:['green','M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2'],logbox:['gray','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],
   secbox:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4'],voicebox:['teal','M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2'],rpbox:['amber','M12 8v5M12 16h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z']};
 function meIcons(){const nav=$('ptabs');if(!nav)return;nav.querySelectorAll('button[data-t]').forEach(b=>{if(b.querySelector('.cic'))return;

@@ -70,6 +70,7 @@ class Spark:
     def __init__(self, conf, timeout=15):
         self.conf, self.timeout = conf, timeout
         self.base = None
+        self.more = []   # the panel's sentences under the last answer („Das kannst du auch sagen“)
 
     def _connect(self, url, fp, timeout):
         u = urllib.parse.urlsplit(url)
@@ -136,6 +137,7 @@ class Spark:
             body["convo"] = convo
         conn, r = self.open("POST", "/api/chat", body, timeout=600, stream=True)
         text = ""
+        self.more = []
         try:
             for raw in r:
                 if stop and stop.is_set():
@@ -154,6 +156,10 @@ class Spark:
                     text = text[:max(0, len(text) - ev["drop"])]
                 elif kind == "error":
                     raise SparkError(str(ev.get("message") or "Fehler beim Spark.")[:300])
+                elif kind == "more" and isinstance(ev.get("items"), list):   # shown as one grey tip line
+                    self.more = [str((x.get("text") or [""])[0])[:200] for x in ev["items"][:3]
+                                 if isinstance(x, dict) and isinstance(x.get("text"), list) and x["text"]]
+                    continue
                 elif kind == "done":
                     break
                 else:
@@ -561,6 +567,9 @@ def run_window(sp, conf, App):
             if not q or self.busy:
                 return
             event.input.value = ""
+            if q.lower() in ("/tipps", "/tips"):   # what this profile can say (Ich → Was ich kann)
+                self.show_tips()
+                return
             if not self.convo:
                 self.convo = {"id": new_convo_id(), "title": title_of(q), "msgs": []}
             msgs = [{"role": m["role"], "content": m["content"]} for m in self.convo["msgs"]][-30:] + [{"role": "user", "content": q}]
@@ -580,7 +589,8 @@ def run_window(sp, conf, App):
                         self.call_from_thread(out.update, text + " ▍")
                 try:
                     answer = sp.ask(msgs, convo["id"], piece, self.stop)
-                    self.call_from_thread(out.update, answer or "_(keine Antwort)_")
+                    tip = ("\n\n_Tipp: " + " · ".join(f"„{s}“" for s in sp.more) + " · /tipps_") if sp.more and answer else ""
+                    self.call_from_thread(out.update, (answer or "_(keine Antwort)_") + tip)
                     news = [{"role": "user", "content": q}, {"role": "assistant", "content": answer}] if answer else []
                     if news:
                         convo["msgs"] += news
@@ -595,6 +605,24 @@ def run_window(sp, conf, App):
                     self.call_from_thread(who.update, "Spark")
                     self.call_from_thread(self.query_one("#log").scroll_end, animate=False)
                     self.call_from_thread(self.refresh_side)
+            self.bg(run)
+
+        def show_tips(self):
+            """/tipps: per area the sentences this profile can say, from the panel (GET /api/profile/saetze)."""
+            self.add_msg("Du", "/tipps", me=True)
+            out = self.add_msg("Spark", "…")
+
+            def run():
+                try:
+                    d = sp.call("GET", "/api/profile/saetze")
+                    if not d.get("on"):
+                        text = "_Beispielsätze sind aus (Funktionen → „Das kannst du auch sagen“)._"
+                    else:
+                        text = "\n\n".join(f"**{a['name'][0]}**\n" + "\n".join(f"- {x['text'][0]}" for x in a["items"])
+                                           for a in d.get("areas", [])) or "_Gerade ist nichts freigegeben._"
+                except (SparkError, OSError, KeyError, TypeError) as e:
+                    text = f"**Nicht geklappt:** {e}"
+                self.call_from_thread(out.update, text)
             self.bg(run)
 
         def action_stop(self):

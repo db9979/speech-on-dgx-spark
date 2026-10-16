@@ -1353,6 +1353,10 @@ textarea.factedit{width:100%;margin:0 0 6px}
 
 /* Rückfrage statt Raten (klaeren.py): buttons or the list under the assistant's question */
 .choice{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+/* „Das kannst du auch sagen“ (saetze.js): the sentences under an answer, „Probier mal“, Ich → Was ich kann */
+.more{margin-top:10px}.more .choice{margin-top:4px}.more .moreh{font-size:12px}
+.morestart{margin:18px auto;max-width:560px;text-align:center}.morestart .choice{justify-content:center}
+#kannq{width:100%;margin:8px 0}.kannrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0}.kannrow .chb{text-align:left}
 .choice .chb{border-radius:999px;border-color:var(--acc);color:var(--acc);font-weight:600}
 .choice .chb.chnone{border-color:var(--line);color:var(--mut);font-weight:400}
 .choice .chb.on{background:var(--acc);color:#fff}

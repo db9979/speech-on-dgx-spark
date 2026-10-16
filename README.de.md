@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.684** Das kannst du auch sagen: Beispielsätze für Funktionen, die bei dir an sind, aber nie benutzt werden („Mal mir …“), unter der Antwort, im leeren Chat und unter Ich → Was ich kann
 - **V01.0.683** Bilder: Karte im Chat bleibt nicht mehr bei „wartet …“; Karikatur und Comic gelten als Bildwunsch
 - **V01.0.682** Steuerzentrale am Bildschirm: der Panel-Rechner zeigt am HDMI-Ausgang alles auf einer Textanzeige, startet beim Booten ohne Anmeldung
 - **V01.0.681** Musik testen: Lieder entstehen (Auftrags-Nummer und Modellnamen so, wie ace-server sie schickt und erwartet)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.677** Fix iPhone-App: CarPlay-Gesicht baut wieder (Typfehler im Standbild)
 - **V01.0.676** CarPlay: Apple hat die Freigabe erteilt, die iPhone-App erscheint jetzt mit eigenem Symbol im Auto, mit dem gewählten Gesicht je Zustand
 - **V01.0.675** Musik testen findet die Modelle im Musik-Ordner; die Musik-Engine bindet ggml fest ein (fehlende Bibliotheken nach dem Bau)
-- **V01.0.674** Fix: Leistung messen klappt bei getrennten Rechnern (Sprache und Sprachmodell über die Türen zum Modell-Rechner); kein „Alles flüssig“, wenn ein Teil fehlt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

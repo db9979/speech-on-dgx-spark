@@ -110,7 +110,7 @@ class Coverage(unittest.TestCase):
         self.assertEqual(sorted(t for t in grouped if t in chat_tools() and t not in wa.SENTENCES
                                 and not any(t in wa.TOOLS[k] and t != wa.TOOLS[k][0] for k in wa.TOOLS)), [],
                          "Testsatz fehlt (werkzeug_abdeckung.SENTENCES)")
-        for tool, sentence in wa.SENTENCES.items():
+        for tool, (sentence, _en) in wa.SENTENCES.items():
             route = intent.classify(sentence)
             self.assertIn(tool, route.tools(), f"{sentence!r} -> {route.label()}")
 

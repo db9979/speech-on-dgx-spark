@@ -140,6 +140,8 @@
     "undo_voice": false,
     "berater_why": false,
     "feature_tips_push": false,
+    "feature_sentences": false,
+    "feature_sentences_voice": false,
     "route_words": "",
     "route_not": "",
     "route_extra": "",
