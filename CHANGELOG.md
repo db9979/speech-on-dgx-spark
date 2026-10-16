@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.648** · 2026-10-16 · ROT-FIX .647: Gehäuse-Felder Drehung und Seiten gehen als Zahl und Liste (Speichern unter Funktionen ging nicht), sudoers-Zeile des Modellwechsels wieder unverändert
 - **V01.0.647** · 2026-10-15 · Gehäuse des Panel-Rechners (Pironman 5, B7a, neu, aus): Display mit fünf Seiten, LEDs in der Statusfarbe, Lüftergrenze; Funktionen → Gehäuse oder install.sh --gehaeuse pironman5
 - **V01.0.646** · 2026-10-15 · Terminal-Client spark-tui (neu, aus): Chat, Gespräche, Heute und Aufträge im Terminal, etwa auf der uConsole; Kopplung unter Ich → Terminal mit festgepinntem Zertifikat oder externer Adresse
 - **V01.0.645** · 2026-10-15 · Verbessern: Speicher-Melder nimmt den Speicher des Modell-Rechners; Fehler beim Nachsehen nennen die Stelle im Code

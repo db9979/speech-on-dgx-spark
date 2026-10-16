@@ -177,6 +177,24 @@ class Anzeige(Base):
         self.assertIn("mindestens eine", gehaeuse.check({"gehaeuse_seiten_aus": [k for k, _, _ in gehaeuse.SEITEN]}))
 
 
+    def test_number_fields_are_sent_as_numbers(self):
+        """V01.0.648: the select of the rotation had a bare data-num (an empty dataset value counts as false in
+        admin.js), so it sent "0" and saving Funktionen was refused (the list of pages likewise with a bare data-list):
+        every number setting of the case has type=number or data-num="1", the list data-list="1"."""
+        import re
+        with open(os.path.join(APP, "config.default.json"), encoding="utf-8") as f:
+            chat = json.load(f)["chat"]
+        with open(os.path.join(APP, "panel", "static", "index.html"), encoding="utf-8") as f:
+            html = f.read()
+        nums = [k for k, v in chat.items() if k.startswith("gehaeuse_") and isinstance(v, int) and not isinstance(v, bool)]
+        self.assertIn("gehaeuse_drehung", nums)
+        for k in nums:
+            m = re.search(r'<(?:input|select)[^>]*id="chat\.%s"[^>]*>' % k, html)
+            if m:
+                self.assertTrue('type="number"' in m.group(0) or 'data-num="1"' in m.group(0), m.group(0))
+        m = re.search(r'<input[^>]*id="chat\.gehaeuse_seiten_aus"[^>]*>', html)   # a list goes as a list (data-list="1")
+        self.assertIn('data-list="1"', m.group(0))
+
 class Wunsch(Base):
     def test_only_a_fresh_wish_with_the_switch_on(self):
         self.on(gehaeuse_luefter_an=60, gehaeuse_luefter_aus=50)
