@@ -23,7 +23,7 @@ from collections import deque
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import rechner  # noqa: E402
-from common import OWN_LLM_UNITS, UNITS, run  # noqa: E402
+from common import ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, run  # noqa: E402
 
 VERLAUF = 400          # samples per computer, one every 3 s (the sampler): 20 minutes
 PUNKTE = 100           # points per curve on the page
@@ -33,7 +33,7 @@ PLATTE_MIN_PCT = 10    # % free disk on either computer
 RAM_MIN_GIB = 0.5      # GiB available memory on the panel computer (the model computer has its own 8 GiB rule)
 DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 # the model computer's parts shown as chips (its status "einheiten"), the panel computer's own units
-MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen")
+MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "bild", "musik")
 PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
                "schirm": "speech-spark-schirm"}
 ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": (0, 65536), "ram_frei": (0, 65536),
@@ -200,7 +200,7 @@ def _dienste_modell(d):
     units = (d or {}).get("einheiten") or {}
     out = []
     for teil in MODELL_TEILE:
-        st = (units.get(UNITS.get(teil) or OWN_LLM_UNITS.get(teil)) or {}).get("state")
+        st = (units.get(UNITS.get(teil) or OWN_LLM_UNITS.get(teil) or ON_DEMAND_UNITS.get(teil)) or {}).get("state")
         if isinstance(st, str) and st != "unknown" and st.replace("-", "").isalpha() and len(st) <= 20:
             out.append({"id": teil, "state": st})
     return out + ([{"id": "waerter", "state": "active"}] if d else [])

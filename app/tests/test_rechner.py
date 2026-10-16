@@ -131,7 +131,8 @@ class Karten(unittest.TestCase):
             self.addCleanup(p.stop)
         self.status = {"version": "V01.0.700", "gpu": {"util": 12.0, "temp": 58.0, "power": 41.0, "name": "GB10"},
                        "einheiten": {"speech-spark-asr": {"state": "active"}, "speech-spark-tts": {"state": "failed"},
-                                     "speech-spark-llm": {"state": "active"}, "speech-spark-sehen": {"state": "unknown"}},
+                                     "speech-spark-llm": {"state": "active"}, "speech-spark-sehen": {"state": "unknown"},
+                                     "speech-spark-musik": {"state": "active"}},
                        "modellwahl": {"llm": {"modell": "RadixArk/qwen38-27b-nvfp4", "enabled": True}},
                        "rechner": messung()}
         p = mock.patch.object(steuer, "cached", side_effect=lambda **kw: self.status)
@@ -166,7 +167,8 @@ class Karten(unittest.TestCase):
         self.assertEqual(m["llm"], "qwen38-27b-nvfp4")
         self.assertEqual((m["netz_rx_mbs"], m["netz_tx_mbs"]), (1.0, 0.1))
         self.assertEqual(m["dienste"], [{"id": "asr", "state": "active"}, {"id": "tts", "state": "failed"},
-                                        {"id": "llm", "state": "active"}, {"id": "waerter", "state": "active"}])
+                                        {"id": "llm", "state": "active"}, {"id": "musik", "state": "active"},
+                                        {"id": "waerter", "state": "active"}])   # Musik machen on the model computer
         self.assertEqual(p["dienste"], [{"id": "panel", "state": "active"}, {"id": "turn", "state": "active"}])
         self.assertEqual((m["stufe"], p["stufe"]), ("ok", "ok"))
         self.assertEqual(p["temp_warn"], rechnerblick.TEMP_WARN)

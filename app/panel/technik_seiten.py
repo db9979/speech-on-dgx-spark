@@ -1091,7 +1091,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "c715f3d179",
+        "stand": "87db8be748",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1169,12 +1169,14 @@ SEITEN_DATEN = {
               ("Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug "
                "dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur "
                "ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt "
-               "das Panel am Ende seinen festen Satz (taten.announces). Gilt, wenn ein änderndes Werkzeug oder gar "
+               "das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art "
+               "später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar "
                "keines angeboten war.",
                "When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this "
                "answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer "
                "tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end "
-               "(taten.announces). Applies when a changing tool or none at all was offered."),
+               "(taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the "
+               "song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered."),
               ("info", "ja", ("Satz fällt weg, am Ende „hat nicht geklappt“", "Sentence dropped, „did not work“ at the end"))),
             S("s8", "schritt", ("Zeigen und sprechen", "Show and speak"),
               ("nie ein Satz zweimal", "never a sentence twice"),
@@ -1295,7 +1297,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b66f353a82",
+        "stand": "7f97ae2242",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1466,7 +1468,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "5dba6d97dd",
+        "stand": "192a79e70f",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -3976,7 +3978,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "df3881d5ff",
+        "stand": "f1ef44e3cb",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],

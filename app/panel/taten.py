@@ -91,6 +91,11 @@ CLAIMS = {
                  r"fortgesetzt|paused|deleted|undone|restored)\b",
     "ablegen": r"\b(?:liegt|liegen|ist|wurde|habe|hab)\b[^.!?]{0,40}\b(?:auf (?:der|deiner|die|deine) nas|im ablage-?ordner|"
                r"on (?:your|the) nas|in (?:your|the) filing folder)\b",
+    # „ich lasse den Song im Reggae-Stil neu anfertigen“ without musik_machen (Dominik 2026-10-16): a song is promised
+    "musik": r"\b(?:lied|song|musikstück|stück|track)\w*\b[^.!?]{0,60}\b(?:entsteht|anfertigen|angefertigt|neu machen|"
+             r"wird (?:gerade |jetzt |gleich )?(?:gemacht|erstellt|erzeugt|komponiert|angefertigt)|is being (?:made|created))\b"
+             r"|\bich\s+(?:mache|erstelle|erzeuge|komponiere|lasse|baue)\b[^.!?]{0,40}\b(?:lied|song|musikstück|track)\w*\b"
+             r"|\bi(?:'m| am| will|'ll)\s+(?:now\s+)?(?:mak|creat|compos)\w*\b[^.!?]{0,40}\b(?:song|track|tune)\b",
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
 }
 CLAIMS = {k: re.compile(v, re.I) for k, v in CLAIMS.items()}
@@ -148,7 +153,7 @@ WHAT = {"geraet": ("das Gerät", "the device"), "erinnerung": ("die Erinnerung",
         "termin": ("der Termin", "the appointment"), "mail_entwurf": ("der Mail-Entwurf", "the mail draft"),
         "dokument": ("das Dokument", "the document"), "remarkable": ("das reMarkable", "the reMarkable"),
         "nachricht": ("die Nachricht", "the message"), "merken": ("das Merken", "remembering it"),
-        "aufgabe": ("die Aufgabe", "the task"), "ablegen": ("das Ablegen auf der NAS", "filing it on the NAS"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
+        "aufgabe": ("die Aufgabe", "the task"), "ablegen": ("das Ablegen auf der NAS", "filing it on the NAS"), "musik": ("das Lied", "the song"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
 
 
 def sentence(art, status, en=False, what=""):

@@ -2108,6 +2108,11 @@ async def _answer(request, turn):
                 # an announcement before a tool call that did come: left out, the tool's answer says the rest
                 st["held_acts"].remove(taten.ANNOUNCED)
                 print("chat: action check: announcement left out, a tool ran", flush=True)
+            worked = {a["art"] for a in st["acts"] if a.get("ok")}
+            if any(k and k in worked for k in st["held_acts"]):
+                # „Ich mache das Lied.“ before the call that then worked: left out, the tool's answer says the rest
+                st["held_acts"] = [k for k in st["held_acts"] if not k or k not in worked]
+                print("chat: action check: claim left out, its tool worked later", flush=True)
             if st["held_acts"]:
                 # "Taten prüfen": a deed was claimed that no tool did; one fixed sentence instead (never the model's)
                 en = guess_language(messages[-1]["content"]) == "English"

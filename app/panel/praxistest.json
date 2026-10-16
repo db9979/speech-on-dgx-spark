@@ -1443,6 +1443,13 @@
 "titel": "Rundlauf-Wächter",
 "text": "A: Funktionen → Dienst-Wächter an, darunter „Rundlauf prüfen“ an, Abstand „alle 2 Minuten“. Nach ein paar Minuten: Zustand → Monitoring zeigt die Karte „Rundlauf“ mit Sprechen, Hören, Sprachmodell in ms und „kommt durch“. Zustand → Live zeigt das Ziel „Rundlauf“ mit den Zeiten. Dann auf tars die Sprachausgabe anhalten (sudo systemctl stop speech-spark-tts): nach zwei Läufen kommt die Mitteilung „Rundlauf: Sprechen antwortet nicht“, Braucht dich ist rot. Wieder starten: „läuft wieder durch“. Während eines Gesprächs steht „wartet: Gespräch läuft“. iPhone: Spark verwalten → Monitoring zeigt den Abschnitt Rundlauf.",
 "thread": "Verbesserungsideen"
+},
+{
+"id": "P230",
+"v": 700,
+"titel": "Musik: im Monitor und als neue Fassung",
+"text": "A: Ein Lied wünschen („Mach mir ein Pop-Lied über unseren Hund“). Solange es entsteht, steht es in Zustand → Live unter „Im Hintergrund“, Zustand → Monitoring und die Steuerzentrale zeigen den Musik-Dienst auf der Karte des Modell-Rechners. Ist es fertig, sagen: „geht das in Reggae-Style“. Es entsteht ein zweites Lied mit eigener Liedkarte. Fragt man nur „Wie lang ist das Lied?“, sagt der Spark nie, dass ein neues Lied entsteht.",
+"thread": "Musik erzeugen mit ACE-Step 1.5"
 }
 ]
 }

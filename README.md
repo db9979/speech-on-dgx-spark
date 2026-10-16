@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.700** Music: running songs on Live, Monitoring and the control centre; "can it be reggae style" makes a new song, no promise without the tool
 - **V01.0.699** Round-trip check: every few minutes a real test run through speaking, listening and the language model; if a step fails twice, the admins hear of it
 - **V01.0.698** Control centre: lines run under the boxes, finished answers stay for a moment
 - **V01.0.697** Hands-on test: Status → Hands-on test lists what is new and should still be tried, per point Works, Problem or Later; old points folded away
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.693** Measuring a fast first word: the own language model reports prefix cache hits; self-test on tars no longer fails in an app-only copy
 - **V01.0.692** Self-tests: one command before a push checks version, docs and the matching tests; the flaky failures in test_panel came from the same profile names in several test files
 - **V01.0.691** Fix: the control centre no longer stops the update on the panel computer
-- **V01.0.690** Fix: "Wie mache ich …?" no longer goes to the Spark help (since "Making music")
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

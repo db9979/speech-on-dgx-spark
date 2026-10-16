@@ -41,11 +41,15 @@ class Rules(unittest.TestCase):
                             ("Die Erinnerung ist gestellt.", {"erinnerung"}), ("Ich erinnere dich um 8.", {"erinnerung"}),
                             ("Die Nachricht an Anna ist gesendet.", {"nachricht"}), ("Habe ich mir gemerkt.", {"merken"}),
                             ("Das Dokument habe ich erstellt.", {"dokument"}), ("Erledigt.", {""}),
-                            ("The light is now on.", {"geraet"}), ("I'll remind you at 8.", {"erinnerung"})]:
+                            ("The light is now on.", {"geraet"}), ("I'll remind you at 8.", {"erinnerung"}),
+                            # Dominik 2026-10-16: a new song promised without musik_machen
+                            ("Klar, ich lasse den Song im Reggae-Stil neu anfertigen.", {"musik"}),
+                            ("Das Lied entsteht gerade.", {"musik"}), ("I'm making the song now.", {"musik"})]:
             self.assertEqual(taten.claims(text), kinds, text)
         for text in ["Soll ich das Licht einschalten?", "Möchtest du, dass ich es eintrage?", "Es ist jetzt 10 Uhr.",
                      "Der Fernseher ist nicht aus.", "Ich habe nachgesehen: Das Licht brennt.", "Hallo.",
-                     "Das hat nicht geklappt: Fernseher."]:
+                     "Das hat nicht geklappt: Fernseher.", "Soll ich das Lied im Reggae-Stil machen?",
+                     "Dein Lied liegt unter Ich → Musik.", "Ich kann kein Lied machen."]:
             self.assertEqual(taten.claims(text), set(), text)
 
     def test_check(self):
@@ -127,6 +131,15 @@ class Chat(unittest.TestCase):
         helpers.set_config(action_check=False)
         said, _ = ask(c, "SAY |x| Gut. Habe ich mir gemerkt.")
         self.assertIn("Habe ich mir gemerkt.", said)
+
+    def test_a_song_promised_without_the_tool_is_not_said(self):
+        c = profile("Taten6")
+        said, _ = ask(c, "SAY |x| Gerne. Ich lasse den Song im Reggae-Stil neu anfertigen.")
+        self.assertIn("Gerne.", said)
+        self.assertNotIn("anfertigen", said)
+        self.assertIn("Das habe ich nicht ausgeführt.", said)
+        # the same sentence before a call of that kind that worked is left out silently (chat.py)
+        self.assertEqual(taten.check("Ich mache das Lied.", [{"art": "musik", "ok": True}], {"musik_machen"}), [])
 
     def test_announced_tool_without_a_call_is_not_said(self):
         c = profile("Taten4")

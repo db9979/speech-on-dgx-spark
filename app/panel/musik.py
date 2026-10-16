@@ -72,8 +72,18 @@ WORDS = re.compile(
     r"|\b(mach\w*|erzeug\w*|generier\w*|make|generate)\s+(?:mir\s+|uns\s+|bitte\s+)*(?:etwas\s+|ein\s+bisschen\s+)?(?:eigene\s+)?musik\b(?!\s+an\b|\s+aus\b|\s+lauter|\s+leiser)")
 # „spiel“, „abspielen“, „lauter“: playing music somewhere, never making it
 PLAY = re.compile(r"(?i)\b(spiel\w*|abspiel\w*|play\w*|lauter|leiser|pausier\w*|stopp?\w*|nächste\w*|weiter)\b")
+# a change of the last song in the follow window: „nochmal“, „länger“, and a style or genre („geht das in Reggae
+# style“, Dominik 2026-10-16: without these words the tool was not offered and the model promised a song anyway)
 AGAIN = re.compile(r"(?i)\b(nochmal|noch einmal|noch ein|nochmals|anders|andere[nrs]?|aber|statt|lieber|länger|"
-                   r"kürzer|schneller|langsamer|ruhiger|fröhlicher|mit gesang|ohne gesang|again|another|instead|longer|shorter)\b")
+                   r"kürzer|schneller|langsamer|ruhiger|fröhlicher|mit gesang|ohne gesang|again|another|instead|longer|shorter|"
+                   r"geht das|kannst du das|stil\w*|style|version|variante|fassung|remix|genre|reggae|rock|jazz|pop|techno|"
+                   r"klassik\w*|classical|schlager|hip.?hop|metal|blues|country|funk|disco|soul|punk|folk|akustisch\w*|acoustic)\b")
+# a song named in the last answer or the person's words (also „Musik“): in the follow window the model gets NO_PROMISE
+SONG = re.compile(r"(?i)\b" + _SONG + r"\b")
+ABOUT = re.compile(r"(?i)\b(" + _SONG[1:-1] + r"|musik|music)\b")
+NO_PROMISE = ("In dieser Runde ist musik_machen nicht angeboten, es entsteht also kein Lied: sag nie, dass ein Lied "
+              "entsteht oder neu gemacht wird. Für eine andere Fassung soll die Person es sagen, z. B. „Mach das Lied "
+              "nochmal im Reggae-Stil“.")
 YES = re.compile(r"(?i)^\W*(ja|jo|jep|jawohl|ok|okay|passt|genau|gern|gerne|mach|los|klar|super|yes|yep|yeah|sure|fine)\b")
 YES_MAX = 120
 # fixed word list: nothing sexual, no violence, no hate (de and en), the same words for the wish, the description
@@ -109,7 +119,7 @@ _lock = threading.Lock()
 _make = []                  # [(loop, asyncio.Lock)] of the running loop: one song at a time
 _jobs = {}                  # jid -> job
 _tasks = set()
-_recent = {}                # uid -> time of the last wish, also a refused one (FOLLOW_SECONDS)
+_recent = {}                # uid -> time of the last wish (also a refused one), song start and end (FOLLOW_SECONDS)
 _count = DayCounter(done=0, failed=0, refused=0)
 BACKGROUND = True           # tests run _work themselves
 
@@ -285,6 +295,14 @@ def stats():
         run = sum(1 for j in _jobs.values() if j["state"] == "run")
         wait = sum(1 for j in _jobs.values() if j["state"] == "wait")
     return {"run": run, "wait": wait, "done": _count["done"], "failed": _count["failed"], "refused": _count["refused"]}
+
+
+def busy(now=None):
+    """Live „Im Hintergrund“: (state, seconds) of every song waiting or being made, oldest first (no wish)."""
+    now = time.time() if now is None else now
+    with _lock:
+        return [("run" if j["state"] == "run" else "wait", int(now - j["t0"])) for j in sorted(_jobs.values(), key=lambda j: j["t0"])
+                if j["state"] in ("wait", "run")]
 
 
 def _live(text_):
@@ -477,6 +495,7 @@ async def _work(j):
                                "model": str(d.get("variant") or j.get("model") or "")[:10], "src": j["src"],
                                "job": j["id"]})
     j.update(state="done", song=row, end=time.time())
+    _recent[j["uid"]] = time.time()   # „geht das auch als Reggae?“ after listening is still a follow-up
     _count.bump("done")
     import verbrauch   # Verbrauchszähler: one song and its time (does nothing while the counter is off)
     verbrauch.add("musik", "Musik machen", who=j["uid"], amount=1, ms=int((d.get("seconds") or 0) * 1000))
@@ -504,9 +523,14 @@ def offer(ctx):
     uid = who["id"]
     words = str(ctx.get("text") or "")
     asked = bool(WORDS.search(words)) and not (PLAY.search(words) and not re.search(r"(?i)komponier|compose", words))
-    recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS
-    again = recent and (bool(AGAIN.search(words)) or len(words) <= YES_MAX and bool(YES.search(words)))
+    before = str(ctx.get("before") or "")
+    # the window counts from the last wish, the start and the end of a song; the last answer about a song counts too
+    recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS or bool(SONG.search(before))
+    again = recent and not PLAY.search(words) and (bool(AGAIN.search(words)) or len(words) <= YES_MAX and bool(YES.search(words)))
     if not asked and not again:
+        # about a song, but no wish: no tool, and the model must not promise one (eine Zusage ohne Werkzeug)
+        if recent and ABOUT.search(words) and features.allowed(KEY, uid):
+            return {"tools": [], "hint": NO_PROMISE}
         return None
     if asked:
         _recent[uid] = time.time()   # the wish itself: the assistant may ask back, the answer still makes the song

@@ -12,6 +12,7 @@ import contextlib
 import io
 import json
 import os
+import time
 import unittest
 
 import httpx
@@ -287,6 +288,28 @@ class Access(On):
         musik._recent[prof["id"]] = 0
         self.assertIsNone(musik.offer({"who": prof, "own": True, "text": "ja, mit Gesang"}))
 
+    def test_a_style_after_a_song_makes_a_new_one_and_nothing_is_promised(self):
+        # Dominik 2026-10-16: „geht das in reggea style“ after a finished song: no tool, a promise, no song
+        _, prof = profile("Musikerin Reggae")
+        names = lambda o: [t["function"]["name"] for t in o["tools"]] if o else None   # noqa: E731
+        musik._recent[prof["id"]] = time.time()          # a song just ended (_work sets it)
+        for text in ("geht das in reggea style", "geht das in Reggae style", "Und als Rock-Version?",
+                     "kannst du das als Jazz machen", "in a reggae style please"):
+            self.assertEqual(names(musik.offer({"who": prof, "own": True, "text": text})), ["musik_machen"], text)
+        # an answer about the song without a wish: no tool, and the model is told not to promise one
+        o = musik.offer({"who": prof, "own": True, "text": "Wie lang ist das Lied?"})
+        self.assertEqual(o["tools"], [])
+        self.assertIn("sag nie, dass ein Lied", o["hint"])
+        self.assertEqual(musik.offer({"who": prof, "own": True, "text": "Spiel das Lied nochmal im Wohnzimmer"})["tools"], [])
+        self.assertIsNone(musik.offer({"who": prof, "own": True, "text": "Wie wird das Wetter morgen?"}))
+        # much later the last answer about the song still counts, an unrelated one does not
+        musik._recent[prof["id"]] = 0
+        before = "Dein Lied ist fertig und liegt unter Ich → Musik."
+        self.assertEqual(names(musik.offer({"who": prof, "own": True, "text": "geht das in reggae style",
+                                            "before": before})), ["musik_machen"])
+        self.assertIsNone(musik.offer({"who": prof, "own": True, "text": "geht das in reggae style",
+                                       "before": "Morgen wird es sonnig."}))
+
     def test_weiche_keeps_making_music_apart(self):
         for q in ("Mach mir ein Lied über unsere Katze", "Komponier ein Stück für Klavier"):
             self.assertEqual(intent.classify(q).names, ["musik"], q)
@@ -433,6 +456,25 @@ class Jobs(On):
             run(musik._jobs[j["id"]])
         self.assertEqual(musik._jobs[j["id"]]["error"], musik.REFUSED["memory"][0])
         self.assertIn("musik: nicht gemacht memory", out.getvalue())
+
+    def test_live_shows_a_running_song_in_numbers(self):
+        """Dominik 2026-10-16 „Musikbearbeitung sieht man nicht in den Monitoren“: a waiting or running song is in
+        Live „Im Hintergrund“ and on its target (numbers only); the model computer's card names the music service."""
+        import live
+        _, prof = profile("Musikerin Live")
+        musik.clear(prof["id"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            j = musik.start(prof, "calm piano secret words", "Geheimer Wunsch")
+        bg = [b for b in live._bg_now(musik._jobs[j["id"]]["t0"] + 5) if b["job"] == "Musik machen"]
+        self.assertEqual(bg, [{"job": "Musik machen", "st": "wait", "secs": 5}])
+        musik._jobs[j["id"]]["state"] = "run"
+        snap = json.dumps(live.snapshot("admin"), ensure_ascii=False)
+        self.assertIn('"job": "Musik machen", "st": "run"', snap)
+        self.assertNotIn("Geheimer", snap)
+        self.assertNotIn("secret", snap)
+        import rechnerblick
+        self.assertIn("musik", rechnerblick.MODELL_TEILE)
+        musik._jobs[j["id"]]["state"] = "error"
 
     def test_tool_answers_with_fixed_sentences_and_a_card_only_in_the_panel(self):
         _, prof = profile("Musikerin Werkzeug")

@@ -40,7 +40,7 @@ from fastapi.responses import JSONResponse
 
 import modelle
 import rechner
-from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
+from common import (CONFIG_PATH, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     run, shipped, waerter_key, waerter_sign, write_json)
 
@@ -55,7 +55,7 @@ UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu")
 # what status reports: the units the panel shows and watches
-WATCHED = dict(UNITS, **OWN_LLM_UNITS)
+WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(BodyLimit, default=MAX_BODY)

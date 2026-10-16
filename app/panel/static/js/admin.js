@@ -150,7 +150,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
 // Level and warnings come from fixed rules in rechnerblick.py; a model computer that does not answer keeps its card,
 // red and with its last values greyed out. Numbers and fixed words only (no address, no process).
 const ZR_DIENST={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),llm:t('Sprachmodell','Language model'),llmtor:'LLM-Tor',
-  sehen:t('Bildverständnis','Image understanding'),waerter:'Wärter',panel:'Panel',turn:t('Anrufe (TURN)','Calls (TURN)'),notasr:t('Notbetrieb-Erkennung','Emergency recognition'),gehaeuse:t('Gehäuse','Case'),schirm:t('Steuerzentrale','Control centre')};
+  sehen:t('Bildverständnis','Image understanding'),bild:t('Bilder malen','Painting pictures'),musik:t('Musik machen','Making music'),waerter:'Wärter',panel:'Panel',turn:t('Anrufe (TURN)','Calls (TURN)'),notasr:t('Notbetrieb-Erkennung','Emergency recognition'),gehaeuse:t('Gehäuse','Case'),schirm:t('Steuerzentrale','Control centre')};
 const ZR_STROM={ok:'ok','zu niedrig':t('Spannung zu niedrig','voltage too low'),'war niedrig':t('Spannung war niedrig','voltage was low'),
   nein:t('nie gedrosselt','never throttled'),jetzt:t('drosselt gerade','throttling now'),'war an':t('war gedrosselt','was throttled')};
 const zRRole=c=>c.id==='modell'?t('Modell-Rechner','Model computer'):t('Panel-Rechner','Panel computer');

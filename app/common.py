@@ -613,6 +613,9 @@ SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
+# the optional services that load their engine only on demand (install.sh --bild, --musik): watched and shown on the
+# model computer's card (Monitoring, Steuerzentrale), never started or stopped by the panel
+ON_DEMAND_UNITS = {"bild": "speech-spark-bild", "musik": "speech-spark-musik"}
 # Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
 QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]

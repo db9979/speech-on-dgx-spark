@@ -853,6 +853,11 @@ def _bg_now(now):
             out.append({"job": "Nachsortieren", "st": "run", "secs": 0})
     except Exception:
         pass
+    try:   # a song on the model computer (musik.py): waiting for a pause or being made, never its wish
+        import musik
+        out += [{"job": "Musik machen", "st": st, "secs": secs} for st, secs in musik.busy(now)]
+    except Exception:
+        pass
     return out
 
 
@@ -1447,7 +1452,7 @@ def snapshot(view="admin", now=None):
     except Exception:
         pause = {"on": False}
     work = {"telefon": tel.get("calls"), "docling": dlg.get("busy") or dlg.get("wait") or dlg.get("down"),
-            "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run")}
+            "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait")}
     ruhe(targets, {k for k, v in work.items() if v} | {h["at"] for h in hs} | {k for k, v in svc.items() if v.get("st") != "ok"}
          | {s["to"] for r in reqs if not r["done"] for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if not r["done"] and r["to"]}, now)
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
