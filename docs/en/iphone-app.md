@@ -1,6 +1,6 @@
 # iPhone app "Spark"
 
-An own app for the iPhone (source in `ios/`): press the button, ask, the answer comes in the Spark voice, also with the screen locked. "Hey Siri, Ask Spark" (German phrase "Frag Spark") runs through the app without a shortcut, also with AirPods and through Siri in the car. CarPlay as its own icon in the car is planned and needs Apple's approval.
+An own app for the iPhone (source in `ios/`): press the button, ask, the answer comes in the Spark voice, also with the screen locked. "Hey Siri, Ask Spark" (German phrase "Frag Spark") runs through the app without a shortcut, also with AirPods and through Siri in the car. Since V01.0.676 the app has its own CarPlay icon in the car (Apple granted the entitlement).
 
 ## Switch it on in the panel
 
@@ -139,9 +139,9 @@ Then reminders and timers (also those set in the panel or on a speaker), the mor
 
 ## CarPlay
 
-An own "Spark" icon in the car. Tap → **"Mit Spark sprechen"** → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text. Answers are short in the car. Smart home in the car only with its own switch **"Smart home in the car too"** and the code word. Route and call only after "Ja".
+An own "Spark" icon in the car. Tap → **"Mit Spark sprechen"** → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text, with the face the admin picked (robot or comic) as a still picture matching the state (since V01.0.676; Apple allows no animation in CarPlay). Answers are short in the car. Smart home in the car only with its own switch **"Smart home in the car too"** and the code word. Route and call only after "Ja".
 
-**Apple must grant CarPlay first**: request the category "Voice-based conversational app" at developer.apple.com/contact/carplay. After approval, enable it for the App ID and add `<key>com.apple.developer.carplay-voice-based-conversation</key><true/>` to `ios/Spark.entitlements` (not before: without the grant Xcode cannot sign the app). After the grant, try it without a car: Simulator → **I/O → External Displays → CarPlay**.
+**Apple's grant:** Apple granted the CarPlay category "Voice-based conversational app"; it is ticked for the App ID `io.github.db9979.speechspark` under developer.apple.com → Identifiers → Additional Capabilities (**CarPlay Voice Based Conversation**), and since V01.0.676 `ios/Spark.entitlements` contains `com.apple.developer.carplay-voice-based-conversation`. The TestFlight build fetches the matching profile itself; without the tick on the App ID the build cannot be signed. If the icon does not appear: iPhone → Settings → General → CarPlay → your car → **Customize**, add Spark. Try it without a car: Simulator → **I/O → External Displays → CarPlay**.
 
 ## Publishing
 

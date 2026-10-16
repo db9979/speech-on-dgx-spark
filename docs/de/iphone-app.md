@@ -1,6 +1,6 @@
 # iPhone-App „Spark“
 
-Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm. „Hey Siri, Frag Spark“ läuft über die App, ohne Kurzbefehl, auch mit AirPods und über Siri im Auto. CarPlay als eigenes Symbol im Auto ist geplant (`plaene/ios-carplay.md`, Weg 3) und braucht eine Freigabe von Apple.
+Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm. „Hey Siri, Frag Spark“ läuft über die App, ohne Kurzbefehl, auch mit AirPods und über Siri im Auto. Seit V01.0.676 hat die App ein eigenes CarPlay-Symbol im Auto (Apple hat die Freigabe erteilt).
 
 ## Im Panel einschalten
 
@@ -142,20 +142,13 @@ Test sagt **BadDeviceToken**: „Entwicklung“ und „Produktion“ vertauscht.
 
 ## CarPlay
 
-Ein eigenes Symbol „Spark“ im Auto. Antippen → **„Mit Spark sprechen“** → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text. Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter **„Smart Home auch im Auto“** (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter.
+Ein eigenes Symbol „Spark“ im Auto. Antippen → **„Mit Spark sprechen“** → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht, das der Admin gewählt hat (Roboter oder Comic), passend zum Zustand als Standbild (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter **„Smart Home auch im Auto“** (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter.
 
-**Apple muss CarPlay freigeben**, sonst erscheint das Symbol nicht:
+**Freigabe von Apple:** Apple hat die CarPlay-Kategorie „Voice-based conversational app“ erteilt, sie ist für die App-ID `io.github.db9979.speechspark` unter developer.apple.com → Identifiers → Additional Capabilities angehakt (**CarPlay Voice Based Conversation**), und `ios/Spark.entitlements` enthält seit V01.0.676 `com.apple.developer.carplay-voice-based-conversation`. Der TestFlight-Build holt das passende Profil selbst. Fehlt der Haken bei der App-ID, scheitert die Signatur des Builds.
 
-1. developer.apple.com/contact/carplay → Kategorie **„Voice-based conversational app“** beantragen. Apple prüft jeden Antrag; das dauert Tage bis Wochen.
-2. Nach der Zusage: developer.apple.com → **Identifiers** → die App-ID → **Additional Capabilities / CarPlay** die Freigabe anhaken.
-3. In `ios/Spark.entitlements` diese zwei Zeilen innerhalb von `<dict>` ergänzen und die App neu aufspielen:
-   ```xml
-   <key>com.apple.developer.carplay-voice-based-conversation</key>
-   <true/>
-   ```
-   (Vorher nicht eintragen: ohne Freigabe kann Xcode die App sonst nicht signieren.)
+Erscheint das Symbol nicht: iPhone → Einstellungen → Allgemein → CarPlay → dein Auto → **Anpassen**, dort Spark hinzufügen.
 
-Nach der Freigabe ausprobieren ohne Auto: Xcode → **Open Developer Tool → Simulator**, dort **I/O → External Displays → CarPlay**.
+Ausprobieren ohne Auto: Xcode → **Open Developer Tool → Simulator**, dort **I/O → External Displays → CarPlay**.
 
 ## Veröffentlichen
 

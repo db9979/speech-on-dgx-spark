@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.676** CarPlay: Apple granted the entitlement, the iPhone app now shows its own icon in the car, with the picked face per state
 - **V01.0.675** Test music finds the models in the music folder; the music engine links ggml in (libraries were missing after the build)
 - **V01.0.674** Fix: Measure performance works with separate computers (speech and language model through the doors to the model computer); no 'all fluent' when a part is missing
 - **V01.0.673** Spark split: both computers in Monitoring, with curves and notes
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.669** Docs and help: own language model next to qwen38, full ports table; new guard test test_doku_stand keeps README, diagram and ports in step with the code
 - **V01.0.668** Save the battery: pages, Android and iPhone app sleep in the background
 - **V01.0.667** README: new diagram with panel computer and model computer, own language model, three screenshots
-- **V01.0.666** · 2026-10-16 · Task sheet with five parts of one's choice: today's appointments, task and shopping list, waiting mail with a draft reply, quick note and note; each profile picks under Me → reMarkable → Paper
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

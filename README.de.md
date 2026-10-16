@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.676** CarPlay: Apple hat die Freigabe erteilt, die iPhone-App erscheint jetzt mit eigenem Symbol im Auto, mit dem gewählten Gesicht je Zustand
 - **V01.0.675** Musik testen findet die Modelle im Musik-Ordner; die Musik-Engine bindet ggml fest ein (fehlende Bibliotheken nach dem Bau)
 - **V01.0.674** Fix: Leistung messen klappt bei getrennten Rechnern (Sprache und Sprachmodell über die Türen zum Modell-Rechner); kein „Alles flüssig“, wenn ein Teil fehlt
 - **V01.0.673** Spark teilen: beide Rechner im Monitoring, mit Kurven und Hinweisen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.669** Doku und Hilfe: eigenes Sprachmodell neben qwen38, vollständige Port-Tabelle; neuer Wächter-Test test_doku_stand hält README, Schaubild und Ports im Einklang mit dem Code
 - **V01.0.668** Akku schonen: Seiten, Android- und iPhone-App schlafen im Hintergrund
 - **V01.0.667** README: neues Schaubild mit Panel-Rechner und Modellrechner, eigenes Sprachmodell, drei Bildschirmfotos
-- **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

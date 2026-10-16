@@ -41,6 +41,8 @@ STALE = [
     (r"Funktionen → Wer darf was|Features → Who may do what",
      "the blocks are under Personen und Geräte → Gesperrte Funktionen since V01.0.670"),
     (r"V01\.0\.[A-Z]{3,}", "a version placeholder left in the docs"),
+    (r"CarPlay als eigenes Symbol im Auto ist geplant|CarPlay as its own icon in the car is planned",
+     "Apple granted CarPlay (V01.0.676)"),
 ]
 
 
