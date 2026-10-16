@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.657** · 2026-10-16 · Bilder ändern, Schnellknöpfe (Stufe 2b): unter Ich → Bilder am Bild nach links oder rechts drehen, spiegeln, heller, dunkler, mehr Kontrast, schwarzweiß, quadratisch zuschneiden, halb so groß; sofort im Panel ohne Modell, als neues Bild, die KI-Kennzeichnung bleibt
 - **V01.0.656** · 2026-10-16 · ROT-FIX .653: der Verbrauchszähler kennt die Aufgabe „Bild ändern“ (Bereich Dokumente), und Bilder ändern hat keinen eigenen Datenbestand (die Bilder liegen bei Bilder malen)
 - **V01.0.655** · 2026-10-16 · Start-Wächter: fehlt beim Laden nach einem Update ein Skript oder die erste Antwort des Spark, hängt die Seite nicht mehr bei „Zustand wird geladen …“, sondern zeigt ein Band und lädt sich neu, sobald der Spark antwortet
 - **V01.0.654** · 2026-10-16 · Chats in der iPhone-App auf Panel-Stand: live mit „schreibt …“, Reaktionen, Antworten, Ändern, Zurücknehmen, Gruppen, Suche, Chat-Infos; private Chats (Ende-zu-Ende) mit Schlüssel im Secure Enclave, Sicherheitsnummer und Verlauf übertragen

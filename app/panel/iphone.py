@@ -74,8 +74,8 @@ AREAS = {
                  # Ich → Bilder (bilder.py): look, paint from a wish, delete one or all
                  (("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
                  (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}"),
-                 # Bilder ändern: change an own picture, upload an own photo to change
-                 (("POST",), rf"/api/bilder/{_DOC}/aendern"), (("POST",), r"/api/bilder/foto")),
+                 # Bilder ändern: change an own picture (FLUX or a quick button), upload an own photo to change
+                 (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto")),
     # Dokumente verwalten: switches, "Für alle", tags, read again, deadline reminder, delete (own documents only)
     "app_docs_edit": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
                       (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),

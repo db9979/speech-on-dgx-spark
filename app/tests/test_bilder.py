@@ -594,14 +594,62 @@ class Change(On):
         self.assertIsNone(bilder.own_pic(uid, "../index"))
         bilder.clear(uid)
 
+    def test_quick_buttons_without_a_model(self):
+        """Schnellknöpfe (Stufe 2b): fixed changes with Pillow on the panel, a new picture each time, the AI marks of
+        a painted picture stay, an own photo gets none; only own pictures, only with Bilder ändern."""
+        from PIL import Image
+        c, prof = profile("Aendern Schnell")
+        uid = prof["id"]
+        bilder.clear(uid)
+        with mock.patch.object(bild_server, "nsfw_share", lambda im: 0.0):
+            marked, _, _, _ = bild_server.finish(png(200, 100))
+        painted = bilder.keep(uid, marked, {"w": 200, "h": 100, "prompt": "p", "wish": "w", "format": "quer", "src": "chat"})
+        d = c.get("/api/bilder").json()
+        self.assertEqual([q[0] for q in d["quick"]], list(bilder.QUICK))
+        want = {"links": (100, 200), "rechts": (100, 200), "spiegeln": (200, 100), "heller": (200, 100),
+                "dunkler": (200, 100), "kontrast": (200, 100), "schwarzweiss": (200, 100), "quadrat": (100, 100),
+                "kleiner": (100, 50)}
+        self.assertEqual(set(want), set(bilder.QUICK))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for was, (w, h) in want.items():
+                r = c.post(f"/api/bilder/{painted['id']}/schnell", json={"was": was})
+                self.assertEqual(r.status_code, 200, was + r.text)
+                x = r.json()
+                self.assertEqual((x["w"], x["h"], x["art"], x["von"]), (w, h, "schnell", painted["id"]), was)
+                with open(bilder.pic_path(uid, x["id"]), "rb") as f:
+                    im = Image.open(f)
+                    im.load()
+                self.assertIn("KI-erzeugt", json.dumps(im.text, ensure_ascii=False), was)   # the marks stay
+        self.assertIn("bilder: schnell links 100x200 fuer", out.getvalue())
+        self.assertEqual(bilder.today_count(uid), 1)                   # only the painted one counts
+        self.assertGreaterEqual(bilder.stats()["quick"], 9)
+        self.assertEqual(len(c.get("/api/bilder").json()["pics"]), 10)   # the original stays
+        with contextlib.redirect_stdout(io.StringIO()):
+            foto = c.post("/api/bilder/foto", content=png(64, 64), headers={"Content-Type": "image/png"}).json()
+            r = c.post(f"/api/bilder/{foto['id']}/schnell", json={"was": "spiegeln"}).json()
+            with open(bilder.pic_path(uid, r["id"]), "rb") as f:
+                self.assertNotIn("KI-", json.dumps(Image.open(f).text))   # an own photo is not called AI-made
+            self.assertEqual(c.post(f"/api/bilder/{foto['id']}/schnell", json={"was": "kleiner"}).status_code, 409)
+            self.assertEqual(c.post(f"/api/bilder/{foto['id']}/schnell", json={"was": "loeschen"}).status_code, 400)
+            self.assertEqual(c.post("/api/bilder/0123456789ab/schnell", json={"was": "links"}).status_code, 404)
+            c2, _ = profile("Aendern Schnell Fremd")
+            self.assertEqual(c2.post(f"/api/bilder/{foto['id']}/schnell", json={"was": "links"}).status_code, 404)
+            helpers.set_config(bilder_aendern=False)
+            self.assertEqual(c.post(f"/api/bilder/{foto['id']}/schnell", json={"was": "links"}).status_code, 403)
+            self.assertEqual(c.get("/api/bilder").json()["quick"], [])
+        bilder.clear(uid)
+
     def test_app_paths_and_limits(self):
         import guard
         import iphone
         import re as re_
         mine = iphone.AREAS["app_mine"]
-        for method, path in (("POST", "/api/bilder/0123456789ab/aendern"), ("POST", "/api/bilder/foto")):
+        for method, path in (("POST", "/api/bilder/0123456789ab/aendern"), ("POST", "/api/bilder/0123456789ab/schnell"),
+                             ("POST", "/api/bilder/foto")):
             self.assertTrue(any(method in m and re_.fullmatch(rx, path) for m, rx in mine), path)
         self.assertIn("bildfoto", guard.RATE)
+        self.assertIn("bildschnell", guard.RATE)
         import werkzeug_abdeckung
         self.assertIn(bilder.EDIT_KEY, werkzeug_abdeckung.RULES)        # a fixed rule in the panel, no tool
 

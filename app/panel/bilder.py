@@ -149,7 +149,7 @@ _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last picture or wish, also a refused one (FOLLOW_SECONDS)
 _edits = {}                 # uid -> (time, picture id) of the last change (Bilder ändern), for a short follow-up
-_count = DayCounter(done=0, edited=0, failed=0, refused=0)
+_count = DayCounter(done=0, edited=0, quick=0, failed=0, refused=0)
 BACKGROUND = True           # tests run _work themselves
 
 
@@ -287,7 +287,7 @@ def used_bytes(uid):
 
 def today_count(uid, now=None):
     now = time.time() if now is None else now
-    return sum(1 for x in all_pics(uid) if now - float(x.get("t") or 0) < DAY_S and x.get("src") != "foto")
+    return sum(1 for x in all_pics(uid) if now - float(x.get("t") or 0) < DAY_S and x.get("src") not in ("foto", "schnell"))
 
 
 def keep(uid, png, meta):
@@ -346,7 +346,7 @@ def stats():
     with _lock:
         run = sum(1 for j in _jobs.values() if j["state"] == "run")
         wait = sum(1 for j in _jobs.values() if j["state"] == "wait")
-    return {"run": run, "wait": wait, "done": _count["done"], "edited": _count["edited"], "failed": _count["failed"],
+    return {"run": run, "wait": wait, "done": _count["done"], "edited": _count["edited"], "quick": _count["quick"], "failed": _count["failed"],
             "refused": _count["refused"]}
 
 
@@ -724,7 +724,8 @@ def bilder_list(request: Request, prof=Depends(own_profile)):
     lim = limits()
     return {"pics": [public(x) for x in all_pics(uid)], "jobs": jobs_of(uid), "limits": lim,
             "used": used_bytes(uid), "today": today_count(uid),
-            "formats": [[k, v[2], v[3]] for k, v in FORMATS.items()]}
+            "formats": [[k, v[2], v[3]] for k, v in FORMATS.items()],
+            "quick": [[k, de, en] for k, (de, en) in QUICK.items()] if features.allowed(EDIT_KEY, uid) else []}
 
 
 @router.post("/api/bilder", dependencies=[Depends(assistant)])
@@ -793,6 +794,83 @@ async def bilder_photo(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(400, "Das ist kein Bild, das ich lesen kann (JPEG, PNG oder WebP).")
     row = keep(uid, png, {"w": w, "h": h, "prompt": "", "wish": "", "format": "", "src": "foto", "art": "foto"})
     print(f"bilder: foto gespeichert {w}x{h} fuer {profiles.log_name(prof)}", flush=True)
+    return public(row)
+
+
+# Schnellknöpfe (Stufe 2b, Dominik 2026-10-16 4a): fixed changes on the panel itself with Pillow, no model, at once.
+# key -> (German, English); the result is a new picture, the original stays
+QUICK = {"links": ("Nach links drehen", "Rotate left"), "rechts": ("Nach rechts drehen", "Rotate right"),
+         "spiegeln": ("Spiegeln", "Mirror"), "heller": ("Heller", "Brighter"), "dunkler": ("Dunkler", "Darker"),
+         "kontrast": ("Mehr Kontrast", "More contrast"), "schwarzweiss": ("Schwarzweiß", "Black and white"),
+         "quadrat": ("Quadratisch zuschneiden", "Crop to a square"), "kleiner": ("Halb so groß", "Half the size")}
+
+
+def quick_png(data, was):
+    """One fixed change (QUICK) of a PNG -> (PNG, width, height). The source's text chunks stay, so a picture
+    marked as made or edited by an AI keeps its marks; an own photo gets none. Raises ValueError otherwise."""
+    import io
+    from PIL import Image, ImageEnhance, ImageOps, PngImagePlugin
+    if was not in QUICK:
+        raise ValueError("was")
+    Image.MAX_IMAGE_PIXELS = 40_000_000
+    try:
+        im = Image.open(io.BytesIO(data))
+        im.load()
+    except Exception:
+        raise ValueError("bild")
+    marks = {k: v for k, v in (im.text or {}).items() if isinstance(v, str) and len(v) <= 4000}
+    im = im.convert("RGB")
+    if was in ("links", "rechts"):
+        im = im.transpose(Image.Transpose.ROTATE_90 if was == "links" else Image.Transpose.ROTATE_270)
+    elif was == "spiegeln":
+        im = ImageOps.mirror(im)
+    elif was in ("heller", "dunkler"):
+        im = ImageEnhance.Brightness(im).enhance(1.25 if was == "heller" else 0.8)
+    elif was == "kontrast":
+        im = ImageEnhance.Contrast(im).enhance(1.3)
+    elif was == "schwarzweiss":
+        im = ImageOps.grayscale(im).convert("RGB")
+    elif was == "quadrat":
+        side = min(im.size)
+        im = ImageOps.fit(im, (side, side))
+    elif was == "kleiner":
+        if min(im.size) < 96:     # half of it would be a thumbnail
+            raise ValueError("klein")
+        im = im.resize((im.width // 2, im.height // 2), Image.Resampling.LANCZOS)
+    meta = PngImagePlugin.PngInfo()
+    for k, v in marks.items():
+        meta.add_itxt(k, v)
+    out = io.BytesIO()
+    im.save(out, "PNG", pnginfo=meta, optimize=True)
+    return out.getvalue(), im.width, im.height
+
+
+@router.post("/api/bilder/{pid}/schnell", dependencies=[Depends(assistant)])
+async def bilder_quick(pid: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Bilder Schnellknöpfe: {was} from QUICK on one of the profile's own pictures, done at once."""
+    uid = _edit_prof(_prof(request, prof))["id"]
+    guard.limit(request, "bildschnell", uid)
+    body = await json_body(request, 1024, lenient=True)
+    was = str(body.get("was") or "")
+    if was not in QUICK:
+        raise HTTPException(400, "unbekannter Knopf")
+    src = own_pic(uid, pid) if ID.fullmatch(pid) else None
+    if src is None:
+        print(f"bilder: schnell nicht gemacht quelle fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "kein solches Bild")
+    lim = limits()
+    if used_bytes(uid) >= lim["store_mb"] * 1024 * 1024 or len(all_pics(uid)) >= MAX_PICS:
+        print(f"bilder: schnell nicht gemacht voll fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(409, "Deine Bilder brauchen schon den ganzen Platz; bitte erst alte löschen (Ich → Bilder).")
+    try:
+        png, w, h = await asyncio.wait_for(asyncio.to_thread(quick_png, src, was), 20)
+    except (ValueError, asyncio.TimeoutError):
+        print(f"bilder: schnell nicht gemacht {was} fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(409, "Das geht mit diesem Bild nicht.")
+    row = keep(uid, png, {"w": w, "h": h, "prompt": "", "wish": QUICK[was][0], "format": "", "src": "schnell",
+                          "art": "schnell", "von": pid})
+    _count.bump("quick")
+    print(f"bilder: schnell {was} {w}x{h} fuer {profiles.log_name(prof)}", flush=True)
     return public(row)
 
 

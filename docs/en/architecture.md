@@ -2568,7 +2568,7 @@ flowchart TD
   s8 -->|no| s8x
 ```
 
-1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start.
+1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
 3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it.
 4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait.

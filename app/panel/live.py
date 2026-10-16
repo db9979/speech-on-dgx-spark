@@ -1343,6 +1343,7 @@ def snapshot(view="admin", now=None):
         if x["id"] == "bild":   # Bilder malen: pictures in numbers (no wish, no prompt)
             x["sub"] = (f"{bild.get('run', 0)} malt · {bild.get('wait', 0)} wartet · {bild.get('done', 0)} heute gemalt"
                         + (f" · {bild['edited']} geändert" if bild.get("edited") else "")
+                        + (f" · {bild['quick']} schnell bearbeitet" if bild.get("quick") else "")
                         + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
                         + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
@@ -1362,7 +1363,7 @@ def snapshot(view="admin", now=None):
             "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
-            "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "failed", "refused")},
+            "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
             "stats": node_stats(now)}
 
 

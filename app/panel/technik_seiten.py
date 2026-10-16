@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "04b843626a",
+        "stand": "594ff1bb86",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -2508,7 +2508,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "7a2895a74e",
+        "stand": "eae5e35246",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3381,7 +3381,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "0b5d820ba7",
+        "stand": "f8241b97c4",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3569,7 +3569,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "3819c74b87",
+        "stand": "6e34c61085",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3934,11 +3934,13 @@ SEITEN_DATEN = {
               ("Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch "
                "das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet "
                "ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis "
-               "der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start.",
+               "der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe "
+               "(drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel.",
                "A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in "
                "the conversation; the model writes an English prompt for it. Changing pictures starts without a "
                "tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last "
-               "change, under Me → Pictures an own picture. Everything ends in bilder.start.")),
+               "change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, "
+               "black and white …) need no model: bilder.quick_png does them at once on the panel.")),
             S("s2", "frage", ("Funktion frei?", "Feature released?"),
               ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
               ("features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "

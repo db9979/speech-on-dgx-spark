@@ -76,8 +76,8 @@ async function showBilder(){const box=$('bildbox');if(!box)return;if(!PROFILE||!
     const fact=(k,v)=>{if(!v)return;facts.append(icEl('dt','',k),icEl('dd','',String(v)))};
     const orig=p.von&&p.von!=='foto'?d.pics.find(x=>x.id===p.von):null;
     fact(t('Wunsch','Wish'),p.wish);fact('Prompt',p.art==='aendern'?'':p.prompt);
-    fact(p.art==='foto'?t('Hochgeladen','Uploaded'):p.art==='aendern'?t('Geändert','Changed'):t('Gemalt','Painted'),blWhen(p.t));
-    if(p.art==='aendern')fact(t('Original','Original'),p.von==='foto'?t('Foto aus dem Chat','Photo from the chat'):orig?'':t('gelöscht','deleted'));fact(t('Größe','Size'),p.w+' × '+p.h+' · '+blMb(p.bytes));
+    fact(p.art==='foto'?t('Hochgeladen','Uploaded'):p.art==='aendern'||p.art==='schnell'?t('Geändert','Changed'):t('Gemalt','Painted'),blWhen(p.t));
+    if(p.art==='aendern'||p.art==='schnell')fact(t('Original','Original'),p.von==='foto'?t('Foto aus dem Chat','Photo from the chat'):orig?'':t('gelöscht','deleted'));fact(t('Größe','Size'),p.w+' × '+p.h+' · '+blMb(p.bytes));
     fact(t('Dauer','Time'),p.seconds!=null?String(p.seconds).replace('.',L==='en'?'.':',')+' s':'');
     const acts=icEl('div','ld-acts');const dl=document.createElement('a');dl.className='b p';dl.href=blFile(p.id,1);dl.textContent=t('Herunterladen','Download');
     const del=icEl('button','b ic-red',t('Löschen','Delete'));del.type='button';del.onclick=async()=>{if(!confirm(t('Dieses Bild löschen?','Delete this picture?')))return;
@@ -93,7 +93,15 @@ async function showBilder(){const box=$('bildbox');if(!box)return;if(!PROFILE||!
         const r4=await apiTry('/api/bilder/'+encodeURIComponent(p.id)+'/aendern',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wunsch:w})});
         if(!r4.r.ok){cm.textContent=String(r4.d.detail||t('Ging nicht.','Did not work.'));cg.disabled=false;return}
         ct.value='';blFollow(r4.d.id,cm,j=>{cm.textContent=blJobLine(j);if(j.state==='done'){BL.sel=j.pic.id;showBilder()}else if(j.state==='error')cg.disabled=false})};
-      const cr=icEl('div','row blrow');cr.appendChild(cg);ch.append(cl,ct,cr,cm);det.appendChild(ch)}};
+      const cr=icEl('div','row blrow');cr.appendChild(cg);ch.append(cl,ct,cr,cm);det.appendChild(ch);
+      // Schnellknöpfe: fixed changes on the panel, without a model, at once (d.quick: [key, German, English])
+      if((d.quick||[]).length){const qr=icEl('div','row blquick');qr.setAttribute('aria-label',t('Schnell ändern','Quick changes'));
+        for(const [k,de,en] of d.quick){const qb=icEl('button','b',L==='en'?en:de);qb.type='button';qb.dataset.was=k;
+          qb.onclick=async()=>{qr.querySelectorAll('button').forEach(x=>x.disabled=true);cm.textContent=t('wird geändert …','changing …');
+            const r5=await apiTry('/api/bilder/'+encodeURIComponent(p.id)+'/schnell',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({was:k})});
+            if(!r5.r.ok){cm.textContent=String(r5.d.detail||t('Ging nicht.','Did not work.'));qr.querySelectorAll('button').forEach(x=>x.disabled=false);return}
+            BL.sel=r5.d.id;showBilder()};qr.appendChild(qb)}
+        ch.insertBefore(qr,cl)}}};
   for(const p of d.pics){const b=icEl('button','bltile');b.type='button';b.dataset.id=p.id;b.title=p.wish||p.prompt||'';b.setAttribute('aria-label',p.wish||p.prompt||t('Bild','Picture'));
     b.appendChild(blImg(p,'blthumb'));b.onclick=()=>open(p);list.appendChild(b)}
   const pick=d.pics.find(p=>p.id===BL.sel);if(pick)open(pick)}

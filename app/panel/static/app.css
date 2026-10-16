@@ -1522,3 +1522,4 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .blbig{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;border-radius:10px;background:var(--line)}
 .blcard .blbig,.blatt .blbig{max-width:420px;margin:8px 0}
 .blnew textarea{width:100%;box-sizing:border-box}.blrow{gap:8px;flex-wrap:wrap;margin-top:6px}.blrow select{width:auto;flex:1 1 140px;min-width:0}
+.blquick{gap:6px;flex-wrap:wrap;margin:4px 0 8px}
