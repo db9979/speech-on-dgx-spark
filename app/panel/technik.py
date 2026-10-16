@@ -100,7 +100,7 @@ MODULE = {
     "echo": ("gespraech", "Der Assistent antwortet nicht auf seine eigene Stimme"),
     "images": ("gespraech", "Bilder in der Frage: das Sprachmodell sieht sie selbst"),
     "schreib": ("gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen"),
-    "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über qwen38"),
+    "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38)"),
     "tipps": ("gespraech", "Schlägt passende Funktionen vor, die noch aus sind"),
     "stufe": ("gespraech", "Vorrang für Personen in der Warteschlange der Sprachausgabe"),
     # Weiche
@@ -265,7 +265,7 @@ KNOTEN = {
     "kanaele": (704, 34, "Telegram, Siri, Uhr", "Telegram, Siri, watch", "Kanäle", "geraete",
                 "Kurze Fragen ohne Browser; den Verlauf speichert das Panel selbst.",
                 "Short questions without a browser; the panel keeps the history itself.", []),
-    "lautsprecher": (364, 34, "Lautsprecher, HA, Telefon", "Speakers, HA, phone", "esp32 · :31003 · :31060", "",
+    "lautsprecher": (364, 34, "Lautsprecher, Telefon", "Speakers, phone", "esp32 · :31003 · :31060", "",
                      "ESP32-Lautsprecher, Home Assistant Assist und Anrufe über die Telefonanlage.",
                      "ESP32 speakers, Home Assistant Assist and calls through the telephone system.",
                      ["esp32.py", "wyoming.py", "telefon.py", "telefon_ton.py", "telefon_ich.py", "telefon_anruf.py"]),
@@ -297,11 +297,11 @@ KNOTEN = {
     "betrieb": (364, 330, "Logs und Live", "Logs and live", "tracelog · live", "betrieb",
                 "Anfrage-Verlauf, Live-Übersicht, Wächter, Sicherung. Nur feste Wörter und Zahlen.",
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
-    "llm": (896, 326, "Sprachmodell", "Language model", ":31006 · :30001", "",
-            "Qwen3.8 aus dgx-spark-qwen38, oder das eigene Modell hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), "
-            "sobald speech-spark modelle llm uebernehmen es einschaltet.",
-            "Qwen3.8 from dgx-spark-qwen38, or the own model behind the LLM-Tor (:31006 → :31016, image understanding :31017 on demand), "
-            "once speech-spark modelle llm uebernehmen switches it on.", ["llm_tor.py", "einordnung.py", "modelle.py"]),
+    "llm": (896, 326, "Sprachmodell", "Language model", ":31006 → :31016", "",
+            "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), eingeschaltet mit "
+            "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001).",
+            "The own model (vLLM) behind the LLM-Tor (:31006 → :31016, image understanding :31017 on demand), switched on with "
+            "speech-spark modelle llm uebernehmen; until then or after … zurueck Qwen3.8 from dgx-spark-qwen38 (:30001).", ["llm_tor.py", "einordnung.py", "modelle.py"]),
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
     "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",

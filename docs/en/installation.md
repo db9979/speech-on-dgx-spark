@@ -46,7 +46,7 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark zurueckholen --von <name-or-ip>` | On the model computer: take the panel back; everything runs on one computer again |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
 
-The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The chat model (qwen38) is not part of this repo and is not touched. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).
+The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. If the language model still comes from dgx-spark-qwen38, it is not touched; the own language model is updated along. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).
 
 ## Updating
 
@@ -107,4 +107,4 @@ sudo ./uninstall.sh --purge    # also delete config, models, voices and the user
 sudo ./uninstall.sh --yes      # no confirmation prompt
 ```
 
-dgx-spark-qwen38 is not touched.
+dgx-spark-qwen38 is not touched; the own language model (`venv-llm`) goes with `uninstall.sh`.

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.669** Doku und Hilfe: eigenes Sprachmodell neben qwen38, vollständige Port-Tabelle; neuer Wächter-Test test_doku_stand hält README, Schaubild und Ports im Einklang mit dem Code
 - **V01.0.668** Akku schonen: Seiten, Android- und iPhone-App schlafen im Hintergrund
 - **V01.0.667** README: neues Schaubild mit Panel-Rechner und Modellrechner, eigenes Sprachmodell, drei Bildschirmfotos
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.662** Verbessern geht auf dem Pi wieder; Gehäuse: elf Seiten mit Vorschau zum Antippen
 - **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
 - **V01.0.660** Ich → Gedächtnis: kein Fehlerkasten mehr bei veralteten Einträgen
-- **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -60,11 +60,11 @@ flowchart LR
   subgraph Clients["Geräte und Apps"]
     B["Browser und Handy,<br/>iPhone- und Android-App,<br/>Begleiter für Windows/Mac"]
     T["Terminal-Client spark-tui<br/>z. B. auf der uConsole"]
-    X["ESP32-Lautsprecher, HA Assist,<br/>Telefon (SIP), Telegram,<br/>Siri, Pebble"]
+    X["ESP32-Lautsprecher,<br/>HA Assist über Wyoming :31003,<br/>Telefon (SIP), Telegram,<br/>Siri, Pebble"]
     M["MCP-Programme<br/>Claude, n8n, Open WebUI"]
   end
   subgraph Panel["Panel-Rechner: der Spark oder ein Raspberry Pi 5"]
-    G["Anmeldung, 2FA, Passkeys,<br/>Profile, Freigaben"]
+    G["Webportal :31443<br/>Anmeldung, 2FA, Passkeys,<br/>Profile, Freigaben"]
     R["Weiche: Werkzeugwahl<br/>nach festen Regeln"]
     K["Eigenes Wissen: Dokumente,<br/>reMarkable, Gedächtnis"]
     S["Wächter netguard<br/>nur erlaubte Ziele"]

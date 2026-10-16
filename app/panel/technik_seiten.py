@@ -1471,11 +1471,13 @@ SEITEN_DATEN = {
             "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"], "verbrauch.warn": ["s11"],
             "wartung.auto_tick": ["s1w"], "wartung.AUTO_MIN": ["s1w"],
         },
-        "kurz": ("Das Sprachmodell (qwen38 aus dgx-spark-qwen38, nicht Teil dieses Repos) schreibt die Antworten. Das "
+        "kurz": ("Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 "
+                 "(nicht Teil dieses Repos). Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
                  "dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; "
                  "jede Hintergrundaufgabe fragt über llm.complete.",
-                 "The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel "
+                 "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 "
+                 "(not part of this repo). The panel "
                  "talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech "
                  "always comes before background work. Address, key and model name live only in llm.py; every "
                  "background job asks through llm.complete."),
@@ -1500,7 +1502,7 @@ SEITEN_DATEN = {
                "ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. "
                "Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der "
                "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet. Mit „Automatisch bei "
-               "Neustart“ pausiert das Panel selbst, sobald ein qwen38-Dienst neu startet oder umschaltet (höchstens "
+               "Neustart“ pausiert das Panel selbst, sobald ein Dienst des Sprachmodells (eigenes oder qwen38) neu startet oder umschaltet (höchstens "
                "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet. Läuft das Modell auf einem "
                "anderen Rechner, der nicht antwortet (Notbetrieb, steuer.weg), gilt dasselbe mit dem Satz „Der Spark macht "
                "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem. Mit Funktionen → Notbetrieb mit Parakeet "
@@ -1510,7 +1512,7 @@ SEITEN_DATEN = {
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
                "time the pause only ends once the model answers {wartung.OK_N} times in a row. With “Automatically on "
-               "restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most "
+               "restart” the panel pauses by itself as soon as a language model service (own or qwen38) restarts or switches (at most "
                "{wartung.AUTO_MIN} min) and goes on once the model answers again. When the model runs on another "
                "computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark "
                "is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency "
@@ -1617,9 +1619,9 @@ SEITEN_DATEN = {
               "The round waits briefly until the answer with priority has its first sentence.")),
             (("Sehr langes Dokument im Verlauf", "Very long document in the history"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s7!"],
              ("Verlauf gekürzt, einmal neu gefragt.", "History cut, asked once more.")),
-            (("qwen38 hängt", "qwen38 hangs"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!"],
+            (("Sprachmodell hängt", "Language model hangs"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!"],
              ("„Mein Sprachmodell antwortet gerade nicht.“ statt Stille.", "„My language model is not answering right now.“ instead of silence.")),
-            (("qwen38 wird neu eingespielt", "qwen38 is being updated"), ["s1", "s1w", "s1w!"],
+            (("Sprachmodell wird neu eingespielt", "Language model is being updated"), ["s1", "s1w", "s1w!"],
              ("„Ich werde gerade aktualisiert und bin in etwa 20 Minuten wieder da.“", "„I am being updated right now and will be back in about 20 minutes.“")),
         ],
         "zahlen": [
@@ -1646,8 +1648,8 @@ SEITEN_DATEN = {
              "je Profil für Tag, Woche und Monat.",
              "Features → Usage counter: counts tokens per model, task and profile; below it the quota per profile for "
              "day, week and month."),
-            ("Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn qwen38 neu startet.",
-             "Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts."),
+            ("Funktionen → Wartungspause → Automatisch bei Neustart: pausiert von selbst, wenn das Sprachmodell neu startet.",
+             "Features → Maintenance pause → Automatically on restart: pauses by itself when the language model restarts."),
         ],
         "sehen": [
             ("Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und "
@@ -1681,7 +1683,7 @@ SEITEN_DATEN = {
             ("vorrang.mark", ("Marke „Sprache läuft“", "mark „speech is running“")),
             ("vorrang.run", ("Hintergrundarbeit weicht der Sprache", "background work gives way to speech")),
             ("wartung.paused", ("Wartungspause: das Modell wird nicht gefragt", "maintenance pause: the model is not asked")),
-            ("wartung.auto_tick", ("Wartungspause von selbst, wenn qwen38 neu startet", "maintenance pause by itself when qwen38 restarts")),
+            ("wartung.auto_tick", ("Wartungspause von selbst, wenn das Sprachmodell neu startet", "maintenance pause by itself when the language model restarts")),
             ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
             ("verbrauch.llm", ("zählt Tokens einer Runde", "counts the tokens of a round")),
             ("verbrauch.over", ("welche Grenze ist voll: Tag, Woche oder Monat?", "which limit is full: day, week or month?")),

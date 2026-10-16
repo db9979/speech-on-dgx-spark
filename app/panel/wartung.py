@@ -1,5 +1,5 @@
 """Wartungspause (plan plaene/wartungspause.md, Dominik 2026-10-14 „1b 2c 3a 4a 5a 6a“): while the language model
-(qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing.
+(own or qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing.
 
 An admin starts it under Zustand → Wartungspause (or on the Spark: sudo speech-spark pause llm 30) for one or more parts
 (PARTS) and at most MAX_MIN minutes. While it holds:

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.669** Docs and help: own language model next to qwen38, full ports table; new guard test test_doku_stand keeps README, diagram and ports in step with the code
 - **V01.0.668** Save the battery: pages, Android and iPhone app sleep in the background
 - **V01.0.667** README: new diagram with panel computer and model computer, own language model, three screenshots
 - **V01.0.666** · 2026-10-16 · Task sheet with five parts of one's choice: today's appointments, task and shopping list, waiting mail with a draft reply, quick note and note; each profile picks under Me → reMarkable → Paper
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.662** Verbessern works on the Pi again; case: eleven pages with a preview to tap
 - **V01.0.661** Terminal client: Me → Terminal sets up the command spark-tui (checksum checked); Textual in its own environment
 - **V01.0.660** Ich → Gedächtnis: no more error box when entries look out of date
-- **V01.0.659** Changing pictures: “Take the beard off” and similar phrasings are understood
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -60,11 +60,11 @@ flowchart LR
   subgraph Clients["Devices and apps"]
     B["Browser and phone,<br/>iPhone and Android app,<br/>Companion for Windows/Mac"]
     T["Terminal client spark-tui<br/>e.g. on the uConsole"]
-    X["ESP32 speakers, HA Assist,<br/>phone (SIP), Telegram,<br/>Siri, Pebble"]
+    X["ESP32 speakers,<br/>HA Assist via Wyoming :31003,<br/>phone (SIP), Telegram,<br/>Siri, Pebble"]
     M["MCP programs<br/>Claude, n8n, Open WebUI"]
   end
   subgraph Panel["Panel computer: the Spark or a Raspberry Pi 5"]
-    G["Login, 2FA, passkeys,<br/>profiles, releases"]
+    G["Web panel :31443<br/>login, 2FA, passkeys,<br/>profiles, releases"]
     R["Router: tool choice<br/>by fixed rules"]
     K["Own knowledge: documents,<br/>reMarkable, memory"]
     S["Guard netguard<br/>allowed targets only"]

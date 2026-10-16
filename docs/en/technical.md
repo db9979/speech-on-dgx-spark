@@ -47,9 +47,11 @@ Since V01.0.163 every value gets a level (very good, good, tight, too slow) and 
 
 The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`. The memory shares of the engines (configuration) are starting values: set them to fit after the measurement.
 
-## Next to dgx-spark-qwen38
+## Language model: own or dgx-spark-qwen38
 
-- **Ports**: qwen38 uses 30000 to 30099 (engine 30000, proxy 30001, image 30020, video 30022, cockpit 30090/30091). Speech uses 31001, 31002, 31080 and 31443 (panel over https); the engines on 31011, 31012 and 31013 listen on 127.0.0.1 only. The panel rejects ports in qwen38's range, and the installer stops if a port is taken.
+The language model runs either as the own vLLM behind the LLM-Tor (`sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen`, back with `… zurueck`) or, as before, from [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38). With the Spark split only the own one works, because the panel computer cannot reach qwen38. The points below about lanes and the cockpit only apply while qwen38 runs.
+
+- **Ports**: qwen38 uses 30000 to 30099 (engine 30000, proxy 30001, image 30020, video 30022, cockpit 30090/30091). Speech uses 31001 (ASR), 31002 (TTS), 31003 (Wyoming), 31005 (pictures), 31006 (LLM-Tor), 31080 and 31443 (panel over https), plus UDP 31060 and 31062–31068 for the phone; the engines on 31011, 31012, 31013, 31015, 31016 and 31017 listen on 127.0.0.1 only, as do the Wärter (31007) and the emergency mode (31009). The full list is in the [architecture](architecture.md#processes-and-ports). The panel rejects ports in qwen38's range, and the installer stops if a port is taken.
 - **Memory**: the GB10 has one 128 GB pool shared by CPU and GPU. The qwen38 lanes reserve a fixed share of it: 50 % with `stock`/`fp8`, 76 % in 1M mode and 85 % with `flash`. According to the qwen38 docs only ~16.6 GiB stay free at idle with `flash`, and below ~8 GiB DGX OS's earlyoom kills processes. Therefore:
   - If the installer detects a flash or 1M lane, it picks the 0.6B models.
   - Before a service loads its model it checks that the reserve stays free afterwards (default 10 GiB). If not, it does not load and the panel shows `blocked` with the reason.
@@ -90,7 +92,7 @@ When several people talk at once, chosen profiles get their answer first (since 
 - **Who may say the stage**: only the panel. It sends `X-Spark-Stufe` (0, 1, 2) together with the key from `state/vorrang-key` (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and only with that key; everybody else is normal, even with the API key.
 - **Seeing it**: Status → Logs → Anfragen shows "with priority" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. The services' `/health` shows slots, waiting requests and counters under `queue`.
 - **Measuring**: Status → Checks → "Speech first" also measures the case "two people at once": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both.
-- **Limits**: the language model (qwen38) knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster.
+- **Limits**: the language model knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster.
 
 ## Why the installation looks like this
 

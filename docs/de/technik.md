@@ -47,9 +47,11 @@ Seit V01.0.163 bekommt jeder Wert eine Stufe (sehr gut, gut, knapp, zu langsam) 
 
 Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. Das letzte Ergebnis steht in `/var/lib/speech-spark/state/bench-latest.json`. Die Speicheranteile der Engines (Konfiguration) sind Startwerte: nach der Messung passend einstellen.
 
-## Neben dgx-spark-qwen38
+## Sprachmodell: eigenes oder dgx-spark-qwen38
 
-- **Ports**: qwen38 nutzt 30000 bis 30099 (Engine 30000, Proxy 30001, Bild 30020, Video 30022, Cockpit 30090/30091). Speech nutzt 31001, 31002, 31080 und 31443 (Panel über https); die Engines auf 31011, 31012 und 31013 hören nur auf 127.0.0.1. Das Panel lehnt Ports im Bereich von qwen38 ab, und das Installationsskript bricht ab, wenn ein Port schon belegt ist.
+Das Sprachmodell läuft entweder als eigenes vLLM hinter dem LLM-Tor (`sudo ./install.sh --llm`, dann `sudo speech-spark modelle llm uebernehmen`, zurück mit `… zurueck`) oder wie früher aus [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38). Beim Spark teilen geht nur das eigene, weil der Panel-Rechner qwen38 nicht erreicht. Die Punkte unten zu Lanes und Cockpit gelten nur, solange qwen38 läuft.
+
+- **Ports**: qwen38 nutzt 30000 bis 30099 (Engine 30000, Proxy 30001, Bild 30020, Video 30022, Cockpit 30090/30091). Speech nutzt 31001 (ASR), 31002 (TTS), 31003 (Wyoming), 31005 (Bilder), 31006 (LLM-Tor), 31080 und 31443 (Panel über https), dazu UDP 31060 und 31062–31068 fürs Telefon; die Engines auf 31011, 31012, 31013, 31015, 31016 und 31017 hören nur auf 127.0.0.1, ebenso der Wärter (31007) und der Notbetrieb (31009). Die vollständige Liste steht in der [Architektur](architektur.md#prozesse-und-ports). Das Panel lehnt Ports im Bereich von qwen38 ab, und das Installationsskript bricht ab, wenn ein Port schon belegt ist.
 - **Speicher**: Die GB10 hat einen gemeinsamen Pool von 128 GB für CPU und GPU. Die qwen38-Lanes reservieren davon einen festen Anteil: 50 % bei `stock`/`fp8`, 76 % im 1M-Modus und 85 % bei `flash`. Laut qwen38-Doku bleiben bei `flash` im Leerlauf nur ~16,6 GiB frei, und unter ~8 GiB beendet earlyoom von DGX OS Prozesse. Deshalb gilt:
   - Erkennt das Skript eine flash- oder 1M-Lane, wählt es automatisch die 0.6B-Modelle.
   - Bevor ein Dienst sein Modell lädt, prüft er, ob danach noch die Reserve frei bleibt (Standard 10 GiB). Wenn nicht, lädt er nicht und zeigt im Panel `blocked` mit Begründung.
@@ -90,7 +92,7 @@ Reden mehrere Personen gleichzeitig, bekommen ausgewählte Profile ihre Antwort 
 - **Wer die Stufe sagen darf**: nur das Panel. Es schickt `X-Spark-Stufe` (0, 1, 2) zusammen mit dem Schlüssel aus `state/vorrang-key` (vom Panel einmal erzeugt, Rechte 0600, nicht in der Sicherung). Die Dienste glauben das nur von 127.0.0.1 und nur mit diesem Schlüssel; alle anderen sind normal, auch mit dem API-Schlüssel.
 - **Sehen**: Zustand → Logs → Anfragen zeigt bei „Eingang“ „mit Vorrang“ und bei „Sprachausgabe“, wie lange die Sätze in der Reihe warteten und wie viele sie überholten. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. `/health` der Dienste zeigt unter `queue` Plätze, Wartende und Zähler.
 - **Messen**: Zustand → Prüfen → „Vorrang für Sprache“ misst zusätzlich den Fall „Zwei Personen gleichzeitig“: die Sprachausgabe ist mit Sätzen anderer voll (alle Plätze plus zwei Wartende), dann kommt ein Satz einmal normal und einmal mit Vorrang. Gezeigt wird der erste Ton beider Fälle.
-- **Grenzen**: Das Sprachmodell (qwen38) selbst kennt keine Reihenfolge: Das Tor wirkt nur auf Anfragen des Panels, Open WebUI und andere Programme, die direkt dorthin fragen, bremst der Vorrang nicht. Spricht nur eine Person, ist nichts schneller.
+- **Grenzen**: Das Sprachmodell selbst kennt keine Reihenfolge: Das Tor wirkt nur auf Anfragen des Panels, Open WebUI und andere Programme, die direkt dorthin fragen, bremst der Vorrang nicht. Spricht nur eine Person, ist nichts schneller.
 
 ## Warum die Installation so aussieht
 

@@ -19,7 +19,7 @@ flowchart TB
     geraet["Browser and phone<br/>static/js"]
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, watch<br/>Kanäle"]
-    lautsprecher["Speakers, HA, phone<br/>esp32 · :31003 · :31060"]
+    lautsprecher["Speakers, phone<br/>esp32 · :31003 · :31060"]
     mcpc["MCP programs<br/>/mcp"]
   end
   subgraph z_spark["DGX Spark · inside"]
@@ -35,7 +35,7 @@ flowchart TB
       betrieb["Logs and live<br/>tracelog · live"]
     end
     subgraph z_modelle["Models · on the DGX"]
-      llm["Language model<br/>:31006 · :30001"]
+      llm["Language model<br/>:31006 → :31016"]
       asr["Speech recognition<br/>:31001 → :31011"]
       tts["Speech output<br/>:31002 → :31012"]
       bild["Painting pictures<br/>:31005 → :31015"]
@@ -92,9 +92,17 @@ flowchart TB
 | `speech-spark-tts` → `speech-spark-tts-engine` | 31002 → 31012 (local only) | Speech output; optional VoiceDesign on 31013 |
 | Wyoming in the panel | 31003 | Home Assistant Assist |
 | Phone in the panel | UDP 31060, sound UDP 31062–31068 | Calling the Spark (SIP and RTP only with the telephone system in the home network) |
-| `dgx-spark-qwen38` (other project) | 30001 | Language model; ports 30000–30099 belong to it |
+| `speech-spark-turn` | 3478, relay 49160–49200 | Relay for calls from outside (coturn), only with its switch on |
+| `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (local only) | Own language model (vLLM) behind the LLM-Tor; image understanding `speech-spark-sehen` on 31017 on demand |
+| `speech-spark-bild` | 31005 → 31015 (local only) | Painting and changing pictures (FLUX.2 klein) |
+| `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: fixed commands from the panel computer (only with the Spark split, behind the TLS-Tor) |
+| `speech-spark-tlstor` | the same ports with TLS | TLS-Tor of the model computer (only with the Spark split), plus `speech-spark-teilen-fw` |
+| `speech-spark-notasr` | 127.0.0.1:31009 | Emergency mode with Parakeet on the panel computer while the model computer is gone |
+| `dgx-spark-qwen38` (other project, optional) | 30001 | Language model until the own one is taken over; ports 30000–30099 belong to it |
 | `speech-spark-watch` | – | Watchdog, only without the panel |
 | `speech-spark-update` | – | Update, only on request |
+| `speech-spark-wechsel` | – | Switch one model (Status → Models), only on request |
+| `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
 
@@ -335,7 +343,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
 | `app/panel/verbrauch.py` | Verbrauchszähler. |
-| `app/panel/wartung.py` | Wartungspause: while the language model (qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
+| `app/panel/wartung.py` | Wartungspause: while the language model (own or qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
 | `app/panel/wege.py` | Ways into the panel in texts that leave it ("Einschalten unter Me → Telegram"): Telegram messages, push notes. |
 
 ### Speech services
@@ -914,7 +922,7 @@ Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-ka
 
 Self-tests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
 
-### Speakers, HA, phone
+### Speakers, phone
 
 Own speakers are ESP32 boards with the open XiaoZhi firmware. They listen for their wake word, send the sound to the Spark over a WebSocket connection and play the answer. Every speaker is a device key of its profile. Home Assistant Assist only uses the Spark's speech recognition and voice over Wyoming.
 
@@ -2216,7 +2224,7 @@ Self-tests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, 
 
 ### Language model
 
-The language model (qwen38 from dgx-spark-qwen38, not part of this repo) writes the answers. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete.
+The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete.
 
 **Why:** The GPU is shared between the model and speech output. While a person waits, no learning or tidying in the background may slow the answer. And a hanging or missing model should give a clear sentence, not minutes of silence.
 
@@ -2263,7 +2271,7 @@ flowchart TD
 ```
 
 1. <a id="kn-llm-s1"></a>**Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
-2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. With “Automatically on restart” the panel pauses by itself as soon as a qwen38 service restarts or switches (at most 30 min) and goes on once the model answers again. When the model runs on another computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, reminders) work without a model (notbetrieb.antwort).
+2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. With “Automatically on restart” the panel pauses by itself as soon as a language model service (own or qwen38) restarts or switches (at most 30 min) and goes on once the model answers again. When the model runs on another computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, reminders) work without a model (notbetrieb.antwort).
 3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
 4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models once and keeps the first name for this address.
 5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. With logs or the usage counter on the server reports at the end how much it read and wrote and how much came from its cache.
@@ -2277,7 +2285,7 @@ flowchart TD
 13. <a id="kn-llm-s12"></a>**Error on the way?**: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text.
 14. <a id="kn-llm-s13"></a>**Text and tool calls back**: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs.
 
-**Examples:** Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · qwen38 hangs: „My language model is not answering right now.“ instead of silence. · qwen38 is being updated: „I am being updated right now and will be back in about 20 minutes.“
+**Examples:** Normal answer: Streamed, the first sentence goes to speech output at once. · Two people, one with priority: The round waits briefly until the answer with priority has its first sentence. · Very long document in the history: History cut, asked once more. · Language model hangs: „My language model is not answering right now.“ instead of silence. · Language model is being updated: „I am being updated right now and will be back in about 20 minutes.“
 
 #### Numbers (from the code)
 
@@ -2297,7 +2305,7 @@ flowchart TD
 - Features → Priority for people: chosen profiles get their answer first.
 - Status → Maintenance pause: pause the language model before an update (also sudo speech-spark pause llm 30).
 - Features → Usage counter: counts tokens per model, task and profile; below it the quota per profile for day, week and month.
-- Features → Maintenance pause → Automatically on restart: pauses by itself when qwen38 restarts.
+- Features → Maintenance pause → Automatically on restart: pauses by itself when the language model restarts.
 
 #### What you see
 
@@ -2323,7 +2331,7 @@ flowchart TD
 - `app/panel/vorrang.py` `mark`: mark „speech is running“ ([step 1](#kn-llm-s1))
 - `app/panel/vorrang.py` `run`: background work gives way to speech ([step 1](#kn-llm-s1))
 - `app/panel/wartung.py` `paused`: maintenance pause: the model is not asked ([step 2](#kn-llm-s1w))
-- `app/panel/wartung.py` `auto_tick`: maintenance pause by itself when qwen38 restarts ([step 2](#kn-llm-s1w))
+- `app/panel/wartung.py` `auto_tick`: maintenance pause by itself when the language model restarts ([step 2](#kn-llm-s1w))
 - `app/panel/wartung.py` `sentence`: the fixed sentence with the time left ([step 2](#kn-llm-s1w))
 - `app/panel/verbrauch.py` `llm`: counts the tokens of a round ([step 12](#kn-llm-s11))
 - `app/panel/verbrauch.py` `over`: which limit is full: day, week or month? ([step 6](#kn-llm-s5))
