@@ -640,3 +640,46 @@ class Bus(unittest.TestCase):
         snap = live.snapshot("admin", now=t + 1)
         self.assertEqual(sorted(r["src"] for r in snap["reqs"]), ["", "job", "rule", "timer"])
         self.assertEqual(snap["bus"], {"rule": 1, "timer": 1, "job": 1, "note": 0})
+
+
+class Ruhe(unittest.TestCase):
+    """Dominik 2026-10-16 ("nur aktuell benutzte anzeigen"): a target keeps its box only while it works, was used in
+    the last 15 minutes or has a warning; every other is quiet and folds into "+ N bereit" / "+ N ruhig"."""
+
+    def setUp(self):
+        reset()
+        self.addCleanup(reset)
+
+    def test_quiet_unless_used_busy_or_core(self):
+        t = 5000.0
+        with live._lock:
+            live._hits.append((t - 240, "bild", True, 900))          # 4 minutes ago
+            live._hits.append((t - live.RECENT - 1, "nas", True, 50))  # just over 15 minutes ago
+        ts = [{"id": k} for k in ("qwen", "bild", "nas", "kiwix", "chats", "web")]
+        live.ruhe(ts, {"kiwix"}, now=t)
+        by = {x["id"]: x for x in ts}
+        self.assertFalse(by["qwen"]["quiet"])           # the language model always keeps its box
+        self.assertFalse(by["bild"]["quiet"])
+        self.assertEqual(by["bild"]["ago"], 240)
+        self.assertTrue(by["nas"]["quiet"])
+        self.assertIsNone(by["nas"]["ago"])
+        self.assertFalse(by["kiwix"]["quiet"])          # busy right now (a request, a ⚠ or running work)
+        self.assertTrue(by["chats"]["quiet"])
+        self.assertTrue(by["web"]["quiet"])
+
+    def test_snapshot_marks_every_target(self):
+        set_logs(live=True)
+        self.addCleanup(set_logs, live=False)
+        snap = live.snapshot("admin", now=1000.0)
+        self.assertTrue(snap["targets"])
+        for x in snap["targets"]:
+            self.assertIn("quiet", x)
+            self.assertIn("ago", x)
+        self.assertFalse(next(x for x in snap["targets"] if x["id"] == "qwen")["quiet"])
+
+    def test_picture_folds_home_and_internet(self):
+        with open(os.path.join(os.path.dirname(live.__file__), "static", "js", "live.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("folded(d,T.filter(x=>x.zone!=='net'),0)", js)
+        self.assertIn("folded(d,T.filter(x=>x.zone==='net'),1)", js)
+        self.assertIn("x.quiet&&!busy.has(x.id)", js)

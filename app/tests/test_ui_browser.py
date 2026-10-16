@@ -2008,6 +2008,8 @@ class Browser(unittest.TestCase):
             c.setdefault("logs", {}).update(kw)
             helpers.write_config(c)
         logs(live=True, live_monitor=True)
+        with live._lock:   # what earlier tests did stays out: a target used in the last 15 minutes keeps its box (2026-10-16)
+            live._run.clear(), live._past.clear(), live._hits.clear(), live._rets.clear()
         # set up: web search, calendar and mail (one profile connected); reMarkable stays off and must not show
         import profiles
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
@@ -2081,13 +2083,18 @@ class Browser(unittest.TestCase):
                         self.assertEqual(await pg.locator("#lvflow .netband").count(), 2)
                         self.assertEqual(await pg.locator("#lvflow .netwall").count(), 1)
                         self.assertIn("ins Internet", await pg.text_content("#lvflow .legend"))
-                        self.assertIn("ruhig", await pg.text_content("#lvflow [data-fold]"))
+                        self.assertIn("ruhig", await pg.text_content("#lvflow [data-fold=net]"))
+                        # Dominik 2026-10-16: unused home and Spark targets fold too, the language model stays
+                        # (here only one home target is quiet, so it keeps its box; a used one says since when)
+                        self.assertEqual(await pg.locator("#lvflow [data-fold=home]").count(), 0)
+                        self.assertIn("vor ", await pg.text_content("#lvflow [data-node='mem']"))
+                        self.assertEqual(await pg.locator("#lvflow [data-node='qwen']").count(), 1)
                         self.assertEqual(await pg.locator("#lvflow [data-node='mail']").count(), 0)
                         self.assertNotIn("reMarkable", await pg.text_content("#lvflow"))   # not set up: not shown at all
-                        await pg.click("#lvflow [data-fold]")
+                        await pg.click("#lvflow [data-fold=net]")
                         await pg.wait_for_selector("#lvflow [data-node='mail']", timeout=20000)
-                        self.assertIn("zuklappen", await pg.text_content("#lvflow [data-fold]"))
-                        await pg.click("#lvflow [data-fold]")
+                        self.assertIn("zuklappen", await pg.text_content("#lvflow [data-fold=net]"))
+                        await pg.click("#lvflow [data-fold=net]")
                         await pg.wait_for_selector("#lvflow [data-node='mail']", state="detached", timeout=20000)
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
                                                           f"live-{name}.png"), full_page=True)

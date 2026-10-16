@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.689** Live view: the right column shows only what is in use; the rest sits in "+ N ready"
 - **V01.0.688** Making music: every released profile makes its own songs in the conversation ("Make me a song about …") and under Me → Music; model (2B or XL) selectable, Test music measures every installed model
 - **V01.0.687** Fix self-test: the test for "You can also say" no longer depends on the order
 - **V01.0.686** Self-tests: a test puts switches back the way it found them (four red block tests on GitHub and tars)
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.682** Control centre on the screen: the panel computer shows everything on one text screen at its HDMI output, starts at boot without signing in
 - **V01.0.681** Test music: songs come out (job number and model names the way ace-server sends and expects them)
 - **V01.0.680** Fix: speech output no longer fails with "No available memory" after running install.sh; engines restart only when changed, the language model first
-- **V01.0.679** Test music: the music engine starts (an option ace-server does not know is gone)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

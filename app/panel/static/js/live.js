@@ -5,7 +5,7 @@
 // the tab is open; the monitor (body.kiosk) asks /api/live/state and pairs once with a 6-digit code.
 (()=>{
 const KIOSK=document.body.classList.contains('kiosk');
-const LV={fit:false,sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0,
+const LV={fit:false,unfold:{},sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0,
   evArea:'',evQ:'',evPause:null,evSel:'',hl:null,node:'',rew:null,past:null,play:0,hold:false};
 const lvE=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tt=(de,en)=>typeof t==='function'?t(de,en):de;
@@ -60,7 +60,7 @@ function skeleton(root){
     tip.textContent=x.dataset.tip;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+16)+'px'});
   fl.addEventListener('mouseleave',()=>tip.style.display='none');
   root.addEventListener('click',e=>{if(e.target.closest('[data-lvfs]')){full(!document.querySelector('.lv .flow.full'));return}
-    if(e.target.closest('[data-fold]')){LV.unfold=!LV.unfold;LV.lastKey='';draw();return}
+    const fo=e.target.closest('[data-fold]');if(fo){LV.unfold[fo.dataset.fold]=!LV.unfold[fo.dataset.fold];LV.lastKey='';draw();return}
     if(KIOSK){if(e.target.closest('.krot')){LV.hold=!LV.hold;rotate()}}else if(clickMore(e))return;const d=e.target.closest('[data-req]');if(d){LV.sel=d.dataset.req;LV.lastSel=Date.now();LV.lastKey='';draw();return}
     const g=e.target.closest('[data-gd]');if(g){LV.gsel=+g.dataset.gd;guardList();return}
     const o=e.target.closest('[data-dr]');if(o){LV.dsel=+o.dataset.dr;doorList();return}
@@ -113,7 +113,7 @@ function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort
   return o}
 const LV_ROW=46;   // the smallest step between two target boxes in the computer picture
 function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.filter(r=>!r.net).slice(-4),net=reqs.filter(r=>r.net).slice(-3);
-  const T=d.targets,order=[...T.filter(x=>x.zone!=='net'),...folded(d,T.filter(x=>x.zone==='net'))];let H;
+  const T=d.targets,order=[...folded(d,T.filter(x=>x.zone!=='net'),0),...folded(d,T.filter(x=>x.zone==='net'),1)];let H;
   if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));
     // every target box keeps room for its two lines (40 high, 46 apart): with many targets the picture grows instead of
     // squeezing the boxes until name and state spill over their edges (Dominik 2026-10-14, NAS and Wissensordner made it 16)
@@ -132,13 +132,16 @@ function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.
   else{const row=(arr,y,h,per)=>{arr.forEach((n,i)=>{const r=Math.floor(i/per),c=i%per,cnt=Math.min(per,arr.length-r*per),w=(W-8*(cnt+1))/cnt;pos[n.k]={x:8+c*(w+8),y:y+r*(h+8),w,h}});return y+Math.ceil(arr.length/per)*(h+8)};
     let y=row(reqs.map(r=>({k:'r'+r.id})),26,52,3);y=Math.max(y,84)+30;const sy=y;y=row(STAGES.map(s=>({k:s[0]})),y,48,3);y+=30;const ty=y;y=row(order.map(x=>({k:x.id})),y,44,3);H=y+40;pos._sy=sy;pos._ty=ty}
   return {pos,W,H,reqs,order}}
-// quiet internet targets fold into one box "+4 ruhig" (Dominik 2026-10-11): nothing running there, no ⚠, not on the
-// chosen way, not lit, not opened; a tap opens them all, "zuklappen" folds them again; under Notaus everything shows its lock
-function folded(d,net){const sel=(d.reqs||[]).find(r=>r.id===LV.sel),busy=new Set([...(d.hints||[]).map(h=>h.at),glowKey(),LV.node]);
+// quiet targets fold into one box (Dominik 2026-10-11 internet "+ N ruhig", 2026-10-16 home and Spark "+ N bereit":
+// "nur aktuell benutzte anzeigen"): the server marks a target quiet when nothing runs there, no ⚠ and no step in the
+// last 15 minutes (live.ruhe); here also not on the chosen way, not lit, not opened. A tap opens that group,
+// "zuklappen" folds it again; under Notaus everything shows its lock
+function folded(d,list,net){const sel=(d.reqs||[]).find(r=>r.id===LV.sel),busy=new Set([...(d.hints||[]).map(h=>h.at),glowKey(),LV.node]),g=net?'net':'home';
   (d.reqs||[]).forEach(r=>{if(!r.done&&r.to)busy.add(r.to)});if(sel){if(sel.to)busy.add(sel.to);sel.steps.forEach(x=>x.to&&busy.add(x.to))}
-  const quiet=net.filter(x=>!busy.has(x.id));if((d.notaus||{}).level>=1||quiet.length<3)return net;
-  if(LV.unfold)return [...net,{id:'_fold',zone:'net',fold:1,name:tt('– zuklappen','– fold'),sub:tt(quiet.length+' ruhige zusammenfassen',quiet.length+' quiet ones together')}];
-  return [...net.filter(x=>busy.has(x.id)),{id:'_fold',zone:'net',fold:1,name:tt(`+ ${quiet.length} ruhig`,`+ ${quiet.length} quiet`),sub:quiet.map(x=>x.name.replace(/ \(.*\)$/,'')).join(' · '),
+  const quiet=list.filter(x=>x.quiet&&!busy.has(x.id));if((d.notaus||{}).level>=1||quiet.length<2)return list;
+  const zone=net?'net':'lan',word=net?['ruhig','quiet']:['bereit','ready'];
+  if(LV.unfold[g])return [...list,{id:'_fold'+g,zone,fold:g,name:tt('– zuklappen','– fold'),sub:tt(quiet.length+' '+(net?'ruhige':'bereite')+' zusammenfassen',quiet.length+' '+word[1]+' ones together')}];
+  return [...list.filter(x=>!quiet.includes(x)),{id:'_fold'+g,zone,fold:g,name:tt(`+ ${quiet.length} ${word[0]}`,`+ ${quiet.length} ${word[1]}`),sub:quiet.map(x=>x.name.replace(/ \(.*\)$/,'')).join(' · '),
     tip:quiet.map(x=>x.name).join(', ')+' · '+tt('gerade nichts los · antippen zum Aufklappen','nothing going on · tap to open')}]}
 // the internet as a tinted area on the right with the Wächter as a wall in it: every way out passes the wall
 function netBand(pos,order,H,d){if(!pos.guard)return '';const nt=order.filter(x=>x.zone==='net'),l=pos[nt[nt.length-1].id],top=pos._net1,bot=Math.min(H-2,Math.max(l.y+l.h+8,blockedNow(d).length?pos.guard.y+124+(blockedNow(d).length-1)*46:0)),gx=pos.guard.x+15;
@@ -226,7 +229,7 @@ function route(r,pos,W,H,ph){const c0=(pos['r'+r.id]||{}).bus?bcol(r):col(r.id);
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);busNew(d.reqs||[]);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,LV.unfold?1:0,reqs.filter(r=>r.auto&&busFly(r)>=0).map(r=>'f'+r.id).join(','),blockedKey(d),ph,NL,glowKey(),LV.node,LV.rew!=null?Math.round(LV.rew):'',(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,(LV.unfold.home?1:0)+(LV.unfold.net?2:0),reqs.filter(r=>r.auto&&busFly(r)>=0).map(r=>'f'+r.id).join(','),blockedKey(d),ph,NL,glowKey(),LV.node,LV.rew!=null?Math.round(LV.rew):'',(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id+(x.ago!=null?'~'+Math.floor(x.ago/60):'')),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
   if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still
@@ -269,8 +272,8 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);busNew
   STAGES.forEach(x=>{const v=sv(x[0]),o=svo(v,x[1]);if(!o.tip)o.tip=x[1];const b=hb(x[0],ph?'':(v&&v.st!=='ok'?v.word:x[0]==='tool'&&wzNow?wzName(wzNow):x[2])+qw(v),o);s+=node(x[0],x[1],b,act.has(x[0]),o)});
   // Einordnung mit Wahrscheinlichkeit (systemone.py): how often today, per use, at the language model; numbers only
   const S1=d.sys1||{},s1=S1.n?' · ⚖ '+S1.n:'',s1tip=S1.n||S1.busy||S1.fail||S1.unsure?` · ${tt('Einordnung heute','classification today')}: ${Object.entries(S1.uses||{}).filter(([,n])=>n).map(([k,n])=>({weiche:tt('Werkzeugwahl','tool choice'),mail:tt('Aufräumen','tidying'),wichtig:tt('wichtige Mail','important mail'),qualitaet:tt('Qualitätstest','quality test'),berater:tt('Einstellungs-Assistent','settings assistant'),pruefen:tt('Antwort prüfen','answer check'),klage:tt('Beschwerde','complaint')}[k]||k)+' '+n).join(', ')||'–'}${S1.ms?' · Ø '+S1.ms+' ms':''}${S1.busy?' · '+S1.busy+' '+tt('ausgelastet','busy'):''}${S1.fail?' · '+S1.fail+' '+tt('ohne Antwort','no answer'):''}${S1.unsure?' · '+S1.unsure+' '+tt('unsicher','unsure'):''}${S1.orders===2?' · '+tt('zwei Reihenfolgen','two orders'):''}`:'';
-  order.forEach(x=>{if(x.fold){s+=node(x.id,x.name,x.sub,false,{dev:1,cls:' fold',attrs:'data-fold="1"',tip:x.tip||x.name,stroke:'var(--line)'});return}
-    const v=sv(x.id),o=Object.assign({tip:`${x.name} · ${x.sub}${x.id==='qwen'?s1tip:''}`},svo(v,x.name));if(x.id==='qwen'&&o.tip.indexOf(s1tip)<0)o.tip+=s1tip;if(x.zone==='net'&&act.has(x.id)&&!o.stroke)o.stroke=NET;const b=hb(x.id,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub+(x.id==='qwen'?s1:''),o);s+=node(x.id,ph?x.name.split(' ')[0]:x.name,b,act.has(x.id),o)});
+  order.forEach(x=>{if(x.fold){s+=node(x.id,x.name,x.sub,false,{dev:1,cls:' fold',attrs:`data-fold="${x.fold}"`,tip:x.tip||x.name,stroke:'var(--line)'});return}
+    const v=sv(x.id),o=Object.assign({tip:`${x.name} · ${x.sub}${x.id==='qwen'?s1tip:''}`},svo(v,x.name));if(x.id==='qwen'&&o.tip.indexOf(s1tip)<0)o.tip+=s1tip;if(x.zone==='net'&&act.has(x.id)&&!o.stroke)o.stroke=NET;const b=hb(x.id,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:(x.ago!=null&&!act.has(x.id)?tt(`vor ${ago(x.ago)} · `,`${ago(x.ago)} ago · `):'')+x.sub+(x.id==='qwen'?s1:''),o);s+=node(x.id,ph?x.name.split(' ')[0]:x.name,b,act.has(x.id),o)});
   if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate${glow('guard')?' glow':''}" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
     <text x="${gx}" y="${gy+34}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Wächter','Wächter')}</text><text x="${gx}" y="${gy+46}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('Internet zu','internet closed'):d.guard.bad+' '+tt('geblockt','blocked')}</text></g>`;
     s+=blocked(d,pos,H)}

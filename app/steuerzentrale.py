@@ -352,9 +352,19 @@ def dienste(R, d, x, w, top, bot, lauf, pos, hoch):
     targets = [t for t in live.get("targets") or [] if isinstance(t, dict)]
     netz = [t for t in targets if t.get("zone") == "net"]
     heim = [t for t in targets if t.get("zone") != "net"]
+    # like the Live picture (Dominik 2026-10-16): quiet targets (live.ruhe) fold into one line per group
+    bereit, ruhig = [t for t in heim if t.get("quiet")], [t for t in netz if t.get("quiet")]
+    if len(bereit) >= 2:
+        heim = [t for t in heim if not t.get("quiet")]
+    else:
+        bereit = []
+    if len(ruhig) >= 2:
+        netz = [t for t in netz if not t.get("quiet")]
+    else:
+        ruhig = []
     R.put(x + 2, top, "DIENSTE UND ZIELE", "m")
-    inet = bot - max(4, min(len(netz), 4) + 3)
-    reihen = inet - top - 2
+    inet = bot - max(4, min(len(netz) + bool(ruhig), 4) + 3)
+    reihen = inet - top - 2 - bool(bereit)
     schritt = 2 if len(heim) * 2 <= reihen else 1
     zeile, faerb = {}, {}
     for j, r in enumerate(lauf):
@@ -378,6 +388,10 @@ def dienste(R, d, x, w, top, bot, lauf, pos, hoch):
             R.put(x + w - 2, y, "●", STUFE.get(h.get("level"), "y") if h else DIENST.get(s["st"], "m"))
     if rest:
         R.put(x + 3, top + 1 + len(zeigen) * schritt, f"+ {rest} weitere", "m")
+    if bereit:
+        y = top + 1 + (len(zeigen) + bool(rest)) * schritt
+        e = R.put(x + 3, y, f"+ {len(bereit)} bereit", "w")
+        R.put(e + 2, y, kurz(" · ".join(str(t.get("name") or "") for t in bereit), x + w - 4 - e - 2), "m")
     for k in range(x + 1, x + w - 1, 2):
         R.put(k, inet, "╌", "o")
     R.put(x + 2, inet, " INTERNET ↓ ", "o")
@@ -391,6 +405,10 @@ def dienste(R, d, x, w, top, bot, lauf, pos, hoch):
         R.put(x + 1, y, "▌", col or "d")
         e = R.put(x + 3, y, kurz(t.get("name"), w * 3 // 5), "W" if col else "w")
         R.put(e + 2, y, kurz(t.get("sub"), x + w - 4 - e - 2), "m")
+    if ruhig and bot - inet - 2 > len(netz):
+        y = inet + 2 + len(netz)
+        e = R.put(x + 3, y, f"+ {len(ruhig)} ruhig", "w")
+        R.put(e + 2, y, kurz(" · ".join(str(t.get("name") or "") for t in ruhig), x + w - 4 - e - 2), "m")
     tx, ty, tw = pos["tool"]
     for j, r in enumerate(lauf):
         t = r.get("to") if r.get("stage") == "tool" else None

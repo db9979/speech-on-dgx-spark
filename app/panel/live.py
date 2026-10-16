@@ -1088,6 +1088,27 @@ def _explain(h):
     return dict(h, why=h.get("why") or "", go=h.get("go") or ("prof" if h.get("at") == "geraete" else "feat" if h.get("at") == "issues" else "mon"))
 
 
+# Dominik 2026-10-16 ("nur aktuell benutzte anzeigen"): the right column shows a box only for a target that works
+# right now, was used in the last RECENT seconds or has a warning; the others are "quiet" and fold into "+ N bereit"
+# (home and Spark) or "+ N ruhig" (internet). The language model always keeps its box: the LLM stage points at it.
+RECENT = 15 * 60
+ALWAYS = frozenset({"qwen"})
+
+
+def ruhe(targets, busy, now=None):
+    """Sets "ago" (seconds since the last step there within RECENT, else None) and "quiet" on every target."""
+    now = time.time() if now is None else now
+    last = {}
+    with _lock:
+        for t, node, _ok, _ms in _hits:
+            if 0 <= now - t < RECENT and t > last.get(node, 0):
+                last[node] = t
+    for x in targets:
+        a = last.get(x["id"])
+        x["ago"] = int(now - a) if a else None
+        x["quiet"] = not (x["id"] in ALWAYS or x["id"] in busy or a)
+
+
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
@@ -1414,6 +1435,10 @@ def snapshot(view="admin", now=None):
             svc[wartung.PARTS[p][0]] = {"st": "pause", "word": "Wartungspause", "ago": 0}
     except Exception:
         pause = {"on": False}
+    work = {"telefon": tel.get("calls"), "docling": dlg.get("busy") or dlg.get("wait") or dlg.get("down"),
+            "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run")}
+    ruhe(targets, {k for k, v in work.items() if v} | {h["at"] for h in hs} | {k for k, v in svc.items() if v.get("st") != "ok"}
+         | {s["to"] for r in reqs if not r["done"] for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if not r["done"] and r["to"]}, now)
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},

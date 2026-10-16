@@ -204,6 +204,20 @@ class Bild(unittest.TestCase):
         self.assertGreater(len(drawn), 10)
         self.assertEqual(set(sz.SCHRITT), {"asr", "weiche", "llm", "tool", "tts", "ack"})
 
+    def test_quiet_targets_fold_like_the_live_picture(self):
+        """Dominik 2026-10-16: only what is in use gets a line; the quiet ones fold into "+ N bereit" / "+ N ruhig"."""
+        d = beispiel()
+        busy = {"qwen", "kiwix", "bild"}
+        for x in d["live"]["targets"]:
+            x["quiet"] = x["id"] not in busy
+        t = sz.bild(d, 240, 67).text()
+        heim = [x for x in d["live"]["targets"] if x["zone"] != "net"]
+        netz = [x for x in d["live"]["targets"] if x["zone"] == "net"]
+        self.assertIn(f"+ {sum(x['quiet'] for x in heim)} bereit", t)
+        self.assertIn(f"+ {sum(x['quiet'] for x in netz)} ruhig", t)
+        self.assertNotIn("+ 1 weitere", t)
+        self.assertNotIn("weitere", t)
+
     def test_missing_glyphs_are_replaced(self):
         have = set(" abc|+-_#.>v")
         s = sz.ersetzen("a▁█✓●┌─┐", have)
