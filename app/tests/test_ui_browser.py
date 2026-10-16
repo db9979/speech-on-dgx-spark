@@ -2873,6 +2873,33 @@ class Browser(unittest.TestCase):
             update.CHANGELOG_FILES = real
             update._cl_cache.update(key=None, entries=[])
 
+    def test_typing_comes_before_the_face(self):
+        """Dominik 2026-10-16 („das Tippen ist total langsam“): while something is typed the face draws at most about
+        ten pictures a second (face.js FD), so the keyboard gets the time; the composer's class changes only when the
+        line goes from empty to text and back (phone.js)."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("goSec('chat')")
+                await self.until(pg, "$('face').offsetParent!==null&&FD.n>0")
+                await pg.focus("#chattext")
+                n0, t0 = await pg.evaluate("[FD.n,performance.now()]")
+                await pg.keyboard.type("Wie wird das Wetter morgen in Berlin", delay=50)
+                n1, t1 = await pg.evaluate("[FD.n,performance.now()]")
+                per_s = (n1 - n0) / max(0.5, (t1 - t0) / 1000)
+                self.assertLessEqual(per_s, 15, f"{per_s:.1f} Bilder je Sekunde beim Tippen")
+                self.assertIn("typing", await pg.evaluate("document.querySelector('.composer').className"))
+                await pg.fill("#chattext", "")
+                self.assertNotIn("typing", await pg.evaluate("document.querySelector('.composer').className"))
+                # after typing the face moves as before again
+                await pg.wait_for_timeout(1700)
+                n2 = await pg.evaluate("FD.n")
+                await pg.wait_for_timeout(500)
+                self.assertGreater(await pg.evaluate("FD.n"), n2)
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_phone_looks_like_the_app(self):
         """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat
         with face, bubbles, big microphone and text field, Heute, Verwalten as a list, pages with "back" on top that the

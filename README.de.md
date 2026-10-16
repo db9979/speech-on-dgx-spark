@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.701** Fix: Tippen im Eingabefeld ist wieder flüssig, im Web, in der Android- und in der iPhone-App
 - **V01.0.700** Musik: laufende Lieder in Live, Monitoring und Steuerzentrale; „geht das in Reggae-Style“ macht ein neues Lied, keine Zusage ohne Werkzeug
 - **V01.0.699** Rundlauf-Wächter: alle paar Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell; hakt ein Schritt zweimal, hören die Admins es
 - **V01.0.698** Steuerzentrale: Linien unter den Kästen, fertige Antworten bleiben kurz stehen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.694** Musik machen: Namen im Lied sind erlaubt (die Personen-Regel blockte auch Wörter wie „braun“ aus Kontakten)
 - **V01.0.693** Schneller Antwortbeginn messbar: das eigene Sprachmodell meldet Treffer im Zwischenspeicher; Selbsttest auf tars scheitert nicht mehr in der Nur-app/-Kopie
 - **V01.0.692** Selbsttests: ein Befehl vor dem Push prüft Version, Doku und die passenden Tests; die wackeligen Fehler in test_panel kamen von gleichen Profilnamen in mehreren Testdateien
-- **V01.0.691** Fix: Die Steuerzentrale bricht das Update auf dem Panel-Rechner nicht mehr ab
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

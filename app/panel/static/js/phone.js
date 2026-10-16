@@ -29,9 +29,12 @@ function layout(){const m=MOBILE.matches;
   if(!m&&mtog.parentNode)mtog.remove();placeFace()}
 new MutationObserver(placeFace).observe($('chatlog'),{childList:true});
 MOBILE.addEventListener('change',layout);
-$('chattext').addEventListener('input',()=>document.querySelector('.composer').classList.toggle('typing',!!$('chattext').value.trim()));
-$('chatsend').addEventListener('click',()=>setTimeout(()=>document.querySelector('.composer').classList.toggle('typing',!!$('chattext').value.trim()),0));
-$('chattext').addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(()=>document.querySelector('.composer').classList.remove('typing'),0)});
+// the class only when it changes (empty ↔ text), not a class write in every keystroke
+{const box=document.querySelector('.composer'),ti=$('chattext');let on=null;
+ const sync=v=>{if(v!==on){on=v;box.classList.toggle('typing',v)}};
+ ti.addEventListener('input',()=>sync(!!ti.value.trim()));
+ $('chatsend').addEventListener('click',()=>setTimeout(()=>sync(!!ti.value.trim()),0));
+ ti.addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(()=>sync(false),0)})}
 // menu sheet: conversation actions, admin pages, language, theme, login
 const closeSheet=()=>{$('msheet').style.display='none'};
 $('msheet').onclick=e=>{if(e.target===$('msheet'))closeSheet()};

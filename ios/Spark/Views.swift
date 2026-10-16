@@ -164,7 +164,6 @@ struct PairView: View {
 struct ChatView: View {
     @EnvironmentObject var app: AppState
     @ObservedObject private var talk = Conversation.shared
-    @State private var typed = ""
     @State private var settings = false
     @State private var history = false
     @State private var today = false
@@ -321,38 +320,14 @@ struct ChatView: View {
                                    store: talk.allowed.docs && !talk.stored && a.image == nil ? { Task { await talk.storeAttachment() } } : nil,
                                    storing: talk.storing)
                 }
-                HStack {
-                    Menu {
-                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                            Button { camera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
-                        }
-                        PhotosPicker(selection: $photo, matching: .images) { Label("Foto auswählen", systemImage: "photo") }
-                        Button { files = true } label: { Label("Dokument", systemImage: "doc") }
-                    } label: {
-                        Image(systemName: "paperclip")
-                    }
-                    .accessibilityLabel("Foto oder Dokument anhängen")
-                    .disabled(talk.reading)
-                    TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: talk.suggestion) {
-                            if let s = talk.suggestion { typed = s; talk.suggestion = nil }
-                        }
-                        .submitLabel(.send)
-                        .onSubmit(send)
-                    Button(action: send) { Image(systemName: "paperplane.fill") }
-                        .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
+                // the line to type in is its own view: a keystroke redraws only it, not the face and every bubble
+                // (Dominik 16.10.2026: „das Tippen ist total langsam“)
+                Composer(camera: $camera, files: $files, photo: $photo)
                 Text(verbatim: AppInfo.version).font(.caption2).foregroundStyle(.tertiary)
             }
             .padding([.horizontal, .top])
             .padding(.bottom, 4)
         }
-    }
-
-    private func send() {
-        talk.write(typed)
-        typed = ""
     }
 
     /// Reads the text on the iPhone; only that text goes along with the next questions.
@@ -362,6 +337,46 @@ struct ChatView: View {
             do { talk.attach(try await work()) } catch { talk.error = error.localizedDescription }
             talk.reading = false
         }
+    }
+}
+
+/// The line to type in, the attachment menu and the send button (ChatView). The typed text lives here, so a
+/// keystroke redraws only this row and not the conversation above it.
+struct Composer: View {
+    @EnvironmentObject var talk: Conversation
+    @Binding var camera: Bool
+    @Binding var files: Bool
+    @Binding var photo: PhotosPickerItem?
+    @State private var typed = ""
+
+    var body: some View {
+        HStack {
+            Menu {
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button { camera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
+                }
+                PhotosPicker(selection: $photo, matching: .images) { Label("Foto auswählen", systemImage: "photo") }
+                Button { files = true } label: { Label("Dokument", systemImage: "doc") }
+            } label: {
+                Image(systemName: "paperclip")
+            }
+            .accessibilityLabel("Foto oder Dokument anhängen")
+            .disabled(talk.reading)
+            TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: talk.suggestion) {
+                    if let s = talk.suggestion { typed = s; talk.suggestion = nil }
+                }
+                .submitLabel(.send)
+                .onSubmit(send)
+            Button(action: send) { Image(systemName: "paperplane.fill") }
+                .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+    }
+
+    private func send() {
+        talk.write(typed)
+        typed = ""
     }
 }
 

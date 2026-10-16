@@ -1450,6 +1450,13 @@
 "titel": "Musik: im Monitor und als neue Fassung",
 "text": "A: Ein Lied wünschen („Mach mir ein Pop-Lied über unseren Hund“). Solange es entsteht, steht es in Zustand → Live unter „Im Hintergrund“, Zustand → Monitoring und die Steuerzentrale zeigen den Musik-Dienst auf der Karte des Modell-Rechners. Ist es fertig, sagen: „geht das in Reggae-Style“. Es entsteht ein zweites Lied mit eigener Liedkarte. Fragt man nur „Wie lang ist das Lied?“, sagt der Spark nie, dass ein neues Lied entsteht.",
 "thread": "Musik erzeugen mit ACE-Step 1.5"
+},
+{
+"id": "P231",
+"v": 701,
+"titel": "Tippen ist flüssig",
+"text": "A: Im Assistenten (Rechner, Handy-Browser, Android-App) einen langen Satz schnell ins Eingabefeld tippen, während das Gesicht zu sehen ist. Die Buchstaben erscheinen sofort, nichts hakt; das Gesicht bewegt sich beim Tippen ruhiger und nach dem Tippen wieder wie immer. iPhone: in der App ebenso schnell tippen, auch bei einem langen Gespräch darüber.",
+"thread": "Langsames Tippen im Eingabefeld"
 }
 ]
 }

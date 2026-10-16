@@ -89,6 +89,7 @@ function comicLips(mx,cy,w,o,sm){const r=n=>Math.round(n*100)/100,y0=r(cy-sm*.5)
     `M${r(mx-w-1)} ${y0} Q${mx} ${r(lo+8.5)} ${r(mx+w+1)} ${y0} Q${mx} ${r(lo)} ${r(mx-w-1)} ${y0}Z`]}
 
 const faces=[];let FACE_KIND='robot',FACE_LIFE=false;
+const FD={typed:-1e9,last:0,vis:null,visAt:-1e9,n:0};   // the frames' own state (faceFrame: Tippen geht vor)
 // ---------------------------------------------------------------- "Gesicht zeigt, was es tut" (V01.0.294)
 // Admin switch chat.face_life (default off, whoami "face_life"). With it the face shows what the answer is
 // doing, taken only from the panel's own chat events (never from the model's text): a magnifier while it
@@ -155,7 +156,7 @@ function mountRobot(el,sfx){el.innerHTML=FACE_SVG.replace(/\b(fhead|fshine|fglow
   const q=c=>el.querySelector('.'+c);return {el,eyeL:q('feyeL'),eyeR:q('feyeR'),mouth:q('fmouth'),halo:q('fhalo'),ant:q('fant'),cheeks:q('fcheeks'),body:q('fbody')}}
 function mountComic(el,sfx){const[s,draw]=COMICS[FACE_KIND],b=draw(sfx);el.innerHTML=b.svg;const q=n=>el.querySelector(`[data-p="${n}"]`);
   return {el,comic:1,s,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),lipT:q('lipT'),lipB:q('lipB'),st:q('st'),ring:q('ring')}}}
-function mountAll(){faces.length=0;mountFace($('face'),'A');mountFace($('fabface'),'B')}
+function mountAll(){faces.length=0;FD.vis=null;mountFace($('face'),'A');mountFace($('fabface'),'B')}
 // called with whoami's "face" and after the admin saved another one; unknown names keep the robot
 // the small picture before each answer (chat.js .av) follows the face: a still of the comic face,
 // drawn once from the same drawing (lids at rest, mouth closed)
@@ -242,8 +243,16 @@ function comicFrame(vis,mode,out,mic,now){const s=vis[0].s,dt=Math.min(.05,(now-
     if(p.st)p.st.setAttribute('transform',`translate(0 ${r2(-C.open*1.3-Math.max(0,C.smile)*.8)})`);
     p.ring.setAttribute('stroke',s.ring[mode]);p.ring.setAttribute('stroke-width',r2(mode==='listen'?5+mic*4:5));
     f.el.dataset.mode=mode}}
+// Tippen geht vor (Dominik 16.10.2026: „das Tippen ist total langsam“): while something is typed the face draws
+// about ten pictures a second instead of sixty, so the keyboard keeps the time; which faces are on screen is asked
+// four times a second, not in every picture (offsetParent makes the browser lay out the page each time)
+document.addEventListener('input',()=>{FD.typed=performance.now()},true);
+document.addEventListener('keydown',()=>{FD.typed=performance.now()},true);
+const faceTyping=now=>now-FD.typed<1500;
 function faceFrame(now){requestAnimationFrame(faceFrame);
-  const vis=faces.filter(f=>f.el.offsetParent);if(!vis.length)return;
+  if(faceTyping(now)&&now-FD.last<100)return;
+  if(!FD.vis||now-FD.visAt>250){FD.vis=faces.filter(f=>f.el.offsetParent);FD.visAt=now}
+  const vis=FD.vis;if(!vis.length)return;FD.last=now;FD.n++;
   let mode=faceMode();if(FACE_LIFE)mode=lifeMode(mode,now);let out=0;
   if(chat.out&&mode==='speak'){outBuf=outBuf||new Float32Array(chat.out.fftSize);chat.out.getFloatTimeDomainData(outBuf);let e=0;for(const v of outBuf)e+=v*v;out=Math.min(1,Math.sqrt(e/outBuf.length)*6)}
   const mic=chat.micLevel||0;
