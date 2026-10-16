@@ -493,12 +493,19 @@ class Change(On):
 
             def ask(text):
                 pid = c.post("/api/chat/image", content=png(64, 48), headers={"Content-Type": "image/png"}).json()["id"]
-                with contextlib.redirect_stdout(io.StringIO()):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
                     r = c.post("/api/chat", json={"messages": [{"role": "user", "content": text}], "images": [pid]})
                 self.assertEqual(r.status_code, 200, r.text)
+                log.append(out.getvalue())
                 return [e for e in helpers.events(r) if e.get("type") == "bild"]
+            log = []
             self.assertEqual(ask("Was ist auf dem Bild?"), [])
+            self.assertNotIn("weiche: Foto mit Änderungswunsch", log[-1])
             ev = ask("Mach den Himmel blau")
+            # the Weiche names it (Logs → Anfragen: not „unklar · Werkzeuge 0 von 0“), no model pick starts
+            self.assertIn("weiche: Foto mit Änderungswunsch - bild", log[-1])
+            self.assertIn("weiche: Absicht bild ", log[-1])
             self.assertEqual(len(ev), 1)
             self.assertEqual(ev[0]["art"], "aendern")
             j = bilder._jobs[ev[0]["job"]]

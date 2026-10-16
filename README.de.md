@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.664** Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für die neuen Funktionen, Lücken zu, Foto ändern als Bilder, Lernen aus unklaren Fragen
 - **V01.0.663** Begleiter: Meldungen im Tray-Fenster mit „OK“ bestätigen
 - **V01.0.662** Verbessern geht auf dem Pi wieder; Gehäuse: elf Seiten mit Vorschau zum Antippen
 - **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.657** Schnellknöpfe für Bilder: drehen, heller, schwarzweiß und mehr, sofort ohne Modell
 - **V01.0.656** ROT-FIX .653: Bilder ändern mit Verbrauchsname und Grund für eigene Daten
 - **V01.0.655** Seite hängt nach Updates nicht mehr bei „Zustand wird geladen …“, lädt sich selbst neu
-- **V01.0.654** Chats in der iPhone-App wie im Panel, auch private Chats (Ende-zu-Ende)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

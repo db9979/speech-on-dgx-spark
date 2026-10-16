@@ -31,9 +31,10 @@ ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 STATIC = os.path.join(os.path.dirname(panel.__file__), "static")
 
-# measured when the hint words came (14.10.2026, 183 sentences): raise these when the rules get better, never lower
-MIN_GOOD = 173      # right + kept by a hint
-MAX_WRONG = 4
+# measured when the hint words came (14.10.2026, 183 sentences) and after the third batch (16.10.2026, 211):
+# raise these when the rules get better, never lower
+MIN_GOOD = 210      # right + kept by a hint
+MAX_WRONG = 0
 
 
 def tool(name):
@@ -65,13 +66,25 @@ class Everyday(unittest.TestCase):
         self.assertGreaterEqual(m["richtig"] + m["geschuetzt"], MIN_GOOD, "\n".join(bad))
         self.assertLessEqual(m["falsch"], MAX_WRONG, "\n".join(bad))
 
+    def test_tools_by_word_are_the_kept_ones(self):
+        # „@tool“ sentences measure a tool the Weiche keeps by the person's own word (werkzeug_abdeckung.BY_WORD)
+        import werkzeug_abdeckung as wa
+        tools = {w[1:] for _, want in intent_alltag.ALLTAG for w in want.split("+") if w.startswith("@")}
+        self.assertTrue(tools)
+        self.assertEqual(sorted(tools - set(wa.BY_WORD)), [])
+        self.assertTrue(intent_alltag.byword("speaker_volume", "Mach leiser"))
+        self.assertFalse(intent_alltag.byword("speaker_volume", "Mach das Licht aus"))
+        m = intent_alltag.measure(intent.classify, [("Mach leiser", "@speaker_volume"), ("Mach das Licht aus", "@undo_last"),
+                                                    ("Leg das auf die NAS", "dokument+@nas_ablegen")])
+        self.assertEqual((m["richtig"], m["offen"], m["falsch"]), (1, 1, 1), m["rows"])
+
     def test_the_lists_are_apart(self):
         # an everyday sentence measures; it never doubles as a tuned test sentence
         from intent_bench import BENCH
         bench = {q.lower() for q, _ in BENCH}
         self.assertFalse([q for q, _ in intent_alltag.ALLTAG if q.lower() in bench])
         for q, want in intent_alltag.ALLTAG:
-            for n in filter(None, want.split("+")):
+            for n in intent_alltag._groups(want):
                 self.assertIn(n, intent.GROUPS, q)
 
     def test_measure_sorts_the_kinds(self):
@@ -254,3 +267,58 @@ class OnePlace(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Learn(unittest.TestCase):
+    """Lernen (plan weiche-intelligenter 3/5): only the group of the first tool of an unclear question and the fixed
+    hint word that named it are kept, never a word of the question; the admin takes a word over, the panel never."""
+    def setUp(self):
+        with weiche._lock:
+            self.saved = json.loads(json.dumps(weiche._days()))
+            for day in weiche._days().values():
+                if isinstance(day, dict):
+                    day.pop("lernen", None)
+
+    def tearDown(self):
+        with weiche._lock:
+            weiche._stats["days"] = self.saved
+            weiche._stats["dirty"] = True
+            weiche._flush()
+
+    def test_counts_only_the_group_and_the_fixed_hint_word(self):
+        route = intent.classify("Wir brauchen Hafermilch für Svenja")
+        self.assertEqual(route.names, [])
+        self.assertEqual(weiche.learn(route, "tasks_add"), "liste")
+        stored = json.dumps(weiche._days(), ensure_ascii=False).lower()
+        self.assertIn("brauchen", stored)
+        for word in ("hafermilch", "svenja"):
+            self.assertNotIn(word, stored)
+        # a rule (or the model's pick) named the group: nothing to learn
+        self.assertIsNone(weiche.learn(intent.classify("Setz Milch auf die Einkaufsliste"), "tasks_add"))
+        self.assertIsNone(weiche.learn(intent.Route(["liste"], {"liste": "Modell"}), "tasks_add"))
+        # a tool of several groups says nothing about the group; a hint of several words is not kept
+        self.assertIsNone(weiche.learn(intent.Route([], {}, {"mail": "post"}), "mail_list"))
+        self.assertEqual(weiche.learn(intent.Route([], {}, {"liste": "kein kaffee mehr"}), "tasks_add"), "liste")
+        self.assertNotIn("kaffee", json.dumps(weiche._days(), ensure_ascii=False).lower())
+
+    def test_a_word_is_offered_after_some_turns_and_only_until_taken(self):
+        for _ in range(weiche.LEARN_MIN - 1):
+            weiche.learn(intent.Route([], {}, {"liste": "brauchen"}), "tasks_add")
+        row = next(r for r in weiche.learned({})["rows"] if r["group"] == "liste")
+        self.assertEqual(row["offer"], [])
+        weiche.learn(intent.Route([], {}, {"liste": "brauchen"}), "tasks_add")
+        row = next(r for r in weiche.learned({})["rows"] if r["group"] == "liste")
+        self.assertEqual(row["offer"], [{"word": "brauchen", "n": weiche.LEARN_MIN}])
+        self.assertEqual(row["n"], weiche.LEARN_MIN)
+        row = next(r for r in weiche.learned({"route_words": "liste: brauchen"})["rows"] if r["group"] == "liste")
+        self.assertEqual(row["offer"], [])
+        # the page shows it; taking it over is the normal save with the check of all test sentences (whChange)
+        self.assertIn("lernen", ADMIN.get("/api/admin/weiche").json())
+
+    def test_a_chat_turn_learns_from_the_first_tool(self):
+        p = profile("Lernen1")
+        r = p.post("/api/chat", json={"messages": [{"role": "user", "content": "TOOL reminder_list"}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        row = next((r for r in weiche.learned({})["rows"] if r["group"] == "erinnerung"), None)
+        self.assertIsNotNone(row)
+        self.assertEqual(row["offer"], [])

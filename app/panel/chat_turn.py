@@ -159,6 +159,13 @@ async def prepare(request):
         if follow:
             route = follow
             print("weiche: Folgefrage -", route.label(), flush=True)
+    # a photo of this turn with a wish to change it is Bilder ändern (bilder.from_turn decides by its fixed rule
+    # further down): the group bild, so no model pick starts and Logs → Anfragen does not show it as „unklar“
+    if ask0 and not route.names and images.ids_of(body):
+        import bilder
+        if bilder.wants_change(ask0):
+            route = intent.Route(["bild"], {"bild": "Foto ändern"})
+            print("weiche: Foto mit Änderungswunsch - bild", flush=True)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     # "Frag Spark" (hilfe.py): asked from a page of the panel, the question is about the Spark itself (a fixed
     # rule on where it was asked, never the model); the admin's own login only counts for the Spark's switches
@@ -889,7 +896,7 @@ async def prepare(request):
     if not force and ex.get("must") and ex["must"] in {t["function"]["name"] for t in tools}:
         force, need = ex["must"], [ex["must"]]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
-    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage') else '…'}“"
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage', 'Foto ändern') else '…'}“"
                     for k, v in route.why.items())[:200]
     print("weiche: Absicht", route.label(), "| Grund", why or "-",
           "| Hinweis", "+".join(route.hints) or "-",

@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.664** Switch check: „Terminal“ is no appointment, everyday sentences for the new functions, known gaps closed, photo edits shown as pictures, learning from unclear questions
 - **V01.0.663** Companion: confirm notes in the tray window with "OK"
 - **V01.0.662** Verbessern works on the Pi again; case: eleven pages with a preview to tap
 - **V01.0.661** Terminal client: Me → Terminal sets up the command spark-tui (checksum checked); Textual in its own environment
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.657** Quick buttons for pictures: rotate, brighter, black and white and more, at once without a model
 - **V01.0.656** RED-FIX .653: changing pictures has its usage name and its own-data reason
 - **V01.0.655** The page no longer hangs at "Zustand wird geladen …" after updates, it reloads itself
-- **V01.0.654** Chats in the iPhone app like in the panel, private chats (end-to-end) included
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

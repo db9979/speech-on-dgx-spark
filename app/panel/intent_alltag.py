@@ -221,11 +221,58 @@ ALLTAG = [
     ("Erklär mir, wie Photosynthese funktioniert", ""),
     ("Wie viele Tage hat der Februar?", ""),
     ("Welche Farbe hat ein Flamingo?", ""),
+    # a third batch for the functions added since (16.10.): telephone, chats, pictures, the Spark's state, and tools
+    # the Weiche keeps by their own word („@tool“: the module's fixed word rule offers it, whatever the group)
+    ("Kannst du mich heute Abend um acht anrufen?", "erinnerung"),
+    ("Ruf mich in einer Stunde an", "erinnerung"),
+    ("Ruf Oma an", "iphone"),
+    ("Schreib im Familienchat, dass ich später komme", "nachricht"),
+    ("Hat jemand im Chat geschrieben?", "nachricht"),
+    ("Was hat Anna im Chat geschrieben?", "nachricht"),
+    ("Starte einen Videoanruf mit Anna", ""),
+    ("Zeichne mir ein Einhorn", "bild"),
+    ("Mal ein Ausmalbild mit Dinos", "bild"),
+    ("Male ein Bild von unserem Hund am Strand", "bild"),
+    ("Läuft alles?", "zustand"),
+    ("Welche Version läuft gerade?", "zustand"),
+    ("Ist der Spark erreichbar?", "spark+zustand"),
+    ("Was hast du heute für mich erledigt?", "erstellen"),
+    ("Wie richte ich den Terminal-Client ein?", "spark"),
+    ("Starte das Terminal", ""),
+    ("Mach leiser", "@speaker_volume"),
+    ("Lautstärke auf 40", "@speaker_volume"),
+    ("Sprich lauter", "@speaker_volume"),
+    ("Mach das rückgängig", "@undo_last"),
+    ("Nimm das zurück", "@undo_last"),
+    ("Meld dich heute nicht mehr", "@proactive_pause"),
+    ("Keine Meldungen bis morgen", "@proactive_pause"),
+    ("Ist die Synology voll?", "@nas_zustand"),
+    ("Wie viel Platz ist noch auf dem NAS?", "@nas_zustand"),
+    ("Leg die Rechnung auf der NAS ab", "dokument+@nas_ablegen"),
+    ("Schick den Artikel aufs reMarkable", "@remarkable_page"),
+    ("Was liegt auf meinem reMarkable?", "@remarkable_library"),
 ]
 
 
-def _ok(names, want):
-    return set(names) == (set(want.split("+")) if want else set())
+def byword(tool, text):
+    """True when the module that offers `tool` only by the person's own word would offer it for `text` (its fixed
+    word rule; werkzeug_abdeckung.BY_WORD). Rights and set-up are not part of the measure."""
+    import aendern
+    import nasablage
+    import naszustand
+    import remarkable
+    words = {"speaker_volume": aendern.VOLUME_WORDS, "undo_last": aendern.UNDO_WORDS,
+             "proactive_pause": aendern.PAUSE_WORDS, "nas_ablegen": nasablage.WORDS, "nas_zustand": naszustand.WORDS,
+             "remarkable_page": remarkable.WORDS, "remarkable_library": remarkable.WORDS}
+    return bool(words[tool].search(text))
+
+
+def _groups(want):
+    return {w for w in want.split("+") if w and not w.startswith("@")}
+
+
+def _ok(names, want, q=""):
+    return set(names) == _groups(want) and all(byword(w[1:], q) for w in want.split("+") if w.startswith("@"))
 
 
 def measure(classify, rows=None):
@@ -236,11 +283,11 @@ def measure(classify, rows=None):
         r = classify(q)
         names = [] if r.names == ["plaudern"] else r.names
         hints = getattr(r, "hints", {}) or {}
-        if _ok(names, want):
+        if _ok(names, want, q):
             kind = "richtig"
-        elif names:
+        elif names and set(names) != _groups(want):
             kind = "falsch"
-        elif want and set(want.split("+")) <= set(hints):
+        elif _groups(want) and _groups(want) <= set(hints):
             kind = "geschuetzt"
         else:
             kind = "offen"

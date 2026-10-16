@@ -7,7 +7,7 @@
 // words (tool_words), the hint words per group and the everyday check („Alltagsquote“, intent_alltag.py).
 const WH={d:null,sel:null,tr:null,edit:null,more:false,fix:null};
 const WHC=['#22a35a','#e09a14','#0ea5a5','#7c5cf0','#e5484d','#3b82f6','#3b82f6','#0d9488','#c2410c','#db2777','#6366f1','#7b8499','#0891b2','#a16207','#9333ea','#64748b','#16a34a','#2563eb','#be123c','#475569'];
-const whName=n=>{const g=WH.d&&WH.d.groups.find(x=>x.name===n);return n==='unklar'?t('unklar','unclear'):n==='mehrere'?t('mehrere','several'):n==='plaudern'?t('Plaudern','Small talk'):g?g.label:n};
+const whName=n=>{if(n.startsWith('@'))return whTool(n.slice(1));const g=WH.d&&WH.d.groups.find(x=>x.name===n);return n==='unklar'?t('unklar','unclear'):n==='mehrere'?t('mehrere','several'):n==='plaudern'?t('Plaudern','Small talk'):g?g.label:n};
 const whTool=n=>(WH.d&&WH.d.tools[n])||n;
 const whRules=()=>WH.edit||WH.d.rules;
 const whDirty=()=>!!WH.edit&&!!WH.d&&JSON.stringify(WH.edit)!==JSON.stringify(WH.d.rules);
@@ -119,13 +119,18 @@ function whTests(){const d=WH.d,own=d.tests.own,A=d.alltag;
       +`<div class="mut wh-small">${esc(t('Eingebaut, nur zum Messen: sie werden nie zu Regeln. Diese landen nicht richtig:','Built in, for measuring only: they never become rules. These do not land right:'))}</div>`
       +A.rows.filter(x=>x.kind!=='geschuetzt').map(x=>`<div class="wh-tool"><span class="${x.kind==='falsch'?'err':'mut'}">${x.kind==='falsch'?'✗':'○'}</span> ${esc(x.q)} <span class="mut">→ ${esc(x.got?x.got.split('+').map(whName).join(' + '):t('unklar','unclear'))} (${esc(t('erwartet','expected'))} ${esc(x.want?x.want.split('+').map(whName).join(' + '):t('unklar','unclear'))})</span></div>`).join('')+'</details>'
     +(d.tests.wrong.filter(x=>!x.own).length?`<div class="err wh-small">${esc(t('Eingebaute Sätze, die mit deinen Regeln anders landen: ','Built-in sentences that land elsewhere with your rules: '))}${d.tests.wrong.filter(x=>!x.own).slice(0,5).map(x=>esc('„'+x.q+'“')).join(', ')}</div>`:'')}
-function whStats(){const s=WH.d.stats,tot=s.total;if(!tot.n){$('whstats').innerHTML=`<div class="mut wh-small">${esc(t('Noch keine Fragen gezählt. Gezählt wird nur die Gruppe und die Zahl der Werkzeuge, nie ein Wort der Frage.','No questions counted yet. Only the group and the number of tools are counted, never a word of the question.'))}</div>`;return}
+// Lernen (weiche.learned): which group the model took for questions no rule knew, and hint words to take over
+function whLearn(){const L2=WH.d.lernen;if(!L2||!L2.rows.length)return '';const own=whParse(whRules().route_words);
+  return `<div class="wh-small wh-learn"><b>${esc(t('Gelernt aus unklaren Fragen','Learned from unclear questions'))}</b> <span class="mut">${esc(t('(nur Gruppe und festes Hinweiswort, nie ein Wort der Frage)','(only the group and a fixed hint word, never a word of the question)'))}</span></div>`
+    +L2.rows.map(r=>`<div class="wh-tool">${esc(t(`${r.label}: ${r.n}× vom Modell gewählt`,`${r.label}: picked ${r.n}× by the model`))}`
+      +r.offer.filter(o=>!(own[r.group]||[]).includes(o.word)).map(o=>` <button type="button" class="wh-chip hint" data-wh="learnuse" data-g="${esc(r.group)}" data-w="${esc(o.word)}" title="${esc(t(`„${o.word}“ führte ${o.n}× hierher: als Wort der Gruppe übernehmen`,`„${o.word}“ led here ${o.n}×: take it as a word of the group`))}">＋ ${esc(o.word)} (${o.n}×)</button>`).join('')+'</div>').join('')}
+function whStats(){const s=WH.d.stats,tot=s.total;if(!tot.n){$('whstats').innerHTML=`<div class="mut wh-small">${esc(t('Noch keine Fragen gezählt. Gezählt wird nur die Gruppe und die Zahl der Werkzeuge, nie ein Wort der Frage.','No questions counted yet. Only the group and the number of tools are counted, never a word of the question.'))}</div>`+whLearn();return}
   const p=x=>Math.round(100*x/tot.n),rules=p(tot.rules),model=p(tot.model),unk=p(tot.unklar);
   const rows=Object.entries(s.groups).sort((a,b)=>b[1].n-a[1].n).slice(0,8);
   $('whstats').innerHTML=`<div class="wh-small">${esc(t(`${tot.n} Fragen in 7 Tagen`,`${tot.n} questions in 7 days`))}</div><div class="wh-bar"><i style="width:${rules}%" class="r"></i><i style="width:${model}%" class="m"></i><i style="width:${unk}%" class="u"></i></div>`
     +`<div class="wh-small wh-legend"><span><i class="r"></i>${esc(t(`von Regeln erkannt ${rules} %`,`recognized by rules ${rules} %`))}</span><span><i class="m"></i>${esc(t(`vom Modell eingeordnet ${model} %`,`sorted by the model ${model} %`))}</span><span><i class="u"></i>${esc(t(`unklar ${unk} %`,`unclear ${unk} %`))}</span></div>`
     +`<table class="wh-tab"><tr><th>${esc(t('Gruppe','Group'))}</th><th>${esc(t('Fragen','Questions'))}</th><th>${esc(t('Ø Werkzeuge','Ø tools'))}</th><th>${esc(t('direkt','direct'))}</th></tr>`
-    +rows.map(([k,v])=>`<tr><td>${esc(whName(k))}</td><td>${v.n}</td><td>${esc(t(`${v.avg} von ${v.avg_of}`,`${v.avg} of ${v.avg_of}`))}</td><td>${v.direct||'–'}</td></tr>`).join('')+'</table>'}
+    +rows.map(([k,v])=>`<tr><td>${esc(whName(k))}</td><td>${v.n}</td><td>${esc(t(`${v.avg} von ${v.avg_of}`,`${v.avg} of ${v.avg_of}`))}</td><td>${v.direct||'–'}</td></tr>`).join('')+'</table>'+whLearn()}
 function whLocks(){$('whlocks').innerHTML=WH.d.locks.map(x=>`<div class="wh-tool">🔒 ${esc(x.t)}</div>`).join('')+`<div class="mut wh-small">${esc(t('Schutzregeln gelten immer und lassen sich hier nicht abschalten.','Protection rules always apply and cannot be switched off here.'))}</div>`}
 function whBar(){const bar=$('whbar');bar.hidden=!whDirty()}
 // ---------------------------------------------------------------- saving
@@ -184,6 +189,8 @@ if($('whbox')){
       else if(k==='locks')$('whlocks').scrollIntoView({behavior:'smooth'});else if(k==='res'||k==='tools'){if(WH.tr&&WH.tr.names[0]){WH.sel=WH.tr.names[0];whDetail()}$('whdet').scrollIntoView({behavior:'smooth'})}}
     else if(a==='del'){const kind=b.dataset.kind,w=b.dataset.w,key={own:'route_words',not:'route_not',extra:'route_extra',must:'tool_words'}[kind];
       whChange(r=>{const o=whParse(r[key]);o[g]=(o[g]||[]).filter(x=>x!==w);r[key]=whJoin(o)})}
+    else if(a==='learnuse'){const w=b.dataset.w;whChange(r=>{const o=whParse(r.route_words);o[g]=[...new Set([...(o[g]||[]),w])];r.route_words=whJoin(o)});
+      WH.sel=g;whList();whDetail();$('whbar').scrollIntoView({behavior:'smooth',block:'center'})}
     else if(a==='deltest'){const q=b.dataset.q;whChange(r=>{r.route_tests=(r.route_tests||[]).filter(x=>x.q!==q)})}
     else if(a==='fixclose'){WH.fix=null;whFix()}
     else if(a==='fixwant'){WH.fix.want=g;WH.fix.text=$('whfixq').value.trim();whFix();whSuggest()}

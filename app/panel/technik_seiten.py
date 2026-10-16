@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "b4e511dd5f",
+        "stand": "9bb1798cfd",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -676,12 +676,14 @@ SEITEN_DATEN = {
                "die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel "
                "die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). "
                "Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); "
-               "Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells.",
+               "Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch "
+               "(bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.",
                "Fixed rules put the own latest message into a group. A new own request that does not point back at the "
                "answer from outside text leaves that answer and its lock out. If no rule knows the question, the model "
                "may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And "
                "tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, "
-               "also beside the model's pick.")),
+               "also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group "
+               "pictures, without the model's pick.")),
             S("s5", "schritt", ("Systemprompt bauen", "Build the system prompt"),
               ("Admin-Text, Zeit, Länge, Stil, Kanal", "admin text, time, length, style, channel"),
               ("Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, "
@@ -823,7 +825,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "d91ec6851d",
+        "stand": "0eb14d8203",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -887,12 +889,16 @@ SEITEN_DATEN = {
               ("Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument "
                "erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue "
                "Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der "
-               "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur ist nie "
-               "ein Gerät. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
+               "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder "
+               "nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder "
+               "Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
+               "nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
                "When several groups match, fixed rules tidy up: weather, list, message, document and „create "
                "document“ come before smart home when there is no switching command; parcels before mail; „Do I have "
                "new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly "
-               "or watches something is an agent; a question about language or nature is never a device. Last, the "
+               "or watches something is an agent; a question about language, nature or a difference is never a "
+               "device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark "
+               "calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the "
                "admin's „Not with“ words take groups out again.")),
             S("s6", "frage", ("Gruppe erkannt?", "Group recognized?"),
               ("eine, zwei oder mehr", "one, two or more"),
@@ -1085,7 +1091,7 @@ SEITEN_DATEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "d180a49ed4",
+        "stand": "1282a200e4",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1196,10 +1202,12 @@ SEITEN_DATEN = {
               ("höchstens {chat.MAX_CALLS} pro Runde", "at most {chat.MAX_CALLS} per round"),
               ("Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über "
                "chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal "
-               "gleich, wird es für diese Antwort gestoppt.",
+               "gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche "
+               "die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage.",
                "Half words before the call are taken back, a finished sentence stays. Every call goes through "
                "chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is "
-               "stopped for this answer."),
+               "stopped for this answer. When no rule recognized the question, the switch counts the group of the "
+               "first tool and the fixed hint word (weiche.learn), never a word of the question."),
               ("zurueck", ("nächste Runde", "next round"), "s4")),
             S("s12", "schritt", ("Ehrliche Schlusssätze", "Honest closing sentences"),
               ("feste Sätze statt der weggelassenen", "fixed sentences instead of the dropped ones"),
@@ -1283,7 +1291,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "bc0ceb8857",
+        "stand": "be7bbfd053",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -1454,7 +1462,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Sprachmodell (chat.llm_url)
     "llm": {
-        "stand": "6937cc23ce",
+        "stand": "ddcb5c7f69",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],

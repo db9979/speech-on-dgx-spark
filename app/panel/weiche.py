@@ -342,6 +342,79 @@ def count(route, offered, of, direct=None, now=None):
             _flush()
 
 
+# Lernen (plan weiche-intelligenter 3/5): a question no rule recognized, for which the model then called a tool of one
+# group first. Kept per day beside the counts: the group and the hint word that named it (a fixed word of
+# intent.HINTS, one word only), never a word of the question itself. A hint word that leads to its group often is
+# offered on Funktionen → Weiche as a word of that group; only the admin takes it over (with the check of all test
+# sentences and Rückgängig), the panel never changes a rule by itself.
+LEARN_MIN = 3        # times a hint word must have led to its group before it is offered
+HINT_WORD = re.compile(r"[a-zäöüß][a-zäöüß-]{2,19}")
+
+
+def group_of_tool(name):
+    """The one Weiche group that owns this tool, or None (several groups, or none)."""
+    owners = [g for g, (tools, _) in intent.GROUPS.items() if name in tools and g in intent.INTENT_NAMES]
+    return owners[0] if len(owners) == 1 else None
+
+
+def learn(route, tool, now=None):
+    """Called with the first tool the model ran in a turn: counts it only when no rule (and no pick of the model)
+    named a group. Returns the group counted, or None."""
+    if route is None or route.names:
+        return None
+    group = group_of_tool(tool)
+    if not group:
+        return None
+    word = str((route.hints or {}).get(group, "")).strip().lower()
+    word = word if HINT_WORD.fullmatch(word) else ""
+    now = time.time() if now is None else now
+    with _lock:
+        day = _days().setdefault(_day(now), {})
+        box = day.get("lernen")
+        if not isinstance(box, dict):
+            box = day["lernen"] = {}
+        g = box.get(group)
+        if not isinstance(g, dict) or not isinstance(g.get("w"), dict):
+            g = box[group] = {"n": 0, "w": {}}
+        g["n"] = int(g.get("n", 0)) + 1
+        if word and (word in g["w"] or len(g["w"]) < 30):
+            g["w"][word] = int(g["w"].get(word, 0)) + 1
+        _stats["dirty"] = True
+        if time.monotonic() - _stats["flushed"] >= FLUSH_S:
+            _flush()
+    print("weiche: gelernt", group, "| Hinweiswort", "ja" if word else "nein", flush=True)
+    return group
+
+
+def learned(ch, now=None):
+    """For the page: per group how often the model took it for an unclear question in the last 7 days, and the
+    hint words offered as a word of that group (at least LEARN_MIN times, not yet a word of the group)."""
+    now = time.time() if now is None else now
+    week = {_day(now - i * 86400) for i in range(7)}
+    with _lock:
+        days = json.loads(json.dumps(_days()))
+    own = intent.parse_route_words(ch.get("route_words", ""))
+    groups = {}
+    for day, rows in days.items():
+        box = rows.get("lernen") if isinstance(rows, dict) and day in week else None
+        for group, g in (box or {}).items():
+            if group not in intent.GROUPS or not isinstance(g, dict):
+                continue
+            s = groups.setdefault(group, {"n": 0, "w": {}})
+            s["n"] += int(g.get("n", 0) or 0)
+            for w, n in (g.get("w") or {}).items():
+                if isinstance(w, str) and HINT_WORD.fullmatch(w):
+                    s["w"][w] = s["w"].get(w, 0) + int(n or 0)
+    rows = []
+    for group, s in sorted(groups.items(), key=lambda x: -x[1]["n"]):
+        # a word the group already knows (built in or the admin's own) is not offered again
+        built = intent.GROUPS[group][1] or (intent.HOME_WORDS if group == "smarthome" else None)
+        offer = [{"word": w, "n": n} for w, n in sorted(s["w"].items(), key=lambda x: -x[1])
+                 if n >= LEARN_MIN and w not in own.get(group, []) and not (built and built.search(w))]
+        rows.append({"group": group, "label": intent.LABELS.get(group, group), "n": s["n"], "offer": offer[:5]})
+    return {"rows": rows[:12], "min": LEARN_MIN}
+
+
 def _flush():
     if not _stats["dirty"]:
         return
@@ -480,7 +553,7 @@ def _view(ch, english=False):
         "systemone": ch.get("systemone") is True,
         "steps": list(_steps()),
         "must_tools": sorted(chat.rule_tools()),
-        "stats": stats, "rules": rules_of(ch),
+        "stats": stats, "rules": rules_of(ch), "lernen": learned(ch),
         "history": [{"t": x.get("t"), "by": x.get("by")} for x in _history()][-5:][::-1],
         "limits": {"words": intent.MAX_ROUTE_WORDS, "extra": intent.MAX_EXTRA, "tests": MAX_TESTS, "q": MAX_Q,
                    "must": chat.MAX_TOOL_WORDS_CHARS},

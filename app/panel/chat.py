@@ -533,7 +533,7 @@ CALENDAR_CHANGE_TOOL = {"type": "function", "function": {
         "required": ["title", "action"]}}}
 # questions that must go through a calendar or mail tool (tool_choice "required" in the first round);
 # "Trag Zahnarzt am Dienstag ein" names no appointment word, so "eintragen" counts as well
-NEED_CALENDAR = re.compile(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b"
+NEED_CALENDAR = re.compile(r"(?i)\b(termin(?!al)\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b"
                            r"|\btr[aä]g\w*\b.{1,80}\bein\b|\beintrag\w*")
 # "Guten Morgen" alone (or with a few greeting words) asks for the day: the briefing, read fresh, never the
 # appointments of an earlier answer in the conversation (Dominik, 2026-10-11: yesterday's appointments as today's)
@@ -2032,6 +2032,9 @@ async def _answer(request, turn):
                     if tr:
                         tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
                     result = await run_tool(x["name"], args, st)
+                    if not st["ran"] and getattr(turn, "route", None) is not None and not turn.route.names:
+                        import weiche   # Lernen: the group of the first tool of an unclear question, never its words
+                        weiche.learn(turn.route, x["name"])
                     st["ran"] += 1
                     a = taten.act(x["name"], args, result)
                     if a:

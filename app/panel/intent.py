@@ -49,14 +49,19 @@ HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermos
                         r"\w*tür(en)?|\w*fenster|garagentor\w*|türschloss|waschmaschine\w*|trockner\w*|"
                         r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?)\b")
 CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
-                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin\w*|"
+                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin(?!al)\w*|"
+                            # „Terminal“ is the terminal client (terminal.py), never an appointment
+                            r"elterngespräch\w*|sprechstunde\w*|vorstellungsgespräch\w*|"
+                            r"hab(e)? ich (heute|morgen|übermorgen|am \w+|\w+tag)\b.{0,20}\bnoch (was|etwas|einen termin)\b|"
                             # everyday ways to ask for the own days (plan weiche-intelligenter 2: „Hab ich am Freitag Zeit?“)
                             r"meeting\w*|elternabend\w*|verplant|(das|dem|ein|unser|mein|nächste[ns]?) treffen|treffe? ich mich|"
                             r"hab(e)? ich .{0,30}\bvor|bin ich .{0,30}\b(frei|verplant|verabredet)|hab(e)? ich .{0,25}\b(zeit|frei))\b)")
 LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                         r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b|"
                         r"\b(muss|müssen|soll|sollen) (ich|wir) .{0,25}einkaufen\b|^\W*schreib \w+( und \w+)? auf\W*$|"
-                        r"\b(auf|in|zu) (meine|die|den) (aufgaben|einkauf)\b)")
+                        r"\b(auf|in|zu) (meine|die|den) (aufgaben|einkauf)\b|"
+                        # „Kauf noch Zwiebeln“, „Was fehlt noch im Kühlschrank?“
+                        r"^\W*kauf(e)? (noch|bitte|mal|auch) |\bwas fehlt (noch )?(im kühlschrank|zu ?hause|daheim)\b)")
 MEMORY_WORDS = re.compile(r"(?i)\b(merk dir|merke dir|vergiss|weißt du (noch|was)|was weißt du über mich|"
                           r"erinnerst du dich|haben wir (schon )?(mal )?(darüber )?(gesprochen|geredet)|letztes mal|"
                           r"remember|forget|"
@@ -74,6 +79,7 @@ MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|r
                            r"ruf(e)? alle|antworte? [A-ZÄÖÜ]\w+,? dass)\b")
 AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*|auftr(a|ä)g\w*|beobachtung\w*)\b")
 REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|ruf\w* mich\b.{0,40}\ban|per anruf|call me at|"
+                            r"mich\b.{0,40}\banrufen|"
                             r"sag mir (in|um|heute|morgen|gleich) .{1,40}(bescheid|,? dass))\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
                            r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast|"
@@ -91,14 +97,24 @@ PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurz
                          r"(?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|navigier\w*|route nach|bring mich nach|call \w+|navigate)\b")
 # „Räum mein Postfach auf“ is the mailbox (mail_tidy), „Amazon-Bestellung“ a parcel (plan werkzeug-abdeckung B2)
 MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer|post (vo[mn]|von der)|antwort (vo[mn]|von der)|"
-                        r"(e-?mail-?|mail)?entwurf\w* .{0,30}antwort\w*|antwort an (frau|herrn?))\b)")
+                        r"(e-?mail-?|mail)?entwurf\w* .{0,30}antwort\w*|antwort an (frau|herrn?)|"
+                        # „Lösch die Werbemails“, „Wie viele Newsletter kamen?“
+                        r"\w+mails?|spam\w*|newsletter\w*)\b)")
 PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b(\w*bestellung\w*|dhl|hermes|dpd|gls|"
                           r"zustell\w*)\b)")
 # plan weiche-intelligenter 2: current things the rules missed („Wie steht der DAX?“, „Hat der Baumarkt heute offen?“)
 SEARCH_WORDS = re.compile(chat.NEED_SEARCH.pattern + r"|(?i:\b(dax|aktie\w*|börse\w*|bitcoin|benzinpreis\w*|spritpreis\w*|"
                           r"diesel\w*|stau|staus|staumeldung\w*|fernsehprogramm|tv-programm|im fernsehen|was gibt es neues|"
                           r"neuigkeiten|in der welt|weltgeschehen|flohmarkt\w*|veranstaltung\w*|konzert\w*|trainer\w*|"
-                          r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet)\b)")
+                          r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet|streik\w*)\b)")
+# „Was kostet ein neues iPhone?“ asks the web for a price, „Streik bei der Bahn“ is news, not a connection
+PRICE_NEWS = re.compile(r"(?i)\b(was kostet|wie viel kostet|streik\w*)\b")
+# „Ruf mich um acht an“, „Kannst du mich morgen anrufen?“: the Spark calls the person (telefon_anruf.py), not the iPhone
+CALL_ME = re.compile(r"(?i)\b(ruf\w* mich\b.{0,40}\ban|mich\b.{0,40}\banrufen)\b")
+# „Mach mir eine Liste der Hauptstädte als Excel“: a file with a list in it, not the own shopping or task list
+LIST_OF = re.compile(r"(?i)\bliste (der|von|mit|aller|über)\b")
+# „Was ist der Unterschied zwischen Wetter und Klima?“: knowledge, no forecast and no device
+COMPARE = re.compile(r"(?i)\bunterschied(e)? zwischen\b")
 TRANSIT_WORDS = re.compile(dict(chat.NEED_TOOLS)["transit"].pattern + r"|(?i:\b(ice|ic|regionalbahn|regionalexpress|"
                            r"u-?bahn|bahnhof|gleis)\b)")
 # a job that comes back by itself („Schick mir jeden Morgen die Schlagzeilen“) or a watch („Pass auf, wann …“):
@@ -124,8 +140,8 @@ NATURE = re.compile(r"(?i)\b(sonne|erde|mond\w*|planet\w*|lichtjahr\w*|lichtgesc
 HINTS = {
     "kalender": re.compile(r"(?i)\b(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|wochenende|übermorgen|"
                            r"nächste woche|los|zeit|frei|uhr|treffen|besuch\w*)\b"),
-    "mail": re.compile(r"(?i)\b(geschrieben|post|brief\w*|antwort\w*|wollte .{1,30} von mir|bank|finanzamt)\b"),
-    "nachricht": re.compile(r"(?i)\b(geschrieben|jemand|alle|sag [A-ZÄÖÜ]\w+)\b"),
+    "mail": re.compile(r"(?i)\b(geschrieben|geantwortet|zurückgeschrieben|post|brief\w*|antwort\w*|wollte .{1,30} von mir|bank|finanzamt)\b"),
+    "nachricht": re.compile(r"(?i)\b(geschrieben|geantwortet|zurückgeschrieben|jemand|alle|sag [A-ZÄÖÜ]\w+)\b"),
     "wetter": re.compile(r"(?i)\b(gießen|jacke|mantel|grill\w*|kalt|warm|sonne\w*|schön|nass|trocken)\b"),
     "liste": re.compile(r"(?i)\b(brauchen|kein\w* .{1,25} mehr|einkauf\w*|kaufen|besorgen|milch|brot|butter|eier|kaffee)\b"),
     "kontakt": re.compile(r"(?i)\b(nummer|wohnt|anschrift|oma|opa|tante|onkel|mama|papa|bruder|schwester)\b"),
@@ -332,9 +348,18 @@ def classify(text, extra_words="", group_words="", not_words=""):
         for name in ("websuche", "iphone", "nachricht"):
             why.pop(name, None)
     # „Was heißt Fenster auf Englisch?“, „Wie lange braucht Licht von der Sonne zur Erde?“: knowledge, no device
-    if (lang or NATURE.search(text)) and not homeassistant.is_command(text):
+    if (lang or NATURE.search(text) or COMPARE.search(text)) and not homeassistant.is_command(text):
         for name in ("smarthome", "kontakt", "dokument"):
             why.pop(name, None)
+        if COMPARE.search(text):
+            why.pop("wetter", None)
+    if "websuche" in why and PRICE_NEWS.search(text):
+        for name in ("iphone", "bahn"):
+            why.pop(name, None)
+    if "erinnerung" in why and CALL_ME.search(text):
+        why.pop("iphone", None)
+    if "erstellen" in why and LIST_OF.search(text):
+        why.pop("liste", None)
     # „Sag mir Bescheid, wenn es eine neue Firmware gibt“ is a watch (beobachten.py, plan „Eigene Aufgaben“):
     # a recurring job that searches later, not a search, a reminder or a state now
     try:

@@ -156,4 +156,8 @@ BENCH = [
     ("Was ist ein Quark?", ""),
     ("Erklär mir, wie ein Kühlschrank funktioniert", ""),
     ("", ""),
+    # „Terminal“ is the terminal client, not an appointment (Weiche-Check 16.10.); the Spark calls the person
+    ("Öffne das Terminal", ""),
+    ("Mein Arzttermin ist verschoben", "kalender"),
+    ("Kannst du mich morgen früh anrufen?", "erinnerung"),
 ]
