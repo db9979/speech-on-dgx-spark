@@ -41,9 +41,11 @@ START_S = 300                 # the engine loads the models (first start after b
 JOB_S = 300                   # one picture
 POLL_S = 0.3
 AI_TEXT = "KI-erzeugt mit FLUX.2 [klein] auf dem Spark / AI-generated with FLUX.2 [klein] on the Spark"
+# Bilder ändern (a picture with a reference): marked as changed by an AI, IPTC "composite with trained algorithmic media"
+AI_TEXT_EDIT = "KI-bearbeitet mit FLUX.2 [klein] auf dem Spark / AI-edited with FLUX.2 [klein] on the Spark"
 XMP = ('<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
        '<rdf:Description xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" '
-       'Iptc4xmpExt:DigitalSourceType="http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"/>'
+       'Iptc4xmpExt:DigitalSourceType="http://cv.iptc.org/newscodes/digitalsourcetype/{kind}"/>'
        '</rdf:RDF></x:xmpmeta>')
 
 app = FastAPI(title="Bilder malen (FLUX.2 klein via stable-diffusion.cpp)")
@@ -202,9 +204,9 @@ def nsfw_share(im):
     return float((e / e.sum())[1])   # labels: 0 sfw, 1 nsfw
 
 
-def finish(raw):
+def finish(raw, edited=False):
     """The engine's picture -> (our own PNG with the AI marks, width, height, nsfw share). Raises ValueError for
-    anything that is not a picture of a sane size."""
+    anything that is not a picture of a sane size. edited: made from a reference picture (Bilder ändern)."""
     from PIL import Image, PngImagePlugin
     Image.MAX_IMAGE_PIXELS = MAX_PIXELS * 2
     try:
@@ -218,8 +220,9 @@ def finish(raw):
     share = nsfw_share(im)
     meta = PngImagePlugin.PngInfo()
     meta.add_text("Software", "Speech on DGX Spark")
-    meta.add_text("Comment", AI_TEXT)
-    meta.add_itxt("XML:com.adobe.xmp", XMP)
+    meta.add_text("Comment", AI_TEXT_EDIT if edited else AI_TEXT)
+    meta.add_itxt("XML:com.adobe.xmp", XMP.format(kind="compositeWithTrainedAlgorithmicMedia" if edited
+                                                  else "trainedAlgorithmicMedia"))
     out = io.BytesIO()
     im.save(out, "PNG", pnginfo=meta, optimize=True)
     return out.getvalue(), im.width, im.height, share
@@ -285,7 +288,7 @@ async def bild(request: Request):
         raise HTTPException(400, "JSON object")
     try:
         raw, secs, extra = await engine.paint(body)
-        png, w, h, share = await asyncio.to_thread(finish, raw)
+        png, w, h, share = await asyncio.to_thread(finish, raw, bool(body["ref_images"]))
     except HTTPException as e:
         stats["failures"] += 1
         print(f"bild: nicht gemalt {e.detail}", flush=True)

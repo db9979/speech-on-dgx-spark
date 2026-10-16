@@ -629,6 +629,18 @@ async def prepare(request):
                 carry = carry or "outside"
             cal_note.append(xprop["call"])
             system = per_turn(system, xprop["system"])
+    # Bilder ändern (bilder.py): a photo of this turn with a wish to change it, or a short follow-up right after a
+    # change, starts the change by a fixed rule; the model only says so (a turn with a photo has no tools anyway)
+    if who and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp and not act_held \
+            and not kl_took:
+        import bilder
+        bprop = await bilder.from_turn({"who": who, "own": own_browser, "client": body.get("client"),
+                                        "private": private_ok}, messages[-1]["content"], pics)
+        if bprop:
+            if bprop.get("event"):
+                kl_events.append(bprop["event"])
+            cal_note.append(bprop["call"])
+            system = per_turn(system, bprop["system"])
     pro = None
     if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp \
             and not act_held and not kl_took:  # one yes confirms one thing

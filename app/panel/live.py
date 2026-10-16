@@ -83,7 +83,7 @@ TOOLS = {
     # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
-    "bild_malen": "bild", "Bild malen": "bild",
+    "bild_malen": "bild", "Bild malen": "bild", "Bild ändern (Panel)": "bild",
     # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
     "anruf_planen": "telefon", "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built
@@ -1342,6 +1342,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))
         if x["id"] == "bild":   # Bilder malen: pictures in numbers (no wish, no prompt)
             x["sub"] = (f"{bild.get('run', 0)} malt · {bild.get('wait', 0)} wartet · {bild.get('done', 0)} heute gemalt"
+                        + (f" · {bild['edited']} geändert" if bild.get("edited") else "")
                         + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
                         + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
@@ -1361,7 +1362,7 @@ def snapshot(view="admin", now=None):
             "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
-            "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "failed", "refused")},
+            "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "failed", "refused")},
             "stats": node_stats(now)}
 
 

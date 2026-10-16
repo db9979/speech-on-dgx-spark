@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.653** · 2026-10-16 · Bilder ändern (Stufe 2a, Funktionen → Bilder ändern, standardmäßig aus): Foto im Chat mit Änderungswunsch („Mach den Himmel blau“), kurze Nachbesserung danach oder Ich → Bilder „Ändern“ und „Eigenes Foto hochladen“; das Panel wählt das Bild nach fester Regel, nie das Modell; zusätzliche Wortliste (Ausweise, Unterschriften, Kennzeichen, Ausziehen, Verletzungen, Gesichter tauschen), Bildprüfung, Kennzeichnung „KI-bearbeitet“; das Original bleibt
 - **V01.0.652** · 2026-10-16 · Anrufe und Videoanrufe in der iPhone-App: Apples Anruf-Bildschirm (CallKit), Klingeln per VoIP-Push auch bei geschlossener App, WebRTC; App-Schlüssel erreicht die Anruf-Wege
 - **V01.0.651** · 2026-10-16 · Nach dem Umzug: iPhone-App nennt bei Zertifikatsfehler Adresse und Reverse Proxy, Panel warnt beim Koppeln über Port 31443 oder IP, Umzug-Hinweis nennt den Reverse Proxy
 - **V01.0.650** · 2026-10-16 · ROT-FIX .647: Gerätename „SunFounder Pironman 5“ bleibt im Englischen gleich (test_bedienung_hilfe)

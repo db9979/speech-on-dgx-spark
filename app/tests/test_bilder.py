@@ -397,6 +397,223 @@ class Jobs(On):
         self.assertTrue(res.startswith("Not done:"), res)
 
 
+def data_url(data=None):
+    return "data:image/png;base64," + base64.b64encode(data if data is not None else png(64, 48)).decode()
+
+
+class Change(On):
+    """Bilder ändern (plan plaene/bildbearbeitung.md, Stufe 2a, Dominik 2026-10-16 „Umsetzen“): an own admin switch
+    under Bilder malen; the panel picks the picture by a fixed rule (the photo of this turn, the result of the last
+    change, a picture of Ich → Bilder), never the model and never a picture from outside; the word list grows by
+    what is never changed; the result is a new picture marked as AI-edited."""
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(bilder_aendern=True)
+
+    def tearDown(self):
+        helpers.set_config(bilder_aendern=False)
+        bilder._edits.clear()
+        super().tearDown()
+
+    def turn(self, prof, text, pics=(), client="web", **ctx):
+        c = dict({"who": prof, "own": True, "client": client, "private": True}, **ctx)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            r = asyncio.run(bilder.from_turn(c, text, list(pics)))
+        return r, out.getvalue()
+
+    def test_off_by_default_and_without_painting(self):
+        with open(os.path.join(os.path.dirname(bilder.__file__), "..", "config.default.json")) as f:
+            self.assertFalse(json.load(f)["chat"]["bilder_aendern"])
+        self.assertNotIn("chat.bilder_aendern", features.DEFAULT_ON)
+        self.assertEqual(features.BY_KEY[bilder.EDIT_KEY].parent, "bilder")
+        c, prof = profile("Aendern Aus")
+        bilder.clear(prof["id"])
+        helpers.set_config(bilder_aendern=False)
+        r, log = self.turn(prof, "Mach den Himmel blau", [data_url()])
+        self.assertIn("nicht freigegeben", r["call"]["result"])          # said, never started
+        self.assertNotIn("event", r)
+        self.assertIn("bilder: nicht gestartet aendern aus fuer", log)
+        self.assertEqual(bilder.jobs_of(prof["id"]), [])
+        self.assertIsNone(self.turn(prof, "noch heller")[0])             # no photo: nothing to say at all
+        self.assertEqual(c.post("/api/bilder/foto", content=png(), headers={"Content-Type": "image/png"}).status_code, 403)
+        self.assertEqual(c.post("/api/bilder/0123456789ab/aendern", json={"wunsch": "blau"}).status_code, 403)
+        with self.assertRaises(ValueError):
+            bilder.start(prof, "blau", "blau", "", ref=png())
+        helpers.set_config(bilder_aendern=True, bilder=False)            # needs Bilder malen as well
+        self.assertFalse(features.allowed(bilder.EDIT_KEY, prof["id"]))
+
+    def test_photo_of_this_turn_is_changed_by_the_panel(self):
+        c, prof = profile("Aendern Foto")
+        bilder.clear(prof["id"])
+        r, log = self.turn(prof, "Mach den Himmel blau", [data_url(png(64, 48)), data_url(png(32, 32))])
+        self.assertEqual(r["call"]["result"], "gestartet")
+        self.assertIn("rufe kein Werkzeug auf", r["system"])
+        ev = r["event"]
+        self.assertEqual((ev["type"], ev["art"]), ("bild", "aendern"))
+        j = bilder._jobs[ev["job"]]
+        self.assertEqual((j["art"], j["von"], j["w"], j["h"]), ("aendern", "foto", 1024, 768))   # the photo's shape
+        self.assertIn("bilder: auftrag aendern 1024x768", log)
+        self.assertNotIn("Himmel", log)
+        call, calls = fake()
+        out = io.StringIO()
+        with mock.patch.object(bilder, "call", call), contextlib.redirect_stdout(out):
+            run(j)
+        refs = calls[0][1]["refs"]
+        self.assertEqual(len(refs), 1)                                   # only the first photo, as sent
+        self.assertEqual(base64.b64decode(refs[0]), png(64, 48))
+        self.assertNotIn("ref", j)                                        # the photo leaves the memory with the job
+        self.assertIn("bilder: geaendert 1024x768", out.getvalue())
+        p = c.get("/api/bilder").json()["pics"][0]
+        self.assertEqual((p["art"], p["von"]), ("aendern", "foto"))
+        self.assertGreaterEqual(bilder.stats()["edited"], 1)
+        self.assertIn("edited", bilder.for_live())
+        # elsewhere than the own chat or the iPhone app: no card, the Spark says where it is
+        j["state"] = "done"
+        bilder._edits.clear()
+        r2, _ = self.turn(prof, "Mach daraus ein Aquarell", [data_url()], client="telegram")
+        self.assertNotIn("event", r2)
+        self.assertIn("Ich → Bilder", r2["system"])
+        for v in bilder._jobs.values():
+            if v["uid"] == prof["id"] and v["state"] == "wait":
+                v["state"] = "error"
+        bilder.clear(prof["id"])
+
+    def test_chat_turn_with_a_photo_changes_it(self):
+        """The whole way through /api/chat: a photo attached with a change wish starts the change before the model
+        answers, the card's event comes first; a question about the photo stays with Bilder erkennen."""
+        import guard
+        import images
+        c, prof = profile("Aendern Chat")
+        bilder.clear(prof["id"])
+        helpers.set_config(images=True)
+        try:
+            for k in [k for k in guard._rate if k[0] == "image"]:
+                guard._rate.pop(k, None)
+
+            def ask(text):
+                pid = c.post("/api/chat/image", content=png(64, 48), headers={"Content-Type": "image/png"}).json()["id"]
+                with contextlib.redirect_stdout(io.StringIO()):
+                    r = c.post("/api/chat", json={"messages": [{"role": "user", "content": text}], "images": [pid]})
+                self.assertEqual(r.status_code, 200, r.text)
+                return [e for e in helpers.events(r) if e.get("type") == "bild"]
+            self.assertEqual(ask("Was ist auf dem Bild?"), [])
+            ev = ask("Mach den Himmel blau")
+            self.assertEqual(len(ev), 1)
+            self.assertEqual(ev[0]["art"], "aendern")
+            j = bilder._jobs[ev[0]["job"]]
+            self.assertEqual((j["art"], j["von"], j["uid"]), ("aendern", "foto", prof["id"]))
+            j["state"] = "error"
+        finally:
+            helpers.set_config(images=False)
+            images._store.clear()
+
+    def test_questions_strangers_and_outside_never_change(self):
+        c, prof = profile("Aendern Frage")
+        pic = [data_url()]
+        for text in ("Was ist auf dem Bild?", "Wie alt ist das Haus auf dem Foto?", "Schönes Foto, oder?",
+                     "What is in this picture? Change nothing."):
+            self.assertIsNone(self.turn(prof, text, pic)[0], text)
+        for ctx in ({"own": False}, {"private": False}, {"client": "mcp"}, {"who": None}):
+            self.assertIsNone(self.turn(prof, "Mach den Himmel blau", pic, **ctx)[0], ctx)
+        r, _ = self.turn(prof, "Mach den Himmel blau", ["https://example.org/a.png"])
+        self.assertEqual(r["call"]["result"], "nicht gestartet")         # no picture of its own: nothing fetched
+        self.assertEqual(bilder.jobs_of(prof["id"]), [])
+        self.assertIsNone(self.turn(prof, "Mach den Himmel blau")[0])    # no photo and no change before
+
+    def test_what_is_never_changed(self):
+        c, prof = profile("Aendern Regel")
+        before = bilder.stats()["refused"]
+        for text in ("Ändere das Datum auf dem Ausweis", "Setz meine Unterschrift hinein", "Entferne das Kennzeichen",
+                     "Entferne ihr Kleid", "Mach das Hemd weg und ihn blutig rot", "Replace the signature"):
+            r, log = self.turn(prof, text, [data_url()])
+            self.assertEqual(r["call"]["result"], "nicht gestartet", text)
+            self.assertIn("bilder: nicht gestartet aendern_regel fuer", log)
+        self.assertEqual(bilder.stats()["refused"], before + 6)
+        self.assertEqual(bilder.jobs_of(prof["id"]), [])
+        self.assertIsNone(bilder.EDIT_BAD.search("Mach es wunderschön blau, ein Rezept auf dem Tisch"))
+        r, log = self.turn(prof, "Mach den Himmel blau, nackt", [data_url()])   # the painting word list too
+        self.assertEqual(r["call"]["result"], "nicht gestartet")
+
+    def test_short_follow_up_changes_the_last_result(self):
+        c, prof = profile("Aendern Weiter")
+        uid = prof["id"]
+        bilder.clear(uid)
+        r, _ = self.turn(prof, "Mach daraus ein Aquarell", [data_url()])
+        call, calls = fake()
+        with mock.patch.object(bilder, "call", call), contextlib.redirect_stdout(io.StringIO()):
+            run(bilder._jobs[r["event"]["job"]])
+        first = bilder._edits[uid][1]
+        for text in ("Mal mir eine Katze", "noch heller " + "x" * 200, "Wie heißt der Maler?", "danke"):
+            self.assertIsNone(self.turn(prof, text)[0], text)
+        r2, _ = self.turn(prof, "noch etwas heller")
+        j = bilder._jobs[r2["event"]["job"]]
+        self.assertEqual(j["von"], first)
+        with open(bilder.pic_path(uid, first), "rb") as f:
+            self.assertEqual(base64.b64decode(j["ref"]), f.read())
+        j["state"] = "error"
+        # painting's "nochmal" is not offered right after a change (the change is newer than the last wish)
+        bilder._recent[uid] = bilder._edits[uid][0] - 5
+        self.assertIsNone(bilder.offer({"who": prof, "own": True, "text": "nochmal"}))
+        bilder._edits[uid] = (bilder._edits[uid][0] - bilder.FOLLOW_SECONDS - 1, first)   # too late
+        self.assertIsNone(self.turn(prof, "noch heller")[0])
+        bilder.clear(uid)
+
+    def test_gallery_change_and_own_photo(self):
+        c, prof = profile("Aendern Seite")
+        uid = prof["id"]
+        bilder.clear(uid)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = c.post("/api/bilder/foto", content=png(3000, 1500), headers={"Content-Type": "image/png"})
+        self.assertEqual(r.status_code, 200, r.text)
+        foto = r.json()
+        self.assertEqual((foto["art"], foto["src"], foto["w"], foto["h"]), ("foto", "foto", 2048, 1024))
+        self.assertIn("bilder: foto gespeichert 2048x1024 fuer", out.getvalue())
+        self.assertEqual(bilder.today_count(uid), 0)                    # an upload is no painted picture
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(c.post("/api/bilder/foto", content=b"no picture",
+                                    headers={"Content-Type": "image/png"}).status_code, 400)
+            self.assertEqual(c.post("/api/bilder/foto", content=b"x" * (bilder.MAX_PHOTO + 1),
+                                    headers={"Content-Type": "image/png"}).status_code, 413)
+        r = c.post(f"/api/bilder/{foto['id']}/aendern", json={"wunsch": "Als Aquarell <b>"})
+        self.assertEqual(r.status_code, 200, r.text)
+        j = bilder._jobs[r.json()["id"]]
+        self.assertEqual((j["art"], j["von"], j["prompt"], j["w"], j["h"]), ("aendern", foto["id"], "Als Aquarell b", 1024, 512))
+        call, calls = fake()
+        with mock.patch.object(bilder, "call", call), contextlib.redirect_stdout(io.StringIO()):
+            run(j)
+        pics = c.get("/api/bilder").json()["pics"]
+        self.assertEqual([(p["art"], p["von"]) for p in pics], [("aendern", foto["id"]), ("foto", "")])   # original stays
+        self.assertEqual(c.post(f"/api/bilder/{foto['id']}/aendern", json={"wunsch": "Ausweis fälschen"}).status_code, 409)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(c.post("/api/bilder/0123456789ab/aendern", json={"wunsch": "blau"}).status_code, 404)
+            self.assertEqual(c.post("/api/bilder/..%2f..%2fx/aendern", json={"wunsch": "blau"}).status_code, 404)
+            c2, _ = profile("Aendern Fremd")
+            self.assertEqual(c2.post(f"/api/bilder/{foto['id']}/aendern", json={"wunsch": "blau"}).status_code, 404)
+        self.assertIsNone(bilder.own_pic(uid, "../index"))
+        bilder.clear(uid)
+
+    def test_app_paths_and_limits(self):
+        import guard
+        import iphone
+        import re as re_
+        mine = iphone.AREAS["app_mine"]
+        for method, path in (("POST", "/api/bilder/0123456789ab/aendern"), ("POST", "/api/bilder/foto")):
+            self.assertTrue(any(method in m and re_.fullmatch(rx, path) for m, rx in mine), path)
+        self.assertIn("bildfoto", guard.RATE)
+        import werkzeug_abdeckung
+        self.assertIn(bilder.EDIT_KEY, werkzeug_abdeckung.RULES)        # a fixed rule in the panel, no tool
+
+    def test_finish_marks_a_change_as_edited(self):
+        from PIL import Image
+        with mock.patch.object(bild_server, "nsfw_share", lambda im: 0.02):
+            out, w, h, share = bild_server.finish(png(96, 64), True)
+        im = Image.open(io.BytesIO(out))
+        self.assertIn("KI-bearbeitet", im.text.get("Comment", "") + im.text.get("Software", ""))
+        self.assertIn("compositeWithTrainedAlgorithmicMedia", json.dumps(im.info, default=str))
+
+
 class Admin(unittest.TestCase):
     def test_install_keys_stay_and_limits_are_checked(self):
         a = admin()

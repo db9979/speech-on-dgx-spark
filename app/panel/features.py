@@ -183,6 +183,10 @@ FEATURES = (
       parent="erstellen", me="docbox", guide="erstellenbilder"),
     # Bilder malen (bilder.py, bild_server.py, plan bildgenerierung): FLUX.2 [klein] on the Spark, installed by install.sh --bild
     F("bilder", "Bilder malen", "Painting pictures", "data", ("bilder",), me="bildbox", guide="bilder"),
+    # Bilder ändern (bilder.from_turn, plan bildbearbeitung, Stufe 2a): an own photo or picture changed by FLUX.2 [klein];
+    # the panel picks the picture by a fixed rule, never the model
+    F("bildaendern", "Bilder ändern", "Changing pictures", "data", ("bilder_aendern",), parent="bilder", me="bildbox",
+      guide="bildaendern"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

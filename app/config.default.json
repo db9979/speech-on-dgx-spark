@@ -153,6 +153,7 @@
     "doc_make_templates": false,
     "doc_make_wikipics": false,
     "bilder": false,
+    "bilder_aendern": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

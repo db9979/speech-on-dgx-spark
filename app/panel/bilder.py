@@ -14,6 +14,16 @@ marked as made by an AI (bild_server). Text from outside (mail, web, documents) 
 is a changing tool, locked after outside text (chat.LOCKED_OUTSIDE via the extras' "changes"), and from Notaus
 stage 2 on. Guests never get the tool or the page; a blocked profile only sees „Daten löschen“.
 
+Bilder ändern (plan plaene/bildbearbeitung.md, Dominik 2026-10-16 „Umsetzen“, own admin switch chat.bilder_aendern,
+built on Bilder malen): FLUX.2 [klein] changes the person's own picture with it as a reference. The panel decides
+which picture and when, never the model (the turn with a photo has no tools anyway): a photo attached in this turn
+(images.py) with a wish to change it (EDIT, not a question), a short follow-up within FOLLOW_SECONDS after the last
+change (the result of that change), or a picture of Ich → Bilder (painted, changed or uploaded there, „Ändern“).
+Pictures from mail, web, documents or someone else are never a source. The wish goes to the model as the person said
+it; besides BAD a second fixed list EDIT_BAD refuses forging papers, money and number plates and undressing or
+hurting people. The image check and the mark (bild_server: "KI-bearbeitet", IPTC composite) as for painting; the
+source stays as it is, the change is a new picture.
+
 Speech first (vorrang): a job waits until the spoken answer is over, the picture itself runs while nobody speaks.
 Storage users/<id>/bilder/<pic>.png and index.json (speicher.AREAS "bilder"). Journal lines start with "bilder:",
 fixed words and numbers only: never a wish, a prompt or a name (profiles.log_name)."""
@@ -38,6 +48,7 @@ from core import api_headers, assistant, auth, browser_profile, json_body, own_p
 
 router = APIRouter()
 KEY = "bilder"
+EDIT_KEY = "bildaendern"     # Bilder ändern (features.py, chat.bilder_aendern; builds on Bilder malen)
 MAX_WISH = 500
 MAX_PROMPT = 1000
 MAX_PICS = 300              # pictures per profile, whatever the space
@@ -46,6 +57,9 @@ WAITING = 10                # open jobs on the whole Spark
 JOB_SECONDS = 12 * 60       # waiting for a pause, loading the model and painting
 FOLLOW_SECONDS = 10 * 60    # after a picture wish, "noch einmal in Blau" or "ja, fiktiv" is understood without the words
 MAX_PNG = 40 * 1024 * 1024
+MAX_PHOTO = 8 * 1024 * 1024      # an own photo uploaded to Ich → Bilder (as images.MAX_BYTES)
+PHOTO_SIDE = 2048                # its longest side once kept
+FOLLOW_MAX = 200                 # a follow-up change („heller“) is a short message
 DAY_S = 24 * 3600
 ID = re.compile(r"[0-9a-f]{12}")
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
@@ -76,6 +90,34 @@ AGAIN = re.compile(r"(?i)\b(nochmal|noch einmal|noch ein|nochmals|anders|andere[
 YES = re.compile(r"(?i)^\W*(ja|jo|jep|jawohl|ok|okay|passt|genau|gern|gerne|mach|los|klar|super|fiktiv\w*|"
                  r"yes|yep|yeah|sure|fine|fictional)\b")
 YES_MAX = 120
+# a wish to change a picture (Bilder ändern), only together with a picture of this turn or right after a change
+EDIT = re.compile(
+    r"(?i)\b(ändere?n?|aendere?n?|bearbeit\w*|veränder\w*|veraender\w*|verwandl\w*|verwandel\w*|retuschier\w*|"
+    r"ersetze?n?|tausche?n?|färbe?n?|faerbe?n?|umfärben|entferne?n?|edit|change|remove|replace|recolou?r|retouch)\b"
+    r"|\b(nimm|nehmt?|nehmen)\b.{0,60}\b(weg|raus|heraus)\b|\bfüge?n?\b.{0,60}\bhinzu\b"
+    r"|\bsetze?n?\b.{0,60}\b(hinein|rein|dazu|ins bild|ins foto)\b"
+    r"|\bmach\w*\b.{0,40}\b(heller|dunkler|bunter|farbig\w*|schwarzweiß|schwarz-weiß|blau\w*|rot\w*|grün\w*|gelb\w*|"
+    r"wärmer|kälter|schärfer|weicher|freundlicher|sonnig\w*|winterlich\w*|herbstlich\w*|daraus|zu einem|zu einer)\b"
+    r"|\b(als|im stil|im stile)\b.{0,20}\b(aquarell\w*|ölgemälde|gemälde|comic\w*|zeichnung|skizze|bleistift\w*|"
+    r"pixel\w*|anime|cartoon|pop.?art|mosaik|malvorlage|ausmalbild)\b"
+    r"|\b(turn it into|make it)\b")
+# a question about the picture stays a question (Bilder erkennen): „Wie entferne ich den Fleck?“ changes nothing
+QUESTION = re.compile(r"(?i)^\W*(wie|was|warum|wieso|weshalb|wo|wer|welche\w*|wann|kann man|gibt es|ist das|"
+                      r"sind das|erkennst|siehst|what|how|why|where|who|which|when|is (?:it|this|that)|are (?:they|these))\b")
+# what is never changed (fixed, besides BAD): forged papers, money and number plates, undressing or hurting people
+_CLOTHES = (r"(?:kleid\w*|kleidung|klamotten|hose\w*|hemd\w*|bluse\w*|rock|bh|unterhose\w*|bikini\w*|badeanzug\w*|"
+            r"badehose\w*|oberteil\w*|t-?shirt\w*|pulli\w*|pullover\w*|clothes|clothing|dress\w*|shirt\w*|bra|underwear|swimsuit)")
+EDIT_BAD = re.compile(
+    r"(?i)\b(ausweis\w*|personalausweis\w*|reisepass\w*|pass ?foto\w*|führerschein\w*|fuehrerschein\w*|"
+    r"unterschrift\w*|signatur\w*|stempel\w*|siegel\w*|kennzeichen|nummernschild\w*|banknote\w*|geldschein\w*|"
+    r"attest\w*|zeugnis\w*|urkunde\w*|passport|driver'?s licen[cs]e|signature|stamp|licen[cs]e plate|"
+    r"banknote|id card|"
+    r"auszieh\w*|zieh\w* (?:ihr|ihm|ihnen|sie|ihn|die|den|das) .{0,20}aus|entkleid\w*|ohne kleidung|ohne klamotten|"
+    r"undress\w*|without clothes|verletz\w*|blutig\w*|blutend\w*|wunden?|injur\w*|bleeding|"
+    r"tausch\w* (?:das |die )?gesicht\w*|gesicht\w* (?:tauschen|austauschen|einsetzen)|face ?swap\w*|swap\w* (?:the )?faces?|"
+    # clothes taken off a person, in either order („Entferne ihr Kleid“, „das Hemd weg“)
+    r"(?:entfern\w*|nimm\w*|weg\w*|remove|take off)\b.{0,40}\b" + _CLOTHES + r"|" + _CLOTHES + r"\b.{0,30}\b(?:weg|aus|ab|entfern\w*|off))\b")
+
 # fixed word list (Dominik 5a): nothing sexual, no nudity, no gore, no hate symbols, no fakes of people
 BAD = re.compile(
     r"(?i)\b(nackt\w*|nacktheit|nude\w*|naked|nudity|nsfw|porn\w*|sex\w*|erotik\w*|erotisch\w*|erotic\w*|hentai|"
@@ -106,7 +148,8 @@ _paint = []                 # [asyncio.Lock] of the running loop: one picture at
 _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last picture or wish, also a refused one (FOLLOW_SECONDS)
-_count = DayCounter(done=0, failed=0, refused=0)
+_edits = {}                 # uid -> (time, picture id) of the last change (Bilder ändern), for a short follow-up
+_count = DayCounter(done=0, edited=0, failed=0, refused=0)
 BACKGROUND = True           # tests run _work themselves
 
 
@@ -191,7 +234,14 @@ REFUSED = {"wortliste": ("Das male ich nicht: der Wunsch fällt unter die festen
            "zeit": ("Das Bild dauerte zu lange.", "The picture took too long."),
            "notaus": ("Der Notaus hält das gerade an.", "The Notaus holds this off right now."),
            "wartung": ("Bilder malen wird gerade gewartet; bitte etwas später noch einmal.",
-                       "Painting pictures is being maintained right now; please try again a little later.")}
+                       "Painting pictures is being maintained right now; please try again a little later."),
+           "aendern_regel": ("Das ändere ich nicht: Ausweise, Unterschriften, Stempel, Kennzeichen und Geld fälsche ich "
+                             "nicht, und Menschen ziehe ich nichts aus und verletze sie nicht.",
+                             "I won't change that: I do not forge papers, signatures, stamps, number plates or money, "
+                             "and I do not undress or hurt people."),
+           "aendern_aus": ("Bilder ändern ist für dich nicht freigegeben.", "Changing pictures is not released for you."),
+           "quelle": ("Das Bild ist nicht mehr da; bitte noch einmal anhängen oder unter Ich → Bilder wählen.",
+                      "The picture is gone; please attach it again or pick it under Me → Pictures.")}
 
 
 # ---------------------------------------------------------------- storage (users/<id>/bilder/)
@@ -237,7 +287,7 @@ def used_bytes(uid):
 
 def today_count(uid, now=None):
     now = time.time() if now is None else now
-    return sum(1 for x in all_pics(uid) if now - float(x.get("t") or 0) < DAY_S)
+    return sum(1 for x in all_pics(uid) if now - float(x.get("t") or 0) < DAY_S and x.get("src") != "foto")
 
 
 def keep(uid, png, meta):
@@ -286,7 +336,8 @@ features.OWN[KEY] = (lambda uid: len(all_pics(uid)), clear)
 def public(x):
     return {"id": x["id"], "t": x.get("t"), "w": x.get("w"), "h": x.get("h"), "prompt": x.get("prompt", ""),
             "wish": x.get("wish", ""), "format": x.get("format", "quadrat"), "seconds": x.get("seconds"),
-            "bytes": x.get("bytes", 0), "src": x.get("src", ""), "job": x.get("job", "")}
+            "bytes": x.get("bytes", 0), "src": x.get("src", ""), "job": x.get("job", ""),
+            "art": x.get("art", "malen"), "von": x.get("von", "")}
 
 
 # ---------------------------------------------------------------- jobs
@@ -295,7 +346,8 @@ def stats():
     with _lock:
         run = sum(1 for j in _jobs.values() if j["state"] == "run")
         wait = sum(1 for j in _jobs.values() if j["state"] == "wait")
-    return {"run": run, "wait": wait, "done": _count["done"], "failed": _count["failed"], "refused": _count["refused"]}
+    return {"run": run, "wait": wait, "done": _count["done"], "edited": _count["edited"], "failed": _count["failed"],
+            "refused": _count["refused"]}
 
 
 def for_live():
@@ -316,7 +368,8 @@ def _live(text_):
 
 def job_public(j):
     return {"id": j["id"], "state": j["state"], "error": j.get("error", ""), "error_en": j.get("error_en", ""),
-            "pic": public(j["pic"]) if j.get("pic") else None, "prompt": j["prompt"], "t0": int(j["t0"])}
+            "pic": public(j["pic"]) if j.get("pic") else None, "prompt": j["prompt"], "t0": int(j["t0"]),
+            "art": j.get("art", "malen")}
 
 
 def jobs_of(uid):
@@ -335,12 +388,34 @@ def _say(why, prof):
     print(f"bilder: nicht gestartet {why} fuer {profiles.log_name(prof)}", flush=True)
 
 
-def start(prof, prompt, wish, fmt, src="chat", client="web"):
-    """Checks everything with fixed rules and starts a job; raises ValueError((de, en)) with the reason."""
+def ref_size(ref, max_side):
+    """(width, height) for a change: the source's shape, the long side max_side, both multiples of 16 (None if the
+    source is no picture)."""
+    from PIL import Image
+    import io
+    try:
+        Image.MAX_IMAGE_PIXELS = 40_000_000
+        with Image.open(io.BytesIO(ref)) as im:
+            w0, h0 = im.size
+    except Exception:
+        return None
+    if w0 < 1 or h0 < 1:
+        return None
+    long_ = max(256, min(2048, int(max_side) // 16 * 16))
+    short = max(256, min(long_, round(long_ * min(w0, h0) / max(w0, h0) / 16) * 16))
+    return (long_, short) if w0 >= h0 else (short, long_)
+
+
+def start(prof, prompt, wish, fmt, src="chat", client="web", ref=None, von=""):
+    """Checks everything with fixed rules and starts a job; raises ValueError((de, en)) with the reason.
+    ref: the picture to change (Bilder ändern, bytes of the person's own picture), von: its id in Ich → Bilder."""
     uid = prof["id"]
     if not features.allowed(KEY, uid):
         _say("aus", prof)
         raise ValueError(("Bilder malen ist für dich nicht freigegeben.", "Painting pictures is not released for you."))
+    if ref is not None and not features.allowed(EDIT_KEY, uid):
+        _say("aendern aus", prof)
+        raise ValueError(REFUSED["aendern_aus"])
     try:
         notaus.stop("auftrag", uid)
     except notaus.NotausAktiv:
@@ -354,7 +429,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web"):
     if not prompt:
         _say("leer", prof)
         raise ValueError(("Was soll ich malen?", "What shall I paint?"))
-    why = refuse_text(uid, prompt, wish)
+    why = refuse_text(uid, prompt, wish) or ("aendern_regel" if ref is not None and EDIT_BAD.search(prompt + " " + wish) else "")
     if why:
         _count.bump("refused")
         _say(why, prof)
@@ -378,15 +453,27 @@ def start(prof, prompt, wish, fmt, src="chat", client="web"):
         _say("voll", prof)
         raise ValueError(("Deine Bilder brauchen schon den ganzen Platz; bitte erst alte löschen (Ich → Bilder).",
                           "Your pictures use all their space; please delete old ones first (Me → Pictures)."))
-    w, h = size(fmt, lim["max_side"])
+    if ref is not None:
+        wh = ref_size(ref, lim["max_side"])
+        if not wh:
+            _say("quelle", prof)
+            raise ValueError(REFUSED["quelle"])
+        w, h = wh
+    else:
+        w, h = size(fmt, lim["max_side"])
     jid = secrets.token_hex(6)
     j = {"id": jid, "uid": uid, "state": "wait", "prompt": prompt, "wish": wish, "format": fmt, "w": w, "h": h,
-         "t0": time.time(), "src": src, "client": client, "log": profiles.log_name(prof)}
+         "t0": time.time(), "src": src, "client": client, "log": profiles.log_name(prof),
+         "art": "aendern" if ref is not None else "malen", "von": von if von == "foto" or ID.fullmatch(str(von or "")) else ""}
+    if ref is not None:
+        j["ref"] = base64.b64encode(ref).decode()   # only in memory, gone when the job ends
     with _lock:
         _jobs[jid] = j
-    _recent[uid] = time.time()
+    if ref is None:
+        _recent[uid] = time.time()
+    art = "aendern " if ref is not None else ""
     _live(f"Bild {w}x{h} angenommen")
-    print(f"bilder: auftrag {w}x{h} {fmt} {src} fuer {j['log']}", flush=True)
+    print(f"bilder: auftrag {art}{w}x{h} {fmt} {src} fuer {j['log']}", flush=True)
     if BACKGROUND:
         try:
             t = asyncio.get_running_loop().create_task(_run(j))
@@ -399,6 +486,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web"):
 
 def _fail(j, why):
     de, en = REFUSED.get(why, REFUSED["dienst"])
+    j.pop("ref", None)
     j.update(state="error", error=de, error_en=en, end=time.time())
     _count.bump("refused" if why in ("pruefung", "ohne_pruefung") else "failed")
     _live(f"Bild nicht gemalt: {why}")
@@ -437,10 +525,14 @@ async def call(path, body=None, timeout=JOB_SECONDS):
     return r.status_code, d if isinstance(d, dict) else {}
 
 
-async def paint(prompt, w, h):
-    """The picture as PNG bytes and its numbers, or raises ValueError(why) with a key of REFUSED."""
+async def paint(prompt, w, h, refs=None):
+    """The picture as PNG bytes and its numbers, or raises ValueError(why) with a key of REFUSED. refs: base64
+    pictures to change (Bilder ändern)."""
+    body = {"prompt": prompt, "width": w, "height": h, "seed": -1}
+    if refs:
+        body["refs"] = list(refs)
     try:
-        code, d = await call("/v1/bild", {"prompt": prompt, "width": w, "height": h, "seed": -1})
+        code, d = await call("/v1/bild", body)
     except httpx.HTTPError:
         raise ValueError("dienst")
     if code == 503 and d.get("detail") in ("memory", "missing"):
@@ -473,22 +565,28 @@ async def _work(j):
             return
         j["state"] = "run"
         try:
-            png, d = await paint(j["prompt"], j["w"], j["h"])
+            png, d = await paint(j["prompt"], j["w"], j["h"], [j.pop("ref")] if j.get("ref") else None)
         except ValueError as e:
             _fail(j, str(e) if str(e) in REFUSED else "dienst")
             return
+    edit = j.get("art") == "aendern"
     row = keep(j["uid"], png, {"w": d.get("w", j["w"]), "h": d.get("h", j["h"]), "prompt": j["prompt"],
                                "wish": j["wish"], "format": j["format"], "seconds": d.get("seconds"), "src": j["src"],
-                               "model": str(cfg().get("variant") or "")[:10], "job": j["id"]})
+                               "model": str(cfg().get("variant") or "")[:10], "job": j["id"],
+                               **({"art": "aendern", "von": j.get("von", "")} if edit else {})})
     j.update(state="done", pic=row, end=time.time())
-    _count.bump("done")
+    _count.bump("edited" if edit else "done")
+    if edit:
+        _edits[j["uid"]] = (time.time(), row["id"])   # a short follow-up changes this result again
     import verbrauch   # Verbrauchszähler: one picture and its time (does nothing while the counter is off)
-    verbrauch.add("bild", "Bild malen", who=j["uid"], amount=1, ms=int((d.get("seconds") or 0) * 1000))
-    _live(f"Bild {row['w']}x{row['h']} gemalt")
-    print(f"bilder: gemalt {row['w']}x{row['h']} {d.get('seconds')} s fuer {j['log']}", flush=True)
+    verbrauch.add("bild", "Bild ändern" if edit else "Bild malen", who=j["uid"], amount=1,
+                  ms=int((d.get("seconds") or 0) * 1000))
+    _live(f"Bild {row['w']}x{row['h']} {'geändert' if edit else 'gemalt'}")
+    print(f"bilder: {'geaendert' if edit else 'gemalt'} {row['w']}x{row['h']} {d.get('seconds')} s fuer {j['log']}", flush=True)
     try:
         import tagebuch
-        tagebuch.note(j["uid"], "bild", "Bild: " + (j["wish"] or j["prompt"])[:70], ref=row["id"])
+        tagebuch.note(j["uid"], "bild", ("Bild geändert: " if edit else "Bild: ") + (j["wish"] or j["prompt"])[:70],
+                      ref=row["id"])
     except Exception:
         pass
     if j["client"] != "web":
@@ -507,7 +605,7 @@ def offer(ctx):
     uid = who["id"]
     words = str(ctx.get("text") or "")
     asked = bool(WORDS.search(words))
-    recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS
+    recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS and _edits.get(uid, (0,))[0] < _recent.get(uid, 0)
     again = recent and (bool(AGAIN.search(words)) or len(words) <= YES_MAX and bool(YES.search(words)))
     if not asked and not again:
         return None
@@ -539,6 +637,79 @@ async def tool(name, args, ctx):
             f"sentence that you are painting it. {where} Do not describe the picture.")
 
 
+# ---------------------------------------------------------------- Bilder ändern in the conversation
+def wants_change(text):
+    """A wish to change a picture in the person's own words: a change word, no question about the picture."""
+    text = str(text or "")[:2000]
+    return bool(EDIT.search(text)) and not QUESTION.search(text)
+
+
+def _data_url(u):
+    """The bytes of a picture of this turn (images.for_turn: "data:image/jpeg;base64,...")."""
+    m = re.fullmatch(r"data:image/(?:jpeg|png);base64,([A-Za-z0-9+/=]+)", str(u or ""))
+    try:
+        return base64.b64decode(m.group(1), validate=True) if m else None
+    except ValueError:
+        return None
+
+
+def own_pic(uid, pid):
+    """The bytes of one of the profile's own pictures (Ich → Bilder), or None."""
+    p = pic_path(uid, pid)
+    if not p:
+        return None
+    with open(p, "rb") as f:
+        data = f.read(MAX_PNG + 1)
+    return data if len(data) <= MAX_PNG and data.startswith(PNG_SIG) else None
+
+
+async def from_turn(ctx, text, pics):
+    """Bilder ändern by a fixed rule, before the model answers: {"call", "system", "event"?} or None.
+    ctx: {"who", "own", "client", "private"}; pics: the pictures of this turn (data URLs, images.for_turn).
+    The source is the first picture of this turn, or without one the result of the last change (FOLLOW_SECONDS,
+    a short message); never a picture from outside. The model only says that the picture is being changed."""
+    who = ctx.get("who")
+    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
+        return None
+    uid = who["id"]
+    text = str(text or "")
+    if pics:
+        if not wants_change(text):
+            return None
+        ref, von = _data_url(pics[0]), "foto"
+    else:
+        t, pid = _edits.get(uid, (0, ""))
+        if time.time() - t >= FOLLOW_SECONDS or len(text) > FOLLOW_MAX or WORDS.search(text) \
+                or QUESTION.search(text) or not (EDIT.search(text) or AGAIN.search(text)):
+            return None
+        ref, von = own_pic(uid, pid), pid
+    if not features.allowed(EDIT_KEY, uid):
+        if not pics:
+            return None
+        print(f"bilder: nicht gestartet aendern aus fuer {profiles.log_name(who)}", flush=True)
+        return {"call": {"name": "Bild ändern (Panel)", "args": "", "result": "nicht freigegeben"},
+                "system": "Bild ändern: " + features.missing_text(EDIT_KEY, uid, "de")
+                + " Sag in einem Satz, dass Bilder ändern gerade nicht geht; beschreibe das Foto nur, wenn danach gefragt."}
+    client = ctx.get("client") or "web"
+    try:
+        if ref is None:
+            raise ValueError(REFUSED["quelle"])
+        j = start(who, text, text, "", "chat", client, ref=ref, von=von)
+    except ValueError as e:
+        de = e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "Das ging nicht."
+        return {"call": {"name": "Bild ändern (Panel)", "args": "", "result": "nicht gestartet"},
+                "system": f"Bild ändern: Nicht gestartet. {de} Sag genau das in einem Satz und beschreibe kein Bild."}
+    shown = client in ("", "web", "iphone")
+    where = "hier im Chat und unter Ich → Bilder" if shown else "unter Ich → Bilder; der Spark sagt Bescheid"
+    out = {"call": {"name": "Bild ändern (Panel)", "args": "", "result": "gestartet"},
+           "system": f"Bild ändern: Das Panel ändert das Bild jetzt nach dem Wunsch der Person auf dem Spark. Sag in "
+                     f"einem kurzen Satz, dass du das Bild änderst und es gleich {where} erscheint. Beschreibe das Bild "
+                     f"nicht und rufe kein Werkzeug auf."}
+    if shown:
+        out["event"] = {"type": "bild", "job": j["id"], "prompt": j["prompt"], "art": "aendern"}
+    return out
+
+
 # ---------------------------------------------------------------- routes
 def _prof(request, prof):
     if not features.allowed(KEY, prof["id"]):
@@ -566,6 +737,63 @@ async def bilder_paint(request: Request, prof=Depends(browser_profile)):
         return start(prof, wish, wish, str(body.get("format") or ""), "seite", "web")
     except ValueError as e:
         raise HTTPException(409, e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "geht nicht")
+
+
+def _edit_prof(prof):
+    if not features.allowed(EDIT_KEY, prof["id"]):
+        raise HTTPException(403, "Bilder ändern ist aus (Funktionen → Bilder ändern)")
+    return prof
+
+
+@router.post("/api/bilder/{pid}/aendern", dependencies=[Depends(assistant)])
+async def bilder_change(pid: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Bilder „Ändern“: one of the profile's own pictures with the person's own sentence."""
+    uid = _edit_prof(_prof(request, prof))["id"]
+    guard.limit(request, "bildmalen", uid)
+    body = await json_body(request, 8 * 1024, lenient=True)
+    wish = clean(body.get("wunsch"), MAX_WISH)
+    ref = own_pic(uid, pid) if ID.fullmatch(pid) else None
+    if ref is None:
+        print(f"bilder: nicht gestartet quelle fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "kein solches Bild")
+    try:
+        return start(prof, wish, wish, "", "seite", "web", ref=ref, von=pid)
+    except ValueError as e:
+        raise HTTPException(409, e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "geht nicht")
+
+
+def photo_png(data, side=PHOTO_SIDE):
+    """An own photo for Ich → Bilder: decoded with images.prepare (upright, no metadata, size limits), then kept as
+    a plain PNG at most side pixels long. Raises ValueError if it is no picture."""
+    import io
+    import images
+    from PIL import Image
+    jpeg, w, h = images.prepare(data, side=side, quality=95)
+    im = Image.open(io.BytesIO(jpeg))
+    out = io.BytesIO()
+    im.convert("RGB").save(out, "PNG", optimize=True)
+    return out.getvalue(), w, h
+
+
+@router.post("/api/bilder/foto", dependencies=[Depends(assistant)])
+async def bilder_photo(request: Request, prof=Depends(browser_profile)):
+    """Ich → Bilder „Eigenes Foto hochladen“ (the raw picture as the body): kept to be changed later."""
+    uid = _edit_prof(_prof(request, prof))["id"]
+    guard.limit(request, "bildfoto", uid)
+    import images
+    data = await images._read(request, MAX_PHOTO)
+    lim = limits()
+    if used_bytes(uid) >= lim["store_mb"] * 1024 * 1024 or len(all_pics(uid)) >= MAX_PICS:
+        print(f"bilder: foto nicht gespeichert voll fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(409, "Deine Bilder brauchen schon den ganzen Platz; bitte erst alte löschen (Ich → Bilder).")
+    try:
+        png, w, h = await asyncio.wait_for(asyncio.to_thread(photo_png, data), 20)
+    except (ValueError, asyncio.TimeoutError):
+        print(f"bilder: foto nicht gespeichert kein bild fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "Das ist kein Bild, das ich lesen kann (JPEG, PNG oder WebP).")
+    row = keep(uid, png, {"w": w, "h": h, "prompt": "", "wish": "", "format": "", "src": "foto", "art": "foto"})
+    print(f"bilder: foto gespeichert {w}x{h} fuer {profiles.log_name(prof)}", flush=True)
+    return public(row)
 
 
 @router.get("/api/bilder/job/{jid}", dependencies=[Depends(assistant)])

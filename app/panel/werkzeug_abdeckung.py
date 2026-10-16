@@ -76,6 +76,7 @@ RULES = {
     "klaeren": "klaeren.py: fragt bei mehreren Treffern zurück",
     "klaerenmerken": "klaeren.py: „Merk dir das“ nach der Rückfrage",
     "images": "images.py: das Bild geht mit der Frage ans Modell",
+    "bildaendern": "bilder.py: Foto im Chat mit Änderungswunsch, das Panel startet die Änderung nach fester Regel",
     "gedpruefen": "gedaechtnis.py: „Stimmt das noch?“ und die Antwort darauf",
     "gedfragen": "gedaechtnis.py: Nachfrage zum Gedächtnis",
     "havoice": "hamelden.py: „Sag mir Bescheid, wenn die Haustür aufgeht“, erst nach Ja",

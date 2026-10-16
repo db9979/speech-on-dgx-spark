@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "30591c5970",
+        "stand": "04b843626a",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "a3f08d5cd0",
+        "stand": "b4e511dd5f",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -2508,7 +2508,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "f00cfab410",
+        "stand": "7a2895a74e",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3379,7 +3379,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "b14b33f2ce",
+        "stand": "0b5d820ba7",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3567,7 +3567,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "4d32ae8992",
+        "stand": "3819c74b87",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3909,7 +3909,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen
     "bild": {
-        "stand": "69c1c54df0",
+        "stand": "f7499f555b",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
@@ -3930,10 +3930,13 @@ SEITEN_DATEN = {
             S("s1", "start", ("Ein Bildwunsch", "A picture wish"),
               ("Ich → Bilder oder bild_malen im Gespräch", "Me → Pictures or bild_malen in the conversation"),
               ("Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch "
-               "das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Beides landet in "
-               "bilder.start.",
+               "das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet "
+               "ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis "
+               "der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start.",
                "A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in "
-               "the conversation; the model writes an English prompt for it. Both end in bilder.start.")),
+               "the conversation; the model writes an English prompt for it. Changing pictures starts without a "
+               "tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last "
+               "change, under Me → Pictures an own picture. Everything ends in bilder.start.")),
             S("s2", "frage", ("Funktion frei?", "Feature released?"),
               ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
               ("features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
@@ -3983,10 +3986,10 @@ SEITEN_DATEN = {
               ("stop", "nein", ("Verworfen, nichts gespeichert", "Discarded, nothing stored"))),
             S("s9", "schritt", ("Als KI-Bild kennzeichnen", "Mark as AI picture"),
               ("neu kodiert, mit Kennzeichen", "re-encoded, with marking"),
-              ("bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist (auch als "
-               "IPTC-Angabe).",
-               "bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made (also as an "
-               "IPTC entry).")),
+              ("bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein "
+               "geändertes Bild KI-bearbeitet (auch als IPTC-Angabe).",
+               "bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed "
+               "picture AI-edited (also as an IPTC entry).")),
             S("s10", "ende", ("Bild abgelegt", "Picture stored"),
               ("users/ID/bilder/, Karte, Push", "users/ID/bilder/, card, push"),
               ("Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in "

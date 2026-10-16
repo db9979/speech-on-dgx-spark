@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.653** Bilder ändern: der Spark ändert ein eigenes Foto oder Bild mit FLUX.2 klein, das Panel wählt das Bild
 - **V01.0.652** Anrufe und Videoanrufe in der iPhone-App, mit Klingeln auch bei geschlossener App
 - **V01.0.651** Nach dem Umzug: iPhone-App nennt Zertifikat und Reverse Proxy, Warnung beim Koppeln über 31443
 - **V01.0.650** ROT-FIX: Gerätename des Gehäuses im Englischen
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.646** Terminal-Client spark-tui (neu, aus): Chat, Gespräche, Heute und Aufträge im Terminal, etwa auf der uConsole
 - **V01.0.645** Verbessern: Speicher von tars, Fehler nennen ihre Stelle im Log
 - **V01.0.644** Leistung messen zeigt den Speicher von tars; eigene Lautsprecher-Adresse ohne Fehlermeldung
-- **V01.0.643** Panel-Rechner (Raspberry Pi): die Installation führt nur den Rauchtest aus; pip nur von PyPI, ohne pip.conf
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
