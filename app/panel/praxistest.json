@@ -1485,6 +1485,13 @@
 "titel": "Lautsprecher: alte DGX-Adresse im Board",
 "text": "A: Bei einem Lautsprecher, in dessen Board noch die Adresse des DGX steht (nach dem Umzug auf den Pi), unter Funktionen → Lautsprecher die Diagnose öffnen und „Netz prüfen“ tippen. Statt „Diese Adresse prüft der Spark nicht“ steht „Das ist die Adresse des Modell-Rechners … im Board http://<Pi-IP>:31080 eintragen“. Nach dem Einrichten per USB mit dieser Adresse meldet sich das Board, „Netz prüfen“ ist grün.",
 "thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P236",
+"v": 714,
+"titel": "Musik nach einer Websuche",
+"text": "A: Fragen „Was weißt du über den OP-XY? Ich will darauf einen House Track machen“ (Websuche), dann „Schlag mir eine Tonart und Akkorde vor“. Danach „Kannst du mir so einen House Track in dieser Progression erstellen?“. Es entsteht ein Lied mit Liedkarte, ohne „vorher auf externe Inhalte geantwortet“, und die Beschreibung nimmt die vorgeschlagenen Akkorde. Auch „Erstell mir ein Musik Stück“ und „Mach einen Musiktrack“ machen ein Lied.",
+"thread": "Musik erzeugen mit ACE-Step 1.5"
 }
 ]
 }

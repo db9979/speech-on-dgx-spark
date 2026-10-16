@@ -310,6 +310,41 @@ class Access(On):
         self.assertIsNone(musik.offer({"who": prof, "own": True, "text": "geht das in reggae style",
                                        "before": "Morgen wird es sonnig."}))
 
+    def test_track_words_and_a_song_after_a_web_answer(self):
+        # Dominik 2026-10-16: „Musik Track, House Track, ... Track“ and „ein musik stück“ are wishes; after an answer
+        # from a web search (chords for the OP-XY) the person's own wish makes the song, the chords stay data
+        for yes in ("Mach mir einen Musik Track", "Erstell einen House Track mit Am7", "Kannst du einen Deep-House-Track "
+                    "erstellen?", "Generier mir einen Musiktrack", "erstelle mir mit diesen infos ein musik stück",
+                    "kannst du mir so ein musik style in dieser progression erstellen?", "Mach einen Beat für mich"):
+            self.assertTrue(musik.wants(yes), yes)
+        for no in ("Spiel den Track nochmal", "Wie lang ist der Track?", "Track meine Pakete", "Mach das Tracking an",
+                   "Spiel einen Beat im Wohnzimmer"):
+            self.assertFalse(musik.wants(no), no)
+        c, prof = profile("Musikerin Akkorde")
+        web = {"role": "assistant", "content": "Tonart A-Moll, Akkorde Am7 – Fmaj7 – Cmaj7 – G7.", "outside": True}
+        helpers.LLM_CALLS.clear()
+        r = c.post("/api/chat", json={"client": "web", "messages": [
+            {"role": "user", "content": "Schlag mir Akkorde für House vor"}, web,
+            {"role": "user", "content": "kannst du mir so ein musik style in dieser progression erstellen?"},
+            {"role": "assistant", "content": "Das geht gerade nicht."}, {"role": "user", "content": "Danke"},
+            {"role": "assistant", "content": "Gern."},
+            {"role": "user", "content": "kannst du mir so ein musik style in dieser progression erstellen?"}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        call = [b for b in helpers.LLM_CALLS if b.get("stream")][0]
+        self.assertIn("Am7 – Fmaj7", json.dumps(call["messages"], ensure_ascii=False))   # kept as data
+        self.assertIn("musik_machen", [t["function"]["name"] for t in call.get("tools") or []])
+        # right after that answer the call itself runs: outside text does not lock a song the person asked for
+        musik._jobs.clear()
+        musik._recent[prof["id"]] = time.time()
+        args = json.dumps({"beschreibung_en": "deep house in a minor style, Am7 Fmaj7 Cmaj7 G7, 124 bpm"})
+        with contextlib.redirect_stdout(io.StringIO()):
+            r = c.post("/api/chat", json={"client": "web", "messages": [
+                {"role": "user", "content": "Schlag mir Akkorde für House vor"}, web,
+                {"role": "user", "content": "TOOL musik_machen " + args}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([j["uid"] for j in musik._jobs.values()], [prof["id"]])
+        self.assertTrue(musik.offer({"who": prof, "own": True, "text": "Mach mir einen House Track"})["own"])
+
     def test_weiche_keeps_making_music_apart(self):
         for q in ("Mach mir ein Lied über unsere Katze", "Komponier ein Stück für Klavier"):
             self.assertEqual(intent.classify(q).names, ["musik"], q)

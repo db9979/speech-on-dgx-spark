@@ -49,6 +49,7 @@ MAX_SONGS = 200             # songs per profile, whatever the space
 MIN_S, DEFAULT_S = 10, 120   # Dominik 3a: instrumental, 2 minutes unless asked
 WAITING = 10                # open jobs on the whole Spark
 JOB_SECONDS = 20 * 60       # waiting for a pause, loading the model and making the song
+BACK = 7                    # messages back an answer from outside text stays data for a song wish (chat_turn)
 FOLLOW_SECONDS = 10 * 60    # after a wish, „ja, mit Gesang“ is understood without the words
 MAX_MP3 = 40 * 1024**2
 DAY_S = 24 * 3600
@@ -58,7 +59,7 @@ LANGS = ("de", "en", "fr", "es", "it", "nl", "pt", "pl", "sv", "da", "no", "fi",
 
 # a wish for a song in the person's own words (the Weiche's group "musik" and offer below): a verb of making and a
 # song, or composing; „Spiel Musik“, „Mach Musik an“ (Home Assistant, the speakers) has no making word and stays there
-_SONG = (r"(lied\w*|song\w*|musikstück\w*|musikstueck\w*|stück musik|melodie\w*|jingle\w*|klingelton\w*|weckton\w*|"
+_SONG = (r"(lied\w*|song\w*|musik[\s-]?stück\w*|musik[\s-]?stueck\w*|stück musik|beat\w*|\w+tracks?|melodie\w*|jingle\w*|klingelton\w*|weckton\w*|"
          r"hymne\w*|ballade\w*|rap\w*|schlaflied\w*|gute-nacht-lied\w*|geburtstagslied\w*|instrumental\w*|"
          r"hintergrundmusik|filmmusik|tune|track|melody|lullaby|anthem)")
 WORDS = re.compile(
@@ -66,9 +67,9 @@ WORDS = re.compile(
     r"|\b(mach\w*|erstell\w*|erzeug\w*|generier\w*|schreib\w*|dicht\w*|produzier\w*|sing\w*|create|make|generate|write|produce)\b"
     r".{0,60}\b" + _SONG + r"\b"
     # the song first, the verb at the end („Kannst du mir ein Lied über Katzen machen?“)
-    r"|\b(ein|eine|einen)\s+(?:\w+\s+){0,3}" + _SONG + r"\b.{0,120}\b(machen|erstellen|erzeugen|generieren|schreiben|"
+    r"|\b(ein|eine|einen)\s+(?:[\w-]+[\s-]+){0,3}" + _SONG + r"\b.{0,120}\b(machen|erstellen|erzeugen|generieren|schreiben|"
     r"komponieren|dichten|produzieren|singen)\b"
-    r"|\bmusik\b.{0,30}\b(machen|erzeugen|komponieren|generieren)\b(?!\s+an)"
+    r"|\bmusik\b.{0,30}\b(machen|erzeugen|komponieren|generieren|erstellen|produzieren)\b(?!\s+an)"
     r"|\b(mach\w*|erzeug\w*|generier\w*|make|generate)\s+(?:mir\s+|uns\s+|bitte\s+)*(?:etwas\s+|ein\s+bisschen\s+)?(?:eigene\s+)?musik\b(?!\s+an\b|\s+aus\b|\s+lauter|\s+leiser)")
 # „spiel“, „abspielen“, „lauter“: playing music somewhere, never making it
 PLAY = re.compile(r"(?i)\b(spiel\w*|abspiel\w*|play\w*|lauter|leiser|pausier\w*|stopp?\w*|nächste\w*|weiter)\b")
@@ -516,13 +517,20 @@ async def _work(j):
 
 
 # ---------------------------------------------------------------- the assistant
+def wants(text):
+    """The person's own message asks to make music (the wish words, never „spiel …“): chat_turn keeps the last
+    answer from outside text as data for it, so chords or a style named there can go into the description."""
+    words = str(text or "")[:2000]
+    return bool(WORDS.search(words)) and not (PLAY.search(words) and not re.search(r"(?i)komponier|compose", words))
+
+
 def offer(ctx):
     who = ctx.get("who")
     if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
         return None
     uid = who["id"]
     words = str(ctx.get("text") or "")
-    asked = bool(WORDS.search(words)) and not (PLAY.search(words) and not re.search(r"(?i)komponier|compose", words))
+    asked = wants(words)
     before = str(ctx.get("before") or "")
     # the window counts from the last wish, the start and the end of a song; the last answer about a song counts too
     recent = time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS or bool(SONG.search(before))
@@ -536,7 +544,9 @@ def offer(ctx):
         _recent[uid] = time.time()   # the wish itself: the assistant may ask back, the answer still makes the song
     if not features.allowed(KEY, uid):
         return {"tools": [], "hint": off_hint(uid)} if asked else None
-    return {"tools": [TOOL], "hint": HINT, "changes": {"musik_machen"}, "keep": {"musik_machen"},
+    # own: the person's own words ask for the song, so an answer from outside text before (a web search about a
+    # synthesizer, chords) does not lock it; that answer stays data for the description (Dominik 2026-10-16)
+    return {"tools": [TOOL], "hint": HINT, "changes": {"musik_machen"}, "keep": {"musik_machen"}, "own": {"musik_machen"},
             "filler": {"musik_machen": ("Ich mache das Lied.", "Making the song.")}}
 
 

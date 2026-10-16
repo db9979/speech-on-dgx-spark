@@ -38,10 +38,11 @@ SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, me
 
 
 def offer(ctx):
-    """{"tools", "hints", "outside", "mail", "filler", "must", "keep", "run": {name: module}} for this request
-    (keep: tools a module offers only because the person's own words named them, intent.narrow keeps them)."""
+    """{"tools", "hints", "outside", "mail", "filler", "must", "keep", "own", "run": {name: module}} for this request
+    (keep: tools a module offers only because the person's own words named them, intent.narrow keeps them; own:
+    tools the person's own words ask for, not locked by outside text read before, still by mail and the Notaus)."""
     res = {"tools": [], "hints": [], "outside": set(), "mail": set(), "changes": set(), "filler": {}, "run": {},
-           "must": None, "keep": set()}
+           "must": None, "keep": set(), "own": set()}
     for m in SERVICES:
         try:
             o = m.offer(ctx)
@@ -56,6 +57,7 @@ def offer(ctx):
         res["mail"] |= o.get("mail", set())
         res["changes"] |= o.get("changes", set())
         res["keep"] |= o.get("keep", set())   # offered on the person's own word: the Weiche never drops them
+        res["own"] |= o.get("own", set())     # asked for in the person's own words: an answer from outside text before does not lock them
         res["filler"].update(o.get("filler", {}))
         res["must"] = res["must"] or o.get("must")
         res["route"] = res.get("route") or o.get("route")   # (group, why): this turn answers a question about a wish   # a fixed rule of the module: the first round calls this tool

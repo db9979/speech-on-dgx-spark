@@ -188,6 +188,14 @@ async def prepare(request):
         carry = None
         print("weiche: answer from outside text before; this message asks for", route.label(),
               "in its own words - that answer is left out, nothing locked", flush=True)
+    # a song in the person's own words („mach daraus einen House-Track“): the last answer from outside text (chords,
+    # a style found on the web) stays as data for the description instead of being left out (Dominik 2026-10-16:
+    # without it the model made up other chords); it locks the turn like any carried answer, the song excepted
+    import musik
+    if not carry and marked and marked[-1] >= len(messages) - musik.BACK and messages[marked[-1]]["mark"] == "outside" \
+            and musik.wants(ask0):
+        carry = "outside"
+        print("musik: answer from outside text before kept as data for the song wish", flush=True)
     messages, gone = chat.left_out(messages, marked[-1] if carry else -1)
     system = ccfg.get("system_prompt") or ""
     # "Schneller Antwortbeginn" (chat.prompt_cache): what holds for this turn only goes with the question
@@ -853,8 +861,10 @@ async def prepare(request):
     # with "Erst lokal suchen" it stays open, but only the person's own words go out, see chat_tools.py)
     def locked(st):
         # the Notaus is read again for every tool call: switched on during an answer it holds the next call off
-        return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"]
-                else set()) | ({"web_search"} if st.get("docs") and not web_own else set()) \
+        # (ex["own"]: asked for in the person's own words, e.g. a song after a web search about chords; outside
+        # text stays data for it, mail and the Notaus still lock it)
+        return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else ((chat.LOCKED_OUTSIDE | ex["changes"]) - ex["own"])
+                if st["outside"] else set()) | ({"web_search"} if st.get("docs") and not web_own else set()) \
             | notaus.locked_tools(notaus.level(), ex["changes"], bool(who and notaus.own(who["id"])))
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])

@@ -44,7 +44,7 @@ class Rules(unittest.TestCase):
                             ("The light is now on.", {"geraet"}), ("I'll remind you at 8.", {"erinnerung"}),
                             # Dominik 2026-10-16: a new song promised without musik_machen
                             ("Klar, ich lasse den Song im Reggae-Stil neu anfertigen.", {"musik"}),
-                            ("Das Lied entsteht gerade.", {"musik"}), ("I'm making the song now.", {"musik"})]:
+                            ("Das Lied entsteht gerade.", {"musik"}), ("Klar, ich lege los mit einem House-Track in F-Dur.", {"musik"}), ("I'm making the song now.", {"musik"})]:
             self.assertEqual(taten.claims(text), kinds, text)
         for text in ["Soll ich das Licht einschalten?", "Möchtest du, dass ich es eintrage?", "Es ist jetzt 10 Uhr.",
                      "Der Fernseher ist nicht aus.", "Ich habe nachgesehen: Das Licht brennt.", "Hallo.",

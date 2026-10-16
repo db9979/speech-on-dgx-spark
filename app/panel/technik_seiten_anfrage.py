@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "714ab734b4",
+        "stand": "6bdfce8814",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -35,9 +35,12 @@ SEITEN = {
             S("s2", "schritt", ("Verlauf kürzen, Sperre übernehmen", "Trim history, carry the lock"),
               ("chat.trim_history", "chat.trim_history"),
               ("Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei "
-               "Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt.",
+               "Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die "
+               "Person in eigenen Worten ein Lied, bleibt so eine Antwort bis {musik.BACK} Nachrichten zurück als Daten "
+               "dabei (Akkorde, Stil).",
                "The history is trimmed to its budget. If an answer from outside text is among the last three messages, "
-               "this turn starts locked; older ones are not sent at all.")),
+               "this turn starts locked; older ones are not sent at all. When the person asks for a song in their own "
+               "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style).")),
             S("s3", "frage", ("Gast oder fremde Stimme?", "Guest or unknown voice?"),
               ("kein Profil oder Lautsprecher/Telefon erkennt die Stimme nicht",
                "no profile or the speaker/phone does not know the voice"),
@@ -723,10 +726,12 @@ SEITEN = {
               ("Sperre nach Web, Kalender, Dokumenten, Mail", "lock after web, calendar, documents, mail"),
               ("Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, "
                "Termine oder Erinnerungen ändern. Nach einer Mail ist auch die Websuche zu, nach eigenen Dokumenten "
-               "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage).",
+               "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die "
+               "Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.",
                "When this answer already read text from outside, nothing may change the home, the memory, "
                "appointments or reminders any more. After a mail web search is closed too, also after own documents "
-               "(except with „search locally first“, then only with the question's own words)."),
+               "(except with „search locally first“, then only with the question's own words). A song the person asks "
+               "for stays open after outside text (own), not after mail."),
               ("stop", "ja", ("Gesperrt (fremder Text)", "Blocked (outside text)"))),
             S("s5", "frage", ("Dienst gerade weg?", "Service gone right now?"),
               ("Dienst-Wächter", "service watch"),

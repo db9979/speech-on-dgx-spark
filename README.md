@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.714** Music: "Musik stück" and "… Track" are recognised, after a web search the own wish makes the song with the chords from before
 - **V01.0.713** Cleanup: the model side of an answer lives in a file of its own, chat.py is 450 lines shorter
 - **V01.0.712** iPhone app: calling failed at once ("Call failed.") because the app registered with Apple's CallKit only on the first incoming call; now at start and dialing. Running and ringing calls show as connections on Live, monitoring and the Steuerzentrale (only the count)
 - **V01.0.711** Speaker firmware 2.5.2.8: now builds on XiaoZhi 2.5.2, all own patches unchanged
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.707** Notes on top of the admin pages: slim lines, from two on folded into one line with the count (red ones stay open); also in the iPhone app
 - **V01.0.706** CarPlay shows the profile's face, also when only the car starts the app
 - **V01.0.705** iPhone app: calls ring without Apple's VoIP push too while the app runs (it listens to the Spark's news itself); before, an iPhone rang only via the push
-- **V01.0.704** Control centre: the tools box shows which tool is at work
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

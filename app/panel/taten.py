@@ -95,6 +95,7 @@ CLAIMS = {
     "musik": r"\b(?:lied|song|musikstück|stück|track)\w*\b[^.!?]{0,60}\b(?:entsteht|anfertigen|angefertigt|neu machen|"
              r"wird (?:gerade |jetzt |gleich )?(?:gemacht|erstellt|erzeugt|komponiert|angefertigt)|is being (?:made|created))\b"
              r"|\bich\s+(?:mache|erstelle|erzeuge|komponiere|lasse|baue)\b[^.!?]{0,40}\b(?:lied|song|musikstück|track)\w*\b"
+             r"|\bich\s+lege\s+(?:gleich\s+|jetzt\s+)?los\b[^.!?]{0,60}\b(?:lied|song|musikstück|\w*track|beat)\w*\b"
              r"|\bi(?:'m| am| will|'ll)\s+(?:now\s+)?(?:mak|creat|compos)\w*\b[^.!?]{0,40}\b(?:song|track|tune)\b",
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
 }
