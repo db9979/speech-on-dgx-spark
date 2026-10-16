@@ -6893,7 +6893,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Steuerzentrale am Bildschirm",
 "title": "Steuerzentrale am Bildschirm",
-"text": "Gezeigt werden nur Art, Ort, Zeit und Zahlen, nie Fragen, Antworten oder Namen: Es sieht jeder im Raum. Die Anzeige fragt jede Sekunde nur das Panel auf demselben Rechner (127.0.0.1) mit einem eigenen Schlüssel, den nur der Dienstbenutzer lesen kann; von anderen Rechnern oder über einen Proxy antwortet das Panel nicht. Neue Dienste der Live-Übersicht erscheinen von selbst. Zustand → Live zeigt im Kasten „Steuerzentrale“, ob sie gerade zeigt; der Dienst-Wächter meldet, wenn sie nicht mehr fragt. Logs im Bereich „system“ (schirm: …)."
+"text": "Gezeigt werden nur Art, Ort, Zeit und Zahlen, nie Fragen, Antworten oder Namen: Es sieht jeder im Raum. Die Anzeige fragt jede Sekunde nur das Panel auf demselben Rechner (127.0.0.1) mit einem eigenen Schlüssel, den nur der Dienstbenutzer lesen kann; von anderen Rechnern oder über einen Proxy antwortet das Panel nicht. Eine langsame Antwort (bis 8 Sekunden) oder ein kurzer Aussetzer lässt das letzte Bild stehen; erst nach fünf Fehlversuchen in Folge zeigt sie „Panel weg“. Neue Dienste der Live-Übersicht erscheinen von selbst. Zustand → Live zeigt im Kasten „Steuerzentrale“, ob sie gerade zeigt; der Dienst-Wächter meldet, wenn sie nicht mehr fragt. Logs im Bereich „system“ (schirm: …)."
 },
 {
 "lang": "de",
@@ -13877,7 +13877,7 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Control centre on the screen",
 "title": "Control centre on the screen",
-"text": "Only kind, place, time and numbers are shown, never questions, answers or names: everyone in the room sees it. The screen program asks only the panel on the same computer (127.0.0.1) once a second, with a key of its own that only the service user can read; the panel does not answer other computers or a proxy. New services of the Live view appear by themselves. Status → Live shows in the box \"Control centre\" whether it shows right now; the service watch reports when it stops asking. Logs in the area \"system\" (schirm: …)."
+"text": "Only kind, place, time and numbers are shown, never questions, answers or names: everyone in the room sees it. The screen program asks only the panel on the same computer (127.0.0.1) once a second, with a key of its own that only the service user can read; the panel does not answer other computers or a proxy. A slow answer (up to 8 seconds) or a short hiccup keeps the last picture; only after five failed questions in a row it shows \"panel gone\". New services of the Live view appear by themselves. Status → Live shows in the box \"Control centre\" whether it shows right now; the service watch reports when it stops asking. Logs in the area \"system\" (schirm: …)."
 },
 {
 "lang": "en",

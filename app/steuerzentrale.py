@@ -25,6 +25,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import STATE, load_config  # noqa: E402
 
+GEDULD = 5                                  # the panel counts as gone after this many failed questions in a row
 KEY = os.path.join(STATE, "schirm.key")     # made by the panel (panel/schirm.py), read here
 HEADER = "X-Speech-Schirm"
 PFAD = "/api/schirm/zustand"
@@ -618,7 +619,7 @@ def dunkel(an, fd=0):
         return False
 
 
-def holen(port, key, timeout=3):
+def holen(port, key, timeout=8):
     import urllib.error
     import urllib.request
     req = urllib.request.Request(f"http://127.0.0.1:{port}{PFAD}", headers={HEADER: key})
@@ -673,8 +674,15 @@ def lauf(scr):
     scr.nodelay(True)
     port = (load_config("panel") or {}).get("port", 31080)
     px, wahl0, font, have, an, code0 = None, None, None, None, True, None
+    alt, fehl = None, 0
     while True:
         d, code = holen(port, schluessel())
+        if d is not None:
+            alt, fehl = d, 0
+        else:
+            fehl += 1
+            if fehl < GEDULD and alt is not None:   # one slow answer (the day's numbers on a Pi): keep the last picture
+                d, code = alt, code0
         if code != code0:
             print(f"schirm: panel {code or 'weg'}", file=sys.stderr, flush=True)
             code0 = code

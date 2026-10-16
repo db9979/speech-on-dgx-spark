@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.696** Steuerzentrale: kein „Panel weg“ mehr bei kurzen Aussetzern
 - **V01.0.695** Fix Selbsttest: Live-Übersicht prüft „+ N bereit“ unabhängig von früheren Tests
 - **V01.0.694** Musik machen: Namen im Lied sind erlaubt (die Personen-Regel blockte auch Wörter wie „braun“ aus Kontakten)
 - **V01.0.693** Schneller Antwortbeginn messbar: das eigene Sprachmodell meldet Treffer im Zwischenspeicher; Selbsttest auf tars scheitert nicht mehr in der Nur-app/-Kopie
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.689** Live-Übersicht: rechts nur noch, was gerade benutzt wird; der Rest steht in „+ N bereit“
 - **V01.0.688** Musik machen: jedes freigegebene Profil macht eigene Lieder im Gespräch („Mach mir ein Lied über …“) und unter Ich → Musik; Modell (2B oder XL) wählbar, Musik testen misst jedes installierte Modell
 - **V01.0.687** Fix Selbsttest: der Test für „Das kannst du auch sagen“ hängt nicht mehr von der Reihenfolge ab
-- **V01.0.686** Selbsttests: Ein Test stellt Schalter zurück, wie er sie vorfand (vier rote Sperre-Tests auf GitHub und tars)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
