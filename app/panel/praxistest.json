@@ -1478,6 +1478,13 @@
 "titel": "Telefon hinter der Dream Machine: Testanruf spricht, Anruf von außen",
 "text": "A: In der UniFi Dream Machine UDP 31060 und 31062-31069 von 192.168.10.1 an das Panel (Pi) weiterleiten, außen und innen dieselben Ports. Funktionen → Den Spark anrufen → „Verbindung prüfen“: „Angemeldet“ und der Hinweis auf NAT. Schritt 4 „Spark ruft mich an“ an das eigene Mobilteil (z. B. **611): abheben, der Testsatz ist zu hören. Unter Zustand → Logs steht „telefon: aufgelegt nach … davon … mit sprache, rein … pakete“ mit Zahlen über null. Dann vom Handy von außen anrufen (Nummer unter Ich → Telefon bestätigt, „Anrufe von außen“ an): der Spark nimmt ab und grüßt; sonst die Zeilen mit „telefon:“ aus dem Log in den Thread kopieren.",
 "thread": "Assistent per Telefon anrufen"
+},
+{
+"id": "P235",
+"v": 710,
+"titel": "Lautsprecher: alte DGX-Adresse im Board",
+"text": "A: Bei einem Lautsprecher, in dessen Board noch die Adresse des DGX steht (nach dem Umzug auf den Pi), unter Funktionen → Lautsprecher die Diagnose öffnen und „Netz prüfen“ tippen. Statt „Diese Adresse prüft der Spark nicht“ steht „Das ist die Adresse des Modell-Rechners … im Board http://<Pi-IP>:31080 eintragen“. Nach dem Einrichten per USB mit dieser Adresse meldet sich das Board, „Netz prüfen“ ist grün.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
 }
 ]
 }

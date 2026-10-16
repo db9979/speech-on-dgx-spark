@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.710** Speakers: if the board still has the old DGX address, the diagnosis names the right one on the Pi
 - **V01.0.709** Cleanup: the proposals under “Improve” come from three smaller parts, shared pieces only once
 - **V01.0.708** Phone behind a router with NAT: the Spark learns the address the PBX sees and says which ports to forward
 - **V01.0.707** Notes on top of the admin pages: slim lines, from two on folded into one line with the count (red ones stay open); also in the iPhone app
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.703** Cleanup: the texts of the architecture pages live in seven smaller files; the guard tables no longer count them
 - **V01.0.702** Self-tests: a profile name belongs to exactly one test file, a test watches over it
 - **V01.0.701** Fix: typing in the text field is smooth again, on the web, in the Android and in the iPhone app
-- **V01.0.700** Music: running songs on Live, Monitoring and the control centre; "can it be reggae style" makes a new song, no promise without the tool
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

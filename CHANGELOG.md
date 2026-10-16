@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.710** · 2026-10-16 · Lautsprecher nach dem Umzug: steht im Board noch die Adresse des Modell-Rechners, sagen Diagnose und „Netz prüfen“ das und nennen die Adresse des Panels auf dem Pi, statt „prüft der Spark nicht“
 - **V01.0.709** · 2026-10-16 · Aufräumen: die Vorschlagsliste des Beraters in drei Teile, doppelte Bausteine einmal
 - **V01.0.708** · 2026-10-16 · Telefon hinter einem Router mit NAT (z. B. FRITZ!Box → Dream Machine): der Spark lernt die Adresse, die die Anlage sieht, und nennt sie für Anmeldung, Anrufe und Ton; der Assistent sagt, welche Ports weiterzuleiten sind. Dazu Ton-Zähler im Log, Ton-Beschreibung aus der 183, Antwortcode bei abgelehnten Anrufen
 - **V01.0.707** · 2026-10-16 · Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App

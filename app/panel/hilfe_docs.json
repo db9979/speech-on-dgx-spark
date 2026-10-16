@@ -6813,7 +6813,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Bestehenden Spark umziehen",
 "title": "Bestehenden Spark umziehen",
-"text": "1. Auf dem neuen Panel-Rechner das Panel installieren wie oben in Schritt 2, aber erst, wenn der DGX den Code zeigt. 2. Auf dem DGX: sudo speech-spark umziehen --code. Er macht eine Umzugs-Sicherung mit dem Tresor-Schlüssel (versiegelt mit einem Zufallspasswort) und dem https-Zertifikat des Panels und zeigt den Code. 3. Der neue Rechner holt beim Koppeln den Umzug, spielt ihn ein, zählt die Profile und meldet „fertig“. Bei einem schon installierten Panel-Rechner geht das auch mit sudo speech-spark umziehen --von <IP-des-DGX>. 4. Erst nach diesem „fertig“ schaltet der DGX sein Panel ab und läuft als Modell-Rechner weiter. Bricht etwas ab, bleibt der DGX unverändert. Keiner der Schritte löscht etwas. 5. Von Hand danach (steht auch unter Zustand → Update, 14 Tage lang): - im Router die Weiterleitung 31443 und die Ports für Anrufe (Funktionen → Chats → „Anrufe von unterwegs“) auf den neuen Rechner, - in Home Assistant Wyoming auf <neuer-Rechner>:31003, - bei jedem ESP32-Lautsprecher die neue Server-Adresse, - den Reverse Proxy (echtes Zertifikat für iPhone-App, Android-App und Passkeys) auf den neuen Rechner; läuft er auf einem anderen Gerät, bleibt seine Adresse unter Einstellungen → "
+"text": "1. Auf dem neuen Panel-Rechner das Panel installieren wie oben in Schritt 2, aber erst, wenn der DGX den Code zeigt. 2. Auf dem DGX: sudo speech-spark umziehen --code. Er macht eine Umzugs-Sicherung mit dem Tresor-Schlüssel (versiegelt mit einem Zufallspasswort) und dem https-Zertifikat des Panels und zeigt den Code. 3. Der neue Rechner holt beim Koppeln den Umzug, spielt ihn ein, zählt die Profile und meldet „fertig“. Bei einem schon installierten Panel-Rechner geht das auch mit sudo speech-spark umziehen --von <IP-des-DGX>. 4. Erst nach diesem „fertig“ schaltet der DGX sein Panel ab und läuft als Modell-Rechner weiter. Bricht etwas ab, bleibt der DGX unverändert. Keiner der Schritte löscht etwas. 5. Von Hand danach (steht auch unter Zustand → Update, 14 Tage lang): - im Router die Weiterleitung 31443 und die Ports für Anrufe (Funktionen → Chats → „Anrufe von unterwegs“) auf den neuen Rechner, - in Home Assistant Wyoming auf <neuer-Rechner>:31003, - bei jedem ESP32-Lautsprecher die neue Server-Adresse (http://<Pi-IP>:31080, per USB unter Lautsprecher einrichten; steht im Board noch die Adresse des DGX, sagen die Diagnose und „Netz prüfen“ das und nennen die richtige), - den Revers"
 },
 {
 "lang": "de",
@@ -6821,7 +6821,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Bestehenden Spark umziehen",
 "title": "Bestehenden Spark umziehen",
-"text": "Sicherheit → Reverse Proxy richtig, lief er auf dem DGX selbst, dort die neue Adresse eintragen. Die iPhone-App nennt sonst im Hinweis „Spark nicht erreichbar“ das Zertifikat."
+"text": "e Proxy (echtes Zertifikat für iPhone-App, Android-App und Passkeys) auf den neuen Rechner; läuft er auf einem anderen Gerät, bleibt seine Adresse unter Einstellungen → Sicherheit → Reverse Proxy richtig, lief er auf dem DGX selbst, dort die neue Adresse eintragen. Die iPhone-App nennt sonst im Hinweis „Spark nicht erreichbar“ das Zertifikat."
 },
 {
 "lang": "de",
@@ -13845,7 +13845,7 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Moving an existing Spark",
 "title": "Moving an existing Spark",
-"text": "1. On the new panel computer install the panel as in step 2 above, but only once the DGX shows the code. 2. On the DGX: sudo speech-spark umziehen --code. It makes a move backup with the vault key (sealed with a random password) and the panel's https certificate and shows the code. 3. While pairing, the new computer fetches the move, restores it, counts the profiles and reports \"fertig\". On a panel computer that is already installed this also works with sudo speech-spark umziehen --von <IP-of-the-DGX>. 4. Only after this \"fertig\" does the DGX switch its panel off and run on as the model computer. If something breaks off, the DGX stays as it was. No step deletes anything. 5. By hand afterwards (also listed under Status → Update for 14 days): - in the router the forward of 31443 and the ports for calls (Features → Chats → \"Calls when away\") to the new computer, - in Home Assistant Wyoming to <new-computer>:31003, - on every ESP32 speaker the new server address, - the reverse proxy (real certificate for the iPhone app, Android app and passkeys) to the new computer; if it runs on another device its address under Settings → Security → Reverse proxy stays right, if it ran on the DGX itse"
+"text": "1. On the new panel computer install the panel as in step 2 above, but only once the DGX shows the code. 2. On the DGX: sudo speech-spark umziehen --code. It makes a move backup with the vault key (sealed with a random password) and the panel's https certificate and shows the code. 3. While pairing, the new computer fetches the move, restores it, counts the profiles and reports \"fertig\". On a panel computer that is already installed this also works with sudo speech-spark umziehen --von <IP-of-the-DGX>. 4. Only after this \"fertig\" does the DGX switch its panel off and run on as the model computer. If something breaks off, the DGX stays as it was. No step deletes anything. 5. By hand afterwards (also listed under Status → Update for 14 days): - in the router the forward of 31443 and the ports for calls (Features → Chats → \"Calls when away\") to the new computer, - in Home Assistant Wyoming to <new-computer>:31003, - on every ESP32 speaker the new server address (http://<Pi IP>:31080, over USB under speaker setup; if the board still has the DGX address, the diagnosis and \"Check network\" say so and name the right one), - the reverse proxy (real certificate for the iPhone app, Android ap"
 },
 {
 "lang": "en",
@@ -13853,7 +13853,7 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Moving an existing Spark",
 "title": "Moving an existing Spark",
-"text": "lf enter the new address there. Otherwise the iPhone app names the certificate in its \"Spark not reachable\" note."
+"text": "p and passkeys) to the new computer; if it runs on another device its address under Settings → Security → Reverse proxy stays right, if it ran on the DGX itself enter the new address there. Otherwise the iPhone app names the certificate in its \"Spark not reachable\" note."
 },
 {
 "lang": "en",

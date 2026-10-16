@@ -2137,11 +2137,17 @@ def ping():
     return {"spark": PROBE}
 
 
-def _addr_hint(base):
-    """What is wrong with an address before anything is tried (None when nothing)."""
+def _addr_hint(base, hier=""):
+    """What is wrong with an address before anything is tried (None when nothing). hier: the address of this
+    panel (_base), named when the board still has the model computer's address from before the move."""
     if not base:
         return None
     host = re.sub(r"^https?://", "", base).split(":")[0].lower()
+    if _model_computer(host):
+        return ("Das ist die Adresse des Modell-Rechners. Seit dem Umzug läuft das Panel auf dem Raspberry Pi: im Board "
+                + (f"{hier} eintragen" if hier and not _model_computer(re.sub(r"^https?://", "", hier).split(":")[0]) else
+                   "die Adresse des Pi eintragen (http://<Pi-IP>:31080)")
+                + ", per USB unter Lautsprecher einrichten.")
     if host.endswith(".invalid"):
         return "Im Board steht keine Spark-Adresse. Lautsprecher per USB neu einrichten."
     if host in ("localhost", "127.0.0.1", "::1") or host.startswith("127."):
@@ -2151,6 +2157,21 @@ def _addr_hint(base):
                 "Reverse Proxys mit echtem Zertifikat nehmen. Im Heimnetz geht auch http://<Spark-IP>:31080, dann aber unverschlüsselt "
                 "(Schlüssel und Ton) und Firmware-Updates nur per USB.")
     return None
+
+
+def _model_computer(host):
+    """True when host is the model computer (models.host) of a split install: the speakers talk to the panel only."""
+    import ipaddress
+    import netguard
+    from common import model_host, model_local
+    if model_local():
+        return False
+    if host == model_host().lower():
+        return True
+    try:
+        return ipaddress.ip_address(host) in netguard.model_addresses()
+    except ValueError:
+        return False
 
 
 def _ws_frame_text(buf):
@@ -2230,14 +2251,14 @@ def _blocked_text(base):
     return "Diese Adresse prüft der Spark nicht (sie zeigt auf seine eigenen Dienste oder ist nicht erlaubt)."
 
 
-async def net_check(base):
+async def net_check(base, hier=""):
     """The board's way to this Spark, tried from the Spark: [(ok, text)]."""
     import netguard
     out = []
-    hint = _addr_hint(base)
+    hint = _addr_hint(base, hier)
     if hint:
         out.append((False, hint))
-        if ".invalid" in base:
+        if ".invalid" in base or _model_computer(re.sub(r"^https?://", "", base).split(":")[0].lower()):
             return out
     try:
         async with netguard.client(netguard.HOME, max_bytes=4096, timeout=6, follow_redirects=False) as c:
@@ -2291,7 +2312,7 @@ def _diag_view(did, c, request):
         checks.append((False, "Das Board hat sich noch nie beim Spark gemeldet. Es erreicht ihn nicht: WLAN, Adresse oder Zertifikat. "
                               "„Netz prüfen“ und „Board-Protokoll (USB)“ zeigen, woran es liegt."))
     base = c.get("base") or ""
-    hint = _addr_hint(base)
+    hint = _addr_hint(base, _base(request))
     if hint:
         checks.append((False, hint))
     return {"base": base or _base(request), "base_known": bool(base), "online": did in _live,
@@ -2317,7 +2338,7 @@ async def profile_net_check(did: str, request: Request, prof=Depends(browser_pro
     _net_tries[prof["id"]] = tries + [now]
     c = clients()[cid]
     base = c.get("base") or _base(request)
-    res = await net_check(_check_base(base))
+    res = await net_check(_check_base(base), _base(request))
     diag(did, "Netz geprüft: " + ("alles gut" if all(ok for ok, _ in res) else next(t for ok, t in res if not ok)))
     return {"results": [{"ok": ok, "text": t} for ok, t in res], **_diag_view(did, clients()[cid], request)}
 
@@ -2403,7 +2424,7 @@ async def admin_net_check(request: Request):
         raise HTTPException(429, "Bitte ein paar Minuten warten, dann noch einmal prüfen.")
     _net_tries["admin"] = tries + [now]
     base = _check_base(str(body.get("base") or "").strip() or load_config().get("chat", {}).get("esp32_url") or _base(request))
-    res = await net_check(base)
+    res = await net_check(base, _base(request))
     return {"base": base, "results": [{"ok": ok, "text": t} for ok, t in res]}
 
 

@@ -450,7 +450,7 @@ class Speakers(unittest.TestCase):
         # "Netz prüfen": at most NET_CHECKS in ten minutes per profile
         asked = []
 
-        async def check(base):
+        async def check(base, hier=""):
             asked.append(base)
             return [(False, "nicht erreichbar")]
         old, esp32.net_check = esp32.net_check, check
@@ -550,6 +550,22 @@ class Speakers(unittest.TestCase):
         self.assertFalse(res[-1][0])
         self.assertIn("Adresse dieses Rechners selbst", res[-1][1])
         self.assertIn("eigenen Dienste oder ist nicht erlaubt", esp32._blocked_text("http://192.0.2.8:31080"))
+
+    def test_the_old_model_computer_address_is_named(self):
+        """Dominik 2026-10-16: after the move the board still had http://<tars>:31080 and only read "prüft der Spark
+        nicht"; the model computer's address now says so and names the panel's address, nothing is tried there."""
+        import common
+        with unittest.mock.patch.object(common, "model_host", lambda cfg=None: "192.0.2.71"), \
+                unittest.mock.patch.object(common, "model_local", lambda cfg=None: False), \
+                unittest.mock.patch.object(netguard, "model_addresses", lambda: {ipaddress.ip_address("192.0.2.71")}):
+            res = asyncio.run(esp32.net_check("http://192.0.2.71:31080", "http://192.0.2.21:31080"))
+            self.assertEqual(len(res), 1, res)
+            self.assertFalse(res[0][0])
+            self.assertIn("Modell-Rechners", res[0][1])
+            self.assertIn("http://192.0.2.21:31080 eintragen", res[0][1])
+            self.assertIn("<Pi-IP>", esp32._addr_hint("http://192.0.2.71:31080", "http://192.0.2.71:31080"))
+            self.assertIsNone(esp32._addr_hint("http://192.0.2.21:31080", "http://192.0.2.21:31080"))
+        self.assertIsNone(esp32._addr_hint("http://192.0.2.71:31080"))   # all on one Spark: no model computer
 
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_speaker_test(self):
