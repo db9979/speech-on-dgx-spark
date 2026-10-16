@@ -39,6 +39,7 @@ OPEN = {
     "/live": "the monitor page: static, 404 while off, home network only (live.py)",
     "/api/live/pair": "a screen enters its one-time code (home network, lockout and rate limit in live.py)",
     "/api/live/state": "checks the monitor's own cookie itself, 401 otherwise, home network only (live.py)",
+    "/api/schirm/zustand": "the HDMI screen on the same computer: loopback only without a forwarded sender, its own key, 404 while off (schirm.py)",
     "/api/login": "the admin's way in (lockout in guard.py)",
     "/api/logout": "ends a login",
     "/api/profile/login": "a profile's way in (lockout in guard.py)",

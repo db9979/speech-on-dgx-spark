@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.685** Fix Selbsttest: die Route der Steuerzentrale steht in der Liste offener Wege, mit Grund
 - **V01.0.684** Das kannst du auch sagen: Beispielsätze für Funktionen, die bei dir an sind, aber nie benutzt werden („Mal mir …“), unter der Antwort, im leeren Chat und unter Ich → Was ich kann
 - **V01.0.683** Bilder: Karte im Chat bleibt nicht mehr bei „wartet …“; Karikatur und Comic gelten als Bildwunsch
 - **V01.0.682** Steuerzentrale am Bildschirm: der Panel-Rechner zeigt am HDMI-Ausgang alles auf einer Textanzeige, startet beim Booten ohne Anmeldung
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.678** Fix: Hinweis auf neue XiaoZhi-Version scheitert nicht mehr an der Größe von GitHubs Antwort (TooLarge)
 - **V01.0.677** Fix iPhone-App: CarPlay-Gesicht baut wieder (Typfehler im Standbild)
 - **V01.0.676** CarPlay: Apple hat die Freigabe erteilt, die iPhone-App erscheint jetzt mit eigenem Symbol im Auto, mit dem gewählten Gesicht je Zustand
-- **V01.0.675** Musik testen findet die Modelle im Musik-Ordner; die Musik-Engine bindet ggml fest ein (fehlende Bibliotheken nach dem Bau)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
