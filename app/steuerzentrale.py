@@ -83,9 +83,11 @@ class Raster:
         for y in range(min(y1, y2), max(y1, y2) + 1):
             self.put(x, y, ch, col)
 
-    def box(self, x, y, w, h, col="d", titel="", tcol="W"):
+    def box(self, x, y, w, h, col="d", titel="", tcol="W", voll=False):
         if w < 2 or h < 2:
             return
+        for i in range(1, h - 1) if voll else ():      # covers what was drawn below it
+            self.put(x + 1, y + i, " " * (w - 2), "w")
         self.put(x, y, "┌" + "─" * (w - 2) + "┐", col)
         self.put(x, y + h - 1, "└" + "─" * (w - 2) + "┘", col)
         for i in range(1, h - 1):
@@ -145,6 +147,14 @@ def stufe_von(d):
 def laufende(d):
     reqs = [r for r in (d.get("live") or {}).get("reqs") or [] if not r.get("done")]
     return reqs[:len(FARBEN)]
+
+
+def gezeigt(d):
+    """What the flow draws: the running requests, then the finished ones the Live picture still shows (the last one,
+    and the others for live.FADE seconds after a newer one came), so an answer does not vanish the moment it is done."""
+    reqs = [r for r in (d.get("live") or {}).get("reqs") or [] if isinstance(r, dict)]
+    fertig = [r for r in reqs if r.get("done") and (r.get("last") or (r.get("left") or 0) > 0)]
+    return (laufende(d) + fertig)[:len(FARBEN)]
 
 
 def weg(r):
@@ -240,12 +250,48 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
     keys = [s[0] for s in stufen]
     for i, (key, name, sub, wo) in enumerate(stufen):
         lx, lw = next(((x, w) for kk, x, w, _, _ in lanes if kk == wo), lanes[0][1:3])
-        bx = lx + (6 if len(lanes) == 1 else 2)
-        bw = min(lw - (8 if len(lanes) == 1 else 4), 40)
-        y = y0 + i * (hoch + gap)
-        pos[key] = (bx, y, bw)
+        pos[key] = (lx + (6 if len(lanes) == 1 else 2), y0 + i * (hoch + gap), min(lw - (8 if len(lanes) == 1 else 4), 40))
+    # the ways first and the boxes over them: a way that skips a stage never runs across its box (Dominik 2026-10-16);
+    # arrow heads and marks come last, they sit on the boxes' edges
+    marken = []
+    for j, r in enumerate(lauf):
+        col, w = FARBEN[j], weg(r)
+        for a, b in zip(w, w[1:]):
+            ia, ib = keys.index(a), keys.index(b)
+            ax, ay, aw = pos[a]
+            bx, by, bw = pos[b]
+            xa, xb = ax + aw // 2 - 3 + 2 * j, bx + bw // 2 - 3 + 2 * j
+            if ib < ia:
+                marken.append((bx + bw - 16, by + 1, "↻", col))
+                continue
+            if ib == ia + 1 or xa != xb or ax == bx and len(lanes) > 1:
+                yy = ay + hoch
+                if ib == ia + 1:
+                    if xa == xb:
+                        R.vl(xa, yy, by - 1, col)
+                    else:
+                        R.put(xa, yy, "└" if xb > xa else "┘", col)
+                        R.hl(min(xa, xb) + 1, max(xa, xb) - 1, yy, col)
+                        R.put(xb, yy, "┐" if xb > xa else "┌", col)
+                        if by - 1 > yy:
+                            R.vl(xb, yy + 1, by - 1, col)
+                else:
+                    R.vl(xa, yy, by - 1, col)
+                marken.append((xb, by, "▾", col))
+                if ib == ia + 1 and not r.get("done") and SCHRITT.get(r.get("stage")) != a:
+                    marken.append((ax + 4 + j, ay + hoch - 1, "✓", "g"))
+            else:   # one frame, a stage skipped: round the left side
+                lx = ax - 4 + j
+                R.put(lx, ay + 1, "┌", col)
+                R.hl(lx + 1, ax - 1, ay + 1, col)
+                R.vl(lx, ay + 2, by, col)
+                R.put(lx, by + 1, "└", col)
+                R.hl(lx + 1, bx - 2, by + 1, col)
+                R.put(bx - 1, by + 1, "▸", col)
+    for key, name, sub, wo in stufen:
+        bx, y, bw = pos[key]
         aktiv = [j for j, r in enumerate(lauf) if SCHRITT.get(r.get("stage")) == key]
-        R.box(bx, y, bw, hoch, "y" if aktiv else "d")
+        R.box(bx, y, bw, hoch, "y" if aktiv else "d", voll=True)
         e = R.put(bx + 2, y + 1, name, "W")
         if aktiv:
             R.put(e + 1, y + 1, "▶", "y")
@@ -266,40 +312,8 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
             R.put(bx + 2, y + 2, kurz(sub, bw - 4), "m")
         else:                    # a low box: the line beside the name
             R.put(e + 3, y + 1, kurz(sub, bx + bw - 6 - e - 3), "m")
-    for j, r in enumerate(lauf):
-        col, w = FARBEN[j], weg(r)
-        for a, b in zip(w, w[1:]):
-            ia, ib = keys.index(a), keys.index(b)
-            ax, ay, aw = pos[a]
-            bx, by, bw = pos[b]
-            xa, xb = ax + aw // 2 - 3 + 2 * j, bx + bw // 2 - 3 + 2 * j
-            if ib < ia:
-                R.put(bx + bw - 16, by + 1, "↻", col)
-                continue
-            if ib == ia + 1 or xa != xb or ax == bx and len(lanes) > 1:
-                yy = ay + hoch
-                if ib == ia + 1:
-                    if xa == xb:
-                        R.vl(xa, yy, by - 1, col)
-                    else:
-                        R.put(xa, yy, "└" if xb > xa else "┘", col)
-                        R.hl(min(xa, xb) + 1, max(xa, xb) - 1, yy, col)
-                        R.put(xb, yy, "┐" if xb > xa else "┌", col)
-                        if by - 1 > yy:
-                            R.vl(xb, yy + 1, by - 1, col)
-                else:
-                    R.vl(xa, yy, by - 1, col)
-                R.put(xb, by, "▾", col)
-                if ib == ia + 1 and not r.get("done") and SCHRITT.get(r.get("stage")) != a:
-                    R.put(ax + 4 + j, ay + hoch - 1, "✓", "g")
-            else:   # one frame, a stage skipped: round the left side
-                lx = ax - 4 + j
-                R.put(lx, ay + 1, "┌", col)
-                R.hl(lx + 1, ax - 1, ay + 1, col)
-                R.vl(lx, ay + 2, by, col)
-                R.put(lx, by + 1, "└", col)
-                R.hl(lx + 1, bx - 2, by + 1, col)
-                R.put(bx - 1, by + 1, "▸", col)
+    for mx, my, ch, col in marken:
+        R.put(mx, my, ch, col)
     return pos, hoch
 
 
@@ -318,7 +332,7 @@ def geraete(R, d, x, w, top, bot, lauf, pos, hoch, busx):
         name = ("Von selbst · " + (r.get("src") or "")) if r.get("auto") else r.get("dev") or "Gerät"
         R.box(x, y, w, 4, col)
         R.put(x + 2, y + 1, kurz(name, w - 4), col)
-        R.put(x + 2, y + 2, kurz(f"{r.get('intent') or 'Anfrage'} · {zahl(r.get('age'), 1)} s", w - 4), "m")
+        R.put(x + 2, y + 2, kurz(f"{r.get('intent') or 'Anfrage'} · {'fertig in ' if r.get('done') else ''}{zahl(r.get('age'), 1)} s", w - 4), "m")
         R.hl(x + w, busx, y + 1, col)
         if ziel != y + 1:
             R.put(busx, y + 1, "┐" if ziel > y + 1 else "┘", col)
@@ -521,7 +535,7 @@ def bild(d, w, h, jetzt=None):
         a, b = bahn(R, x, lw, main_top, main_bot, k, karten.get(k), live)
         ln.append((k, x, lw, a, b))
     stufen = [(k, n, s, wo if karten else "spark") for k, n, s, wo in STUFEN]
-    lauf = laufende(d)
+    lauf = gezeigt(d)
     pos, hoch = stufen_zeichnen(R, d, ln, lauf, stufen)
     foot = ("geladen: " + " · ".join(TEIL.get(m.get("id"), m.get("id")) for m in (karten.get("modell") or {}).get("dienste") or [] if m.get("state") == "active")) if karten else ""
     if karten:
@@ -544,7 +558,7 @@ def knapp(R, d):
     for k in rechner_karten(d).values():
         R.put(1, y, kurz(f"{k.get('name')}: CPU {zahl(k.get('cpu'))} % · frei {zahl(k.get('ram_frei'), 1)} GiB · {zahl(k.get('temp'))} °C", R.w - 2), "w")
         y += 1
-    for j, r in enumerate(laufende(d)):
+    for j, r in enumerate(gezeigt(d)):
         R.put(1, y + 1, kurz(f"{r.get('dev')} · {' → '.join(weg(r))} · {zahl(r.get('age'), 1)} s", R.w - 2), FARBEN[j])
         y += 1
     for a in (d.get("hinweise") or [])[:5]:

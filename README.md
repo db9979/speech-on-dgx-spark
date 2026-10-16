@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.698** Control centre: lines run under the boxes, finished answers stay for a moment
 - **V01.0.697** Hands-on test: Status → Hands-on test lists what is new and should still be tried, per point Works, Problem or Later; old points folded away
 - **V01.0.696** Control centre: no more "panel gone" on short hiccups
 - **V01.0.695** Self-test fix: the live view checks "+ N ready" independent of earlier tests
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.691** Fix: the control centre no longer stops the update on the panel computer
 - **V01.0.690** Fix: "Wie mache ich …?" no longer goes to the Spark help (since "Making music")
 - **V01.0.689** Live view: the right column shows only what is in use; the rest sits in "+ N ready"
-- **V01.0.688** Making music: every released profile makes its own songs in the conversation ("Make me a song about …") and under Me → Music; model (2B or XL) selectable, Test music measures every installed model
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

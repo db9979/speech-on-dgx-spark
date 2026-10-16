@@ -220,6 +220,35 @@ class Bild(unittest.TestCase):
         one = sz.bild(beispiel(split=False), 240, 67).text()
         self.assertIn("Panel und Modelle", one)
 
+    def test_a_way_never_runs_across_a_box(self):
+        # Pi 2026-10-16 "die verbindungen sind manchmal über den kästen": a way that skips stages (Hören straight to
+        # Werkzeuge, or Weiche to Sprechen) went through the boxes in between
+        reqs = [{"id": "s1", "stage": "tool", "steps": [{"k": "asr"}, {"k": "tool"}]},
+                {"id": "s2", "stage": "tts", "steps": [{"k": "weiche"}, {"k": "tts"}]},
+                {"id": "s3", "stage": "tts", "steps": [{"k": "asr"}, {"k": "llm"}, {"k": "tts"}]}]
+        for lanes, stufen in (([("modell", 30, 50, 5, 38), ("panel", 80, 50, 5, 38)], sz.STUFEN),
+                              ([("spark", 30, 100, 5, 38)], tuple((k, n, t, "spark") for k, n, t, _ in sz.STUFEN))):
+            R = sz.Raster(200, 45)
+            pos, hoch = sz.stufen_zeichnen(R, {"live": {"reqs": reqs}}, lanes, reqs, stufen)
+            for key, (x, y, w) in pos.items():
+                for yy in range(y + 1, y + hoch - 1):
+                    inner = "".join(c for c, _ in R.z[yy][x + 1:x + w - 1])
+                    self.assertFalse(set(inner) & set("│┃─━┌┐└┘"), f"{key}: {inner!r}")
+
+    def test_a_finished_answer_stays_a_moment(self):
+        # "die letzte meldung verschwindet ziemlich schnell": the Live picture keeps the last answer (last) and fades
+        # the others (left seconds); the screen shows them too, marked as done, and counts only the running ones
+        d = beispiel()
+        d["live"]["reqs"] = [{"id": "f1", "dev": "Küche", "intent": "Wetter", "stage": "done", "done": True, "last": True,
+                              "age": 2.4, "steps": [{"k": "asr"}, {"k": "llm"}, {"k": "tts"}]},
+                             {"id": "f2", "dev": "Bad", "stage": "done", "done": True, "left": 0, "age": 1, "steps": []}]
+        self.assertEqual([r["id"] for r in sz.gezeigt(d)], ["f1"])
+        self.assertEqual(sz.laufende(d), [])
+        t = sz.bild(d, 240, 67).text()
+        self.assertIn("Küche", t)
+        self.assertIn("fertig in 2,4 s", t)
+        self.assertNotIn("Bad", t.split("GERÄTE", 1)[1].split("Verbunden", 1)[0])
+
     def test_every_live_service_has_its_line(self):
         """Dominik 2026-10-16: the screen grows with every change. Every box of the Live picture is drawn or counted."""
         d = beispiel()

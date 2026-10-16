@@ -1429,6 +1429,13 @@
 "titel": "Praxistest im Panel",
 "text": "A: Zustand → Praxistest: die neuesten Punkte stehen oben unter „Offen“. Einen Punkt mit „Klappt“ markieren, einen mit „Problem“ (der Hinweis zeigt den Weg zu Zustand → Logs → Diagnose), einen mit „Später“. „Alt, vor V01.0.600“ aufklappen → „Alle alten erledigt“ → die Gruppe ist weg. Braucht dich zeigt eine leise Zeile mit der Zahl der offenen Punkte. iPhone: Spark verwalten → Praxistest zeigt dieselbe Liste. Verwalter sehen die Seite nicht.",
 "thread": "Verbesserungsideen"
+},
+{
+"id": "P228",
+"v": 698,
+"titel": "Steuerzentrale: Linien und fertige Antworten",
+"text": "A: Am Bildschirm des Panel-Rechners eine Sprachfrage stellen, die ein Werkzeug braucht, und eine ohne. Keine Linie läuft durch einen Kasten (Hören, Weiche, Sprachmodell, Werkzeuge, Sprechen). Ist die Antwort fertig, bleibt das Gerät links mit „fertig in … s“ stehen, bis eine neue Frage kommt. Kein kurzes Schwarzbild mehr.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
 }
 ]
 }
