@@ -1544,3 +1544,13 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 /* Musik machen (musik.js): the player in the chat card and in Ich → Musik, the lyrics as they were written */
 .muplay{display:block;width:100%;max-width:420px;margin:8px 0}.muchk{display:flex;align-items:center;gap:6px;width:auto}.mulyr{white-space:pre-wrap;font:inherit;margin:8px 0}
 .blquick{gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+/* Zustand → Praxistest (praxistest.js) */
+.pt-sum{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.pt-n{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:84px}
+.pt-n b{display:block;font-size:20px}.pt-n small{color:var(--mut)}
+.pt-grp>summary{font-weight:600;cursor:pointer}.pt-grp>.b{margin:8px 0}
+.pt-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.pt-v{font:12px var(--mono,monospace);color:var(--mut);min-width:70px;padding-top:2px}.pt-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.pt-steps{margin:2px 0}.pt-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pt-chip{font-size:12px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--line)}
+.pt-problem{color:var(--bad)}.pt-ok,.pt-erledigt{color:var(--ok)}.pt-spaeter{color:var(--warn)}
+@media (max-width:600px){.pt-row{flex-wrap:wrap}.pt-v{min-width:0}.pt-btns{width:100%;justify-content:flex-start}}

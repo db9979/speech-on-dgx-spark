@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.697** · 2026-10-16 · Zustand → Praxistest: die Prüfpunkte stehen als eine Liste im Repository (app/panel/praxistest.json, Nummern bleiben), das Neueste oben, je Punkt Klappt/Problem/Später, Punkte vor V01.0.600 eingeklappt mit „Alle alten erledigt“; leise Zeile in Braucht dich, iPhone unter Spark verwalten; nur Admin
 - **V01.0.696** · 2026-10-16 · Steuerzentrale am Bildschirm: wartet bis 8 s auf das Panel und behält bei kurzen Aussetzern das letzte Bild; „panel weg“ erst nach 5 Fehlversuchen in Folge (Pi: die Tageszahlen brauchten manchmal über 3 s)
 - **V01.0.695** · 2026-10-16 · Fix Selbsttest: der Browser-Test der Live-Übersicht hängt beim Kasten „+ N bereit“ nicht mehr davon ab, was frühere Tests eingerichtet haben
 - **V01.0.694** · 2026-10-16 · Musik machen: keine Personen-Regel mehr für Lieder (Dominik: „das sind einfach nur die Namen dazu“); sie blockte jeden Wunsch, in dem ein Wort aus einem Kontaktnamen stand; Wortliste, Künstler und Geheimnisse bleiben

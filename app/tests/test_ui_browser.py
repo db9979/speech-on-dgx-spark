@@ -947,6 +947,49 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(write_help=False)
 
+    def test_praxistest_page(self):
+        """Zustand → Praxistest (praxistest.js, V01.0.697): the newest points open on top, „Klappt“ puts a chip on
+        the point, „Problem“ shows the way to the logs as a jump link, the old points go with one button; at 320, 390
+        and 1280 px, with the strict CSP, without sideways scrolling."""
+        import praxistest
+
+        def clean():
+            if os.path.exists(praxistest.STAND_FILE):
+                os.remove(praxistest.STAND_FILE)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in (("klein", 320, 700),) + VIEWS:
+                    clean()
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        pg.on("dialog", lambda d: asyncio.ensure_future(d.accept()))
+                        await pg.evaluate("goSec('praxis')")
+                        await pg.wait_for_selector("#ptmain details[open] .pt-row", timeout=20000)
+                        first = await pg.evaluate("document.querySelector('#ptmain details[open] .pt-row').dataset.id")
+                        newest = max(praxistest.punkte(), key=lambda x: x["v"])["id"]
+                        self.assertEqual(first, newest, name)
+                        await pg.click(f"#ptmain .pt-row[data-id={first}] .pt-ok")
+                        await pg.wait_for_selector(f"#ptmain .pt-row[data-id={first}] .pt-chip.pt-ok", state="attached", timeout=20000)   # in „Erledigt“, folded
+                        second = await pg.evaluate("document.querySelector('#ptmain details[open] .pt-row').dataset.id")
+                        await pg.click(f"#ptmain .pt-row[data-id={second}] .pt-bad")
+                        await self.until(pg, "document.querySelector('#ptmsg a')!==null")
+                        self.assertIn(second, await pg.inner_text("#ptmsg"))
+                        old = await pg.evaluate("[...document.querySelectorAll('#ptmain details')].find(d=>d.querySelector('summary').textContent.startsWith('Alt'))!==undefined")
+                        self.assertTrue(old, name)
+                        await pg.evaluate("[...document.querySelectorAll('#ptmain details')].find(d=>d.querySelector('summary').textContent.startsWith('Alt')).open=true")
+                        await pg.click("#ptmain details button:text('Alle alten erledigt')")
+                        await self.until(pg, "![...document.querySelectorAll('#ptmain details summary')].some(s=>s.textContent.startsWith('Alt'))")
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            clean()
+
     def test_bilder_page(self):
         """Ich → Bilder (bilder.js, Bilder malen): the form, the gallery and a picture's details with download; on a
         computer and a phone, with the strict CSP, without sideways scrolling. The chat shows a painted picture under

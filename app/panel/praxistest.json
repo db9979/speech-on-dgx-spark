@@ -1,0 +1,1434 @@
+{
+"punkte": [
+{
+"id": "P001",
+"v": 224,
+"titel": "0.1 Update",
+"text": "auf die neueste grüne Version: Einstellungen → Spark → Update → Jetzt prüfen → Aktualisieren. Danach steht unten links V01.0.224 oder neuer."
+},
+{
+"id": "P002",
+"v": 224,
+"titel": "0.2 Funktionsprüfung",
+"text": "Zustand → Prüfen → Jetzt prüfen. Alle Zeilen grün?"
+},
+{
+"id": "P003",
+"v": 212,
+"titel": "0.3 Logs",
+"text": "(.212–.217): Zustand → Logs. Zählen die Bereichs-Kacheln (nicht alle 0)? Kein Telegram-Konflikt alle 15 s (.214)?"
+},
+{
+"id": "P004",
+"v": 221,
+"titel": "1.1 Eine Antwort, nicht zwei",
+"text": "(.221): Raum-Modus am Lautsprecher, eine Frage. Kommt genau eine Antwort?"
+},
+{
+"id": "P005",
+"v": 205,
+"titel": "1.2 Keine Aussetzer, keine verschluckten Endungen",
+"text": "(.205, .219): fünf längere Fragen im Browser. Stockt es? Fehlt ein Wortende? Dann Logs → Erweitert → „Gespräch“ an und die Zeilen „chat: tts …“ schicken."
+},
+{
+"id": "P006",
+"v": 210,
+"titel": "1.3 Nur Text statt Sprache",
+"text": "(.210): Seite neu laden, sofort per Mikro fragen. Kommt „Einmal tippen“, und danach spricht er?"
+},
+{
+"id": "P007",
+"v": 218,
+"titel": "1.4 Schneller Antwortbeginn",
+"text": "(.218, .220): A Einstellungen → Assistent → Sprachmodell → Schneller Antwortbeginn. Fünf Fragen, dann die Zeilen „zeit: …“ aus dem Log schicken (erstes Wort, erster Ton)."
+},
+{
+"id": "P008",
+"v": 222,
+"titel": "1.5 Codes nie gesprochen",
+"text": "(.222): „Merk dir das Passwort Sonne123“ und dann danach fragen. Wird es nur angezeigt, nicht gesprochen?"
+},
+{
+"id": "P009",
+"v": 223,
+"titel": "1.6 Kein Platzhalter-Satz",
+"text": "(.223): ein eigenes Dokument fragen („Was steht in meinem Lebenslauf?“), dann zwei Folgefragen dazu („Fass zusammen, was für ein Typ ich bin“). Kommt jedes Mal eine echte Antwort, nie „(Diese frühere Antwort beruhte auf Texten von außen …)“? Alte Gespräche mit diesem Satz im Verlauf sollten auch wieder normal weitergehen."
+},
+{
+"id": "P010",
+"v": 204,
+"titel": "1.7 Leerzeilen",
+"text": "(.204): Antworten beginnen und enden ohne leere Zeilen."
+},
+{
+"id": "P011",
+"v": 208,
+"titel": "2.1 Sichtbar",
+"text": "Raum-Modus am Lautsprecher starten. Grüner Streifen oben im Panel, Tab-Titel „● Raum“, Zustand → Hört gerade zu, Ich → Raum-Modus → Gerade aktiv mit +30 Min. und Beenden. Beenden klappt?"
+},
+{
+"id": "P012",
+"v": 208,
+"titel": "2.2 Erinnerungston",
+"text": "nach 15 Minuten, Mitteilung beim Start."
+},
+{
+"id": "P013",
+"v": 213,
+"titel": "2.3 Fernstart",
+"text": "(.213): A + P Raum-Modus aus der Ferne. Im Panel „Raummodus im Wohnzimmer an“ → Rückfrage → „Ja“. Startet der Lautsprecher? „Raummodus im Wohnzimmer aus“ beendet?"
+},
+{
+"id": "P014",
+"v": 209,
+"titel": "2.4 iPhone",
+"text": "(.209): Zeile „… hört zu bis …“ im Chat, Live-Aktivität, Widget, „Hey Siri, Raummodus beenden mit Spark“."
+},
+{
+"id": "P015",
+"v": 202,
+"titel": "3.1 A",
+"text": "Funktionen → Gezielte Werkzeugwahl an, P Ich → Gespräch an."
+},
+{
+"id": "P016",
+"v": 202,
+"titel": "3.2 Unter Funktionen → Gezielte Werkzeugwahl → Satz ausprobieren: „Wie wird da",
+"text": "3.2 Unter Funktionen → Gezielte Werkzeugwahl → Satz ausprobieren: „Wie wird das Wetter morgen?“, „Was steht morgen an?“, „Mach das Licht aus“. Passt die Gruppe?"
+},
+{
+"id": "P017",
+"v": 202,
+"titel": "3.3 Dieselben drei Fragen echt stellen. Richtige Antwort? Log-Zeile „weiche: …“",
+"text": "3.3 Dieselben drei Fragen echt stellen. Richtige Antwort? Log-Zeile „weiche: …“ passt?"
+},
+{
+"id": "P018",
+"v": 202,
+"titel": "3.4 Option „Fragen, die keine Regel erkennt → nur Websuche und Gedächtnis“ an, e",
+"text": "3.4 Option „Fragen, die keine Regel erkennt → nur Websuche und Gedächtnis“ an, eine allgemeine Frage stellen. Schneller, noch richtig?"
+},
+{
+"id": "P019",
+"v": 192,
+"titel": "4.1 A",
+"text": "Nachrichten an, im Chat Briefknopf. „Schreib Test, dass ich später komme“ → Rückfrage → „Ja“. Kommt sie im anderen Profil einmal an?"
+},
+{
+"id": "P020",
+"v": 206,
+"titel": "4.2 Empfängerfeld „An …“ mit Zuletzt/Favoriten (.206); Rufname setzen und per Sp",
+"text": "4.2 Empfängerfeld „An …“ mit Zuletzt/Favoriten (.206); Rufname setzen und per Sprache nutzen."
+},
+{
+"id": "P021",
+"v": 195,
+"titel": "4.3 iPhone: Umschlag neben dem Eingabefeld, Antwort aus der Mitteilung, Siri „Na",
+"text": "4.3 iPhone: Umschlag neben dem Eingabefeld, Antwort aus der Mitteilung, Siri „Nachricht mit Spark“ (.195, .201)."
+},
+{
+"id": "P022",
+"v": 190,
+"titel": "5.1 A",
+"text": "+ P Bilder erkennen. Foto im Assistenten anhängen: „Was siehst du?“ Stimmt es?"
+},
+{
+"id": "P023",
+"v": 191,
+"titel": "5.2 Dasselbe über Telegram und aus der iPhone-App (.191: Schalter „Fotos aus der",
+"text": "5.2 Dasselbe über Telegram und aus der iPhone-App (.191: Schalter „Fotos aus der App ansehen lassen“)."
+},
+{
+"id": "P024",
+"v": 224,
+"titel": "5.3 Dokumente",
+"text": "(.224): ein PDF und eine Excel-Datei hochladen, Dokumente → ansehen, „Suche ausprobieren“, dann eine Frage dazu. Quelle mit Seite anklickbar?"
+},
+{
+"id": "P025",
+"v": 177,
+"titel": "6.1 Einstellungen → Spark → Sicherung → Jetzt sichern. Die Datei erscheint mit",
+"text": "6.1 Einstellungen → Spark → Sicherung → Jetzt sichern. Die Datei erscheint mit Größe."
+},
+{
+"id": "P026",
+"v": 177,
+"titel": "6.2 Umzugs-Sicherung",
+"text": "mit Passwort erstellen und herunterladen (nicht einspielen, nur prüfen, dass es klappt). Datei an einem zweiten Ort ablegen (NAS/iCloud), siehe Durchsicht Punkt 3."
+},
+{
+"id": "P027",
+"v": 177,
+"titel": "6.3 iPhone: Spark-Update aus der App (.177) geht erst, wenn „db“ MFA hat. Erst M",
+"text": "6.3 iPhone: Spark-Update aus der App (.177) geht erst, wenn „db“ MFA hat. Erst MFA für „db“ einrichten, dann probieren."
+},
+{
+"id": "P028",
+"v": 166,
+"titel": "7.1 Erinnerung in 2 Minuten stellen, Panel und iPhone offen. Klingelt sie nur au",
+"text": "7.1 Erinnerung in 2 Minuten stellen, Panel und iPhone offen. Klingelt sie nur auf einem Gerät?"
+},
+{
+"id": "P029",
+"v": 181,
+"titel": "7.2 Push geht nur an das zuletzt genutzte Gerät (.181).",
+"text": "7.2 Push geht nur an das zuletzt genutzte Gerät (.181)."
+},
+{
+"id": "P030",
+"v": 166,
+"titel": "7.3 Eigene Stimme überhören",
+"text": "(.166): A + P. iPhone freihändig neben dem Lautsprecher; der Lautsprecher antwortet. Nimmt das iPhone das als neue Frage?"
+},
+{
+"id": "P031",
+"v": 206,
+"titel": "7.4 Profile und Geräte: Suche, Filter, Details (.206).",
+"text": "7.4 Profile und Geräte: Suche, Filter, Details (.206)."
+},
+{
+"id": "P032",
+"v": 163,
+"titel": "Qualitätstest (Zustand → Prüfen → Qualitätstest), Leistung messen mit Urteil (",
+"text": "Qualitätstest (Zustand → Prüfen → Qualitätstest), Leistung messen mit Urteil (.163, .164)."
+},
+{
+"id": "P033",
+"v": 187,
+"titel": "Gesicht Comic mit neuem Schnurrbart (.187).",
+"text": "Gesicht Comic mit neuem Schnurrbart (.187)."
+},
+{
+"id": "P034",
+"v": 224,
+"titel": "Websuche, Rückfrage ohne Weckwort, Mail, Kalender, Home Assistant (Pool-Thermost",
+"text": "Websuche, Rückfrage ohne Weckwort, Mail, Kalender, Home Assistant (Pool-Thermostat), Telegram, MFA für Admin."
+},
+{
+"id": "P035",
+"v": 175,
+"titel": "Agenten (.175): A + Stufe „lesen“ im Profil, einen Auftrag im Hintergrund ge",
+"text": "Agenten (.175): A + Stufe „lesen“ im Profil, einen Auftrag im Hintergrund geben, Bericht kommt per Push/Telegram."
+},
+{
+"id": "P036",
+"v": 225,
+"titel": "Vorrang für Sprache",
+"text": "(.225, ohne Schalter): Zustand → Prüfen → Vorrang für Sprache → Vorrang prüfen (etwa eine Minute). Ist „Unter Last, mit Vorfahrt“ fast so schnell wie „Alleine“? Danach eine Sprachfrage stellen, während eine Sicherung oder das Lesen eines hochgeladenen Scans läuft: Zustand → Logs, Bereich „Vorrang“ zeigt „… wartet (Gespräch)“ bzw. „… abgebrochen“."
+},
+{
+"id": "P037",
+"v": 230,
+"titel": "Pebble-Uhr",
+"text": "(.230): App-Datei neu installieren (Einbinden → Pebble-Uhr). A Funktionen → Pebble-Uhr koppeln + P Ich → Pebble-Uhr, „Pebble koppeln“, Zeile in den Pebble-Einstellungen bei „Einrichtungscode“ einfügen. Zeigt die Uhr „Gekoppelt“? Drei Fragen stellen, eine davon mit Handy kurz außer Reichweite. Hängt etwas? Nach der ersten Antwort sollte die Uhr das Comic-Gesicht zeigen, wenn es im Panel gewählt ist. Danach Zustand → Logs, Bereich „Uhr“, „Kopieren für Thread“."
+},
+{
+"id": "P038",
+"v": 226,
+"titel": "Lautsprecher nur für die eigene Stimme",
+"text": "(.226, ohne Schalter): Am Wohnzimmer-Lautsprecher fragt eine andere Person „Was steht in meinen E-Mails?“. Sagt der Assistent nur, dass er das hier nur dem Inhaber sagt? Dann Dominik selbst (Sprechererkennung an, Stimme vorher am Lautsprecher mit „Stimme hier anlernen“ angelernt): Kommen die Mails? Zustand → Logs, Bereich „Lautsprecher“: gelbe Zeile „personal data withheld … – voice not recognized“ bzw. „owner's voice recognized“, „Kopieren für Thread“."
+},
+{
+"id": "P039",
+"v": 227,
+"titel": "Dokumente in der iPhone-App ansehen",
+"text": "(.227): P Ich → iPhone-App → „Dokumente aus der App“ an. In der App Einstellungen → Meine Dokumente: Erscheint die Liste wie im Panel? Ein PDF und ein Foto öffnen (Original mit Zoom), Reiter „Text“ zeigt den gespeicherten Text. Eine Excel- oder Word-Datei zeigt nur Text. Schalter aus: Die Liste sagt, wo man ihn einschaltet."
+},
+{
+"id": "P040",
+"v": 228,
+"titel": "Fortschritt beim Lesen von Dokumenten",
+"text": "(.228, .232): A Funktionen → Eigene Dokumente: „Bilder und Scans lesen“ und „Bedeutungssuche“ an, P Ich → Dokumente beide an. Einen Scan mit mehreren Seiten hochladen und die Liste offen lassen: Steht „Seite x von y gelesen“ mit Balken und Grund („liest gerade Seite …“ bzw. „wartet auf eine ruhige Minute“, solange du sprichst), zählt es ohne Neuladen hoch? Danach „Bedeutung x von y“. Zustand → Monitoring, Karte „Eigene Dokumente“: Modell „läuft“ mit MiB, wartende Seiten. Im iPhone unter Meine Dokumente „Seite x von y gelesen“."
+},
+{
+"id": "P041",
+"v": 233,
+"titel": "iPhone-App: erste Antwort mit Ton",
+"text": "(.233): App ganz schließen (nach oben wegwischen), neu öffnen und gleich eine Frage stellen, einmal gesprochen und einmal getippt. Spricht schon die erste Antwort? Auch mit AirPods/Auto-Bluetooth einmal probieren. Bleibt sie stumm: Zustand → Logs → Diagnose, „Kopieren für Thread“."
+},
+{
+"id": "P042",
+"v": 236,
+"titel": "Gemeinsame Dokumente",
+"text": "(.236): A Funktionen → Eigene Dokumente → Gemeinsame Dokumente an. P db: Ich → Dokumente „Gemeinsame Dokumente“ an, an einer Anleitung „Für alle“ anhaken. Zweites Profil: Schalter an, steht die Anleitung unter „Von anderen für alle freigegeben“ und lässt sie sich ansehen? Frage dazu stellen: Nennt die Quelle „geteilt von db“? Ohne Schalter im zweiten Profil: nichts. Am Wohnzimmer-Lautsprecher mit fremder Stimme: keine gemeinsamen Dokumente. Zustand → Monitoring: Anleitung steht in der Karte, „Zurücknehmen“ wirkt."
+},
+{
+"id": "P043",
+"v": 238,
+"titel": "Scans vollständig, Neu einlesen",
+"text": "(.238): Das PDF, bei dem nur 20 Seiten kamen, unter Ich → Dokumente „Neu einlesen“ (wenn das Original aufbewahrt ist) oder neu hochladen. Zählt der Fortschritt bis zur echten Seitenzahl? Steht am Dokument eine Grenze oder „übersprungen“? Bei über 100 Seiten geht es am nächsten Tag weiter. In der iPhone-App ein langes PDF an eine Frage hängen: Sagt die Antwort, dass nur der Anfang dabei ist?"
+},
+{
+"id": "P044",
+"v": 240,
+"titel": "Lange Dokumente nachts lesen",
+"text": "(.240): A Funktionen → Eigene Dokumente → Bilder und Scans lesen → Lange Dokumente nachts lesen an, Nachtfenster lassen (01:00–06:00). Tagsüber einen Scan mit über 10 Seiten und einen mit 2 Seiten hochladen und weiter Fragen stellen: Wird der kurze gelesen, steht am langen „langes Dokument, wird nachts ab 01:00 gelesen“? Am nächsten Morgen: Ist der lange fertig (oder weiter als 100 Seiten)?"
+},
+{
+"id": "P045",
+"v": 241,
+"titel": "Antwort-Bild folgt dem Gesicht",
+"text": "(V01.0.241): A Einstellungen → Vorgaben → Gesicht des Assistenten auf „Comic“. Im Verlauf steht vor jeder Antwort ein kleiner Comic-Kopf statt des Roboters? Zurück auf „Roboter“: wieder der Roboter."
+},
+{
+"id": "P046",
+"v": 242,
+"titel": "PDF-Größe und Speicher",
+"text": "(.242): reading_the_marseille_tarot.pdf erneut unter Ich → Dokumente hochladen (bei über 100 MB vorher A Funktionen → Eigene Dokumente → Größte PDF-Datei erhöhen). Kommt es durch? Steht „Belegt: x von y“ mit Balken? A Zustand → Monitoring, Karte „Eigene Dokumente“: Speicher pro Profil sichtbar, für ein Profil einen anderen Wert setzen, wirkt er unter Ich → Dokumente?"
+},
+{
+"id": "P047",
+"v": 244,
+"titel": "iPhone-App: Weiterlesen",
+"text": "(.244): In der App Einstellungen → Meine Dokumente ein sehr langes Dokument öffnen, Reiter „Text“, ganz nach unten: Hängt „Weiterlesen“ das nächste Stück an, bis zum Ende?"
+},
+{
+"id": "P048",
+"v": 245,
+"titel": "Steckbrief und Tags",
+"text": "(.245): A Funktionen → Eigene Dokumente → Steckbrief und Tags an. P Ich → Dokumente „Steckbrief und Tags“ und „Fristen anbieten“ an. Ein paar ruhige Minuten warten: Stehen an den Dokumenten Titel, Art und Tags (bei Scans statt „scan_0012.pdf“ ein sinnvoller Titel)? Auf einen Tag tippen: filtert die Liste? „Tags“ ändern und leeren. Frage „Was steht in meinen Versicherungen zur Kündigung?“: Nennt die Antwort das richtige Dokument? Bei einem Vertrag mit Frist „Erinnern“ tippen: steht die Erinnerung als Chip unter den Schaltern im Assistenten (sechs Wochen vor der Frist)? „Ansehen“ zeigt „Dazu gehören“ bei Dokumenten mit gleicher Nummer oder gleichem Absender."
+},
+{
+"id": "P049",
+"v": 246,
+"titel": "iPhone-App übernimmt das Panel",
+"text": "(.246–.250): A Funktionen → iPhone-App → Panel-Bereiche in der iPhone-App an. P Ich → iPhone-App: unter „Panel-Bereiche in der App“ einzeln einschalten. App neu öffnen, Einstellungen: Erscheinen nur die eingeschalteten Bereiche? „Im Panel öffnen“ springt in Safari an die richtige Stelle. Mein Alltag: Termine, Erinnerungen, Gedächtnis (ein Eintrag wischen, „Aufräumen vorschlagen“). Spark verwalten (braucht den zweiten Schritt des Admins): Face ID, Admin-Passwort, Code; Monitoring, Logs „Kopieren für Thread“, Prüfen; unter „Ändern“ einen Schalter in Funktionen umlegen und im Panel nachsehen, eine Sicherung anlegen. Meine Dokumente mit „Dokumente verwalten“: lange drücken → „Für alle“, Tags, Neu einlesen; wischen → Löschen. Stimme einlernen (Sprechererkennung an, zweiter Schritt im Profil): drei Sätze vorlesen, Code eingeben, Zahl der Aufnahmen steigt. Von selbst: Wetter-Ort setzen und ausprobieren, Haltestelle suchen. Sicherheit: Geräte und letzte Anmeldungen stimmen mit dem Panel überein. Konten verbinden: ohne zweiten Schritt kommt der Hinweis „braucht den zweiten Anmeldeschritt“; mit Code einen Kalender verbinden. Schalter im Panel wieder aus: Der Bereich verschwindet nach dem nächsten App-Start, Aufrufe gehen nicht mehr."
+},
+{
+"id": "P050",
+"v": 252,
+"titel": "Standardstimme als Liste",
+"text": "(.252): A Einstellungen → Sprache → Sprachausgabe: „Standardstimme“ ist eine Auswahlliste. Mit Base-Modell stehen dort die eigenen Stimmen (z. B. Jarvis), mit CustomVoice die festen Sprecher (ryan, serena …), bei VoiceDesign ist sie gesperrt. Modell nur umstellen (nicht speichern): Liste passt sich an. Ein alter Name, den das Modell nicht kennt, steht als „(nicht in der Liste)“ da und geht beim Speichern nicht verloren."
+},
+{
+"id": "P051",
+"v": 254,
+"titel": "Einstellungen springen nicht mehr",
+"text": "(.254, ohne Schalter): Am Rechner (Windows/Linux mit sichtbarer Scrollleiste, Fenster groß) unter Einstellungen zwischen Sprachausgabe, Spracherkennung, Sicherheit und Betrieb hin und her klicken. Bleibt die Karte an derselben Stelle? Sicherheit: Steht „Zweiter Anmeldeschritt“ mit Text und Knopf in einem Rahmen mit der Linie darunter? Spracherkennung: Ist die Modell-Auswahl lesbar („Qwen/Qwen3-ASR-1.7B“)?",
+"erledigt": true
+},
+{
+"id": "P052",
+"v": 255,
+"titel": "Benutzer als Admin",
+"text": "(.255): A zweiten Anmeldeschritt für den Admin an, dann Einstellungen → Sicherheit → Benutzer als Admin erlauben an (fragt Code), Profil wählen, Rolle „Mit-Admin“ geben. P (anderer Browser, Profil mit eigenem zweiten Schritt) Ich → Sicherheit → Admin-Modus öffnen, Code eingeben: oben steht „Admin-Modus: … bis HH:MM“, Einstellungen gehen, Panel-Passwort und „Benutzer als Admin“ sind nicht zu sehen. A Rolle entziehen: der Profil-Browser fällt beim nächsten Klick heraus. Mit „Verwalter“ nur Zustand (Monitoring, Logs) und Profile und Geräte. Zustand → Logs → Admin-Protokoll zeigt, wer was getan hat."
+},
+{
+"id": "P053",
+"v": 256,
+"titel": "iPhone-App: Mit meinem Profil anmelden",
+"text": "(.256): Profil mit Rolle Mit-Admin oder Verwalter (zweiter Schritt im Profil und beim Hauptadmin an, P „Spark verwalten in der App“ an). In der App Spark verwalten: Steht „Mit meinem Profil anmelden“? Code des Profils eingeben: Anmeldung klappt. Als Verwalter fehlen Prüfen und Sicherungen; als Mit-Admin lassen sich Sicherungen nicht löschen. 15 Minuten nichts tun: Die App bittet um neue Anmeldung."
+},
+{
+"id": "P054",
+"v": 263,
+"titel": "Anfragen im Log verfolgen",
+"text": "(.263): A Einstellungen → Spark → Betrieb → Logs → „Anfragen verfolgen“ an, speichern. Ein paar Fragen stellen (eine mit Werkzeug, z. B. Wetter oder Websuche, eine am Lautsprecher). Zustand → Logs → Anfragen: Steht jede Anfrage in der Liste mit Perlenkette und Werkzeugnamen? Antippen zeigt „Wohin die Zeit ging“ und den Zeitstrahl (Weiche, Runden, Werkzeuge, erster Ton). Name steht nur als „Profil“. P Ich → Gespräch → Datenschutz → „Mein Name im Anfragen-Log“ an: jetzt steht der Name da. „Zugehörige Logzeilen“ und „Kopieren für Thread“ ausprobieren. Nirgends darf die Frage oder Antwort im Klartext stehen."
+},
+{
+"id": "P055",
+"v": 279,
+"titel": "Antwort aufs reMarkable",
+"text": "(.279): A reMarkable-Notizen und „Aufs reMarkable schicken“ an, P Ich → reMarkable beide an und verbunden. Am Lautsprecher oder im Browser: „Fass die politische Lage zusammen und leg es aufs reMarkable.“ Nach der Antwort kommt „Die Antwort liegt jetzt auf deinem reMarkable im Ordner Spark …“, und dort liegt ein neues Dokument mit der Zusammenfassung. Logs → Anfragen zeigt „remarkable (Panel)“. „Schreib aufs reMarkable: Milch kaufen“ legt weiter nur die Notiz an."
+},
+{
+"id": "P056",
+"v": 276,
+"titel": "Neue Personen per Einladung",
+"text": "(.276/.280): Personen und Geräte → Neue Personen „Nur mit Einladung“, Einladung erstellen, Link am Handy öffnen, Name + PIN wählen → „Los geht's“ öffnet sich; einen Schritt erledigen (z. B. Wetterort) → wird von selbst abgehakt; am Rechner „Am Handy weitermachen“ → QR scannen → richtige Zahl antippen → Handy angemeldet."
+},
+{
+"id": "P057",
+"v": 281,
+"titel": "Mein Zustand",
+"text": "Funktionen → Alltag → „Mein Zustand\" an, dann Ich → Mein Zustand → „Mein Zustand anzeigen\". Prüfen: Dokumente/reMarkable/Aufräumen mit Stand und Wartegrund, unter „Verbunden\" nur eigene Postfächer/Kalender/HA/Geräte; nach einem falschen Passwort roter Punkt bei Ich mit „Anmeldung nötig\"; keine Mail-Betreffs oder Dokumenttexte sichtbar."
+},
+{
+"id": "P058",
+"v": 282,
+"titel": "Vorrang für Personen (V01.0.282, .284, .287)",
+"text": "Funktionen → Gespräch → „Vorrang für Personen“ an, unter Personen und Geräte → Profil „db“ → Rechte → Vorrang auf „Vorrang“ stellen. Zustand → Prüfen → „Vorrang für Sprache“ → Prüfen: Die Zeile „Zwei Personen gleichzeitig, mit Vorrang“ sollte beim ersten Ton deutlich früher sein als „ohne Vorrang“. Alltag: Zwei Geräte fragen gleichzeitig. Logs → Anfragen zeigt beim Vorrang-Profil unter Sprachausgabe „überholte …“ und beim anderen unter Sprachmodell „wartete … auf eine Antwort mit Vorrang“."
+},
+{
+"id": "P059",
+"v": 291,
+"titel": "reMarkable: Ablegen in",
+"text": "(.291): P Ich → reMarkable → Ablegen in einen eigenen Ordner wählen, dann unter einer Antwort „Aufs reMarkable“ tippen: Das Dokument liegt in diesem Ordner, sonst ändert sich nichts. Den Ordner auf dem reMarkable löschen und noch einmal schicken: Es landet in „Spark“, und der Knopf sagt „gewählter Ordner fehlt“."
+},
+{
+"id": "P060",
+"v": 294,
+"titel": "Einstellungen → Vorgaben → „Gesicht zeigt, was es tut“ an, speichern. Fragen: „W",
+"text": "Einstellungen → Vorgaben → „Gesicht zeigt, was es tut“ an, speichern. Fragen: „Wie wird das Wetter morgen?“ (Lupe), „Was steht heute im Kalender?“ (Kalenderblatt), „Hab ich neue Mails?“ (Brief), „Schalte das Licht im Büro an“ (Glühbirne, danach Zwinkern mit Haken), „Merk dir, dass …“ (Notizblock, danach Zwinkern). Bei Roboter und Comic ausprobieren."
+},
+{
+"id": "P061",
+"v": 294,
+"titel": "Fünf Minuten nichts tun: Das Gesicht schläft mit „zzz“ ein, Tippen oder Maus übe",
+"text": "Fünf Minuten nichts tun: Das Gesicht schläft mit „zzz“ ein, Tippen oder Maus übers Gesicht weckt es. Bei einem Fehler (z. B. Sprachmodell aus) schaut es ratlos mit Fragezeichen."
+},
+{
+"id": "P062",
+"v": 296,
+"titel": "Spark am iPhone (Safari) und an einem Android-Handy (Chrome) öffnen: unten die T",
+"text": "Spark am iPhone (Safari) und an einem Android-Handy (Chrome) öffnen: unten die Tabs Spark · Heute · Dokumente · Ich (und Verwalten mit Admin-Rechten). Spark: Gesicht, großer Mikrofon-Knopf, Tippfeld immer da; oben links „Verlauf“ öffnet frühere Gespräche als Blatt von unten."
+},
+{
+"id": "P063",
+"v": 296,
+"titel": "Verwalten → Einstellungen → eine Seite öffnen, dann die Zurück-Geste des Handys",
+"text": "Verwalten → Einstellungen → eine Seite öffnen, dann die Zurück-Geste des Handys (Android) bzw. Wischen in Safari: geht genau eine Ebene zurück, nie aus der Seite raus."
+},
+{
+"id": "P064",
+"v": 296,
+"titel": "Ich → Darstellung → „Am Rechner-Layout zeigen“: alte Handy-Ansicht; im Menü (☰)",
+"text": "Ich → Darstellung → „Am Rechner-Layout zeigen“: alte Handy-Ansicht; im Menü (☰) „Wie die App anzeigen“ holt die App-Ansicht zurück."
+},
+{
+"id": "P065",
+"v": 299,
+"titel": "Funktionen → Eigene Dokumente → reMarkable-Notizen → „Neueste zuerst“ an, dann I",
+"text": "Funktionen → Eigene Dokumente → reMarkable-Notizen → „Neueste zuerst“ an, dann Ich → reMarkable → „Neueste zuerst“ an."
+},
+{
+"id": "P066",
+"v": 299,
+"titel": "Auf dem reMarkable etwas Neues schreiben (getippt oder Handschrift). Nach höchst",
+"text": "Auf dem reMarkable etwas Neues schreiben (getippt oder Handschrift). Nach höchstens etwa 3 Minuten Ruhe steht im Journal „remarkable: account changed, comparing now“; danach fragen „Was habe ich heute notiert?“: die neue Seite kommt zuerst, mit „geändert am“."
+},
+{
+"id": "P067",
+"v": 299,
+"titel": "Eine Frage zu einem Thema, das in alter und neuer Notiz steht: die Antwort folgt",
+"text": "Eine Frage zu einem Thema, das in alter und neuer Notiz steht: die Antwort folgt der neueren und nennt ihr Datum."
+},
+{
+"id": "P068",
+"v": 297,
+"titel": "Codewort am Lautsprecher",
+"text": "(.297, aus): A Funktionen → Sprechererkennung → „Codewort am Lautsprecher“ + P Ich → Lautsprecher → Schalter an und Codewort festlegen (2 Wörter). Am Lautsprecher leise oder sehr kurz „Meine Mails?“ fragen: Kommt „Sag bitte dein Codewort“? Richtiges Codewort → Mails; falsches → „stimmt nicht“. Eine andere Person fragt: nie nach dem Codewort gefragt. Zustand → Logs, Bereich „Lautsprecher“: „code word asked … / right / wrong“, das Codewort selbst darf nirgends stehen."
+},
+{
+"id": "P069",
+"v": 303,
+"titel": "Funktionen → „Spark als MCP-Server“ an, dann Ich → „Dienste per MCP“ an. Dort „P",
+"text": "Funktionen → „Spark als MCP-Server“ an, dann Ich → „Dienste per MCP“ an. Dort „Programm verbinden“: Name „Open WebUI“, lokal, Werkzeuge Sprache + Nachschlagen + ask_spark, mit Code bestätigen. Den Schlüssel (wird nur einmal gezeigt) in Open WebUI unter Einstellungen → Externe Werkzeuge → „+“, Typ MCP (Streamable HTTP), mit der Adresse http://192.168.178.171:31080/mcp und „Bearer“ eintragen."
+},
+{
+"id": "P070",
+"v": 303,
+"titel": "In Open WebUI fragen „Frag den Spark, was heute ansteht“ (ask_spark) und „Was sa",
+"text": "In Open WebUI fragen „Frag den Spark, was heute ansteht“ (ask_spark) und „Was sagt Wikipedia zu Ameisen?“: Antworten kommen. Zustand → Logs, Bereich Journal: „mcp-server: Open WebUI (lokal) … ok“."
+},
+{
+"id": "P071",
+"v": 303,
+"titel": "Denselben Schlüssel über https://speech.metaluna9.i234.me/mcp versuchen: muss ab",
+"text": "Denselben Schlüssel über https://speech.metaluna9.i234.me/mcp versuchen: muss abgelehnt werden („a home network key from outside“)."
+},
+{
+"id": "P072",
+"v": 303,
+"titel": "Optional: Unterschalter „MCP: Handeln mit Bestätigung“ an, beim Zugang „Handeln“",
+"text": "Optional: Unterschalter „MCP: Handeln mit Bestätigung“ an, beim Zugang „Handeln“ dazunehmen, in Open WebUI „Schalte das Licht im Büro an“: Push kommt, unter Ich → Dienste per MCP „Ja“ (mit Code) schaltet, „Nein“ nicht."
+},
+{
+"id": "P073",
+"v": 303,
+"titel": "Optional extern: Unterschalter „von außen (OAuth)“ an, in claude.ai unter Connec",
+"text": "Optional extern: Unterschalter „von außen (OAuth)“ an, in claude.ai unter Connectors die Adresse https://speech.metaluna9.i234.me/mcp hinzufügen: Anmeldung im Spark mit zweitem Schritt, Warnhinweis lesen, zustimmen."
+},
+{
+"id": "P074",
+"v": 300,
+"titel": "Einmal den Signierschlüssel anlegen und als Secrets eintragen (docs/de/android-a",
+"text": "Einmal den Signierschlüssel anlegen und als Secrets eintragen (docs/de/android-app.md, Schritt 1), dann Actions → „Android app“ → Run workflow: Release android-v1.0.0 erscheint."
+},
+{
+"id": "P075",
+"v": 300,
+"titel": "Funktionen → Android-App an, „App jetzt holen“: „App 1.0.0 auf dem Spark“. Ich →",
+"text": "Funktionen → Android-App an, „App jetzt holen“: „App 1.0.0 auf dem Spark“. Ich → Android-App → an → „Download-Link holen“, QR mit dem Android-Handy scannen, installieren."
+},
+{
+"id": "P076",
+"v": 300,
+"titel": "In der App die Proxy-Adresse eintragen, mit Name und PIN anmelden, Mikrofon test",
+"text": "In der App die Proxy-Adresse eintragen, mit Name und PIN anmelden, Mikrofon testen. App schließen, „Erinnere mich in 20 Minuten an den Tee“: Die Mitteilung kommt spätestens 15 Minuten nach Fälligkeit."
+},
+{
+"id": "P077",
+"v": 300,
+"titel": "Text in einer anderen App teilen → Spark: steht im Tippfeld, wird nicht von selb",
+"text": "Text in einer anderen App teilen → Spark: steht im Tippfeld, wird nicht von selbst geschickt."
+},
+{
+"id": "P078",
+"v": 308,
+"titel": "Einstellungen → Spark → Betrieb → Logs: „Live-Seite“ an, speichern. Zustand → Li",
+"text": "Einstellungen → Spark → Betrieb → Logs: „Live-Seite“ an, speichern. Zustand → Live öffnen, am Handy oder Lautsprecher etwas fragen („Wie wird das Wetter?“): Gerät erscheint links, Weg mit Zeiten unten, „ist gerade hier“ wandert mit; 10 s nach dem Ende blendet es aus. Frage und Antwort stehen nirgends."
+},
+{
+"id": "P079",
+"v": 308,
+"titel": "Über https://speech.metaluna9.i234.me fragen: Gerät steht unter „Über das Intern",
+"text": "Über https://speech.metaluna9.i234.me fragen: Gerät steht unter „Über das Internet“, Eingang zeigt den gekürzten Absender (z. B. 89.204.x.x)."
+},
+{
+"id": "P080",
+"v": 308,
+"titel": "Unterschalter „Live-Monitor im Heimnetz“ an, speichern, „Neuer Monitor“ Name „Fl",
+"text": "Unterschalter „Live-Monitor im Heimnetz“ an, speichern, „Neuer Monitor“ Name „Flur“ → 6-stelliger Code. Am Bildschirm im LAN https://192.168.178.171:31443/live öffnen, Code eingeben: Monitor zeigt das Bild ohne Menü, die untere Karte wechselt alle 10 s. Monitor in der Liste „zeigt gerade“, Löschen → Bildschirm verlangt sofort neuen Code."
+},
+{
+"id": "P081",
+"v": 308,
+"titel": "/live über die Proxy-Adresse aus dem Internet: „nur im Heimnetz“ (403).",
+"text": "/live über die Proxy-Adresse aus dem Internet: „nur im Heimnetz“ (403)."
+},
+{
+"id": "P082",
+"v": 314,
+"titel": "Funktionen → Von selbst melden: die fünf Unterschalter (Live, laut, Ereignisse,",
+"text": "Funktionen → Von selbst melden: die fünf Unterschalter (Live, laut, Ereignisse, per Sprache, Kamera) an. Ich → Von selbst: Smart-Home-Regeln und „Sofort“ an. Regel „Bewegung Flur geht an, Pause 10 min“: Bewegung auslösen, Meldung kommt binnen Sekunden (nicht erst zur nächsten Minute), zweite Bewegung in 10 min bleibt still. Unter den Regeln steht „Live verbunden“."
+},
+{
+"id": "P083",
+"v": 314,
+"titel": "Regel mit „nur wenn niemand zu Hause“: bei Anwesenheit kommt nichts. Regel „laut",
+"text": "Regel mit „nur wenn niemand zu Hause“: bei Anwesenheit kommt nichts. Regel „laut“ mit eigenem Satz und Lautsprecher Küche: Lautsprecher sagt nur den Satz, ohne Namen."
+},
+{
+"id": "P084",
+"v": 314,
+"titel": "Ereignisse: Name „klingel“, Satz „Es hat geklingelt.“, Schlüssel erzeugen, rest_",
+"text": "Ereignisse: Name „klingel“, Satz „Es hat geklingelt.“, Schlüssel erzeugen, rest_command aus dem Panel in HA eintragen, in HA ausführen → Meldung. Unbekannter Name → 404 in den HA-Logs."
+},
+{
+"id": "P085",
+"v": 314,
+"titel": "Sprache: „Sag mir Bescheid, wenn die Haustür aufgeht“ → Rückfrage → „Ja“ → Regel",
+"text": "Sprache: „Sag mir Bescheid, wenn die Haustür aufgeht“ → Rückfrage → „Ja“ → Regel steht in der Liste (Quelle Sprache)."
+},
+{
+"id": "P086",
+"v": 314,
+"titel": "Kamera: Regel mit Kamera Eingang → Meldung endet mit „Kamera: …“ in wenigen Wort",
+"text": "Kamera: Regel mit Kamera Eingang → Meldung endet mit „Kamera: …“ in wenigen Worten."
+},
+{
+"id": "P087",
+"v": 314,
+"titel": "Zustand → Live: unter Kanäle steht „Home Assistant live“, unter Ereignisse „Rege",
+"text": "Zustand → Live: unter Kanäle steht „Home Assistant live“, unter Ereignisse „Regel gemeldet“ / „Ereignis angenommen“ ohne Gerätenamen."
+},
+{
+"id": "P088",
+"v": 307,
+"titel": "Vorab holen bei Rückfrage",
+"text": "Funktionen → Gezielte Werkzeugwahl → „Vorab holen bei Rückfrage“ an, Ich → Gespräch → gleicher Schalter an. Fragen, auf die der Assistent zurückfragt (z. B. „Habe ich einen Termin?“ → „Für welchen Tag?“ → „Morgen“). In Logs → Diagnose (Bereich Gespräch) erscheinen „vorab: geholt Kalender | x s“ und nach der Antwort „vorab: genutzt Kalender“; die zweite Antwort sollte ohne Kalender-Wartezeit kommen."
+},
+{
+"id": "P089",
+"v": 317,
+"titel": "(V01.0.317) Ich → Von selbst → Regel hinzufügen: Feld „Gerät oder Sensor“ schläg",
+"text": "(V01.0.317) Ich → Von selbst → Regel hinzufügen: Feld „Gerät oder Sensor“ schlägt Geräte vor; „Zuletzt geändert“ zeigt die letzten; „Gerät erkennen“ drücken, Bewegung oder Klingel auslösen → Gerät erscheint, Antippen trägt es ein."
+},
+{
+"id": "P090",
+"v": 316,
+"titel": "Als Admin im Browser zu Hause: roter Knopf „Notaus“ unten in der Seitenleiste →",
+"text": "Als Admin im Browser zu Hause: roter Knopf „Notaus“ unten in der Seitenleiste → Stufe 1 „Außen zu“ auslösen. Rotes Band oben. Am Handy über https://speech.metaluna9.i234.me (WLAN aus): nur die Notaus-Seite, nichts sonst. Websuche zu Hause liefert nichts („Notaus“ in Logs → Diagnose bei netguard)."
+},
+{
+"id": "P091",
+"v": 316,
+"titel": "„Stufe erhöhen“ → 2 „Hände weg“: „Schalte das Licht im Flur ein“ wird abgelehnt,",
+"text": "„Stufe erhöhen“ → 2 „Hände weg“: „Schalte das Licht im Flur ein“ wird abgelehnt, Fragen aus dem Wissen gehen. Zustand → Karte „Was der Notaus gerade abhält“ zählt den Versuch. Push „Notaus“ kam auf die Admin-Geräte."
+},
+{
+"id": "P092",
+"v": 316,
+"titel": "Stufe 3 „Alles still“: Lautsprecher verstummen, Panel zeigt nur die Notaus-Seite",
+"text": "Stufe 3 „Alles still“: Lautsprecher verstummen, Panel zeigt nur die Notaus-Seite. Zustand → Live / Monitor /live zeigt rotes Band mit Stufe und Anzahl."
+},
+{
+"id": "P093",
+"v": 316,
+"titel": "„Wieder einschalten …“ mit Code → ganz aus: Seite lädt neu, alles wie vorher. Vo",
+"text": "„Wieder einschalten …“ mit Code → ganz aus: Seite lädt neu, alles wie vorher. Von der iPhone-App oder von außen gibt es keinen „Wieder einschalten“-Knopf."
+},
+{
+"id": "P094",
+"v": 338,
+"titel": "Seit V01.0.338 nur für Admins: ein normales Profil sieht weder Knopf noch Band.",
+"text": "Seit V01.0.338 nur für Admins: ein normales Profil sieht weder Knopf noch Band. Den Reverse Proxy unter Einstellungen → Sicherheit → Reverse Proxy eintragen: ein Proxy, der keine Absender-Adresse (X-Forwarded-For) mitschickt, zählt sonst als Heimnetz."
+},
+{
+"id": "P095",
+"v": 319,
+"titel": "(V01.0.319) Ich → Von selbst: bei einer Regel „Bearbeiten“, Text oder Pause ände",
+"text": "(V01.0.319) Ich → Von selbst: bei einer Regel „Bearbeiten“, Text oder Pause ändern, „Prüfen und speichern“ → Regel steht geändert an derselben Stelle."
+},
+{
+"id": "P096",
+"v": 321,
+"titel": "V01.0.321/.323 iPhone-App (neuer TestFlight-Build nach .323): erste Antwort wird",
+"text": "V01.0.321/.323 iPhone-App (neuer TestFlight-Build nach .323): erste Antwort wird gesprochen (Fix aus .277); mit Admin-Schalter „Gesicht zeigt, was es tut“: Lupe bei „Such im Web …“, Glühbirne bei Smart Home, Notizblock + Zwinkern bei „Merk dir …“, „zzz“ nach 5 Minuten Ruhe."
+},
+{
+"id": "P097",
+"v": 326,
+"titel": "V01.0.326 Hilfe zum Spark: Funktionen → „Hilfe zum Spark“ + „Einstellungen vorsc",
+"text": "V01.0.326 Hilfe zum Spark: Funktionen → „Hilfe zum Spark“ + „Einstellungen vorschlagen“ + „Frag Spark auf jeder Seite“ an, Ich → Gespräch → „Fragen zum Spark“ an. Im Chat „Wie werden die Antworten schneller?“ → Weg im Panel + Stand. „Schlag mir was vor“ → Karte, erst „Übernehmen“ schaltet, „Rückgängig“ geht. Knopf „Frag Spark“ unten rechts kennt die Seite. Als normales Profil: keine Spark-Schalter, keine Admin-Doku; als Gast nichts."
+},
+{
+"id": "P098",
+"v": 338,
+"titel": "Als normales Profil: Ich → Sicherheit → „Mein Notaus auslösen“. Band „MEIN NOTAU",
+"text": "Als normales Profil: Ich → Sicherheit → „Mein Notaus auslösen“. Band „MEIN NOTAUS IST AN“. Am Handy (App) kommt nur noch „gesperrt“, ein zweiter Browser ist abgemeldet. „Schalte das Licht an“ wird abgelehnt, „Was steht heute im Kalender?“ geht."
+},
+{
+"id": "P099",
+"v": 338,
+"titel": "Admin bekommt einen Push mit dem Namen; Zustand zeigt „Mein Notaus von Profilen“",
+"text": "Admin bekommt einen Push mit dem Namen; Zustand zeigt „Mein Notaus von Profilen“ mit „Aufheben“. Zustand → Live zeigt „Mein Notaus: 1 Profil“ ohne Namen."
+},
+{
+"id": "P100",
+"v": 338,
+"titel": "Zurück im Profil: PIN eingeben → „Wieder einschalten“, App geht wieder.",
+"text": "Zurück im Profil: PIN eingeben → „Wieder einschalten“, App geht wieder."
+},
+{
+"id": "P101",
+"v": 335,
+"titel": "V01.0.335 Frag Spark im Kopf: mit „Frag Spark auf jeder Seite“ an gibt es keinen",
+"text": "V01.0.335 Frag Spark im Kopf: mit „Frag Spark auf jeder Seite“ an gibt es keinen eigenen Knopf mehr; der Kopf unten rechts zeigt „Du bist auf: …“ (auch über Ich), Frage tippen oder auf den Kopf tippen und sprechen → Antwort und Karte im Kopf-Fenster. Admin schaltet „Vorab holen“ an → Ich neu öffnen zeigt es ohne „Vom Admin ausgeschaltet“, ohne Neuladen."
+},
+{
+"id": "P102",
+"v": 339,
+"titel": "Funktionen → Schreibhilfe → „In anderen Programmen“ an, Ich → Schreibhilfe → „In",
+"text": "Funktionen → Schreibhilfe → „In anderen Programmen“ an, Ich → Schreibhilfe → „In anderen Programmen nutzen“ an."
+},
+{
+"id": "P103",
+"v": 339,
+"titel": "Mac: Schnellaktion holen, installieren, in Apple Mail Text markieren → Dienste →",
+"text": "Mac: Schnellaktion holen, installieren, in Apple Mail Text markieren → Dienste → „Mit Spark verbessern“, Einrichtungszeile einfügen, Übernehmen."
+},
+{
+"id": "P104",
+"v": 339,
+"titel": "Windows (x64 und ARM): exe von der Release-Seite, koppeln, in Outlook markieren,",
+"text": "Windows (x64 und ARM): exe von der Release-Seite, koppeln, in Outlook markieren, Strg+Alt+S."
+},
+{
+"id": "P105",
+"v": 339,
+"titel": "Outlook/Word/Excel: Manifest (nur über https-Adresse) laden, Seitenleiste koppel",
+"text": "Outlook/Word/Excel: Manifest (nur über https-Adresse) laden, Seitenleiste koppeln, Text übernehmen."
+},
+{
+"id": "P106",
+"v": 339,
+"titel": "Browser: Erweiterung entpackt laden, in Webmail Rechtsklick → „Mit Spark verbess",
+"text": "Browser: Erweiterung entpackt laden, in Webmail Rechtsklick → „Mit Spark verbessern“."
+},
+{
+"id": "P107",
+"v": 339,
+"titel": "iPhone: Teilen → Spark → „Text verbessern“.",
+"text": "iPhone: Teilen → Spark → „Text verbessern“."
+},
+{
+"id": "P108",
+"v": 339,
+"titel": "Programm unter Ich → Schreibhilfe entfernen: es fragt danach neu nach der Kopplu",
+"text": "Programm unter Ich → Schreibhilfe entfernen: es fragt danach neu nach der Kopplung."
+},
+{
+"id": "P109",
+"v": 343,
+"titel": "Funktionen → „Hilfe zum Spark“ und darunter „Frag Spark auf jeder Seite“ an, im",
+"text": "Funktionen → „Hilfe zum Spark“ und darunter „Frag Spark auf jeder Seite“ an, im Profil Ich → Gespräch „Fragen zum Spark“ an."
+},
+{
+"id": "P110",
+"v": 343,
+"titel": "Im Chat: „Wie lade ich jemanden ein?“, „Was ist der Raummodus?“, „Wie ändere ich",
+"text": "Im Chat: „Wie lade ich jemanden ein?“, „Was ist der Raummodus?“, „Wie ändere ich meine PIN?“ geben eine Antwort mit dem Weg im Panel; Logs → Anfragen zeigt bei der Weiche „spark“ und „Herkunft: panel“."
+},
+{
+"id": "P111",
+"v": 343,
+"titel": "„Wo finde ich meinen Termin morgen?“ und „Mach das Licht an“ gehen weiter an Kal",
+"text": "„Wo finde ich meinen Termin morgen?“ und „Mach das Licht an“ gehen weiter an Kalender und Smart Home, nicht an die Hilfe."
+},
+{
+"id": "P112",
+"v": 343,
+"titel": "Auf Funktionen hinter einem Schalter das kleine „?“ antippen: der Kopf fragt nac",
+"text": "Auf Funktionen hinter einem Schalter das kleine „?“ antippen: der Kopf fragt nach genau diesem Schalter und nennt ihn zuerst."
+},
+{
+"id": "P113",
+"v": 343,
+"titel": "Am Lautsprecher „Wie schalte ich die Websuche an?“: kurze gesprochene Antwort oh",
+"text": "Am Lautsprecher „Wie schalte ich die Websuche an?“: kurze gesprochene Antwort ohne Pfeile. Auf dem Handy (App-Ansicht) steht der Weg mit „Verwalten → …“."
+},
+{
+"id": "P114",
+"v": 343,
+"titel": "Zustand → Live zeigt bei Spark-Hilfe „Frage über …, N Treffer“, nie die Frage se",
+"text": "Zustand → Live zeigt bei Spark-Hilfe „Frage über …, N Treffer“, nie die Frage selbst."
+},
+{
+"id": "P115",
+"v": 342,
+"titel": "Funktionen → „Spark-Begleiter am PC und Mac“ an, Ich → Begleiter → „Spark-Beglei",
+"text": "Funktionen → „Spark-Begleiter am PC und Mac“ an, Ich → Begleiter → „Spark-Begleiter für mich“ an."
+},
+{
+"id": "P116",
+"v": 342,
+"titel": "Windows (x64/ARM) und Mac: Programm laden, „Gerät koppeln“, Zeile einfügen; Punk",
+"text": "Windows (x64/ARM) und Mac: Programm laden, „Gerät koppeln“, Zeile einfügen; Punkt im Symbol wird normal."
+},
+{
+"id": "P117",
+"v": 342,
+"titel": "Schreibhilfe per Tastenkürzel in Outlook/Apple Mail; Frag Spark; Diktieren (nach",
+"text": "Schreibhilfe per Tastenkürzel in Outlook/Apple Mail; Frag Spark; Diktieren (nach Einschalten im Panel)."
+},
+{
+"id": "P118",
+"v": 342,
+"titel": "Teil im Panel ausschalten: verschwindet im Programm innerhalb einer halben Minut",
+"text": "Teil im Panel ausschalten: verschwindet im Programm innerhalb einer halben Minute."
+},
+{
+"id": "P119",
+"v": 342,
+"titel": "Meldung vom Spark kommt als Systemmitteilung; Gerät entfernen: Programm fragt ne",
+"text": "Meldung vom Spark kommt als Systemmitteilung; Gerät entfernen: Programm fragt neu nach Kopplung."
+},
+{
+"id": "P120",
+"v": 344,
+"titel": "Funktionen → … → Aufs reMarkable schicken → „Mehr mit dem reMarkable“ an; Ich →",
+"text": "Funktionen → … → Aufs reMarkable schicken → „Mehr mit dem reMarkable“ an; Ich → reMarkable → unter „Mehr mit dem reMarkable“ alles an. „Anleitung jetzt ablegen“: im Ordner liegt „Spark-Anleitung“ mit „(an)“/„(aus)“ je Funktion. Einen Schalter umlegen: nach höchstens 10 Minuten ist dieselbe Anleitung erneuert (kein zweites Dokument)."
+},
+{
+"id": "P121",
+"v": 344,
+"titel": "In einem gelesenen Notizbuch „@Spark Wie lange hält Sauerteig im Kühlschrank?“ s",
+"text": "In einem gelesenen Notizbuch „@Spark Wie lange hält Sauerteig im Kühlschrank?“ schreiben: nach Abgleich und Lesen liegt „Antwort: …“ im Ordner."
+},
+{
+"id": "P122",
+"v": 344,
+"titel": "Zeile „☐ Steuer abgeben“ schreiben: unter Ich → reMarkable erscheint die Aufgabe",
+"text": "Zeile „☐ Steuer abgeben“ schreiben: unter Ich → reMarkable erscheint die Aufgabe; „Erinnern“ trägt sie ein."
+},
+{
+"id": "P123",
+"v": 344,
+"titel": "Notizbuch „Besprechung Test“ anlegen, etwas schreiben, 30 Minuten warten: Zusamm",
+"text": "Notizbuch „Besprechung Test“ anlegen, etwas schreiben, 30 Minuten warten: Zusammenfassung plus Mitteilung."
+},
+{
+"id": "P124",
+"v": 344,
+"titel": "„Leg die Seite https://de.wikipedia.org/wiki/Sauerteig aufs reMarkable“ und „Leg",
+"text": "„Leg die Seite https://de.wikipedia.org/wiki/Sauerteig aufs reMarkable“ und „Leg den Anhang der letzten Mail von … aufs reMarkable“."
+},
+{
+"id": "P125",
+"v": 344,
+"titel": "Zweimal „Notier auf dem reMarkable: …“: beide stehen im Dokument „Eingang TT.MM.",
+"text": "Zweimal „Notier auf dem reMarkable: …“: beide stehen im Dokument „Eingang TT.MM.JJJJ“."
+},
+{
+"id": "P126",
+"v": 344,
+"titel": "Morgenblatt-Uhrzeit auf in 5 Minuten stellen: PDF „Morgenblatt …“ mit Linien; fr",
+"text": "Morgenblatt-Uhrzeit auf in 5 Minuten stellen: PDF „Morgenblatt …“ mit Linien; freitags ab 17 Uhr „Wochenrückblick KW …“."
+},
+{
+"id": "P127",
+"v": 348,
+"titel": "V01.0.348 Morgenbegrüßung mit frischen Terminen",
+"text": "Morgens im Assistenten nur „Guten Morgen“ sagen (im selben Gespräch wie gestern). Erwartet: Logs → Anfragen zeigt Pflicht daily_briefing, genannt werden nur heutige Termine aus dem Kalender, schon vergangene Termine höchstens als „vorbei“."
+},
+{
+"id": "P128",
+"v": 347,
+"titel": "V01.0.347 Begleiter Aussehen + Updates",
+"text": "Neue Version einmal von Hand installieren (Windows: Release begleiter-windows, Mac: begleiter-mac). Erwartet: Spark-Gesicht im Symbol, Klick öffnet Fenster im Panel-Look, unten „☕ Spark unterstützen“. Funktionen → Spark-Begleiter → „Neue Version jetzt holen“ zeigt die gehaltenen Versionen; bei der nächsten Version erscheint im Programm „Neue Version …“, installiert erst nach Klick."
+},
+{
+"id": "P129",
+"v": 353,
+"titel": "V01.0.353 Begleiter tiefer im Rechner",
+"text": "Unter Ich → Begleiter beim Gerät einzeln einschalten und je einmal probieren: Rechtsklick auf eine PDF → „Mit Spark“ → Zusammenfassen; Strg+Alt+B (⌥⌘B) Bereich aufziehen → Erklären; Text in Outlook markieren → Strg+Alt+S (Ton passt zur Mail); offene Mail → Strg+Alt+M → Entwurf im Antwortfenster, nichts gesendet; Datei in „Spark-Wissen“ legen → nach ~15 s in Ich → Dokumente; Meldung → „Antworten“; Admin „Darf am PC handeln“ an + Teil an + Programm freigeben, dann „Öffne am PC tagesschau.de“ → Rückfrage am Rechner; „Hey Spark, wie spät ist es?“ am Rechner."
+},
+{
+"id": "P130",
+"v": 264,
+"titel": "V01.0.264 Erst lokal suchen",
+"text": "Funktionen → „Erst lokal suchen“ an, Ich → Gespräch → Antwort → „Erst lokal suchen“ an (für Treffer im Archiv auch „Eigenes Archiv (Kiwix)“). Fragen: 1) „Wer war Albert Einstein?“ → Antwort nennt das Archiv als Quelle; 2) eine Frage zu einem hochgeladenen Dokument ohne „meine“ → „In deinen Unterlagen …“; 3) „Wie wird das Wetter morgen?“ → wie bisher, ohne Verzögerung; 4) „Was steht in meinen Unterlagen zu …?“ → keine Websuche. Erwartet je Frage eine Zeile „lokal:“ unter Logs → Diagnose, Bereich Wissen. Zum Vorab-Prüfen: Zustand → Prüfen → „Erst lokal testen“."
+},
+{
+"id": "P131",
+"v": 363,
+"titel": "V01.0.363 Eigene MCP-Dienste pro Profil",
+"text": "Funktionen → Agent-Funktionen → Dienste per MCP → „Eigene MCP-Dienste für Profile“ an. Im Profil Ich → Meine MCP-Dienste einschalten, einen MCP-Dienst mit Adresse und Schlüssel anbinden (Code wird verlangt). Erwartet: alle Werkzeuge „Aus“; eines auf „Lesen“ → Frage danach wird beantwortet, Zustand → Live zeigt unter Ereignisse „MCP: Name · Host · ok · … ms“, Ich → Mein Zustand eine Zeile für den Dienst. Ein Werkzeug auf „Handeln mit Ja“ → Assistent fragt „Soll ich …?“, erst „Ja“ führt aus. Apps und Schnittstellen → „Sperren“ → Werkzeug sofort weg. Optional „… mit Anmeldung (OAuth)“ an, Dienst ohne Schlüssel anbinden, „Beim Dienst anmelden“."
+},
+{
+"id": "P132",
+"v": 360,
+"titel": "V01.0.360 Notaus auf mehr Wegen",
+"text": "(alles nur einschalten, aufheben danach jedes Mal als Admin im Browser):"
+},
+{
+"id": "P133",
+"v": 344,
+"titel": "V01.0.344 Mehr mit dem reMarkable",
+"text": "Telegram als normales Profil: /notaus → Antwort „nur Admins“; /meinnotaus → Mein Notaus an (Aufheben unter Ich → Sicherheit mit PIN). Als Admin-Profil /notaus 1 → Stufe 1. Im Assistenten „Spark, Mein Notaus“ tippen oder sagen → Mein Notaus an. „Was ist der Notaus?“ → nichts passiert. Einstellungen → Sicherheit → „Notaus von außen“: Schlüssel erzeugen (Code wird verlangt), Text in configuration.yaml von Home Assistant, neu laden, rest_command.spark_notaus aufrufen → Stufe 2; Sensor „Spark Notaus“ zeigt 2. Android-App 1.1.0 holen (Ich → Android-App), Schnelleinstellungen → „Notaus“ hinzufügen, antippen → Rückfrage; die Kachel zeigt die Stufe."
+},
+{
+"id": "P134",
+"v": 364,
+"titel": "V01.0.364 Notaus von selbst + Tasten",
+"text": "Einstellungen → Sicherheit → „Notaus von selbst“ an (Code). Von unterwegs (Handy ohne WLAN) 20-mal falsches Panel-Passwort → Stufe 1, Push „Wächter“. Lautsprecher-Firmware Build 6 aufspielen, BOOT 5 s halten → am Lautsprecher eines Admin-Profils Stufe 2 mit Ansage. Pebble (sobald Uhr-App 1.6.0 im Panel liegt): SELECT 3 s halten bis langes Brummen, loslassen → Stufe 2."
+},
+{
+"id": "P135",
+"v": 370,
+"titel": "V01.0.370 Notaus in der iPhone-App",
+"text": "(nächste TestFlight-Version): Einstellungen → „Notaus“ → Rückfrage → „Mein Notaus“ → App zeigt „Mein Notaus ist an …“. Im Admin-Modus zusätzlich „Ganzer Spark (Stufe 2)“. Siri „Spark Notaus“ fragt nach. Aufheben danach im Browser."
+},
+{
+"id": "P136",
+"v": 380,
+"titel": "V01.0.380 Funktionen vorschlagen",
+"text": "Funktionen → unter „Hilfe zum Spark“ „Funktionen vorschlagen“ an, Ich → Gespräch → „Hinweise auf Funktionen“ an. Mit ausgeschalteten „Aufgaben“ (Ich) fragen „Setz Milch auf die Einkaufsliste“ → unter der Antwort 💡 mit „Einrichten“; antippen → Kopf-Fenster mit Karte und Schritten, Ich-Seite geht auf; „Übernehmen“, dann „Prüfen“ → „Eingerichtet“. Ich → Überblick zeigt „Für dich vorgeschlagen“ (z. B. iPhone-App gekoppelt, aber keine Push). Als Profil bei einer vom Admin ausgeschalteten Funktion „Admin fragen“ → Admin bekommt Push. Optional: „… auch von selbst“ + Ich → Von selbst → „Funktion vorschlagen“ (höchstens 1 pro Woche)."
+},
+{
+"id": "P137",
+"v": 375,
+"titel": "V01.0.375 Begleiter: sieben weitere Teile + Übersicht",
+"text": "Begleiter-Programm neu holen (Ich → Begleiter zeigt „Update da“). Ich → Begleiter: bei mehreren Geräten kompakte Zeilen (Punkt, Version, „N von 21 Teilen an“), eine aufklappen; Teile stehen in Gruppen. Je Gerät einschalten und probieren: Vorlesen Text markieren → Strg+Alt+L (⌥⌘L) → Spark-Stimme; Frag Spark per Sprache fragen → Antwort wird vorgelesen (Einstellung „Antworten vorlesen“); Vom Handy im Assistenten „Schick den Link an meinen PC“ oder Ich → Begleiter → „An PC schicken“ → Meldung am PC; Termine Fenster zeigt heutige Termine, Erinnerung 10 Min vorher; Nicht stören im Teams/Zoom-Termin oder Vollbild → Meldungen warten, danach gesammelt; Besprechung (Admin „Besprechungen mitschreiben“ an) starten → beenden → Zusammenfassung als Gespräch „Besprechung …“ und Aufgaben; Smart Home Knopf anlegen (Programm-Suche bei „Am PC handeln“: installierte Programme aus Liste wählen), Knopf mit Codewort drücken; Tagesstart/Feierabend beim ersten Anmelden morgens. Zustand → Live zeigt je eine Zeile „Begleiter: …“ (ohne Inhalte)."
+},
+{
+"id": "P138",
+"v": 381,
+"titel": "Funktionen → Geräte-Updates an; Zustand → Geräte-Updates zeigt Lautsprecher-Firm",
+"text": "Funktionen → Geräte-Updates an; Zustand → Geräte-Updates zeigt Lautsprecher-Firmware mit Version und jedem Lautsprecher; „Jetzt suchen“ läuft ohne Fehler."
+},
+{
+"id": "P139",
+"v": 381,
+"titel": "Ich → Gespräch → Geräte → „Hinweis bei neuen Geräte-Versionen“ an; Mein Zustand",
+"text": "Ich → Gespräch → Geräte → „Hinweis bei neuen Geräte-Versionen“ an; Mein Zustand zeigt die Zeile „Lautsprecher-Firmware“."
+},
+{
+"id": "P140",
+"v": 381,
+"titel": "Bei der nächsten neuen Firmware (fw-…) kommt genau ein Hinweis.",
+"text": "Bei der nächsten neuen Firmware (fw-…) kommt genau ein Hinweis."
+},
+{
+"id": "P141",
+"v": 381,
+"titel": "Optional: „Lautsprecher nachts aktualisieren“ an (Admin + Profil); am Morgen in",
+"text": "Optional: „Lautsprecher nachts aktualisieren“ an (Admin + Profil); am Morgen in Zustand → Geräte-Updates prüfen, dass der Lautsprecher die neue Version hat."
+},
+{
+"id": "P142",
+"v": 381,
+"titel": "Live-Übersicht zeigt das Ziel „Geräte-Updates“ mit Anzahlen.",
+"text": "Live-Übersicht zeigt das Ziel „Geräte-Updates“ mit Anzahlen."
+},
+{
+"id": "P143",
+"v": 386,
+"titel": "V01.0.386 Probleme melden",
+"text": "Auf GitHub einen fine-grained Token anlegen (nur Repo spark-meldungen, „Issues: Read and write“, 90 Tage). Funktionen → Sicherheit → „Probleme melden“ an, darunter Token speichern (Code), „Prüfen“ → „privat“. Optional „Admin per Assistent informieren“ an. Ich → Probleme melden → für dich an. Unten im Panel „Problem melden“: Text eingeben, „Entwurf anlegen“ → Vorschau zeigt Platzhalter statt Namen/Adressen, Zeile abwählen, „An GitHub senden“ → Issue erscheint in spark-meldungen. Telegram /melden Test und Satz „Spark, Problem melden: Test“ → nur Entwurf + Mitteilung. Mit einem zweiten Profil senden → Admin-Profil bekommt die Nachricht vom Assistenten. Auf GitHub antworten → im Panel „Antworten“ zeigt den Text. iPhone-App (nächste TestFlight-Version): Einstellungen → Problem melden."
+},
+{
+"id": "P144",
+"v": 388,
+"titel": "V01.0.388 Rechte wirken sofort",
+"text": "(Thread „Wer darf was“): Ein Profil im Browser offen lassen, an einem anderen Gerät unter Funktionen → Wer darf was eine Funktion für dieses Profil ein- oder ausschalten. Innerhalb einer Minute (oder beim Zurückwechseln) lädt die Seite neu mit „Deine Funktionen wurden geändert“. Am iPhone: App in den Hintergrund und wieder nach vorn, Weckwort/Funktion folgt. Begleiter: Funktion für das Profil aus, nach der nächsten Abfrage stoppt der Teil, der Begleiter bleibt gekoppelt. ESP32: „Eigene Lautsprecher“ für das Profil aus, die Verbindung endet in Sekunden.",
+"thread": "Wer darf was"
+},
+{
+"id": "P145",
+"v": 391,
+"titel": "V01.0.391 Update-Prüfung",
+"text": "Zustand → Update „Jetzt prüfen“ zeigt keine Meldung „GitHub-Testergebnisse nicht abrufbar“ mehr, sondern die neueste getestete Version (oder „aktuell“)."
+},
+{
+"id": "P146",
+"v": 440,
+"titel": "V01.0.440 Dienst-Wächter",
+"text": "(Thread „Dienst-Ausfall melden“): Funktionen → Sicherheit → „Dienst-Wächter“ an, unter Ich → Gespräch → Dienste „Hinweise bei Ausfällen“ an (Gerät wählen). Kiwix kurz stoppen: nach etwa 3 bis 4 Minuten kommt „⚠️ Archiv (Kiwix) nicht erreichbar“ aufs Gerät, oben in Zustand steht „Gerade eingeschränkt“, Zustand → Dienste zeigt es rot, die Live-Übersicht einen roten Punkt. Kiwix wieder starten: nach 1 bis 2 Minuten „✅ Wieder da“ mit Dauer. Ein kurzer Wackler (unter 3 Minuten) meldet nichts.",
+"thread": "Dienst-Ausfall melden"
+},
+{
+"id": "P147",
+"v": 430,
+"titel": "V01.0.430 Sprachaussetzer bei langen Antworten",
+"text": "eine lange Antwort (z. B. „Erzähl mir ausführlich die Geschichte des Mauerfalls“) im Browser und in der iPhone-App mit Tempo 1,2 anhören: keine Aussetzer, solange der Text noch geschrieben wird. Falls doch: Logs → Diagnose, Filter „chat:“ (Zeilen „tts behind by … inside/before the piece“) und in der App das Ton-Protokoll („leergelaufen, puffere“)."
+},
+{
+"id": "P148",
+"v": 433,
+"titel": "V01.0.433 Office-Add-ins (Begleiter)",
+"text": "Teil „Office-Add-ins“ einschalten (Panel über https speichern), im Begleiter „Office-Add-ins einrichten“; Outlook classic neu starten → Knopf „Spark“ (Antwort entwerfen, Übersetzen, beim Verfassen Text verbessern); Word/Excel → „Spark Schreibhilfe“."
+},
+{
+"id": "P149",
+"v": 435,
+"titel": "Sprung-Links",
+"text": "Zustand → Live bei ausgeschalteter Live-Seite: „Einstellungen → Spark → Betrieb → Logs „Live-Seite““ antippen, springt zu Betrieb und markiert „Live-Seite“. Stichproben: Hinweise unter Einstellungen (z. B. „Zustand → Logs → Anfragen“), Anleitungen, Ich → Gespräch, eine Antwort des Assistenten mit „Ich → …“; am Handy ebenso."
+},
+{
+"id": "P150",
+"v": 444,
+"titel": "Einstellungs-Assistent",
+"text": "A: Funktionen → „Einstellungs-Assistent“ an, darunter „👍/👎 unter Antworten“. P: Ich → Gespräch → Verbessern „👍/👎 unter Antworten“ an. Eine Antwort mit 👎 „falsches Werkzeug“ bewerten (oder „Das war falsch“ sagen) → Zustand → Verbessern → Eingang zeigt den Fall; „Jetzt nachsehen“ → Vorschläge zeigt einen Vorschlag mit grünem oder rotem Prüfstand; „Übernehmen“, danach „Zurück“ stellt den alten Wert wieder her. Live-Übersicht zeigt „Verbessern“ mit Zahlen.",
+"thread": "Einstellungen mit dem Sprachmodell optimieren"
+},
+{
+"id": "P151",
+"v": 464,
+"titel": "Einstellungs-Assistent Ergänzungen",
+"text": "A: Satz mit Codewort an Home Assistant zweimal sagen → Zustand → Verbessern zeigt keinen Fall und keinen Vorschlag mit dem Satz (der alte Vorschlag ist weg). Zustand → Logs → Diagnose beim letzten Fehler „Erklären“ und „Als Fall aufnehmen“. Admin-Profil: „Warum hast du eben im Web gesucht?“ erklärt den Weg. Bei offenen Vorschlägen steht oben auf Zustand die Karte „… wartet auf dich“. Funktionen → „Ideen außerhalb des Katalogs“ an: bei einem Vorschlag „Als Meldung“ „Idee holen“ → Text „Idee, nicht geprüft“, „Zur Einstellung“ springt hin; zweimal „Gute Idee“ (zwei Vorschläge) → „Als Katalog-Wunsch melden“."
+},
+{
+"id": "P152",
+"v": 465,
+"titel": "Admin-Regeln, Tagebuch, Daumen",
+"text": "A: „Wurde ein neues Dokument erstellt?“ ruft zuerst den Dokument-Status, kein „Nein“ ohne Werkzeug (Logs → Anfragen zeigt das Werkzeug). Zustand → Verbessern → Fall öffnen: Vorschlags-Chips, „Nachstellen“ zeigt vorher/nachher; Funktionen → „Fall analysieren“ an, dann „Fall analysieren“. Tab Regeln: eigene Regel sichtbar, „Exportieren“, Fassungen, „Entfernen“. Einstellungen → Sprachmodell → Werkzeug-Hinweise: eine Zeile „document_status: …“ speichern. Funktionen → „Spark-Tagebuch“ an, P: Ich → Spark-Tagebuch an; Dokument erstellen, dann „Was hast du heute für mich gemacht?“ nennt es. Tab Bericht zeigt den Monat. Zustand → Logs → Anfragen: Antwort mit 👎 bewerten → Daumen in der Liste, Filter 👎, Detail „Bewertet nach … s“ mit „Fall öffnen“, „Kopieren für Thread“ enthält „Bewertung 👎“.",
+"thread": "Einstellungen mit dem Sprachmodell optimieren"
+},
+{
+"id": "P153",
+"v": 444,
+"titel": "Eigener Speicher",
+"text": "A: Funktionen → „Eigener Speicher“ an, bei NAS im Heimnetz „Speicher im Heimnetz“ an. P: Ich → Speicher → WebDAV-Adresse des NAS (z. B. Synology https://nas:5006/home/spark), Benutzer, Passwort, Code → „Prüfen“ grün; „Jetzt ablegen“ → Zustand → Eigener Speicher zeigt Dateien und Zeit; auf dem NAS liegt ein Ordner spark-… mit nur .enc-Dateien. NAS kurz aus → nach etwa 1 h Hinweis „nicht erreichbar“, nach dem Einschalten „wieder da“. Eine lokale Datei fehlt nicht, also „Fehlendes zurückholen“ meldet 0. Live-Übersicht zeigt „Speicher“.",
+"thread": "Eigenen Speicher einbinden"
+},
+{
+"id": "P154",
+"v": 459,
+"titel": "Seiten sichtbar laden",
+"text": "P: Ich öffnen: oben läuft kurz ein dünner Balken, Kästen zeigen graue Platzhalter, bis ihre Daten da sind; Gedächtnis erscheint, ohne auf Kalender/E-Mail zu warten. Ich schließen und wieder öffnen: alte Daten blass mit „wird aktualisiert …“. A: Zustand → Logs → Diagnose, Filter „Seite lädt“: steht dort eine Zeile „seite: slow GET …“, ist das die langsame Stelle (bitte kopieren). Optional: WLAN kurz aus, eine Seite öffnen: Band „Spark antwortet nicht.“, WLAN an, Band geht von selbst und die Seite lädt nach.",
+"thread": "Seiten sichtbar laden"
+},
+{
+"id": "P155",
+"v": 450,
+"titel": "Verlauf auf allen Geräten",
+"text": "Ohne Schalter: am Rechner und am Handy dasselbe Gespräch offen, auf dem Handy fragen, am Rechner erscheint es nach höchstens 30 s; eine Antwort mit Websuche zeigt ihre Quellen auch auf dem anderen Gerät. A: Funktionen → „Verlauf sofort abgleichen“, „Ein Gespräch für alle Kanäle“, „Verlauf offline lesen“ an. P: Ich → Gespräch → Verlauf alle drei an. Sofort-Abgleich: Frage am Handy → am Rechner sofort, währenddessen blass „Handy antwortet gerade …“; Gespräch am Handy löschen → am Rechner geschlossen. Live-Übersicht → Verbindungen „Verlauf-Abgleich“ mit Zahl. Ein Gespräch: über Telegram fragen → steht im heutigen Gespräch im Panel mit Zeichen „Telegram“. Offline: im vertrauten Browser Spark-Adresse öffnen, WLAN aus, neu laden → Verlauf zum Lesen mit Hinweis „Ohne Verbindung …“; Frage stellen, WLAN an → Frage geht raus. In einem privaten/nicht vertrauten Browser: Entwicklerwerkzeuge → Local Storage enthält kein offl:.",
+"thread": "Verlauf auf allen Geräten synchron"
+},
+{
+"id": "P156",
+"v": 447,
+"titel": "Zustand: Hinweis oben (z. B. „Antworten sind langsamer geworden“) hat „Ansehen“",
+"text": "Zustand: Hinweis oben (z. B. „Antworten sind langsamer geworden“) hat „Ansehen“ und springt zur Stelle; „Hinweise stehen oben.“ springt zu den Hinweisen."
+},
+{
+"id": "P157",
+"v": 447,
+"titel": "Funktionen → Telegram: „Panel-Adresse für Links in Telegram“ mit „Diese Adresse",
+"text": "Funktionen → Telegram: „Panel-Adresse für Links in Telegram“ mit „Diese Adresse nehmen“ füllen, speichern; eine Telegram-Nachricht mit „Ich → …“ hat den Knopf „Im Panel öffnen“."
+},
+{
+"id": "P158",
+"v": 447,
+"titel": "iPhone-App (neuer Build): ein Hinweis wie „Im Panel unter Ich → iPhone-App“ ist",
+"text": "iPhone-App (neuer Build): ein Hinweis wie „Im Panel unter Ich → iPhone-App“ ist blau und öffnet Safari an der Stelle."
+},
+{
+"id": "P159",
+"v": 447,
+"titel": "Android-App 1.1.1: Tippen auf eine Mitteilung mit Weg öffnet die Stelle; Notaus-",
+"text": "Android-App 1.1.1: Tippen auf eine Mitteilung mit Weg öffnet die Stelle; Notaus-Kachel bei Mein Notaus an: „Im Panel öffnen“."
+},
+{
+"id": "P160",
+"v": 447,
+"titel": "Begleiter (Windows/Mac, nächstes Update): „im Panel unter Ich → Begleiter“ ist k",
+"text": "Begleiter (Windows/Mac, nächstes Update): „im Panel unter Ich → Begleiter“ ist klickbar, auch Hinweisblasen."
+},
+{
+"id": "P161",
+"v": 458,
+"titel": "V01.0.458 GitHub-Token für Updates",
+"text": "Einstellungen → Update → „GitHub-Token (nur lesen)“: Token einfügen, Speichern (Code) → „gesetzt, läuft bis …, 5000 pro Stunde“. Jetzt prüfen → ok; Zustand → Live zeigt bei der Update-Prüfung „mit Token“."
+},
+{
+"id": "P162",
+"v": 465,
+"titel": "V01.0.465 Präsentationen professionell",
+"text": "Funktionen → Dokumente erstellen an; „Mach eine Präsentation über die Alpen“: Folien wechseln den Typ (Kapitel, Kernaussage, Symbole, große Zahlen, Zeitstrahl, Vergleich …), nie zweimal derselbe hintereinander, höchstens 4 kurze Punkte pro Folie, Rest in den Notizen. Zahlen nur mit Beleg, Fertig-Meldung sagt „geprüft …“. Dann Funktionen → Bilder aus dem Kiwix an (Admin und Ich): Titelfolie mit Wikipedia-Bild und Quelle unten. Alles auch ohne Internet."
+},
+{
+"id": "P163",
+"v": 467,
+"titel": "Gedächtnis prüfen",
+"text": "A: Funktionen → Assistent → „Gedächtnis prüfen“ an (Alter für gelernte Einträge: 6 Monate). P: Ich → Gesprächsführung → „Mein Gedächtnis prüfen lassen“ an. Ich → Gedächtnis: jeder Eintrag hat ein Kennzeichen (bestätigt, gelernt, veraltet?, Widerspruch); oben „N vielleicht veraltet“ mit Filter. Eintrag „Bin bis 20.09. im Urlaub“ merken lassen → erscheint als „veraltet?“ mit Grund „Datum vorbei“; antippen → „✓ Stimmt noch“ macht ihn bestätigt. „Ich wohne in Pforzheim“ und später „Ich wohne in Karlsruhe“ → der ältere ist „Widerspruch“. Im Chat „Wo wohne ich?“: Antwort nennt Karlsruhe, nie den veralteten als Tatsache. Logs → Anfragen: Schritt „Gedächtnis (Panel)“ mit Zahlen. Live → „Gedächtnis“ zeigt nur Anzahlen. Gelöscht wird nie etwas.",
+"thread": "Selbstkorrigierendes Gedächtnis"
+},
+{
+"id": "P164",
+"v": 447,
+"titel": "Stopp beim Vorlesen (Thread „Lautsprecher sollen Stopp erkennen“, Firmware 2.5.1.7)",
+"text": "Lautsprecher aktualisieren (Ich → Lautsprecher → Firmware). Ohne Schalter: „Jarvis, erzähl mir etwas über die Alpen“, während er spricht „Jarvis“ → sofort still (kein Nachlauf), Signalton, dann „Stopp“ → bleibt still, keine Antwort, Prüfen zeigt „Stopp gehört“. A: Funktionen → Eigene Lautsprecher → „Stopp beim Vorlesen“ an. P: Ich → Lautsprecher → „Stopp beim Vorlesen“ an. Neue Frage mit langer Antwort, dabei nur „Stopp“ (ohne Jarvis) → sofort still und hört zu; nichts sagen → wartet wieder aufs Weckwort. Eine Antwort mit „halt“ im Text stoppt nicht von selbst. Zustand → Live zeigt beim Sprechen „Lautsprecher hört auf „Stopp““ (Anzahl). Schalter aus → nach dem nächsten „Jarvis“ wie vorher.",
+"thread": "Lautsprecher sollen Stopp erkennen"
+},
+{
+"id": "P165",
+"v": 467,
+"titel": "Gedächtnis: Fassungen und Nachfrage",
+"text": "P: „Ich wohne in Pforzheim“ merken lassen; mit „Aus Korrekturen lernen“ an: „Nein, ich wohne jetzt in Karlsruhe“, Ja → Ich → Gedächtnis zeigt EINEN Eintrag „Wohnt in Karlsruhe“, im Detail „Frühere Fassungen: Wohnt in Pforzheim · Korrektur im Gespräch“ mit „Zurückholen“. A: Funktionen → Gedächtnis prüfen → „Im Gespräch nachfragen“ an, P: Ich → Gespräch → „Im Gespräch nachfragen“ an. Bei einem veralteten Eintrag (z. B. „Bin zurzeit krank“ vor über 90 Tagen) etwas Passendes fragen → nach der Antwort „Kurz nachgefragt: Stimmt das noch: …?“; „Ja“ → bestätigt. Im selben Gespräch kommt keine zweite Nachfrage. Live → Gedächtnis zeigt „1 Nachfrage offen“, solange sie offen ist."
+},
+{
+"id": "P166",
+"v": 461,
+"titel": "V01.0.461 Fernseher per Codewort",
+"text": "„Schalte den Fernseher im Wohnzimmer ein Codewort …“ schaltet den Fernseher, nicht die Box daneben; Antwort sagt den echten Zustand. Ist es unklar (z. B. „Schalte den Fernseher aus“ bei mehreren), nennt der Spark die Geräte mit Namen und schaltet nichts. Logs → Anfragen zeigt kein „unbekannt“-Werkzeug mehr."
+},
+{
+"id": "P167",
+"v": 467,
+"titel": "Gedächtnis: Themen",
+"text": "A: Funktionen → Gedächtnis prüfen → „Themen im Gedächtnis“ an, P: Ich → Gespräch → „Themen im Gedächtnis“ an. Nach einigen Minuten (niemand spricht) zeigt Ich → Gedächtnis Gruppen wie „Person“, „Arbeit“, „Sonstiges“. Einen Eintrag antippen, Thema ändern → er wandert in die Gruppe und bleibt dort. Zustand → Prüfen → Qualitätstest: die Fälle „gedaechtnis-veraltet“ und „gedaechtnis-bestaetigt“ sind grün."
+},
+{
+"id": "P168",
+"v": 477,
+"titel": "Taten prüfen und Fehlerschleife",
+"text": "Ohne Schalter (standardmäßig an, Einstellungen → Sprachmodell). Einen Fernseher/ein Gerät schalten lassen, das Home Assistant nicht kennt: die Antwort sagt „Das hat nicht geklappt: …“, nie „ist aus“. Logs → Anfragen: Schritt „Taten-Prüfung“ mit Art und Grund. Zustand → Live → „Taten-Prüfung“ zählt hoch. Schaltet etwas wirklich, kommt die normale Bestätigung. „Trag Zahnarzt Dienstag 10 Uhr ein“: der Vorschlag mit Rückfrage kommt wie bisher, kein Zusatzsatz.",
+"thread": "Selbstkorrigierendes Gedächtnis"
+},
+{
+"id": "P169",
+"v": 463,
+"titel": "Chats",
+"text": "A: Funktionen → „Nachrichten an andere“ an, darunter „Chats“ und „Gruppen-Chats“ an. P (zwei Profile, z. B. Handy und Rechner): Ich → Gespräch → Chats → „Chats mit anderen“ an. Im Menü erscheint „Chats“ (am Handy Tab „Chats“). „＋ Neuer Chat“ → Person → schreiben: beim anderen Profil steht die Zahl am Menüpunkt, im offenen Chat erscheint die Nachricht sofort; ✓ → ✓✓ → blaue ✓✓, sobald der andere den Chat öffnet. Nachricht antippen: 👍, Antworten, Ändern, Zurücknehmen. Handy gesperrt, Seite zu: Mitteilung „💬 Name · Neue Nachricht“ ohne Text. „Sag <Name>, ich komme später“ zum Assistenten → steht im Chat mit 🎙. Gruppe anlegen, ⓘ → stumm, verschwinden nach 24 h. Zustand → Live: Kachel „Chats“ nur mit Zahlen; Logs → Diagnose, Bereich „Nachrichten und Chats“: nur Zeilen wie „chats: sent | kind one | chars 12“.",
+"thread": "WhatsApp-Ablöse"
+},
+{
+"id": "P170",
+"v": 447,
+"titel": "Chats: Fotos, Dateien, Sprache, Einladung (gleiche Version, Thread „WhatsApp-Ablöse“)",
+"text": "A: Funktionen → Chats → „Fotos, Dateien und Sprache in Chats“ an. Im Chat 📎 → Foto vom Handy: erscheint klein, Antippen zeigt es groß; am anderen Gerät herunterladen und prüfen, dass kein Ort mehr drin ist. 📎 → PDF und Word-Datei: Chip mit Name, Herunterladen klappt; eine .exe oder ein Bild als Datei wird abgelehnt. 🎤 → 10 Sekunden sprechen → ➤: Abspielen klappt, darunter steht der Text (iPhone-Safari und Rechner). Live-Kachel „Chats“ zeigt Anzahl und MB. A: „In einen Chat einladen“ an und Personen und Geräte → Neue Personen „nur mit Einladung“. P: ＋ Neuer Chat → „Jemanden einladen“ → QR mit einem zweiten Handy scannen, Name und PIN wählen: landet direkt im Chat, dort steht „… ist mit deiner Einladung dazugekommen“. Einladung zurückziehen: Link geht nicht mehr.",
+"thread": "WhatsApp-Ablöse"
+},
+{
+"id": "P171",
+"v": 470,
+"titel": "Rückfrage statt Raten",
+"text": "A: Funktionen → „Rückfrage statt Raten“ an, darunter „Auswahl merken“ an. P: Ich → Gespräch → beide an. „Schalte den Fernseher ein Codewort …“ bei mehreren Fernsehern: Frage mit Knöpfen, ein Tipp schaltet das gewählte Gerät, danach „Soll ich mir merken …?“ → „Ja, merken“. Gleicher Satz noch mal: schaltet sofort (Codewort weiter nötig). „Nein, das andere“ stellt das falsche zurück. „Keins davon“ zeigt die ganze Liste mit Suche. Ich → Gedächtnis → Zuordnungen: Eintrag ändern, löschen. „Wann fährt der Bus nach Bahnhof“ und Wetter für einen doppelten Ortsnamen fragen nach. Telegram: Knöpfe als Tastatur. Termin in „Kalender X“ (gibt es nicht): nichts eingetragen, Kalender werden genannt. Live: Kachel „Rückfrage“ nur Zahlen; Logs nur „klaeren: frage ha 3 kandidaten“.",
+"thread": "Fernseher einschalten klappt nicht"
+},
+{
+"id": "P172",
+"v": 485,
+"titel": "Papier fürs reMarkable",
+"text": "A: Funktionen → … → Aufs reMarkable schicken → „Papier fürs reMarkable“ an. P: Ich → reMarkable → Papier: „Gestaltete Blätter“, „Ordner nach Art“, „Selbst aufräumen“ an; Gerät „Automatisch“ lassen (nach dem ersten gelesenen Notizbuch steht dort „erkannt: Paper Pro Move“). „Jetzt einsortieren“: alte Morgenblätter, Rückblicke usw. liegen danach in „Spark/Morgenblatt“, „Spark/Wochenrückblick“ …; Notizbücher bleiben, wo sie sind. „Abgleich-Blatt schicken“: Blatt füllt den Bildschirm ganz aus; in jeden Kreis ein Kreuz → nach dem nächsten Abgleich steht „abgeglichen: Paper Pro Move“. Morgenblatt mit Erinnerungen: eine abhaken → Erinnerung verschwindet, unter Papier „angekreuzt“ und „Zurücknehmen“; Kästchen ausmalen → Erinnerung wieder da. Kreuz knapp neben ein Kästchen → „unklar“, nichts passiert. „Kann weg“ oben rechts ankreuzen → Blatt im Papierkorb; mit Notizen darauf → in „Spark/Archiv“. Kontrollbild (Lupe) zeigt die Striche genau über den Kästchen. Eine Kopie des Blatts auf dem Gerät ankreuzen → nichts passiert. Logs → Diagnose nur „remarkable: sheet read | 1 ticked, 0 unclear, 1 done“; Live zeigt „Blatt gelesen …“ nur mit Zahlen.",
+"thread": "reMarkable aufwerten"
+},
+{
+"id": "P173",
+"v": 479,
+"titel": "Einordnung mit Wahrscheinlichkeit ausgebaut",
+"text": "A: Funktionen → Tempo und Genauigkeit → „Einordnung mit Wahrscheinlichkeit“ an, „Einordnung prüfen“: Antwort mit Zeit, Gruppe, „Label-Masse … %“ und „eine Reihenfolge“. „Einordnung messen“: Zähler läuft (x / ~100), danach Tabelle je Schwelle 60–90 % und Vorschlag; „Vorschlag übernehmen“ → Speichern. Auf tars einmal sudo systemctl edit qwen38-keepalive.service mit [Service] / Environment=SYSTEMONE_PERMUTATIONS=2, dann sudo systemctl restart qwen38-keepalive.service: „Einordnung prüfen“ zeigt „zwei Reihenfolgen an“, nochmal messen und vergleichen. „Im Einstellungs-Assistenten“ an: neue Vorschläge im Fall-Eingang tragen den Grund „Einordnung, NN % sicher“. „Antworten im Hintergrund prüfen“ an (A und P Ich → Gespräch): nach einer Kalender-Frage erscheint nur bei Zweifel ab 90 % ein Fall „Erfundenes vermutet“ unter Zustand → Verbessern; Live zeigt am Sprachmodell „Antwort prüfen n“. „Beschwerde erkennen“ an (A und P): Erinnerung stellen lassen, dann „geht immer noch nicht“ → Spark sieht nach und sagt den Stand, stellt nichts neu; „… mach es nochmal“ → stellt neu. Logs → Anfragen: Schritt „Beschwerde (Panel)“ mit „Liste“; Live → Taten-Prüfung „1 Beschwerden erkannt“.",
+"thread": "System One für Speech"
+},
+{
+"id": "P174",
+"v": 483,
+"titel": "Geräte im Spark-Tagebuch",
+"text": "Funktionen → „Spark-Tagebuch“ an und Ich → Gespräch → Tagebuch an. Ein Gerät per Codewort schalten (auch über Rückfrage-Auswahl oder Zuordnung), dann „Was hast du heute für mich gemacht?“: nennt „<Gerät> eingeschaltet/ausgeschaltet“, nie das Codewort. Tagebuch aus: nichts notiert.",
+"thread": "Fernseher einschalten klappt nicht"
+},
+{
+"id": "P175",
+"v": 491,
+"titel": "Aufgabenblatt",
+"text": "A: unter „Papier fürs reMarkable“ „Aufgabenblatt zum Ankreuzen“ an. P: Ich → reMarkable → Papier: „Aufgaben vom Papier“ an (das Aufgabenblatt selbst hat keinen Profil-Schalter mehr). In ein Notizbuch „☐ Steuer abgeben“ schreiben, warten bis es unter Ich → reMarkable steht. „Aufgabenblatt schicken“: in „Spark/Aufgaben“ liegt „Aufgaben“ mit dem Punkt und Erinnern / Weg / Später. „Erinnern“ und „Fertig“ ankreuzen → nach dem nächsten Abgleich gibt es die Erinnerung morgen 9 Uhr, unter Papier „Zurücknehmen“. Nach 10 Minuten liegt Version 2 mit „Erledigt seit Version 1“, Version 1 im Archiv. Zwei Kreuze in einem Punkt → „unklar“, nichts passiert. Als Admin: offene Vorschläge des Einstellungs-Assistenten und „Praxistest nach dem Update“ stehen drauf; „Klappt nicht“ → Fall unter Zustand → Verbessern. Notaus an → nichts wird ausgeführt („Notaus“ in der Quittung).",
+"thread": "reMarkable aufwerten"
+},
+{
+"id": "P176",
+"v": 512,
+"titel": "Anmerkung auf dem Aufgabenblatt",
+"text": "„Bilder und Scans lesen“ an. Unter „Anmerkung“ „Paket abholen“ schreiben und „Fertig“ ankreuzen: Die nächste Version zeigt „✎ gelesen: Paket abholen“ und den Punkt „Aus deiner Anmerkung“; „Erinnern“ ankreuzen ergibt eine Erinnerung morgen 9 Uhr. Mit Beobachten an: „Sag mir Bescheid, wenn es eine neue Firmware für die FRITZ!Box gibt“ bekommt zusätzlich „Als Auftrag“; angekreuzt steht er unter Ich → Aufträge. „Lösche alle Erinnerungen“ in der Anmerkung tut nichts außer dem Punkt. Zurücknehmen unter Papier.",
+"thread": "reMarkable aufwerten"
+},
+{
+"id": "P177",
+"v": 447,
+"titel": "Werkzeug-Abdeckung",
+"text": "Teil 1: „Lösch die Erinnerung Müll“ löscht sie wirklich. „Ist der Raummodus im Wohnzimmer an?“ sagt den Stand, schlägt nichts vor. „Leg meine Einkaufsliste aufs reMarkable“ klappt. „Schalte die Websuche ein“ zeigt die Hilfe-Karte, sucht nicht im Web. A: Funktionen → „Zustand per Sprache“ an: „Läuft alles?“, „Wann wurde zuletzt gesichert?“, „Gibt es ein Update?“ → Admin hört Dienste, Sicherung, Version; ein anderes Profil nur seinen eigenen Zustand. Teil 2 (lesen): „Welche Dokumente habe ich?“, „Was liegt auf meinem reMarkable?“, „Welche Smart-Home-Regeln habe ich?“, mit Kamerabild an: „Was sieht die Kamera an der Haustür?“. Teil 3 (ändern, immer erst nach „Ja“): „Verschieb den Zahnarzttermin auf Freitag 15 Uhr“ → Rückfrage, „Ja“ → im Kalender verschoben, kein zweiter Termin. Wiederkehrenden Termin verschieben → wird abgelehnt. „Pausiere den Wochenüberblick“, „Lösch die Regel für die Haustür“, „Melde dich heute nicht mehr“, „Mach den Lautsprecher in der Küche leiser“, „Erinnere mich jeden Montag um 7 an den Müll“ (nach dem Klingeln steht der nächste Montag in der Liste), „Schreib in die Familiengruppe, dass ich später komme“. A: Funktionen → „Rückgängig per Sprache“ an: nach einer der Taten „Mach das rückgängig“ → Rückfrage, „Ja“ → zurück. Notaus an → nichts davon wird ausgeführt. Über MCP gibt es keins der neuen Werkzeuge.",
+"thread": "Werkzeuge für alle Dienste"
+},
+{
+"id": "P178",
+"v": 447,
+"titel": "Chats mit anderen Sparks (Spark-Verbund V1, nächste freie Version, Thread „WhatsApp-Ablöse“)",
+"text": "Braucht zwei Sparks, beide von außen per https erreichbar (tars über speech.metaluna9.i234.me, dazu der zweite Testserver mit eigenem Namen). Auf beiden A: Funktionen → Chats → „Chats mit anderen Sparks“ an, Adresse von außen eintragen (Code), „nur gekoppelte Sparks“. Auf tars „Kopplungs-Code erstellen“, Code auf dem Testserver unter „Code eines anderen Sparks“ eintragen → beide Listen „Verbundene Sparks“ zeigen den anderen als „gekoppelt“ mit demselben Fingerabdruck wie oben beim anderen. Zustand → Dienste: „Erreichbar für andere Sparks“ läuft. P auf beiden: kein eigener Schalter mehr nötig. Chats → ＋ Neuer Chat → „🌐 Jemand auf einem anderen Spark“: eigene Adresse mit QR. Vom Testserver die tars-Adresse anfragen → auf tars oben „Kontaktanfragen 1“ (und Mitteilung „🌐 Kontaktanfrage“), Annehmen → Chat mit 🌐 öffnet sich. Hin und her schreiben: ✓ → ✓✓ (anderer Spark hat sie) → blaue ✓✓ beim Lesen; Antworten, 👍, Ändern, Zurücknehmen kommen drüben an. 📎 und 🎤 fehlen in diesem Chat. Testserver-Panel stoppen, Nachricht schicken → bleibt ✓, Live-Kachel Chats „1 wartet“; wieder starten → nach spätestens 5 Minuten ✓✓. Ablehnen und Sperren an einer zweiten Anfrage: drüben passiert sichtbar nichts. Im Admin den Testserver sperren → nichts geht mehr rein und raus; Erlauben → wieder. „Habe ich neue Nachrichten?“ liest Nachrichten vom anderen Spark nicht vor (nie ans Sprachmodell). Logs → Diagnose, Bereich „Nachrichten und Chats“: nur „verbund: sent | n 1“, „verbund: request in“ …, keine Domain, kein Name, kein Text.",
+"thread": "WhatsApp-Ablöse"
+},
+{
+"id": "P179",
+"v": 447,
+"titel": "NAS verbinden (Synology S1, nächste freie Version, Thread „Synology nahtlos einbinden“)",
+"text": "Vorher: Eigener Speicher und/oder Sicherung aufs NAS laufen schon. Nach dem Update: beide laufen unverändert weiter (Zustand → Eigener Speicher, Einstellungen → Sicherung „Jetzt senden“), Logs → Diagnose, Bereich „NAS“: einmal „nas: umgestellt nutzungen=N“. A: Funktionen → „NAS verbinden“ an. P: Ich → Speicher zeigt oben „Meine NAS“ mit der umgezogenen Verbindung („genutzt von Eigener Speicher“). „NAS verbinden“ mit der Synology (WebDAV, https://<IP>:5006, eigener Benutzer): erst Fingerabdruck-Abfrage, mit Synology Systemsteuerung → Sicherheit → Zertifikat vergleichen, „annehmen“ → „verbunden“. Eigener Speicher → „Speicher einbinden“ → Art „Auf meiner NAS: …“, nur Ordner eintragen → klappt ohne Passwort. „Entfernen“ der NAS → „wird noch genutzt“. Passwort an der NAS ändern, unter „Ändern“ neu eintragen → Eigener Speicher gleicht wieder ab. Zustand → NAS-Verbindungen: Name, Art, Zustand, keine Adresse. Live: Ziel „NAS“ mit Zahlen.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P180",
+"v": 505,
+"titel": "Speicher aufgeräumt",
+"text": "Nach dem Update: A: Funktionen zeigt eine Überschrift „Speicher und NAS“, darunter eingerückt „Kopie meiner Daten“ mit „Speicher im Heimnetz erlauben“, „Originale auslagern“, „Ordner auf dem Spark“. War vorher nur „Eigener Speicher“ an, ist „Speicher und NAS“ jetzt auch an (Logs → Diagnose „nas: umgestellt schalter=1“). P: Ich → Speicher zeigt nur noch Orte als Karten (Synology mit Zustand, Art, Adresse, Benutzer), darunter „Wofür“ → „Kopie meiner Daten“ mit Ordner, Dateien, „Jetzt abgleichen“, „Was dorthin geht“, „Ordner ändern“. Kein Profil-Schalter „Eigener Speicher für mich“ mehr. Bei einem zweiten Ort „Kopie meiner Daten“ einschalten (Ordner eintragen, Code) → Probe ok; wieder ausschalten → bleibt dort. „＋ Ort hinzufügen“ fragt Art, Adresse, Benutzer, Passwort. „Ort entfernen“, solange die Kopie an ist → „Erst dort ausschalten“. Auf dem iPhone (390 px) nichts seitlich abgeschnitten.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P181",
+"v": 447,
+"titel": "Eigene Aufgaben und Beobachten",
+"text": "A: Funktionen → Agent-Funktionen → „Beobachten“ an (Profil hat eine Agent-Stufe). P: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt.“ → Rückfrage „Soll ich das so anlegen: … täglich um 08:00 …?“, nichts gesucht; „Ja“ → „Angelegt …“. Ich → Aufträge → Eigene Aufgaben: Zeile „Neue Firmware für FRITZ!Box“ mit Schalter; im Detail „Jetzt prüfen“ → nach dem Lauf entweder Mitteilung „🔔 Neu gefunden: …“ mit Version und Adresse oder still, Verlauf zeigt „nichts Neues“. Zweites „Jetzt prüfen“ → still (schon bekannt). „Bekanntes vergessen“, nochmal prüfen → wieder „neu“. „Melde dich, sobald der Flug nach Rom unter 100 Euro kostet“ → Preisgrenze 100 € im Detail. „Beobachte das lieber jeden Montag“ → Rückfrage, „Ja“ → wöchentlich, „Mach das rückgängig“ → wieder täglich. Liste: wiederkehrende Erinnerung („Erinnere mich jeden Montag um 7 an den Müll“) erscheint, Schalter aus → klingelt nirgends, an → kommt wieder; Smart-Home-Regel pausieren; „Sag mir Bescheid, wenn eine Mail von der Sparkasse kommt“ → Ja → Absender unter Mail. iPhone-App (neuer Build) → Von selbst → „Eigene Aufgaben“ mit Schalter und Wischen zum Löschen. Gast und Profil ohne Agent-Stufe: kein Vorschlag. Logs → Diagnose nur „agent: watch run | result still | new 0 | dropped 0 | …“; Live: Lauf als „Beobachten“.",
+"thread": "Eigene Aufgaben finden und verwalten"
+},
+{
+"id": "P182",
+"v": 447,
+"titel": "Fernseher wird keine Frage",
+"text": "P im Browser, Fernseher an (normale Lautstärke, 2 bis 3 m entfernt). Ohne angelernte Stimme: Frage per „Sprechen“, Antwort laufen lassen, nicht dazwischen reden → die Antwort läuft zu Ende, danach keine neue Anfrage (Logs → Anfragen bleibt bei einer). Mit Rückfrage ohne Weckwort (Ich → Gespräch, 6 s): nach der Antwort Fernseher weiterlaufen lassen → keine Anfrage; „Und morgen?“ direkt zum Gerät → wird beantwortet. Mit angelernter Stimme (A: Sprechererkennung an, P: Ich → Stimme, 3 Sätze): Lautstärke des Fernsehers hoch, nach der Antwort → Zeile „Fremde Stimme überhört, zum Beispiel vom Fernseher.“, Logs → Diagnose „chat: ignored (foreign voice, …) | match …“; eigene Rückfrage und Ins-Wort-Fallen klappen weiter („open microphone voice checked … known voice“). Getipptes „Sprechen“ mit dem Fernseher davor wird nie geprüft.",
+"thread": "Fernsehstimmen im Browser"
+},
+{
+"id": "P183",
+"v": 447,
+"titel": "Suchprüfung",
+"text": "A: Funktionen → Eigene Dokumente → „Suchprüfung“ an, darunter „Prüffragen vom Spark“ an (20 pro Tag). P: Ich → Dokumente → aufklappen „Suchprüfung“ → „Prüffrage hinzufügen“: eine Frage, wie du sie stellen würdest („Wann läuft mein Handyvertrag ab?“), das richtige Dokument wählen → „Hinzufügen“. Im Chat eine Frage zu einem Dokument stellen; unter der Antwort „Aus deinen Dokumenten: …“ steht „Richtige Stelle angeben“ → öffnet Ich → Dokumente mit der Frage im Feld. Nach einer ruhigen Stunde stehen unter „Alle Prüffragen“ auch welche „vom Spark“ (lesbar, mit Fragezeichen, kein abgeschriebener Satz). „Jetzt prüfen“: Balken für Wörter, Bedeutung (nur mit Bedeutungssuche), Gemischt mit Prozent unter den ersten 5 und „als Erstes“, Suchzeit in ms; zweites „Jetzt prüfen“ sofort danach → „Wieder in 10 min“. Unter „Schlecht gefunden“ → „Ausprobieren“ zeigt die ersten 5 Treffer, das richtige fett. Nächster Morgen: „Verlauf“ hat einen Lauf aus der Nacht. Zustand → Prüfen → „Suche prüfen“: nur Zahlen (Fragen, Profile, Balken), kein Fragetext. Zustand → Live: Ziel „Suchprüfung“ mit „N Prüffragen · P Profile · X % unter den ersten 5“. Logs → Diagnose, Bereich Wissen: nur „wissen: suchpruefung lauf fertig | knopf | 12 fragen | top5 83 top1 66 | 14 ms“, „wissen: pruefrage gemacht | 1 frage“ oder „verworfen | copied“, nie eine Frage.",
+"thread": "Suche schärfen"
+},
+{
+"id": "P184",
+"v": 447,
+"titel": "Treffer nachsortieren",
+"text": "Vorher Ich → Dokumente → Suchprüfung → „Jetzt prüfen“ und die Zahl „Gemischt“ merken. A: Funktionen → Eigene Dokumente → „Treffer nachsortieren“ an, Modell „klein“. Eine Frage zu einem Dokument stellen: die erste Antwort kommt wie bisher (das Modell lädt im Hintergrund, beim ersten Mal von Hugging Face). Zustand → Monitoring → Eigene Dokumente: Zeile „Treffer nachsortieren (CPU-Modell)“ wird „Standby“/„arbeitet“ mit MiB; bei „Fehler“ den Grund notieren (dann gibt es die Modelldatei unter diesem Namen nicht, bitte melden). Nächste Frage: Logs → Anfragen zeigt den Schritt „Nachsortieren“ mit n 30, keep 5, state ok und die Dauer. „Jetzt prüfen“ (10 Minuten später): neue Zeile „Nachsortiert“, besser als „Gemischt“? Logs → Diagnose nur „wissen: nachsortieren | 30 -> 5 | NNN ms“. „Höchstens warten“ auf 300 stellen: bei langen Dokumenten „nachsortieren langsam … reihenfolge der mischung“, die Antwort wartet nicht. Modell „groß“ ausprobieren und vergleichen. Schalter aus → Modell stoppt (Monitoring).",
+"thread": "Suche schärfen"
+},
+{
+"id": "P185",
+"v": 447,
+"titel": "Abschnitte mit Zusammenhang (Stufe 2)",
+"text": "Nach dem Update baut der Spark in ruhigen Minuten die Kontextzeilen; Ich → Dokumente → „Zusammenhang der Abschnitte: N Dokumente warten …“ zählt herunter, Logs „wissen: kontext gebaut | 20 dokumente“. Danach in einer Antwort aus einem Vertrag steht in der Quelle „Abschnitt § …“; Suchprüfung zeigt höhere Werte als vorher."
+},
+{
+"id": "P186",
+"v": 447,
+"titel": "Wissensordner (Synology S2, nächste freie Version, Thread „Synology nahtlos einbinden“)",
+"text": "A: Funktionen → unter „Speicher und NAS“ „Wissensordner“ an (Eigene Dokumente muss an sein). Am besten an der Synology einen Benutzer, der nur lesen darf. P: Ich → Speicher → bei der Synology unter „Wofür“ „Wissensordner“ an → „Ordner durchsuchen“ zeigt die Ordner (kein @eaDir, kein #recycle), einen Ordner mit Verträgen wählen → „Vorschau“ zählt Dateien je Gruppe und sagt die Runden → „Hinzufügen“. Nach dem ersten Abgleich: „N Dokumente · M im Ordner“, unter „Ausgelassen“ steht, was nicht gelesen wurde und warum. Ich → Dokumente: die Dateien stehen mit „NAS · /Ordner“, Löschen heißt „Nicht mehr finden“; Öffnen holt die Datei von der NAS (NAS aus → „gerade nicht erreichbar“). Frage zu einem Vertrag: Antwort mit Quelle „NAS · …“. An der NAS eine Datei ändern und eine löschen, „Jetzt abgleichen“ → „1 neu, 1 weg“. „Was gelesen wird“: Gruppe abwählen oder Unterordner auslassen → nach dem nächsten Abgleich verschwinden die Dokumente. „Ort entfernen“, solange ein Wissensordner dort ist → „Erst dort ausschalten“. An der NAS bleibt alles unverändert. Zustand → Wissensordner: nur Zahlen; Live: Ziel „Wissensordner“; Logs → Diagnose, Bereich NAS: nur „nasquelle: abgeglichen | N neu | N weg …“, kein Pfad, kein Dateiname. Auf dem iPhone (390 px) nichts abgeschnitten.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P187",
+"v": 447,
+"titel": "Synology-Komfort (Synology S3, nächste freie Version, Thread „Synology nahtlos einbinden“)",
+"text": "P: Ich → Speicher → „＋ Ort hinzufügen“ → „Im Heimnetz suchen“: nach ein paar Sekunden steht die Synology mit Modell und IP da (Fritzbox, Raspi o. ä. evtl. auch); antippen füllt „NAS oder Cloud (WebDAV)“ und https://<IP>:5006 aus. Benutzer „spark“ (siehe Anleitung „Synology einrichten“) eintragen, verbinden → gleich danach steht beim Ort die Rechte-Liste: freigegebene Ordner „lesen“, andere „kein Zugriff“, „spark_ablage“ (falls angelegt mit Lesen/Schreiben) „lesen und schreiben“; in DSM ist danach keine Probedatei übrig. Einmal mit dem DSM-Admin verbinden → rote Warnung „Das sieht nach einem Admin-Konto aus“, nichts gesperrt. Notaus an → „Im Heimnetz suchen“ sagt „Notaus ist an“. Logs → Diagnose, Bereich NAS: nur „nas: gesucht | N gefunden | 1 synology“ und „nas: rechte | art=webdav | N ordner | ablage=… | admin=…“, keine IP, kein Ordnername. 390 px: nichts abgeschnitten.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P188",
+"v": 447,
+"titel": "Ablage-Ordner (Synology S4, nächste freie Version, Thread „Synology nahtlos einbinden“)",
+"text": "A: Funktionen → unter „Speicher und NAS“ „Ablage-Ordner“ an. DSM: freigegebener Ordner „spark_ablage“, Benutzer „spark“ Lesen/Schreiben. P: Ich → Speicher → beim Synology-Ort unter „Wofür“ „Ablage-Ordner“ → „Hier ablegen“ → in DSM liegen „Erstellt“ und „Eingang“ (mit „erledigt“, „abgelehnt“). Eine Präsentation erstellen lassen → fertig-Hinweis sagt „Liegt auch im Ablage-Ordner“, Datei in „Erstellt“. Sprache: „Leg die Präsentation auf die NAS“ → Spark fragt nach, erst nach „Ja“ liegt sie da (zweites Mal „… (2).pptx“, die erste unverändert); „Nein“ → nichts. Eine PDF und eine umbenannte .exe in „Eingang“ legen → „Eingang jetzt abholen“: PDF unter Ich → Dokumente (Quelle „NAS-Eingang“), in DSM unter „Eingang/erledigt“, die .exe unter „Eingang/abgelehnt“, nichts gelöscht. Ort mit Internet-Adresse → kein „Hier ablegen“. Notaus an → „Ja“ legt nichts ab. Logs → Diagnose, Bereich NAS: „nasablage: …“ ohne Pfad und Dateinamen. Live: Ziel „Ablage-Ordner“ mit Zahlen. 390 px: nichts abgeschnitten.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P189",
+"v": 447,
+"titel": "Weiche intelligenter",
+"text": "A: Funktionen → Weiche: oben „Alltagsquote“ (z. B. 173 von 183); Karte „Unklare Fragen“ mit Auswahl und Schwelle (bei System One „Einordnung messen“ dort), Karte „Pflicht-Wörter“ mit Chips je Werkzeug. Unter Einstellungen → Sprachmodell und Einordnung stehen diese Felder nicht mehr, nur ein Sprung-Link. P: „Hab ich am Freitag Zeit?“ → Kalender. „Wir brauchen Milch“ mit „Knapp“ → Liste bleibt angeboten (Anfragen: „Hinweis Liste“). „Wie wird das Wetter heute?“, danach „Und morgen?“ → Wetter, Anfragen zeigt „Folgefrage“. Seite Weiche → Satz testen mit „Frage davor“ zeigt dasselbe. Live → Weiche: Zeilen „davon mit Hinweis“ und „Folgefragen“ zählen hoch.",
+"thread": "Weiche sichtbar und einstellbar"
+},
+{
+"id": "P190",
+"v": 447,
+"titel": "Gesperrt: eigene Daten löschen",
+"text": "(Thread „Freigabe nur noch durch Admin“): Für ein Testprofil mit gespeichertem Wetterort unter Funktionen → Wer darf was „Wetter“ sperren. Im Profil unter Ich erscheint nur die Karte „Der Admin hat „Wetter“ für dich gesperrt … Gespeichert: 1 Einträge“ mit „Daten löschen“. Löschen, Karte verschwindet; Sperre aufheben, kein Wetterort mehr gespeichert.",
+"thread": "Freigabe nur noch durch Admin"
+},
+{
+"id": "P191",
+"v": 447,
+"titel": "Android: Update in der App",
+"text": "Vorher: Actions → „Android app“ hat android-v1.3.0 veröffentlicht, A: Funktionen → Android-App → „App jetzt holen“ zeigt 1.3.0. Einmal noch alter Weg: Handy mit 1.2.0, Ich → Android-App → Link → 1.3.0 installieren. A: „Android: Update in der App“ an. In der App Ich → Android-App: „Diese App ist aktuell.“ Zum Ausprobieren eine 1.3.1 bauen (version.properties erhöhen, pushen), Spark holt sie: App neu öffnen → blauer Streifen „Neue App-Version 1.3.1 · du hast 1.3.0“ mit „Jetzt aktualisieren“. Antippen → beim ersten Mal „Einmal erlauben“ → Android-Einstellung „Dieser Quelle vertrauen“ an, zurück → Laden mit Balken, „Prüfe …“, dann Android-Dialog „Aktualisieren“ → danach Mitteilung „Spark ist aktualisiert“, App öffnen, weiter angemeldet. ✕ am Streifen → kommt erst mit der nächsten Version wieder. Mitteilung „Neue Spark-App … Antippen zum Aktualisieren“ startet dasselbe. Schalter aus → kein Streifen, Knopf weg, Mitteilung führt wieder zum Download-Link. Zustand → Geräte-Updates: Android-App „N Profile mit der App · x von y Handys aktuell“, darunter Profil und Version. Live: „Android x/y aktuell“. Logs → Diagnose: „android: app update 1.3.1 sent to …“, „android: app version 1.3.0 -> 1.3.1 for …“.",
+"thread": "Update aus der Android-App"
+},
+{
+"id": "P192",
+"v": 447,
+"titel": "Zustand der NAS (Synology S6, nächste freie Version, Thread „Synology nahtlos einbinden“)",
+"text": "DSM: Systemsteuerung → Terminal & SNMP → SNMP → SNMP-Dienst an, nur SNMPv3, eigener Benutzer, SHA mit Passwort, Datenschutz AES mit zweitem Passwort. A: Funktionen → unter „Speicher und NAS“ „Zustand der NAS“ an, Name/IP, Benutzer, beide Passwörter → „Speichern“ (Code) → „Zuletzt gelesen …“. Falsches Passwort → „Benutzer oder Passwort abgelehnt“. Zustand → Dienste: Karte „Zustand der NAS“ mit Modell, DSM, Volume (%, GB frei), Festplatten mit °C. Sprache (Admin-Profil): „Wie voll ist die NAS?“, „Geht es den Festplatten gut?“ → Zahlen aus dem Ergebnis; ein Nicht-Admin-Profil bekommt das Werkzeug nicht. Hinweis testen: „Hinweis ab Belegung“ unter die aktuelle Belegung stellen → nach zwei Lesungen (etwa 10 min) ein Hinweis an die Admins („Zustand der NAS: Speicherbereich 1 zu N % belegt“), zurückstellen → „wieder in Ordnung“. SNMP-Dienst in DSM aus → nach einigen Minuten „Zustand der NAS antwortet … nicht“, wieder an → „läuft wieder“. Live: Ziel „Zustand der NAS“ mit Zahlen. Logs → Diagnose, Bereich NAS: „naszustand: …“ ohne Adresse.",
+"thread": "Synology nahtlos einbinden"
+},
+{
+"id": "P193",
+"v": 447,
+"titel": "Wissensordner-Vorschau (mit S6)",
+"text": "Ich → Speicher → Wissensordner → „Vorschau“ bei einem großen Ordner mit Bildern: sagt „Gelesen werden davon höchstens N, M bleiben ungelesen …“, Runden = höchstens Grenze/200, Tipp „Bilder und Scans abwählen“. Nach dem Lesen: unter Ich → Dokumente zuerst PDFs/Dokumente, Bilder erst danach."
+},
+{
+"id": "P194",
+"v": 447,
+"titel": "Haushaltsordner (Synology S5)",
+"text": "Funktionen → Speicher und NAS → unter „Wissensordner“ „Haushaltsordner“ an. Im Admin-Profil Ich → Speicher → bei der Synology unter „Wofür“ einen Wissensordner (z. B. /home/Anleitungen) mit „Für alle im Haushalt“ hinzufügen. Erwartet: liest in ruhigen Minuten; ein anderes Profil fragt „Wo ist die Anleitung für die Waschmaschine?“ und bekommt die Stelle mit „geteilt von Haushalt“; unter Ich → Dokumente steht sie bei den geteilten und öffnet sich frisch von der NAS. Gast im Browser und fremde Stimme am Lautsprecher bekommen nichts daraus. Live → Wissensordner zeigt „Haushalt N Ordner“."
+},
+{
+"id": "P195",
+"v": 447,
+"titel": "Wartungspause",
+"text": "A: Funktionen → Wartungspause an. Zustand → Wartungspause: „Sprachmodell“, 15 min, „Pause starten“ → Karte zeigt „Pause“, seit, endet spätestens. Im Assistenten fragen „Wie wird das Wetter morgen?“ → sofort „Ich werde gerade aktualisiert und bin in etwa 15 Minuten wieder da.“ (gesprochen, kein Fehler). Zahl „Anfragen mit dem Wartungssatz“ steigt. Live: Sprachmodell-Punkt blau „Wartungspause“. „+15 min“ verlängert. Auf tars: sudo speech-spark pause status, dann sudo speech-spark weiter → Karte zurück auf „Pause starten“. Echtes Qwen-Update einrahmen: sudo speech-spark pause llm 30, qwen38 neu starten/aktualisieren, kein Ausfall-Hinweis vom Dienst-Wächter; ist die Zeit um und Qwen antwortet, endet die Pause von selbst (Logs → Diagnose „wartung: aus llm geprueft“). Test „antwortet nicht“: Pause 15 min, qwen38 aus lassen → nach 15 min eine Mitteilung „Wartungspause läuft weiter“, danach normaler Dienst-Wächter-Hinweis. Nur „Sprachausgabe“ pausieren → Antworten kommen als Text.",
+"thread": "Pause-Knopf für LLMs"
+},
+{
+"id": "P196",
+"v": 512,
+"titel": "MCP-Server auf der NAS (Synology S7, nur Anleitung)",
+"text": "Funktionen → Anleitungen → „Fortgeschritten: MCP-Server auf der NAS“ öffnen: Warnung oben, Vorlage docs/vorlagen/nas-mcp genannt. Unter Ich → Meine MCP-Dienste erscheint dieselbe Anleitung oben. Optional: Vorlage auf der Synology bauen, Reverse Proxy einrichten, unter Ich → Meine MCP-Dienste anbinden; „Such in meinen NAS-Dateien …“ findet eine Datei, schreibende Werkzeuge stehen auf „Aus“."
+},
+{
+"id": "P197",
+"v": 550,
+"titel": "Verlauf privater Chats auf ein neues Gerät",
+"text": "Voraussetzung: Funktionen → Chats → „Private Chats (Ende-zu-Ende)“ an, P hat schon einen privaten Chat mit ein paar Nachrichten auf Gerät 1 (z. B. Rechner-Browser). Auf Gerät 2 (anderer Browser oder Android-App) als P anmelden, den privaten Chat öffnen, „Gerät eintragen“ (Code des zweiten Schritts). Erwartet: alte Nachrichten zeigen 🔒, darüber „Ältere Nachrichten liegen auf deinen anderen Geräten …“ mit einem Code aus 6 Zeichen. Auf Gerät 1 Chats öffnen → oben „🔒 Neues Gerät: …“ mit demselben Code → „Übertragen“ → „Verlauf übertragen: n Nachrichten“. Auf Gerät 2 erscheinen die alten Nachrichten lesbar (auch Fotos). Live-Kachel Chats zeigt vorher „Verlauf übertragen: 1 wartet“, danach nichts. Logs → Diagnose, Bereich „Nachrichten und Chats“: „chats: private history shared | n …“, kein Text. Gegenprobe: ein drittes Gerät eintragen, auf Gerät 1 „Nicht ich“ → Gerät 3 ist unter ⓘ → Deine Geräte weg.",
+"thread": "Messenger statt WhatsApp"
+},
+{
+"id": "P198",
+"v": 550,
+"titel": "Bilder malen",
+"text": "Auf tars: sudo ./install.sh --bild 4b-q8 im Quellordner (oder sudo speech-spark models und bei „Bilder malen“ 1 wählen). Erwartet: „Building the picture engine …“ einmal (dauert), „Picture model 4b-q8 …“ lädt etwa 9 GB, sudo speech-spark status zeigt speech-spark-bild active und „BILD port 31005: off“. A: Funktionen → Bilder malen an, speichern → „Bild testen“: nach Laden und Malen „ok“ mit Ladezeit, Malzeit und Speicher (diese Zahlen bitte in den Thread, das ist die Messung aus Stufe 0). P: Ich → Bilder → „Ein Leuchtturm bei Sturm, Ölgemälde“, Querformat, Malen → „wartet …“/„malt …“, dann Bild in der Galerie mit Wunsch, Prompt, Dauer, Herunterladen, Löschen. Im Assistenten „Mal mir eine Katze auf einem Skateboard“ → Karte „Bild“ mit Prompt, dann das Bild; danach „nochmal in Blau“ → neues Bild. Gegenproben: „Mal ein Nacktbild“ → feste Absage ohne Malen; „Mal ein Bild von <eigener Profilname>“ → Absage „Personen“; als Gast kein Bild. Nach 10 Minuten ohne Bild: Logs → Diagnose, Bereich „Bild“: „bild: engine beendet leerlauf“, free -g zeigt den Speicher wieder frei. Live: Ziel „Bilder malen“ mit Zahlen, nie Wunsch oder Prompt. Mit iPhone-App/Telegram: Push „Bild“, wenn es fertig ist.",
+"thread": "Bildgenerierung mit FLUX.2 klein"
+},
+{
+"id": "P199",
+"v": 550,
+"titel": "Mailstil lernen",
+"text": "A: Funktionen → Post und Kontakte → „Mailstil lernen“ an. P: Ich → E-Mail → Mein Mailstil → „Stil lernen“: nach ein bis zwei Minuten stehen Reiter Privat, Beruflich, Unbekannt mit Anrede, Begrüßung ({Name}), Gruß, Länge, Ton, Wendungen; keine Namen außer dem eigenen, keine Zahlen oder Adressen. In der Mail-App bleibt im Ordner „Gesendet“ alles unverändert. „Ändern“ beim Gruß, speichern, „Neu lernen“: der eigene Gruß bleibt (✎). Per Sprache: „Schreib Anna eine Antwort, dass ich komme“ (Entwürfe für das Postfach an): Entwurf klingt nach dem Stil (du, eigener Gruß). Begleiter: Outlook classic oder Mac Mail → „Antwort entwerfen“ auf eine Mail von einem beruflichen Kontakt: Sie-Form, eigener beruflicher Gruß. Logs → Diagnose: nur mailstil: gelernt … mails=N gruppen=3 und mailstil: benutzt weg=…, keine Namen oder Texte. „⋯ → Mailstil löschen“ leert die Seite.",
+"thread": "Antwortstil aus gesendeten Mails",
+"aktuell": true
+},
+{
+"id": "P200",
+"v": 550,
+"titel": "Verbrauchszähler und Tageskontingent",
+"text": "A: Funktionen → Zugang → „Verbrauchszähler“ an. P: zwei, drei Fragen im Assistenten stellen, eine per Sprache. Zustand → Verbrauch: Kacheln „Sprachmodell heute“ (Tokens, gelesen/geschrieben), „Aus dem Zwischenspeicher“ (%), „Sprache heute“ zeigen Zahlen; Balken für heute; „Nach Modell“ mit Qwen-Namen, Spracherkennung, Sprachausgabe; „Nach Bereich“ → Gespräch aufklappen zeigt „Gespräch“, „Weiche“ steht als eigener Bereich; „Nach Profil“ nennt P. „24 h“ und „12 Monate“ umschalten. Zustand → Monitoring: Karte „Verbrauch heute“, Zeile antippen springt zu Zustand → Verbrauch. Live: Kasten Sprachmodell „… Tokens/min · heute …“. Technik → Sprachmodell: Zeile „Heute“ mit Anfragen und Tokens. P: Ich → Verbrauch zeigt nur die eigenen Zahlen, „Meine Zahlen löschen“ leert alles außer heute. Kontingent: Funktionen → darunter „Tageskontingent“ an, Wert 1 (= 1000 Tokens). P (kein Admin-Profil) fragt etwas: nach spätestens zwei Fragen kommt „Für heute ist dein Kontingent beim Sprachmodell aufgebraucht …“, Logs → Diagnose „System“: verbrauch: Kontingent erreicht | <Profil> | …. Zustand → Verbrauch bei P „0“ setzen → P bekommt wieder Antworten. iPhone (neuer TestFlight-Build): Spark verwalten → Verbrauch. Danach Kontingent wieder aus.",
+"thread": "Token-Verbrauch je Sprachmodell"
+},
+{
+"id": "P201",
+"v": 556,
+"titel": "Anrufe mit Sprache und Video",
+"text": "A: Funktionen → Chats → „Anrufe (Sprache und Video)“ an. Zwei Profile P und Q, beide im Browser über https (oder Android-App 1.3.1) in Chats. P öffnet den Chat mit Q: oben 📞 und 🎥. P drückt 🎥, bei Q klingelt es mit „Annehmen“, „Mit Video“, „Ablehnen“; Q nimmt „Mit Video“: beide sehen sich, die Zeit läuft, „Stumm“ und „Kamera aus“ gehen. P legt auf: im Chat steht „🎥 Videoanruf · 0:42“. Dann: Q lehnt ab („Anruf abgelehnt“), Q nimmt 45 s nicht ab („Verpasster Anruf“), Q hat zwei Geräte offen, eins nimmt an, das andere hört auf zu klingeln. Q hat die Chats-Seite zu: das Handy meldet „📞 P ruft an“. Zustand → Live: Kachel Chats „📞 Anrufe …“, Logs: „chats: call started/answered/ended“ nur mit Zahlen. Von unterwegs: im Router UDP 3478 und UDP 49160–49200 an tars weiterleiten, sudo speech-spark update (installiert coturn), A: „Anrufe von unterwegs“ an, Adresse leer lassen (= Adresse für andere Sparks) oder eintragen. Zustand → Dienste: „Vermittler für Anrufe“ grün. Q im Mobilfunk (WLAN aus) ruft P an: Verbindung steht. systemctl status coturn zeigt „masked“, systemctl status speech-spark-turn läuft; Schalter aus: speech-spark-turn hält an.",
+"thread": "Messenger statt WhatsApp"
+},
+{
+"id": "P202",
+"v": 553,
+"titel": "Wartungspause Paket 2",
+"text": "Kommandozeile: sudo speech-spark pause llm 30 läuft ohne Fehler (V01.0.553), sudo speech-spark weiter. A: Funktionen → Wartungspause → „Automatisch bei Neustart“ an. Auf tars sudo systemctl restart qwen38-sglang (bzw. die laufende Spur) → binnen 15 s zeigt Zustand → Wartungspause „Pause“ von „Automatisch“, eine Frage im Chat bekommt sofort den Wartungssatz; sobald Qwen wieder antwortet, endet die Pause von selbst (Logs → Diagnose „wartung: automatisch erkannt llm neustart“, später „wartung: aus llm geprueft“), kein Ausfall-Hinweis vom Dienst-Wächter. ESP32-Lautsprecher: einen Tag nach dem Einschalten (oder nach einem Panel-Neustart) liegt der Satz als Datei vor; Zustand → Wartungspause nur „Sprachausgabe“ starten, dem Lautsprecher eine Frage stellen → Antwort auf dem Display, zu hören „Ich werde gerade aktualisiert und bin gleich wieder da.“ Nur „Spracherkennung“ pausieren → Lautsprecher sagt den Satz gleich nach dem Weckwort. Home Assistant Assist mit Spark-Stimme in der Pause der Sprachausgabe → derselbe Satz. iPhone (neuer TestFlight-Build): unter „Spark verwalten“ zeigt die Seite „Wartungspause“ die Karte, „Pause starten“, „+15 min“, „Weiter“ gehen. Android: Zustand → Wartungspause zeigt die Karte.",
+"thread": "Pause-Knopf für LLMs",
+"aktuell": true
+},
+{
+"id": "P203",
+"v": 556,
+"titel": "Zustand als Kacheln",
+"text": "Zustand → Monitoring am Rechner: oben der Satz mit Chips (Version, Sicherung, Prüfung), bei offenen Punkten „Zum offenen Punkt“ (springt zu „Braucht dich“ direkt darunter). „Jetzt“: vier Kacheln mit Symbol und Farbleiste, Antippen klappt „Technische Details“ auf bzw. öffnet Prüfen. „Heute“: Kacheln Antworten, Erster Ton, Lautsprecher (gelb, wenn nicht alle online), Hintergrund; jede springt zu ihrer Stelle (Logs → Anfragen, Ich → Lautsprecher, Logs). Darunter „Bereiche“ mit Symbol, am Rechner zweispaltig. Handy (Browser und Android-App): Kacheln zweispaltig, nichts ragt über den Rand. Englisch umschalten: Now, Today, Areas. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring zeigt den Abschnitt „Heute (24 Std.)“.",
+"thread": "Zustand-Übersicht"
+},
+{
+"id": "P204",
+"v": 568,
+"titel": "Fotos und Dateien zu anderen Sparks",
+"text": "Braucht einen zweiten Spark (Testserver) mit Chats mit anderen Sparks, gekoppelt, beide mit „Fotos, Dateien und Sprache in Chats“ und neu „Fotos und Dateien zu anderen Sparks“ an (Funktionen → Chats → Chats mit anderen Sparks). Im Chat mit der Person auf dem anderen Spark erscheinen 📎 und 🎤. Ein Handyfoto schicken: kommt drüben an, ohne Ort (Foto speichern, Exif ansehen). Eine PDF und eine Sprachnachricht schicken: PDF öffnet sich, unter der Sprachnachricht steht die Abschrift des anderen Sparks. Auf dem anderen Spark den Schalter aus: ein neues Foto zeigt hier ⚠ (nicht zugestellt), Text geht weiter. Zustand → Live: Kachel Chats „Dateien heute n rein / n raus“; Logs nur „verbund: file in | kb …“.",
+"thread": "Messenger statt WhatsApp"
+},
+{
+"id": "P205",
+"v": 568,
+"titel": "Gruppen mit anderen Sparks",
+"text": "Braucht den zweiten Spark wie oben, beide mit „Gruppen-Chats“ und neu „Gruppen mit anderen Sparks“ an (Funktionen → Chats → Chats mit anderen Sparks). Auf tars eine neue Gruppe erstellen und neben einem Profil von tars den angenommenen Kontakt mit 🌐 vom Testserver wählen. Erwartet: Auf dem Testserver erscheint die Gruppe mit ihrem Namen und „verwaltet auf einem anderen Spark“; Nachrichten gehen in beide Richtungen und kommen bei allen an, ohne doppelt. Gruppenname auf tars ändern: Testserver zeigt den neuen Namen. Auf dem Testserver ist Umbenennen und Hinzufügen gesperrt; „Gruppe verlassen“ dort nimmt die Person auf tars aus der Gruppe. Bearbeiten, Zurücknehmen und 📎 gehen in dieser Gruppe noch nicht (Hinweis statt Fehler). Zustand → Live, Kachel Chats: „Gruppen: 1 von hier“ auf tars, „1 von anderen“ auf dem Testserver.",
+"thread": "Messenger statt WhatsApp"
+},
+{
+"id": "P206",
+"v": 568,
+"titel": "Säulen „Antworten pro Stunde“",
+"text": "Zustand → Monitoring, Abschnitt „Heute“: über den vier Kacheln eine breite Kachel mit 24 Säulen, rechts „jetzt“; nach einer neuen Frage wächst die rechte Säule (Seite neu laden). Maus über eine Säule zeigt Stunde und Zahl. Antippen öffnet Zustand → Logs → Anfragen. Handy 320/390: Beschriftung in einer Zeile, nichts ragt über den Rand. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring → „Heute (24 Std.)“ zeigt die Säulen.",
+"thread": "Zustand-Übersicht"
+},
+{
+"id": "P207",
+"v": 624,
+"titel": "Kontingent für Tag, Woche, Monat",
+"text": "A: Funktionen → Verbrauchszähler → „Kontingent“ an, Tag 1, Woche 0, Monat 0, Vorwarnung 80. P (kein Admin-Profil) fragt etwas Kurzes: unter der Antwort „80 % deines Tageskontingents sind verbraucht.“ (oder gleich die Grenze). Nächste Frage: „Für heute sind deine Tokens aufgebraucht. Morgen geht es weiter; …“. Danach „Wie spät ist es?“ und ein Licht-Befehl: beide gehen ohne Sprachmodell. Schreibhilfe und „Dokument erstellen“ sagen denselben Satz. Zustand → Verbrauch, Karte „Kontingent“: bei P „+500 heute“ → P bekommt wieder Antworten. Dann Tag 0, Woche 1: Satz „… Ab Montag geht es weiter“. P: Ich → Verbrauch zeigt drei Zeilen (Heute, Diese Woche, Dieser Monat), „Meine Zahlen löschen“ ändert die Balken nicht. Live: Kasten Sprachmodell „… · 1 am Kontingent“. Logs → Diagnose „System“: verbrauch: Kontingent erreicht | <Profil> | woche | …, verbrauch: Vorwarnung, verbrauch: Nachschlag. iPhone (neuer TestFlight-Build): Spark verwalten → Verbrauch → Kontingent → Profil: Werte setzen, „+500 heute“. Danach Kontingent wieder aus.",
+"thread": "Token-Verbrauch je Sprachmodell"
+},
+{
+"id": "P208",
+"v": 626,
+"titel": "Den Spark anrufen, Stufe T1",
+"text": "A: Funktionen → „Den Spark anrufen“ an. Schritt 1: „Im Heimnetz suchen“ → „FRITZ!Box gefunden unter 192.168.178.1“. Schritt 2: die Klicks für die FRITZ!Box stehen da, „Kopieren“ übernimmt Benutzername und Kennwort. In der FRITZ!Box Telefonie → Telefoniegeräte → Neues Gerät → IP-Telefon „Spark“ mit genau diesen Daten, „nur interne Anrufe“. Schritt 3: „Speichern“ (Code) → „Angemeldet.“ Gegenproben: Kennwort falsch → „Benutzername oder Kennwort falsch …“; Adresse 8.8.8.8 → „muss im Heimnetz stehen“. Vom Mobilteil die interne Nummer des Spark wählen (meist **620): er nimmt ab und sagt „… noch keinem Profil zugeordnet …“, legt auf. Schritt 4: „Neu laden“ → Nummer des Mobilteils unter „Zuletzt angerufen“, einem Profil zuordnen, Name „Küche“. Nächster Anruf: „Hallo <Name>, hier ist der Spark.“, „Wie wird das Wetter morgen?“ → kurze gesprochene Antwort. 20 s schweigen → „Noch etwas?“, nochmal 10 s → „Ich lege jetzt auf. Tschüss.“ Mit angelernter Stimme (Ich → Stimme): „Was steht morgen im Kalender?“ wird beantwortet; ruft jemand anderes vom selben Mobilteil an, sagt der Spark nur, dass er das dem Inhaber sagt. Als „Gemeinsames Telefon“: nur allgemeine Fragen. Zweites Mobilteil gleichzeitig → besetzt (bei „Gespräche gleichzeitig“ 1). Ich → Verlauf: Gespräch mit Ursprung „Telefon“. Zustand → Live: Ziel „Telefon“ nur mit Zahlen, nie Nummern. Zustand → Dienste: „Telefon“ grün; das IP-Telefon in der FRITZ!Box löschen → nach einigen Minuten rot. Logs → Diagnose, Bereich Telefon: nur „telefon: …“ mit festen Wörtern, keine Nummer. Ton „schmal“ (G.711) ausprobieren. Notaus an → Anruf wird abgewiesen.",
+"thread": "Assistent per Telefon anrufen"
+},
+{
+"id": "P209",
+"v": 627,
+"titel": "Ich → Telefon, Stufe T2",
+"text": "Voraussetzung T1 läuft, in der FRITZ!Box klingelt der Spark auch bei einer Rufnummer von außen (IP-Telefon „Spark“ → ankommende Rufnummern). P: Ich → Telefon → Handynummer eintragen (Code-Abfrage) → Code aus 4 Ziffern mit „noch 15 min“. Vom Handy die Festnetznummer anrufen, bei der der Spark klingelt: „Bitte tippe jetzt den Code …“, einmal falsch → „Der Code stimmt nicht. Bitte noch einmal.“, dann richtig → „Danke, die Nummer ist jetzt bestätigt.“, er legt auf; die Seite zeigt „bestätigt“. Gegenprobe: ein anderes Handy ohne Code wird abgewiesen. Ein zweites Profil trägt dieselbe Nummer ein → „schon bei einem anderen Profil bestätigt“. PIN: „1111“ → abgelehnt, „2580“ speichern (Code-Abfrage), sie steht danach nirgends. Vom eigenen Mobilteil (ohne angelernte Stimme) „Was steht morgen im Kalender?“ → Hinweis auf die PIN; 2580 # tippen → „Danke. Jetzt weiß ich, dass du es bist.“, dieselbe Frage wird beantwortet. Neuer Anruf, dreimal falsche PIN → „… eine halbe Stunde lang …“, Mitteilung „🔐 Spark … falsche Telefon-PINs“, die richtige PIN geht danach nicht. Am gemeinsamen Telefon wählt die PIN das Profil („Danke, <Name>“). Ich → Telefon → Meine Telefonate: Zeit, Dauer, Art, Fragen; eins löschen, alle löschen. iPhone (neuer Build) und Android: Seite „Telefon“ unter Ich. Live: „PIN n richtig, m falsch · k Nummern bestätigt“. Logs → Diagnose: nur „telefon: pin richtig fuer …“, „telefon: nummer bestaetigt fuer …“, nie Nummer, Code oder PIN.",
+"thread": "Assistent per Telefon anrufen"
+},
+{
+"id": "P210",
+"v": 628,
+"titel": "Anrufe von außen, Stufe T3",
+"text": "Erst prüfen, dass sich der Spark jetzt überhaupt anmeldet (bis V01.0.627 griff der Schalter nicht): Funktionen → Den Spark anrufen → Zustand „Angemeldet.“, Zustand → Dienste „Telefon“ grün. FRITZ!Box: beim IP-Telefon „Spark“ die Festnetznummer als ankommende Rufnummer wählen. A: „Anrufe von außen“ an. Vom Handy mit bestätigter Nummer (Stufe T2) die Festnetznummer anrufen: „Hallo, hier ist der Spark.“ ohne Namen; „Wie wird das Wetter?“ geht; „Was steht morgen im Kalender?“ → Hinweis auf die PIN; PIN und # → Termine. Von einem fremden Handy: abgewiesen (besetzt/abgelehnt). „Unbekannte Anrufer als Gast“ an: fremdes Handy bekommt Frage und Antwort, „Mach das Licht an“ geht nicht. Unterdrückte Nummer: wie unbekannt. Ich → Telefon → Meine Telefonate: „Von außen“. Live: „von außen n, davon m Gäste“. Logs → Diagnose: „telefon: anruf extern bekannt als …“, „… unbekannt als gast“, nie eine Nummer. Danach „Anrufe von außen“ wieder aus → Handy wird abgewiesen.",
+"thread": "Assistent per Telefon anrufen"
+},
+{
+"id": "P211",
+"v": 632,
+"titel": "Der Spark ruft an, Stufe T4",
+"text": "FRITZ!Box: beim IP-Telefon „Spark“ ausgehende Anrufe erlauben (nicht „nur interne Anrufe“) und die ausgehende Rufnummer wählen. A: Funktionen → Den Spark anrufen → Schritt 4: **611 eintragen, „Spark ruft an“ → Mobilteil klingelt, „… das ist der Testanruf …“, Seite „Abgehoben …“. „Der Spark ruft an“ an. P (Mobilteil zugeordnet): „Ruf mich in zwei Minuten an“ → Ich → Telefon → Anrufe vom Spark zeigt den Weckruf; nach zwei Minuten klingelt es, „Guten …, hier ist der Spark. Es ist …“, danach weiterfragen. „Erinnere mich per Anruf in 3 Minuten an den Tee“: mit Telefon-PIN fragt er erst nach Stimme oder PIN, dann „Du wolltest erinnert werden: den Tee“; nicht abheben → nach 5 Minuten noch einmal, dann Mitteilung mit dem Text. Einen geplanten Anruf unter Ich → Telefon löschen → kommt nicht. „Der Spark darf mich anrufen“ aus → der Assistent sagt, dass er nicht anrufen darf. Rückruf: „Wen der Spark anruft“ auf „auch bestätigte eigene Nummern“, „Anrufe von außen“ an, vom bestätigten Handy anrufen, „Was steht morgen im Kalender?“ → Hinweis auf PIN oder Rückruf; „Ruf mich zurück“ → er legt auf, ruft das Handy an: „… wie versprochen“, Kalenderfrage wird beantwortet. Alarm: „Anruf bei Dienstausfall“ an, tagsüber einen beobachteten Dienst (z. B. Websuche) 10 Minuten aus → Anruf am Mobilteil des Admins mit dem Dienstnamen; nachts (22–7 Uhr) nur Hinweis, um 7 Uhr der Anruf, falls noch weg. Ich → Telefon → Meine Telefonate: „Der Spark rief an“. Live: „der Spark rief n-mal an, m abgehoben“. Logs → Diagnose: „telefon: anruf raus (weckruf) fuer … angenommen“, „telefon: alarm in ruhezeit, nur push“, nie eine Nummer von außen oder ein Erinnerungstext.",
+"thread": "Assistent per Telefon anrufen"
+},
+{
+"id": "P212",
+"v": 646,
+"titel": "Terminal-Client spark-tui",
+"text": "A: Funktionen → Terminal-Client an. P: Ich → Terminal → die Zeile unter „Programm holen“ auf der uConsole ausführen (meldet „spark-tui.py: OK“, danach gibt es den Befehl spark-tui), python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual. „Kopplungszeile holen“ (Code) → Zeile auf der uConsole ausführen → Spark-Adresse, Zertifikat „festgepinnt“, Profil und „Fertig“; die Seite zeigt „Terminal · uconsole“. python3 spark-tui.py status → Adresse, Profil, Aufträge-Stufe. python3 spark-tui.py frage \"Wie wird das Wetter morgen?\" → Antwort als Text. python3 spark-tui.py → Fenster mit Gesprächen, Aufträgen und Heute links, Antwort läuft Wort für Wort ein; Esc stoppt; Strg+N neues Gespräch; das neue Gespräch steht danach auch im Panel unter Ich → Verlauf (Eingang „Terminal“). F3, n: Auftrag anlegen, Enter öffnet ihn, d speichert als Dokument. Terminal schmaler als 100 Spalten (oder per SSH vom Handy): nur der Chat. Von außen: die Zeile über die externe Adresse holen → kein fp= darin, Kopplung klappt mit gültigem Zertifikat; oder spark-tui adresse-dazu https://… und im Heimnetz WLAN aus. Update (ab V01.0.665): nach dem nächsten Panel-Update zeigt das Fenster oben „Neue Version …: spark-tui update“; spark-tui update → „spark-tui … → …, ersetzt: …“, nochmal → „ist aktuell“, Kopplung bleibt. Gegenproben: Kopplungszeile ein zweites Mal → „Der Kopplungscode passt nicht oder ist abgelaufen …“; Funktion aus → oben „Gerade nicht verfügbar (vom Admin ausgeschaltet …)“, Kopplung bleibt; Gerät unter Ich → Terminal entfernen → „Dieses Terminal ist nicht mehr gekoppelt …“. Live: unter Verbindungen „Terminal-Client 1“. Logs → Diagnose, Bereich „Apps“: nur „terminal: …“ mit festen Wörtern.",
+"thread": "Terminal-Client für die uConsole"
+},
+{
+"id": "P213",
+"v": 664,
+"titel": "Weiche-Check",
+"text": "Funktionen → Weiche: Alltagsquote zeigt 210 von 211. P: „Öffne das Terminal“ → nicht Kalender (Anfragen: unklar). „Was kostet ein neues iPhone?“ → Websuche. „Kannst du mich heute Abend um acht anrufen?“ → Erinnerung/Rückruf, nicht iPhone. „Lösch die Werbemails“ → Mail. „Kauf noch Zwiebeln“ → Liste.",
+"thread": "Weiche sichtbar und einstellbar"
+},
+{
+"id": "P214",
+"v": 684,
+"titel": "Das kannst du auch sagen",
+"text": "A: Funktionen → „Hilfe zum Spark“ → „Funktionen vorschlagen“ → „Das kannst du auch sagen“ an (darunter „Tipps beim Sprechen“). P (ein Profil mit Bilder malen und Wetter an): neuer Chat → „Probier mal, das geht bei dir:“ mit drei Sätzen; Tipp setzt den Satz ins Eingabefeld, nichts wird geschickt. „Wie wird das Wetter morgen?“ → unter der Antwort „Das kannst du auch sagen:“ mit Folgesätzen (z. B. Erinnerung an den Schirm). „Zeichne mir einen Leuchtturm“ ohne Bildwort-Treffer bzw. „Klingel mich morgen um sieben“ → „Meintest du:“ mit „Ruf mich morgen um sieben an“, ein Tipp und Absenden → Weckruf geplant. „Was kannst du?“ nennt Beispielsätze. Ich → Was ich kann: Bereiche, Suchfeld, „noch nie benutzt“; „Meine Zählung löschen“ setzt zurück. Am Lautsprecher: höchstens einmal am Tag „Übrigens: du kannst auch sagen …“ am Ende einer Antwort; Ich → Gespräch → „Tipps beim Sprechen“ aus → nichts mehr. Telegram: Folgesätze als Antworttasten. TUI: Zeile „Tipp: …“, /tipps zeigt die Liste. iPhone (neuer TestFlight-Build): Chips unter der Antwort setzen den Satz ins Feld. Admin: Funktionen → Weiche → „Was keiner findet“ zeigt Funktionen ohne Nutzung in 30 Tagen und gezeigt/getippt. Gast: nie Vorschläge. Live: Ereignisse „Funktionen vorschlagen“ (gezeigt, getippt), Logs nur tipps: Beispielsatz … mit Werkzeugnamen.",
+"thread": "Vorschläge für Funktionen"
+},
+{
+"id": "P215",
+"v": 647,
+"titel": "Gehäuse des Panel-Rechners",
+"text": "A: Funktionen → Gehäuse an. Das Display zeigt die Seiten, die LEDs leuchten in der Statusfarbe, der Lüfter läuft erst ab der eingestellten Temperatur. Seiten 6 bis 11, Vorschau antippen und Reihenfolge ziehen (V01.0.662).",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P216",
+"v": 653,
+"titel": "Bilder ändern",
+"text": "A: Funktionen → Bilder ändern an. P: ein Foto in den Chat mit „Mach den Himmel blau“, danach „Mach den Bart weg“. Unter Ich → Bilder die Schnellknöpfe probieren: drehen, spiegeln, heller, schwarzweiß, quadratisch.",
+"thread": "Bilder erzeugen mit FLUX.2 klein"
+},
+{
+"id": "P217",
+"v": 662,
+"titel": "Verbessern auf dem Pi",
+"text": "Zustand → Verbessern lädt ohne Fehler, die Fälle und Vorschläge erscheinen.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P218",
+"v": 663,
+"titel": "Begleiter mit OK-Knopf",
+"text": "Neuen Windows-Begleiter holen. Jede Meldung im Tray-Fenster hat zuerst „OK“, das nimmt sie weg, das Fenster bleibt offen.",
+"thread": "Schreibhilfe für Mails"
+},
+{
+"id": "P219",
+"v": 666,
+"titel": "Aufgabenblatt für den reMarkable",
+"text": "P: Ich → reMarkable → Papier: fünf Teile wählen (Termine, Aufgaben, wartende Mails, Schnell notieren, Anmerkung). Am nächsten Morgen liegt das Blatt auf dem reMarkable.",
+"thread": "reMarkable-Dokumente aufwerten"
+},
+{
+"id": "P220",
+"v": 668,
+"titel": "Apps schonen den Akku",
+"text": "Android-App 1.3.3 holen, neue TestFlight-Version der iPhone-App. Einen Tag normal nutzen: verbraucht die App im Hintergrund spürbar weniger? Anrufe klingeln trotzdem.",
+"thread": "Apps schonender für den Akku"
+},
+{
+"id": "P221",
+"v": 673,
+"titel": "Rechner-Karten tars und Pi",
+"text": "Zustand → Monitoring: zwei Karten mit CPU, Speicher, Platte, Temperatur und 20-Minuten-Kurven. Stimmen die Werte mit dem Rechner überein?",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P222",
+"v": 674,
+"titel": "Leistung messen bei getrennten Rechnern",
+"text": "Zustand → Prüfen → Leistung messen: Sprachausgabe, Spracherkennung und Sprachmodell bekommen Zahlen, nichts steht auf „Nicht gemessen“.",
+"thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P223",
+"v": 676,
+"titel": "CarPlay",
+"text": "Neue TestFlight-Version installieren, iPhone ans Auto. Die App erscheint mit eigenem Symbol, eine Frage per Sprache bekommt eine Antwort, das Gesicht wechselt mit dem Zustand.",
+"thread": "iPhone-App aufpäppeln"
+},
+{
+"id": "P224",
+"v": 678,
+"titel": "Hinweis auf neue XiaoZhi-Version",
+"text": "Nach dem Update auf dem Pi: Personen und Geräte → Lautsprecher zeigt keinen Fehler TooLarge mehr, eine neue XiaoZhi-Version wird gemeldet.",
+"thread": "XiaoZhi-Prüfung meldet TooLarge"
+},
+{
+"id": "P225",
+"v": 681,
+"titel": "Musik testen",
+"text": "Zustand → Prüfen → Musik testen: zwei feste Lieder entstehen und lassen sich anhören. Klingt der Gesang deutsch?",
+"thread": "Musik erzeugen mit ACE-Step 1.5"
+},
+{
+"id": "P226",
+"v": 682,
+"titel": "Steuerzentrale am Bildschirm",
+"text": "A: Funktionen → Steuerzentrale am Bildschirm an. Bildschirm an den HDMI-Ausgang des Pi: nach dem Booten erscheint ohne Anmeldung die Textanzeige mit Fluss, Rechnern, Diensten und Hinweisen.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P227",
+"v": 697,
+"titel": "Praxistest im Panel",
+"text": "A: Zustand → Praxistest: die neuesten Punkte stehen oben unter „Offen“. Einen Punkt mit „Klappt“ markieren, einen mit „Problem“ (der Hinweis zeigt den Weg zu Zustand → Logs → Diagnose), einen mit „Später“. „Alt, vor V01.0.600“ aufklappen → „Alle alten erledigt“ → die Gruppe ist weg. Braucht dich zeigt eine leise Zeile mit der Zahl der offenen Punkte. iPhone: Spark verwalten → Praxistest zeigt dieselbe Liste. Verwalter sehen die Seite nicht.",
+"thread": "Verbesserungsideen"
+}
+]
+}

@@ -355,6 +355,8 @@ def alerts():
     out += rechnerblick.alerts()     # the two computers when the models run apart: heat, power, memory, disk, gone
     import berater
     out += berater.alerts()          # proposals of the Einstellungs-Assistent waiting (level info: not a warning)
+    import praxistest
+    out += praxistest.alerts()       # points of the hands-on test still open (level info, Zustand → Praxistest)
     return out
 
 

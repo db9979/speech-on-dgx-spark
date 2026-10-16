@@ -94,6 +94,7 @@ struct AdminView: View {
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                     if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
                     if s.role != "manager" { NavigationLink("Modelle") { ModelsView() } }
+                    if s.role != "manager" { NavigationLink("Praxistest") { PraxisView() } }
                     if s.role != "manager" { NavigationLink("Wartungspause") { WartungView() } }
                 } header: { Text("Zustand") }
                 Section {
@@ -435,6 +436,53 @@ struct ModelsView: View {
     static func gib(_ v: Any?) -> String {
         guard let n = (v as? NSNumber)?.doubleValue else { return "–" }
         return String(format: "%.1f GiB", n)
+    }
+}
+
+/// Zustand → Praxistest (panel/praxistest.py): the points of the hands-on test still open, the newest first; per point
+/// „Klappt“, „Problem“, „Später“. The steps are German, as the threads wrote them.
+struct PraxisView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var error: String?
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            let all = d["punkte"] as? [[String: Any]] ?? []
+            let open = all.filter { ($0["alt"] as? Bool) != true && (($0["stand"] as? String ?? "").isEmpty || $0["stand"] as? String == "problem") }
+            Section {
+                ForEach(Array(open.enumerated()), id: \.offset) { _, p in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(verbatim: p["titel"] as? String ?? "").font(.headline)
+                        if p["stand"] as? String == "problem" { Text("Problem").font(.caption).foregroundStyle(.red) }
+                        Text(SparkAPI.way(p["text"] as? String ?? "")).font(.subheadline)
+                        Text(verbatim: (p["id"] as? String ?? "") + " · V01.0." + String(format: "%03d", (p["v"] as? Int) ?? 0)).font(.caption).foregroundStyle(.secondary)
+                        HStack {
+                            Button("Klappt") { Task { await mark(p, "ok") } }.buttonStyle(.bordered).tint(.green)
+                            if p["stand"] as? String != "problem" {
+                                Button("Problem") { Task { await mark(p, "problem") } }.buttonStyle(.bordered).tint(.red)
+                                Button("Später") { Task { await mark(p, "spaeter") } }.buttonStyle(.bordered)
+                            }
+                        }
+                    }.padding(.vertical, 4)
+                }
+            } header: { Text("Offen") } footer: {
+                Text(SparkAPI.way(String(localized: "Bei einem Problem: im Browser Zustand → Logs → Diagnose kopieren und mit der Nummer in den Thread geben.")))
+            }
+        }
+        .navigationTitle("Praxistest")
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private func load() async {
+        do { d = try await AdminSession.shared.object("GET", "api/admin/praxistest"); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func mark(_ p: [String: Any], _ stand: String) async {
+        do { _ = try await AdminSession.shared.call("POST", "api/admin/praxistest/" + (p["id"] as? String ?? ""), body: ["stand": stand]); await load() }
+        catch { self.error = error.localizedDescription }
     }
 }
 

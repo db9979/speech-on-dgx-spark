@@ -9280,6 +9280,66 @@
           }
         }
       }
+    },
+    "Praxistest": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-on test"
+          }
+        }
+      }
+    },
+    "Klappt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works"
+          }
+        }
+      }
+    },
+    "Problem": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem"
+          }
+        }
+      }
+    },
+    "Später": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
+    "Offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Bei einem Problem: im Browser Zustand → Logs → Diagnose kopieren und mit der Nummer in den Thread geben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a problem: in the browser copy Status → Logs → Diagnosis and give it to the thread with the number."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -194,6 +194,7 @@ DATEIEN = [
     state("doc-rank.json", "Nachsortier-Modell", "Re-ranking model", lokal="Prüfsummen des Nachsortier-Modells, entstehen neu"),
     state("notaus.json", "Notaus", "Kill switch", lokal="Notaus gilt nur auf diesem Gerät"),
     state("wartung.json", "Wartungspause", "Maintenance pause", lokal="Wartungspause gilt nur für das laufende Update"),
+    state("praxistest-stand.json", "Praxistest: je Prüfpunkt die Markierung (klappt, Problem, später) und die Zeit", "Hands-on test: per point the mark (works, problem, later) and the time", "json"),
     state("modelle-messung.json", "Messung der Modelle (nur Zahlen)", "Model measurement (numbers only)", lokal="Messwert dieses Geräts (speech-spark modelle messen)"),
     state("qwen38-vorher.json", "Vor dem Umzug: laufende qwen38-Dienste und alte Adresse des Sprachmodells", "Before the move: running qwen38 services and the language model's old address", lokal="gilt nur für dieses Gerät (speech-spark modelle llm uebernehmen, zurueck)"),
     state("qwen38-vorher.json.alt", "Die Notiz des letzten Umzugs nach dem Weg zurück", "The last move's note after the way back", lokal="gilt nur für dieses Gerät", sonst=True),
