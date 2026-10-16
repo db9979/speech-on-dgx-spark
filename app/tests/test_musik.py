@@ -10,6 +10,8 @@ import io
 import json
 import os
 import unittest
+
+import httpx
 from unittest import mock
 
 from tests import helpers
@@ -148,7 +150,7 @@ class Service(unittest.TestCase):
         self.assertEqual((b["lyrics"], b["vocal_language"]), (musik_server.INSTRUMENTAL, "unknown"))
         self.assertEqual((b["inference_steps"], b["output_format"], b["synth_batch_size"]), (musikmodell.STEPS, "mp3", 1))
         v = musikmodell.VARIANTS[musikmodell.DEFAULT]
-        self.assertEqual((b["synth_model"], b["lm_model"]), (v["dit"].stem, v["lm"].stem))
+        self.assertEqual((b["synth_model"], b["lm_model"]), (v["dit"].name, v["lm"].name))   # the whole file name
         s = musik_server.request_body({"caption": "pop", "seconds": 60, "lyrics": "[verse]\nHallo", "language": "de"})
         self.assertEqual((s["vocal_language"], s["lyrics"]), ("de", "[verse]\nHallo"))
         for bad in ({"caption": "", "seconds": 30}, {"caption": "x" * 601, "seconds": 30}, {"caption": "a", "seconds": 5},
@@ -178,6 +180,54 @@ class Service(unittest.TestCase):
             musik_server.audio_part(res)
         with self.assertRaises(ValueError):
             musik_server.audio_part(mock.Mock(headers={"content-type": "audio/mpeg"}, content=FRAME))
+
+    def test_a_song_through_an_engine_that_answers_like_ace_server(self):
+        """The wire format of ace-server at musikmodell.ACECPP_COMMIT (tars 2026-10-16: every song failed): job ids are
+        16 hex digits, models are named by their whole file name, /lm hands back a JSON array, /synth a
+        multipart/mixed answer with an audio and a latent part."""
+        names = {f.name for f in musikmodell.files(musikmodell.DEFAULT)}
+        jobs, seen = {}, []
+
+        def handler(req):
+            if req.method == "POST" and req.url.path in ("/lm", "/synth"):
+                body = json.loads(req.content)
+                seen.append((req.url.path, body.get("lm_model"), body.get("synth_model"), body.get("audio_codes")))
+                if body["lm_model"] not in names or body["synth_model"] not in names:
+                    return httpx.Response(200, json={"id": "00000000000000ff"})   # ace-server: "LM not found"
+                job = f"{len(jobs) + 0xa1b2c3d4e5f60700:016x}"
+                jobs[job] = (req.url.path, body)
+                return httpx.Response(200, json={"id": job})
+            if req.url.path == "/job":
+                job = req.url.params.get("id")
+                if job not in jobs:
+                    return httpx.Response(200, json={"status": "failed"})
+                if req.url.params.get("result") != "1":
+                    return httpx.Response(200, json={"status": "done"})
+                step, body = jobs[job]
+                if step == "/lm":
+                    return httpx.Response(200, json=[dict(body, audio_codes="12,7,99", bpm=96)])
+                multi = (b"--ace-batch-boundary\r\nContent-Type: audio/mpeg\r\n\r\n" + FRAME + b"\r\n"
+                         b"--ace-batch-boundary\r\nContent-Type: application/octet-stream\r\n"
+                         b"Content-Disposition: form-data; name=\"latent\"\r\n\r\n" + b"\x00" * 256 + b"\r\n"
+                         b"--ace-batch-boundary--\r\n")
+                return httpx.Response(200, content=multi,
+                                      headers={"content-type": "multipart/mixed; boundary=ace-batch-boundary"})
+            return httpx.Response(404)
+
+        e = musik_server.Engine()
+        e.client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        req = musik_server.request_body({"caption": "calm piano", "seconds": 30})
+
+        async def ready():
+            e.state = "ready"
+
+        with mock.patch.object(e, "start", ready), mock.patch.object(e, "alive", lambda: True), \
+                mock.patch.object(musik_server, "POLL_S", 0):
+            raw, lm_s, synth_s, peak = asyncio.run(e.make(req))
+        self.assertEqual(raw, FRAME)
+        self.assertEqual([s[0] for s in seen], ["/lm", "/synth"])
+        self.assertEqual(seen[1][3], "12,7,99")            # the codes of the planner go on to the sound model
+        self.assertTrue(musik_server.finish(raw, "x").startswith(b"ID3"))
 
     def test_too_little_memory_loads_nothing(self):
         e = musik_server.Engine()

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.681** Test music: songs come out (job number and model names the way ace-server sends and expects them)
 - **V01.0.680** Fix: speech output no longer fails with "No available memory" after running install.sh; engines restart only when changed, the language model first
 - **V01.0.679** Test music: the music engine starts (an option ace-server does not know is gone)
 - **V01.0.678** Fix: the note on a new XiaoZhi version no longer fails on the size of GitHub's answer (TooLarge)
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.674** Fix: Measure performance works with separate computers (speech and language model through the doors to the model computer); no 'all fluent' when a part is missing
 - **V01.0.673** Spark split: both computers in Monitoring, with curves and notes
 - **V01.0.672** "Who may use it" as one line; blocks under People and devices → Blocked functions instead of a page of their own
-- **V01.0.671** Test music now sits under State → Checks (Features stays short, Weiche unchanged)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

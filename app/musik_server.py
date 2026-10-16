@@ -23,6 +23,7 @@ import asyncio
 import base64
 import email.parser
 import email.policy
+import re
 import struct
 import time
 
@@ -42,6 +43,7 @@ MAX_MP3 = 40 * 1024**2        # what the engine hands back, before checking (10 
 START_S = 120                 # ace-server itself starts at once; the models load with the first request
 JOB_S = 900                   # one song, both steps
 POLL_S = 0.5
+JOB_ID = re.compile(r"[0-9a-f]{1,32}")   # ace-server names a job with 16 hex digits (V01.0.681: not only digits)
 LANGS = ("de", "en", "fr", "es", "it", "nl", "pt", "pl", "sv", "da", "no", "fi", "tr", "ru", "uk", "ja", "zh", "ko")
 INSTRUMENTAL = "[Instrumental]"
 AI_TEXT = "KI-erzeugt mit ACE-Step 1.5 auf dem Spark / AI-generated with ACE-Step 1.5 on the Spark"
@@ -119,7 +121,7 @@ class Engine(OnDemand):
         if r.status_code != 200:
             raise HTTPException(502, "engine")
         job = str((r.json() or {}).get("id") or "")
-        if not job.isdigit() or len(job) > 12:
+        if not JOB_ID.fullmatch(job):
             raise HTTPException(502, "engine")
         while time.time() - t0 < JOB_S:
             await asyncio.sleep(POLL_S)
@@ -227,7 +229,8 @@ def finish(raw, title):
 
 
 def request_body(b):
-    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed."""
+    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed.
+    ace-server knows its models by the whole file name, .gguf included (V01.0.681)."""
     if not isinstance(b, dict):
         raise HTTPException(400, "JSON object")
     caption = b.get("caption")
@@ -251,7 +254,7 @@ def request_body(b):
     return {"caption": caption, "lyrics": lyrics or INSTRUMENTAL, "vocal_language": lang if lyrics else "unknown",
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
-            "mp3_bitrate": musikmodell.MP3_KBPS, "synth_model": v["dit"].stem, "lm_model": v["lm"].stem,
+            "mp3_bitrate": musikmodell.MP3_KBPS, "synth_model": v["dit"].name, "lm_model": v["lm"].name,
             "use_cot_caption": True, "lm_mode": "generate", "adapter": ""}
 
 

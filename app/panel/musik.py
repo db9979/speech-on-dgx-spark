@@ -101,8 +101,8 @@ async def make(test):
         code, d = await call("/v1/musik", body)
     except httpx.HTTPError:
         raise ValueError("dienst")
-    if code == 503 and d.get("detail") in ("memory", "missing", "engine"):
-        raise ValueError(d["detail"])
+    if code in (502, 503) and d.get("detail") in ("memory", "missing", "engine"):
+        raise ValueError(d["detail"])     # 502 "engine": the engine runs but did not make the song
     if code == 504:
         raise ValueError("zeit")
     if code != 200 or not isinstance(d.get("mp3"), str) or len(d["mp3"]) > MAX_MP3 * 4 // 3 + 4:

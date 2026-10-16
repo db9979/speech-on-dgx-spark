@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.681** Musik testen: Lieder entstehen (Auftrags-Nummer und Modellnamen so, wie ace-server sie schickt und erwartet)
 - **V01.0.680** Fix: Die Sprachausgabe scheitert nach einem Lauf von install.sh nicht mehr an „No available memory“; Engines starten nur bei Änderung neu, das Sprachmodell zuerst
 - **V01.0.679** Musik testen: die Musik-Engine startet (eine Startoption, die ace-server nicht kennt, ist raus)
 - **V01.0.678** Fix: Hinweis auf neue XiaoZhi-Version scheitert nicht mehr an der Größe von GitHubs Antwort (TooLarge)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.674** Fix: Leistung messen klappt bei getrennten Rechnern (Sprache und Sprachmodell über die Türen zum Modell-Rechner); kein „Alles flüssig“, wenn ein Teil fehlt
 - **V01.0.673** Spark teilen: beide Rechner im Monitoring, mit Kurven und Hinweisen
 - **V01.0.672** „Wer darf es“ als eine Zeile; Sperren unter Personen und Geräte → Gesperrte Funktionen statt eigener Seite
-- **V01.0.671** Musik testen steht jetzt unter Zustand → Prüfen (Funktionen bleibt kurz, Weiche unverändert)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

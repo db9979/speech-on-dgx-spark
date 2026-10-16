@@ -29,11 +29,6 @@ class File:
     def name(self):
         return os.path.basename(self.path)
 
-    @property
-    def stem(self):
-        """The name without .gguf (acestep.cpp knows its models by it, musikmodell.py)."""
-        return self.name[:-5] if self.name.endswith(".gguf") else self.name
-
 
 _K4 = "leejet/FLUX.2-klein-4B-GGUF", "3b1f5a9dc3abb32238b053aeb3d823c30afdacbd"
 _K9 = "leejet/FLUX.2-klein-9B-GGUF", "cc588497a95ffc2937ebbd6b9b3916a11ada6e5b"

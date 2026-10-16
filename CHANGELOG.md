@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.681** · 2026-10-16 · Musik testen: Lieder entstehen (Auftrags-Nummer und Modellnamen so, wie ace-server sie schickt und erwartet); ein Abbruch der Engine heißt „Engine-Fehler“
 - **V01.0.680** · 2026-10-16 · Fix Sprachausgabe auf dem Modell-Rechner: install.sh startet nur noch geänderte oder gestoppte Engines neu, das Sprachmodell zuerst; die Sprachausgabe wartet, bis es geladen ist; Zustand → Dienste rechnet den reservierten Speicher aus dem Speicher des Modell-Rechners
 - **V01.0.679** · 2026-10-16 · Musik testen: die Musik-Engine startet (eine Startoption, die ace-server nicht kennt, ist raus)
 - **V01.0.678** · 2026-10-16 · Fix Geräte-Updates: Hinweis auf neue XiaoZhi-Version scheitert nicht mehr an GitHubs großer Release-Antwort (TooLarge, Grenze 256 KB → 4 MB)
