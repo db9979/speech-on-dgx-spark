@@ -3976,7 +3976,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "bc3deaf8cf",
+        "stand": "df3881d5ff",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
@@ -4031,10 +4031,10 @@ SEITEN_DATEN = {
               ("Wortliste und bekannte Personen", "word list and known people"),
               ("bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, "
                "keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und "
-               "Liedtext ebenso, dazu „im Stil von“ einem Künstler und Geheimnisse. Das Modell kann das nicht umgehen.",
+               "Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen.",
                "bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no "
                "hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and "
-               "lyrics the same way, plus \"in the style of\" an artist and secrets. The model cannot get around it."),
+               "lyrics against the word list, plus \"in the style of\" an artist and secrets; names are fine. The model cannot get around it."),
               ("stop", "nein", ("Feste Absage, nichts gemalt", "Fixed refusal, nothing painted"))),
             S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
@@ -4144,7 +4144,7 @@ SEITEN_DATEN = {
             ("musik_server.Engine.make", ("Ein Lied in zwei Schritten", "one song in two steps")),
             ("musik_server.finish", ("MP3 prüfen und als KI-erzeugt kennzeichnen", "check the MP3 and mark it AI-made")),
             ("musik.start", ("Liedwunsch annehmen", "accept a song wish")),
-            ("musik.refuse_text", ("Wortliste, Künstler, Personen", "word list, artists, people")),
+            ("musik.refuse_text", ("Wortliste, Künstler, Geheimnisse", "word list, artists, secrets")),
             ("musik._work", ("Lied im Hintergrund", "song in the background")),
             ("musik.keep", ("Lied ablegen", "store the song")),
             ("musik._measure", ("Musik testen je Modell", "test music per model")),

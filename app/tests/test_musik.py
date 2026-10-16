@@ -4,7 +4,7 @@ measurement uses fixed songs only and keeps numbers, never a caption or lyrics i
 field of the engine itself, takes only an MP3 back and marks it as made by an AI; the model files and the engine are
 pinned; install.sh builds it only on request. M1 (Dominik 2026-10-16 „2a 3a“, „größeres Modell auswählen“): an own
 admin switch, off by default; guests and blocked profiles never make music; fixed rules refuse (word list, artists,
-secrets, other people's names); instrumental and 2 minutes unless asked; the picked model goes with every song; the
+secrets; names are fine); instrumental and 2 minutes unless asked; the picked model goes with every song; the
 journal never names a wish or lyrics. The music service is faked (no GPU); nothing depends on the time."""
 import asyncio
 import base64
@@ -295,22 +295,26 @@ class Access(On):
 
 
 class Rules(On):
-    def test_word_list_artists_secrets_and_known_names_refuse(self):
+    def test_word_list_artists_and_secrets_refuse_names_are_fine(self):
+        """Dominik 2026-10-16: „Du musst die Person nicht kennen, das sind einfach nur die Namen dazu“: a song may
+        name people, also other profiles; the word list, artists and secrets still refuse."""
         _, prof = profile("Musikerin Regeln")
         _, other = profile("Gertrude Nachbar")
         uid = prof["id"]
         self.assertEqual(musik.refuse_text(uid, "a song about a naked man"), "wortliste")
         self.assertEqual(musik.refuse_text(uid, "pop im Stil von Helene Fischer"), "kuenstler")
         self.assertEqual(musik.refuse_text(uid, "ein Lied", "[verse]\nmein Passwort: abc123"), "geheim")
-        self.assertEqual(musik.refuse_text(uid, "a song about Gertrude"), "person")
-        self.assertEqual(musik.refuse_text(uid, "a birthday song for Musikerin"), "")    # the own name is fine
+        self.assertEqual(musik.refuse_text(uid, "a birthday song for Gertrude", "[verse]\nGertrude und Musikerin"), "")
         self.assertEqual(musik.refuse_text(uid, "calm piano", "Ruhiges Klavier"), "")
         out = io.StringIO()
         with contextlib.redirect_stdout(out), self.assertRaises(ValueError):
-            musik.start(prof, "a song about Gertrude", "Ein Lied über Gertrude")
-        self.assertIn("musik: nicht gestartet person", out.getvalue())
-        self.assertNotIn("Gertrude", out.getvalue())
+            musik.start(prof, "a song about a naked man", "Nackter Mann")
+        self.assertIn("musik: nicht gestartet wortliste", out.getvalue())
+        self.assertNotIn("naked", out.getvalue())
         self.assertNotIn("Musikerin", out.getvalue())   # names only through profiles.log_name
+        with contextlib.redirect_stdout(io.StringIO()):
+            j = musik.start(prof, "a birthday song for Gertrude", "Geburtstagslied für Gertrude")
+        self.assertEqual(j["state"], "wait")
         self.assertEqual(other["name"], "Gertrude Nachbar")
 
     def test_length_default_and_the_admin_limit(self):

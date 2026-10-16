@@ -2601,7 +2601,7 @@ flowchart TD
 
 1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
-3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics the same way, plus "in the style of" an artist and secrets. The model cannot get around it.
+3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus "in the style of" an artist and secrets; names are fine. The model cannot get around it.
 4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. Songs: songs per day, space and the longest song, on the Spark at most 10 waiting (musik.start).
 5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. A song the same way (musik._work), one at a time.
 6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed.
@@ -2647,7 +2647,7 @@ flowchart TD
 - `app/musik_server.py` `Engine.make`: one song in two steps ([step 7](#kn-bild-s7))
 - `app/musik_server.py` `finish`: check the MP3 and mark it AI-made ([step 9](#kn-bild-s9))
 - `app/panel/musik.py` `start`: accept a song wish ([step 1](#kn-bild-s1), [step 4](#kn-bild-s4))
-- `app/panel/musik.py` `refuse_text`: word list, artists, people ([step 3](#kn-bild-s3))
+- `app/panel/musik.py` `refuse_text`: word list, artists, secrets ([step 3](#kn-bild-s3))
 - `app/panel/musik.py` `_work`: song in the background ([step 5](#kn-bild-s5))
 - `app/panel/musik.py` `keep`: store the song ([step 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: test music per model ([step 5](#kn-bild-s5))

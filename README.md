@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.694** Making music: names in a song are allowed (the people rule also blocked words like "braun" from contacts)
 - **V01.0.693** Measuring a fast first word: the own language model reports prefix cache hits; self-test on tars no longer fails in an app-only copy
 - **V01.0.692** Self-tests: one command before a push checks version, docs and the matching tests; the flaky failures in test_panel came from the same profile names in several test files
 - **V01.0.691** Fix: the control centre no longer stops the update on the panel computer
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.687** Fix self-test: the test for "You can also say" no longer depends on the order
 - **V01.0.686** Self-tests: a test puts switches back the way it found them (four red block tests on GitHub and tars)
 - **V01.0.685** Fix self-test: the control centre's route is on the list of open ways, with its reason
-- **V01.0.684** You can also say: example sentences for functions that are on for you but never used ("Draw me …"), under the answer, in an empty chat and under Me → What I can do
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

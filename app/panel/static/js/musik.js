@@ -36,8 +36,8 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   const r=await apiTry('/api/musik');box.textContent='';
   if(!r.r.ok){box.appendChild(icEmpty(String(r.d.detail||t('Gerade nicht erreichbar.','Not reachable right now.'))));return}
   const d=MU.d=r.d,lim=d.limits;
-  box.appendChild(icEl('div','intro',t('Beschreib ein Lied, der Spark macht es selbst (ACE-Step 1.5), ohne Internet. Im Gespräch geht es auch: „Mach mir ein Lied über unsere Katze“. Ohne Gesang wird es instrumental. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und Lieder über andere Personen, die der Spark kennt, macht er nicht.',
-    'Describe a song and the Spark makes it itself (ACE-Step 1.5), without the internet. It works in the conversation too: "Make me a song about our cat". Without singing it is instrumental. Every song is marked as made by an AI; the Spark makes nothing sexual, violent or hateful and no songs about other people it knows.')));
+  box.appendChild(icEl('div','intro',t('Beschreib ein Lied, der Spark macht es selbst (ACE-Step 1.5), ohne Internet. Im Gespräch geht es auch: „Mach mir ein Lied über unsere Katze“. Ohne Gesang wird es instrumental. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und Lieder „im Stil von“ einem Künstler macht er nicht. Namen im Liedtext gehen.',
+    'Describe a song and the Spark makes it itself (ACE-Step 1.5), without the internet. It works in the conversation too: "Make me a song about our cat". Without singing it is instrumental. Every song is marked as made by an AI; the Spark makes nothing sexual, violent or hateful and nothing "in the style of" an artist. Names in the lyrics are fine.')));
   const sub=t(`${muMb(d.used)} von ${lim.store_mb} MB · heute ${d.today} von ${lim.day}`,`${muMb(d.used)} of ${lim.store_mb} MB · today ${d.today} of ${lim.day}`);
   box.appendChild(icCard('spark',t(`${d.songs.length} Lieder`,`${d.songs.length} songs`),sub,[],
     d.songs.length?[{label:t('Alle Lieder löschen','Delete all songs'),danger:true,act:muClear}]:[]));

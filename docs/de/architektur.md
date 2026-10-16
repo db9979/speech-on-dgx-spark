@@ -2601,7 +2601,7 @@ flowchart TD
 
 1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start.
 2. <a id="kn-bild-s2"></a>**Funktion frei?**: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
-3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext ebenso, dazu „im Stil von“ einem Künstler und Geheimnisse. Das Modell kann das nicht umgehen.
+3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen.
 4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. Lieder: Lieder pro Tag, Platz und längstes Lied, auf dem Spark höchstens 10 wartende (musik.start).
 5. <a id="kn-bild-s5"></a>**Warten auf eine Pause**: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. Ein Lied genauso (musik._work), eins zugleich.
 6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört.
@@ -2647,7 +2647,7 @@ flowchart TD
 - `app/musik_server.py` `Engine.make`: Ein Lied in zwei Schritten ([Schritt 7](#kn-bild-s7))
 - `app/musik_server.py` `finish`: MP3 prüfen und als KI-erzeugt kennzeichnen ([Schritt 9](#kn-bild-s9))
 - `app/panel/musik.py` `start`: Liedwunsch annehmen ([Schritt 1](#kn-bild-s1), [Schritt 4](#kn-bild-s4))
-- `app/panel/musik.py` `refuse_text`: Wortliste, Künstler, Personen ([Schritt 3](#kn-bild-s3))
+- `app/panel/musik.py` `refuse_text`: Wortliste, Künstler, Geheimnisse ([Schritt 3](#kn-bild-s3))
 - `app/panel/musik.py` `_work`: Lied im Hintergrund ([Schritt 5](#kn-bild-s5))
 - `app/panel/musik.py` `keep`: Lied ablegen ([Schritt 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: Musik testen je Modell ([Schritt 5](#kn-bild-s5))

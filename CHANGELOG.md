@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.694** · 2026-10-16 · Musik machen: keine Personen-Regel mehr für Lieder (Dominik: „das sind einfach nur die Namen dazu“); sie blockte jeden Wunsch, in dem ein Wort aus einem Kontaktnamen stand; Wortliste, Künstler und Geheimnisse bleiben
 - **V01.0.693** · 2026-10-16 · Messung „Schneller Antwortbeginn“: das eigene Sprachmodell meldet, wie viel einer Frage aus dem Zwischenspeicher kam (--enable-prompt-tokens-details), `modelle messen` misst das erste Wort kalt und warm; Selbsttest auf tars: kein Test liest install.sh ohne Überspringen, hängt an der eigenen Adresse oder teilt einen Profilnamen
 - **V01.0.692** · 2026-10-16 · Ein Prüfbefehl vor dem Push (tools/vorpush.py: Version, Doku mit Python 3.11, betroffene und Wächter-Tests, auch test_hilfe und test_scanner); Testdateien legen keine gleichnamigen Profile mehr an (Ursache der Erstversuch-Fehler in test_panel)
 - **V01.0.691** · 2026-10-16 · Fix Update auf dem Panel-Rechner: der Dienst der Steuerzentrale bricht Update und Zurückrollen nicht mehr ab („Job for speech-spark-schirm.service canceled“); die Anmeldung auf tty1 startet erst nach dem echten Ausschalten, ein Neustart der Anzeige hält ein Update nie an; `speech-spark logs schirm`

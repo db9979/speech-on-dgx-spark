@@ -10,8 +10,8 @@ picks the model (music.model: one of the installed variants, Dominik 2026-10-16 
 und auswählen“); „Musik testen“ measures every installed one with two fixed songs.
 
 Protection (fixed rules, no switch): a word list before making (the wish, the description and the lyrics, de and
-en), no names of other people the Spark knows in the lyrics, no songs „im Stil von“ a named artist, and every song
-marked as made by an AI (musik_server: its own ID3 tag). Text from outside (mail, web, documents) never starts a
+en), no passwords or account numbers, no songs „im Stil von“ a named artist, and every song marked as made by an
+AI (musik_server: its own ID3 tag). Text from outside (mail, web, documents) never starts a
 song: musik_machen is a changing tool, locked after outside text (chat.LOCKED_OUTSIDE via the extras' "changes"),
 and from Notaus stage 2 on. Guests never get the tool or the page; a blocked profile only sees „Daten löschen“.
 
@@ -150,26 +150,10 @@ def clean(v, most, lines=False):
     return re.sub(r"\s+", " ", s).strip()[:most]
 
 
-def names(uid):
-    """Names of other people the Spark knows (every other profile's name and call name, the profile's contacts):
-    no song names them (a fixed rule; the own name is fine, a birthday song for oneself)."""
-    own = set()
-    out = set()
-    for p in profiles.names():
-        words = {w.lower() for n in (p.get("name"), p.get("call")) for w in re.findall(r"\w{3,}", str(n or ""))}
-        (own if p["id"] == uid else out).update(words)
-    try:
-        import contacts
-        if contacts.usable(uid):
-            for c in contacts.cards(uid)[:2000]:
-                out.update(w.lower() for w in re.findall(r"\w{4,}", str(c.get("name") or "")))
-    except Exception:
-        pass
-    return out - own
-
-
 def refuse_text(uid, *texts):
-    """The reason in fixed words when a fixed rule refuses, else ""."""
+    """The reason in fixed words when a fixed rule refuses, else "". Names are fine in a song (Dominik 2026-10-16:
+    „das sind einfach nur die Namen dazu“; a birthday song names its people): unlike a picture, a song shows no
+    one's face."""
     joined = " ".join(str(t or "") for t in texts)
     if BAD.search(joined):
         return "wortliste"
@@ -177,8 +161,6 @@ def refuse_text(uid, *texts):
         return "kuenstler"
     if SECRET.search(joined):
         return "geheim"
-    if set(w.lower() for w in re.findall(r"\w{3,}", joined)) & names(uid):
-        return "person"
     return ""
 
 
@@ -189,8 +171,6 @@ REFUSED = {"wortliste": ("Das mache ich nicht: der Wunsch fällt unter die feste
                          "Instrumente.", "I don't copy a named artist; describe the style, mood and instruments instead."),
            "geheim": ("Passwörter, PINs und Kontonummern kommen in kein Lied.",
                       "Passwords, PINs and account numbers go into no song."),
-           "person": ("Lieder über andere Personen, die der Spark kennt, macht er nicht.",
-                      "The Spark makes no songs about other people it knows by name."),
            "memory": ("Gerade ist zu wenig Speicher frei; das Musikmodell startet erst, wenn mehr frei ist.",
                       "Too little memory is free right now; the music model starts once more is free."),
            "missing": ("Das Musikmodell ist nicht installiert (Admin: sudo ./install.sh --musik 2b).",
