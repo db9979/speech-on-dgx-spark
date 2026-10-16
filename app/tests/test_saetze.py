@@ -182,6 +182,8 @@ class Rows(unittest.TestCase):
         self.assertIsNone(saetze.row(Turn(self.uid, "Notier Milch für den Einkauf"), [], now=T0))   # tasks off: nothing
 
     def test_was_kannst_du_lists_what_the_profile_can_use(self):
+        helpers.keep_chat(self, "search", "bilder")
+        helpers.set_config(search=False, bilder=False)   # other test modules may leave them on
         ev = saetze.row(Turn(self.uid, "Was kannst du alles?"), [], now=T0)
         self.assertEqual(ev["kind"], "kann")
         tools = {x["tool"] for x in ev["items"]}
