@@ -109,6 +109,8 @@ struct Allowed: Equatable {
     var report = false
     /// "Vom Spark erstellt" (docmake.py): admin switch chat.doc_make, not blocked for this profile
     var make = false
+    /// Anrufe (anrufe.py): voice and video in a chat of two, ringing through CallKit (Calls.swift)
+    var calls = false
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -319,7 +321,8 @@ struct SparkAPI {
                        panel: d["panel"] as? Bool ?? false,
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
                        adminRole: ["admin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
-                       report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false)
+                       report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false,
+                       calls: d["calls"] as? Bool ?? false)
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).
@@ -714,8 +717,9 @@ struct SparkAPI {
     }
 
     /// This iPhone's push address, so the Spark can reach the closed app through Apple.
-    func pushToken(_ hex: String) async throws -> Bool {
-        try await post("api/iphone/push-token", ["token": hex])["push"] as? Bool ?? false
+    /// kind "voip": the PushKit address, calls ring through CallKit with it (Calls.swift).
+    func pushToken(_ hex: String, kind: String = "alert") async throws -> Bool {
+        try await post("api/iphone/push-token", ["token": hex, "kind": kind])["push"] as? Bool ?? false
     }
 
     /// The answer as a stream of text and sound, while the Spark is still writing.

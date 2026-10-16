@@ -1742,7 +1742,7 @@ def _call_live():
     except Exception:
         a = {}
     return {"call_on": bool(a.get("on")), **{"call_" + k: a[k] for k in ("talking", "ringing", "today", "talked", "missed",
-                                                                         "minutes", "turn", "turn_ok", "turn_why") if k in a}}
+                                                                         "minutes", "iphone", "turn", "turn_ok", "turn_why") if k in a}}
 
 
 def _private_live():

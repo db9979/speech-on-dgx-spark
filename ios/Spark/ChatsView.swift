@@ -44,6 +44,9 @@ struct ChatLine: Identifiable, Hashable {
     var edited = false
     var sys = ""
     var media: ChatMedia?
+    /// a call's line (anrufe.py): how long and whether with picture
+    var secs = 0
+    var video = false
 }
 
 struct ChatState {
@@ -129,6 +132,8 @@ extension SparkAPI {
             l.gone = x["gone"] as? Bool ?? false
             l.edited = x["edited"] as? Bool ?? false
             l.sys = x["sys"] as? String ?? ""
+            l.secs = (x["secs"] as? NSNumber)?.intValue ?? 0
+            l.video = x["video"] as? Bool ?? false
             if l.kind == "box" && !l.gone {   // private chat (chatsec.py): end-to-end, this app has no key for it yet
                 l.kind = "text"
                 l.text = String(localized: "🔒 Private Nachricht. Lesbar im Browser oder in der Android-App, auf dem iPhone mit dem nächsten Build.")
@@ -235,8 +240,10 @@ struct ChatsView: View {
             .navigationTitle("Chats")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: String.self) { id in
-                ChatThreadView(id: id, title: m.state.chats.first { $0.id == id }?.title ?? "", media: m.state.media,
-                               maxText: m.state.maxText)
+                let c = m.state.chats.first { $0.id == id }
+                // calls only in a chat of two on this Spark (anrufe.py); "new chat" opens one of two as well
+                ChatThreadView(id: id, title: c?.title ?? "", media: m.state.media, maxText: m.state.maxText,
+                               callable: Conversation.shared.allowed.calls && !(c?.group ?? false) && !(c?.far ?? false))
             }
             .refreshable { await m.load() }
             .task {
@@ -412,10 +419,14 @@ struct ChatThreadView: View {
     @State private var files = false
     @FocusState private var writing: Bool
 
-    init(id: String, title: String, media: Bool, maxText: Int) {
+    let callable: Bool
+    @ObservedObject private var calls = CallCenter.shared
+
+    init(id: String, title: String, media: Bool, maxText: Int, callable: Bool = false) {
         _m = StateObject(wrappedValue: ChatThreadModel(id: id, title: title))
         self.media = media
         self.maxText = maxText
+        self.callable = callable
     }
 
     var body: some View {
@@ -448,6 +459,16 @@ struct ChatThreadView: View {
         }
         .navigationTitle(Text(verbatim: m.title))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if callable {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button { calls.dial(chat: m.id, name: m.title, video: false) } label: { Image(systemName: "phone") }
+                        .accessibilityLabel("Anrufen").disabled(calls.active)
+                    Button { calls.dial(chat: m.id, name: m.title, video: true) } label: { Image(systemName: "video") }
+                        .accessibilityLabel("Videoanruf").disabled(calls.active)
+                }
+            }
+        }
         .task {
             while !Task.isCancelled {   // fresh while the chat is open
                 await m.load()
@@ -547,6 +568,14 @@ private struct ChatBubble: View {
         case "made": return who + " " + String(localized: "hat die Gruppe erstellt")
         case "newkey": return who + " " + String(localized: "hat ein Gerät für private Chats eingetragen")
         case "keygone": return who + " " + String(localized: "hat ein Gerät aus den privaten Chats genommen")
+        case "call":
+            let d = l.secs > 0 ? String(format: " · %d:%02d", l.secs / 60, l.secs % 60) : ""
+            return (l.video ? "🎥 " + String(localized: "Videoanruf") : "📞 " + String(localized: "Anruf")) + d
+        case "call_rejected":
+            return l.video ? "🎥 " + String(localized: "Videoanruf abgelehnt") : "📞 " + String(localized: "Anruf abgelehnt")
+        case "call_missed":
+            if l.mine { return l.video ? "🎥 " + String(localized: "Videoanruf nicht angenommen") : "📞 " + String(localized: "Anruf nicht angenommen") }
+            return l.video ? "🎥 " + String(localized: "Verpasster Videoanruf") : "📞 " + String(localized: "Verpasster Anruf")
         default: return String(localized: "Änderung im Chat")
         }
     }

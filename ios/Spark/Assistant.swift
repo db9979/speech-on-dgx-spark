@@ -93,7 +93,10 @@ final class Conversation: ObservableObject {
     @Published var level: Float = 0
     @Published var offer: PhoneAction.Offer?
     @Published var allowed = Allowed() {
-        didSet { Reader.sendPictures = allowed.images }
+        didSet {
+            Reader.sendPictures = allowed.images
+            if allowed.calls != oldValue.calls || allowed.push != oldValue.push { CallCenter.shared.follow(allowed) }
+        }
     }
     @Published var charging = false
     @Published var speechAllowed = false
@@ -229,7 +232,7 @@ final class Conversation: ObservableObject {
     /// The wake word may listen: the app's switch, the profile allows it, recognition on the iPhone,
     /// and on battery only for a while after the last use.
     var canWake: Bool {
-        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice else { return false }
+        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice, !CallCenter.shared.active else { return false }
         if charging { return true }
         return Prefs.batteryMinutes > 0 && Date().timeIntervalSince(lastActivity) < Double(Prefs.batteryMinutes) * 60
     }
@@ -274,6 +277,7 @@ final class Conversation: ObservableObject {
     func scene(_ p: ScenePhase) {
         foreground = p == .active
         if foreground {
+            CallCenter.shared.foreground()
             lastActivity = Date()
             Task { await catchUp() }
             // what the profile may has possibly changed meanwhile (Wer darf was in the panel): ask the Spark again

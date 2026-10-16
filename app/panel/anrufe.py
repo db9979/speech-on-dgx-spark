@@ -59,7 +59,7 @@ DENIED = ("0.0.0.0-0.255.255.255", "10.0.0.0-10.255.255.255", "100.64.0.0-100.12
 _lock = threading.RLock()
 _calls = {}              # call id -> {"a", "b", "cid", "video", "t", "state", "adev", "bdev", "talk"}
 _started = {}            # uid -> deque of start times (PER_HOUR)
-_count = DayCounter(calls=0, talked=0, missed=0, secs=0)
+_count = DayCounter(calls=0, talked=0, missed=0, secs=0, voip=0)
 _tkey = None             # the Vermittler's shared secret (cached; backup._forget_cached drops it)
 _turn = {"conf": "", "ip": "", "on": False, "why": ""}
 
@@ -107,7 +107,7 @@ def for_live():
         now = sum(1 for x in _calls.values() if x["state"] == "talk")
         ring = sum(1 for x in _calls.values() if x["state"] == "ring")
     return {"on": True, "talking": now, "ringing": ring, "today": t["calls"], "talked": t["talked"],
-            "missed": t["missed"], "minutes": t["secs"] // 60, "turn": turn_on(), "turn_ok": bool(_turn["on"]),
+            "missed": t["missed"], "minutes": t["secs"] // 60, "iphone": t["voip"], "turn": turn_on(), "turn_ok": bool(_turn["on"]),
             "turn_why": _turn["why"]}
 
 
@@ -195,6 +195,7 @@ async def start(uid, cid, video, dev, now=None):
     chats._send_event(other, {"type": "call", "id": cid, "call": call, "from": uid, "name": chats.name_of(uid),
                               "video": bool(video)})
     _log("started", video=int(bool(video)))
+    await _voip(other, call)
     if not chats.listening(other):
         await _push(other, uid, video)
     spawn(_ring_out(call, now))
@@ -214,6 +215,33 @@ async def _push(other, caller, video):
         _log("push", sent=int(n or 0))
     except Exception as e:
         _log("push failed", error=type(e).__name__)
+
+
+async def _voip(other, call):
+    """The iPhones of the other person ring like a phone call (CallKit), also locked or with the app closed: Apple
+    carries only the call's random id; the app asks the Spark who calls (/api/anrufe/info)."""
+    try:
+        import apns
+        n = await apns.send_voip(other, call)
+        if n:
+            _count.today()["voip"] += 1
+            _log("voip", sent=n)
+    except Exception as e:
+        _log("voip failed", error=type(e).__name__)
+
+
+def info(uid, call):
+    """What the app needs for its call screen: the chat, who calls, sound or video and the state. Only for the two
+    people of the call; an ended or unknown call is "end", so a late VoIP push still shows and closes at once."""
+    import chats
+    with _lock:
+        x = _calls.get(call)
+        if not x or uid not in (x["a"], x["b"]):
+            return {"call": call, "state": "end"}
+        other = x["b"] if uid == x["a"] else x["a"]
+        out = {"call": call, "id": x["cid"], "video": x["video"], "state": x["state"], "mine": uid == x["a"]}
+    out["name"] = chats.name_of(other) or ""
+    return out
 
 
 def spawn(coro):
@@ -503,11 +531,12 @@ router = APIRouter()
 
 
 def _on(request: Request, prof=Depends(own_profile)):
-    """The profile's own browser login (the Android app's page is one): camera and microphone live in that browser."""
+    """The profile's own browser login (the Android app's page is one) or the iPhone app's own key (WebRTC and CallKit
+    in the app, V01.0.652): camera and microphone live there. No other device key (speakers, watches, terminals)."""
     import guard
-    if request.headers.get(profiles.DEVICE_HEADER):
+    if request.headers.get(profiles.DEVICE_HEADER) and (profiles.device(request) or {}).get("scope") != "app":
         _log("refused", why="device key")
-        raise HTTPException(403, "only in the profile's own browser login")
+        raise HTTPException(403, "only in the profile's own browser login or the iPhone app")
     if not admin_on():
         _log("refused", why="off")
         raise HTTPException(403, "Anrufe sind auf dem Spark aus.")
@@ -538,6 +567,16 @@ def _err(e):
 @router.get("/api/anrufe/ice", dependencies=[Depends(assistant)])
 def api_ice(request: Request, prof=Depends(_on)):
     return {"servers": ice(prof["id"]), "ring": RING_SECS}
+
+
+@router.get("/api/anrufe/info", dependencies=[Depends(assistant)])
+def api_info(request: Request, call: str = "", prof=Depends(_on)):
+    if not CALL_ID.fullmatch(call or ""):
+        raise HTTPException(400, "call id is required")
+    out = info(prof["id"], call)
+    if out["state"] == "end":
+        _log("info", state="end")
+    return out
 
 
 @router.post("/api/anrufe/start", dependencies=[Depends(assistant)])

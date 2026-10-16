@@ -24,6 +24,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         Store.share()
         Passkey.install()
         Task { @MainActor in CodePrompt.install() }
+        // calls ring through PushKit: its registry must exist before a push that woke the app is handed over
+        MainActor.assumeIsolated { CallCenter.shared.wake() }
         return true
     }
 

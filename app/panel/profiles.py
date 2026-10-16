@@ -554,6 +554,9 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/chats/back", "/api/chats/react", "/api/chats/read", "/api/chats/typing", "/api/chats/opts",
              "/api/chats/members", "/api/chats/leave", "/api/chats/clear", "/api/chats/find", "/api/chats/stream",
              "/api/chats/media",
+             # calls between two profiles (anrufe.py): the app rings through CallKit, sound and picture go device to device
+             "/api/anrufe/ice", "/api/anrufe/info", "/api/anrufe/start", "/api/anrufe/answer", "/api/anrufe/signal",
+             "/api/anrufe/end",
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
              "/api/room/active", "/api/room/end",
              "/api/profile/docs",     # the list of the own documents (GET only for the app, with app_docs)

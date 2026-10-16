@@ -16,7 +16,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "So you can take a photo of a letter or a note. The iPhone reads the text itself; only the text goes to the Spark."
+            "value": "For photos of letters or notes (only the text goes to the Spark) and for video calls with other profiles (the picture goes straight to the other person)."
           }
         }
       }
@@ -46,7 +46,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "So you can ask your Spark questions. The recording only goes to your own Spark."
+            "value": "So you can ask your Spark questions (the recording only goes to your own Spark) and for calls with other profiles (the sound goes straight to the other person)."
           }
         }
       }

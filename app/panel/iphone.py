@@ -299,7 +299,14 @@ def app_hello(prof=Depends(own_profile)):
             # "Problem melden" in the settings (meldung.py): admin switch and the profile's own
             "report": features.allowed("melden", prof["id"]),
             # "Vom Spark erstellt" (docmake.py): the made documents to look at, download and share
-            "make": features.allowed("erstellen", prof["id"])}
+            "make": features.allowed("erstellen", prof["id"]),
+            # calls between profiles (anrufe.py): call buttons in a chat of two, CallKit, VoIP push only with this on
+            "calls": _calls_on(prof["id"])}
+
+
+def _calls_on(uid):
+    import anrufe
+    return bool(anrufe.admin_on() and anrufe.usable(uid))
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)

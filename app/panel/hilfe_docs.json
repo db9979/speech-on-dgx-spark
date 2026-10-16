@@ -877,7 +877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 57 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats …), ein paar Lese-Muster und die Panel-Bereiche, die das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil d"
+"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 63 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster und die Panel-Bereiche, die das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherhe"
 },
 {
 "lang": "de",
@@ -885,7 +885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "er App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "it des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -901,7 +901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 57 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 63 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
 },
 {
 "lang": "de",
@@ -3493,7 +3493,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Private Chats, Ende-zu-Ende (V01.0.479)",
-"text": "hat zu zweit auf diesem Spark (normal oder 🔒 privat, nicht mit anderen Sparks) oben 📞 und 🎥. Alle offenen Chats-Seiten der anderen Person klingeln, ihre Geräte bekommen „📞 Name ruft an“; sie nimmt mit oder ohne Video an oder lehnt ab, ein anderes ihrer Geräte hört dann auf. Ton und Bild gehen per WebRTC verschlüsselt (DTLS-SRTP) direkt von Gerät zu Gerät; der Spark bringt die beiden nur zusammen (Angebot, Antwort und Netzwerk-Kandidaten, nur auf Form und Größe geprüft, nie gespeichert oder geloggt) und reicht jedes Signal nur an das eine Gerät, das den Anruf auf der anderen Seite führt. Feste Regeln: beide haben Chats und Anrufe, die andere Person nimmt Nachrichten vom Anrufer an, in ihren Ruhezeiten oder bei „Nicht stören“ klingelt nichts (verpasst), wer telefoniert ist besetzt, 20 Anrufe pro Stunde, 45 Sekunden Klingeln, höchstens 4 Stunden. Jeder Anruf hinterlässt eine Zeile im Chat („📞 Anruf · 4:12“, „Verpasster Anruf“, „Anruf abgelehnt“). Schaltet der Admin Anrufe aus, enden laufende Anrufe innerhalb einer Minute. Zuerst Browser und Android-App (ab 1.3.1 mit Kamera), die iPhone-App mit einem späteren Build; Anrufe zu anderen Sparks später. Anrufe von unterwegs: Admin: Funktion"
+"text": "hat zu zweit auf diesem Spark (normal oder 🔒 privat, nicht mit anderen Sparks) oben 📞 und 🎥. Alle offenen Chats-Seiten der anderen Person klingeln, ihre Geräte bekommen „📞 Name ruft an“; sie nimmt mit oder ohne Video an oder lehnt ab, ein anderes ihrer Geräte hört dann auf. Ton und Bild gehen per WebRTC verschlüsselt (DTLS-SRTP) direkt von Gerät zu Gerät; der Spark bringt die beiden nur zusammen (Angebot, Antwort und Netzwerk-Kandidaten, nur auf Form und Größe geprüft, nie gespeichert oder geloggt) und reicht jedes Signal nur an das eine Gerät, das den Anruf auf der anderen Seite führt. Feste Regeln: beide haben Chats und Anrufe, die andere Person nimmt Nachrichten vom Anrufer an, in ihren Ruhezeiten oder bei „Nicht stören“ klingelt nichts (verpasst), wer telefoniert ist besetzt, 20 Anrufe pro Stunde, 45 Sekunden Klingeln, höchstens 4 Stunden. Jeder Anruf hinterlässt eine Zeile im Chat („📞 Anruf · 4:12“, „Verpasster Anruf“, „Anruf abgelehnt“). Schaltet der Admin Anrufe aus, enden laufende Anrufe innerhalb einer Minute. Browser und Android-App (ab 1.3.1 mit Kamera); die iPhone-App seit V01.0.652 mit Apples Anruf-Fenster (siehe iphone-app.md, „Anrufe und Videoanrufe“). Ihre iPhones k"
 },
 {
 "lang": "de",
@@ -3501,7 +3501,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Private Chats, Ende-zu-Ende (V01.0.479)",
-"text": "en → Chats → „Anrufe von unterwegs“ (aus) und die Adresse von außen (leer: die Adresse für andere Sparks). Dann läuft auf dem Spark ein eigener Vermittler (coturn, Unit speech-spark-turn, nur solange der Schalter an ist; der coturn-Dienst der Distribution bleibt gesperrt). Im Router UDP 3478 und UDP 49160 bis 49200 an den Spark weiterleiten. Jedes Gerät bekommt pro Anruf einen Zugang, der nach einer Stunde abläuft (TURN REST, Geheimnis aus dem Schlüssel des Sparks); der Vermittler reicht Pakete nur an öffentliche Adressen weiter, nie ins Heimnetz oder an den Spark selbst, ohne Konsole, mit Grenzen pro Person und gesamt, ohne Log. Zustand → Dienste zeigt „Vermittler für Anrufe“. Live: Kachel Chats „📞 Anrufe: laufen, klingeln, heute, Vermittler läuft/aus“; Logs: „call started | video 1“, „call answered | secs 4“, „call ended | secs 252“, „call not answered | why rejected“, „call refused | why limit“, „call relay started“, nur Zahlen und feste Wörter."
+"text": "lingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; die App fragt den Spark, wer anruft (GET /api/anrufe/info, nur für die beiden im Anruf), und bekommt keine zweite Mitteilung „ruft an“. Live zählt „auf dem iPhone geklingelt“. Anrufe zu anderen Sparks später. Anrufe von unterwegs: Admin: Funktionen → Chats → „Anrufe von unterwegs“ (aus) und die Adresse von außen (leer: die Adresse für andere Sparks). Dann läuft auf dem Spark ein eigener Vermittler (coturn, Unit speech-spark-turn, nur solange der Schalter an ist; der coturn-Dienst der Distribution bleibt gesperrt). Im Router UDP 3478 und UDP 49160 bis 49200 an den Spark weiterleiten. Jedes Gerät bekommt pro Anruf einen Zugang, der nach einer Stunde abläuft (TURN REST, Geheimnis aus dem Schlüssel des Sparks); der Vermittler reicht Pakete nur an öffentliche Adressen weiter, nie ins Heimnetz oder an den Spark selbst, ohne Konsole, mit Grenzen pro Person und gesamt, ohne Log. Zustand → Dienste zeigt „Vermittler für Anrufe“. Live: Kachel Chats „📞 Anrufe: laufen, klingeln, heute, Vermittler läuft/aus“; Logs: „call started | video 1“, „call answered | secs 4“, „call ended | secs 252“, „call not answered "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Private Chats, Ende-zu-Ende (V01.0.479)",
+"text": "| why rejected“, „call refused | why limit“, „call relay started“, nur Zahlen und feste Wörter."
 },
 {
 "lang": "de",
@@ -5715,6 +5723,22 @@
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
+"head": "Anrufe und Videoanrufe",
+"title": "Anrufe und Videoanrufe",
+"text": "Seit V01.0.652 telefoniert die App selbst: Im Chat zu zweit auf diesem Spark stehen oben 📞 und 🎥. Kommt ein Anruf, klingelt das iPhone wie bei einem normalen Anruf, auch gesperrt und bei geschlossener App (Apples Anruf-Bildschirm mit „Spark“). Im Gespräch: Stumm, Kamera aus, Kamera wechseln, Lautsprecher, Auflegen. Der Anruf steht danach im Chat („📞 Anruf · 3:12“, „Verpasster Anruf“, „Anruf abgelehnt“), und die iPhone-Anrufliste zeigt ihn auch. Es gelten dieselben festen Regeln wie im Browser (nur wer Nachrichten von dir annimmt, nicht in der Ruhezeit, 45 Sekunden Klingeln); das andere Ende kann ein Browser, die Android-App oder ein iPhone sein. Nimmt ein anderes Gerät desselben Profils ab, hört das iPhone auf zu klingeln."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Anrufe und Videoanrufe",
+"title": "Anrufe und Videoanrufe",
+"text": "Braucht: Funktionen → Chats → Anrufe (Sprache und Video) (Admin, von unterwegs zusätzlich „Anrufe von unterwegs“) und Push an die iPhone-App (sonst klingelt es nur bei offener App), außerdem den nächsten TestFlight-Build. Beim ersten Anruf fragt das iPhone nach Mikrofon und Kamera."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
 "head": "Wo gerade zugehört wird (Raum-Modus)",
 "title": "Wo gerade zugehört wird (Raum-Modus)",
 "text": "Ab V01.0.209 zeigt die App, wenn ein Gerät deines Profils im Raum-Modus zuhört (Browser oder Lautsprecher). Einschalten im Panel unter Ich → iPhone-App → „Raum-Modus in der App zeigen“ (aus, braucht den Raum-Modus vom Admin). Oben im Chat steht dann „● Küche hört zu bis 21:30“ mit „Beenden“, bei mehreren Geräten eine Zeile zum Aufklappen. Die App fragt beim Öffnen, bei der Rückkehr und alle 30 Sekunden nach. Auf dem Sperrbildschirm und in der Dynamic Island erscheint eine Live-Aktivität mit Restzeit und „Beenden“ (abschalten in den iPhone-Einstellungen → Spark → Live-Aktivitäten). Sie wird nur aktualisiert, solange die App läuft; nach der Endzeit steht dort „vorbei“, bis die App wieder nachsieht. Das Widget „Raum-Modus“ (Home- und Sperrbildschirm) zeigt „Küche hört zu bis 21:30“ oder „Niemand hört zu“. Per Siri: „Raummodus beenden mit Spark“. Die App kann nur beenden, nie starten; sie sieht nur wo und bis wann, nie was gehört wurde."
@@ -5829,7 +5853,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "hone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel. - Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB. - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht. - Spark-Update: Rechte vergibt nur der Admin (mit seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür. - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf. - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil."
+"text": "hone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel. - Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB. - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht. - Spark-Update: Rechte vergibt nur der Admin (mit seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür. - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf. - Anrufe: Ton und Bild gehen verschlüsselt (DTLS-SRTP) direkt zwischen den Geräten oder über den eigenen Vermittler des Sparks, nie über Apple. Apple bekommt beim Klingeln nur ei"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "ne Zufallsnummer, Name und Art holt die App mit ihrem Schlüssel vom Spark. Der App-Schlüssel erreicht nur die Anruf-Wege (Start, Annehmen, Signal, Ende, Info, ICE), und nur für Anrufe, an denen sein Profil beteiligt ist. Das Sprachmodell kann keinen Anruf starten. - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil."
 },
 {
 "lang": "de",
@@ -7829,7 +7861,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "rites. 7. Path allowed for the app?: An app key only works for the 57 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list."
+"text": "rites. 7. Path allowed for the app?: An app key only works for the 63 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app"
 },
 {
 "lang": "en",
@@ -7837,7 +7869,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " The app's next request finds no profile any more."
+"text": "; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -7853,7 +7885,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 57 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 63 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
 },
 {
 "lang": "en",
@@ -10381,7 +10413,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Private chats, end-to-end (V01.0.479)",
-"text": "picture go encrypted over WebRTC (DTLS-SRTP) straight from device to device; the Spark only brings the two together (offer, answer and network candidates, checked for form and size only, never stored or logged) and passes each signal only to the one device that holds the call on the other side. Fixed rules: both have Chats and Calls, the other person takes messages from the caller, nothing rings in their quiet hours or with \"Do not disturb\" (missed), whoever is on a call is busy, 20 calls per hour, 45 seconds of ringing, at most 4 hours. Every call leaves one line in the chat (\"📞 Call · 4:12\", \"Missed call\", \"Call declined\"). When the admin switches calls off, running calls end within a minute. First browser and Android app (1.3.1 and later with camera), the iPhone app with a later build; calls to other Sparks later. Calls when away: Admin: Features → Chats → \"Calls when away\" (off) and the address from outside (empty: the address for other Sparks). Then the Spark runs its own relay (coturn, unit speech-spark-turn, only while the switch is on; the distribution's coturn service stays masked). In the router forward UDP 3478 and UDP 49160 to 49200 to the Spark. Each device gets an acc"
+"text": "picture go encrypted over WebRTC (DTLS-SRTP) straight from device to device; the Spark only brings the two together (offer, answer and network candidates, checked for form and size only, never stored or logged) and passes each signal only to the one device that holds the call on the other side. Fixed rules: both have Chats and Calls, the other person takes messages from the caller, nothing rings in their quiet hours or with \"Do not disturb\" (missed), whoever is on a call is busy, 20 calls per hour, 45 seconds of ringing, at most 4 hours. Every call leaves one line in the chat (\"📞 Call · 4:12\", \"Missed call\", \"Call declined\"). When the admin switches calls off, running calls end within a minute. Browser and Android app (1.3.1 and later with camera); the iPhone app since V01.0.652 with Apple's call screen (see iphone-app.md, \"Voice and video calls\"). Its iPhones ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls (GET /api/anrufe/info, only for the two people in the call) and gets no second \"is calling\" notification. Live counts \"rang on the iPhone\". Calls to other Sparks later. Calls when away: Admin: Features → Chats → \"C"
 },
 {
 "lang": "en",
@@ -10389,7 +10421,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Private chats, end-to-end (V01.0.479)",
-"text": "ess per call that expires after an hour (TURN REST, secret derived from the Spark's key); the relay only passes packets to public addresses, never into the home network or to the Spark itself, without console, with limits per person and in total, without log. Status → Services shows \"Relay for calls\". Live: tile Chats \"📞 Calls: running, ringing, today, relay on/off\"; logs: \"call started | video 1\", \"call answered | secs 4\", \"call ended | secs 252\", \"call not answered | why rejected\", \"call refused | why limit\", \"call relay started\", numbers and fixed words only."
+"text": "alls when away\" (off) and the address from outside (empty: the address for other Sparks). Then the Spark runs its own relay (coturn, unit speech-spark-turn, only while the switch is on; the distribution's coturn service stays masked). In the router forward UDP 3478 and UDP 49160 to 49200 to the Spark. Each device gets an access per call that expires after an hour (TURN REST, secret derived from the Spark's key); the relay only passes packets to public addresses, never into the home network or to the Spark itself, without console, with limits per person and in total, without log. Status → Services shows \"Relay for calls\". Live: tile Chats \"📞 Calls: running, ringing, today, relay on/off\"; logs: \"call started | video 1\", \"call answered | secs 4\", \"call ended | secs 252\", \"call not answered | why rejected\", \"call refused | why limit\", \"call relay started\", numbers and fixed words only."
 },
 {
 "lang": "en",
@@ -12459,6 +12491,22 @@
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
+"head": "Voice and video calls",
+"title": "Voice and video calls",
+"text": "Since V01.0.652 the app makes calls itself: a chat between two people on this Spark shows 📞 and 🎥 at the top. An incoming call rings the iPhone like a normal call, also when locked and with the app closed (Apple's call screen with \"Spark\"). During the call: mute, camera off, switch camera, speaker, hang up. Afterwards the call shows in the chat (\"📞 Call · 3:12\", \"Missed call\", \"Call declined\") and in the iPhone's call list. The same fixed rules as in the browser apply (only people who take your messages, not in quiet hours, 45 seconds of ringing); the other end can be a browser, the Android app or an iPhone. When another device of the same profile answers, the iPhone stops ringing."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Voice and video calls",
+"title": "Voice and video calls",
+"text": "Needs: Features → Chats → Calls (voice and video) (admin; from outside the home also \"Calls when away\") and Push to the iPhone app (otherwise it only rings while the app is open), plus the next TestFlight build. On the first call the iPhone asks for microphone and camera."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
 "head": "Where the Spark is listening (room mode)",
 "title": "Where the Spark is listening (room mode)",
 "text": "Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Me → iPhone app → \"Raum-Modus in der App zeigen\" (show room mode in the app) (off, needs room mode from the admin). The top of the chat then reads \"● Küche hört zu bis 21:30\" with \"Beenden\", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and \"Beenden\" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads \"vorbei\" until the app looks again. The \"Raum-Modus\" widget (home and lock screen) shows \"Küche hört zu bis 21:30\" or \"Niemand hört zu\". With Siri: \"End room mode with Spark\". The app can only end room mode, never start it; it sees only where and until when, never what was heard."
@@ -12541,7 +12589,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "st 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB. - Waiting questions stay on the iPhone and are deleted when unpairing. - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile."
+"text": "st 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB. - Waiting questions stay on the iPhone and are deleted when unpairing. - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Calls: sound and picture travel encrypted (DTLS-SRTP) directly between the devices or through the Spark's own relay, never through Apple. When ringing, Apple only gets a random number; name and kind the app fetches from the Spark with its key. The app key reaches only the call paths (start, answer, signal, end, info, ICE), and only for calls its profile takes part in. The language model cannot start a call. - Pairing only from the profile's own browser login, with the second log"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Security",
+"title": "Security",
+"text": "in step when the profile has it. At most 5 iPhones per profile."
 },
 {
 "lang": "en",

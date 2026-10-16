@@ -7930,6 +7930,286 @@
           }
         }
       }
+    },
+    "Spark-Anruf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark call"
+          }
+        }
+      }
+    },
+    "Anruf vorbei.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call over."
+          }
+        }
+      }
+    },
+    "Anruf ging nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The call did not work."
+          }
+        }
+      }
+    },
+    "Besetzt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busy."
+          }
+        }
+      }
+    },
+    "Nimmt gerade nicht ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not answering right now."
+          }
+        }
+      }
+    },
+    "Abgelehnt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined."
+          }
+        }
+      }
+    },
+    "Aufgelegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hung up."
+          }
+        }
+      }
+    },
+    "Auf einem anderen Gerät angenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered on another device."
+          }
+        }
+      }
+    },
+    "Nicht angenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not answered."
+          }
+        }
+      }
+    },
+    "Verbindung klappt nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection does not work."
+          }
+        }
+      }
+    },
+    "Ende-zu-Ende verschlüsselt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End-to-end encrypted"
+          }
+        }
+      }
+    },
+    "Ton an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound on"
+          }
+        }
+      }
+    },
+    "Stumm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute"
+          }
+        }
+      }
+    },
+    "Kamera": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera"
+          }
+        }
+      }
+    },
+    "Auflegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hang up"
+          }
+        }
+      }
+    },
+    "Klingelt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ringing …"
+          }
+        }
+      }
+    },
+    "Ruft an …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calling …"
+          }
+        }
+      }
+    },
+    "Verbinde …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting …"
+          }
+        }
+      }
+    },
+    "Der Spark gibt gerade keine Nachrichten durch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is not passing on messages right now."
+          }
+        }
+      }
+    },
+    "Anrufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        }
+      }
+    },
+    "Videoanruf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video call"
+          }
+        }
+      }
+    },
+    "Anruf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call"
+          }
+        }
+      }
+    },
+    "Videoanruf abgelehnt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video call declined"
+          }
+        }
+      }
+    },
+    "Anruf abgelehnt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call declined"
+          }
+        }
+      }
+    },
+    "Videoanruf nicht angenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video call not answered"
+          }
+        }
+      }
+    },
+    "Anruf nicht angenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call not answered"
+          }
+        }
+      }
+    },
+    "Verpasster Videoanruf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missed video call"
+          }
+        }
+      }
+    },
+    "Verpasster Anruf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missed call"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

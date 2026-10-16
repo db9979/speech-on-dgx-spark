@@ -2703,7 +2703,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "6d59c5e57f",
+        "stand": "d66d1afd6a",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -2776,10 +2776,10 @@ SEITEN_DATEN = {
             S("s7", "frage", ("Pfad für die App erlaubt?", "Path allowed for the app?"),
               ("{profiles.APP_PATHS|anzahl} feste Pfade und freigegebene Bereiche", "{profiles.APP_PATHS|anzahl} fixed paths and opened areas"),
               ("Ein App-Schlüssel gilt nur für die {profiles.APP_PATHS|anzahl} Pfade in profiles.APP_PATHS (Chat, "
-               "Spracherkennung, Gespräche, Erinnerungen, Chats …), ein paar Lese-Muster und die Panel-Bereiche, die "
+               "Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster und die Panel-Bereiche, die "
                "das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil.",
                "An app key only works for the {profiles.APP_PATHS|anzahl} paths in profiles.APP_PATHS (chat, speech "
-               "recognition, conversations, reminders, chats …), a few read patterns and the panel areas the profile "
+               "recognition, conversations, reminders, chats, calls …), a few read patterns and the panel areas the profile "
                "opened for the app one by one. Everything else it sees without a profile."),
               ("stop", "nein", ("Kein Profil (401)", "No profile (401)"))),
             S("s8", "frage", ("App gerade aus oder Mein Notaus?", "App off right now or My kill switch?"),
@@ -2795,10 +2795,12 @@ SEITEN_DATEN = {
               ("/api/chat · /api/test/asr · /api/profile/convos", "/api/chat · /api/test/asr · /api/profile/convos"),
               ("Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf "
                "(Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App "
-               "zeigt es nur an und hält sich daran.",
+               "zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, "
+               "der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
-               "only shows it and follows it."),
+               "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
+               "only the call's random number; the app asks the Spark who calls."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, jobs)"))),

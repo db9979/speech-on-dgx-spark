@@ -103,6 +103,12 @@ Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen �
 
 Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Seit V01.0.488 gibt es in der App kein eigenes Nachrichten-Fenster und keine Mitteilung mit Antwortfeld mehr; neue Chat-Nachrichten kommen als „💬 Name“ und öffnen die App. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach; die Nachricht landet im Chat mit dieser Person, „alle“ in der Gruppe „Alle“. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt (Name oder Rufname). Passen mehrere, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche. Die Heute-Karte „Chats“ zählt ungelesene Chat-Nachrichten. Wer dir schreiben darf, stellst du im Browser ein (Ich → Gespräch → Chats). Braucht den nächsten TestFlight-Build.
 
+## Anrufe und Videoanrufe
+
+Seit V01.0.652 telefoniert die App selbst: Im Chat zu zweit auf diesem Spark stehen oben 📞 und 🎥. Kommt ein Anruf, klingelt das iPhone wie bei einem normalen Anruf, auch gesperrt und bei geschlossener App (Apples Anruf-Bildschirm mit „Spark“). Im Gespräch: Stumm, Kamera aus, Kamera wechseln, Lautsprecher, Auflegen. Der Anruf steht danach im Chat („📞 Anruf · 3:12“, „Verpasster Anruf“, „Anruf abgelehnt“), und die iPhone-Anrufliste zeigt ihn auch. Es gelten dieselben festen Regeln wie im Browser (nur wer Nachrichten von dir annimmt, nicht in der Ruhezeit, 45 Sekunden Klingeln); das andere Ende kann ein Browser, die Android-App oder ein iPhone sein. Nimmt ein anderes Gerät desselben Profils ab, hört das iPhone auf zu klingeln.
+
+Braucht: **Funktionen → Chats → Anrufe (Sprache und Video)** (Admin, von unterwegs zusätzlich „Anrufe von unterwegs“) und **Push an die iPhone-App** (sonst klingelt es nur bei offener App), außerdem den nächsten TestFlight-Build. Beim ersten Anruf fragt das iPhone nach Mikrofon und Kamera.
+
 ## Wo gerade zugehört wird (Raum-Modus)
 
 Ab V01.0.209 zeigt die App, wenn ein Gerät deines Profils im Raum-Modus zuhört (Browser oder Lautsprecher). Einschalten im Panel unter Ich → iPhone-App → „Raum-Modus in der App zeigen“ (aus, braucht den Raum-Modus vom Admin). Oben im Chat steht dann „● Küche hört zu bis 21:30“ mit „Beenden“, bei mehreren Geräten eine Zeile zum Aufklappen. Die App fragt beim Öffnen, bei der Rückkehr und alle 30 Sekunden nach. Auf dem Sperrbildschirm und in der Dynamic Island erscheint eine Live-Aktivität mit Restzeit und „Beenden“ (abschalten in den iPhone-Einstellungen → Spark → Live-Aktivitäten). Sie wird nur aktualisiert, solange die App läuft; nach der Endzeit steht dort „vorbei“, bis die App wieder nachsieht. Das Widget „Raum-Modus“ (Home- und Sperrbildschirm) zeigt „Küche hört zu bis 21:30“ oder „Niemand hört zu“. Per Siri: „Raummodus beenden mit Spark“. Die App kann nur beenden, nie starten; sie sieht nur wo und bis wann, nie was gehört wurde.
@@ -167,6 +173,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht.
 - Spark-Update: Rechte vergibt nur der Admin (mit seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür.
 - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf.
+- Anrufe: Ton und Bild gehen verschlüsselt (DTLS-SRTP) direkt zwischen den Geräten oder über den eigenen Vermittler des Sparks, nie über Apple. Apple bekommt beim Klingeln nur eine Zufallsnummer, Name und Art holt die App mit ihrem Schlüssel vom Spark. Der App-Schlüssel erreicht nur die Anruf-Wege (Start, Annehmen, Signal, Ende, Info, ICE), und nur für Anrufe, an denen sein Profil beteiligt ist. Das Sprachmodell kann keinen Anruf starten.
 - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil.
 
 ## Was der Spark dafür anbietet
@@ -181,7 +188,9 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `POST /api/assistant/say` | App: Hinweise mit der Spark-Stimme sprechen |
 | `POST /api/test/asr`, `POST /api/chat`, `POST /api/siri/ask` | Fragen und Antworten wie im Browser und bei Siri |
 | `DELETE /api/profile/iphone/{id}` | Browser-Anmeldung: iPhone entfernen |
-| `POST /api/iphone/push-token` | App: ihre Push-Adresse anmelden (nur mit dem App-Schlüssel) |
+| `POST /api/iphone/push-token` | App: ihre Push-Adresse anmelden (nur mit dem App-Schlüssel), `kind` `alert` oder `voip` (Klingeln) |
+| `GET /api/chats/stream` | App: Chat-Ereignisse live, darunter die Anruf-Signale |
+| `POST /api/anrufe/start\|answer\|signal\|end`, `GET /api/anrufe/ice\|info` | App: Anruf starten, annehmen, Signale tauschen, beenden; Zugang zum Vermittler; wer anruft |
 | `GET /api/iphone/note?id=…` | App (Mitteilungs-Erweiterung): Text einer Push-Meldung holen |
 | `POST /api/profile/iphone/push-test` | Browser-Anmeldung: Test-Meldung an die eigenen iPhones |
 | `GET/PUT /api/profile/convos` | App: Verlauf lesen und das laufende Gespräch speichern (Löschen nur im Panel) |

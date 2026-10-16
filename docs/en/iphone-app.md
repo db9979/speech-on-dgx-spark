@@ -102,6 +102,12 @@ With "Documents from the app" (Me → iPhone app), Settings → **My documents**
 
 You write in Chats (button at the top right when chats are on). Since V01.0.488 the app has no messages window of its own and no notification with a reply field any more; new chat messages arrive as "💬 name" and open the app. With Siri: "Message with Spark" asks for recipient and text and confirms before sending; the message lands in the chat with that person, "everybody" in the group "Alle". The name must match a profile that takes your messages (name or call name). When several fit, Siri asks "Whom do you mean?" with at most 4 names; for an unknown name it says at most 3 similar ones. The Today card "Chats" counts unread chat messages. Who may write to you is set in the browser (Me → Conversation → Chats). Needs the next TestFlight build.
 
+## Voice and video calls
+
+Since V01.0.652 the app makes calls itself: a chat between two people on this Spark shows 📞 and 🎥 at the top. An incoming call rings the iPhone like a normal call, also when locked and with the app closed (Apple's call screen with "Spark"). During the call: mute, camera off, switch camera, speaker, hang up. Afterwards the call shows in the chat ("📞 Call · 3:12", "Missed call", "Call declined") and in the iPhone's call list. The same fixed rules as in the browser apply (only people who take your messages, not in quiet hours, 45 seconds of ringing); the other end can be a browser, the Android app or an iPhone. When another device of the same profile answers, the iPhone stops ringing.
+
+Needs: **Features → Chats → Calls (voice and video)** (admin; from outside the home also "Calls when away") and **Push to the iPhone app** (otherwise it only rings while the app is open), plus the next TestFlight build. On the first call the iPhone asks for microphone and camera.
+
 ## Where the Spark is listening (room mode)
 
 Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Me → iPhone app → "Raum-Modus in der App zeigen" (show room mode in the app) (off, needs room mode from the admin). The top of the chat then reads "● Küche hört zu bis 21:30" with "Beenden", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and "Beenden" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads "vorbei" until the app looks again. The "Raum-Modus" widget (home and lock screen) shows "Küche hört zu bis 21:30" or "Niemand hört zu". With Siri: "End room mode with Spark". The app can only end room mode, never start it; it sees only where and until when, never what was heard.
@@ -153,6 +159,7 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Waiting questions stay on the iPhone and are deleted when unpairing.
 - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it.
 - CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
+- Calls: sound and picture travel encrypted (DTLS-SRTP) directly between the devices or through the Spark's own relay, never through Apple. When ringing, Apple only gets a random number; name and kind the app fetches from the Spark with its key. The app key reaches only the call paths (start, answer, signal, end, info, ICE), and only for calls its profile takes part in. The language model cannot start a call.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 
 ## What the Spark offers for it
@@ -167,7 +174,9 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 | `POST /api/assistant/say` | App: speak notes with the Spark's voice |
 | `POST /api/test/asr`, `POST /api/chat`, `POST /api/siri/ask` | Questions and answers as in the browser and with Siri |
 | `DELETE /api/profile/iphone/{id}` | Browser login: remove an iPhone |
-| `POST /api/iphone/push-token` | App: sign up its push address (only with the app key) |
+| `POST /api/iphone/push-token` | App: sign up its push address (only with the app key), `kind` `alert` or `voip` (ringing) |
+| `GET /api/chats/stream` | App: chat events live, among them the call signals |
+| `POST /api/anrufe/start\|answer\|signal\|end`, `GET /api/anrufe/ice\|info` | App: start, answer, exchange signals, end a call; access to the relay; who is calling |
 | `GET /api/iphone/note?id=…` | App (notification extension): fetch the text of a push notification |
 | `POST /api/profile/iphone/push-test` | Browser login: test notification to the own iPhones |
 | `GET/PUT /api/profile/convos` | App: read the history and save the current conversation (deleting only in the panel) |

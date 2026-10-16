@@ -100,11 +100,18 @@ class Off(Base):
         self.assertTrue(a.get("/api/chats").json().get("calls"))
         g = TestClient(panel.app)
         self.assertIn(g.post("/api/anrufe/start", json={"id": cid, "dev": DEV_A}).status_code, (401, 403))
-        token = profiles.add_device("Antestapp", uid_of(a), scope="app")
-        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Antestapp")
+        # a device key that is not the iPhone app (a speaker, a watch, a terminal) never calls
+        token = profiles.add_device("Antestbox", uid_of(a))
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Antestbox")
         self.addCleanup(profiles.delete_device, did)
         k = TestClient(panel.app)
         self.assertIn(k.get("/api/anrufe/ice", headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403))
+        # the iPhone app's key only while the admin has the iPhone app on (profiles.APP_GATE)
+        token = profiles.add_device("Antestapp", uid_of(a), scope="app")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Antestapp")
+        self.addCleanup(profiles.delete_device, did)
+        helpers.set_config(iphone=False)
+        self.assertIn(k.get("/api/anrufe/ice", headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403, 503))
 
     def test_the_admin_blocks_one_profile_and_switching_off_ends_running_calls(self):
         a, b = profile("Ancarl"), profile("Andora")
@@ -320,3 +327,58 @@ class Visible(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class IPhone(Base):
+    """The iPhone app (V01.0.652): its own key calls and answers like a browser, its iPhones ring over VoIP push with
+    nothing but the call's id, and it asks the Spark who calls (info, only for the two people of the call)."""
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(iphone=True)
+        self.voip = mock.patch("apns.send_voip", new=mock.AsyncMock(return_value=1)).start()
+        self.addCleanup(mock.patch.stopall)
+
+    def tearDown(self):
+        helpers.set_config(iphone=False)
+        super().tearDown()
+
+    def app(self, client, name):
+        token = profiles.add_device(name, uid_of(client), scope="app")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == name)
+        self.addCleanup(profiles.delete_device, did)
+        k = TestClient(panel.app)
+        k.headers[profiles.DEVICE_HEADER] = token
+        return k
+
+    def test_the_app_calls_answers_and_learns_who_calls(self):
+        a, b = profile("Anifa"), profile("Anibo")
+        cid = open_with(a, b)
+        pa, pb = self.app(a, "Anifa iPhone"), self.app(b, "Anibo iPhone")
+        self.assertEqual(pa.get("/api/anrufe/ice").status_code, 200)
+        r = pa.post("/api/anrufe/start", json={"id": cid, "video": True, "dev": DEV_A})
+        self.assertEqual(r.status_code, 200, r.text)
+        call = r.json()["call"]
+        # the other person's iPhones ring over VoIP with the call's id only
+        self.voip.assert_awaited_once_with(uid_of(b), call)
+        info = pb.get("/api/anrufe/info", params={"call": call}).json()
+        self.assertEqual((info["id"], info["video"], info["state"], info["mine"], info["name"]), (cid, True, "ring", False, "Anifa"))
+        self.assertEqual(pa.get("/api/anrufe/info", params={"call": call}).json()["mine"], True)
+        # a third person learns nothing about the call
+        c = self.app(profile("Anicus"), "Anicus iPhone")
+        self.assertEqual(c.get("/api/anrufe/info", params={"call": call}).json(), {"call": call, "state": "end"})
+        self.assertEqual(pb.get("/api/anrufe/info", params={"call": "x"}).status_code, 400)
+        self.assertEqual(pb.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B}).status_code, 200)
+        self.assertEqual(pb.post("/api/anrufe/signal", json={"call": call, "dev": DEV_B,
+                                                            "data": {"sdp": {"type": "answer", "sdp": SDP}}}).status_code, 200)
+        self.assertEqual(pb.post("/api/anrufe/end", json={"call": call, "dev": DEV_B}).status_code, 200)
+        # a late VoIP push still finds out the call is over
+        self.assertEqual(pb.get("/api/anrufe/info", params={"call": call}).json()["state"], "end")
+
+    def test_the_app_key_reaches_nothing_else_of_a_call_without_the_iphone_app(self):
+        a, b = profile("Anigo"), profile("Anihu")
+        cid = open_with(a, b)
+        pa = self.app(a, "Anigo iPhone")
+        helpers.set_config(iphone=False)
+        self.assertIn(pa.post("/api/anrufe/start", json={"id": cid, "dev": DEV_A}).status_code, (401, 403, 503))
+        self.voip.assert_not_awaited()
+

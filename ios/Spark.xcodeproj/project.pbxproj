@@ -10,6 +10,7 @@
 		5A0000000000000000000101 /* SparkNotify.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000100 /* SparkNotify.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5A0000000000000000000201 /* SparkWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000200 /* SparkWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5A0000000000000000000301 /* SparkShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000300 /* SparkShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5A0000000000000000000601 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 5A0000000000000000000602 /* WebRTC */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A0000000000000000000601 /* WebRTC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -190,6 +192,9 @@
 				5A0000000000000000000510 /* Rooms */,
 			);
 			name = Spark;
+			packageProductDependencies = (
+				5A0000000000000000000602 /* WebRTC */,
+			);
 			productName = Spark;
 			productReference = 5A0000000000000000000001 /* Spark.app */;
 			productType = "com.apple.product-type.application";
@@ -294,6 +299,9 @@
 			);
 			mainGroup = 5A0000000000000000000030;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5A0000000000000000000603 /* XCRemoteSwiftPackageReference "WebRTC" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5A0000000000000000000031 /* Products */;
 			projectDirPath = "";
@@ -526,10 +534,10 @@
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du das Update des Spark starten kannst.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Für Fotos von Briefen oder Zetteln (an den Spark geht nur der Text) und für Videoanrufe mit anderen Profilen (das Bild geht direkt an die andere Person).";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Damit Erinnerungen und die Einkaufsliste des Spark nach deinem „Ja“ in der Erinnerungen-App stehen. Gelesen wird dort nichts für den Spark.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst (die Aufnahme geht nur an deinen eigenen Spark) und für Anrufe mit anderen Profilen (der Ton geht direkt an die andere Person).";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -560,10 +568,10 @@
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du das Update des Spark starten kannst.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Für Fotos von Briefen oder Zetteln (an den Spark geht nur der Text) und für Videoanrufe mit anderen Profilen (das Bild geht direkt an die andere Person).";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Damit Erinnerungen und die Einkaufsliste des Spark nach deinem „Ja“ in der Erinnerungen-App stehen. Gelesen wird dort nichts für den Spark.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst (die Aufnahme geht nur an deinen eigenen Spark) und für Anrufe mit anderen Profilen (der Ton geht direkt an die andere Person).";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -780,6 +788,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5A0000000000000000000603 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC";
+			requirement = {
+				kind = exactVersion;
+				version = 154.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5A0000000000000000000602 /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5A0000000000000000000603 /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5A0000000000000000000050 /* Project object */;
 }

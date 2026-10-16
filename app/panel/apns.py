@@ -44,6 +44,8 @@ INBOX_MAX = 30
 PER_HOUR = 30                  # pushes per profile and hour
 GENERIC = "Neue Nachricht vom Spark"
 TOKEN = re.compile(r"[0-9a-f]{64,200}")
+CALL = re.compile(r"[0-9a-f]{16}")
+VOIP_SECONDS = 45              # a call's push is worth nothing after the ringing (anrufe.RING_SECS)
 _lock = threading.Lock()
 _jwt = (0.0, "", "")           # (made, key id, token)
 _inbox = {}                    # uid -> [{"id", "t", "title", "body"}]
@@ -105,9 +107,15 @@ def tokens():
     return _read("apns-tokens.json")
 
 
-def set_token(did, uid, token):
+def set_token(did, uid, token, kind="alert"):
+    """kind "alert": notes; "voip": calls ring through CallKit (PushKit, anrufe.py). Both live in the device's entry."""
     d = {k: v for k, v in tokens().items() if k in _app_devices()}   # drops removed iPhones
-    d[did] = {"uid": uid, "token": token, "t": int(time.time())}
+    old = d.get(did) if isinstance(d.get(did), dict) and d[did].get("uid") == uid else {}
+    entry = {"uid": uid, "token": old.get("token", ""), "t": int(time.time())}
+    if old.get("voip"):
+        entry["voip"] = old["voip"]
+    entry["voip" if kind == "voip" else "token"] = token
+    d[did] = entry
     _write("apns-tokens.json", d)
 
 
@@ -127,6 +135,13 @@ def profile_tokens(uid):
     devs = _app_devices()
     return [(did, v["token"]) for did, v in tokens().items()
             if devs.get(did) == uid and v.get("uid") == uid and TOKEN.fullmatch(str(v.get("token", "")))]
+
+
+def voip_tokens(uid):
+    """(device id, VoIP token) of the profile's iPhones that still exist and still belong to it."""
+    devs = _app_devices()
+    return [(did, v["voip"]) for did, v in tokens().items()
+            if devs.get(did) == uid and v.get("uid") == uid and TOKEN.fullmatch(str(v.get("voip", "")))]
 
 
 def on_for(uid):
@@ -203,11 +218,13 @@ def _client():
         raise ValueError("Paket h2 fehlt (Update ausführen)")
 
 
-async def _post(c, s, token, body, now):
+async def _post(c, s, token, body, now, voip=False):
+    # a call rings now or never: its push expires with the ringing (anrufe.RING_SECS), on the app's ".voip" topic
     return await c.post(f"{HOSTS[bool(s.get('sandbox'))]}/3/device/{token}", content=json.dumps(body).encode(),
-                        headers={"authorization": "bearer " + _bearer(s, now), "apns-topic": s["bundle"],
-                                 "apns-push-type": "alert", "apns-priority": "10",
-                                 "apns-expiration": str(int(now) + 3600)})
+                        headers={"authorization": "bearer " + _bearer(s, now),
+                                 "apns-topic": s["bundle"] + (".voip" if voip else ""),
+                                 "apns-push-type": "voip" if voip else "alert", "apns-priority": "10",
+                                 "apns-expiration": str(int(now) + (VOIP_SECONDS if voip else 3600))})
 
 
 def _reason(r):
@@ -228,9 +245,11 @@ async def send(uid, title, body, tag="", now=None):
     s = settings()
     nid = _keep(uid, title, body, now)
     n = 0
+    # a call already rang the iPhones that take calls through CallKit (send_voip): no second "📞 … ruft an" there
+    rung = {did for did, _ in voip_tokens(uid)} if tag == "call" else set()
     try:
         async with _client() as c:
-            for did, token in profile_tokens(uid):
+            for did, token in [x for x in profile_tokens(uid) if x[0] not in rung]:
                 try:
                     r = await _post(c, s, token, payload(nid, tag), now)
                 except httpx.HTTPError as e:
@@ -246,6 +265,44 @@ async def send(uid, title, body, tag="", now=None):
     except ValueError as e:
         print("apns:", e, flush=True)
     return n
+
+
+async def send_voip(uid, call, now=None):
+    """A call rings on every iPhone of the profile that registered for calls (PushKit). Apple carries only the call's
+    random id, never who calls; the app asks the Spark (anrufe.info). Returns how many Apple accepted. The hourly
+    limit of notes does not count calls (anrufe.PER_HOUR limits the caller)."""
+    now = time.time() if now is None else now
+    if not CALL.fullmatch(str(call)) or not on_for(uid):
+        return 0
+    targets = voip_tokens(uid)
+    if not targets:
+        return 0
+    s = settings()
+    n = 0
+    try:
+        async with _client() as c:
+            for did, token in targets:
+                try:
+                    r = await _post(c, s, token, {"call": call}, now, voip=True)
+                except httpx.HTTPError as e:
+                    print("apns: voip", type(e).__name__, flush=True)
+                    continue
+                if r.status_code == 200:
+                    n += 1
+                elif r.status_code == 410 or _reason(r) in ("BadDeviceToken", "Unregistered", "DeviceTokenNotForTopic"):
+                    _drop_voip(did)
+                    print("apns: voip token dropped:", r.status_code, _reason(r), flush=True)
+                else:
+                    print("apns: voip", r.status_code, _reason(r), flush=True)
+    except ValueError as e:
+        print("apns:", e, flush=True)
+    return n
+
+
+def _drop_voip(did):
+    d = tokens()
+    if isinstance(d.get(did), dict) and d[did].pop("voip", None):
+        _write("apns-tokens.json", d)
 
 
 async def test(uid, now=None):
@@ -338,15 +395,19 @@ async def app_token(request: Request, prof=Depends(own_profile)):
     import guard
     dev = profiles.device(request)
     if not dev or dev.get("scope") != "app":
+        print("apns: token refused, not the iPhone app", flush=True)
         raise HTTPException(403, "only the iPhone app")
     guard.limit(request, "chat", prof["id"], False)
     import iphone
     body = await json_body(request, iphone.MAX_BODY, lenient=True)
     token = body.get("token") if isinstance(body.get("token"), str) else ""
     token = token.lower()
-    if not TOKEN.fullmatch(token):
+    kind = body.get("kind", "alert")
+    if not TOKEN.fullmatch(token) or kind not in ("alert", "voip"):
+        print("apns: token refused, bad form", flush=True)
         raise HTTPException(400, "bad token")
-    set_token(dev["id"], prof["id"], token)
+    set_token(dev["id"], prof["id"], token, kind)
+    print(f"apns: {kind} token saved | {profiles.log_name(prof)}", flush=True)
     return {"ok": True, "push": on_for(prof["id"])}
 
 

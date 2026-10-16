@@ -1304,7 +1304,7 @@ def snapshot(view="admin", now=None):
                            if cht.get("far_on") else "")
                         + (f" · 📞 Anrufe: {cht.get('call_talking', 0)} laufen, {cht.get('call_ringing', 0)} klingeln, heute "
                            f"{cht.get('call_today', 0)} ({cht.get('call_talked', 0)} angenommen, {cht.get('call_missed', 0)} verpasst, "
-                           f"{cht.get('call_minutes', 0)} min)"
+                           f"{cht.get('call_minutes', 0)} min, {cht.get('call_iphone', 0)} auf dem iPhone geklingelt)"
                            + (" · Vermittler " + ("läuft" if cht.get("call_turn_ok") else "aus: " + (cht.get("call_turn_why") or "startet"))
                               if cht.get("call_turn") else "")
                            if cht.get("call_on") else ""))

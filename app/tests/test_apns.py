@@ -193,3 +193,34 @@ class Apns(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_calls_ring_over_voip_with_nothing_but_the_call_id(self):
+        """V01.0.652: the app's PushKit token sits next to its notes token; a call goes on the ".voip" topic with the
+        call's random id only, expires with the ringing, and those iPhones get no second "ruft an" note."""
+        ADMIN.put("/api/admin/apns", json=GOOD)
+        c, h = self.phone("Pirmin")
+        app = TestClient(panel.app)
+        self.assertEqual(app.post("/api/iphone/push-token", json={"token": T1, "kind": "bell"}, headers=h).status_code, 400)
+        self.assertEqual(app.post("/api/iphone/push-token", json={"token": T1}, headers=h).status_code, 200)
+        self.assertEqual(app.post("/api/iphone/push-token", json={"token": T2, "kind": "voip"}, headers=h).status_code, 200)
+        uid = uid_of("Pirmin")
+        self.assertEqual(apns.profile_tokens(uid)[0][1], T1)       # the notes token stays
+        self.assertEqual(apns.voip_tokens(uid)[0][1], T2)
+        sent = []
+
+        async def post(c, s, token, body, now, voip=False):
+            sent.append((token, body, voip))
+            return self.answer
+        apns._post = post
+        self.assertEqual(asyncio.run(apns.send_voip(uid, "not-a-call")), 0)
+        self.assertEqual(asyncio.run(apns.send_voip(uid, "0123456789abcdef", now=1000)), 1)
+        self.assertEqual(sent[-1], (T2, {"call": "0123456789abcdef"}, True))
+        # the "📞 … ruft an" note skips the iPhones that rang through CallKit; other notes still reach them
+        sent.clear()
+        self.assertEqual(asyncio.run(apns.send(uid, "📞 Anna", "ruft an", tag="call", now=1001)), 0)
+        self.assertEqual(sent, [])
+        self.assertEqual(asyncio.run(apns.send(uid, "⏰", "Tee", tag="rem-1", now=1002)), 1)
+        # the admin switch off: no call rings
+        helpers.set_config(iphone_push=False)
+        self.assertEqual(asyncio.run(apns.send_voip(uid, "0123456789abcdef", now=1003)), 0)
+
