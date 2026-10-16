@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.678** · 2026-10-16 · Fix Geräte-Updates: Hinweis auf neue XiaoZhi-Version scheitert nicht mehr an GitHubs großer Release-Antwort (TooLarge, Grenze 256 KB → 4 MB)
 - **V01.0.677** · 2026-10-16 · Fix iPhone-App: CarPlay-Gesicht baut wieder (Typfehler im Standbild)
 - **V01.0.676** · 2026-10-16 · CarPlay: Apple hat die Freigabe erteilt, die iPhone-App erscheint jetzt mit eigenem Symbol im Auto, mit dem gewählten Gesicht je Zustand
 - **V01.0.675** · 2026-10-16 · Musik testen findet die Modelle im Musik-Ordner; die Musik-Engine bindet ggml fest ein (fehlende Bibliotheken nach dem Bau)

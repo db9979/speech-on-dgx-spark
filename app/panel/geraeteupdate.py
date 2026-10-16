@@ -59,6 +59,7 @@ BACK_WAIT = 10 * 60        # a restarted speaker must be back with the new versi
 REST_GAP = 30 * 60         # after the first speaker came back: this long until the others
 QUIET = 10 * 60            # a speaker used this lately is left for now
 UPSTREAM = "78/xiaozhi-esp32"
+UPSTREAM_MAX = 4 * 1048576  # GitHub's release answer lists every asset (XiaoZhi: one zip per board, far over 256 KB)
 VERSION = re.compile(r"\d{1,4}(\.\d{1,4}){0,3}")
 TAG = re.compile(r"v?(\d{1,4}(?:\.\d{1,4}){1,3})")
 HHMM = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
@@ -317,7 +318,7 @@ async def check_upstream(c=None):
         if c is not None:
             r = await ghtoken.get(c, f"{api}/repos/{UPSTREAM}/releases/latest")
         else:
-            async with netguard.client(netguard.PUBLIC, max_bytes=256 * 1024, timeout=20, follow_redirects=False) as cl:
+            async with netguard.client(netguard.PUBLIC, max_bytes=UPSTREAM_MAX, timeout=20, follow_redirects=False) as cl:
                 r = await ghtoken.get(cl, f"{api}/repos/{UPSTREAM}/releases/latest", headers={"Accept": "application/vnd.github+json"})
         r.raise_for_status()
         m = TAG.fullmatch(str((r.json() or {}).get("tag_name", "")))

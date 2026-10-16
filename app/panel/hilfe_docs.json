@@ -3261,7 +3261,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Geräte-Updates (V01.0.381)",
-"text": "em Fenster des nächtlichen Spark-Updates) startet der Spark erst einen verbundenen, unbenutzten Lautsprecher neu. Kommt er innerhalb von 10 Minuten mit der neuen Version zurück, folgen die übrigen einzeln, der nächste frühestens 30 Minuten später. Kommt er nicht zurück, hält die Runde für diese Version an: Besitzer und Admin bekommen eine Mitteilung, weiter geht es erst mit *Weiter verteilen* in Zustand. Nie während eines Gesprächs, im Raum-Modus, bei einem Test, bei einem Notaus oder eigenen Notaus und nie während eines Spark-Updates. Hinweis auf neue XiaoZhi-Version (Unterschalter): Der Spark vergleicht das neueste Release von github.com/78/xiaozhi-esp32 mit dem Stand, auf dem unsere Firmware baut, und schickt dem Admin einmal pro neuer Version einen Hinweis. Gebaut wird nichts von selbst; vom Release kommt nur die Versionsnummer, nie sein Text."
+"text": "em Fenster des nächtlichen Spark-Updates) startet der Spark erst einen verbundenen, unbenutzten Lautsprecher neu. Kommt er innerhalb von 10 Minuten mit der neuen Version zurück, folgen die übrigen einzeln, der nächste frühestens 30 Minuten später. Kommt er nicht zurück, hält die Runde für diese Version an: Besitzer und Admin bekommen eine Mitteilung, weiter geht es erst mit *Weiter verteilen* in Zustand. Nie während eines Gesprächs, im Raum-Modus, bei einem Test, bei einem Notaus oder eigenen Notaus und nie während eines Spark-Updates. Hinweis auf neue XiaoZhi-Version (Unterschalter): Der Spark vergleicht das neueste Release von github.com/78/xiaozhi-esp32 mit dem Stand, auf dem unsere Firmware baut, und schickt dem Admin einmal pro neuer Version einen Hinweis. Gebaut wird nichts von selbst; vom Release kommt nur die Versionsnummer, nie sein Text. Seit V01.0.678 darf GitHubs Antwort bis 4 MB groß sein: sie listet jede Datei des Releases (bei XiaoZhi ein Paket pro Board) und war mit 256 KB zu knapp („XiaoZhi check failed: TooLarge“ im Fehler-Log)."
 },
 {
 "lang": "de",
@@ -5653,7 +5653,7 @@
 "file": "iPhone-App „Spark“",
 "head": "iPhone-App „Spark“",
 "title": "iPhone-App „Spark“",
-"text": "Eine eigene App fürs iPhone (Quellcode in ios/): Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm. „Hey Siri, Frag Spark“ läuft über die App, ohne Kurzbefehl, auch mit AirPods und über Siri im Auto. CarPlay als eigenes Symbol im Auto ist geplant (plaene/ios-carplay.md, Weg 3) und braucht eine Freigabe von Apple."
+"text": "Eine eigene App fürs iPhone (Quellcode in ios/): Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm. „Hey Siri, Frag Spark“ läuft über die App, ohne Kurzbefehl, auch mit AirPods und über Siri im Auto. Seit V01.0.676 hat die App ein eigenes CarPlay-Symbol im Auto (Apple hat die Freigabe erteilt)."
 },
 {
 "lang": "de",
@@ -5933,23 +5933,15 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text. Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter."
+"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht, das der Admin gewählt hat (Roboter oder Comic), passend zum Zustand als Standbild (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter."
 },
 {
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
-"title": "Apple muss CarPlay freigeben",
-"text": "Apple muss CarPlay freigeben, sonst erscheint das Symbol nicht:"
-},
-{
-"lang": "de",
-"src": "iphone-app",
-"file": "iPhone-App „Spark“",
-"head": "CarPlay",
-"title": "CarPlay",
-"text": "1. developer.apple.com/contact/carplay → Kategorie „Voice-based conversational app“ beantragen. Apple prüft jeden Antrag; das dauert Tage bis Wochen. 2. Nach der Zusage: developer.apple.com → Identifiers → die App-ID → Additional Capabilities / CarPlay die Freigabe anhaken. 3. In ios/Spark.entitlements diese zwei Zeilen innerhalb von <dict> ergänzen und die App neu aufspielen: xml <key>com.apple.developer.carplay-voice-based-conversation</key> <true/> (Vorher nicht eintragen: ohne Freigabe kann Xcode die App sonst nicht signieren.)"
+"title": "Freigabe von Apple",
+"text": "Freigabe von Apple: Apple hat die CarPlay-Kategorie „Voice-based conversational app“ erteilt, sie ist für die App-ID io.github.db9979.speechspark unter developer.apple.com → Identifiers → Additional Capabilities angehakt (CarPlay Voice Based Conversation), und ios/Spark.entitlements enthält seit V01.0.676 com.apple.developer.carplay-voice-based-conversation. Der TestFlight-Build holt das passende Profil selbst. Fehlt der Haken bei der App-ID, scheitert die Signatur des Builds."
 },
 {
 "lang": "de",
@@ -5957,7 +5949,15 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "Nach der Freigabe ausprobieren ohne Auto: Xcode → Open Developer Tool → Simulator, dort I/O → External Displays → CarPlay."
+"text": "Erscheint das Symbol nicht: iPhone → Einstellungen → Allgemein → CarPlay → dein Auto → Anpassen, dort Spark hinzufügen."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "CarPlay",
+"text": "Ausprobieren ohne Auto: Xcode → Open Developer Tool → Simulator, dort I/O → External Displays → CarPlay."
 },
 {
 "lang": "de",
@@ -10357,7 +10357,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Device updates (V01.0.381)",
-"text": " the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text."
+"text": " the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text. Since V01.0.678 GitHub's answer may be up to 4 MB: it lists every file of the release (XiaoZhi: one package per board) and 256 KB was too tight (\"XiaoZhi check failed: TooLarge\" in the error log)."
 },
 {
 "lang": "en",
@@ -12613,7 +12613,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "iPhone app \"Spark\"",
 "title": "iPhone app \"Spark\"",
-"text": "An own app for the iPhone (source in ios/): press the button, ask, the answer comes in the Spark voice, also with the screen locked. \"Hey Siri, Ask Spark\" (German phrase \"Frag Spark\") runs through the app without a shortcut, also with AirPods and through Siri in the car. CarPlay as its own icon in the car is planned and needs Apple's approval."
+"text": "An own app for the iPhone (source in ios/): press the button, ask, the answer comes in the Spark voice, also with the screen locked. \"Hey Siri, Ask Spark\" (German phrase \"Frag Spark\") runs through the app without a shortcut, also with AirPods and through Siri in the car. Since V01.0.676 the app has its own CarPlay icon in the car (Apple granted the entitlement)."
 },
 {
 "lang": "en",
@@ -12861,15 +12861,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "An own \"Spark\" icon in the car. Tap → \"Mit Spark sprechen\" → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text. Answers are short in the car. Smart home in the car only with its own switch \"Smart home in the car too\" and the code word. Route and call only after \"Ja\"."
+"text": "An own \"Spark\" icon in the car. Tap → \"Mit Spark sprechen\" → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text, with the face the admin picked (robot or comic) as a still picture matching the state (since V01.0.676; Apple allows no animation in CarPlay). Answers are short in the car. Smart home in the car only with its own switch \"Smart home in the car too\" and the code word. Route and call only after \"Ja\"."
 },
 {
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
-"title": "Apple must grant CarPlay first",
-"text": "Apple must grant CarPlay first: request the category \"Voice-based conversational app\" at developer.apple.com/contact/carplay. After approval, enable it for the App ID and add <key>com.apple.developer.carplay-voice-based-conversation</key><true/> to ios/Spark.entitlements (not before: without the grant Xcode cannot sign the app). After the grant, try it without a car: Simulator → I/O → External Displays → CarPlay."
+"title": "Apple's grant",
+"text": "Apple's grant: Apple granted the CarPlay category \"Voice-based conversational app\"; it is ticked for the App ID io.github.db9979.speechspark under developer.apple.com → Identifiers → Additional Capabilities (CarPlay Voice Based Conversation), and since V01.0.676 ios/Spark.entitlements contains com.apple.developer.carplay-voice-based-conversation. The TestFlight build fetches the matching profile itself; without the tick on the App ID the build cannot be signed. If the icon does not appear: iPhone → Settings → General → CarPlay → your car → Customize, add Spark. Try it without a car: Simulator → I/O → External Displays → CarPlay."
 },
 {
 "lang": "en",

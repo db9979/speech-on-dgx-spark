@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.678** Fix: the note on a new XiaoZhi version no longer fails on the size of GitHub's answer (TooLarge)
 - **V01.0.677** Fix iPhone app: CarPlay face builds again (type error in the still picture)
 - **V01.0.676** CarPlay: Apple granted the entitlement, the iPhone app now shows its own icon in the car, with the picked face per state
 - **V01.0.675** Test music finds the models in the music folder; the music engine links ggml in (libraries were missing after the build)
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.671** Test music now sits under State → Checks (Features stays short, Weiche unchanged)
 - **V01.0.670** Making music, stage M0: ACE-Step 1.5 on the Spark (acestep.cpp, install.sh --musik 2b), loads only for a song; the admin measures with “Test music”
 - **V01.0.669** Docs and help: own language model next to qwen38, full ports table; new guard test test_doku_stand keeps README, diagram and ports in step with the code
-- **V01.0.668** Save the battery: pages, Android and iPhone app sleep in the background
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

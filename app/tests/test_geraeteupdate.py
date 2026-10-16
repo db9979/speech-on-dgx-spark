@@ -326,6 +326,29 @@ class Upstream(Base):
         o = ADMIN.get("/api/admin/devup").json()
         self.assertEqual(o["upstream"]["version"], "2.6.0")
 
+    def test_a_release_with_many_board_packages_still_fits(self):
+        # XiaoZhi lists one zip per board; GitHub's answer grew past the old 256 KB (log "TooLarge")
+        import netguard
+        asset = {"name": "board.zip", "browser_download_url": "https://github.com/x/" + "y" * 120,
+                 "uploader": {"login": "u", "url": "https://api.github.com/users/" + "u" * 900}, "size": 1}
+        body = json.dumps({"tag_name": "v2.6.0", "body": "x" * 60000, "assets": [asset] * 400}).encode()
+        self.assertGreater(len(body), 256 * 1024)
+        seen = {}
+
+        def client(level, max_bytes=netguard.MAX_BYTES, **kw):
+            seen["max"] = max_bytes
+
+            def handle(req):
+                if len(body) > max_bytes:
+                    raise netguard.TooLarge("too large")
+                return httpx.Response(200, content=body)
+            return httpx.AsyncClient(transport=httpx.MockTransport(handle))
+        helpers.set_config(dev_updates_upstream=True)
+        with mock.patch.object(netguard, "client", client):
+            self.assertEqual(run(gu.check_upstream()), "")
+        self.assertEqual(gu._read()["upstream"]["version"], "2.6.0")
+        self.assertLessEqual(seen["max"], 8 * 1048576)      # still a limit, just a fitting one
+
     def test_strange_tag_is_ignored_and_off_means_nothing(self):
         helpers.set_config(dev_updates_upstream=True)
         run(gu.check_upstream(self.gh("latest-and-greatest")))
