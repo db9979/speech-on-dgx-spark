@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.671** · 2026-10-16 · Musik testen steht jetzt unter Zustand → Prüfen (Funktionen bleibt kurz, Weiche unverändert)
 - **V01.0.670** · 2026-10-16 · Musik machen, Stufe M0: ACE-Step 1.5 auf dem Spark (acestep.cpp, install.sh --musik 2b), lädt nur für ein Lied; der Admin misst mit „Musik testen“
 - **V01.0.669** · 2026-10-16 · Doku, Hilfe und Technik-Seite nennen das eigene Sprachmodell neben qwen38 (Bilder erkennen, Einordnung, Wartungspause, Sprachmodell-Kasten :31006 → :31016), Tabelle „Prozesse und Ports“ mit allen Diensten; neuer Wächter-Test test_doku_stand: Schaubild mit jedem öffentlichen Port, Port-Tabelle mit jedem Port und Dienst, keine veralteten Sätze
 - **V01.0.668** · 2026-10-16 · Akku schonen: verdeckte Seiten fragen nicht mehr im Takt und schließen den Verlauf-Strom, die Android-App (1.3.3) pausiert ihre Seite im Hintergrund (außer im Anruf), die iPhone-App stoppt im Hintergrund die Audio-Engine; „Mitteilungen sofort“ hält eine Frage 4 statt 1 Minute (Rückfall auf 50 s, wenn der Proxy abschneidet), das iPhone-Weckwort hört am Akku standardmäßig nur am Ladekabel

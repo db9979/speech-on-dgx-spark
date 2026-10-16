@@ -3945,7 +3945,7 @@ SEITEN_DATEN = {
                  "klein only at the first picture, checks the finished picture and frees the memory after a quiet time.\n\n"
                  "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 "
                  "loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "
-                 "\"Musik testen\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand "
+                 "\"Test music\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand "
                  "engine of bedarf.py."),
         "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
                   "Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen "
@@ -4052,8 +4052,8 @@ SEITEN_DATEN = {
              "„Bild testen“.",
              "Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "
              "\"Bild testen\"."),
-            ("Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Funktionen → Musik machen → „Musik testen“.",
-             "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); Features → Making music → \"Musik testen\"."),
+            ("Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Zustand → Prüfen → „Musik testen“.",
+             "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → \"Test music\"."),
         ],
         "sehen": [
             ("Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.",

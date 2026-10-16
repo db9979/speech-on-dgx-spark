@@ -2612,7 +2612,7 @@ flowchart TD
 
 - Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none).
 - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“.
-- Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Funktionen → Musik machen → „Musik testen“.
+- Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Zustand → Prüfen → „Musik testen“.
 
 #### Was du siehst
 

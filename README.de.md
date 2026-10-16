@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.671** Musik testen steht jetzt unter Zustand → Prüfen (Funktionen bleibt kurz, Weiche unverändert)
 - **V01.0.670** Musik machen, Stufe M0: ACE-Step 1.5 auf dem Spark (acestep.cpp, install.sh --musik 2b), lädt nur für ein Lied; der Admin misst mit „Musik testen“
 - **V01.0.669** Doku und Hilfe: eigenes Sprachmodell neben qwen38, vollständige Port-Tabelle; neuer Wächter-Test test_doku_stand hält README, Schaubild und Ports im Einklang mit dem Code
 - **V01.0.668** Akku schonen: Seiten, Android- und iPhone-App schlafen im Hintergrund
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.664** Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für die neuen Funktionen, Lücken zu, Foto ändern als Bilder, Lernen aus unklaren Fragen
 - **V01.0.663** Begleiter: Meldungen im Tray-Fenster mit „OK“ bestätigen
 - **V01.0.662** Verbessern geht auf dem Pi wieder; Gehäuse: elf Seiten mit Vorschau zum Antippen
-- **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -98,7 +98,7 @@ flowchart LR
 
 1. Du sprichst ins Handy, in den Browser, in eine der Apps, den Terminal-Client, einen Lautsprecher oder ins Telefon. Das Portal meldet dich an, schickt den Ton an die **Spracherkennung** und bekommt Text zurück.
 2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** hinter dem LLM-Tor (oder an qwen38, wenn du es behältst).
-3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung. Bilder malt und ändert FLUX.2 klein auf dem Spark; Musik macht ACE-Step 1.5 (zuerst nur „Musik testen“ für den Admin).
+3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung. Bilder malt und ändert FLUX.2 klein auf dem Spark; Musik macht ACE-Step 1.5 (zuerst nur „Musik testen“ für den Admin unter Zustand → Prüfen).
 4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt. Der Vorrang sorgt dafür, dass gesprochene Antworten und wichtige Personen zuerst drankommen.
 5. Mit **Spark teilen** liegen Portal, Profile, Chats und Anrufe auf dem kleinen Rechner und erreichen die Modelle nur über das TLS-Tor. Startet der DGX neu oder ist er aus, laufen Chats, Erinnerungen und Anrufe weiter, und der Notbetrieb versteht ein paar feste Befehle ohne Sprachmodell.
 6. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang.

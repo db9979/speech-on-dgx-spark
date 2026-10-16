@@ -2485,7 +2485,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Funktionen → Musik machen → „Musik testen“."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Zustand → Prüfen → „Musik testen“."
 },
 {
 "lang": "de",
@@ -4053,7 +4053,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Musik machen (V01.0.670, Stufe M0: messen, Plan `plaene/musik.md`)",
-"text": "In dieser Stufe misst nur der Admin: Funktionen → Musik machen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s Pop mit deutschem Text) und zeigt fertig in, Planen, Klang und Speicher an der Spitze, dazu beide Stücke zum Anhören. Profile, Gäste, Werkzeuge, Apps und MCP bekommen noch nichts; das kommt in Stufe M1 mit eigenem Admin-Schalter. Zustand → Live: Ziel „Musik machen“ mit der letzten Messung (Zahlen); Dienst-Wächter-Teil „Musik machen“; Wartungspause-Teil „Musik machen“; Logs (Bereich „Musik“): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (Admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
+"text": "In dieser Stufe misst nur der Admin: Zustand → Prüfen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s Pop mit deutschem Text) und zeigt fertig in, Planen, Klang und Speicher an der Spitze, dazu beide Stücke zum Anhören. Profile, Gäste, Werkzeuge, Apps und MCP bekommen noch nichts; das kommt in Stufe M1 mit eigenem Admin-Schalter. Zustand → Live: Ziel „Musik machen“ mit der letzten Messung (Zahlen); Dienst-Wächter-Teil „Musik machen“; Wartungspause-Teil „Musik machen“; Logs (Bereich „Musik“): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (Admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
 },
 {
 "lang": "de",
@@ -5637,7 +5637,7 @@
 "file": "Installation im Detail",
 "head": "Musik machen (optional, Stufe M0: messen)",
 "title": "Musik machen (optional, Stufe M0: messen)",
-"text": "Sie baut einmal acestep.cpp (ace-server, fester Commit, CUDA für den GB10, ohne torch und ohne Docker, braucht nvcc und cmake) nach /opt/speech-spark/acestep, lädt die GGUF-Dateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/musik und richtet den Dienst speech-spark-musik ein (nur 127.0.0.1, beim Teilen über das TLS-Tor; Ports music.port 31004 und music.engine_port 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. In dieser Stufe misst nur der Admin: Funktionen → Musik machen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und beide Stücke zum Anhören. Profile können noch nichts bestellen. Logs: sudo speech-spark logs musik, Wartungspause: sudo speech-spark pause musik 30."
+"text": "Sie baut einmal acestep.cpp (ace-server, fester Commit, CUDA für den GB10, ohne torch und ohne Docker, braucht nvcc und cmake) nach /opt/speech-spark/acestep, lädt die GGUF-Dateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/musik und richtet den Dienst speech-spark-musik ein (nur 127.0.0.1, beim Teilen über das TLS-Tor; Ports music.port 31004 und music.engine_port 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. In dieser Stufe misst nur der Admin: Zustand → Prüfen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und beide Stücke zum Anhören. Profile können noch nichts bestellen. Logs: sudo speech-spark logs musik, Wartungspause: sudo speech-spark pause musik 30."
 },
 {
 "lang": "de",
@@ -9541,7 +9541,7 @@
 "file": "Architecture and data flow",
 "head": "Pictures and music",
 "title": "Pictures and music",
-"text": "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with \"Musik testen\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py."
+"text": "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with \"Test music\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py."
 },
 {
 "lang": "en",
@@ -9589,7 +9589,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); Features → Making music → \"Musik testen\"."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → \"Test music\"."
 },
 {
 "lang": "en",
@@ -11085,7 +11085,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Making music (V01.0.670, stage M0: measuring, plan `plaene/musik.md`)",
-"text": "n measures: Features → Making music → \"Musik testen\" makes two fixed samples (30 s of piano, 60 s of pop with German lyrics) and shows done in, planning, sound and memory at the peak, plus both samples to listen to. Profiles, guests, tools, apps and MCP get nothing yet; that comes in stage M1 with its own admin switch. State → Live: target \"Making music\" with the last measurement (numbers); service guard part \"Making music\"; maintenance pause part \"Making music\"; logs (area \"Musik\"): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
+"text": "n measures: State → Checks → \"Test music\" makes two fixed samples (30 s of piano, 60 s of pop with German lyrics) and shows done in, planning, sound and memory at the peak, plus both samples to listen to. Profiles, guests, tools, apps and MCP get nothing yet; that comes in stage M1 with its own admin switch. State → Live: target \"Making music\" with the last measurement (numbers); service guard part \"Making music\"; maintenance pause part \"Making music\"; logs (area \"Musik\"): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
 },
 {
 "lang": "en",
@@ -12573,7 +12573,7 @@
 "file": "Installation in detail",
 "head": "Making music (optional, stage M0: measuring)",
 "title": "Making music (optional, stage M0: measuring)",
-"text": "It builds acestep.cpp once (ace-server, pinned commit, CUDA for the GB10, no torch and no Docker, needs nvcc and cmake) into /opt/speech-spark/acestep, downloads the GGUF files with a SHA-256 check into /var/lib/speech-spark/models/musik and sets up the service speech-spark-musik (only 127.0.0.1, with a split install through the TLS-Tor; ports music.port 31004 and music.engine_port 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. In this stage only the admin measures: Features → Making music → \"Musik testen\" makes two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and both samples to listen to. Profiles cannot order anything yet. Logs: sudo speech-spark logs musik, maintenance pause: sudo speech-spark pause musik 30."
+"text": "It builds acestep.cpp once (ace-server, pinned commit, CUDA for the GB10, no torch and no Docker, needs nvcc and cmake) into /opt/speech-spark/acestep, downloads the GGUF files with a SHA-256 check into /var/lib/speech-spark/models/musik and sets up the service speech-spark-musik (only 127.0.0.1, with a split install through the TLS-Tor; ports music.port 31004 and music.engine_port 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. In this stage only the admin measures: State → Checks → \"Test music\" makes two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and both samples to listen to. Profiles cannot order anything yet. Logs: sudo speech-spark logs musik, maintenance pause: sudo speech-spark pause musik 30."
 },
 {
 "lang": "en",

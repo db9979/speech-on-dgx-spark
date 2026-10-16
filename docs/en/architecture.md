@@ -2548,7 +2548,7 @@ Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test
 
 Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 klein only at the first picture, checks the finished picture and frees the memory after a quiet time.
 
-Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "Musik testen" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py.
+Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "Test music" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py.
 
 **Why:** A picture model can paint anything, also nudity, violence or real people. The language model never decides that; fixed rules before and after painting do. And the model needs a lot of shared memory: it must never push out the language model or the voice.
 
@@ -2612,7 +2612,7 @@ flowchart TD
 
 - Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none).
 - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "Bild testen".
-- Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); Features → Making music → "Musik testen".
+- Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → "Test music".
 
 #### What you see
 

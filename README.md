@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.671** Test music now sits under State → Checks (Features stays short, Weiche unchanged)
 - **V01.0.670** Making music, stage M0: ACE-Step 1.5 on the Spark (acestep.cpp, install.sh --musik 2b), loads only for a song; the admin measures with “Test music”
 - **V01.0.669** Docs and help: own language model next to qwen38, full ports table; new guard test test_doku_stand keeps README, diagram and ports in step with the code
 - **V01.0.668** Save the battery: pages, Android and iPhone app sleep in the background
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.664** Switch check: „Terminal“ is no appointment, everyday sentences for the new functions, known gaps closed, photo edits shown as pictures, learning from unclear questions
 - **V01.0.663** Companion: confirm notes in the tray window with "OK"
 - **V01.0.662** Verbessern works on the Pi again; case: eleven pages with a preview to tap
-- **V01.0.661** Terminal client: Me → Terminal sets up the command spark-tui (checksum checked); Textual in its own environment
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -98,7 +98,7 @@ flowchart LR
 
 1. You speak into your phone, browser, one of the apps, the terminal client, a speaker or the phone. The panel signs you in, sends the audio to **speech recognition** and gets text back.
 2. The **router** picks by fixed rules which tools the question needs. The panel passes the text, with memory, conversation history, your own knowledge and exactly those tools, to the **language model** behind the LLM-Tor (or to qwen38 if you keep it).
-3. When the answer needs calendars, mail, weather, Home Assistant, web search, Kiwix or Wikipedia, the panel fetches the data itself; switching and adding entries only happen after you confirm. Pictures are painted and edited by FLUX.2 klein on the Spark; music is made by ACE-Step 1.5 (at first only “Test music” for the admin).
+3. When the answer needs calendars, mail, weather, Home Assistant, web search, Kiwix or Wikipedia, the panel fetches the data itself; switching and adding entries only happen after you confirm. Pictures are painted and edited by FLUX.2 klein on the Spark; music is made by ACE-Step 1.5 (at first only “Test music” for the admin under State → Checks).
 4. The answer goes sentence by sentence to **text to speech** and is played as a stream while the model is still writing. Priority makes sure spoken answers and important people go first.
 5. With the **Spark split** the panel, profiles, chats and calls live on the small computer and reach the models only through the TLS-Tor. If the DGX restarts or is switched off, chats, reminders and calls keep running, and emergency mode understands a few fixed commands without a language model.
 6. Other apps use ASR and TTS directly through the OpenAI-style APIs with an API key, MCP programs use the Spark as an MCP server with their own access.
