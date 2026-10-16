@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.690** · 2026-10-16 · ROT-FIX .688: Alltagsverben aus Funktionsnamen („mach“ aus „Musik machen“) zählen nicht als Hilfe-Thema; „Wie mache ich Pfannkuchen?“ geht wieder ans Sprachmodell
 - **V01.0.689** · 2026-10-16 · Live-Übersicht: rechts stehen nur noch Ziele, die gerade arbeiten, ein ⚠ haben oder in den letzten 15 Minuten benutzt wurden (mit „vor 4 min“); die übrigen im Heimnetz und auf dem Spark stehen zusammen in „+ N bereit“, das Internet weiter in „+ N ruhig“; die Steuerzentrale am Bildschirm fasst genauso zusammen
 - **V01.0.688** · 2026-10-16 · Musik machen (Stufe M1): eigener Admin-Schalter, Werkzeug musik_machen mit Weiche, Ich → Musik mit Liedern, Abspieler und Löschen, Liedkarte im Chat, Apps; feste Regeln (instrumental und 2 Minuten ohne Wunsch, keine Künstler, keine Personen, keine Geheimnisse), Grenzen pro Profil; Modell wählbar, Musik testen misst jedes installierte Modell; Speicherbedarf aus der Messung (2B 14, XL 20 GiB)
 - **V01.0.687** · 2026-10-16 · Fix Selbsttest: test_saetze hängt nicht mehr davon ab, ob ein früherer Test die Websuche angelassen hat

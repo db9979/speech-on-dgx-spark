@@ -314,8 +314,13 @@ def _lvl(x):
     return x if x in LEVELS else "admin" if x is True else "profile"
 
 
+# everyday verbs in a function's name name no topic: "Musik machen" made "Wie mache ich Pfannkuchen?" a help question
+EVERYDAY = {"mach", "making"}
+
+
 def _topic_words():
-    """Stems that name a function or guide (titles from features.py and guides.js) and the synonyms."""
+    """Stems that name a function or guide (titles from features.py and guides.js) and the synonyms, without
+    EVERYDAY."""
     ix = index()
     if ix.get("topics") is None:
         words = set()
@@ -325,7 +330,7 @@ def _topic_words():
         for f in features.FEATURES:
             words |= {w for w in tokens(f.de + " " + f.en) if len(w) >= 4}
         words |= {w for w in SYN if len(w) >= 3}
-        ix["topics"] = words
+        ix["topics"] = words - EVERYDAY
     return ix["topics"]
 
 

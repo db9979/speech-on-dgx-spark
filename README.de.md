@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.690** Fix: „Wie mache ich …?“ landet nicht mehr in der Spark-Hilfe (seit „Musik machen“)
 - **V01.0.689** Live-Übersicht: rechts nur noch, was gerade benutzt wird; der Rest steht in „+ N bereit“
 - **V01.0.688** Musik machen: jedes freigegebene Profil macht eigene Lieder im Gespräch („Mach mir ein Lied über …“) und unter Ich → Musik; Modell (2B oder XL) wählbar, Musik testen misst jedes installierte Modell
 - **V01.0.687** Fix Selbsttest: der Test für „Das kannst du auch sagen“ hängt nicht mehr von der Reihenfolge ab
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.683** Bilder: Karte im Chat bleibt nicht mehr bei „wartet …“; Karikatur und Comic gelten als Bildwunsch
 - **V01.0.682** Steuerzentrale am Bildschirm: der Panel-Rechner zeigt am HDMI-Ausgang alles auf einer Textanzeige, startet beim Booten ohne Anmeldung
 - **V01.0.681** Musik testen: Lieder entstehen (Auftrags-Nummer und Modellnamen so, wie ace-server sie schickt und erwartet)
-- **V01.0.680** Fix: Die Sprachausgabe scheitert nach einem Lauf von install.sh nicht mehr an „No available memory“; Engines starten nur bei Änderung neu, das Sprachmodell zuerst
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
