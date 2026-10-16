@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.677** · 2026-10-16 · Fix iPhone-App: CarPlay-Gesicht baut wieder (Typfehler im Standbild)
 - **V01.0.676** · 2026-10-16 · CarPlay: Apple hat die Freigabe erteilt, die iPhone-App erscheint jetzt mit eigenem Symbol im Auto, mit dem gewählten Gesicht je Zustand
 - **V01.0.675** · 2026-10-16 · Musik testen findet die Modelle im Musik-Ordner; die Musik-Engine bindet ggml fest ein (fehlende Bibliotheken nach dem Bau)
 - **V01.0.674** · 2026-10-16 · Fix Leistung messen bei getrennten Rechnern: Sprachausgabe/Spracherkennung über common.model_url (TLS-Tor) statt 127.0.0.1, neu das Sprachmodell über llm.py (erstes Wort, Token/s einzeln und gleichzeitig), GPU-Name und Speicher vom Wärter; fehlt ein Teil, heißt es „Nicht gemessen: …“ statt „Alles flüssig“; Texte ohne qwen38

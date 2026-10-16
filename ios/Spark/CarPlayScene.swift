@@ -89,7 +89,12 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
 @MainActor
 enum FaceStill {
     static func image(_ kind: String, _ mood: FaceMood, side: CGFloat = 240) -> UIImage? {
-        let style: FaceStyle = kind == "comic" ? ComicFace() : kind == "comic_woman" ? ComicFace(woman: true) : RobotFace()
+        let style: FaceStyle
+        switch kind {
+        case "comic": style = ComicFace()
+        case "comic_woman": style = ComicFace(woman: true)
+        default: style = RobotFace()
+        }
         let t: (open: Double, smile: Double, eyeH: Double, halo: Double, brow: Double, look: Double)
         switch mood {
         case .listen: t = (0, 0.5, 28, 0.6, 0.8, 0)
