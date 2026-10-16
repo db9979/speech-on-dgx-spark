@@ -1471,6 +1471,13 @@
 "titel": "Hinweise einklappbar",
 "text": "A: Mit mindestens zwei Hinweisen oben (z. B. NAS, Verbessern, Praxistest) eine Admin-Seite öffnen: eine schmale Zeile „N Hinweise“ mit den Textanfängen, zugeklappt. Antippen klappt die Zeilen mit „Ansehen“ auf; nach Neuladen bleibt es so. Zustand → „Hinweise stehen oben“ klappt sie auf. Ein roter Hinweis steht immer offen darüber. Am Handy passt die Zeile ohne Umbruch. iPhone: Spark verwalten → Monitoring → Braucht dich zeigt „N Hinweise“ zum Aufklappen.",
 "thread": "Hinweis-Kästen einklappbar"
+},
+{
+"id": "P234",
+"v": 708,
+"titel": "Telefon hinter der Dream Machine: Testanruf spricht, Anruf von außen",
+"text": "A: In der UniFi Dream Machine UDP 31060 und 31062-31069 von 192.168.10.1 an das Panel (Pi) weiterleiten, außen und innen dieselben Ports. Funktionen → Den Spark anrufen → „Verbindung prüfen“: „Angemeldet“ und der Hinweis auf NAT. Schritt 4 „Spark ruft mich an“ an das eigene Mobilteil (z. B. **611): abheben, der Testsatz ist zu hören. Unter Zustand → Logs steht „telefon: aufgelegt nach … davon … mit sprache, rein … pakete“ mit Zahlen über null. Dann vom Handy von außen anrufen (Nummer unter Ich → Telefon bestätigt, „Anrufe von außen“ an): der Spark nimmt ab und grüßt; sonst die Zeilen mit „telefon:“ aus dem Log in den Thread kopieren.",
+"thread": "Assistent per Telefon anrufen"
 }
 ]
 }

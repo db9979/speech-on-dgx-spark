@@ -412,6 +412,7 @@ class Agent(asyncio.DatagramProtocol):
         self.pbx = None             # (ip, port)
         self.local = ""             # this machine's address towards the PBX
         self.port = 0
+        self.nat = ("", 0)          # the address the PBX sees when a router translates in between (Via received, rport)
         self.z = {}
         self.reg = {"ok": False, "why": "fehlt", "t": 0.0, "until": 0.0}
         self.cseq = random.randint(1, 1000)
@@ -422,6 +423,11 @@ class Agent(asyncio.DatagramProtocol):
         self.calls = {}             # call-id -> Call
         self.sec = [0.0, 0]         # the second and the messages in it
         self.closing = False
+
+    def me(self):
+        """(ip, SIP port) the PBX reaches the Spark at: the router's when one translates in between (NAT; there UDP
+        SIP_PORT and RTP_PORTS have to be forwarded to this computer), else this computer's own."""
+        return self.nat if self.nat[0] else (self.local, self.port)
 
     # ------------------------------------------------------------ socket
     async def open(self, z, ip):
@@ -514,11 +520,11 @@ class Agent(asyncio.DatagramProtocol):
         user, dom = self.z["user"], self._domain()
         uri = f"sip:{dom}"
         auth_line, why, nc = "", "stumm", 0
-        for _ in range(3):
+        for _ in range(5):
             self.cseq += 1
             heads = [f"Via: SIP/2.0/UDP {self.local}:{self.port};branch={branch()};rport", "Max-Forwards: 70",
                      f"From: <sip:{user}@{dom}>;tag={self.tag}", f"To: <sip:{user}@{dom}>", f"Call-ID: {self.reg_cid}",
-                     f"CSeq: {self.cseq} REGISTER", f"Contact: <sip:{user}@{self.local}:{self.port}>",
+                     f"CSeq: {self.cseq} REGISTER", "Contact: <sip:{}@{}:{}>".format(user, *self.me()),
                      f"Expires: {expires}", "Allow: " + ", ".join(METHODS)] + ([auth_line] if auth_line else [])
             r = await self.transact(request("REGISTER", uri, heads), (self.reg_cid, self.cseq, "REGISTER"))
             if r is None:
@@ -536,6 +542,9 @@ class Agent(asyncio.DatagramProtocol):
                     break
             why = "ok" if 200 <= r.code < 300 else "zugang" if r.code in (401, 407, 403) and auth_line \
                 else "verboten" if r.code == 403 else "unbekannt" if r.code == 404 else "abgelehnt"
+            if why == "ok" and expires and self._learn_nat(r):
+                auth_line = ""                             # sign in again with the address the PBX sees (a new challenge)
+                continue
             if why == "ok" and expires:
                 m = re.search(r";\s*expires=(\d+)", r.get("contact")) or re.fullmatch(r"\s*(\d+)\s*", r.get("expires") or "")
                 expires = max(60, min(int(m.group(1)), 3600)) if m else expires
@@ -544,6 +553,20 @@ class Agent(asyncio.DatagramProtocol):
             self.reg = {"ok": why == "ok", "why": why, "t": time.time(), "until": time.time() + (expires if why == "ok" else 0),
                         "code": getattr(r, "code", 0) if why != "ok" else 0}
         return why
+
+    def _learn_nat(self, r):
+        """True when the answer shows a router translating between the Spark and the PBX for the first time (Via
+        received= differs from this computer's address): from now on Contact and SDP name the router's address."""
+        via = r.get("via")
+        m = re.search(r";\s*received=([\d.]+)", via)
+        ip = m.group(1) if m else ""
+        if not ip or ip == self.local or not lan_ip(ip) or self.nat[0] == ip:
+            return False
+        m = re.search(r";\s*rport=(\d{1,5})", via)
+        port = int(m.group(1)) if m and 0 < int(m.group(1)) < 65536 else self.port
+        self.nat = (ip, port)
+        print(f"telefon: nat zwischen spark und anlage, anlage sieht port {port}", flush=True)
+        return True
 
     # ------------------------------------------------------------ requests from the PBX
     def on_request(self, msg, addr):
@@ -658,6 +681,7 @@ class Call:
         self.ours = 0                                     # CSeq of our own requests in this dialog
         self.tasks = []
         self.rest = b""
+        self.pkts = {"raus": 0, "sprache": 0, "rein": 0}   # RTP packets sent, of them with speech, received (log at the end)
 
     # ------------------------------------------------------------ start and end
     @staticmethod
@@ -763,17 +787,17 @@ class Call:
         user, dom = agent.z["user"], agent._domain()
         uri, me = f"sip:{target}@{dom}", f"<sip:{user}@{dom}>;tag={tag}"
         pts = [p for p in telefon_ton.PREFER if s["ton"] == "hd" or p != 9]
-        offer = sdp_offer(agent.local, sock.getsockname()[1], pts, random.randint(1000, 10 ** 9))
+        offer = sdp_offer(agent.me()[0], sock.getsockname()[1], pts, random.randint(1000, 10 ** 9))
         got = asyncio.Queue()
         agent.watch[cid] = got.put_nowait
-        cseq, auth, nc, ok = random.randint(1, 1000), "", 0, None
+        cseq, auth, nc, ok, early = random.randint(1, 1000), "", 0, None, {}
         try:
             for _ in range(2):
                 via = f"Via: SIP/2.0/UDP {agent.local}:{agent.port};branch={branch()};rport"
                 heads = [via, "Max-Forwards: 70", "From: " + me, f"To: <{uri}>", f"Call-ID: {cid}", f"CSeq: {cseq} INVITE",
-                         f"Contact: <sip:{user}@{agent.local}:{agent.port}>", "Allow: " + ", ".join(METHODS)] + ([auth] if auth else [])
+                         "Contact: <sip:{}@{}:{}>".format(user, *agent.me()), "Allow: " + ", ".join(METHODS)] + ([auth] if auth else [])
                 inv = request("INVITE", uri, heads, offer)
-                final = await Call._ring(agent, inv, got, cseq, via, uri, me, cid, ring)
+                final = await Call._ring(agent, inv, got, cseq, via, uri, me, cid, ring, early)
                 if final is None:
                     return "keine antwort"
                 if 200 <= final.code < 300:
@@ -790,6 +814,7 @@ class Call:
                         return "abgelehnt"
                     cseq += 1
                     continue
+                print(f"telefon: anruf raus antwort {final.code}", flush=True)     # the code alone, never the number
                 return "besetzt" if final.code in (486, 600) else "keine antwort" if final.code in (408, 480, 487) else "abgelehnt"
             if ok is None:
                 return "abgelehnt"
@@ -800,7 +825,7 @@ class Call:
             ack = request("ACK", far, ack_heads, "")
             agent.send(ack)
             agent.watch[cid] = lambda m: agent.send(ack) if 200 <= m.code < 300 else None   # the 200 again: the ACK again
-            sdp = sdp_parse(ok.body)
+            sdp = sdp_parse(ok.body or early.get("sdp", ""))     # some PBX answer only in the 183, the 200 comes empty
             pt = choose(sdp, s["ton"]) if sdp else None
             if not sdp or pt is None or not lan_ip(sdp["ip"]) and sdp["ip"] != agent.pbx[0]:
                 print("telefon: anruf raus beendet, keine gemeinsame tonart oder adresse nicht im heimnetz", flush=True)
@@ -810,6 +835,7 @@ class Call:
                 return "abgelehnt"
             call = Call(agent, parse(inv), agent.pbx, target, uid, False, sdp, pt, mode=mode)
             call.out, call.tag, call.ours, call.text = {"target": far, "from": me, "to": ok.get("to"), "routes": routes}, tag, cseq, text
+            call.sdp = offer                     # a new offer in the call (re-INVITE) gets our own description again
             call.sock, sock = sock, None
             call.answered = True
             call.acked.set()
@@ -826,9 +852,9 @@ class Call:
                 agent.watch.pop(cid, None)
 
     @staticmethod
-    async def _ring(agent, inv, got, cseq, via, uri, me, cid, ring):
+    async def _ring(agent, inv, got, cseq, via, uri, me, cid, ring, early=None):
         """Sends our INVITE (again until the PBX answers at all) and waits for the final answer; after ring seconds a
-        CANCEL. The final answer or None when none came."""
+        CANCEL. The final answer or None when none came. The SDP of a provisional answer (183) goes to early["sdp"]."""
         end, wait, heard = time.monotonic() + ring, 0.5, False
         next_send = time.monotonic()
         while True:
@@ -846,6 +872,8 @@ class Call:
                 continue
             if m.code >= 200:
                 return m
+            if early is not None and m.body.strip():
+                early["sdp"] = m.body
             heard = True
         if not heard:
             return None
@@ -872,7 +900,7 @@ class Call:
                                     f"CSeq: {cseq} ACK"], "")
 
     def contact(self):
-        return [f"Contact: <sip:{self.agent.z.get('user', 'spark')}@{self.agent.local}:{self.agent.port}>"]
+        return ["Contact: <sip:{}@{}:{}>".format(self.agent.z.get("user", "spark"), *self.agent.me())]
 
     def end(self, why, by_peer=False):
         if not self.over.is_set():
@@ -918,7 +946,7 @@ class Call:
         self.rtp = Rtp(self)
         await loop.create_datagram_endpoint(lambda: self.rtp, sock=self.sock)
         port = self.sock.getsockname()[1]
-        self.sdp = sdp_offer(a.local, port, [self.codec.pt], random.randint(1000, 10 ** 9))
+        self.sdp = sdp_offer(a.me()[0], port, [self.codec.pt], random.randint(1000, 10 ** 9))
         self.last = response(self.invite, 200, "OK", self.tag, self.contact(), self.sdp)
         self.answered = True
         wait = 0.5
@@ -991,7 +1019,9 @@ class Call:
                 secs = int(time.time() - self.t0)
                 _bump("sekunden", secs)
                 self.keep(secs)
-                print(f"telefon: aufgelegt nach {secs} s, {self.questions} fragen ({why})", flush=True)
+                k = self.pkts
+                print(f"telefon: aufgelegt nach {secs} s, {self.questions} fragen ({why}), ton raus {k['raus']} pakete, "
+                      f"davon {k['sprache']} mit sprache, rein {k['rein']} pakete", flush=True)
             elif why == "abgebrochen":
                 print("telefon: anruf vor dem abheben beendet", flush=True)
 
@@ -1019,6 +1049,7 @@ class Call:
                 self.digit(DTMF[payload[0]])
             return
         if pt == self.codec.pt:
+            self.pkts["rein"] += 1
             self.inbuf.append(payload)
             self.got.set()
 
@@ -1080,6 +1111,8 @@ class Call:
             mark = payload is None
             if self.rtp and self.rtp.transport and not self.rtp.transport.is_closing():
                 self.rtp.transport.sendto(pkt, to)
+                self.pkts["raus"] += 1
+                self.pkts["sprache"] += payload is not None
             seq, ts = (seq + 1) & 0xFFFF, (ts + self.codec.clock // 50) & 0xFFFFFFFF
             nxt += 0.02
             delay = nxt - loop.time()
@@ -1123,8 +1156,12 @@ class Call:
             if wartung.paused("tts"):
                 await self.play(esp32.pause_clip(guess_language(text) == "English", text))
             else:
+                got = 0
                 async for pcm in esp32.tts_stream(self.uid or None, text):
+                    got += len(pcm)
                     await self.play(pcm)
+                if not got:
+                    print("telefon: sprachausgabe leer", flush=True)
         except Exception as e:
             print("telefon: sprachausgabe", type(e).__name__, flush=True)
         await self.drain()
@@ -1637,7 +1674,7 @@ def state():
     else:
         reg = dict(a.reg) if a else {"ok": False, "why": "stumm", "t": 0}
     return {"on": s["on"], "ok": bool(reg.get("ok")), "why": reg.get("why", ""), "since": reg.get("t", 0),
-            "calls": len(a.calls) if a else 0}
+            "calls": len(a.calls) if a else 0, "nat": bool(a and a.nat[0] and reg.get("ok"))}
 
 
 def for_live():
@@ -1809,7 +1846,7 @@ async def admin_check(request: Request):
     if not settings()["on"]:
         z = zugang()
         a = await _start(z)
-        why = a.reg.get("why", "stumm")
+        why, nat = a.reg.get("why", "stumm"), bool(a.nat[0])
         if a.transport:
             if a.reg.get("ok"):
                 await a.register(0)
@@ -1818,8 +1855,9 @@ async def admin_check(request: Request):
         _agent["key"] = None
         await tick()
         why = state()["why"] if not state()["ok"] else "ok"
-    print(f"telefon: verbindung geprueft, {why}", flush=True)
-    return {"ok": why == "ok", "why": why, "text": SAY.get(why, SAY["abgelehnt"])[0]}
+        nat = state()["nat"]
+    print(f"telefon: verbindung geprueft, {why}" + (", nat dazwischen" if nat else ""), flush=True)
+    return {"ok": why == "ok", "why": why, "text": SAY.get(why, SAY["abgelehnt"])[0], "nat": nat and why == "ok"}
 
 
 @router.put("/api/admin/telefon/nummern", dependencies=[Depends(auth)])

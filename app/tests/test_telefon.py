@@ -168,6 +168,8 @@ class Parser(unittest.TestCase):
 
 # ---------------------------------------------------------------- a made-up PBX
 class Pbx(asyncio.DatagramProtocol):
+    received = ""                    # a router in between (NAT): the address the PBX writes into the Via of its answers
+
     def __init__(self, pw="geheim-1234"):
         self.pw, self.got, self.q, self.nonce = pw, [], asyncio.Queue(), "n0nce"
 
@@ -186,15 +188,16 @@ class Pbx(asyncio.DatagramProtocol):
             h = lambda s: hashlib.md5(s.encode()).hexdigest()  # noqa: E731
             want = h(f"{h(p['username'] + ':fritz.box:' + self.pw)}:{self.nonce}:{p['nc']}:{p['cnonce']}:auth:{h('REGISTER:' + p['uri'])}")
             if p["response"] == want:
-                self.reply(m, addr, "200 OK\r\nContact: " + m.get("contact") + ";expires=300")
+                self.reply(m, addr, "200 OK\r\nContact: " + m.get("contact") + ";expires=300",
+                           f";received={self.received};rport=40600" if self.received else "")
             else:
                 self.reply(m, addr, "403 Forbidden")
             return
         self.q.put_nowait((m, addr))
 
-    def reply(self, m, addr, status):
+    def reply(self, m, addr, status, via=""):
         self.t.sendto((
-            f"SIP/2.0 {status}\r\nVia: {m.get('via')}\r\nFrom: {m.get('from')}\r\nTo: {m.get('to')};tag=pbx\r\n"
+            f"SIP/2.0 {status}\r\nVia: {m.get('via')}{via}\r\nFrom: {m.get('from')}\r\nTo: {m.get('to')};tag=pbx\r\n"
             f"Call-ID: {m.get('call-id')}\r\nCSeq: {m.get('cseq')}\r\nContent-Length: 0\r\n\r\n").encode(), addr)
 
 
@@ -279,6 +282,29 @@ class Calls(unittest.TestCase):
         reg, methods = self.run_with_pbx(body)
         self.assertTrue(reg["ok"])
         self.assertEqual(methods, ["REGISTER", "REGISTER"])
+
+    def test_a_router_in_between_is_learned_and_named_in_contact_and_sdp(self):
+        """Spark and PBX in two networks with NAT between (FRITZ!Box → Dream Machine → Spark): the PBX only reaches
+        the router's address (here 127.0.0.9: the tests take 127.x as home network), so after the first sign-in the Spark signs in again with it and names it in its SDP."""
+        async def body(a, pbx, port):
+            regs = [m for m in pbx.got if m and m.method == "REGISTER"]
+            return a.reg, a.me(), [r.get("contact") for r in regs], bool(a.nat[0])
+        with mock.patch.object(Pbx, "received", "127.0.0.9"), _quiet() as log:
+            reg, me, contacts, nat = self.run_with_pbx(body)
+        self.assertTrue(reg["ok"])
+        self.assertEqual(me, ("127.0.0.9", 40600))
+        self.assertTrue(nat)
+        self.assertIn("@127.0.0.1:", contacts[0])
+        self.assertTrue(contacts[-1].endswith("@127.0.0.9:40600>"))
+        self.assertIn("telefon: nat zwischen spark und anlage", log.text)
+        self.assertEqual(telefon.sdp_parse(telefon.sdp_offer(me[0], 31062, [9], 1))["ip"], "127.0.0.9")
+
+    def test_the_same_network_keeps_the_own_address(self):
+        async def body(a, pbx, port):
+            return a.me(), a.nat
+        me, nat = self.run_with_pbx(body)
+        self.assertEqual(me[0], "127.0.0.1")
+        self.assertEqual(nat, ("", 0))
 
     def test_wrong_password_says_so(self):
         async def body(a, pbx, port):
@@ -675,6 +701,46 @@ class Calls(unittest.TestCase):
         self.assertTrue(any("Testanruf" in t for t in helpers.TTS_TEXT))
         self.assertIn("telefon: anruf raus angenommen (test)", log.text)
         self.assertIn("telefon: testanruf an **611: angenommen", log.text)
+
+    def test_the_sound_description_of_a_183_counts_when_the_200_comes_without_one(self):
+        """Some PBX describe the sound only in the 183 (early media) and answer with an empty 200: the Spark still
+        speaks, and the hang-up line counts the sound packets (fixed words and numbers)."""
+        helpers.TTS_TEXT.clear()
+
+        async def body(a, pbx, port):
+            loop = asyncio.get_running_loop()
+            ph = Phone()
+            pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+            rport = pt_.get_extra_info("sockname")[1]
+            with mock.patch.dict(telefon._agent, {"a": a}):
+                task = asyncio.ensure_future(telefon_anruf.test_call("**611"))
+                m, addr = await self._req(pbx, "INVITE")
+                sdp = (f"v=0\r\no=ph 1 1 IN IP4 127.0.0.1\r\ns=-\r\nc=IN IP4 127.0.0.1\r\nt=0 0\r\nm=audio {rport} RTP/AVP 9 101\r\n"
+                       "a=rtpmap:9 G722/8000\r\na=rtpmap:101 telephone-event/8000\r\n")
+                self._reply(pbx, m, addr, "183 Session Progress", "Content-Type: application/sdp\r\n", sdp)
+                self._reply(pbx, m, addr, "200 OK", "Contact: <sip:611@127.0.0.1>\r\n")
+                res = await task
+                bye, addr = await self._req(pbx, "BYE", wait=15)
+                self._reply(pbx, bye, addr, "200 OK")
+                await self._until(lambda: not a.calls and not a.watch)
+            pt_.close()
+            return res, len(ph.packets)
+        with _quiet() as log:
+            res, n = self.run_with_pbx(body)
+        self.assertEqual(res, "angenommen")
+        self.assertGreater(n, 3)
+        self.assertRegex(log.text, r"telefon: aufgelegt nach \d+ s, 0 fragen \(test\), ton raus \d+ pakete, davon [1-9]\d* mit sprache, rein \d+ pakete")
+
+    def test_a_refused_call_logs_the_answer_code(self):
+        async def body(a, pbx, port):
+            task = asyncio.ensure_future(telefon.Call.dial(a, "**611", self.uid, "weckruf", ring=2))
+            m, addr = await self._req(pbx, "INVITE")
+            self._reply(pbx, m, addr, "403 Forbidden")
+            return await task
+        with _quiet() as log:
+            res = self.run_with_pbx(body)
+        self.assertEqual(res, "abgelehnt")
+        self.assertIn("telefon: anruf raus antwort 403", log.text)
 
     def test_nobody_answers_the_spark_cancels(self):
         async def body(a, pbx, port):
