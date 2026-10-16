@@ -74,6 +74,19 @@ Laufen Panel und Modelle getrennt, zeigt Zustand → Monitoring beide Rechner gl
 
 Antwortet der Modell-Rechner nicht, bleibt seine Karte stehen, rot mit „antwortet nicht seit …“ und den letzten Werten grau. Unter „Braucht dich“ meldet sich das Panel mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder mit zu wenig Strom, weniger als 0,5 GiB Arbeitsspeicher frei; auf jedem Rechner weniger als 10 % Platte frei; der Modell-Rechner antwortet nicht. Jeder Hinweis führt zu den Karten. Dasselbe zeigen Zustand → Live (Kasten „Panel-Rechner“, CPU des Panel-Rechners neben der des Modell-Rechners), die iPhone-App unter Monitoring und die Android-App über die Panel-Ansicht. Gezeigt werden nur Zahlen und feste Wörter, nie Adressen oder Prozesse; auf einem einzelnen Spark bleibt die Seite wie bisher. Logs im Bereich „system“ (`rechner: hinweis …`).
 
+## Steuerzentrale am Bildschirm
+
+Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: alles auf einer Anzeige, als reiner Text ohne Desktop und Browser (etwa 20 MB). Einschalten unter Funktionen → Steuerzentrale am Bildschirm; danach startet sie bei jedem Booten von selbst auf dem ersten Bildschirm, ohne Anmeldung. Ausschalten beendet sie, und die normale Anmeldung kommt zurück.
+
+- **Oben**: Gesamtzustand, laufende Anfragen, Hinweise, Wartung und Version, darunter die Zahlen des Tages (Antworten, erster Ton, Wächter, Eingang, Sicherung, Zeiten des Bildschirms).
+- **Mitte**: die Stufen Hören, Weiche, Sprachmodell, Werkzeuge und Sprechen im Rahmen des Rechners, auf dem sie laufen; bei Spark teilen tars und Pi nebeneinander mit CPU, GPU, Arbeitsspeicher, Temperatur und 20-Minuten-Kurve. Jede laufende Anfrage hat eine eigene Farbe und springt sichtbar zwischen den Rechnern hin und her.
+- **Links** die Geräte mit Anfrage, die verbundenen Geräte und Zugriffe über das Internet; **rechts** alle Dienste und Ziele der Live-Übersicht, das Internet hinter dem Wächter, „Braucht dich“, Modelle und Dienste, die letzten Ereignisse, Sicherheit und Wartung.
+- **Unten** die letzten 20 Minuten als Kurven (GPU, CPU, freier Speicher, Temperatur) und die Antworten je Stunde.
+
+Die Größe richtet sich nach dem Bildschirm: Beim Start und wenn sich die Auflösung ändert, wählt die Anzeige eine Terminus-Schrift für mindestens 160 × 45 Zeichen (Full HD etwa 160 × 45, 4K mit doppelt so großer Schrift etwa 240 × 67); „kleiner“ oder „größer“ nimmt die nächste Schrift. Auf einem sehr kleinen Bildschirm erscheint eine knappe Liste ohne Fluss. Zeichen, die die Schrift nicht kennt, ersetzt sie durch einfache Zeichen. Zwischen „Anzeige aus ab“ und „Anzeige an ab“ (Standard 23 bis 7 Uhr, zweimal dieselbe Stunde heißt immer an) schaltet sie den Bildschirm dunkel, der Monitor geht in den Ruhezustand. Gegen Einbrennen wandert das Bild alle 3 Minuten um ein bis zwei Zeichen.
+
+Gezeigt werden nur Art, Ort, Zeit und Zahlen, nie Fragen, Antworten oder Namen: Es sieht jeder im Raum. Die Anzeige fragt jede Sekunde nur das Panel auf demselben Rechner (127.0.0.1) mit einem eigenen Schlüssel, den nur der Dienstbenutzer lesen kann; von anderen Rechnern oder über einen Proxy antwortet das Panel nicht. Neue Dienste der Live-Übersicht erscheinen von selbst. Zustand → Live zeigt im Kasten „Steuerzentrale“, ob sie gerade zeigt; der Dienst-Wächter meldet, wenn sie nicht mehr fragt. Logs im Bereich „system“ (`schirm: …`).
+
 ## Prüfen und Fehler suchen
 
 | Was | Befehl |

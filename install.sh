@@ -927,6 +927,7 @@ fi
   done
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
+  printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel\n'   # stage E4: takes the panel's checked wish
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1310,6 +1311,45 @@ Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh gehaeuse wunsch-intern
 TimeoutStartSec=5min
 UNIT
+# Plan raspberry-split B9: the Steuerzentrale as text on the screen (steuerzentrale.py on tty1, no desktop, no sign-in).
+# Only where the panel runs; panel/schirm.py enables and starts it when the admin switches Funktionen → Steuerzentrale
+# on (then it comes up at every boot) and disables it again, the login prompt on tty1 comes back after it stops.
+if [ "$MODE" = full ]; then
+cat >/etc/systemd/system/speech-spark-schirm.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Steuerzentrale on the screen (tty1)
+After=speech-spark-panel.service getty@tty1.service systemd-user-sessions.service
+Conflicts=getty@tty1.service
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=TERM=linux LANG=C.UTF-8
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/steuerzentrale.py
+ExecStopPost=+/usr/bin/systemctl --no-block start getty@tty1.service
+Restart=always
+RestartSec=5
+MemoryMax=128M
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+else
+  systemctl disable --now speech-spark-schirm.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-schirm.service
+fi
 if [ -n "$GEHAEUSE_PICK" ]; then
   say "Case $GEHAEUSE_PICK: display, LEDs and fans (active after a restart)"
   bash "$PREFIX/app/speech-spark.sh" gehaeuse ein || warn "case: setup failed, see speech-spark gehaeuse status"
@@ -1497,7 +1537,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr, tts, bild, musik, llmtor, tlstor, waerter or notasr)
+restart_front() {  # $1 = service (asr, tts, bild, musik, llmtor, tlstor, waerter, notasr or schirm)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -1547,6 +1587,8 @@ fi
 [ "$LLM_ON" = 1 ] && restart_front llmtor
 
 [ "$PANEL_ONLY" = 1 ] && restart_front notasr
+# B9: the Steuerzentrale runs only while the admin switch is on (panel/schirm.py); an update restarts it then
+systemctl is-active -q speech-spark-schirm.service 2>/dev/null && restart_front schirm
 if [ "$TEILEN" = 1 ]; then
   systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
   systemctl start speech-spark-teilen-fw.service 2>/dev/null || warn "the door's firewall did not load (sudo speech-spark teilen firewall)"

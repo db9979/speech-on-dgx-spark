@@ -131,6 +131,8 @@ TARGETS = {
     "naszustand": ("Zustand der NAS", "SNMPv3 · nur lesen · Heimnetz", "lan", False),
     # Gehäuse (gehaeuse.py): OLED and LEDs of the panel computer's case; numbers and status only
     "gehaeuse": ("Gehäuse", "Pironman 5 · am Panel-Rechner", "spark", False),
+    # Steuerzentrale (schirm.py, steuerzentrale.py): the text screen on the panel computer's HDMI output; status only
+    "schirm": ("Steuerzentrale", "Bildschirm am Panel-Rechner", "spark", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
@@ -1237,6 +1239,13 @@ def snapshot(view="admin", now=None):
         geh = {"on": False}
     if geh.get("on"):
         used.add("gehaeuse")
+    try:
+        import schirm
+        szr = schirm.for_live(now=now)
+    except Exception:
+        szr = {"on": False}
+    if szr.get("on"):
+        used.add("schirm")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1303,6 +1312,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "gehaeuse" and geh.get("on"):   # Gehäuse: display, LEDs, temperature, fan (no page content)
             x["sub"] = (f"Display {geh.get('oled', '-')} · LEDs {geh.get('led', '-')} · {geh.get('temp', '?')} °C"
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
+        if x["id"] == "schirm" and szr.get("on"):   # Steuerzentrale: shows or not, on or dark by the times (no content)
+            x["sub"] = ("zeigt" if szr.get("sieht") else "wartet auf den Bildschirm") + ("" if szr.get("an") else " · dunkel nach Zeitplan")
         if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, disks, open problems (no address)
             x["sub"] = (f"{nzs.get('vols', 0)} Speicherbereiche · {nzs.get('disks', 0)} Festplatten"
                         + ("" if nzs.get("ok") else " · antwortet nicht") + (f" · {nzs['warn']} Hinweise" if nzs.get("warn") else ""))

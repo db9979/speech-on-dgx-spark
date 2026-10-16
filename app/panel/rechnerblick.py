@@ -34,7 +34,8 @@ RAM_MIN_GIB = 0.5      # GiB available memory on the panel computer (the model c
 DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 # the model computer's parts shown as chips (its status "einheiten"), the panel computer's own units
 MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen")
-PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse"}
+PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
+               "schirm": "speech-spark-schirm"}
 ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": (0, 65536), "ram_frei": (0, 65536),
           "ram_cache": (0, 65536), "ram_pct": (0, 100), "swap": (0, 65536), "platte_total": (0, 1e6),
           "platte_frei": (0, 1e6), "platte_pct": (0, 100), "netz_rx": (0, 1e18), "netz_tx": (0, 1e18),

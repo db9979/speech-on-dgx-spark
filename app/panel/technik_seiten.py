@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "edeb3e2c48",
+        "stand": "d56e26cfe3",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -2131,7 +2131,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
-        "stand": "b49cd16a42",
+        "stand": "d028bd839f",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -2305,7 +2305,7 @@ SEITEN_DATEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "6648e57b18",
+        "stand": "ccd38e3e81",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -2407,13 +2407,15 @@ SEITEN_DATEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "69629f733f",
+        "stand": "089b1c2a2c",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
             "steuer.weg": ["s8"], "steuer.GONE": ["s8"], "tarswart.WINDOW": ["s7"],
             "rechner.messen": ["s9"], "rechnerblick.warnungen": ["s9"], "rechnerblick.TEMP_WARN": ["s9"],
             "rechnerblick.PLATTE_MIN_PCT": ["s9"], "rechnerblick.RAM_MIN_GIB": ["s9"],
+            "schirm.schirm_zustand": ["s10"], "schirm.abgleich": ["s10"], "schirm.an_jetzt": ["s10"],
+            "steuerzentrale.schrift": ["s10"], "schirm.SIEHT_S": ["s10"],
         },
         "kurz": ("Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle "
                  "bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie "
@@ -2484,6 +2486,18 @@ SEITEN_DATEN = {
                "values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from "
                "{rechnerblick.TEMP_WARN} °C, throttled or short of power, less than {rechnerblick.RAM_MIN_GIB} GiB free; "
                "on either computer less than {rechnerblick.PLATTE_MIN_PCT} % disk free; the DGX not answering.")),
+            S("s10", "schritt", ("Steuerzentrale am Bildschirm", "Control centre on the screen"),
+              ("tty1, nur lokal mit Schlüssel", "tty1, local only with a key"),
+              ("Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim "
+               "Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, "
+               "nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven "
+               "als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung "
+               "für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel.",
+               "When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start "
+               "at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only "
+               "from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; "
+               "only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at "
+               "enough columns and rows, schirm.an_jetzt makes it dark by the times.")),
             S("s8", "ende", ("Notbetrieb, wenn der DGX fehlt", "Notbetrieb when the DGX is missing"),
               ("nach {steuer.GONE} s ohne Antwort", "after {steuer.GONE} s without an answer"),
               ("Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und "
@@ -2509,12 +2523,15 @@ SEITEN_DATEN = {
             ("{rechnerblick.TEMP_WARN} °C", ("Hinweis, der Panel-Rechner ist warm", "note, the panel computer is warm"), "rechnerblick.TEMP_WARN"),
             ("{rechnerblick.PLATTE_MIN_PCT} %", ("Platte frei, darunter ein Hinweis", "disk free, below it a note"), "rechnerblick.PLATTE_MIN_PCT"),
             ("{rechnerblick.RAM_MIN_GIB} GiB", ("Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis", "memory free on the panel computer, below it a note"), "rechnerblick.RAM_MIN_GIB"),
+            ("{schirm.SIEHT_S} s", ("ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel", "without a question from the control centre, then the screen counts as dark"), "schirm.SIEHT_S"),
         ],
         "einstellen": [
             ("Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen "
              "(Anleitung „Spark teilen“).",
              "On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen "
              "(guide „Spark split“)."),
+            ("Funktionen → Steuerzentrale am Bildschirm: an und aus, Anzeige an ab und aus ab (Uhr), Schriftgröße.",
+             "Features → Control centre on the screen: on and off, screen on from and off from (hour), font size."),
         ],
         "sehen": [
             ("Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.",
@@ -2523,6 +2540,8 @@ SEITEN_DATEN = {
              "dazu den Kasten „Panel-Rechner“.",
              "Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live "
              "adds the box „Panel computer“."),
+            ("Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.",
+             "The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now."),
         ],
         "code": [
             ("teilen.CODE_SECS", ("Lebensdauer des Codes", "life of the code")),
@@ -2536,13 +2555,17 @@ SEITEN_DATEN = {
             ("steuer.weg", ("Notbetrieb erkennen", "spot Notbetrieb")),
             ("rechner.messen", ("Werte eines Rechners", "values of one computer")),
             ("rechnerblick.warnungen", ("Hinweise nach festen Regeln", "notes by fixed rules")),
+            ("schirm.schirm_zustand", ("nur lokal und mit Schlüssel", "local only and with a key")),
+            ("schirm.abgleich", ("Dienst folgt dem Schalter", "unit follows the switch")),
+            ("schirm.an_jetzt", ("dunkel nach den Zeiten", "dark by the times")),
+            ("steuerzentrale.schrift", ("Schrift nach Auflösung", "font by resolution")),
         ],
-        "tests": ["test_teilen", "test_umziehen", "test_rechner"],
+        "tests": ["test_teilen", "test_umziehen", "test_rechner", "test_steuerzentrale"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "04a61acd5e",
+        "stand": "0c5d737c62",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3417,7 +3440,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "da438a7955",
+        "stand": "a7396ade55",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3605,7 +3628,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "c977888c23",
+        "stand": "d189727398",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],

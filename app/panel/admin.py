@@ -589,6 +589,10 @@ def validate(new):
     why = gehaeuse.check(ch)
     if why:
         raise HTTPException(400, why)
+    import schirm
+    why = schirm.check(ch)
+    if why:
+        raise HTTPException(400, why)
     import berater
     off = ch.get("berater_off", [])
     if not isinstance(off, list) or len(off) > len(berater.MELDER) or any(x not in berater.MELDER for x in off):

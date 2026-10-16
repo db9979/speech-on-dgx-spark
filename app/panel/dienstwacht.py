@@ -103,6 +103,9 @@ SVC = {
     # Gehäuse (gehaeuse.py): the display of the panel computer's case answers on I2C; the probe only looks at the loop
     "gehaeuse": ("Display am Gehäuse", "Display on the case", "Das Display am Gehäuse zeigt gerade nichts; alles andere läuft weiter.",
                  SLOW, "gehaeuse"),
+    # Steuerzentrale (schirm.py): the screen program asks the panel once a second; the probe only looks when it last did
+    "schirm": ("Steuerzentrale am Bildschirm", "Control centre on the screen", "Der Bildschirm am Panel-Rechner zeigt gerade nichts; alles andere läuft weiter.",
+               SLOW, "schirm"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Bilder malen (bild_server.py on 127.0.0.1): the service, not the engine; an engine unloaded after idling is no outage
@@ -311,6 +314,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import schirm
+        p = schirm.probes()
+        if p:
+            out["schirm"] = p
+    except Exception:
+        pass
+    try:
         import doclingdienst
         d = doclingdienst._read()
         if doclingdienst.admin_on(c) and _origin(d.get("url")):
@@ -483,6 +493,9 @@ async def probe(sid, key, p, cfg):
         if p.get("oled"):    # Gehäuse: the display answered in the panel's own loop (gehaeuse.py), no question of its own
             import gehaeuse
             return Probe(gehaeuse.oled_ok())
+        if p.get("schirm"):  # Steuerzentrale: the screen asked the panel lately (schirm.sieht), no question of its own
+            import schirm
+            return Probe(schirm.sieht())
         if p.get("tcp"):
             return await _tcp(p)
         if p.get("turn"):    # Anrufe von unterwegs: the unit runs with the panel's settings (anrufe.relay_ok)

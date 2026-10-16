@@ -202,6 +202,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - `live.py` hält alles nur im Arbeitsspeicher. Die Admin-Seite fragt jede Sekunde ab. Der Monitor ist nur im Heimnetz, mit Kopplungscode. (M)
   - Der alte Plan nannte SSE; gebaut ist die Abfrage.
 - **Dienst-Zustand:** Ein Dienst gilt als weg nach 3 Fehlproben und 3 Minuten, als zurück nach 2 guten Proben. Höchstens eine Meldung je 30 Minuten. Fällt das Internet aus, kommt eine Sammelmeldung. Meldungen bestehen aus festen Sätzen. Gezeigt wird das als Banner `health.alerts`, als Zustand-Karte und als Live-Knoten. (M [[dienst-ausfall-plan]])
+- **Steuerzentrale am Bildschirm wächst mit (Dominik 2026-10-16):** Was Zustand → Live, Zustand → Monitoring (beide Rechner) oder die Hinweise zeigen, steht auch auf der Textanzeige am Panel-Rechner (`steuerzentrale.py`), im selben Commit. Dienste und Ziele kommen von selbst aus `live.snapshot`; eine neue Stufe, Zahl oder Kurve braucht eine Zeile in `steuerzentrale.py`. (M [[live-monitor-aktuell-halten]]; 🧪 test_steuerzentrale.test_every_live_service_has_its_line)
 - **Hintergrundarbeit** meldet ihren Stand mit festen Gründen (sprache, nacht, tageslimit, pause, …). (P hintergrund-status)
 
 ---

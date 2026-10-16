@@ -74,6 +74,19 @@ When the panel and the models run apart, Status → Monitoring shows both comput
 
 When the model computer does not answer, its card stays, red with "not answering for …" and its last values grey. Under "Braucht dich" the panel speaks up by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB memory free; on either computer less than 10 % disk free; the model computer not answering. Each note leads to the cards. The same shows in Status → Live (box "Panel computer", the panel computer's CPU next to the model computer's), in the iPhone app under Monitoring and in the Android app through the panel view. Only numbers and fixed words, never addresses or processes; on a single Spark the page stays as before. Logs in the area "system" (`rechner: hinweis …`).
 
+## Control centre on the screen
+
+A screen on the panel computer's HDMI output shows the control centre: everything on one display, as plain text without a desktop or browser (about 20 MB). Switch it on under Features → Control centre on the screen; then it starts at every boot by itself on the first screen, without signing in. Switching it off ends it, and the normal sign-in comes back.
+
+- **Top**: overall state, running requests, notes, maintenance and version, below it the day's numbers (answers, first sound, Wächter, entrance, backup, the screen's times).
+- **Middle**: the stages Hören, Weiche, Sprachmodell, Werkzeuge and Sprechen in the frame of the computer they run on; with Spark split tars and the Pi side by side with CPU, GPU, memory, temperature and a 20-minute curve. Every running request has its own colour and visibly jumps between the computers.
+- **Left** the devices with a request, the connected devices and access over the internet; **right** every service and target of the Live view, the internet behind the Wächter, "Braucht dich", models and services, the last events, security and maintenance.
+- **Bottom** the last 20 minutes as curves (GPU, CPU, free memory, temperature) and the answers per hour.
+
+The size follows the screen: at the start and whenever the resolution changes, the screen program picks a Terminus font for at least 160 × 45 characters (Full HD about 160 × 45, 4K with a font twice as big about 240 × 67); "smaller" or "larger" takes the next font. A very small screen gets a short list without the flow. Characters the font lacks are replaced by plain ones. Between "Screen off from" and "Screen on from" (default 23 to 7 o'clock, the same hour twice means always on) it turns the screen dark and the monitor sleeps. Against burn-in the picture moves by one or two characters every 3 minutes.
+
+Only kind, place, time and numbers are shown, never questions, answers or names: everyone in the room sees it. The screen program asks only the panel on the same computer (127.0.0.1) once a second, with a key of its own that only the service user can read; the panel does not answer other computers or a proxy. New services of the Live view appear by themselves. Status → Live shows in the box "Control centre" whether it shows right now; the service watch reports when it stops asking. Logs in the area "system" (`schirm: …`).
+
 ## Checking and finding faults
 
 | What | Command |

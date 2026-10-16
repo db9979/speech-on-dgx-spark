@@ -195,6 +195,8 @@ DATEIEN = [
     state("modelle-eigene.json", "Eigene Modelle des Admins (Hugging-Face-Name, fester Commit, Speicherbedarf)", "The admin's own models (Hugging Face name, pinned commit, memory need)", lokal="gilt nur für dieses Gerät (Zustand → Modelle, Eigene Modelle)"),
     state("modelle-wunsch.json", "Wunsch des Panels für den nächsten Modellwechsel, Sekunden", "The panel's wish for the next model switch, seconds", lokal="wird vom Wechsel sofort gelesen und gelöscht"),
     state("gehaeuse-wunsch.json", "Wunsch des Panels für das Gehäuse (einrichten, entfernen, neu starten), Sekunden", "The panel's wish for the case (set up, remove, restart), seconds", lokal="wird von der Einrichtung sofort gelesen und gelöscht"),
+    state("schirm.key", "Schlüssel der Steuerzentrale am Bildschirm (nur der Dienstnutzer liest ihn)", "Key of the control centre on the screen (only the service user reads it)",
+          lokal="gilt nur für dieses Gerät, das Panel macht ihn neu", schutz=("nur Dienstnutzer", "service user only")),
     state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("notbetrieb-satz-de.pcm", "Notbetrieb-Satz als Ton", "Emergency sentence as sound", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),

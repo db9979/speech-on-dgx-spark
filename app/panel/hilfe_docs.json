@@ -2693,7 +2693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. 9. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
+"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. 9. Steuerzentrale am Bildschirm: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. 10. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
 },
 {
 "lang": "de",
@@ -2709,7 +2709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 10 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 9) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 10 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
 },
 {
 "lang": "de",
@@ -2717,7 +2717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen (Anleitung „Spark teilen“)."
+"text": "- Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen (Anleitung „Spark teilen“). - Funktionen → Steuerzentrale am Bildschirm: an und aus, Anzeige an ab und aus ab (Uhr), Schriftgröße."
 },
 {
 "lang": "de",
@@ -2725,7 +2725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause. - Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt dazu den Kasten „Panel-Rechner“."
+"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause. - Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt dazu den Kasten „Panel-Rechner“. - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt."
 },
 {
 "lang": "de",
@@ -2733,7 +2733,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 9) - app/rechner.py messen: Werte eines Rechners (Schritt 8) - app/panel/rechnerblick.py warnungen: Hinweise nach festen Regeln (Schritt 8)"
+"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 10) - app/rechner.py messen: Werte eines Rechners (Schritt 8) - app/panel/rechnerblick.py warnungen: Hinweise nach festen Regeln (Schritt 8) - app/panel/schirm.py schirm_zustand: nur lokal und mit Schlüssel (Schritt 9) - app/panel/schirm.py abgleich: Dienst folgt dem Schalter (Schritt 9) - app/panel/schirm.py an_jetzt: dunkel nach den Zeiten (Schritt 9) - app/steuerzentrale.py schrift: Schrift nach Auflösung (Schritt 9)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale"
 },
 {
 "lang": "de",
@@ -2765,7 +2773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 64). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 65). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -2789,7 +2797,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Dateien in jeder Sicherung (Schritt 7) - 64 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 30 Dateien in jeder Sicherung (Schritt 7) - 65 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -6803,6 +6811,38 @@
 "lang": "de",
 "src": "spark-teilen",
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Steuerzentrale am Bildschirm",
+"title": "Steuerzentrale am Bildschirm",
+"text": "Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: alles auf einer Anzeige, als reiner Text ohne Desktop und Browser (etwa 20 MB). Einschalten unter Funktionen → Steuerzentrale am Bildschirm; danach startet sie bei jedem Booten von selbst auf dem ersten Bildschirm, ohne Anmeldung. Ausschalten beendet sie, und die normale Anmeldung kommt zurück."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Steuerzentrale am Bildschirm",
+"title": "Steuerzentrale am Bildschirm",
+"text": "- Oben: Gesamtzustand, laufende Anfragen, Hinweise, Wartung und Version, darunter die Zahlen des Tages (Antworten, erster Ton, Wächter, Eingang, Sicherung, Zeiten des Bildschirms). - Mitte: die Stufen Hören, Weiche, Sprachmodell, Werkzeuge und Sprechen im Rahmen des Rechners, auf dem sie laufen; bei Spark teilen tars und Pi nebeneinander mit CPU, GPU, Arbeitsspeicher, Temperatur und 20-Minuten-Kurve. Jede laufende Anfrage hat eine eigene Farbe und springt sichtbar zwischen den Rechnern hin und her. - Links die Geräte mit Anfrage, die verbundenen Geräte und Zugriffe über das Internet; rechts alle Dienste und Ziele der Live-Übersicht, das Internet hinter dem Wächter, „Braucht dich“, Modelle und Dienste, die letzten Ereignisse, Sicherheit und Wartung. - Unten die letzten 20 Minuten als Kurven (GPU, CPU, freier Speicher, Temperatur) und die Antworten je Stunde."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Steuerzentrale am Bildschirm",
+"title": "Steuerzentrale am Bildschirm",
+"text": "Die Größe richtet sich nach dem Bildschirm: Beim Start und wenn sich die Auflösung ändert, wählt die Anzeige eine Terminus-Schrift für mindestens 160 × 45 Zeichen (Full HD etwa 160 × 45, 4K mit doppelt so großer Schrift etwa 240 × 67); „kleiner“ oder „größer“ nimmt die nächste Schrift. Auf einem sehr kleinen Bildschirm erscheint eine knappe Liste ohne Fluss. Zeichen, die die Schrift nicht kennt, ersetzt sie durch einfache Zeichen. Zwischen „Anzeige aus ab“ und „Anzeige an ab“ (Standard 23 bis 7 Uhr, zweimal dieselbe Stunde heißt immer an) schaltet sie den Bildschirm dunkel, der Monitor geht in den Ruhezustand. Gegen Einbrennen wandert das Bild alle 3 Minuten um ein bis zwei Zeichen."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Steuerzentrale am Bildschirm",
+"title": "Steuerzentrale am Bildschirm",
+"text": "Gezeigt werden nur Art, Ort, Zeit und Zahlen, nie Fragen, Antworten oder Namen: Es sieht jeder im Raum. Die Anzeige fragt jede Sekunde nur das Panel auf demselben Rechner (127.0.0.1) mit einem eigenen Schlüssel, den nur der Dienstbenutzer lesen kann; von anderen Rechnern oder über einen Proxy antwortet das Panel nicht. Neue Dienste der Live-Übersicht erscheinen von selbst. Zustand → Live zeigt im Kasten „Steuerzentrale“, ob sie gerade zeigt; der Dienst-Wächter meldet, wenn sie nicht mehr fragt. Logs im Bereich „system“ (schirm: …)."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Prüfen und Fehler suchen",
 "title": "Prüfen und Fehler suchen",
 "text": "Der Live-Kasten „Modell-Rechner“ zeigt, ob der DGX erreichbar ist, wie viele Dienste laufen, seine Version und eine Pause. Technik dazu: Sicherheit und Betrieb und Architektur."
@@ -9821,7 +9861,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e fixed list. No shell, no free names. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. 9. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
+"text": "e fixed list. No shell, no free names. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. 9. Control centre on the screen: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. 10. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
 },
 {
 "lang": "en",
@@ -9837,7 +9877,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 10 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 9) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 10 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
 },
 {
 "lang": "en",
@@ -9845,7 +9885,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen (guide „Spark split“)."
+"text": "- On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen (guide „Spark split“). - Features → Control centre on the screen: on and off, screen on from and off from (hour), font size."
 },
 {
 "lang": "en",
@@ -9853,7 +9893,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause. - Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“."
+"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause. - Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“. - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now."
 },
 {
 "lang": "en",
@@ -9861,7 +9901,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 9) - app/rechner.py messen: values of one computer (step 8) - app/panel/rechnerblick.py warnungen: notes by fixed rules (step 8)"
+"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 10) - app/rechner.py messen: values of one computer (step 8) - app/panel/rechnerblick.py warnungen: notes by fixed rules (step 8) - app/panel/schirm.py schirm_zustand: local only and with a key (step 9) - app/panel/schirm.py abgleich: unit follows the switch (step 9) - app/panel/schirm.py an_jetzt: dark by the times (step 9) - app/steuerzentrale.py schrift: font by resolution (step 9)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale"
 },
 {
 "lang": "en",
@@ -9893,7 +9941,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 64). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 65). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -9909,7 +9957,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 files in every backup (step 7) - 64 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 30 files in every backup (step 7) - 65 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -13694,6 +13742,38 @@
 "head": "Both computers in Monitoring",
 "title": "Both computers in Monitoring",
 "text": "When the model computer does not answer, its card stays, red with \"not answering for …\" and its last values grey. Under \"Braucht dich\" the panel speaks up by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB memory free; on either computer less than 10 % disk free; the model computer not answering. Each note leads to the cards. The same shows in Status → Live (box \"Panel computer\", the panel computer's CPU next to the model computer's), in the iPhone app under Monitoring and in the Android app through the panel view. Only numbers and fixed words, never addresses or processes; on a single Spark the page stays as before. Logs in the area \"system\" (rechner: hinweis …)."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Control centre on the screen",
+"title": "Control centre on the screen",
+"text": "A screen on the panel computer's HDMI output shows the control centre: everything on one display, as plain text without a desktop or browser (about 20 MB). Switch it on under Features → Control centre on the screen; then it starts at every boot by itself on the first screen, without signing in. Switching it off ends it, and the normal sign-in comes back."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Control centre on the screen",
+"title": "Control centre on the screen",
+"text": "- Top: overall state, running requests, notes, maintenance and version, below it the day's numbers (answers, first sound, Wächter, entrance, backup, the screen's times). - Middle: the stages Hören, Weiche, Sprachmodell, Werkzeuge and Sprechen in the frame of the computer they run on; with Spark split tars and the Pi side by side with CPU, GPU, memory, temperature and a 20-minute curve. Every running request has its own colour and visibly jumps between the computers. - Left the devices with a request, the connected devices and access over the internet; right every service and target of the Live view, the internet behind the Wächter, \"Braucht dich\", models and services, the last events, security and maintenance. - Bottom the last 20 minutes as curves (GPU, CPU, free memory, temperature) and the answers per hour."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Control centre on the screen",
+"title": "Control centre on the screen",
+"text": "The size follows the screen: at the start and whenever the resolution changes, the screen program picks a Terminus font for at least 160 × 45 characters (Full HD about 160 × 45, 4K with a font twice as big about 240 × 67); \"smaller\" or \"larger\" takes the next font. A very small screen gets a short list without the flow. Characters the font lacks are replaced by plain ones. Between \"Screen off from\" and \"Screen on from\" (default 23 to 7 o'clock, the same hour twice means always on) it turns the screen dark and the monitor sleeps. Against burn-in the picture moves by one or two characters every 3 minutes."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Control centre on the screen",
+"title": "Control centre on the screen",
+"text": "Only kind, place, time and numbers are shown, never questions, answers or names: everyone in the room sees it. The screen program asks only the panel on the same computer (127.0.0.1) once a second, with a key of its own that only the service user can read; the panel does not answer other computers or a proxy. New services of the Live view appear by themselves. Status → Live shows in the box \"Control centre\" whether it shows right now; the service watch reports when it stops asking. Logs in the area \"system\" (schirm: …)."
 },
 {
 "lang": "en",

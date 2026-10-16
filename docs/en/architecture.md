@@ -104,6 +104,7 @@ flowchart TB
 | `speech-spark-update` | – | Update, only on request |
 | `speech-spark-wechsel` | – | Switch one model (Status → Models), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
+| `speech-spark-schirm` | – (asks only 127.0.0.1:31080) | Control centre as text on the panel computer's screen (tty1), only with the switch on |
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
 
@@ -384,7 +385,9 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
 | `app/rechner.py` | The values of one computer for Status → Monitoring → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name. |
 | `app/panel/rechnerblick.py` | Status → Monitoring → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each und … |
+| `app/panel/schirm.py` | Steuerzentrale am Bildschirm. |
 | `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
+| `app/steuerzentrale.py` | Steuerzentrale am Bildschirm, the screen half. |
 | `app/tarswart.py` | Wärter: the model computer's few hands for a panel on another computer. |
 | `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
 | `app/tlstor.py` | TLS-Tor: the door of the model computer for the panel on another computer. |
@@ -560,6 +563,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/qwen38-vorher.json.alt` | The last move's note after the way back | – | no |
 | `state/regel-versionen.json` | Rule versions | – | yes |
 | `state/revoked.json` | Revoked sessions | – | no |
+| `state/schirm.key` | Key of the control centre on the screen (only the service user reads it) | service user only | no |
 | `state/secret.key` | Key for everything sealed | is the key | no |
 | `state/setup.json` | Setup wizard done | – | yes |
 | `state/speech-active` | Time of last speech | – | no |
@@ -2847,7 +2851,8 @@ flowchart TD
   s6["6. Command to the Wärter"]
   s7{{"7. Signature, time, number, command valid?"}}
   s9["8. Values of both computers"]
-  s8(["9. Notbetrieb when the DGX is missing"])
+  s10["9. Control centre on the screen"]
+  s8(["10. Notbetrieb when the DGX is missing"])
   s1 --> s2
   s2 --> s3
   s3 -->|yes| s4
@@ -2855,7 +2860,8 @@ flowchart TD
   s5 -->|yes| s6
   s6 --> s7
   s7 -->|yes| s9
-  s9 --> s8
+  s9 --> s10
+  s10 --> s8
   s3x(["Not paired"])
   s3 -->|no| s3x
   s5x(["Refused"])
@@ -2872,7 +2878,8 @@ flowchart TD
 6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
 7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names.
 8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering.
-9. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
+9. <a id="kn-teilen-s10"></a>**Control centre on the screen**: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times.
+10. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
 
 **Examples:** Pair a Pi: Paired, certificate pinned. · Wrong computer in between: The proof does not fit, no pairing. · Switch the model from the Pi: The Wärter starts the switch by its own rules. · A stranger asks the door: Refused before the handshake.
 
@@ -2881,19 +2888,22 @@ flowchart TD
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
 - **10** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
-- **30 s** without an answer until Notbetrieb ([step 9](#kn-teilen-s8))
+- **30 s** without an answer until Notbetrieb ([step 10](#kn-teilen-s8))
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
 - **0.5 GiB** memory free on the panel computer, below it a note ([step 8](#kn-teilen-s9))
+- **15 s** without a question from the control centre, then the screen counts as dark ([step 9](#kn-teilen-s10))
 
 #### Settings
 
 - On the computers themselves: sudo speech-spark teilen code, teilen koppeln, umziehen and zurueckholen (guide „Spark split“).
+- Features → Control centre on the screen: on and off, screen on from and off from (hour), font size.
 
 #### What you see
 
 - Status → Live: box „Model computer“ with reachable, services, version and pause.
 - Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“.
+- The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now.
 
 #### In the code
 
@@ -2905,11 +2915,15 @@ flowchart TD
 - `app/panel/steuer.py` `call`: signed command ([step 6](#kn-teilen-s6))
 - `app/tarswart.py` `check`: signature, time, number, command ([step 7](#kn-teilen-s7))
 - `app/tarswart.py` `COMMANDS`: the fixed commands ([step 7](#kn-teilen-s7))
-- `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 9](#kn-teilen-s8))
+- `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 10](#kn-teilen-s8))
 - `app/rechner.py` `messen`: values of one computer ([step 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `warnungen`: notes by fixed rules ([step 8](#kn-teilen-s9))
+- `app/panel/schirm.py` `schirm_zustand`: local only and with a key ([step 9](#kn-teilen-s10))
+- `app/panel/schirm.py` `abgleich`: unit follows the switch ([step 9](#kn-teilen-s10))
+- `app/panel/schirm.py` `an_jetzt`: dark by the times ([step 9](#kn-teilen-s10))
+- `app/steuerzentrale.py` `schrift`: font by resolution ([step 9](#kn-teilen-s10))
 
-Self-tests: `test_teilen`, `test_umziehen`, `test_rechner`
+Self-tests: `test_teilen`, `test_umziehen`, `test_rechner`, `test_steuerzentrale`
 
 ### state/
 
@@ -2957,7 +2971,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 64). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 65). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2968,7 +2982,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **30** files in every backup ([step 7](#kn-state-s7))
-- **64** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **65** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

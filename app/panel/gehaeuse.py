@@ -519,10 +519,14 @@ def vorschau(c=None, now=None):
             "oled": _st["oled"], "dunkel": _st["seite"] == "-", "w": W, "h": H}
 
 
-def nacht(c, now=None):
+def im_fenster(von, bis, now=None):
+    """Whether the hour now lies from von to bis o'clock (over midnight when von > bis); also the screen's times (schirm.py)."""
     h = time.localtime(time.time() if now is None else now).tm_hour
-    von, bis = zahl(c, "gehaeuse_nacht_von"), zahl(c, "gehaeuse_nacht_bis")
     return (von <= h or h < bis) if von > bis else (von <= h < bis)
+
+
+def nacht(c, now=None):
+    return im_fenster(zahl(c, "gehaeuse_nacht_von"), zahl(c, "gehaeuse_nacht_bis"), now)
 
 
 # ---------------------------------------------------------------- the loop (in the panel, every second)

@@ -202,6 +202,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - `live.py` keeps everything in memory only. The admin page polls every second. The monitor is only in the home network, with a pairing code. (M)
   - The old plan mentioned SSE; what is built is polling.
 - **Service state:** a service counts as gone after 3 failed probes and 3 minutes, as back after 2 good probes. At most one message per 30 minutes. If the internet fails, a collective message comes. Messages consist of fixed sentences. This is shown as the banner `health.alerts`, as a Status card and as a live node. (M [[dienst-ausfall-plan]])
+- **The control centre on the screen grows along (Dominik 2026-10-16):** what Status → Live, Status → Monitoring (both computers) or the notes show also appears on the text screen at the panel computer (`steuerzentrale.py`), in the same commit. Services and targets come by themselves from `live.snapshot`; a new stage, number or curve needs a line in `steuerzentrale.py`. (M [[live-monitor-aktuell-halten]]; 🧪 test_steuerzentrale.test_every_live_service_has_its_line)
 - **Background work** reports its state with fixed reasons (sprache, nacht, tageslimit, pause, …). (P hintergrund-status)
 
 ---

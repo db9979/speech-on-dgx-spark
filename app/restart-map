@@ -10,3 +10,4 @@ llmtor: llm_tor.py einordnung.py modelle.py modelle.json bildmodell.py musikmode
 tlstor: tlstor.py common.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 waerter: tarswart.py rechner.py common.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 notasr: asr_proxy.py common.py parakeet.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+schirm: steuerzentrale.py common.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json

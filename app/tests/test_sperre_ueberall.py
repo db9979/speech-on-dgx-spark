@@ -347,6 +347,7 @@ ADMIN_ON_OK = {
     "wartung.py:admin_on": "Spark-wide maintenance pause, only admins start it",
     "wartung.py:auto_on": "Spark-wide: the panel pauses a restarting part by itself, no profile involved",
     "gehaeuse.py:admin_on": "admin only: the case of the panel computer (display, LEDs, fans), no profile part",
+    "schirm.py:admin_on": "admin only: the control centre on the panel computer's screen, no profile part",
     "notbetrieb.py:admin_on": "Spark-wide emergency mode with Parakeet on the panel computer; the fixed commands keep the turn's own rights (HA, reminders)",
     "modellseite.py:_an": "Spark-wide model switch, admin-only endpoints (Zustand → Modelle), no profile involved",
     "modellseite.py:_eigen_an": "Spark-wide own models, admin-only endpoints (Zustand → Modelle), no profile involved",
