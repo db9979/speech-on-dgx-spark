@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.695** Self-test fix: the live view checks "+ N ready" independent of earlier tests
 - **V01.0.694** Making music: names in a song are allowed (the people rule also blocked words like "braun" from contacts)
 - **V01.0.693** Measuring a fast first word: the own language model reports prefix cache hits; self-test on tars no longer fails in an app-only copy
 - **V01.0.692** Self-tests: one command before a push checks version, docs and the matching tests; the flaky failures in test_panel came from the same profile names in several test files
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.688** Making music: every released profile makes its own songs in the conversation ("Make me a song about …") and under Me → Music; model (2B or XL) selectable, Test music measures every installed model
 - **V01.0.687** Fix self-test: the test for "You can also say" no longer depends on the order
 - **V01.0.686** Self-tests: a test puts switches back the way it found them (four red block tests on GitHub and tars)
-- **V01.0.685** Fix self-test: the control centre's route is on the list of open ways, with its reason
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
