@@ -140,20 +140,33 @@ func stableRows(_ rows: [[String: Any]], _ key: ([String: Any]) -> String) -> [(
 struct StatusView: View {
     @State private var d: [String: Any] = [:]
     @State private var miss = PollMiss()
+    @AppStorage("alertsOpen") private var alertsOpen = false
+
+    private func alertRows(_ rows: [[String: Any]]) -> some View {
+        ForEach(stableRows(rows) { ($0["text"] as? String ?? "") }, id: \.id) { item in
+            let a = item.row
+            Label {
+                Text(verbatim: a["text"] as? String ?? "").lineLimit(2)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(a["level"] as? String == "bad" ? .red : .orange)
+            }
+        }
+    }
 
     var body: some View {
         List {
             let alerts = d["alerts"] as? [[String: Any]] ?? []
+            // like the panel's notes on top (admin.js showAlerts): "bad" always open, from two others on they fold into
+            // one line with the count, folded by default and remembered on this device
+            let bad = alerts.filter { $0["level"] as? String == "bad" }, rest = alerts.filter { $0["level"] as? String != "bad" }
             Section("Braucht dich") {
                 if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(.green) }
-                ForEach(stableRows(alerts) { ($0["text"] as? String ?? "") }, id: \.id) { item in
-                    let a = item.row
-                    Label {
-                        Text(verbatim: a["text"] as? String ?? "")
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(a["level"] as? String == "bad" ? .red : .orange)
+                alertRows(bad)
+                if rest.count > 1 {
+                    DisclosureGroup(isExpanded: $alertsOpen) { alertRows(rest) } label: {
+                        Label("\(rest.count) Hinweise", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                     }
-                }
+                } else { alertRows(rest) }
             }
             let sys = d["system"] as? [String: Any] ?? [:], gpu = d["gpu"] as? [String: Any] ?? [:]
             Section("Spark") {

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.707** Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App
 - **V01.0.706** CarPlay zeigt das Gesicht des Profils, auch wenn nur das Auto die App startet
 - **V01.0.705** iPhone-App: Anrufe klingeln auch ohne Apples VoIP-Push, solange die App läuft (sie hört die Nachrichten des Spark selbst mit); vorher klingelte ein iPhone nur über den Push
 - **V01.0.704** Steuerzentrale: der Kasten Werkzeuge zeigt, welches Werkzeug gerade arbeitet
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.700** Musik: laufende Lieder in Live, Monitoring und Steuerzentrale; „geht das in Reggae-Style“ macht ein neues Lied, keine Zusage ohne Werkzeug
 - **V01.0.699** Rundlauf-Wächter: alle paar Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell; hakt ein Schritt zweimal, hören die Admins es
 - **V01.0.698** Steuerzentrale: Linien unter den Kästen, fertige Antworten bleiben kurz stehen
-- **V01.0.697** Praxistest: unter Zustand → Praxistest steht, was neu ist und noch ausprobiert werden sollte, je Punkt Klappt, Problem oder Später; alte Punkte eingeklappt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

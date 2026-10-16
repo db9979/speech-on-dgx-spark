@@ -1464,6 +1464,13 @@
 "titel": "Steuerzentrale: welches Werkzeug",
 "text": "A: Am Bildschirm des Panel-Rechners nach dem Wetter fragen und danach ein Licht schalten. Im Kasten Werkzeuge steht „▶ Websuche“ in der Farbe der Anfrage, solange es läuft, danach „✓ Websuche“, bis die Anfrage ausgeblendet wird. Bei zwei Anfragen stehen beide Werkzeuge da (Full HD: der zweite als „+1“). Ein fehlgeschlagenes Werkzeug zeigt ✗.",
 "thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P233",
+"v": 707,
+"titel": "Hinweise einklappbar",
+"text": "A: Mit mindestens zwei Hinweisen oben (z. B. NAS, Verbessern, Praxistest) eine Admin-Seite öffnen: eine schmale Zeile „N Hinweise“ mit den Textanfängen, zugeklappt. Antippen klappt die Zeilen mit „Ansehen“ auf; nach Neuladen bleibt es so. Zustand → „Hinweise stehen oben“ klappt sie auf. Ein roter Hinweis steht immer offen darüber. Am Handy passt die Zeile ohne Umbruch. iPhone: Spark verwalten → Monitoring → Braucht dich zeigt „N Hinweise“ zum Aufklappen.",
+"thread": "Hinweis-Kästen einklappbar"
 }
 ]
 }

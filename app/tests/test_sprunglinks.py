@@ -397,6 +397,40 @@ class Browser(unittest.TestCase):
                 await br.close()
         asyncio.run(go())
 
+    def test_alerts_fold_and_still_jump(self):
+        """The notes on top (Dominik 16.10.2026: „zu groß, muss einklappbar sein“): a red one stays open, two or more
+        others fold into one slim line with the count, folded by default; opened, each button still jumps."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, profile=False)
+                await pg.evaluate("try{localStorage.removeItem('alertsopen')}catch{}")
+                await pg.evaluate("goSec('mon')")
+                await self.until(pg, "ALERTS_LAST!==''")
+                await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false;SA=showAlerts;showAlerts=()=>{};SA(["
+                                  "{kind:'service',level:'bad',text:'Sprachausgabe ist weg.'},"
+                                  "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
+                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind offen.',go:'Zustand → Praxistest'}])")
+                r = await pg.evaluate("(()=>{const f=$('alerts').querySelector('details.afold');return {open:f.open,"
+                                      "first:$('alerts').firstElementChild.classList.contains('bad'),"
+                                      "sum:f.querySelector('summary').textContent,h:f.getBoundingClientRect().height}})()")
+                self.assertFalse(r["open"])
+                self.assertTrue(r["first"])
+                self.assertTrue(r["sum"].startswith("2 "), r["sum"])
+                self.assertLess(r["h"], 60)
+                # drawn again (the refresh every 3 s, here held off) it stays open: the browser remembers it
+                await pg.click("#alerts details.afold>summary")
+                await self.until(pg, "localStorage.getItem('alertsopen')==='1'")
+                await pg.evaluate("ALERTS_LAST='';SA(["
+                                  "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
+                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind offen.',go:'Zustand → Praxistest'}])")
+                self.assertTrue(await pg.evaluate("$('alerts').querySelector('details.afold').open"))
+                await pg.click("#alerts details.afold .gonote button")
+                await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")
+                await pg.evaluate("try{localStorage.removeItem('alertsopen')}catch{}showAlerts=SA")
+                self.assertEqual(errors, [])
+                await br.close()
+        asyncio.run(go())
+
     def test_live_hint_links_to_its_switch(self):
         """Dominik's example: the Live page is off, its hint opens Einstellungen → Betrieb and marks „Live-Seite“."""
         # the page is off for this test, whatever an earlier test in the run left on (test_live switches it on)

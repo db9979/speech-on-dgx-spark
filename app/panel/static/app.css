@@ -286,6 +286,15 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .token{font-family:ui-monospace,monospace;word-break:break-all;user-select:all}
 #alerts:empty{display:none}#alerts .note.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
 body.guest #alerts,body.inchat #alerts{display:none}
+/* the alerts: one slim line each, the rest folded into one line with the count (admin.js showAlerts) */
+#alerts .note.anote{padding:5px 6px 5px 12px;margin-bottom:6px;font-size:14px;border-radius:10px;min-height:36px;box-sizing:border-box}
+#alerts .note.anote>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#alerts .note.anote>.b{padding:3px 10px;font-size:13px;min-height:0}
+#alerts details.afold{margin-bottom:10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);background:color-mix(in srgb,var(--warn) 7%,transparent)}
+#alerts details.afold>summary{display:flex;gap:8px;align-items:center;cursor:pointer;padding:7px 12px;font-size:14px;min-height:36px;box-sizing:border-box}
+#alerts details.afold>summary>span{flex:1;min-width:0;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#alerts details.afold>.note.anote{margin:0 6px 6px;background:transparent}
+#alerts details.afold>summary{list-style:none}#alerts details.afold>summary::-webkit-details-marker{display:none}
+#alerts details.afold>summary::after{content:'▸';flex:none;color:var(--mut);transition:transform .15s}#alerts details.afold[open]>summary::after{transform:rotate(90deg)}
 a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .findcard{width:min(640px,94vw);max-height:86vh;display:flex;flex-direction:column}.finds{overflow:auto;margin-top:6px}
 /* "Was ist neu" (changelog.js): the version line at the bottom opens it; one line per version, a date line per day */

@@ -51,6 +51,16 @@
         }
       }
     },
+    "%lld Hinweise": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld notes"
+          }
+        }
+      }
+    },
     "%lld Geräte": {
       "localizations": {
         "en": {
