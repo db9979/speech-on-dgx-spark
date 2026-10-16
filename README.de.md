@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.709** Aufräumen: die Vorschläge unter „Verbessern“ entstehen aus drei kleineren Teilen, gleiche Bausteine nur noch einmal
 - **V01.0.708** Telefon hinter einem Router mit NAT: der Spark lernt die Adresse, die die Anlage sieht, und sagt, welche Ports weiterzuleiten sind
 - **V01.0.707** Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App
 - **V01.0.706** CarPlay zeigt das Gesicht des Profils, auch wenn nur das Auto die App startet
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.702** Selbsttests: ein Profilname gehört genau einer Testdatei, ein Test passt darauf auf
 - **V01.0.701** Fix: Tippen im Eingabefeld ist wieder flüssig, im Web, in der Android- und in der iPhone-App
 - **V01.0.700** Musik: laufende Lieder in Live, Monitoring und Steuerzentrale; „geht das in Reggae-Style“ macht ein neues Lied, keine Zusage ohne Werkzeug
-- **V01.0.699** Rundlauf-Wächter: alle paar Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell; hakt ein Schritt zweimal, hören die Admins es
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

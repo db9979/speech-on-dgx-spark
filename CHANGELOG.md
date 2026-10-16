@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.709** · 2026-10-16 · Aufräumen: die Vorschlagsliste des Beraters in drei Teile, doppelte Bausteine einmal
 - **V01.0.708** · 2026-10-16 · Telefon hinter einem Router mit NAT (z. B. FRITZ!Box → Dream Machine): der Spark lernt die Adresse, die die Anlage sieht, und nennt sie für Anmeldung, Anrufe und Ton; der Assistent sagt, welche Ports weiterzuleiten sind. Dazu Ton-Zähler im Log, Ton-Beschreibung aus der 183, Antwortcode bei abgelehnten Anrufen
 - **V01.0.707** · 2026-10-16 · Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App
 - **V01.0.706** · 2026-10-16 · CarPlay zeigt das Gesicht des Profils, auch wenn nur das Auto die App startet

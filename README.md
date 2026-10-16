@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.709** Cleanup: the proposals under “Improve” come from three smaller parts, shared pieces only once
 - **V01.0.708** Phone behind a router with NAT: the Spark learns the address the PBX sees and says which ports to forward
 - **V01.0.707** Notes on top of the admin pages: slim lines, from two on folded into one line with the count (red ones stay open); also in the iPhone app
 - **V01.0.706** CarPlay shows the profile's face, also when only the car starts the app
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.702** Self-tests: a profile name belongs to exactly one test file, a test watches over it
 - **V01.0.701** Fix: typing in the text field is smooth again, on the web, in the Android and in the iPhone app
 - **V01.0.700** Music: running songs on Live, Monitoring and the control centre; "can it be reggae style" makes a new song, no promise without the tool
-- **V01.0.699** Round-trip check: every few minutes a real test run through speaking, listening and the language model; if a step fails twice, the admins hear of it
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

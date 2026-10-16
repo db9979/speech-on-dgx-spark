@@ -452,20 +452,35 @@ def _svc_of(case):
     return _svc_area(code)   # a case from an error area of Logs → Diagnose
 
 
+def _weiche_wort(g, w):
+    return _cand("weiche_wort", {"group": g, "word": w}, f"„{w}“ als eigenes Wort für {_label(g)}",
+                 f'"{w}" as own word for {_label(g)}')
+
+
+def _weiche_test(q, g):
+    return _cand("weiche_test", {"q": q[:200], "want": g}, f"Testsatz „{q[:60]}“ → {_label(g)}",
+                 f'Test sentence "{q[:60]}" → {_label(g)}')
+
+
+def _qualitaet(q, tool=None):
+    """The question into the quality test; tool: the expected tool (the Befund names one, maybe "")."""
+    if tool is None:
+        return _cand("qualitaet_fall", {"q": q[:200]}, f"„{q[:60]}“ in den Qualitätstest", f'"{q[:60]}" into the quality test')
+    return _cand("qualitaet_fall", {"q": q[:200], "tool": tool}, f"„{q[:60]}“ in den Qualitätstest"
+                 + (f" (erwartet {_tool_label(tool)})" if tool else ""), f'"{q[:60]}" into the quality test'
+                 + (f" (expects {_tool_label(tool, True)})" if tool else ""))
+
+
 def candidates(case, cfg=None):
     """Every change that could help with this case, by fixed rules, best first. Never more than 12."""
-    import intent
+    import befund
     cfg = load_config() if cfg is None else cfg
-    ch = cfg.get("chat", {})
-    kind, grund, melder = case.get("kind"), case.get("grund"), case.get("melder")
+    kind, melder = case.get("kind"), case.get("melder")
     qs = [x["q"] for x in case.get("examples", []) if x.get("q") and faelle.CODEWORD not in x["q"]]
     q = qs[-1] if qs else ""
-    group = (case.get("group") or "").split("+")[0]
     acts = bool(set((case.get("group") or "").split("+")) & ACTS)
     out = []
-
     env = features.admin_on("berateru")
-    import befund
     found = befund.diagnose(case, cfg)
     causes = {o["k"] for o in found}
 
@@ -477,18 +492,30 @@ def candidates(case, cfg=None):
                 x["befund"] = why
             out.append(x)
 
-    # first what the Befund names (plan vorschlaege-besser.md, V1): a proposal must fit a cause
+    _from_befund(found, case, q, acts, cfg, add)
+    _from_case(case, q, acts, cfg, add)
+    quiet = kind == "schlecht" and causes & {"richtig", "unklar"} and not out   # nothing to change, or ask first
+    if kind in ("tool", "fehler", "absage") or melder == "fehler" or \
+            (not out and kind not in ("abbruch", "aussetzer") and not quiet) or "fehlt" in causes:
+        add(_issue(), "fehlt" if "fehlt" in causes else "")
+    out = [x for x in out if x]
+    useless = _read().get("useless") or {}       # „Nicht zielführend“ three times for this cause: to the end
+    out.sort(key=lambda x: int(useless.get(f"{x.get('befund', '')}|{x['key']}", 0)) >= USELESS_N)
+    return out
+
+
+def _from_befund(found, case, q, acts, cfg, add):
+    """First what the Befund names (plan vorschlaege-besser.md, V1): a proposal must fit a cause."""
     import chat as _chat
+    import intent
     rule_ok, known = _chat.rule_tools(), intent.known_tools()
     for o in found:
         k = o["k"]
         if k == "weiche" and o.get("group") and "+" not in o["group"] and o["group"] in intent.GROUPS:
             for w in _words(q)[:3]:
-                add(_cand("weiche_wort", {"group": o["group"], "word": w}, f"„{w}“ als eigenes Wort für {_label(o['group'])}",
-                          f'"{w}" as own word for {_label(o["group"])}'), k)
+                add(_weiche_wort(o["group"], w), k)
             if q:
-                add(_cand("weiche_test", {"q": q[:200], "want": o["group"]}, f"Testsatz „{q[:60]}“ → {_label(o['group'])}",
-                          f'Test sentence "{q[:60]}" → {_label(o["group"])}'), k)
+                add(_weiche_test(q, o["group"]), k)
         elif k == "nicht_gerufen":
             # R1: a must-word for any tool an admin rule may name, R2: a fixed hint sentence for it
             for t in [t for t in o["tools"] if t in rule_ok][:2]:
@@ -503,10 +530,7 @@ def candidates(case, cfg=None):
                     add(_hint(t, "kein_nein"), k)
             add(_value_step("werkzeug_temperatur", cfg, True), k)
             if q and not acts:
-                t = (o["tools"] or [""])[0]
-                add(_cand("qualitaet_fall", {"q": q[:200], "tool": t}, f"„{q[:60]}“ in den Qualitätstest"
-                          + (f" (erwartet {_tool_label(t)})" if t else ""), f'"{q[:60]}" into the quality test'
-                          + (f" (expects {_tool_label(t, True)})" if t else "")), k)
+                add(_qualitaet(q, (o["tools"] or [""])[0]), k)
         elif k == "fehlt":
             # R3: the expected tool belongs to another group: the case's group keeps it as well (only when the
             # turn offers it anyway, intent.narrow; rights stay as they are)
@@ -536,21 +560,25 @@ def candidates(case, cfg=None):
                 add(_cand("pflicht_wort", {"tool": "web_search", "word": w}, f"Bei „{w}“ im Web nachsehen",
                           f'With "{w}" look on the web'), k)
 
+
+def _from_case(case, q, acts, cfg, add):
+    """Then what the kind of case and its reporter (melder) call for, by fixed rules."""
+    import intent
+    ch = cfg.get("chat", {})
+    kind, grund, melder = case.get("kind"), case.get("grund"), case.get("melder")
+    group = (case.get("group") or "").split("+")[0]
     if kind == "weiche" and case.get("want") in intent.GROUPS:
         want = case["want"]
         for w in _words(q):
-            add(_cand("weiche_wort", {"group": want, "word": w}, f"„{w}“ als eigenes Wort für {_label(want)}",
-                      f'"{w}" as own word for {_label(want)}'))
+            add(_weiche_wort(want, w))
         if q:
-            add(_cand("weiche_test", {"q": q[:200], "want": want}, f"Testsatz „{q[:60]}“ → {_label(want)}",
-                      f'Test sentence "{q[:60]}" → {_label(want)}'))
+            add(_weiche_test(q, want))
     if kind == "unklar" or (kind == "schlecht" and grund == "werkzeug"):
         for w in _words(q)[:3]:
             for g in intent.GROUPS:
                 if g in ("plaudern", group):
                     continue
-                add(_cand("weiche_wort", {"group": g, "word": w}, f"„{w}“ als eigenes Wort für {_label(g)}",
-                          f'"{w}" as own word for {_label(g)}'))
+                add(_weiche_wort(g, w))
         if kind == "schlecht" and group in intent.GROUPS and q:
             why = (intent.classify_cfg(q, ch).why.get(group) or "").strip().lower()
             if why:
@@ -558,8 +586,7 @@ def candidates(case, cfg=None):
                           f'"{why}" no longer to {_label(group)}'))
     if kind in ("doppelt", "pruefung", "absage", "erfunden") or (kind == "schlecht" and grund in ("antwort", "")):
         if q and not acts:   # never a question that switches, sends or writes into the quality test
-            add(_cand("qualitaet_fall", {"q": q[:200]}, f"„{q[:60]}“ in den Qualitätstest",
-                      f'"{q[:60]}" into the quality test'))
+            add(_qualitaet(q))
     # the general knobs only when the Befund says the answer contradicted a result (never alone after one 👎)
     if kind == "schlecht" and grund == "aussprache":
         for w in _note_words(case)[:3]:
@@ -601,19 +628,10 @@ def candidates(case, cfg=None):
             add(_value_step("lokal_ms", cfg, True))
             add(_switch("sofort_satz", cfg, True))
         if q and not acts:
-            add(_cand("qualitaet_fall", {"q": q[:200]}, f"„{q[:60]}“ in den Qualitätstest",
-                      f'"{q[:60]}" into the quality test'))
+            add(_qualitaet(q))
     svc = _svc_of(case)
     if kind in ("tool", "fehler") and svc:
         add(_env(svc))
-    quiet = kind == "schlecht" and causes & {"richtig", "unklar"} and not out   # nothing to change, or ask first
-    if kind in ("tool", "fehler", "absage") or melder == "fehler" or \
-            (not out and kind not in ("abbruch", "aussetzer") and not quiet) or "fehlt" in causes:
-        add(_issue(), "fehlt" if "fehlt" in causes else "")
-    out = [x for x in out if x]
-    useless = _read().get("useless") or {}       # „Nicht zielführend“ three times for this cause: to the end
-    out.sort(key=lambda x: int(useless.get(f"{x.get('befund', '')}|{x['key']}", 0)) >= USELESS_N)
-    return out
 
 
 NOTE_PAIR = re.compile(r"([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]{1,30})\s*(?:=|wie|->|→)\s*([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß -]{0,38}[\wÄÖÜäöüß])")
