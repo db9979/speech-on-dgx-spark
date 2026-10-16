@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.702** Self-tests: a profile name belongs to exactly one test file, a test watches over it
 - **V01.0.701** Fix: typing in the text field is smooth again, on the web, in the Android and in the iPhone app
 - **V01.0.700** Music: running songs on Live, Monitoring and the control centre; "can it be reggae style" makes a new song, no promise without the tool
 - **V01.0.699** Round-trip check: every few minutes a real test run through speaking, listening and the language model; if a step fails twice, the admins hear of it
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.695** Self-test fix: the live view checks "+ N ready" independent of earlier tests
 - **V01.0.694** Making music: names in a song are allowed (the people rule also blocked words like "braun" from contacts)
 - **V01.0.693** Measuring a fast first word: the own language model reports prefix cache hits; self-test on tars no longer fails in an app-only copy
-- **V01.0.692** Self-tests: one command before a push checks version, docs and the matching tests; the flaky failures in test_panel came from the same profile names in several test files
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

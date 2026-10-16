@@ -122,6 +122,45 @@ class Guideline(unittest.TestCase):
                                 if kw.arg in on and isinstance(kw.value, ast.Constant) and kw.value.value is False]
         self.assertEqual(bad, [], "use helpers.keep_chat(self, …) in setUp")
 
+    def test_a_profile_name_belongs_to_one_test_file(self):
+        """Test modules share one panel and one state folder per run (GitHub runs them in four parts, the order
+        follows the measured times): a profile two files create meets the other file's PIN, documents or facts.
+        test_panel's Isolation, Gaps and HomeAssistant failed on GitHub for that (2026-10-16, "Anna", "Doris",
+        "Ina"). A name passed to a helper that creates a profile (also through another helper, self.on → profile)
+        or posted with a PIN is created by one test file only."""
+        import ast
+        import collections
+        use = collections.defaultdict(set)
+        for path in sorted(glob.glob(os.path.join(APP, "tests", "test_*.py"))):
+            with open(path, encoding="utf-8") as f:
+                src = f.read()
+            tree = ast.parse(src)
+            funcs = [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+            makers = {fn.name for fn in funcs
+                      if any(w in (ast.get_source_segment(src, fn) or "") for w in ('/api/admin/profiles"', '/api/join"'))}
+            name_of = lambda f: f.id if isinstance(f, ast.Name) else getattr(f, "attr", "")   # noqa: E731
+            grew = True
+            while grew:      # a helper that hands its name to a maker makes a profile too
+                grew = False
+                for fn in funcs:
+                    if fn.name not in makers and any(isinstance(c, ast.Call) and name_of(c.func) in makers and c.args
+                                                     and isinstance(c.args[0], ast.Name) for c in ast.walk(fn)):
+                        makers.add(fn.name)
+                        grew = True
+            for c in ast.walk(tree):
+                if not isinstance(c, ast.Call):
+                    continue
+                if name_of(c.func) in makers and c.args and isinstance(c.args[0], ast.Constant) and isinstance(c.args[0].value, str):
+                    use[c.args[0].value].add(os.path.basename(path))
+                for kw in c.keywords:
+                    if kw.arg == "json" and isinstance(kw.value, ast.Dict):
+                        keys = [k.value if isinstance(k, ast.Constant) else None for k in kw.value.keys]
+                        v = kw.value.values[keys.index("name")] if "name" in keys and "pin" in keys else None
+                        if isinstance(v, ast.Constant) and isinstance(v.value, str):
+                            use[v.value].add(os.path.basename(path))
+        twice = {n: sorted(f) for n, f in use.items() if len(f) > 1}
+        self.assertEqual(twice, {}, "profile names created by more than one test file: give each file its own")
+
     def test_both_languages_and_claude_md_point_to_it(self):
         de = repo_file("docs", "de", "richtlinien.md")
         en = repo_file("docs", "en", "guidelines.md")

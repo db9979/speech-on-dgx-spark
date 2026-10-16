@@ -284,6 +284,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Browser tests** wait for a state, never for a fixed time. Contexts with `bypass_csp=True`. Widths 320, 390 and 1280 px. (M)
 - **Tests write no unknown config keys**, write the configuration atomically (`helpers.write_config`) and in `tearDown` switch off loops they switched on. (M)
 - **Switches back as they were:** a test that flips switches puts them back the way it found them (`helpers.keep_chat(self, …)` in `setUp`), never simply to off. Otherwise a later test in the same run finds a switch off that ships on; that is how `test_sperre_ueberall` went red four times on GitHub and on tars, because `test_rmpapier` left the calendar off (2026-10-16). (🧪 test_richtlinie)
+- **A profile name belongs to one test file:** all test modules of a run share one panel and one state folder, and GitHub cuts the parts by measured times, so the order changes. When two files create the same profile, the second meets the first one's PIN, documents or facts; that is how `test_panel` Isolation, Gaps and HomeAssistant kept failing their first try ("Anna", "Doris", "Ina", 2026-10-16). Each test file creates only names of its own. (🧪 test_richtlinie)
 - **One panel per test class, and it stops with it:** browser tests start the panel only with `helpers.serve_panel(cls, port)`, which stops it after the class. Otherwise its background loops keep running for the rest of the run, every class adds a copy, the panel gets slower and slower and takes the work later tests wait for. Tests leave no devices, connections or profiles behind that disturb later tests; pairs like `python -m unittest tests.test_chats tests.test_meldung` find such leaks. (2026-10-13, main red after V01.0.473; 🧪 test_testserver)
 - **Ports for test servers stay reserved:** a port for a test server comes only from `helpers._port()`, which keeps it bound until `helpers._serve` or `helpers.take_port` (for servers that listen themselves) uses it; never get a port and give it back. A busy port fails at once instead of waiting 60 s (run of V01.0.489: a port was taken on the runner, every test waited again, cut off after 45 min). Self-test `test_testserver`.
 - **A second attempt** (Dominik 2026-10-11): a red test gets exactly one second attempt (`app/selftest.py`).
@@ -452,7 +453,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | DoubleDictKey | a key once |
 | UnusedImport | delete, or `# noqa: F401` with a reason |
 | OwnJsonWrite | `common.write_json` (fresh name instead of a fixed `.tmp`) |
-| OwnModelCall | planned: one shared `llm.complete` |
+| OwnModelCall | `llm.complete` (language model) |
 | RawFetch | `api()`/`apiTry()` from base.js (sign-in, code dialog, Notaus, loading bar) |
 | SameNames | groups and names from `features.py` |
 | SettingCopies | defaults and allowed values from `profiles.SETTINGS`/`CHOICES` (browser: `SDEF`, `SETC`) |
