@@ -39,8 +39,10 @@ class Rule(unittest.TestCase):
                                                   {"home_assistant_action"}), ["geraet"])
 
     def test_chat_asks_the_rule_not_taten_directly(self):
-        with open(os.path.join(PANEL, "chat.py"), encoding="utf-8") as f:
-            src = f.read()
+        src = ""
+        for name in ("chat.py", "chat_modell.py"):   # the model side of an answer lives in chat_modell.py
+            with open(os.path.join(PANEL, name), encoding="utf-8") as f:
+                src += f.read()
         self.assertIn("answercheck.action_check(piece,", src)
         self.assertNotIn("taten.check(", src)
 

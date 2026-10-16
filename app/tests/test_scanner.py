@@ -148,8 +148,10 @@ class Scanner(unittest.TestCase):
         self.assertIn("style-src 'self' 'unsafe-inline'", csp)
 
     def test_every_tool_is_sorted(self):
-        with open(os.path.join(PANEL, "chat.py"), encoding="utf-8") as f:
-            text = f.read()
+        text = ""
+        for name in ("chat.py", "chat_modell.py"):   # the model side of an answer lives in chat_modell.py
+            with open(os.path.join(PANEL, name), encoding="utf-8") as f:
+                text += f.read()
         import chat
         known = chat.READS_OUTSIDE | chat.HA_READS | chat.LOCKED_OUTSIDE | chat.INSIDE
         tools = set(re.findall(r'"name": "([a-z_]+)"', text))

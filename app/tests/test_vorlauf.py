@@ -33,10 +33,13 @@ class Margin(unittest.TestCase):
         self.assertAlmostEqual(chat.piece_margin(3.0, True), 8.3)   # a slow engine start still wins
 
     def test_answer_marks_when_it_is_written(self):
-        with open(chat.__file__) as f:
+        import chat_modell   # the model side of an answer (cut out of chat._answer, V01.0.713)
+        with open(chat_modell.__file__) as f:
             src = f.read()
         end = src.index('tm["written"] = True')
         self.assertLess(end, src.index("await sentences.put(None)", end))
+        with open(chat.__file__) as f:
+            src = f.read()
         self.assertIn('piece_margin(ttfa, not tm.get("written"), tts_body.get("speed"))', src)
 
 
