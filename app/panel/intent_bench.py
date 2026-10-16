@@ -24,6 +24,7 @@ BENCH = [
     ("Erstell ein Logo für unseren Fußballverein", "bild"),
     ("Kannst du mir mal ein Bild erstellen von einem Mann im Auto, der durch den Wald fährt?", "bild"),
     ("Kannst du ein Logo für mich entwerfen?", "bild"),
+    ("erstelle mir eine witzige karikatur comic stiel.", "bild"),
     ("Mach mir eine Malvorlage mit einem Dinosaurier", "bild"),
     ("Mal mir ein Haus mit Garten", "bild"),
     ("Was ist auf dem Bild?", ""),

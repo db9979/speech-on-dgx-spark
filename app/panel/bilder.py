@@ -76,12 +76,12 @@ WORDS = re.compile(
     r"|^\s*(?:bitte\s+)?mal\s+(?:mir\s+|uns\s+|bitte\s+)*(?:ein|eine|einen)\s+(?!frage\b)\w+"
     r"|\b(erstell\w*|mach\w*|generier\w*|erzeug\w*|entwirf|entwerf\w*|gestalte\w*|create|make|generate|design)\b"
     r".{0,60}\b(bild|bildchen|zeichnung|illustration|logo|malvorlage|ausmalbild|poster|grafik|hintergrundbild|"
-    r"wallpaper|avatar|picture|image|drawing|illustration|coloring page)\b"
+    r"wallpaper|avatar|karikatur|comic|cartoon|picture|image|drawing|illustration|caricature|coloring page)\b"
     r"|\b(malvorlage|ausmalbild)\b"
     # the noun first, the verb at the end („Kannst du mir ein Bild von … erstellen?“, Dominik 2026-10-15): only a new
     # picture (ein/eine/einen) and only the verbs of making one, so „Was ist auf dem Bild?“ stays with Bilder erkennen
     r"|\b(ein|eine|einen)\s+(?:\w+\s+){0,2}(bild|bildchen|zeichnung|illustration|logo|poster|grafik|"
-    r"hintergrundbild|wallpaper|avatar)\b.{0,120}\b(erstellen|malen|zeichnen|generieren|erzeugen|machen|"
+    r"hintergrundbild|wallpaper|avatar|karikatur|comic|cartoon)\b.{0,120}\b(erstellen|malen|zeichnen|generieren|erzeugen|machen|"
     r"entwerfen|gestalten|anfertigen)\b")
 AGAIN = re.compile(r"(?i)\b(nochmal|noch einmal|noch ein|nochmals|anders|andere[nrs]?|aber|statt|lieber|heller|"
                    r"dunkler|bunter|größer|kleiner|again|another|instead|but)\b")

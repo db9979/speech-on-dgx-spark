@@ -998,6 +998,17 @@ class Browser(unittest.TestCase):
                                 break
                             await asyncio.sleep(0.2)
                         self.assertEqual(ok, 64, name)
+                        # the card of a fresh answer is made before it is put into the answer (chat.js): it still
+                        # follows its job and shows the picture, never stays at „wartet …“ (Dominik 2026-10-16)
+                        await pg.evaluate("(()=>{const c=bildCard({job:'abcdef123456',prompt:'a blue sky'});"
+                                          "chatLog('assistant','Ich male dir gerade ein Bild.').appendChild(c)})()")
+                        ok = 0
+                        for _ in range(100):
+                            ok = await pg.evaluate("(()=>{const i=document.querySelector('#chatlog .blcard img');return i&&i.complete?i.naturalWidth:0})()")
+                            if ok:
+                                break
+                            await asyncio.sleep(0.2)
+                        self.assertEqual(ok, 64, name)
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                         self.assertEqual(errors, [], name)

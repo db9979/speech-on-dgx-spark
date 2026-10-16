@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (144) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (145) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 21 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 144 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 21 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 145 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -3997,7 +3997,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": "Bilder malen (V01.0.567, standardmäßig aus, Plan plaene/bildgenerierung.md): Der Spark malt Bilder selbst mit FLUX.2 [klein], ohne Internet. Das Modell kommt nur mit der Installation: sudo ./install.sh --bild 4b-q8 (4B mit Q8, Apache 2.0, empfohlen), 4b-q4 (weniger Speicher), 9b-q8 oder 9b-q4 (FLUX Non-Commercial, nur privat); die erste Installation fragt danach, Standard ist keins. Die Engine ist stable-diffusion.cpp (sd-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, kein Docker), die Modelldateien sind fest mit Revision und SHA-256 (bildmodell.py). Der Dienst speech-spark-bild (bild_server.py, nur 127.0.0.1:31005, API-Schlüssel) lädt die Engine erst beim ersten Bild (127.0.0.1:31015, vorher Prüfung des freien Speichers) und beendet sie nach *Entladen nach Minuten ohne Bild* (Standard 10). Schalter: Admin unter Funktionen → Bilder malen (chat.bilder); freigegeben gilt es für jedes Profil, Gäste nie, nie über MCP. Ein Profil malt unter *Ich → Bilder* (Wunsch, Format Quadrat, Querformat, Hochformat oder Breitbild) oder im Gespräch („Mal mir eine Katze auf einem Skateboard“, seit V01.0.591 auch mit dem Verb am Ende: „Kannst du mir ein Bild von … erstellen?“): die Weiche"
+"text": "Bilder malen (V01.0.567, standardmäßig aus, Plan plaene/bildgenerierung.md): Der Spark malt Bilder selbst mit FLUX.2 [klein], ohne Internet. Das Modell kommt nur mit der Installation: sudo ./install.sh --bild 4b-q8 (4B mit Q8, Apache 2.0, empfohlen), 4b-q4 (weniger Speicher), 9b-q8 oder 9b-q4 (FLUX Non-Commercial, nur privat); die erste Installation fragt danach, Standard ist keins. Die Engine ist stable-diffusion.cpp (sd-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, kein Docker), die Modelldateien sind fest mit Revision und SHA-256 (bildmodell.py). Der Dienst speech-spark-bild (bild_server.py, nur 127.0.0.1:31005, API-Schlüssel) lädt die Engine erst beim ersten Bild (127.0.0.1:31015, vorher Prüfung des freien Speichers) und beendet sie nach *Entladen nach Minuten ohne Bild* (Standard 10). Schalter: Admin unter Funktionen → Bilder malen (chat.bilder); freigegeben gilt es für jedes Profil, Gäste nie, nie über MCP. Ein Profil malt unter *Ich → Bilder* (Wunsch, Format Quadrat, Querformat, Hochformat oder Breitbild) oder im Gespräch („Mal mir eine Katze auf einem Skateboard“, seit V01.0.591 auch mit dem Verb am Ende: „Kannst du mir ein Bild von … erstellen?“, seit V01.0."
 },
 {
 "lang": "de",
@@ -4005,7 +4005,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": "-Gruppe „bild“ bietet bild_malen, das Modell schreibt dazu einen englischen Prompt, der unter dem Bild steht. Das Werkzeug gilt als Änderung (nach fremdem Text gesperrt, Notaus Stufe 2 hält es an). Der Auftrag läuft im Hintergrund, wartet auf eine Gesprächspause (Vorrang für Sprache), es malt immer nur ein Bild zugleich, höchstens 10 warten, 12 Minuten pro Auftrag. Feste Regeln, nicht abschaltbar: eine Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole), keine Personen, die der Spark kennt (Profilnamen und Kontakte), danach eine Bildprüfung (ViT-Klassifikator, ONNX auf der CPU; über 50 % wird das Bild verworfen, fehlt die Prüfung, wird nichts gezeigt); jedes Bild ist als KI-Bild gekennzeichnet (PNG-Text „KI-erzeugt“, IPTC trainedAlgorithmicMedia) und neu kodiert. Ablage: users/<p>/bilder/ mit index.json, *Bilder pro Profil und Tag* (Standard 30, gleitend 24 Stunden), *Platz pro Profil* (Standard 500 MB), höchstens 300 Bilder; *Längste Seite* 512 bis 1408 Pixel (Standard 1024). Im Chat zeigt eine Karte den Fortschritt, dann das Bild mit Herunterladen und „Alle Bilder“; die Antwort behält „Bild: <Prompt>“ und den Auftrag, so zeigt der Chat das Bild auch nach dem Neuladen, i"
+"text": "683 auch Karikatur, Comic und Cartoon: „Erstelle mir eine witzige Karikatur“): die Weiche-Gruppe „bild“ bietet bild_malen, das Modell schreibt dazu einen englischen Prompt, der unter dem Bild steht. Das Werkzeug gilt als Änderung (nach fremdem Text gesperrt, Notaus Stufe 2 hält es an). Der Auftrag läuft im Hintergrund, wartet auf eine Gesprächspause (Vorrang für Sprache), es malt immer nur ein Bild zugleich, höchstens 10 warten, 12 Minuten pro Auftrag. Feste Regeln, nicht abschaltbar: eine Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole), keine Personen, die der Spark kennt (Profilnamen und Kontakte), danach eine Bildprüfung (ViT-Klassifikator, ONNX auf der CPU; über 50 % wird das Bild verworfen, fehlt die Prüfung, wird nichts gezeigt); jedes Bild ist als KI-Bild gekennzeichnet (PNG-Text „KI-erzeugt“, IPTC trainedAlgorithmicMedia) und neu kodiert. Ablage: users/<p>/bilder/ mit index.json, *Bilder pro Profil und Tag* (Standard 30, gleitend 24 Stunden), *Platz pro Profil* (Standard 500 MB), höchstens 300 Bilder; *Längste Seite* 512 bis 1408 Pixel (Standard 1024). Im Chat zeigt eine Karte den Fortschritt, dann das Bild mit Herunterladen und „Alle Bilder“; die Antwort behä"
 },
 {
 "lang": "de",
@@ -4013,7 +4013,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": "n jedem gespeicherten Gespräch und auf jedem Gerät wieder. Fragt der Assistent nach einem Bildwunsch zurück (etwa „echte Personen male ich nicht, lieber erfundene?“), reicht als Antwort ein kurzes „ja“ oder „passt“: bis 10 Minuten nach dem eigenen Wunsch bleibt das Malen dafür angeboten, ohne Websuche. Die iPhone-App zeigt das Bild ebenso direkt unter der Antwort (gedrückt halten: sichern oder teilen); ihr Schlüssel darf dafür nur den Auftrag und die Bilddatei des eigenen Profils lesen, die ganze Liste, Malen und Löschen bleiben beim Bereich „Mein Alltag“. *Ich → Bilder* zeigt die Bilder als Galerie mit Wunsch, Prompt, Zeit, Größe, Dauer, Herunterladen und Löschen, oben „Alle Bilder löschen“. Fertig über die iPhone-App oder Telegram: Push „Bild“. „Bild testen“ unter dem Schalter malt ein Testbild und zeigt Ladezeit, Malzeit und Speicher (Stufe 0, Messung). Zustand → Live: Ziel „Bilder malen“ mit Anzahlen (läuft, wartet, heute fertig, fehlgeschlagen, abgelehnt), nie Wünsche oder Prompts; Dienst-Wächter-Teil „Bilder malen“; Logs (Bereich „Bild“): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <grund> fuer …, bild: engine gestartet 38 s 11.2 gib,"
+"text": "lt „Bild: <Prompt>“ und den Auftrag, so zeigt der Chat das Bild auch nach dem Neuladen, in jedem gespeicherten Gespräch und auf jedem Gerät wieder. Die Karte fragt erst nach, wenn sie in der Antwort steht (seit V01.0.683; vorher blieb sie manchmal bei „wartet …“ stehen, obwohl das Bild unter *Ich → Bilder* fertig war). Fragt der Assistent nach einem Bildwunsch zurück (etwa „echte Personen male ich nicht, lieber erfundene?“), reicht als Antwort ein kurzes „ja“ oder „passt“: bis 10 Minuten nach dem eigenen Wunsch bleibt das Malen dafür angeboten, ohne Websuche. Die iPhone-App zeigt das Bild ebenso direkt unter der Antwort (gedrückt halten: sichern oder teilen); ihr Schlüssel darf dafür nur den Auftrag und die Bilddatei des eigenen Profils lesen, die ganze Liste, Malen und Löschen bleiben beim Bereich „Mein Alltag“. *Ich → Bilder* zeigt die Bilder als Galerie mit Wunsch, Prompt, Zeit, Größe, Dauer, Herunterladen und Löschen, oben „Alle Bilder löschen“. Fertig über die iPhone-App oder Telegram: Push „Bild“. „Bild testen“ unter dem Schalter malt ein Testbild und zeigt Ladezeit, Malzeit und Speicher (Stufe 0, Messung). Zustand → Live: Ziel „Bilder malen“ mit Anzahlen (läuft, wartet, heut"
 },
 {
 "lang": "de",
@@ -4021,7 +4021,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": " bild: engine beendet leerlauf. API (Profil): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; Admin: GET|POST /api/admin/bild-test. Später: Schnellknöpfe, Hintergrund entfernen und Vergrößern (Stufe 2b), Telegram-Foto und Open-WebUI-Schnittstelle (2d)."
+"text": "e fertig, fehlgeschlagen, abgelehnt), nie Wünsche oder Prompts; Dienst-Wächter-Teil „Bilder malen“; Logs (Bereich „Bild“): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <grund> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (Profil): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; Admin: GET|POST /api/admin/bild-test. Später: Schnellknöpfe, Hintergrund entfernen und Vergrößern (Stufe 2b), Telegram-Foto und Open-WebUI-Schnittstelle (2d)."
 },
 {
 "lang": "de",
@@ -8797,7 +8797,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (144) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (145) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -8813,7 +8813,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 21 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 144 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 21 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 145 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -11101,7 +11101,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": "Painting pictures (V01.0.567, off by default, plan plaene/bildgenerierung.md): The Spark paints pictures itself with FLUX.2 [klein], without the internet. The model only comes with the installation: sudo ./install.sh --bild 4b-q8 (4B with Q8, Apache 2.0, recommended), 4b-q4 (less memory), 9b-q8 or 9b-q4 (FLUX Non-Commercial, private use only); the first install asks, the default is none. The engine is stable-diffusion.cpp (sd-server, pinned to one commit, built for the GB10 with CUDA, no Docker); the model files are pinned by revision and SHA-256 (bildmodell.py). The service speech-spark-bild (bild_server.py, only 127.0.0.1:31005, API key) loads the engine at the first picture (127.0.0.1:31015, after checking the free memory) and stops it after *Unload after minutes without a picture* (default 10). Switch: admin under Features → Painting pictures (chat.bilder); once released it applies to every profile, never to guests, never over MCP. A profile paints under *Me → Pictures* (wish, format square, landscape, portrait or wide) or in the conversation (\"Paint me a cat on a skateboard\", since V01.0.591 also with the verb at the end, as in German \"Kannst du mir ein Bild von … erstellen?\")"
+"text": "Painting pictures (V01.0.567, off by default, plan plaene/bildgenerierung.md): The Spark paints pictures itself with FLUX.2 [klein], without the internet. The model only comes with the installation: sudo ./install.sh --bild 4b-q8 (4B with Q8, Apache 2.0, recommended), 4b-q4 (less memory), 9b-q8 or 9b-q4 (FLUX Non-Commercial, private use only); the first install asks, the default is none. The engine is stable-diffusion.cpp (sd-server, pinned to one commit, built for the GB10 with CUDA, no Docker); the model files are pinned by revision and SHA-256 (bildmodell.py). The service speech-spark-bild (bild_server.py, only 127.0.0.1:31005, API key) loads the engine at the first picture (127.0.0.1:31015, after checking the free memory) and stops it after *Unload after minutes without a picture* (default 10). Switch: admin under Features → Painting pictures (chat.bilder); once released it applies to every profile, never to guests, never over MCP. A profile paints under *Me → Pictures* (wish, format square, landscape, portrait or wide) or in the conversation (\"Paint me a cat on a skateboard\", since V01.0.591 also with the verb at the end, as in German \"Kannst du mir ein Bild von … erstellen?\","
 },
 {
 "lang": "en",
@@ -11109,7 +11109,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": ": the router group \"bild\" offers bild_malen, the model writes an English prompt that is shown under the picture. The tool counts as a change (locked after outside text, emergency stop stage 2 holds it). The job runs in the background and waits for a pause in the conversation (speech goes first); one picture at a time, at most 10 waiting, 12 minutes per job. Fixed rules that cannot be switched off: a word list (nothing sexual, no violence, no hate symbols), no people the Spark knows (profile names and contacts), then an image check (ViT classifier, ONNX on the CPU; above 50 % the picture is discarded, without the check nothing is shown); every picture is marked as AI-made (PNG text \"KI-erzeugt\", IPTC trainedAlgorithmicMedia) and re-encoded. Storage: users/<p>/bilder/ with index.json, *Pictures per profile and day* (default 30, rolling 24 hours), *Space per profile* (default 500 MB), at most 300 pictures; *Longest side* 512 to 1408 pixels (default 1024). In the chat a card shows the progress, then the picture with Download and \"All pictures\"; the answer keeps \"Picture: <prompt>\" and the job, so the chat shows the picture again after a reload, in every saved conversation and on every "
+"text": " since V01.0.683 also caricature, comic and cartoon: \"Create a funny caricature for me\"): the router group \"bild\" offers bild_malen, the model writes an English prompt that is shown under the picture. The tool counts as a change (locked after outside text, emergency stop stage 2 holds it). The job runs in the background and waits for a pause in the conversation (speech goes first); one picture at a time, at most 10 waiting, 12 minutes per job. Fixed rules that cannot be switched off: a word list (nothing sexual, no violence, no hate symbols), no people the Spark knows (profile names and contacts), then an image check (ViT classifier, ONNX on the CPU; above 50 % the picture is discarded, without the check nothing is shown); every picture is marked as AI-made (PNG text \"KI-erzeugt\", IPTC trainedAlgorithmicMedia) and re-encoded. Storage: users/<p>/bilder/ with index.json, *Pictures per profile and day* (default 30, rolling 24 hours), *Space per profile* (default 500 MB), at most 300 pictures; *Longest side* 512 to 1408 pixels (default 1024). In the chat a card shows the progress, then the picture with Download and \"All pictures\"; the answer keeps \"Picture: <prompt>\" and the job, so th"
 },
 {
 "lang": "en",
@@ -11117,7 +11117,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": "device. When the assistant asks back after a picture wish (say \"I do not paint real people, fictional ones instead?\"), a short \"yes\" or \"fine\" is enough: up to 10 minutes after the own wish painting stays offered for it, without a web search. The iPhone app shows the picture right under the answer as well (touch and hold: save or share); for that its key may only read the job and the picture file of its own profile, the whole list, painting and deleting stay with the area \"Mein Alltag\". *Me → Pictures* shows them as a gallery with wish, prompt, time, size, duration, download and delete, \"Delete all pictures\" on top. Finished through the iPhone app or Telegram: push \"Bild\". \"Bild testen\" below the switch paints a test picture and shows load time, paint time and memory (stage 0, measuring). State → Live: target \"Painting pictures\" with counts (running, waiting, done, failed and refused today), never wishes or prompts; service guard part \"Painting pictures\"; logs (area \"Bild\"): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <reason> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (profile): GET|POST|DELETE /api/bi"
+"text": "e chat shows the picture again after a reload, in every saved conversation and on every device. The card only asks once it stands in the answer (since V01.0.683; before, it sometimes stayed at \"waiting …\" although the picture was ready under *Me → Pictures*). When the assistant asks back after a picture wish (say \"I do not paint real people, fictional ones instead?\"), a short \"yes\" or \"fine\" is enough: up to 10 minutes after the own wish painting stays offered for it, without a web search. The iPhone app shows the picture right under the answer as well (touch and hold: save or share); for that its key may only read the job and the picture file of its own profile, the whole list, painting and deleting stay with the area \"Mein Alltag\". *Me → Pictures* shows them as a gallery with wish, prompt, time, size, duration, download and delete, \"Delete all pictures\" on top. Finished through the iPhone app or Telegram: push \"Bild\". \"Bild testen\" below the switch paints a test picture and shows load time, paint time and memory (stage 0, measuring). State → Live: target \"Painting pictures\" with counts (running, waiting, done, failed and refused today), never wishes or prompts; service guard part"
 },
 {
 "lang": "en",
@@ -11125,7 +11125,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": "lder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; admin: GET|POST /api/admin/bild-test. Later: quick buttons, background removal and upscaling (stage 2b), Telegram photo and Open WebUI interface (2d)."
+"text": " \"Painting pictures\"; logs (area \"Bild\"): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <reason> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (profile): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; admin: GET|POST /api/admin/bild-test. Later: quick buttons, background removal and upscaling (stage 2b), Telegram photo and Open WebUI interface (2d)."
 },
 {
 "lang": "en",

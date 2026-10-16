@@ -222,6 +222,14 @@ class Rules(On):
                 asyncio.run(bilder.paint("a cat", 512, 512))
             self.assertEqual(str(e.exception), why)
 
+    def test_a_caricature_or_comic_is_a_wish_for_a_picture(self):
+        # „erstelle mir eine witzige karikatur comic stiel.“ went to the plain model, which said it cannot draw (Dominik 2026-10-16)
+        for wish in ("erstelle mir eine witzige karikatur comic stiel.", "Mach mir einen Comic von meinem Hund",
+                     "Kannst du eine Karikatur von einem Koch erstellen?", "create a funny cartoon of a cat"):
+            self.assertTrue(bilder.WORDS.search(wish), wish)
+        for other in ("Ich lese gerade einen Comic.", "Was ist eine Karikatur?"):
+            self.assertFalse(bilder.WORDS.search(other), other)
+
     def test_sizes_follow_the_format_and_the_admin_limit(self):
         for fmt in bilder.FORMATS:
             for side in (512, 1024, 1408):

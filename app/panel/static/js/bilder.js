@@ -8,10 +8,12 @@ const blWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{date
 const blMb=b=>(b/1048576).toFixed(b<10485760?1:0).replace('.',L==='en'?'.':',')+' MB';
 function blImg(p,cls){const i=document.createElement('img');i.src=blFile(p.id);i.alt=p.wish||p.prompt||t('Gemaltes Bild','Painted picture');
   i.loading='lazy';i.decoding='async';i.className=cls||'';if(p.w&&p.h){i.width=p.w;i.height=p.h}return i}
-// follows one job until it ends; tick(job) on every look, stops when the element left the page
+// follows one job until it ends; tick(job) on every look, stops when the element left the page. The first look waits
+// a moment: the chat's card is made before it is put into the answer, and a look at a card not yet in the page ended
+// at once, so the card stayed at „wartet …“ (Dominik 2026-10-16)
 function blFollow(jid,el,tick){const look=async()=>{if(!el.isConnected)return;const r=await apiTry('/api/bilder/job/'+encodeURIComponent(jid));
     if(!r.r.ok){tick({state:'error',error:String(r.d.detail||'').slice(0,200)});return}
-    tick(r.d);if(r.d.state==='wait'||r.d.state==='run')setTimeout(look,2500)};look()}
+    tick(r.d);if(r.d.state==='wait'||r.d.state==='run')setTimeout(look,2500)};setTimeout(look,0)}
 const BLSTATE={wait:['wartet auf eine Gesprächspause','waiting for a pause in the conversation'],run:['malt …','painting …'],change:['ändert …','changing …']};
 function blJobLine(j){return j.state==='error'?(L==='en'&&j.error_en?j.error_en:j.error)||t('Ging nicht.','Did not work.'):t(...(j.state==='run'&&j.art==='aendern'?BLSTATE.change:BLSTATE[j.state]||BLSTATE.wait))}
 // sends an own photo (Ich → Bilder „Eigenes Foto hochladen“) as it is; the panel cleans and keeps it as a PNG
@@ -32,8 +34,8 @@ function bildCard(ev){const d=icEl('div','hcard blcard');const h=icEl('h4','',ev
 // after a reload and on every device), else the prompt and a way to the pictures
 function bildAtt(a){const d=icEl('div','mem');d.appendChild(document.createTextNode('🖼 '+t('Bild: ','Picture: ')+String(a.p||'').slice(0,120)+' '));
   const b=icEl('button','mlink',t('Ansehen','View'));b.type='button';b.onclick=()=>openMe('bildbox');d.appendChild(b);
-  if(a.j&&BILD_ON)setTimeout(()=>blFollow(a.j,d,j=>{if(j.state!=='done'||!j.pic)return;const l=document.createElement('a');l.href=blFile(j.pic.id);
-    l.target='_blank';l.rel='noopener';l.className='blatt';l.appendChild(blImg(j.pic,'blbig'));d.prepend(l)}),0);
+  if(a.j&&BILD_ON)blFollow(a.j,d,j=>{if(j.state!=='done'||!j.pic)return;const l=document.createElement('a');l.href=blFile(j.pic.id);
+    l.target='_blank';l.rel='noopener';l.className='blatt';l.appendChild(blImg(j.pic,'blbig'));d.prepend(l)});
   return d}
 
 // ---------------------------------------------------------------- Ich → Bilder
