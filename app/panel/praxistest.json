@@ -1457,6 +1457,13 @@
 "titel": "Tippen ist flüssig",
 "text": "A: Im Assistenten (Rechner, Handy-Browser, Android-App) einen langen Satz schnell ins Eingabefeld tippen, während das Gesicht zu sehen ist. Die Buchstaben erscheinen sofort, nichts hakt; das Gesicht bewegt sich beim Tippen ruhiger und nach dem Tippen wieder wie immer. iPhone: in der App ebenso schnell tippen, auch bei einem langen Gespräch darüber.",
 "thread": "Langsames Tippen im Eingabefeld"
+},
+{
+"id": "P232",
+"v": 704,
+"titel": "Steuerzentrale: welches Werkzeug",
+"text": "A: Am Bildschirm des Panel-Rechners nach dem Wetter fragen und danach ein Licht schalten. Im Kasten Werkzeuge steht „▶ Websuche“ in der Farbe der Anfrage, solange es läuft, danach „✓ Websuche“, bis die Anfrage ausgeblendet wird. Bei zwei Anfragen stehen beide Werkzeuge da (Full HD: der zweite als „+1“). Ein fehlgeschlagenes Werkzeug zeigt ✗.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
 }
 ]
 }

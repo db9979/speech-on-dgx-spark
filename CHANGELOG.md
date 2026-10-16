@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.704** · 2026-10-16 · Steuerzentrale: Kasten Werkzeuge zeigt jedes benutzte Werkzeug in der Farbe seiner Anfrage (▶ läuft, ✓ fertig, ✗ Fehler), bleibt bis die Anfrage ausgeblendet wird; Full HD ein Name und „+N“
 - **V01.0.703** · 2026-10-16 · Aufräumen: Knoten-Seiten in sieben Dateien statt einer mit 4.771 Zeilen; Wächter-Tabellen zählen die Seitentexte nicht mehr als Module
 - **V01.0.702** · 2026-10-16 · Selbsttest: ein Profilname gehört einer Testdatei
 - **V01.0.701** · 2026-10-16 · Tippen geht vor: das Gesicht zeichnet beim Tippen nur noch etwa zehn Bilder pro Sekunde und fragt seine Sichtbarkeit seltener ab, die iPhone-App zeichnet beim Tippen nur die Eingabezeile neu (Dominik: „das Tippen ist total langsam“)

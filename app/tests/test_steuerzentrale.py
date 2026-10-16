@@ -214,7 +214,7 @@ class Bild(unittest.TestCase):
     def test_shows_both_computers_stages_and_requests(self):
         t = sz.bild(beispiel(), 240, 67).text()
         for word in ("tars · Modell-Rechner", "pi · Panel-Rechner", "Hören", "Weiche", "Sprachmodell", "Werkzeuge", "Sprechen",
-                     "Lautsprecher", "Browser", "Braucht dich", "Pi ist heiß", "LETZTE 20 MINUTEN", "INTERNET", "Websuche läuft"):
+                     "Lautsprecher", "Browser", "Braucht dich", "Pi ist heiß", "LETZTE 20 MINUTEN", "INTERNET", "▶ Websuche"):
             self.assertIn(word, t)
         self.assertNotIn("Uhr ·", t.split("\n")[3])     # a finished request is no device line
         one = sz.bild(beispiel(split=False), 240, 67).text()
@@ -248,6 +248,28 @@ class Bild(unittest.TestCase):
         self.assertIn("Küche", t)
         self.assertIn("fertig in 2,4 s", t)
         self.assertNotIn("Bad", t.split("GERÄTE", 1)[1].split("Verbunden", 1)[0])
+
+    def test_the_tool_box_names_each_tool(self):
+        # "unterhalb von werkzeugen nicht ersichtlich was für ein werkzeug benutzt wird": every shown request names
+        # its tool in its colour, running (▶), done (✓) or failed (✗), and keeps it until the request fades
+        d = beispiel()
+        d["live"]["reqs"] = [{"id": "w1", "dev": "Küche", "intent": "Wetter", "stage": "tool", "tool": "Websuche", "done": False,
+                              "age": 1, "steps": [{"k": "llm"}, {"k": "tool", "n": "Websuche", "ok": True}]},
+                             {"id": "w2", "dev": "Bad", "intent": "Licht", "stage": "done", "done": True, "last": True, "age": 2,
+                              "steps": [{"k": "tool", "n": "Kalender", "ok": True}, {"k": "tool", "n": "Licht schalten", "ok": False}]},
+                             {"id": "w3", "dev": "Uhr", "stage": "llm", "done": False, "age": 1, "steps": [{"k": "llm"}]}]
+        lauf = sz.gezeigt(d)
+        farbe = {r["id"]: sz.FARBEN[j] for j, r in enumerate(lauf)}    # the colour of its request's way
+        self.assertEqual(sz.werkzeug_teile(lauf), [("▶ Websuche", farbe["w1"]), (" · ", "m"), ("✗ Licht schalten +1", farbe["w2"])])
+        groß = sz.bild(d, 240, 67).text()
+        self.assertIn("▶ Websuche · ✗ Licht schalten +1", groß)
+        klein = sz.bild(d, 160, 45).text()           # Full HD: the first name whole, the rest counted
+        self.assertRegex(klein, r"Werkzeuge ▶ Websuche( \+1| · ✗)")
+        for r in d["live"]["reqs"]:
+            r["steps"] = [s for s in r["steps"] if s["k"] != "tool"]
+            r["stage"] = "llm" if r["stage"] == "tool" else r["stage"]
+        self.assertEqual(sz.werkzeug_teile(sz.gezeigt(d)), [])
+        self.assertIn("Suchen · Schalten · Lesen", sz.bild(d, 240, 67).text())
 
     def test_every_live_service_has_its_line(self):
         """Dominik 2026-10-16: the screen grows with every change. Every box of the Live picture is drawn or counted."""

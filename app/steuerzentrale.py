@@ -238,6 +238,21 @@ def bahn(R, x, w, top, bot, k, karte, live):
     return top + 6, bot - 3
 
 
+def werkzeug_teile(lauf):
+    """Which tool each shown request uses or used, in its colour: ▶ running, ✓ done, ✗ failed (Dominik 2026-10-16)."""
+    teile = []
+    for j, r in enumerate(lauf):
+        ts = [st for st in r.get("steps") or [] if st.get("k") == "tool" and st.get("n")]
+        jetzt = r.get("stage") == "tool" and not r.get("done")
+        name = (r.get("tool") if jetzt else "") or (ts[-1].get("n") if ts else "")
+        if not name:
+            continue
+        mark = "▶" if jetzt else "✓" if ts[-1].get("ok", True) is not False else "✗"
+        mehr = f" +{len(ts) - 1}" if len(ts) > 1 else ""
+        teile += ([(" · ", "m")] if teile else []) + [(f"{mark} {name}{mehr}", FARBEN[j % len(FARBEN)])]
+    return teile
+
+
 def stufen_zeichnen(R, d, lanes, lauf, stufen):
     """The five stages in the frame of the computer each runs on, the requests' ways between them."""
     live = d.get("live") or {}
@@ -291,9 +306,10 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
     for key, name, sub, wo in stufen:
         bx, y, bw = pos[key]
         aktiv = [j for j, r in enumerate(lauf) if SCHRITT.get(r.get("stage")) == key]
+        teile = werkzeug_teile(lauf) if key == "tool" else []
         R.box(bx, y, bw, hoch, "y" if aktiv else "d", voll=True)
         e = R.put(bx + 2, y + 1, name, "W")
-        if aktiv:
+        if aktiv and not teile:             # the tools carry their own ▶
             R.put(e + 1, y + 1, "▶", "y")
         s = svc.get(key) or {}
         if s.get("wait"):
@@ -302,16 +318,25 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
             R.put(bx + bw - 3, y + 1, "●", DIENST.get(s["st"], "m"))
         if key == "llm" and karten.get("modell", {}).get("llm"):
             sub = karten["modell"]["llm"]
-        tool = next((r.get("tool") for r in lauf if r.get("stage") == "tool" and r.get("tool")), "")
-        if key == "tool" and tool:
-            sub = tool + " läuft"
         runden = max([sum(1 for st in r.get("steps") or [] if st.get("k") == "llm") for r in lauf] or [0])
         if key == "llm" and runden > 1:
             sub += f" · Runde {runden}"
-        if hoch == 4:
-            R.put(bx + 2, y + 2, kurz(sub, bw - 4), "m")
-        else:                    # a low box: the line beside the name
-            R.put(e + 3, y + 1, kurz(sub, bx + bw - 6 - e - 3), "m")
+        zx, zy = (bx + 2, y + 2) if hoch == 4 else (e + (1 if teile else 3), y + 1)
+        if teile:
+            bis = bx + bw - (2 if hoch == 4 else 5)
+            namen = teile[::2]               # every other part is the dot between two
+            for i, (t, col) in enumerate(namen):
+                rest = len(namen) - i - 1
+                platz = bis - zx - (len(f" +{rest}") if rest else 0)
+                if not i and len(t) > platz:   # the first name whole before any count
+                    platz = bis - zx
+                if i and platz < 5 + 3:      # no room for a readable name: the rest as a number
+                    R.put(zx, zy, kurz(f" +{rest + 1}", bis + 3 - zx), "m")
+                    break
+                zx = R.put(zx, zy, " · ", "m") if i else zx
+                zx = R.put(zx, zy, kurz(t, platz - (3 if i else 0)), col)
+        else:
+            R.put(zx, zy, kurz(sub, bx + bw - 2 - zx - (0 if hoch == 4 else 4)), "m")
     for mx, my, ch, col in marken:
         R.put(mx, my, ch, col)
     return pos, hoch
