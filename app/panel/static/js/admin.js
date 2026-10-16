@@ -121,10 +121,15 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
   box.appendChild(zCard(c.llm===true?'ok':c.llm===false?'bad':'','llm',t('Sprachmodell','Language model'),c.llm===true?t('antwortet','answers'):c.llm===false?t('antwortet nicht','does not answer'):t('noch nicht geprüft','not checked yet'),'',
     c.time?t('geprüft ','checked ')+zAgo(c.time)+(c.seconds!=null?' · '+fmt(c.seconds,' s',1):''):t('Prüfen startet die Funktionsprüfung','Checks runs the function check'),()=>goSec('test')));
   const free=sy.mem_avail_gib,tot=sy.mem_total_gib,ml=free==null?'':free<8?'bad':free<12?'warn':'ok';
-  const mc=zCard(ml,'mem',t('Speicher','Memory'),free==null?'–':fmt(free,'',1),free==null?'':t(' GiB frei',' GiB free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
+  const R=(s.rechner&&s.rechner.an&&s.rechner.liste)||[],rm=R.find(x=>x.id==='modell'),rp=R.find(x=>x.id==='panel'),rg=(rm&&rm.gpu)||{};
+  const mc=rm?zCard(zWorst(ml,rm.stufe),'mem',zRName(rm),free==null?'–':fmt(free,'',1),free==null?'':t(' GiB frei',' GiB free'),
+      ['GPU '+fmt(rg.util,' %'),fmt(rg.temp,' °C'),'CPU '+fmt(rm.cpu,' %')].join(' · '),zRGo)
+    :zCard(ml,'mem',t('Speicher','Memory'),free==null?'–':fmt(free,'',1),free==null?'':t(' GiB frei',' GiB free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
   if(free!=null&&tot){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');f.style.width=Math.max(2,Math.min(100,Math.round(100*free/tot)))+'%';
     const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
   box.appendChild(mc);
+  if(rp)box.appendChild(zRTile(rp));
+  box.classList.toggle('z5',!!rp);zRechner(R);
   const meta=$('zmeta');meta.textContent='';
   for(const x of [g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean)){const sp=document.createElement('span');sp.textContent=x;meta.appendChild(sp)}
   // „Heute“: each tile opens where its number comes from (way.js wayFirst): the requests, the own speakers, the logs
@@ -140,6 +145,64 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
     wayFirst(t('Ich → Lautsprecher','Me → Speakers'),t('Funktionen → Eigene Lautsprecher (ESP32)','Features → Own speakers (ESP32)'))));
   if(bg.held)tb.appendChild(zCard('acc2','pulse',t('Hintergrund','Background'),String(bg.held),t('× gewartet','× waited'),t('auf Sprache gewartet','waited for speech'),null,wayFirst(t('Zustand → Logs','Status → Logs'))));
   tb.hidden=$('ztodayh').hidden=false}
+// Zustand → Monitoring → Rechner (rechnerblick.py, Dominik 2026-10-16): with the models on another computer both
+// computers side by side, a tile each in „Jetzt“ and a card each under „Rechner“ with curves of the last 20 minutes.
+// Level and warnings come from fixed rules in rechnerblick.py; a model computer that does not answer keeps its card,
+// red and with its last values greyed out. Numbers and fixed words only (no address, no process).
+const ZR_DIENST={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),llm:t('Sprachmodell','Language model'),llmtor:'LLM-Tor',
+  sehen:t('Bildverständnis','Image understanding'),waerter:'Wärter',panel:'Panel',turn:t('Anrufe (TURN)','Calls (TURN)'),notasr:t('Notbetrieb-Erkennung','Emergency recognition'),gehaeuse:t('Gehäuse','Case')};
+const ZR_STROM={ok:'ok','zu niedrig':t('Spannung zu niedrig','voltage too low'),'war niedrig':t('Spannung war niedrig','voltage was low'),
+  nein:t('nie gedrosselt','never throttled'),jetzt:t('drosselt gerade','throttling now'),'war an':t('war gedrosselt','was throttled')};
+const zRRole=c=>c.id==='modell'?t('Modell-Rechner','Model computer'):t('Panel-Rechner','Panel computer');
+const zRName=c=>c.name?c.name+' · '+zRRole(c):zRRole(c);
+const zWorst=(...a)=>a.includes('bad')?'bad':a.includes('warn')?'warn':a.includes('ok')?'ok':'';
+const zRGo=()=>{const h=$('zrechnerh');if(h)h.scrollIntoView({behavior:'smooth',block:'start'})};
+const zDur=s=>s==null?'–':s>=86400?Math.floor(s/86400)+t(' T ',' d ')+Math.floor(s%86400/3600)+t(' Std.',' h'):s>=3600?Math.floor(s/3600)+t(' Std. ',' h ')+Math.floor(s%3600/60)+' min':Math.max(1,Math.round(s/60))+' min';
+const zUsed=c=>c.ram_total!=null&&c.ram_frei!=null?c.ram_total-c.ram_frei:null;
+function zRTile(c){const bel=zUsed(c);
+  const b=zCard(c.stufe,'mem',zRName(c),bel==null?'–':fmt(bel,'',1),bel==null?'':t(' GiB belegt',' GiB used'),
+    ['CPU '+fmt(c.cpu,' %'),c.temp!=null?fmt(c.temp,' °C'):'',c.platte_pct!=null?t('Platte ','Disk ')+fmt(c.platte_pct,' %'):''].filter(Boolean).join(' · '),zRGo);
+  if(bel!=null&&c.ram_total){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');
+    f.style.width=Math.max(2,Math.min(100,Math.round(100*bel/c.ram_total)))+'%';bar.appendChild(f);b.appendChild(bar)}
+  return b}
+function zRCard(c){const card=document.createElement('div');card.className='card zrcard';card.dataset.lvl=c.stufe;
+  const stale=c.id==='modell'&&!c.ok;card.classList.toggle('zrstale',stale);
+  const h=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=zRName(c);
+  pl.className='pill '+(c.stufe||'');pl.textContent=stale?t('antwortet nicht','not answering')+(c.stumm_s!=null?t(' seit ',' for ')+zDur(c.stumm_s):''):c.stufe==='ok'?t('alles gut','all good'):c.stufe==='bad'?t('Fehler','Error'):t('Hinweis','Note');
+  h.append(nm,pl);const meta=document.createElement('div');meta.className='mut zrmeta';
+  meta.textContent=[c.geraet,c.system,c.laeuft_s!=null?t('läuft seit ','up ')+zDur(c.laeuft_s):'',c.version].filter(Boolean).join(' · ');card.append(h,meta);
+  const K=c.kurven||{},hw=c.hinweise||[];
+  const row=(k,big,small,curve,max,lvl)=>{const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div');
+    const kk=document.createElement('small');kk.textContent=k;const b=document.createElement('b');b.textContent=big;tx.append(kk,b);
+    if(small){const sm=document.createElement('small');sm.textContent=small;tx.appendChild(sm)}r.appendChild(tx);
+    if(curve&&curve.filter(x=>x!=null).length>1){const v=document.createElementNS('http://www.w3.org/2000/svg','svg');v.setAttribute('class','zrspark');v.setAttribute('aria-hidden','true');spark(v,curve,max);r.appendChild(v)}
+    else if(lvl){const d=document.createElement('span');d.className='zrdot';d.dataset.lvl=lvl;r.appendChild(d)}
+    card.appendChild(r)};
+  if(c.id==='modell'){const g=c.gpu||{};
+    row('GPU',fmt(g.util,' %'),[fmt(g.temp,' °C'),fmt(g.power,' W')].join(' · '),K.gpu,100);
+    row('Unified Memory',c.ram_frei==null?'–':fmt(c.ram_frei,t(' GiB frei',' GiB free'),1),c.ram_total!=null?t('von ','of ')+fmt(c.ram_total,' GiB',1)+t(' · Grenze 8 GiB',' · limit 8 GiB'):'',K.frei,c.ram_total)}
+  row('CPU',fmt(c.cpu,' %'),[c.kerne?c.kerne+t(' Kerne',' cores'):'',c.last!=null?t('Last ','load ')+fmt(c.last,'',2):''].filter(Boolean).join(' · '),K.cpu,100);
+  if(c.id==='panel'){const bel=zUsed(c);
+    row(t('Arbeitsspeicher','Memory'),bel==null?'–':fmt(bel,t(' GiB belegt',' GiB used'),1),[c.ram_frei!=null?fmt(c.ram_frei,t(' GiB verfügbar',' GiB available'),1):'',
+      c.ram_cache!=null?t('Cache ','cache ')+fmt(c.ram_cache,' GiB',1):'',c.swap?t('Swap ','swap ')+fmt(c.swap,' GiB',1):''].filter(Boolean).join(' · '),
+      (K.frei||[]).map(x=>x==null||c.ram_total==null?null:c.ram_total-x),c.ram_total);
+    row(t('Temperatur','Temperature'),fmt(c.temp,' °C'),[c.luefter==null?'':c.luefter?t('Lüfter an','fan on'):t('Lüfter aus','fan off'),
+      c.temp_warn?t('Hinweis ab ','note from ')+c.temp_warn+' °C':''].filter(Boolean).join(' · '),K.temp,100)}
+  row(t('Platte','Disk'),fmt(c.platte_frei,t(' GB frei',' GB free')),c.platte_total!=null?t('von ','of ')+fmt(c.platte_total,' GB')+' · '+fmt(c.platte_pct,t(' % belegt',' % used')):'',
+    null,null,c.platte_pct==null?'':hw.includes('platte_'+c.id)?'warn':'ok');
+  row(t('Netz','Network'),!c.netz_mbit?'–':c.netz_mbit>=1000?fmt(c.netz_mbit/1000,' Gbit/s',c.netz_mbit%1000?1:0):fmt(c.netz_mbit,' Mbit/s'),
+    `↓ ${fmt(c.netz_rx_mbs,' MB/s',1)} ↑ ${fmt(c.netz_tx_mbs,' MB/s',1)}`,K.netz,null);
+  if(c.id==='modell')row(t('Sprachmodell','Language model'),c.llm||t('aus','off'),'',null,null,c.llm?'ok':'');
+  if(c.id==='panel'&&c.strom){const bad=c.strom.spannung==='zu niedrig'||c.strom.drossel==='jetzt';
+    row(t('Strom','Power'),bad?t('Problem','Problem'):'ok',[ZR_STROM[c.strom.spannung],ZR_STROM[c.strom.drossel]].filter(Boolean).join(' · '),null,null,bad?'bad':'ok')}
+  if((c.dienste||[]).length){const r=document.createElement('div');r.className='zrrow zrsvc';const k=document.createElement('small');k.textContent=t('Dienste','Services');
+    const w=document.createElement('div');w.className='zrchips';
+    for(const x of c.dienste){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
+      sp.textContent=ZR_DIENST[x.id]||x.id;w.appendChild(sp)}
+    r.append(k,w);card.appendChild(r)}
+  return card}
+function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.textContent='';
+  for(const c of R)box.appendChild(zRCard(c))}
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};

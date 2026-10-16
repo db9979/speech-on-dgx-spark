@@ -382,6 +382,8 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
+| `app/rechner.py` | The values of one computer for Status → Monitoring → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name. |
+| `app/panel/rechnerblick.py` | Status → Monitoring → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each und … |
 | `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
 | `app/tarswart.py` | Wärter: the model computer's few hands for a panel on another computer. |
 | `app/teilen.py` | Spark teilen: what the model computer needs besides the TLS-Tor (tlstor.py). |
@@ -2844,14 +2846,16 @@ flowchart TD
   s5{{"5. Connection to the TLS-Tor allowed?"}}
   s6["6. Command to the Wärter"]
   s7{{"7. Signature, time, number, command valid?"}}
-  s8(["8. Notbetrieb when the DGX is missing"])
+  s9["8. Values of both computers"]
+  s8(["9. Notbetrieb when the DGX is missing"])
   s1 --> s2
   s2 --> s3
   s3 -->|yes| s4
   s4 --> s5
   s5 -->|yes| s6
   s6 --> s7
-  s7 -->|yes| s8
+  s7 -->|yes| s9
+  s9 --> s8
   s3x(["Not paired"])
   s3 -->|no| s3x
   s5x(["Refused"])
@@ -2867,7 +2871,8 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Connection to the TLS-Tor allowed?**: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the content.
 6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
 7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names.
-8. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
+8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering.
+9. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
 
 **Examples:** Pair a Pi: Paired, certificate pinned. · Wrong computer in between: The proof does not fit, no pairing. · Switch the model from the Pi: The Wärter starts the switch by its own rules. · A stranger asks the door: Refused before the handshake.
 
@@ -2876,7 +2881,10 @@ flowchart TD
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
 - **10** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
-- **30 s** without an answer until Notbetrieb ([step 8](#kn-teilen-s8))
+- **30 s** without an answer until Notbetrieb ([step 9](#kn-teilen-s8))
+- **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
+- **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
+- **0.5 GiB** memory free on the panel computer, below it a note ([step 8](#kn-teilen-s9))
 
 #### Settings
 
@@ -2885,6 +2893,7 @@ flowchart TD
 #### What you see
 
 - Status → Live: box „Model computer“ with reachable, services, version and pause.
+- Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“.
 
 #### In the code
 
@@ -2896,9 +2905,11 @@ flowchart TD
 - `app/panel/steuer.py` `call`: signed command ([step 6](#kn-teilen-s6))
 - `app/tarswart.py` `check`: signature, time, number, command ([step 7](#kn-teilen-s7))
 - `app/tarswart.py` `COMMANDS`: the fixed commands ([step 7](#kn-teilen-s7))
-- `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 8](#kn-teilen-s8))
+- `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 9](#kn-teilen-s8))
+- `app/rechner.py` `messen`: values of one computer ([step 8](#kn-teilen-s9))
+- `app/panel/rechnerblick.py` `warnungen`: notes by fixed rules ([step 8](#kn-teilen-s9))
 
-Self-tests: `test_teilen`, `test_umziehen`
+Self-tests: `test_teilen`, `test_umziehen`, `test_rechner`
 
 ### state/
 

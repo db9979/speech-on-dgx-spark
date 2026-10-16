@@ -39,6 +39,7 @@ import documents  # noqa: E402,F401  (registers its routes)
 import health  # noqa: E402
 import push  # noqa: E402
 import proactive  # noqa: E402
+import rechnerblick  # noqa: E402
 import room  # noqa: E402
 import roomlive  # noqa: E402
 import tidy  # noqa: E402
@@ -284,6 +285,7 @@ async def sampler():
                 cfg = load_config()
                 # nvidia-smi and psutil block for a moment: off the event loop; both health checks at once
                 g, s = await asyncio.to_thread(lambda: (steuer.gpu() or {}, system_stats()))
+                await asyncio.to_thread(rechnerblick.probe)     # both computers' cards when the models run apart
                 h = dict(zip(SERVICES, await asyncio.gather(*(service_health(n, cfg) for n in SERVICES))))
                 health.check_memory(s["mem_avail_gib"], cfg)
                 live.services(h, cfg)

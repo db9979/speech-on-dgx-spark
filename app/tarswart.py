@@ -9,7 +9,8 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
 
     status                      version, state and uptime of the model units, GPU, free memory, settings hash,
                                 the model choice (common.MODEL_CHOICE: which model runs is this computer's), its
-                                Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too)
+                                Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too),
+                                this computer's values for Zustand → Monitoring → Rechner (rechner.messen)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
@@ -38,6 +39,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 import modelle
+import rechner
 from common import (CONFIG_PATH, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     run, shipped, waerter_key, waerter_sign, write_json)
@@ -132,7 +134,16 @@ def status():
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
-            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft()}
+            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "rechner": _rechner()}
+
+
+def _rechner():
+    """This computer's values for Zustand → Monitoring → Rechner (rechner.messen): numbers and fixed words only."""
+    try:
+        return rechner.messen()
+    except Exception as e:
+        print("waerter: rechner", type(e).__name__, flush=True)
+        return None
 
 
 def einstellen(daten):

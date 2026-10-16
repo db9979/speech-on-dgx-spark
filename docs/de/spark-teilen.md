@@ -65,6 +65,15 @@ Steckt der Raspberry Pi im Pironman-5-Gehäuse, zeigt das kleine Display den Zus
 
 Das Panel schreibt nie selbst in Systemdateien: es legt einen Wunsch ab und startet die feste Einheit `speech-spark-gehaeuse`, die den Wunsch noch einmal prüft und den Block aus zwei Zahlen selbst schreibt. Prüfen mit `sudo speech-spark gehaeuse status`; der Live-Kasten „Gehäuse“ zeigt Display, LEDs und Seite, die Logs stehen im Bereich „gehaeuse“.
 
+## Beide Rechner im Monitoring
+
+Laufen Panel und Modelle getrennt, zeigt Zustand → Monitoring beide Rechner gleichwertig: oben je eine Kachel (Modell-Rechner mit freiem Speicher, GPU und CPU; Panel-Rechner mit belegtem Arbeitsspeicher, CPU, Temperatur und Platte) und darunter unter „Rechner“ zwei Karten nebeneinander mit Kurven der letzten 20 Minuten:
+
+- **Modell-Rechner**: GPU mit Temperatur und Leistung, Unified Memory mit der 8-GiB-Grenze, CPU, Platte, Netz, das laufende Sprachmodell und seine Dienste. Die Werte schickt der Wärter mit seinem Zustand.
+- **Panel-Rechner**: CPU, Arbeitsspeicher (belegt, verfügbar, Cache), Temperatur und Lüfter, Speicherkarte oder SSD, Netz, Strom (Unterspannung und Drosselung des Raspberry Pi) und seine Dienste.
+
+Antwortet der Modell-Rechner nicht, bleibt seine Karte stehen, rot mit „antwortet nicht seit …“ und den letzten Werten grau. Unter „Braucht dich“ meldet sich das Panel mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder mit zu wenig Strom, weniger als 0,5 GiB Arbeitsspeicher frei; auf jedem Rechner weniger als 10 % Platte frei; der Modell-Rechner antwortet nicht. Jeder Hinweis führt zu den Karten. Dasselbe zeigen Zustand → Live (Kasten „Panel-Rechner“, CPU des Panel-Rechners neben der des Modell-Rechners), die iPhone-App unter Monitoring und die Android-App über die Panel-Ansicht. Gezeigt werden nur Zahlen und feste Wörter, nie Adressen oder Prozesse; auf einem einzelnen Spark bleibt die Seite wie bisher. Logs im Bereich „system“ (`rechner: hinweis …`).
+
 ## Prüfen und Fehler suchen
 
 | Was | Befehl |

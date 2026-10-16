@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.673** · 2026-10-16 · Spark teilen: Zustand → Monitoring zeigt beide Rechner nebeneinander (CPU, Speicher, Platte, Netz, Temperatur, Strom, Dienste, Kurven), Hinweise bei Hitze, Strom, Speicher, Platte und fehlendem Modell-Rechner; auch Live und iPhone
 - **V01.0.672** · 2026-10-16 · „Wer darf es“ in der Funktion als eine Zeile (alle Profile · gesperrt: …), die Profil-Chips erst nach Antippen; die Seite „Wer darf was“ entfällt, Sperren stehen unter Personen und Geräte → Gesperrte Funktionen und im Profil-Detail
 - **V01.0.671** · 2026-10-16 · Musik testen steht jetzt unter Zustand → Prüfen (Funktionen bleibt kurz, Weiche unverändert)
 - **V01.0.670** · 2026-10-16 · Musik machen, Stufe M0: ACE-Step 1.5 auf dem Spark (acestep.cpp, install.sh --musik 2b), lädt nur für ein Lied; der Admin misst mit „Musik testen“

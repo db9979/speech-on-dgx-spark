@@ -2693,7 +2693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
+"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. 9. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
 },
 {
 "lang": "de",
@@ -2709,7 +2709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 10 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 8)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 10 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 9) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2725,7 +2725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause."
+"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause. - Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt dazu den Kasten „Panel-Rechner“."
 },
 {
 "lang": "de",
@@ -2733,7 +2733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 8)"
+"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 9) - app/rechner.py messen: Werte eines Rechners (Schritt 8) - app/panel/rechnerblick.py warnungen: Hinweise nach festen Regeln (Schritt 8)"
 },
 {
 "lang": "de",
@@ -6779,6 +6779,30 @@
 "lang": "de",
 "src": "spark-teilen",
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Beide Rechner im Monitoring",
+"title": "Beide Rechner im Monitoring",
+"text": "Laufen Panel und Modelle getrennt, zeigt Zustand → Monitoring beide Rechner gleichwertig: oben je eine Kachel (Modell-Rechner mit freiem Speicher, GPU und CPU; Panel-Rechner mit belegtem Arbeitsspeicher, CPU, Temperatur und Platte) und darunter unter „Rechner“ zwei Karten nebeneinander mit Kurven der letzten 20 Minuten:"
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Beide Rechner im Monitoring",
+"title": "Beide Rechner im Monitoring",
+"text": "- Modell-Rechner: GPU mit Temperatur und Leistung, Unified Memory mit der 8-GiB-Grenze, CPU, Platte, Netz, das laufende Sprachmodell und seine Dienste. Die Werte schickt der Wärter mit seinem Zustand. - Panel-Rechner: CPU, Arbeitsspeicher (belegt, verfügbar, Cache), Temperatur und Lüfter, Speicherkarte oder SSD, Netz, Strom (Unterspannung und Drosselung des Raspberry Pi) und seine Dienste."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
+"head": "Beide Rechner im Monitoring",
+"title": "Beide Rechner im Monitoring",
+"text": "Antwortet der Modell-Rechner nicht, bleibt seine Karte stehen, rot mit „antwortet nicht seit …“ und den letzten Werten grau. Unter „Braucht dich“ meldet sich das Panel mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder mit zu wenig Strom, weniger als 0,5 GiB Arbeitsspeicher frei; auf jedem Rechner weniger als 10 % Platte frei; der Modell-Rechner antwortet nicht. Jeder Hinweis führt zu den Karten. Dasselbe zeigen Zustand → Live (Kasten „Panel-Rechner“, CPU des Panel-Rechners neben der des Modell-Rechners), die iPhone-App unter Monitoring und die Android-App über die Panel-Ansicht. Gezeigt werden nur Zahlen und feste Wörter, nie Adressen oder Prozesse; auf einem einzelnen Spark bleibt die Seite wie bisher. Logs im Bereich „system“ (rechner: hinweis …)."
+},
+{
+"lang": "de",
+"src": "spark-teilen",
+"file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Prüfen und Fehler suchen",
 "title": "Prüfen und Fehler suchen",
 "text": "Der Live-Kasten „Modell-Rechner“ zeigt, ob der DGX erreichbar ist, wie viele Dienste laufen, seine Version und eine Pause. Technik dazu: Sicherheit und Betrieb und Architektur."
@@ -9789,7 +9813,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e fixed list. No shell, no free names. 8. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
+"text": "e fixed list. No shell, no free names. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. 9. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
 },
 {
 "lang": "en",
@@ -9805,7 +9829,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 10 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 8)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 10 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 9) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8)"
 },
 {
 "lang": "en",
@@ -9821,7 +9845,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause."
+"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause. - Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“."
 },
 {
 "lang": "en",
@@ -9829,7 +9853,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 8)"
+"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 9) - app/rechner.py messen: values of one computer (step 8) - app/panel/rechnerblick.py warnungen: notes by fixed rules (step 8)"
 },
 {
 "lang": "en",
@@ -13638,6 +13662,30 @@
 "head": "Case of the panel computer (Pironman 5)",
 "title": "Case of the panel computer (Pironman 5)",
 "text": "The panel never writes system files itself: it leaves a wish and starts the fixed unit speech-spark-gehaeuse, which checks the wish again and writes the block itself from two numbers. Check with sudo speech-spark gehaeuse status; the Live box \"Gehäuse\" shows display, LEDs and page, the logs are in the area \"gehaeuse\"."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Both computers in Monitoring",
+"title": "Both computers in Monitoring",
+"text": "When the panel and the models run apart, Status → Monitoring shows both computers as equals: a tile each on top (the model computer with free memory, GPU and CPU; the panel computer with used memory, CPU, temperature and disk) and below, under \"Computers\", two cards side by side with curves of the last 20 minutes:"
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Both computers in Monitoring",
+"title": "Both computers in Monitoring",
+"text": "- Model computer: GPU with temperature and power, unified memory with the 8 GiB limit, CPU, disk, network, the running language model and its services. The Wärter sends the values with its status. - Panel computer: CPU, memory (used, available, cache), temperature and fan, SD card or SSD, network, power (the Raspberry Pi's under-voltage and throttling) and its services."
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Both computers in Monitoring",
+"title": "Both computers in Monitoring",
+"text": "When the model computer does not answer, its card stays, red with \"not answering for …\" and its last values grey. Under \"Braucht dich\" the panel speaks up by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB memory free; on either computer less than 10 % disk free; the model computer not answering. Each note leads to the cards. The same shows in Status → Live (box \"Panel computer\", the panel computer's CPU next to the model computer's), in the iPhone app under Monitoring and in the Android app through the panel view. Only numbers and fixed words, never addresses or processes; on a single Spark the page stays as before. Logs in the area \"system\" (rechner: hinweis …)."
 },
 {
 "lang": "en",

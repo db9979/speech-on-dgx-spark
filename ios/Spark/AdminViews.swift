@@ -160,6 +160,26 @@ struct StatusView: View {
                 LabeledContent("CPU") { Text(verbatim: Self.num(sys["cpu"]) + " %") }
                 LabeledContent("GPU") { Text(verbatim: Self.num(gpu["util"]) + " % · " + Self.num(gpu["temp"]) + " °C · " + Self.num(gpu["power"]) + " W") }
             }
+            // Zustand → Monitoring → Rechner (rechnerblick.py): with the models on another computer both computers,
+            // numbers and fixed words only; the colour follows the panel's fixed rules ("stufe")
+            let rech = d["rechner"] as? [String: Any] ?? [:]
+            if rech["an"] as? Bool == true {
+                ForEach(stableRows(rech["liste"] as? [[String: Any]] ?? []) { ($0["id"] as? String ?? "") }, id: \.id) { item in
+                    let c = item.row
+                    Section {
+                        LabeledContent("Zustand") { Text(Self.stufe(c)).foregroundStyle(Self.stufeFarbe(c)) }
+                        if c["id"] as? String == "modell" {
+                            let cg = c["gpu"] as? [String: Any] ?? [:]
+                            LabeledContent("GPU") { Text(verbatim: Self.num(cg["util"]) + " % · " + Self.num(cg["temp"]) + " °C") }
+                        }
+                        LabeledContent("CPU") { Text(verbatim: Self.num(c["cpu"]) + " %") }
+                        LabeledContent("Speicher frei") { Text(verbatim: Self.num(c["ram_frei"]) + " / " + Self.num(c["ram_total"]) + " GiB") }
+                        if c["temp"] is NSNumber { LabeledContent("Temperatur") { Text(verbatim: Self.num(c["temp"]) + " °C") } }
+                        LabeledContent("Platte frei") { Text(verbatim: Self.num(c["platte_frei"]) + " GB · " + Self.num(c["platte_pct"]) + " %") }
+                        LabeledContent("Dienste") { Text(verbatim: Self.dienste(c)) }
+                    } header: { Text(verbatim: Self.rechnerName(c)) }
+                }
+            }
             // the "Heute" tiles of Zustand → Monitoring (admin.glance): counts and times only; orange by the panel's rules
             let g = d["glance"] as? [String: Any] ?? [:]
             Section("Heute (24 Std.)") {
@@ -222,6 +242,33 @@ struct StatusView: View {
     static func num(_ v: Any?) -> String {
         guard let n = (v as? NSNumber)?.doubleValue else { return "–" }
         return n == n.rounded() ? String(Int(n)) : String(format: "%.1f", n)
+    }
+
+    /// a computer of Zustand → Monitoring → Rechner: its host name and its role
+    static func rechnerName(_ c: [String: Any]) -> String {
+        let rolle = c["id"] as? String == "modell" ? String(localized: "Modell-Rechner") : String(localized: "Panel-Rechner")
+        let name = c["name"] as? String ?? ""
+        return name.isEmpty ? rolle : name + " · " + rolle
+    }
+
+    static func stufe(_ c: [String: Any]) -> LocalizedStringKey {
+        if c["id"] as? String == "modell" && c["ok"] as? Bool == false { return "antwortet nicht" }
+        switch c["stufe"] as? String {
+        case "bad": return "Fehler"
+        case "warn": return "Hinweis"
+        default: return "alles gut"
+        }
+    }
+
+    static func stufeFarbe(_ c: [String: Any]) -> Color {
+        ["ok": .green, "warn": .orange, "bad": .red][c["stufe"] as? String ?? ""] ?? .primary
+    }
+
+    /// "3 / 4 aktiv": the computer's services that run
+    static func dienste(_ c: [String: Any]) -> String {
+        let all = c["dienste"] as? [[String: Any]] ?? []
+        let on = all.filter { $0["state"] as? String == "active" }.count
+        return "\(on) / \(all.count) " + String(localized: "aktiv")
     }
 
     static func color(_ state: String) -> Color {

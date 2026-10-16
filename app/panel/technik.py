@@ -246,6 +246,8 @@ MODULE = {
     "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
     "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
+    "rechner": ("teilen", "Werte eines Rechners: CPU, Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
+    "rechnerblick": ("teilen", "Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln"),
     "einordnung": ("sprache", "Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor"),
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
     "musik_server": ("sprache", "Musik-Dienst: startet ACE-Step 1.5 bei Bedarf, prüft und kennzeichnet jedes Lied"),
@@ -328,9 +330,11 @@ KNOTEN = {
                  "update check. Through the guard or fixed addresses; the kill switch turns them off.", []),
     "teilen": (896, 258, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
                "Nur wenn das Panel auf einem eigenen Rechner läuft: jeder Weg zu den Modellen geht durch das TLS-Tor "
-               "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben.",
+               "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben. Zustand → "
+               "Monitoring zeigt dann beide Rechner nebeneinander.",
                "Only when the panel runs on its own computer: every way to the models goes through the TLS-Tor "
-               "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed.", ["tlstor.py", "tarswart.py", "teilen.py"]),
+               "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed. Status → Monitoring "
+               "then shows both computers side by side.", ["tlstor.py", "tarswart.py", "teilen.py", "rechner.py"]),
     "state": (194, 550, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
               "Global state: keys, statistics, watchers.", []),
     "users": (534, 550, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",

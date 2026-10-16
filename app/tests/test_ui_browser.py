@@ -659,6 +659,54 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_zustand_shows_both_computers_when_split(self):
+        """Zustand → Monitoring → Rechner (Dominik 2026-10-16, Variante 1): with the models on another computer a tile
+        each in „Jetzt“ and a card each under „Rechner“ with curves; a model computer that does not answer keeps its
+        card, red and greyed; on one Spark neither shows. No overflow at 320 and 390 px."""
+        card = ("{id:'%s',name:'%s',stufe:'%s',ok:%s,stumm_s:%s,cpu:4,kerne:4,last:0.5,ram_total:7.9,ram_frei:7.2,ram_cache:2,swap:0,"
+                "platte_total:238,platte_frei:212,platte_pct:11,netz_rx_mbs:1.2,netz_tx_mbs:0.4,netz_mbit:1000,laeuft_s:300000,"
+                "temp:52,luefter:true,temp_warn:80,strom:{spannung:'ok',drossel:'nein'},version:'V01.0.1',geraet:'Raspberry Pi 5',system:'Debian',"
+                "gpu:{util:12,temp:58,power:41},llm:'qwen38-27b-nvfp4',hinweise:[],dienste:[{id:'panel',state:'active'},{id:'turn',state:'failed'}],"
+                "kurven:{cpu:[1,5,3],frei:[7,7.1,7.2],temp:[50,52,51],netz:[0.5,1,1.6],gpu:[10,20,12]}}")
+        split = ("zustand({glance:{},services:{},system:{mem_avail_gib:41.2,mem_total_gib:121.7,cpu:4},alerts:[],rechner:{an:true,liste:[%s,%s]}})"
+                 % (card % ("modell", "tars", "ok", "true", "null"), card % ("panel", "speech", "warn", "true", "null")))
+        gone = split.replace("id:'modell',name:'tars',stufe:'ok',ok:true,stumm_s:null", "id:'modell',name:'tars',stufe:'bad',ok:false,stumm_s:240")
+        async def go():
+            async with async_playwright() as p:
+                for w in (320, 390, 1280):
+                    br, pg, errors = await self.page(p, w, 900)
+                    seen = []
+
+                    async def status(route, request=None, seen=seen):
+                        seen.append(1)
+                        await (route.continue_() if len(seen) == 1 else route.abort())
+                    await pg.route("**/api/status", status)
+                    await pg.evaluate("goSec('mon')")
+                    await pg.wait_for_function("$('zhead').dataset.lvl", timeout=20000)
+                    await pg.wait_for_function("/erreichbar|reachable/.test($('hdr').textContent)", timeout=20000)
+                    self.assertTrue(await pg.evaluate("$('zrechner').hidden"))         # one Spark: no cards
+                    await pg.evaluate(split)
+                    self.assertEqual(await pg.evaluate("$('zcards').children.length"), 4 + 1)
+                    self.assertFalse(await pg.evaluate("$('zrechnerh').hidden"))
+                    got = await pg.evaluate("[...$('zrechner').children].map(c=>[c.dataset.lvl,c.querySelectorAll('svg.zrspark').length,"
+                                            "c.querySelectorAll('.zrchips span').length,c.querySelector('h2').textContent])")
+                    self.assertEqual([g[0] for g in got], ["ok", "warn"])
+                    self.assertEqual([g[1] for g in got], [4, 4])          # GPU, memory, CPU, network / CPU, memory, temperature, network
+                    self.assertEqual([g[2] for g in got], [2, 2])
+                    self.assertIn("tars", got[0][3])
+                    await pg.evaluate(gone)
+                    self.assertEqual(await pg.evaluate("[$('zrechner').firstElementChild.dataset.lvl,$('zrechner').firstElementChild.classList.contains('zrstale')]"),
+                                     ["bad", True])
+                    self.assertRegex(await pg.evaluate("$('zrechner').firstElementChild.querySelector('.pill').textContent"), r"antwortet nicht|not answering")
+                    self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"), w)
+                    self.assertFalse(await pg.evaluate("[...document.querySelectorAll('#mon .zcard,#mon .zrcard')].some(e=>e.getBoundingClientRect().right>innerWidth+1)"), w)
+                    await pg.evaluate("zustand({glance:{},services:{},system:{},alerts:[],rechner:{an:false}})")
+                    self.assertTrue(await pg.evaluate("$('zrechner').hidden&&$('zrechnerh').hidden"))
+                    self.assertEqual(await pg.evaluate("$('zcards').children.length"), 4)
+                    self.assertEqual(errors, [])
+                    await br.close()
+        self.run_async(go())
+
     def test_zustand_says_how_it_is_and_what_needs_you(self):
         """V01.0.146: Zustand starts with one sentence and lists unsaved settings pages under "Braucht dich"
         with a button that opens the page; the dot in the menu follows the sentence. (Services may also be

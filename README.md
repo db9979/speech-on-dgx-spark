@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.673** Spark split: both computers in Monitoring, with curves and notes
 - **V01.0.672** "Who may use it" as one line; blocks under People and devices → Blocked functions instead of a page of their own
 - **V01.0.671** Test music now sits under State → Checks (Features stays short, Weiche unchanged)
 - **V01.0.670** Making music, stage M0: ACE-Step 1.5 on the Spark (acestep.cpp, install.sh --musik 2b), loads only for a song; the admin measures with “Test music”
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.666** · 2026-10-16 · Task sheet with five parts of one's choice: today's appointments, task and shopping list, waiting mail with a draft reply, quick note and note; each profile picks under Me → reMarkable → Paper
 - **V01.0.665** Terminal client: spark-tui update (checksum from the Spark checked); the window shows a new version
 - **V01.0.664** Switch check: „Terminal“ is no appointment, everyday sentences for the new functions, known gaps closed, photo edits shown as pictures, learning from unclear questions
-- **V01.0.662** Verbessern works on the Pi again; case: eleven pages with a preview to tap
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

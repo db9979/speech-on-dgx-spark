@@ -163,6 +163,8 @@ TARGETS = {
     "telefon": ("Telefonanlage", "SIP · Heimnetz", "lan", False),
     # Spark teilen (steuer.py): the DGX with the models while the panel runs on another computer; reachable, counts
     "modell": ("Modell-Rechner", "Sprache, LLM und Bilder · Heimnetz", "lan", False),
+    # Spark teilen (rechnerblick.py): the computer the panel runs on, next to the model computer; numbers only
+    "panelrechner": ("Panel-Rechner", "Panel und Dienste · Heimnetz", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -999,6 +1001,13 @@ def _upd(now):
         return {"run": False}
 
 
+def _n(v, nach=0):
+    """A number for a box line in German style ("-" when unknown)."""
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return "-"
+    return f"{v:.{nach}f}".replace(".", ",")
+
+
 def _sys():
     try:
         import monitor
@@ -1007,8 +1016,16 @@ def _sys():
         h = []
     last = h[-1] if h else {}
     num = lambda v: round(v, 1) if isinstance(v, (int, float)) else None  # noqa: E731
-    return {"gpu": num(last.get("gpu")), "cpu": num(last.get("cpu")), "free": num(last.get("avail")), "temp": num(last.get("temp")),
-            "power": num(last.get("power")), "hist": {k: [num(x.get(k)) for x in h] for k in ("gpu", "cpu", "avail")}}
+    out = {"gpu": num(last.get("gpu")), "cpu": num(last.get("cpu")), "free": num(last.get("avail")), "temp": num(last.get("temp")),
+           "power": num(last.get("power")), "hist": {k: [num(x.get(k)) for x in h] for k in ("gpu", "cpu", "avail")}}
+    try:      # models on another computer: the numbers above are its; the panel computer's CPU next to them
+        import rechnerblick
+        if rechnerblick.an():
+            c = rechnerblick.kurven("panel")["cpu"][-60:]
+            out["pi"] = {"cpu": num(c[-1]) if c else None, "hist": [num(x) for x in c]}
+    except Exception:
+        pass
+    return out
 
 
 def node_stats(now=None):
@@ -1249,6 +1266,13 @@ def snapshot(view="admin", now=None):
         nbl = {}
     if mr.get("on"):
         used.add("modell")
+    try:
+        import rechnerblick
+        rb = rechnerblick.for_live()
+    except Exception:
+        rb = {"on": False}
+    if rb.get("on"):
+        used.add("panelrechner")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1329,9 +1353,16 @@ def snapshot(view="admin", now=None):
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
                         + (" · Wartungspause" if mr.get("pause") else ""))
+            rm = rb.get("modell") or {}   # Rechner: GPU, free memory and CPU of the model computer (numbers only)
+            if mr.get("ok") and rm.get("frei") is not None:
+                x["sub"] += f" · GPU {_n(rm.get('gpu'))} % · {_n(rm['frei'], 1)} GiB frei · CPU {_n(rm.get('cpu'))} %"
             if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
                 x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
                              if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
+        if x["id"] == "panelrechner":   # Panel-Rechner: CPU, memory, temperature, disk (numbers only, no name)
+            rp = rb.get("panel") or {}
+            x["sub"] = (f"CPU {_n(rp.get('cpu'))} % · RAM {_n(rp.get('belegt'), 1)} von {_n(rp.get('total'), 1)} GiB"
+                        f" · {_n(rp.get('temp'))} °C · Platte {_n(rp.get('platte'))} %")
         if x["id"] == "telefon":   # Telefon: signed in, calls in numbers (never a number, a name or a word)
             x["sub"] = (("angemeldet" if tel.get("ok") else "nicht angemeldet") + f" · {tel.get('calls', 0)} Gespräche jetzt · heute "
                         f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "

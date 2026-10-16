@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.673** Spark teilen: beide Rechner im Monitoring, mit Kurven und Hinweisen
 - **V01.0.672** „Wer darf es“ als eine Zeile; Sperren unter Personen und Geräte → Gesperrte Funktionen statt eigener Seite
 - **V01.0.671** Musik testen steht jetzt unter Zustand → Prüfen (Funktionen bleibt kurz, Weiche unverändert)
 - **V01.0.670** Musik machen, Stufe M0: ACE-Step 1.5 auf dem Spark (acestep.cpp, install.sh --musik 2b), lädt nur für ein Lied; der Admin misst mit „Musik testen“
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** Terminal-Client: spark-tui update (Prüfsumme vom Spark geprüft); das Fenster zeigt neue Versionen an
 - **V01.0.664** Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für die neuen Funktionen, Lücken zu, Foto ändern als Bilder, Lernen aus unklaren Fragen
-- **V01.0.662** Verbessern geht auf dem Pi wieder; Gehäuse: elf Seiten mit Vorschau zum Antippen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

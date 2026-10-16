@@ -382,6 +382,8 @@ Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse des Panel-Rechners (Pironman 5): OLED-Seiten für den Admin, Status-LEDs, Lüftergrenzen |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt |
+| `app/rechner.py` | Werte eines Rechners: CPU, Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich) |
+| `app/panel/rechnerblick.py` | Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln |
 | `app/panel/steuer.py` | Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners |
 | `app/tarswart.py` | Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo |
 | `app/teilen.py` | Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats |
@@ -2844,14 +2846,16 @@ flowchart TD
   s5{{"5. Verbindung zum TLS-Tor erlaubt?"}}
   s6["6. Befehl an den Wärter"]
   s7{{"7. Unterschrift, Zeit, Nummer, Befehl gültig?"}}
-  s8(["8. Notbetrieb, wenn der DGX fehlt"])
+  s9["8. Werte beider Rechner"]
+  s8(["9. Notbetrieb, wenn der DGX fehlt"])
   s1 --> s2
   s2 --> s3
   s3 -->|ja| s4
   s4 --> s5
   s5 -->|ja| s6
   s6 --> s7
-  s7 -->|ja| s8
+  s7 -->|ja| s9
+  s9 --> s8
   s3x(["Nicht gekoppelt"])
   s3 -->|nein| s3x
   s5x(["Abgewiesen"])
@@ -2867,7 +2871,8 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Verbindung zum TLS-Tor erlaubt?**: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.
 6. <a id="kn-teilen-s6"></a>**Befehl an den Wärter**: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel.
 7. <a id="kn-teilen-s7"></a>**Unterschrift, Zeit, Nummer, Befehl gültig?**: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen.
-8. <a id="kn-teilen-s8"></a>**Notbetrieb, wenn der DGX fehlt**: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz.
+8. <a id="kn-teilen-s9"></a>**Werte beider Rechner**: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht.
+9. <a id="kn-teilen-s8"></a>**Notbetrieb, wenn der DGX fehlt**: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz.
 
 **Beispiele:** Pi koppeln: Gekoppelt, Zertifikat angeheftet. · Falscher Rechner dazwischen: Der Beweis passt nicht, keine Kopplung. · Modell wechseln vom Pi: Der Wärter startet den Wechsel mit seinen eigenen Regeln. · Fremdes Gerät fragt das Tor: Abgewiesen vor dem Handshake.
 
@@ -2876,7 +2881,10 @@ flowchart TD
 - **600 s** lebt ein Kopplungscode ([Schritt 2](#kn-teilen-s2))
 - **60 s** darf die Zeit eines Befehls daneben liegen ([Schritt 7](#kn-teilen-s7))
 - **10** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
-- **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 8](#kn-teilen-s8))
+- **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 9](#kn-teilen-s8))
+- **80 °C** Hinweis, der Panel-Rechner ist warm ([Schritt 8](#kn-teilen-s9))
+- **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
+- **0.5 GiB** Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
 
 #### Einstellen
 
@@ -2885,6 +2893,7 @@ flowchart TD
 #### Was du siehst
 
 - Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.
+- Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt dazu den Kasten „Panel-Rechner“.
 
 #### Im Code
 
@@ -2896,9 +2905,11 @@ flowchart TD
 - `app/panel/steuer.py` `call`: unterschriebener Befehl ([Schritt 6](#kn-teilen-s6))
 - `app/tarswart.py` `check`: Unterschrift, Zeit, Nummer, Befehl ([Schritt 7](#kn-teilen-s7))
 - `app/tarswart.py` `COMMANDS`: die festen Befehle ([Schritt 7](#kn-teilen-s7))
-- `app/panel/steuer.py` `weg`: Notbetrieb erkennen ([Schritt 8](#kn-teilen-s8))
+- `app/panel/steuer.py` `weg`: Notbetrieb erkennen ([Schritt 9](#kn-teilen-s8))
+- `app/rechner.py` `messen`: Werte eines Rechners ([Schritt 8](#kn-teilen-s9))
+- `app/panel/rechnerblick.py` `warnungen`: Hinweise nach festen Regeln ([Schritt 8](#kn-teilen-s9))
 
-Selbsttests: `test_teilen`, `test_umziehen`
+Selbsttests: `test_teilen`, `test_umziehen`, `test_rechner`
 
 ### state/
 

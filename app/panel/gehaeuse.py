@@ -30,7 +30,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
 import core  # noqa: E402
 import guard  # noqa: E402
+import rechner  # noqa: E402
 from common import STATE, load_config, read_json, write_json  # noqa: E402
+from rechner import THROTTLED  # noqa: E402,F401  (the self-tests fake this file)
 from core import admin_code, auth  # noqa: E402
 
 ARTEN = {"keins": ("Keins", "None"), "pironman5": ("SunFounder Pironman 5", "SunFounder Pironman 5")}
@@ -274,22 +276,12 @@ def _hinweise():
 
 def _pi():
     import psutil
-    out = {"temp": None, "cpu": None, "ram": None, "platte": None, "luefter": None}
-    try:
-        out["temp"] = int(hw.read("/sys/class/thermal/thermal_zone0/temp").strip()) / 1000
-    except (OSError, ValueError):
-        pass
+    out = {"temp": rechner.temp(hw.read), "cpu": None, "ram": None, "platte": None, "luefter": rechner.luefter(hw.read)}
     try:
         out["cpu"] = psutil.cpu_percent(None)
         out["ram"] = psutil.virtual_memory().percent
         out["platte"] = psutil.disk_usage("/").percent
     except Exception:
-        pass
-    try:
-        for d in sorted(os.listdir("/sys/class/thermal")):
-            if d.startswith("cooling_device") and hw.read(f"/sys/class/thermal/{d}/type").strip() == "gpio-fan":
-                out["luefter"] = int(hw.read(f"/sys/class/thermal/{d}/cur_state").strip()) > 0
-    except (OSError, ValueError):
         pass
     return out
 
@@ -384,7 +376,7 @@ def zeilen(key, now=None):
                 f"Suche {_dienst('web')}"]
     if key == "strom":
         jetzt, war = _strom()
-        return ["Strom", "Spannung " + jetzt, "Drossel " + war, "Pi an " + _dauer(_safe(_pi_an))]
+        return ["Strom", "Spannung " + jetzt, "Drossel " + war, "Pi an " + _dauer(_safe(rechner.laeuft_s))]
     if key == "version":
         try:
             import core as _core
@@ -450,23 +442,9 @@ def _dienst(sid):
         return "?"
 
 
-THROTTLED = "/sys/devices/platform/soc/soc:firmware/get_throttled"
-
-
 def _strom():
     """The Pi's firmware flags (get_throttled): under-voltage now or since the start, throttled now or since the start."""
-    try:
-        v = int(hw.read(THROTTLED).strip(), 16)
-    except (OSError, ValueError):
-        return "?", "?"
-    jetzt = "zu niedrig" if v & 0x1 else "war niedrig" if v & 0x10000 else "ok"
-    war = "jetzt" if v & 0x4 else "war an" if v & 0x40000 else "nein"
-    return jetzt, war
-
-
-def _pi_an():
-    import psutil
-    return time.time() - psutil.boot_time()
+    return rechner.strom_worte(rechner.strom_flags(hw.read))
 
 
 def _dauer(s):

@@ -2407,11 +2407,13 @@ SEITEN_DATEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "534cd3572b",
+        "stand": "69629f733f",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
             "steuer.weg": ["s8"], "steuer.GONE": ["s8"], "tarswart.WINDOW": ["s7"],
+            "rechner.messen": ["s9"], "rechnerblick.warnungen": ["s9"], "rechnerblick.TEMP_WARN": ["s9"],
+            "rechnerblick.PLATTE_MIN_PCT": ["s9"], "rechnerblick.RAM_MIN_GIB": ["s9"],
         },
         "kurz": ("Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle "
                  "bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie "
@@ -2472,6 +2474,16 @@ SEITEN_DATEN = {
                "tarswart.check checks the signature, a time at most {tarswart.WINDOW} s off, the number only once and a "
                "command from the fixed list. No shell, no free names."),
               ("stop", "nein", ("Abgelehnt", "Refused"))),
+            S("s9", "schritt", ("Werte beider Rechner", "Values of both computers"),
+              ("alle 3 s, nur Zahlen", "every 3 s, numbers only"),
+              ("rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des "
+               "DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab "
+               "{rechnerblick.TEMP_WARN} °C, gedrosselt oder zu wenig Strom, weniger als {rechnerblick.RAM_MIN_GIB} GiB "
+               "frei; auf jedem Rechner weniger als {rechnerblick.PLATTE_MIN_PCT} % Platte frei; der DGX antwortet nicht.",
+               "rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's "
+               "values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from "
+               "{rechnerblick.TEMP_WARN} °C, throttled or short of power, less than {rechnerblick.RAM_MIN_GIB} GiB free; "
+               "on either computer less than {rechnerblick.PLATTE_MIN_PCT} % disk free; the DGX not answering.")),
             S("s8", "ende", ("Notbetrieb, wenn der DGX fehlt", "Notbetrieb when the DGX is missing"),
               ("nach {steuer.GONE} s ohne Antwort", "after {steuer.GONE} s without an answer"),
               ("Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und "
@@ -2494,6 +2506,9 @@ SEITEN_DATEN = {
             ("{tarswart.WINDOW} s", ("darf die Zeit eines Befehls daneben liegen", "a command's time may be off"), "tarswart.WINDOW"),
             ("{tarswart.COMMANDS|anzahl}", ("feste Befehle des Wärters", "fixed commands of the Wärter"), "tarswart.COMMANDS"),
             ("{steuer.GONE} s", ("ohne Antwort bis zum Notbetrieb", "without an answer until Notbetrieb"), "steuer.GONE"),
+            ("{rechnerblick.TEMP_WARN} °C", ("Hinweis, der Panel-Rechner ist warm", "note, the panel computer is warm"), "rechnerblick.TEMP_WARN"),
+            ("{rechnerblick.PLATTE_MIN_PCT} %", ("Platte frei, darunter ein Hinweis", "disk free, below it a note"), "rechnerblick.PLATTE_MIN_PCT"),
+            ("{rechnerblick.RAM_MIN_GIB} GiB", ("Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis", "memory free on the panel computer, below it a note"), "rechnerblick.RAM_MIN_GIB"),
         ],
         "einstellen": [
             ("Auf den Rechnern selbst: sudo speech-spark teilen code, teilen koppeln, umziehen und zurueckholen "
@@ -2504,6 +2519,10 @@ SEITEN_DATEN = {
         "sehen": [
             ("Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.",
              "Status → Live: box „Model computer“ with reachable, services, version and pause."),
+            ("Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt "
+             "dazu den Kasten „Panel-Rechner“.",
+             "Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live "
+             "adds the box „Panel computer“."),
         ],
         "code": [
             ("teilen.CODE_SECS", ("Lebensdauer des Codes", "life of the code")),
@@ -2515,8 +2534,10 @@ SEITEN_DATEN = {
             ("tarswart.check", ("Unterschrift, Zeit, Nummer, Befehl", "signature, time, number, command")),
             ("tarswart.COMMANDS", ("die festen Befehle", "the fixed commands")),
             ("steuer.weg", ("Notbetrieb erkennen", "spot Notbetrieb")),
+            ("rechner.messen", ("Werte eines Rechners", "values of one computer")),
+            ("rechnerblick.warnungen", ("Hinweise nach festen Regeln", "notes by fixed rules")),
         ],
-        "tests": ["test_teilen", "test_umziehen"],
+        "tests": ["test_teilen", "test_umziehen", "test_rechner"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy
