@@ -696,14 +696,21 @@ def validate(new):
             raise HTTPException(400, f"image {k}: {lo} bis {hi}")
     if im["max_side"] % 64:
         raise HTTPException(400, "image max_side: a multiple of 64")
-    # Musik machen (musik_server.py), stage M0: everything comes from install.sh (sudo ./install.sh --musik ...);
-    # the panel changes nothing of it yet
+    # Musik machen (musik_server.py): whether it is installed, its variant and ports come from install.sh
+    # (sudo ./install.sh --musik ...); the panel picks the model per song among the installed ones and sets the limits
     mu, omu = new["music"], old.get("music", {})
     for k in ("enabled", "variant", "port", "engine_port", "idle_min"):
         if k in omu:
             mu[k] = omu[k]
         else:
             mu.pop(k, None)
+    import musik
+    if mu.get("model", "") not in ("",) + tuple(musik.VARIANTS):
+        raise HTTPException(400, "music model: " + ", ".join(musik.VARIANTS) + " or empty")
+    for k, lo, hi in (("day_limit", 1, 100), ("store_mb", 50, 20000), ("max_s", 30, 600)):
+        v = mu.get(k)
+        if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+            raise HTTPException(400, f"music {k}: {lo} bis {hi}")
     w = new["watch"]
     if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
         raise HTTPException(400, "watch warn_gib must be 2..64")

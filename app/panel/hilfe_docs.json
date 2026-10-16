@@ -1549,7 +1549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 21 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 22 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (145) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (150) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1613,7 +1613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (81 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (82 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 21 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 145 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 22 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 150 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -1805,7 +1805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 81 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 82 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2437,7 +2437,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Bilder und Musik",
 "title": "Bilder und Musik",
-"text": "Musik läuft daneben genauso (Stufe M0, bisher nur zum Messen): der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied und gibt den Speicher nach einer Ruhezeit frei; der Admin misst ihn mit „Musik testen“ (zwei feste Probestücke, Sekunden und Speicher an der Spitze). Beide Dienste teilen die Engine bei Bedarf aus bedarf.py."
+"text": "Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py."
 },
 {
 "lang": "de",
@@ -2453,7 +2453,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. 2. Funktion frei?: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. 5. Warten auf eine Pause: Der Auftrag läuft im Hintergrund (bilder."
+"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start. 2. Funktion frei?: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext ebenso, dazu „im Stil von“ einem Künstler und Geheimnisse. Das Modell kann das nicht umgehen. 4."
 },
 {
 "lang": "de",
@@ -2461,7 +2461,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "_work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. 6. Modell geladen?: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei."
+"text": " Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. Lieder: Lieder pro Tag, Platz und längstes Lied, auf dem Spark höchstens 10 wartende (musik.start). 5. Warten auf eine Pause: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. Ein Lied genauso (musik._work), eins zugleich. 6. Modell geladen?: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgele"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "gt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
 },
 {
 "lang": "de",
@@ -2477,7 +2485,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 300 Bilder pro Profil höchstens (Schritt 4) - 10 Aufträge warten höchstens (Schritt 4) - 0.5 Anteil der Bildprüfung, ab dem verworfen wird (Schritt 8) - 4 Schritte pro Bild (Schritt 7) - 720 Sekunden pro Auftrag höchstens (Schritt 5)"
+"text": "- 300 Bilder pro Profil höchstens (Schritt 4) - 10 Aufträge warten höchstens (Schritt 4) - 10 Lieder warten höchstens (Schritt 4) - 0.5 Anteil der Bildprüfung, ab dem verworfen wird (Schritt 8) - 4 Schritte pro Bild (Schritt 7) - 720 Sekunden pro Auftrag höchstens (Schritt 5)"
 },
 {
 "lang": "de",
@@ -2485,7 +2493,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Zustand → Prüfen → „Musik testen“."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none; mehrere nacheinander bleiben alle); Funktionen → Musik machen: Schalter, Modell, Lieder pro Tag, Platz, längstes Lied; Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell."
 },
 {
 "lang": "de",
@@ -2493,7 +2501,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“. - Zustand → Live: Ziel „Musik machen“ mit der letzten Messung; Logs → Diagnose, Bereich „Musik“."
+"text": "- Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“. - Zustand → Live: Ziel „Musik machen“ mit Liedern und der letzten Messung in Zahlen; Logs → Diagnose, Bereich „Musik“."
 },
 {
 "lang": "de",
@@ -2501,7 +2509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/bilder.py start: Wunsch annehmen (Schritt 1) - app/panel/features.py allowed: Freigabe für das Profil (Schritt 2) - app/panel/bilder.py refuse_text: Wortliste und Personen (Schritt 3) - app/panel/bilder.py _work: Auftrag im Hintergrund (Schritt 5) - app/panel/bilder.py keep: Bild ablegen (Schritt 10) - app/bild_server.py Engine.start: Engine laden (Schritt 6) - app/bild_server.py Engine.paint: Malen (Schritt 7) - app/bild_server.py nsfw_share: Bildprüfung (Schritt 8) - app/bild_server.py finish: Kennzeichnen und neu kodieren (Schritt 9) - app/bedarf.py OnDemand: Engine bei Bedarf, für Bild und Musik (Schritt 6) - app/musik_server.py Engine.make: Ein Lied in zwei Schritten (Schritt 7) - app/musik_server.py finish: MP3 prüfen und als KI-erzeugt kennzeichnen (Schritt 9) - app/panel/musik.py _measure: Musik testen (Schritt 5)"
+"text": "- app/panel/bilder.py start: Wunsch annehmen (Schritt 1) - app/panel/features.py allowed: Freigabe für das Profil (Schritt 2) - app/panel/bilder.py refuse_text: Wortliste und Personen (Schritt 3) - app/panel/bilder.py _work: Auftrag im Hintergrund (Schritt 5) - app/panel/bilder.py keep: Bild ablegen (Schritt 10) - app/bild_server.py Engine.start: Engine laden (Schritt 6) - app/bild_server.py Engine.paint: Malen (Schritt 7) - app/bild_server.py nsfw_share: Bildprüfung (Schritt 8) - app/bild_server.py finish: Kennzeichnen und neu kodieren (Schritt 9) - app/bedarf.py OnDemand: Engine bei Bedarf, für Bild und Musik (Schritt 6) - app/musik_server.py Engine.make: Ein Lied in zwei Schritten (Schritt 7) - app/musik_server.py finish: MP3 prüfen und als KI-erzeugt kennzeichnen (Schritt 9) - app/panel/musik.py start: Liedwunsch annehmen (Schritt 1, Schritt 4) - app/panel/musik.py refuse_text: Wortliste, Künstler, Personen (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5)"
 },
 {
 "lang": "de",
@@ -2773,7 +2781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 65). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 69). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -2797,7 +2805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Dateien in jeder Sicherung (Schritt 7) - 65 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 30 Dateien in jeder Sicherung (Schritt 7) - 69 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -4052,16 +4060,32 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Musik machen (V01.0.670, Stufe M0: messen, Plan `plaene/musik.md`)",
-"text": "Musik machen (V01.0.670, Stufe M0: messen, Plan plaene/musik.md): Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). "
+"title": "Sprach-Chat",
+"text": "Musik machen (V01.0.670 Stufe M0 messen, V01.0.688 Stufe M1 selbst machen, Plan plaene/musik.md): Seit Stufe M1 macht jedes freigegebene Profil eigene Lieder. Eigener Admin-Schalter Funktionen → Musik machen (aus, braucht das installierte Modell); freigegeben gilt er für jedes Profil, der Admin sperrt einzelne. Gäste, MCP und fremder Text (nach Mail, Web oder Dokument, Notaus ab Stufe 2) bekommen das Werkzeug nie. Im Gespräch: „Mach mir ein Lied über unsere Katze“, „Komponier ein Stück für Klavier“; die Weiche (Gruppe musik, Werkzeug musik_machen) hält das von „Spiel Musik im Wohnzimmer“ (Home Assistant) getrennt, ein kurzes „ja, mit Gesang“ innerhalb von 10 Minuten nach dem Wunsch zählt noch. Unter Ich → Musik: Wunsch, Länge, „Mit Gesang“ mit Sprache und Liedtext, darunter die eigenen Lieder mit Abspieler, Herunterladen und Löschen. Feste Regeln (musik.refuse_text): ohne Gesang instrumental, ohne Länge 2 Minuten (10 s bis music.max_s, Standard 300 s); keine Wortliste (Sexuelles, Gewalt, Hass), kein „im Stil von“ einem Künstler, keine Passwörter, PINs oder Kontonummern, keine Lieder über andere Profile oder Kontakte (der eigene Name geht). Grenzen pro Profil: music.day_limit Lieder"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Musik machen (V01.0.670, Stufe M0: messen, Plan `plaene/musik.md`)",
-"text": "In dieser Stufe misst nur der Admin: Zustand → Prüfen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s Pop mit deutschem Text) und zeigt fertig in, Planen, Klang und Speicher an der Spitze, dazu beide Stücke zum Anhören. Bricht die Engine ein Stück ab, steht dort „Engine-Fehler“, die Einzelheiten stehen im Log (Bereich „Musik“). Profile, Gäste, Werkzeuge, Apps und MCP bekommen noch nichts; das kommt in Stufe M1 mit eigenem Admin-Schalter. Zustand → Live: Ziel „Musik machen“ mit der letzten Messung (Zahlen); Dienst-Wächter-Teil „Musik machen“; Wartungspause-Teil „Musik machen“; Logs (Bereich „Musik“): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (Admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
+"title": "Sprach-Chat",
+"text": " am Tag (10), music.store_mb MB Platz (500), höchstens 200 Lieder; ein Lied zugleich pro Profil, höchstens 10 wartende auf dem Spark; ein Lied wartet auf eine Gesprächspause (vorrang.py) und darf 20 Minuten dauern. Modell wählen: Funktionen → Musik machen → Modell („Wie installiert“, 2B, 2B klein, XL); nicht installierte sind ausgegraut. Gemessen auf tars am 16.10.2026: 2B 16,6 s für 30 s mit 13,4 GB Spitze, XL 17,6 s mit 19,2 GB; ein anderes Modell beendet erst die laufende Engine. Ablage users/<id>/musik/ (MP3 mit KI-Kennzeichen und index.json), Daten löschen der Freigabe zählt mit. Im Chat des Panels erscheint eine Liedkarte mit Abspieler, die Apps finden das Lied unter Ich → Musik und bekommen einen Hinweis, wenn es fertig ist. Logs nur mit Zahlen und festen Wörtern: musik: auftrag 120 s instrumental chat fuer …, musik: gemacht 120 s gesang 9.5 s fuer …, musik: nicht gestartet kuenstler fuer …, nie Wunsch oder Liedtext. API: GET|POST|DELETE /api/musik, GET /api/musik/job/{id}, GET /api/musik/{id}/datei, DELETE /api/musik/{id}."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " für jedes installierte Modell zwei feste Probestücke (30 s Klavier, 60 s Pop mit deutschem Text) und zeigt fertig in, Planen, Klang und Speicher an der Spitze, dazu beide Stücke zum Anhören. Bricht die Engine ein Stück ab, steht dort „Engine-Fehler“, die Einzelheiten stehen im Log (Bereich „Musik“). Zustand → Live: Ziel „Musik machen“ mit der letzten Messung (Zahlen); Dienst-Wächter-Teil „Musik machen“; Wartungspause-Teil „Musik machen“; Logs (Bereich „Musik“): musik: test gestartet, musik: test xl 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (Admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{2b|2b-klein|xl}/{1|2}.mp3."
 },
 {
 "lang": "de",
@@ -5659,17 +5683,17 @@
 "lang": "de",
 "src": "installation",
 "file": "Installation im Detail",
-"head": "Musik machen (optional, Stufe M0: messen)",
-"title": "Musik machen (optional, Stufe M0: messen)",
+"head": "Musik machen (optional)",
+"title": "Musik machen (optional)",
 "text": "Mit --musik installiert die Installation zusätzlich das Musikmodell ACE-Step 1.5 (MIT-Lizenz; auf dem Modell-Rechner, beim Teilen mit --teilen; die erste Installation fragt danach, Standard ist keins, sudo speech-spark models fragt erneut):"
 },
 {
 "lang": "de",
 "src": "installation",
 "file": "Installation im Detail",
-"head": "Musik machen (optional, Stufe M0: messen)",
-"title": "Musik machen (optional, Stufe M0: messen)",
-"text": "Sie baut einmal acestep.cpp (ace-server, fester Commit, ggml fest eingebunden, CUDA für den GB10, ohne torch und ohne Docker, braucht nvcc und cmake) nach /opt/speech-spark/acestep, lädt die GGUF-Dateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/musik und richtet den Dienst speech-spark-musik ein (nur 127.0.0.1, beim Teilen über das TLS-Tor; Ports music.port 31004 und music.engine_port 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. In dieser Stufe misst nur der Admin: Zustand → Prüfen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und beide Stücke zum Anhören. Profile können noch nichts bestellen. Logs: sudo speech-spark logs musik, Wartungspause: sudo speech-spark pause musik 30."
+"head": "Musik machen (optional)",
+"title": "Musik machen (optional)",
+"text": "Sie baut einmal acestep.cpp (ace-server, fester Commit, ggml fest eingebunden, CUDA für den GB10, ohne torch und ohne Docker, braucht nvcc und cmake) nach /opt/speech-spark/acestep, lädt die GGUF-Dateien mit SHA-256-Prüfung nach /var/lib/speech-spark/models/musik und richtet den Dienst speech-spark-musik ein (nur 127.0.0.1, beim Teilen über das TLS-Tor; Ports music.port 31004 und music.engine_port 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. Mehrere Modelle nacheinander installieren geht, die Dateien bleiben alle. Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell mit zwei festen Probestücken (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und die Stücke zum Anhören. Danach Funktionen → Musik machen einschalten und dort das Modell wählen; jedes freigegebene Profil macht dann Lieder im Gespräch und unter Ich → Musik. Logs: sudo speech-spark logs musik, Wartungspause: sudo speech-spark pause musik 30."
 },
 {
 "lang": "de",
@@ -8765,7 +8789,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 21 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 22 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -8821,7 +8845,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (145) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (150) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -8829,7 +8853,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (81 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (82 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -8837,7 +8861,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 21 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 145 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 22 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 150 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -9021,7 +9045,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 81 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 82 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -9637,7 +9661,7 @@
 "file": "Architecture and data flow",
 "head": "Pictures and music",
 "title": "Pictures and music",
-"text": "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with \"Test music\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py."
+"text": "Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; \"Test music\" measures every installed model. Both services share the on-demand engine of bedarf.py."
 },
 {
 "lang": "en",
@@ -9653,7 +9677,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. 2. Feature released?: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. 5. Wait for a pause: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) an"
+"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start. 2. Feature released?: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics the same way, plus \"in the style of\" an artist and secrets. The model cannot get around it. 4. Within the limits?: Per profil"
 },
 {
 "lang": "en",
@@ -9661,7 +9685,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "d paints only one picture at a time, for at most 720 seconds. 6. Model loaded?: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory."
+"text": "e there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. Songs: songs per day, space and the longest song, on the Spark at most 10 waiting (musik.start). 5. Wait for a pause: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. A song the same way (musik._work), one at a time. 6. Model loaded?: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in t"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "he chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
 },
 {
 "lang": "en",
@@ -9677,7 +9709,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 300 pictures per profile at most (step 4) - 10 jobs wait at most (step 4) - 0.5 image check share above which it is discarded (step 8) - 4 steps per picture (step 7) - 720 seconds per job at most (step 5)"
+"text": "- 300 pictures per profile at most (step 4) - 10 jobs wait at most (step 4) - 10 songs wait at most (step 4) - 0.5 image check share above which it is discarded (step 8) - 4 steps per picture (step 7) - 720 seconds per job at most (step 5)"
 },
 {
 "lang": "en",
@@ -9685,7 +9717,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → \"Test music\"."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making music: switch, model, songs per day, space, longest song; State → Checks → \"Test music\" measures every installed model."
 },
 {
 "lang": "en",
@@ -9693,7 +9725,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\". - State → Live: target \"Making music\" with the last measurement; Logs → Diagnosis, area \"Musik\"."
+"text": "- State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\". - State → Live: target \"Making music\" with songs and the last measurement in numbers; Logs → Diagnosis, area \"Musik\"."
 },
 {
 "lang": "en",
@@ -9701,7 +9733,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/bilder.py start: accept a wish (step 1) - app/panel/features.py allowed: release for the profile (step 2) - app/panel/bilder.py refuse_text: word list and people (step 3) - app/panel/bilder.py _work: job in the background (step 5) - app/panel/bilder.py keep: store the picture (step 10) - app/bild_server.py Engine.start: load the engine (step 6) - app/bild_server.py Engine.paint: paint (step 7) - app/bild_server.py nsfw_share: image check (step 8) - app/bild_server.py finish: mark and re-encode (step 9) - app/bedarf.py OnDemand: engine on demand, for pictures and music (step 6) - app/musik_server.py Engine.make: one song in two steps (step 7) - app/musik_server.py finish: check the MP3 and mark it AI-made (step 9) - app/panel/musik.py _measure: test music (step 5)"
+"text": "- app/panel/bilder.py start: accept a wish (step 1) - app/panel/features.py allowed: release for the profile (step 2) - app/panel/bilder.py refuse_text: word list and people (step 3) - app/panel/bilder.py _work: job in the background (step 5) - app/panel/bilder.py keep: store the picture (step 10) - app/bild_server.py Engine.start: load the engine (step 6) - app/bild_server.py Engine.paint: paint (step 7) - app/bild_server.py nsfw_share: image check (step 8) - app/bild_server.py finish: mark and re-encode (step 9) - app/bedarf.py OnDemand: engine on demand, for pictures and music (step 6) - app/musik_server.py Engine.make: one song in two steps (step 7) - app/musik_server.py finish: check the MP3 and mark it AI-made (step 9) - app/panel/musik.py start: accept a song wish (step 1, step 4) - app/panel/musik.py refuse_text: word list, artists, people (step 3) - app/panel/musik.py _work: song in the background (step 5) - app/panel/musik.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5)"
 },
 {
 "lang": "en",
@@ -9965,7 +9997,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 65). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 69). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -9981,7 +10013,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 files in every backup (step 7) - 65 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 30 files in every backup (step 7) - 69 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -11180,16 +11212,32 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Making music (V01.0.670, stage M0: measuring, plan `plaene/musik.md`)",
-"text": "Making music (V01.0.670, stage M0: measuring, plan plaene/musik.md): The Spark makes music itself with ACE-Step 1.5 (MIT licence), without the internet. The model only comes with the installation on the model computer: sudo ./install.sh --musik 2b (2B turbo with the 1.7B planner, recommended), 2b-klein (0.6B planner, less memory) or xl (XL turbo, sounds better, needs more); the first install asks, the default is none. The engine is acestep.cpp (ace-server, pinned to one commit, built for the GB10 with CUDA, no torch and no Docker); the GGUF files are pinned by revision and SHA-256 (musikmodell.py). The service speech-spark-musik (musik_server.py, only 127.0.0.1:31004, with a split install through the TLS-Tor, API key) loads the engine only for a song (127.0.0.1:31014, after checking the free memory) and stops it after 10 minutes without a song; the picture and music services share bedarf.py for it. A song takes two steps: the small planner sets structure and audio codes, then the sound model turns them into an MP3 (192 kbit/s). The service sets every field itself, takes only an MP3 back and writes its own ID3 mark into it (\"KI-erzeugt mit ACE-Step 1.5\"). In this stage only the admi"
+"title": "Voice chat",
+"text": "Making music (V01.0.670 stage M0 measuring, V01.0.688 stage M1 making songs, plan plaene/musik.md): Since stage M1 every released profile makes its own songs. Own admin switch Features → Making music (off, needs the installed model); once released it holds for every profile, the admin blocks single ones. Guests, MCP and outside text (after mail, web or a document, Notaus from stage 2) never get the tool. In the conversation: \"Make me a song about our cat\", \"Compose a piece for piano\"; the Weiche (group musik, tool musik_machen) keeps that apart from \"Play music in the living room\" (Home Assistant), a short \"yes, with singing\" within 10 minutes after the wish still counts. Under Me → Music: wish, length, \"With singing\" with language and lyrics, below it the own songs with a player, download and delete. Fixed rules (musik.refuse_text): without singing instrumental, without a length 2 minutes (10 s up to music.max_s, default 300 s); no word list (sexual, violence, hate), no \"in the style of\" an artist, no passwords, PINs or account numbers, no songs about other profiles or contacts (the own name is fine). Limits per profile: music.day_limit songs a day (10), music.store_mb MB of space"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Making music (V01.0.670, stage M0: measuring, plan `plaene/musik.md`)",
-"text": "n measures: State → Checks → \"Test music\" makes two fixed samples (30 s of piano, 60 s of pop with German lyrics) and shows done in, planning, sound and memory at the peak, plus both samples to listen to. When the engine stops a sample, it says \"engine error\"; the details are in the log (area \"Music\"). Profiles, guests, tools, apps and MCP get nothing yet; that comes in stage M1 with its own admin switch. State → Live: target \"Making music\" with the last measurement (numbers); service guard part \"Making music\"; maintenance pause part \"Making music\"; logs (area \"Musik\"): musik: test gestartet, musik: test 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{1|2}.mp3."
+"title": "Voice chat",
+"text": " (500), at most 200 songs; one song at a time per profile, at most 10 waiting on the Spark; a song waits for a pause in the conversation (vorrang.py) and may take 20 minutes. Picking the model: Features → Making music → Model (\"As installed\", 2B, 2B small, XL); models not installed are greyed out. Measured on tars on 2026-10-16: 2B 16.6 s for 30 s with a 13.4 GB peak, XL 17.6 s with 19.2 GB; another model ends the running engine first. Storage users/<id>/musik/ (MP3 with the AI mark and index.json), Delete data of the release counts it. The panel's chat shows a song card with a player, the apps find the song under Me → Music and get a notice when it is done. Logs with numbers and fixed words only: musik: auftrag 120 s instrumental chat fuer …, musik: gemacht 120 s gesang 9.5 s fuer …, musik: nicht gestartet kuenstler fuer …, never the wish or the lyrics. API: GET|POST|DELETE /api/musik, GET /api/musik/job/{id}, GET /api/musik/{id}/datei, DELETE /api/musik/{id}."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Stage M0: The Spark makes music itself with ACE-Step 1.5 (MIT licence), without the internet. The model only comes with the installation on the model computer: sudo ./install.sh --musik 2b (2B turbo with the 1.7B planner, recommended), 2b-klein (0.6B planner, less memory) or xl (XL turbo, sounds better, needs more); the first install asks, the default is none. The engine is acestep.cpp (ace-server, pinned to one commit, built for the GB10 with CUDA, no torch and no Docker); the GGUF files are pinned by revision and SHA-256 (musikmodell.py). The service speech-spark-musik (musik_server.py, only 127.0.0.1:31004, with a split install through the TLS-Tor, API key) loads the engine only for a song (127.0.0.1:31014, after checking the free memory) and stops it after 10 minutes without a song; the picture and music services share bedarf.py for it. A song takes two steps: the small planner sets structure and audio codes, then the sound model turns them into an MP3 (192 kbit/s). The service sets every field itself, takes only an MP3 back and writes its own ID3 mark into it (\"KI-erzeugt mit ACE-Step 1.5\"). The admin measures: State → Checks → \"Test music\" makes two fixed samples for every in"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "stalled model (30 s of piano, 60 s of pop with German lyrics) and shows done in, planning, sound and memory at the peak, plus both samples to listen to. When the engine stops a sample, it says \"engine error\"; the details are in the log (area \"Music\"). State → Live: target \"Making music\" with the last measurement (numbers); service guard part \"Making music\"; maintenance pause part \"Making music\"; logs (area \"Musik\"): musik: test gestartet, musik: test xl 1 ok 12.5 s, musik: gemacht 30 s instrumental 12.5 s spitze 8.1 gib, musik: engine gestartet 2.0 s, musik: engine beendet leerlauf, musik: engine nicht gestartet speicher 6.2 gib frei. API (admin): GET|POST /api/admin/musik-test, GET /api/admin/musik-test/{2b|2b-klein|xl}/{1|2}.mp3."
 },
 {
 "lang": "en",
@@ -12691,17 +12739,17 @@
 "lang": "en",
 "src": "installation",
 "file": "Installation in detail",
-"head": "Making music (optional, stage M0: measuring)",
-"title": "Making music (optional, stage M0: measuring)",
+"head": "Making music (optional)",
+"title": "Making music (optional)",
 "text": "With --musik the installation also installs the music model ACE-Step 1.5 (MIT licence; on the model computer, with a split install together with --teilen; the first install asks, the default is none, sudo speech-spark models asks again):"
 },
 {
 "lang": "en",
 "src": "installation",
 "file": "Installation in detail",
-"head": "Making music (optional, stage M0: measuring)",
-"title": "Making music (optional, stage M0: measuring)",
-"text": "It builds acestep.cpp once (ace-server, pinned commit, ggml linked in, CUDA for the GB10, no torch and no Docker, needs nvcc and cmake) into /opt/speech-spark/acestep, downloads the GGUF files with a SHA-256 check into /var/lib/speech-spark/models/musik and sets up the service speech-spark-musik (only 127.0.0.1, with a split install through the TLS-Tor; ports music.port 31004 and music.engine_port 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. In this stage only the admin measures: State → Checks → \"Test music\" makes two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and both samples to listen to. Profiles cannot order anything yet. Logs: sudo speech-spark logs musik, maintenance pause: sudo speech-spark pause musik 30."
+"head": "Making music (optional)",
+"title": "Making music (optional)",
+"text": "It builds acestep.cpp once (ace-server, pinned commit, ggml linked in, CUDA for the GB10, no torch and no Docker, needs nvcc and cmake) into /opt/speech-spark/acestep, downloads the GGUF files with a SHA-256 check into /var/lib/speech-spark/models/musik and sets up the service speech-spark-musik (only 127.0.0.1, with a split install through the TLS-Tor; ports music.port 31004 and music.engine_port 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. Several models can be installed one after the other; all files stay. State → Checks → \"Test music\" measures every installed model with two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and the samples to listen to. Then switch on Features → Making music and pick the model there; every released profile then makes songs in the conversation and under Me → Music. Logs: sudo speech-spark logs musik, maintenance pause: sudo speech-spark pause musik 30."
 },
 {
 "lang": "en",

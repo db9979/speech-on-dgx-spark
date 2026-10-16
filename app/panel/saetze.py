@@ -64,7 +64,7 @@ AREAS = (
                                     "camera_describe")),
     ("wissen", "Wissen und Suche", "Knowledge and search", ("web_search", "wikipedia", "archive_search",
                                                             "document_search", "document_list", "history_search")),
-    ("machen", "Bilder und Dokumente", "Pictures and documents", ("bild_malen", "document_plan")),
+    ("machen", "Bilder, Musik und Dokumente", "Pictures, music and documents", ("bild_malen", "musik_machen", "document_plan")),
     ("gedaechtnis", "Gedächtnis", "Memory", ("memory_save", "memory_forget", "spark_tagebuch")),
     ("auftraege", "Aufträge", "Jobs", ("agent_list", "agent_schedule", "agent_watch", "agent_change")),
     ("spark", "Spark", "Spark", ("spark_hilfe", "spark_vorschlag", "spark_zustand")),

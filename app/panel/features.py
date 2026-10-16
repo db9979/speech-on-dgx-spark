@@ -44,7 +44,7 @@ GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkei
 ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My status"), ("gobox", "Los geht's", "Let's go"),
             ("kannbox", "Was ich kann", "What I can do"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
-            ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
+            ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"),
             ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
@@ -193,6 +193,8 @@ FEATURES = (
     # the panel picks the picture by a fixed rule, never the model
     F("bildaendern", "Bilder ändern", "Changing pictures", "data", ("bilder_aendern",), parent="bilder", me="bildbox",
       guide="bildaendern"),
+    # Musik machen (musik.py, musik_server.py, plan musik M1): ACE-Step 1.5 on the model computer, install.sh --musik
+    F("musik", "Musik machen", "Making music", "data", ("musik",), me="musikbox", guide="musik"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
@@ -442,6 +444,7 @@ def _docling_set_up(c):
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
          "docling": _docling_set_up,                          # the Docling server needs its address
          "bilder": lambda c: bool(load_config("image").get("enabled")),   # the picture model installed (install.sh --bild)
+         "musik": lambda c: bool(load_config("music").get("enabled")),    # the music model installed (install.sh --musik)
          "naszustand": _naszustand_set_up}                    # the NAS status needs its host and SNMP user
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}

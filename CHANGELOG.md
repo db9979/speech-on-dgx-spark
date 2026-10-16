@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.688** · 2026-10-16 · Musik machen (Stufe M1): eigener Admin-Schalter, Werkzeug musik_machen mit Weiche, Ich → Musik mit Liedern, Abspieler und Löschen, Liedkarte im Chat, Apps; feste Regeln (instrumental und 2 Minuten ohne Wunsch, keine Künstler, keine Personen, keine Geheimnisse), Grenzen pro Profil; Modell wählbar, Musik testen misst jedes installierte Modell; Speicherbedarf aus der Messung (2B 14, XL 20 GiB)
 - **V01.0.687** · 2026-10-16 · Fix Selbsttest: test_saetze hängt nicht mehr davon ab, ob ein früherer Test die Websuche angelassen hat
 - **V01.0.686** · 2026-10-16 · ROT-FIX Selbsttests: test_rmpapier stellt Kalender, Aufgaben und Mail am Ende so zurück, wie es sie vorfand (helpers.keep_chat); vorher fand test_sperre_ueberall den Kalender aus. Neuer Wächter in test_richtlinie
 - **V01.0.685** · 2026-10-16 · Fix Selbsttest: die Route der Steuerzentrale steht in der Liste offener Wege (test_scanner), mit Grund: nur derselbe Rechner, eigener Schlüssel

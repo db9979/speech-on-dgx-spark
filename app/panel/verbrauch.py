@@ -79,9 +79,11 @@ MODELS = {"llm": ("Sprachmodell", "Language model", "tok"),
           "tts": ("Sprachausgabe", "Speech output", "sek"),
           "embed": ("Bedeutungssuche", "Meaning search", "texte"),
           "rerank": ("Nachsortieren", "Re-ranking", "paare"),
-          "bild": ("Bilder", "Pictures", "bilder")}
+          "bild": ("Bilder", "Pictures", "bilder"),
+          "musik": ("Musik", "Music", "lieder")}
 UNITS = {"tok": ("Tokens", "tokens"), "fragen": ("Fragen", "questions"), "sek": ("Sekunden", "seconds"),
-         "texte": ("Texte", "texts"), "paare": ("Paare", "pairs"), "bilder": ("Bilder", "pictures")}
+         "texte": ("Texte", "texts"), "paare": ("Paare", "pairs"), "bilder": ("Bilder", "pictures"),
+         "lieder": ("Lieder", "songs")}
 BEREICHE = {"gespraech": ("Gespräch", "Conversation"), "weiche": ("Weiche", "Switch"),
             "hintergrund": ("Hintergrund", "Background"), "assistent": ("Assistent und Verbessern", "Assistant and improving"),
             "pruefen": ("Prüfen und Qualität", "Checks and quality"), "agent": ("Agent und MCP", "Agent and MCP"),
@@ -110,7 +112,7 @@ AUFGABEN = {
     "Antwort prüfen": "pruefen", "Einordnung messen": "pruefen", "Dienst prüfen": "pruefen", "Suchprüfung": "pruefen",
     # agent, MCP, companion, documents
     "Agent": "agent", "MCP": "agent", "Schreibhilfe": "begleiter", "Begleiter": "begleiter",
-    "Dokument erstellen": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente",
+    "Dokument erstellen": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente", "Musik machen": "dokumente",
 }
 
 WHO = contextvars.ContextVar("verbrauch_who", default=SPARK)

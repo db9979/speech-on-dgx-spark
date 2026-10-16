@@ -295,7 +295,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   await setReady();getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();musikModelLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -1038,15 +1038,23 @@ function bildTestShow(d){const m=$('bildtestmsg');if(!m)return;const r=d&&d.last
 async function bildTestLoad(){if(!$('bildtestgo'))return;try{bildTestShow(await (await api('/api/admin/bild-test')).json())}catch{}}
 if($('bildtestgo'))$('bildtestgo').onclick=async()=>{$('bildtestgo').disabled=true;$('bildtestmsg').textContent=t('malt ein Probebild …','painting a sample …');
   try{bildTestShow(await (await api('/api/admin/bild-test',{method:'POST'})).json())}catch(e){$('bildtestmsg').textContent=e.message}$('bildtestgo').disabled=false};
-// Musik machen, Stufe M0 (musik.py): two fixed sample songs, seconds and memory at the peak, both to listen to
-function musikTestShow(d){const m=$('musiktestmsg'),box=$('musiktestrows');if(!m||!box)return;const h=d&&d.health||{},r=d&&d.last;
+// Musik machen (musik.py): Musik testen measures every installed model with two fixed sample songs (seconds and
+// memory at the peak, both to listen to); Funktionen → Musik machen offers only the installed models
+function musikTestShow(d){const m=$('musiktestmsg'),box=$('musiktestrows');musikModelShow(d);if(!m||!box)return;const h=d&&d.health||{},r=d&&d.last;
   const st={missing:t('Musikmodell nicht vollständig installiert (sudo ./install.sh --musik 2b)','music model not fully installed (sudo ./install.sh --musik 2b)'),off_install:t('Musikmodell nicht installiert (sudo ./install.sh --musik 2b)','music model not installed (sudo ./install.sh --musik 2b)'),
     down:t('Musik-Dienst antwortet nicht','music service does not answer'),off:t('entladen','unloaded'),starting:t('lädt','loading'),ready:t('geladen','loaded'),busy:t('macht Musik','making music'),error:t('Fehler','error')}[h.status]||'';
   const num=(v,u)=>v==null?'':String(v).replace('.',L==='en'?'.':',')+' '+u;
   const why={missing:t('nicht installiert','not installed'),memory:t('zu wenig Speicher frei','too little memory free'),engine:t('Engine-Fehler','engine error'),zeit:t('Zeit abgelaufen','timed out'),dienst:t('Dienst antwortet nicht','service does not answer'),pause:t('Wartungspause','maintenance pause')};
-  m.textContent=[h.name,st,d&&d.run?t('misst … ','measuring … ')+(d.done||0)+'/'+(d.total||2):''].filter(Boolean).join(' · ');
+  const vn={};(d&&d.variants||[]).forEach(([k,de,en])=>vn[k]=L==='en'?en:de);
+  const inst=(h.installed||[]).map(k=>vn[k]||k).join(', ');
+  m.textContent=[inst?t('installiert: ','installed: ')+inst:h.name,st,d&&d.run?t('misst … ','measuring … ')+(d.done||0)+'/'+(d.total||2):''].filter(Boolean).join(' · ');
   const names={};(d&&d.tests||[]).forEach(x=>names[x.n]=L==='en'?x.name.en:x.name.de);
-  box.innerHTML=(r&&r.tests||[]).map(x=>`<div class="fh">${x.ok?'✓':'✗'} ${esc(names[x.n]||String(x.n))}: `+(x.ok?esc([t('fertig in ','done in ')+num(x.seconds,'s'),t('Planen ','planning ')+num(x.lm_s,'s'),t('Klang ','sound ')+num(x.synth_s,'s'),t('Speicher ','memory ')+num(x.peak_gib,'GB')].join(' · '))+`<br><audio controls preload="none" src="/api/admin/musik-test/${x.n}.mp3?t=${r.t}"></audio>`:esc(why[x.why]||x.why))+'</div>').join('')}
+  box.innerHTML=(r&&r.runs||[]).map(run=>`<div class="fh"><b>${esc(vn[run.variant]||run.variant)}</b></div>`+(run.tests||[]).map(x=>`<div class="fh">${x.ok?'✓':'✗'} ${esc(names[x.n]||String(x.n))}: `+(x.ok?esc([t('fertig in ','done in ')+num(x.seconds,'s'),t('Planen ','planning ')+num(x.lm_s,'s'),t('Klang ','sound ')+num(x.synth_s,'s'),t('Speicher ','memory ')+num(x.peak_gib,'GB')].join(' · '))+`<br><audio controls preload="none" src="/api/admin/musik-test/${encodeURIComponent(run.variant)}/${x.n}.mp3?t=${r.t}"></audio>`:esc(why[x.why]||x.why))+'</div>').join('')).join('')}
+// the model select of Funktionen → Musik machen: models that are not installed can not be picked
+function musikModelShow(d){const sel=$('music.model'),msg=$('musikmodelmsg');if(!sel||!d)return;const inst=(d.health||{}).installed;if(!Array.isArray(inst))return;
+  [...sel.options].forEach(o=>{if(o.value)o.disabled=!inst.includes(o.value)});
+  if(msg)msg.textContent=sel.value&&!inst.includes(sel.value)?t('Dieses Modell ist auf dem Modell-Rechner nicht installiert (sudo ./install.sh --musik '+sel.value+').','This model is not installed on the model computer (sudo ./install.sh --musik '+sel.value+').'):t('Wählbar sind die installierten Modelle; vergleichen mit Zustand → Prüfen → „Musik testen“.','The installed models can be picked; compare them with State → Checks → „Test music“.')}
+async function musikModelLoad(){if(!$('music.model'))return;try{musikModelShow(await (await api('/api/admin/musik-test')).json())}catch{}}
 let musikTimer=null;
 async function musikTestLoad(){clearTimeout(musikTimer);if(!$('musiktestgo'))return;try{const d=await (await api('/api/admin/musik-test')).json();musikTestShow(d);
   $('musiktestgo').disabled=!!d.run;if(d.run)musikTimer=setTimeout(musikTestLoad,3000)}catch{}}

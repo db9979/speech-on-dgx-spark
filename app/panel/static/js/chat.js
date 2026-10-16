@@ -276,7 +276,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='why'){why=ev}
         else if(ev.type==='hilfe'){hcards.push(ev.card)}
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
-        else if(ev.type==='bild'){blcards.push(ev)}   // a picture painted for this answer (bilder.js)
+        else if(ev.type==='bild'||ev.type==='musik'){blcards.push(ev)}   // a picture or a song made for this answer (bilder.js, musik.js)
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // 👍/👎 for this answer (faelle.py, bewerten.js)
@@ -297,7 +297,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(why)el.appendChild(whyNote(why));
   if(typeof hilfeCard==='function')for(const c of hcards)el.appendChild(hilfeCard(c));
   if(typeof mkCard==='function')for(const c of mkcards)el.appendChild(mkCard(c));
-  if(typeof bildCard==='function')for(const c of blcards)el.appendChild(bildCard(c));
+  for(const c of blcards){if(c.type==='musik'){if(typeof musikCard==='function')el.appendChild(musikCard(c))}else if(typeof bildCard==='function')el.appendChild(bildCard(c))}
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
@@ -514,7 +514,7 @@ function attOf(searches,sources,docs,drefs,mkcards,blcards){const a=[];
   if(sources.length)a.push({k:'src',q:searches.join(' · ').slice(0,200),l:sources.slice(0,5).map(x=>({t:String(x.title||'').slice(0,100),u:String(x.url||'').slice(0,500)}))});
   if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0}))});
   for(const c of mkcards.slice(0,3))a.push({k:'mk',t:String(c.title||'').slice(0,120),n:String(c.kind_name||'').slice(0,40)});
-  for(const c of (blcards||[]).slice(0,3))a.push({k:'bild',p:String(c.prompt||'').slice(0,300),j:String(c.job||'').slice(0,12)});
+  for(const c of (blcards||[]).slice(0,3))a.push({k:c.type==='musik'?'musik':'bild',p:String(c.type==='musik'?c.caption||'':c.prompt||'').slice(0,300),j:String(c.job||'').slice(0,12)});
   return a}
 const VIA={telegram:'Telegram',siri:'Siri',desk:t('Begleiter','Companion'),watch:t('Uhr','Watch'),speaker:t('Lautsprecher','Speaker')};
 function attRender(el,att,live,via){
@@ -533,7 +533,8 @@ function attRender(el,att,live,via){
     else if(a.k==='mk'&&!live){const d=document.createElement('div');d.className='mem';
       d.innerHTML=`📄 ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;
       d.querySelector('button').onclick=()=>openMe('docbox');el.appendChild(d)}
-    else if(a.k==='bild'&&!live&&typeof bildAtt==='function')el.appendChild(bildAtt(a))}}
+    else if(a.k==='bild'&&!live&&typeof bildAtt==='function')el.appendChild(bildAtt(a))
+    else if(a.k==='musik'&&!live&&typeof musikAtt==='function')el.appendChild(musikAtt(a))}}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
 async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
   try{const r=await api('/api/assistant/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:ctrl.signal});

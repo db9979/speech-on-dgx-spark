@@ -26,6 +26,7 @@ ARTEN = {   # key -> (German, English)
     "nachricht": ("Nachricht geschickt", "Message sent"),
     "ablegen": ("Auf der NAS abgelegt", "Filed on the NAS"),
     "bild": ("Bild gemalt", "Picture painted"),
+    "musik": ("Lied gemacht", "Song made"),
     # kinds of the action check (taten.KIND); no diary hook yet, so the tool may answer "nothing noted" for them
     "termin": ("Termin eingetragen", "Appointment added"),
     "merken": ("Gemerkt oder vergessen", "Remembered or forgotten"),

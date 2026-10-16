@@ -127,7 +127,7 @@ MODULE = {
     "wiki": ("wissen", "Wikipedia für „Was ist …?“"),
     "docmake": ("wissen", "Dokumente erstellen: Aufträge, Vorlagen, Ablage"),
     "bilder": ("wissen", "Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte"),
-    "musik": ("betrieb", "Musik machen, Stufe M0: Musik testen für den Admin (zwei feste Probestücke, Zeit und Speicher)"),
+    "musik": ("wissen", "Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell"),
     "docrender": ("wissen", "Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code"),
     "folien": ("wissen", "Folientypen und feste Regeln für erstellte Dokumente"),
     "symbole": ("wissen", "Feste Symbole für Folien und Dokumente"),

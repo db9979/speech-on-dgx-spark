@@ -84,6 +84,8 @@ TOOLS = {
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
     "bild_malen": "bild", "Bild malen": "bild", "Bild ändern (Panel)": "bild",
+    # Musik machen (musik.py): the song is made on the model computer (musik_server.py)
+    "musik_machen": "musik", "Musik machen": "musik",
     # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
     "anruf_planen": "telefon", "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built
@@ -147,7 +149,7 @@ TARGETS = {
     "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
     # Bilder malen (bilder.py, bild_server.py): the line shows pictures in numbers, never a wish or a prompt
     "bild": ("Bilder malen", "FLUX.2 klein · auf dem Spark", "spark", False),
-    # Musik machen (musik.py, musik_server.py): stage M0, shown while it is installed; the measurement in numbers
+    # Musik machen (musik.py, musik_server.py): shown while it is installed or on; songs and the measurement in numbers
     "musik": ("Musik machen", "ACE-Step 1.5 · auf dem Spark", "spark", False),
     # Einstellungs-Assistent (berater.py): shown while it is on, the line with 👍/👎, cases and proposals in numbers
     "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
@@ -1152,7 +1154,7 @@ def snapshot(view="admin", now=None):
         mus = musik.for_live()
     except Exception:
         mus = {"on": False}
-    if mus.get("on"):
+    if mus.get("on") or mus.get("installed"):
         used.add("musik")
     try:
         import berater
@@ -1398,9 +1400,12 @@ def snapshot(view="admin", now=None):
                         + (f" · {bild['quick']} schnell bearbeitet" if bild.get("quick") else "")
                         + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
                         + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
-        if x["id"] == "musik":   # Musik machen (M0): the measurement in numbers (no caption, no lyrics)
-            x["sub"] = ("misst gerade" if mus.get("run") else
-                        f"letzte Messung {mus['ok']} von {mus['total']} gut" if mus.get("total") else "noch nicht gemessen")
+        if x["id"] == "musik":   # Musik machen: songs and the measurement in numbers (no wish, no lyrics)
+            x["sub"] = (f"{mus.get('run', 0)} macht · {mus.get('wait', 0)} wartet · {mus.get('done', 0)} heute gemacht"
+                        + (f" · {mus['refused']} abgelehnt" if mus.get("refused") else "")
+                        + (f" · {mus['failed']} Fehler" if mus.get("failed") else "")
+                        + (" · misst gerade" if mus.get("test_run") else
+                           f" · Messung {mus['test_ok']} von {mus['test_total']} gut" if mus.get("test_total") else ""))
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
     try:   # Wartungspause (wartung.py): the paused parts in blue, "Pause" (never who or why)
         import wartung
@@ -1419,7 +1424,8 @@ def snapshot(view="admin", now=None):
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
-            "musik": {k: mus.get(k) for k in ("on", "run", "ok", "total")},
+            "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "test_run",
+                                              "test_ok", "test_total")},
             "stats": node_stats(now)}
 
 

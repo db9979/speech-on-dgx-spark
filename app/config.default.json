@@ -59,7 +59,11 @@
     "variant": "2b",
     "port": 31004,
     "engine_port": 31014,
-    "idle_min": 10
+    "idle_min": 10,
+    "model": "",
+    "day_limit": 10,
+    "store_mb": 500,
+    "max_s": 300
   },
   "llm": {
     "enabled": false,
@@ -163,6 +167,7 @@
     "doc_make_wikipics": false,
     "bilder": false,
     "bilder_aendern": false,
+    "musik": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

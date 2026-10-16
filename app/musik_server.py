@@ -16,7 +16,7 @@ frame header) and gets our own ID3 tag that marks it as made by an AI. The servi
 only seconds, sizes and states.
 
     GET  /health        status (off | starting | ready | busy | error | missing), variant, counts, measurements
-    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?} -> {mp3, seconds, lm_s, synth_s, peak_gib, ...}
+    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?} -> {mp3, variant, seconds, lm_s, ...}
     POST /v1/musik/stop ends the engine now (Wartungspause, Musik testen)
 """
 import asyncio
@@ -65,6 +65,7 @@ class Engine(OnDemand):
 
     def __init__(self):
         super().__init__("musik")
+        self.variant = ""          # the variant whose models the running engine holds (M1: picked per song)
 
     @property
     def base(self):
@@ -78,10 +79,13 @@ class Engine(OnDemand):
                 str(int(c["engine_port"])), "--max-batch", "1",
                 "--keep-loaded"]   # all modules stay while the engine runs; the idle stop frees them
 
-    async def start(self):
-        if self.alive() and self.state == "ready":
+    async def start(self, v):
+        """The engine for variant v: a running one with another variant ends first, so the memory check before the
+        start covers the models it will load (M1: the admin picks the variant, Musik testen measures each)."""
+        if self.alive() and self.state == "ready" and self.variant == v:
             return
-        v = musikmodell.variant(cfg().get("variant"))
+        if self.alive():
+            self.stop("anderes modell")
         if not musikmodell.installed(v):
             self.state = "error"
             raise HTTPException(503, "missing")
@@ -94,6 +98,7 @@ class Engine(OnDemand):
         t0 = time.time()
         self.state = "starting"
         stats["starts"] += 1
+        self.variant = v
         self.spawn(self.command(), musikmodell.FOLDER)
         while time.time() - t0 < START_S:
             if not self.alive():
@@ -143,10 +148,10 @@ class Engine(OnDemand):
             pass
         raise HTTPException(504, "timeout")
 
-    async def make(self, req):
-        """One song: (MP3 bytes from the engine, seconds of both steps, GiB taken at the peak)."""
+    async def make(self, req, v):
+        """One song with variant v: (MP3 bytes from the engine, seconds of both steps, GiB taken at the peak)."""
         async with self.lock:
-            await self.start()
+            await self.start(v)
             self.busy = True
             t0 = time.time()
             first = low = mem_available_gib()
@@ -228,7 +233,16 @@ def finish(raw, title):
     return b"ID3\x03\x00\x00" + _syncsafe(len(frames)) + frames + raw
 
 
-def request_body(b):
+def pick(b):
+    """The variant of one song: the caller's "variant" (the admin's pick, Musik testen) when it is known, else the
+    one install.sh set (music.variant). Whether it is installed decides start (503 "missing")."""
+    v = b.get("variant") if isinstance(b, dict) else None
+    if v is not None and v not in musikmodell.VARIANTS:
+        raise HTTPException(400, "variant")
+    return musikmodell.variant(v or cfg().get("variant"))
+
+
+def request_body(b, v=None):
     """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed.
     ace-server knows its models by the whole file name, .gguf included (V01.0.681)."""
     if not isinstance(b, dict):
@@ -250,7 +264,7 @@ def request_body(b):
     seed = b.get("seed", -1)
     if isinstance(seed, bool) or not isinstance(seed, int) or not -1 <= seed < 2**31:
         raise HTTPException(400, "seed")
-    v = musikmodell.VARIANTS[musikmodell.variant(cfg().get("variant"))]
+    v = musikmodell.VARIANTS[v or pick(b)]
     return {"caption": caption, "lyrics": lyrics or INSTRUMENTAL, "vocal_language": lang if lyrics else "unknown",
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
@@ -262,12 +276,13 @@ def request_body(b):
 async def musik(request: Request):
     try:
         b = await request.json()
-        req = request_body(b)
+        v = pick(b)
+        req = request_body(b, v)
     except ValueError:
         raise HTTPException(400, "JSON object")
     title = str(b.get("title") or "")[:120]
     try:
-        raw, lm_s, synth_s, peak = await engine.make(req)
+        raw, lm_s, synth_s, peak = await engine.make(req, v)
         mp3 = finish(raw, "".join(ch for ch in title if ch.isprintable()))
     except HTTPException as e:
         stats["failures"] += 1
@@ -281,9 +296,9 @@ async def musik(request: Request):
     stats.update(last_s=round(lm_s + synth_s, 1), last_lm_s=round(lm_s, 1), last_synth_s=round(synth_s, 1),
                  last_len_s=int(req["duration"]), peak_gib=round(peak, 1))
     sung = req["lyrics"] != INSTRUMENTAL
-    print(f"musik: gemacht {int(req['duration'])} s {'gesang' if sung else 'instrumental'} "
+    print(f"musik: gemacht {int(req['duration'])} s {'gesang' if sung else 'instrumental'} {v} "
           f"{lm_s + synth_s:.1f} s spitze {peak:.1f} gib", flush=True)
-    return {"mp3": base64.b64encode(mp3).decode(), "seconds": round(lm_s + synth_s, 1), "lm_s": round(lm_s, 1),
+    return {"mp3": base64.b64encode(mp3).decode(), "variant": v, "seconds": round(lm_s + synth_s, 1), "lm_s": round(lm_s, 1),
             "synth_s": round(synth_s, 1), "peak_gib": round(peak, 1), "length_s": int(req["duration"]),
             "sung": sung, "seed": req["seed"], "bytes": len(mp3)}
 
@@ -304,7 +319,8 @@ async def health(request: Request):
         return {"service": "musik", "status": status}
     return {"service": "musik", "status": status, "variant": v, "name": musikmodell.VARIANTS[v]["name"],
             "license": musikmodell.LICENSE, "need_gib": musikmodell.VARIANTS[v]["need_gib"],
-            "missing": musikmodell.missing(v), "idle_min": int(c["idle_min"]), "uptime_s": round(time.time() - started),
+            "missing": musikmodell.missing(v), "installed": musikmodell.available(),
+            "loaded": engine.variant if engine.state == "ready" else "", "idle_min": int(c["idle_min"]), "uptime_s": round(time.time() - started),
             "idle_s": round(time.time() - engine.used) if engine.state == "ready" else None, **stats}
 
 

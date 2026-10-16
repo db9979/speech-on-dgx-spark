@@ -386,7 +386,7 @@
       <div data-show="chat.no_self_echo"><label>Was er überhört</label><select id="chat.self_echo_mode"><option value="text">Sätze, die er gerade selbst gesagt hat</option><option value="pause">dazu alles, solange ein anderes Gerät spricht (empfohlen)</option></select></div>
       <div class="setrow"><div class="lbl"><b>Bilder erkennen</b><span>Profile hängen im Assistenten, in der iPhone-App oder über Telegram ein Foto an; das Sprachmodell sieht es sich selbst an.</span></div><label class="tgl"><input type="checkbox" id="chat.images"><i></i></label></div>
       <div data-show="chat.images"><div class="fh">Prüft einmal, ob das laufende Sprachmodell Bilder annimmt: Es bekommt ein Testbild mit einer Zahl.</div><div class="row"><button class="b" type="button" id="visiongo">Bilderkennung prüfen</button><span id="visionmsg" class="mut"></span></div></div>
-      <div class="setrow"><div class="lbl"><b>Bilder malen</b><span>Bilder, Zeichnungen oder Malvorlagen malen lassen; FLUX.2 klein läuft auf dem Spark, ohne Internet, jedes Bild als KI-Bild gekennzeichnet.</span></div><label class="tgl"><input type="checkbox" id="chat.bilder"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Bilder malen</b><span>Bilder, Zeichnungen oder Malvorlagen malen lassen; ohne Internet, als KI-Bild gekennzeichnet.</span></div><label class="tgl"><input type="checkbox" id="chat.bilder"><i></i></label></div>
       <div data-show="chat.bilder" style="margin-left:18px"><div class="fh">Das Bildmodell kommt mit der Installation: sudo ./install.sh --bild 4b-q8 (4b-q4 braucht weniger Speicher, 9b-… nur privat). Es lädt beim ersten Bild und gibt den Speicher danach wieder frei. Nacktes, Gewalt, Hasssymbole und Personen, die der Spark kennt, malt er nie (feste Regeln, Bildprüfung danach).</div>
         <label>Bilder pro Profil und Tag</label><input class="num" id="image.day_limit" type="number" min="1" max="500"><div class="fh">1 bis 500, Standard 30.</div>
         <label>Platz pro Profil (MB)</label><input class="num" id="image.store_mb" type="number" min="50" max="20000"><div class="fh">50 bis 20000, Standard 500. Voll: erst alte Bilder löschen.</div>
@@ -394,6 +394,12 @@
         <label>Entladen nach Minuten ohne Bild</label><input class="num" id="image.idle_min" type="number" min="1" max="120"><div class="fh">1 bis 120, Standard 10.</div>
         <div class="row"><button class="b" type="button" id="bildtestgo">Bild testen</button><span id="bildtestmsg" class="mut"></span></div></div>
       <div class="setrow" data-show="chat.bilder" style="margin-left:18px"><div class="lbl"><b>Bilder ändern</b><span>Ein eigenes Foto oder Bild nach einem Satz ändern lassen, mit FLUX.2 klein; das Original bleibt, das Ergebnis als KI-bearbeitet markiert.</span></div><label class="tgl"><input type="checkbox" id="chat.bilder_aendern"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Musik machen</b><span>Lieder machen lassen, instrumental oder mit Gesang; ohne Internet, als KI-erzeugt markiert.</span></div><label class="tgl"><input type="checkbox" id="chat.musik"><i></i></label></div>
+      <div data-show="chat.musik" style="margin-left:18px"><div class="fh">Das Musikmodell kommt mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b oder xl (nacheinander installiert bleiben beide). „Musik testen“ misst jedes installierte Modell. Sexuelles, Gewalt, Hass, „im Stil von“ einem Künstler und andere Personen, die der Spark kennt, macht er nie (feste Regeln).</div>
+        <label>Modell</label><select id="music.model"><option value="">wie installiert</option><option value="2b">2B turbo + 1,7B</option><option value="2b-klein">2B turbo + 0,6B</option><option value="xl">XL turbo + 1,7B (klingt besser, braucht mehr Speicher)</option></select><div class="fh" id="musikmodelmsg"></div>
+        <label>Lieder pro Profil und Tag</label><input class="num" id="music.day_limit" type="number" min="1" max="100"><div class="fh">1 bis 100, Standard 10.</div>
+        <label>Platz pro Profil (MB)</label><input class="num" id="music.store_mb" type="number" min="50" max="20000"><div class="fh">50 bis 20000, Standard 500. Ein Lied von 2 Minuten braucht rund 3 MB.</div>
+        <label>Längstes Lied (Sekunden)</label><input class="num" id="music.max_s" type="number" min="30" max="600"><div class="fh">30 bis 600, Standard 300. Ohne Angabe wird ein Lied 2 Minuten lang.</div></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Rückfrage statt Raten</b><span>Passt ein Befehl auf mehrere Geräte oder auf keins genau, fragt der Assistent nach und zeigt die Auswahl, statt zu raten.</span></div><label class="tgl"><input type="checkbox" id="chat.klaeren"><i></i></label></div>
       <div class="setrow" data-show="chat.klaeren" style="margin-left:36px"><div class="lbl"><b>Auswahl merken</b><span>Nach der Auswahl fragt er, ob er sie sich merken soll; nach „Ja“ gilt derselbe Satz künftig sofort.</span></div><label class="tgl"><input type="checkbox" id="chat.klaeren_merken"><i></i></label></div>
@@ -760,7 +766,7 @@
     <div id="benchrate"></div>
     <details id="benchraw" style="margin-top:10px"><summary class="mut">Rohwerte</summary><pre id="benchout" style="margin-top:8px">–</pre></details></div>
   <div class="card"><h2>Musik testen</h2>
-    <div class="intro sm">Misst Musik machen mit ACE-Step 1.5 auf dem Spark: zwei feste Probestücke (30 Sekunden Klavier, 60 Sekunden mit deutschem Gesang), dazu Zeit, Speicher an der Spitze und beide Stücke zum Anhören. Das Modell kommt mit der Installation auf dem Modell-Rechner: <code>sudo ./install.sh --musik 2b</code> (2b-klein braucht weniger Speicher, xl klingt besser und braucht mehr). Es lädt nur für ein Lied und gibt den Speicher nach 10 Minuten wieder frei.</div>
+    <div class="intro sm">Misst Musik machen mit ACE-Step 1.5 auf dem Modell-Rechner, und zwar jedes installierte Modell: zwei feste Probestücke (30 Sekunden Klavier, 60 Sekunden mit deutschem Gesang), dazu Zeit, Speicher an der Spitze und beide Stücke zum Anhören. Modelle kommen mit der Installation auf dem Modell-Rechner: <code>sudo ./install.sh --musik 2b</code> (xl klingt besser und braucht mehr Speicher; nacheinander installiert bleiben beide). Welches Modell die Profile nutzen, wählst du bei Musik machen unter Funktionen.</div>
     <div class="row" style="margin-top:12px"><button class="b" type="button" id="musiktestgo">Musik testen</button><span id="musiktestmsg" class="mut"></span></div><div id="musiktestrows"></div></div>
   <div class="card"><h2>Vorrang für Sprache</h2>
     <div class="intro sm">Spracherkennung und Sprachausgabe gehen immer vor: Hintergrundarbeit wartet, solange gesprochen wird, und eine laufende Hintergrund-Anfrage an das Sprachmodell wird abgebrochen und später wiederholt. Der Test spricht einen Satz dreimal: alleine, während das Sprachmodell eine lange Antwort schreibt, und dasselbe mit Vorfahrt. Dauert etwa eine Minute.</div>
@@ -1120,6 +1126,7 @@
     <div id="storebox" class="ptab"><div id="nasbox"></div></div>
     <div id="rmbox" class="ptab"></div>
     <div id="bildbox" class="ptab"></div>
+    <div id="musikbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>
@@ -1217,6 +1224,7 @@
 <script src="/static/js/hilfe.js"></script>
 <script src="/static/js/erstellen.js"></script>
 <script src="/static/js/bilder.js"></script>
+<script src="/static/js/musik.js"></script>
 <script src="/static/js/suchpruefung.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/saetze.js"></script>

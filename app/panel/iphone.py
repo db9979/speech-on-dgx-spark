@@ -75,7 +75,10 @@ AREAS = {
                  (("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
                  (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}"),
                  # Bilder ändern: change an own picture (FLUX or a quick button), upload an own photo to change
-                 (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto")),
+                 (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto"),
+                 # Ich → Musik (musik.py): listen, make from a wish, delete one or all
+                 (("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
+                 (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),
     # Dokumente verwalten: switches, "Für alle", tags, read again, deadline reminder, delete (own documents only)
     "app_docs_edit": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
                       (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),

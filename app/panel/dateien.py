@@ -44,6 +44,7 @@ BEREICHE = {
     "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)"),
     "erstellt": ("Erstellte Dokumente", "Created documents"),
     "bilder": ("Gemalte Bilder", "Painted pictures"),
+    "musik": ("Eigene Lieder", "Own songs"),
 }
 
 DATEIEN = [
@@ -61,6 +62,7 @@ DATEIEN = [
     profil("suchpruefung.json", "Prüffragen und Läufe der Suchprüfung", "Test questions and runs of the search check", bereich="dokumente"),
     profil("erstellt/", "Erstellte Dokumente", "Created documents", bereich="erstellt"),
     profil("bilder/", "Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe)", "Painted pictures and their index (prompt, wish, size)", bereich="bilder"),
+    profil("musik/", "Eigene Lieder und ihr Verzeichnis (Wunsch, Beschreibung, Liedtext, Länge)", "Own songs and their index (wish, description, lyrics, length)", bereich="musik"),
     # users/<id>/: everything else stays on the Spark (speicher.LOCAL), with its kind: keys, logins, settings,
     # voiceprint, queues and marks (Richtlinie Teil 1, "Kopie meiner Daten")
     profil("settings.json", "Einstellungen", "Settings", art="Einstellungen"),
@@ -175,8 +177,12 @@ DATEIEN = [
     state("weiche-stats.json", "Weiche-Statistik", "Switch statistics", lokal="Statistik", sonst=True),
     state("bild-test.json", "Letztes Probebild (Bild testen)", "Last sample picture (Test a picture)", lokal="Messwert dieses Geräts (Bild testen)"),
     state("musik-test.json", "Letzte Messung (Musik testen)", "Last measurement (Test music)", lokal="Messwerte dieses Geräts (Musik testen)"),
-    state("musik-test-1.mp3", "Probestück 1 (Musik testen)", "Sample 1 (Test music)", lokal="entsteht beim nächsten Test neu"),
-    state("musik-test-2.mp3", "Probestück 2 (Musik testen)", "Sample 2 (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-2b-1.mp3", "Probestück 1 mit 2B (Musik testen)", "Sample 1 with 2B (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-2b-2.mp3", "Probestück 2 mit 2B (Musik testen)", "Sample 2 with 2B (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-2b-klein-1.mp3", "Probestück 1 mit 2B klein (Musik testen)", "Sample 1 with 2B small (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-2b-klein-2.mp3", "Probestück 2 mit 2B klein (Musik testen)", "Sample 2 with 2B small (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-xl-1.mp3", "Probestück 1 mit XL (Musik testen)", "Sample 1 with XL (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("musik-test-xl-2.mp3", "Probestück 2 mit XL (Musik testen)", "Sample 2 with XL (Test music)", lokal="entsteht beim nächsten Test neu"),
     state("weiche-history.json", "Weiche-Änderungen", "Switch changes", lokal="Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)", sonst=True),
     state("bewertungen.json", "Bewertungen pro Tag", "Ratings per day", lokal="Zähler pro Tag", sonst=True),
     state("quality.json", "Letzter Qualitätstest", "Last quality test", lokal="letztes Ergebnis"),

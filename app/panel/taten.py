@@ -24,6 +24,7 @@ KIND = {
     "agent_change": "aenderung", "agent_watch": "aenderung", "home_rule_delete": "aenderung", "proactive_pause": "aenderung", "undo_last": "aenderung",
     "nas_ablegen": "ablegen",
     "bild_malen": "bild",
+    "musik_machen": "musik",
     "anruf_planen": "erinnerung",
 }
 # kind -> the tool that knows what was done earlier (R4 "Nein zu eigenem Tun", thread "Einstellungen optimieren")

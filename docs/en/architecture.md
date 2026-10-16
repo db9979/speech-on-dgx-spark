@@ -225,6 +225,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
+| `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: a cross-encoder reads the question and each of the mixed search's candidates together and gives a score; the best come first, the ones … |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
@@ -330,7 +331,6 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
 | `app/panel/modellseite.py` | Status → Models: the model catalog (app/modelle.py) to look at, for admins only. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
-| `app/panel/musik.py` | Musik machen, stage M0: measuring. |
 | `app/panel/nas.py` | NAS-Verbindung. |
 | `app/panel/nasablage.py` | Ablage-Ordner. |
 | `app/panel/nashilfe.py` | Synology-Komfort: find a NAS in the home network and show what the Spark's user may do on a connected place. |
@@ -443,6 +443,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
 | `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
+| `users/ID/musik/` | Own songs and their index (wish, description, lyrics, length) |  | – | yes | Own songs |
 | `users/ID/settings.json` | Settings | Settings | – | yes | – |
 | `users/ID/setup.json` | Setup | Settings | – | yes | – |
 | `users/ID/speicher.json` | Own storage targets | Settings | key sealed | yes | – |
@@ -542,8 +543,12 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/modelle-messung.json` | Model measurement (numbers only) | – | no |
 | `state/modelle-wechsel.json` | Per kind the model before the last switch (7 days to bring back) | – | no |
 | `state/modelle-wunsch.json` | The panel's wish for the next model switch, seconds | – | no |
-| `state/musik-test-1.mp3` | Sample 1 (Test music) | – | no |
-| `state/musik-test-2.mp3` | Sample 2 (Test music) | – | no |
+| `state/musik-test-2b-1.mp3` | Sample 1 with 2B (Test music) | – | no |
+| `state/musik-test-2b-2.mp3` | Sample 2 with 2B (Test music) | – | no |
+| `state/musik-test-2b-klein-1.mp3` | Sample 1 with 2B small (Test music) | – | no |
+| `state/musik-test-2b-klein-2.mp3` | Sample 2 with 2B small (Test music) | – | no |
+| `state/musik-test-xl-1.mp3` | Sample 1 with XL (Test music) | – | no |
+| `state/musik-test-xl-2.mp3` | Sample 2 with XL (Test music) | – | no |
 | `state/musik-test.json` | Last measurement (Test music) | – | no |
 | `state/nas-admin.json` | The Spark's NAS connection | password sealed | yes |
 | `state/nasquelle-tmp` | Knowledge folder staging, seconds | – | no |
@@ -1547,7 +1552,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 21 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 22 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -1624,21 +1629,21 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (145) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (150) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (81 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (82 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **21** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **22** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **145** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **150** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **211** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -1850,7 +1855,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **81** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **82** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2555,7 +2560,7 @@ Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test
 
 Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 klein only at the first picture, checks the finished picture and frees the memory after a quiet time.
 
-Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "Test music" (two fixed songs, seconds and memory at the peak). Both services share the on-demand engine of bedarf.py.
+Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; "Test music" measures every installed model. Both services share the on-demand engine of bedarf.py.
 
 **Why:** A picture model can paint anything, also nudity, violence or real people. The language model never decides that; fixed rules before and after painting do. And the model needs a lot of shared memory: it must never push out the language model or the voice.
 
@@ -2594,16 +2599,16 @@ flowchart TD
   s8 -->|no| s8x
 ```
 
-1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel.
+1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
-3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. The model cannot get around it.
-4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait.
-5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds.
+3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics the same way, plus "in the style of" an artist and secrets. The model cannot get around it.
+4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. Songs: songs per day, space and the longest song, on the Spark at most 10 waiting (musik.start).
+5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. A song the same way (musik._work), one at a time.
 6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed.
 7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
 8. <a id="kn-bild-s8"></a>**Picture harmless?**: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing.
 9. <a id="kn-bild-s9"></a>**Mark as AI picture**: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry).
-10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory.
+10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music.
 
 **Examples:** Cat on a skateboard: Painted, marked, in the gallery. · Picture of the own profile name: Fixed refusal, the model is not asked. · Too little memory free: Nothing loaded, speech keeps running.
 
@@ -2611,6 +2616,7 @@ flowchart TD
 
 - **300** pictures per profile at most ([step 4](#kn-bild-s4))
 - **10** jobs wait at most ([step 4](#kn-bild-s4))
+- **10** songs wait at most ([step 4](#kn-bild-s4))
 - **0.5** image check share above which it is discarded ([step 8](#kn-bild-s8))
 - **4** steps per picture ([step 7](#kn-bild-s7))
 - **720** seconds per job at most ([step 5](#kn-bild-s5))
@@ -2619,12 +2625,12 @@ flowchart TD
 
 - Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none).
 - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "Bild testen".
-- Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → "Test music".
+- Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making music: switch, model, songs per day, space, longest song; State → Checks → "Test music" measures every installed model.
 
 #### What you see
 
 - State → Live: target "Painting pictures" with numbers only; Logs → Diagnosis, area "Bild".
-- State → Live: target "Making music" with the last measurement; Logs → Diagnosis, area "Musik".
+- State → Live: target "Making music" with songs and the last measurement in numbers; Logs → Diagnosis, area "Musik".
 
 #### In the code
 
@@ -2640,7 +2646,11 @@ flowchart TD
 - `app/bedarf.py` `OnDemand`: engine on demand, for pictures and music ([step 6](#kn-bild-s6))
 - `app/musik_server.py` `Engine.make`: one song in two steps ([step 7](#kn-bild-s7))
 - `app/musik_server.py` `finish`: check the MP3 and mark it AI-made ([step 9](#kn-bild-s9))
-- `app/panel/musik.py` `_measure`: test music ([step 5](#kn-bild-s5))
+- `app/panel/musik.py` `start`: accept a song wish ([step 1](#kn-bild-s1), [step 4](#kn-bild-s4))
+- `app/panel/musik.py` `refuse_text`: word list, artists, people ([step 3](#kn-bild-s3))
+- `app/panel/musik.py` `_work`: song in the background ([step 5](#kn-bild-s5))
+- `app/panel/musik.py` `keep`: store the song ([step 10](#kn-bild-s10))
+- `app/panel/musik.py` `_measure`: test music per model ([step 5](#kn-bild-s5))
 
 Self-tests: `test_bilder`, `test_musik`
 
@@ -2972,7 +2982,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 65). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 30), otherwise the line gives its reason (dateien.STATE_LOCAL, 69). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -2983,7 +2993,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **30** files in every backup ([step 7](#kn-state-s7))
-- **65** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **69** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

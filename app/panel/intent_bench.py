@@ -28,6 +28,12 @@ BENCH = [
     ("Mach mir eine Malvorlage mit einem Dinosaurier", "bild"),
     ("Mal mir ein Haus mit Garten", "bild"),
     ("Was ist auf dem Bild?", ""),
+    # Musik machen (musik.py): a song to make, never a document or a search
+    ("Mach mir ein Lied über unsere Katze", "musik"),
+    ("Komponier mir was Ruhiges zum Einschlafen", "musik"),
+    ("Kannst du ein Geburtstagslied für mich machen?", "musik"),
+    ("Erzeuge eine fröhliche Melodie mit Gitarre", "musik"),
+    ("Schreib mir einen Song mit Gesang über den Sommer", "musik"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

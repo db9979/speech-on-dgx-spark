@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "d56e26cfe3",
+        "stand": "28aba4ea54",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -825,7 +825,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "b29029d2b9",
+        "stand": "94e0acf37e",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -2569,7 +2569,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "0c5d737c62",
+        "stand": "200b7614d5",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3446,7 +3446,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "a7396ade55",
+        "stand": "99e4ba99b8",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3634,7 +3634,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "d189727398",
+        "stand": "0e5f49e092",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3976,27 +3976,29 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "2becfaa2b2",
+        "stand": "bc3deaf8cf",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
             "bedarf.OnDemand": ["s6"], "musik_server.Engine.make": ["s7"], "musik_server.finish": ["s9"],
-            "musik._measure": ["s5"],
+            "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik.WAITING": ["s4"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
                  "klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.\n\n"
-                 "Musik läuft daneben genauso (Stufe M0, bisher nur zum Messen): der Musik-Dienst auf :31004 lädt "
-                 "ACE-Step 1.5 nur für ein Lied und gibt den Speicher nach einer Ruhezeit frei; der Admin misst ihn mit "
-                 "„Musik testen“ (zwei feste Probestücke, Sekunden und Speicher an der Spitze). Beide Dienste teilen die "
-                 "Engine bei Bedarf aus bedarf.py.",
+                 "Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch "
+                 "wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 "
+                 "nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit "
+                 "frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus "
+                 "bedarf.py.",
                  "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with "
                  "fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 "
                  "klein only at the first picture, checks the finished picture and frees the memory after a quiet time.\n\n"
-                 "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 "
-                 "loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "
-                 "\"Test music\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand "
-                 "engine of bedarf.py."),
+                 "Making music works the same way next to it: a wish under Me → Music or musik_machen in the "
+                 "conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 "
+                 "loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet "
+                 "time; \"Test music\" measures every installed model. Both services share the on-demand engine of "
+                 "bedarf.py."),
         "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
                   "Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen "
                   "Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.",
@@ -4010,12 +4012,14 @@ SEITEN_DATEN = {
                "das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet "
                "ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis "
                "der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe "
-               "(drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel.",
+               "(drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. "
+               "Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start.",
                "A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in "
                "the conversation; the model writes an English prompt for it. Changing pictures starts without a "
                "tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last "
                "change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, "
-               "black and white …) need no model: bilder.quick_png does them at once on the panel.")),
+               "black and white …) need no model: bilder.quick_png does them at once on the panel. "
+               "A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start.")),
             S("s2", "frage", ("Funktion frei?", "Feature released?"),
               ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
               ("features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
@@ -4026,23 +4030,29 @@ SEITEN_DATEN = {
             S("s3", "frage", ("Wunsch erlaubt?", "Wish allowed?"),
               ("Wortliste und bekannte Personen", "word list and known people"),
               ("bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, "
-               "keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Das Modell kann das nicht umgehen.",
+               "keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und "
+               "Liedtext ebenso, dazu „im Stil von“ einem Künstler und Geheimnisse. Das Modell kann das nicht umgehen.",
                "bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no "
-               "hate symbols) and against the names of profiles and contacts. The model cannot get around it."),
+               "hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and "
+               "lyrics the same way, plus \"in the style of\" an artist and secrets. The model cannot get around it."),
               ("stop", "nein", ("Feste Absage, nichts gemalt", "Fixed refusal, nothing painted"))),
             S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
               ("Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens {bilder.MAX_PICS} Bilder; "
-               "auf dem ganzen Spark warten höchstens {bilder.WAITING} Aufträge.",
+               "auf dem ganzen Spark warten höchstens {bilder.WAITING} Aufträge. Lieder: Lieder pro Tag, Platz und "
+               "längstes Lied, auf dem Spark höchstens {musik.WAITING} wartende (musik.start).",
                "Per profile there are pictures per day (rolling 24 hours), space and at most {bilder.MAX_PICS} "
-               "pictures; on the whole Spark at most {bilder.WAITING} jobs wait."),
+               "pictures; on the whole Spark at most {bilder.WAITING} jobs wait. Songs: songs per day, space and the "
+               "longest song, on the Spark at most {musik.WAITING} waiting (musik.start)."),
               ("stop", "nein", ("Abgelehnt mit Grund", "Refused with the reason"))),
             S("s5", "schritt", ("Warten auf eine Pause", "Wait for a pause"),
               ("Sprache zuerst, ein Bild zugleich", "speech first, one picture at a time"),
               ("Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt "
-               "immer nur ein Bild zugleich, höchstens {bilder.JOB_SECONDS} Sekunden lang.",
+               "immer nur ein Bild zugleich, höchstens {bilder.JOB_SECONDS} Sekunden lang. Ein Lied genauso "
+               "(musik._work), eins zugleich.",
                "The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only "
-               "one picture at a time, for at most {bilder.JOB_SECONDS} seconds.")),
+               "one picture at a time, for at most {bilder.JOB_SECONDS} seconds. A song the same way (musik._work), "
+               "one at a time.")),
             S("s6", "frage", ("Modell geladen?", "Model loaded?"),
               ("sonst laden, wenn genug Speicher frei ist", "else load, when enough memory is free"),
               ("bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug "
@@ -4073,10 +4083,12 @@ SEITEN_DATEN = {
               ("users/ID/bilder/, Karte, Push", "users/ID/bilder/, card, push"),
               ("Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in "
                "der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein "
-               "Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei.",
+               "Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt "
+               "als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik.",
                "The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in "
                "the iPhone app shows it, also in a conversation opened again; a push goes out through the app or "
-               "Telegram. After a quiet time the picture service stops the engine and frees the memory.")),
+               "Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept "
+               "as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music.")),
         ],
         "beispiele": [
             (("Katze auf einem Skateboard", "Cat on a skateboard"),
@@ -4090,6 +4102,7 @@ SEITEN_DATEN = {
         "zahlen": [
             ("{bilder.MAX_PICS}", ("Bilder pro Profil höchstens", "pictures per profile at most"), "bilder.MAX_PICS"),
             ("{bilder.WAITING}", ("Aufträge warten höchstens", "jobs wait at most"), "bilder.WAITING"),
+            ("{musik.WAITING}", ("Lieder warten höchstens", "songs wait at most"), "musik.WAITING"),
             ("{bilder.NSFW_MAX}", ("Anteil der Bildprüfung, ab dem verworfen wird", "image check share above which it is discarded"),
              "bilder.NSFW_MAX"),
             ("{bildmodell.STEPS}", ("Schritte pro Bild", "steps per picture"), "bildmodell.STEPS"),
@@ -4102,14 +4115,20 @@ SEITEN_DATEN = {
              "„Bild testen“.",
              "Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "
              "\"Bild testen\"."),
-            ("Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Zustand → Prüfen → „Musik testen“.",
-             "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); State → Checks → \"Test music\"."),
+            ("Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none; mehrere nacheinander bleiben alle); "
+             "Funktionen → Musik machen: Schalter, Modell, Lieder pro Tag, Platz, längstes Lied; Zustand → Prüfen → "
+             "„Musik testen“ misst jedes installierte Modell.",
+             "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making "
+             "music: switch, model, songs per day, space, longest song; State → Checks → \"Test music\" measures every "
+             "installed model."),
         ],
         "sehen": [
             ("Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.",
              "State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\"."),
-            ("Zustand → Live: Ziel „Musik machen“ mit der letzten Messung; Logs → Diagnose, Bereich „Musik“.",
-             "State → Live: target \"Making music\" with the last measurement; Logs → Diagnosis, area \"Musik\"."),
+            ("Zustand → Live: Ziel „Musik machen“ mit Liedern und der letzten Messung in Zahlen; Logs → Diagnose, "
+             "Bereich „Musik“.",
+             "State → Live: target \"Making music\" with songs and the last measurement in numbers; Logs → Diagnosis, "
+             "area \"Musik\"."),
         ],
         "code": [
             ("bilder.start", ("Wunsch annehmen", "accept a wish")),
@@ -4124,7 +4143,11 @@ SEITEN_DATEN = {
             ("bedarf.OnDemand", ("Engine bei Bedarf, für Bild und Musik", "engine on demand, for pictures and music")),
             ("musik_server.Engine.make", ("Ein Lied in zwei Schritten", "one song in two steps")),
             ("musik_server.finish", ("MP3 prüfen und als KI-erzeugt kennzeichnen", "check the MP3 and mark it AI-made")),
-            ("musik._measure", ("Musik testen", "test music")),
+            ("musik.start", ("Liedwunsch annehmen", "accept a song wish")),
+            ("musik.refuse_text", ("Wortliste, Künstler, Personen", "word list, artists, people")),
+            ("musik._work", ("Lied im Hintergrund", "song in the background")),
+            ("musik.keep", ("Lied ablegen", "store the song")),
+            ("musik._measure", ("Musik testen je Modell", "test music per model")),
         ],
         "tests": ["test_bilder", "test_musik"],
         "heute": [],

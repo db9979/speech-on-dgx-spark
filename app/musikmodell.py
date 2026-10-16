@@ -37,12 +37,13 @@ DIT2B = File(*_GG, "acestep-v15-turbo-Q8_0.gguf",
 DITXL = File(*_GG, "acestep-v15-xl-turbo-Q8_0.gguf",
              "4f1044fb646374fb5730e10f64325766883eb2fc02a643c1b403f2d61f39dc19", 5305828736)
 
-# variant -> name, the sound model (DiT), the song planner (LM), unified memory while making music (GiB, an estimate
-# until the measurement on tars, stage M0: the largest module plus working memory; ace-server keeps one at a time)
+# variant -> name, the sound model (DiT), the song planner (LM), unified memory while making music (GiB: Musik testen
+# on tars 2026-10-16 measured a peak of 13.4 GB for 2b and 19.2 GB for xl, rounded up; 2b-klein not measured yet,
+# the smaller planner saves about 2 GB)
 VARIANTS = {
-    "2b": {"name": "ACE-Step 1.5 · 2B turbo + 1.7B", "need_gib": 10, "dit": DIT2B, "lm": LM17},
-    "2b-klein": {"name": "ACE-Step 1.5 · 2B turbo + 0.6B", "need_gib": 7, "dit": DIT2B, "lm": LM06},
-    "xl": {"name": "ACE-Step 1.5 · XL turbo + 1.7B", "need_gib": 16, "dit": DITXL, "lm": LM17},
+    "2b": {"name": "ACE-Step 1.5 · 2B turbo + 1.7B", "need_gib": 14, "dit": DIT2B, "lm": LM17},
+    "2b-klein": {"name": "ACE-Step 1.5 · 2B turbo + 0.6B", "need_gib": 12, "dit": DIT2B, "lm": LM06},
+    "xl": {"name": "ACE-Step 1.5 · XL turbo + 1.7B", "need_gib": 20, "dit": DITXL, "lm": LM17},
 }
 DEFAULT = "2b"
 LICENSE = "MIT"
@@ -76,6 +77,11 @@ def missing(v, folder=None):
     if not os.access(ENGINE, os.X_OK):
         out.append("engine")
     return out
+
+
+def available(folder=None):
+    """The variants whose files are all there (Musik testen measures each, the admin picks one, M1)."""
+    return [v for v in VARIANTS if installed(v, folder)]
 
 
 def download(v, folder):

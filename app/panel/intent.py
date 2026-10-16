@@ -28,6 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import chat
 import bilder
+import musik
 import docmake
 import guard
 import homeassistant
@@ -187,6 +188,9 @@ GROUPS = {
     # Bilder malen (bilder.py): a picture, drawing, logo or colouring page painted on the Spark; „Was ist auf dem
     # Bild?“ has no painting word and stays with Bilder erkennen (images.py)
     "bild": ({"bild_malen"}, bilder.WORDS),
+    # Musik machen (musik.py): a song or a piece of music made on the Spark; „Spiel Musik“ has no making word and
+    # stays with Smart Home (the speakers)
+    "musik": ({"musik_machen"}, musik.WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
@@ -341,6 +345,15 @@ def classify(text, extra_words="", group_words="", not_words=""):
         for name in ("websuche", "dokument"):
             why.pop(name, None)
         if not SWITCH_VERB.search(text):   # „Mal mir ein Haus mit Garten“: the garden is in the picture
+            why.pop("smarthome", None)
+    # „Mach mir ein Lied über unsere Katze“, „Komponier was Ruhiges“ (musik.py): a song to make, not a document, a
+    # search or the speakers; „Schreib mir einen Liedtext“ alone is no song either way
+    if "musik" in why:
+        if not docmake.MAKE_WORDS.search(text) or musik.WORDS.search(text):
+            why.pop("erstellen", None)
+        for name in ("websuche", "dokument", "bild"):
+            why.pop(name, None)
+        if not SWITCH_VERB.search(text):
             why.pop("smarthome", None)
     # a job that comes back by itself or a watch: the group agent (a reminder stays a reminder)
     if (RECUR.search(text) and DELIVER.search(text) or WATCH.search(text)) and "erinnerung" not in why:
@@ -586,6 +599,7 @@ GROUP_SAYS = {
     "kalender": "Termine ansehen oder eintragen, Tagesüberblick",
     "erstellen": "ein Dokument, einen Brief, eine Präsentation oder Tabelle als Datei erstellen oder ändern",
     "bild": "ein Bild, eine Zeichnung, ein Logo oder eine Malvorlage malen lassen",
+    "musik": "ein Lied, eine Melodie oder ein Musikstück machen lassen (nicht abspielen)",
     "mail": "E-Mails lesen, suchen, aufräumen oder entwerfen",
     "websuche": "aktuelle Dinge im Internet nachsehen (Nachrichten, Preise, Öffnungszeiten, Ergebnisse)",
     "erinnerung": "Timer oder Erinnerung stellen, ansehen oder löschen",
@@ -784,13 +798,13 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
-          "bild": "Bilder malen", "archiv": "Eigenes Archiv"}
+          "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
-           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder"}
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik"}
 
 
 def explain(route, offered, who, stranger, c=None):
