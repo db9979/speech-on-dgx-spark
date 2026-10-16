@@ -42,7 +42,7 @@ SAME_IN_EN = {
     "Base", "wav, mp3, m4a, …", "Reserve", "GiB", "Logs", "MB", "Version", "VoiceDesign", "Open WebUI", ": Server-Sent Events",
     "Hermes Agent", "OpenClaw", "curl", "10 min", "ASR", "TTS", "ASR-Engine", "TTS-Engine",
     "VoiceDesign-Engine", "Panel", "Admin", "iCloud (CalDAV)", "Nextcloud (CalDAV)", "iCloud", "Gmail", "GMX", "web.de",
-    "Server", "reMarkable-Notizen",
+    "Server", "reMarkable-Notizen", "SunFounder Pironman 5",
 }
 MODEL_NAME = re.compile(r"Qwen/[\w.-]+")
 

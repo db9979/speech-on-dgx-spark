@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.650** Red fix: the case's product name in English
 - **V01.0.649** Red fix .646: tests count the new terminal scope and switch guest access off first
 - **V01.0.648** Red fix: saving Funktionen works again (case fields)
 - **V01.0.647** Case of the panel computer (Pironman 5): display, status LEDs and fans, Funktionen → Gehäuse (new, off)
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.643** Panel computer (Raspberry Pi): the install runs only the smoke test; pip only from PyPI, no pip.conf
 - **V01.0.642** Fix: with the models on another computer the panel shows that computer's memory (no false 'only 7 GiB free' from the Pi)
 - **V01.0.641** Pi: a hand-typed tars address is switched to the LLM door too
-- **V01.0.640** Fix: a Wartungspause on the model computer ends with its time (no more hanging pause after an aborted measurement)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
