@@ -613,7 +613,8 @@ internal sealed partial class TrayContext
                 DismissNote(n);
                 OpenPanel();
             } : null,
-            agenda ? () => _ = RemindNoteAsync(n) : null)).ToList();
+            agenda ? () => _ = RemindNoteAsync(n) : null,
+            () => DismissNote(n))).ToList();
     }
 
     private void ReplyToNote(Note note)

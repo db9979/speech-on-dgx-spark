@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.663** · 2026-10-16 · Begleiter (Windows): jede Meldung im Tray-Fenster hat zuerst „OK“, nimmt sie weg, das Fenster bleibt offen für die nächste
 - **V01.0.662** · 2026-10-16 · Verbessern lädt wieder auf dem Pi (befund: Absicht ohne Gruppe), Suchmodell auf dem Panel-Rechner mit 1,5 GiB statt 8,5 GiB und ohne Neuversuch alle 20 s; Gehäuse B7b: Seiten 6–11, Vorschau zum Antippen und Ziehen, Live-Bild, Schutz vor Einbrennen
 - **V01.0.661** · 2026-10-16 · Terminal-Client: die Zeile unter Ich → Terminal prüft die Prüfsumme und richtet den Befehl spark-tui ein; Textual in eigener Umgebung, die spark-tui selbst findet
 - **V01.0.660** · 2026-10-16 · Ich → Gedächtnis zeigt keinen Fehler „(ctl || []).forEach is not a function“ mehr, sobald ein Eintrag vielleicht veraltet ist (der Hinweis gab seinen Knopf nicht als Liste weiter); ein Test prüft alle Kästen

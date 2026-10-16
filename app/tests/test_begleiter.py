@@ -1469,6 +1469,25 @@ class MicSwitch(unittest.TestCase):
         self.assertIn("x.online?' · '+(x.mic==='closed'", js)
 
 
+class NoteOk(unittest.TestCase):
+    """Dominik 2026-10-16: "wie kann ich die meldungen als ok bestätigen?" Every note in the tray window has "OK"
+    first: it only takes the note away (nothing goes to the Spark) and the window stays open for the next one."""
+    ROOT = Office.ROOT
+
+    def src(self, *path):
+        return Office.src(self, *path)
+
+    def test_every_note_has_ok_that_keeps_the_window(self):
+        panel = self.src("windows", "TrayPanel.cs")
+        self.assertIn('("OK", note.Done), ("Antworten", note.Reply)', panel)
+        build = panel[panel.index('("OK", note.Done)'):]
+        build = build[:build.index("_notes.Add((note, buttons));")]
+        self.assertIn("_post(run);", build)                      # no Close(): the window stays
+        parts = self.src("windows", "TrayContext.Parts.cs")
+        notes = parts[parts.index("private IReadOnlyList<PanelNote> BuildPanelNotes()"):parts.index("private void ReplyToNote")]
+        self.assertIn("() => DismissNote(n))).ToList();", notes)  # always offered, only local
+
+
 class Labels(unittest.TestCase):
     """Dominik 2026-10-12 (screenshot "Einstellung / en"): button labels never break inside a word."""
     ROOT = Office.ROOT

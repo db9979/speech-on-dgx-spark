@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.663** Begleiter: Meldungen im Tray-Fenster mit „OK“ bestätigen
 - **V01.0.662** Verbessern geht auf dem Pi wieder; Gehäuse: elf Seiten mit Vorschau zum Antippen
 - **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
 - **V01.0.660** Ich → Gedächtnis: kein Fehlerkasten mehr bei veralteten Einträgen
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.656** ROT-FIX .653: Bilder ändern mit Verbrauchsname und Grund für eigene Daten
 - **V01.0.655** Seite hängt nach Updates nicht mehr bei „Zustand wird geladen …“, lädt sich selbst neu
 - **V01.0.654** Chats in der iPhone-App wie im Panel, auch private Chats (Ende-zu-Ende)
-- **V01.0.653** Bilder ändern: der Spark ändert ein eigenes Foto oder Bild mit FLUX.2 klein, das Panel wählt das Bild
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

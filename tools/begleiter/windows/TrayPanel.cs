@@ -12,7 +12,8 @@ internal enum StatusKind
 internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Action Action, bool Danger = false, bool Enabled = true);
 
 /// <summary>Teil "actions": eine Meldung im Tray-Fenster mit ihren Knöpfen (nur die angebotenen sind gesetzt).</summary>
-internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open, Action? Remind = null);
+/// <param name="Done">„OK“: die Meldung ist gesehen und verschwindet; das Fenster bleibt offen (Dominik 2026-10-16).</param>
+internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open, Action? Remind = null, Action? Done = null);
 
 /// <summary>Teil "agenda": eine Zeile unter „Als Nächstes“ (Zeit, Text, Ort/Hinweis).</summary>
 internal sealed record PanelLine(string When, string Text, string Detail);
@@ -273,7 +274,7 @@ internal sealed class TrayPanel : ThemedForm
         foreach (PanelNote note in _model.Notes)
         {
             var buttons = new List<SparkButton>();
-            foreach (var (label, action) in new (string, Action?)[] { ("Antworten", note.Reply), ("Später", note.Later), ("In 20 Min erinnern", note.Remind), ("Panel öffnen", note.Open) })
+            foreach (var (label, action) in new (string, Action?)[] { ("OK", note.Done), ("Antworten", note.Reply), ("Später", note.Later), ("In 20 Min erinnern", note.Remind), ("Panel öffnen", note.Open) })
             {
                 if (action is null)
                 {
@@ -283,7 +284,18 @@ internal sealed class TrayPanel : ThemedForm
                 var button = new SparkButton(ButtonKind.Secondary, label) { FontSize = 8.5f, TabIndex = tab++ };
                 button.AccessibleDescription = "Meldung: " + note.Title;
                 Action run = action;
-                button.Click += (_, _) => Run(run);
+                bool stay = ReferenceEquals(action, note.Done); // „OK“: weitere Meldungen gleich mit bestätigen
+                button.Click += (_, _) =>
+                {
+                    if (stay)
+                    {
+                        _post(run);
+                    }
+                    else
+                    {
+                        Run(run);
+                    }
+                };
                 buttons.Add(button);
                 Controls.Add(button);
             }

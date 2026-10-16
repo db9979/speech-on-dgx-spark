@@ -4308,6 +4308,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Meldungen mit „OK“ (V01.0.663)",
+"text": "Meldungen mit „OK“ (V01.0.663): Im Tray-Fenster des Windows-Begleiters hat jede Meldung zuerst den Knopf „OK“. Er nimmt die Meldung weg, ohne etwas zu öffnen, und das Fenster bleibt offen, damit weitere gleich mit bestätigt werden können. Auf dem Mac sind Meldungen Mitteilungen von macOS und verschwinden wie gewohnt mit „Schließen“. Braucht den neuen Begleiter-Build."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Mikrofon offen/zu (V01.0.549)",
 "text": "Mikrofon offen/zu (V01.0.549): Im Begleiter (Windows: Rechtsklick-Menü und Tray-Fenster, Mac: Menüleisten-Fenster) gibt es den Schalter „Mikrofon schließen“ bzw. „Mikrofon öffnen“, sobald ein Teil mit Mikrofon an ist (Diktieren, Frag Spark, Weckwort, Besprechung). Zu heißt wirklich zu: das Weckwort hört auf, eine laufende Aufnahme wird verworfen und nicht geschickt, eine Besprechung endet, und kein Knopf öffnet das Mikrofon, bis du es wieder öffnest. Der Zustand bleibt nach einem Neustart. Das Symbol in Taskleiste bzw. Menüleiste zeigt dann ein durchgestrichenes Mikrofon. Unter Ich → Begleiter steht bei jedem verbundenen Gerät „Mikrofon offen“ oder „Mikrofon zu“, Zustand → Live zählt nur die Geräte mit Mikrofon zu. Zum Spark geht nur dieser Zustand, nie Ton. Braucht den neuen Begleiter-Build."
 },
@@ -11198,6 +11206,14 @@
 "head": "Voice chat",
 "title": "Blocked Spark add-in (V01.0.545)",
 "text": "Blocked Spark add-in (V01.0.545): after a hang Outlook moves an add-in to \"Disabled items\", and its tick under COM add-ins stays empty. \"Office-Add-ins einrichten …\" now lifts that block, for Spark only (Resiliency\\DisabledItems and CrashingAddinList); other add-ins stay as Outlook set them."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Notes with \"OK\" (V01.0.663)",
+"text": "Notes with \"OK\" (V01.0.663): in the Windows companion's tray window every note has the button \"OK\" first. It takes the note away without opening anything, and the window stays open so further notes can be confirmed right away. On the Mac notes are macOS notifications and go away as usual with \"Close\". Needs the new companion build."
 },
 {
 "lang": "en",
