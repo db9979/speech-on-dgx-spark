@@ -842,6 +842,12 @@ SETTINGS = {
     "rm_inbox": (True, lambda v: isinstance(v, bool)),
     # paper for the reMarkable (rmpapier.py, admin chat.remarkable_paper)
     "rm_tidy": (True, lambda v: isinstance(v, bool)),
+    # what comes on the Aufgabenblatt (rmaufgaben.PARTS): each part on unless the profile turns it off
+    "rm_tasks_cal": (True, lambda v: isinstance(v, bool)),
+    "rm_tasks_lists": (True, lambda v: isinstance(v, bool)),
+    "rm_tasks_mail": (True, lambda v: isinstance(v, bool)),
+    "rm_tasks_new": (True, lambda v: isinstance(v, bool)),
+    "rm_tasks_note": (True, lambda v: isinstance(v, bool)),
     "rm_model": ("auto", _in("rm_model")),   # the model whose page format the paper takes (rmpapier.MODELS)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),

@@ -17,6 +17,18 @@ Sources (each by its own switch, only what the profile may do anyway):
            watches are allowed (agent.watch_on, room under beobachten.MAX_WATCH): then the tick makes a watch under
            Ich → Aufträge (created_by "remarkable"). The text is data: it is shown and acts only after the tick
 
+Parts the person chooses under Ich → reMarkable → Papier (PARTS, Dominik 2026-10-16 "1-5 sollte aber der user steuern
+können"; each on unless the profile turns it off, and only while its function is released for the profile):
+  termin   today's appointments not over yet (calendars.events): Passt / 30 min vorher erinnern / Auf morgen; only a
+           reminder is made, the calendar itself is never changed
+  liste    open entries of the task and shopping list (tasks.items): Erledigt ticks it off there (tasks.change)
+  mail     unread mails of the last two days (mail.find): Gelesen (off the sheet only, the mailbox stays as it is) /
+           Antwort entwerfen (schreib.assist writes it, tidy.make_draft puts it into the drafts folder, never sent;
+           only with schreib.draft_ok) / Später
+  neu      "Schnell notieren": lines read like the Anmerkung plus one ticked kind (Erinnerung heute, Morgen, Aufgabe,
+           Einkauf); the tick is the yes, each line becomes one reminder or list entry
+  notiz    the Anmerkung (above)
+
 When it acts: at once when "Fertig – bitte auswerten" is ticked, else after QUIET seconds without a change on the
 sheet. Exactly one answer per point; two ticked = unclear, nothing happens and the point comes again. Afterwards a new
 version with the receipt ("Erledigt seit Version N"); the old one, with the person's ticks, goes to "Archiv"
@@ -35,7 +47,14 @@ import remarkable
 import rmpapier
 
 QUIET = 15 * 60             # s without a change on a sheet before its ticks count (without "Fertig")
-MAX_ITEMS = 15              # points on one sheet
+MAX_ITEMS = 30              # points on one sheet
+MAX_CAL = 6                 # appointments of today on one sheet
+MAX_LIST = 6                # entries of each list on one sheet
+MAX_MAIL = 5                # waiting mails on one sheet
+MAIL_DAYS = 2               # unread mails of these last days
+MAX_SEEN = 200              # mails ticked "Gelesen" kept off the sheet
+NEW_LINES = 3               # ruled lines of "Schnell notieren"
+NEW_MAX = 6                 # entries from "Schnell notieren" at most
 MAX_UNDO = 30               # acted points kept for "Zurücknehmen"
 MAX_PRAXIS = 8              # changelog lines on one sheet
 RENEW_GAP = 10 * 60         # s between two new versions at least
@@ -44,17 +63,34 @@ NOTE_CHARS = 200            # characters of one note at most
 MAX_NOTES = 6               # notes waiting on the sheet at most
 NOTE_WAIT = 180             # s for the model to read the note
 NOTE_WATCH = (("ja", "Erinnern"), ("auftrag", "Als Auftrag"), ("nein", "Weg"), ("spaeter", "Später"))
-OPTS = {"notiz": (("ja", "Erinnern"), ("nein", "Weg"), ("spaeter", "Später")),
+# (part, profile setting, German, English, function it needs): the one list of the sheet's parts
+PARTS = (("termine", "rm_tasks_cal", "Termine heute", "Today's appointments", "calendar"),
+         ("listen", "rm_tasks_lists", "Aufgaben und Einkauf", "Tasks and shopping", "tasks"),
+         ("mails", "rm_tasks_mail", "Wartende Mails", "Waiting mail", "mail"),
+         ("neu", "rm_tasks_new", "Schnell notieren", "Quick note", ""),
+         ("anmerkung", "rm_tasks_note", "Anmerkung", "Note", ""))
+NEW_KINDS = (("heute", "Erinnerung heute"), ("morgen", "Morgen"), ("aufgabe", "Aufgabe"), ("einkauf", "Einkauf"))
+LISTS = (("aufgaben", "Aufgabenliste"), ("einkauf", "Einkaufsliste"))
+OPTS = {"termin": (("ok", "Passt"), ("erinnern", "30 min vorher erinnern"), ("morgen", "Auf morgen")),
+        "liste": (("erledigt", "Erledigt"),),
+        "mail": (("gelesen", "Gelesen"), ("entwurf", "Antwort entwerfen"), ("spaeter", "Später")),
+        "notiz": (("ja", "Erinnern"), ("nein", "Weg"), ("spaeter", "Später")),
         "todo": (("ja", "Erinnern"), ("nein", "Weg"), ("spaeter", "Später")),
         "ged": (("ja", "Stimmt"), ("nein", "Stimmt nicht"), ("spaeter", "Später")),
         "mich": (("ja", "Übernehmen"), ("nein", "Nein")),
         "berater": (("ja", "Übernehmen"), ("nein", "Ablehnen"), ("spaeter", "Später")),
         "praxis": (("ja", "Klappt"), ("nein", "Klappt nicht"))}
-SECTION = {"notiz": "Aus deiner Anmerkung", "todo": "Aufgaben aus deinen Notizen", "ged": "Stimmt das noch?", "mich": "Vorschläge für dich",
+SECTION = {"termin": "Heute im Kalender", "liste": "Aufgaben und Einkauf", "mail": "Wartende Mails",
+           "notiz": "Aus deiner Anmerkung", "todo": "Aufgaben aus deinen Notizen", "ged": "Stimmt das noch?", "mich": "Vorschläge für dich",
            "berater": "Vorschläge für den Spark (Admin)", "praxis": "Praxistest nach dem Update"}
 SAFE = re.compile(r"[0-9A-Za-z_.\-]{1,24}")
 RES_DE = {"erledigt": "✓ erledigt", "abgelehnt": "✓ abgelehnt", "spaeter": "später", "unklar": "? unklar",
-          "weg": "nicht mehr da", "notiert": "✎ gelesen", "fehler": "ging nicht", "aus": "ist aus", "angehalten": "Notaus"}
+          "weg": "nicht mehr da", "notiert": "gelesen", "fehler": "ging nicht", "aus": "ist aus", "angehalten": "Notaus",
+          "passt": "✓ passt", "erinnert": "✓ Erinnerung eingetragen", "entwurf": "✓ Entwurf im Postfach",
+          "vorbei": "schon vorbei", "neu": "✓ eingetragen"}
+DONE = ("erledigt", "abgelehnt", "passt", "erinnert", "entwurf", "neu")
+OUTSIDE = ("termin", "liste", "mail")      # points asked from other services (gather): not in due()'s signature
+ORDER = ("termin", "liste", "mail", "notiz", "todo", "ged", "mich", "berater", "praxis")
 
 
 def on(uid):
@@ -67,6 +103,17 @@ def admin(uid):
     return bool(uid) and coadmin.acts(uid) == "admin"
 
 
+def part(uid, p):
+    """The profile wants this part on its sheet (its setting) and the function the part needs is released for it.
+    "Schnell notieren" also needs "Bilder und Scans lesen" (the lines are read by the model)."""
+    row = next(x for x in PARTS if x[0] == p)
+    if profiles.settings(uid).get(row[1], profiles.SETTINGS[row[1]][0]) is not True:
+        return False
+    if p == "neu" and not remarkable._pictures(uid):
+        return False
+    return not row[4] or features.allowed(row[4], uid)
+
+
 def _zone(uid):
     import rmplus
     return rmplus._zone(uid)
@@ -77,7 +124,7 @@ def items(uid):
     """[{"key", "src", "id", "text", "sub"}] of everything open for this profile, by the sources' own switches."""
     out = []
     t = remarkable.load(uid).get("tasks") or {}
-    for n in (t.get("notes") or [])[-MAX_NOTES:]:
+    for n in (t.get("notes") or [])[-MAX_NOTES:] if part(uid, "anmerkung") else ():
         x = {"src": "notiz", "id": n["id"], "text": n["text"], "sub": "von deinem Aufgabenblatt"}
         if watch_of(uid, n["text"]):
             x["opts"] = NOTE_WATCH
@@ -104,11 +151,83 @@ def items(uid):
     if admin(uid):
         for e in praxis_lines(uid):
             out.append({"src": "praxis", "id": e["version"], "text": e["text"], "sub": e["version"]})
+    return _keyed(out)
+
+
+def _keyed(out):
     out = [x for x in out if SAFE.fullmatch(str(x["id"]))]
     for x in out:
         x["key"] = f"{x['src']}:{x['id']}"
         x["text"] = rmpapier.clean(x["text"], 200)
-    return out[:MAX_ITEMS]
+        x["sub"] = rmpapier.clean(x.get("sub") or "", 110)
+    return sorted(out, key=lambda x: ORDER.index(x["src"]))[:MAX_ITEMS]
+
+
+def _hid(*parts):
+    return hashlib.sha256("|".join(str(x) for x in parts).encode()).hexdigest()[:12]
+
+
+async def gather(uid, now):
+    """The points of the parts that ask other services (calendar, lists, mailbox), each with what acting needs ("x").
+    A service that does not answer leaves its part out of this version (a line in the log); the others still come."""
+    out = []
+    zone = _zone(uid)
+    if part(uid, "termine"):
+        import calendars
+        start = datetime.datetime.fromtimestamp(now, zone).replace(hour=0, minute=0, second=0, microsecond=0)
+        try:
+            got = await asyncio.wait_for(calendars.events(uid, start, start + datetime.timedelta(days=1), zone), 30)
+        except Exception as e:
+            got = None
+            print("remarkable: task sheet appointments not read:", type(e).__name__, flush=True)
+        for ev in (got[0] if got else [])[:MAX_CAL * 3]:
+            if not ev["allday"] and ev["end"].timestamp() <= now:
+                continue          # over already
+            when = "ganztägig" if ev["allday"] else ev["start"].strftime("%H:%M")
+            x = {"src": "termin", "id": _hid(ev["start"].isoformat(), ev["title"]), "text": f"{when} {ev['title']}",
+                 "sub": ev["location"], "x": {"start": int(ev["start"].timestamp()), "title": ev["title"][:120]}}
+            if ev["allday"]:
+                x["opts"] = tuple(o for o in OPTS["termin"] if o[0] != "erinnern")
+            out.append(x)
+            if sum(1 for y in out if y["src"] == "termin") >= MAX_CAL:
+                break
+    if part(uid, "listen"):
+        import tasks
+        for lst, name in LISTS:
+            try:
+                have = await asyncio.wait_for(tasks.items(uid, lst), 30)
+            except Exception as e:
+                have = []
+                print(f"remarkable: task sheet list {lst} not read:", type(e).__name__, flush=True)
+            for e in have[:MAX_LIST]:
+                out.append({"src": "liste", "id": _hid(lst, e["id"]), "text": e["text"], "sub": name,
+                            "x": {"lst": lst, "ref": e["id"]}})
+    if part(uid, "mails"):
+        import mail
+        seen = set((remarkable.load(uid).get("tasks") or {}).get("mail_seen") or [])
+        try:
+            found, _, _ = await asyncio.to_thread(mail.find, uid, "", MAIL_DAYS, True, MAX_MAIL + len(seen))
+        except Exception as e:
+            found = []
+            print("remarkable: task sheet mails not read:", type(e).__name__, flush=True)
+        reply = await asyncio.to_thread(_draft_ok, uid)
+        for aid, u, h in found:
+            iid = f"{aid}-{u}"
+            if iid in seen:
+                continue
+            x = {"src": "mail", "id": iid, "text": h.get("subject") or "(ohne Betreff)",
+                 "sub": "von " + mail.known(uid, h.get("from", "")), "x": {"ref": f"{aid}:{u}"}}
+            if not reply:
+                x["opts"] = tuple(o for o in OPTS["mail"] if o[0] != "entwurf")
+            out.append(x)
+            if sum(1 for y in out if y["src"] == "mail") >= MAX_MAIL:
+                break
+    return out
+
+
+def _draft_ok(uid):
+    import schreib
+    return schreib.draft_ok(uid)
 
 
 def praxis_lines(uid):
@@ -134,7 +253,9 @@ def _sig(its):
 
 
 # ---------------------------------------------------------------- the sheet
-def build(m, its, version, receipt, day):
+def build(m, its, version, receipt, day, areas=("anmerkung",), kinds=NEW_KINDS):
+    """areas: the writing parts on this sheet ("neu" Schnell notieren, "anmerkung"); kinds: the answers of "Schnell
+    notieren" (Aufgabe and Einkauf only with the lists)."""
     sh = rmpapier.Sheet(m, "Aufgaben", "Deine Aufgaben", f"Version {version} · {day}", rmpapier._code("aufgaben", version, time.time()))
     if receipt:
         sh.section(f"Erledigt seit Version {version - 1}")
@@ -149,11 +270,20 @@ def build(m, its, version, receipt, day):
             src_seen.add(x["src"])
             sh.need(45 * sh.s)        # a heading never stands alone at the bottom of a page
             sh.section(SECTION[x["src"]])
-        sh.choice(x["text"], x["key"], x.get("opts") or OPTS[x["src"]], x.get("sub", ""))
-    sh.note_area("anmerkung", "Anmerkung")
-    sh.para("Was du hier schreibst, liest der Spark und legt es dir auf der nächsten Version zum Ankreuzen vor "
-            "(Erinnern, Weg, Später).", 7.5, "mut")
-    if its:
+        if x["src"] == "liste":
+            sh.check(x["text"], x["key"] + "|erledigt", "wahl", x.get("sub", ""))
+        else:
+            sh.choice(x["text"], x["key"], x.get("opts") or OPTS[x["src"]], x.get("sub", ""))
+    if "neu" in areas:
+        sh.need(45 * sh.s + NEW_LINES * 8)
+        sh.section("Schnell notieren")
+        sh.note_area("neu", "Eine Sache pro Zeile", NEW_LINES)
+        sh.choice("Was ist das?", "neu", kinds, "Ein Kreuz: das ist dein Ja. Ohne Kreuz passiert nichts.")
+    if "anmerkung" in areas:
+        sh.note_area("anmerkung", "Anmerkung")
+        sh.para("Was du hier schreibst, liest der Spark und legt es dir auf der nächsten Version zum Ankreuzen vor "
+                "(Erinnern, Weg, Später).", 7.5, "mut")
+    if its or "neu" in areas:
         sh.para("Ein Kreuz je Punkt. Falsch? Kästchen ganz ausmalen. Zwei Kreuze in einem Punkt: dann passiert nichts, "
                 "und er kommt wieder.", 7.5, "mut")
         sh.check("Fertig – bitte auswerten", "fertig", "fertig", "Sonst wertet der Spark nach 15 Minuten Ruhe aus.")
@@ -165,19 +295,23 @@ async def send(uid, now=None):
     now = now or time.time()
     d = remarkable.load(uid)
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
-    its = items(uid)
+    its = _keyed(await gather(uid, now) + items(uid))
+    areas = tuple(p for p in ("neu", "anmerkung") if part(uid, p))
     version = int(t.get("v", 0)) + 1
     local = datetime.datetime.fromtimestamp(now, _zone(uid))
     m = rmpapier.model(rmpapier.model_key(uid, d))
-    built = build(m, its, version, t.get("receipt") or [], local.strftime("%d.%m.%Y"))
+    kinds = NEW_KINDS if features.allowed("tasks", uid) else NEW_KINDS[:2]
+    built = build(m, its, version, t.get("receipt") or [], local.strftime("%d.%m.%Y"), areas, kinds)
     r = await rmpapier.place(uid, "aufgaben", "Aufgaben", built, "aufgaben", own="aufgaben", auto=True)
     d = remarkable.load(uid)
     pp = d["papers"][r["id"]]
     pp["items"] = {x["key"]: dict({"src": x["src"], "id": x["id"], "text": x["text"]},
-                                  **({"o": [k for k, _ in x["opts"]]} if x.get("opts") else {})) for x in its}
+                                  **({"o": [k for k, _ in x["opts"]]} if x.get("opts") else {}),
+                                  **({"x": x["x"]} if x.get("x") else {})) for x in its}
     pp["v"] = version
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
-    t.update(v=version, receipt=[], renew=False, last=int(now), sig=_sig(its), day=local.strftime("%Y-%m-%d"))
+    t.update(v=version, receipt=[], renew=False, last=int(now), sig=_sig([x for x in its if x["src"] not in OUTSIDE]),
+             day=local.strftime("%Y-%m-%d"))
     pr = [x["id"] for x in its if x["src"] == "praxis"]
     if pr:
         t["praxis"] = pr[0]
@@ -209,13 +343,16 @@ def due(uid, now):
     at = profiles.settings(uid).get("rm_morning_at") or "06:30"
     if t.get("day") == local.strftime("%Y-%m-%d") or local.strftime("%H:%M") < at:
         return False
+    if any(part(uid, p) for p in ("termine", "listen", "mails")):
+        return True           # today's appointments, the lists and the mailbox change by the day: a new one each morning
     return _sig(items(uid)) != t.get("sig")
 
 
 # ---------------------------------------------------------------- reading it back (from rmpapier.check)
-def note_strokes(pp, mm):
-    """The strokes (mm) written in the sheet's "Anmerkung": more than half of their points inside its lines."""
-    f = next((x for x in pp.get("f") or [] if x.get("k") == "notiz"), None)
+def note_strokes(pp, mm, name="anmerkung"):
+    """The strokes (mm) written in one of the sheet's writing areas ("anmerkung", "neu"): more than half of their
+    points inside its lines."""
+    f = next((x for x in pp.get("f") or [] if x.get("k") == "notiz" and x.get("n") == name), None)
     if not f:
         return []
     out = []
@@ -224,6 +361,53 @@ def note_strokes(pp, mm):
         if ln and inside * 2 > len(ln):
             out.append(ln)
     return out
+
+
+def note_lines(text):
+    """The model's reading of "Schnell notieren": one entry per written line, without its picture description and
+    unreadable marks."""
+    out = []
+    for line in str(text or "").splitlines():
+        s = line.strip()
+        if not s or s.lower().startswith("bild:"):
+            continue
+        s = rmpapier.clean(" ".join(s.replace("[unleserlich]", " ").strip(" -•*#\t").split()), 120).strip()
+        if s:
+            out.append(s)
+    return out[:NEW_MAX]
+
+
+def _ink(pp, mm, name):
+    """(strokes, signature) of a writing area with enough ink, else (None, None)."""
+    lines = note_strokes(pp, mm, name)
+    if sum(math.dist(a, b) for a, b in rmpapier._segments(lines)) < NOTE_MIN:
+        return None, None
+    return lines, hashlib.sha256(repr([[(round(x, 1), round(y, 1)) for x, y in ln] for ln in lines]).encode()).hexdigest()[:12]
+
+
+async def _read_page(lines):
+    """The model's reading of the strokes (rendered at a tenth of a millimetre), or raises."""
+    import wissen
+    jpeg = remarkable.render([([(x * 10, y * 10) for x, y in ln], 8.0) for ln in lines])
+    return await asyncio.wait_for(wissen.read_page(jpeg), NOTE_WAIT)
+
+
+async def read_new(uid, pp, mm):
+    """Reads "Schnell notieren" when its ink changed; the lines wait on the sheet (pp["neu"]) for the ticked kind."""
+    lines, sig = _ink(pp, mm, "neu")
+    if not lines or sig == (pp.get("neu") or {}).get("sig"):
+        return None
+    if not remarkable._pictures(uid):
+        print("remarkable: task sheet quick note not read | reading pictures is off", flush=True)
+        return None
+    try:
+        got = note_lines(await _read_page(lines))
+    except Exception as e:             # the model away or slow: read again with the next change of the sheet
+        print("remarkable: task sheet quick note not read:", remarkable.why(e), flush=True)
+        return None
+    pp["neu"] = {"sig": sig, "lines": got}
+    print(f"remarkable: task sheet quick note read | {len(got)} line(s)", flush=True)
+    return got
 
 
 def note_text(text):
@@ -242,20 +426,14 @@ def note_text(text):
 async def read_note(uid, did, pp, mm, now):
     """Reads the "Anmerkung" when its ink changed: one note per sheet (a longer one replaces the shorter), a point on
     the next version. Returns the text or None."""
-    lines = note_strokes(pp, mm)
-    ink = sum(math.dist(a, b) for a, b in rmpapier._segments(lines))
-    if ink < NOTE_MIN:
-        return None
-    sig = hashlib.sha256(repr([[(round(x, 1), round(y, 1)) for x, y in ln] for ln in lines]).encode()).hexdigest()[:12]
-    if sig == pp.get("note_sig"):
+    lines, sig = _ink(pp, mm, "anmerkung")
+    if not lines or sig == pp.get("note_sig"):
         return None
     if not remarkable._pictures(uid):
         print("remarkable: task sheet note not read | reading pictures is off", flush=True)
         return None
-    import wissen
     try:
-        jpeg = remarkable.render([([(x * 10, y * 10) for x, y in ln], 8.0) for ln in lines])
-        text = note_text(await asyncio.wait_for(wissen.read_page(jpeg), NOTE_WAIT))
+        text = note_text(await _read_page(lines))
     except Exception as e:             # the model away or slow: read again with the next change of the sheet
         print("remarkable: task sheet note not read:", remarkable.why(e), flush=True)
         return None
@@ -289,7 +467,7 @@ def ready(pp, now):
     return (pp.get("r") or {}).get("fertig") == "an" or pending(pp, now)
 
 
-def act(uid, pp, now):
+async def act(uid, pp, now):
     """Does what the ticked answers say, by the table OPTS (never the model). Returns the number acted on."""
     import notaus
     states = pp.get("r") or {}
@@ -314,7 +492,7 @@ def act(uid, pp, now):
             results.append({"text": it["text"], "res": stop})
             continue
         try:
-            res, u = _do(uid, it, ticked[0], now)
+            res, u = await _do_outside(uid, it, ticked[0], now) if it["src"] in OUTSIDE else _do(uid, it, ticked[0], now)
         except Exception as e:         # one point failing never stops the others
             print("remarkable: task point failed:", type(e).__name__, flush=True)
             res, u = "fehler", None
@@ -323,7 +501,29 @@ def act(uid, pp, now):
             done_keys.append(key)
         if u:
             undo.append({"i": f"{int(now)}{len(undo)}", "text": it["text"], "src": it["src"], "u": u})
-        n += res in ("erledigt", "abgelehnt")
+        n += res in DONE
+    if "neu" not in done_keys:
+        kinds = [k for k, _ in NEW_KINDS if states.get(f"neu|{k}") == "an"]
+        got = (pp.get("neu") or {}).get("lines") or []
+        if kinds:
+            text = "Schnell notieren: " + ", ".join(got)[:120] if got else "Schnell notieren"
+            if len(kinds) > 1:
+                res, u = "unklar", None
+            elif stop:
+                res, u = stop, None
+            elif not got:
+                res, u = "fehler", None     # not read (yet): the next change of the sheet acts again
+            else:
+                try:
+                    res, u = await _do_new(uid, kinds[0], got, now)
+                except Exception as e:
+                    print("remarkable: task point failed:", type(e).__name__, flush=True)
+                    res, u = "fehler", None
+                done_keys.append("neu")
+            results.append({"text": text, "res": res})
+            if u:
+                undo.append({"i": f"{int(now)}{len(undo)}", "text": text, "src": "neu", "u": u})
+            n += res in DONE
     pp["acted"] = int(now)
     pp["done"] = results
     d = remarkable.load(uid)
@@ -358,6 +558,91 @@ def watch_of(uid, text):
 def _tomorrow_nine(uid, now):
     local = datetime.datetime.fromtimestamp(now, _zone(uid)) + datetime.timedelta(days=1)
     return int(local.replace(hour=9, minute=0, second=0, microsecond=0).timestamp() * 1000)
+
+
+def _today_evening(uid, now):
+    """"Erinnerung heute": at 18:00, or in an hour when it is later than 17:00."""
+    local = datetime.datetime.fromtimestamp(now, _zone(uid))
+    at = local.replace(hour=18, minute=0, second=0, microsecond=0)
+    return int((at.timestamp() if local.hour < 17 else now + 3600) * 1000)
+
+
+async def _do_new(uid, kind, lines, now):
+    """"Schnell notieren" with its ticked kind: each line one reminder or one list entry."""
+    if kind in ("heute", "morgen"):
+        due = _today_evening(uid, now) if kind == "heute" else _tomorrow_nine(uid, now)
+        return "neu", {"rems": [profiles.add_reminder(uid, x, due)["id"] for x in lines]}
+    if not features.allowed("tasks", uid):
+        return "aus", None
+    import tasks
+    lst = "aufgaben" if kind == "aufgabe" else "einkauf"
+    added = await tasks.add(uid, lst, lines)
+    return "neu", {"list": lst, "texts": added}
+
+
+async def _do_outside(uid, it, choice, now):
+    """One answer to a point asked from another service (gather): (result, what "Zurücknehmen" needs or None).
+    The calendar is never changed, a mail never sent or marked."""
+    src, x = it["src"], it.get("x") or {}
+    if choice == "spaeter":
+        return "spaeter", None
+    if src == "termin":
+        if not features.allowed("calendar", uid):
+            return "aus", None
+        if choice == "ok":
+            return "passt", None
+        start = int(x.get("start", 0))
+        when = datetime.datetime.fromtimestamp(start, _zone(uid)).strftime("%H:%M")
+        if choice == "erinnern":
+            if start <= now:
+                return "vorbei", None
+            r = profiles.add_reminder(uid, f"Um {when}: {x.get('title', '')}", max(start - 1800, int(now) + 60) * 1000)
+        else:
+            r = profiles.add_reminder(uid, f"Von gestern verschoben: {x.get('title', '')}", _tomorrow_nine(uid, now))
+        return "erinnert", {"rem": r["id"]}
+    if src == "liste":
+        if not features.allowed("tasks", uid):
+            return "aus", None
+        import tasks
+        hit = next((e for e in await tasks.items(uid, x.get("lst")) if e["id"] == x.get("ref")), None)
+        if not hit:
+            return "weg", None
+        await tasks.change(uid, x["lst"], [hit], "done")
+        return "erledigt", {"list": x["lst"], "texts": [hit["text"]]}
+    if src == "mail":
+        if not features.allowed("mail", uid):
+            return "aus", None
+        if choice == "entwurf":
+            if not await asyncio.to_thread(_draft_ok, uid):
+                return "aus", None
+            await _draft(uid, x.get("ref", ""))
+        _seen(uid, it["id"])
+        return ("entwurf", None) if choice == "entwurf" else ("erledigt", {"seen": it["id"]})
+    return "weg", None
+
+
+async def _draft(uid, ref):
+    """"Antwort entwerfen": the Schreibhilfe writes the answer to the mail (data for it, never an order), the draft goes
+    into the mailbox's drafts folder; nothing is sent."""
+    import mail
+    import schreib
+    import tidy
+    msg = await asyncio.to_thread(mail.message, uid, ref)
+    if msg is None:
+        raise ValueError("the message is gone")
+    text, _ = mail.plain(msg)
+    head = f"Von: {mail._addr(msg.get('From', ''))}\nBetreff: {mail._hdr(msg.get('Subject', ''))}\n\n"
+    out = await schreib.assist(uid, {"art": "antwort", "mail": (head + (text or ""))[:schreib.MAX_MAIL]}, "auto", "reMarkable")
+    aid, u = ref.split(":")
+    await asyncio.to_thread(tidy.make_draft, uid, aid, "", "", out["text"], int(u))
+
+
+def _seen(uid, iid):
+    d = remarkable.load(uid)
+    t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
+    t["mail_seen"] = ([v for v in t.get("mail_seen") or [] if v != iid] + [iid])[-MAX_SEEN:]
+    d["tasks"] = t
+    remarkable.save(uid, d)
 
 
 def _keep_note(uid, note):
@@ -472,7 +757,7 @@ def _do(uid, it, choice, now):
     return "weg", None
 
 
-def undo(uid, i):
+async def undo(uid, i):
     """"Zurücknehmen" of one acted point. Returns True when it was taken back."""
     d = remarkable.load(uid)
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
@@ -482,6 +767,17 @@ def undo(uid, i):
     u = x["u"]
     if "rem" in u:
         profiles.remove_reminders(uid, {u["rem"]})
+    if "rems" in u:
+        profiles.remove_reminders(uid, set(u["rems"]))
+    if "list" in u:
+        import tasks
+        if not features.allowed("tasks", uid):
+            return False
+        if x["src"] == "neu":          # taken off the list again
+            have = await tasks.items(uid, u["list"])
+            await tasks.change(uid, u["list"], [e for e in have if e["text"] in u["texts"]], "delete")
+        else:                          # ticked off: back on the list
+            await tasks.add(uid, u["list"], u["texts"])
     if "plan" in u:
         import agent
         agent.mutate(uid, lambda d: d.update(plans=[p for p in d["plans"] if p.get("id") != u["plan"]]))
@@ -500,6 +796,8 @@ def undo(uid, i):
     d = remarkable.load(uid)
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
     t["undo"] = [v for v in t.get("undo") or [] if v["i"] != i]
+    if "seen" in u:
+        t["mail_seen"] = [v for v in t.get("mail_seen") or [] if v != u["seen"]]
     if "note" in u:
         t["notes"] = ([n for n in t.get("notes") or [] if n["id"] != u["note"]["id"]] + [u["note"]])[-MAX_NOTES:]
     d["tasks"] = t
@@ -512,4 +810,6 @@ def public(uid):
     t = remarkable.load(uid).get("tasks") or {}
     return {"on": features.allowed("rmaufgaben", uid), "spark": features.admin_on("rmaufgaben"), "version": t.get("v", 0),
             "open": len(items(uid)) if on(uid) else 0,
-            "undo": [{"i": u["i"], "text": u["text"], "src": u["src"]} for u in (t.get("undo") or [])][::-1][:10]}
+            "undo": [{"i": u["i"], "text": u["text"], "src": u["src"]} for u in (t.get("undo") or [])][::-1][:10],
+            "parts": [{"k": p, "pref": key, "de": de, "en": en, "ok": not need or features.allowed(need, uid)}
+                      for p, key, de, en, need in PARTS]}

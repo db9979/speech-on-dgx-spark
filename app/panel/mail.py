@@ -396,14 +396,23 @@ def _wrap(text):
     return UNTRUSTED + "\n<<<\n" + text + "\n>>>"
 
 
-def read(uid, ref, zone=None):
-    """Text for the assistant: one message (id "<account>:<uid>" from a listing), its time in `zone`."""
+def message(uid, ref):
+    """One message (id "<account>:<uid>" from a listing; fetched with PEEK, so it stays unread), None when it is
+    gone; ValueError for an id of no account of this profile."""
     m = re.fullmatch(r"\[?(m[0-9a-f]{8}):(\d{1,10})\]?", str(ref).strip())
     acct = next((a for a in get(uid)["accounts"] if m and a["id"] == m.group(1)), None)
     if not acct:
-        return "Unknown message id: list or search the mails first and use an id like m1a2b3c4d:123."
+        raise ValueError("unknown message id")
     with _Session(acct) as s:
-        msg = s.body(int(m.group(2)))
+        return s.body(int(m.group(2)))
+
+
+def read(uid, ref, zone=None):
+    """Text for the assistant: one message (id "<account>:<uid>" from a listing), its time in `zone`."""
+    try:
+        msg = message(uid, ref)
+    except ValueError:
+        return "Unknown message id: list or search the mails first and use an id like m1a2b3c4d:123."
     if msg is None:
         return "This message no longer exists."
     text, files = plain(msg)

@@ -982,7 +982,7 @@ async def check(uid, now=None):
     quiet = [did for did, pp in papers.items() if rmaufgaben.pending(pp, now)]
     if quiet and rmaufgaben.on(uid):           # an Aufgabenblatt left alone long enough: its ticks count now
         for did in quiet:
-            rmaufgaben.act(uid, papers[did], now)
+            await rmaufgaben.act(uid, papers[did], now)
         d = remarkable.load(uid)
         cur = d.get("papers") or {}
         for did in quiet:
@@ -1032,8 +1032,9 @@ async def check(uid, now=None):
             pp["changed"] = int(now)
             if rmaufgaben.on(uid):
                 await rmaufgaben.read_note(uid, did, pp, mm, now)
+                await rmaufgaben.read_new(uid, pp, mm)
             if rmaufgaben.on(uid) and rmaufgaben.ready(pp, now):
-                done += rmaufgaben.act(uid, pp, now)
+                done += await rmaufgaben.act(uid, pp, now)
         n_on = sum(1 for v in states.values() if v == "an")
         n_q = sum(1 for v in states.values() if v == "unklar")
         page = f"{int(size[0])}x{int(size[1])}" if size else "no size"
@@ -1313,7 +1314,7 @@ async def tasks_undo_route(request: Request, prof=Depends(browser_profile)):
     if not isinstance(i, str) or not re.fullmatch(r"[0-9]{1,14}", i):
         raise HTTPException(400, "i")
     try:
-        ok = rmaufgaben.undo(uid, i)
+        ok = await rmaufgaben.undo(uid, i)
     except HTTPException:
         raise
     except Exception as e:

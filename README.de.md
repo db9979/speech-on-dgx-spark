@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.666** · 2026-10-16 · Aufgabenblatt mit fünf Teilen nach Wahl: heutige Termine, Aufgaben- und Einkaufsliste, wartende Mails mit Antwortentwurf, Schnell notieren und Anmerkung; jedes Profil wählt unter Ich → reMarkable → Papier
 - **V01.0.665** Terminal-Client: spark-tui update (Prüfsumme vom Spark geprüft); das Fenster zeigt neue Versionen an
 - **V01.0.664** Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für die neuen Funktionen, Lücken zu, Foto ändern als Bilder, Lernen aus unklaren Fragen
 - **V01.0.663** Begleiter: Meldungen im Tray-Fenster mit „OK“ bestätigen
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
 - **V01.0.658** ROT-FIX .657: Zustand-Kacheltest ohne Rennen mit der 3-s-Aktualisierung
 - **V01.0.657** Schnellknöpfe für Bilder: drehen, heller, schwarzweiß und mehr, sofort ohne Modell
-- **V01.0.656** ROT-FIX .653: Bilder ändern mit Verbrauchsname und Grund für eigene Daten
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

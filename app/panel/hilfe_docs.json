@@ -4941,7 +4941,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Anmerkung auf dem Aufgabenblatt (V01.0.512, Dominik 2026-10-13 „1“)",
-"text": "Anmerkung auf dem Aufgabenblatt (V01.0.512, Dominik 2026-10-13 „1“): Unter den Punkten hat das Aufgabenblatt vier Linien „Anmerkung“ (Sheet.note_area, Feld der Art notiz, nie als Kästchen gewertet). Liegt dort mindestens 12 mm Handschrift (rmaufgaben.NOTE_MIN) und hat sie sich geändert, rendert der Spark nur diese Striche als Bild und lässt sie vom Sprachmodell lesen (wissen.read_page, nur mit „Bilder und Scans lesen“; sonst wartet die Anmerkung, Journal „note not read | reading pictures is off“). Vom Ergebnis bleibt eine Zeile ohne Bildbeschreibung und „[unleserlich]“, höchstens 200 Zeichen. Der Text ist Daten: Er steht in der Quittung („✎ gelesen: …“) und als Punkt „Aus deiner Anmerkung“ auf der nächsten Version mit den festen Antworten Erinnern (morgen 9 Uhr) / Weg / Später; erst das Kreuz macht daraus eine Erinnerung, „Zurücknehmen“ unter Papier holt sie zurück. Findet die feste Regel von „Eigene Aufgaben“ (beobachten.parse, nie das Modell) darin einen Beobachten-Satz („Sag mir Bescheid, wenn es eine neue Firmware gibt“), sind Beobachtungen erlaubt (agent.watch_on) und ist unter beobachten.MAX_WATCH noch Platz, kommt die Antwort „Als Auftrag“ dazu: Das Kreuz legt die Beobachtun"
+"text": "Anmerkung auf dem Aufgabenblatt (V01.0.512, Dominik 2026-10-13 „1“): Unter den Punkten hat das Aufgabenblatt vier Linien „Anmerkung“ (Sheet.note_area, Feld der Art notiz, nie als Kästchen gewertet). Liegt dort mindestens 12 mm Handschrift (rmaufgaben.NOTE_MIN) und hat sie sich geändert, rendert der Spark nur diese Striche als Bild und lässt sie vom Sprachmodell lesen (wissen.read_page, nur mit „Bilder und Scans lesen“; sonst wartet die Anmerkung, Journal „note not read | reading pictures is off“). Vom Ergebnis bleibt eine Zeile ohne Bildbeschreibung und „[unleserlich]“, höchstens 200 Zeichen. Der Text ist Daten: Er steht in der Quittung („gelesen: …“) und als Punkt „Aus deiner Anmerkung“ auf der nächsten Version mit den festen Antworten Erinnern (morgen 9 Uhr) / Weg / Später; erst das Kreuz macht daraus eine Erinnerung, „Zurücknehmen“ unter Papier holt sie zurück. Findet die feste Regel von „Eigene Aufgaben“ (beobachten.parse, nie das Modell) darin einen Beobachten-Satz („Sag mir Bescheid, wenn es eine neue Firmware gibt“), sind Beobachtungen erlaubt (agent.watch_on) und ist unter beobachten.MAX_WATCH noch Platz, kommt die Antwort „Als Auftrag“ dazu: Das Kreuz legt die Beobachtung "
 },
 {
 "lang": "de",
@@ -4949,7 +4949,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Anmerkung auf dem Aufgabenblatt (V01.0.512, Dominik 2026-10-13 „1“)",
-"text": "g unter Ich → Aufträge an (created_by „remarkable“), dort pausier-, änder- und löschbar; „Zurücknehmen“ entfernt sie wieder. Beim Ausführen wird alles noch einmal geprüft; geht es nicht, bleibt die Anmerkung offen. Eine Anmerkung je Blatt (längeres Weiterschreiben ersetzt sie), höchstens 6 warten. Beim Lesen zählen für die Wahl der Einheiten nur Striche, die fast ganz in einem Kästchen liegen; Zeilen Handschrift, die eine andere Skala quer über die Kästchen zöge, verschieben nichts mehr. Journal nur Zahlen („remarkable: task sheet note read | 42 characters“), Live „Anmerkung gelesen“. Selbsttests test_rmpapier.Tasks.test_the_anmerkung_is_read_and_comes_back_as_a_point_never_a_command, test_the_anmerkung_waits_while_reading_pictures_is_off, test_note_text_keeps_only_what_was_written, test_a_note_asking_to_watch_offers_a_task_only_by_the_panels_rule, test_a_task_ticked_after_watches_were_switched_off_does_nothing, test_a_tick_and_long_lines_of_writing_never_move_the_mapping."
+"text": "unter Ich → Aufträge an (created_by „remarkable“), dort pausier-, änder- und löschbar; „Zurücknehmen“ entfernt sie wieder. Beim Ausführen wird alles noch einmal geprüft; geht es nicht, bleibt die Anmerkung offen. Eine Anmerkung je Blatt (längeres Weiterschreiben ersetzt sie), höchstens 6 warten. Beim Lesen zählen für die Wahl der Einheiten nur Striche, die fast ganz in einem Kästchen liegen; Zeilen Handschrift, die eine andere Skala quer über die Kästchen zöge, verschieben nichts mehr. Journal nur Zahlen („remarkable: task sheet note read | 42 characters“), Live „Anmerkung gelesen“. Selbsttests test_rmpapier.Tasks.test_the_anmerkung_is_read_and_comes_back_as_a_point_never_a_command, test_the_anmerkung_waits_while_reading_pictures_is_off, test_note_text_keeps_only_what_was_written, test_a_note_asking_to_watch_offers_a_task_only_by_the_panels_rule, test_a_task_ticked_after_watches_were_switched_off_does_nothing, test_a_tick_and_long_lines_of_writing_never_move_the_mapping."
 },
 {
 "lang": "de",
@@ -4958,6 +4958,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Morgenblatt gegliedert (Dominik 2026-10-15 „nicht schön dargestellt aktuell auch nur fließtext“): Das Morgenblatt holt den Tagesüberblick jetzt gegliedert (chat.morning_briefing(..., markdown=True), BRIEF_MD_SYSTEM): je Bereich mit Inhalt eine Zeile Termine, Erinnerungen, Mails, Wetter, Themen mit kurzen Listenpunkten; auf dem Blatt wird jede davon ein nummerierter Abschnitt (rmpapier.heads), statt eines Fließtext-Blocks „01 Überblick“. Selbsttest test_rmplus.SheetOnRequest.test_the_morning_sheet_is_sorted_into_sections."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Aufgabenblatt mit fünf Teilen nach Wahl (Dominik 2026-10-16 „1-5 sollte aber der user steuern können was er alles bekommen möchte“): Jedes Profil stellt unter Ich → reMarkable → Papier → „Was aufs Blatt kommt“ selbst ein, welche Teile auf sein Aufgabenblatt kommen (rmaufgaben.PARTS, Profil-Einstellungen rm_tasks_cal, rm_tasks_lists, rm_tasks_mail, rm_tasks_new, rm_tasks_note, alle an, bis das Profil sie ausschaltet; kein neuer Funktionsschalter). Ein Teil kommt nur, solange seine Funktion für das Profil freigegeben ist; sonst steht dort, woran es fehlt. Heute im Kalender: die heutigen Termine, die noch kommen (höchstens 6, calendars.events), mit Passt / 30 min vorher erinnern / Auf morgen; ganztägige ohne „erinnern“. Gemacht wird nur eine Erinnerung (30 Minuten vorher, oder „Von gestern verschoben: …“ morgen um 9 Uhr), der Kalender selbst bleibt unverändert; ist der Termin beim Auswerten schon vorbei, steht „schon vorbei“ in der Quittung. Aufgaben und Einkauf: je Liste bis zu 6 offene Einträge (tasks.items) mit einem Kästchen „Erledigt“, das den Eintrag dort abhakt (tasks.change, auch im iCloud-Kalender); „Zurücknehmen“ setzt ihn wieder auf die Liste. Wartende Mails: bis zu 5 ungel"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "esene Mails der letzten zwei Tage (mail.find) mit Gelesen / Antwort entwerfen / Später. „Gelesen“ nimmt die Mail nur vom Blatt, im Postfach bleibt sie, wie sie ist. „Antwort entwerfen“ gibt es nur, wenn das Profil Entwürfe ablegen darf (schreib.draft_ok): Die Schreibhilfe schreibt die Antwort (die Mail ist für sie Daten, nie ein Auftrag), der Entwurf liegt danach im Entwürfe-Ordner des Postfachs (tidy.make_draft) und wird nie gesendet. Schnell notieren: drei Linien und ein Kreuz, was es ist: Erinnerung heute (18 Uhr, nach 17 Uhr in einer Stunde), Morgen (9 Uhr), Aufgabe oder Einkauf (die beiden nur mit freigegebenen Listen). Gelesen wird wie die Anmerkung (read_new, nur mit „Bilder und Scans lesen“); jede Zeile wird ein Eintrag, höchstens 6. Das Kreuz ist das Ja: ohne Kreuz passiert nichts, zwei Kreuze = unklar; „Zurücknehmen“ entfernt die Erinnerungen oder Listeneinträge wieder. Anmerkung: wie bisher. Antwortet ein Dienst nicht, fehlt nur sein Teil in dieser Version (Journal „remarkable: task sheet mails not read: …“). Weil Termine, Listen und Mails sich täglich ändern, kommt mit einem dieser Teile jeden Morgen ab der Morgenblatt-Zeit eine neue Version (solange das Blatt nicht weg"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "geworfen ist). Die Quittung zeigt „gelesen“ statt des Zeichens ✎, das die Schrift nicht kennt. mail.message ist jetzt die eine Stelle, die eine Mail nach ihrer Kennung holt (auch für mail.read). Journal nur feste Wörter und Zahlen („remarkable: task sheet quick note read | 2 line(s)“). Selbsttests test_rmpapier.TaskParts."
 },
 {
 "lang": "de",
@@ -11829,7 +11853,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Note on the task sheet (V01.0.512, Dominik 2026-10-13 \"1\")",
-"text": "Note on the task sheet (V01.0.512, Dominik 2026-10-13 \"1\"): below the points the task sheet has four lines \"Anmerkung\" (Sheet.note_area, a field of kind notiz, never judged as a box). When at least 12 mm of handwriting lie there (rmaufgaben.NOTE_MIN) and it changed, the Spark renders only these strokes as a picture and lets the language model read them (wissen.read_page, only with \"Read pictures and scans\"; otherwise the note waits, journal \"note not read | reading pictures is off\"). One line remains of the result, without the picture description and \"[unleserlich]\", at most 200 characters. The text is data: it stands in the receipt (\"✎ gelesen: …\") and as a point \"Aus deiner Anmerkung\" on the next version with the fixed answers remind (tomorrow 9:00) / remove / later; only the tick makes it a reminder, \"Take back\" under Paper brings it back. When the fixed rule of \"Own tasks\" (beobachten.parse, never the model) finds a watch sentence in it (\"Sag mir Bescheid, wenn es eine neue Firmware gibt\"), watches are allowed (agent.watch_on) and there is room under beobachten.MAX_WATCH, the answer \"Als Auftrag\" is added: the tick makes the watch under Me → Jobs (created_by \"remarkable\"), wher"
+"text": "Note on the task sheet (V01.0.512, Dominik 2026-10-13 \"1\"): below the points the task sheet has four lines \"Anmerkung\" (Sheet.note_area, a field of kind notiz, never judged as a box). When at least 12 mm of handwriting lie there (rmaufgaben.NOTE_MIN) and it changed, the Spark renders only these strokes as a picture and lets the language model read them (wissen.read_page, only with \"Read pictures and scans\"; otherwise the note waits, journal \"note not read | reading pictures is off\"). One line remains of the result, without the picture description and \"[unleserlich]\", at most 200 characters. The text is data: it stands in the receipt (\"gelesen: …\") and as a point \"Aus deiner Anmerkung\" on the next version with the fixed answers remind (tomorrow 9:00) / remove / later; only the tick makes it a reminder, \"Take back\" under Paper brings it back. When the fixed rule of \"Own tasks\" (beobachten.parse, never the model) finds a watch sentence in it (\"Sag mir Bescheid, wenn es eine neue Firmware gibt\"), watches are allowed (agent.watch_on) and there is room under beobachten.MAX_WATCH, the answer \"Als Auftrag\" is added: the tick makes the watch under Me → Jobs (created_by \"remarkable\"), where "
 },
 {
 "lang": "en",
@@ -11837,7 +11861,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Note on the task sheet (V01.0.512, Dominik 2026-10-13 \"1\")",
-"text": "e it can be paused, changed and deleted; \"Take back\" removes it again. Everything is checked again when acting; if it cannot be done, the note stays open. One note per sheet (writing on replaces it), at most 6 wait. When reading, only strokes lying almost wholly in a box count for choosing the units; lines of handwriting that another scale would drag across the boxes move nothing any more. Journal numbers only (\"remarkable: task sheet note read | 42 characters\"), live \"Anmerkung gelesen\". Self-tests test_rmpapier.Tasks.test_the_anmerkung_is_read_and_comes_back_as_a_point_never_a_command, test_the_anmerkung_waits_while_reading_pictures_is_off, test_note_text_keeps_only_what_was_written, test_a_note_asking_to_watch_offers_a_task_only_by_the_panels_rule, test_a_task_ticked_after_watches_were_switched_off_does_nothing, test_a_tick_and_long_lines_of_writing_never_move_the_mapping."
+"text": "it can be paused, changed and deleted; \"Take back\" removes it again. Everything is checked again when acting; if it cannot be done, the note stays open. One note per sheet (writing on replaces it), at most 6 wait. When reading, only strokes lying almost wholly in a box count for choosing the units; lines of handwriting that another scale would drag across the boxes move nothing any more. Journal numbers only (\"remarkable: task sheet note read | 42 characters\"), live \"Anmerkung gelesen\". Self-tests test_rmpapier.Tasks.test_the_anmerkung_is_read_and_comes_back_as_a_point_never_a_command, test_the_anmerkung_waits_while_reading_pictures_is_off, test_note_text_keeps_only_what_was_written, test_a_note_asking_to_watch_offers_a_task_only_by_the_panels_rule, test_a_task_ticked_after_watches_were_switched_off_does_nothing, test_a_tick_and_long_lines_of_writing_never_move_the_mapping."
 },
 {
 "lang": "en",
@@ -11846,6 +11870,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "Morning sheet in sections (Dominik 2026-10-15 \"not nicely laid out, currently only prose\"): the morning sheet now takes the sorted daily overview (chat.morning_briefing(..., markdown=True), BRIEF_MD_SYSTEM): per area with content a line Termine, Erinnerungen, Mails, Wetter, Themen with short bullets; on the sheet each becomes a numbered section (rmpapier.heads) instead of one prose block \"01 Überblick\". Self-test test_rmplus.SheetOnRequest.test_the_morning_sheet_is_sorted_into_sections."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Task sheet with five parts of one's choice (Dominik 2026-10-16 \"1-5 sollte aber der user steuern können was er alles bekommen möchte\"): each profile sets under Me → reMarkable → Paper → \"What goes on the sheet\" which parts come on its task sheet (rmaufgaben.PARTS, profile settings rm_tasks_cal, rm_tasks_lists, rm_tasks_mail, rm_tasks_new, rm_tasks_note, all on until the profile turns them off; no new function switch). A part only comes while its function is released for the profile; otherwise the page says what is missing. Today in the calendar: today's appointments still to come (at most 6, calendars.events) with Passt / 30 min vorher erinnern / Auf morgen; all-day ones without \"remind\". Only a reminder is made (30 minutes before, or \"Von gestern verschoben: …\" tomorrow at 9:00), the calendar itself stays unchanged; when the appointment is over by the time the sheet is read, the receipt says \"schon vorbei\". Tasks and shopping: up to 6 open entries per list (tasks.items) with one box \"Erledigt\" that ticks the entry off there (tasks.change, also in the iCloud calendar); \"Take back\" puts it on the list again. Waiting mail: up to 5 unread mails of the last two days (mail.find) with Ge"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lesen / Antwort entwerfen / Später. \"Gelesen\" only takes the mail off the sheet, the mailbox stays as it is. \"Antwort entwerfen\" is only offered when the profile may put drafts (schreib.draft_ok): the writing help writes the answer (the mail is data for it, never an order), the draft then lies in the mailbox's drafts folder (tidy.make_draft) and is never sent. Quick note: three lines and one tick for what it is: reminder today (18:00, after 17:00 in an hour), tomorrow (9:00), task or shopping (the last two only with released lists). It is read like the note (read_new, only with \"Read pictures and scans\"); each line becomes one entry, at most 6. The tick is the yes: without a tick nothing happens, two ticks = unclear; \"Take back\" removes the reminders or list entries again. Note: as before. When a service does not answer, only its part is missing from this version (journal \"remarkable: task sheet mails not read: …\"). Since appointments, lists and mails change daily, with one of these parts a new version comes every morning from the morning sheet's time (as long as the sheet is not thrown away). The receipt shows \"gelesen\" instead of the sign ✎ the font does not have. mail.message is"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " now the one place that fetches a mail by its id (also for mail.read). Journal fixed words and numbers only (\"remarkable: task sheet quick note read | 2 line(s)\"). Self-tests test_rmpapier.TaskParts."
 },
 {
 "lang": "en",

@@ -145,6 +145,15 @@ function rmPlus(p){const at=new Date(Date.now()+864e5);at.setHours(9,0,0,0);cons
 // the calibration sheet and what was read from each sheet (control picture). Titles from the cloud only via textContent.
 const RMSTATE={an:['angekreuzt','ticked'],unklar:['unklar','unclear'],'zurück':['zurückgenommen','taken back'],leer:['leer','empty']};
 const RMDID={papierkorb:['in den Papierkorb gelegt','put into the trash'],archiv:['ins Archiv gelegt','put into the archive'],notizen:['bleibt liegen (Handschrift darauf)','stays (handwriting on it)']};
+// the Aufgabenblatt's parts (rmaufgaben.PARTS): each profile picks what comes on its sheet
+const RMTPART={termine:['Heutige Termine, die noch kommen: Passt, 30 min vorher erinnern oder Auf morgen. Der Kalender selbst bleibt, wie er ist.','Today’s appointments still to come: Fine, remind 30 min before or Tomorrow. The calendar itself stays as it is.'],
+  listen:['Offene Einträge der Aufgaben- und Einkaufsliste; ein Kreuz hakt sie dort ab.','Open entries of the task and shopping list; a tick checks them off there.'],
+  mails:['Ungelesene Mails der letzten zwei Tage: Gelesen (nur vom Blatt), Antwort entwerfen (Entwurf im Postfach, nie gesendet) oder Später.','Unread mail of the last two days: Read (off the sheet only), Draft a reply (a draft in the mailbox, never sent) or Later.'],
+  neu:['Linien zum Schreiben und ein Kreuz, was es ist: Erinnerung heute, Morgen, Aufgabe oder Einkauf. Braucht „Bilder und Scans lesen“.','Lines to write on and one tick for what it is: reminder today, tomorrow, task or shopping. Needs "Read pictures and scans".'],
+  anmerkung:['Freie Notiz; der Spark legt sie dir auf der nächsten Version zum Ankreuzen vor.','A free note; the Spark offers it to tick on the next version.']};
+const RMTOFF={termine:['Kommt erst, wenn der Kalender für dich freigegeben ist.','Comes once the calendar is released for you.'],
+  listen:['Kommt erst, wenn Aufgaben und Einkaufsliste für dich freigegeben sind.','Comes once tasks and shopping list are released for you.'],
+  mails:['Kommt erst, wenn E-Mail lesen für dich freigegeben ist.','Comes once reading e-mail is released for you.'],neu:['',''],anmerkung:['','']};
 function rmPaper(p){const E=icEl,w=E('div');
   const sw=[['rmpapier','rm_paper',['Gestaltete Blätter','Designed sheets'],['Morgenblatt, Rückblick, Zusammenfassungen, Antworten, Eingang und Anleitung als Blatt im Format deines Geräts, mit „Kann weg“ oben rechts; auf dem Morgenblatt Erinnerungen zum Abhaken.','Morning sheet, review, summaries, answers, inbox and guide as a sheet in your device’s format, with "Kann weg" at the top right; reminders to tick off on the morning sheet.']],
     ['rmordner','rm_folders',['Ordner nach Art','Folders by kind'],['Ein Ordner je Art unter „Spark“: Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. Die Anleitung liegt oben als Favorit.','One folder per kind below "Spark": Morgenblatt, Wochenrückblick, Besprechungen, Antworten, Web und Anhänge, Eingang, Archiv. The guide lies on top as a favourite.']],
@@ -167,6 +176,8 @@ function rmPaper(p){const E=icEl,w=E('div');
       const tb=E('button','b',tk.version?t('Neue Version jetzt','New version now'):t('Aufgabenblatt schicken','Send task sheet'));tb.type='button';tb.id='rmtasks';
       tb.onclick=async()=>{tb.disabled=true;try{const r=await (await api('/api/profile/remarkable/papier/aufgaben',{method:'POST'})).json();xmsg('rmmsg',t('Liegt in „','It is in "')+r.where+'“.');showRm()}catch(e){xmsg('rmmsg',e.message,true)}tb.disabled=false};
       const tr=E('div','row');tr.appendChild(tb);w.appendChild(tr);
+      const parts=E('div');parts.innerHTML=`<h4 class="ic-h4">${t('Was aufs Blatt kommt','What goes on the sheet')}</h4>`+tk.parts.map(x=>x.ok?xsw(x.pref,t(x.de,x.en),t(...RMTPART[x.k])):xinfo(t(x.de,x.en),t(...RMTOFF[x.k]))).join('');
+      xbind(parts,showRm);w.appendChild(parts);
       if(tk.undo.length)w.appendChild(icList(tk.undo.map(u=>{const b=E('button','b',t('Zurücknehmen','Take back'));b.type='button';
         b.onclick=async()=>{b.disabled=true;try{await api('/api/profile/remarkable/papier/aufgaben/zurueck',xjson('POST',{i:u.i}));showRm()}catch(e){b.disabled=false;xmsg('rmmsg',e.message,true)}};
         return icRow(u.text,t('vom Aufgabenblatt erledigt','done from the task sheet'),[b],[],true)})))}
