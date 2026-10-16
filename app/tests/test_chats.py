@@ -733,12 +733,27 @@ class Private(Base):
         self.assertTrue(a.get("/api/chats").json()["private"])
         g = TestClient(panel.app)                           # guests never
         self.assertIn(g.post("/api/chats/keys", json={"pub": pub}).status_code, (401, 403))
-        # the iPhone app's key (a device key) cannot add a key: the private half has to live in that browser
-        token = profiles.add_device("Chtestapp", uid_of(a), scope="app")
-        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Chtestapp")
+        # a device key other than the iPhone app's (a speaker, a watch) never adds a key: the private half lives on
+        # the device that reads; the iPhone app keeps its own in the Secure Enclave (ChatSec.swift)
+        token = profiles.add_device("Chtestgeraet2", uid_of(a))
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Chtestgeraet2")
         self.addCleanup(profiles.delete_device, did)
         k = TestClient(panel.app)
         self.assertIn(k.post("/api/chats/keys", json={"pub": pub}, headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403))
+        self.assertIn(k.get("/api/chats/keys", headers={profiles.DEVICE_HEADER: token}).status_code, (401, 403))
+        # the iPhone app's key: only while the iPhone app is on, and its entry is always an iPhone
+        token = profiles.add_device("Chtestapp", uid_of(a), scope="app")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Chtestapp")
+        self.addCleanup(profiles.delete_device, did)
+        h = {profiles.DEVICE_HEADER: token}
+        helpers.set_config(iphone=False)
+        self.assertEqual(k.post("/api/chats/keys", json={"pub": pub, "kind": "browser"}, headers=h).status_code, 503)
+        helpers.set_config(iphone=True)
+        self.addCleanup(helpers.set_config, iphone=False)
+        r = k.post("/api/chats/keys", json={"pub": pub, "kind": "browser"}, headers=h)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(next(x for x in r.json()["keys"] if x["id"] == r.json()["id"])["kind"], "iphone")
+        self.assertEqual(k.post("/api/chats/private", json={"to": uid_of(b)}, headers=h).status_code, 403)   # b has no device yet
 
     def test_a_key_is_a_real_point_and_counted(self):
         a = profile("Chquinn")

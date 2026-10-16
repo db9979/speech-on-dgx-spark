@@ -8210,6 +8210,956 @@
           }
         }
       }
+    },
+    "8 Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8 hours"
+          }
+        }
+      }
+    },
+    "immer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "always"
+          }
+        }
+      }
+    },
+    "nach 24 Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "after 24 hours"
+          }
+        }
+      }
+    },
+    "nach 7 Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "after 7 days"
+          }
+        }
+      }
+    },
+    "nach 90 Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "after 90 days"
+          }
+        }
+      }
+    },
+    "Nichts gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found."
+          }
+        }
+      }
+    },
+    "In Chats suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search chats"
+          }
+        }
+      }
+    },
+    "Neue Gruppe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New group"
+          }
+        }
+      }
+    },
+    "Nicht dabei, weil sie gerade keine Nachrichten von dir annehmen oder schon in zu vielen Gruppen sind: ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not added because they don't take messages from you right now or are in too many groups already: "
+          }
+        }
+      }
+    },
+    "Name der Gruppe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group name"
+          }
+        }
+      }
+    },
+    "Wer kommt in die Gruppe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who joins the group"
+          }
+        }
+      }
+    },
+    "Du bist Admin der Gruppe. Dabei sein kann nur, wer Nachrichten von dir annimmt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are the group's admin. Only people who take messages from you can join."
+          }
+        }
+      }
+    },
+    "Erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        }
+      }
+    },
+    "Ältere Nachrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older messages"
+          }
+        }
+      }
+    },
+    "Nachrichten verschwinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages disappear"
+          }
+        }
+      }
+    },
+    "Die Gruppe ist da. Schreib die erste Nachricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The group is ready. Write the first message."
+          }
+        }
+      }
+    },
+    "%@ schreibt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is typing …"
+          }
+        }
+      }
+    },
+    "schreibt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "typing …"
+          }
+        }
+      }
+    },
+    "%lld Personen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people"
+          }
+        }
+      }
+    },
+    "Chat-Infos: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat info: %@"
+          }
+        }
+      }
+    },
+    "Für alle zurücknehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take back for everybody?"
+          }
+        }
+      }
+    },
+    "Für alle zurücknehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take back for everybody"
+          }
+        }
+      }
+    },
+    "Die Nachricht verschwindet bei allen in diesem Chat. Dort steht dann, dass du sie zurückgenommen hast.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message disappears for everybody in this chat. It then says that you took it back."
+          }
+        }
+      }
+    },
+    "Gestern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        }
+      }
+    },
+    "Nachricht ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change message"
+          }
+        }
+      }
+    },
+    "Stumm: keine Mitteilungen aufs iPhone, nur für dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mute: no notifications to the iPhone, only for you."
+          }
+        }
+      }
+    },
+    "„Nachrichten verschwinden“: feste Gruppe ohne Admins.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Messages disappear\": fixed group without admins."
+          }
+        }
+      }
+    },
+    "„Nachrichten verschwinden“ gilt für alle in diesem Chat.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Messages disappear\" applies to everybody in this chat."
+          }
+        }
+      }
+    },
+    "„Nachrichten verschwinden“ stellen die Admins der Gruppe ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Messages disappear\" is set by the group's admins."
+          }
+        }
+      }
+    },
+    "Gelöschtes Profil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted profile"
+          }
+        }
+      }
+    },
+    "Admin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "admin"
+          }
+        }
+      }
+    },
+    "Zum Admin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make admin"
+          }
+        }
+      }
+    },
+    "Personen hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add people"
+          }
+        }
+      }
+    },
+    "Mitglieder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members"
+          }
+        }
+      }
+    },
+    "Nach links wischen: zum Admin machen oder entfernen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to make admin or remove."
+          }
+        }
+      }
+    },
+    "Diese Gruppe verwaltet ein anderer Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another Spark manages this group."
+          }
+        }
+      }
+    },
+    "Chat für mich leeren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear chat for me"
+          }
+        }
+      }
+    },
+    "Nicht mehr mitmachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop taking part"
+          }
+        }
+      }
+    },
+    "Gruppe verlassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave group"
+          }
+        }
+      }
+    },
+    "Chat-Infos": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat info"
+          }
+        }
+      }
+    },
+    "Alle, die Nachrichten von dir annehmen, sind schon dabei.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everybody who takes messages from you is in already."
+          }
+        }
+      }
+    },
+    "%lld Personen · alle, die bei „Nachricht an alle“ mitmachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld people · everybody who takes part in \"Message to everybody\""
+          }
+        }
+      }
+    },
+    "verwaltet auf einem anderen Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "managed on another Spark"
+          }
+        }
+      }
+    },
+    "Chat zu zweit mit jemandem auf einem anderen Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat for two with someone on another Spark"
+          }
+        }
+      }
+    },
+    "Privater Chat zu zweit, Ende-zu-Ende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private chat for two, end-to-end"
+          }
+        }
+      }
+    },
+    "Chat zu zweit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat for two"
+          }
+        }
+      }
+    },
+    "Chat für dich leeren? Die anderen behalten ihre Nachrichten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the chat for you? The others keep their messages."
+          }
+        }
+      }
+    },
+    "Gruppe verlassen? Zurück kommst du nur, wenn ein Admin dich wieder hinzufügt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave the group? You only come back when an admin adds you again."
+          }
+        }
+      }
+    },
+    "%@ aus der Gruppe nehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take %@ out of the group?"
+          }
+        }
+      }
+    },
+    "Leeren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        }
+      }
+    },
+    "Verlassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave"
+          }
+        }
+      }
+    },
+    "Zur Nachricht, auf die das antwortet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To the message this answers"
+          }
+        }
+      }
+    },
+    "über den Assistenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via the assistant"
+          }
+        }
+      }
+    },
+    "nicht zugestellt: der andere Spark war 7 Tage nicht erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not delivered: the other Spark was not reachable for 7 days"
+          }
+        }
+      }
+    },
+    "gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read"
+          }
+        }
+      }
+    },
+    "zugestellt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "delivered"
+          }
+        }
+      }
+    },
+    "gesendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sent"
+          }
+        }
+      }
+    },
+    "Reagieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "React"
+          }
+        }
+      }
+    },
+    "fügte hinzu:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "added:"
+          }
+        }
+      }
+    },
+    "nahm heraus:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "took out:"
+          }
+        }
+      }
+    },
+    "machte zum Admin:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "made admin:"
+          }
+        }
+      }
+    },
+    "nannte die Gruppe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "named the group"
+          }
+        }
+      }
+    },
+    "stellte ein: Nachrichten verschwinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "set: messages disappear"
+          }
+        }
+      }
+    },
+    "schaltete „Nachrichten verschwinden“ aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "switched off \"messages disappear\""
+          }
+        }
+      }
+    },
+    "Dieses neue Gerät aus den privaten Chats nehmen? Es kann sie danach nicht mehr lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take this new device out of private chats? It cannot read them afterwards."
+          }
+        }
+      }
+    },
+    "Nicht ich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not me"
+          }
+        }
+      }
+    },
+    "Privat (Ende-zu-Ende)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private (end-to-end)"
+          }
+        }
+      }
+    },
+    "Nur eure beiden Geräte können einen privaten Chat lesen, der Spark nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only your two people's devices can read a private chat, the Spark cannot."
+          }
+        }
+      }
+    },
+    "Neues Gerät": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New device"
+          }
+        }
+      }
+    },
+    "Verlauf deiner privaten Chats dorthin übertragen? Nur wenn dort derselbe Code steht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer the history of your private chats there? Only if it shows the same code: %@"
+          }
+        }
+      }
+    },
+    "Übertragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer"
+          }
+        }
+      }
+    },
+    "Übertragen: ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferred: "
+          }
+        }
+      }
+    },
+    "Verlauf übertragen: %lld Nachrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History transferred: %lld messages"
+          }
+        }
+      }
+    },
+    "Die Schlüssel für private Chats sind gerade nicht zu holen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The keys for private chats cannot be fetched right now."
+          }
+        }
+      }
+    },
+    "Ältere Nachrichten liegen auf deinen anderen Geräten. Öffne Chats auf einem davon und tippe „Übertragen“, wenn dort derselbe Code steht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older messages are on your other devices. Open Chats on one of them and tap \"Transfer\" when it shows the same code: %@"
+          }
+        }
+      }
+    },
+    "Damit du hier lesen und schreiben kannst, bekommt dieses iPhone einen eigenen Schlüssel. Er bleibt auf dem iPhone, der Spark bekommt nur seine öffentliche Hälfte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To read and write here, this iPhone gets its own key. It stays on the iPhone; the Spark only gets its public half."
+          }
+        }
+      }
+    },
+    "Dieses iPhone eintragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add this iPhone"
+          }
+        }
+      }
+    },
+    "Nur eure Geräte können diesen Chat lesen, der Spark nicht. Vergleicht diese Nummer einmal von Angesicht zu Angesicht oder am Telefon: Ist sie bei euch beiden gleich, sitzt niemand dazwischen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only your devices can read this chat, the Spark cannot. Compare this number once face to face or on the phone: if it is the same for both of you, nobody sits in between."
+          }
+        }
+      }
+    },
+    "Verglichen. Ändert sich ein Schlüssel, fragt die App neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compared. If a key changes, the app asks again."
+          }
+        }
+      }
+    },
+    "Ist bei uns beiden gleich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is the same for both of us"
+          }
+        }
+      }
+    },
+    "🔒 Ende-zu-Ende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔒 End-to-end"
+          }
+        }
+      }
+    },
+    "seit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "since"
+          }
+        }
+      }
+    },
+    "dieses iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this iPhone"
+          }
+        }
+      }
+    },
+    "Noch keines.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None yet."
+          }
+        }
+      }
+    },
+    "Deine Geräte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your devices"
+          }
+        }
+      }
+    },
+    "Nach links wischen: ein Gerät aus den privaten Chats nehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to take a device out of private chats."
+          }
+        }
+      }
+    },
+    "Dieses iPhone aus den privaten Chats nehmen? Es kann sie danach nicht mehr lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take this iPhone out of private chats? It cannot read them afterwards."
+          }
+        }
+      }
+    },
+    "Dieses Gerät aus den privaten Chats nehmen? Es kann neue Nachrichten danach nicht mehr lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take this device out of private chats? It cannot read new messages afterwards."
+          }
+        }
+      }
+    },
+    "Android-App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android app"
+          }
+        }
+      }
+    },
+    "Browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser"
+          }
+        }
+      }
+    },
+    "Der Spark hat den Schlüssel nicht angenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark did not take the key."
+          }
+        }
+      }
+    },
+    "Schlüssel fehlt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key missing."
+          }
+        }
+      }
+    },
+    "Dieses Gerät hat noch keinen Schlüssel für private Chats.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This device has no key for private chats yet."
+          }
+        }
+      }
+    },
+    "🔒 Auf diesem Gerät nicht lesbar (vor seinem Eintragen geschickt).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔒 Not readable on this device (sent before it was added)."
+          }
+        }
+      }
+    },
+    "Verschlüsseln ging nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypting failed."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -139,6 +139,7 @@ final class AppState: ObservableObject {
     }
 
     func unpair() {
+        ChatSec.shared.forget()   // before Store.forget: its keychain entry is named after the Spark and the profile
         Store.forget()
         Outbox.clear()
         AppleReminders.forget()

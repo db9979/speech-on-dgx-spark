@@ -548,7 +548,8 @@ def items(uid, cid, before="", now=None):
         why = "" if others and takes(others[0], uid) else why_not(others[0], uid) if others else "Diese Person gibt es nicht mehr."
     out = {"id": cid, "kind": c.get("kind", "one"), "title": _title(cid, c, uid, names),
            "items": [_public(x, cid, c, d, uid, names) for x in page], "more": len(shown) > len(page),
-           "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or [])} for u in c["members"]],
+           "members": [{"id": u, "name": names.get(u, ""), "admin": u in (c.get("admins") or []), **({"me": True} if u == uid else {})}
+                       for u in c["members"]],   # "me": the app knows no profile id of its own
            "admin": uid in (c.get("admins") or []), "vanish": int(c.get("vanish") or 0),
            "mute": _muted_until(c, uid, now), "reactions": list(REACTIONS),
            "can_send": (not why if c.get("kind") in ("priv", "far") or c.get("fixed") else

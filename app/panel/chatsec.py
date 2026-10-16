@@ -2,9 +2,9 @@
 "plus einzelne private Chats mit Ende-zu-Ende", picks 1a 2a 3a: a key per device, browser and Android app first,
 only two people).
 
-Every device (each browser, the Android app's page) makes its own key pair (ECDH P-256) the first time a private
-chat is used. The private key never leaves the device (the browser keeps it as a non-extractable WebCrypto key in
-IndexedDB); the Spark keeps only the public keys (users/<uid>/chatkeys.json) and the messages as the device sent
+Every device (each browser, the Android app's page, the iPhone app) makes its own key pair (ECDH
+P-256) the first time a private chat is used. The private key never leaves the device (the browser keeps it as a
+non-extractable WebCrypto key in IndexedDB, the iPhone app in the Secure Enclave, ChatSec.swift); the Spark keeps only the public keys (users/<uid>/chatkeys.json) and the messages as the device sent
 them: a box the Spark cannot open.
 
 A box (made and opened only in chatsec.js):
@@ -391,10 +391,11 @@ router = APIRouter()
 
 
 def _on(request: Request, prof=Depends(own_profile)):
-    """Only in the profile's own browser login (the Android app's page is one): the key lives in that browser."""
+    """Only in the profile's own browser login (the Android app's page is one) or the iPhone app (its key in the
+    Secure Enclave, ChatSec.swift): the private half lives on that device. Other device keys never."""
     import guard
-    if request.headers.get(profiles.DEVICE_HEADER):
-        raise HTTPException(403, "only in the profile's own browser login")
+    if request.headers.get(profiles.DEVICE_HEADER) and profiles.key_scope(request) != "app":
+        raise HTTPException(403, "only in the profile's own browser login or the iPhone app")
     if not admin_on():
         raise HTTPException(403, "private chats are turned off")
     if not usable(prof["id"]):
@@ -423,7 +424,9 @@ async def api_key_add(request: Request, prof=Depends(_on)):
     body = await json_body(request, 2048)
     await confirm_code(request, prof["id"], prof["name"])
     try:
-        kid = add_key(prof["id"], body.get("pub"), str(body.get("kind") or "browser"))
+        # the iPhone app's key always makes an iPhone entry, whatever the body says
+        kind = "iphone" if request.headers.get(profiles.DEVICE_HEADER) else str(body.get("kind") or "browser")
+        kid = add_key(prof["id"], body.get("pub"), kind)
     except (PermissionError, ValueError, OverflowError) as e:
         raise chats._err(e)
     guard.log("chat_key_added", name=prof["name"], uid=prof["id"])
