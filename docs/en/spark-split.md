@@ -38,7 +38,8 @@ The panel with all profiles, memory, chats, voices and settings moves in one go.
 5. **By hand afterwards** (also listed under Status → Update for 14 days):
    - in the router the forward of 31443 and the ports for calls (Features → Chats → "Calls when away") to the new computer,
    - in Home Assistant Wyoming to `<new-computer>:31003`,
-   - on every ESP32 speaker the new server address.
+   - on every ESP32 speaker the new server address,
+   - the reverse proxy (real certificate for the iPhone app, Android app and passkeys) to the new computer; if it runs on another device its address under Settings → Security → Reverse proxy stays right, if it ran on the DGX itself enter the new address there. Otherwise the iPhone app names the certificate in its "Spark not reachable" note.
 
 The apps stay signed in because the panel's certificate moves along. What is changed in the old panel between the backup and the switch does not move; best move while nobody is talking.
 

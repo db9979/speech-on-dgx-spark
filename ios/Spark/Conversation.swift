@@ -109,7 +109,7 @@ final class AppState: ObservableObject {
             paired = true
             message = nil
         } catch {
-            message = error.localizedDescription
+            message = NetWatch.certificate(error) ? NetWatch.certificateText(link.base) : error.localizedDescription
         }
     }
 

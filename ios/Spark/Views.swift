@@ -366,6 +366,7 @@ struct OfflineBanner: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label("Spark nicht erreichbar", systemImage: "wifi.exclamationmark").font(.subheadline.bold())
+            if talk.certBad { Text(verbatim: NetWatch.certificateText()).font(.footnote) }
             if talk.outbox.isEmpty {
                 Text("Geschriebene Fragen gehen raus, sobald er wieder da ist.").font(.footnote)
             } else {

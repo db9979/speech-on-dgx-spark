@@ -106,7 +106,9 @@ final class Conversation: ObservableObject {
     @Published var stored = false
     @Published var storing = false
     /// the Spark cannot be reached (no network, Spark or proxy down): typed questions wait in the outbox
-    @Published var unreachable = false { didSet { if unreachable != oldValue { offlineSoon() } } }
+    @Published var unreachable = false { didSet { if unreachable != oldValue { offlineSoon() }; if !unreachable { certBad = false } } }
+    /// the address answers with a certificate the iPhone does not trust (the band names the reverse proxy)
+    @Published var certBad = false
     /// the band „Spark nicht erreichbar“: only after 3 s without the Spark, so a short network change or the Spark's
     /// restart during an update does not make it blink and push the page down (plaene/ruhige-seiten.md)
     @Published private(set) var offlineShown = false
@@ -688,7 +690,7 @@ final class Conversation: ObservableObject {
             flushNext()
             return true
         } catch {
-            if NetWatch.offline(error) { unreachable = true }
+            if NetWatch.offline(error) { unreachable = true; certBad = NetWatch.certificate(error) }
             return false
         }
     }
@@ -769,6 +771,7 @@ final class Conversation: ObservableObject {
         if e is CancellationError || (e as? URLError)?.code == .cancelled { return }
         if NetWatch.offline(e) {
             unreachable = true
+            certBad = NetWatch.certificate(e)
             error = nil
         } else {
             error = e.localizedDescription

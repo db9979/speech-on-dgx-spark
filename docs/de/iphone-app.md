@@ -29,7 +29,7 @@ Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die 
 2. Am PC: den QR-Code mit der Kamera des iPhones scannen. Auf dem iPhone: **„in der App öffnen“** antippen.
 3. Die App fragt „Mit diesem Spark koppeln?“ und zeigt die Adresse. Nur bei deiner eigenen Adresse **Koppeln** tippen.
 
-Der Link gilt 10 Minuten und nur einmal. Die Adresse muss https mit echtem Zertifikat sein (dein Reverse Proxy, z. B. `https://speech.example.de`); das selbst signierte Zertifikat auf Port 31443 nimmt die App nicht an.
+Der Link gilt 10 Minuten und nur einmal. Die Adresse muss https mit echtem Zertifikat sein (dein Reverse Proxy, z. B. `https://speech.example.de`); das selbst signierte Zertifikat auf Port 31443 nimmt die App nicht an. Öffnest du das Panel zum Koppeln über Port 31443 oder eine IP-Adresse, sagt das Panel das gleich unter dem QR-Code. Nimmt das iPhone das Zertifikat später nicht an, nennt die App im Hinweis „Spark nicht erreichbar“ die Adresse und den Reverse Proxy: Nach einem Umzug des Panels (z. B. auf den Raspberry Pi) muss der Reverse Proxy auf den neuen Rechner zeigen; die App selbst behält ihre Adresse und ihren Schlüssel.
 
 **Mit Einladung** (seit V01.0.276): Öffnet jemand ohne Profil den Einladungs-Link auf dem iPhone und tippt „Lieber gleich in der iPhone-App“ an, legt die App mit Name und PIN das Profil an und ist sofort gekoppelt. Die App zeigt vorher die Adresse des Spark. Eine schon gekoppelte App nimmt keine Einladung an (erst entkoppeln), PIN-Links gehen nur im Browser.
 

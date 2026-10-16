@@ -56,6 +56,22 @@ final class NetWatch {
         let codes: [URLError.Code] = [.notConnectedToInternet, .cannotConnectToHost, .cannotFindHost, .timedOut,
                                       .networkConnectionLost, .dnsLookupFailed, .internationalRoamingOff,
                                       .dataNotAllowed, .secureConnectionFailed, .cannotLoadFromNetwork]
+        return codes.contains(u.code) || certificate(e)
+    }
+
+    /// The address answers, but not with a certificate the iPhone trusts: usually a reverse proxy that still points to
+    /// the old computer after a move, an expired certificate, or the Spark's own self-signed one (port 31443).
+    static func certificate(_ e: Error) -> Bool {
+        guard let u = e as? URLError else { return false }
+        let codes: [URLError.Code] = [.serverCertificateUntrusted, .serverCertificateHasBadDate,
+                                      .serverCertificateNotYetValid, .serverCertificateHasUnknownRoot,
+                                      .secureConnectionFailed]
         return codes.contains(u.code)
+    }
+
+    /// The text for a certificate the iPhone does not trust, naming the address.
+    static func certificateText(_ base: URL? = Store.baseURL) -> String {
+        let host = base?.host ?? ""
+        return String(localized: "Das Zertifikat von \(host) nimmt das iPhone nicht an. Zeigt dein Reverse Proxy auf den Rechner mit dem Panel (nach einem Umzug auf den neuen)? Das selbst signierte Zertifikat auf Port 31443 geht in der App nicht.")
     }
 }

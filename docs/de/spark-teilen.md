@@ -38,7 +38,8 @@ Das Panel mit allen Profilen, Gedächtnis, Chats, Stimmen und Einstellungen zieh
 5. **Von Hand danach** (steht auch unter Zustand → Update, 14 Tage lang):
    - im Router die Weiterleitung 31443 und die Ports für Anrufe (Funktionen → Chats → „Anrufe von unterwegs“) auf den neuen Rechner,
    - in Home Assistant Wyoming auf `<neuer-Rechner>:31003`,
-   - bei jedem ESP32-Lautsprecher die neue Server-Adresse.
+   - bei jedem ESP32-Lautsprecher die neue Server-Adresse,
+   - den Reverse Proxy (echtes Zertifikat für iPhone-App, Android-App und Passkeys) auf den neuen Rechner; läuft er auf einem anderen Gerät, bleibt seine Adresse unter Einstellungen → Sicherheit → Reverse Proxy richtig, lief er auf dem DGX selbst, dort die neue Adresse eintragen. Die iPhone-App nennt sonst im Hinweis „Spark nicht erreichbar“ das Zertifikat.
 
 Die Apps bleiben angemeldet, weil das Zertifikat des Panels mitzieht. Was zwischen Sicherung und Umschalten im alten Panel geändert wird, geht nicht mit; am besten umziehen, wenn gerade niemand spricht.
 

@@ -7920,6 +7920,16 @@
           }
         }
       }
+    },
+    "Das Zertifikat von %@ nimmt das iPhone nicht an. Zeigt dein Reverse Proxy auf den Rechner mit dem Panel (nach einem Umzug auf den neuen)? Das selbst signierte Zertifikat auf Port 31443 geht in der App nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone does not accept the certificate of %@. Does your reverse proxy point to the computer with the panel (after a move, to the new one)? The self-signed certificate on port 31443 does not work in the app."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.651** Nach dem Umzug: iPhone-App nennt Zertifikat und Reverse Proxy, Warnung beim Koppeln über 31443
 - **V01.0.650** ROT-FIX: Gerätename des Gehäuses im Englischen
 - **V01.0.649** ROT-FIX .646: Tests zählen den Terminal-Bereich mit und schalten den Gastzugang vorher aus
 - **V01.0.648** ROT-FIX: Speichern unter Funktionen geht wieder (Gehäuse-Felder)
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.644** Leistung messen zeigt den Speicher von tars; eigene Lautsprecher-Adresse ohne Fehlermeldung
 - **V01.0.643** Panel-Rechner (Raspberry Pi): die Installation führt nur den Rauchtest aus; pip nur von PyPI, ohne pip.conf
 - **V01.0.642** Fix: laufen die Modelle auf einem anderen Rechner, zeigt das Panel dessen Speicher (kein falsches „nur noch 7 GiB frei“ vom Pi)
-- **V01.0.641** Pi: auch eine von Hand eingetragene tars-Adresse wird aufs LLM-Tor umgestellt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

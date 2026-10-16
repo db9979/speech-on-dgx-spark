@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.651** · 2026-10-16 · Nach dem Umzug: iPhone-App nennt bei Zertifikatsfehler Adresse und Reverse Proxy, Panel warnt beim Koppeln über Port 31443 oder IP, Umzug-Hinweis nennt den Reverse Proxy
 - **V01.0.650** · 2026-10-16 · ROT-FIX .647: Gerätename „SunFounder Pironman 5“ bleibt im Englischen gleich (test_bedienung_hilfe)
 - **V01.0.649** · 2026-10-16 · ROT-FIX .646: Tests zählen den neuen Terminal-Bereich mit und schalten den Gastzugang vorher aus; Funktionen-Seite am Handy darf 5300 px hoch sein
 - **V01.0.648** · 2026-10-16 · ROT-FIX .647: Gehäuse-Felder Drehung und Seiten gehen als Zahl und Liste (Speichern unter Funktionen ging nicht), sudoers-Zeile des Modellwechsels wieder unverändert

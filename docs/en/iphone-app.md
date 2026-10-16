@@ -29,7 +29,7 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 2. On a PC: scan the QR code with the iPhone camera. On the iPhone: tap **"open in the app"**.
 3. The app asks "Pair with this Spark?" and shows the address. Tap **Pair** only for your own address.
 
-The link is valid for 10 minutes and once. The address must be https with a real certificate (your reverse proxy); the self-signed certificate on port 31443 is not accepted.
+The link is valid for 10 minutes and once. The address must be https with a real certificate (your reverse proxy); the self-signed certificate on port 31443 is not accepted. If you open the panel for pairing through port 31443 or an IP address, the panel says so right under the QR code. If the iPhone later does not accept the certificate, the app names the address and the reverse proxy in the "Spark not reachable" note: after the panel moves (e.g. to the Raspberry Pi) the reverse proxy must point to the new computer; the app keeps its address and its key.
 
 **With an invitation** (since V01.0.276): when someone without a profile opens the invitation link on the iPhone and taps "Rather straight in the iPhone app", the app creates the profile with name and PIN and is paired right away. The app shows the Spark's address first. An app that is already paired takes no invitation (unpair first); PIN links work only in the browser.
 
