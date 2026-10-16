@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.655** · 2026-10-16 · Start-Wächter: fehlt beim Laden nach einem Update ein Skript oder die erste Antwort des Spark, hängt die Seite nicht mehr bei „Zustand wird geladen …“, sondern zeigt ein Band und lädt sich neu, sobald der Spark antwortet
 - **V01.0.654** · 2026-10-16 · Chats in der iPhone-App auf Panel-Stand: live mit „schreibt …“, Reaktionen, Antworten, Ändern, Zurücknehmen, Gruppen, Suche, Chat-Infos; private Chats (Ende-zu-Ende) mit Schlüssel im Secure Enclave, Sicherheitsnummer und Verlauf übertragen
 - **V01.0.653** · 2026-10-16 · Bilder ändern (Stufe 2a, Funktionen → Bilder ändern, standardmäßig aus): Foto im Chat mit Änderungswunsch („Mach den Himmel blau“), kurze Nachbesserung danach oder Ich → Bilder „Ändern“ und „Eigenes Foto hochladen“; das Panel wählt das Bild nach fester Regel, nie das Modell; zusätzliche Wortliste (Ausweise, Unterschriften, Kennzeichen, Ausziehen, Verletzungen, Gesichter tauschen), Bildprüfung, Kennzeichnung „KI-bearbeitet“; das Original bleibt
 - **V01.0.652** · 2026-10-16 · Anrufe und Videoanrufe in der iPhone-App: Apples Anruf-Bildschirm (CallKit), Klingeln per VoIP-Push auch bei geschlossener App, WebRTC; App-Schlüssel erreicht die Anruf-Wege

@@ -330,5 +330,72 @@ class Browser(unittest.TestCase):
         self.assertLessEqual(await pg.evaluate("document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth"), 0, what)
 
 
+class StartwaechterStatic(unittest.TestCase):
+    """Start-Wächter (Dominik 16.10.2026: after updates the page stood at „Zustand wird geladen …“ for good)."""
+
+    def test_guard_loads_first_and_start_reports_to_it(self):
+        html = read("index.html")
+        first = re.search(r'<script src="/static/js/([a-z0-9\-]+)\.js"', html).group(1)
+        self.assertEqual(first, "theme")   # first of all scripts: it also sees base.js or start.js missing
+        self.assertLess(html.index("/static/js/theme.js"), html.index("</head>"))
+        st, th = read("js", "start.js"), read("js", "theme.js")
+        self.assertEqual(st.count("startPage().then("), 1)
+        self.assertIn("sparkBootDone", st)
+        self.assertIn("sparkBootFail", st)
+        for name in ("window.sparkBootDone=", "window.sparkBootFail=", 'addEventListener("error"', 'addEventListener("load"'):
+            self.assertIn(name, th)
+        # no answer from the Spark: never an invented admin page
+        self.assertNotIn("{admin:true}", st)
+        self.assertNotRegex(st, r"\(async\(\)=>\{let who=")
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Startwaechter(unittest.TestCase):
+    """A page loaded while the Spark restarts: a script or the first who-am-I gets the proxy's 502. The page shows the
+    band and loads itself again once the Spark answers (waits for states, never for a fixed time)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    def broken_start(self, pattern):
+        async def run():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                # the service worker would answer the page's requests itself, past the test's routes
+                ctx = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE",
+                                           service_workers="block", bypass_csp=True)
+                pg = await ctx.new_page()
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY)
+                down = {"on": True}
+
+                async def proxy(route):
+                    if down["on"]:
+                        await route.fulfill(status=502, content_type="text/html", body="<html>502 Bad Gateway</html>")
+                    else:
+                        await route.continue_()
+                await pg.route(pattern, proxy)
+                await pg.reload()
+                await pg.wait_for_selector("#bootband:not([hidden])")
+                self.assertIn("nicht vollständig", await pg.text_content("#bootband"))
+                # before: no version, no menu, Zustand's placeholders for good; now nothing invented meanwhile
+                self.assertEqual(await pg.text_content("#ver"), "")
+                down["on"] = False   # the Spark is back: the page loads itself again, all of it
+                await pg.wait_for_function(PAGE_READY + "&&!document.getElementById('bootband')", timeout=20000)
+                self.assertIsNone(await pg.evaluate("sessionStorage.getItem('boottry')"))
+                await br.close()
+        asyncio.run(run())
+
+    def test_a_script_missing(self):
+        self.broken_start("**/static/js/me.js*")
+
+    def test_no_answer_from_whoami(self):
+        self.broken_start("**/api/whoami")
+
+
 if __name__ == "__main__":
     unittest.main()
