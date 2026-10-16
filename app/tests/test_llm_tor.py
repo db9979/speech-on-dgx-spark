@@ -246,6 +246,9 @@ class Start(unittest.TestCase):
         self.assertEqual(modelle.venv(kat()["qwen38-27b-nvfp4"]), "llm")
         a = modelle.vllm_args(m, revision="b" * 40)
         self.assertEqual(a[a.index("--kv-cache-dtype") + 1], "fp8")
+        # the repository holds bf16 weights (73.6 GiB on tars 2026-10-16, "Available KV cache memory: -14.88 GiB"
+        # at 46 %): vLLM quantises them to FP8 while loading, about half of that
+        self.assertEqual(a[a.index("--quantization") + 1], "fp8")
         self.assertEqual(a[a.index("--tool-call-parser") + 1], "kolibri1")
         self.assertNotIn("--limit-mm-per-prompt.image", a)
         self.assertNotIn("trust", " ".join(a))

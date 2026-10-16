@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.715** `modelle messen` klappt neben dem eigenen Sprachmodell; Kolibri-1 lädt als FP8
 - **V01.0.714** Musik: „Musik stück“ und „… Track“ werden erkannt, nach einer Websuche macht der eigene Wunsch das Lied mit den Akkorden von davor
 - **V01.0.713** Aufräumen: die Modellseite einer Antwort liegt jetzt in einer eigenen Datei, chat.py wird um 450 Zeilen kürzer
 - **V01.0.712** iPhone-App: Anrufen ging gar nicht („Anruf ging nicht.“), weil die App sich erst beim ersten eingehenden Anruf bei Apples CallKit anmeldete; jetzt beim Start und Wählen. Laufende und klingelnde Anrufe stehen als Verbindung auf Live, Monitoring und der Steuerzentrale (nur die Anzahl)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.708** Telefon hinter einem Router mit NAT: der Spark lernt die Adresse, die die Anlage sieht, und sagt, welche Ports weiterzuleiten sind
 - **V01.0.707** Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App
 - **V01.0.706** CarPlay zeigt das Gesicht des Profils, auch wenn nur das Auto die App startet
-- **V01.0.705** iPhone-App: Anrufe klingeln auch ohne Apples VoIP-Push, solange die App läuft (sie hört die Nachrichten des Spark selbst mit); vorher klingelte ein iPhone nur über den Push
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

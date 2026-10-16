@@ -368,6 +368,14 @@ class Kommando(unittest.TestCase):
         s = self.sh[self.sh.index(name + "() {"):]
         return s[:s.index("\n}\n")]
 
+    def test_the_port_is_checked_after_the_own_model_stopped(self):
+        # the own language model's engine has the measuring port (31016): checked before it stopped, every
+        # measurement next to it ended with "port belegt" (tars 2026-10-16)
+        b = self.body("cmd_messen_intern")
+        self.assertEqual(modelle.MESS_PORT, modelle.ROLLEN["llm"][2])
+        self.assertLess(b.index('systemctl stop "${MESS_QWEN[@]}"'), b.index("port belegt"))
+        self.assertIn("speech-spark-llm.service", b[:b.index("port belegt")])
+
     def test_wired(self):
         self.assertIn("modelle) shift; cmd_modelle", self.sh)
         self.assertIn("as_panel_user ../modelle.py", self.sh)

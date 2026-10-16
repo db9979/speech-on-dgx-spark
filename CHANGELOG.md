@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.715** · 2026-10-16 · `speech-spark modelle messen` misst auch neben dem eigenen Sprachmodell (vorher „messung abgelehnt port belegt“, weil dessen Engine den Messport hatte) und sagt richtig, dass es das laufende Sprachmodell stoppt; Kolibri-1 lädt als FP8 (bf16-Gewichte passten nicht in den Anteil)
 - **V01.0.714** · 2026-10-16 · Musik machen nach einer Websuche (Dominik, OP-XY und House-Akkorde): „Musik stück“, „Musik Track“, „House Track“, „Musiktrack“, „Beat“ zählen als Wunsch; ein eigener Musikwunsch ist nach Text von außen nicht gesperrt (extras.offer own, Mail und Notaus sperren weiter), die Antwort davor bleibt bis zu 7 Nachrichten als Daten dabei (musik.BACK), Taten-Prüfung kennt „ich lege los mit einem Track“
 - **V01.0.713** · 2026-10-16 · Aufräumen chat.py: die Modellseite einer Antwort in eigene Datei chat_modell.py
 - **V01.0.712** · 2026-10-16 · iPhone-App: Anrufen ging gar nicht („Anruf ging nicht.“), weil die App sich erst beim ersten eingehenden Anruf bei Apples CallKit anmeldete; jetzt beim Start und Wählen. Laufende und klingelnde Anrufe stehen als Verbindung auf Live, Monitoring und der Steuerzentrale (nur die Anzahl)

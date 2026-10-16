@@ -17,7 +17,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [eigen-…] [--yes]  measure catalog models; qwen38 pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
@@ -386,7 +386,6 @@ cmd_messen_intern() {
     fi
   done
   [ "${#ids[@]}" -gt 0 ] || { echo "modelle: messung ende nichts geladen"; return 1; }
-  if ss -Hltn "sport = :$MESS_PORT" | grep -q .; then echo "modelle: messung abgelehnt port belegt"; return 1; fi
   minutes=$(( ${#ids[@]} * 25 + 10 )); [ "$minutes" -gt 240 ] && minutes=240
   if can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
     as_panel_user wartung.py llm "$minutes" && MESS_PAUSE=1 || echo "modelle: messung ohne wartungspause"
@@ -396,10 +395,13 @@ cmd_messen_intern() {
   trap mess_restore EXIT
   trap 'exit 1' INT TERM
   if [ "${#MESS_QWEN[@]}" -gt 0 ]; then
-    echo "modelle: qwen38 aus (${#MESS_QWEN[@]} dienste), frei vorher $(mem_gib) GiB"
+    echo "modelle: sprachmodell aus (${#MESS_QWEN[@]} dienste), frei vorher $(mem_gib) GiB"
     systemctl stop "${MESS_QWEN[@]}" || true
   fi
   mem_settle
+  # only now: the own language model's engine listens on the same port (31016) until it is stopped above; checked
+  # before, every measurement next to the own model ended with "port belegt" (tars 2026-10-16)
+  if ss -Hltn "sport = :$MESS_PORT" | grep -q .; then echo "modelle: messung abgelehnt port belegt"; return 1; fi
   echo "modelle: frei zum messen $(mem_gib) GiB"
   for i in "${!ids[@]}"; do
     rc=0; mess_engine "${ids[$i]}" "${commits[$i]}" "" || rc=$?
@@ -627,7 +629,7 @@ cmd_modelle() {
       systemctl is-active -q speech-spark-update && die "an update is running; measure afterwards"
       ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [eigen-…] [--yes]"
       echo "Messen: $ids"
-      echo "Das lädt fehlende Modelle, stoppt qwen38 für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
+      echo "Das lädt fehlende Modelle, stoppt das laufende Sprachmodell (eigenes oder qwen38) für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
         [ -t 0 ] || die "messen asks first; run it in a terminal (or add --yes)"
         local a; read -r -p "Weiter? [j/N] " a

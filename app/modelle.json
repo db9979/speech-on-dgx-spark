@@ -73,16 +73,16 @@
       "id": "kolibri-1-nvfp4",
       "art": "llm",
       "name": {
-        "de": "Kolibri-1 NVFP4 (Aleph Alpha, für Deutsch)",
-        "en": "Kolibri-1 NVFP4 (Aleph Alpha, built for German)"
+        "de": "Kolibri-1 (Aleph Alpha, für Deutsch, FP8 beim Laden)",
+        "en": "Kolibri-1 (Aleph Alpha, built for German, FP8 when loaded)"
       },
       "engine": "vllm",
       "repo": "Aleph-Alpha/Kolibri-1",
       "revision": "",
       "lizenz": "Apache-2.0",
       "gewerblich": true,
-      "platte_gb": 45,
-      "need_gib": 55,
+      "platte_gb": 79,
+      "need_gib": 52,
       "gemessen": false,
       "anteil": 0.46,
       "kontext": 65536,
@@ -91,6 +91,7 @@
       "vllm": {
         "reasoning_parser": "kolibri1",
         "tool_call_parser": "kolibri1",
+        "quantization": "fp8",
         "kv_cache_dtype": "fp8",
         "max_seqs": 8,
         "venv": "kolibri"
