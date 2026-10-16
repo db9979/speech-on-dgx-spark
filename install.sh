@@ -727,7 +727,9 @@ fi
 ACECPP_COMMIT=$(sed -n 's/^ACECPP_COMMIT = "\([0-9a-f]\{40\}\)"$/\1/p' "$INSTALL_FROM/app/musikmodell.py")
 if [ "$WITH_MUSIK" = 1 ]; then
   [ -n "$ACECPP_COMMIT" ] || die "app/musikmodell.py names no acestep.cpp commit"
-  if [ -L "$PREFIX/acestep" ] || [ "$(cat "$PREFIX/acestep/.built" 2>/dev/null)" != "$ACECPP_COMMIT" ] || [ ! -x "$PREFIX/acestep/bin/ace-server" ]; then
+  # ggml is linked in (static): with shared libraries ace-server looked for libggml*.so in the build folder it was
+  # moved away from (V01.0.672); the marker names the static build, so an older shared build is built again
+  if [ -L "$PREFIX/acestep" ] || [ "$(cat "$PREFIX/acestep/.built" 2>/dev/null)" != "$ACECPP_COMMIT static" ] || [ ! -x "$PREFIX/acestep/bin/ace-server" ]; then
     say "Building the music engine (acestep.cpp ${ACECPP_COMMIT:0:12}, CUDA; takes a while once)"
     command -v cmake >/dev/null || apt_wait install -y -q cmake || die "cmake could not be installed"
     NVCC=$(command -v nvcc || echo /usr/local/cuda/bin/nvcc)
@@ -738,14 +740,15 @@ if [ "$WITH_MUSIK" = 1 ]; then
     git -C "$PREFIX/acestep.new" checkout --quiet "$ACECPP_COMMIT" || die "acestep.cpp has no commit $ACECPP_COMMIT"
     git -C "$PREFIX/acestep.new" submodule update --quiet --init ggml || die "could not fetch ggml for acestep.cpp"
     nice -n 10 cmake -S "$PREFIX/acestep.new" -B "$PREFIX/acestep.new/build" -DCMAKE_BUILD_TYPE=Release \
-      -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=121 -DCMAKE_CUDA_COMPILER="$NVCC" >/dev/null \
+      -DBUILD_SHARED_LIBS=OFF -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=121 -DCMAKE_CUDA_COMPILER="$NVCC" >/dev/null \
       || die "cmake for the music engine failed"
     nice -n 10 cmake --build "$PREFIX/acestep.new/build" --target ace-server -j "$(nproc)" >/dev/null \
       || die "building the music engine failed"
     built=$(find "$PREFIX/acestep.new/build" -type f -name ace-server -perm -u+x | head -1)
     [ -n "$built" ] || die "the build left no ace-server"
     install -d -m 755 "$PREFIX/acestep.new/bin" && install -m 755 "$built" "$PREFIX/acestep.new/bin/ace-server"
-    printf '%s\n' "$ACECPP_COMMIT" >"$PREFIX/acestep.new/.built"
+    ! ldd "$PREFIX/acestep.new/bin/ace-server" | grep -q "not found" || die "the music engine misses a library (ldd)"
+    printf '%s\n' "$ACECPP_COMMIT static" >"$PREFIX/acestep.new/.built"
     rm -rf -- "$PREFIX/acestep" && mv -- "$PREFIX/acestep.new" "$PREFIX/acestep"
   fi
   if [ "$DOWNLOAD" = 1 ]; then

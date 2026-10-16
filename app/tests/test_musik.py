@@ -23,6 +23,7 @@ from fastapi import HTTPException  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 import bedarf  # noqa: E402
+import bildmodell  # noqa: E402
 import common  # noqa: E402
 import modelle  # noqa: E402
 import musik_server  # noqa: E402
@@ -223,6 +224,26 @@ class Service(unittest.TestCase):
         self.assertIn("musik", [x["art"] for x in modelle.aktiv(cfg, 120)])
 
 
+class Folder(unittest.TestCase):
+    def test_files_are_looked_for_in_the_music_folder(self):
+        """V01.0.672: missing() asked bildmodell.path without a folder and looked in the picture folder, so a complete
+        install said "nicht vollständig installiert"."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as music, tempfile.TemporaryDirectory() as pictures:
+            engine = os.path.join(music, "ace-server")
+            with open(engine, "w") as f:
+                f.write("#!/bin/sh\n")
+            os.chmod(engine, 0o755)
+            with mock.patch.object(musikmodell, "FOLDER", music), mock.patch.object(musikmodell, "ENGINE", engine), \
+                    mock.patch.object(bildmodell, "FOLDER", pictures):
+                self.assertEqual(len(musikmodell.missing("2b")), 4)
+                for f in musikmodell.files("2b"):
+                    with open(os.path.join(music, f.name), "wb") as out:
+                        out.truncate(f.size)   # sparse: the size counts, the hash is checked when fetched
+                self.assertEqual(musikmodell.missing("2b"), [])
+                self.assertTrue(musikmodell.installed("2b"))
+
+
 class Install(unittest.TestCase):
     """install.sh: the music service only on request, the engine built from the pinned commit, its unit like the
     picture service (no memory cap on unified memory, the first one the kernel may stop)."""
@@ -236,6 +257,11 @@ class Install(unittest.TestCase):
         self.assertIn('WITH_MUSIK=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg \'.music.enabled // false\')" = true ] && WITH_MUSIK=1', sh)
         self.assertIn('WITH_BILD=0; WITH_MUSIK=0;', sh)
         self.assertIn('checkout --quiet "$ACECPP_COMMIT"', sh)
+        # V01.0.672: ggml linked in, the moved engine finds every library, an older shared build is built again
+        self.assertIn("-DBUILD_SHARED_LIBS=OFF -DGGML_CUDA=ON", sh)
+        self.assertIn('ldd "$PREFIX/acestep.new/bin/ace-server" | grep -q "not found"', sh)
+        self.assertIn('!= "$ACECPP_COMMIT static" ]', sh)
+        self.assertIn('printf \'%s\\n\' "$ACECPP_COMMIT static"', sh)
         unit = sh[sh.index("speech-spark-musik.service <<EOF"):]
         unit = unit[:unit.index("\nEOF")]
         self.assertIn("OOMScoreAdjust=1000", unit)

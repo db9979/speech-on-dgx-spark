@@ -70,8 +70,9 @@ def installed(v, folder=None):
 
 
 def missing(v, folder=None):
-    """What is not there yet: names of files, and "engine" when ace-server is not built."""
-    out = [f.name for f in files(v) if file_size(path(f, folder)) != f.size]
+    """What is not there yet: names of files, and "engine" when ace-server is not built. bildmodell.path falls back to
+    the picture folder, so the music folder is always passed on (V01.0.672: the files were looked for there)."""
+    out = [f.name for f in files(v) if file_size(path(f, folder or FOLDER)) != f.size]
     if not os.access(ENGINE, os.X_OK):
         out.append("engine")
     return out
