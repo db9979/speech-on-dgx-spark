@@ -195,6 +195,15 @@ class Service(unittest.TestCase):
         self.assertEqual(cmd[cmd.index("--host") + 1], "127.0.0.1")
         self.assertNotIn("--adapters", cmd)
 
+    def test_engine_gets_only_options_it_knows(self):
+        """ace-server ends with its help and code 1 on an unknown option ("--mp3-bitrate" on tars, 2026-10-16):
+        every option is one of its `--help` at musikmodell.ACECPP_COMMIT."""
+        known = {"--models", "--adapters", "--device", "--keep-loaded", "--vae-chunk", "--vae-overlap", "--host",
+                 "--port", "--max-batch", "--max-seq", "--no-fsm", "--no-fa", "--no-batch-cfg", "--clamp-fp16"}
+        self.assertEqual(musikmodell.ACECPP_COMMIT[:7], "6013134", "a new commit: compare its --help with `known`")
+        cmd = musik_server.Engine().command()
+        self.assertEqual([a for a in cmd if a.startswith("--") and a not in known], [])
+
     def test_models_are_pinned(self):
         for v in musikmodell.VARIANTS:
             for f in musikmodell.files(v):

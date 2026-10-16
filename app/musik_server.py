@@ -70,8 +70,10 @@ class Engine(OnDemand):
 
     def command(self):
         c = cfg()
+        # only options ace-server knows (it prints its help and ends with code 1 on any other, V01.0.679: an
+        # "--mp3-bitrate" did that); the bitrate goes with every song (mp3_bitrate in request_body)
         return [musikmodell.ENGINE, "--models", musikmodell.FOLDER, "--host", "127.0.0.1", "--port",
-                str(int(c["engine_port"])), "--mp3-bitrate", str(musikmodell.MP3_KBPS), "--max-batch", "1",
+                str(int(c["engine_port"])), "--max-batch", "1",
                 "--keep-loaded"]   # all modules stay while the engine runs; the idle stop frees them
 
     async def start(self):
