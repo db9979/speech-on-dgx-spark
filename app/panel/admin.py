@@ -343,12 +343,18 @@ def _status(cfg, healths):
         services[name] = {"unit": unit, "state": unit_state(unit), "enabled": cfg[name]["enabled"],
                           "port": cfg[name]["port"], "estimate_gib": estimate_gib(cfg[name]["model"]),
                           "health": healths.get(name)}
-    total_gib = psutil.virtual_memory().total / 2**30
+    sysd = system_stats()
+    # the engines' shares are of the memory of the computer they run on: with the models on tars the Pi's 8 GB read as
+    # "geschätzt ~2.2 GiB" while the TTS engine reserved ~11.8 (2026-10-16); None (no estimate) while tars does not answer
+    total_gib = sysd["mem_total_gib"] if sysd.get("mem_von") == "modell-rechner" else psutil.virtual_memory().total / 2**30
+
+    def share(frac):
+        return round(frac * total_gib + 1.5, 1) if total_gib else None
     a = cfg["asr"]
     if a.get("recognizer") == "parakeet":
         services["asr"]["estimate_gib"] = modelle.eintrag("parakeet-primeline")["need_gib"]  # CPU model, no engine
     elif a.get("backend") == "vllm":
-        gib = round(a["engine_mem"] * total_gib + 1.5, 1)
+        gib = share(a["engine_mem"])
         services["asr"]["backend"] = "vllm"
         services["asr"]["estimate_gib"] = gib
         services["asr"]["engines"] = [
@@ -356,9 +362,9 @@ def _status(cfg, healths):
              "model": a["model"], "port": a["engine_port"], "estimate_gib": gib}]
     t = cfg["tts"]
     if t.get("backend") == "vllm-omni":
-        per_engine = round((t["engine_mem_talker"] + t["engine_mem_code2wav"]) * total_gib + 1.5, 1)
+        per_engine = share(t["engine_mem_talker"] + t["engine_mem_code2wav"])
         services["tts"]["backend"] = "vllm-omni"
-        services["tts"]["estimate_gib"] = per_engine * (2 if t.get("voicedesign_enabled") else 1)
+        services["tts"]["estimate_gib"] = per_engine and round(per_engine * (2 if t.get("voicedesign_enabled") else 1), 1)
         services["tts"]["engines"] = [
             {"name": "tts-engine", "kind": "vllm-omni", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
              "model": t["model"], "port": t["engine_port"], "estimate_gib": per_engine}]
@@ -367,7 +373,7 @@ def _status(cfg, healths):
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
     qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": frac} for u, frac in _qwen38_lanes()]
-    return {"time": time.time(), "system": system_stats(), "gpu": steuer.gpu(),
+    return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
             "rechner": rechnerblick.fuer_status()}   # both computers when the models run apart (Zustand → Monitoring → Rechner)

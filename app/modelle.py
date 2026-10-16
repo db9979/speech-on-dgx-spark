@@ -15,7 +15,8 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
-[--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh).
+[--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh) · signatur llm|sehen
+(install.sh).
 
 Stage E2 starts the own language model: speech-spark-llm (engine.sh llm) and, on demand, speech-spark-sehen
 (engine.sh sehen) run `vllm serve` with start_args(): config llm.modell / llm.sehen_modell, a pinned commit only
@@ -410,6 +411,15 @@ def rolle(art, cfg, kat=None):
     if m["engine"] != "vllm" or m["art"] != art or isinstance(port, bool) or not isinstance(port, int) or port == MESS_PORT and art != "llm":
         raise Fehler("art")
     return m, port
+
+
+def signatur(art, cfg, messung=None, kat=None):
+    """What speech-spark-llm / -sehen start from, as 16 hex: its catalog entry (own entries included), port and pinned
+    commit. install.sh restarts the engine only when this changed, so a new music or image model in the catalog does
+    not load the language model again (that load took many minutes, tars 2026-10-16)."""
+    m, port = rolle(art, cfg, kat)
+    roh = json.dumps([m, port, fest_revision(m, messung)], sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(roh.encode()).hexdigest()[:16]
 
 
 def start_args(art, cfg, messung=None, kat=None, hf_home=None):
@@ -1221,6 +1231,9 @@ def cli(args, log=print):
         if cmd == "kompilieren":
             for k, v in KOMPILIEREN.items():
                 log(f"{k}={v}")
+            return 0
+        if cmd == "signatur":
+            log(signatur(args[1], load_config()))
             return 0
         if cmd == "start-args":
             for a in start_args(args[1], load_config()):

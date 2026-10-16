@@ -71,7 +71,9 @@ export PATH="$VENV/bin:/usr/local/cuda/bin:$PATH"
 # One engine at a time: vLLM sizes its KV cache from device-wide memory use while it starts,
 # so an engine loading at the same moment eats into this one's budget (seen on GB10:
 # "Available KV cache memory: 0.0 GiB"). Order: llm, asr, main, design, sehen; each waits for the ones
-# before it that are running but not ready yet, at most 20 minutes.
+# before it that are running, stopping or restarting but not ready yet, at most an hour (the own language model
+# compiles its kernels after a restart and loads for well over 20 minutes; a TTS engine that stopped waiting then
+# failed with "No available memory for the cache blocks" every 30 seconds, tars 2026-10-16).
 others=()
 own_llm="speech-spark-llm $(jq -r '.llm.engine_port // 31016' "$CONFIG")"
 case "$ROLE" in
@@ -84,9 +86,9 @@ case "$ROLE" in
 esac
 for o in "${others[@]}"; do
   read -r ounit oport <<<"$o"
-  for _ in $(seq 1 240); do
+  for _ in $(seq 1 720); do
     # also wait through the other engine's restart pause, so its next start does not overlap ours
-    case "$(systemctl is-active "$ounit" 2>/dev/null)" in active|activating) ;; *) break ;; esac
+    case "$(systemctl is-active "$ounit" 2>/dev/null)" in active|activating|deactivating|reloading) ;; *) break ;; esac
     curl -fs -o /dev/null "http://127.0.0.1:$oport/health" && break
     state loading "waiting for $ounit to finish starting"
     sleep 5

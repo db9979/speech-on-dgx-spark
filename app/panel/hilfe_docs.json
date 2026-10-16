@@ -6869,7 +6869,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Sprachmodell: eigenes oder dgx-spark-qwen38",
 "title": "Sprachmodell: eigenes oder dgx-spark-qwen38",
-"text": "dem knapp, beendet das System zuerst das Panel (OOMScoreAdjust=900), dann die Speech-Dienste (500), nicht die LLM-Lane und nicht sshd (siehe „Vorrang für Sprache“). - Speech startet nach den qwen38-Lanes, damit diese ihren festen Anteil zuerst belegen. - Die Engines starten nacheinander, weil vLLM beim Start den freien Speicher misst und parallele Starts sich gegenseitig den Anteil wegnehmen. - Lane-Wechsel: Wechselst du im Cockpit auf flash, bleiben die schon geladenen Speech-Modelle im Speicher. Mit 1.7B-Modellen kann das zu knapp werden. Dann vorher ASR und TTS im Panel stoppen oder auf 0.6B umstellen. - GPU-Zeit: ASR und TTS teilen sich die GPU mit dem LLM. Während einer Transkription oder Sprachausgabe wird das LLM etwas langsamer."
+"text": "dem knapp, beendet das System zuerst das Panel (OOMScoreAdjust=900), dann die Speech-Dienste (500), nicht die LLM-Lane und nicht sshd (siehe „Vorrang für Sprache“). - Speech startet nach den qwen38-Lanes, damit diese ihren festen Anteil zuerst belegen. - Die Engines starten nacheinander, weil vLLM beim Start den freien Speicher misst und parallele Starts sich gegenseitig den Anteil wegnehmen. Reihenfolge: eigenes Sprachmodell, Spracherkennung, Sprachausgabe, VoiceDesign, Bildverständnis. Jede wartet, solange eine vor ihr stoppt, neu startet oder lädt, höchstens eine Stunde (engine.sh). install.sh startet eine Engine nur neu, wenn sich ihre Einstellungen geändert haben oder sie nicht läuft, auch bei einem Lauf von Hand, und das Sprachmodell zuerst (seit V01.0.680). Vorher startete ein Lauf wie install.sh --musik 2b alle Engines neu, das Sprachmodell zuletzt. Es lud dann, während die Sprachausgabe ihren Speicher maß, und die scheiterte alle 30 Sekunden mit „No available memory for the cache blocks“. Gezielt neu starten: sudo systemctl restart speech-spark-<engine>. - Lane-Wechsel: Wechselst du im Cockpit auf flash, bleiben die schon geladenen Speech-Modelle im Speicher. Mit 1.7B-Mode"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Sprachmodell: eigenes oder dgx-spark-qwen38",
+"title": "Sprachmodell: eigenes oder dgx-spark-qwen38",
+"text": "llen kann das zu knapp werden. Dann vorher ASR und TTS im Panel stoppen oder auf 0.6B umstellen. - GPU-Zeit: ASR und TTS teilen sich die GPU mit dem LLM. Während einer Transkription oder Sprachausgabe wird das LLM etwas langsamer."
 },
 {
 "lang": "de",
@@ -13757,7 +13765,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Language model: own or dgx-spark-qwen38",
 "title": "Language model: own or dgx-spark-qwen38",
-"text": "services (500), not the LLM lane and not sshd (see \"Speech first\"). - Speech starts after the qwen38 lanes, so they take their fixed share first. - Engines start one after another, because vLLM measures free memory at start-up and parallel starts take each other's share. - Lane switch: if you switch to flash in the cockpit, already loaded speech models stay in memory. With 1.7B models that can get too tight. Stop ASR and TTS in the panel first or switch them to 0.6B. - GPU time: ASR and TTS share the GPU with the LLM. During a transcription or speech request the LLM gets a little slower."
+"text": "services (500), not the LLM lane and not sshd (see \"Speech first\"). - Speech starts after the qwen38 lanes, so they take their fixed share first. - Engines start one after another, because vLLM measures free memory at start-up and parallel starts take each other's share. Order: own language model, speech recognition, speech output, VoiceDesign, image understanding. Each waits while one before it stops, restarts or loads, at most an hour (engine.sh). install.sh restarts an engine only when its settings changed or it is not running, also on a run by hand, and the language model first (since V01.0.680). Before, a run such as install.sh --musik 2b restarted every engine, the language model last. It then loaded while speech output measured its memory, and speech output failed every 30 seconds with \"No available memory for the cache blocks\". To restart one on purpose: sudo systemctl restart speech-spark-<engine>. - Lane switch: if you switch to flash in the cockpit, already loaded speech models stay in memory. With 1.7B models that can get too tight. Stop ASR and TTS in the panel first or switch them to 0.6B. - GPU time: ASR and TTS share the GPU with the LLM. During a transcription or s"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Language model: own or dgx-spark-qwen38",
+"title": "Language model: own or dgx-spark-qwen38",
+"text": "peech request the LLM gets a little slower."
 },
 {
 "lang": "en",

@@ -1444,20 +1444,35 @@ else
 fi
 systemctl daemon-reload
 
-# an update only restarts an engine when its settings changed: a restart costs a model load
+# an engine restarts only when its settings changed or it is not running, on an update and on a run by hand alike: a
+# restart costs a model load (the own language model compiles kernels again and loads for many minutes), and a run of
+# install.sh for another part (`--musik 2b`) restarted every engine, tars 2026-10-16. `sudo systemctl restart
+# speech-spark-<engine>` still restarts one on purpose.
 restart_engine() {  # $1 = unit suffix, $2 = settings signature
   local sigfile="$VAR/state/$1.sig"
   # bump units-r… when the unit files change in a way a running engine must pick up; a changed engine.sh
   # (its start options) restarts the engines by itself
   set -- "$1" "$2 units-r2 engine.sh=$(sha256sum "$PREFIX/app/engine.sh" | cut -c1-16)"
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
-  if [ "$FROM_UPDATE" = 0 ] || [ "$(as_svc cat -- "$sigfile" 2>/dev/null)" != "$2" ] \
-     || ! systemctl is-active -q "speech-spark-$1.service"; then
+  if [ "$(as_svc cat -- "$sigfile" 2>/dev/null)" != "$2" ] || ! systemctl is-active -q "speech-spark-$1.service"; then
     systemctl restart "speech-spark-$1.service"
   fi
   no_links "$sigfile"; rm -f -- "$sigfile"
   printf '%s\n' "$2" | as_svc tee -- "$sigfile" >/dev/null
 }
+
+# The own language model first, in engine.sh's order (llm, asr, main, design, sehen): the engines after it wait while it
+# loads; restarted after them it loaded while the TTS engine sized its memory ("No available memory for the cache
+# blocks", tars 2026-10-16). It runs only once `speech-spark modelle llm uebernehmen` switched llm.enabled on; until
+# then qwen38 stays the language model and these units stay off. Its signature is modelle.signatur(): its own catalog
+# entry, port and commit, not the whole catalog, so a new music or image model does not reload the language model.
+if [ "$LLM_ON" = 1 ]; then
+  restart_engine llm "$VLLM_LLM_VERSION $("$PREFIX/venv-panel/bin/python" "$PREFIX/app/modelle.py" signatur llm 2>/dev/null \
+    || echo unbekannt)"
+else
+  systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
+  systemctl stop speech-spark-sehen.service 2>/dev/null || true
+fi
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
   # the old transformers ASR keeps its model in memory until it stops; free it before the
@@ -1529,15 +1544,7 @@ else
   systemctl disable --now speech-spark-musik.service 2>/dev/null || true
 fi
 
-# The own language model runs only once `speech-spark modelle llm uebernehmen` switched llm.enabled on; until then
-# qwen38 stays the language model and these units stay off.
-if [ "$LLM_ON" = 1 ]; then
-  restart_engine llm "$VLLM_LLM_VERSION $(cfgq -c '.llm | {modell, engine_port}') $(sha256sum "$PREFIX/app/modelle.json" | cut -c1-16)"
-  restart_front llmtor
-else
-  systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
-  systemctl stop speech-spark-sehen.service 2>/dev/null || true
-fi
+[ "$LLM_ON" = 1 ] && restart_front llmtor
 
 [ "$PANEL_ONLY" = 1 ] && restart_front notasr
 if [ "$TEILEN" = 1 ]; then
