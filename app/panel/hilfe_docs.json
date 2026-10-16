@@ -5941,7 +5941,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Anrufe und Videoanrufe",
 "title": "Anrufe und Videoanrufe",
-"text": "Seit V01.0.652 telefoniert die App selbst: Im Chat zu zweit auf diesem Spark stehen oben 📞 und 🎥. Kommt ein Anruf, klingelt das iPhone wie bei einem normalen Anruf, auch gesperrt und bei geschlossener App (Apples Anruf-Bildschirm mit „Spark“). Im Gespräch: Stumm, Kamera aus, Kamera wechseln, Lautsprecher, Auflegen. Der Anruf steht danach im Chat („📞 Anruf · 3:12“, „Verpasster Anruf“, „Anruf abgelehnt“), und die iPhone-Anrufliste zeigt ihn auch. Es gelten dieselben festen Regeln wie im Browser (nur wer Nachrichten von dir annimmt, nicht in der Ruhezeit, 45 Sekunden Klingeln); das andere Ende kann ein Browser, die Android-App oder ein iPhone sein. Nimmt ein anderes Gerät desselben Profils ab, hört das iPhone auf zu klingeln."
+"text": "Seit V01.0.652 telefoniert die App selbst: Im Chat zu zweit auf diesem Spark stehen oben 📞 und 🎥. Kommt ein Anruf, klingelt das iPhone wie bei einem normalen Anruf, auch gesperrt und bei geschlossener App (Apples Anruf-Bildschirm mit „Spark“). Im Gespräch: Stumm, Kamera aus, Kamera wechseln, Lautsprecher, Auflegen. Der Anruf steht danach im Chat („📞 Anruf · 3:12“, „Verpasster Anruf“, „Anruf abgelehnt“); in die Anrufliste der Telefon-App kommt er bewusst nicht. Ist die App offen, klingelt sie auch ohne Apples VoIP-Push (seit V01.0.705): Sie hört die Nachrichten des Spark selbst mit. Es gelten dieselben festen Regeln wie im Browser (nur wer Nachrichten von dir annimmt, nicht in der Ruhezeit, 45 Sekunden Klingeln); das andere Ende kann ein Browser, die Android-App oder ein iPhone sein. Nimmt ein anderes Gerät desselben Profils ab, hört das iPhone auf zu klingeln."
 },
 {
 "lang": "de",
@@ -13005,7 +13005,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Voice and video calls",
 "title": "Voice and video calls",
-"text": "Since V01.0.652 the app makes calls itself: a chat between two people on this Spark shows 📞 and 🎥 at the top. An incoming call rings the iPhone like a normal call, also when locked and with the app closed (Apple's call screen with \"Spark\"). During the call: mute, camera off, switch camera, speaker, hang up. Afterwards the call shows in the chat (\"📞 Call · 3:12\", \"Missed call\", \"Call declined\") and in the iPhone's call list. The same fixed rules as in the browser apply (only people who take your messages, not in quiet hours, 45 seconds of ringing); the other end can be a browser, the Android app or an iPhone. When another device of the same profile answers, the iPhone stops ringing."
+"text": "Since V01.0.652 the app makes calls itself: a chat between two people on this Spark shows 📞 and 🎥 at the top. An incoming call rings the iPhone like a normal call, also when locked and with the app closed (Apple's call screen with \"Spark\"). During the call: mute, camera off, switch camera, speaker, hang up. Afterwards the call shows in the chat (\"📞 Call · 3:12\", \"Missed call\", \"Call declined\"); on purpose not in the Phone app's call list. With the app open it also rings without Apple's VoIP push (since V01.0.705): it listens to the Spark's news itself. The same fixed rules as in the browser apply (only people who take your messages, not in quiet hours, 45 seconds of ringing); the other end can be a browser, the Android app or an iPhone. When another device of the same profile answers, the iPhone stops ringing."
 },
 {
 "lang": "en",

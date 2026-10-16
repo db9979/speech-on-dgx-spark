@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.705** · 2026-10-16 · iPhone-App: Anrufe klingeln auch ohne Apples VoIP-Push, solange die App läuft (sie hört die Nachrichten des Spark selbst mit); vorher klingelte ein iPhone nur über den Push
 - **V01.0.704** · 2026-10-16 · Steuerzentrale: Kasten Werkzeuge zeigt jedes benutzte Werkzeug in der Farbe seiner Anfrage (▶ läuft, ✓ fertig, ✗ Fehler), bleibt bis die Anfrage ausgeblendet wird; Full HD ein Name und „+N“
 - **V01.0.703** · 2026-10-16 · Aufräumen: Knoten-Seiten in sieben Dateien statt einer mit 4.771 Zeilen; Wächter-Tabellen zählen die Seitentexte nicht mehr als Module
 - **V01.0.702** · 2026-10-16 · Selbsttest: ein Profilname gehört einer Testdatei

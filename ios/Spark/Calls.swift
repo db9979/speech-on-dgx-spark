@@ -94,11 +94,17 @@ final class CallCenter: ObservableObject {
     }
 
     /// What the Spark allows now (hello): calls and Apple push on → this iPhone rings for calls, else not.
+    /// Calls on: the app also hears the Spark's news itself while it runs, so it rings when the VoIP push is late,
+    /// lost or not set up (Apple push off on the Spark).
     func follow(_ a: Allowed) {
         let want = a.calls && a.push
         UserDefaults.standard.set(want, forKey: Self.wantKey)
         if want { register() } else if let r = registry { r.desiredPushTypes = [] }
+        callsOn = a.calls
+        if a.calls { listenToSpark() } else if !active { listen?.cancel(); listen = nil }
     }
+
+    private var callsOn = false
 
     private func register() {
         if registry == nil {
@@ -137,6 +143,26 @@ final class CallCenter: ObservableObject {
             }
         }
         guard fresh else { return }
+        start(incoming: id, uuid: u)
+    }
+
+    /// An incoming call heard on the Chats stream while the app runs (no VoIP push needed): CallKit rings as for a push.
+    private func ring(_ id: String, name: String, video: Bool) {
+        let u = Self.callUUID(id)
+        let update = CXCallUpdate()
+        update.remoteHandle = CXHandle(type: .generic, value: name.isEmpty ? String(localized: "Spark-Anruf") : name)
+        update.localizedCallerName = name.isEmpty ? String(localized: "Spark-Anruf") : name
+        update.hasVideo = video
+        update.supportsHolding = false
+        update.supportsGrouping = false
+        update.supportsUngrouping = false
+        update.supportsDTMF = false
+        provider.reportNewIncomingCall(with: u, update: update) { [weak self] error in
+            guard error != nil else { return }   // CallKit refused it (Do Not Disturb, a phone call): no ringing here
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { if self?.uuid == u { self?.cleanUp(nil) } }
+            }
+        }
         start(incoming: id, uuid: u)
     }
 
@@ -294,10 +320,13 @@ final class CallCenter: ObservableObject {
 
     // ---------------------------------------------------------------- news from the Spark (the Chats stream)
     private func listenToSpark() {
-        listen?.cancel()
+        guard listen == nil else { return }   // one stream for the whole app: a ringing call and the running one
         listen = Task { [weak self] in
             while !Task.isCancelled {
-                guard let api = SparkAPI.current else { return }
+                guard let api = SparkAPI.current else {
+                    try? await Task.sleep(for: .seconds(5))
+                    continue
+                }
                 do {
                     for try await ev in api.chatEvents() {
                         guard let self else { return }
@@ -310,7 +339,14 @@ final class CallCenter: ObservableObject {
     }
 
     private func event(_ ev: [String: Any]) async {
-        guard let type = ev["type"] as? String, type.hasPrefix("call"), ev["call"] as? String == cur, !cur.isEmpty else { return }
+        guard let type = ev["type"] as? String, type.hasPrefix("call") else { return }
+        if type == "call" {   // someone calls this profile: ring here too, unless the VoIP push already did
+            if let id = ev["call"] as? String, Self.callId(id), !active {
+                ring(id, name: String((ev["name"] as? String ?? "").prefix(60)), video: ev["video"] as? Bool ?? false)
+            }
+            return
+        }
+        guard ev["call"] as? String == cur, !cur.isEmpty else { return }
         switch type {
         case "call_taken" where ev["dev"] as? String != dev && !answered:
             finish(String(localized: "Auf einem anderen Gerät angenommen."), reason: .answeredElsewhere)
@@ -455,8 +491,10 @@ final class CallCenter: ObservableObject {
     }
 
     private func cleanUp(_ text: String?) {
-        listen?.cancel()
-        listen = nil
+        if !callsOn {   // calls stay on: the stream stays for the next incoming call
+            listen?.cancel()
+            listen = nil
+        }
         capturer?.stopCapture()
         pc?.close()
         pc = nil

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.705** iPhone-App: Anrufe klingeln auch ohne Apples VoIP-Push, solange die App läuft (sie hört die Nachrichten des Spark selbst mit); vorher klingelte ein iPhone nur über den Push
 - **V01.0.704** Steuerzentrale: der Kasten Werkzeuge zeigt, welches Werkzeug gerade arbeitet
 - **V01.0.703** Aufräumen: die Texte der Technik-Seiten liegen in sieben kleineren Dateien; die Wächter-Tabellen zählen sie nicht mehr mit
 - **V01.0.702** Selbsttests: ein Profilname gehört genau einer Testdatei, ein Test passt darauf auf
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.698** Steuerzentrale: Linien unter den Kästen, fertige Antworten bleiben kurz stehen
 - **V01.0.697** Praxistest: unter Zustand → Praxistest steht, was neu ist und noch ausprobiert werden sollte, je Punkt Klappt, Problem oder Später; alte Punkte eingeklappt
 - **V01.0.696** Steuerzentrale: kein „Panel weg“ mehr bei kurzen Aussetzern
-- **V01.0.695** Fix Selbsttest: Live-Übersicht prüft „+ N bereit“ unabhängig von früheren Tests
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
