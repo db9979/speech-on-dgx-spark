@@ -347,6 +347,8 @@ FEATURES = (
       guide="kontingent"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
+    # rundlauf.py: every few minutes a real round trip (speak, hear, ask the model); told through the Dienst-Wächter
+    F("rundlauf", "Rundlauf prüfen", "Round-trip check", "sec", ("rundlauf",), parent="dienstwacht", guide="rundlauf"),
     # wartung.py: while the language model, ASR or TTS is updated the Spark pauses on purpose (fixed sentence, background waits)
     F("wartung", "Wartungspause", "Maintenance pause", "sec", ("wartung",), guide="wartung"),
     F("wartungauto", "Wartungspause bei Neustart", "Maintenance pause on restart", "sec", ("wartung_auto",), parent="wartung",
@@ -458,7 +460,7 @@ OWN = {}
 DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "modellwechsel", "modelleeigen"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.

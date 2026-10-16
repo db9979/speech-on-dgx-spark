@@ -77,6 +77,8 @@
   <div class="zcards ztoday" id="ztoday" hidden></div>
   <h3 class="zsec" id="zrechnerh" hidden>Rechner <small>beide Rechner · letzte 20 Minuten</small></h3>
   <div class="zrechner" id="zrechner" hidden></div>
+  <h3 class="zsec" id="zrundh" hidden>Rundlauf <small>Sprechen, Hören, Sprachmodell · echter Probelauf</small></h3>
+  <div class="zrechner zrund" id="zrund" hidden></div>
   <h3 class="zsec zareash">Bereiche</h3>
   <div class="zareas" id="zareas">
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
@@ -212,6 +214,10 @@
         <div id="rpadmin" data-nodirty="1"></div></div>
       <div class="setrow"><div class="lbl"><b>Dienst-Wächter</b><span>Der Spark prüft selbst, ob Archiv, Internet, Websuche und andere Dienste antworten, und meldet den Admins Ausfall und Entwarnung.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch"><i></i></label></div>
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
+      <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Rundlauf prüfen</b><span>Alle paar Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell. Hakt ein Schritt zweimal, hören die Admins es.</span></div><label class="tgl"><input type="checkbox" id="chat.rundlauf"><i></i></label></div>
+      <div data-show="chat.rundlauf" style="margin-left:36px">
+        <label for="chat.rundlauf_min">Abstand</label><select id="chat.rundlauf_min" data-num="1"><option value="2">alle 2 Minuten</option><option value="5">alle 5 Minuten</option><option value="15">alle 15 Minuten</option></select><div class="fh">Ausgelassen, solange jemand spricht, in einer Wartungspause, bei einem Update und während Bilder oder Musik entstehen. Ergebnis unter Zustand → Monitoring.</div>
+      </div>
       <div class="setrow"><div class="lbl"><b>Wartungspause</b><span>Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe hält der Spark kurz an: fester Satz statt Fehler, Hintergrund wartet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung"><i></i></label></div>
       <div class="setrow" data-show="chat.wartung" style="margin-left:18px"><div class="lbl"><b>Automatisch bei Neustart</b><span>Startet ein Modell neu (auch beim Umschalten in qwen38), pausiert der Spark diesen Teil selbst, bis er wieder antwortet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung_auto"><i></i></label></div>
       <div class="setrow" data-teilen="1"><div class="lbl"><b>Gehäuse</b><span>Pironman 5 am Panel-Rechner: das Display zeigt dem Admin Zustand und Zahlen, die LEDs die Statusfarbe, die Lüfter laufen nach Temperatur.</span></div><label class="tgl"><input type="checkbox" id="chat.gehaeuse"><i></i></label></div>

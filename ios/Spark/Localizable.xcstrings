@@ -9340,6 +9340,86 @@
           }
         }
       }
+    },
+    "Rundlauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round trip"
+          }
+        }
+      }
+    },
+    "Störung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fault"
+          }
+        }
+      }
+    },
+    "noch kein Lauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no run yet"
+          }
+        }
+      }
+    },
+    "kommt durch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gets through"
+          }
+        }
+      }
+    },
+    "ein Fehler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one error"
+          }
+        }
+      }
+    },
+    "Sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking"
+          }
+        }
+      }
+    },
+    "Hören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening"
+          }
+        }
+      }
+    },
+    "Ganzer Weg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole way"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

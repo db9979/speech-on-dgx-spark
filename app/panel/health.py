@@ -206,6 +206,29 @@ def _wav_seconds(data):
         return None
 
 
+async def tts_wav(c, cfg, text, headers, url=None):
+    """Sprechen says text as WAV (the live check and the Rundlauf-Wächter): (status, audio or None, seconds of
+    audio). Audio shorter than half a second counts as none. url: tests point the models elsewhere."""
+    r = await c.post((url or model_url)("tts", "/v1/audio/speech", cfg), headers=headers,
+                     json={"input": text, "language": "German", "response_format": "wav"})
+    secs = _wav_seconds(r.content) if r.status_code == 200 else None
+    ok = bool(secs and secs > 0.5)
+    return r.status_code, (r.content if ok else None), secs
+
+
+async def asr_text(c, cfg, audio, headers, url=None):
+    """Hören writes the WAV down: (status, text)."""
+    r = await c.post((url or model_url)("asr", "/v1/audio/transcriptions", cfg), headers=headers,
+                     files={"file": ("check.wav", audio)}, data={"language": "German"})
+    return r.status_code, (str(r.json().get("text") or "") if r.status_code == 200 else "")
+
+
+def heard_share(text):
+    """How many of LIVE_SENTENCE's words came back (0 to 1), fixed words, no model."""
+    want = _words(LIVE_SENTENCE)
+    return len(want & _words(text)) / len(want)
+
+
 async def livecheck(reason="manual"):
     """LLM, TTS and ASR once, with times; returns and stores the result."""
     if _live_lock.locked():
@@ -264,13 +287,9 @@ async def livecheck(reason="manual"):
             if cfg["tts"].get("enabled", True):
                 t0 = time.time()
                 try:
-                    r = await c.post(model_url("tts", "/v1/audio/speech", cfg), headers=api_headers(),
-                                     json={"input": LIVE_SENTENCE, "language": "German", "response_format": "wav"})
-                    secs = _wav_seconds(r.content) if r.status_code == 200 else None
-                    ok = bool(secs and secs > 0.5)
-                    audio = r.content if ok else None
-                    steps.append({"name": "tts", "ok": ok, "seconds": round(time.time() - t0, 2),
-                                  "detail": f"{secs:.1f} s Audio" if ok else f"HTTP {r.status_code}: {r.text[:150]}"})
+                    code, audio, secs = await tts_wav(c, cfg, LIVE_SENTENCE, api_headers())
+                    steps.append({"name": "tts", "ok": audio is not None, "seconds": round(time.time() - t0, 2),
+                                  "detail": f"{secs:.1f} s Audio" if audio is not None else f"HTTP {code}"})
                 except Exception as e:
                     steps.append({"name": "tts", "ok": False, "seconds": round(time.time() - t0, 2),
                                   "detail": f"{type(e).__name__}: {e}"[:200]})
@@ -281,16 +300,12 @@ async def livecheck(reason="manual"):
                     steps.append({"name": "asr", "ok": None, "seconds": 0, "detail": "skipped: no audio from TTS"})
                 else:
                     try:
-                        r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
-                                         headers=api_headers(), files={"file": ("check.wav", audio)},
-                                         data={"language": "German"})
-                        text = r.json().get("text", "") if r.status_code == 200 else ""
-                        want = _words(LIVE_SENTENCE)
-                        share = len(want & _words(text)) / len(want)
-                        steps.append({"name": "asr", "ok": r.status_code == 200 and share >= 0.6,
+                        code, text = await asr_text(c, cfg, audio, api_headers())
+                        share = heard_share(text)
+                        steps.append({"name": "asr", "ok": code == 200 and share >= 0.6,
                                       "seconds": round(time.time() - t0, 2),
-                                      "detail": f"„{text[:100]}“ ({round(share * 100)} % der Wörter)" if r.status_code == 200
-                                      else f"HTTP {r.status_code}: {r.text[:150]}"})
+                                      "detail": f"„{text[:100]}“ ({round(share * 100)} % der Wörter)" if code == 200
+                                      else f"HTTP {code}"})
                     except Exception as e:
                         steps.append({"name": "asr", "ok": False, "seconds": round(time.time() - t0, 2),
                                       "detail": f"{type(e).__name__}: {e}"[:200]})
@@ -357,6 +372,8 @@ def alerts():
     out += berater.alerts()          # proposals of the Einstellungs-Assistent waiting (level info: not a warning)
     import praxistest
     out += praxistest.alerts()       # points of the hands-on test still open (level info, Zustand → Praxistest)
+    import rundlauf
+    out += rundlauf.alerts()         # the round trip through the models: the step that hakt, a step much slower
     return out
 
 

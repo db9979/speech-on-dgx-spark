@@ -256,6 +256,8 @@
     "gehaeuse_luefter_an": 55,
     "gehaeuse_luefter_aus": 48,
     "schirm": false,
+    "rundlauf": false,
+    "rundlauf_min": 5,
     "schirm_an": 7,
     "schirm_aus": 23,
     "schirm_schrift": "auto",

@@ -106,6 +106,10 @@ SVC = {
     # Steuerzentrale (schirm.py): the screen program asks the panel once a second; the probe only looks when it last did
     "schirm": ("Steuerzentrale am Bildschirm", "Control centre on the screen", "Der Bildschirm am Panel-Rechner zeigt gerade nichts; alles andere läuft weiter.",
                SLOW, "schirm"),
+    # Rundlauf-Wächter (rundlauf.py): its own loop speaks, hears and asks the model; the probe only looks that the loop
+    # runs, the step that hakt comes as a warning of its own (warn)
+    "rundlauf": ("Rundlauf", "Round trip", "Der Probelauf durch Sprechen, Hören und Sprachmodell kommt nicht durch.", EVERY,
+                 "rundlauf"),
     # Docling-Server (doclingdienst.py): /health needs no key
     "docling": ("Docling-Server", "Docling server", "Dokumente liest nur der Spark selbst, bis er zurück ist.", SLOW, "docling"),
     # Bilder malen (bild_server.py on 127.0.0.1): the service, not the engine; an engine unloaded after idling is no outage
@@ -321,6 +325,12 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import rundlauf
+        if rundlauf.an(c):
+            out["rundlauf"] = {"own": {"rundlauf": True}}
+    except Exception:
+        pass
+    try:
         import doclingdienst
         d = doclingdienst._read()
         if doclingdienst.admin_on(c) and _origin(d.get("url")):
@@ -496,6 +506,9 @@ async def probe(sid, key, p, cfg):
         if p.get("schirm"):  # Steuerzentrale: the screen asked the panel lately (schirm.sieht), no question of its own
             import schirm
             return Probe(schirm.sieht())
+        if p.get("rundlauf"):  # Rundlauf: its own loop ran lately (rundlauf.lebt), no question of its own
+            import rundlauf
+            return Probe(rundlauf.lebt())
         if p.get("tcp"):
             return await _tcp(p)
         if p.get("turn"):    # Anrufe von unterwegs: the unit runs with the panel's settings (anrufe.relay_ok)

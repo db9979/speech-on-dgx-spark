@@ -63,6 +63,7 @@ from core import (  # noqa: E402
     store_password)
 from monitor import history, service_health, system_stats  # noqa: E402
 import rechnerblick  # noqa: E402
+import rundlauf  # noqa: E402
 import steuer  # noqa: E402
 from steuer import unit_state  # noqa: E402
 from chat import web_search  # noqa: E402
@@ -376,7 +377,8 @@ def _status(cfg, healths):
     return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
-            "rechner": rechnerblick.fuer_status()}   # both computers when the models run apart (Zustand → Monitoring → Rechner)
+            "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Monitoring → Rechner)
+            "rundlauf": rundlauf.fuer_status()}      # the last round trip through the models (Zustand → Monitoring → Rundlauf)
 
 
 def glance(cfg):
@@ -591,6 +593,10 @@ def validate(new):
         raise HTTPException(400, why)
     import schirm
     why = schirm.check(ch)
+    if why:
+        raise HTTPException(400, why)
+    import rundlauf
+    why = rundlauf.check(ch)
     if why:
         raise HTTPException(400, why)
     import berater

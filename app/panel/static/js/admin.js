@@ -129,7 +129,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
     const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
   box.appendChild(mc);
   if(rp)box.appendChild(zRTile(rp));
-  box.classList.toggle('z5',!!rp);zRechner(R);
+  box.classList.toggle('z5',!!rp);zRechner(R);zRund(s.rundlauf||{});
   const meta=$('zmeta');meta.textContent='';
   for(const x of [g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean)){const sp=document.createElement('span');sp.textContent=x;meta.appendChild(sp)}
   // „Heute“: each tile opens where its number comes from (way.js wayFirst): the requests, the own speakers, the logs
@@ -203,6 +203,32 @@ function zRCard(c){const card=document.createElement('div');card.className='card
   return card}
 function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.textContent='';
   for(const c of R)box.appendChild(zRCard(c))}
+// Zustand → Monitoring → Rundlauf (rundlauf.py, plan verbesserungen 3a): the last real round trip through Sprechen,
+// Hören and the language model, each step in ms, the whole way with the curve of the last runs; a step that hakt is
+// red with a fixed word. Shown while Funktionen → Dienst-Wächter → Rundlauf prüfen is on. Numbers and fixed words only.
+const ZRD_WHY={zeit:t('antwortet nicht rechtzeitig','does not answer in time'),fehler:t('antwortet nicht','does not answer'),stumm:t('liefert keinen Ton','gives no sound'),
+  falsch:t('versteht den Satz nicht','does not understand the sentence'),leer:t('antwortet leer','answers empty')};
+const ZRD_AUS={start:t('Panel startet','panel starting'),notaus:'Notaus',update:'Update',gespraech:t('Gespräch läuft','conversation going on'),nacht:t('Update-Nacht','update night'),
+  wartung:t('Wartungspause','maintenance pause'),bild:t('Bild entsteht','picture being made'),musik:t('Lied entsteht','song being made')};
+const zMs=v=>v==null?'–':v>=1000?fmt(v/1000,' s',1):v+' ms';
+function zRund(R){const box=$('zrund'),h=$('zrundh');if(!box)return;box.hidden=h.hidden=!R.an;box.textContent='';if(!R.an)return;
+  const la=R.letzt,st=R.stoerung,card=document.createElement('div');card.className='card zrcard';
+  card.dataset.lvl=st?'bad':!la?'':la.ok?(R.langsam||[]).length?'warn':'ok':'warn';
+  const hd=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=t('Probelauf','Test run');
+  pl.className='pill '+card.dataset.lvl;pl.textContent=st?t('Störung','Fault'):!la?t('noch kein Lauf','no run yet'):la.ok?t('kommt durch','gets through'):t('ein Fehler','one error');
+  hd.append(nm,pl);const meta=document.createElement('div');meta.className='mut zrmeta';
+  meta.textContent=[t('alle ','every ')+R.min+' min',la?t('zuletzt ','last ')+zAgo(la.t):'',R.aus?t('wartet: ','waiting: ')+(ZRD_AUS[R.aus]||R.aus):'',
+    t('heute ','today ')+R.heute.ok+' ok'+(R.heute.fehler?' · '+R.heute.fehler+t(' Fehler',' errors'):'')].filter(Boolean).join(' · ');card.append(hd,meta);
+  const ms=(la&&la.ms)||{},slow=R.langsam||[];
+  for(const [k,de,en] of [['tts','Sprechen','Speaking'],['asr','Hören','Listening'],['llm','Sprachmodell','Language model']]){
+    const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
+    kk.textContent=t(de,en);const bad=la&&!la.ok&&la.step===k;b.textContent=bad?(ZRD_WHY[la.why]||t('Fehler','error')):zMs(ms[k]);tx.append(kk,b);
+    if(slow.includes(k)){const sm=document.createElement('small');sm.textContent=t('langsamer als sonst','slower than usual');tx.appendChild(sm)}
+    const d=document.createElement('span');d.className='zrdot';d.dataset.lvl=bad?'bad':slow.includes(k)?'warn':ms[k]!=null?'ok':'';r.append(tx,d);card.appendChild(r)}
+  const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div'),kk=document.createElement('small'),b=document.createElement('b');
+  kk.textContent=t('Ganzer Weg','Whole way');b.textContent=la&&la.ok?zMs(ms.ganz):'–';tx.append(kk,b);r.appendChild(tx);
+  if((R.kurve||[]).filter(x=>x!=null).length>1){const v=document.createElementNS('http://www.w3.org/2000/svg','svg');v.setAttribute('class','zrspark');v.setAttribute('aria-hidden','true');spark(v,R.kurve);r.appendChild(v)}
+  card.appendChild(r);box.appendChild(card)}
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};

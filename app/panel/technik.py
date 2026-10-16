@@ -249,6 +249,7 @@ MODULE = {
     "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "rechner": ("teilen", "Werte eines Rechners: CPU, Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
+    "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),
     "steuerzentrale": ("teilen", "Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan"),
     "rechnerblick": ("teilen", "Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln"),

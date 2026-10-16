@@ -109,6 +109,7 @@ import nasablage  # noqa: E402
 import naszustand  # noqa: E402
 import gehaeuse  # noqa: E402
 import schirm  # noqa: E402
+import rundlauf  # noqa: E402
 import nashilfe  # noqa: E402
 import meldung  # noqa: E402
 import ghtoken  # noqa: E402
@@ -399,6 +400,7 @@ async def stability():
     spawn(begleiter.fetch_loop())
     spawn(geraeteupdate.loop())
     spawn(dienstwacht.loop())
+    spawn(rundlauf.loop())
     spawn(wartung.loop())
     spawn(berater.loop())
     spawn(speicher.loop())

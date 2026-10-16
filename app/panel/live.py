@@ -135,6 +135,8 @@ TARGETS = {
     "gehaeuse": ("Gehäuse", "Pironman 5 · am Panel-Rechner", "spark", False),
     # Steuerzentrale (schirm.py, steuerzentrale.py): the text screen on the panel computer's HDMI output; status only
     "schirm": ("Steuerzentrale", "Bildschirm am Panel-Rechner", "spark", False),
+    # Rundlauf-Wächter (rundlauf.py): speaks, hears and asks the model every few minutes; times and fixed words only
+    "rundlauf": ("Rundlauf", "Sprechen → Hören → Sprachmodell", "spark", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
     "docling": ("Docling-Server", "Dokumente lesen · Heimnetz", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
@@ -1139,7 +1141,12 @@ def snapshot(view="admin", now=None):
         watch_svc, watch_hints = dienstwacht.for_live(now)
     except Exception:
         watch_svc, watch_hints = {}, []
-    hs = [_explain(h) for h in hints(now) + watch_hints]
+    try:   # the Rundlauf-Wächter: its line, and the step that hakt at its box (fixed words, numbers)
+        import rundlauf
+        rdl, rdl_hints = rundlauf.for_live(now)
+    except Exception:
+        rdl, rdl_hints = {"on": False}, []
+    hs = [_explain(h) for h in hints(now) + watch_hints + rdl_hints]
     upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     try:
@@ -1269,6 +1276,8 @@ def snapshot(view="admin", now=None):
         szr = {"on": False}
     if szr.get("on"):
         used.add("schirm")
+    if rdl.get("on"):
+        used.add("rundlauf")
     cc = load_config().get("chat", {})
     if cc.get("action_check", True) or cc.get("loop_stop", True):
         import taten
@@ -1335,6 +1344,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "gehaeuse" and geh.get("on"):   # Gehäuse: display, LEDs, temperature, fan (no page content)
             x["sub"] = (f"Display {geh.get('oled', '-')} · LEDs {geh.get('led', '-')} · {geh.get('temp', '?')} °C"
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
+        if x["id"] == "rundlauf" and rdl.get("on"):   # Rundlauf: pace, the last run's times, what it waits for
+            x["sub"] = rdl["sub"]
         if x["id"] == "schirm" and szr.get("on"):   # Steuerzentrale: shows or not, on or dark by the times (no content)
             x["sub"] = ("zeigt" if szr.get("sieht") else "wartet auf den Bildschirm") + ("" if szr.get("an") else " · dunkel nach Zeitplan")
         if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, disks, open problems (no address)

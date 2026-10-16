@@ -1436,6 +1436,13 @@
 "titel": "Steuerzentrale: Linien und fertige Antworten",
 "text": "A: Am Bildschirm des Panel-Rechners eine Sprachfrage stellen, die ein Werkzeug braucht, und eine ohne. Keine Linie läuft durch einen Kasten (Hören, Weiche, Sprachmodell, Werkzeuge, Sprechen). Ist die Antwort fertig, bleibt das Gerät links mit „fertig in … s“ stehen, bis eine neue Frage kommt. Kein kurzes Schwarzbild mehr.",
 "thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P229",
+"v": 699,
+"titel": "Rundlauf-Wächter",
+"text": "A: Funktionen → Dienst-Wächter an, darunter „Rundlauf prüfen“ an, Abstand „alle 2 Minuten“. Nach ein paar Minuten: Zustand → Monitoring zeigt die Karte „Rundlauf“ mit Sprechen, Hören, Sprachmodell in ms und „kommt durch“. Zustand → Live zeigt das Ziel „Rundlauf“ mit den Zeiten. Dann auf tars die Sprachausgabe anhalten (sudo systemctl stop speech-spark-tts): nach zwei Läufen kommt die Mitteilung „Rundlauf: Sprechen antwortet nicht“, Braucht dich ist rot. Wieder starten: „läuft wieder durch“. Während eines Gesprächs steht „wartet: Gespräch läuft“. iPhone: Spark verwalten → Monitoring zeigt den Abschnitt Rundlauf.",
+"thread": "Verbesserungsideen"
 }
 ]
 }

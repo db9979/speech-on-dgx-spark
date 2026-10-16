@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.699** · 2026-10-16 · Rundlauf-Wächter (Funktionen → Dienst-Wächter → Rundlauf prüfen, aus): alle 2, 5 oder 15 Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell mit Stufe „hinten“, jeder Schritt in ms; zwei Fehlläufe in Folge melden den Admins über den Dienst-Wächter den Schritt, der hakt; viel langsamer als sonst ist eine leise Zeile; Zustand → Monitoring, Live, Steuerzentrale, iPhone
 - **V01.0.698** · 2026-10-16 · Steuerzentrale am Bildschirm: Wege laufen unter den Kästen durch statt darüber, eine fertige Antwort bleibt stehen wie in der Live-Übersicht
 - **V01.0.697** · 2026-10-16 · Zustand → Praxistest: die Prüfpunkte stehen als eine Liste im Repository (app/panel/praxistest.json, Nummern bleiben), das Neueste oben, je Punkt Klappt/Problem/Später, Punkte vor V01.0.600 eingeklappt mit „Alle alten erledigt“; leise Zeile in Braucht dich, iPhone unter Spark verwalten; nur Admin
 - **V01.0.696** · 2026-10-16 · Steuerzentrale am Bildschirm: wartet bis 8 s auf das Panel und behält bei kurzen Aussetzern das letzte Bild; „panel weg“ erst nach 5 Fehlversuchen in Folge (Pi: die Tageszahlen brauchten manchmal über 3 s)

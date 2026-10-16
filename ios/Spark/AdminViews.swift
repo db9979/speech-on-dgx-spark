@@ -181,6 +181,27 @@ struct StatusView: View {
                     } header: { Text(verbatim: Self.rechnerName(c)) }
                 }
             }
+            // Zustand → Monitoring → Rundlauf (rundlauf.py): the last real round trip, each step in ms, the step that
+            // hakt with its fixed word; numbers only
+            let rd = d["rundlauf"] as? [String: Any] ?? [:]
+            if rd["an"] as? Bool == true {
+                let last = rd["letzt"] as? [String: Any] ?? [:]
+                let ms = last["ms"] as? [String: Any] ?? [:]
+                let bad = last["ok"] as? Bool == false ? last["step"] as? String ?? "" : ""
+                Section("Rundlauf") {
+                    LabeledContent("Zustand") {
+                        Text(rd["stoerung"] is [String: Any] ? String(localized: "Störung") : last.isEmpty ? String(localized: "noch kein Lauf")
+                             : bad.isEmpty ? String(localized: "kommt durch") : String(localized: "ein Fehler"))
+                            .foregroundStyle(rd["stoerung"] is [String: Any] ? .red : bad.isEmpty ? .green : .orange)
+                    }
+                    ForEach([("tts", String(localized: "Sprechen")), ("asr", String(localized: "Hören")), ("llm", String(localized: "Sprachmodell"))], id: \.0) { k, name in
+                        LabeledContent(name) {
+                            Text(verbatim: bad == k ? String(localized: "Fehler") : Self.ms(ms[k])).foregroundStyle(bad == k ? .red : .primary)
+                        }
+                    }
+                    LabeledContent("Ganzer Weg") { Text(verbatim: bad.isEmpty ? Self.ms(ms["ganz"]) : "–") }
+                }
+            }
             // the "Heute" tiles of Zustand → Monitoring (admin.glance): counts and times only; orange by the panel's rules
             let g = d["glance"] as? [String: Any] ?? [:]
             Section("Heute (24 Std.)") {
@@ -238,6 +259,12 @@ struct StatusView: View {
     private func load() async {
         do { d = try await AdminSession.shared.object("GET", "api/status"); miss.ok() }
         catch { miss.fail(error) }
+    }
+
+    /// a step of the Rundlauf: ms below a second, seconds above
+    static func ms(_ v: Any?) -> String {
+        guard let n = (v as? NSNumber)?.intValue else { return "–" }
+        return n >= 1000 ? String(format: "%.1f s", Double(n) / 1000) : "\(n) ms"
     }
 
     static func num(_ v: Any?) -> String {
