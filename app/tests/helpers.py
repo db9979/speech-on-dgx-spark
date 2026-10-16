@@ -14,6 +14,18 @@ import threading
 import time
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def repo_file(*parts):
+    """A file next to app/ (install.sh, update.sh …), skipped when missing: the self-test of install.sh and of an
+    update runs in a copy with only app/ (tars 2026-10-16: four tests read ../install.sh and were ERROR there)."""
+    import unittest
+    path = os.path.join(APP, "..", *parts)
+    if not os.path.exists(path):
+        raise unittest.SkipTest(f"{parts[-1]} is not part of this copy")
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
 TMP = tempfile.mkdtemp(prefix="speech-spark-test-")
 atexit.register(lambda: shutil.rmtree(TMP, ignore_errors=True))
 

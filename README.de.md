@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.693** Schneller Antwortbeginn messbar: das eigene Sprachmodell meldet Treffer im Zwischenspeicher; Selbsttest auf tars scheitert nicht mehr in der Nur-app/-Kopie
 - **V01.0.692** Selbsttests: ein Befehl vor dem Push prüft Version, Doku und die passenden Tests; die wackeligen Fehler in test_panel kamen von gleichen Profilnamen in mehreren Testdateien
 - **V01.0.691** Fix: Die Steuerzentrale bricht das Update auf dem Panel-Rechner nicht mehr ab
 - **V01.0.690** Fix: „Wie mache ich …?“ landet nicht mehr in der Spark-Hilfe (seit „Musik machen“)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.686** Selbsttests: Ein Test stellt Schalter zurück, wie er sie vorfand (vier rote Sperre-Tests auf GitHub und tars)
 - **V01.0.685** Fix Selbsttest: die Route der Steuerzentrale steht in der Liste offener Wege, mit Grund
 - **V01.0.684** Das kannst du auch sagen: Beispielsätze für Funktionen, die bei dir an sind, aber nie benutzt werden („Mal mir …“), unter der Antwort, im leeren Chat und unter Ich → Was ich kann
-- **V01.0.683** Bilder: Karte im Chat bleibt nicht mehr bei „wartet …“; Karikatur und Comic gelten als Bildwunsch
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

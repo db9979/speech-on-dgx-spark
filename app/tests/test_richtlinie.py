@@ -6,6 +6,7 @@ until now get a self-test here.
 - app/VERSION, the newest CHANGELOG.md line and the first line of "Letzte Änderungen"/"Latest changes" in both
   READMEs agree, and each README keeps exactly 10 lines there (part 11).
 - The guideline exists in German and English, CLAUDE.md points to it, and every self-test it names exists.
+- No test opens a file next to app/ directly; helpers.repo_file skips it in the app/-only copy (part 16).
 
 Tests that read files outside app/ skip in the app/-only copy the Spark tests in. No wall clock dependence.
 
@@ -131,6 +132,16 @@ class Guideline(unittest.TestCase):
             self.assertIn("sicherheits-checkliste.md" if text is de else "security-checklist.md", text)
         repo_file("docs", "de", "sicherheits-checkliste.md")
         repo_file("docs", "en", "security-checklist.md")
+
+    def test_no_test_opens_a_file_outside_app_directly(self):
+        """tars 2026-10-16: the self-test of install.sh (a copy with only app/) had four ERROR from open(../install.sh)."""
+        bad = []
+        for path in sorted(glob.glob(os.path.join(APP, "tests", "*.py"))):
+            with open(path, encoding="utf-8") as f:
+                for n, line in enumerate(f, 1):
+                    if re.search(r'open\((helpers\.)?os\.path\.join\((helpers\.)?(APP|ROOT), "\.\."', line):
+                        bad.append(f"{os.path.basename(path)}:{n}")
+        self.assertEqual(bad, [], "use helpers.repo_file (skips in the app/-only copy)")
 
     def test_every_named_self_test_exists(self):
         """A renamed or removed test must not leave the guideline pointing at nothing."""

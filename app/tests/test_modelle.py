@@ -46,7 +46,9 @@ class Fake(BaseHTTPRequestHandler):
         if self.path == "/metrics":
             Fake.accepted += 30
             text = (f"vllm:spec_decode_num_accepted_tokens_total{{model_name=\"x\"}} {Fake.accepted}.0\n"
-                    f"vllm:spec_decode_num_draft_tokens_total{{model_name=\"x\"}} {Fake.accepted * 2}.0\n")
+                    f"vllm:spec_decode_num_draft_tokens_total{{model_name=\"x\"}} {Fake.accepted * 2}.0\n"
+                    f"vllm:prefix_cache_queries_total{{model_name=\"x\"}} {Fake.accepted * 40}.0\n"
+                    f"vllm:prefix_cache_hits_total{{model_name=\"x\"}} {Fake.accepted * 30}.0\n")
             data = text.encode()
             self.send_response(200)
             self.send_header("Content-Length", str(len(data)))
@@ -154,6 +156,7 @@ class VllmArgs(unittest.TestCase):
         self.assertEqual(a[a.index("--max-model-len") + 1], "131072")
         self.assertEqual(a[a.index("--gpu-memory-utilization") + 1], "0.30")
         self.assertIn("--no-enable-flashinfer-autotune", a)
+        self.assertIn("--enable-prompt-tokens-details", a)   # cached_tokens in usage: the panel shows the prefix cache
         self.assertNotIn("--trust-remote-code", a)
         self.assertEqual(json.loads(a[a.index("--speculative-config") + 1]), {"method": "mtp", "num_speculative_tokens": 3})
         self.assertNotIn("--speculative-config", modelle.vllm_args(qwen(), mtp=False))
@@ -315,6 +318,12 @@ class Messen(unittest.TestCase):
             self.assertNotIn(GEHEIM, line)
         self.assertNotIn(GEHEIM, saved)
         self.assertIn("werkzeug ok", modelle.zeile("qwen38-27b-nvfp4", r))
+        # the prefix cache: the same long question cold and warm, the share from vLLM's counters
+        self.assertEqual(r["zwischenspeicher"], 0.75)
+        self.assertIn("erste_kalt_s", r)
+        self.assertIn("erste_warm_s", r)
+        self.assertTrue(any(x.startswith("modelle: messung qwen38-27b-nvfp4 zwischenspeicher 75 %, erste kalt ") for x in lines), lines)
+        self.assertIn("zwischenspeicher 75 %", modelle.zeile("qwen38-27b-nvfp4", r))
 
     def test_a_model_without_tools_or_eyes_is_not_asked(self):
         m = qwen()
@@ -345,6 +354,7 @@ class Messen(unittest.TestCase):
         self.assertFalse(modelle.werkzeug_ok({"choices": [{"message": {"tool_calls": [
             {"function": {"name": "wetter", "arguments": "kein json"}}]}}]}))
         self.assertEqual(modelle.spec_zaehler("vllm:spec_decode_num_accepted_tokens_total 3.0\n"), (3.0, 0))
+        self.assertEqual(modelle.cache_zaehler("vllm:prefix_cache_hits_total{a=\"b\"} 6.0\nvllm:prefix_cache_queries_total 8.0\n"), (6.0, 8.0))
 
 
 class Kommando(unittest.TestCase):
@@ -481,15 +491,13 @@ class Budget(unittest.TestCase):
         lines = modelle.wahl_zeilen("bild")
         self.assertIn("(private use only)", lines[2])
         self.assertIn("(recommended)", lines[0])
-        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
-            sh = f.read()
+        sh = helpers.repo_file("install.sh")
         self.assertNotIn("most accurate, ~6 GiB", sh)
         self.assertIn('pick_model asr "$(cur_asr)"', sh)
 
     def test_pick_model_maps_the_answer(self):
         import subprocess
-        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
-            sh = f.read()
+        sh = helpers.repo_file("install.sh")
         fn = sh[sh.index("pick_model() {"):]
         fn = fn[:fn.index("\n}\n") + 3]
         for answer, cur, keep, want in (("", "0.6b", "", "0.6b"), ("3", "1.7b", "", "parakeet"), ("4", "x", "", "none"),

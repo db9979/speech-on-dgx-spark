@@ -25,12 +25,7 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def repo_file(*parts):
-    """A file next to app/ (install.sh, update.sh); the self-test during an update only has app/ itself."""
-    path = os.path.join(ROOT, *parts)
-    if not os.path.exists(path):
-        raise unittest.SkipTest(f"{parts[-1]} is not part of this copy")
-    return open(path).read()
+repo_file = helpers.repo_file
 
 
 def profile(name, pin="1234"):

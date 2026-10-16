@@ -40,7 +40,7 @@ from common import load_config, read_json  # noqa: E402
 from core import admin_code, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
-MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "werkzeug", "bild_text", "bild_szene", "bild_ok", "ok")
+MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "erste_warm_s", "zwischenspeicher", "werkzeug", "bild_text", "bild_szene", "bild_ok", "ok")
 _live = {"t": None, "v": None}
 MAX_BODY = 256
 # why a switch is refused (modelle.Fehler words): a sentence for the page

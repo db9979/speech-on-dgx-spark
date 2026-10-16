@@ -11,7 +11,7 @@ const MD_REGEL={alle:['Alle Modelle passen gleichzeitig in den Speicher.','All m
 function mdGib(v){return v==null?'–':(Math.round(v*10)/10).toLocaleString(L==='en'?'en':'de')+' GiB'}
 function mdMess(m){const x=m.messung||{};if(!Object.keys(x).length)return '';if(x.ok===false)return t('abgebrochen','broke off');
   const ja=v=>v?t('ok','ok'):t('falsch','wrong');
-  return [x.tok_s!=null?x.tok_s+' tok/s':'',x.erste_s!=null?t('erste ','first ')+x.erste_s+' s':'',x.mtp_annahme!=null?'MTP '+Math.round(x.mtp_annahme*100)+' %':'',
+  return [x.tok_s!=null?x.tok_s+' tok/s':'',x.erste_s!=null?t('erste ','first ')+x.erste_s+' s':'',x.mtp_annahme!=null?'MTP '+Math.round(x.mtp_annahme*100)+' %':'',x.erste_warm_s!=null?t('warm ','warm ')+x.erste_warm_s+' s':'',x.zwischenspeicher!=null?t('Zwischenspeicher ','Prefix cache ')+Math.round(x.zwischenspeicher*100)+' %':'',
     'werkzeug' in x?t('Werkzeug ','Tool ')+ja(x.werkzeug):'','bild_text' in x?t('Text ','Text ')+ja(x.bild_text):'','bild_szene' in x?t('Szene ','Scene ')+ja(x.bild_szene):''].filter(Boolean).join(' · ')}
 function mdBudget(b){const pct=v=>Math.max(0,Math.min(100,Math.round(100*v/(b.gesamt||1))));
   return `<div class="card"><h3>${esc(t('Speicher-Budget','Memory budget'))}</h3><div class="vb-hb vb-qbar"><i class="${b.regel==='alle'?'':'full'}" style="width:${pct(b.fest+b.system+b.reserve)}%"></i></div>`+

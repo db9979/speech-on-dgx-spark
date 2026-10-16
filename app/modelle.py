@@ -78,6 +78,11 @@ KOMPILIEREN = {"MAX_JOBS": "4", "NVCC_THREADS": "1", "TORCHINDUCTOR_COMPILE_THRE
 FRAGEN = ("Erkläre in vier Sätzen, warum der Himmel blau ist.",
           "Schreib eine kurze, freundliche Mail an einen Nachbarn: Das Paket liegt bei mir, er kann es heute ab 18 Uhr holen.",
           "Fasse zusammen, was man beim Kauf eines gebrauchten Fahrrads prüfen sollte. Höchstens sechs Punkte.")
+# a long fixed start (about 8k tokens, like the panel's tool list in front of every question) for the prefix cache:
+# the first question with it is cold, the second warm; the run's own first line keeps an earlier run's cache out
+VORLAUF = "\n".join(f"Regel {i}: Antworte kurz, freundlich und auf Deutsch, nenne nur Zahlen, die du geprüft hast, "
+                     f"und frag nach, wenn etwas fehlt." for i in range(1, 261))
+VORLAUF_FRAGE = "Nenne die Nummer der ersten Regel."
 LANG = "Erzähl ausführlich, wie ein Leuchtturm funktioniert, von der Lampe bis zur Kennung. Etwa 300 Wörter."
 WERKZEUG = {"type": "function", "function": {
     "name": "wetter", "description": "Wettervorhersage für einen Ort",
@@ -366,7 +371,10 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
          "--served-model-name", m["id"], "--max-model-len", str(m["kontext"]),
          "--gpu-memory-utilization", f"{m['anteil']:.2f}", "--max-num-seqs", str(v.get("max_seqs", 8)),
          "--generation-config", "vllm", "--no-enable-flashinfer-autotune",
-         "--disable-uvicorn-access-log"]   # stats stay on: /metrics counts the MTP hits
+         "--disable-uvicorn-access-log",   # stats stay on: /metrics counts the MTP and prefix cache hits
+         # usage.prompt_tokens_details.cached_tokens: the panel shows how much of a question came from the prefix cache
+         # (chat.timing_lines, verbrauch.py); the cache itself is on by default in vLLM V1
+         "--enable-prompt-tokens-details"]
     if v.get("quantization"):
         a += ["--quantization", v["quantization"]]
     if v.get("kv_cache_dtype"):
@@ -414,11 +422,11 @@ def rolle(art, cfg, kat=None):
 
 
 def signatur(art, cfg, messung=None, kat=None):
-    """What speech-spark-llm / -sehen start from, as 16 hex: its catalog entry (own entries included), port and pinned
-    commit. install.sh restarts the engine only when this changed, so a new music or image model in the catalog does
+    """What speech-spark-llm / -sehen start from, as 16 hex: its catalog entry (own entries included) and its start
+    arguments (port, pinned commit, a new option such as --enable-prompt-tokens-details). install.sh restarts the engine only when this changed, so a new music or image model in the catalog does
     not load the language model again (that load took many minutes, tars 2026-10-16)."""
     m, port = rolle(art, cfg, kat)
-    roh = json.dumps([m, port, fest_revision(m, messung)], sort_keys=True, ensure_ascii=False)
+    roh = json.dumps([m, vllm_args(m, port, fest_revision(m, messung)), LOGPROBS_MAX], sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(roh.encode()).hexdigest()[:16]
 
 
@@ -570,6 +578,39 @@ def spec_zaehler(text):
     return summe("spec_decode_num_accepted_tokens_total"), summe("spec_decode_num_draft_tokens_total")
 
 
+def cache_zaehler(text):
+    """(hits, queries) of vLLM's prefix cache in tokens from /metrics, 0 when absent."""
+    def summe(name):
+        return sum(float(x) for x in re.findall(rf"^vllm:{name}(?:{{[^}}]*}})? ([0-9.e+]+)$", text, re.M))
+    return summe("prefix_cache_hits_total"), summe("prefix_cache_queries_total")
+
+
+def cache_messen(m, port, zeit, log=print):
+    """The prefix cache: the same long question twice, first word cold and warm and the share of the second one's
+    prompt that came from the cache (numbers only; the answers are dropped)."""
+    msgs = [{"role": "system", "content": f"Messlauf {zeit}\n{VORLAUF}"}, {"role": "user", "content": VORLAUF_FRAGE}]
+    try:
+        vorher = cache_zaehler(_get(port, "/metrics"))
+    except Exception:
+        vorher = None
+    kalt = stream_messen(port, _body(m, msgs, 16))[0]
+    try:
+        mitte = cache_zaehler(_get(port, "/metrics"))
+    except Exception:
+        mitte = None
+    warm = stream_messen(port, _body(m, msgs, 16))[0]
+    r = {"erste_kalt_s": kalt, "erste_warm_s": warm}
+    try:
+        nach = cache_zaehler(_get(port, "/metrics"))
+        if vorher is not None and mitte is not None and nach[1] > mitte[1]:
+            r["zwischenspeicher"] = round((nach[0] - mitte[0]) / (nach[1] - mitte[1]), 2)
+    except Exception:
+        pass
+    anteil = f"{int(r['zwischenspeicher'] * 100)} %" if "zwischenspeicher" in r else "unbekannt"
+    log(f"modelle: messung {m['id']} zwischenspeicher {anteil}, erste kalt {kalt} s, warm {warm} s")
+    return r
+
+
 def werkzeug_ok(antwort):
     """True when the answer calls the tool wetter for Hamburg (fixed check, nothing of the answer is kept)."""
     calls = ((antwort.get("choices") or [{}])[0].get("message") or {}).get("tool_calls") or []
@@ -704,6 +745,8 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
                 log(f"modelle: messung {mid} mtp annahme {int(r['mtp_annahme'] * 100)} %")
         except Exception:
             pass
+        if m["kontext"] >= 16384:
+            r.update(cache_messen(m, port, r["zeit"], log))
         if m["werkzeuge"]:
             ok = werkzeug_ok(_post(port, CHAT, _body(
                 m, [{"role": "user", "content": WERKZEUG_FRAGE}], 200, tools=[WERKZEUG], tool_choice="auto")))
@@ -751,6 +794,10 @@ def zeile(mid, r):
              f"laden {r.get('laden_s')} s"]
     if "mtp_annahme" in r:
         teile.append(f"mtp {int(r['mtp_annahme'] * 100)} %")
+    if "erste_warm_s" in r:
+        teile.append(f"warm {r['erste_warm_s']} s")
+    if "zwischenspeicher" in r:
+        teile.append(f"zwischenspeicher {int(r['zwischenspeicher'] * 100)} %")
     if "mtp" in r:
         teile.append("mtp " + r["mtp"])
     for key, wort in (("werkzeug", "werkzeug"), ("bild_text", "text"), ("bild_szene", "szene"), ("bild_ok", "bild")):

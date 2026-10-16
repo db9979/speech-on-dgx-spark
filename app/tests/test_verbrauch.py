@@ -239,8 +239,8 @@ class OwnNumbers(Base):
 class Quota(Base):
     def test_over_the_day_limit_the_conversation_says_the_fixed_sentence(self):
         helpers.set_config(usage_quota=True, usage_quota_k=1)        # 1000 tokens a day
-        c = profile("Vbdora")
-        uid = uid_of("Vbdora")
+        c = profile("Vkdora")  # not Vbdora: test_verbund has its own Vbdora with another PIN (one process: 401)
+        uid = uid_of("Vkdora")
         with mock.patch.object(verbrauch, "_day", lambda now: DAY), mock.patch.object(verbrauch, "_keys", lambda now: KEYS):
             self.assertFalse(verbrauch.over(uid))
             verbrauch.add("llm", "Gespräch", uid, 900, 0, 200)
@@ -324,8 +324,8 @@ class Quota(Base):
         self.assertIn(c.post("/api/admin/verbrauch/nachschlag", json={"uid": uid, "k": 5}).status_code, (401, 403))
 
     def test_the_quota_endpoint_checks_its_input(self):
-        profile("Vbdora")
-        uid = uid_of("Vbdora")
+        profile("Vkdora")
+        uid = uid_of("Vkdora")
         for body, code in (({"uid": "u_nobody00000", "k": 5}, 404), ({"uid": uid, "k": -1}, 400),
                            ({"uid": uid, "k": "viel"}, 400), ({"uid": uid, "k": True}, 400),
                            ({"uid": uid, "zeit": "jahr", "k": 5}, 400),

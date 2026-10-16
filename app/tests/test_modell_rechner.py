@@ -123,6 +123,11 @@ class Netguard(unittest.TestCase):
     def setUp(self):
         netguard._model.update(host="", t=0.0, ips=set())
         self.addCleanup(netguard._model.update, host="", t=0.0, ips=set())
+        # the test computer's own addresses are not the point here: on tars 192.168.178.171 is its own address, so
+        # "all-in-one: a LAN device like any" was refused as own ground (self-test of install.sh, 2026-10-16)
+        own = mock.patch.object(netguard, "own_addresses", return_value=set())
+        own.start()
+        self.addCleanup(own.stop)
 
     def check(self, host, ip, port):
         with mock.patch.object(common, "load_config", return_value=cfg_with(host)):

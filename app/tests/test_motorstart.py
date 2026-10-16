@@ -86,6 +86,8 @@ class Signatur(unittest.TestCase):
         other["qwen38-27b-nvfp4"] = dict(kat["qwen38-27b-nvfp4"], anteil=0.31)        # the language model's share changed
         self.assertNotEqual(modelle.signatur("llm", cfg, messung={}, kat=other), sig)
         self.assertNotEqual(modelle.signatur("llm", dict(cfg, llm=dict(cfg["llm"], engine_port=31018)), messung={}, kat=kat), sig)
+        with mock.patch.object(modelle, "vllm_args", side_effect=lambda *a, **k: ["neue-option"]):
+            self.assertNotEqual(modelle.signatur("llm", cfg, messung={}, kat=kat), sig)   # a new start option restarts it
 
 
 class EngineWait(unittest.TestCase):

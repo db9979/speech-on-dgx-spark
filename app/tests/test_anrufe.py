@@ -290,14 +290,12 @@ class Vermittler(Base):
             self.assertEqual(anrufe._turn["why"], "coturn fehlt")
             self.assertFalse(anrufe.relay_ok())
             anrufe.apply_turn()
-        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
-            ins = f.read()
+        ins = helpers.repo_file("install.sh")
         self.assertIn("ConditionPathExists=/usr/bin/turnserver", ins)   # no restart loop without the program
         self.assertIn("RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK", ins)   # coturn reads its addresses
 
     def test_installed_as_its_own_unit_and_the_distribution_service_never_runs(self):
-        with open(os.path.join(helpers.APP, "..", "install.sh")) as f:
-            ins = f.read()
+        ins = helpers.repo_file("install.sh")
         self.assertIn("systemctl mask --now coturn.service", ins)   # stopped too when it already ran
         self.assertIn("speech-spark-turn.service", ins)
         self.assertRegex(ins, r"for u in [^;\n]*\bturn\b[^;\n]*; do")              # sudoers: start/stop/restart only
