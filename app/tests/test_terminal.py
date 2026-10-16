@@ -197,6 +197,40 @@ class Program(unittest.TestCase):
             self.assertIsNone(p.LINE.fullmatch(bad), bad)
         self.assertIsNone(p.URL.fullmatch("http://spark.example.org"))
 
+    def test_fetch_line_checks_the_sum_before_it_installs(self):
+        # V01.0.661: Ich → Terminal installs the command spark-tui only after sha256sum -c with the page's value
+        with open(os.path.join(os.path.dirname(__file__), "..", "panel", "static", "js", "extras.js")) as f:
+            js = f.read()
+        line = js[js.index("get=`curl"):js.index(";", js.index("get=`curl"))]
+        self.assertIn("sha256sum -c && install -Dm755 spark-tui.py ~/.local/bin/spark-tui", line)
+        self.assertLess(line.index("sha256sum -c"), line.index("install "))
+        self.assertIn("~/.local/bin/spark-tui koppeln", js)
+
+    def test_window_uses_its_own_textual_environment(self):
+        # V01.0.661: Debian refuses pip outside a venv; without Textual the window restarts in spark-tui's own one
+        import sys
+        import tempfile
+        p = program()
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "bin"))
+            py = os.path.join(d, "bin", "python3")
+            open(py, "w").close()
+            calls = []
+            old = (p.VENV, p.need, p.os.execv, sys.modules.get("textual.app"))
+            p.VENV, p.need = d, lambda: {"key": "k", "urls": []}
+            p.os.execv = lambda exe, argv: calls.append((exe, argv)) or (_ for _ in ()).throw(SystemExit(0))
+            sys.modules["textual.app"] = None   # import fails as without Textual
+            try:
+                with self.assertRaises(SystemExit):
+                    p.cmd_window(None)
+            finally:
+                p.VENV, p.need, p.os.execv = old[:3]
+                if old[3] is None:
+                    sys.modules.pop("textual.app", None)
+                else:
+                    sys.modules["textual.app"] = old[3]
+        self.assertEqual(calls[0][0], py)
+
     def test_wrong_pin_sends_nothing(self):
         p = program()
         sent = []

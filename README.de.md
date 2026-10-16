@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.661** Terminal-Client: Ich → Terminal richtet den Befehl spark-tui ein (Prüfsumme geprüft); Textual in eigener Umgebung
 - **V01.0.660** Ich → Gedächtnis: kein Fehlerkasten mehr bei veralteten Einträgen
 - **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
 - **V01.0.658** ROT-FIX .657: Zustand-Kacheltest ohne Rennen mit der 3-s-Aktualisierung
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.654** Chats in der iPhone-App wie im Panel, auch private Chats (Ende-zu-Ende)
 - **V01.0.653** Bilder ändern: der Spark ändert ein eigenes Foto oder Bild mit FLUX.2 klein, das Panel wählt das Bild
 - **V01.0.652** Anrufe und Videoanrufe in der iPhone-App, mit Klingeln auch bei geschlossener App
-- **V01.0.651** Nach dem Umzug: iPhone-App nennt Zertifikat und Reverse Proxy, Warnung beim Koppeln über 31443
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

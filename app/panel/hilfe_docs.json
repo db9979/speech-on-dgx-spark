@@ -461,7 +461,7 @@
 "file": "APIs und Einbinden",
 "head": "Terminal-Client (spark-tui)",
 "title": "Terminal-Client (spark-tui)",
-"text": "1. Admin schaltet *Funktionen → Terminal-Client* ein (gilt für jedes Profil, der Admin sperrt einzelne; Gäste nie). 2. Unter *Ich → Terminal* steht die Zeile zum Holen des Programms mit Prüfsumme (curl -fsSkLo spark-tui.py …/tui/spark-tui.py und sha256sum). Für das Fenster braucht es Textual (python3 -m pip install --user textual), spark-tui frage \"…\" geht ohne. 3. „Kopplungszeile holen“ (mit Bestätigungscode) gibt eine Zeile python3 spark-tui.py koppeln 'https://…#tui=…&fp=…', die 10 Minuten und einmal gilt. Im Heimnetz pinnt das Terminal das Zertifikat des Panels (fp, SHA-256) und schickt nichts, wenn es nicht passt. Holt man die Zeile über die Adresse von außen (Reverse-Proxy mit echtem Zertifikat), steht kein fp darin und das Zertifikat wird wie im Browser geprüft. spark-tui adresse-dazu https://… fügt eine zweite Adresse hinzu; das Terminal nimmt die erste, die antwortet. Nur https geht. 4. Das Terminal speichert seinen Schlüssel in ~/.config/spark-tui/geraet.json (nur für dich lesbar). Der Schlüssel heißt „Terminal · Name“, erreicht nur Chat, Gespräche, Heute, Funktionsliste und die Aufträge-Seiten und bekommt 503, solange die Funktion aus oder das Profil gesperrt ist. Aufträ"
+"text": "1. Admin schaltet *Funktionen → Terminal-Client* ein (gilt für jedes Profil, der Admin sperrt einzelne; Gäste nie). 2. Unter *Ich → Terminal* steht eine Zeile, die das Programm holt, die Prüfsumme prüft (sha256sum -c mit dem Wert von der Seite) und es als Befehl ~/.local/bin/spark-tui einrichtet (ab V01.0.661; Raspberry Pi OS hat ~/.local/bin nach dem nächsten Anmelden im Suchpfad). Für das Fenster braucht es Textual in einer eigenen Umgebung (python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual, Raspberry Pi OS und Debian lassen pip außerhalb einer Umgebung nicht zu; spark-tui findet sie selbst), spark-tui frage \"…\" geht ohne. 3. „Kopplungszeile holen“ (mit Bestätigungscode) gibt eine Zeile ~/.local/bin/spark-tui koppeln 'https://…#tui=…&fp=…', die 10 Minuten und einmal gilt. Im Heimnetz pinnt das Terminal das Zertifikat des Panels (fp, SHA-256) und schickt nichts, wenn es nicht passt. Holt man die Zeile über die Adresse von außen (Reverse-Proxy mit echtem Zertifikat), steht kein fp darin und das Zertifikat wird wie im Browser geprüft. spark-tui adresse-dazu https://… fügt eine zweite Adresse hinzu; das Terminal nimmt die erste, die antworte"
 },
 {
 "lang": "de",
@@ -469,7 +469,7 @@
 "file": "APIs und Einbinden",
 "head": "Terminal-Client (spark-tui)",
 "title": "Terminal-Client (spark-tui)",
-"text": "ge folgen der Agent-Stufe des Profils. Entfernen unter *Ich → Terminal* oder bei Personen und Geräte."
+"text": "t. Nur https geht. 4. Das Terminal speichert seinen Schlüssel in ~/.config/spark-tui/geraet.json (nur für dich lesbar). Der Schlüssel heißt „Terminal · Name“, erreicht nur Chat, Gespräche, Heute, Funktionsliste und die Aufträge-Seiten und bekommt 503, solange die Funktion aus oder das Profil gesperrt ist. Aufträge folgen der Agent-Stufe des Profils. Entfernen unter *Ich → Terminal* oder bei Personen und Geräte."
 },
 {
 "lang": "de",
@@ -7477,7 +7477,7 @@
 "file": "APIs and integration",
 "head": "Terminal client (spark-tui)",
 "title": "Terminal client (spark-tui)",
-"text": "1. The admin switches on *Functions → Terminal client* (applies to every profile, the admin blocks single ones; never guests). 2. *Me → Terminal* shows the line to get the program with its checksum (curl -fsSkLo spark-tui.py …/tui/spark-tui.py and sha256sum). The window needs Textual (python3 -m pip install --user textual), spark-tui frage \"…\" works without it. 3. \"Get a pairing line\" (with confirmation code) gives a line python3 spark-tui.py koppeln 'https://…#tui=…&fp=…', valid for 10 minutes and once. In the home network the terminal pins the panel's certificate (fp, SHA-256) and sends nothing if it does not match. If you fetch the line over the outside address (reverse proxy with a real certificate), it has no fp and the certificate is checked as in the browser. spark-tui adresse-dazu https://… adds a second address; the terminal uses the first one that answers. Only https works. 4. The terminal keeps its key in ~/.config/spark-tui/geraet.json (readable only by you). The key is called \"Terminal · name\", reaches only chat, conversations, Today, the function list and the job pages, and gets 503 while the function is off or the profile is blocked. Jobs follow the profile's agent l"
+"text": "1. The admin switches on *Functions → Terminal client* (applies to every profile, the admin blocks single ones; never guests). 2. *Me → Terminal* shows a line that fetches the program, checks the checksum (sha256sum -c with the value from the page) and sets it up as the command ~/.local/bin/spark-tui (from V01.0.661; Raspberry Pi OS has ~/.local/bin in the path after the next login). The window needs Textual in its own environment (python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual, Raspberry Pi OS and Debian refuse pip outside an environment; spark-tui finds it by itself), spark-tui frage \"…\" works without it. 3. \"Get a pairing line\" (with confirmation code) gives a line ~/.local/bin/spark-tui koppeln 'https://…#tui=…&fp=…', valid for 10 minutes and once. In the home network the terminal pins the panel's certificate (fp, SHA-256) and sends nothing if it does not match. If you fetch the line over the outside address (reverse proxy with a real certificate), it has no fp and the certificate is checked as in the browser. spark-tui adresse-dazu https://… adds a second address; the terminal uses the first one that answers. Only https works. 4. T"
 },
 {
 "lang": "en",
@@ -7485,7 +7485,7 @@
 "file": "APIs and integration",
 "head": "Terminal client (spark-tui)",
 "title": "Terminal client (spark-tui)",
-"text": "evel. Remove it under *Me → Terminal* or under People and devices."
+"text": "he terminal keeps its key in ~/.config/spark-tui/geraet.json (readable only by you). The key is called \"Terminal · name\", reaches only chat, conversations, Today, the function list and the job pages, and gets 503 while the function is off or the profile is blocked. Jobs follow the profile's agent level. Remove it under *Me → Terminal* or under People and devices."
 },
 {
 "lang": "en",

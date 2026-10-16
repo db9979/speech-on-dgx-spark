@@ -20,6 +20,7 @@ import http.client
 import json
 import os
 import re
+import shutil
 import socket
 import ssl
 import sys
@@ -27,8 +28,10 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 HEADER = "X-Speech-Device"
+VENV = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "spark-tui")   # Textual for the window
+SETUP = "python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual"
 CONF = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "spark-tui", "geraet.json")
 LINE = re.compile(r"(https://[A-Za-z0-9.\-\[\]:]{1,260})/?#tui=([A-Za-z0-9_\-]{20,40})(?:&fp=([0-9a-f]{64}))?")
 URL = re.compile(r"https://[A-Za-z0-9.\-]{1,253}(?::\d{1,5})?|https://\[[0-9A-Fa-f:.]{2,45}\](?::\d{1,5})?")
@@ -213,7 +216,8 @@ def cmd_pair(args):
     print("  Zertifikat   " + (f"SHA-256 {fp[:4]} {fp[4:8]} … {fp[-4:]}  festgepinnt" if fp else "wie im Browser geprüft"))
     print(f"  Profil       {d.get('profile', '')}")
     print(f"  Gespeichert  {CONF}  (Rechte 0600)")
-    print("\n  Fertig. Starten mit:  spark-tui")
+    me = "spark-tui" if shutil.which("spark-tui") else (os.path.abspath(sys.argv[0]) if sys.argv[0].endswith("spark-tui") else "python3 " + sys.argv[0])
+    print(f"\n  Fertig. Starten mit:  {me}")
 
 
 def need():
@@ -270,7 +274,12 @@ def cmd_window(args):
     try:
         from textual.app import App
     except ImportError:
-        sys.exit("Für das Fenster fehlt Textual: python3 -m pip install --user textual\n"
+        # Debian/Raspberry Pi OS refuse pip outside a venv: Textual lives in spark-tui's own one, used from here
+        py = os.path.join(VENV, "bin", "python3")
+        if os.path.isfile(py) and os.path.realpath(sys.executable) != os.path.realpath(py):
+            os.execv(py, [py, os.path.abspath(sys.argv[0])] + sys.argv[1:])
+        sys.exit("Für das Fenster fehlt Textual, einmal einrichten:\n"
+                 f"  {SETUP}\n"
                  "Ohne Fenster geht es mit: spark-tui frage '…'")
     run_window(Spark(conf), conf, App)
 

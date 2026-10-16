@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.661** · 2026-10-16 · Terminal-Client: die Zeile unter Ich → Terminal prüft die Prüfsumme und richtet den Befehl spark-tui ein; Textual in eigener Umgebung, die spark-tui selbst findet
 - **V01.0.660** · 2026-10-16 · Ich → Gedächtnis zeigt keinen Fehler „(ctl || []).forEach is not a function“ mehr, sobald ein Eintrag vielleicht veraltet ist (der Hinweis gab seinen Knopf nicht als Liste weiter); ein Test prüft alle Kästen
 - **V01.0.659** · 2026-10-16 · Bilder ändern: die feste Regel erkennt jetzt auch „Mach den Bart weg“, „Lass den Hut weg“, „Mach ihn ohne Brille“, „Mach den Bart ab“, „Bart weg bitte“ und „…wegmachen“ (vorher ging so ein Foto nur ans Sprachmodell)
 - **V01.0.658** · 2026-10-16 · ROT-FIX .657: test_zustand_tiles_fit_and_lead_somewhere ließ die echte Zustand-Aktualisierung (alle 3 s) über die Testdaten malen; jetzt ist nur die erste /api/status-Antwort echt, alle späteren schlagen fehl wie ein nicht erreichbares Panel, alle Prüfungen bleiben
