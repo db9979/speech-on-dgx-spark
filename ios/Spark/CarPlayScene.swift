@@ -5,7 +5,7 @@ import UIKit
 
 /// CarPlay: an own icon in the car. Tapping "Mit Spark sprechen" starts a hands-free conversation
 /// (the same assistant as on the phone, with short answers); the car screen shows only the state
-/// (listening, thinking, speaking) with the face the admin picked (robot or comic, as a still picture:
+/// (listening, thinking, speaking) with the profile's face (robot or comic, from hello and redrawn when it arrives later, as a still picture:
 /// CarPlay allows no own drawing or animation), never text. Needs the CarPlay entitlement for voice-based
 /// conversational apps (Spark.entitlements; granted by Apple since V01.0.676, docs/de/iphone-app.md).
 @MainActor
@@ -14,6 +14,11 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var voice: CPVoiceControlTemplate?
     private var shown = false
     private var watch: AnyCancellable?
+    private var watchFace: AnyCancellable?
+    private var start: CPListItem?
+    /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
+    private var face = ""
+    private var faceLater = false
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didConnect interfaceController: CPInterfaceController) {
@@ -21,11 +26,12 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         let talk = Conversation.shared
         talk.inCar = true
         let start = CPListItem(text: String(localized: "Mit Spark sprechen"), detailText: String(localized: "Antippen und losreden"),
-                               image: FaceStill.image(talk.allowed.face, .idle) ?? UIImage(systemName: "waveform"))
+                               image: nil)
         start.handler = { [weak self] _, done in
             self?.begin(fresh: false)
             done()
         }
+        self.start = start
         let fresh = CPListItem(text: String(localized: "Neues Gespräch"), detailText: String(localized: "Das bisherige Gespräch vergessen"),
                                image: UIImage(systemName: "square.and.pencil"))
         fresh.handler = { [weak self] _, done in
@@ -34,21 +40,38 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         }
         let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: [start, fresh])])
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
-        let face = talk.allowed.face
+        watchFace = talk.$allowed.map(\.face).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] f in self?.use(face: f) }
+        watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
+        // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
+        // without it the car would keep the defaults (robot face, no profile switches)
+        Task { await talk.check() }
+    }
+
+    /// Draws the pictures for the profile's face. A voice template on screen keeps its pictures (CarPlay
+    /// cannot change them while shown), so a change then waits until it is dismissed.
+    private func use(face kind: String) {
+        guard kind != face else { return }
+        start?.setImage(FaceStill.image(kind, .idle) ?? UIImage(systemName: "waveform"))
+        if shown { faceLater = true; return }
+        face = kind
+        faceLater = false
         voice = CPVoiceControlTemplate(voiceControlStates: [
             CPVoiceControlState(identifier: "listen", titleVariants: [String(localized: "Ich höre zu …")],
-                                image: FaceStill.image(face, .listen) ?? UIImage(systemName: "mic.fill"), repeats: true),
+                                image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "mic.fill"), repeats: true),
             CPVoiceControlState(identifier: "think", titleVariants: [String(localized: "Denke nach …")],
-                                image: FaceStill.image(face, .think) ?? UIImage(systemName: "ellipsis"), repeats: true),
+                                image: FaceStill.image(kind, .think) ?? UIImage(systemName: "ellipsis"), repeats: true),
             CPVoiceControlState(identifier: "speak", titleVariants: [String(localized: "Spark spricht …")],
-                                image: FaceStill.image(face, .speak) ?? UIImage(systemName: "speaker.wave.2.fill"), repeats: true)])
-        watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
+                                image: FaceStill.image(kind, .speak) ?? UIImage(systemName: "speaker.wave.2.fill"), repeats: true)])
     }
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didDisconnectInterfaceController interfaceController: CPInterfaceController) {
         watch = nil
+        watchFace = nil
         interface = nil
+        start = nil
+        voice = nil
+        face = ""
         shown = false
         let talk = Conversation.shared
         talk.inCar = false
@@ -79,6 +102,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         } else if shown {
             shown = false
             interface.dismissTemplate(animated: true, completion: nil)
+            if faceLater { use(face: Conversation.shared.allowed.face) }
         }
     }
 }

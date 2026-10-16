@@ -6013,7 +6013,7 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht, das der Admin gewählt hat (Roboter oder Comic), passend zum Zustand als Standbild (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter."
+"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht deines Profils (Roboter oder Comic, wie in der App), passend zum Zustand als Standbild; startet nur das Auto die App, fragt sie den Spark gleich selbst nach dem Gesicht (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter."
 },
 {
 "lang": "de",
@@ -13069,7 +13069,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "An own \"Spark\" icon in the car. Tap → \"Mit Spark sprechen\" → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text, with the face the admin picked (robot or comic) as a still picture matching the state (since V01.0.676; Apple allows no animation in CarPlay). Answers are short in the car. Smart home in the car only with its own switch \"Smart home in the car too\" and the code word. Route and call only after \"Ja\"."
+"text": "An own \"Spark\" icon in the car. Tap → \"Mit Spark sprechen\" → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text, with the profile's face (robot or comic, as in the app) as a still picture matching the state; when only the car starts the app, it asks the Spark for the face itself (since V01.0.676; Apple allows no animation in CarPlay). Answers are short in the car. Smart home in the car only with its own switch \"Smart home in the car too\" and the code word. Route and call only after \"Ja\"."
 },
 {
 "lang": "en",

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.706** CarPlay shows the profile's face, also when only the car starts the app
 - **V01.0.705** iPhone app: calls ring without Apple's VoIP push too while the app runs (it listens to the Spark's news itself); before, an iPhone rang only via the push
 - **V01.0.704** Control centre: the tools box shows which tool is at work
 - **V01.0.703** Cleanup: the texts of the architecture pages live in seven smaller files; the guard tables no longer count them
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.699** Round-trip check: every few minutes a real test run through speaking, listening and the language model; if a step fails twice, the admins hear of it
 - **V01.0.698** Control centre: lines run under the boxes, finished answers stay for a moment
 - **V01.0.697** Hands-on test: Status → Hands-on test lists what is new and should still be tried, per point Works, Problem or Later; old points folded away
-- **V01.0.696** Control centre: no more "panel gone" on short hiccups
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
