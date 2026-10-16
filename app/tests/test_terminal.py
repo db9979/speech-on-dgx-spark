@@ -121,7 +121,8 @@ class Terminal(unittest.TestCase):
     def test_key_reaches_only_the_terminal_paths(self):
         a = profile("Toni")
         app, h = paired(a)
-        self.assertEqual(app.get("/api/tui/hello", headers=h).status_code, 200)
+        hello = app.get("/api/tui/hello", headers=h).json()
+        self.assertEqual(hello["sha256"], terminal.program()["sha256"])   # what "spark-tui update" checks against
         self.assertEqual(app.get("/api/profile/convos", headers=h).status_code, 200)
         self.assertEqual(app.get("/api/profile/today", headers=h).status_code, 200)
         r = app.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "speak": False}, headers=h)
@@ -230,6 +231,53 @@ class Program(unittest.TestCase):
                 else:
                     sys.modules["textual.app"] = old[3]
         self.assertEqual(calls[0][0], py)
+
+    def test_update_keeps_only_the_named_sum(self):
+        # spark-tui update: the file from the Spark replaces the program only when its SHA-256 is the one hello names
+        import tempfile
+        p = program()
+        new = b"#!/usr/bin/env python3\nVERSION = \"9.9.9\"\n"
+
+        class R:
+            def __init__(self, data):
+                self.data = data
+
+            def read(self, n):
+                return self.data[:n]
+
+        class C:
+            def close(self):
+                pass
+
+        class Sp:
+            def __init__(self, sha, data):
+                self.sha, self.data, self.fetched = sha, data, 0
+
+            def call(self, method, path, body=None):
+                return {"program": "9.9.9", "sha256": self.sha}
+
+            def open(self, method, path, body=None, **kw):
+                self.fetched += 1
+                return C(), R(self.data)
+        with tempfile.TemporaryDirectory() as d:
+            target = os.path.join(d, "spark-tui")
+            with open(target, "wb") as f:
+                f.write(b"#!/usr/bin/env python3\nVERSION = \"1\"\n")
+            bad = Sp(hashlib.sha256(new).hexdigest(), new + b"# changed on the way\n")
+            with self.assertRaises(p.SparkError):
+                p.update_file(bad, target)
+            with open(target, "rb") as f:
+                self.assertNotIn(b"9.9.9", f.read())   # nothing changed
+            with self.assertRaises(p.SparkError):
+                p.update_file(Sp("", new), target)   # no sum named: nothing fetched
+            good = Sp(hashlib.sha256(new).hexdigest(), new)
+            self.assertEqual(p.update_file(good, target), "9.9.9")
+            with open(target, "rb") as f:
+                self.assertEqual(f.read(), new)
+            self.assertTrue(os.access(target, os.X_OK))
+            self.assertEqual(p.update_file(good, target), "")   # already current: not fetched again
+            self.assertEqual(good.fetched, 1)
+            self.assertEqual(sorted(os.listdir(d)), ["spark-tui"])
 
     def test_wrong_pin_sends_nothing(self):
         p = program()

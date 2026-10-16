@@ -19,7 +19,8 @@ on them, the answers come from the normal assistant with its own rules (Weiche, 
     DELETE /api/profile/terminal/{did}       remove a terminal (its key stops at once)
     program:
     POST   /api/tui/pair {code, name}        -> {"key", "profile"}
-    GET    /api/tui/hello                    -> version, profile, parts (also the "online" mark for Live)
+    GET    /api/tui/hello                    -> version, profile, parts, the program's version and SHA-256 for
+                                                "spark-tui update" (also the "online" mark for Live)
     and the panel's own paths in TUI_RULES (chat, conversations, Heute, agent)
 """
 import hashlib
@@ -239,7 +240,8 @@ def program_hello(request: Request, prof=Depends(own_profile)):
         _seen.clear()
     import agent
     uid = prof["id"]
-    return {"spark": app_version(), "profile": prof["name"], "program": program().get("version", ""),
+    prog = program()
+    return {"spark": app_version(), "profile": prof["name"], "program": prog.get("version", ""), "sha256": prog.get("sha256", ""),
             "agent": agent.level(uid) if agent.admin_on() else "", "today": True}
 
 

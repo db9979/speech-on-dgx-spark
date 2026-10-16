@@ -477,7 +477,7 @@
 "file": "APIs und Einbinden",
 "head": "Terminal-Client (spark-tui)",
 "title": "Terminal-Client (spark-tui)",
-"text": "Fenster: links Gespräche, Aufträge und Heute (unter 100 Spalten nur der Chat), rechts der Chat. F2 Gespräche, F3 Aufträge (n neuer Auftrag; im Auftrag d als Dokument, x abbrechen, Entf löschen), F4 neu laden, Strg+N neues Gespräch, Esc stoppt die Antwort, F10 Ende. spark-tui status zeigt Adresse, Profil und was das Terminal darf. Fragen erscheinen im Anfrage-Verlauf mit Eingang „Terminal“, unter *Zustand → Live* steht die Zahl offener Terminals, unter *Zustand → Logs* im Bereich „Apps“ die Zeilen terminal: …."
+"text": "Fenster: links Gespräche, Aufträge und Heute (unter 100 Spalten nur der Chat), rechts der Chat. F2 Gespräche, F3 Aufträge (n neuer Auftrag; im Auftrag d als Dokument, x abbrechen, Entf löschen), F4 neu laden, Strg+N neues Gespräch, Esc stoppt die Antwort, F10 Ende. spark-tui status zeigt Adresse, Profil und was das Terminal darf. Hat der Spark eine neuere Version, steht oben im Fenster „Neue Version …: spark-tui update“; spark-tui update holt sie über die gekoppelte Verbindung und ersetzt das Programm nur, wenn die Prüfsumme zu der passt, die der Spark nennt (ab V01.0.665). Fragen erscheinen im Anfrage-Verlauf mit Eingang „Terminal“, unter *Zustand → Live* steht die Zahl offener Terminals, unter *Zustand → Logs* im Bereich „Apps“ die Zeilen terminal: …."
 },
 {
 "lang": "de",
@@ -7517,7 +7517,7 @@
 "file": "APIs and integration",
 "head": "Terminal client (spark-tui)",
 "title": "Terminal client (spark-tui)",
-"text": "Window: conversations, jobs and Today on the left (below 100 columns only the chat), the chat on the right. F2 conversations, F3 jobs (n new job; in a job d as document, x cancel, Del delete), F4 reload, Ctrl+N new conversation, Esc stops the answer, F10 quit. spark-tui status shows address, profile and what the terminal may do. Questions show up in the request history with input \"Terminal\", *Status → Live* shows the number of open terminals, *Status → Logs* has the terminal: … lines in the area \"Apps\"."
+"text": "Window: conversations, jobs and Today on the left (below 100 columns only the chat), the chat on the right. F2 conversations, F3 jobs (n new job; in a job d as document, x cancel, Del delete), F4 reload, Ctrl+N new conversation, Esc stops the answer, F10 quit. spark-tui status shows address, profile and what the terminal may do. When the Spark has a newer version, the window's head line says \"Neue Version …: spark-tui update\"; spark-tui update fetches it over the paired connection and replaces the program only when the checksum matches the one the Spark names (from V01.0.665). Questions show up in the request history with input \"Terminal\", *Status → Live* shows the number of open terminals, *Status → Logs* has the terminal: … lines in the area \"Apps\"."
 },
 {
 "lang": "en",

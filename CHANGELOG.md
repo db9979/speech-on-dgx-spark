@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.665** · 2026-10-16 · Terminal-Client: spark-tui update holt die neue Version vom Spark und ersetzt das Programm nur bei passender Prüfsumme; das Fenster zeigt neue Versionen an
 - **V01.0.664** · 2026-10-16 · Weiche-Check: „Terminal“ ist kein Termin, Alltagssätze für Telefon, Chats, Bilder, NAS und Co., bekannte Lücken zu, Foto mit Änderungswunsch als Gruppe Bilder, Lernen aus unklaren Fragen (Hinweiswort übernehmen)
 - **V01.0.663** · 2026-10-16 · Begleiter (Windows): jede Meldung im Tray-Fenster hat zuerst „OK“, nimmt sie weg, das Fenster bleibt offen für die nächste
 - **V01.0.662** · 2026-10-16 · Verbessern lädt wieder auf dem Pi (befund: Absicht ohne Gruppe), Suchmodell auf dem Panel-Rechner mit 1,5 GiB statt 8,5 GiB und ohne Neuversuch alle 20 s; Gehäuse B7b: Seiten 6–11, Vorschau zum Antippen und Ziehen, Live-Bild, Schutz vor Einbrennen

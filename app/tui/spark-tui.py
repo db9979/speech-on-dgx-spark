@@ -7,6 +7,7 @@
     spark-tui frage 'Wann fährt der erste Bus?'                              one question, the answer as text
     echo 'Text' | spark-tui frage 'Fasse das zusammen'                       the piped text goes with the question
     spark-tui status                                                         reachable? what may this terminal do?
+    spark-tui update                                                         the newest version from the Spark
 
 Only the Python standard library talks to the Spark: https only; an address from the pairing line at home has its
 certificate pinned (SHA-256, checked before anything is sent), any other address is checked against the system's
@@ -28,7 +29,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 HEADER = "X-Speech-Device"
 VENV = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "spark-tui")   # Textual for the window
 SETUP = "python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual"
@@ -250,7 +251,47 @@ def cmd_status(args):
         sys.exit(str(e))
     agent = {"": "aus", "read": "nur lesen", "act": "auch handeln"}.get(d.get("agent", ""), d.get("agent", ""))
     print(f"Spark {d.get('spark', '')} · erreichbar · Profil {d.get('profile', '')} · Aufträge: {agent} · "
-          f"spark-tui {VERSION}" + (f" (auf dem Spark {d['program']})" if d.get("program") and d["program"] != VERSION else ""))
+          f"spark-tui {VERSION}" + (f" (auf dem Spark {d['program']}: spark-tui update)" if d.get("program") and d["program"] != VERSION else ""))
+
+
+def update_file(sp, target):
+    """Replaces target with the Spark's spark-tui.py: fetched over the paired (pinned) connection and kept only when
+    its SHA-256 matches what the Spark names in hello; written next to it and moved in at once. Returns the new version
+    or "" when already current."""
+    d = sp.call("GET", "/api/tui/hello")
+    want, ver = str(d.get("sha256", "")), str(d.get("program", ""))
+    if not re.fullmatch(r"[0-9a-f]{64}", want):
+        raise SparkError("Der Spark nennt keine Prüfsumme für das Programm.")
+    with open(target, "rb") as f:
+        if hmac.compare_digest(hashlib.sha256(f.read()).hexdigest(), want):
+            return ""
+    conn, r = sp.open("GET", "/tui/spark-tui.py")
+    try:
+        data = r.read(4 * 1024 * 1024 + 1)
+    finally:
+        conn.close()
+    if len(data) > 4 * 1024 * 1024 or not hmac.compare_digest(hashlib.sha256(data).hexdigest(), want):
+        raise SparkError("Die Prüfsumme passt nicht. Nichts geändert.")
+    if not data.startswith(b"#!/usr/bin/env python3\n"):
+        raise SparkError("Unerwartete Datei vom Spark. Nichts geändert.")
+    tmp = target + ".neu"
+    with open(tmp, "wb") as f:
+        f.write(data)
+    os.chmod(tmp, 0o755)
+    os.replace(tmp, target)
+    return ver or "?"
+
+
+def cmd_update(args):
+    conf = need()
+    target = os.path.realpath(sys.argv[0])
+    try:
+        ver = update_file(Spark(conf), target)
+    except SparkError as e:
+        sys.exit(str(e))
+    except OSError as e:
+        sys.exit(f"Nicht geschrieben ({type(e).__name__}): {target}")
+    print(f"spark-tui {VERSION} ist aktuell." if not ver else f"spark-tui {VERSION} → {ver}, ersetzt: {target}")
 
 
 def cmd_ask(args):
@@ -406,6 +447,8 @@ def run_window(sp, conf, App):
                     d = sp.call("GET", "/api/tui/hello")
                     agent = {"": "Aufträge aus", "read": "Aufträge: nur lesen", "act": "Aufträge: auch handeln"}.get(d.get("agent", ""), "")
                     text = f"✦ Spark {d.get('spark', '')} · {d.get('profile', '')} · ● bereit · {agent}"
+                    if d.get("program") and d["program"] != VERSION:
+                        text += f" · Neue Version {d['program']}: spark-tui update"
                 except SparkError as e:
                     text = f"✦ Spark · ● {e}"
                 self.call_from_thread(self.query_one("#head").update, text)
@@ -591,8 +634,9 @@ def main(argv=None):
     f = sub.add_parser("frage", help="eine Frage, die Antwort als Text")
     f.add_argument("text", nargs="*")
     sub.add_parser("status", help="erreichbar? was darf dieses Terminal?")
+    sub.add_parser("update", help="die neueste Version vom Spark holen (Prüfsumme geprüft)")
     args = p.parse_args(argv)
-    {"koppeln": cmd_pair, "adresse-dazu": cmd_add, "frage": cmd_ask, "status": cmd_status}.get(args.cmd, cmd_window)(args)
+    {"koppeln": cmd_pair, "adresse-dazu": cmd_add, "frage": cmd_ask, "status": cmd_status, "update": cmd_update}.get(args.cmd, cmd_window)(args)
 
 
 if __name__ == "__main__":
