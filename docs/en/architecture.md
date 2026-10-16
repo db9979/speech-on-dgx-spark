@@ -176,6 +176,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/ack.py` | Instant acknowledgement. |
 | `app/panel/answercheck.py` | Answer check: the panel, not the model, decides whether a sentence may be said. |
 | `app/panel/chat.py` | The voice assistant: /api/chat with its tools (search, memory, documents, reminders, calendar, e-mail, Home Assistant, earlier conversations), learning from … |
+| `app/panel/chat_modell.py` | chat_modell.py: the model side of an answer, cut out of chat._answer. |
 | `app/panel/chat_tools.py` | The tools of one chat turn: what runs when the model calls web search, Home Assistant, mail, calendar, reminders ... |
 | `app/panel/chat_turn.py` | One chat turn, before the model is asked: who is speaking and what they may use (profile, voice, device key, Telegram, iPhone app), the system prompt, answer … |
 | `app/panel/echo.py` | The assistant does not answer its own voice (admin chat.no_self_echo, per profile "echo"; off by default). |
@@ -1771,7 +1772,8 @@ flowchart TD
 #### In the code
 
 - `app/panel/chat.py` `chat`: rate limit, speech first, „answering“ ([step 1](#kn-antwort-s1))
-- `app/panel/chat.py` `_answer`: rounds, tools, checks, speech output as one stream ([step 4](#kn-antwort-s4), [step 5](#kn-antwort-s5), [step 11](#kn-antwort-s11))
+- `app/panel/chat.py` `_answer`: speech output and events as one stream ([step 4](#kn-antwort-s4), [step 5](#kn-antwort-s5), [step 11](#kn-antwort-s11))
+- `app/panel/chat_modell.py` `model_turn`: rounds with the model, tools, checks ([step 4](#kn-antwort-s4), [step 11](#kn-antwort-s11))
 - `app/panel/chat.py` `split_sentences`: cuts finished sentences off ([step 5](#kn-antwort-s5))
 - `app/panel/chat.py` `said_key`: spots a sentence already said ([step 8](#kn-antwort-s8))
 - `app/panel/chat.py` `no_code`: code blocks only shown, never spoken ([step 8](#kn-antwort-s8))
@@ -1881,7 +1883,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 #### In the code
 
 - `app/panel/chat_tools.py` `run`: the checks and all built-in tools ([step 2](#kn-werkzeuge-s2), [step 7](#kn-werkzeuge-s7))
-- `app/panel/chat.py` `_answer`: calls run_tool, wraps results, stops loops ([step 1](#kn-werkzeuge-s1))
+- `app/panel/chat_modell.py` `model_turn`: calls run_tool, wraps results, stops loops ([step 1](#kn-werkzeuge-s1))
 - `app/panel/chat.py` `wrap_outside`: outside text as a data block ([step 9](#kn-werkzeuge-s9))
 - `app/panel/chat.py` `LOCKED_OUTSIDE`: locked after outside text ([step 4](#kn-werkzeuge-s4))
 - `app/panel/chat.py` `LOCKED_MAIL`: locked after a mail ([step 4](#kn-werkzeuge-s4))

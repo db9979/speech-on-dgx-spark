@@ -86,6 +86,7 @@ MODULE = {
     # Gespräch
     "chat": ("gespraech", "Der Assistent: /api/chat, Runden mit dem Modell, Text und Ton als Strom"),
     "llm": ("gespraech", "Der eine Weg zum Sprachmodell: Adresse, Schlüssel, Modellname, Aufruf"),
+    "chat_modell": ("gespraech", "Die Modellseite einer Antwort: fragt das Sprachmodell, ruft Werkzeuge, schreibt Sätze"),
     "chat_turn": ("gespraech", "Bereitet eine Anfrage vor: Rechte, Sperren, Systemprompt, Werkzeuge"),
     "chat_tools": ("gespraech", "Führt die Werkzeugaufrufe des Modells aus und prüft die Sperren erneut"),
     "answercheck": ("gespraech", "Antwort-Prüfung: das Panel entscheidet, ob ein Satz gesagt werden darf"),

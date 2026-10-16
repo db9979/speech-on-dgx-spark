@@ -176,6 +176,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/ack.py` | Sofortige Rückmeldung aus aufgenommenen Sätzen |
 | `app/panel/answercheck.py` | Antwort-Prüfung: das Panel entscheidet, ob ein Satz gesagt werden darf |
 | `app/panel/chat.py` | Der Assistent: /api/chat, Runden mit dem Modell, Text und Ton als Strom |
+| `app/panel/chat_modell.py` | Die Modellseite einer Antwort: fragt das Sprachmodell, ruft Werkzeuge, schreibt Sätze |
 | `app/panel/chat_tools.py` | Führt die Werkzeugaufrufe des Modells aus und prüft die Sperren erneut |
 | `app/panel/chat_turn.py` | Bereitet eine Anfrage vor: Rechte, Sperren, Systemprompt, Werkzeuge |
 | `app/panel/echo.py` | Der Assistent antwortet nicht auf seine eigene Stimme |
@@ -1771,7 +1772,8 @@ flowchart TD
 #### Im Code
 
 - `app/panel/chat.py` `chat`: Rate-Limit, Sprache zuerst, „antwortet gerade“ ([Schritt 1](#kn-antwort-s1))
-- `app/panel/chat.py` `_answer`: Runden, Werkzeuge, Prüfungen, Sprachausgabe als ein Strom ([Schritt 4](#kn-antwort-s4), [Schritt 5](#kn-antwort-s5), [Schritt 11](#kn-antwort-s11))
+- `app/panel/chat.py` `_answer`: Sprachausgabe und Ereignisse als ein Strom ([Schritt 4](#kn-antwort-s4), [Schritt 5](#kn-antwort-s5), [Schritt 11](#kn-antwort-s11))
+- `app/panel/chat_modell.py` `model_turn`: Runden mit dem Modell, Werkzeuge, Prüfungen ([Schritt 4](#kn-antwort-s4), [Schritt 11](#kn-antwort-s11))
 - `app/panel/chat.py` `split_sentences`: schneidet fertige Sätze ab ([Schritt 5](#kn-antwort-s5))
 - `app/panel/chat.py` `said_key`: erkennt einen schon gesagten Satz ([Schritt 8](#kn-antwort-s8))
 - `app/panel/chat.py` `no_code`: Codeblöcke nur zeigen, nie sprechen ([Schritt 8](#kn-antwort-s8))
@@ -1881,7 +1883,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 #### Im Code
 
 - `app/panel/chat_tools.py` `run`: die Prüfungen und alle eingebauten Werkzeuge ([Schritt 2](#kn-werkzeuge-s2), [Schritt 7](#kn-werkzeuge-s7))
-- `app/panel/chat.py` `_answer`: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen ([Schritt 1](#kn-werkzeuge-s1))
+- `app/panel/chat_modell.py` `model_turn`: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen ([Schritt 1](#kn-werkzeuge-s1))
 - `app/panel/chat.py` `wrap_outside`: fremder Text als Datenblock ([Schritt 9](#kn-werkzeuge-s9))
 - `app/panel/chat.py` `LOCKED_OUTSIDE`: gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - `app/panel/chat.py` `LOCKED_MAIL`: gesperrt nach einer Mail ([Schritt 4](#kn-werkzeuge-s4))

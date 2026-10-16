@@ -470,9 +470,9 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "87db8be748",
+        "stand": "1d194533c6",
         "bezug": {
-            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"],
+            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"],
@@ -658,7 +658,8 @@ SEITEN = {
         ],
         "code": [
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),
-            ("chat._answer", ("Runden, Werkzeuge, Prüfungen, Sprachausgabe als ein Strom", "rounds, tools, checks, speech output as one stream")),
+            ("chat._answer", ("Sprachausgabe und Ereignisse als ein Strom", "speech output and events as one stream")),
+            ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat.split_sentences", ("schneidet fertige Sätze ab", "cuts finished sentences off")),
             ("chat.said_key", ("erkennt einen schon gesagten Satz", "spots a sentence already said")),
             ("chat.no_code", ("Codeblöcke nur zeigen, nie sprechen", "code blocks only shown, never spoken")),
@@ -676,7 +677,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "7f97ae2242",
+        "stand": "bca98c273f",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -697,7 +698,7 @@ SEITEN = {
                   "call again instead of trusting the model."),
         "ablauf": [
             S("s1", "start", ("Modell ruft ein Werkzeug", "The model calls a tool"),
-              ("aus der Runde in chat._answer", "from the round in chat._answer"),
+              ("aus der Runde in chat_modell.model_turn", "from the round in chat_modell.model_turn"),
               ("Höchstens {chat.MAX_CALLS} Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft "
                "nicht mehr. Gedächtnis-Notizen sind auf {chat.MAX_SAVES} pro Antwort begrenzt.",
                "At most {chat.MAX_CALLS} calls per round run, and a tool stopped after errors does not run again. Memory "
@@ -831,7 +832,7 @@ SEITEN = {
         ],
         "code": [
             ("chat_tools.run", ("die Prüfungen und alle eingebauten Werkzeuge", "the checks and all built-in tools")),
-            ("chat._answer", ("ruft run_tool, packt Ergebnisse ein, stoppt Schleifen", "calls run_tool, wraps results, stops loops")),
+            ("chat_modell.model_turn", ("ruft run_tool, packt Ergebnisse ein, stoppt Schleifen", "calls run_tool, wraps results, stops loops")),
             ("chat.wrap_outside", ("fremder Text als Datenblock", "outside text as a data block")),
             ("chat.LOCKED_OUTSIDE", ("gesperrt nach fremdem Text", "locked after outside text")),
             ("chat.LOCKED_MAIL", ("gesperrt nach einer Mail", "locked after a mail")),
