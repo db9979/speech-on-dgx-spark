@@ -285,7 +285,7 @@ class Knoten(unittest.TestCase):
             refs = {z[2] for z in p.get("zahlen", []) if len(z) > 2 and z[2]} | {r for r, _ in p.get("code", [])}
             cells = {technik_knoten.zelle(row[0]) for row in p.get("regeln", [])[1:]}
             for r in sorted(refs):
-                self.assertTrue(technik_knoten.schritte(p, r), f"{nid}: {r} needs a step (\"bezug\" in technik_seiten.py)")
+                self.assertTrue(technik_knoten.schritte(p, r), f"{nid}: {r} needs a step (\"bezug\" in technik_seiten_*.py)")
             for k, v in p.get("bezug", {}).items():
                 self.assertTrue(v and set(v) <= ids, f"{nid}: bezug {k} -> real steps")
                 if k == "regeln":

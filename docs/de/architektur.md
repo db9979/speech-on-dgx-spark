@@ -344,7 +344,14 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/system.py` | Sicherung, Echtprüfung der Dienste, Hinweise oben |
 | `app/panel/technik.py` | Diese Seite: Zustand → Technik und die Architektur-Doku |
 | `app/panel/technik_knoten.py` | Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code |
-| `app/panel/technik_seiten.py` | Die Texte der Knoten-Seiten, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten.py` | Knoten-Seiten: der Baustein S für einen Schritt |
+| `app/panel/technik_seiten_anfrage.py` | Knoten-Seiten Vorbereiten, Weiche, Antwort und Werkzeuge, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_daten.py` | Knoten-Seiten Zustand, Nutzerdaten, Ablage und Logs, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_geraete.py` | Knoten-Seiten Geräte, Apps, Kanäle, Lautsprecher und MCP, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_kern.py` | Knoten-Seiten Sprachmodell, eigenes Wissen und Betrieb, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_modelle.py` | Knoten-Seiten Spracherkennung, Sprachausgabe und Bilder, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_netz.py` | Knoten-Seiten Dienste außen, Internet und Spark teilen, Zahlen als Platzhalter aus dem Code |
+| `app/panel/technik_seiten_zugang.py` | Knoten-Seiten Wächter, Middleware und Zugang, Zahlen als Platzhalter aus dem Code |
 | `app/panel/tracelog.py` | Logs → Anfragen: der Weg jeder Anfrage |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll |
 | `app/panel/update.py` | Updates von GitHub, nur nach grünem Test |
@@ -2063,14 +2070,14 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 30 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
 6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Nie erlaubt?**: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt.
-8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
+8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
 9. <a id="kn-waechter-s9"></a>**Verbinden mit genau dieser Adresse**: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft.
 10. <a id="kn-waechter-s10"></a>**Passwort nur zur eigenen Seite**: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war.
 11. <a id="kn-waechter-s11"></a>**Antwort höchstens 20 MB**: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt.
@@ -2085,9 +2092,9 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 | Stufe | Wer sie nutzt (aus dem Code) | Internet | Heimnetz |
 |---|---|---|---|
 | nur Internet | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
-| Nutzer | calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten | ✓ | nur mit Schalter |
+| Nutzer | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| je nach Ziel | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, telefon, zertpin | wie das Ziel eingestellt ist | – |
+| je nach Ziel | anrufe, dienstwacht, nas, nasquelle, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
 | immer | alle | ✕ bei Notaus | ✕ eigene Dienste, 169.254, Multicast |
 
 #### Wenn gesperrt

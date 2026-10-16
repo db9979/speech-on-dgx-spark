@@ -23,11 +23,29 @@ import re
 import textwrap
 import tokenize
 
-from technik_seiten import SEITEN_DATEN, S  # noqa: F401  (S for the pages, re-exported)
+import technik_seiten_zugang
+import technik_seiten_anfrage
+import technik_seiten_kern
+import technik_seiten_netz
+import technik_seiten_geraete
+import technik_seiten_modelle
+import technik_seiten_daten
+from technik_seiten import S  # noqa: F401  (S for the pages, re-exported)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
 GITHUB = "https://github.com/db9979/speech-on-dgx-spark/blob/main/"
+
+# node id (technik.KNOTEN) -> page, the parts in a fixed order
+SEITEN_DATEN = {}
+for _teil in (technik_seiten_zugang,
+              technik_seiten_anfrage,
+              technik_seiten_kern,
+              technik_seiten_netz,
+              technik_seiten_geraete,
+              technik_seiten_modelle,
+              technik_seiten_daten):
+    SEITEN_DATEN.update(_teil.SEITEN)
 
 # labels of a question's exits ("ja" leaves to the side, the way goes on with the other one)
 LABELS = {"ja": ("ja", "yes"), "nein": ("nein", "no")}
@@ -41,7 +59,7 @@ def _callers(*patterns):
     """Modules of app/panel whose code matches one of the patterns (comments left out), sorted."""
     out = set()
     for f in sorted(os.listdir(HERE)):
-        if not f.endswith(".py") or f in ("netguard.py", "technik_knoten.py"):
+        if not f.endswith(".py") or f in ("netguard.py", "technik_knoten.py") or f.startswith("technik_seiten"):
             continue
         try:
             with open(os.path.join(HERE, f), encoding="utf-8") as fh:
@@ -274,7 +292,7 @@ def _label(v, i):
 
 
 def _roh(s):
-    """Every text of a step as written in technik_seiten (with its placeholders), to find what it names."""
+    """Every text of a step as written in technik_seiten_*.py (with its placeholders), to find what it names."""
     out = []
     for v in (s["name"], s["sub"], s["text"], (s["side"] or (0, 0, ""))[2]):
         out += list(v) if isinstance(v, tuple) else [v]

@@ -344,7 +344,14 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/system.py` | System page: backups, the live check of the real services and the alerts shown on top. |
 | `app/panel/technik.py` | Status → Architecture: how the Spark is built, as a page to click through and as docs/de/architektur.md + docs/en/architecture.md. |
 | `app/panel/technik_knoten.py` | Status → Architecture, Knoten-Seiten: for every box of the picture one page that says exactly how it works: what it does and why, its way as a picture with n … |
-| `app/panel/technik_seiten.py` | Status → Architecture, Knoten-Seiten: the texts of every box's page. |
+| `app/panel/technik_seiten.py` | Status → Architecture, Knoten-Seiten: the step helper S. |
+| `app/panel/technik_seiten_anfrage.py` | Status → Architecture, Knoten-Seiten: the pages of preparing, router, answer and tools (vorbereiten, weiche, antwort, werkzeuge). |
+| `app/panel/technik_seiten_daten.py` | Status → Architecture, Knoten-Seiten: the pages of state, user data, storage and logs (state, users, ablage, journal). |
+| `app/panel/technik_seiten_geraete.py` | Status → Architecture, Knoten-Seiten: the pages of devices, apps, channels, speakers and MCP (geraet, apps, kanaele, lautsprecher, mcpc). |
+| `app/panel/technik_seiten_kern.py` | Status → Architecture, Knoten-Seiten: the pages of language model, own knowledge and operation (llm, wissen, betrieb). |
+| `app/panel/technik_seiten_modelle.py` | Status → Architecture, Knoten-Seiten: the pages of speech recognition, speech output and pictures (asr, tts, bild). |
+| `app/panel/technik_seiten_netz.py` | Status → Architecture, Knoten-Seiten: the pages of outside services, internet and Spark split (aussen, internet, teilen). |
+| `app/panel/technik_seiten_zugang.py` | Status → Architecture, Knoten-Seiten: the pages of the guard, middleware and access (waechter, middleware, zugang). |
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
@@ -2063,14 +2070,14 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
 6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
-8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten) only when Settings → Security → Allow home network addresses is on.
+8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
 10. <a id="kn-waechter-s10"></a>**Password only to its own site**: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https.
 11. <a id="kn-waechter-s11"></a>**Answer at most 20 MB**: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory.
@@ -2085,9 +2092,9 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
 | internet only | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
-| user | calendars, contacts, mail, mcp, meinmcp, tasks, technik_seiten | ✓ | only with switch |
+| user | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| by target | anrufe, dienstwacht, nas, nasquelle, speicher, technik_seiten, telefon, zertpin | as the target is set | – |
+| by target | anrufe, dienstwacht, nas, nasquelle, speicher, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
 
 #### When blocked
