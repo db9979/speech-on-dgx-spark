@@ -927,7 +927,7 @@ fi
   done
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
-  printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm'   # B9
+  printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel\n'   # stage E4: takes the panel's checked wish
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1313,7 +1313,9 @@ TimeoutStartSec=5min
 UNIT
 # Plan raspberry-split B9: the Steuerzentrale as text on the screen (steuerzentrale.py on tty1, no desktop, no sign-in).
 # Only where the panel runs; panel/schirm.py enables and starts it when the admin switches Funktionen → Steuerzentrale
-# on (then it comes up at every boot) and disables it again, the login prompt on tty1 comes back after it stops.
+# on (then it comes up at every boot) and disables it again, then it starts the login prompt on tty1 itself. No
+# ExecStopPost for that: it ran on every restart too, and the login prompt's start (Conflicts=) cancelled the restart
+# job, so an update with the screen on stopped with "Job for speech-spark-schirm.service canceled" (Pi 2026-10-16).
 if [ "$MODE" = full ]; then
 cat >/etc/systemd/system/speech-spark-schirm.service <<EOF
 [Unit]
@@ -1336,7 +1338,6 @@ TTYReset=yes
 TTYVHangup=yes
 TTYVTDisallocate=yes
 ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/steuerzentrale.py
-ExecStopPost=+/usr/bin/systemctl --no-block start getty@tty1.service
 Restart=always
 RestartSec=5
 MemoryMax=128M
@@ -1347,8 +1348,11 @@ PrivateTmp=yes
 WantedBy=multi-user.target
 EOF
 else
-  systemctl disable --now speech-spark-schirm.service 2>/dev/null || true
-  rm -f /etc/systemd/system/speech-spark-schirm.service
+  if [ -e /etc/systemd/system/speech-spark-schirm.service ]; then
+    systemctl disable --now speech-spark-schirm.service 2>/dev/null || true
+    rm -f /etc/systemd/system/speech-spark-schirm.service
+    systemctl start getty@tty1.service 2>/dev/null || true
+  fi
 fi
 if [ -n "$GEHAEUSE_PICK" ]; then
   say "Case $GEHAEUSE_PICK: display, LEDs and fans (active after a restart)"
@@ -1587,8 +1591,11 @@ fi
 [ "$LLM_ON" = 1 ] && restart_front llmtor
 
 [ "$PANEL_ONLY" = 1 ] && restart_front notasr
-# B9: the Steuerzentrale runs only while the admin switch is on (panel/schirm.py); an update restarts it then
-systemctl is-active -q speech-spark-schirm.service 2>/dev/null && restart_front schirm
+# B9: the Steuerzentrale runs only while the admin switch is on (panel/schirm.py); an update restarts it then. Only a
+# screen: when it does not come back, the update goes on (the Dienst-Wächter reports it), it never stops the update.
+if systemctl is-active -q speech-spark-schirm.service 2>/dev/null; then
+  restart_front schirm || warn "Steuerzentrale did not restart (sudo speech-spark logs schirm); the update goes on"
+fi
 if [ "$TEILEN" = 1 ]; then
   systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
   systemctl start speech-spark-teilen-fw.service 2>/dev/null || warn "the door's firewall did not load (sudo speech-spark teilen firewall)"

@@ -2411,7 +2411,7 @@ SEITEN_DATEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "089b1c2a2c",
+        "stand": "aebad33f3c",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
@@ -2496,12 +2496,12 @@ SEITEN_DATEN = {
                "Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, "
                "nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven "
                "als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung "
-               "für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel.",
+               "für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an.",
                "When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start "
                "at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only "
                "from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; "
                "only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at "
-               "enough columns and rows, schirm.an_jetzt makes it dark by the times.")),
+               "enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update.")),
             S("s8", "ende", ("Notbetrieb, wenn der DGX fehlt", "Notbetrieb when the DGX is missing"),
               ("nach {steuer.GONE} s ohne Antwort", "after {steuer.GONE} s without an answer"),
               ("Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und "

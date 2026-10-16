@@ -35,6 +35,8 @@ for s in asr asr-engine tts tts-engine tts-design turn bild musik llm llmtor seh
   rm -f "/etc/systemd/system/speech-spark-$s.service"
 done
 systemctl daemon-reload
+# B9: the Steuerzentrale had tty1; the login prompt comes back there
+systemctl start getty@tty1.service 2>/dev/null || true
 # Spark teilen: the door's firewall (its rules lie in root's /etc)
 nft delete table inet speech_spark_teilen 2>/dev/null || true
 rm -f /etc/speech-spark-teilen.nft

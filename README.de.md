@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.691** Fix: Die Steuerzentrale bricht das Update auf dem Panel-Rechner nicht mehr ab
 - **V01.0.690** Fix: „Wie mache ich …?“ landet nicht mehr in der Spark-Hilfe (seit „Musik machen“)
 - **V01.0.689** Live-Übersicht: rechts nur noch, was gerade benutzt wird; der Rest steht in „+ N bereit“
 - **V01.0.688** Musik machen: jedes freigegebene Profil macht eigene Lieder im Gespräch („Mach mir ein Lied über …“) und unter Ich → Musik; Modell (2B oder XL) wählbar, Musik testen misst jedes installierte Modell
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.684** Das kannst du auch sagen: Beispielsätze für Funktionen, die bei dir an sind, aber nie benutzt werden („Mal mir …“), unter der Antwort, im leeren Chat und unter Ich → Was ich kann
 - **V01.0.683** Bilder: Karte im Chat bleibt nicht mehr bei „wartet …“; Karikatur und Comic gelten als Bildwunsch
 - **V01.0.682** Steuerzentrale am Bildschirm: der Panel-Rechner zeigt am HDMI-Ausgang alles auf einer Textanzeige, startet beim Booten ohne Anmeldung
-- **V01.0.681** Musik testen: Lieder entstehen (Auftrags-Nummer und Modellnamen so, wie ace-server sie schickt und erwartet)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

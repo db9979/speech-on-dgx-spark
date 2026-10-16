@@ -2701,7 +2701,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. 9. Steuerzentrale am Bildschirm: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. 10. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
+"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. 9. Steuerzentrale am Bildschirm: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an. 10. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, lau"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "fen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
 },
 {
 "lang": "de",
@@ -9917,7 +9925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e fixed list. No shell, no free names. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. 9. Control centre on the screen: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. 10. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
+"text": "e fixed list. No shell, no free names. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. 9. Control centre on the screen: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update. 10. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
 },
 {
 "lang": "en",

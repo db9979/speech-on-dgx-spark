@@ -11,8 +11,9 @@ control centre once a second. This module is its panel half:
                               Only from this machine itself (loopback, no forwarded sender) and only with the screen's
                               key (KEY, made here, readable by the service user only), at most RATE schirm a minute.
     loop()                    every SCHAUEN_S: switch on Funktionen → Steuerzentrale and the unit runs (and starts at
-                              boot), switch off and it stops; the login prompt on tty1 comes back then (the unit's
-                              ExecStopPost). sudoers allows exactly these two commands.
+                              boot), switch off and it stops, then the login prompt on tty1 starts again (anmeldung;
+                              not the unit's ExecStopPost, that cancelled every restart). sudoers allows exactly these
+                              three commands.
 
 Admin switch chat.schirm (off), the settings under Einstellungen → System → Steuerzentrale: on from schirm_an to
 schirm_aus o'clock (the same hour twice: always on), the font size (auto, kleiner, groesser). Logs: "schirm: …" with
@@ -169,6 +170,17 @@ def _systemctl(*args):
         return False
 
 
+def anmeldung():
+    """The login prompt on tty1 again, after the screen stopped for good (sudoers: exactly this command)."""
+    try:
+        ok = subprocess.run(["sudo", "-n", "/usr/bin/systemctl", "start", "getty@tty1.service"], timeout=30,
+                            capture_output=True).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        ok = False
+    print(f"schirm: anmeldung {'zurueck' if ok else 'fehler'}", flush=True)
+    return ok
+
+
 def abgleich(now=None, c=None):
     """One comparison: returns "an", "aus", "fehler" or "" (nothing to do)."""
     from common import run, unit_exists
@@ -187,6 +199,8 @@ def abgleich(now=None, c=None):
         print(f"schirm: dienst {'start' if soll else 'stopp'} fehler", flush=True)
         return "fehler"
     print(f"schirm: dienst {'an' if soll else 'aus'}", flush=True)
+    if not soll:
+        anmeldung()
     return "an" if soll else "aus"
 
 

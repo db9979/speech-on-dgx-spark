@@ -6,6 +6,7 @@ change, Dominik 2026-10-16) and replaces glyphs the console font lacks. No wall 
 """
 import json
 import os
+import re
 import stat
 import time
 import unittest
@@ -146,15 +147,16 @@ class Panel(unittest.TestCase):
         lauf = {"st": "inactive"}
         with mock.patch("common.unit_exists", return_value=True), \
                 mock.patch("common.run", side_effect=lambda cmd, **k: (0, lauf["st"])), \
-                mock.patch.object(schirm, "_systemctl", side_effect=lambda *a: calls.append(a) or True):
+                mock.patch.object(schirm, "_systemctl", side_effect=lambda *a: calls.append(a) or True), \
+                mock.patch.object(schirm, "anmeldung", side_effect=lambda: calls.append("anmeldung") or True):
             self.assertEqual(schirm.abgleich(T0, {"schirm": False}), "")
             self.assertEqual(schirm.abgleich(T0, {"schirm": True}), "an")
-            self.assertEqual(calls[-1], ("enable", "--now"))
+            self.assertEqual(calls[-1], ("enable", "--now"))                              # no login prompt while it shows
             self.assertTrue(schirm.schluessel())
             lauf["st"] = "active"
             self.assertEqual(schirm.abgleich(T0, {"schirm": True}), "")
             self.assertEqual(schirm.abgleich(T0, {"schirm": False}), "aus")
-            self.assertEqual(calls[-1], ("disable", "--now"))
+            self.assertEqual(calls[-2:], [("disable", "--now"), "anmeldung"])             # switched off: the login prompt again
         with mock.patch("common.unit_exists", return_value=True), mock.patch("common.run", return_value=(0, "inactive")), \
                 mock.patch.object(schirm, "_systemctl", return_value=False):
             self.assertEqual(schirm.abgleich(T0, {"schirm": True}), "fehler")
@@ -172,6 +174,32 @@ class Panel(unittest.TestCase):
             self.assertEqual(schirm.probes(), {})                       # switch off: nothing to watch
             set_chat(schirm=True)
             self.assertEqual(schirm.probes(), {"schirm": {"schirm": True}})
+
+
+class Einheit(unittest.TestCase):
+    """The unit as install.sh writes it (Pi 2026-10-16: an update with the screen on stopped with "Job for
+    speech-spark-schirm.service canceled", and putting the previous version back failed the same way)."""
+
+    def setUp(self):
+        path = os.path.join(helpers.APP, "..", "install.sh")
+        if not os.path.exists(path):
+            raise unittest.SkipTest("install.sh is not part of this copy")
+        with open(path) as f:
+            self.sh = f.read()
+        self.unit = self.sh.split("cat >/etc/systemd/system/speech-spark-schirm.service <<EOF\n", 1)[1].split("\nEOF\n", 1)[0]
+
+    def test_a_restart_is_never_cancelled_by_the_login_prompt(self):
+        # what the unit conflicts with may not be started from its own stop: that runs on a restart too and cancels it
+        conflicts = re.findall(r"^Conflicts=(.+)$", self.unit, re.M)
+        self.assertEqual(conflicts, ["getty@tty1.service"])
+        for line in self.unit.splitlines():
+            if line.startswith(("ExecStop", "ExecStopPost", "ExecReload", "ExecStartPre", "ExecStartPost")):
+                self.assertNotIn("getty", line, line)
+        self.assertIn("/usr/bin/systemctl start getty@tty1.service", self.sh.split("/etc/sudoers.d/speech-spark", 1)[0])
+
+    def test_the_screen_never_stops_an_update(self):
+        line = next(x for x in self.sh.splitlines() if "restart_front schirm" in x)
+        self.assertIn("|| warn", line)
 
 
 class Bild(unittest.TestCase):
