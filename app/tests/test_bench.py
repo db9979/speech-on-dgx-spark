@@ -86,6 +86,35 @@ class Rating(unittest.TestCase):
         self.assertEqual(part["level"], "warn")
         self.assertIn("Nicht alles gemessen", part["detail"])
 
+    def test_the_language_model_and_what_is_missing(self):
+        """16.10.: after the split the Pi measured only memory, TTS and ASR "unreachable" (127.0.0.1), no language
+        model, and said "Alles flüssig"."""
+        r = dict(result(qwen38=()), llm={"model": "qwen38-27b-nvfp4", "single": {"first_s": 0.4, "tok_s": 22.0},
+                                          "parallel": {"n": 4, "wall_s": 10, "tok_s": 48.0}})
+        got = rows(r)
+        self.assertEqual((got["llm_first"]["level"], got["llm_speed"]["level"], got["llm_par"]["level"]), ("top", "ok", "ok"))
+        self.assertEqual(rows(dict(r, llm={"single": {"tok_s": 6.0}, "parallel": {}}))["llm_speed"]["word"], "stockt")
+        self.assertIn("Sprachmodell", [g["name"] for g in bench.rate(r)["groups"]])
+        self.assertIn("LLM  qwen38-27b-nvfp4", bench.report(dict(r, llm=r["llm"])))
+        only_memory = bench.rate({"errors": ["TTS not measured: unreachable", "ASR not measured: unreachable",
+                                             "LLM: ConnectError"], "qwen38_active": [],
+                                  "memory_after": {"mem_available_gib": 55.4}})["verdict"]
+        self.assertEqual(only_memory["title"], "Nicht gemessen: Sprachausgabe, Spracherkennung, Sprachmodell.")
+        self.assertEqual(only_memory["level"], "warn")
+        self.assertNotIn("qwen38", bench.report({"time": 1760000000, "host": "x", "qwen38_active": [], "errors": []}))
+        for g in bench.rate(result(free=9, rtf=0.9, qwen38=()))["groups"]:
+            for x in g["rows"]:
+                self.assertNotIn("qwen38", x["why"], "the texts speak of the language model, not of qwen38")
+
+    def test_measures_the_ways_the_panel_takes(self):
+        """With the models on another computer speech goes to its TLS-Tor (common.model_url), not to 127.0.0.1."""
+        b = bench.Bench(log=lambda m: None)
+        self.assertEqual(b.url("tts", "/health"), common.model_url("tts", "/health", b.cfg))
+        c = json.loads(json.dumps(b.cfg))
+        c["models"]["host"] = "192.168.178.171"
+        b.cfg = c
+        self.assertEqual(b.url("asr", "/health"), f"https://192.168.178.171:{c['asr']['port']}/health")
+
     def test_compared_with_the_last_run(self):
         got = rows(result(), {"values": {"tts_first": 0.58, "asr_acc": 0.97, "mem_free": 12.0}})
         self.assertEqual(got["tts_first"]["before"], "0,58 s")

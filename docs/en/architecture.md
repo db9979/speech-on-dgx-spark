@@ -358,7 +358,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/asr_proxy.py` | Qwen3-ASR front end for the vLLM engine (backend "vllm"). |
 | `app/asr_server.py` | Qwen3-ASR as a small HTTP service (OpenAI-style /v1/audio/transcriptions). |
 | `app/bedarf.py` | An engine that runs only on demand (Bilder malen: bild_server.py, Musik machen: musik_server.py): the service starts it as its child process for the first jo … |
-| `app/bench.py` | Measures speech on this box: time to first audio, speed and memory. |
+| `app/bench.py` | Measures speech and the language model: time to first audio and first word, speed and memory. |
 | `app/bild_server.py` | Bilder malen: the image service. |
 | `app/bildmodell.py` | Bilder malen: the one list of the image models, where they lie and how they are fetched and checked. |
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |

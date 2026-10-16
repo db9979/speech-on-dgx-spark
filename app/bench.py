@@ -1,4 +1,4 @@
-"""Measures speech on this box: time to first audio, speed and memory.
+"""Measures speech and the language model: time to first audio and first word, speed and memory.
 
     sudo speech-spark-bench                 # full run, prints a report
     sudo speech-spark-bench --parallel 8    # more simultaneous requests
@@ -8,7 +8,9 @@ The panel runs the same measurement under Zustand → Prüfen. Results are kept 
 /var/lib/speech-spark/state/bench-latest.json so the panel shows the last run; the last ten runs'
 key numbers go to bench-history.json for the comparison. rate() gives every number a level and a
 sentence what it means (fixed rules, the panel only shows them).
-Measures through the public ports, so it sees what apps see (key, proxy and all).
+Measures through the public ports, so it sees what apps see (key, proxy and all). With the models on another computer
+(Spark teilen) it measures the same ways the panel takes: speech through common.model_url (TLS-Tor, pinned
+certificate), the language model through llm.py (the own LLM-Tor), memory and GPU from the Wärter's status.
 """
 import argparse
 import asyncio
@@ -24,11 +26,15 @@ import time
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import STATE, load_config, mem_available_gib, write_json  # noqa: E402
+import common  # noqa: E402
+from common import STATE, load_config, mem_available_gib, model_url, write_json  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "panel"))   # steuer.py, llm.py
 
 RESULT = os.path.join(STATE, "bench-latest.json")
 HISTORY = os.path.join(STATE, "bench-history.json")
 KEEP_RUNS = 10
+PROMPT = "Erkläre in etwa hundert Wörtern, wie ein Sprachassistent eine Frage beantwortet."
+LLM_TOKENS = 200
 TEXT = ("Guten Morgen. Dies ist ein Test der Sprachausgabe auf der DGX Spark. Wir messen, wie schnell "
         "der erste Ton kommt, wie lange der ganze Satz braucht und wie viele Anfragen gleichzeitig "
         "flüssig laufen. Danach hört die Spracherkennung zu und schreibt alles wieder auf.")
@@ -64,9 +70,7 @@ def memory_snapshot():
     """Per unit: cgroup memory (CPU side) and GPU memory of its processes as nvidia-smi reports it. With the models on
     another computer (Spark teilen) only its free memory from the Wärter's status (V01.0.644: a Raspberry Pi's own
     8 GB read as "Frei auf dem Spark 6,7 GiB, kritisch"); no number when it does not answer."""
-    from common import model_local
-    if not model_local():
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "panel"))
+    if not common.model_local():
         import steuer
         x = (steuer.status() or {}).get("mem_avail_gib")
         ok = isinstance(x, (int, float)) and not isinstance(x, bool) and x >= 0
@@ -101,7 +105,7 @@ class Bench:
         self.client = httpx.AsyncClient(timeout=900)
 
     def url(self, svc, path):
-        return f"http://127.0.0.1:{self.cfg[svc]['port']}{path}"
+        return model_url(svc, path, self.cfg)
 
     async def ready(self, svc):
         if not self.cfg[svc].get("enabled"):
@@ -199,6 +203,56 @@ class Bench:
             "heard": text,
         }
 
+    # ------------------------------------------------------------ language model
+    async def llm_once(self, ccfg, name):
+        """One streamed answer: seconds to the first word and words (tokens) per second after it."""
+        import llm
+        body = {"model": name, "messages": [{"role": "user", "content": PROMPT}], "max_tokens": LLM_TOKENS,
+                "temperature": 0, "stream": True, "stream_options": {"include_usage": True},
+                "chat_template_kwargs": {"enable_thinking": False}}
+        t0 = time.time()
+        first, chunks, tokens = None, 0, None
+        async with self.client.stream("POST", llm.url(ccfg), json=body, headers=llm.headers(ccfg)) as r:
+            if r.status_code != 200:
+                raise RuntimeError(f"LLM {r.status_code}")
+            async for line in r.aiter_lines():
+                if not line.startswith("data:") or line.strip() == "data: [DONE]":
+                    continue
+                d = json.loads(line[5:])
+                if (d.get("usage") or {}).get("completion_tokens"):
+                    tokens = d["usage"]["completion_tokens"]
+                delta = ((d.get("choices") or [{}])[0].get("delta") or {})
+                if delta.get("content") or delta.get("reasoning_content"):
+                    chunks += 1
+                    if first is None:
+                        first = time.time() - t0
+        total = time.time() - t0
+        n = tokens or chunks
+        return {"first_s": first, "total_s": total, "tokens": n,
+                "tok_s": round((n - 1) / (total - first), 1) if first is not None and n > 1 and total > first else None}
+
+    async def bench_llm(self):
+        import llm
+        ccfg = load_config("chat")
+        if not ccfg.get("llm_url"):
+            raise RuntimeError("not configured")
+        name = await llm.model(self.client, ccfg)
+        self.log("LLM: warm-up")
+        await self.llm_once(ccfg, name)
+        singles = []
+        for i in range(self.repeats):
+            r = await self.llm_once(ccfg, name)
+            singles.append(r)
+            self.log(f"LLM {i + 1}/{self.repeats}: first word {fmt(r['first_s'])} s, {fmt(r['tok_s'], 1)} tokens/s")
+        self.log(f"LLM: {self.parallel} requests at once")
+        t0 = time.time()
+        par = await asyncio.gather(*[self.llm_once(ccfg, name) for _ in range(self.parallel)])
+        wall = time.time() - t0
+        return {"model": str(name)[:80],
+                "single": {"first_s": avg(r["first_s"] for r in singles), "tok_s": avg(r["tok_s"] for r in singles)},
+                "parallel": {"n": self.parallel, "wall_s": round(wall, 3),
+                             "tok_s": round(sum(r["tokens"] for r in par) / wall, 1) if wall else None}}
+
     # ------------------------------------------------------------ all
     async def run(self):
         c = self.cfg
@@ -211,10 +265,12 @@ class Bench:
                "qwen38_active": [u for u in run(["systemctl", "list-units", "qwen38-*", "--state=active",
                                                  "--no-legend", "--plain"]).split() if u.endswith(".service")],
                "tts": None, "asr": None, "errors": []}
-        try:
+        if common.model_local(c):
             res["gpu_name"] = run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"])
-        except Exception:
-            pass
+        else:
+            import steuer
+            res["gpu_name"] = str(((steuer.status(c) or {}).get("gpu") or {}).get("name") or "")[:60]
+            res["host"] = "Modell-Rechner"
         res["memory"] = memory_snapshot()
 
         tts_state, asr_state = await self.ready("tts"), await self.ready("asr")
@@ -244,6 +300,11 @@ class Bench:
 
         if res["asr"] and not self.audio:
             res["asr"]["accuracy"] = word_accuracy(res["asr"].get("heard", ""), TEXT)
+        res["llm"] = None
+        try:
+            res["llm"] = await self.bench_llm()
+        except Exception as e:
+            res["errors"].append(f"LLM not measured: {e}" if str(e) == "not configured" else f"LLM: {type(e).__name__}")
         res["memory_after"] = memory_snapshot()
         res["duration_s"] = round(time.time() - res["time"], 1)
         await self.client.aclose()
@@ -289,13 +350,15 @@ def word_accuracy(heard, reference):
 
 def values(r):
     """The numbers that get a rating, by key (also kept in the history for the comparison)."""
-    t, a, m = r.get("tts") or {}, r.get("asr") or {}, r.get("memory_after") or {}
+    t, a, m, lm = r.get("tts") or {}, r.get("asr") or {}, r.get("memory_after") or {}, r.get("llm") or {}
     ts, tp, as_, ap = t.get("single") or {}, t.get("parallel") or {}, a.get("single") or {}, a.get("parallel") or {}
     v = {"tts_first": ts.get("ttfa_s"),
          "tts_speed": round(1 / ts["rtf"], 2) if ts.get("rtf") else None,
          "tts_par": tp.get("x_realtime"), "tts_par_n": tp.get("n"), "tts_par_first": tp.get("ttfa_max_s"),
          "asr_time": as_.get("total_s"), "asr_audio": a.get("audio_s"), "asr_acc": a.get("accuracy"),
          "asr_par": ap.get("x_realtime"), "asr_par_n": ap.get("n"),
+         "llm_first": (lm.get("single") or {}).get("first_s"), "llm_speed": (lm.get("single") or {}).get("tok_s"),
+         "llm_par": (lm.get("parallel") or {}).get("tok_s"), "llm_par_n": (lm.get("parallel") or {}).get("n"),
          "mem_free": m.get("mem_available_gib")}
     return {k: x for k, x in v.items() if isinstance(x, (int, float)) and not isinstance(x, bool)}
 
@@ -332,7 +395,7 @@ def rate(r, previous=None):
     """Per value a level and one sentence what it means, plus one sentence for the whole run."""
     v = values(r)
     prev = (previous or {}).get("values") or {}
-    tts, asr, mem = [], [], []
+    tts, asr, lm, mem = [], [], [], []
     if "tts_first" in v:
         x = v["tts_first"]
         tts.append({"key": "tts_first", "label": "Erster Ton nach", "value": f"{_num(x)} s",
@@ -343,7 +406,7 @@ def rate(r, previous=None):
         level = _step(x, (2.0, 1.3, 1.0))
         tts.append({"key": "tts_speed", "label": "Tempo", "value": f"{_num(x, 1)}× Echtzeit", "level": level,
                     "word": "stockt" if level == "bad" else None,
-                    "why": "Ab 1× läuft die Stimme ohne Stocken, ab 2× ist genug Luft, auch wenn qwen38 rechnet."})
+                    "why": "Ab 1× läuft die Stimme ohne Stocken, ab 2× ist genug Luft, auch wenn das Sprachmodell rechnet."})
     if "tts_par" in v and v.get("tts_par_n"):
         tts.append(_parallel("tts_par", f"{v['tts_par_n']} gleichzeitig", v["tts_par"], v["tts_par_n"], "Stimmen"))
     if "tts_par_first" in v and v.get("tts_par_n"):
@@ -368,16 +431,33 @@ def rate(r, previous=None):
                     "why": "Ab 95 % sind nur Kleinigkeiten falsch, unter 85 % versteht der Assistent Fragen oft falsch."})
     if "asr_par" in v and v.get("asr_par_n"):
         asr.append(_parallel("asr_par", f"{v['asr_par_n']} gleichzeitig", v["asr_par"], v["asr_par_n"], "Erkennungen"))
+    if "llm_first" in v:
+        x = v["llm_first"]
+        lm.append({"key": "llm_first", "label": "Erstes Wort nach", "value": f"{_num(x)} s",
+                   "level": _step(x, (0.5, 1.0, 2.0), False),
+                   "why": "So lange dauert es, bis die Antwort anfängt. Unter 1 s wirkt sie sofort, ab 2 s wartet man."})
+    if "llm_speed" in v:
+        x = v["llm_speed"]
+        level = _step(x, (30, 15, 8))
+        lm.append({"key": "llm_speed", "label": "Tempo", "value": f"{_num(x, 0)} Token/s", "level": level,
+                   "word": "stockt" if level == "bad" else None,
+                   "why": "Vorgelesen braucht eine Antwort etwa 5 Token/s; ab 15 Token/s ist die Antwort vor der Stimme fertig."})
+    if "llm_par" in v and v.get("llm_par_n"):
+        x, n = v["llm_par"], v["llm_par_n"]
+        level = _step(x / n, (15, 8, 5))
+        lm.append({"key": "llm_par", "n": n, "label": f"{n} gleichzeitig", "value": f"{_num(x, 0)} Token/s gesamt",
+                   "level": level, "word": "stockt" if level == "bad" else None,
+                   "why": f"Je Anfrage {_num(x / n, 0)} Token/s; ab 8 bleibt jede Antwort schneller als vorgelesen."})
     if "mem_free" in v:
         x = v["mem_free"]
         level = "ok" if x >= 14 else "warn" if x >= 10 else "bad"
         why = "Unter etwa 8 GiB beendet DGX OS Programme, ab 14 GiB ist sicher Luft."
         if level != "ok":
-            why += " Hilft: kleineres Modell oder weniger Speicher für qwen38."
+            why += " Hilft: ein kleineres Modell unter Zustand → Modelle."
         mem.append({"key": "mem_free", "label": "Frei auf dem Spark", "value": f"{_num(x, 1)} GiB", "level": level,
                     "word": "kritisch" if level == "bad" else None, "why": why})
     groups = [g for g in ({"name": "Sprachausgabe", "rows": tts}, {"name": "Spracherkennung", "rows": asr},
-                          {"name": "Speicher", "rows": mem}) if g["rows"]]
+                          {"name": "Sprachmodell", "rows": lm}, {"name": "Speicher", "rows": mem}) if g["rows"]]
     rows = [row for g in groups for row in g["rows"]]
     for row in rows:
         row["word"] = row.get("word") or WORDS[row["level"]]
@@ -390,14 +470,18 @@ def rate(r, previous=None):
 def _before(row, old):
     if row.get("fmt") == "pct":
         return f"{_num(old * 100, 0)} %"
-    unit = {"tts_speed": "×", "tts_par": "×", "asr_par": "×", "mem_free": " GiB"}.get(row["key"], " s")
-    return f"{_num(old, 1 if unit != ' s' else 2)}{unit}"
+    unit = {"tts_speed": "×", "tts_par": "×", "asr_par": "×", "mem_free": " GiB", "llm_speed": " Token/s",
+            "llm_par": " Token/s"}.get(row["key"], " s")
+    return f"{_num(old, 0 if 'Token' in unit else 1 if unit != ' s' else 2)}{unit}"
 
 
-SINGLE = ("tts_first", "tts_speed", "asr_time", "asr_acc")
+SINGLE = ("tts_first", "tts_speed", "asr_time", "asr_acc", "llm_first", "llm_speed")
 SHORT = {"tts_first": "erster Ton", "tts_speed": "Tempo der Stimme", "tts_par": "Stimmen gleichzeitig",
          "tts_par_first": "erster Ton bei mehreren", "asr_time": "Tempo der Erkennung", "asr_acc": "Verständnis",
-         "asr_par": "Erkennung gleichzeitig", "mem_free": "freier Speicher"}
+         "asr_par": "Erkennung gleichzeitig", "llm_first": "erstes Wort", "llm_speed": "Tempo des Sprachmodells",
+         "llm_par": "Sprachmodell gleichzeitig", "mem_free": "freier Speicher"}
+# what is missing when a part was not measured (errors start with the part's name)
+MISSING = {"TTS": "Sprachausgabe", "ASR": "Spracherkennung", "LLM": "Sprachmodell"}
 
 
 def _verdict(r, rows):
@@ -406,9 +490,12 @@ def _verdict(r, rows):
     level = LEVELS[worst]
     weak = [row for row in rows if row["level"] in ("warn", "bad")]
     single_fine = all(row["level"] in ("top", "ok") for row in rows if row["key"] in SINGLE)
+    missing = [w for k, w in MISSING.items() if any(str(e).startswith(k) for e in errors)]
     if not rows:
         title = "Nichts gemessen."
         level = "bad"
+    elif missing and not weak:
+        title = "Nicht gemessen: " + ", ".join(missing) + "."   # never "Alles flüssig" when a part is missing
     elif not weak:
         title = "Alles flüssig, auch bei mehreren gleichzeitig." if any(
             row["key"].endswith("_par") for row in rows) else "Alles flüssig."
@@ -450,7 +537,8 @@ def save_history(items):
 def report(r):
     lines = [f"Speech on DGX Spark, measured {time.strftime('%Y-%m-%d %H:%M', time.localtime(r['time']))} "
              f"on {r['host']} ({r.get('gpu_name') or 'GPU ?'})"]
-    lines.append(f"qwen38 running: {', '.join(r['qwen38_active']) or 'nothing'}")
+    if r.get("qwen38_active"):
+        lines.append(f"qwen38 running: {', '.join(r['qwen38_active'])}")
     t = r.get("tts")
     if t:
         s, p = t["single"], t["parallel"]
@@ -468,6 +556,12 @@ def report(r):
                   f"  heard: {a['heard'][:120]}"]
         if a.get("accuracy") is not None:
             lines.append(f"  words right: {fmt(a['accuracy'] * 100, 0)} %")
+    lm = r.get("llm")
+    if lm:
+        s, p = lm["single"], lm["parallel"]
+        lines += ["", f"LLM  {lm['model']}",
+                  f"  one request:    first word {fmt(s['first_s'])} s, {fmt(s['tok_s'], 1)} tokens/s",
+                  f"  {p['n']} at once:      {fmt(p['tok_s'], 1)} tokens/s in total"]
     m = r.get("memory_after") or {}
     lines += ["", f"Memory: {fmt(m.get('mem_available_gib'), 1)} GiB available"]
     for unit, u in (m.get("units") or {}).items():
