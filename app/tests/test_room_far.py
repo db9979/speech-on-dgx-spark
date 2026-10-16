@@ -102,7 +102,7 @@ class RoomFar(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         call = helpers.LLM_CALLS[-1]
         said = json.dumps(call, ensure_ascii=False)
-        self.assertIn("Funktionen → Wer darf was", said)   # blocked by the admin: says where
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", said)   # blocked by the admin: says where
         self.assertNotIn("Ich →", said)
         self.assertFalse(call.get("tools"))           # no smart home, no other tools in this turn
         self.assertEqual(helpers.HA_CALLS, [])

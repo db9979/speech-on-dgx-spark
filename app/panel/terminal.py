@@ -152,7 +152,7 @@ def _on(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "the terminal client is turned off")
     if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("terminal", prof["id"]):   # own data: also while blocked
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     return prof
 
 
@@ -170,7 +170,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time setup line for `spark-tui koppeln '…'` (after the confirmation code: a new way into the profile)."""
     body = await core.json_body(request, MAX_BODY, lenient=True)
     if not features.allowed("terminal", prof["id"]):
-        raise HTTPException(403, "Den Terminal-Client hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
+        raise HTTPException(403, "Den Terminal-Client hat der Admin für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen).")
     if len(devices(prof["id"])) >= MAX_DEVICES:
         raise HTTPException(409, f"Schon {MAX_DEVICES} Terminals gekoppelt. Erst eins entfernen.")
     base = setup_base(body.get("origin"), load_config("panel"))

@@ -123,7 +123,7 @@
       <h3 class="sec">Sicherheit <span>rot = offen, gelb = empfohlen, grün = gut</span></h3>
       <div id="secglance" class="sglance" data-nodirty="1"></div>
     </div>
-    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen. <button type="button" class="wlink" id="featwho">Wer darf was</button></div>
+    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow" data-show="chat.memory" style="margin-left:18px"><div class="lbl"><b>Gedächtnis prüfen</b><span>Jeder Eintrag behält, woher er kommt; feste Regeln markieren, was veraltet sein könnte. Das Modell nennt es nie als Tatsache.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_check"><i></i></label></div>
       <div data-show="chat.memory_check" style="margin-left:36px"><label>Gelernt gilt als alt nach (Monaten)</label><input class="num" id="chat.memory_stale_months" type="number" min="1" max="60"><div class="fh">1 bis 60, Standard 6. Nur automatisch gelernte Einträge, die nie bestätigt wurden.</div></div>
@@ -804,7 +804,7 @@
       <div class="row" id="ppager" style="gap:6px;align-items:center"></div>
       <details class="pnew" id="pnew"><summary class="b p">+ Neues Profil</summary>
       <div class="row"><input id="pname" placeholder="Name" maxlength="40" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
-      <div class="fh">Ein neues Profil bekommt gleich alles, was im Spark an ist; einzelne Funktionen sperrst du in der Funktion unter „Wer darf es“, alle Sperren stehen unter Funktionen → Wer darf was.</div></details>
+      <div class="fh">Ein neues Profil bekommt gleich alles, was im Spark an ist; einzelne Funktionen sperrst du in der Funktion unter „Wer darf es“, alle Sperren stehen unter Personen und Geräte → Gesperrte Funktionen.</div></details>
       <div id="pmsg" style="margin-top:8px"></div>
       </div><aside class="pside" id="pside" aria-live="polite"></aside></div>
     </div>
@@ -815,15 +815,13 @@
       <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" maxlength="40" style="flex:1;min-width:140px"><select id="duser" style="flex:1;min-width:120px" aria-label="Profil"></select><button class="b p" id="dadd">Anlegen</button></div></details>
       <div id="dmsg" style="margin-top:8px"></div>
     </div>
+    <div class="card" id="blkcard"><h2>Gesperrte Funktionen</h2>
+      <div class="mut">Nur die Funktionen, die der Admin für ein Profil gesperrt hat; antippen hebt die Sperre auf. Neue Sperren setzt du in der Funktion selbst unter „Wer darf es“.</div>
+      <div id="whobox"></div>
+    </div>
   </div>
 </section>
 
-<section id="who">
-  <div class="card"><h2>Wer darf was</h2>
-    <div class="mut">Nur die Funktionen, die der Admin für ein Profil gesperrt hat; antippen hebt die Sperre auf. Neue Sperren setzt du in der Funktion selbst unter „Wer darf es“.</div>
-    <div id="whobox"></div>
-  </div>
-</section>
 <section id="route">
   <div id="whbox">
     <div class="card"><h2 data-wht="h"></h2><div class="mut" data-wht="intro"></div>

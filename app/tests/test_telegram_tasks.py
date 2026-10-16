@@ -343,7 +343,7 @@ class Telegram(unittest.TestCase):
             block(self, uid_of("Tilda"), "images")                               # the admin blocked it for Tilda
             photo()
             said = poll()[0]
-            self.assertIn("Funktionen → Wer darf was", said)
+            self.assertIn("Personen und Geräte → Gesperrte Funktionen", said)
             self.assertNotIn("Ich → Gespräch", said)                              # no profile switch to point to
             block(self, uid_of("Tilda"), "images", on=True)
             helpers.set_config(images=False)

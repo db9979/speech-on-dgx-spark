@@ -978,7 +978,7 @@ struct AdminProfileView: View {
     @State private var note: String?
     @State private var role = ""
     @State private var sessions: [(id: String, agent: String, last: Date?)] = []
-    /// the functions on on the Spark and whether this profile may use them (Wer darf was): on for every profile at
+    /// the functions on on the Spark and whether this profile may use them (Gesperrte Funktionen): on for every profile at
     /// once, the admin only blocks one here; "via" marks a block through a function it builds on
     @State private var funcs: [(key: String, name: String, on: Bool, via: Bool)] = []
 

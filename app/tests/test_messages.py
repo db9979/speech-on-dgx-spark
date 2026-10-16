@@ -580,7 +580,7 @@ class Unlock(Base):
         self.assertIn("NO TOOL message_send", out)
         said = json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False)
         self.assertIn("Für dein Profil sind Chats aus", said)
-        self.assertIn("Funktionen → Wer darf was", said)
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", said)
         self.assertNotIn("Ich → ", said.split("Für dein Profil sind Chats aus", 1)[1][:200])
         helpers.set_config(public=True)
         ask(TestClient(panel.app), "Schreib Quintus eine Nachricht")

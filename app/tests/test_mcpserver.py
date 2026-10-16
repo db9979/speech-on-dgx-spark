@@ -287,7 +287,7 @@ class Acting(Base):
 
     def test_waiting_action_not_run_after_the_admin_switched_the_profile_off(self):
         """Rights arrive at once (V01.0.388): a proposal made earlier is not carried out once the admin turned
-        the profile's MCP switch off under Wer darf was."""
+        the profile's MCP switch off under Gesperrte Funktionen."""
         c, uid = profile("McpRolf")
         helpers.set_config(mcp_server_act=True)
         token = self.key(c, ["reminder_set"], name="n8n")

@@ -97,7 +97,7 @@ class Base(unittest.TestCase):
 
     def switch(self, c, **on):
         """True: the admin switches the function on (released: on for every profile at once) and does not block
-        this profile; False: the admin blocks it for this one profile (chat.deny, Funktionen → Wer darf was)."""
+        this profile; False: the admin blocks it for this one profile (chat.deny, Personen und Geräte → Gesperrte Funktionen)."""
         uid = c.get("/api/whoami").json()["profile"]["id"]
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             deny = dict(json.load(f)["chat"].get("deny") or {})

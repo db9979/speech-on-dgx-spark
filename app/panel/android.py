@@ -323,7 +323,7 @@ def _on(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "the Android app is turned off")
     if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("android", prof["id"]):   # own data: seen and deleted also while blocked
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     return prof
 
 
@@ -344,7 +344,7 @@ async def profile_link(request: Request, prof=Depends(_on)):
     guard.limit(request, "android", prof["id"])
     body = await json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "Die Android-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
+        raise HTTPException(403, "Die Android-App hat der Admin für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen).")
     if not meta():
         raise HTTPException(409, "Der Spark hat die App noch nicht geholt.")
     url = f"{_base(body)}/android/spark.apk?t={new_token(prof['id'])}"

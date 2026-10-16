@@ -1,5 +1,5 @@
 """Instant acknowledgement (ack.py, admin chat.instant_ack, off; then on for every profile unless the admin blocks
-one under Funktionen → Wer darf was; never guests):
+one under Personen und Geräte → Gesperrte Funktionen; never guests):
 a ready-made sentence of what the Spark does now, chosen by fixed rules and played from a recording made once per
 voice; kept apart from the answer's first sound. No model, no clock."""
 import asyncio

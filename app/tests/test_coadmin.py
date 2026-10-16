@@ -172,7 +172,7 @@ class CoAdmin(unittest.TestCase):
 
     def test_manager_only_lifts_blocks(self):
         """Dominik 2026-10-14: only the admin switches functions on and off and blocks a profile; a Verwalter only
-        lifts a block (Funktionen → Wer darf was), enforced on the server."""
+        lifts a block (Personen und Geräte → Gesperrte Funktionen), enforced on the server."""
         import features
         c, _ = self.give("KoBruno", role="manager")
         profile("KoBrunoKind")

@@ -1493,7 +1493,7 @@ class Fixes(unittest.TestCase):
         uid = a.get("/api/whoami").json()["profile"]["id"]
         helpers.set_config(learn_fixes=True, memory=True)
         self.assertTrue(a.get("/api/profile/settings").json()["allow"]["fix_learn"])
-        # the admin blocks it for this profile (Funktionen → Wer darf was): no question
+        # the admin blocks it for this profile (Personen und Geräte → Gesperrte Funktionen): no question
         self.assertEqual(ADMIN.put(f"/api/admin/features/fixes/profiles/{uid}", json={"on": False}).status_code, 200)
         self.addCleanup(ADMIN.put, f"/api/admin/features/fixes/profiles/{uid}", json={"on": True})
         self.assertFalse(a.get("/api/profile/settings").json()["allow"]["fix_learn"])
@@ -1749,7 +1749,7 @@ class Proactive(unittest.TestCase):
         self.assertIsNone(self.say(uid, "events", "x"))        # the profile switched its preference off
         a.put("/api/profile/settings", json={"pro_on": True, "pro_quiet": "", "pro_greet": False})
         self.assertIsNone(self.say(uid))                       # this kind is off
-        # the admin blocks it for this profile (Funktionen → Wer darf was)
+        # the admin blocks it for this profile (Personen und Geräte → Gesperrte Funktionen)
         self.assertEqual(ADMIN.put(f"/api/admin/features/proactive/profiles/{uid}", json={"on": False}).status_code, 200)
         self.addCleanup(ADMIN.put, f"/api/admin/features/proactive/profiles/{uid}", json={"on": True})
         self.assertIsNone(self.say(uid, "events", "x"))

@@ -441,7 +441,7 @@ def _on(request: Request):
     prof = profiles.current(request)
     # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
     if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("contacts", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 @router.get("/api/profile/contacts", dependencies=[Depends(assistant)])

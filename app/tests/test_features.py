@@ -29,7 +29,7 @@ def profile(name, pin="1234"):
 
 
 def block(test, key, uid, on=False):
-    """The admin blocks (on=False) or allows again (on=True) a function for one profile: Funktionen → Wer darf was."""
+    """The admin blocks (on=False) or allows again (on=True) a function for one profile: Personen und Geräte → Gesperrte Funktionen."""
     r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
     test.assertEqual(r.status_code, 200, r.text)
     if not on:
@@ -251,7 +251,7 @@ class Values(unittest.TestCase):
 
 
 class Matrix(unittest.TestCase):
-    """Phase 3 (V01.0.269): Funktionen → Wer darf was."""
+    """Phase 3 (V01.0.269): Personen und Geräte → Gesperrte Funktionen."""
     def test_matrix_and_switching_a_profile(self):
         _, uid = profile("FeaAnton")
         helpers.set_config(weather=True)
@@ -259,7 +259,7 @@ class Matrix(unittest.TestCase):
         d = ADMIN.get("/api/admin/features").json()
         row = next(f for f in d["features"] if f["key"] == "weather")
         self.assertIs(row["cells"][uid], True)                          # released: every profile may use it
-        # only what its readers use (Wer darf was, Wer darf es, needs.js, the tiles, the iPhone app): no Spark column,
+        # only what its readers use (Gesperrte Funktionen, Wer darf es, needs.js, the tiles, the iPhone app): no Spark column,
         # no filters since Dominik 2026-10-14 ("Verschlanken")
         self.assertEqual(set(row), {"key", "name", "switch", "spark", "blockable", "cells", "inherited", "chain"})
         self.assertEqual(set(d), {"features", "profiles", "states", "snames"})

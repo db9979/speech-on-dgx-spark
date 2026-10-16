@@ -1,4 +1,4 @@
-"""Rights arrive at once (V01.0.388): what the admin sets under Funktionen → Wer darf was reaches the profile
+"""Rights arrive at once (V01.0.388): what the admin sets under Personen und Geräte → Gesperrte Funktionen reaches the profile
 on every way without reloading by hand: the pages see a new fingerprint (features.stamp in /api/whoami and
 /api/features) and reload, the iPhone app asks again on coming to the front and every minute, a device key
 whose function is off answers "not now" (503) and keeps its pairing, and new profiles by invitation may use what
@@ -50,7 +50,7 @@ class Stamp(unittest.TestCase):
             self.assertRegex(first, r"^[0-9a-f]{16}$")
             self.assertEqual(c.get("/api/features").json()["stamp"], first)    # one fingerprint for page and app
             self.assertEqual(c.get("/api/whoami").json()["rights"], first)     # stable while nothing changes
-            # the admin blocks the function for this profile under Wer darf was
+            # the admin blocks the function for this profile under Gesperrte Funktionen
             self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": False}).status_code, 200)
             second = c.get("/api/whoami").json()["rights"]
             self.assertNotEqual(second, first)

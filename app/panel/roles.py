@@ -6,7 +6,7 @@ The panel recognizes these sentences with fixed rules in the person's own latest
 outside text or in what the model wrote) and only for a name the profile saved itself; the model
 then only says the result. A role changes the tone like the own style, never the rules for tools,
 smart home, code word and data. Off until the admin allows it (chat.roles); then on for every
-profile unless the admin blocks one (Funktionen → Wer darf was). Guests and a voice that is not the profile's own never.
+profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests and a voice that is not the profile's own never.
 
     settings "roles"  text, one role per line "Name: what it should be like" (at most MAX_ROLES)
     settings "role"   the name of the active role ("" = none)

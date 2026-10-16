@@ -156,11 +156,11 @@ class Switches(Base):
         block(self, uq)
         r = q.get("/api/report")
         self.assertEqual(r.status_code, 403)                                       # the admin blocked this profile
-        self.assertIn("Funktionen → Wer darf was", r.json()["detail"])
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", r.json()["detail"])
         self.assertNotIn("Ich →", r.json()["detail"])                              # no profile switch to point to
         said = asyncio.run(meldung.by_phrase(uq, "RpRita", "Problem melden: geht nicht", "telegram"))
         self.assertIn("geht für dich gerade nicht", said)
-        self.assertIn("Funktionen → Wer darf was", said)
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", said)
         self.assertNotIn("Ich →", said)
         self.assertEqual(q.get("/api/report").status_code, 403)
         block(self, uq, True)

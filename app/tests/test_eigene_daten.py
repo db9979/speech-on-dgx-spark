@@ -269,7 +269,7 @@ class Static(unittest.TestCase):
             js = f.read()
         self.assertIn("function meOwn()", js)
         self.assertIn("t('Daten löschen','Delete data')", js)
-        self.assertIn("(Features → Who may do what)", js)
+        self.assertIn("(People and devices → Blocked functions)", js)
         self.assertIn("/api/profile/owndata/", js)
         self.assertNotIn("onclick=\"", js)
 

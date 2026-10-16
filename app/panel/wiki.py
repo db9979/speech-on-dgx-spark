@@ -1,7 +1,7 @@
 """Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best
 matching article and hands its short intro to the model, without SearXNG and without reading whole
 pages. Less text before the first word, so the answer starts sooner. Off until the admin allows it
-(chat.wiki); then on for every profile unless the admin blocks one (Funktionen → Wer darf was). Guests never.
+(chat.wiki); then on for every profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests never.
 
 With the own Kiwix (kiwix.py, V01.0.258) the Wikipedia books there are asked first, the online
 Wikipedia only when nothing fits or the Kiwix does not answer; a profile with only the Kiwix switch gets

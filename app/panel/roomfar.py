@@ -159,9 +159,9 @@ def why_not(ctx):
         return "Über " + ("Telegram" if ctx.get("client") == "telegram" else "Siri") + \
             " startet der Raum-Modus nicht aus der Ferne. Im Panel, in der iPhone-App oder am Lautsprecher geht es."
     if not esp32.admin_on() or not esp32.profile_on(who["id"]):
-        return "Der Admin hat Lautsprecher für dein Profil gesperrt (Funktionen → Wer darf was)."
+        return "Der Admin hat Lautsprecher für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen)."
     if not profile_on(who["id"]):
-        return ("Der Admin hat das für dein Profil gesperrt (Funktionen → Wer darf was). Am Gerät selbst geht "
+        return ("Der Admin hat das für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen). Am Gerät selbst geht "
                 "„Raummodus an“.")
     return ""
 

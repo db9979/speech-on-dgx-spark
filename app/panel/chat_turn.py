@@ -234,7 +234,7 @@ async def prepare(request):
     # why the search is (not) offered, for the journal and for the model (never silently missing)
     print("chat: web search", "NOT offered: guest, only questions and answers" if guest
           else "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
-          else "NOT offered: not for this profile (Funktionen → Wer darf was)" if not features.allowed("search", me0["id"], ccfg)
+          else "NOT offered: not for this profile (Personen und Geräte → Gesperrte Funktionen)" if not features.allowed("search", me0["id"], ccfg)
           else "NOT offered: no SearXNG address" if not search
           else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
     if cache_on and search and carry == "mail":   # the usual hint stays, the lock goes with the question
@@ -417,7 +417,7 @@ async def prepare(request):
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
                   else "a picture is attached (no tools in this answer)" if pics
-                  else "not for this profile (Funktionen → Wer darf was)" if not features.allowed("ha", who["id"], ccfg)
+                  else "not for this profile (Personen und Geräte → Gesperrte Funktionen)" if not features.allowed("ha", who["id"], ccfg)
                   else "not allowed in the car (Ich → iPhone-App)" if app_blocked and car
                   else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
                   else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])

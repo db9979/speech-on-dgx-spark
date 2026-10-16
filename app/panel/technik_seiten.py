@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "e3271f6fee",
+        "stand": "edeb3e2c48",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -580,8 +580,8 @@ SEITEN_DATEN = {
              "Settings → Security → Assistant without password: guests may ask (default off)."),
             ("Einstellungen → Sicherheit → Anmeldung im Browser: wie viele Tage ohne Nutzung ein Profil angemeldet bleibt.",
              "Settings → Security → Sign-in in the browser: how many days without use a profile stays signed in."),
-            ("Funktionen → Wer darf was: eine Funktion für einzelne Profile sperren.",
-             "Features → Who may do what: block a function for single profiles."),
+            ("Personen und Geräte → Gesperrte Funktionen: eine Funktion für einzelne Profile sperren.",
+             "People and devices → Blocked functions: block a function for single profiles."),
             ("Ich → Sicherheit: der zweite Schritt eines Profils.", "Me → Security: a profile's second step."),
         ],
         "sehen": [
@@ -625,7 +625,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)
     "vorbereiten": {
-        "stand": "9bb1798cfd",
+        "stand": "37a9485312",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -793,7 +793,7 @@ SEITEN_DATEN = {
             ("{notaus.STAGE.aktion}", ("Notaus-Stufe ohne Aktionen", "kill switch stage without actions"), "notaus.STAGE"),
         ],
         "einstellen": [
-            ("Funktionen → Wer darf was: was ein einzelnes Profil nicht bekommt.", "Features → Who may do what: what a single profile does not get."),
+            ("Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt.", "People and devices → Blocked functions: what a single profile does not get."),
             ("Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus).",
              "Features → Ask instead of guessing: the panel asks instead of guessing (default off)."),
             ("Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.",
@@ -2718,7 +2718,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "a49df2bf00",
+        "stand": "9b76a0bdcc",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -2873,8 +2873,8 @@ SEITEN_DATEN = {
         "einstellen": [
             ("Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).",
              "Features → iPhone app and Features → Android app: the apps for every profile (default off)."),
-            ("Funktionen → Wer darf was: die App für einzelne Profile sperren.",
-             "Features → Who may do what: block the app for single profiles."),
+            ("Personen und Geräte → Gesperrte Funktionen: die App für einzelne Profile sperren.",
+             "People and devices → Blocked functions: block the app for single profiles."),
             ("Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen.",
              "Me → iPhone and Me → Android: pairing, the app's rights, removing devices."),
             ("Funktionen → Terminal-Client und Ich → Terminal: Programm holen, koppeln (zu Hause gepinnt, extern wie im "

@@ -94,7 +94,7 @@ Den Agenten nicht auf der Spark selbst installieren: Er führt Befehle aus und k
 
 Andere Programme nutzen den Spark über das [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, Adresse `/mcp` des Panels, z. B. `http://SPARK:31080/mcp`). Standardmäßig aus.
 
-**Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Das gilt für jedes Profil; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was). Einrichten im Profil: Ich → *Dienste per MCP* → „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
+**Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Das gilt für jedes Profil; einzelne Profile sperrt nur der Admin (Personen und Geräte → Gesperrte Funktionen). Einrichten im Profil: Ich → *Dienste per MCP* → „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
 
 | Gruppe | Werkzeuge |
 |---|---|

@@ -14,7 +14,7 @@ not behind "Vorrang für Sprache" (vorrang.py): that would wait until the speaki
 network calls to the profile's own services, nothing that loads the graphics card.
 
 Off until the admin allows it (chat.prefetch, below Gezielte Werkzeugwahl); then on for every profile unless the
-admin blocks one (Funktionen → Wer darf was). Guests never, a voice not recognised at a shared speaker never, a question from another
+admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests never, a voice not recognised at a shared speaker never, a question from another
 program over MCP never.
 """
 import asyncio

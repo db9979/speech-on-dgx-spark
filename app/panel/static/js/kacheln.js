@@ -11,7 +11,7 @@ cards.forEach(c=>{const two=c.parentElement.classList.contains('two')?c.parentEl
   const b=document.createElement('button');b.type='button';b.className='atbtn';b.setAttribute('aria-expanded','false');b.textContent=h.textContent;h.textContent='';h.appendChild(b);
   b.onclick=()=>{const on=!c.classList.contains('open');grid.querySelectorAll('.atile.open').forEach(x=>{x.classList.remove('open');x.querySelector('.atbtn').setAttribute('aria-expanded','false')});
     c.classList.toggle('open',on);b.setAttribute('aria-expanded',on?'true':'false');if(on)c.scrollIntoView({block:'nearest',behavior:'smooth'})}});
-// the state of the functions behind a tile, from the same list as Wer darf was
+// the state of the functions behind a tile, from the same list as Gesperrte Funktionen
 async function state(){let d;try{d=await (await api('/api/admin/features')).json()}catch{return}
   grid.querySelectorAll('.atile[data-sw]').forEach(c=>{const f=d.features.find(x=>x.switch===c.dataset.sw);let s=c.querySelector(':scope>.atstate');
     if(!f){if(s)s.remove();return}

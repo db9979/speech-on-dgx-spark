@@ -57,10 +57,10 @@ MAX_CARDS_UID = 10     # per profile
 # ---------------------------------------------------------------- where the person is (Frag Spark)
 SECTIONS = {"chat": ("Assistent", "Assistant"), "mon": ("Zustand", "Status"), "live": ("Zustand → Live", "Status → Live"),
             "test": ("Zustand → Prüfen", "Status → Checks"), "logs": ("Zustand → Logs", "Status → Logs"),
-            "feat": ("Funktionen", "Features"), "who": ("Funktionen → Wer darf was", "Features → Who may do what"),
+            "feat": ("Funktionen", "Features"),
             "route": ("Funktionen → Weiche", "Features → Switch"), "tech": ("Zustand → Technik", "Status → Architecture"), "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
             "apps": ("Personen und Geräte → Apps und Schnittstellen", "People and devices → Apps and interfaces")}
-PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|who|route|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
+PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|route|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
 # what a page is for (plan plaene/hilfe-besser.md 2): fixed sentences; the switches on it are added from the page itself
 PAGE_TEXT = {
     "chat": ("Das Gespräch mit dem Assistenten: sprechen (Mikrofon oder Kopf antippen) oder tippen; darüber die Gespräche, "
@@ -81,18 +81,18 @@ PAGE_TEXT = {
              "Was hier an ist, gilt sofort für jedes Profil; einzelne Profile sperrt der Admin in der Funktion unter „Wer darf es“.",
              "Features: every function of the Spark with its admin switch, sub-switches below and the guide. What is on here "
              "applies to every profile at once; the admin blocks single profiles in the function under \"Who may use it\"."),
-    "who": ("Funktionen → Wer darf was: nur die Funktionen, die der Admin für ein Profil gesperrt hat; antippen hebt die "
-            "Sperre auf. Neue Sperren setzt der Admin in der Funktion unter „Wer darf es“.",
-            "Features → Who may do what: only the functions the admin blocked for a profile; tap to lift the block. The "
-            "admin sets new blocks in the function under \"Who may use it\"."),
     "route": ("Funktionen → Weiche: welche Werkzeuge eine Frage bekommt, als Bild. Einen Satz ausprobieren, Gruppen mit eigenen "
               "Wörtern, „Nicht bei“ und zusätzlichen Werkzeugen ergänzen, Testsätze, „Falsch zugeordnet …“ und Rückgängig.",
               "Features → Switch: which tools a question gets, as a picture. Try a sentence, add own words, “Not with” and extra "
               "tools to groups, test sentences, “Wrongly sorted …” and undo."),
     "int": ("Funktionen → Anleitungen: alle Anleitungen zum Nachlesen, mit Einrichten und „Wenn es nicht klappt“.",
             "Features → Guides: all guides to read, with setting up and \"If it does not work\"."),
-    "prof": ("Personen und Geräte: Profile anlegen und einladen, PIN, Rollen, Vorrang, Geräte und ihre Schlüssel.",
-             "People and devices: create and invite profiles, PIN, roles, priority, devices and their keys."),
+    "prof": ("Personen und Geräte: Profile anlegen und einladen, PIN, Rollen, Vorrang, Geräte und ihre Schlüssel. Unten "
+             "„Gesperrte Funktionen“: was der Admin für ein Profil gesperrt hat, antippen hebt die Sperre auf; neue Sperren "
+             "setzt der Admin in der Funktion unter „Wer darf es“.",
+             "People and devices: create and invite profiles, PIN, roles, priority, devices and their keys. At the bottom "
+             "\"Blocked functions\": what the admin blocked for a profile, tap to lift the block; the admin sets new blocks "
+             "in the function under \"Who may use it\"."),
     "apps": ("Personen und Geräte → Apps und Schnittstellen: iPhone-App, Android-App, Uhr, Lautsprecher, Telegram, MCP und andere Zugänge.",
              "People and devices → Apps and interfaces: iPhone app, Android app, watch, speakers, Telegram, MCP and other ways in."),
     "me/setbox": ("Ich → Gespräch: wie der Assistent für dich arbeitet (zuhören, antworten, Anzeige, Datenschutz). "
@@ -449,7 +449,7 @@ def visible(it, level, c=None):
         return level == "admin" or (level == "manager" and it["page"] == "feat")
     if it["kind"] == "page":
         return it["page"] in ("chat",) or it["page"].startswith("me/") or level == "admin" \
-            or (level == "manager" and it["page"] in ("feat", "who", "int"))
+            or (level == "manager" and it["page"] in ("feat", "prof", "int"))
     if it["kind"] == "doc":
         return level == "admin" or it.get("src") in USER_DOCS
     if it["kind"] in ("tip", "faq"):
@@ -1113,8 +1113,8 @@ def answer_text(question, uid, level="profile", page=None, lang="de", request=No
                         if li == 0 else "This function is off on the Spark; only the admin can switch it on.") + " " + text
             elif it["feature"] and uid and features.blocked(it["feature"], uid, c):
                 off_spark = True
-                text = ("Diese Funktion hat der Admin für dich gesperrt (Funktionen → Wer darf was)."
-                        if li == 0 else "The admin blocked this function for you (Features → Who may do what).") + " " + text
+                text = ("Diese Funktion hat der Admin für dich gesperrt (Personen und Geräte → Gesperrte Funktionen)."
+                        if li == 0 else "The admin blocked this function for you (People and devices → Blocked functions).") + " " + text
         text = SECRET.sub("…", text)
         ws = [way(w, org, app, lang) for w in ways(it, lang, level, c)]
         head = f"[{i}] {kinds[it['kind']][li]} „{it['title']}“"

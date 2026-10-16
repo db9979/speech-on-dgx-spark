@@ -126,7 +126,7 @@ def blocked(uid, kind, p=None, local=None, st=None):
     import notaus
     if notaus.refuse("auto", uid):     # the Notaus from stage 2, or the profile's own (notaus.py)
         return "Notaus"
-    if features.blocked("proactive", uid):    # the admin blocked it for this profile (Funktionen → Wer darf was)
+    if features.blocked("proactive", uid):    # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
         return "blocked by the admin"
     if not p.get("pro_on"):
         return "turned off in the profile"
@@ -1082,7 +1082,7 @@ def _on(request: Request):
         raise HTTPException(403, "speaking up by itself is turned off")
     prof = profiles.current(request)
     if prof and features.blocked("proactive", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 def status(uid):

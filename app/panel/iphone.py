@@ -168,7 +168,7 @@ def _on(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "the iPhone app is turned off")
     if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("iphone", prof["id"]):   # own data: seen and deleted also while blocked
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     return prof
 
 
@@ -184,7 +184,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time link for the app: as a QR code and as a link for this very iPhone."""
     body = await json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "Die iPhone-App hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
+        raise HTTPException(403, "Die iPhone-App hat der Admin für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen).")
     if len(phones(prof["id"])) >= MAX_PHONES:
         raise HTTPException(409, f"Schon {MAX_PHONES} iPhones gekoppelt. Erst eines entfernen.")
     base = _base(body)

@@ -386,7 +386,7 @@ def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(sec
     closed = request.scope.get("speech_gate_closed")
     if closed and not creds:   # a known device, its function off right now: keep the pairing (profiles._gate_closed)
         raise HTTPException(503, "Mein Notaus hält dieses Gerät an." if closed == "notaus"
-                            else "Für dieses Gerät gerade ausgeschaltet (Funktionen → Wer darf was).")
+                            else "Für dieses Gerät gerade ausgeschaltet (Personen und Geräte → Gesperrte Funktionen).")
     auth(request, creds)
 
 
@@ -457,13 +457,13 @@ async def secret_profile_fresh(request: Request):
 
 
 def _gate(key, why, request):
-    """The admin switch, and not blocked for the profile behind this request (Funktionen → Wer darf was)."""
+    """The admin switch, and not blocked for the profile behind this request (Personen und Geräte → Gesperrte Funktionen)."""
     import features   # features.py imports this module
     if not features.admin_on(key):
         raise HTTPException(403, why)
     prof = profiles.current(request)
     if prof and features.blocked(key, prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 # Calendar and briefing topics: profiles only; the stored password is never sent back.

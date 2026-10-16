@@ -3,7 +3,7 @@ language model looks at it itself. qwen38's Qwen3.8 is a vision model; the admin
 "Bilderkennung prüfen" that the running lane accepts pictures (POST /api/admin/vision-test).
 
 Off until the admin switches it on (chat.images); then on for every profile unless the admin blocks one
-(Funktionen → Wer darf was); from the iPhone app also app_images, over Telegram also tg_images. Guests and
+(Personen und Geräte → Gesperrte Funktionen); from the iPhone app also app_images, over Telegram also tg_images. Guests and
 other device keys never.
 
 A picture is data, never an instruction:

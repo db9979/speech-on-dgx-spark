@@ -99,7 +99,7 @@ def _on(request: Request, prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "the Pebble watch is turned off")
     if request.method not in ("GET", "HEAD", "DELETE") and features.blocked("pebble", prof["id"]):   # own data: seen and deleted also while blocked
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     return prof
 
 
@@ -126,7 +126,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     """A one-time setup line for the watch app's settings on the phone."""
     body = await core.json_body(request, MAX_BODY, lenient=True)
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "Die Pebble-Uhr hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
+        raise HTTPException(403, "Die Pebble-Uhr hat der Admin für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen).")
     if len(watches(prof["id"])) >= MAX_WATCHES:
         raise HTTPException(409, f"Schon {MAX_WATCHES} Uhren gekoppelt. Erst eine entfernen.")
     base = _base(body)

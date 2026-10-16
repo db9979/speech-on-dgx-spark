@@ -51,7 +51,7 @@ def profile(name, pin="1234", on=True):
 
 
 def block(uid, key, yes=True):
-    """The admin blocks (or allows again) one function for one profile: Funktionen → Wer darf was (chat.deny)."""
+    """The admin blocks (or allows again) one function for one profile: Personen und Geräte → Gesperrte Funktionen (chat.deny)."""
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         deny = dict(json.load(f)["chat"].get("deny") or {})
     deny[key] = [u for u in deny.get(key, []) if u != uid] + ([uid] if yes else [])
@@ -151,7 +151,7 @@ class Switches(Base):
         self.assertEqual(c.get("/api/make").status_code, 403)
         o = docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung"))   # off: no tools, only why
         self.assertEqual(o["tools"], [])
-        self.assertIn("Funktionen → Wer darf was", o["hint"])
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", o["hint"])
         self.assertNotIn("Ich →", o["hint"])
         self.assertIsNone(docmake.offer(ctx(uid, "Wie wird das Wetter?")))
         block(uid, "erstellen", False)                         # released: works at once
@@ -199,7 +199,7 @@ class Switches(Base):
         docmake.offer(ctx(uid, "Mach eine Präsentation über die der eine Folie."))
         o = docmake.offer(dict(ctx(uid, "den mauer fall, gerne kurz"), before=ask))
         self.assertEqual(o["tools"], [])
-        self.assertIn("Funktionen → Wer darf was", o["hint"])
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", o["hint"])
 
     def test_answer_in_the_chat_offers_the_tools(self):
         """The same through /api/chat: the second turn's model call carries document_plan and the hint."""

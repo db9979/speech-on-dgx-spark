@@ -2,7 +2,8 @@
 // right (its sentence, who may use it, its settings, its guide), the list on the left stays one line per function. On a
 // narrow page it opens below its line as before. The rows are moved, not copied: ids, loading, saving, "braucht dich"
 // and the search work unchanged, and closing puts them back into the item. "Wer darf es" is where the admin blocks a
-// profile (/api/admin/features, …/profiles/<id>; Wer darf was lists the blocks) and works at once, without the save bar. What the
+// profile (/api/admin/features, …/profiles/<id>; one line, the chips behind a tap; Personen und Geräte → Gesperrte Funktionen
+// lists all blocks) and works at once, without the save bar. What the
 // Spark allows works for every profile at once (Dominik 2026-10-13); a chip only blocks one profile (on = may use it).
 (()=>{
 const pane=$('pane-feat');if(!pane)return;
@@ -29,6 +30,7 @@ function out(it){if(cur===it)return;back();cur=it;it._kids=[...it.children].slic
 function back(){if(!cur)return;const it=cur;cur=null;const body=inner.querySelector('.fdbody');if(body)it.append(...body.children);it.classList.remove('fside');empty()}
 // ---------------------------------------------------------------- Wer darf es
 let WD=null;
+const WHO_OPEN=new Set();   // functions whose profile chips are open (until closed again or the page reloads)
 async function whoData(){try{WD=await (await api('/api/admin/features')).json()}catch{WD=null}return WD}
 const inItem=(it,el)=>!!el&&(it.contains(el)||(cur===it&&inner.contains(el)));
 async function who(it){let box=[...it.children].find(x=>x.classList.contains('fwho'))||(cur===it&&inner.querySelector('.fwho'));
@@ -38,21 +40,29 @@ async function who(it){let box=[...it.children].find(x=>x.classList.contains('fw
   // the function itself and the switches inside it that show now (a sub-switch hides while the one it builds on is off)
   const shown=el=>{for(let x=el.closest('[data-show]');x;x=x.parentElement&&x.parentElement.closest('[data-show]'))if(x.style.display==='none')return false;return true};
   const fs=d.features.filter(f=>{if(f.blockable===false)return false;const el=$('chat.'+f.switch);return inItem(it,el)&&('chat.'+f.switch===it.dataset.sw||shown(el))});if(!fs.length){box.hidden=true;return}
-  box.hidden=false;box.textContent='';const h=document.createElement('div');h.className='fwhoh';
-  h.innerHTML=`<b>${esc(t('Wer darf es','Who may use it'))}</b><span>${esc(t('wirkt sofort','applies at once'))}</span>`;box.appendChild(h);
-  for(const f of fs){const r=document.createElement('div');r.className='fwrow';
-    if(fs.length>1){const n=document.createElement('div');n.className='fwname';n.textContent=f.name[L==='en'?1:0];r.appendChild(n)}
-    const chips=document.createElement('div');chips.className='fwchips';
-    const nm=f.name[L==='en'?1:0];
-    for(const p of d.profiles){const inh=!!(f.inherited&&f.inherited[p.id]),on=!!f.cells[p.id];
-      chips.appendChild(chip(p.name,on&&!inh,f.spark&&!inh,`${nm} – ${p.name}`,async()=>{
-        await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(p.id)}`,xjson('PUT',{on:!on}));f.cells[p.id]=!on}))}
-    r.appendChild(chips);box.appendChild(r)}
-  const n=document.createElement('div');n.className='mut fwg';
-  n.textContent=fs.some(f=>!f.spark)?t('Gilt für alle Profile, sobald der Schalter der Funktion an und gespeichert ist; hier sperrst du dann einzelne Profile.','Applies to every profile once the function\'s switch is on and saved; here you then block single profiles.')
-    :t('Gilt sofort für alle Profile; hier sperrst du einzelne Profile.','Applies to every profile at once; here you block single profiles.');box.appendChild(n)
-  const g=document.createElement('div');g.className='mut fwg';g.textContent=t('Gäste: nie (nur Fragen und Antworten)','Guests: never (questions and answers only)');box.appendChild(g)
-  // a jump from Wer darf was scrolled to its row before this box was filled and pushed the row down: scroll again
+  // one line (Dominik 2026-10-16 option 1): „Wer darf es: alle Profile“ and who is blocked; a tap opens the chips, once for the
+  // function (a sub-switch only shows its own row while it holds a block of its own, so it can be lifted)
+  box.hidden=false;box.textContent='';const nm=f=>f.name[L==='en'?1:0];
+  const main=fs.find(f=>'chat.'+f.switch===it.dataset.sw)||fs[0];
+  const own=f=>d.profiles.filter(p=>f.spark&&f.cells[p.id]===false&&!(f.inherited&&f.inherited[p.id]));
+  const rows=fs.filter(f=>f===main||own(f).length),names=[...new Set(fs.flatMap(f=>own(f).map(p=>p.name)))];
+  const line=document.createElement('div');line.className='fwline';
+  const hb=document.createElement('b');hb.textContent=t('Wer darf es: ','Who may use it: ');
+  const say=document.createElement('span');say.textContent=main.spark?t('alle Profile','every profile'):t('alle Profile, sobald die Funktion an ist','every profile once the function is on');
+  line.append(hb,say);
+  if(names.length){const bl=document.createElement('span');bl.className='fwblk';bl.textContent=t('gesperrt: ','blocked: ')+names.join(', ');line.append(' · ',bl)}
+  const open=WHO_OPEN.has(main.key),tg=document.createElement('button');tg.type='button';tg.className='wlink';tg.setAttribute('aria-expanded',open?'true':'false');
+  tg.textContent=open?t('Fertig','Done'):names.length?t('Sperren ändern …','Change blocks …'):t('Profil sperren …','Block a profile …');
+  tg.onclick=()=>{WHO_OPEN.has(main.key)?WHO_OPEN.delete(main.key):WHO_OPEN.add(main.key);who(it)};line.append(' ',tg);box.appendChild(line);
+  if(open){for(const f of rows){const r=document.createElement('div');r.className='fwrow';
+      if(rows.length>1){const n=document.createElement('div');n.className='fwname';n.textContent=nm(f);r.appendChild(n)}
+      const chips=document.createElement('div');chips.className='fwchips';
+      for(const p of d.profiles){const inh=!!(f.inherited&&f.inherited[p.id]),on=!!f.cells[p.id];
+        chips.appendChild(chip(p.name,on&&!inh,f.spark&&!inh,`${nm(f)} – ${p.name}`,async()=>{
+          await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(p.id)}`,xjson('PUT',{on:!on}));f.cells[p.id]=!on}))}
+      r.appendChild(chips);box.appendChild(r)}
+    const g=document.createElement('div');g.className='mut fwg';g.textContent=t('Wirkt sofort. Gäste: nie (nur Fragen und Antworten).','Applies at once. Guests: never (questions and answers only).');box.appendChild(g)}
+  // a jump from Gesperrte Funktionen scrolled to its row before this box was filled and pushed the row down: scroll again
   // (until the user moves himself, so a later refresh by a chip does not move the page; the flash alone was too
   // short on a slow device with many profiles)
   const j=typeof WHO_LAST!=='undefined'&&WHO_LAST;if(j&&typeof whoKeepJump==='function'&&whoKeepJump()&&inItem(it,j))j.scrollIntoView({block:'center'})

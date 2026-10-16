@@ -38,6 +38,9 @@ STALE = [
     (r"\(qwen38 aus dgx-spark-qwen38, nicht Teil|\(qwen38 from dgx-spark-qwen38, not part", "own or qwen38"),
     (r"Funktion ist pro Profil einzeln schaltbar|feature can be switched on per profile",
      "the admin releases for every profile (Freigabe 2026-10-13)"),
+    (r"Funktionen → Wer darf was|Features → Who may do what",
+     "the blocks are under Personen und Geräte → Gesperrte Funktionen since V01.0.670"),
+    (r"V01\.0\.[A-Z]{3,}", "a version placeholder left in the docs"),
 ]
 
 

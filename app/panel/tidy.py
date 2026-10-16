@@ -1636,7 +1636,7 @@ async def due_once(idle=True):
         return
     c = features.chat_cfg()   # read once: many profiles
     for uid in profiles.user_ids():
-        if not features.allowed("tidy", uid, c):   # the admin blocked it for this profile (Funktionen → Wer darf was)
+        if not features.allowed("tidy", uid, c):   # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
             continue
         d = state(uid)
         every = d["every"] * 60
@@ -1702,7 +1702,7 @@ def _on(request: Request):
     prof = profiles.current(request)
     # blocked by the admin: own data can still be seen and deleted, nothing added, connected or done
     if prof and request.method not in ("GET", "HEAD", "DELETE") and features.blocked("tidy", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 async def _body(request):

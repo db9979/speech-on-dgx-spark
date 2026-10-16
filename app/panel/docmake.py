@@ -3,7 +3,7 @@ reports, minutes, notes, presentations and tables for a profile, as Word, PowerP
 text or CSV.
 
 Off until the admin switches chat.doc_make on (Funktionen → Eigene Dokumente → Dokumente erstellen); then on for
-every profile unless the admin blocks one (Funktionen → Wer darf was); guests never. Own templates have a second
+every profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen); guests never. Own templates have a second
 admin switch (chat.doc_make_templates).
 
 How it works (fixed rules, the panel decides, never the model):

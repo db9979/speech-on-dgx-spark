@@ -1,5 +1,6 @@
-// Funktionen → „Wer darf was“ (plan „Vereinheitlichen“ Phase 3, V01.0.269; plan „Freigabe vereinfachen“,
-// Dominik 2026-10-13; slimmed down, Dominik 2026-10-14 option 3 „Verschlanken“): what the Spark allows works at once
+// Personen und Geräte → Gesperrte Funktionen (plan „Vereinheitlichen“ Phase 3, V01.0.269; plan „Freigabe vereinfachen“,
+// Dominik 2026-10-13; slimmed down, Dominik 2026-10-14 option 3 „Verschlanken“; a box under Personen und Geräte instead of the page Funktionen → „Wer darf was“ since
+// Dominik 2026-10-16 option 1): what the Spark allows works at once
 // for every profile, so the page lists only the functions the admin blocked for at least one profile: the name (jumps
 // to the function) and one chip per blocked profile (tap lifts the block). New blocks are set in the function itself
 // (fdetail.js „Wer darf es“). Nothing blocked: one sentence with a jump to Funktionen. Guests never get a function (one
@@ -28,7 +29,7 @@ function whoRow(f){const el=$('chat.'+f.switch);if(!el)return null;let row=el.cl
     const sw=$(dep.dataset.show);if(!sw)break;row=sw.closest('.setrow')||sw.closest('.fitem')||sw}
   return row}
 async function whoOpen(f){const me=whoOpen.n=(whoOpen.n||0)+1;goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
-  // a settings load started elsewhere (Wer darf was loads them too) may still be drawing the rows: wait for them,
+  // a settings load started elsewhere (Gesperrte Funktionen loads them too) may still be drawing the rows: wait for them,
   // on a busy machine up to 20 s; a newer jump wins
   let row=whoRow(f);for(let i=0;!row&&i<80&&me===whoOpen.n;i++){await new Promise(r=>setTimeout(r,250));row=whoRow(f)}
   if(me!==whoOpen.n)return;
@@ -63,4 +64,3 @@ function drawWho(){const box=$('whobox');if(!box||!WHO)return;box.textContent=''
     r.append(nm,chips);box.appendChild(r)}
   const n=document.createElement('p');n.className='mut wnote';n.textContent=whoGuest();box.appendChild(n)}
 window.loadWho=loadWho;
-if($('featwho'))$('featwho').onclick=()=>goSec('who');

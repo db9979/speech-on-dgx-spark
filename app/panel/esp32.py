@@ -1575,7 +1575,7 @@ RECHECK = 2.0              # an open speaker connection looks at its rights agai
 
 def still_allowed(dev):
     """While a speaker is connected: the Spark's switch, the profile's own switch (also when the admin turns
-    it off under Wer darf was) and the device itself (deleted, or moved to another profile) still hold."""
+    it off under Gesperrte Funktionen) and the device itself (deleted, or moved to another profile) still hold."""
     if not admin_on() or not profile_on(dev["user"]):
         return False
     now = next((x for x in profiles._load()["devices"] if x["id"] == dev["id"]), None)
@@ -1850,7 +1850,7 @@ def _on(prof=Depends(browser_profile)):
     if not admin_on():
         raise HTTPException(403, "speakers are turned off")
     if not profile_on(prof["id"]):
-        raise HTTPException(403, "speakers are blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "speakers are blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     return prof
 
 
@@ -1943,7 +1943,7 @@ async def profile_speaker_code(request: Request, prof=Depends(secret_profile_fre
     if not features.admin_on("spkcode"):
         raise HTTPException(403, "Codewort am Lautsprecher ist ausgeschaltet.")
     if features.blocked("spkcode", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
     body = await json_body(request, MAX_BODY, lenient=True)
     try:
         res = spkcode.set_code(prof["id"], str(body.get("code", ""))[:200])

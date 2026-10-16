@@ -127,7 +127,7 @@ def granted(uid):
 
 def level(uid):
     """The level in use: the one the admin granted (no switch of the profile's own since „Freigabe vereinfachen“),
-    none while the admin blocked the agent functions for this profile (Funktionen → Wer darf was)."""
+    none while the admin blocked the agent functions for this profile (Personen und Geräte → Gesperrte Funktionen)."""
     return "" if uid and features.blocked("agent", uid) else granted(uid)
 
 

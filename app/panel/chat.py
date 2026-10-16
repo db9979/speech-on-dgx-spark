@@ -76,7 +76,7 @@ async def learn_once():
             if not dict(adm, **profiles.settings(uid)).get("learn", True):
                 continue
             if not (features.allowed("memory", uid, ccfg) and features.allowed("history", uid, ccfg)):
-                continue   # the admin blocked it for this profile (Funktionen → Wer darf was)
+                continue   # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
             prof = profiles.by_id(uid)
             for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
                 if vorrang.speaking():

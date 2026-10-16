@@ -36,7 +36,7 @@ FAR = "fremd.example.org"
 
 
 def profile(name, pin="2468", chats=True):
-    """A profile; chats=False: the admin blocked Chats for it (Funktionen → Wer darf was), the only way off now."""
+    """A profile; chats=False: the admin blocked Chats for it (Personen und Geräte → Gesperrte Funktionen), the only way off now."""
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
     c = TestClient(panel.app)

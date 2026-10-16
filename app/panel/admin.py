@@ -486,7 +486,7 @@ def _tidy(cfg, known):
     # gone with "Freigabe vereinfachen" (Dominik 2026-10-13): what a new profile got switched on; every profile now
     # gets what the admin releases
     ch.pop("new_profile_on", None)
-    if "chat" in cfg:   # a removed function or a deleted profile in Wer darf was never blocks saving
+    if "chat" in cfg:   # a removed function or a deleted profile in Gesperrte Funktionen never blocks saving
         ch["deny"] = features.clean_deny(ch.get("deny"))
     if isinstance(ch.get("defaults"), dict):        # a preset whose setting is gone or takes other values now
         ch["defaults"] = profiles.clean_settings(ch["defaults"])
@@ -597,7 +597,7 @@ def validate(new):
         raise HTTPException(400, "telegram_panel_url: https://name or https://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
         raise HTTPException(400, "esp32_repo: owner/name")
-    # Wer darf was: the functions the admin blocked for single profiles (features.blocked); only the admin writes it
+    # Gesperrte Funktionen: the functions the admin blocked for single profiles (features.blocked); only the admin writes it
     deny = ch.get("deny", {})
     if not (isinstance(deny, dict) and len(deny) <= len(features.FEATURES)
             and all(k in features.BY_KEY and k not in features.NO_BLOCK and isinstance(v, list) and 0 < len(v) <= features.MAX_DENY and len(set(v)) == len(v)

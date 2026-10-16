@@ -16,7 +16,7 @@ helpers.start()
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel", "static")
 ZUSTAND = ("mon", "live", "test", "logs", "verb", "usage", "models", "tech")
-OTHERS = ("feat", "who", "route", "int", "prof", "apps", "cfg")
+OTHERS = ("feat", "route", "int", "prof", "apps", "cfg")
 
 
 def read(*p):

@@ -271,7 +271,7 @@ def aloud(uid):
 
 def program_rev(did, uid):
     """(settings, rev) for the program itself: rev also goes up when what the switches allow changes (the
-    admin under Wer darf was, the profile under Ich), so the program fetches its config with the next poll and
+    admin under Gesperrte Funktionen, the profile under Ich), so the program fetches its config with the next poll and
     stops the parts that are no longer allowed, not only after a restart (V01.0.388)."""
     mask = "".join("1" if v else "0" for v in may(uid).values())
     mask += ":" + profiles.face_of(uid, load_config().get("chat", {}))   # another face: the program draws it now
@@ -557,9 +557,9 @@ def _program(request):
     prof = profiles.current(request)
     dev = profiles.device(request) if prof else None
     closed = None if prof else request.scope.get("speech_gate_closed")
-    if closed:   # switched off (Wer darf was, Mein Notaus): "not now", the program keeps its pairing
+    if closed:   # switched off (Gesperrte Funktionen, Mein Notaus): "not now", the program keeps its pairing
         raise HTTPException(503, "Mein Notaus hält den Begleiter an." if closed == "notaus"
-                            else "Der Begleiter ist für dich gerade ausgeschaltet (Funktionen → Wer darf was).")
+                            else "Der Begleiter ist für dich gerade ausgeschaltet (Personen und Geräte → Gesperrte Funktionen).")
     if not prof or not dev or dev["scope"] != "desk":
         raise HTTPException(401, "Der Spark kennt dieses Gerät nicht mehr. Neu koppeln.")
     return prof, dev

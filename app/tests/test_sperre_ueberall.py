@@ -1,5 +1,5 @@
 """„Altlasten bereinigen“ (Paket 3 von „Freigabe vereinfachen“): what the admin blocks for one profile (chat.deny,
-Funktionen → Wer darf was) holds everywhere a function acts for that profile, offers it something or shows it
+Personen und Geräte → Gesperrte Funktionen) holds everywhere a function acts for that profile, offers it something or shows it
 something: tools in a chat turn, the pages in /api/whoami, the iPhone app, background jobs (Von selbst, Agent, Home
 Assistant live, reMarkable, Telegram) and the endpoints where it sets something up. Another profile keeps all of it.
 A static guard keeps it that way: no module gates a profile with features.admin_on alone; every call that is left

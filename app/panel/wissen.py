@@ -175,7 +175,7 @@ def add(uid, name, data, text=None, source="upload"):
     if join.mfa_due(uid):   # came in by invitation: documents wait for the second step
         raise ValueError("Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit), dann Dokumente ablegen.")
     if features.blocked("documents", uid):   # every way in (panel, app, Telegram, Begleiter): the admin's block holds
-        raise ValueError("Dokumente hat der Admin für dein Profil gesperrt (Funktionen → Wer darf was).")
+        raise ValueError("Dokumente hat der Admin für dein Profil gesperrt (Personen und Geräte → Gesperrte Funktionen).")
     if documents.usage_total(uid) >= quota_bytes(uid):
         raise ValueError(f"the space for documents is full ({quota_bytes(uid) // 1024**2} MB): delete documents "
                          "or ask the admin for more")

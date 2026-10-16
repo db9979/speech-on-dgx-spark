@@ -869,7 +869,7 @@ async def decide(uid, aid, yes, now=None):
             raise HTTPException(404, "Dieser Vorschlag wartet nicht mehr.")
         x["state"] = "busy"
         _save_actions(uid, items)
-    # the profile's own MCP switch is looked at again too: turned off meanwhile under Wer darf was, nothing runs
+    # the profile's own MCP switch is looked at again too: turned off meanwhile under Gesperrte Funktionen, nothing runs
     if yes and act_on() and features.allowed("mcpserver", uid) and any(c["id"] == x["conn"] for c in _load()["conns"]):
         import live
         rec, t0 = live.begin("mcp", str(x["by"])[:30], uid=uid), time.time()

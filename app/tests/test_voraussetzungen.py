@@ -78,13 +78,13 @@ class Chain(Base):
         self.assertIn("Features → Own documents", en)
         helpers.set_config(documents=True, doc_make=True)
         self.assertEqual(features.missing_text("erstellen", uid), "")   # released: nothing missing for the profile
-        # blocked for this profile by the admin (also through the chain): the way to Wer darf was
+        # blocked for this profile by the admin (also through the chain): the way to Gesperrte Funktionen
         r = ADMIN.put(f"/api/admin/features/documents/profiles/{uid}", json={"on": False})
         self.assertEqual(r.status_code, 200)
         self.addCleanup(ADMIN.put, f"/api/admin/features/documents/profiles/{uid}", json={"on": True})
-        self.assertIn("Der Admin hat es für dich gesperrt (Funktionen → Wer darf was)", features.missing_text("erstellen", uid))
+        self.assertIn("Der Admin hat es für dich gesperrt (Personen und Geräte → Gesperrte Funktionen)", features.missing_text("erstellen", uid))
         # the chat's fixed sentence for a file wish while it is off
-        self.assertIn("Funktionen → Wer darf was", docmake.off_hint(uid))
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", docmake.off_hint(uid))
         self.assertNotIn("Ich →", docmake.off_hint(uid))
         ADMIN.put(f"/api/admin/features/documents/profiles/{uid}", json={"on": True})
         helpers.set_config(documents=False)
@@ -99,7 +99,7 @@ class Chain(Base):
 
 class Enable(Base):
     """Only Funktionen switches a chain on (needs.js ticks the page's switches, saved with the page). The Spark column
-    of Wer darf was and its POST /api/admin/features/{key}/enable went with the slim page (Dominik 2026-10-14)."""
+    of Gesperrte Funktionen and its POST /api/admin/features/{key}/enable went with the slim page (Dominik 2026-10-14)."""
     def setUp(self):
         super().setUp()
         helpers.set_config(documents=False, doc_make=False, doc_make_templates=False)

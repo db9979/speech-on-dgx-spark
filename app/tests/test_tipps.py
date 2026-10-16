@@ -57,7 +57,7 @@ WISH = {"key": "tasks", "why": "spark"}
 
 
 def block(test, key, uid, on=False):
-    """The admin blocks a function for one profile (Funktionen → Wer darf was), lifted again after the test."""
+    """The admin blocks a function for one profile (Personen und Geräte → Gesperrte Funktionen), lifted again after the test."""
     test.assertEqual(ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on}).status_code, 200)
     if not on:
         test.addCleanup(ADMIN.put, f"/api/admin/features/{key}/profiles/{uid}", json={"on": True})

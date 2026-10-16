@@ -65,7 +65,7 @@ class Static(unittest.TestCase):
             self.assertRegex(js, rf"\b{p}:\[", p)
 
     def test_feature_groups_match(self):
-        # the Funktionen page (guides.js) and the feature register (features.py, Wer darf was, the apps) use the
+        # the Funktionen page (guides.js) and the feature register (features.py, Gesperrte Funktionen, the apps) use the
         # same groups in the same order; the technical switches have their own group (Anordnung, Umzug 2)
         import features
         js = read("js", "guides.js")
@@ -259,6 +259,50 @@ class Frame(unittest.TestCase):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_who_may_use_it_is_one_line(self):
+        """Dominik 2026-10-16 option 1: "Wer darf es" in the function's detail is one line („alle Profile“ and who is
+        blocked); the profile chips show only after a tap, once for the function. A chip blocks the profile at once
+        (the Spark holds it, the line names it), tapped again it lifts the block. On a computer and on a phone."""
+        import features
+        import profiles
+        me = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Rahmen")
+        self.addCleanup(helpers.set_config, deny={})
+
+        def denied():
+            return {k for k, v in (features.chat_cfg().get("deny") or {}).items() if me in v}
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    helpers.set_config(deny={})
+                    br, pg, errors = await self.page(p, w, h)
+                    try:
+                        await self.open_pane(pg, "feat")
+                        await pg.evaluate("featOpen($('chat.weather').closest('.fitem'),true)")
+                        await pg.wait_for_selector(".fwho:not([hidden]) .fwline")
+                        line = await pg.text_content(".fwho:not([hidden]) .fwline")
+                        self.assertIn("Wer darf es: alle Profile", line)
+                        self.assertNotIn("gesperrt:", line)
+                        self.assertFalse(await pg.query_selector(".fwho .fwc"), w)   # the chips only after a tap
+                        await pg.click(".fwho:not([hidden]) .fwline .wlink")
+                        chip = ".fwho:not([hidden]) .fwc[aria-label^='Wetter – Rahmen']"
+                        await pg.wait_for_selector(chip)
+                        await pg.click(chip)
+                        await pg.wait_for_function("(document.querySelector('.fwho:not([hidden]) .fwblk')||{}).textContent==='gesperrt: Rahmen'",
+                                                   timeout=10000)
+                        self.assertEqual(denied(), {"weather"}, w)
+                        await pg.click(chip)
+                        await pg.wait_for_function("!document.querySelector('.fwho:not([hidden]) .fwblk')", timeout=10000)
+                        self.assertEqual(denied(), set(), w)
+                        await pg.click(".fwho:not([hidden]) .fwline .wlink")     # Fertig: the chips fold away again
+                        await pg.wait_for_function("!document.querySelector('.fwho .fwc')", timeout=10000)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
     def test_me_is_a_page_with_sections(self):

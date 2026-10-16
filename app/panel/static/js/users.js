@@ -28,11 +28,10 @@ async function loadProf(){profFilter();let d;const keep=window.lzKeep?lzKeep($('
   $('proflist').innerHTML=d.users.map(u=>`<tr data-prow="${esc(u.id)}"${PL.open===u.id?' class="pon"':''}><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}${typeof joinSetupLine==='function'&&u.setup&&u.setup.total?' · '+joinSetupLine(u.setup):''}</div></td>
     <td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-popen="${esc(u.id)}">${PL.open===u.id?t('Schließen','Close'):t('Details','Details')}</button></td></tr>${PL.open===u.id&&!side?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
     ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
-  // Gäste as the first row: who talks without a profile, and what they get (Wer darf was has the details)
+  // Gäste as the first row: who talks without a profile, and what they get
   if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span><div class="intro sm">${d.guests.public
       ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></td>
-    <td style="text-align:right;white-space:nowrap"><button class="b" type="button" id="pguests">${t('Wer darf was','Who may do what')}</button></td></tr>`);
-  if($('pguests'))$('pguests').onclick=()=>goSec('who');
+    <td></td></tr>`);
   const pages=Math.max(1,Math.ceil(d.total/d.per));
   $('ppager').innerHTML=`<span class="mut">${d.total===d.all?d.all+' '+t('Profile','profiles'):d.total+' '+t('von','of')+' '+d.all+' '+t('Profilen','profiles')}${pages>1?' · '+t('Seite','page')+' '+(d.page+1)+'/'+pages:''}</span>${pages>1?`<button class="b" type="button" data-ppage="${d.page-1}"${d.page?'':' disabled'}>‹</button><button class="b" type="button" data-ppage="${d.page+1}"${d.page+1<pages?'':' disabled'}>›</button>`:''}`;
   $('ppager').querySelectorAll('[data-ppage]').forEach(b=>b.onclick=()=>{PL.page=+b.dataset.ppage;loadProf()});
@@ -63,7 +62,7 @@ function pSide(){const c=document.querySelector('#prof .pcard');if(!c)return fal
 {const c=document.querySelector('#prof .pcard');let was=null;if(c)new ResizeObserver(()=>{const w=c.getBoundingClientRect().width;if(!w)return;
   const on=w>=740&&!document.body.classList.contains('appview');if(was!==null&&on!==was&&$('prof').classList.contains('on'))loadProf();was=on}).observe(c)}
 // One profile in detail (plan „Vereinheitlichen“ Phase 5): Zugang (PIN, zweiter Schritt, Rolle, Browser), Rufname,
-// Geräte, Funktionen „n von m an“ (springt zu Wer darf was), Rechte (Aufträge, Spark-Update aus der App, Platz für
+// Geräte, Funktionen „n von m an“ with the functions blocked for this profile (tap lifts the block), Rechte (Aufträge, Spark-Update aus der App, Platz für
 // Uploads) and Löschen. Everything that used to sit on other pages per profile is here; the pages stay for the overview.
 const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{admin:t('Admin','Admin'),manager:t('Verwalter','Manager')};
 const pbtn=(id,l,extra='')=>`<button class="b" type="button" id="${id}"${extra}>${esc(l)}</button>`;
@@ -104,7 +103,8 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
     <div class="fh">${t('So können andere ihn in Nachrichten nennen, wenn Namen sich ähneln. Muss eindeutig sein.','How others can name this profile in messages when names are alike. Must be unique.')}</div>
     ${h3(t('Geräte','Devices'))}<ul class="facts">${u.devices.map(x=>`<li><span>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''} <small class="mut">${x.speaker?t('Lautsprecher','speaker'):x.app?t('iPhone-App','iPhone app'):t('Schlüssel','key')} · ${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t)):t('noch nie','never')}</small></span></li>`).join('')||`<li class="mut">${t('Keine.','None.')}</li>`}</ul>
     ${h3(t('Funktionen','Functions'))}
-    ${setRow(esc(t(`darf ${u.features.on} von ${u.features.of} freigegebenen Funktionen`,`may use ${u.features.on} of ${u.features.of} released functions`)),esc(t('Was im Spark an ist, gilt sofort für jedes Profil; unter Wer darf was sperrst du einzelne Funktionen für dieses Profil.','What is switched on in the Spark works at once for every profile; under Who may do what you block single functions for this profile.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
+    ${setRow(esc(t(`darf ${u.features.on} von ${u.features.of} freigegebenen Funktionen`,`may use ${u.features.on} of ${u.features.of} released functions`)),esc(t('Was im Spark an ist, gilt sofort für jedes Profil. Sperren setzt du in der Funktion unter „Wer darf es“; hier hebst du sie mit einem Tipp auf.','What is switched on in the Spark works at once for every profile. You set blocks in the function under "Who may use it"; here one tap lifts them.')),'')}
+    <div class="wchips" id="pblk"></div>
     ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}
@@ -116,7 +116,7 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
   $('pcallsave').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/call',jpost('PUT',{call:$('pcall').value}))).json();
     ok(r.call?t('Rufname gespeichert: ','Call name saved: ')+r.call:t('Rufname entfernt.','Call name removed.'));loadProf()}catch(e){perr('pmsg',e)}};
   if($('pmfa'))$('pmfa').onclick=()=>resetMfa(id,u.name);$('ppinnew').onclick=()=>newPin(id,u.name);$('pdel').onclick=()=>delProf(id,u.name);
-  $('pfeat').onclick=()=>goSec('who');
+  pBlocked(id,u.name);
   if($('ptrust'))$('ptrust').querySelectorAll('[data-ptrust]').forEach(b=>b.onclick=async()=>{try{await api('/api/admin/profiles/'+encodeURIComponent(id)+'/trusted/'+encodeURIComponent(b.dataset.ptrust),{method:'DELETE'});ok(t('Entfernt: fragt wieder einen Code.','Removed: asks for a code again.'))}catch(e){perr('pmsg',e)}again()});
   $('psess').querySelectorAll('[data-psess]').forEach(b=>b.onclick=async()=>{try{await api('/api/admin/profiles/'+encodeURIComponent(id)+'/sessions/'+encodeURIComponent(b.dataset.psess),{method:'DELETE'});ok(t('Abgemeldet.','Signed out.'))}catch(e){perr('pmsg',e)}again()});
   if($('prole'))$('prole').onchange=async()=>{const v=$('prole').value;
@@ -149,3 +149,14 @@ const sendTyped=()=>{const x=$('chattext').value.trim()||(typeof pics!=='undefin
 $('chatsend').onclick=sendTyped;$('chattext').onkeydown=e=>{if(e.key==='Enter')sendTyped()};
 document.addEventListener('keydown',e=>{if(e.code!=='Space'||!$('chat').classList.contains('on')||/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName))return;
   e.preventDefault();$('talk').click()});
+
+// the functions the admin blocked for this one profile (features.blocked, the same data as Gesperrte Funktionen): one
+// chip each, a tap allows it again (only the admin or a Verwalter lifts a block, Dominik 2026-10-13)
+async function pBlocked(id,name){const box=$('pblk');if(!box)return;let d;try{d=await (await api('/api/admin/features')).json()}catch{return}
+  if(!$('pblk'))return;box.textContent='';
+  const fs=d.features.filter(f=>f.blockable!==false&&f.cells[id]===false&&!(f.inherited&&f.inherited[id]));
+  if(!fs.length){const p=document.createElement('span');p.className='mut';p.textContent=t('Nichts gesperrt.','Nothing blocked.');box.appendChild(p);return}
+  for(const f of fs){const b=document.createElement('button');b.type='button';b.className='wchip';const nm=f.name[L==='en'?1:0];b.textContent='⊘ '+nm;
+    const label=t('gesperrt, antippen erlaubt wieder','blocked, tap to allow again');b.title=label;b.setAttribute('aria-label',`${nm} – ${name}: ${label}`);
+    b.onclick=async()=>{b.disabled=true;try{await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(id)}`,xjson('PUT',{on:true}));
+      pBlocked(id,name);if(window.loadWho&&$('whobox'))loadWho()}catch(e){alert(e.message);b.disabled=false}};box.appendChild(b)}}

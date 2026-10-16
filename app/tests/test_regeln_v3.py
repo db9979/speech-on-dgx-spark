@@ -171,7 +171,7 @@ class Version4(Base):
         self.assertFalse(berater.takes(q, uid))
         helpers.set_config(berater_why=True)
         self.assertTrue(berater.takes(q, uid))                   # released: for every profile at once
-        # the admin blocks it for this profile (Funktionen → Wer darf was)
+        # the admin blocks it for this profile (Personen und Geräte → Gesperrte Funktionen)
         self.assertEqual(ADMIN.put(f"/api/admin/features/beraterwarum/profiles/{uid}", json={"on": False}).status_code, 200)
         self.addCleanup(ADMIN.put, f"/api/admin/features/beraterwarum/profiles/{uid}", json={"on": True})
         self.assertFalse(berater.takes(q, uid))

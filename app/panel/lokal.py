@@ -1,6 +1,6 @@
 """Erst lokal suchen (V01.0.264, plan plaene/erst-lokal.md): before anything goes outside, the panel looks in
 the person's own sources itself. Off until the admin allows it (chat.local_first); then
-on for every profile unless the admin blocks one (Funktionen → Wer darf was). Guests never (they have no own sources).
+on for every profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests never (they have no own sources).
 
 A fixed rule (classify) sorts the person's own latest message, never the model:
 - "extern": asks for the web in so many words, weather, trains, parcels, news, prices, anything current.

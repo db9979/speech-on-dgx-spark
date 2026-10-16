@@ -464,7 +464,7 @@ def defaults(c=None):
 
 def limits(uid, c=None):
     """Tokens per period for this profile, {zeit: tokens} (0: no limit). Admin profiles are never limited, nor a profile
-    the admin took out (Funktionen → Wer darf was: „Kontingent“ gesperrt heißt, es gilt nicht für dieses Profil)."""
+    the admin took out (Personen und Geräte → Gesperrte Funktionen: „Kontingent“ gesperrt heißt, es gilt nicht für dieses Profil)."""
     none = {z: 0 for z in ZEITRAEUME}
     if not uid or uid in (GUEST, SPARK) or not features.allowed("kontingent", uid, c):
         return none

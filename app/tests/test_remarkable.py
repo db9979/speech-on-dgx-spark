@@ -217,7 +217,7 @@ class Base(unittest.TestCase):
         helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False, remarkable_fresh=False, deny={})
 
     def block(self, key, uid, on=False):
-        """The admin blocks a function for one profile (Funktionen → Wer darf was, chat.deny), or lifts it again."""
+        """The admin blocks a function for one profile (Personen und Geräte → Gesperrte Funktionen, chat.deny), or lifts it again."""
         r = ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on})
         self.assertEqual(r.status_code, 200, r.text)
 

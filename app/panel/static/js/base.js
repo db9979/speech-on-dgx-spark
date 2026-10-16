@@ -42,7 +42,7 @@ function verTry(){if(updBusy())return;const now=Date.now(),calm=!sparkBusy()&&no
   verBar(t('Neue Version ist da: ','A new version is here: ')+verWatch.newer)}
 // Switched a function on or off in the settings: the page reads the switches once at start (start.js), so
 // after a saved change it compares them with the Spark and loads itself again when one differs (no F5).
-// "rights" (features.stamp) changes with every switch under Wer darf was that touches this profile. The face
+// "rights" (features.stamp) changes with every switch under Gesperrte Funktionen that touches this profile. The face
 // counts as the Spark's (face_spark): the profile's own pick (Ich → Gespräch) shows at once without a reload.
 const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face_spark'||k==='rights').map(k=>[k,w[k]]));
 let WHO_FLAGS=null,whoT=null;
@@ -68,7 +68,7 @@ document.addEventListener('click',e=>{if(!WHO_PENDING)return;const b=e.target.cl
   const to=b.dataset.sub||lastSec[b.dataset.s]||b.dataset.s;if(whoPendingGo(to)){e.stopImmediatePropagation();e.preventDefault()}},true);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')whoPendingGo()});
 const whoSoon=()=>{clearTimeout(whoT);whoT=setTimeout(whoCheck,300)};
-// Changed elsewhere (the admin under Wer darf was, the profile on another device): checked every minute, on
+// Changed elsewhere (the admin under Gesperrte Funktionen, the profile on another device): checked every minute, on
 // coming back and on focus, with the same calm rules as a new version (never mid-conversation or while typing).
 // whoLocal(): this page itself just changed what /api/whoami says (Mein Notaus on or off): for 10 s such a change
 // is taken as seen, not as "changed elsewhere" (the confirm dialog's focus would otherwise reload the page)
@@ -159,7 +159,7 @@ function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.clas
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
 const GROUPS={chat:[['chat','']],chats:[['chats','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')],['verb',t('Verbessern','Improve')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
-  feat:[['feat',t('Funktionen','Features')],['who',t('Wer darf was','Who may do what')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
+  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
@@ -175,7 +175,7 @@ function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('sect
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');lzb($('cfg'),loadCfg,LZ_CFG);if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');
-  if(s==='cfg'){cw.classList.remove('sub');lzb($('cfg'),loadCfg,LZ_CFG);mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang();musikTestLoad();if(typeof sprAdmin==='function')sprAdmin()}if(s==='prof'){lzb($('proflist'),loadProf,{form:'tabelle'});if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')lzb($('logout'),loadLogs);if(s==='live'&&window.liveOpen){if(window.lzSkelIn)lzSkelIn($('lvroot'),'karten',4);liveOpen()}if(s==='apps'){lzb($('int-ep'),loadInt,{form:'tabelle'});if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='who'&&window.loadWho)lzb($('whobox'),loadWho);if(s==='route'&&window.loadWeiche)lzb($('whbox'),loadWeiche,{at:$('whlist')});if(s==='verb'&&window.loadVerb)loadVerb();if(s==='usage'&&window.loadUsage)lzb($('usgbox'),loadUsage);if(s==='models'&&window.loadModelle)lzb($('mdbox'),loadModelle);if(s==='tech'&&window.loadTechnik)lzb($('tkview'),loadTechnik);if(window.cxShown)cxShown(s==='chats')}
+  if(s==='cfg'){cw.classList.remove('sub');lzb($('cfg'),loadCfg,LZ_CFG);mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang();musikTestLoad();if(typeof sprAdmin==='function')sprAdmin()}if(s==='prof'){lzb($('proflist'),loadProf,{form:'tabelle'});if(window.loadWho)lzb($('whobox'),loadWho);if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')lzb($('logout'),loadLogs);if(s==='live'&&window.liveOpen){if(window.lzSkelIn)lzSkelIn($('lvroot'),'karten',4);liveOpen()}if(s==='apps'){lzb($('int-ep'),loadInt,{form:'tabelle'});if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='route'&&window.loadWeiche)lzb($('whbox'),loadWeiche,{at:$('whlist')});if(s==='verb'&&window.loadVerb)loadVerb();if(s==='usage'&&window.loadUsage)lzb($('usgbox'),loadUsage);if(s==='models'&&window.loadModelle)lzb($('mdbox'),loadModelle);if(s==='tech'&&window.loadTechnik)lzb($('tkview'),loadTechnik);if(window.cxShown)cxShown(s==='chats')}
 // Zustand, Funktionen and Personen und Geräte have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;
@@ -185,7 +185,6 @@ const SUBDESC={mon:()=>($('ztitle')||{}).textContent||'',test:()=>t('Funktionspr
   verb:()=>t('Fälle, Vorschläge und Nachkontrolle des Einstellungs-Assistenten','Cases, proposals and re-check of the settings assistant'),
   usage:()=>t('Tokens und Sekunden je Modell, Bereich und Profil','Tokens and seconds per model, area and profile'),models:()=>t('Katalog, laufende Modelle, Speicher-Budget, Messung','Catalog, running models, memory budget, measurement'),int:()=>t('Zu jedem Dienst: einrichten, benutzen, ausschalten','For every service: set up, use, switch off'),
   feat:()=>t('Was der Assistent können soll, für den Spark und jedes Profil','What the assistant may do, for the Spark and each profile'),
-  who:()=>t('Jede Funktion für Spark, Profile und Gäste','Every function for the Spark, profiles and guests'),
   route:()=>t('Welche Werkzeuge eine Frage bekommt, mit Testsätzen','Which tools a question gets, with test sentences'),
   prof:()=>t('Profile, Gäste und Geräte mit Schlüssel','Profiles, guests and devices with a key'),
   apps:()=>t('Open WebUI, andere Apps, Pebble, Siri, curl und Python','Open WebUI, other apps, Pebble, Siri, curl and Python')};

@@ -280,7 +280,7 @@ final class Conversation: ObservableObject {
             CallCenter.shared.foreground()
             lastActivity = Date()
             Task { await catchUp() }
-            // what the profile may has possibly changed meanwhile (Wer darf was in the panel): ask the Spark again
+            // what the profile may has possibly changed meanwhile (Gesperrte Funktionen in the panel): ask the Spark again
             if started { Task { await rightsCheck() } } else if unreachable { Task { await check() } }
             if allowed.ios && started { Task { await AppleReminders.syncLists() } }
             Task { await refreshRooms(now: true) }

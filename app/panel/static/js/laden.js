@@ -53,7 +53,7 @@ ON.lzPing=()=>lzPing();
 // back: the band goes, and the open page loads what it shows again (never the settings form: unsaved changes stay)
 function lzUp(){clearInterval(LZ.tick);LZ.tick=0;if(LZ.band)LZ.band.hidden=true;
   try{if($('profmodal').style.display==='grid'&&typeof meLoadOnce==='function')meLoadOnce()
-    else{const s=document.querySelector('main section.on');if(s&&['mon','prof','who','route','logs','apps','live'].includes(s.id))showSec(s.id)}}catch{}}
+    else{const s=document.querySelector('main section.on');if(s&&['mon','prof','route','logs','apps','live'].includes(s.id))showSec(s.id)}}catch{}}
 // ---------------------------------------------------------------- placeholders in a box
 // forms: 'zeilen' (a list), 'karten' (tiles, Zustand and Live), 'tabelle' (rows of a table)
 function lzSkel(form,n){const d=document.createElement('div');d.className='lz-sk lz-'+(form||'zeilen');d.setAttribute('aria-hidden','true');

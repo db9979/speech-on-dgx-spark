@@ -537,7 +537,7 @@ def pref_on(key, uid, s=None):
 
 
 def blocked(key, uid, c=None):
-    """The admin blocked the function for this profile (chat.deny, Funktionen → Wer darf was): the function or
+    """The admin blocked the function for this profile (chat.deny, Personen und Geräte → Gesperrte Funktionen): the function or
     one it builds on. A profile can never change this itself, it is not in its settings."""
     c = chat_cfg() if c is None else c
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
@@ -546,7 +546,7 @@ def blocked(key, uid, c=None):
 
 # never blocked for a single profile: a profile must always be able to set up its second step (Dominik 2026-10-13)
 NO_BLOCK = {"mfa"}
-MAX_DENY = 2000   # blocked profiles per function (Wer darf was): the whole household, a bound for the config
+MAX_DENY = 2000   # blocked profiles per function (Gesperrte Funktionen): the whole household, a bound for the config
 
 
 def clean_deny(deny):
@@ -725,8 +725,8 @@ def missing_text(key, uid, lang="de", c=None):
     if setup:
         out.append(("Noch einzurichten: " if li == 0 else "Still to set up: ") + ", ".join(admin_way(k, lang) for k in setup) + ".")
     if uid and blocked(key, uid, c):
-        out.append("Der Admin hat es für dich gesperrt (Funktionen → Wer darf was)." if li == 0
-                   else "The admin blocked it for you (Features → Who may do what).")
+        out.append("Der Admin hat es für dich gesperrt (Personen und Geräte → Gesperrte Funktionen)." if li == 0
+                   else "The admin blocked it for you (People and devices → Blocked functions).")
     elif uid and f.pref and not pref_on(key, uid):
         out.append(("Du hast es ausgeschaltet: " if li == 0 else "You switched it off: ") + me_way(key, lang) + ".")
     return " ".join(out)
@@ -763,7 +763,7 @@ def app_pages(uid):
     return out
 
 
-# ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)
+# ---------------------------------------------------------------- Personen und Geräte → Gesperrte Funktionen (admin)
 _UID = re.compile(r"u_[0-9a-f]{12}")
 SEEN = os.path.join(STATE, "features-seen.json")
 
@@ -787,7 +787,7 @@ def _seen(c):
 
 
 def matrix():
-    """Funktionen → Wer darf was (only the blocked ones), „Wer darf es“ in each function, the switch chain on
+    """Personen und Geräte → Gesperrte Funktionen (only the blocked ones), „Wer darf es“ in each function, the switch chain on
     Funktionen (needs.js), the tiles under Apps and the iPhone app's profile page."""
     c = chat_cfg()
     users = profiles.names()

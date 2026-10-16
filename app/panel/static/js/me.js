@@ -551,7 +551,7 @@ async function meLoad(){let out=false;
   showRoom();showOver();meOwn();if(typeof goShow==='function')goShow();if(window.meBerater)meBerater();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()}).catch(()=>{})}
 window.openMe=openMe;
 // Ich says what the admin has not switched on instead of hiding it without a word (plan „Vereinheitlichen“ Phase 4,
-// V01.0.270): the names with the reason, for an admin a jump to Funktionen (off) or Funktionen → Wer darf was (blocked).
+// V01.0.270): the names with the reason, for an admin a jump to Funktionen (off) or Personen und Geräte → Gesperrte Funktionen (blocked).
 // From /api/features.
 let FEATS=null;
 async function loadFeats(){if(!PROFILE){FEATS=null;return}try{FEATS=await (await api('/api/features')).json()}catch{FEATS=null}}
@@ -566,11 +566,11 @@ function meLocked(box){if(!box)return;let el=box.querySelector(':scope>.melocked
   part(t('Vom Admin nicht eingeschaltet','Not switched on by the admin'),off,ADMIN?'':t('Frag den Admin, wenn du etwas davon nutzen möchtest.','Ask the admin if you would like to use one of them.'));
   // blocked for this one profile by the admin (chat.deny): only the admin lifts it (Dominik 2026-10-13)
   part(t('Vom Admin für dich gesperrt','Blocked for you by the admin'),blk,ADMIN?'':t('Nur der Admin kann das aufheben.','Only the admin can lift this.'));
-  // for an admin: what is off to Funktionen, what is blocked to Wer darf was (lists only the blocks)
+  // for an admin: what is off to Funktionen, what is blocked to Personen und Geräte → Gesperrte Funktionen
   const jump=(l,s)=>{const b=document.createElement('button');b.type='button';b.className='b';b.textContent=l;
     b.onclick=()=>{if(window.closeProf)closeProf();goSec(s)};el.appendChild(b)};
   if(ADMIN&&off.length)jump(t('Funktionen','Features'),'feat');
-  if(ADMIN&&blk.length)jump(t('Wer darf was','Who may do what'),'who')}
+  if(ADMIN&&blk.length)jump(t('Gesperrte Funktionen','Blocked functions'),'prof')}
 // Gesperrt, aber eigene Daten da (whoami "locked", features.OWN; Dominik 2026-10-14 „Auf der Seite nur „Daten
 // löschen“ zeigen“): in place of the page or part of a function the admin blocked for this profile only a short note,
 // the number of stored entries and „Daten löschen“. The page itself stays hidden (class ownonly); after deleting the
@@ -582,8 +582,8 @@ function meOwn(){document.querySelectorAll('#profmodal .ptab').forEach(b=>{b.cla
     let el=[...box.querySelectorAll(':scope>.meown')].find(e=>e.dataset.own===x.key);
     if(!el){el=document.createElement('div');el.className='meown';el.dataset.own=x.key;box.prepend(el)}
     const name=(x.name||[x.key,x.key])[L==='en'?1:0],p=document.createElement('p'),b=document.createElement('button'),msg=document.createElement('p');
-    p.textContent=t(`Der Admin hat „${name}“ für dich gesperrt (Funktionen → Wer darf was). Gespeichert: ${x.n} ${x.n===1?'Eintrag':'Einträge'}.`,
-      `The admin blocked "${name}" for you (Features → Who may do what). Stored: ${x.n} ${x.n===1?'entry':'entries'}.`);
+    p.textContent=t(`Der Admin hat „${name}“ für dich gesperrt (Personen und Geräte → Gesperrte Funktionen). Gespeichert: ${x.n} ${x.n===1?'Eintrag':'Einträge'}.`,
+      `The admin blocked "${name}" for you (People and devices → Blocked functions). Stored: ${x.n} ${x.n===1?'entry':'entries'}.`);
     b.type='button';b.className='b danger';b.textContent=t('Daten löschen','Delete data');msg.className='fh';
     b.onclick=()=>meOwnDelete(x,name,el,msg);el.replaceChildren(p,b,msg)}}
 async function meOwnDelete(x,name,el,msg){

@@ -116,7 +116,7 @@ def profile(name):
 
 
 def block(c, *keys):
-    """The admin blocks these functions for this one profile (chat.deny, Funktionen → Wer darf was)."""
+    """The admin blocks these functions for this one profile (chat.deny, Personen und Geräte → Gesperrte Funktionen)."""
     uid = c.get("/api/whoami").json()["profile"]["id"]
     helpers.set_config(deny={k: [uid] for k in keys})
 

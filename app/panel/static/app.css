@@ -741,7 +741,7 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .fpal .ffoot{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
 .fpal .fnone{padding:14px 16px;color:var(--mut);font-size:14px}
 @media (max-width:760px){.fpal{padding-top:8px}.fpal .ffoot{display:none}}
-/* Funktionen → Wer darf was (who.js, V01.0.269; only the blocked functions since Dominik 2026-10-14) */
+/* Personen und Geräte → Gesperrte Funktionen (who.js, V01.0.269; only the blocked functions since Dominik 2026-10-14) */
 .wrow{border-bottom:1px solid var(--line);padding:10px 0}
 .wname{border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;text-align:left;overflow-wrap:anywhere}
 .wname:hover{color:var(--acc)}
@@ -1125,8 +1125,8 @@ select.segsel{display:none!important}
 #pane-feat.fsplit .fitem.open{padding-bottom:0}
 .fitem.fside>.setrow:first-child{background:color-mix(in srgb,var(--acc) 9%,transparent);border-radius:10px;box-shadow:inset 3px 0 0 var(--acc)}
 .fwho{margin:4px 0 10px;padding:10px 12px;border-radius:12px;background:var(--bg)}
+.fwline{font-size:13px;line-height:1.5}.fwline .fwblk{color:var(--bad)}.fwline+.fwrow{margin-top:8px}
 .fwho[hidden]{display:none}
-.fwhoh{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}.fwhoh b{font-size:13px}.fwhoh span{font-size:11.5px;color:var(--mut)}
 .fwrow+.fwrow{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}.fwname{font-size:12.5px;font-weight:600;margin-bottom:4px}
 .fwchips{display:flex;flex-wrap:wrap;gap:6px}
 .fwc{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer}

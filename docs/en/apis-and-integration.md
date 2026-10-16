@@ -94,7 +94,7 @@ Do not install the agent on the Spark itself: it runs commands and could reach s
 
 Other programs use the Spark over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, the panel's address `/mcp`, e.g. `http://SPARK:31080/mcp`). Off by default.
 
-**Switching on:** admin: Features → *Spark as MCP server*. This works for every profile; only the admin blocks single profiles (Features → Who may do what). Setup in the profile: Me → *Services over MCP* → "Connect a program with a key": name, tools, "Create key". The key is shown once; enter it in the program as the header `Authorization: Bearer <key>`.
+**Switching on:** admin: Features → *Spark as MCP server*. This works for every profile; only the admin blocks single profiles (People and devices → Blocked functions). Setup in the profile: Me → *Services over MCP* → "Connect a program with a key": name, tools, "Create key". The key is shown once; enter it in the program as the header `Authorization: Bearer <key>`.
 
 | Group | Tools |
 |---|---|

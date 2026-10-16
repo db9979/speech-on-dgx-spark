@@ -62,7 +62,7 @@ class Hilfe(unittest.TestCase):
         hilfe._cards.clear()
 
     def block(self, key, uid, on=False):
-        """The admin blocks a function for one profile (Funktionen → Wer darf was), lifted again after the test."""
+        """The admin blocks a function for one profile (Personen und Geräte → Gesperrte Funktionen), lifted again after the test."""
         self.assertEqual(ADMIN.put(f"/api/admin/features/{key}/profiles/{uid}", json={"on": on}).status_code, 200)
         if not on:
             self.addCleanup(ADMIN.put, f"/api/admin/features/{key}/profiles/{uid}", json={"on": True})
@@ -114,7 +114,7 @@ class Hilfe(unittest.TestCase):
         self.block("routing", self.uid)                                   # blocked by the admin: said so, with the way
         line = hilfe.state_line("routing", self.uid, "profile")
         self.assertIn("Bei dir: vom Admin für dich gesperrt", line)
-        self.assertIn("Funktionen → Wer darf was", line)
+        self.assertIn("Personen und Geräte → Gesperrte Funktionen", line)
         self.assertIn("blocked for you by the admin", hilfe.state_line("routing", self.uid, "profile", "en"))
 
     # ---------------------------------------------------------------- only what the rights allow

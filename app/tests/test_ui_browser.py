@@ -36,7 +36,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "chats", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "route", "int", "apps")
+SECTIONS = ("chat", "chats", "mon", "live", "sys", "test", "logs", "cfg", "prof", "route", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
@@ -523,10 +523,10 @@ class Browser(unittest.TestCase):
             helpers.set_config(transit=False)
 
     def test_wer_darf_was_name_jumps_to_its_switch(self):
-        """V01.0.398 (Dominik: the click on a function did not load right): the name under Wer darf was opens
+        """V01.0.398 (Dominik: the click on a function did not load right): the name under Gesperrte Funktionen opens
         Funktionen at the function's own switch row, also a switch inside another function's item; when that
         row is hidden because the switch it builds on is off, at that switch. Folded groups open, the row is in
-        view. Checked on a computer and a phone. Wer darf was lists only blocked functions (Dominik 2026-10-14):
+        view. Checked on a computer and a phone. Gesperrte Funktionen lists only blocked functions (Dominik 2026-10-14):
         Uitest is blocked for them during the test."""
         import features
         import profiles
@@ -541,7 +541,7 @@ class Browser(unittest.TestCase):
                 for width in (1280, 390):
                     br, pg, errors = await self.page(p, width, 900)
                     for sw in keys:
-                        await pg.evaluate("goSec('who')")
+                        await pg.evaluate("goSec('prof')")
                         await pg.wait_for_selector("#whobox .wname", timeout=20000)   # 8 s was red on a busy runner
                         name = await pg.evaluate(f"(WHO.features.find(f=>f.switch==='{sw}')||{{name:['']}}).name[0]")
                         if not name:
@@ -549,16 +549,16 @@ class Browser(unittest.TestCase):
                         await pg.evaluate("WHO_LAST=null")
                         await pg.locator("#whobox .wname", has_text=name).first.click()
                         # seen in full local runs (V01.0.440): the list was drawn again under the click, nothing opened;
-                        # still on Wer darf was after 8 s: tap the name once more
+                        # still on Gesperrte Funktionen after 8 s: tap the name once more
                         try:
                             await pg.wait_for_function("!!WHO_LAST", timeout=8000)
                         except Exception:
                             # V01.0.446: also seen with Funktionen already open and no row marked (full local runs):
-                            # back to Wer darf was and tap once more, say so
+                            # back to Gesperrte Funktionen and tap once more, say so
                             seen = await pg.evaluate("JSON.stringify({n:whoOpen.n||0,feat:!!document.querySelector('#pane-feat .fitem')})")
-                            print(f"\nWARNUNG Wer darf was: {sw} nach dem Tippen nicht geöffnet ({seen}), tippe noch einmal", file=sys.stderr)
+                            print(f"\nWARNUNG Gesperrte Funktionen: {sw} nach dem Tippen nicht geöffnet ({seen}), tippe noch einmal", file=sys.stderr)
                             if not await pg.is_visible("#whobox .wname"):
-                                await pg.evaluate("goSec('who')")
+                                await pg.evaluate("goSec('prof')")
                                 await pg.wait_for_selector("#whobox .wname", state="visible", timeout=20000)
                             await pg.locator("#whobox .wname", has_text=name).first.click()
                         # the smooth scroll to a far row takes longer on GitHub's runners: wait until it is in view
@@ -584,7 +584,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_rights_changed_elsewhere_arrive_without_f5(self):
-        """V01.0.388: the admin blocks a function for this profile under Wer darf was (another browser): the
+        """V01.0.388: the admin blocks a function for this profile under Gesperrte Funktionen (another browser): the
         open page sees the new fingerprint at its next look (every minute, on coming back) and reloads when calm,
         with a note; in a conversation only a bar."""
         import profiles
@@ -968,7 +968,7 @@ class Browser(unittest.TestCase):
     def test_voraussetzungen_mit_einschalten(self):
         """Dominik 2026-10-12: switching on a function that builds on others asks to switch those on too; switching
         off says what goes off with it. On Funktionen (the page's switches, saved with the page), the only place that
-        switches functions on since Wer darf was lists only the blocks (Dominik 2026-10-14)."""
+        switches functions on since Gesperrte Funktionen lists only the blocks (Dominik 2026-10-14)."""
         import json as _json
         import os as _os
         import profiles
@@ -2343,7 +2343,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_who_may_do_what(self):
-        """Funktionen → Wer darf was, slim since Dominik 2026-10-14 (option 3 „Verschlanken“): only the functions the
+        """Personen und Geräte → Gesperrte Funktionen, slim since Dominik 2026-10-14 (option 3 „Verschlanken“): only the functions the
         admin blocked for at least one profile, one chip per blocked profile that lifts the block (also while the Spark
         is off); a function nobody is blocked for does not show, there is no Spark column and no filter. Nothing
         blocked: one sentence with a jump to Funktionen. The same list on a computer and on phones of 390 and 320 px,
@@ -2361,7 +2361,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS + (("klein", 320, 640),):
                     helpers.set_config(deny={"weather": [me], "transit": [me]})
                     br, pg, errors = await self.page(p, w, h)
-                    await pg.evaluate("goSec('who')")
+                    await pg.evaluate("goSec('prof')")
                     await pg.wait_for_selector("#whobox .wrow")
                     rows = await pg.evaluate("[...document.querySelectorAll('#whobox .wrow .wname')].map(x=>x.textContent)")
                     self.assertEqual(sorted(rows), ["Bus und Bahn", "Wetter"], name)   # nothing else is blocked
@@ -2410,7 +2410,7 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
-                await pg.evaluate("goSec('who')")
+                await pg.evaluate("goSec('prof')")
                 await pg.wait_for_selector("#whobox .wrow")
                 rows = await pg.evaluate("[...document.querySelectorAll('#whobox .wrow')].map(r=>[r.querySelector('.wname').textContent,"
                                          "[...r.querySelectorAll('.wchip')].map(c=>c.dataset.uid)])")
@@ -2422,17 +2422,28 @@ class Browser(unittest.TestCase):
 
     def test_one_profile_detail(self):
         """Phase 5: Personen und Geräte – the Gäste row, role badges, "+ Neu" opens the fields, and one detail per
-        profile with Zugang, Geräte, Funktionen „darf n von m freigegebenen Funktionen“ (jumps to Wer darf was), Rechte and Daten."""
+        profile with Zugang, Geräte, Funktionen „darf n von m freigegebenen Funktionen“ with its blocks as chips (a tap lifts
+        the block, Dominik 2026-10-16 option 1), Rechte and Daten."""
+        import features
+        import profiles
+        me = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        helpers.set_config(weather=True)
+        self.addCleanup(helpers.set_config, deny={})
+
+        def denied():
+            return {k: v for k, v in (features.chat_cfg().get("deny") or {}).items() if me in v}
+
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
+                    helpers.set_config(deny={"weather": [me]})
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('prof')")
                     await pg.wait_for_selector("#proflist tr.pguest")
                     self.assertFalse(await pg.is_visible("#pname"))
                     await pg.click("#pnew summary")
                     self.assertTrue(await pg.is_visible("#pname"))
-                    await pg.click("#proflist [data-popen]")
+                    await pg.click(f"#proflist [data-popen='{me}']")
                     await pg.wait_for_selector("#pdetail .pdet")
                     heads = await pg.evaluate("[...document.querySelectorAll('#pdetail h3.sec')].map(x=>x.textContent)")
                     self.assertEqual(heads, ["Zugang", "Rufname", "Geräte", "Funktionen", "Rechte", "Daten"])
@@ -2441,8 +2452,12 @@ class Browser(unittest.TestCase):
                     self.assertRegex(await pg.text_content("#pdetail"), r"darf \d+ von \d+ freigegebenen Funktionen")
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, name)
-                    await pg.click("#pfeat")
-                    await pg.wait_for_selector("#whobox .wnote")
+                    # the blocks of this profile as chips; a tap lifts the block on the Spark
+                    await pg.wait_for_selector("#pblk .wchip[aria-label^='Wetter – Uitest']")
+                    await pg.click("#pblk .wchip[aria-label^='Wetter – Uitest']")
+                    await pg.wait_for_selector("#pblk .mut")
+                    self.assertEqual(denied(), {}, name)
+                    self.assertFalse(await pg.query_selector("#pfeat"), name)
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())

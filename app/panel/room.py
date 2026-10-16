@@ -927,7 +927,7 @@ def _not_owner(uid, voice, text=None):
 async def _carry_out(uid, r, offer, text):
     """A yes to the open proposal: the panel does it and says only the checked result."""
     need = {"ha": "ha", "shop": "ha", "timer": "reminders", "remind": "reminders", "calendar": "calendar"}.get(offer["kind"], "room")
-    if not features.allowed(need, uid):   # blocked by the admin since it was proposed (Funktionen → Wer darf was)
+    if not features.allowed(need, uid):   # blocked by the admin since it was proposed (Personen und Geräte → Gesperrte Funktionen)
         r["offer"] = None
         return "Das geht für dein Profil gerade nicht."
     if offer["kind"] in ("ha", "shop"):
@@ -993,7 +993,7 @@ def _on(request: Request):
         raise HTTPException(403, "room mode is turned off")
     prof = profiles.current(request)
     if prof and features.blocked("room", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 def _rid(body):

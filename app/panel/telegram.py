@@ -737,7 +737,7 @@ def _on(request: Request):
         raise HTTPException(403, "Telegram is turned off")
     prof = profiles.current(request)
     if prof and features.blocked("telegram", prof["id"]):
-        raise HTTPException(403, "blocked for this profile by the admin (Funktionen → Wer darf was)")
+        raise HTTPException(403, "blocked for this profile by the admin (Personen und Geräte → Gesperrte Funktionen)")
 
 
 @router.get("/api/profile/telegram", dependencies=[Depends(assistant)])

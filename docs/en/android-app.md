@@ -59,7 +59,7 @@ since V01.0.296) and adds only what a page cannot do:
 
 ## Security
 
-- Admin switch `chat.android`, off. Once released it works for every profile; only the admin blocks single profiles (Features → Who may do what). Never guests.
+- Admin switch `chat.android`, off. Once released it works for every profile; only the admin blocks single profiles (People and devices → Blocked functions). Never guests.
 - The app has no key of its own: it uses its page's login (cookie). Signing out in the page ends it.
 - The app only loads pages of its own Spark (same address and port), everything else opens in the browser; https
   only, system certificates. Microphone only for the own Spark page.

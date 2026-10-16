@@ -1,6 +1,6 @@
 """The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge
 source that works without the internet. Off until the admin allows it (chat.kiwix with an address in
-chat.kiwix_url); then on for every profile unless the admin blocks one (Funktionen → Wer darf was). Guests never.
+chat.kiwix_url); then on for every profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests never.
 
 Used by wiki.py: the wikipedia tool asks the Wikipedia books of the Kiwix first (online Wikipedia only
 when nothing fits or the Kiwix does not answer), archive_search searches the full text of the chosen

@@ -61,7 +61,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 
 ## Sicherheit
 
-- Admin-Schalter `chat.android`, aus. Freigegeben gilt er für jedes Profil; einzelne Profile sperrt nur der Admin (Funktionen → Wer darf was). Gäste nie.
+- Admin-Schalter `chat.android`, aus. Freigegeben gilt er für jedes Profil; einzelne Profile sperrt nur der Admin (Personen und Geräte → Gesperrte Funktionen). Gäste nie.
 - Die App hat keinen eigenen Schlüssel: Sie nutzt die Anmeldung ihrer Seite (Cookie). Abmelden in der Seite beendet sie.
 - Die App lädt nur Seiten ihres eigenen Spark (gleiche Adresse und Port), alles andere öffnet der Browser; nur https,
   System-Zertifikate. Mikrofon nur für die eigene Spark-Seite.

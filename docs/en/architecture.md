@@ -800,7 +800,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 #### Settings
 
 - Features → iPhone app and Features → Android app: the apps for every profile (default off).
-- Features → Who may do what: block the app for single profiles.
+- People and devices → Blocked functions: block the app for single profiles.
 - Me → iPhone and Me → Android: pairing, the app's rights, removing devices.
 - Features → Terminal client and Me → Terminal: get the program, pair (pinned at home, checked as in the browser from outside), remove.
 
@@ -1401,7 +1401,7 @@ Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 
 - Settings → Security → Assistant without password: guests may ask (default off).
 - Settings → Security → Sign-in in the browser: how many days without use a profile stays signed in.
-- Features → Who may do what: block a function for single profiles.
+- People and devices → Blocked functions: block a function for single profiles.
 - Me → Security: a profile's second step.
 
 #### What you see
@@ -1513,7 +1513,7 @@ Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 
 #### Settings
 
-- Features → Who may do what: what a single profile does not get.
+- People and devices → Blocked functions: what a single profile does not get.
 - Features → Ask instead of guessing: the panel asks instead of guessing (default off).
 - Features → Switch: the fixed rules that narrow the tools.
 

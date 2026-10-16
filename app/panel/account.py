@@ -142,7 +142,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
-            # a function the admin blocked for this profile (Funktionen → Wer darf was) shows no page either
+            # a function the admin blocked for this profile (Personen und Geräte → Gesperrte Funktionen) shows no page either
             **{name: features.admin_on(key, chat) and not (prof and features.blocked(key, prof["id"], chat))
                for name, key in WHO.items()},
             "agent": bool(prof and agent.level(prof["id"])),
@@ -914,7 +914,7 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_pro
     if not load_config().get("chat", {}).get("documents", True):
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
     if features.blocked("documents", prof["id"]):
-        raise HTTPException(403, "documents are blocked for this profile (Funktionen → Wer darf was)")
+        raise HTTPException(403, "documents are blocked for this profile (Personen und Geräte → Gesperrte Funktionen)")
     data = await file.read(wissen.pdf_bytes() + 1)
     try:
         return await asyncio.to_thread(wissen.add, prof["id"], file.filename, data)

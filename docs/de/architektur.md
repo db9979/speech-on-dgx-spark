@@ -800,7 +800,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 #### Einstellen
 
 - Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).
-- Funktionen → Wer darf was: die App für einzelne Profile sperren.
+- Personen und Geräte → Gesperrte Funktionen: die App für einzelne Profile sperren.
 - Ich → iPhone und Ich → Android: koppeln, Rechte der App, Geräte entfernen.
 - Funktionen → Terminal-Client und Ich → Terminal: Programm holen, koppeln (zu Hause gepinnt, extern wie im Browser geprüft), entfernen.
 
@@ -1401,7 +1401,7 @@ Gilt bei: [Schritt 6](#kn-zugang-s6), [Schritt 7](#kn-zugang-s7)
 
 - Einstellungen → Sicherheit → Assistent ohne Passwort: Gäste dürfen fragen (Standard aus).
 - Einstellungen → Sicherheit → Anmeldung im Browser: wie viele Tage ohne Nutzung ein Profil angemeldet bleibt.
-- Funktionen → Wer darf was: eine Funktion für einzelne Profile sperren.
+- Personen und Geräte → Gesperrte Funktionen: eine Funktion für einzelne Profile sperren.
 - Ich → Sicherheit: der zweite Schritt eines Profils.
 
 #### Was du siehst
@@ -1513,7 +1513,7 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 
 #### Einstellen
 
-- Funktionen → Wer darf was: was ein einzelnes Profil nicht bekommt.
+- Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt.
 - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus).
 - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.
 

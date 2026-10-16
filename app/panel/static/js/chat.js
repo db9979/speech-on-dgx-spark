@@ -346,7 +346,7 @@ function whyNote(w){const d=document.createElement('div');d.className='mem whyno
     guest:t(n+' gibt es nur mit Profil.',n+' needs a profile.'),mfa:t(n+' braucht zuerst den zweiten Anmeldeschritt.',n+' needs the second login step first.'),
     voice:t('Am geteilten Lautsprecher gibt es Funktionen nur, wenn er deine Stimme erkennt.','At a shared speaker functions need your recognized voice.')}[w.why];
   if(!txt)return d;d.textContent='ℹ '+txt;const go=(l,f)=>{const b=document.createElement('button');b.type='button';b.className='mlink';b.textContent=l;b.onclick=f;d.append(' ',b)};
-  if(w.why==='spark'&&document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&typeof goSec==='function')go(t('Unter Funktionen','Under Features'),async()=>{   // the function's own switch (Wer darf was only lists blocks)
+  if(w.why==='spark'&&document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&typeof goSec==='function')go(t('Unter Funktionen','Under Features'),async()=>{   // the function's own switch (Gesperrte Funktionen only lists blocks)
     const m=typeof needsLoad==='function'?await needsLoad():null,f=m&&m.features.find(x=>x.key===w.key);if(f&&typeof whoOpen==='function')whoOpen(f);else goSec('feat')});
   else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich ändern','Change under Me'),()=>openMe(w.me));   // a preference the person switched off (blocked: no button, only the admin lifts it)
   else if(w.why==='guest'&&typeof openMe==='function')go(t('Anmelden','Sign in'),()=>openMe('loginbox'));

@@ -84,7 +84,7 @@ function tab(k){if(!ON)return;closeSheet();const pm=$('profmodal').style.display
   else if(k==='me'){if(prev==='me'&&pm&&$('profmodal').classList.contains('sub'))$('meback').click();else openMe('list')}
   render()}
 tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)tab(b.dataset.tab)});
-// other code opens a section (search, "Wer darf was", the start page): follow it
+// other code opens a section (search, "Gesperrte Funktionen", the start page): follow it
 const _showSec=showSec;
 showSec=function(s){_showSec(s);if(!ON)return;B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');
   TAB=s==='chat'?'spark':s==='chats'?'chats':'manage';render()};

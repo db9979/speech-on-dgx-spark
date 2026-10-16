@@ -53,7 +53,7 @@ def active(uid):
     if not m or not uid:
         return None
     import features
-    if features.blocked("selfecho", uid):   # the admin blocked it for this profile (Funktionen → Wer darf was)
+    if features.blocked("selfecho", uid):   # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
         return None
     return m if profiles.settings(uid).get("echo", True) is not False else None
 

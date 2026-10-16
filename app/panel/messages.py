@@ -6,7 +6,7 @@ own Rufname, reading new chat messages on the own speaker and announcements on s
 Everything builds on Chats (chat.chats; released, it holds for every profile). Sending to everybody (chat.messages_all, the
 fixed group "Alle", each profile takes part unless it switched msg_all off) and announcements on speakers
 (chat.messages_announce, on every speaker whose owner may use them) each have their own admin switch, all off. Only
-the admin blocks a single profile (Funktionen → Wer darf was). Guests get nothing.
+the admin blocks a single profile (Personen und Geräte → Gesperrte Funktionen). Guests get nothing.
 
 Who may write to whom (fixed rules here, never the model):
     both may use chats (not blocked by the admin), the recipient has not blocked the sender, and the recipient takes messages from every

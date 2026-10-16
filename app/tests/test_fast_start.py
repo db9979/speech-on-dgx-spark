@@ -5,7 +5,7 @@
   question, and the panel still runs only the tools the rules left (chat_tools.run). The kept conversation
   starts at an anchor question (chat.trim_history), so the LLM server can keep it in its cache.
 - "Eindeutiges direkt abrufen" (chat.direct_read; on for every profile unless the admin
-  blocks one under Funktionen → Wer darf was): a short, plain reading question gets
+  blocks one under Personen und Geräte → Gesperrte Funktionen): a short, plain reading question gets
   its tool called by the panel (intent.DIRECT), the model's first round is saved.
 - Logs → Anfragen: the parts of each call in characters (chat.prompt_sizes).
 No model, no clock.

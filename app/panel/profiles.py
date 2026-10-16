@@ -680,7 +680,7 @@ def used(uid, kind, key=""):
 
 
 def _gate_closed(request, why="off"):
-    """A known device key whose function is switched off right now (Wer darf was, Ich, Mein Notaus): no profile
+    """A known device key whose function is switched off right now (Gesperrte Funktionen, Ich, Mein Notaus): no profile
     for this request, but core.assistant answers 503 ("not now", like the Notaus) instead of 401, so the apps keep
     their pairing, do not ask again in a loop, and work again as soon as the switch is back on (V01.0.388)."""
     request.scope["speech_gate_closed"] = why

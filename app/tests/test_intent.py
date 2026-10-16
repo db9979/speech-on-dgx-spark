@@ -33,7 +33,7 @@ def tool(name):
 
 
 def profile(name, route=True):
-    """A logged-in profile; route=False: the admin blocks the Weiche for it (chat.deny, Funktionen → Wer darf was).
+    """A logged-in profile; route=False: the admin blocks the Weiche for it (chat.deny, Personen und Geräte → Gesperrte Funktionen).
     The Turns tests clear chat.deny again in tearDown."""
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": "1234"})
     assert r.status_code in (200, 409), r.text
