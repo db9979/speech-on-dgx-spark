@@ -3557,7 +3557,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Private Chats, Ende-zu-Ende (V01.0.479)",
-"text": " enden laufende Anrufe innerhalb einer Minute. Browser und Android-App (ab 1.3.1 mit Kamera); die iPhone-App seit V01.0.652 mit Apples Anruf-Fenster (siehe iphone-app.md, „Anrufe und Videoanrufe“). Ihre iPhones klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; die App fragt den Spark, wer anruft (GET /api/anrufe/info, nur für die beiden im Anruf), und bekommt keine zweite Mitteilung „ruft an“. Live zählt „auf dem iPhone geklingelt“. Anrufe zu anderen Sparks später. Anrufe von unterwegs: Admin: Funktionen → Chats → „Anrufe von unterwegs“ (aus) und die Adresse von außen (leer: die Adresse für andere Sparks). Dann läuft auf dem Spark ein eigener Vermittler (coturn, Unit speech-spark-turn, nur solange der Schalter an ist; der coturn-Dienst der Distribution bleibt gesperrt). Im Router UDP 3478 und UDP 49160 bis 49200 an den Spark weiterleiten. Jedes Gerät bekommt pro Anruf einen Zugang, der nach einer Stunde abläuft (TURN REST, Geheimnis aus dem Schlüssel des Sparks); der Vermittler reicht Pakete nur an öffentliche Adressen weiter, nie ins Heimnetz oder an den Spark selbst, ohne Konsole, mit Grenzen pro Person und gesamt, ohne Log. Zustand → Dienste"
+"text": " enden laufende Anrufe innerhalb einer Minute. Browser und Android-App (ab 1.3.1 mit Kamera); die iPhone-App seit V01.0.652 mit Apples Anruf-Fenster (siehe iphone-app.md, „Anrufe und Videoanrufe“). Ihre iPhones klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; die App fragt den Spark, wer anruft (GET /api/anrufe/info, nur für die beiden im Anruf), und bekommt keine zweite Mitteilung „ruft an“. Live zählt „auf dem iPhone geklingelt“. Laufende und klingelnde Anrufe stehen außerdem als Verbindung „Anruf im Chat“ und „Anruf klingelt“ (nur die Anzahl) auf Live, dem Monitoring-Bildschirm und der Steuerzentrale am HDMI-Bildschirm (seit V01.0.712). Anrufe zu anderen Sparks später. Anrufe von unterwegs: Admin: Funktionen → Chats → „Anrufe von unterwegs“ (aus) und die Adresse von außen (leer: die Adresse für andere Sparks). Dann läuft auf dem Spark ein eigener Vermittler (coturn, Unit speech-spark-turn, nur solange der Schalter an ist; der coturn-Dienst der Distribution bleibt gesperrt). Im Router UDP 3478 und UDP 49160 bis 49200 an den Spark weiterleiten. Jedes Gerät bekommt pro Anruf einen Zugang, der nach einer Stunde abläuft (TURN REST, Geheimnis aus"
 },
 {
 "lang": "de",
@@ -3565,7 +3565,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Private Chats, Ende-zu-Ende (V01.0.479)",
-"text": " zeigt „Vermittler für Anrufe“. Live: Kachel Chats „📞 Anrufe: laufen, klingeln, heute, Vermittler läuft/aus“; Logs: „call started | video 1“, „call answered | secs 4“, „call ended | secs 252“, „call not answered | why rejected“, „call refused | why limit“, „call relay started“, nur Zahlen und feste Wörter."
+"text": " dem Schlüssel des Sparks); der Vermittler reicht Pakete nur an öffentliche Adressen weiter, nie ins Heimnetz oder an den Spark selbst, ohne Konsole, mit Grenzen pro Person und gesamt, ohne Log. Zustand → Dienste zeigt „Vermittler für Anrufe“. Live: Kachel Chats „📞 Anrufe: laufen, klingeln, heute, Vermittler läuft/aus“; Logs: „call started | video 1“, „call answered | secs 4“, „call ended | secs 252“, „call not answered | why rejected“, „call refused | why limit“, „call relay started“, nur Zahlen und feste Wörter."
 },
 {
 "lang": "de",
@@ -3668,15 +3668,15 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Fehlersuche am Telefon (V01.0.708)",
-"text": "Fehlersuche am Telefon (V01.0.708): *Router zwischen Spark und Anlage:* Stehen beide in verschiedenen Netzen und übersetzt ein Router dazwischen die Adresse (NAT, z. B. FRITZ!Box → UniFi Dream Machine → Heimnetz), erkennt der Spark das an der Antwort auf seine Anmeldung (Via „received“), meldet sich mit der Adresse des Routers neu an und nennt sie auch für den Ton (Log telefon: nat zwischen spark und anlage). Der Assistent unter Funktionen → Den Spark anrufen sagt dann, was im Router nötig ist: UDP 31060 und 31062-31069 an den Rechner mit dem Panel weiterleiten, am besten nur von der Adresse der Anlage. Ohne diese Weiterleitungen erreicht kein Anruf von außen den Spark, und beim Testanruf klingelt es, aber es kommt kein Ton. Jedes Gespräch endet im Log mit telefon: aufgelegt nach … s, … fragen (grund), ton raus N pakete, davon M mit sprache, rein K pakete. Ist M null, kam keine Sprachausgabe (dann steht davor telefon: sprachausgabe mit der Fehlerart oder leer); ist K null, schickt die Anlage keinen Ton an den Spark. Lehnt die Anlage einen Anruf des Spark ab, steht ihr Antwortcode da (telefon: anruf raus antwort 403). Beschreibt die Anlage den Ton nur in der Vorab-Antwort (183) und "
+"title": "Fehlersuche am Telefon (V01.0.712)",
+"text": "Fehlersuche am Telefon (V01.0.712): *Router zwischen Spark und Anlage:* Stehen beide in verschiedenen Netzen und übersetzt ein Router dazwischen die Adresse (NAT, z. B. FRITZ!Box → UniFi Dream Machine → Heimnetz), erkennt der Spark das an der Antwort auf seine Anmeldung (Via „received“), meldet sich mit der Adresse des Routers neu an und nennt sie auch für den Ton (Log telefon: nat zwischen spark und anlage). Der Assistent unter Funktionen → Den Spark anrufen sagt dann, was im Router nötig ist: UDP 31060 und 31062-31069 an den Rechner mit dem Panel weiterleiten, am besten nur von der Adresse der Anlage. Ohne diese Weiterleitungen erreicht kein Anruf von außen den Spark, und beim Testanruf klingelt es, aber es kommt kein Ton. Jedes Gespräch endet im Log mit telefon: aufgelegt nach … s, … fragen (grund), ton raus N pakete, davon M mit sprache, rein K pakete. Ist M null, kam keine Sprachausgabe (dann steht davor telefon: sprachausgabe mit der Fehlerart oder leer); ist K null, schickt die Anlage keinen Ton an den Spark. Lehnt die Anlage einen Anruf des Spark ab, steht ihr Antwortcode da (telefon: anruf raus antwort 403). Beschreibt die Anlage den Ton nur in der Vorab-Antwort (183) und "
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Fehlersuche am Telefon (V01.0.708)",
+"title": "Fehlersuche am Telefon (V01.0.712)",
 "text": "kommt das 200 OK ohne, nimmt der Spark die aus der 183."
 },
 {
@@ -10797,7 +10797,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Private chats, end-to-end (V01.0.479)",
-"text": "y for the two people in the call) and gets no second \"is calling\" notification. Live counts \"rang on the iPhone\". Calls to other Sparks later. Calls when away: Admin: Features → Chats → \"Calls when away\" (off) and the address from outside (empty: the address for other Sparks). Then the Spark runs its own relay (coturn, unit speech-spark-turn, only while the switch is on; the distribution's coturn service stays masked). In the router forward UDP 3478 and UDP 49160 to 49200 to the Spark. Each device gets an access per call that expires after an hour (TURN REST, secret derived from the Spark's key); the relay only passes packets to public addresses, never into the home network or to the Spark itself, without console, with limits per person and in total, without log. Status → Services shows \"Relay for calls\". Live: tile Chats \"📞 Calls: running, ringing, today, relay on/off\"; logs: \"call started | video 1\", \"call answered | secs 4\", \"call ended | secs 252\", \"call not answered | why rejected\", \"call refused | why limit\", \"call relay started\", numbers and fixed words only."
+"text": "y for the two people in the call) and gets no second \"is calling\" notification. Live counts \"rang on the iPhone\". Running and ringing calls also show as connections \"Anruf im Chat\" and \"Anruf klingelt\" (only the count) on Live, the monitoring screen and the HDMI Steuerzentrale (since V01.0.712). Calls to other Sparks later. Calls when away: Admin: Features → Chats → \"Calls when away\" (off) and the address from outside (empty: the address for other Sparks). Then the Spark runs its own relay (coturn, unit speech-spark-turn, only while the switch is on; the distribution's coturn service stays masked). In the router forward UDP 3478 and UDP 49160 to 49200 to the Spark. Each device gets an access per call that expires after an hour (TURN REST, secret derived from the Spark's key); the relay only passes packets to public addresses, never into the home network or to the Spark itself, without console, with limits per person and in total, without log. Status → Services shows \"Relay for calls\". Live: tile Chats \"📞 Calls: running, ringing, today, relay on/off\"; logs: \"call started | video 1\", \"call answered | secs 4\", \"call ended | secs 252\", \"call not answered | why rejected\", \"call refused "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Private chats, end-to-end (V01.0.479)",
+"text": "| why limit\", \"call relay started\", numbers and fixed words only."
 },
 {
 "lang": "en",
@@ -10892,15 +10900,15 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Troubleshooting the phone (V01.0.708)",
-"text": "Troubleshooting the phone (V01.0.708): *A router between the Spark and the PBX:* if both are in different networks and a router translates the address in between (NAT, e.g. FRITZ!Box → UniFi Dream Machine → home network), the Spark sees it in the answer to its sign-in (Via \"received\"), signs in again with the router's address and names it for the sound too (log telefon: nat zwischen spark und anlage). The wizard under Features → Calling the Spark then says what the router needs: forward UDP 31060 and 31062-31069 to the computer with the panel, best only from the PBX's address. Without these forwards no call from outside reaches the Spark, and a test call rings but has no sound. Every call ends in the log with telefon: aufgelegt nach … s, … fragen (reason), ton raus N pakete, davon M mit sprache, rein K pakete. If M is zero, the speech output gave nothing (before it stands telefon: sprachausgabe with the kind of error or leer); if K is zero, the PBX sends no sound to the Spark. If the PBX refuses a call of the Spark, its answer code is logged (telefon: anruf raus antwort 403). If the PBX describes the sound only in the early answer (183) and the 200 OK comes without one, the Spark t"
+"title": "Troubleshooting the phone (V01.0.712)",
+"text": "Troubleshooting the phone (V01.0.712): *A router between the Spark and the PBX:* if both are in different networks and a router translates the address in between (NAT, e.g. FRITZ!Box → UniFi Dream Machine → home network), the Spark sees it in the answer to its sign-in (Via \"received\"), signs in again with the router's address and names it for the sound too (log telefon: nat zwischen spark und anlage). The wizard under Features → Calling the Spark then says what the router needs: forward UDP 31060 and 31062-31069 to the computer with the panel, best only from the PBX's address. Without these forwards no call from outside reaches the Spark, and a test call rings but has no sound. Every call ends in the log with telefon: aufgelegt nach … s, … fragen (reason), ton raus N pakete, davon M mit sprache, rein K pakete. If M is zero, the speech output gave nothing (before it stands telefon: sprachausgabe with the kind of error or leer); if K is zero, the PBX sends no sound to the Spark. If the PBX refuses a call of the Spark, its answer code is logged (telefon: anruf raus antwort 403). If the PBX describes the sound only in the early answer (183) and the 200 OK comes without one, the Spark t"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Troubleshooting the phone (V01.0.708)",
+"title": "Troubleshooting the phone (V01.0.712)",
 "text": "akes the one from the 183."
 },
 {

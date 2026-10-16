@@ -101,7 +101,7 @@ final class CallCenter: ObservableObject {
         UserDefaults.standard.set(want, forKey: Self.wantKey)
         if want { register() } else if let r = registry { r.desiredPushTypes = [] }
         callsOn = a.calls
-        if a.calls { listenToSpark() } else if !active { listen?.cancel(); listen = nil }
+        if a.calls { _ = provider; listenToSpark() } else if !active { listen?.cancel(); listen = nil }
     }
 
     private var callsOn = false
@@ -205,6 +205,7 @@ final class CallCenter: ObservableObject {
         outgoing = true
         phase = .calling
         Conversation.shared.stop()
+        _ = provider   // CallKit must know this app's provider first, or it refuses the call (unknown provider)
         let action = CXStartCallAction(call: u, handle: CXHandle(type: .generic, value: self.name))
         action.isVideo = video
         controller.request(CXTransaction(action: action)) { [weak self] error in

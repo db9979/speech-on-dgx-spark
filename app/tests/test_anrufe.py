@@ -322,6 +322,22 @@ class Visible(Base):
         self.assertGreaterEqual(lv["today"], 1)
         self.assertNotIn("Antilda", json.dumps(lv))
 
+    def test_running_calls_show_as_connections_in_live_monitoring_and_the_steuerzentrale(self):
+        import live
+        import time
+        a, b = profile("Anwalda"), profile("Anrolf")
+        cid = open_with(a, b)
+        with contextlib.redirect_stdout(io.StringIO()):
+            call = self.call(a, cid).json()["call"]
+            n = {c["name"]: c["n"] for c in live._conns(time.time())}
+            self.assertEqual((n.get("Anruf klingelt"), n.get("Anruf im Chat")), (1, None))
+            b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B})
+            rows = [c for c in live._conns(time.time()) if c["name"].startswith("Anruf")]
+            self.assertEqual([(c["name"], c["n"]) for c in rows], [("Anruf im Chat", 1)])
+            self.assertNotIn("Anwalda", json.dumps(rows))
+            a.post("/api/anrufe/end", json={"call": call, "dev": DEV_A})
+        self.assertFalse([c for c in live._conns(time.time()) if c["name"].startswith("Anruf")])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.712** iPhone-App: Anrufen ging gar nicht („Anruf ging nicht.“), weil die App sich erst beim ersten eingehenden Anruf bei Apples CallKit anmeldete; jetzt beim Start und Wählen. Laufende und klingelnde Anrufe stehen als Verbindung auf Live, Monitoring und der Steuerzentrale (nur die Anzahl)
 - **V01.0.711** Lautsprecher-Firmware 2.5.2.8: baut jetzt auf XiaoZhi 2.5.2, alle eigenen Patches unverändert
 - **V01.0.710** Lautsprecher: steht im Board noch die alte DGX-Adresse, nennt die Diagnose die richtige des Pi
 - **V01.0.709** Aufräumen: die Vorschläge unter „Verbessern“ entstehen aus drei kleineren Teilen, gleiche Bausteine nur noch einmal
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.705** iPhone-App: Anrufe klingeln auch ohne Apples VoIP-Push, solange die App läuft (sie hört die Nachrichten des Spark selbst mit); vorher klingelte ein iPhone nur über den Push
 - **V01.0.704** Steuerzentrale: der Kasten Werkzeuge zeigt, welches Werkzeug gerade arbeitet
 - **V01.0.703** Aufräumen: die Texte der Technik-Seiten liegen in sieben kleineren Dateien; die Wächter-Tabellen zählen sie nicht mehr mit
-- **V01.0.702** Selbsttests: ein Profilname gehört genau einer Testdatei, ein Test passt darauf auf
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

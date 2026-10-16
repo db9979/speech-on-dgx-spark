@@ -711,6 +711,15 @@ def _conns(now):
     except Exception:
         pass
     try:
+        # Anrufe im Chat (anrufe.py, Browser und Apps): talking and ringing now, only the counts
+        import anrufe
+        a = anrufe.for_live()
+        for name, k in (("Anruf im Chat", "talking"), ("Anruf klingelt", "ringing")):
+            if a.get(k):
+                out.append({"name": name, "proto": "WebRTC", "dir": "ein", "n": int(a[k])})
+    except Exception:
+        pass
+    try:
         import begleiter
         n = sum(1 for t in list(getattr(begleiter, "_seen", {}).values()) if now - t < 3 * getattr(begleiter, "POLL", 30))
         if n:

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.712** · 2026-10-16 · iPhone-App: Anrufen ging gar nicht („Anruf ging nicht.“), weil die App sich erst beim ersten eingehenden Anruf bei Apples CallKit anmeldete; jetzt beim Start und Wählen. Laufende und klingelnde Anrufe stehen als Verbindung auf Live, Monitoring und der Steuerzentrale (nur die Anzahl)
 - **V01.0.711** · 2026-10-16 · Lautsprecher-Firmware 2.5.2.8: baut auf XiaoZhi 2.5.2 (Commit 49b4380), Patches unverändert; Rückweg auf 2.5.1.7 nur per USB
 - **V01.0.710** · 2026-10-16 · Lautsprecher nach dem Umzug: steht im Board noch die Adresse des Modell-Rechners, sagen Diagnose und „Netz prüfen“ das und nennen die Adresse des Panels auf dem Pi, statt „prüft der Spark nicht“
 - **V01.0.709** · 2026-10-16 · Aufräumen: die Vorschlagsliste des Beraters in drei Teile, doppelte Bausteine einmal
