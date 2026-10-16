@@ -242,7 +242,7 @@ class Telegram(unittest.TestCase):
         mail._cache.clear()
         helpers.set_config(mail=True)
         try:
-            a = self.link("Theo", 4501)
+            a = self.link("Theodora", 4501)
             self.assertEqual(a.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER,
                                                                "password": helpers.MAIL_PW}).status_code, 200)
             self.assertIn("Grillen am Samstag", ask(a, "TOOL mail_list {}"))   # on the page: yes

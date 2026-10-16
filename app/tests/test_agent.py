@@ -169,7 +169,7 @@ class Access(Base):
         self.assertIn("NO TOOL agent_task", ask(a, task))
 
     def test_jobs_belong_to_their_profile(self):
-        a, uid = profile("Bodo")
+        a, uid = profile("Bodwin")
         b, _ = profile("Berta")
         allow(a, uid)
         r = a.post("/api/profile/agent/jobs", json={"task": "Vergleiche Flüge nach Rom"})

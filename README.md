@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.692** Self-tests: one command before a push checks version, docs and the matching tests; the flaky failures in test_panel came from the same profile names in several test files
 - **V01.0.691** Fix: the control centre no longer stops the update on the panel computer
 - **V01.0.690** Fix: "Wie mache ich …?" no longer goes to the Spark help (since "Making music")
 - **V01.0.689** Live view: the right column shows only what is in use; the rest sits in "+ N ready"
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.685** Fix self-test: the control centre's route is on the list of open ways, with its reason
 - **V01.0.684** You can also say: example sentences for functions that are on for you but never used ("Draw me …"), under the answer, in an empty chat and under Me → What I can do
 - **V01.0.683** Pictures: the chat card no longer stays at “waiting …”; caricature and comic count as a picture wish
-- **V01.0.682** Control centre on the screen: the panel computer shows everything on one text screen at its HDMI output, starts at boot without signing in
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

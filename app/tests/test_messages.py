@@ -93,15 +93,15 @@ class Access(Base):
     def test_off_until_admin_and_admin_block(self):
         helpers.set_config(chats=False)
         a, ua = profile("Merle")
-        b, ub = profile("Ben")
-        send = 'TOOL message_send {"to": "Ben", "text": "Essen ist fertig"}'
+        b, ub = profile("Bennet")
+        send = 'TOOL message_send {"to": "Bennet", "text": "Essen ist fertig"}'
         self.assertIn("NO TOOL message_send", ask(a, send))
         self.assertFalse(a.get("/api/whoami").json()["chats"])
         self.assertEqual(a.get("/api/chats/who").status_code, 403)
         helpers.set_config(chats=True)
         self.assertTrue(a.get("/api/whoami").json()["chats"])
         block(self, ub)
-        self.assertIn("Nicht gesendet", ask(a, send))      # the admin blocked chats for Ben
+        self.assertIn("Nicht gesendet", ask(a, send))      # the admin blocked chats for Bennet
         block(self, ub, on=True)
         block(self, ua)
         self.assertIn("NO TOOL message_send", ask(a, send))   # blocked for the sender
@@ -159,7 +159,7 @@ class Access(Base):
         self.assertEqual(messages._load(ua)["block"], [])
 
     def test_who_may_write(self):
-        a, ua = profile("Alma")
+        a, ua = profile("Almut")
         b, ub = profile("Balduin")
         c, uc = profile("Cleo")
         self.assertTrue(messages.takes_from(ub, ua))
@@ -480,7 +480,7 @@ class Speakers(Base):
         self.assertEqual(messages.spoken("Anna", "", "", "text"), "Nachricht von Anna.")
         self.assertEqual(messages.spoken("Anna", "Familie", "Hallo", "hint"), "Nachricht von Anna in Familie.")
         self.assertEqual(messages.spoken("Anna", "", "Hallo", "text"), "Nachricht von Anna.")   # the text: only on request
-        a, ua = profile("Pia")
+        a, ua = profile("Pirka")
         b, ub = profile("Paul")
         cid = chats.open_one(ua, ub)
         mid = "ab" * 6
@@ -489,7 +489,7 @@ class Speakers(Base):
             d["items"].append({"id": mid, "from": ua, "t": NOW, "kind": "box", "box": {"v": 1}, "react": {}})
             meta["unread"][ub] = 1
         chats._mutate(cid, put)
-        self.assertEqual(chats.waiting(ub, 0, NOW + 1), [("Pia", "", "")])
+        self.assertEqual(chats.waiting(ub, 0, NOW + 1), [("Pirka", "", "")])
 
 
 class Backup(Base):
@@ -566,7 +566,7 @@ class Unlock(Base):
 
     def test_wants_send(self):
         for yes in ("Schreib Anna, dass das Essen fertig ist", "Schick eine Nachricht an sb", "Sag allen, wir fahren",
-                    "Nachricht an Ben: komme später", "Richte Ben aus, dass ich später komme", "Durchsage im Flur: Essen"):
+                    "Nachricht an Bennet: komme später", "Richte Bennet aus, dass ich später komme", "Durchsage im Flur: Essen"):
             self.assertTrue(messages.wants_send(yes), yes)
         for no in ("Antworte ihr: ok", "Schreib mir eine Zusammenfassung", "Was schreibt die Zeitung?",
                    "Sag Bescheid, wenn es fertig ist", "Sag mir, wie das Wetter wird"):
@@ -595,8 +595,8 @@ class Simple(Base):
     def test_parse_send(self):
         self.assertEqual(messages.parse_send("Schreib sb, dass ich später komme"), ("sb", "Ich komme später"))
         self.assertEqual(messages.parse_send("Sag Anna, das Essen ist fertig"), ("Anna", "Das Essen ist fertig"))
-        self.assertEqual(messages.parse_send("Nachricht an Ben: komme gleich"), ("Ben", "Komme gleich"))
-        self.assertEqual(messages.parse_send("Kannst du Ben schreiben, dass wir um acht fahren?"), ("Ben", "Wir fahren um acht"))
+        self.assertEqual(messages.parse_send("Nachricht an Bennet: komme gleich"), ("Bennet", "Komme gleich"))
+        self.assertEqual(messages.parse_send("Kannst du Bennet schreiben, dass wir um acht fahren?"), ("Bennet", "Wir fahren um acht"))
         self.assertIsNone(messages.parse_send("Sag Anna Bescheid, dass das Essen fertig ist"))   # the model words it
         for no in ("Schreib mir eine Zusammenfassung", "Sag mir, wie das Wetter wird", "Was gibt es Neues?"):
             self.assertIsNone(messages.parse_send(no), no)

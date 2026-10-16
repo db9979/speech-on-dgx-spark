@@ -210,7 +210,7 @@ class Turns(unittest.TestCase):
         self.assertEqual(offered(streamed()[0]), {"memory_save", "reminder_set", "reminder_list", "reminder_cancel"})
         # the admin blocked the Weiche for this profile: everything as before, also with "lean"
         helpers.LLM_CALLS.clear()
-        q = profile("Weiche7", route=False)
+        q = profile("Weiche8", route=False)
         chat_with(q, [{"role": "user", "content": "Erzähl mir einen Witz"}])
         self.assertIn("reminder_set", offered(streamed()[0]))
 

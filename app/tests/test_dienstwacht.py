@@ -72,11 +72,11 @@ class Base(unittest.TestCase):
         dw.reset()
         for k in [k for k in guard._rate if k[0] in ("svcwatch", "svcwatchnow")]:
             guard._rate.pop(k, None)
-        self.anna_c, self.ben_c = profile("Anna"), profile("Ben")
-        self.anna, self.ben = uid_of("Anna"), uid_of("Ben")
+        self.anna_c, self.ben_c = profile("Anjuli"), profile("Bentje")
+        self.anna, self.ben = uid_of("Anjuli"), uid_of("Bentje")
         profiles.save_settings(self.anna, {"svc_note": True, "svc_night": False, "svc_device": ""})
         profiles.save_settings(self.ben, {"svc_note": True})
-        self.hint(self.ben, False)        # the admin blocked "Hinweis, wenn ein Dienst fehlt" for Ben
+        self.hint(self.ben, False)        # the admin blocked "Hinweis, wenn ein Dienst fehlt" for Bentje
         self.addCleanup(self.hint, self.ben, True)
         self.sent, self.reached = [], True
         self.up = {s: True for s in self.SERVICES}          # what the fake probes answer
@@ -155,7 +155,7 @@ class Flood(Base):
         self.rounds(t0, 3)                       # 10:00, 10:01, 10:02: three probes but only two minutes
         self.assertEqual(self.sent, [])
         self.rounds(t0 + 180, 1)                 # 10:03: three minutes since the first failure
-        self.assertEqual(len(self.sent), 2)      # Anna and Ben, one note each
+        self.assertEqual(len(self.sent), 2)      # Anjuli and Bentje, one note each
         n = self.sent[0]
         self.assertIn("Archiv (Kiwix) nicht erreichbar", n["title"])
         self.assertIn("antwortet seit 10:00 nicht", n["body"])
@@ -309,7 +309,7 @@ class Who(Base):
         self.gone(t0)
         self.up["kiwix"] = True
         self.rounds(t0 + 1800, 3)
-        self.assertEqual([n["uid"] for n in self.sent], [self.ben, self.ben])   # Ben is told at once, Anna not
+        self.assertEqual([n["uid"] for n in self.sent], [self.ben, self.ben])   # Bentje is told at once, Anjuli not
         self.sent.clear()
         self.rounds(local(6, 58), 1)
         self.assertEqual(self.sent, [])
@@ -472,7 +472,7 @@ class Assistant(Base):
         out = self.call("archive_search", self.anna)
         self.assertTrue(out.startswith("Not done: the service Archive (Kiwix) is not reachable"), out)
         self.assertIn("Archiv (Kiwix) ist gerade nicht erreichbar (seit 10:00).", out)
-        self.assertEqual(dw.tool_down("archive_search", self.ben), "")          # the admin blocked it for Ben
+        self.assertEqual(dw.tool_down("archive_search", self.ben), "")          # the admin blocked it for Bentje
         self.assertEqual(dw.tool_down("archive_search", ""), "")                # guests never
         helpers.set_config(svc_watch_users=False)
         self.assertEqual(dw.tool_down("archive_search", self.anna), "")
@@ -494,7 +494,7 @@ class Assistant(Base):
         with mock.patch.object(dw, "_mail_parts", lambda: {"m1": {"host": "imap.example", "port": 993, "uids": [self.anna]}}):
             self.rounds(local(10, 0), 4)
             self.assertIn("Mail ist gerade nicht erreichbar", dw.tool_down("mail_list", self.anna))
-            self.assertEqual(dw.tool_down("mail_list", self.ben), "")    # Ben's mail is elsewhere
+            self.assertEqual(dw.tool_down("mail_list", self.ben), "")    # Bentje's mail is elsewhere
 
 
 if __name__ == "__main__":

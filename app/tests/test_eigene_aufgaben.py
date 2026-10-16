@@ -153,7 +153,7 @@ class Access(Base):
 
     def test_other_profiles_never_reach_a_watch(self):
         a, uid = profile("AufXaver")
-        b, uid_b = profile("Yvonne")
+        b, uid_b = profile("Yvana")
         allow(a, uid)
         allow(b, uid_b)
         helpers.set_config(agent=True, agent_watch=True)
@@ -178,7 +178,7 @@ def ADMIN():
 class Voice(Base):
     def setUp(self):
         super().setUp()
-        self.a, self.uid = profile("Zora")
+        self.a, self.uid = profile("Zorela")
         allow(self.a, self.uid)
         helpers.set_config(agent=True, agent_watch=True)
         agent.mutate(self.uid, lambda d: d.update(plans=[], jobs=[], count=0))
@@ -244,7 +244,7 @@ class Voice(Base):
 class Runs(Base):
     def setUp(self):
         super().setUp()
-        self.a, self.uid = profile("Vera")
+        self.a, self.uid = profile("Verla")
         allow(self.a, self.uid)
         helpers.set_config(agent=True, agent_watch=True)
         agent.mutate(self.uid, lambda d: d.update(plans=[], jobs=[], count=0))

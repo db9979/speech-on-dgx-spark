@@ -101,7 +101,7 @@ class Images(unittest.TestCase):
         self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400)
 
     def test_limits_and_types(self):
-        c = self.on("Berta")
+        c = self.on("Bertina")
         r = c.post("/api/chat/image", content=b"x" * (images.MAX_BYTES + 1), headers={"Content-Type": "image/jpeg"})
         self.assertEqual(r.status_code, 413)
         self.assertEqual(upload(c, b"GIF89a" + b"\0" * 100).status_code, 415)          # only JPEG, PNG, WebP
@@ -176,7 +176,7 @@ class Images(unittest.TestCase):
             self.assertEqual(ask(c, "Hallo", bad).status_code, 400, bad)
 
     def test_bound_to_profile_and_device_and_expires(self):
-        a, b = self.on("Bianca"), self.on("Bodo")
+        a, b = self.on("Bianca"), self.on("Bodomar")
         pid = upload(a, jpeg()).json()["id"]
         self.assertEqual(ask(b, "Was ist das?", [pid]).status_code, 410)          # someone else's picture
         self.assertEqual(b.delete(f"/api/chat/image/{pid}").json()["removed"], False)
@@ -207,8 +207,8 @@ class Images(unittest.TestCase):
         self.assertEqual(codes[-1], 429)
 
     def test_other_device_keys_get_none_and_the_app_needs_its_switch(self):
-        c = self.on("Bruno")
-        uid = uid_of("Bruno")
+        c = self.on("Brunhild")
+        uid = uid_of("Brunhild")
         token = ADMIN.post("/api/admin/devices", json={"name": "Küche", "user": uid}).json()["token"]
         box = TestClient(panel.app)
         self.assertEqual(upload(box, jpeg(), {"X-Speech-Device": token}).status_code, 403)

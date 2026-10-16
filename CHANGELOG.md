@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.692** · 2026-10-16 · Ein Prüfbefehl vor dem Push (tools/vorpush.py: Version, Doku mit Python 3.11, betroffene und Wächter-Tests, auch test_hilfe und test_scanner); Testdateien legen keine gleichnamigen Profile mehr an (Ursache der Erstversuch-Fehler in test_panel)
 - **V01.0.691** · 2026-10-16 · Fix Update auf dem Panel-Rechner: der Dienst der Steuerzentrale bricht Update und Zurückrollen nicht mehr ab („Job for speech-spark-schirm.service canceled“); die Anmeldung auf tty1 startet erst nach dem echten Ausschalten, ein Neustart der Anzeige hält ein Update nie an; `speech-spark logs schirm`
 - **V01.0.690** · 2026-10-16 · ROT-FIX .688: Alltagsverben aus Funktionsnamen („mach“ aus „Musik machen“) zählen nicht als Hilfe-Thema; „Wie mache ich Pfannkuchen?“ geht wieder ans Sprachmodell
 - **V01.0.689** · 2026-10-16 · Live-Übersicht: rechts stehen nur noch Ziele, die gerade arbeiten, ein ⚠ haben oder in den letzten 15 Minuten benutzt wurden (mit „vor 4 min“); die übrigen im Heimnetz und auf dem Spark stehen zusammen in „+ N bereit“, das Internet weiter in „+ N ruhig“; die Steuerzentrale am Bildschirm fasst genauso zusammen

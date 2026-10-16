@@ -38,7 +38,7 @@ class RoomVoices(unittest.TestCase):
         return r.json()
 
     def test_only_known_voices(self):
-        a, uid = profile("Vera")
+        a, uid = profile("Veruschka")
         b = {"voices": "known", "probe": False}
         # a voice nobody taught (the TV): the question is not taken and not kept
         self.assertFalse(self.heard(a, "vv1234", Q, **b)["wait"])

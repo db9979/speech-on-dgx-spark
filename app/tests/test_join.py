@@ -175,9 +175,9 @@ class Invite(unittest.TestCase):
             d["invites"][made["id"]]["until"] = int(time.time()) - 5
             join._write(d)
         self.assertEqual(TestClient(panel.app).post("/api/join/check", json={"code": code}).status_code, 400)
-        code2, made2 = invite("Weg")
+        code2, made2 = invite("Wegner")
         self.assertEqual(ADMIN.delete("/api/admin/join/invites/" + made2["id"]).status_code, 200)
-        self.assertEqual(TestClient(panel.app).post("/api/join", json={"code": code2, "name": "Weg", "pin": "123456"}).status_code, 400)
+        self.assertEqual(TestClient(panel.app).post("/api/join", json={"code": code2, "name": "Wegner", "pin": "123456"}).status_code, 400)
 
     def test_wrong_codes_lock_the_address(self):
         c = TestClient(panel.app)

@@ -219,8 +219,8 @@ class Rules(unittest.TestCase):
 
 class PauseVolumeUndo(unittest.TestCase):
     def setUp(self):
-        profile("Paula")
-        self.uid = uid_of("Paula")
+        profile("Paulina")
+        self.uid = uid_of("Paulina")
 
     def test_offered_only_with_the_switches_and_never_over_mcp(self):
         ctx = {"who": {"id": self.uid}, "own": True, "text": "Melde dich heute nicht mehr"}

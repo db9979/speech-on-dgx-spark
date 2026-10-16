@@ -146,8 +146,8 @@ class Zustand(unittest.TestCase):
 
     def test_offered_only_with_both_switches_and_the_words(self):
         import zustand_wz
-        profile("Zora")
-        uid = uid_of("Zora")
+        profile("Zorina")
+        uid = uid_of("Zorina")
         ctx = {"who": {"id": uid}, "own": True, "text": "Läuft alles?"}
         self.assertIsNone(zustand_wz.offer(ctx))
         helpers.set_config(status_voice=True)
@@ -160,8 +160,8 @@ class Zustand(unittest.TestCase):
     def test_a_profile_hears_its_own_part_an_admin_the_spark(self):
         import zustand_wz
         from unittest import mock
-        profile("Zeno")
-        uid = uid_of("Zeno")
+        profile("Zenon")
+        uid = uid_of("Zenon")
         with mock.patch.object(zustand_wz, "is_admin", return_value=False):
             out = zustand_wz.text(uid, "alles")
             self.assertIn("nur ein Admin", out)
@@ -176,8 +176,8 @@ class Zustand(unittest.TestCase):
             self.assertTrue("Sicherung" in out)
 
     def test_the_tool_runs_in_a_chat(self):
-        c = profile("Zita")
-        uid = uid_of("Zita")
+        c = profile("Zitana")
+        uid = uid_of("Zitana")
         helpers.set_config(status_voice=True)
         ev = ask(c, 'TOOL spark_zustand {"teil": "notaus"} Ist der Notaus an?')
         self.assertFalse(any(e.get("type") == "error" for e in ev))
