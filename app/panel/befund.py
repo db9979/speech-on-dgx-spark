@@ -152,8 +152,8 @@ def expected(case, cfg=None):
         need = chat.needed(q, set(k), ch.get("tool_words", ""))
         out += [(t, "frage") for t in need]
         if not need:     # no must-rule: the tools of the groups its words point to
-            for g in intent.classify_cfg(q, ch).names:
-                out += [(t, "frage") for t in sorted(intent.GROUPS[g][0])]
+            for g in intent.classify_cfg(q, ch).names:   # a name without a group (the admin's own words) adds nothing
+                out += [(t, "frage") for t in sorted(intent.GROUPS[g][0])] if g in intent.GROUPS else []
     for x in case.get("examples", []):
         out += [(t, "pflicht") for t in (x.get("f") or {}).get("n", [])]
     seen, res = set(), []

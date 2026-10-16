@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "594ff1bb86",
+        "stand": "de29a2ba56",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -1685,7 +1685,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "261db60fd1",
+        "stand": "236ed4a86a",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -1728,11 +1728,13 @@ SEITEN_DATEN = {
             S("s3", "schritt", ("Bedeutungsvektor der Frage", "Meaning vector of the question"),
               ("höchstens {docembed.QUERY_TIMEOUT} s warten", "wait at most {docembed.QUERY_TIMEOUT} s"),
               ("Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der "
-               "Frage. Es startet nur bei mindestens {docembed.MIN_FREE_GIB} GiB freiem Speicher und endet nach "
+               "Frage. Es startet nur bei mindestens {docembed.MIN_FREE_GIB} GiB freiem Speicher (auf einem Panel-Rechner "
+               "{docembed.MIN_FREE_PANEL_GIB} GiB) und endet nach "
                "{docembed.IDLE_STOP|min} Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, "
                "ohne Fehler.",
                "With meaning search a small vector model (own process, processor only) computes the question's "
-               "vector. It starts only with at least {docembed.MIN_FREE_GIB} GiB free memory and ends after "
+               "vector. It starts only with at least {docembed.MIN_FREE_GIB} GiB free memory (on a panel computer "
+               "{docembed.MIN_FREE_PANEL_GIB} GiB) and ends after "
                "{docembed.IDLE_STOP|min} minutes without work. Without a vector the Spark searches full text only, "
                "without an error."),
               ("info", ("kein Vektor", "no vector"), ("nur Volltext", "full text only"))),
@@ -1846,6 +1848,7 @@ SEITEN_DATEN = {
             ("{documents.HEAD_WEIGHT}", ("Gewicht der Kontextzeile", "weight of the context line"), "documents.HEAD_WEIGHT"),
             ("{docembed.QUERY_TIMEOUT} s", ("längstes Warten auf den Fragevektor", "longest wait for the question vector"), "docembed.QUERY_TIMEOUT"),
             ("{docembed.MIN_FREE_GIB} GiB", ("freier Speicher, damit das Vektormodell startet", "free memory for the vector model to start"), "docembed.MIN_FREE_GIB"),
+            ("{docembed.MIN_FREE_PANEL_GIB} GiB", ("dasselbe auf einem Panel-Rechner (Spark teilen)", "the same on a panel computer (Spark teilen)"), "docembed.MIN_FREE_PANEL_GIB"),
             ("{lokal.MAX_HITS}", ("Treffer höchstens bei „Erst lokal suchen“", "hits at most with „Look locally first“"), "lokal.MAX_HITS"),
         ],
         "einstellen": [
@@ -2508,7 +2511,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "eae5e35246",
+        "stand": "363c11e093",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3381,7 +3384,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "f8241b97c4",
+        "stand": "185bcf710e",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3569,7 +3572,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "6e34c61085",
+        "stand": "8fa0e786cf",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],

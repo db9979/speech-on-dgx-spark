@@ -52,10 +52,20 @@ UNIT = "speech-spark-gehaeuse"
 WUNSCH_S = 300                     # a wish older than this is not taken
 LED_EVERY = 5                      # seconds between two LED colours
 RETRY = 60                         # seconds before a device that failed is tried again
+# Schutz vor Einbrennen (B7b): the picture moves by a pixel or two every VERSATZ_S seconds, and a picture that did not
+# change for GLEICH_S seconds is shown at GLEICH_HELL % at most
+VERSATZ = ((0, 0), (1, 1), (0, 2), (1, 0))
+VERSATZ_S = 180
+GLEICH_S = 600
+GLEICH_HELL = 10
 
-# the pages: key -> (German, English); the order is the order on the display
+# the pages: key -> (German, English); the order is the order on the display unless the admin dragged another one
+# (chat.gehaeuse_reihenfolge); 6 to 11 came with B7b (Dominik 2026-10-15 "ergänze diese noch")
 SEITEN = (("spark", "Spark", "Spark"), ("dienste", "Dienste und Wartung", "Services and maintenance"),
-          ("pi", "Pi", "Pi"), ("dgx", "DGX weg oder in Pause", "DGX gone or paused"), ("netz", "Netz", "Network"))
+          ("pi", "Pi", "Pi"), ("dgx", "DGX weg oder in Pause", "DGX gone or paused"), ("netz", "Netz", "Network"),
+          ("dgxdetail", "DGX im Detail", "DGX in detail"), ("sicherheit", "Sicherheit", "Security"),
+          ("geraete", "Geräte", "Devices"), ("haus", "Haus", "House"), ("strom", "Strom", "Power"),
+          ("version", "Version", "Version"))
 FARBEN = {"gruen": (0, 255, 0), "gelb": (255, 150, 0), "rot": (255, 0, 0), "aus": (0, 0, 0)}
 NACHT = ("aus", "dunkel", "an")
 ANZEIGE = ("immer", "probleme")   # "probleme": dark while everything is green
@@ -66,7 +76,7 @@ ZAHLEN = {"gehaeuse_wechsel_s": (6, 3, 60), "gehaeuse_hell": (60, 1, 100), "geha
 
 _lock = threading.Lock()
 _st = {"oled": "aus", "led": "aus", "addr": None, "seite": "", "farbe": "aus", "next": 0.0, "i": 0, "led_t": 0.0,
-       "fail": {}, "bild": None}
+       "fail": {}, "bild": None, "roh": b"", "gleich": 0.0}
 
 
 # ---------------------------------------------------------------- the device files (tests put a fake here)
@@ -135,7 +145,17 @@ def check(c):
     keys = [k for k, _, _ in SEITEN]
     if not isinstance(aus, list) or len(aus) >= len(keys) or len(set(aus)) != len(aus) or any(x not in keys for x in aus):
         return "gehaeuse_seiten_aus: Seiten des Displays, mindestens eine bleibt an"
+    folge = c.get("gehaeuse_reihenfolge", [])
+    if not isinstance(folge, list) or len(set(folge)) != len(folge) or any(x not in keys for x in folge):
+        return "gehaeuse_reihenfolge: Seiten des Displays, jede höchstens einmal"
     return None
+
+
+def reihenfolge(c):
+    """All pages in the admin's order (chat.gehaeuse_reihenfolge first, the rest in their own order)."""
+    keys = [k for k, _, _ in SEITEN]
+    folge = [k for k in (c.get("gehaeuse_reihenfolge") or []) if k in keys] if isinstance(c.get("gehaeuse_reihenfolge"), list) else []
+    return list(dict.fromkeys(folge)) + [k for k in keys if k not in folge]
 
 
 # ---------------------------------------------------------------- OLED (SSD1306)
@@ -340,13 +360,126 @@ def zeilen(key, now=None):
         lines.append("HTTPS 31443 " + ("offen" if _offen(31443) else "zu"))
         lines.append("TURN 3478 " + ("offen" if _offen(3478) else "zu"))
         return lines
+    if key == "dgxdetail":
+        if not steuer.remote():
+            from common import mem_available_gib
+            return ["DGX Detail", "auf diesem Rechner", f"Frei {_num(_safe(mem_available_gib))} GiB", "LLM " + _kurz(_llm_lokal())]
+        gpu = d.get("gpu") or {}
+        llm = ((d.get("modellwahl") or {}).get("llm") or {})
+        return ["DGX Detail", f"GPU {_num(gpu.get('temp'))} C", f"Frei {_num(d.get('mem_avail_gib'))} GiB",
+                "LLM " + (_kurz(llm.get("modell")) if llm.get("enabled", True) else "aus")]
+    if key == "sicherheit":
+        n = _zaehler()
+        try:
+            import notaus
+            stufe = str(notaus.level())
+        except Exception:
+            stufe = "?"
+        return ["Sicherheit", f"Anmeldung falsch {n.get('door_out', '-')}", f"Waechter geblockt {n.get('guard_bad', '-')}",
+                f"Notaus Stufe {stufe}"]
+    if key == "geraete":
+        return ["Geraete", f"Lautsprecher {_geraete('esp32')}", f"Apps {_geraete('apps')}", "Verbund " + _dienst("verbund")]
+    if key == "haus":
+        return ["Haus", f"HA {_dienst('ha')}  NAS {_dienst('naszustand')}", f"Kiwix {_dienst('kiwix')}",
+                f"Suche {_dienst('web')}"]
+    if key == "strom":
+        jetzt, war = _strom()
+        return ["Strom", "Spannung " + jetzt, "Drossel " + war, "Pi an " + _dauer(_safe(_pi_an))]
+    if key == "version":
+        try:
+            import core as _core
+            mine = _core.app_version() or "?"
+        except Exception:
+            mine = "?"
+        other = str(d.get("version") or "")[:20] if steuer.remote() else mine
+        return ["Version", "Pi " + mine, "DGX " + (other or "-"),
+                "gleich" if other == mine else "abweichend" if other else "DGX unbekannt"]
     return []
+
+
+def _safe(f):
+    try:
+        return f()
+    except Exception:
+        return None
+
+
+def _kurz(name):
+    """A model's short name for the display (the last part of its id, 17 characters)."""
+    return str(name or "-").rsplit("/", 1)[-1][:17]
+
+
+def _llm_lokal():
+    return (load_config().get("llm") or {}).get("modell")
+
+
+def _zaehler():
+    """Today's counts of Live (live.counts_today): wrong logins and refused devices, connections the Wächter blocked.
+    Live counts only while it is on; otherwise empty (the page shows "-")."""
+    try:
+        import live
+        return live.counts_today() if live.on() else {}
+    except Exception:
+        return {}
+
+
+def _geraete(was):
+    try:
+        if was == "esp32":
+            import esp32
+            return len(getattr(esp32, "_live", {}) or {})
+        import android
+        import terminal
+        return int(terminal.online(time.time())) + int(android.live_count())
+    except Exception:
+        return "?"
+
+
+def _dienst(sid):
+    """A service of the Dienst-Wächter in one word: ok, weg or - (not watched, not set up, not known yet)."""
+    try:
+        import dienstwacht
+        if not dienstwacht.admin_on():
+            return "-"
+        e = dienstwacht._read()["svc"].get(sid)
+        if not e:
+            return "-"
+        st = dienstwacht._state(e)
+        return "ok" if st in ("ok", "wobble") else "weg" if st in ("down", "inet") else "-"
+    except Exception:
+        return "?"
+
+
+THROTTLED = "/sys/devices/platform/soc/soc:firmware/get_throttled"
+
+
+def _strom():
+    """The Pi's firmware flags (get_throttled): under-voltage now or since the start, throttled now or since the start."""
+    try:
+        v = int(hw.read(THROTTLED).strip(), 16)
+    except (OSError, ValueError):
+        return "?", "?"
+    jetzt = "zu niedrig" if v & 0x1 else "war niedrig" if v & 0x10000 else "ok"
+    war = "jetzt" if v & 0x4 else "war an" if v & 0x40000 else "nein"
+    return jetzt, war
+
+
+def _pi_an():
+    import psutil
+    return time.time() - psutil.boot_time()
+
+
+def _dauer(s):
+    if s is None:
+        return "?"
+    s = int(s)
+    return f"{s // 86400} d {s % 86400 // 3600} h" if s >= 86400 else f"{s // 3600} h {s % 3600 // 60} min"
 
 
 def seiten(c, now=None):
     """The pages to show, in their order: an open problem brings its page first; "DGX" only while it is gone or paused."""
     aus = set(c.get("gehaeuse_seiten_aus") or [])
-    keys = [k for k, _, _ in SEITEN if k not in aus]
+    keys = [k for k in reihenfolge(c) if k not in aus]
     farbe, _ = lage(now)
     try:
         import steuer
@@ -364,16 +497,48 @@ def seiten(c, now=None):
     return keys or ["spark"]
 
 
-def bild(lines, drehen=False):
+def bild(lines, drehen=False, versatz=(0, 0)):
     from PIL import Image, ImageDraw, ImageFont
     img = Image.new("1", (W, H), 0)
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
+    dx, dy = versatz
     for i, line in enumerate(lines[:5]):
-        draw.text((1, 1 + i * 12), line[:21], fill=1, font=font)
+        draw.text((dx, dy + i * 12), line[:21], fill=1, font=font)
         if i == 0:
-            draw.line((0, 12, W - 1, 12), fill=1)
+            draw.line((0, dy + 11, W - 1, dy + 11), fill=1)
     return img.rotate(180) if drehen else img
+
+
+def versatz(now):
+    """Schutz vor Einbrennen: where the picture sits now (a pixel or two, changing every VERSATZ_S seconds)."""
+    return VERSATZ[int(now // VERSATZ_S) % len(VERSATZ)]
+
+
+def bits(img):
+    """A picture for the panel's preview: 128×64 points row by row, 16 bytes a row, the leftmost point in the top bit."""
+    import base64
+    return base64.b64encode(img.convert("1").tobytes()).decode()
+
+
+def vorschau(c=None, now=None):
+    """Funktionen → Gehäuse (B7b): every page as the display would draw it now (upright, without the move against
+    burn-in), whether it is on, and the picture the display shows right now. Numbers and fixed words only."""
+    c = cfg_chat(c)
+    now = time.time() if now is None else now
+    aus = set(c.get("gehaeuse_seiten_aus") or [])
+    names = {k: (de, en) for k, de, en in SEITEN}
+    out = []
+    for k in reihenfolge(c):
+        try:
+            b = bits(bild(zeilen(k, now)))
+        except Exception as e:
+            print("gehaeuse: vorschau fehler", type(e).__name__, flush=True)
+            b = ""
+        out.append({"id": k, "name": list(names[k]), "an": k not in aus, "bits": b})
+    jetzt = _st["seite"] if _st["oled"] == "an" and _st["seite"] not in ("", "-") else ""
+    return {"seiten": out, "jetzt": jetzt, "jetzt_bits": bits(_st["bild"]) if jetzt and _st["bild"] is not None else "",
+            "oled": _st["oled"], "dunkel": _st["seite"] == "-", "w": W, "h": H}
 
 
 def nacht(c, now=None):
@@ -454,10 +619,17 @@ def _oled(c, now, farbe, dark, night_off):
         keys = seiten(c, now)
         i = _st["i"] % len(keys)
         key = keys[i]
-        oled_hell(a, 5 if dark else zahl(c, "gehaeuse_hell"))
-        img = bild(zeilen(key, now), c.get("gehaeuse_drehung") == 180)
+        lines = zeilen(key, now)
+        img = bild(lines, c.get("gehaeuse_drehung") == 180, versatz(now))
+        roh = "\n".join(lines).encode()
+        if roh != _st["roh"]:
+            _st.update(roh=roh, gleich=now)
+        hell = 5 if dark else zahl(c, "gehaeuse_hell")
+        if now - _st["gleich"] >= GLEICH_S:
+            hell = min(hell, GLEICH_HELL)     # the same picture for 10 minutes: darker against burn-in
+        oled_hell(a, hell)
         oled_zeigen(a, img)
-        _st.update(seite=key, i=i + 1, next=now + zahl(c, "gehaeuse_wechsel_s"), bild=img)
+        _st.update(seite=key, i=i + 1, next=now + zahl(c, "gehaeuse_wechsel_s"), bild=bild(lines))
     except OSError as e:
         _fehler("oled", e, now)
 
@@ -580,6 +752,12 @@ def seite(lang="de"):
 def admin_gehaeuse(request: Request, lang: str = "de"):
     guard.limit(request, "gehaeuse", None, True)
     return seite("en" if lang == "en" else "de")
+
+
+@router.get("/api/admin/gehaeuse/vorschau", dependencies=[Depends(auth)])
+def admin_vorschau(request: Request):
+    guard.limit(request, "gehaeuse", None, True)
+    return vorschau()
 
 
 async def _wunsch_starten(request, was):

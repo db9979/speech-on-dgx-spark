@@ -1908,7 +1908,7 @@ flowchart TD
 
 1. <a id="kn-wissen-s1"></a>**Model calls document_search**: The tool is offered only when the profile has own or shared documents, the function is released for the profile and the voice is recognized. Guests and unknown voices at a shared speaker never get it. The profile comes from the login, never from the model.
 2. <a id="kn-wissen-s2"></a>**Tags or kind allowed?**: The model may narrow the search to tags or a kind of document (at most five tags). With „Document card and tags“ off for the profile these are dropped and every document is searched.
-3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
+3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory (on a panel computer 1.5 GiB) and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
 4. <a id="kn-wissen-s4"></a>**Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
 5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
 6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises.
@@ -1951,6 +1951,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **0.4** weight of the context line ([step 5](#kn-wissen-s5))
 - **8 s** longest wait for the question vector ([step 3](#kn-wissen-s3))
 - **8.5 GiB** free memory for the vector model to start ([step 3](#kn-wissen-s3))
+- **1.5 GiB** the same on a panel computer (Spark teilen) ([step 3](#kn-wissen-s3))
 - **3** hits at most with „Look locally first“ ([step 5](#kn-wissen-s5))
 
 #### Settings

@@ -1908,7 +1908,7 @@ flowchart TD
 
 1. <a id="kn-wissen-s1"></a>**Modell ruft document_search**: Das Werkzeug wird nur angeboten, wenn das Profil eigene oder geteilte Dokumente hat, die Funktion für das Profil frei ist und die Stimme erkannt ist. Gäste und fremde Stimmen am geteilten Lautsprecher bekommen es nie. Das Profil kommt aus der Anmeldung, nie vom Modell.
 2. <a id="kn-wissen-s2"></a>**Tags oder Art erlaubt?**: Das Modell darf die Suche auf Tags oder eine Dokumentart eingrenzen (höchstens fünf Tags). Ist „Steckbrief und Tags“ für das Profil aus, werden diese Angaben verworfen und alle Dokumente durchsucht.
-3. <a id="kn-wissen-s3"></a>**Bedeutungsvektor der Frage**: Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der Frage. Es startet nur bei mindestens 8.5 GiB freiem Speicher und endet nach 10 Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, ohne Fehler.
+3. <a id="kn-wissen-s3"></a>**Bedeutungsvektor der Frage**: Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der Frage. Es startet nur bei mindestens 8.5 GiB freiem Speicher (auf einem Panel-Rechner 1.5 GiB) und endet nach 10 Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, ohne Fehler.
 4. <a id="kn-wissen-s4"></a>**Eingegrenzt?**: Mit Tags oder Art sucht match_docs zuerst die Dokumente, die alle Tags und die Art tragen. Nur deren Stellen kommen weiter in Frage; passt keines, gibt es keine Treffer.
 5. <a id="kn-wissen-s5"></a>**Volltext: Wörter und Kontextzeile**: Die Frage wird in Suchwörter zerlegt (Füllwörter weg, Endungen grob gekürzt). Gesucht wird in den Wörtern jeder Stelle und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang.
 6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht.
@@ -1951,6 +1951,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **0.4** Gewicht der Kontextzeile ([Schritt 5](#kn-wissen-s5))
 - **8 s** längstes Warten auf den Fragevektor ([Schritt 3](#kn-wissen-s3))
 - **8.5 GiB** freier Speicher, damit das Vektormodell startet ([Schritt 3](#kn-wissen-s3))
+- **1.5 GiB** dasselbe auf einem Panel-Rechner (Spark teilen) ([Schritt 3](#kn-wissen-s3))
 - **3** Treffer höchstens bei „Erst lokal suchen“ ([Schritt 5](#kn-wissen-s5))
 
 #### Einstellen

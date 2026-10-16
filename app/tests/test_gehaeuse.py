@@ -54,7 +54,8 @@ class Base(unittest.TestCase):
         p = mock.patch.object(gehaeuse, "hw", self.hw)
         p.start()
         self.addCleanup(p.stop)
-        gehaeuse._st.update(oled="aus", led="aus", addr=None, seite="", farbe="aus", next=0.0, i=0, led_t=0.0, fail={}, bild=None)
+        gehaeuse._st.update(oled="aus", led="aus", addr=None, seite="", farbe="aus", next=0.0, i=0, led_t=0.0, fail={}, bild=None,
+                            roh=b"", gleich=0.0)
         p = mock.patch.object(gehaeuse, "_hinweise", return_value=(0, 0))
         p.start()
         self.addCleanup(p.stop)
@@ -194,6 +195,76 @@ class Anzeige(Base):
                 self.assertTrue('type="number"' in m.group(0) or 'data-num="1"' in m.group(0), m.group(0))
         m = re.search(r'<input[^>]*id="chat\.gehaeuse_seiten_aus"[^>]*>', html)   # a list goes as a list (data-list="1")
         self.assertIn('data-list="1"', m.group(0))
+
+
+class Seiten(Base):
+    """B7b: pages 6 to 11, the admin's order, the move and the dimming against burn-in, the preview in the panel."""
+
+    def test_every_page_fits_the_display(self):
+        for key, _, _ in gehaeuse.SEITEN:
+            lines = gehaeuse.zeilen(key, T0)
+            self.assertTrue(1 <= len(lines) <= 5, key)
+            for line in lines:
+                self.assertLessEqual(len(line), 21, (key, line))
+        self.assertEqual(len(gehaeuse.SEITEN), 11)
+
+    def test_the_admins_order(self):
+        c = self.on(gehaeuse_reihenfolge=["version", "pi"])
+        self.assertEqual(gehaeuse.seiten(c, T0)[:3], ["version", "pi", "spark"])
+        self.assertIn("gehaeuse_reihenfolge", gehaeuse.check({"gehaeuse_reihenfolge": ["pi", "pi"]}))
+        self.assertIn("gehaeuse_reihenfolge", gehaeuse.check({"gehaeuse_reihenfolge": ["fremd"]}))
+        self.assertIsNone(gehaeuse.check({"gehaeuse_reihenfolge": ["netz", "spark"]}))
+
+    def test_power_flags_of_the_pi(self):
+        self.hw.files[gehaeuse.THROTTLED] = "0x50005\n"
+        self.assertEqual(gehaeuse._strom(), ("zu niedrig", "jetzt"))
+        self.hw.files[gehaeuse.THROTTLED] = "0x50000\n"
+        self.assertEqual(gehaeuse._strom(), ("war niedrig", "war an"))
+        self.hw.files[gehaeuse.THROTTLED] = "0x0\n"
+        self.assertEqual(gehaeuse._strom(), ("ok", "nein"))
+        del self.hw.files[gehaeuse.THROTTLED]
+        self.assertEqual(gehaeuse.zeilen("strom", T0)[1], "Spannung ?")
+
+    def test_model_computer_in_detail_and_versions(self):
+        st = {"gpu": {"temp": 61.0}, "mem_avail_gib": 37.6, "version": "V01.0.001",
+              "modellwahl": {"llm": {"enabled": True, "modell": "RedHatAI/qwen38-27b-nvfp4"}}}
+        with mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "cached", return_value=st):
+            self.assertEqual(gehaeuse.zeilen("dgxdetail", T0), ["DGX Detail", "GPU 61 C", "Frei 38 GiB", "LLM qwen38-27b-nvfp4"])
+            self.assertEqual(gehaeuse.zeilen("version", T0)[2:], ["DGX V01.0.001", "abweichend"])
+
+    def test_burn_in(self):
+        self.assertNotEqual(gehaeuse.versatz(T0), gehaeuse.versatz(T0 + gehaeuse.VERSATZ_S))
+        a, b = gehaeuse.bild(["X"]), gehaeuse.bild(["X"], versatz=(1, 1))
+        self.assertNotEqual(gehaeuse.packen(a), gehaeuse.packen(b), "the picture moves")
+        c = self.on(gehaeuse_seiten_aus=[k for k, _, _ in gehaeuse.SEITEN if k != "netz"], gehaeuse_hell=80)
+        with mock.patch.object(gehaeuse, "zeilen", return_value=["Netz", "gleich"]):
+            self.tick(T0, c)
+            hell = [x for x in self.hw.i2c if x[:2] == bytes([0x00, 0x81])]
+            self.assertEqual(hell[-1][2], round(80 * 255 / 100))
+            self.tick(T0 + gehaeuse.GLEICH_S + 7, c)
+            hell = [x for x in self.hw.i2c if x[:2] == bytes([0x00, 0x81])]
+            self.assertEqual(hell[-1][2], round(gehaeuse.GLEICH_HELL * 255 / 100), "the same picture for 10 min: darker")
+
+    def test_preview_for_the_admin_only(self):
+        import base64
+        from fastapi.testclient import TestClient
+        import panel
+        c = self.on(gehaeuse_seiten_aus=["haus"])
+        v = gehaeuse.vorschau(c, T0)
+        self.assertEqual([p["id"] for p in v["seiten"]], gehaeuse.reihenfolge(c))
+        self.assertFalse(next(p for p in v["seiten"] if p["id"] == "haus")["an"])
+        self.assertEqual(len(base64.b64decode(v["seiten"][0]["bits"])), gehaeuse.W * gehaeuse.H // 8)
+        self.assertEqual(v["jetzt"], "")
+        self.tick(T0, c)
+        v = gehaeuse.vorschau(c, T0)
+        self.assertEqual(v["jetzt"], "spark")
+        self.assertEqual(len(base64.b64decode(v["jetzt_bits"])), 1024)
+        self.assertIn(TestClient(panel.app).get("/api/admin/gehaeuse/vorschau").status_code, (401, 403))
+        admin = TestClient(panel.app)
+        admin.post("/api/login", json={"password": "secret-admin"})
+        r = admin.get("/api/admin/gehaeuse/vorschau")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(len(r.json()["seiten"]), 11)
 
 class Wunsch(Base):
     def test_only_a_fresh_wish_with_the_switch_on(self):

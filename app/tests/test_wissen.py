@@ -589,6 +589,16 @@ for line in sys.stdin:
 
 
 class Worker(Base):
+    def test_a_panel_computer_needs_less_free_memory(self):
+        """V01.0.660: the Pi (8 GB, models on the model computer) never had 8.5 GiB free; the vector model never
+        started and was tried every 20 seconds."""
+        import common
+        from unittest import mock
+        self.assertEqual(docembed.need_gib(), docembed.MIN_FREE_GIB)
+        with mock.patch.object(common, "model_local", return_value=False):
+            self.assertEqual(docembed.need_gib(), docembed.MIN_FREE_PANEL_GIB)
+        self.assertLess(docembed.MIN_FREE_PANEL_GIB, 2)
+
     def test_model_process_protocol_and_idle_stop(self):
         path = os.path.join(helpers.TMP, "fake_worker.py")
         with open(path, "w") as f:

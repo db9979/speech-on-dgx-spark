@@ -2632,7 +2632,12 @@ def overview(now=None):
 @router.get("/api/admin/berater", dependencies=[Depends(auth)])
 def admin_get(request: Request):
     guard.limit(request, "berater", None, True)
-    return overview()
+    try:
+        return overview()
+    except Exception as e:     # V01.0.660: the page answered a bare "Internal Server Error" without a line in the log
+        from common import fehler_stelle
+        print("berater: seite", fehler_stelle(e), flush=True)
+        raise HTTPException(500, "Verbessern ließ sich nicht laden, die Stelle steht im Log (berater: seite).")
 
 
 @router.post("/api/admin/berater/run", dependencies=[Depends(auth)])
@@ -2641,11 +2646,11 @@ async def admin_run(request: Request):
     _need_on()
     try:
         made = await round_once(force=True)
+        return dict(overview(), made=made)
     except Exception as e:
         from common import fehler_stelle
         print("berater: jetzt", fehler_stelle(e), flush=True)
         raise HTTPException(500, "Nachsehen fehlgeschlagen, die Stelle steht im Log (berater: jetzt).")
-    return dict(overview(), made=made)
 
 
 @router.post("/api/admin/berater/melder", dependencies=[Depends(auth)])

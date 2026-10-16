@@ -68,8 +68,9 @@ LONG_IDLE = 1800
 NIGHT_PAGES = 400
 READ_TIMEOUT = 120
 IDLE = 60
+VEC_HOLD_S = 600       # a panel computer with too little memory for the vector model: the next try after this long
 _now = {}          # the page being read right now: {"uid", "doc", "page"} (Ich → Dokumente shows it)
-_last = {"read": 0.0, "failed": 0.0, "vectors": 0.0}    # when background work last did something (Zustand)
+_last = {"read": 0.0, "failed": 0.0, "vectors": 0.0, "vec_hold": 0.0}    # when background work last did something (Zustand)
 READ_PROMPT = ("Du liest eine Seite oder ein Foto aus den eigenen Dokumenten des Nutzers, damit er später darin "
                "suchen kann. Schreibe zuerst allen lesbaren Text vollständig und genau ab, in der Reihenfolge der "
                "Seite; Tabellen als Zeilen mit Tabulatoren. Danach eine Zeile „Bild:“ mit ein bis drei Sätzen, was "
@@ -475,7 +476,7 @@ async def due_once(idle=True, now=None):
         live.bg_done(f"Kontext für {done} Dokumente", True, time.time() - t0)
         return "kopf"
     for uid in _readers():
-        if not on(uid, "semantic"):
+        if not on(uid, "semantic") or now < _last["vec_hold"]:
             continue
         miss = await asyncio.to_thread(documents.missing_vectors, uid, docembed.BATCH)
         if not miss:
@@ -484,6 +485,9 @@ async def due_once(idle=True, now=None):
             vecs = await docembed.embed([t for _, t in miss], "passage")
         except Exception as e:
             print("wissen: no vectors:", type(e).__name__, str(e)[:120], flush=True)
+            from common import model_local
+            if "free memory" in str(e) and not model_local():   # V01.0.660: on the Pi not again every 20 s
+                _last["vec_hold"] = now + VEC_HOLD_S
             return None
         await asyncio.to_thread(documents.set_vectors, uid, [(i, v) for (i, _), v in zip(miss, vecs)])
         _last["vectors"] = time.time()
@@ -538,7 +542,7 @@ def admin_state():
         out["shared"] = [{"owner": uid, "who": (profiles.by_id(uid) or {}).get("name", "?"), "id": d["id"], "name": d["name"]}
                          for uid in profiles.user_ids() if on(uid, "shared") for d in documents.list_shared(uid)]
     if on_["semantic"]:
-        out["model"] = dict(docembed.status(), mib=docembed.memory_mib(), need_gib=docembed.MIN_FREE_GIB,
+        out["model"] = dict(docembed.status(), mib=docembed.memory_mib(), need_gib=docembed.need_gib(),
                             stop_min=docembed.IDLE_STOP // 60)
     return out
 

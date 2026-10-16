@@ -554,6 +554,27 @@ class Melders(Base):
         self.assertRegex(out.getvalue(), r"berater: jetzt KeyError test_einstellungs_assistent\.py broken \d+")
         self.assertNotIn("geheim", out.getvalue() + r.text)
 
+    def test_a_name_without_a_group_adds_no_tools(self):
+        """V01.0.660: on the Pi every round and the page stopped with "KeyError befund.py expected 156": the Weiche
+        named something that is not one of its groups (the admin's own words), and befund looked it up blindly."""
+        import befund
+        import chat
+        import intent
+        case = {"examples": [{"q": "Wie spät ist es auf dem Mond?"}]}
+        with mock.patch.object(intent, "classify_cfg", return_value=types.SimpleNamespace(names=["gibtesnicht"])), \
+                mock.patch.object(chat, "needed", return_value=[]):
+            self.assertEqual(befund.expected(case, {"chat": {}}), [])
+            befund.diagnose(case, {"chat": {}})
+
+    def test_the_page_names_where_it_failed(self):
+        self.on()
+        with mock.patch.object(berater, "overview", side_effect=lambda **kw: {}["geheim"]), \
+                redirect_stdout(io.StringIO()) as out:
+            r = ADMIN.get("/api/admin/berater")
+        self.assertEqual(r.status_code, 500)
+        self.assertIn("berater: seite KeyError", out.getvalue())
+        self.assertNotIn("geheim", out.getvalue() + r.text)
+
     def test_same_finding_is_not_counted_again(self):
         """V01.0.492 wrote "faelle: melder | - | fehler | 9×" every 30 minutes for one unchanged finding."""
         self.on()

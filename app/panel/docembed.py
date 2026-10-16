@@ -27,6 +27,7 @@ WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.
 DIM = 384
 BATCH = 16
 MIN_FREE_GIB = 8.5
+MIN_FREE_PANEL_GIB = 1.5     # a panel computer (Spark teilen, Raspberry Pi with 8 GB): no models next to it (V01.0.660)
 IDLE_STOP = 600
 START_TIMEOUT = 300            # the first start downloads the model
 QUERY_TIMEOUT = 8
@@ -72,6 +73,13 @@ def memory_mib():
         return None
 
 
+def need_gib():
+    """Free memory the model needs to start: MIN_FREE_GIB next to the models, MIN_FREE_PANEL_GIB on a panel computer
+    (its 8 GB never had 8.5 GiB free, so the model never started and was tried again every 20 seconds)."""
+    from common import model_local
+    return MIN_FREE_GIB if model_local() else min(MIN_FREE_GIB, MIN_FREE_PANEL_GIB)
+
+
 def _free_gib():
     try:
         import psutil
@@ -99,7 +107,7 @@ async def _start(timeout):
     global _proc
     if _proc and _proc.returncode is None:
         return
-    if _free_gib() < MIN_FREE_GIB:
+    if _free_gib() < need_gib():
         _status.update(state="waiting", error="zu wenig freier Arbeitsspeicher")
         raise RuntimeError("not enough free memory for the embedding model")
     _status.update(state="starting", error="")

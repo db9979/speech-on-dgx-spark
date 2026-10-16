@@ -238,6 +238,7 @@
     "gehaeuse_anzeige": "immer",
     "gehaeuse_drehung": 0,
     "gehaeuse_seiten_aus": [],
+    "gehaeuse_reihenfolge": [],
     "gehaeuse_luefter_an": 55,
     "gehaeuse_luefter_aus": 48,
     "modelle_wechseln": false,
