@@ -9,6 +9,7 @@
 #   sudo ./install.sh --gehaeuse pironman5  # the panel computer's case: display, status LEDs, fans (then restart)
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
+#   sudo ./install.sh --musik 2b|2b-klein|xl|none   # Musik machen with ACE-Step 1.5 (optional, default none)
 #   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
 #   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
@@ -49,7 +50,7 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
 TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""
-MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
+MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
@@ -68,6 +69,7 @@ while [ $# -gt 0 ]; do
     --voicedesign) VD_PICK=yes ;;
     --no-voicedesign) VD_PICK=no ;;
     --bild) BILD_PICK="$2"; shift ;;
+    --musik) MUSIK_PICK="$2"; shift ;;
     --llm) LLM_PICK=1 ;;
     --gehaeuse) GEHAEUSE_PICK="${2:-}"; shift ;;
     --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
@@ -77,7 +79,7 @@ while [ $# -gt 0 ]; do
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -99,6 +101,7 @@ case "$GEHAEUSE_PICK" in ""|pironman5) ;; *) echo "--gehaeuse: pironman5" >&2; e
 case "$ASR_PICK" in ""|1.7b|0.6b|parakeet|none) ;; *) echo "--asr must be 1.7b, 0.6b, parakeet or none" >&2; exit 2 ;; esac
 case "$TTS_PICK" in ""|0.6b|1.7b|none) ;; *) echo "--tts must be 0.6b, 1.7b or none" >&2; exit 2 ;; esac
 case "$BILD_PICK" in ""|4b-q8|4b-q4|9b-q8|9b-q4|none) ;; *) echo "--bild must be 4b-q8, 4b-q4, 9b-q8, 9b-q4 or none" >&2; exit 2 ;; esac
+case "$MUSIK_PICK" in ""|2b|2b-klein|xl|none) ;; *) echo "--musik must be 2b, 2b-klein, xl or none" >&2; exit 2 ;; esac
 
 say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 # During an update the panel shows a progress bar; each step also goes into this file.
@@ -326,6 +329,13 @@ if [ "$ASK" = 1 ] && { { [ "$MODE" = full ] && [ -z "$MODELLE_PICK" ]; } || [ "$
   d=none; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.image.enabled // false')" = true ] && d=4b-q8
   pick_model bild "$d"; BILD_PICK=$PICKED
 fi
+# Musik machen (plan musik): like the pictures, only with the panel as its caller; off unless asked for
+if [ "$ASK" = 1 ] && { { [ "$MODE" = full ] && [ -z "$MODELLE_PICK" ]; } || [ "$TEILEN" = 1 ]; } && { [ "$FIRST" = 1 ] || [ "$CHOOSE_MODELS" = 1 ]; } && [ -z "$MUSIK_PICK" ]; then
+  echo
+  echo "Musik machen: the Spark makes songs itself with ACE-Step 1.5 (loaded only while making music)."
+  d=none; [ "$FIRST" = 0 ] && [ "$(cfgq -r '.music.enabled // false')" = true ] && d=$(cfgq -r '.music.variant // "2b"')
+  pick_model musik "$d"; MUSIK_PICK=$PICKED
+fi
 if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ] && [ "$TEILEN" = 0 ] && [ -z "$MODELLE_PICK" ]; then
   echo
   echo "Should other computers in the network reach the APIs? (An API key is required either way.)"
@@ -371,6 +381,10 @@ case "$VD_PICK" in yes) jqi '.tts.voicedesign_enabled=true' ;; no) jqi '.tts.voi
 case "$BILD_PICK" in
   none) jqi '.image.enabled=false' ;;
   ?*) jqi --arg v "$BILD_PICK" '.image.enabled=true | .image.variant=$v' ;;
+esac
+case "$MUSIK_PICK" in
+  none) jqi '.music.enabled=false' ;;
+  ?*) jqi --arg v "$MUSIK_PICK" '.music.enabled=true | .music.variant=$v' ;;
 esac
 case "$NET_PICK" in
   local) jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1"' ;;
@@ -477,6 +491,7 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
 WITH_BILD=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
+WITH_MUSIK=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg '.music.enabled // false')" = true ] && WITH_MUSIK=1
 # venv-llm / venv-kolibri: once installed, every update keeps them current; the services run only with llm.enabled
 WITH_LLM=$LLM_PICK; [ -x "$PREFIX/venv-llm/bin/vllm" ] && WITH_LLM=1
 WITH_KOLIBRI=$KOLIBRI_PICK; [ -x "$PREFIX/venv-kolibri/bin/vllm" ] && WITH_KOLIBRI=1
@@ -486,7 +501,7 @@ LLM_ON=0; [ "$WITH_LLM" = 1 ] && [ "$(cfg '.llm.enabled // false')" = true ] && 
 PANEL_ONLY=0
 if [ "$MODE" = full ] && { [ -n "$MODELLE_PICK" ] \
      || [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" != true ]; }; then
-  PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0; SMOKE=0
+  PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0; SMOKE=0
 fi
 
 # ---------------------------------------------------------------- ports
@@ -499,6 +514,7 @@ ports=""
 [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
 [ "$TEILEN" = 1 ] && ports="$ports 31007"   # the Wärter (common.WAERTER_PORT); the door shares the services' ports
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
+[ "$WITH_MUSIK" = 1 ] && ports="$ports $(cfg_int .music.port 31004) $(cfg_int .music.engine_port 31014)"
 [ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
@@ -704,6 +720,46 @@ if [ "$WITH_BILD" = 1 ]; then
   fi
 fi
 
+# ---------------------------------------------------------------- Musik machen (optional, plan musik)
+# The engine is acestep.cpp's ace-server, built here once per pinned commit (musikmodell.ACECPP_COMMIT) for the GB10
+# (CUDA, sm_121), no Docker, no torch; the model files are pinned by revision and SHA-256 (musikmodell.py). Without
+# the option nothing of this is fetched or built, and the service stays off.
+ACECPP_COMMIT=$(sed -n 's/^ACECPP_COMMIT = "\([0-9a-f]\{40\}\)"$/\1/p' "$INSTALL_FROM/app/musikmodell.py")
+if [ "$WITH_MUSIK" = 1 ]; then
+  [ -n "$ACECPP_COMMIT" ] || die "app/musikmodell.py names no acestep.cpp commit"
+  if [ -L "$PREFIX/acestep" ] || [ "$(cat "$PREFIX/acestep/.built" 2>/dev/null)" != "$ACECPP_COMMIT" ] || [ ! -x "$PREFIX/acestep/bin/ace-server" ]; then
+    say "Building the music engine (acestep.cpp ${ACECPP_COMMIT:0:12}, CUDA; takes a while once)"
+    command -v cmake >/dev/null || apt_wait install -y -q cmake || die "cmake could not be installed"
+    NVCC=$(command -v nvcc || echo /usr/local/cuda/bin/nvcc)
+    [ -x "$NVCC" ] || die "nvcc not found (CUDA toolkit); needed once to build the music engine"
+    rm -rf -- "$PREFIX/acestep.new"
+    git clone --quiet --no-checkout https://github.com/ServeurpersoCom/acestep.cpp "$PREFIX/acestep.new" \
+      || die "could not fetch acestep.cpp"
+    git -C "$PREFIX/acestep.new" checkout --quiet "$ACECPP_COMMIT" || die "acestep.cpp has no commit $ACECPP_COMMIT"
+    git -C "$PREFIX/acestep.new" submodule update --quiet --init ggml || die "could not fetch ggml for acestep.cpp"
+    nice -n 10 cmake -S "$PREFIX/acestep.new" -B "$PREFIX/acestep.new/build" -DCMAKE_BUILD_TYPE=Release \
+      -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=121 -DCMAKE_CUDA_COMPILER="$NVCC" >/dev/null \
+      || die "cmake for the music engine failed"
+    nice -n 10 cmake --build "$PREFIX/acestep.new/build" --target ace-server -j "$(nproc)" >/dev/null \
+      || die "building the music engine failed"
+    built=$(find "$PREFIX/acestep.new/build" -type f -name ace-server -perm -u+x | head -1)
+    [ -n "$built" ] || die "the build left no ace-server"
+    install -d -m 755 "$PREFIX/acestep.new/bin" && install -m 755 "$built" "$PREFIX/acestep.new/bin/ace-server"
+    printf '%s\n' "$ACECPP_COMMIT" >"$PREFIX/acestep.new/.built"
+    rm -rf -- "$PREFIX/acestep" && mv -- "$PREFIX/acestep.new" "$PREFIX/acestep"
+  fi
+  if [ "$DOWNLOAD" = 1 ]; then
+    say "Music model $(cfg .music.variant) (only what is missing; checked with SHA-256)"
+    as_svc mkdir -p -- "$VAR/models/musik"
+    # musikmodell.py takes its checks from bildmodell.py: both from the source, copied by root into a fresh folder
+    # the service user can read (the new app/ is not in place yet)
+    mtmp=$(mktemp -d) && chmod 755 "$mtmp" && install -m 644 "$INSTALL_FROM/app/bildmodell.py" "$INSTALL_FROM/app/musikmodell.py" "$mtmp/"
+    sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-panel/bin/python" "$mtmp/musikmodell.py" download "$(cfg .music.variant)" "$VAR/models/musik" \
+      || warn "music model incomplete; run the install again later (Musik testen says what is missing)"
+    rm -rf -- "$mtmp"
+  fi
+fi
+
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
 # An update downloads only when the chosen models changed since the last complete download
 # ($PREFIX/.models, root's file); the services fetch a model that went missing themselves.
@@ -860,7 +916,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild tts-design turn llm llmtor sehen; do
+  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -1178,6 +1234,35 @@ PrivateTmp=yes
 WantedBy=multi-user.target
 EOF
 
+# Musik machen (musik_server.py): like the picture service, only on 127.0.0.1 with the panel as its only caller; it
+# starts the music engine (ace-server) as its own child only while making music and stops it after music.idle_min
+# minutes. No MemoryMax= (unified memory); it checks the free memory before it loads and goes first when memory runs out.
+cat >/etc/systemd/system/speech-spark-musik.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Musik machen (ACE-Step 1.5)
+After=network-online.target $QWEN38_AFTER
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=SPEECH_SPARK_MUSIK_DIR=$VAR/models/musik
+Environment=SPEECH_SPARK_ACE_SERVER=$PREFIX/acestep/bin/ace-server
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/musik_server.py
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+KillMode=control-group
+OOMScoreAdjust=1000
+Nice=15
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Runs update.sh from the root-owned clone; started by the panel's update button.
 cat >/etc/systemd/system/speech-spark-update.service <<EOF
 [Unit]
@@ -1394,7 +1479,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr, tts, bild, llmtor, tlstor, waerter or notasr)
+restart_front() {  # $1 = service (asr, tts, bild, musik, llmtor, tlstor, waerter or notasr)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -1434,6 +1519,11 @@ if [ "$WITH_BILD" = 1 ]; then
   restart_front bild
 else
   systemctl disable --now speech-spark-bild.service 2>/dev/null || true
+fi
+if [ "$WITH_MUSIK" = 1 ]; then
+  restart_front musik
+else
+  systemctl disable --now speech-spark-musik.service 2>/dev/null || true
 fi
 
 # The own language model runs only once `speech-spark modelle llm uebernehmen` switched llm.enabled on; until then

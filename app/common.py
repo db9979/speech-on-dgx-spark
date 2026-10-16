@@ -698,12 +698,13 @@ def gpu_stats():
 MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
 # settings of the model side the panel sets and the model computer must know (Spark teilen, B4b): the sections and the
 # keys that stay as each computer's install made them (addresses, ports, backends)
-SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image")
+SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image", "music")
 SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend"}
 # which model runs (B4c): the model computer decides (install.sh, Zustand → Modelle, `speech-spark modelle`) and
 # reports it in its status; the panel takes it over, never the other way round
 MODEL_CHOICE = {"asr": ("model", "aligner_model", "recognizer"), "tts": ("model", "voicedesign_model"),
-                "image": ("enabled", "variant"), "llm": ("enabled", "modell", "sehen_modell")}
+                "image": ("enabled", "variant"), "music": ("enabled", "variant"),
+                "llm": ("enabled", "modell", "sehen_modell")}
 
 
 def _keep(sec):
@@ -787,9 +788,9 @@ def waerter_sign(key, body):
     return hmac.new(key, body, hashlib.sha256).hexdigest()
 
 
-# the model computer (plan Raspberry-Pi split, B1): speech recognition, speech output, pictures and the LLM-Tor live on
-# models.host, 127.0.0.1 when everything runs on one Spark. art -> its config section with the port
-MODEL_ARTS = {"asr": "asr", "tts": "tts", "bild": "image", "llm": "llm"}
+# the model computer (plan Raspberry-Pi split, B1): speech recognition, speech output, pictures, music and the LLM-Tor
+# live on models.host, 127.0.0.1 when everything runs on one Spark. art -> its config section with the port
+MODEL_ARTS = {"asr": "asr", "tts": "tts", "bild": "image", "musik": "music", "llm": "llm"}
 MODEL_HOST_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|[0-9A-Fa-f:]{2,39}")
 
 

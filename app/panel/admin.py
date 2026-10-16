@@ -684,6 +684,14 @@ def validate(new):
             raise HTTPException(400, f"image {k}: {lo} bis {hi}")
     if im["max_side"] % 64:
         raise HTTPException(400, "image max_side: a multiple of 64")
+    # Musik machen (musik_server.py), stage M0: everything comes from install.sh (sudo ./install.sh --musik ...);
+    # the panel changes nothing of it yet
+    mu, omu = new["music"], old.get("music", {})
+    for k in ("enabled", "variant", "port", "engine_port", "idle_min"):
+        if k in omu:
+            mu[k] = omu[k]
+        else:
+            mu.pop(k, None)
     w = new["watch"]
     if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
         raise HTTPException(400, "watch warn_gib must be 2..64")

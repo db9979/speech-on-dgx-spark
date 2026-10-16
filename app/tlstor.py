@@ -34,10 +34,10 @@ _open = set()
 
 
 def ports(cfg):
-    """The ports the door opens: speech recognition and output, the LLM-Tor and pictures when installed, and the
-    Wärter (tarswart.py)."""
+    """The ports the door opens: speech recognition and output, the LLM-Tor, pictures and music when installed, and
+    the Wärter (tarswart.py)."""
     out = []
-    for sec in ("asr", "tts", "llm", "image"):
+    for sec in ("asr", "tts", "llm", "image", "music"):
         c = cfg.get(sec) or {}
         if c.get("enabled", sec in ("asr", "tts")) and c.get("port"):
             out.append(int(c["port"]))

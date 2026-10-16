@@ -42,10 +42,11 @@ VORHER = os.path.join(STATE, "qwen38-vorher.json")    # stage E3: what `modelle 
 QWEN38_KEINE = ("qwen38-dashboard",)                     # qwen38 units that are no model; they keep running
 ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
          "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
-         "bild": ("Bilder malen", "Painting pictures"), "klein": ("Kleine Modelle (CPU)", "Small models (CPU)")}
+         "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
+         "klein": ("Kleine Modelle (CPU)", "Small models (CPU)")}
 # vllm: an engine this installation starts itself (the strict rules below); the others are run as before by their
-# own services and are listed for the budget: extern (qwen38), the speech models, sd.cpp, ONNX on the CPU
-ENGINES = ("vllm", "extern", "qwen-asr", "qwen-tts", "sdcpp", "onnx-cpu")
+# own services and are listed for the budget: extern (qwen38), the speech models, sd.cpp, acestep.cpp, ONNX on the CPU
+ENGINES = ("vllm", "extern", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
 BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
@@ -113,7 +114,7 @@ def pruefe_eintrag(m):
             raise Fehler(key)
     if not all(isinstance(m.get(x), bool) for x in ("gewerblich", "gemessen")):
         raise Fehler("schalter")
-    if m["engine"] == "sdcpp" and not isinstance(m.get("variante"), str):
+    if m["engine"] in ("sdcpp", "acestepcpp") and not isinstance(m.get("variante"), str):
         raise Fehler("variante")
     if "trust_remote_code" in json.dumps(m):
         raise Fehler("trust_remote_code")
@@ -155,8 +156,17 @@ def _pruefe_vllm(m):
 
 
 def _aus_bildmodell(m):
-    """A picture entry (engine sdcpp) takes name, licence, memory, repository and disk size from bildmodell.VARIANTS:
-    the files with their checksums live there, and install.sh hands that file alone to the service user."""
+    """A picture entry (engine sdcpp) or a music entry (acestepcpp) takes name, licence, memory, repository and disk
+    size from bildmodell.VARIANTS or musikmodell.VARIANTS: the files with their checksums live there, and install.sh
+    hands those files alone to the service user."""
+    if m.get("engine") == "acestepcpp":
+        import musikmodell
+        v = musikmodell.VARIANTS.get(m.get("variante"))
+        if v is None:
+            raise Fehler("variante")
+        return dict(m, name={"de": v["name"], "en": v["name"]}, lizenz=musikmodell.LICENSE, gewerblich=True,
+                    need_gib=v["need_gib"], repo=v["dit"].repo, revision=v["dit"].revision,
+                    platte_gb=musikmodell.disk_gb(m["variante"]))
     if m.get("engine") != "sdcpp":
         return m
     import bildmodell
@@ -266,6 +276,9 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
     if img.get("enabled"):
         add(zur_variante("bild", img.get("variant"), kat) or zur_variante("bild", "4b-q8", kat))
         add(kat.get("nsfw-pruefung"))
+    mus = cfg.get("music", {})
+    if mus.get("enabled"):
+        add(zur_variante("musik", mus.get("variant"), kat) or zur_variante("musik", "2b", kat))
     if chat.get("doc_semantic"):
         add(kat.get("e5-small"))
     if chat.get("rerank"):
@@ -299,7 +312,7 @@ def budget(cfg, total_gib, lanes=(), kat=None):
 
 def wahl(art, kat=None):
     """The entries install.sh offers for a kind, in catalog order (field "wahl" = the install's short key)."""
-    if art not in ("asr", "tts", "bild"):
+    if art not in ("asr", "tts", "bild", "musik"):
         raise Fehler("art")
     kat = katalog() if kat is None else kat
     return [m for m in kat.values() if m["art"] == art and m.get("wahl")]
@@ -310,7 +323,10 @@ def wahl_zeilen(art, kat=None):
     out = []
     for i, m in enumerate(wahl(art, kat), 1):
         text = (m.get("text") or {}).get("en", "")
-        if art == "bild":
+        if art == "musik":
+            out.append(f"  {i}) {m['name']['en']:<32} ~{m['platte_gb']:g} GB disk, ~{m['need_gib']:g} GiB while making "
+                       f"music, {m['lizenz']}{' (' + text + ')' if text else ''}")
+        elif art == "bild":
             extra = "" if m["gewerblich"] else " (private use only)"
             extra += f" ({text})" if text and text != "private use only" else ""
             out.append(f"  {i}) {m['name']['en']:<24} ~{m['platte_gb']:g} GB disk, ~{m['need_gib']:g} GiB while painting, "

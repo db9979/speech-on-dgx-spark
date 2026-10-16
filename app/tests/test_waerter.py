@@ -362,7 +362,7 @@ class Pause(Base):
         self.assertFalse(self.w.paused("llm"), "its time is over: no pause here")
         self.there({"on": True, "parts": ["llm"], "since": now, "until": now + 600}, age=steuer.PUSH + 5)
         self.assertFalse(self.w.paused("llm"), "an old status counts as none")
-        self.there({"on": True, "parts": ["musik"], "since": now, "until": now + 600})
+        self.there({"on": True, "parts": ["video"], "since": now, "until": now + 600})
         self.assertFalse(self.w.state()["on"], "a strange pause counts as none")
 
     def test_a_question_never_waits_for_the_model_computer(self):

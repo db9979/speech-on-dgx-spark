@@ -54,6 +54,13 @@
     "store_mb": 500,
     "max_side": 1024
   },
+  "music": {
+    "enabled": false,
+    "variant": "2b",
+    "port": 31004,
+    "engine_port": 31014,
+    "idle_min": 10
+  },
   "llm": {
     "enabled": false,
     "host": "0.0.0.0",

@@ -232,7 +232,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   await setReady();getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();musikTestLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -975,6 +975,20 @@ function bildTestShow(d){const m=$('bildtestmsg');if(!m)return;const r=d&&d.last
 async function bildTestLoad(){if(!$('bildtestgo'))return;try{bildTestShow(await (await api('/api/admin/bild-test')).json())}catch{}}
 if($('bildtestgo'))$('bildtestgo').onclick=async()=>{$('bildtestgo').disabled=true;$('bildtestmsg').textContent=t('malt ein Probebild …','painting a sample …');
   try{bildTestShow(await (await api('/api/admin/bild-test',{method:'POST'})).json())}catch(e){$('bildtestmsg').textContent=e.message}$('bildtestgo').disabled=false};
+// Musik machen, Stufe M0 (musik.py): two fixed sample songs, seconds and memory at the peak, both to listen to
+function musikTestShow(d){const m=$('musiktestmsg'),box=$('musiktestrows');if(!m||!box)return;const h=d&&d.health||{},r=d&&d.last;
+  const st={missing:t('Musikmodell nicht vollständig installiert (sudo ./install.sh --musik 2b)','music model not fully installed (sudo ./install.sh --musik 2b)'),off_install:t('Musikmodell nicht installiert (sudo ./install.sh --musik 2b)','music model not installed (sudo ./install.sh --musik 2b)'),
+    down:t('Musik-Dienst antwortet nicht','music service does not answer'),off:t('entladen','unloaded'),starting:t('lädt','loading'),ready:t('geladen','loaded'),busy:t('macht Musik','making music'),error:t('Fehler','error')}[h.status]||'';
+  const num=(v,u)=>v==null?'':String(v).replace('.',L==='en'?'.':',')+' '+u;
+  const why={missing:t('nicht installiert','not installed'),memory:t('zu wenig Speicher frei','too little memory free'),engine:t('Engine startet nicht','engine does not start'),zeit:t('Zeit abgelaufen','timed out'),dienst:t('Dienst antwortet nicht','service does not answer'),pause:t('Wartungspause','maintenance pause')};
+  m.textContent=[h.name,st,d&&d.run?t('misst … ','measuring … ')+(d.done||0)+'/'+(d.total||2):''].filter(Boolean).join(' · ');
+  const names={};(d&&d.tests||[]).forEach(x=>names[x.n]=L==='en'?x.name.en:x.name.de);
+  box.innerHTML=(r&&r.tests||[]).map(x=>`<div class="fh">${x.ok?'✓':'✗'} ${esc(names[x.n]||String(x.n))}: `+(x.ok?esc([t('fertig in ','done in ')+num(x.seconds,'s'),t('Planen ','planning ')+num(x.lm_s,'s'),t('Klang ','sound ')+num(x.synth_s,'s'),t('Speicher ','memory ')+num(x.peak_gib,'GB')].join(' · '))+`<br><audio controls preload="none" src="/api/admin/musik-test/${x.n}.mp3?t=${r.t}"></audio>`:esc(why[x.why]||x.why))+'</div>').join('')}
+let musikTimer=null;
+async function musikTestLoad(){clearTimeout(musikTimer);if(!$('musiktestgo'))return;try{const d=await (await api('/api/admin/musik-test')).json();musikTestShow(d);
+  $('musiktestgo').disabled=!!d.run;if(d.run)musikTimer=setTimeout(musikTestLoad,3000)}catch{}}
+if($('musiktestgo'))$('musiktestgo').onclick=async()=>{$('musiktestgo').disabled=true;
+  try{musikTestShow(await (await api('/api/admin/musik-test',{method:'POST'})).json());musikTimer=setTimeout(musikTestLoad,3000)}catch(e){$('musiktestmsg').textContent=e.message;$('musiktestgo').disabled=false}};
 if($('visiongo'))$('visiongo').onclick=async()=>{$('visiongo').disabled=true;$('visionmsg').textContent=t('prüft …','checking …');
   try{visionShow((await (await api('/api/admin/vision-test',{method:'POST'})).json()).last)}catch(e){$('visionmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('visiongo').disabled=false};
 

@@ -406,7 +406,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "de29a2ba56",
+        "stand": "e3271f6fee",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -1923,7 +1923,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "820bea825e",
+        "stand": "b841f69fe4",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -2131,7 +2131,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ Dienste draußen
     "aussen": {
-        "stand": "eaaab5858a",
+        "stand": "b49cd16a42",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -2305,7 +2305,7 @@ SEITEN_DATEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "cd77dffc94",
+        "stand": "6648e57b18",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -2521,7 +2521,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Browser und Handy
     "geraet": {
-        "stand": "363c11e093",
+        "stand": "04a61acd5e",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -3396,7 +3396,7 @@ SEITEN_DATEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "185bcf710e",
+        "stand": "da438a7955",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -3584,7 +3584,7 @@ SEITEN_DATEN = {
     },
     # ------------------------------------------------------------------ Spracherkennung
     "asr": {
-        "stand": "8fa0e786cf",
+        "stand": "c977888c23",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -3924,19 +3924,29 @@ SEITEN_DATEN = {
         "heute": [("vb_tts_calls", ("Ausgaben", "outputs")), ("vb_tts_amount", ("Sekunden gesprochen", "seconds spoken"))],
     },
 
-    # ------------------------------------------------------------------ Bilder malen
+    # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "f7499f555b",
+        "stand": "2becfaa2b2",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
+            "bedarf.OnDemand": ["s6"], "musik_server.Engine.make": ["s7"], "musik_server.finish": ["s9"],
+            "musik._measure": ["s5"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
-                 "klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.",
+                 "klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.\n\n"
+                 "Musik läuft daneben genauso (Stufe M0, bisher nur zum Messen): der Musik-Dienst auf :31004 lädt "
+                 "ACE-Step 1.5 nur für ein Lied und gibt den Speicher nach einer Ruhezeit frei; der Admin misst ihn mit "
+                 "„Musik testen“ (zwei feste Probestücke, Sekunden und Speicher an der Spitze). Beide Dienste teilen die "
+                 "Engine bei Bedarf aus bedarf.py.",
                  "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with "
                  "fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 "
-                 "klein only at the first picture, checks the finished picture and frees the memory after a quiet time."),
+                 "klein only at the first picture, checks the finished picture and frees the memory after a quiet time.\n\n"
+                 "Music works the same way next to it (stage M0, only measuring so far): the music service on :31004 "
+                 "loads ACE-Step 1.5 only for a song and frees the memory after a quiet time; the admin measures it with "
+                 "\"Musik testen\" (two fixed songs, seconds and memory at the peak). Both services share the on-demand "
+                 "engine of bedarf.py."),
         "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
                   "Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen "
                   "Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.",
@@ -4042,10 +4052,14 @@ SEITEN_DATEN = {
              "„Bild testen“.",
              "Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "
              "\"Bild testen\"."),
+            ("Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Funktionen → Musik machen → „Musik testen“.",
+             "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none); Features → Making music → \"Musik testen\"."),
         ],
         "sehen": [
             ("Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.",
              "State → Live: target \"Painting pictures\" with numbers only; Logs → Diagnosis, area \"Bild\"."),
+            ("Zustand → Live: Ziel „Musik machen“ mit der letzten Messung; Logs → Diagnose, Bereich „Musik“.",
+             "State → Live: target \"Making music\" with the last measurement; Logs → Diagnosis, area \"Musik\"."),
         ],
         "code": [
             ("bilder.start", ("Wunsch annehmen", "accept a wish")),
@@ -4057,8 +4071,12 @@ SEITEN_DATEN = {
             ("bild_server.Engine.paint", ("Malen", "paint")),
             ("bild_server.nsfw_share", ("Bildprüfung", "image check")),
             ("bild_server.finish", ("Kennzeichnen und neu kodieren", "mark and re-encode")),
+            ("bedarf.OnDemand", ("Engine bei Bedarf, für Bild und Musik", "engine on demand, for pictures and music")),
+            ("musik_server.Engine.make", ("Ein Lied in zwei Schritten", "one song in two steps")),
+            ("musik_server.finish", ("MP3 prüfen und als KI-erzeugt kennzeichnen", "check the MP3 and mark it AI-made")),
+            ("musik._measure", ("Musik testen", "test music")),
         ],
-        "tests": ["test_bilder"],
+        "tests": ["test_bilder", "test_musik"],
         "heute": [],
     },
 

@@ -2,10 +2,11 @@
 # one of these files, its systemd unit, the settings or its Python packages changed; a service that is
 # not listed here always restarts (the panel, the watchdog and the engines have their own rules).
 # tests/test_rauchtest.py checks this list against the imports, so a new module cannot be forgotten.
-asr: asr_proxy.py asr_server.py common.py parakeet.py modelle.py modelle.json bildmodell.py config.default.json
-tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py modelle.py modelle.json bildmodell.py config.default.json
-bild: bild_server.py bildmodell.py common.py modelle.py modelle.json config.default.json
-llmtor: llm_tor.py einordnung.py modelle.py modelle.json bildmodell.py common.py config.default.json
-tlstor: tlstor.py common.py modelle.py modelle.json bildmodell.py config.default.json
-waerter: tarswart.py common.py modelle.py modelle.json bildmodell.py config.default.json
-notasr: asr_proxy.py common.py parakeet.py modelle.py modelle.json bildmodell.py config.default.json
+asr: asr_proxy.py asr_server.py common.py parakeet.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+bild: bild_server.py bedarf.py bildmodell.py musikmodell.py common.py modelle.py modelle.json config.default.json
+musik: musik_server.py musikmodell.py bedarf.py bildmodell.py common.py modelle.py modelle.json config.default.json
+llmtor: llm_tor.py einordnung.py modelle.py modelle.json bildmodell.py musikmodell.py common.py config.default.json
+tlstor: tlstor.py common.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+waerter: tarswart.py common.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+notasr: asr_proxy.py common.py parakeet.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json

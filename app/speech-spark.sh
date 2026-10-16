@@ -8,12 +8,12 @@
 #   speech-spark key [new]         show the API key, or make a new one (the old one stops working)
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
-#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, llm,
-#                                  llmtor, sehen, tlstor, waerter, notasr, panel, watch, update, messen, umzug or all (default)
+#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, musik,
+#                                  llm, llmtor, sehen, tlstor, waerter, notasr, panel, watch, update, messen, umzug or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
-#   speech-spark pause [llm|asr|tts|bild|alles][,…] [min]  Wartungspause while a model is updated (default llm 30)
+#   speech-spark pause [llm|asr|tts|bild|musik|alles][,…] [min]  Wartungspause while a model is updated (default llm 30)
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
@@ -138,7 +138,7 @@ cmd_status() {
   free=$(awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo)
   echo "Free memory: $free GiB (DGX OS starts killing processes at about 8 GiB)"
   echo
-  for u in asr asr-engine tts tts-engine tts-design bild panel watch; do
+  for u in asr asr-engine tts tts-engine tts-design bild musik panel watch; do
     st=$(systemctl is-active "speech-spark-$u.service" 2>/dev/null || true)
     [ "$(systemctl is-enabled "speech-spark-$u.service" 2>/dev/null || true)" = enabled ] || [ "$st" = active ] || continue
     printf '  %-26s %s\n' "speech-spark-$u" "$st"
@@ -154,6 +154,10 @@ cmd_status() {
   if [ "$(cfg '.image.enabled // false')" = true ]; then
     h=$(health "$(cfg .image.port)")
     printf '  %-4s port %s: %s\n' "BILD" "$(cfg .image.port)" "$( [ -n "$h" ] && jq -r '.status' <<<"$h" 2>/dev/null || echo "no answer")"
+  fi
+  if [ "$(cfg '.music.enabled // false')" = true ]; then
+    h=$(health "$(cfg .music.port)")
+    printf '  %-4s port %s: %s\n' "MUSIK" "$(cfg .music.port)" "$( [ -n "$h" ] && jq -r '.status' <<<"$h" 2>/dev/null || echo "no answer")"
   fi
   prog="$VAR/state/update-progress.json"
   if [ -s "$prog" ]; then
@@ -187,11 +191,11 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|bild|llm|llmtor|sehen|panel|watch|update|tlstor|waerter|notasr) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|panel|watch|update|tlstor|waerter|notasr) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, llm, llmtor, sehen, tlstor, waerter, notasr, panel, watch, update, messen, umzug, wechsel or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, tlstor, waerter, notasr, panel, watch, update, messen, umzug, wechsel or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }

@@ -364,7 +364,7 @@ class Installation(unittest.TestCase):
 
     def test_panel_computer(self):
         sh = repo_file("install.sh")
-        self.assertIn("PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0", sh)
+        self.assertIn("PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0", sh)
         self.assertIn("sys.version_info < (3, 11)", sh)
         self.assertIn("aarch64|x86_64", sh)
         # paired before any unit is written or started: the panel never talks to the models without the pin

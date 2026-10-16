@@ -29,6 +29,11 @@ class File:
     def name(self):
         return os.path.basename(self.path)
 
+    @property
+    def stem(self):
+        """The name without .gguf (acestep.cpp knows its models by it, musikmodell.py)."""
+        return self.name[:-5] if self.name.endswith(".gguf") else self.name
+
 
 _K4 = "leejet/FLUX.2-klein-4B-GGUF", "3b1f5a9dc3abb32238b053aeb3d823c30afdacbd"
 _K9 = "leejet/FLUX.2-klein-9B-GGUF", "cc588497a95ffc2937ebbd6b9b3916a11ada6e5b"
@@ -90,18 +95,19 @@ def disk_gb(v):
 
 def installed(v, folder=None):
     """All files there with their size (the hash is checked once when they are fetched) and the engine built."""
-    return all(_size(path(f, folder)) == f.size for f in files(v)) and os.access(ENGINE, os.X_OK)
+    return all(file_size(path(f, folder)) == f.size for f in files(v)) and os.access(ENGINE, os.X_OK)
 
 
 def missing(v, folder=None):
     """What is not there yet: names of files, and "engine" when sd-server is not built."""
-    out = [f.name for f in files(v) if _size(path(f, folder)) != f.size]
+    out = [f.name for f in files(v) if file_size(path(f, folder)) != f.size]
     if not os.access(ENGINE, os.X_OK):
         out.append("engine")
     return out
 
 
-def _size(p):
+def file_size(p):
+    """The size of a plain file (a link counts as missing: -1), -1 when it is not there."""
     try:
         return os.stat(p).st_size if not os.path.islink(p) else -1
     except OSError:
@@ -117,14 +123,19 @@ def sha256(p):
 
 
 def download(v, folder):
-    """Fetches what is missing into folder (as the service user, called by install.sh) and checks each file's
-    size and SHA-256; a file that does not match is deleted. Returns True when everything is there."""
+    """Fetches what the variant is missing into folder (as the service user, called by install.sh)."""
+    return fetch(files(v), folder)
+
+
+def fetch(wanted, folder):
+    """Fetches the files that are missing into folder and checks each file's size and SHA-256; a file that does not
+    match is deleted. Returns True when everything is there. musikmodell.py fetches its files with it too."""
     from huggingface_hub import hf_hub_download
     os.makedirs(folder, exist_ok=True)
     ok = True
-    for f in files(v):
+    for f in wanted:
         dest = path(f, folder)
-        if _size(dest) == f.size:
+        if file_size(dest) == f.size:
             continue
         print(f"   {f.name} ({f.size / 1e9:.1f} GB) from {f.repo}", flush=True)
         try:
@@ -133,14 +144,13 @@ def download(v, folder):
             print(f"   {f.name}: download failed ({type(e).__name__})", flush=True)
             ok = False
             continue
-        if os.path.islink(got) or _size(got) != f.size or sha256(got) != f.sha256:
+        if os.path.islink(got) or file_size(got) != f.size or sha256(got) != f.sha256:
             print(f"   {f.name}: size or SHA-256 does not match, deleted", flush=True)
             os.unlink(got)
             ok = False
             continue
         os.replace(got, dest)
     return ok
-
 
 if __name__ == "__main__":
     if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in VARIANTS:

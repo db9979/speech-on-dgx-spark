@@ -99,6 +99,19 @@ sudo ./install.sh --bild none    # off again (the files stay in /var/lib/speech-
 
 It builds stable-diffusion.cpp once (`sd-server`, pinned commit, CUDA for the GB10, needs `nvcc` and `cmake`) into `/opt/speech-spark/sdcpp`, downloads the model files with a SHA-256 check into `/var/lib/speech-spark/models/bild` and sets up the service `speech-spark-bild` (only `127.0.0.1`, ports `image.port` 31005 and `image.engine_port` 31015). The model takes memory only while painting. Then switch on Features → Painting pictures in the panel and press "Bild testen". Details: [Assistant](assistant.md).
 
+## Making music (optional, stage M0: measuring)
+
+With `--musik` the installation also installs the music model ACE-Step 1.5 (MIT licence; on the model computer, with a split install together with `--teilen`; the first install asks, the default is none, `sudo speech-spark models` asks again):
+
+```bash
+sudo ./install.sh --musik 2b         # 2B turbo + 1.7B planner: ~5.6 GB disk, ~10 GiB while making music (recommended)
+sudo ./install.sh --musik 2b-klein   # 2B turbo + 0.6B planner: less memory
+sudo ./install.sh --musik xl         # XL turbo (4B) + 1.7B: sounds better, ~16 GiB, measure first
+sudo ./install.sh --musik none       # off again (the files stay in /var/lib/speech-spark/models/musik)
+```
+
+It builds acestep.cpp once (`ace-server`, pinned commit, CUDA for the GB10, no torch and no Docker, needs `nvcc` and `cmake`) into `/opt/speech-spark/acestep`, downloads the GGUF files with a SHA-256 check into `/var/lib/speech-spark/models/musik` and sets up the service `speech-spark-musik` (only `127.0.0.1`, with a split install through the TLS-Tor; ports `music.port` 31004 and `music.engine_port` 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. In this stage only the admin measures: Features → Making music → "Musik testen" makes two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and both samples to listen to. Profiles cannot order anything yet. Logs: `sudo speech-spark logs musik`, maintenance pause: `sudo speech-spark pause musik 30`.
+
 ## Uninstalling
 
 ```bash

@@ -174,6 +174,10 @@ OHNE = {
     "image": (
         "day_limit", "enabled", "engine_port", "idle_min", "max_side", "port", "store_mb", "variant",
     ),
+    # Musik machen (musik_server.py, musikmodell.py): installed by install.sh, only the service's own numbers
+    "music": (
+        "enabled", "engine_port", "idle_min", "port", "variant",
+    ),
     # Eigene Modelle (llm_tor.py, modelle.py): ports, model and the switch come from install and the model commands
     "llm": (
         "enabled", "engine_port", "host", "max_body_mb", "modell", "port", "sehen_leerlauf_min", "sehen_modell",

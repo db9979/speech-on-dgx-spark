@@ -38,7 +38,7 @@ flowchart TB
       llm["Sprachmodell<br/>:31006 → :31016"]
       asr["Spracherkennung<br/>:31001 → :31011"]
       tts["Sprachausgabe<br/>:31002 → :31012"]
-      bild["Bilder malen<br/>:31005 → :31015"]
+      bild["Bilder und Musik<br/>:31005→:31015 · :31004→:31014"]
       teilen["Spark teilen<br/>TLS-Tor · :31007"]
     end
     subgraph z_speicher["Speicher"]
@@ -95,6 +95,7 @@ flowchart TB
 | `speech-spark-turn` | 3478, Relais 49160–49200 | Vermittler für Anrufe von unterwegs (coturn), nur mit dem Schalter an |
 | `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (nur lokal) | Eigenes Sprachmodell (vLLM) hinter dem LLM-Tor; Bildverständnis `speech-spark-sehen` auf 31017 bei Bedarf |
 | `speech-spark-bild` | 31005 → 31015 (nur lokal) | Bilder malen und ändern (FLUX.2 klein) |
+| `speech-spark-musik` | 31004 → 31014 (nur lokal) | Musik machen (ACE-Step 1.5), die Engine nur während eines Lieds |
 | `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: feste Befehle vom Panel-Rechner (nur bei Spark teilen, hinter dem TLS-Tor) |
 | `speech-spark-tlstor` | dieselben Ports mit TLS | TLS-Tor des Modell-Rechners (nur bei Spark teilen), dazu `speech-spark-teilen-fw` |
 | `speech-spark-notasr` | 127.0.0.1:31009 | Notbetrieb mit Parakeet auf dem Panel-Rechner, wenn der Modell-Rechner weg ist |
@@ -327,6 +328,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
 | `app/panel/modellseite.py` | Zustand → Modelle: Katalog, Speicher-Budget, Messung, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
+| `app/panel/musik.py` | Musik machen, Stufe M0: Musik testen für den Admin (zwei feste Probestücke, Zeit und Speicher) |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
 | `app/panel/nasablage.py` | Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten |
 | `app/panel/nashilfe.py` | NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto |
@@ -355,6 +357,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/api_watchdog.py` | Wächter ohne Panel (Installationsart „api“) |
 | `app/asr_proxy.py` | Spracherkennung: nimmt an und reicht an die Engine durch |
 | `app/asr_server.py` | Spracherkennung als eigener kleiner Dienst |
+| `app/bedarf.py` | Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden (Bild- und Musik-Dienst) |
 | `app/bench.py` | Leistung messen |
 | `app/bild_server.py` | Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild |
 | `app/bildmodell.py` | Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation |
@@ -362,6 +365,8 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/einordnung.py` | Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor |
 | `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle |
+| `app/musik_server.py` | Musik-Dienst: startet ACE-Step 1.5 bei Bedarf, prüft und kennzeichnet jedes Lied |
+| `app/musikmodell.py` | Musikmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation |
 | `app/parakeet.py` | Zweite Spracherkennung (Parakeet) auf der CPU |
 | `app/tempo.py` | Sprechtempo für gestreamte Sprache |
 | `app/textnorm.py` | Text aufräumen vor der Sprachausgabe |
@@ -531,6 +536,9 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/modelle-messung.json` | Messung der Modelle (nur Zahlen) | – | nein |
 | `state/modelle-wechsel.json` | Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar) | – | nein |
 | `state/modelle-wunsch.json` | Wunsch des Panels für den nächsten Modellwechsel, Sekunden | – | nein |
+| `state/musik-test-1.mp3` | Probestück 1 (Musik testen) | – | nein |
+| `state/musik-test-2.mp3` | Probestück 2 (Musik testen) | – | nein |
+| `state/musik-test.json` | Letzte Messung (Musik testen) | – | nein |
 | `state/nas-admin.json` | NAS-Verbindung des Spark | Passwort versiegelt | ja |
 | `state/nasquelle-tmp` | Zwischendateien der Wissensordner, Sekunden | – | nein |
 | `state/naszustand.json` | Zustand der NAS: Adresse, SNMP-Benutzer, letzte Werte | Passwörter versiegelt | ja |
@@ -2149,7 +2157,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (31 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -2536,9 +2544,11 @@ flowchart TD
 
 Selbsttests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
 
-### Bilder malen
+### Bilder und Musik
 
 Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.
+
+Musik läuft daneben genauso (Stufe M0, bisher nur zum Messen): der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied und gibt den Speicher nach einer Ruhezeit frei; der Admin misst ihn mit „Musik testen“ (zwei feste Probestücke, Sekunden und Speicher an der Spitze). Beide Dienste teilen die Engine bei Bedarf aus bedarf.py.
 
 **Warum:** Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.
 
@@ -2602,10 +2612,12 @@ flowchart TD
 
 - Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none).
 - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“.
+- Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none); Funktionen → Musik machen → „Musik testen“.
 
 #### Was du siehst
 
 - Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.
+- Zustand → Live: Ziel „Musik machen“ mit der letzten Messung; Logs → Diagnose, Bereich „Musik“.
 
 #### Im Code
 
@@ -2618,8 +2630,12 @@ flowchart TD
 - `app/bild_server.py` `Engine.paint`: Malen ([Schritt 7](#kn-bild-s7))
 - `app/bild_server.py` `nsfw_share`: Bildprüfung ([Schritt 8](#kn-bild-s8))
 - `app/bild_server.py` `finish`: Kennzeichnen und neu kodieren ([Schritt 9](#kn-bild-s9))
+- `app/bedarf.py` `OnDemand`: Engine bei Bedarf, für Bild und Musik ([Schritt 6](#kn-bild-s6))
+- `app/musik_server.py` `Engine.make`: Ein Lied in zwei Schritten ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `finish`: MP3 prüfen und als KI-erzeugt kennzeichnen ([Schritt 9](#kn-bild-s9))
+- `app/panel/musik.py` `_measure`: Musik testen ([Schritt 5](#kn-bild-s5))
 
-Selbsttests: `test_bilder`
+Selbsttests: `test_bilder`, `test_musik`
 
 ### Dienste im Heimnetz
 
@@ -2930,7 +2946,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 61). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 30), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 64). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -2941,7 +2957,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **30** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **61** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **64** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3216,7 +3232,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (30 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (31 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -3232,7 +3248,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **30** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **31** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

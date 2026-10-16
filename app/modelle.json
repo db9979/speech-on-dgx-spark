@@ -416,6 +416,45 @@
       }
     },
     {
+      "gemessen": false,
+      "id": "ace-step-15-2b",
+      "art": "musik",
+      "variante": "2b",
+      "engine": "acestepcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "2b",
+      "text": {
+        "de": "Empfehlung",
+        "en": "recommended"
+      }
+    },
+    {
+      "gemessen": false,
+      "id": "ace-step-15-2b-klein",
+      "art": "musik",
+      "variante": "2b-klein",
+      "engine": "acestepcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "2b-klein",
+      "text": {
+        "de": "kleiner",
+        "en": "smaller"
+      }
+    },
+    {
+      "gemessen": false,
+      "id": "ace-step-15-xl",
+      "art": "musik",
+      "variante": "xl",
+      "engine": "acestepcpp",
+      "betrieb": "bei_bedarf",
+      "wahl": "xl",
+      "text": {
+        "de": "beste Qualität, erst messen",
+        "en": "best quality, measure first"
+      }
+    },
+    {
       "revision": "",
       "gewerblich": true,
       "gemessen": false,

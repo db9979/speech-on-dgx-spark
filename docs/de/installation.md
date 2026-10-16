@@ -99,6 +99,19 @@ sudo ./install.sh --bild none    # wieder aus (die Dateien bleiben in /var/lib/s
 
 Sie baut einmal stable-diffusion.cpp (`sd-server`, fester Commit, CUDA für den GB10, braucht `nvcc` und `cmake`) nach `/opt/speech-spark/sdcpp`, lädt die Modelldateien mit SHA-256-Prüfung nach `/var/lib/speech-spark/models/bild` und richtet den Dienst `speech-spark-bild` ein (nur `127.0.0.1`, Ports `image.port` 31005 und `image.engine_port` 31015). Das Modell belegt nur beim Malen Speicher. Danach im Portal Funktionen → Bilder malen einschalten und „Bild testen“ drücken. Einzelheiten: [Assistent](assistent.md).
 
+## Musik machen (optional, Stufe M0: messen)
+
+Mit `--musik` installiert die Installation zusätzlich das Musikmodell ACE-Step 1.5 (MIT-Lizenz; auf dem Modell-Rechner, beim Teilen mit `--teilen`; die erste Installation fragt danach, Standard ist keins, `sudo speech-spark models` fragt erneut):
+
+```bash
+sudo ./install.sh --musik 2b         # 2B turbo + 1,7B-Planer: ~5,6 GB Platte, ~10 GiB beim Musikmachen (empfohlen)
+sudo ./install.sh --musik 2b-klein   # 2B turbo + 0,6B-Planer: weniger Speicher
+sudo ./install.sh --musik xl         # XL turbo (4B) + 1,7B: klingt besser, ~16 GiB, erst messen
+sudo ./install.sh --musik none       # wieder aus (die Dateien bleiben in /var/lib/speech-spark/models/musik)
+```
+
+Sie baut einmal acestep.cpp (`ace-server`, fester Commit, CUDA für den GB10, ohne torch und ohne Docker, braucht `nvcc` und `cmake`) nach `/opt/speech-spark/acestep`, lädt die GGUF-Dateien mit SHA-256-Prüfung nach `/var/lib/speech-spark/models/musik` und richtet den Dienst `speech-spark-musik` ein (nur `127.0.0.1`, beim Teilen über das TLS-Tor; Ports `music.port` 31004 und `music.engine_port` 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. In dieser Stufe misst nur der Admin: Funktionen → Musik machen → „Musik testen“ macht zwei feste Probestücke (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und beide Stücke zum Anhören. Profile können noch nichts bestellen. Logs: `sudo speech-spark logs musik`, Wartungspause: `sudo speech-spark pause musik 30`.
+
 ## Deinstallieren
 
 ```bash

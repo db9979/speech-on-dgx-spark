@@ -44,7 +44,8 @@ from common import WARTUNG_FILE, load_config, model_side, write_json  # noqa: E4
 FILE = WARTUNG_FILE
 # the parts that can pause: id -> (Dienst-Wächter id, name de, name en)
 PARTS = {"llm": ("qwen", "Sprachmodell", "Language model"), "asr": ("asr", "Spracherkennung", "Speech recognition"),
-         "tts": ("tts", "Sprachausgabe", "Speech output"), "bild": ("bild", "Bilder malen", "Painting pictures")}
+         "tts": ("tts", "Sprachausgabe", "Speech output"), "bild": ("bild", "Bilder malen", "Painting pictures"),
+         "musik": ("musik", "Musik machen", "Making music")}
 MINUTES = (15, 30, 60, 120)    # the choices on Zustand; the shell command takes any whole number in MIN_MIN..MAX_MIN
 MIN_MIN, MAX_MIN = 5, 240
 MORE = 15                      # "+15 min"

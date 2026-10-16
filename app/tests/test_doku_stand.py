@@ -52,7 +52,7 @@ def config():
 
 def public_ports(c):
     """The ports apps and devices reach (the engines behind them listen on 127.0.0.1 only)."""
-    return {"asr": c["asr"]["port"], "tts": c["tts"]["port"], "image": c["image"]["port"], "llm": c["llm"]["port"],
+    return {"asr": c["asr"]["port"], "tts": c["tts"]["port"], "image": c["image"]["port"], "music": c["music"]["port"], "llm": c["llm"]["port"],
             "https": c["panel"]["https_port"], "wyoming": c["chat"]["wyoming_port"]}
 
 
@@ -97,7 +97,7 @@ class Stale(unittest.TestCase):
 class Technik(unittest.TestCase):
     def test_model_boxes_show_the_configured_ports(self):
         c = config()
-        for box, part in (("asr", "asr"), ("tts", "tts"), ("bild", "image"), ("llm", "llm")):
+        for box, part in (("asr", "asr"), ("tts", "tts"), ("bild", "image"), ("bild", "music"), ("llm", "llm")):
             small = technik.KNOTEN[box][4]
             for key in ("port", "engine_port"):
                 self.assertIn(f":{c[part][key]}", small, f"Technik box {box}: {part}.{key}")

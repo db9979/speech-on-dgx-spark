@@ -145,6 +145,8 @@ TARGETS = {
     "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
     # Bilder malen (bilder.py, bild_server.py): the line shows pictures in numbers, never a wish or a prompt
     "bild": ("Bilder malen", "FLUX.2 klein · auf dem Spark", "spark", False),
+    # Musik machen (musik.py, musik_server.py): stage M0, shown while it is installed; the measurement in numbers
+    "musik": ("Musik machen", "ACE-Step 1.5 · auf dem Spark", "spark", False),
     # Einstellungs-Assistent (berater.py): shown while it is on, the line with 👍/👎, cases and proposals in numbers
     "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
     # Gedächtnis prüfen (gedaechtnis.py): shown while it is on, the facts of all profiles by mark, numbers only
@@ -169,6 +171,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
+           "musik": "Lied (Länge und Sekunden)",
            "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
@@ -1126,6 +1129,13 @@ def snapshot(view="admin", now=None):
     if bild.get("on"):
         used.add("bild")
     try:
+        import musik
+        mus = musik.for_live()
+    except Exception:
+        mus = {"on": False}
+    if mus.get("on"):
+        used.add("musik")
+    try:
         import berater
         verb = berater.for_live(now)
     except Exception:
@@ -1346,6 +1356,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {bild['quick']} schnell bearbeitet" if bild.get("quick") else "")
                         + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
                         + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
+        if x["id"] == "musik":   # Musik machen (M0): the measurement in numbers (no caption, no lyrics)
+            x["sub"] = ("misst gerade" if mus.get("run") else
+                        f"letzte Messung {mus['ok']} von {mus['total']} gut" if mus.get("total") else "noch nicht gemessen")
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
     try:   # Wartungspause (wartung.py): the paused parts in blue, "Pause" (never who or why)
         import wartung
@@ -1364,6 +1377,7 @@ def snapshot(view="admin", now=None):
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
+            "musik": {k: mus.get(k) for k in ("on", "run", "ok", "total")},
             "stats": node_stats(now)}
 
 

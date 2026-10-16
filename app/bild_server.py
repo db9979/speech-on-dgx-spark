@@ -21,7 +21,6 @@ import asyncio
 import base64
 import io
 import os
-import subprocess
 import time
 
 import httpx
@@ -29,6 +28,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 
 import bildmodell
+from bedarf import OnDemand, idle_loop
 from common import BodyLimit, api_key_dependency, api_key_ok, check_memory, load_config, mem_available_gib, quiet_access_log
 
 MAX_BODY = 16 * 1024**2
@@ -60,23 +60,15 @@ def cfg():
     return load_config("image")
 
 
-class Engine:
+class Engine(OnDemand):
     """sd-server as a child process: started on demand, ended after image.idle_min minutes without a picture."""
 
     def __init__(self):
-        self.proc = None
-        self.state = "off"         # off | starting | ready | error
-        self.used = 0.0
-        self.busy = False
-        self.lock = asyncio.Lock()
-        self.client = httpx.AsyncClient(timeout=httpx.Timeout(30, connect=3))
+        super().__init__("bild")
 
     @property
     def base(self):
         return f"http://127.0.0.1:{int(cfg()['engine_port'])}"
-
-    def alive(self):
-        return self.proc is not None and self.proc.poll() is None
 
     def command(self):
         c = cfg()
@@ -103,9 +95,7 @@ class Engine:
         t0 = time.time()
         self.state = "starting"
         stats["starts"] += 1
-        # list arguments, no shell; its own output stays out of the journal (it would name prompts)
-        self.proc = subprocess.Popen(self.command(), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL, cwd=bildmodell.FOLDER, start_new_session=True)
+        self.spawn(self.command(), bildmodell.FOLDER)
         while time.time() - t0 < START_S:
             if not self.alive():
                 self.state = "error"
@@ -126,19 +116,6 @@ class Engine:
         self.stop("zeitlimit")
         self.state = "error"
         raise HTTPException(503, "engine")
-
-    def stop(self, why):
-        if self.proc is not None and self.proc.poll() is None:
-            self.proc.terminate()
-            try:
-                self.proc.wait(20)
-            except subprocess.TimeoutExpired:
-                self.proc.kill()
-                self.proc.wait(5)
-            print(f"bild: engine beendet {why}", flush=True)
-        self.proc = None
-        if self.state != "error" or why != "fehler":
-            self.state = "off"
 
     async def paint(self, body):
         """One picture: (PNG bytes from the engine, seconds, GiB the picture took on top of the loaded engine)."""
@@ -328,16 +305,7 @@ async def health(request: Request):
 
 @app.on_event("startup")
 async def idle_stop():
-    async def loop():
-        while True:
-            await asyncio.sleep(30)
-            idle = max(1, int(cfg()["idle_min"])) * 60
-            if engine.state == "ready" and not engine.busy and not engine.lock.locked() and time.time() - engine.used > idle:
-                engine.stop("leerlauf")
-            elif engine.state == "ready" and not engine.alive():
-                engine.state = "error"
-                print(f"bild: engine beendet code {engine.proc.returncode if engine.proc else -1}", flush=True)
-    asyncio.create_task(loop())
+    idle_loop(engine, lambda: cfg()["idle_min"])
 
 
 @app.on_event("shutdown")
