@@ -621,8 +621,18 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 for w in (320, 390, 1280):
                     br, pg, errors = await self.page(p, w, 900)
+                    # Zustand refreshes itself every 3 s from /api/status (start.js) and would paint over the test's
+                    # data on a slow runner (V01.0.657 on GitHub): the first status after opening the page is the
+                    # real one, every later one fails like an unreachable panel, so refresh() never calls zustand()
+                    seen = []
+
+                    async def status(route, request=None, seen=seen):
+                        seen.append(1)
+                        await (route.continue_() if len(seen) == 1 else route.abort())
+                    await pg.route("**/api/status", status)
                     await pg.evaluate("goSec('mon')")
                     await pg.wait_for_function("$('zhead').dataset.lvl", timeout=20000)
+                    await pg.wait_for_function("/erreichbar|reachable/.test($('hdr').textContent)", timeout=20000)
                     await pg.evaluate(fake)
                     tiles = await pg.evaluate("[...$('ztoday').children].map(n=>[n.nodeName,n.dataset.lvl,!!n.dataset.way,!!n.querySelector('svg.zico')])")
                     self.assertEqual([x[1] for x in tiles], ["acc", "warn", "warn", "acc2"])

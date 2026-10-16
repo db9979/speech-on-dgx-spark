@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.658** RED-FIX .657: the Zustand tile test no longer races the 3 s refresh
 - **V01.0.657** Quick buttons for pictures: rotate, brighter, black and white and more, at once without a model
 - **V01.0.656** RED-FIX .653: changing pictures has its usage name and its own-data reason
 - **V01.0.655** The page no longer hangs at "Zustand wird geladen …" after updates, it reloads itself
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.651** After the move: iPhone app names certificate and reverse proxy, warning when pairing over 31443
 - **V01.0.650** Red fix: the case's product name in English
 - **V01.0.649** Red fix .646: tests count the new terminal scope and switch guest access off first
-- **V01.0.648** Red fix: saving Funktionen works again (case fields)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
