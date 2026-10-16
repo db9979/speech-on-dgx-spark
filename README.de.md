@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.711** Lautsprecher-Firmware 2.5.2.8: baut jetzt auf XiaoZhi 2.5.2, alle eigenen Patches unverändert
 - **V01.0.710** Lautsprecher: steht im Board noch die alte DGX-Adresse, nennt die Diagnose die richtige des Pi
 - **V01.0.709** Aufräumen: die Vorschläge unter „Verbessern“ entstehen aus drei kleineren Teilen, gleiche Bausteine nur noch einmal
 - **V01.0.708** Telefon hinter einem Router mit NAT: der Spark lernt die Adresse, die die Anlage sieht, und sagt, welche Ports weiterzuleiten sind
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.704** Steuerzentrale: der Kasten Werkzeuge zeigt, welches Werkzeug gerade arbeitet
 - **V01.0.703** Aufräumen: die Texte der Technik-Seiten liegen in sieben kleineren Dateien; die Wächter-Tabellen zählen sie nicht mehr mit
 - **V01.0.702** Selbsttests: ein Profilname gehört genau einer Testdatei, ein Test passt darauf auf
-- **V01.0.701** Fix: Tippen im Eingabefeld ist wieder flüssig, im Web, in der Android- und in der iPhone-App
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

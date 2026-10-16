@@ -3293,7 +3293,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Geräte-Updates (V01.0.381)",
-"text": "em Fenster des nächtlichen Spark-Updates) startet der Spark erst einen verbundenen, unbenutzten Lautsprecher neu. Kommt er innerhalb von 10 Minuten mit der neuen Version zurück, folgen die übrigen einzeln, der nächste frühestens 30 Minuten später. Kommt er nicht zurück, hält die Runde für diese Version an: Besitzer und Admin bekommen eine Mitteilung, weiter geht es erst mit *Weiter verteilen* in Zustand. Nie während eines Gesprächs, im Raum-Modus, bei einem Test, bei einem Notaus oder eigenen Notaus und nie während eines Spark-Updates. Hinweis auf neue XiaoZhi-Version (Unterschalter): Der Spark vergleicht das neueste Release von github.com/78/xiaozhi-esp32 mit dem Stand, auf dem unsere Firmware baut, und schickt dem Admin einmal pro neuer Version einen Hinweis. Gebaut wird nichts von selbst; vom Release kommt nur die Versionsnummer, nie sein Text. Seit V01.0.678 darf GitHubs Antwort bis 4 MB groß sein: sie listet jede Datei des Releases (bei XiaoZhi ein Paket pro Board) und war mit 256 KB zu knapp („XiaoZhi check failed: TooLarge“ im Fehler-Log)."
+"text": "em Fenster des nächtlichen Spark-Updates) startet der Spark erst einen verbundenen, unbenutzten Lautsprecher neu. Kommt er innerhalb von 10 Minuten mit der neuen Version zurück, folgen die übrigen einzeln, der nächste frühestens 30 Minuten später. Kommt er nicht zurück, hält die Runde für diese Version an: Besitzer und Admin bekommen eine Mitteilung, weiter geht es erst mit *Weiter verteilen* in Zustand. Nie während eines Gesprächs, im Raum-Modus, bei einem Test, bei einem Notaus oder eigenen Notaus und nie während eines Spark-Updates. Hinweis auf neue XiaoZhi-Version (Unterschalter): Der Spark vergleicht das neueste Release von github.com/78/xiaozhi-esp32 mit dem Stand, auf dem unsere Firmware baut, und schickt dem Admin einmal pro neuer Version einen Hinweis. Gebaut wird nichts von selbst; vom Release kommt nur die Versionsnummer, nie sein Text. Seit V01.0.678 darf GitHubs Antwort bis 4 MB groß sein: sie listet jede Datei des Releases (bei XiaoZhi ein Paket pro Board) und war mit 256 KB zu knapp („XiaoZhi check failed: TooLarge“ im Fehler-Log). Firmware 2.5.2.8 (V01.0.711): Unsere Lautsprecher-Firmware baut jetzt auf XiaoZhi 2.5.2 (Commit 49b4380) auf. Für unsere Boards ändert si"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Geräte-Updates (V01.0.381)",
+"text": "ch wenig: Das ESP32-S3 stellt Mikrofon und Lautsprecher (I2S) einheitlich ein, und eine unlesbare Seriennummer im Chip wird ignoriert. Alle eigenen Patches (nur eigener Server, Board ohne Display, Ton warten statt verwerfen, Notaus-Knopf, sofort still beim Weckwort, Stopp beim Vorlesen) greifen unverändert. Die Boards nehmen per Update nur neuere Versionen an; zurück auf 2.5.1.7 geht nur per USB."
 },
 {
 "lang": "de",
@@ -10533,7 +10541,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Device updates (V01.0.381)",
-"text": " the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text. Since V01.0.678 GitHub's answer may be up to 4 MB: it lists every file of the release (XiaoZhi: one package per board) and 256 KB was too tight (\"XiaoZhi check failed: TooLarge\" in the error log)."
+"text": " the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text. Since V01.0.678 GitHub's answer may be up to 4 MB: it lists every file of the release (XiaoZhi: one package per board) and 256 KB was too tight (\"XiaoZhi check failed: TooLarge\" in the error log). Firmware 2.5.2.8 (V01.0.711): our speaker firmware now builds on XiaoZhi 2.5.2 (commit 49b4380). Little changes for our boards: the ESP32-S3 sets up microphone and speaker (I2S) the same way everywhere, and an unreadable serial number in the chip is ignor"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Device updates (V01.0.381)",
+"text": "ed. All own patches (own server only, board without display, wait instead of dropping sound, Notaus button, quiet at once on the wake word, stop while it speaks) apply unchanged. Boards take only newer versions by update; going back to 2.5.1.7 works only over USB."
 },
 {
 "lang": "en",
