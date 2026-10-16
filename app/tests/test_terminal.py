@@ -54,7 +54,7 @@ def program():
 
 class Terminal(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(terminal=True, deny={})
+        helpers.set_config(terminal=True, deny={}, public=False)   # public on (left by another test) opens settings and chat to anyone
         terminal._codes.pending.clear()
         self._fp = terminal.cert_sha256
         terminal.cert_sha256 = lambda: FP   # the test panel has no certificate of its own

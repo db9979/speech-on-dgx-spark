@@ -131,7 +131,7 @@ class DeviceKeys(unittest.TestCase):
             self.assertTrue(str(e.exception.detail).startswith(start))
         src = read(HERE, "..", "panel", "profiles.py")
         body = src[src.index("    token = request.headers.get(DEVICE_HEADER"):src.index("        _note_device(dev[\"id\"], request)")]
-        self.assertEqual(len(re.findall(r"_GATE\[0\]\(dev\[\"user\"\]\):\n\s+return _gate_closed\(request\)", body)), 6)
+        self.assertEqual(len(re.findall(r"_GATE\[0\]\(dev\[\"user\"\]\):\n\s+return _gate_closed\(request\)", body)), 7)   # V01.0.646: +1 terminal (tui)
 
 
 class NewProfiles(unittest.TestCase):

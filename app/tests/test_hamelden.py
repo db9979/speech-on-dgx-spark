@@ -458,6 +458,7 @@ class Loud(Base):
 
 class Events(Base):
     def test_events_with_their_own_key(self):
+        helpers.set_config(public=False)   # with public on (left by another test) /api/chat answers anyone
         a, uid = profile("Elfi", pro_ha_events=False)
         self.assertEqual(a.put("/api/profile/ha-events", json={"events": []}).status_code, 403)   # profile off
         a.put("/api/profile/settings", json={"pro_ha_events": True})
