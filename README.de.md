@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.656** ROT-FIX .653: Bilder ändern mit Verbrauchsname und Grund für eigene Daten
 - **V01.0.655** Seite hängt nach Updates nicht mehr bei „Zustand wird geladen …“, lädt sich selbst neu
 - **V01.0.654** Chats in der iPhone-App wie im Panel, auch private Chats (Ende-zu-Ende)
 - **V01.0.653** Bilder ändern: der Spark ändert ein eigenes Foto oder Bild mit FLUX.2 klein, das Panel wählt das Bild
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.649** ROT-FIX .646: Tests zählen den Terminal-Bereich mit und schalten den Gastzugang vorher aus
 - **V01.0.648** ROT-FIX: Speichern unter Funktionen geht wieder (Gehäuse-Felder)
 - **V01.0.647** Gehäuse des Panel-Rechners (Pironman 5): Display, Status-LEDs und Lüfter, Funktionen → Gehäuse (neu, aus)
-- **V01.0.646** Terminal-Client spark-tui (neu, aus): Chat, Gespräche, Heute und Aufträge im Terminal, etwa auf der uConsole
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

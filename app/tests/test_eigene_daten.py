@@ -32,6 +32,7 @@ _N = itertools.count(1)
 
 # functions with a page under Ich (account.WHO) that keep no „Daten löschen“ card, each with its reason
 OHNE = {
+    "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
     "documents": "alle Dokumente auf einmal wären zu einschneidend; jedes Dokument hat sein eigenes Löschen unter Ich → Dokumente",
     "erstellen": "erstellte Dokumente gehören zu den Dokumenten (dasselbe einschneidende Löschen)",
     "parcels": "keine eigenen Daten: liest nur das Postfach (E-Mail)",
