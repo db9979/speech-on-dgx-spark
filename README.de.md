@@ -34,6 +34,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.659** Bilder ändern versteht „Mach den Bart weg“ und ähnliche Sätze
 - **V01.0.658** ROT-FIX .657: Zustand-Kacheltest ohne Rennen mit der 3-s-Aktualisierung
 - **V01.0.657** Schnellknöpfe für Bilder: drehen, heller, schwarzweiß und mehr, sofort ohne Modell
 - **V01.0.656** ROT-FIX .653: Bilder ändern mit Verbrauchsname und Grund für eigene Daten
@@ -43,7 +44,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.652** Anrufe und Videoanrufe in der iPhone-App, mit Klingeln auch bei geschlossener App
 - **V01.0.651** Nach dem Umzug: iPhone-App nennt Zertifikat und Reverse Proxy, Warnung beim Koppeln über 31443
 - **V01.0.650** ROT-FIX: Gerätename des Gehäuses im Englischen
-- **V01.0.649** ROT-FIX .646: Tests zählen den Terminal-Bereich mit und schalten den Gastzugang vorher aus
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

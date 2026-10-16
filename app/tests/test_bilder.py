@@ -508,6 +508,16 @@ class Change(On):
             helpers.set_config(images=False)
             images._store.clear()
 
+    def test_ways_to_ask_for_a_change(self):
+        """The person's own words for a change (Dominik 2026-10-16: „mache den bart weg“ changed nothing)."""
+        for text in ("mache den bart weg", "Bart weg bitte", "Lass den Hut weg", "Mach ihn ohne Brille",
+                     "Mach den Bart ab", "Kannst du den Bart wegmachen?", "Entferne das Auto", "Mach den Himmel blau",
+                     "Mach daraus ein Aquarell", "Füge einen Hund hinzu", "Make it brighter"):
+            self.assertTrue(bilder.wants_change(text), text)
+        for text in ("Was ist auf dem Bild?", "Ich gehe gleich weg", "Mach weiter so", "Schönes Foto, oder?",
+                     "Wie mache ich den Fleck weg?", "Wer ist das?"):
+            self.assertFalse(bilder.wants_change(text), text)
+
     def test_questions_strangers_and_outside_never_change(self):
         c, prof = profile("Aendern Frage")
         pic = [data_url()]

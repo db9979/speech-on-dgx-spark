@@ -95,6 +95,9 @@ EDIT = re.compile(
     r"(?i)\b(ändere?n?|aendere?n?|bearbeit\w*|veränder\w*|veraender\w*|verwandl\w*|verwandel\w*|retuschier\w*|"
     r"ersetze?n?|tausche?n?|färbe?n?|faerbe?n?|umfärben|entferne?n?|edit|change|remove|replace|recolou?r|retouch)\b"
     r"|\b(nimm|nehmt?|nehmen)\b.{0,60}\b(weg|raus|heraus)\b|\bfüge?n?\b.{0,60}\bhinzu\b"
+    # „Mach den Bart weg“, „Lass den Hut weg“, „Mach ihn ohne Brille“, „Bart weg bitte“ (Dominik 2026-10-16)
+    r"|\b(mach\w*|lass\w*)\b.{0,60}\b(weg|raus|ab|ohne)\b|\b(weg|raus)(?:machen|nehmen|lassen|retuschieren)\b"
+    r"|^\W*(?:(?:den|die|das|der|dem|seinen|seine|ihren|ihre|meinen|meine)\s+)?\w+\s+(weg|raus)\b(?:\W+bitte)?\W*$"
     r"|\bsetze?n?\b.{0,60}\b(hinein|rein|dazu|ins bild|ins foto)\b"
     r"|\bmach\w*\b.{0,40}\b(heller|dunkler|bunter|farbig\w*|schwarzweiß|schwarz-weiß|blau\w*|rot\w*|grün\w*|gelb\w*|"
     r"wärmer|kälter|schärfer|weicher|freundlicher|sonnig\w*|winterlich\w*|herbstlich\w*|daraus|zu einem|zu einer)\b"

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.659** · 2026-10-16 · Bilder ändern: die feste Regel erkennt jetzt auch „Mach den Bart weg“, „Lass den Hut weg“, „Mach ihn ohne Brille“, „Mach den Bart ab“, „Bart weg bitte“ und „…wegmachen“ (vorher ging so ein Foto nur ans Sprachmodell)
 - **V01.0.658** · 2026-10-16 · ROT-FIX .657: test_zustand_tiles_fit_and_lead_somewhere ließ die echte Zustand-Aktualisierung (alle 3 s) über die Testdaten malen; jetzt ist nur die erste /api/status-Antwort echt, alle späteren schlagen fehl wie ein nicht erreichbares Panel, alle Prüfungen bleiben
 - **V01.0.657** · 2026-10-16 · Bilder ändern, Schnellknöpfe (Stufe 2b): unter Ich → Bilder am Bild nach links oder rechts drehen, spiegeln, heller, dunkler, mehr Kontrast, schwarzweiß, quadratisch zuschneiden, halb so groß; sofort im Panel ohne Modell, als neues Bild, die KI-Kennzeichnung bleibt
 - **V01.0.656** · 2026-10-16 · ROT-FIX .653: der Verbrauchszähler kennt die Aufgabe „Bild ändern“ (Bereich Dokumente), und Bilder ändern hat keinen eigenen Datenbestand (die Bilder liegen bei Bilder malen)
