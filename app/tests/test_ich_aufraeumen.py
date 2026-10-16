@@ -36,6 +36,39 @@ def profile(name, pin="4711"):
     return c
 
 
+def call_args(js, i):
+    """Top-level arguments of the call whose "(" ends at i (strings and template literals skipped)."""
+    args, cur, depth, q = [], [], 0, None
+    while i < len(js):
+        ch = js[i]
+        if q:
+            cur.append(ch)
+            if ch == "\\":
+                cur.append(js[i + 1])
+                i += 1
+            elif ch == q:
+                q = None
+        elif ch in "'\"`":
+            q = ch
+            cur.append(ch)
+        elif ch in "([{":
+            depth += 1
+            cur.append(ch)
+        elif ch in ")]}":
+            if depth == 0:
+                args.append("".join(cur))
+                return args
+            depth -= 1
+            cur.append(ch)
+        elif ch == "," and depth == 0:
+            args.append("".join(cur))
+            cur = []
+        else:
+            cur.append(ch)
+        i += 1
+    return args
+
+
 class Static(unittest.TestCase):
     def test_building_blocks_load_before_the_pages(self):
         scripts = re.findall(r'<script src="/static/js/([\w]+)\.js"', read("index.html"))
@@ -50,6 +83,28 @@ class Static(unittest.TestCase):
         self.assertNotRegex(js, r"\.innerHTML\s*=(?!\s*'<svg)")
         for page in ("tidy.js", "remarkable.js", "me.js"):
             self.assertNotRegex(read("js", page), r"\bon(click|change|input)=\"", page)
+
+    def test_controls_are_always_a_list(self):
+        # icCard and icNote take their buttons as a list; one bare button broke Ich → Gedächtnis with
+        # "(ctl || []).forEach is not a function" as soon as a fact looked out of date (V01.0.659)
+        where = {"icCard": 3, "icNote": 2}
+        seen = 0
+        for name in sorted(os.listdir(os.path.join(STATIC, "js"))):
+            if not name.endswith(".js"):
+                continue
+            js = read("js", name)
+            for m in re.finditer(r"\b(icCard|icNote)\(", js):
+                if js[max(0, m.start() - 7):m.start()] == "window.":
+                    continue
+                args = call_args(js, m.end())
+                pos = where[m.group(1)]
+                if len(args) <= pos:
+                    continue
+                seen += 1
+                arg = args[pos].strip()
+                self.assertTrue(arg.startswith("[") or arg in ("null", "undefined", "0", "''"),
+                                f"{name}: {m.group(1)} controls must be a list, got {arg[:40]}")
+        self.assertGreater(seen, 3)
 
     def test_no_scroll_box_inside_ich(self):
         css = read("app.css")

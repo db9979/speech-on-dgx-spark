@@ -74,7 +74,7 @@ function factDraw(){const E=icEl,tools=$('facttools'),box=$('factlist');if(!tool
   const note=$('factcheck');if(note){note.textContent='';const ns=FCHECK?n('stale'):0;note.hidden=!ns;
     if(ns){const b=E('button','b p',t('Durchgehen','Go through'));b.type='button';b.onclick=()=>{FF='stale';FMORE=false;factDraw()};
       note.appendChild(icNote(t(`${ns} ${ns===1?'Eintrag ist':'Einträge sind'} vielleicht veraltet`,`${ns} ${ns===1?'entry is':'entries are'} maybe out of date`),
-        t('Gefunden mit festen Regeln (Datum vorbei, „zurzeit“, lange nicht bestätigt, Widerspruch). Gelöscht wird nichts.','Found with fixed rules (date passed, "currently", not confirmed for long, contradiction). Nothing is deleted.'),b))}}
+        t('Gefunden mit festen Regeln (Datum vorbei, „zurzeit“, lange nicht bestätigt, Widerspruch). Gelöscht wird nichts.','Found with fixed rules (date passed, "currently", not confirmed for long, contradiction). Nothing is deleted.'),[b]))}}
   list();
   function keep(f){return FF==='all'||(FF==='auto'?!!f.auto:FF==='own'?!f.auto:FF==='stale'?fstale(f):f.mark===FF)}
   function list(){box.textContent='';const q=FQ.trim().toLowerCase();

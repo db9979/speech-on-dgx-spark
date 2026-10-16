@@ -34,6 +34,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.660** Ich → Gedächtnis: no more error box when entries look out of date
 - **V01.0.659** Changing pictures: “Take the beard off” and similar phrasings are understood
 - **V01.0.658** RED-FIX .657: the Zustand tile test no longer races the 3 s refresh
 - **V01.0.657** Quick buttons for pictures: rotate, brighter, black and white and more, at once without a model
@@ -43,7 +44,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.653** Changing pictures: the Spark changes an own photo or picture with FLUX.2 klein, the panel picks the picture
 - **V01.0.652** Voice and video calls in the iPhone app, ringing also with the app closed
 - **V01.0.651** After the move: iPhone app names certificate and reverse proxy, warning when pairing over 31443
-- **V01.0.650** Red fix: the case's product name in English
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
