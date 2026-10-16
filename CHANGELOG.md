@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.686** · 2026-10-16 · ROT-FIX Selbsttests: test_rmpapier stellt Kalender, Aufgaben und Mail am Ende so zurück, wie es sie vorfand (helpers.keep_chat); vorher fand test_sperre_ueberall den Kalender aus. Neuer Wächter in test_richtlinie
 - **V01.0.685** · 2026-10-16 · Fix Selbsttest: die Route der Steuerzentrale steht in der Liste offener Wege (test_scanner), mit Grund: nur derselbe Rechner, eigener Schlüssel
 - **V01.0.684** · 2026-10-16 · Das kannst du auch sagen: Beispielsätze für Funktionen, die bei dir an sind, aber nie benutzt werden (unter der Antwort, „Meintest du“, Probier mal, Ich → Was ich kann, Telegram, TUI, iPhone, Satz der Woche, Was keiner findet)
 - **V01.0.683** · 2026-10-16 · Bilder malen: die Karte im Chat fragt erst nach, wenn sie in der Antwort steht, und bleibt nicht mehr bei „wartet …“ stehen, obwohl das Bild unter Ich → Bilder fertig ist; „Erstelle mir eine Karikatur“, „Comic“ und „Cartoon“ gelten als Bildwunsch (vorher sagte das Modell, es könne nicht zeichnen)

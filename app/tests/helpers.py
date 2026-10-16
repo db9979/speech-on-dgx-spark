@@ -820,6 +820,24 @@ def write_config(c):
     os.replace(os.environ["SPEECH_SPARK_CONFIG"] + ".part", os.environ["SPEECH_SPARK_CONFIG"])
 
 
+def keep_chat(test, *keys):
+    """Puts these chat switches back as they were when the test ends (addCleanup), so a test that turns one on or off
+    leaves the next test the shipped config. test_rmpapier.TaskParts left calendar, tasks and mail off, and the later
+    test_sperre_ueberall then found the calendar switched off (4 red tests on GitHub at .682 and on tars, 2026-10-16)."""
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        before = json.load(f)["chat"]
+    old = {k: before[k] for k in keys if k in before}
+
+    def back():
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        for k in keys:
+            c["chat"].pop(k, None)
+        c["chat"].update(old)
+        write_config(c)
+    test.addCleanup(back)
+
+
 def set_config(**chat):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.686** Self-tests: a test puts switches back the way it found them (four red block tests on GitHub and tars)
 - **V01.0.685** Fix self-test: the control centre's route is on the list of open ways, with its reason
 - **V01.0.684** You can also say: example sentences for functions that are on for you but never used ("Draw me …"), under the answer, in an empty chat and under Me → What I can do
 - **V01.0.683** Pictures: the chat card no longer stays at “waiting …”; caricature and comic count as a picture wish
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.679** Test music: the music engine starts (an option ace-server does not know is gone)
 - **V01.0.678** Fix: the note on a new XiaoZhi version no longer fails on the size of GitHub's answer (TooLarge)
 - **V01.0.677** Fix iPhone app: CarPlay face builds again (type error in the still picture)
-- **V01.0.676** CarPlay: Apple granted the entitlement, the iPhone app now shows its own icon in the car, with the picked face per state
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

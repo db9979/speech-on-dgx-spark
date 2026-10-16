@@ -872,11 +872,8 @@ class TaskParts(Paper):
 
     def setUp(self):
         super().setUp()
+        helpers.keep_chat(self, "remarkable_tasks", "remarkable_plus", "calendar", "tasks", "mail")
         helpers.set_config(remarkable_tasks=True, remarkable_plus=True, calendar=True, tasks=True, mail=True)
-
-    def tearDown(self):
-        super().tearDown()
-        helpers.set_config(remarkable_tasks=False, remarkable_plus=False, calendar=False, tasks=False, mail=False)
 
     def marked(self, did, pp, names, extra=None):
         """Ticks in the named boxes (on whatever page each lies) plus other ink per page."""

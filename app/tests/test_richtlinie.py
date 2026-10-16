@@ -102,6 +102,25 @@ class Versions(unittest.TestCase):
 
 
 class Guideline(unittest.TestCase):
+    def test_no_tear_down_turns_off_a_switch_that_ships_on(self):
+        """A test puts a switch back the way it was (helpers.keep_chat), never to False when it ships on:
+        test_rmpapier.TaskParts left the calendar off, and test_sperre_ueberall later failed four times (2026-10-16)."""
+        import ast
+        with open(os.path.join(helpers.APP, "config.default.json"), encoding="utf-8") as f:
+            on = {k for k, v in json.load(f)["chat"].items() if v is True}
+        bad = []
+        for path in glob.glob(os.path.join(helpers.APP, "tests", "test_*.py")):
+            with open(path, encoding="utf-8") as f:
+                tree = ast.parse(f.read())
+            for fn in ast.walk(tree):
+                if not isinstance(fn, ast.FunctionDef) or fn.name not in ("tearDown", "tearDownClass"):
+                    continue
+                for call in ast.walk(fn):
+                    if isinstance(call, ast.Call) and getattr(call.func, "attr", "") == "set_config":
+                        bad += [f"{os.path.basename(path)}: {kw.arg}" for kw in call.keywords
+                                if kw.arg in on and isinstance(kw.value, ast.Constant) and kw.value.value is False]
+        self.assertEqual(bad, [], "use helpers.keep_chat(self, …) in setUp")
+
     def test_both_languages_and_claude_md_point_to_it(self):
         de = repo_file("docs", "de", "richtlinien.md")
         en = repo_file("docs", "en", "guidelines.md")
