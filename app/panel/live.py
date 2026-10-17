@@ -64,6 +64,8 @@ TOOLS = {
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
+    # inside a job (auftragsplan.py): plan, question and proposal stay on the Spark
+    "job_plan": "mem", "job_propose": "mem", "job_ask": "mem",
     "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",

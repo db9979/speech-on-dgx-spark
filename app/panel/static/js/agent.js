@@ -84,6 +84,23 @@ function agNewForm(d){const o=d.own||{};
     ${o.pro?`<h4 class="ag-h">${esc(t('Mail von …','Mail from …'))}</h4><div class="fh">${esc(t('Ich melde mich, wenn eine Mail dieses Absenders kommt.','I tell you when a mail from this sender comes.'))}</div>
     <div class="row"><input id="agmwho" maxlength="80" placeholder="${esc(t('z. B. Sparkasse','e.g. Sparkasse'))}" aria-label="${esc(t('Absender','Sender'))}"><button class="b" type="button" id="agmadd">${esc(t('Hinzufügen','Add'))}</button></div>`:''}
     <div class="fh">${esc(t('Per Sprache: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt.“ Gespeichert wird erst nach deinem „Ja“.','By voice: "Let me know when there is a new firmware for my FRITZ!Box." It is saved only after your "Yes".'))}</div>`}
+// package F (auftragsplan.py): the job's plan as a checklist, its question with choices, the person's additions and
+// its one proposal with Ja and Nein (carried out by the panel only after Ja, bound to the proposal's hash). Plan,
+// question and proposal are written by the model: shown as plain text, never as markup.
+const AG_DONE={ja:['angenommen','accepted'],nein:['abgelehnt','declined'],fehler:['ging nicht','failed']};
+function agPlus(j,d){let h='';const todo=j.todo||[];
+  if(todo.length)h+=`<div class="ag-todo"><small class="mut">${esc(t('Plan: ','Plan: ')+todo.filter(x=>x.done).length+t(' von ',' of ')+todo.length+t(' erledigt',' done'))}</small><ol>${todo.map(x=>`<li class="${x.done?'on':''}">${x.done?'✓':'○'} ${esc(x.text)}</li>`).join('')}</ol></div>`;
+  for(const n of j.notes||[])h+=`<br><small class="mut">${esc(t('Nachgeschoben: ','Added: ')+n.text)}</small>`;
+  if(j.ask)h+=`<div class="ag-ask confirmc"><b>${esc(t('Dein Auftrag fragt: ','Your job asks: '))}</b>${esc(j.ask.q)}
+    <div class="row">${(j.ask.choices||[]).map(c=>`<button class="b" type="button" data-agans="${esc(j.id)}" data-agval="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="row"><input type="text" maxlength="200" id="agansin-${esc(j.id)}" aria-label="${esc(t('Antwort','Answer'))}" placeholder="${esc(t('Eigene Antwort …','Own answer …'))}"><button class="b p" type="button" data-agans="${esc(j.id)}">${t('Antworten','Answer')}</button></div>
+    <small class="mut">${t('Gib hier nie Passwörter, PINs oder Codes ein. Ohne Antwort macht der Auftrag nach 10 Minuten weiter.','Never type passwords, PINs or codes here. Without an answer the job goes on after 10 minutes.')}</small></div>`;
+  if(j.state==='running'&&d.plan&&(j.notes||[]).length<3)h+=`<div class="row ag-steer"><input type="text" maxlength="300" id="agsteerin-${esc(j.id)}" aria-label="${esc(t('Nachschieben','Add to the job'))}" placeholder="${esc(t('Etwas ergänzen …','Add something …'))}"><button class="b" type="button" data-agsteer="${esc(j.id)}">${t('Nachschieben','Add')}</button></div>`;
+  const p=j.proposal;if(p){h+=`<div class="confirmc ag-prop"><b>${esc(t('Vorschlag: ','Proposal: '))}</b>${esc(p.text)}
+    ${p.outside?`<br><small class="err">${t('Stammt aus einem Auftrag, der Text von außen gelesen hat. Prüf ihn, bevor du Ja sagst.','Comes from a job that read outside text. Check it before you say Yes.')}</small>`:''}
+    ${p.open?`<div class="row"><button class="b p" type="button" data-agprop="${esc(j.id)}" data-agyes="1" data-agh="${esc(p.h)}">${t('Ja','Yes')}</button><button class="b" type="button" data-agprop="${esc(j.id)}" data-agh="${esc(p.h)}">${t('Nein','No')}</button></div>`
+      :`<br><small class="mut">${esc(p.done?t(...AG_DONE[p.done]||['?','?']):t('abgelaufen','expired'))}</small>`}</div>`}
+  return h}
 async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(agTimer);if(!PROFILE||!AGENT_ON){box.innerHTML='';return}
   let d;try{d=agData=await (await api('/api/profile/agent')).json()}catch{box.innerHTML='';return}
   const lvl={read:t('nur lesen und berichten','read and report only'),act:t('auch handeln mit „Ja“','also act after "Yes"')}[d.granted]||t('nichts','nothing');
@@ -99,7 +116,7 @@ async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(a
     ['rule',t('Smart Home','Smart home'),cnt('rule')],['mail',t('Mail','Mail'),cnt('mail')],['routine',t('Abläufe','Routines'),cnt('routine')]].filter(c=>c[0]==='all'||c[2]);
   const job=j=>`<li><span><b>${esc(t(...(AG_ST[j.state]||['?','?'])))}</b> · ${esc(j.title||j.task)}<br><small class="mut">${esc(agTime(j.created))}${j.origin==='plan'?t(' · geplant',' · scheduled'):j.origin==='watch'?t(' · Beobachten',' · watching'):''}${j.doc_name?' · '+esc(j.doc_name):''}</small>
       ${j.finds&&j.finds.length?`<br><small>${j.finds.map(f=>esc(f.v)+' ('+esc(agHost(f.src))+')').join(' · ')}</small>`:j.summary?`<br><small>${esc(j.summary)}</small>`:''}${j.error?`<br><small class="err">${esc(j.error)}</small>`:''}${j.doc_error?`<br><small class="err">${esc(j.doc_error)}</small>`:''}
-      ${j.state==='running'&&j.steps.length?`<br><small class="mut">${esc(j.steps[j.steps.length-1])}</small>`:''}<div class="agrep" data-agrep="${esc(j.id)}" hidden></div></span>
+      ${j.state==='running'&&j.steps.length?`<br><small class="mut">${esc(j.steps[j.steps.length-1])}</small>`:''}${agPlus(j,d)}<div class="agrep" data-agrep="${esc(j.id)}" hidden></div></span>
       <span class="row">${j.state==='done'?`<button class="b" type="button" data-agshow="${esc(j.id)}">${t('Bericht','Report')}</button>`:''}
       ${j.state==='done'&&!j.doc_name?`<button class="b" type="button" data-agdoc="${esc(j.id)}">${t('Als Dokument','As document')}</button>`:''}
       ${j.state==='queued'||j.state==='running'?`<button class="b" type="button" data-agstop="${esc(j.id)}">${t('Abbrechen','Cancel')}</button>`:`<button class="b" type="button" data-agdel="${esc(j.id)}">${t('Löschen','Delete')}</button>`}</span></li>`;
@@ -130,7 +147,9 @@ async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(a
   xbind(box,showAgent);
   agBind(box,d);
   // while a job waits or runs, the page looks again now and then
-  if(d.jobs.some(j=>j.state==='queued'||j.state==='running'))agTimer=setTimeout(()=>{if(box.offsetParent)showAgent()},10000)}
+  // an answer or addition being typed is never wiped by the refresh: it waits until the field is empty again
+  const again=()=>{if(!box.offsetParent)return;if([...box.querySelectorAll('.ag-ask input,.ag-steer input')].some(i=>i.value||i===document.activeElement)){agTimer=setTimeout(again,10000);return}showAgent()};
+  if(d.jobs.some(j=>j.state==='queued'||j.state==='running'))agTimer=setTimeout(again,10000)}
 function agBind(box,d){
   const call=async(p,o,after)=>{try{await api(p,o);if(after)after();await showAgent()}catch(e){xmsg('agmsg',e.message,true);const m=$('agmsg');if(m)m.scrollIntoView({block:'nearest'})}};
   const enc=encodeURIComponent,open=k=>{agSel=k;showAgent()};
@@ -163,6 +182,12 @@ function agBind(box,d){
   box.querySelectorAll('[data-agstop]').forEach(b=>b.onclick=()=>call('/api/profile/agent/jobs/'+enc(b.dataset.agstop)+'/cancel',xjson('POST')));
   box.querySelectorAll('[data-agdel]').forEach(b=>b.onclick=()=>call('/api/profile/agent/jobs/'+enc(b.dataset.agdel),{method:'DELETE'}));
   box.querySelectorAll('[data-agdoc]').forEach(b=>b.onclick=()=>call('/api/profile/agent/jobs/'+enc(b.dataset.agdoc)+'/doc',xjson('POST')));
+  box.querySelectorAll('[data-agans]').forEach(b=>b.onclick=()=>{const id=b.dataset.agans,f=$('agansin-'+id),v=(b.dataset.agval||(f?f.value:'')).trim();if(!v)return;if(f)f.value='';
+    call('/api/profile/agent/jobs/'+enc(id)+'/answer',xjson('POST',{text:v}))});
+  box.querySelectorAll('[data-agsteer]').forEach(b=>b.onclick=()=>{const id=b.dataset.agsteer,f=$('agsteerin-'+id),v=f?f.value.trim():'';if(!v)return;f.value='';
+    call('/api/profile/agent/jobs/'+enc(id)+'/steer',xjson('POST',{text:v}),()=>xmsg('agmsg',t('Nachgeschoben, der Auftrag liest es in seinem nächsten Schritt.','Added, the job reads it in its next step.')))});
+  box.querySelectorAll('[data-agprop]').forEach(b=>b.onclick=()=>call('/api/profile/agent/jobs/'+enc(b.dataset.agprop)+'/proposal',xjson('POST',{yes:b.dataset.agyes==='1',h:b.dataset.agh}),
+    ()=>xmsg('agmsg',b.dataset.agyes==='1'?t('Erledigt.','Done.'):t('Abgelehnt, nichts geändert.','Declined, nothing changed.'))));
   box.querySelectorAll('[data-agshow]').forEach(b=>b.onclick=async()=>{const el=box.querySelector(`[data-agrep="${CSS.escape(b.dataset.agshow)}"]`);if(!el)return;
     if(!el.hidden){el.hidden=true;return}
     try{const j=await (await api('/api/profile/agent/jobs/'+enc(b.dataset.agshow))).json();el.textContent=j.report||'';el.hidden=false}catch(e){xmsg('agmsg',e.message,true)}});

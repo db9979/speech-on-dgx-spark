@@ -1625,6 +1625,10 @@
 "titel": "Ablauf und Freigabe-Karte im Assistenten",
 "text": "A: Funktionen → „Ablauf und Freigabe zeigen“ an. P: im Assistenten „Was steht morgen in meinem Kalender?“ fragen: unter der Antwort steht zugeklappt „1 Werkzeug benutzt · … s“, aufgeklappt „✓ Termine lesen“. Dann „Trag mir morgen um 10 Uhr Zahnarzt ein“: unter der Antwort die Karte „Wartet auf dein Ja: Termin“ mit Ja und Nein; „Nein“ tippen, nichts wird eingetragen; noch einmal fragen und „Ja“ tippen, der Termin steht im Kalender. Dasselbe in der iPhone-App und in der Android-App.",
 "thread": "Ideen aus Redde"
+},
+{"id": "P256", "v": 744, "titel": "Auftrag mit Plan, Rückfrage und Vorschlag",
+"text": "A: Funktionen → Agent-Funktionen → „Aufträge mit Plan, Rückfrage und Vorschlag“ an. P: unter Ich → Aufträge „Recherchiere zwei leise Geschirrspüler und frag mich nach dem Budget, dann erinnere mich am Samstag um 10 Uhr ans Bestellen“ starten: der Auftrag zeigt seinen Plan mit Häkchen, dann die Frage mit Antworten zum Antippen (die Mitteilung nennt die Frage nicht); eine Antwort tippen. Während er läuft „Nur Bosch“ nachschieben. Unter dem fertigen Bericht steht „Vorschlag: Erinnerung …“ mit Warnung und Ja/Nein; „Ja“ tippen, die Erinnerung steht unter Erinnerungen. Dasselbe in der iPhone-App (Auftrag öffnen) und in der Android-App.",
+"thread": "Ideen aus Redde"
 }
 ]
 }

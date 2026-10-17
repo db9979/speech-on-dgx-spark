@@ -234,6 +234,7 @@
     "agent": false,
     "agent_mcp": false,
     "agent_watch": false,
+    "agent_plan": false,
     "mcp_own": false,
     "mcp_own_jobs": false,
     "mcp_own_oauth": false,

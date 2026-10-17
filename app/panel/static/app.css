@@ -1010,6 +1010,8 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 .ag-when{flex-wrap:wrap;gap:6px}.ag-when select,.ag-when input{width:auto;flex:1 1 110px;min-width:0}.ag-when [hidden]{display:none}
 .ag-h{margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
 .ag-steps{margin:6px 0;padding-left:20px;font-size:13.5px}
+.ag-todo ol{margin:4px 0;padding-left:4px;list-style:none;font-size:13.5px}.ag-todo li.on{color:var(--mut)}
+.ag-ask,.ag-prop{margin-top:6px}.ag-ask input,.ag-steer input{flex:1;min-width:0}.ag-steer{margin-top:6px}
 .ld-more{text-align:center;margin:10px 0}.ld-empty{padding:14px 8px}
 .ld-detail{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
 .ld-detail[hidden]{display:none}

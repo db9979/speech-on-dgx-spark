@@ -1733,7 +1733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (84 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (87 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1933,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 84 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 87 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -3549,7 +3549,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Agent-Funktionen (V01.0.175)",
-"text": "t es still und nur der Verlauf (14 Tage) hält den Lauf fest. Nach 5 Fehlern hintereinander oder 90 Tagen ohne Neues pausiert sich die Beobachtung und sagt warum. Höchstens 10 pro Profil. Ändern per Sprache („Beobachte das lieber jeden Montag“, nach „Ja“, rückgängig machbar) oder unter Ich → Aufträge → Eigene Aufgaben: eine Liste mit Suche und Filtern für Beobachtungen, geplante Aufträge, wiederkehrende Erinnerungen, Smart-Home-Regeln von „Von selbst melden“ und wichtige Mail-Absender; jede Zeile mit Schalter (aus = pausiert, bleibt gespeichert), im Detail Ändern, „Jetzt prüfen“, „Bekanntes vergessen“, Verlauf und Löschen. Eine pausierte Erinnerung klingelt auf keinem Gerät. Die iPhone-App zeigt die Beobachtungen und geplanten Aufträge unter „Von selbst“ mit Schalter und Löschen. Admin: Funktionen → Agent-Funktionen → „Beobachten“ (aus), gilt für jedes Profil mit Agent-Funktionen, nie für Gäste. Logs: agent: watch run | result neu|still|bericht|fehler | new … | dropped …. - *Abläufe (nur Stufe „auch handeln“):* „Merk dir als Ablauf Feierabend: Licht Terrasse an, Pool auf 36 Grad.“ Nach „Ja“ reicht später „Feierabend“. Jeder Schritt ist ein Home-Assistant-Satz und läuft wie ein gespr"
+"text": "t es still und nur der Verlauf (14 Tage) hält den Lauf fest. Nach 5 Fehlern hintereinander oder 90 Tagen ohne Neues pausiert sich die Beobachtung und sagt warum. Höchstens 10 pro Profil. Ändern per Sprache („Beobachte das lieber jeden Montag“, nach „Ja“, rückgängig machbar) oder unter Ich → Aufträge → Eigene Aufgaben: eine Liste mit Suche und Filtern für Beobachtungen, geplante Aufträge, wiederkehrende Erinnerungen, Smart-Home-Regeln von „Von selbst melden“ und wichtige Mail-Absender; jede Zeile mit Schalter (aus = pausiert, bleibt gespeichert), im Detail Ändern, „Jetzt prüfen“, „Bekanntes vergessen“, Verlauf und Löschen. Eine pausierte Erinnerung klingelt auf keinem Gerät. Die iPhone-App zeigt die Beobachtungen und geplanten Aufträge unter „Von selbst“ mit Schalter und Löschen. Admin: Funktionen → Agent-Funktionen → „Beobachten“ (aus), gilt für jedes Profil mit Agent-Funktionen, nie für Gäste. Logs: agent: watch run | result neu|still|bericht|fehler | new … | dropped …. - *Aufträge mit Plan, Rückfrage und Vorschlag (V01.0.744, Ideen aus Redde, Paket F):* Ein Auftrag bekommt drei Werkzeuge, die nur ihn selbst betreffen. job_plan schreibt seine Schritte als Liste (höchstens 6) und h"
 },
 {
 "lang": "de",
@@ -3557,7 +3557,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Agent-Funktionen (V01.0.175)",
-"text": "ochener Befehl (gleiche Allowlist, gleiches Codewort); höchstens 8 Schritte und 20 Abläufe. - *Dienste per MCP:* Unter „Agent-Funktionen“ der Schalter „Dienste per MCP“. Der Admin trägt Name, Adresse (Streamable HTTP) und Token ein (Anmeldung plus frischer Code; Token im vault, nie zurückgegeben). Jedes Werkzeug ist aus, bis der Admin es auf „lesen“ oder „handeln“ stellt, und pro Dienst werden die Profile angehakt. Lesende Antworten gelten als fremder Text; handelnde Werkzeuge schlagen nur vor und laufen nach dem „Ja“. Ändert ein Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abfragen“ wieder auf aus. Der Spark startet nie selbst ein Programm; Heimnetz-Adressen nur mit der Freigabe unter Sicherheit. - *Eigene MCP-Dienste (V01.0.363):* Unter „Dienste per MCP“ der Schalter „Eigene MCP-Dienste für Profile“. Jedes Profil bindet unter Ich → Meine MCP-Dienste bis zu fünf eigene Dienste an (frischer Code, Schlüssel verschlüsselt) und gibt jedes Werkzeug selbst frei („Lesen“ oder „Handeln mit Ja“). Optional in Hintergrundaufträgen (nur lesend) und mit Anmeldung (OAuth). Der Admin sieht alle unter Apps und Schnittstellen und kann jeden sofort sperren. Detail"
+"text": "akt sie ab; Ich → Aufträge zeigt das live. job_ask stellt dir eine Frage mit bis zu 4 Antworten zum Antippen und wartet bis zu 10 Minuten, nur bei Aufträgen, die du selbst gestartet hast (geplante Aufträge und Beobachten fragen nie); die Mitteilung sagt nur, dass eine Frage wartet, nie die Frage. Eine Frage nach Passwörtern, PINs oder Codes lehnt das Panel ab. job_propose macht höchstens einen Vorschlag: eine Erinnerung, einen Termin oder einen Eintrag auf deiner Einkaufs- oder Aufgabenliste, nie Smart Home, Mail oder etwas außerhalb deines Profils. Der Auftrag führt nichts aus: Unter dem Bericht steht der Vorschlag vollständig in festen Worten, mit Warnung, wenn der Auftrag vorher Text von außen gelesen hat, und „Ja“ / „Nein“. Erst dein Ja führt ihn aus, und nur, wenn er unverändert ist (Prüfsumme), noch offen und höchstens 24 Stunden alt; Notaus und die Freigabe der Funktion gelten dabei wie sonst. Mit „Nachschieben“ ergänzt du einen laufenden Auftrag bis zu dreimal; der Satz geht im nächsten Schritt als deine eigenen Worte ans Modell. Alles auch in der iPhone-App (Auftrag öffnen), Android zeigt die Panel-Seite. Admin: Funktionen → Agent-Funktionen → „Aufträge mit Plan, Rückfrage"
 },
 {
 "lang": "de",
@@ -3565,7 +3565,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Agent-Funktionen (V01.0.175)",
-"text": "s: APIs und Einbinden."
+"text": " und Vorschlag“ (aus), gilt für jedes Profil mit Agent-Funktionen, nie für Gäste. Logs nur feste Wörter: agent: job plan | steps … | done …, agent: job asks, agent: job question answered|unanswered|refused, agent: job proposal saved|done|declined|failed|refused, agent: job steer taken|refused. Selbsttests test_auftragsplan. - *Abläufe (nur Stufe „auch handeln“):* „Merk dir als Ablauf Feierabend: Licht Terrasse an, Pool auf 36 Grad.“ Nach „Ja“ reicht später „Feierabend“. Jeder Schritt ist ein Home-Assistant-Satz und läuft wie ein gesprochener Befehl (gleiche Allowlist, gleiches Codewort); höchstens 8 Schritte und 20 Abläufe. - *Dienste per MCP:* Unter „Agent-Funktionen“ der Schalter „Dienste per MCP“. Der Admin trägt Name, Adresse (Streamable HTTP) und Token ein (Anmeldung plus frischer Code; Token im vault, nie zurückgegeben). Jedes Werkzeug ist aus, bis der Admin es auf „lesen“ oder „handeln“ stellt, und pro Dienst werden die Profile angehakt. Lesende Antworten gelten als fremder Text; handelnde Werkzeuge schlagen nur vor und laufen nach dem „Ja“. Ändert ein Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abfragen“ wieder auf aus. Der Spark startet "
 },
 {
 "lang": "de",
@@ -5492,15 +5492,15 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus)",
-"text": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus): Unter jeder Antwort steht zugeklappt, welche Werkzeuge der Assistent benutzt hat („3 Werkzeuge benutzt · 2,1 s“), aufgeklappt jedes mit ✓ oder ⚠ und seiner Zeit; gezeigt werden nur der lesbare Name (werkzeuge.NAMES), ob es geklappt hat (taten.failed) und die Millisekunden, nie die Angaben an das Werkzeug oder was es gefunden hat. Hat die Antwort einen Vorschlag hinterlassen, der auf ein schlichtes „Ja“ wartet (Termin, Postfach, Liste, Gedächtnis, Auftrag, Nachricht, Durchsage, eigener Dienst, Smart-Home-Meldung, Rückgängig, NAS-Ablage), steht darunter eine Karte „Wartet auf dein Ja: Termin“ mit „Ja“ und „Nein“. Ein Tipp schickt „Ja“ oder „Nein“ wie eine getippte Antwort aus demselben Gerät und Gespräch; das Modul, das vorgeschlagen hat, entscheidet mit seinen festen Regeln (calendars.confirms …) und führt erst dann aus. Die Karte selbst führt nichts aus und nennt nur die Art des Vorschlags (feste Wörter in ablauf.KINDS), nie seinen Text; sie kommt nur für einen Vorschlag aus dieser Antwort, diesem Gerät und Gespräch, höchstens eine pro Antwort, nie im Notaus (dort fallen alle Vorschläge weg). Nur für ein angemeldetes Profil"
+"title": "Ablauf und Freigabe zeigen (V01.0.743, standardmäßig aus)",
+"text": "Ablauf und Freigabe zeigen (V01.0.743, standardmäßig aus): Unter jeder Antwort steht zugeklappt, welche Werkzeuge der Assistent benutzt hat („3 Werkzeuge benutzt · 2,1 s“), aufgeklappt jedes mit ✓ oder ⚠ und seiner Zeit; gezeigt werden nur der lesbare Name (werkzeuge.NAMES), ob es geklappt hat (taten.failed) und die Millisekunden, nie die Angaben an das Werkzeug oder was es gefunden hat. Hat die Antwort einen Vorschlag hinterlassen, der auf ein schlichtes „Ja“ wartet (Termin, Postfach, Liste, Gedächtnis, Auftrag, Nachricht, Durchsage, eigener Dienst, Smart-Home-Meldung, Rückgängig, NAS-Ablage), steht darunter eine Karte „Wartet auf dein Ja: Termin“ mit „Ja“ und „Nein“. Ein Tipp schickt „Ja“ oder „Nein“ wie eine getippte Antwort aus demselben Gerät und Gespräch; das Modul, das vorgeschlagen hat, entscheidet mit seinen festen Regeln (calendars.confirms …) und führt erst dann aus. Die Karte selbst führt nichts aus und nennt nur die Art des Vorschlags (feste Wörter in ablauf.KINDS), nie seinen Text; sie kommt nur für einen Vorschlag aus dieser Antwort, diesem Gerät und Gespräch, höchstens eine pro Antwort, nie im Notaus (dort fallen alle Vorschläge weg). Nur für ein angemeldetes Profil"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus)",
+"title": "Ablauf und Freigabe zeigen (V01.0.743, standardmäßig aus)",
 "text": " auf dem eigenen Gerät, nie für Gäste oder eine fremde Stimme. Gilt im Assistenten im Panel, in der Android-App (zeigt das Panel) und in der iPhone-App (dieselben Ereignisse step und confirm). Schalter: Funktionen → „Ablauf und Freigabe zeigen“. Protokoll: chat: freigabe-karte gezeigt | n. Plan: plaene/redde-ideen/plan.md (Paket A); Tests: app/tests/test_ablauf.py."
 },
 {
@@ -9293,7 +9293,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (84 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (87 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -9485,7 +9485,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 84 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 87 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -11053,7 +11053,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Agent functions (V01.0.175)",
-"text": "onday instead\", after \"Yes\", can be undone) or under Me → Jobs → Own tasks: one list with search and filters for watches, scheduled jobs, repeating reminders, smart home rules of \"Speaking up by itself\" and important mail senders; every row has a switch (off = paused, stays saved), the detail has change, \"Check now\", \"Forget what is known\", history and delete. A paused reminder rings on no device. The iPhone app shows watches and scheduled jobs under \"Proactive\" with a switch and delete. Admin: Features → Agent functions → \"Watching\" (off), applies to every profile with agent functions, never to guests. Logs: agent: watch run | result neu|still|bericht|fehler | new … | dropped …. - *Routines (level \"also act\" only):* \"Remember as routine Evening: terrace light on, pool to 36 degrees.\" After \"Yes\", later \"Evening\" is enough. Every step is a Home Assistant sentence and runs like a spoken command (same allowlist, same code word); at most 8 steps and 20 routines. - *Services over MCP:* below \"Agent functions\" the switch \"Services over MCP\". The admin enters name, address (Streamable HTTP) and token (login plus a fresh code; token in the vault, never sent back). Every tool is off until "
+"text": "onday instead\", after \"Yes\", can be undone) or under Me → Jobs → Own tasks: one list with search and filters for watches, scheduled jobs, repeating reminders, smart home rules of \"Speaking up by itself\" and important mail senders; every row has a switch (off = paused, stays saved), the detail has change, \"Check now\", \"Forget what is known\", history and delete. A paused reminder rings on no device. The iPhone app shows watches and scheduled jobs under \"Proactive\" with a switch and delete. Admin: Features → Agent functions → \"Watching\" (off), applies to every profile with agent functions, never to guests. Logs: agent: watch run | result neu|still|bericht|fehler | new … | dropped …. - *Jobs with plan, questions and proposals (V01.0.744, ideas from Redde, package F):* A job gets three tools that only concern itself. job_plan writes its steps as a list (at most 6) and ticks them off; Me → Jobs shows it live. job_ask asks you one question with up to 4 answers to tap and waits up to 10 minutes, only in jobs you started yourself (scheduled jobs and watching never ask); the notification only says that a question waits, never the question. The panel refuses a question about passwords, PINs o"
 },
 {
 "lang": "en",
@@ -11061,7 +11061,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Agent functions (V01.0.175)",
-"text": "the admin sets it to \"read\" or \"act\", and the profiles are ticked per service. Reading answers count as outside text; acting tools only propose and run after the \"Yes\". If a service changes a tool's description or inputs, it is off again after \"Fetch tools again\". The Spark never starts a program itself; home network addresses only with the permission under Security. - *Own MCP services (V01.0.363):* below \"Services over MCP\" the switch \"Own MCP services for profiles\". Every profile connects up to five services of its own under Me → My MCP services (fresh code, key encrypted) and releases every tool itself (\"Read\" or \"Act after yes\"). Optionally in background jobs (read only) and with sign-in (OAuth). The admin sees all of them under Apps and interfaces and can block each at once. Details: APIs and integration."
+"text": "r codes. job_propose makes one proposal at most: a reminder, an appointment or an entry on your shopping or task list, never smart home, mail or anything outside your profile. The job carries out nothing: under the report the proposal stands in full in fixed words, with a warning when the job read outside text before, and \"Yes\" / \"No\". Only your yes carries it out, and only when it is unchanged (checksum), still open and at most 24 hours old; the emergency stop and the release of the function apply as always. With \"Add\" you add to a running job up to three times; the sentence reaches the model in its next step as your own words. All of it also in the iPhone app (open the job); Android shows the panel page. Admin: Features → Agent functions → \"Jobs with plan, questions and proposals\" (off), applies to every profile with agent functions, never to guests. Logs only fixed words: agent: job plan | steps … | done …, agent: job asks, agent: job question answered|unanswered|refused, agent: job proposal saved|done|declined|failed|refused, agent: job steer taken|refused. Self-tests test_auftragsplan. - *Routines (level \"also act\" only):* \"Remember as routine Evening: terrace light on, pool t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Agent functions (V01.0.175)",
+"text": "o 36 degrees.\" After \"Yes\", later \"Evening\" is enough. Every step is a Home Assistant sentence and runs like a spoken command (same allowlist, same code word); at most 8 steps and 20 routines. - *Services over MCP:* below \"Agent functions\" the switch \"Services over MCP\". The admin enters name, address (Streamable HTTP) and token (login plus a fresh code; token in the vault, never sent back). Every tool is off until the admin sets it to \"read\" or \"act\", and the profiles are ticked per service. Reading answers count as outside text; acting tools only propose and run after the \"Yes\". If a service changes a tool's description or inputs, it is off again after \"Fetch tools again\". The Spark never starts a program itself; home network addresses only with the permission under Security. - *Own MCP services (V01.0.363):* below \"Services over MCP\" the switch \"Own MCP services for profiles\". Every profile connects up to five services of its own under Me → My MCP services (fresh code, key encrypted) and releases every tool itself (\"Read\" or \"Act after yes\"). Optionally in background jobs (read only) and with sign-in (OAuth). The admin sees all of them under Apps and interfaces and can block eac"
 },
 {
 "lang": "en",
@@ -12884,15 +12892,15 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Show steps and approvals (V01.0.727, off by default)",
-"text": "Show steps and approvals (V01.0.727, off by default): Below every answer a folded line shows which tools the assistant used (\"3 tools used · 2.1 s\"), unfolded each with ✓ or ⚠ and its time; only the readable name (werkzeuge.NAMES), whether it worked (taten.failed) and the milliseconds are shown, never what was handed to the tool or what it found. When the answer left a proposal waiting for a plain \"Ja\" (appointment, mailbox, list, memory, job, message, announcement, own service, smart home alert, undo, NAS filing), a card \"Waiting for your yes: Appointment\" with \"Yes\" and \"No\" stands below it. A tap sends \"Ja\" or \"Nein\" like a typed answer from the same device and conversation; the module that made the proposal decides with its fixed rules (calendars.confirms …) and only then carries it out. The card itself carries nothing out and names only the kind of the proposal (fixed words in ablauf.KINDS), never its text; it comes only for a proposal of this answer, device and conversation, at most one per answer, never under the emergency stop (all proposals are dropped there). Only for a signed-in profile on its own device, never for guests or another voice. Works in the panel's assistant,"
+"title": "Show steps and approvals (V01.0.743, off by default)",
+"text": "Show steps and approvals (V01.0.743, off by default): Below every answer a folded line shows which tools the assistant used (\"3 tools used · 2.1 s\"), unfolded each with ✓ or ⚠ and its time; only the readable name (werkzeuge.NAMES), whether it worked (taten.failed) and the milliseconds are shown, never what was handed to the tool or what it found. When the answer left a proposal waiting for a plain \"Ja\" (appointment, mailbox, list, memory, job, message, announcement, own service, smart home alert, undo, NAS filing), a card \"Waiting for your yes: Appointment\" with \"Yes\" and \"No\" stands below it. A tap sends \"Ja\" or \"Nein\" like a typed answer from the same device and conversation; the module that made the proposal decides with its fixed rules (calendars.confirms …) and only then carries it out. The card itself carries nothing out and names only the kind of the proposal (fixed words in ablauf.KINDS), never its text; it comes only for a proposal of this answer, device and conversation, at most one per answer, never under the emergency stop (all proposals are dropped there). Only for a signed-in profile on its own device, never for guests or another voice. Works in the panel's assistant,"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Show steps and approvals (V01.0.727, off by default)",
+"title": "Show steps and approvals (V01.0.743, off by default)",
 "text": " in the Android app (which shows the panel) and in the iPhone app (the same events step and confirm). Switch: Features → \"Show steps and approvals\". Log: chat: freigabe-karte gezeigt | n. Plan: plaene/redde-ideen/plan.md (package A); tests: app/tests/test_ablauf.py."
 },
 {

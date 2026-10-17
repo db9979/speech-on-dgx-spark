@@ -1121,6 +1121,16 @@
         }
       }
     },
+    "Dein Auftrag fragt:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your job asks:"
+          }
+        }
+      }
+    },
     "Dein Name": {
       "localizations": {
         "en": {
@@ -1681,6 +1691,16 @@
         }
       }
     },
+    "Eigene Antwort …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own answer …"
+          }
+        }
+      }
+    },
     "Eigene Dokumente": {
       "localizations": {
         "en": {
@@ -1721,12 +1741,112 @@
         }
       }
     },
+    "Etwas ergänzen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add something …"
+          }
+        }
+      }
+    },
+    "Gib hier nie Passwörter, PINs oder Codes ein. Ohne Antwort macht der Auftrag nach 10 Minuten weiter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never type passwords, PINs or codes here. Without an answer the job goes on after 10 minutes."
+          }
+        }
+      }
+    },
+    "Nachgeschoben: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added: %@"
+          }
+        }
+      }
+    },
+    "Nachschieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "Plan: %lld von %lld erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan: %lld of %lld done"
+          }
+        }
+      }
+    },
+    "Stammt aus einem Auftrag, der Text von außen gelesen hat. Prüf ihn, bevor du Ja sagst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comes from a job that read outside text. Check it before you say Yes."
+          }
+        }
+      }
+    },
+    "Vorschlag:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal:"
+          }
+        }
+      }
+    },
     "Wartet auf dein Ja: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for your yes: %@"
+          }
+        }
+      }
+    },
+    "abgelaufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "expired"
+          }
+        }
+      }
+    },
+    "abgelehnt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "declined"
+          }
+        }
+      }
+    },
+    "angenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "accepted"
           }
         }
       }
@@ -5817,6 +5937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "stopped"
+          }
+        }
+      }
+    },
+    "ging nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed"
           }
         }
       }

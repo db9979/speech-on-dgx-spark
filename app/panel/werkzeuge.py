@@ -65,6 +65,8 @@ NAMES = {
     "document_write": ("Dokument schreiben", "Write document"), "document_build": ("Datei bauen", "Build file"),
     "document_sources": ("Quellen fürs Dokument", "Sources for the document"),
     "document_facts": ("Fakten aus dem Archiv", "Facts from the archive"), "document_picture": ("Bild aus dem Archiv", "Picture from the archive"),
+    "job_plan": ("Plan des Auftrags", "Plan of the job"), "job_ask": ("Rückfrage im Auftrag", "Question in a job"),
+    "job_propose": ("Vorschlag des Auftrags", "Proposal of the job"),
     "today": ("Heute (Überblick)", "Today (overview)"), "action_status": ("Stand einer Bestätigung", "State of a confirmation"),
 }
 MCP = re.compile(r"^mcpu?_[0-9a-f]{6}_(.+)$")   # mcp.exposed / meinmcp.exposed

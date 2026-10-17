@@ -246,6 +246,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 |---|---|
 | `app/panel/aendern.py` | Ändern per Sprache: what so far only had a button on a page. |
 | `app/panel/agent.py` | Agent functions: the assistant works on a task in the background and reports later, runs tasks on a schedule, keeps routines of smart home steps, and uses ou … |
+| `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage und Vorschlag. |
 | `app/panel/beobachten.py` | Eigene Aufgaben, die beobachten: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt“, „Erinnere mich, wenn der Flug nach Rom unter 100 Eu … |
 | `app/panel/calendars.py` | Calendar and daily briefing per profile (guests have neither). |
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
@@ -1674,7 +1675,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (84 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (87 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -1899,7 +1900,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **84** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **87** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 

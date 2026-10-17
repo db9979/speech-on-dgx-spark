@@ -246,6 +246,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 |---|---|
 | `app/panel/aendern.py` | Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“ |
 | `app/panel/agent.py` | Aufträge im Hintergrund, Zeitpläne, Routinen |
+| `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage, Vorschlag mit Ja und Nachschieben |
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
 | `app/panel/calendars.py` | Kalender und Tagesbriefing |
 | `app/panel/contacts.py` | Kontakte per CardDAV, nur lesen |
@@ -1674,7 +1675,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (84 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (87 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1899,7 +1900,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **84** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **87** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 

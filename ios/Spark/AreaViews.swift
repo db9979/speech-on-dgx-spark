@@ -527,14 +527,76 @@ struct JobView: View {
     let job: Job
     @State private var report = ""
     @State private var error: String?
+    // Aufträge mit Plan, Rückfrage und Vorschlag (auftragsplan.py): written by the model, shown as plain text only
+    @State private var todo: [(text: String, done: Bool)] = []
+    @State private var question = ""
+    @State private var choices: [String] = []
+    @State private var notes: [String] = []
+    @State private var running = false
+    @State private var proposal: (text: String, h: String, outside: Bool, open: Bool, done: String)?
+    @State private var input = ""
+    @State private var steerInput = ""
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Text(verbatim: job.task).font(.headline)
                 if !job.error.isEmpty { Text(verbatim: job.error).foregroundStyle(.red) }
+                if !todo.isEmpty {
+                    Text("Plan: \(todo.filter { $0.done }.count) von \(todo.count) erledigt").font(.caption).foregroundStyle(.secondary)
+                    ForEach(Array(todo.enumerated()), id: \.offset) { _, x in
+                        Text(verbatim: (x.done ? "✓ " : "○ ") + x.text).font(.subheadline).foregroundStyle(x.done ? .secondary : .primary)
+                    }
+                }
+                ForEach(Array(notes.enumerated()), id: \.offset) { _, n in
+                    Text("Nachgeschoben: \(n)").font(.caption).foregroundStyle(.secondary)
+                }
+                if !question.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Dein Auftrag fragt:").font(.subheadline.bold())
+                        Text(verbatim: question)
+                        ForEach(choices, id: \.self) { c in
+                            Button { Task { await send("answer", ["text": c]) } } label: { Text(verbatim: c) }.buttonStyle(.bordered)
+                        }
+                        HStack {
+                            TextField("Eigene Antwort …", text: $input).textFieldStyle(.roundedBorder)
+                            Button("Antworten") { let v = input; input = ""; Task { await send("answer", ["text": String(v.prefix(200))]) } }
+                                .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
+                        }
+                        Text("Gib hier nie Passwörter, PINs oder Codes ein. Ohne Antwort macht der Auftrag nach 10 Minuten weiter.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                if running && notes.count < 3 {
+                    HStack {
+                        TextField("Etwas ergänzen …", text: $steerInput).textFieldStyle(.roundedBorder)
+                        Button("Nachschieben") { let v = steerInput; steerInput = ""; Task { await send("steer", ["text": String(v.prefix(300))]) } }
+                            .disabled(steerInput.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                }
                 // the job's report: what the language model wrote from outside sources, shown as plain text
                 Text(verbatim: report.isEmpty ? job.summary : report).textSelection(.enabled)
+                if let p = proposal {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Vorschlag:").font(.subheadline.bold())
+                        Text(verbatim: p.text)
+                        if p.outside {
+                            Text("Stammt aus einem Auftrag, der Text von außen gelesen hat. Prüf ihn, bevor du Ja sagst.").font(.caption).foregroundStyle(.orange)
+                        }
+                        if p.open {
+                            HStack {
+                                Button("Ja") { Task { await send("proposal", ["yes": true, "h": p.h]) } }.buttonStyle(.borderedProminent)
+                                Button("Nein") { Task { await send("proposal", ["yes": false, "h": p.h]) } }.buttonStyle(.bordered)
+                            }
+                        } else {
+                            Text(p.done == "ja" ? String(localized: "angenommen") : p.done == "nein" ? String(localized: "abgelehnt")
+                                 : p.done == "fehler" ? String(localized: "ging nicht") : String(localized: "abgelaufen"))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
                 if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             }
             .padding()
@@ -542,12 +604,33 @@ struct JobView: View {
         }
         .navigationTitle("Auftrag")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            do {
-                let d = try await SparkAPI.current?.object("GET", "api/profile/agent/jobs/\(job.id)")
-                report = String((d?["report"] as? String ?? "").prefix(200_000))
-            } catch { self.error = error.localizedDescription }
-        }
+        .task { await load() }
+    }
+
+    func load() async {
+        do {
+            guard let d = try await SparkAPI.current?.object("GET", "api/profile/agent/jobs/\(job.id)") else { return }
+            report = String((d["report"] as? String ?? "").prefix(200_000))
+            running = (d["state"] as? String) == "running"
+            todo = (d["todo"] as? [[String: Any]] ?? []).prefix(6).map { (String(($0["text"] as? String ?? "").prefix(80)), $0["done"] as? Bool ?? false) }
+            let ask = d["ask"] as? [String: Any]
+            question = String((ask?["q"] as? String ?? "").prefix(200))
+            choices = (ask?["choices"] as? [String] ?? []).prefix(4).map { String($0.prefix(40)) }
+            notes = (d["notes"] as? [[String: Any]] ?? []).prefix(3).map { String(($0["text"] as? String ?? "").prefix(300)) }
+            if let p = d["proposal"] as? [String: Any], let h = p["h"] as? String {
+                proposal = (String((p["text"] as? String ?? "").prefix(400)), String(h.prefix(16)), p["outside"] as? Bool ?? true,
+                            p["open"] as? Bool ?? false, p["done"] as? String ?? "")
+            } else { proposal = nil }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    /// answer, steer or proposal: the panel checks everything again (own profile, still waiting, same proposal)
+    func send(_ what: String, _ body: [String: Any]) async {
+        do {
+            _ = try await SparkAPI.current?.call("POST", "api/profile/agent/jobs/\(job.id)/\(what)", body: body)
+            await load()
+        } catch { self.error = error.localizedDescription }
     }
 }
 

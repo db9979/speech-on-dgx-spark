@@ -227,6 +227,9 @@ FEATURES = (
     F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests
     F("beobachten", "Beobachten", "Watching", "day", ("agent_watch",), parent="agent", me="agentbox", guide="beobachten"),
+    # package F of the redde ideas (auftragsplan.py): plan, question, proposal and Nachschieben inside a job
+    F("auftragsplan", "Aufträge mit Plan, Rückfrage und Vorschlag", "Jobs with plan, questions and proposals", "day",
+      ("agent_plan",), parent="agent", me="agentbox", guide="auftragsplan"),
     F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
     # each profile its own MCP services (meinmcp.py); needs no agent level, only the switches
     F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), parent="mcp", me="mymcpbox",

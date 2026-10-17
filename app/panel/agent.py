@@ -567,14 +567,18 @@ async def run_job(uid, jid):
     item = job(uid, jid)
     if not item or item.get("state") != "queued":
         return
-    _set_job(uid, jid, state="running", started=int(time.time()))
+    _set_job(uid, jid, state="running", started=int(time.time()), ask=None)
     print("agent: job running", flush=True)
+    import auftragsplan
     import chat
     tools, extra = job_tools(uid, item.get("private", True))
+    plus = auftragsplan.tools_for(uid, item)     # plan, question, proposal (package F, its own switch)
+    tools.update(plus)
     s = profiles.settings(uid)
     prof = profiles.by_id(uid) or {"name": ""}
     plan = next((x for x in load(uid)["plans"] if x["id"] == item.get("plan")), None) if item.get("origin") == "watch" else None
-    system = JOB_SYSTEM + ("\n\n" + beobachten.RULES if plan else "") + "\n\n" + chat.now_line(s.get("tz", ""))
+    system = JOB_SYSTEM + ("\n\n" + beobachten.RULES if plan else "") + (auftragsplan.HINT if plus else "") \
+        + "\n\n" + chat.now_line(s.get("tz", ""))
     task = item["task"]
     if plan and plan.get("known"):   # what the watch already knows (the panel decides anyway, this only saves steps)
         task += "\nSchon bekannt (nicht neu): " + "; ".join(clean(k.get("v"), 80) for k in plan["known"][:10])
@@ -599,6 +603,9 @@ async def run_job(uid, jid):
         nonlocal used_private
         for n in range(MAX_ROUNDS + 1):
             await _quiet()
+            for text in auftragsplan.take_steers(uid, jid):   # Nachschieben: the person's own words, also for searches
+                messages.append({"role": "user", "content": "Nachtrag des Nutzers zum Auftrag: " + text})
+                counts["task"] += " " + text
             last = n == MAX_ROUNDS
             if last:
                 messages.append({"role": "user", "content": WRAP_UP})
@@ -624,7 +631,10 @@ async def run_job(uid, jid):
                     if rec is not None:
                         rec.now("tool", name)
                     try:
-                        result = await _job_tool(uid, name, _args(fn.get("arguments")), extra, counts, steps)
+                        if name in plus:
+                            result = await auftragsplan.tool(uid, jid, name, _args(fn.get("arguments")), counts, item["task"])
+                        else:
+                            result = await _job_tool(uid, name, _args(fn.get("arguments")), extra, counts, steps)
                     except Exception as e:
                         result, ok = f"The tool failed: {type(e).__name__}", False
                     if rec is not None:
@@ -633,14 +643,15 @@ async def run_job(uid, jid):
                 _set_job(uid, jid, steps=steps[-30:])
         return ""
     try:
-        report = await asyncio.wait_for(work(), JOB_SECONDS)
+        report = await asyncio.wait_for(work(), JOB_SECONDS + auftragsplan.seconds(plus))
     except asyncio.TimeoutError:
         report = ""
-        _set_job(uid, jid, error="Zeit abgelaufen.")
+        _set_job(uid, jid, error="Zeit abgelaufen.", ask=None)
     except (httpx.HTTPError, KeyError, ValueError) as e:
         _set_job(uid, jid, state="failed", finished=int(time.time()), error="Sprachmodell: " + type(e).__name__,
-                 steps=steps[-30:])
+                 steps=steps[-30:], ask=None)
         _live_end(rec, False)
+        auftragsplan.forget(uid, jid)
         if plan:
             await watch_done(uid, jid, "", counts)
             return
@@ -648,7 +659,9 @@ async def run_job(uid, jid):
         return
     except BaseException:
         _live_end(rec, False)
+        auftragsplan.forget(uid, jid)
         raise
+    auftragsplan.forget(uid, jid)
     _live_end(rec, bool(report))
     if (job(uid, jid) or {}).get("state") == "cancelled":
         return
@@ -804,7 +817,7 @@ async def deliver(uid, item, private=True):
         title, body = "🔎 Auftrag erledigt", item.get("summary") or item["task"]
     else:
         title, body = "⚠️ Auftrag ging nicht", f"„{item['task'][:120]}“: {item.get('error') or 'kein Bericht'}"
-    body = body[:600] + "\nGanzer Bericht: Ich → Aufträge"
+    body = body[:600] + "\nGanzer Bericht: Ich → Aufträge" + ("\nEin Vorschlag wartet auf dein Ja." if item.get("proposal") else "")
     try:
         return await push.send(uid, title, body, tag="agent", private=bool(private))
     except Exception as e:
@@ -1598,6 +1611,8 @@ def _public_job(x, full=False):
     out = {k: x.get(k) for k in ("id", "task", "state", "created", "started", "finished", "summary", "error",
                                  "origin", "doc", "doc_name", "doc_error")}
     out["steps"] = [s.get("what", "") for s in x.get("steps") or []][-30:]
+    import auftragsplan
+    out.update(auftragsplan.public(x))
     if full:
         out["report"] = x.get("report", "")
     return out
@@ -1606,7 +1621,8 @@ def _public_job(x, full=False):
 def _view(uid):
     d = load(uid)
     import homeassistant
-    return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(level(uid)),
+    import auftragsplan
+    return {"admin": admin_on(), "granted": granted(uid), "level": level(uid), "on": bool(level(uid)), "plan": auftragsplan.on(uid),
             "watch": watch_on(uid), "max_watch": beobachten.MAX_WATCH, "own": own_tasks(uid, d),
             "ha": bool(features.allowed("ha", uid) and homeassistant.get(uid)),
             "jobs": [_public_job(x) for x in reversed(d["jobs"])],
