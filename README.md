@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.743** Show steps and approvals: below every answer the tools the assistant used, and proposals as a card with "Yes" and "No"
 - **V01.0.742** Fix: profiles no longer get the admin sign-in window when the page starts
 - **V01.0.741** Describe the screen: ask "What do you see on my Mac?", the computer asks first, the description is shown but never stored
 - **V01.0.740** Self-test fix: the Kiwix test switches the Weiche off itself
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.736** Pebble watch: own Spark watchface, my day and my week, quick notes with place
 - **V01.0.735** Pebble watch 2.0: on the road over https, follow-ups to tap, own quick commands, reminders and timers on the wrist
 - **V01.0.734** CarPlay: listening in the car no longer stops in mid-sentence (quieter voice counts, 1.6 s pause, 15 s without a voice)
-- **V01.0.733** Chat calls now also show under devices on Live, monitoring and the Steuerzentrale (browser or iPhone app, "Anruf"), from ringing to hanging up
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

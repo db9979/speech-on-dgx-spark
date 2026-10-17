@@ -246,7 +246,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[];let rateId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[];let rateId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
@@ -279,6 +279,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
         else if(ev.type==='bild'||ev.type==='musik'){blcards.push(ev)}   // a picture or a song made for this answer (bilder.js, musik.js)
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
+        else if(ev.type==='step'){steps.push(ev)}   // Ablauf zeigen (ablauf.py): tool name, ok and time, never what it found
+        else if(ev.type==='confirm'){confirms.push(ev)}   // Freigabe-Karte: a proposal of this answer waits for "Ja"
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // 👍/👎 for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
@@ -294,12 +296,14 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(screenUsed?{screen:true}:{}),...(att.length?{att}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   attRender(el,att,true);
+  if(steps.length)el.appendChild(stepsFold(steps));
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
   if(why)el.appendChild(whyNote(why));
   if(typeof hilfeCard==='function')for(const c of hcards)el.appendChild(hilfeCard(c));
   if(typeof mkCard==='function')for(const c of mkcards)el.appendChild(mkCard(c));
   for(const c of blcards){if(c.type==='musik'){if(typeof musikCard==='function')el.appendChild(musikCard(c))}else if(typeof bildCard==='function')el.appendChild(bildCard(c))}
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
+  if(!err&&!foreign)for(const c of confirms)el.appendChild(confirmCard(c));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
@@ -321,6 +325,19 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
   chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})}
+// Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓/⚠ name and time
+function stepsFold(steps){const d=document.createElement('details');d.className='steps';const s=document.createElement('summary');
+  const sec=x=>(x/1000).toLocaleString(L==='en'?'en':'de',{maximumFractionDigits:1})+' s',all=steps.reduce((a,x)=>a+(x.ms||0),0);
+  s.textContent=(steps.length===1?t('1 Werkzeug benutzt','1 tool used'):t(steps.length+' Werkzeuge benutzt',steps.length+' tools used'))+' · '+sec(all);d.appendChild(s);
+  const ul=document.createElement('ul');for(const x of steps){const li=document.createElement('li');li.className=x.ok?'ok':'bad';
+    li.textContent=(x.ok?'✓ ':'⚠ ')+(L==='en'?x.en:x.de)+' · '+sec(x.ms||0);ul.appendChild(li)}
+  d.appendChild(ul);return d}
+// Freigabe-Karte (ablauf.py): Ja and Nein send the words like a typed answer; the module that proposed decides by its rules
+function confirmCard(c){const d=document.createElement('div');d.className='confirmc';const h=document.createElement('b');
+  h.textContent=t('Wartet auf dein Ja: ','Waiting for your yes: ')+(L==='en'?c.en:c.de);d.appendChild(h);const row=document.createElement('div');row.className='choice';
+  const btn=(label,word,cls)=>{const b=document.createElement('button');b.type='button';b.className='b chb'+cls;b.textContent=label;
+    b.onclick=()=>{if(chat.ctrl)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);b.classList.add('on');ask(word)};row.appendChild(b)};
+  btn(t('Ja','Yes'),'Ja',' on');btn(t('Nein','No'),'Nein','');d.appendChild(row);return d}
 // Rückfrage statt Raten (klaeren.py): the panel's own question as buttons, or the whole list with a search field.
 // A tap sends the name like a typed answer; the panel takes it by fixed rules, the model never picks.
 function choiceCard(c){const d=document.createElement('div');d.className='choice';const opts=c.options||[];

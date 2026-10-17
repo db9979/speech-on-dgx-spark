@@ -79,6 +79,16 @@ def notaus_note(held, mine=False):
             "sperrt es, bis ein Admin ihn aufhebt.")
 
 
+def waiting_mods():
+    """Every module that keeps one proposal per profile waiting for a plain "Ja" (profiles.pending_set): Notaus
+    drops them all, and the Freigabe-Karte (ablauf.py) asks about the one this turn left."""
+    import agent
+    import messages as inbox   # (messages is the conversation in prepare)
+    import tasks
+    import roomfar
+    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage)
+
+
 class Turn:
     """The values prepare() worked out for one turn (plus the queues chat._answer() adds)."""
 
@@ -573,11 +583,7 @@ async def prepare(request):
     act_held = held >= 2 or mine
     src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if act_held and who:
-        import agent
-        import messages as inbox   # (messages is the conversation here)
-        import tasks
-        import roomfar
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage):
+        for mod in waiting_mods():
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
@@ -978,6 +984,9 @@ async def prepare(request):
     # thinking only while choosing the tool: released by the admin for this profile (never guests)
     think_tools = bool(who and own_browser and features.allowed("toolthink", who["id"], ccfg))
     small = bool(chat.SMALLTALK.fullmatch(ask_text))
+    # Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer under it, a waiting proposal as a card with
+    # Ja and Nein; only the profile's own device, never guests or another voice
+    steps_on = bool(who and own_browser and features.allowed("ablauf", who["id"], ccfg))
     if tools_stable is not None and tools_stable:
         names = [t["function"]["name"] for t in tools]
         if len(names) < len(tools_stable):   # fewer for this question: said with it, the list itself stays

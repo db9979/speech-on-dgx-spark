@@ -141,6 +141,16 @@
         }
       }
     },
+    "%lld Werkzeuge benutzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tools used"
+          }
+        }
+      }
+    },
     "%lld Zeichen": {
       "localizations": {
         "en": {
@@ -187,6 +197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 day"
+          }
+        }
+      }
+    },
+    "1 Werkzeug benutzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 tool used"
           }
         }
       }
@@ -1697,6 +1717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Own conversation style"
+          }
+        }
+      }
+    },
+    "Wartet auf dein Ja: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your yes: %@"
           }
         }
       }

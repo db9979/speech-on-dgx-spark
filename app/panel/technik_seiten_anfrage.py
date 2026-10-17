@@ -182,6 +182,10 @@ SEITEN = {
              "Features → Ask instead of guessing: the panel asks instead of guessing (default off)."),
             ("Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.",
              "Features → Switch: the fixed rules that narrow the tools."),
+            ("Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein "
+             "(nur eigenes Profil und Gerät, Standard aus).",
+             "Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No "
+             "(own profile and device only, default off)."),
         ],
         "sehen": [
             ("Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“, Pflichtwerkzeug und Sperre, ohne Inhalt.",
@@ -660,6 +664,10 @@ SEITEN = {
              "Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound."),
             ("Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben.",
              "Status → Improve: how often the built-in rules stepped in today."),
+            ("Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender "
+             "Vorschlag als Karte mit Ja und Nein; nur Namen und Zahlen, nie Ergebnisse.",
+             "Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a "
+             "card with Yes and No; only names and numbers, never results."),
         ],
         "code": [
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),
@@ -683,7 +691,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "bca98c273f",
+        "stand": "a73290f5d0",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -837,6 +845,10 @@ SEITEN = {
              "Status → Logs → Requests: every call with its readable name, ok or not, length and whether locked."),
             ("Zustand → Live: welches Werkzeug gerade läuft und was der Dienst zurückgab (nur die Art).",
              "Status → Live: which tool runs right now and what the service gave back (only the kind)."),
+            ("Unter der Antwort (Ablauf und Freigabe zeigen): jedes angebotene Werkzeug mit verständlichem Namen, ✓/⚠ "
+             "und Zeit (ablauf.step), nie seine Angaben oder sein Ergebnis.",
+             "Below the answer (Show steps and approvals): every offered tool with its readable name, ✓/⚠ and time "
+             "(ablauf.step), never its arguments or its result."),
         ],
         "code": [
             ("chat_tools.run", ("die Prüfungen und alle eingebauten Werkzeuge", "the checks and all built-in tools")),

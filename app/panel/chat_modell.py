@@ -1,5 +1,6 @@
 """chat_modell.py: the model side of an answer, cut out of chat._answer (plan Aufräumen, Richtlinie Teil 17).
 Same code, same order; chat._answer hands every value over by name."""
+import ablauf
 import aendern
 import answercheck
 import asyncio
@@ -175,6 +176,8 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 await sentences.put(filler[1] if chat.guess_language(messages[-1]["content"]) == "English" else filler[0])
             dargs = getattr(turn, "direct_args", None) or {}   # only a date the panel worked out (intent.direct_args)
             result = await run_tool(direct, dict(dargs), st)
+            if getattr(turn, "steps_on", False):   # Ablauf zeigen: the tool the panel called itself
+                await out.put(ablauf.step(direct, result, time.time() - t_dr))
             pin = getattr(turn, "kl_pin", None)
             if pin and isinstance(result, str):   # the person's choice (klaeren.py): offer to remember it
                 import klaeren
@@ -296,7 +299,10 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 t_tool = time.time()
                 if tr:
                     tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
+                offered = x["name"] in st["offered"]
                 result = await run_tool(x["name"], args, st)
+                if getattr(turn, "steps_on", False) and offered:   # Ablauf zeigen (ablauf.py): name, ok, time
+                    await out.put(ablauf.step(x["name"], result, time.time() - t_tool))
                 if not st["ran"] and getattr(turn, "route", None) is not None and not turn.route.names:
                     import weiche   # Lernen: the group of the first tool of an unclear question, never its words
                     weiche.learn(turn.route, x["name"])

@@ -20,6 +20,15 @@ enum ChatEvent {
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
+    case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
+    case confirm(String)    // Freigabe-Karte (ablauf.py): the kind of a proposal waiting for "Ja", in fixed words
+}
+
+/// One tool of an answer (ablauf.py): only its readable name, whether it worked and its time, never what it found.
+struct StepItem: Hashable {
+    let name: String
+    let ok: Bool
+    let ms: Int
 }
 
 /// „Das kannst du auch sagen“ (saetze.py): a sentence the person can say, and the tool it is for (only its name
@@ -855,6 +864,19 @@ struct SparkAPI {
                                 return s.isEmpty ? nil : MoreItem(text: s, tool: tool)
                             }
                             if !items.isEmpty { cont.yield(.more(kind: String((ev["kind"] as? String ?? "").prefix(10)), items: items)) }
+                        case "step":
+                            // the readable name in the app's language (plain text, short), ok and the milliseconds
+                            let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
+                            let name = String(((de ? ev["de"] : ev["en"]) as? String ?? "").prefix(60))
+                            if !name.isEmpty {
+                                let ms = min(max((ev["ms"] as? NSNumber)?.intValue ?? 0, 0), 3_600_000)
+                                cont.yield(.step(StepItem(name: name, ok: ev["ok"] as? Bool ?? false, ms: ms)))
+                            }
+                        case "confirm":
+                            // only the kind in fixed words; a tap sends "Ja" or "Nein" like a typed answer
+                            let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
+                            let kind = String(((de ? ev["de"] : ev["en"]) as? String ?? "").prefix(40))
+                            if !kind.isEmpty { cont.yield(.confirm(kind)) }
                         case "rate":
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.743** Ablauf und Freigabe zeigen: unter jeder Antwort, welche Werkzeuge der Assistent benutzt hat, und Vorschläge als Karte mit „Ja“ und „Nein“
 - **V01.0.742** Rot-Fix: Profile bekommen beim Seitenstart kein Admin-Anmeldefenster mehr
 - **V01.0.741** Bildschirm beschreiben: „Was siehst du auf meinem Mac?“ fragen, der Rechner fragt vorher, die Beschreibung wird gezeigt, aber nie gespeichert
 - **V01.0.740** Rot-Fix: der Kiwix-Selbsttest stellt die Weiche selbst ab
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.736** Pebble-Uhr: eigenes Spark-Zifferblatt, Mein Tag und Meine Woche, Schnell merken mit Ort
 - **V01.0.735** Pebble-Uhr 2.0: unterwegs über https, Nachfragen zum Antippen, eigene Schnellbefehle, Erinnerungen und Timer am Handgelenk
 - **V01.0.734** CarPlay: Zuhören bricht im Auto nicht mehr mitten im Satz ab (leisere Stimme zählt, 1,6 s Pause, 15 s ohne Stimme)
-- **V01.0.733** Anrufe im Chat stehen auf Live, Monitoring und der Steuerzentrale jetzt auch unter Geräte (Browser oder iPhone-App, „Anruf“), vom Klingeln bis zum Auflegen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

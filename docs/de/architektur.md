@@ -174,6 +174,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/ablauf.py` | Zeigt unter der Antwort die benutzten Werkzeuge und einen wartenden Vorschlag als Karte mit Ja und Nein |
 | `app/panel/ack.py` | Sofortige Rückmeldung aus aufgenommenen Sätzen |
 | `app/panel/answercheck.py` | Antwort-Prüfung: das Panel entscheidet, ob ein Satz gesagt werden darf |
 | `app/panel/chat.py` | Der Assistent: /api/chat, Runden mit dem Modell, Text und Ton als Strom |
@@ -1567,6 +1568,7 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 - Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt.
 - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus).
 - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.
+- Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein (nur eigenes Profil und Gerät, Standard aus).
 
 #### Was du siehst
 
@@ -1795,6 +1797,7 @@ flowchart TD
 - Zustand → Logs → Anfragen: jede Runde, jedes Werkzeug, „Antwort-Prüfung“ und „Taten-Prüfung“ mit Zahlen, nie mit Text.
 - Zustand → Logs → Erweitert → Gespräch: wo die Zeit einer Antwort blieb, bis zum ersten Ton.
 - Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben.
+- Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender Vorschlag als Karte mit Ja und Nein; nur Namen und Zahlen, nie Ergebnisse.
 
 #### Im Code
 
@@ -1907,6 +1910,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 
 - Zustand → Logs → Anfragen: jeder Aufruf mit verständlichem Namen, ok oder nicht, Länge und ob gesperrt.
 - Zustand → Live: welches Werkzeug gerade läuft und was der Dienst zurückgab (nur die Art).
+- Unter der Antwort (Ablauf und Freigabe zeigen): jedes angebotene Werkzeug mit verständlichem Namen, ✓/⚠ und Zeit (ablauf.step), nie seine Angaben oder sein Ergebnis.
 
 #### Im Code
 
@@ -2372,6 +2376,7 @@ flowchart TD
 
 - Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und die Zeit bis zum ersten Wort.
 - Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil.
+- Unter der Antwort (Ablauf und Freigabe zeigen): die Werkzeuge der Runden mit Name, ✓/⚠ und Zeit.
 - Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet.
 - Spark teilen: Läuft das Panel auf einem anderen Rechner, stehen Sprachmodell, Spracherkennung, Sprachausgabe und Bilder auf dem Modell-Rechner (Zustand → Live, Kasten „Modell-Rechner“); das Panel erreicht sie nur über das TLS-Tor mit festem Zertifikat und steuert sie über den Wärter.
 

@@ -2133,6 +2133,10 @@ async def _answer(request, turn):
                 more = None
             if more:
                 yield f"data: {json.dumps(more)}\n\n"
+            if getattr(turn, "steps_on", False):   # Freigabe-Karte (ablauf.py): a proposal of this answer waits for "Ja"
+                import ablauf
+                for ev in ablauf.waiting(who["id"], chat_turn.waiting_mods(), t0, src):
+                    yield f"data: {json.dumps(ev)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:

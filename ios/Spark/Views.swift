@@ -302,6 +302,8 @@ struct ChatView: View {
                         ForEach(talk.messages) { m in
                             Bubble(message: m).id(m.id)
                             if m.role != "user", let j = m.picJob { PictureCard(job: j) }
+                            if m.role != "user", let steps = m.steps, !steps.isEmpty { StepsFold(steps: steps) }
+                            if m.role != "user", m.id == talk.messages.last?.id, let kind = m.confirm { ConfirmCard(kind: kind) }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
                                 MoreRow(kind: m.moreKind ?? "", items: more)
@@ -742,6 +744,54 @@ struct MoreRow: View {
             }
         }
         .padding(.leading, 6)
+    }
+}
+
+/// Ablauf zeigen (ablauf.py): the tools of an answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓/⚠ name and time.
+struct StepsFold: View {
+    let steps: [StepItem]
+
+    static func seconds(_ ms: Int) -> String {
+        (Double(ms) / 1000).formatted(.number.precision(.fractionLength(0...1))) + " s"
+    }
+
+    var body: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { _, x in
+                    Text(verbatim: (x.ok ? "✓ " : "⚠ ") + x.name + " · " + Self.seconds(x.ms))
+                        .foregroundStyle(x.ok ? Color.green : Color.orange)
+                }
+            }
+            .font(.caption)
+        } label: {
+            Text(steps.count == 1 ? String(localized: "1 Werkzeug benutzt") : String(localized: "\(steps.count) Werkzeuge benutzt"))
+                + Text(verbatim: " · " + Self.seconds(steps.reduce(0) { $0 + $1.ms }))
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.leading, 6)
+    }
+}
+
+/// Freigabe-Karte (ablauf.py): a proposal of the last answer waits for "Ja". Ja and Nein send the word like a typed
+/// answer; the Spark's module that proposed decides with its own rules, the card carries nothing out.
+struct ConfirmCard: View {
+    let kind: String
+    @State private var sent = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Wartet auf dein Ja: \(kind)").font(.footnote.bold())
+            HStack(spacing: 10) {
+                Button("Ja") { sent = true; Conversation.shared.write("Ja") }.buttonStyle(.borderedProminent)
+                Button("Nein") { sent = true; Conversation.shared.write("Nein") }.buttonStyle(.bordered)
+            }
+            .disabled(sent)
+        }
+        .padding(10)
+        .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange, lineWidth: 1.5))
     }
 }
 

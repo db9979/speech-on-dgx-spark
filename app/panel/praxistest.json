@@ -1618,6 +1618,13 @@
 "titel": "Bildschirm beschreiben",
 "text": "A: Funktionen → Spark bedient den Rechner ist an, unter Ich → Begleiter ist beim Gerät „Bildschirm zeigen und bedienen“ an; der Begleiter am Mac (oder PC) ist verbunden. P: In der iPhone-App „Was siehst du gerade auf meinem Mac?“ fragen. Am Mac erscheint „Spark hinsehen lassen?“ mit der Frage; „Erlauben“ drücken. Nach wenigen Sekunden beschreibt der Spark kurz, was offen ist, ohne Passwörter oder Zahlen vorzulesen. Den Chat schließen und wieder öffnen: an der Stelle steht nur noch „(Hier stand eine Beschreibung deines Bildschirms. Sie wird nicht gespeichert.)“. Noch einmal fragen und am Mac „Ablehnen“ drücken: der Spark sagt, dass er nicht hinsehen durfte.",
 "thread": "Rechner fernsteuern"
+},
+{
+"id": "P255",
+"v": 743,
+"titel": "Ablauf und Freigabe-Karte im Assistenten",
+"text": "A: Funktionen → „Ablauf und Freigabe zeigen“ an. P: im Assistenten „Was steht morgen in meinem Kalender?“ fragen: unter der Antwort steht zugeklappt „1 Werkzeug benutzt · … s“, aufgeklappt „✓ Termine lesen“. Dann „Trag mir morgen um 10 Uhr Zahnarzt ein“: unter der Antwort die Karte „Wartet auf dein Ja: Termin“ mit Ja und Nein; „Nein“ tippen, nichts wird eingetragen; noch einmal fragen und „Ja“ tippen, der Termin steht im Kalender. Dasselbe in der iPhone-App und in der Android-App.",
+"thread": "Ideen aus Redde"
 }
 ]
 }

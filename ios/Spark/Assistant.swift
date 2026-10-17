@@ -24,6 +24,9 @@ final class Conversation: ObservableObject {
         /// „Das kannst du auch sagen“ (saetze.py): the Spark's sentences under this answer and their kind
         var more: [MoreItem]?
         var moreKind: String?
+        /// Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer, and the kind of a proposal waiting for "Ja"
+        var steps: [StepItem]?
+        var confirm: String?
     }
 
     /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
@@ -670,6 +673,8 @@ final class Conversation: ObservableObject {
                 case .rate(let id): edit { $0.rateId = id }
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
+                case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }
+                case .confirm(let kind): edit { $0.confirm = kind }
                 }
             }
             streamDone = true

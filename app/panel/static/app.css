@@ -1366,6 +1366,8 @@ textarea.factedit{width:100%;margin:0 0 6px}
 
 /* Rückfrage statt Raten (klaeren.py): buttons or the list under the assistant's question */
 .choice{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bubble .steps{margin-top:8px;font-size:12px;color:var(--mut)}.bubble .steps summary{cursor:pointer}.bubble .steps ul{margin:4px 0 0 6px;padding-left:10px;border-left:2px solid var(--line);list-style:none}.bubble .steps li.ok{color:var(--ok)}.bubble .steps li.bad{color:var(--warn)}
+.confirmc{margin-top:10px;padding:10px 12px;border:1.5px solid var(--warn);border-radius:12px;background:color-mix(in srgb,var(--warn) 8%,transparent)}.confirmc .choice{margin-top:6px}
 /* „Das kannst du auch sagen“ (saetze.js): the sentences under an answer, „Probier mal“, Ich → Was ich kann */
 .more{margin-top:10px}.more .choice{margin-top:4px}.more .moreh{font-size:12px}
 .morestart{margin:18px auto;max-width:560px;text-align:center}.morestart .choice{justify-content:center}

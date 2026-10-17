@@ -200,6 +200,8 @@ SEITEN = {
              "the first word."),
             ("Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil.",
              "Status → Usage: tokens per day, model, area and profile."),
+            ("Unter der Antwort (Ablauf und Freigabe zeigen): die Werkzeuge der Runden mit Name, ✓/⚠ und Zeit.",
+             "Below the answer (Show steps and approvals): the tools of the rounds with name, ✓/⚠ and time."),
             ("Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet.",
              "Status → Checks → Speech first: whether speech output stays smooth while the model computes."),
             ("Spark teilen: Läuft das Panel auf einem anderen Rechner, stehen Sprachmodell, Spracherkennung, Sprachausgabe "

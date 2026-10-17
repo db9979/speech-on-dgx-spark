@@ -132,6 +132,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Pro Profil gibt es genau einen offenen Vorschlag. Er gilt nur für dasselbe Gerät, ein schlichtes „Ja“ und 15 Minuten. (C; 🧪 test_hardening)
 - Home Assistant läuft mit einer Allowlist von Domains. Mail wird nie gelöscht. (C)
 - Vorschlagskarten (Hilfe, Tipps, Einstellungs-Assistent) schalten nie selbst. Erst der Tipp der Person auf „Übernehmen“ schaltet, mit denselben Prüfungen wie das Formular. Sicherheit wird nie per Karte abgeschwächt, dafür gibt es nur „Zeig mir wo“. (P panel-hilfe, funktionen-entdecken, einstellungs-assistent)
+- **Freigabe-Karte** (V01.0.727, Plan `redde-ideen/plan.md`): Ein Modul, das einen Vorschlag auf ein „Ja“ warten lässt, steht in `chat_turn.waiting_mods()` (dieselbe Liste leert der Notaus) und hat seine Art in festen Wörtern in `ablauf.KINDS`. Die Karte schickt nur „Ja“ oder „Nein“ wie getippt; ausführen tut das Modul mit seinen eigenen Regeln, nie die Karte. (🧪 test_ablauf)
 
 ### 2.5 Verbindungen nach außen (SSRF)
 - Nur http(s), nur über `netguard`. Loopback, private und link-local Adressen sind gesperrt, außer der Admin erlaubt das Heimnetz. (C)

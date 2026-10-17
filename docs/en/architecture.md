@@ -174,6 +174,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 
 | Module | Task |
 |---|---|
+| `app/panel/ablauf.py` | Ablauf und Freigabe zeigen. |
 | `app/panel/ack.py` | Instant acknowledgement. |
 | `app/panel/answercheck.py` | Answer check: the panel, not the model, decides whether a sentence may be said. |
 | `app/panel/chat.py` | The voice assistant: /api/chat with its tools (search, memory, documents, reminders, calendar, e-mail, Home Assistant, earlier conversations), learning from … |
@@ -1567,6 +1568,7 @@ Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 - People and devices → Blocked functions: what a single profile does not get.
 - Features → Ask instead of guessing: the panel asks instead of guessing (default off).
 - Features → Switch: the fixed rules that narrow the tools.
+- Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No (own profile and device only, default off).
 
 #### What you see
 
@@ -1795,6 +1797,7 @@ flowchart TD
 - Status → Logs → Requests: every round, every tool, „answer check“ and „check deeds“ with numbers, never with text.
 - Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound.
 - Status → Improve: how often the built-in rules stepped in today.
+- Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a card with Yes and No; only names and numbers, never results.
 
 #### In the code
 
@@ -1907,6 +1910,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 
 - Status → Logs → Requests: every call with its readable name, ok or not, length and whether locked.
 - Status → Live: which tool runs right now and what the service gave back (only the kind).
+- Below the answer (Show steps and approvals): every offered tool with its readable name, ✓/⚠ and time (ablauf.step), never its arguments or its result.
 
 #### In the code
 
@@ -2372,6 +2376,7 @@ flowchart TD
 
 - Status → Logs → Advanced → Conversation: per round tokens read, of them from the cache, and the time to the first word.
 - Status → Usage: tokens per day, model, area and profile.
+- Below the answer (Show steps and approvals): the tools of the rounds with name, ✓/⚠ and time.
 - Status → Checks → Speech first: whether speech output stays smooth while the model computes.
 - Spark split: when the panel runs on another computer, language model, speech recognition, speech output and pictures are on the model computer (Status → Live, box "Model computer"); the panel reaches them only through the TLS-Tor with a pinned certificate and controls them through the Wärter.
 

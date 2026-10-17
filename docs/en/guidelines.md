@@ -132,6 +132,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Per profile there is exactly one open suggestion. It is valid only for the same device, a plain "Yes" and 15 minutes. (C; 🧪 test_hardening)
 - Home Assistant runs with an allowlist of domains. Mail is never deleted. (C)
 - Suggestion cards (help, tips, settings assistant) never switch by themselves. Only the person's tap on "Apply" ("Übernehmen") switches, with the same checks as the form. Security is never weakened via a card; for that there is only "Show me where" ("Zeig mir wo"). (P panel-hilfe, funktionen-entdecken, einstellungs-assistent)
+- **Approval card** (V01.0.727, plan `redde-ideen/plan.md`): A module that leaves a proposal waiting for a "Ja" is listed in `chat_turn.waiting_mods()` (the emergency stop clears the same list) and has its kind in fixed words in `ablauf.KINDS`. The card only sends "Ja" or "Nein" as if typed; the module carries it out with its own rules, never the card. (🧪 test_ablauf)
 
 ### 2.5 Outgoing connections (SSRF)
 - Only http(s), only via `netguard`. Loopback, private and link-local addresses are blocked, unless the admin allows the home network. (C)

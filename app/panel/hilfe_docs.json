@@ -1637,7 +1637,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt. - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus). - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen."
+"text": "- Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt. - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus). - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen. - Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein (nur eigenes Profil und Gerät, Standard aus)."
 },
 {
 "lang": "de",
@@ -1853,7 +1853,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Logs → Anfragen: jede Runde, jedes Werkzeug, „Antwort-Prüfung“ und „Taten-Prüfung“ mit Zahlen, nie mit Text. - Zustand → Logs → Erweitert → Gespräch: wo die Zeit einer Antwort blieb, bis zum ersten Ton. - Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben."
+"text": "- Zustand → Logs → Anfragen: jede Runde, jedes Werkzeug, „Antwort-Prüfung“ und „Taten-Prüfung“ mit Zahlen, nie mit Text. - Zustand → Logs → Erweitert → Gespräch: wo die Zeit einer Antwort blieb, bis zum ersten Ton. - Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben. - Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender Vorschlag als Karte mit Ja und Nein; nur Namen und Zahlen, nie Ergebnisse."
 },
 {
 "lang": "de",
@@ -1949,7 +1949,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Logs → Anfragen: jeder Aufruf mit verständlichem Namen, ok oder nicht, Länge und ob gesperrt. - Zustand → Live: welches Werkzeug gerade läuft und was der Dienst zurückgab (nur die Art)."
+"text": "- Zustand → Logs → Anfragen: jeder Aufruf mit verständlichem Namen, ok oder nicht, Länge und ob gesperrt. - Zustand → Live: welches Werkzeug gerade läuft und was der Dienst zurückgab (nur die Art). - Unter der Antwort (Ablauf und Freigabe zeigen): jedes angebotene Werkzeug mit verständlichem Namen, ✓/⚠ und Zeit (ablauf.step), nie seine Angaben oder sein Ergebnis."
 },
 {
 "lang": "de",
@@ -2349,7 +2349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und die Zeit bis zum ersten Wort. - Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil. - Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet. - Spark teilen: Läuft das Panel auf einem anderen Rechner, stehen Sprachmodell, Spracherkennung, Sprachausgabe und Bilder auf dem Modell-Rechner (Zustand → Live, Kasten „Modell-Rechner“); das Panel erreicht sie nur über das TLS-Tor mit festem Zertifikat und steuert sie über den Wärter."
+"text": "- Zustand → Logs → Erweitert → Gespräch: pro Runde gelesene Tokens, davon aus dem Zwischenspeicher, und die Zeit bis zum ersten Wort. - Zustand → Verbrauch: Tokens je Tag, Modell, Bereich und Profil. - Unter der Antwort (Ablauf und Freigabe zeigen): die Werkzeuge der Runden mit Name, ✓/⚠ und Zeit. - Zustand → Prüfen → Vorrang für Sprache: ob die Sprachausgabe flüssig bleibt, während das Modell rechnet. - Spark teilen: Läuft das Panel auf einem anderen Rechner, stehen Sprachmodell, Spracherkennung, Sprachausgabe und Bilder auf dem Modell-Rechner (Zustand → Live, Kasten „Modell-Rechner“); das Panel erreicht sie nur über das TLS-Tor mit festem Zertifikat und steuert sie über den Wärter."
 },
 {
 "lang": "de",
@@ -5486,6 +5486,22 @@
 "head": "Sprach-Chat",
 "title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
 "text": "n an, abschaltbar). Sparsam: höchstens ein Hinweis pro Gespräch und drei pro Woche, „Nicht mehr zeigen“ gilt für immer, keiner nach Text aus Mail oder Web, im Notaus, am Lautsprecher, an Uhr und Siri, auf Telegram und über MCP, nie für Gäste oder einen Geräteschlüssel. Gespeichert wird pro Profil nur, welche Hinweise kamen und abgelehnt wurden, und die Zahl der Fragen pro Art (tipps.json, 14 Tage). Schalter: Funktionen → unter „Hilfe zum Spark“ „Funktionen vorschlagen“ (darunter „… auch von selbst“), freigegeben für jedes Profil; die Mitteilung von selbst lässt sich unter Ich → Von selbst → „Funktion vorschlagen“ abschalten. Protokoll: Zeilen tipps:; Logs → Anfragen zeigt bei der Weiche hinweis; Zustand → Live Ereignisse „Funktionen vorschlagen“ (gezeigt, übernommen, nicht mehr zeigen, Admin gefragt), nie Inhalte. Plan: plaene/funktionen-entdecken.md; Tests: app/tests/test_tipps.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus)",
+"text": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus): Unter jeder Antwort steht zugeklappt, welche Werkzeuge der Assistent benutzt hat („3 Werkzeuge benutzt · 2,1 s“), aufgeklappt jedes mit ✓ oder ⚠ und seiner Zeit; gezeigt werden nur der lesbare Name (werkzeuge.NAMES), ob es geklappt hat (taten.failed) und die Millisekunden, nie die Angaben an das Werkzeug oder was es gefunden hat. Hat die Antwort einen Vorschlag hinterlassen, der auf ein schlichtes „Ja“ wartet (Termin, Postfach, Liste, Gedächtnis, Auftrag, Nachricht, Durchsage, eigener Dienst, Smart-Home-Meldung, Rückgängig, NAS-Ablage), steht darunter eine Karte „Wartet auf dein Ja: Termin“ mit „Ja“ und „Nein“. Ein Tipp schickt „Ja“ oder „Nein“ wie eine getippte Antwort aus demselben Gerät und Gespräch; das Modul, das vorgeschlagen hat, entscheidet mit seinen festen Regeln (calendars.confirms …) und führt erst dann aus. Die Karte selbst führt nichts aus und nennt nur die Art des Vorschlags (feste Wörter in ablauf.KINDS), nie seinen Text; sie kommt nur für einen Vorschlag aus dieser Antwort, diesem Gerät und Gespräch, höchstens eine pro Antwort, nie im Notaus (dort fallen alle Vorschläge weg). Nur für ein angemeldetes Profil"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ablauf und Freigabe zeigen (V01.0.727, standardmäßig aus)",
+"text": " auf dem eigenen Gerät, nie für Gäste oder eine fremde Stimme. Gilt im Assistenten im Panel, in der Android-App (zeigt das Panel) und in der iPhone-App (dieselben Ereignisse step und confirm). Schalter: Funktionen → „Ablauf und Freigabe zeigen“. Protokoll: chat: freigabe-karte gezeigt | n. Plan: plaene/redde-ideen/plan.md (Paket A); Tests: app/tests/test_ablauf.py."
 },
 {
 "lang": "de",
@@ -9181,7 +9197,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- People and devices → Blocked functions: what a single profile does not get. - Features → Ask instead of guessing: the panel asks instead of guessing (default off). - Features → Switch: the fixed rules that narrow the tools."
+"text": "- People and devices → Blocked functions: what a single profile does not get. - Features → Ask instead of guessing: the panel asks instead of guessing (default off). - Features → Switch: the fixed rules that narrow the tools. - Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No (own profile and device only, default off)."
 },
 {
 "lang": "en",
@@ -9397,7 +9413,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Logs → Requests: every round, every tool, „answer check“ and „check deeds“ with numbers, never with text. - Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound. - Status → Improve: how often the built-in rules stepped in today."
+"text": "- Status → Logs → Requests: every round, every tool, „answer check“ and „check deeds“ with numbers, never with text. - Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound. - Status → Improve: how often the built-in rules stepped in today. - Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a card with Yes and No; only names and numbers, never results."
 },
 {
 "lang": "en",
@@ -9485,7 +9501,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Logs → Requests: every call with its readable name, ok or not, length and whether locked. - Status → Live: which tool runs right now and what the service gave back (only the kind)."
+"text": "- Status → Logs → Requests: every call with its readable name, ok or not, length and whether locked. - Status → Live: which tool runs right now and what the service gave back (only the kind). - Below the answer (Show steps and approvals): every offered tool with its readable name, ✓/⚠ and time (ablauf.step), never its arguments or its result."
 },
 {
 "lang": "en",
@@ -9877,7 +9893,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Logs → Advanced → Conversation: per round tokens read, of them from the cache, and the time to the first word. - Status → Usage: tokens per day, model, area and profile. - Status → Checks → Speech first: whether speech output stays smooth while the model computes. - Spark split: when the panel runs on another computer, language model, speech recognition, speech output and pictures are on the model computer (Status → Live, box \"Model computer\"); the panel reaches them only through the TLS-Tor with a pinned certificate and controls them through the Wärter."
+"text": "- Status → Logs → Advanced → Conversation: per round tokens read, of them from the cache, and the time to the first word. - Status → Usage: tokens per day, model, area and profile. - Below the answer (Show steps and approvals): the tools of the rounds with name, ✓/⚠ and time. - Status → Checks → Speech first: whether speech output stays smooth while the model computes. - Spark split: when the panel runs on another computer, language model, speech recognition, speech output and pictures are on the model computer (Status → Live, box \"Model computer\"); the panel reaches them only through the TLS-Tor with a pinned certificate and controls them through the Wärter."
 },
 {
 "lang": "en",
@@ -12862,6 +12878,22 @@
 "head": "Voice chat",
 "title": "Suggesting functions (V01.0.380, off by default)",
 "text": " speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), released for every profile; the note by itself can be switched off under Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Suggesting functions\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Show steps and approvals (V01.0.727, off by default)",
+"text": "Show steps and approvals (V01.0.727, off by default): Below every answer a folded line shows which tools the assistant used (\"3 tools used · 2.1 s\"), unfolded each with ✓ or ⚠ and its time; only the readable name (werkzeuge.NAMES), whether it worked (taten.failed) and the milliseconds are shown, never what was handed to the tool or what it found. When the answer left a proposal waiting for a plain \"Ja\" (appointment, mailbox, list, memory, job, message, announcement, own service, smart home alert, undo, NAS filing), a card \"Waiting for your yes: Appointment\" with \"Yes\" and \"No\" stands below it. A tap sends \"Ja\" or \"Nein\" like a typed answer from the same device and conversation; the module that made the proposal decides with its fixed rules (calendars.confirms …) and only then carries it out. The card itself carries nothing out and names only the kind of the proposal (fixed words in ablauf.KINDS), never its text; it comes only for a proposal of this answer, device and conversation, at most one per answer, never under the emergency stop (all proposals are dropped there). Only for a signed-in profile on its own device, never for guests or another voice. Works in the panel's assistant,"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Show steps and approvals (V01.0.727, off by default)",
+"text": " in the Android app (which shows the panel) and in the iPhone app (the same events step and confirm). Switch: Features → \"Show steps and approvals\". Log: chat: freigabe-karte gezeigt | n. Plan: plaene/redde-ideen/plan.md (package A); tests: app/tests/test_ablauf.py."
 },
 {
 "lang": "en",

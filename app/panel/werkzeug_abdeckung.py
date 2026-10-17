@@ -99,6 +99,7 @@ RULES = {
 }
 
 WITHOUT = {
+    "ablauf": "Einstellung, wie Antworten gezeigt werden (ablauf.py)",
     # Telefon: who may call and when the Spark calls, fixed rules in telefon.py and telefon_anruf.py
     "telefongast": "Gäste am Telefon: nur Frage und Antwort",
     "telefonaussen": "Anrufe von außen: die bestätigte Nummer wählt das Profil",
