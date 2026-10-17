@@ -2164,10 +2164,12 @@ async def watch_ask(request: Request):
     job = watch.Job(speak=bool(body.get("speak", True)))
     response = await chat(Request(request.scope, receive))
     prof = profiles.current(request)
+    import pebblewatch
+    # Uhr: Nachfragen zum Antippen (its own admin switch): "done" waits for them, at most watch.FOLLOW_TIMEOUT
+    job.follow_wait = bool(prof) and features.allowed("pebblefolge", prof["id"]) and not wartung.paused("llm")
     job.task = asyncio.create_task(_watch_run(job, response, prof, text, inner.get("tz")))
     watch.JOBS[job.id] = job
     # the profile's face (own pick, else the Spark's), so the watch shows the same one (fixed names only)
-    import pebblewatch
     return {"id": job.id, "format": "ima-adpcm-8k", "face": profiles.face_of(prof["id"] if prof else None, load_config().get("chat", {})),
             # the panel serves a newer watch app than the one asking: the phone shows a short note
             "app_new": pebblewatch.newer_app(body.get("app"))}
@@ -2178,6 +2180,16 @@ async def _watch_run(job, response, prof, text, tz):
     day, like Siri's), so the panel and the iPhone app show them too (before, they were on the watch only)."""
     await watch.run(job, response)
     answer = job.text.strip()
+    if job.follow_wait:
+        why = watch.follow_skip(job, text)
+        if not why:
+            t0 = time.monotonic()
+            job.follow = await watch.follow_ups(text, answer, load_config().get("chat", {}))
+            print(f"watch: Nachfragen | {len(job.follow)} | {int((time.monotonic() - t0) * 1000)} ms", flush=True)
+        else:
+            print(f"watch: Nachfragen weggelassen | why {why}", flush=True)
+        job.follow_wait = False
+        job.ping()
     if not prof or not answer or job.error:
         return
     ha = homeassistant.get(prof["id"])

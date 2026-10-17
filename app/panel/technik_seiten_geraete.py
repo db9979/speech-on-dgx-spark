@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "42e4b70005",
+        "stand": "abe748c148",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -404,12 +404,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "012ae2c21d",
+        "stand": "89e7a93273",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
             "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"],
             "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"],
+            "watch.follow_ups": ["s9"], "watch.follow_clean": ["s9"], "pebblewatch.watch_sync": ["s9"],
+            "pebblewatch.watch_reminder": ["s9"],
         },
         "kurz": ("Telegram, der Siri-Kurzbefehl und die Pebble-Uhr stellen kurze Fragen ohne Browser. Jeder Kanal baut "
                  "daraus eine Anfrage an /api/chat wie ein Gerät, sammelt die Antwort aus dem Strom ein und gibt sie "
@@ -498,12 +500,20 @@ SEITEN = {
                "Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens "
                "{watch.MAX_RUNNING} Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und "
                "zusätzlich die Antwort mit Markdown (höchstens {chat.MD_ANSWER_MAX} Zeichen), wenn darin nicht weniger "
-               "Geheimnisse verdeckt sind.",
+               "Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu {watch.FOLLOW_MAX} "
+               "Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, "
+               "Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ "
+               "und über /api/watch/sync die Schnellbefehle und die nächsten {pebblewatch.AGENDA_MAX} Erinnerungen, "
+               "die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie.",
                "Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets "
                "speakable text without passwords and codes. The watch fetches text and sound (packed for its small "
                "speaker, {watch.MAX_AUDIO} bytes per fetch) through /api/watch/poll; at most {watch.MAX_RUNNING} watch "
                "answers run at once. The companion gets text without Markdown and also the answer with Markdown (at "
-               "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets.")),
+               "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets. With its switches the watch also "
+               "gets up to {watch.FOLLOW_MAX} follow-ups to tap (the model only suggests, watch.follow_clean keeps short "
+               "questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and "
+               "✕, and through /api/watch/sync the quick commands and the next {pebblewatch.AGENDA_MAX} reminders, "
+               "which it rings itself as wake-ups; push waits for it first.")),
             S("s10", "schritt", ("Codewort schwärzen", "Black out the code word"),
               ("Smart-Home-Codewort nie im Verlauf", "smart home code word never in the history"),
               ("Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die "
@@ -547,13 +557,19 @@ SEITEN = {
              "chat.SIRI_FOLLOW_UP"),
             ("{watch.MAX_RUNNING}", ("Uhr-Antworten gleichzeitig", "watch answers at once"), "watch.MAX_RUNNING"),
             ("{watch.JOB_TTL|min}", ("Minuten bleibt eine Uhr-Antwort abrufbar", "minutes a watch answer stays fetchable"), "watch.JOB_TTL"),
+            ("{watch.FOLLOW_MAX}", ("Nachfragen zum Antippen auf der Uhr", "follow-ups to tap on the watch"), "watch.FOLLOW_MAX"),
+            ("{pebblewatch.AGENDA_MAX}", ("Erinnerungen und Timer auf der Uhr", "reminders and timers on the watch"),
+             "pebblewatch.AGENDA_MAX"),
         ],
         "einstellen": [
             ("Funktionen → Telegram: Bot-Token und Schalter (Standard aus).", "Features → Telegram: bot token and switch (default off)."),
             ("Ich → Telegram: den eigenen Chat verknüpfen; Sprachnachrichten, private Daten, Smart Home und Mitteilungen "
              "einzeln erlauben.",
              "Me → Telegram: link the own chat; allow voice messages, private data, smart home and notes one by one."),
-            ("Ich → Pebble-Uhr: die Uhr koppeln.", "Me → Pebble watch: pair the watch."),
+            ("Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https) und die Schnellbefehle.",
+             "Me → Pebble watch: pair the watch, the address on the road (https only) and the quick commands."),
+            ("Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, je ein Schalter (Standard aus).",
+             "Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, one switch each (default off)."),
             ("Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages.",
              "Features → One conversation for all channels: every channel writes into the day's main conversation."),
         ],
@@ -561,6 +577,8 @@ SEITEN = {
             ("Logs → Anfragen: Eingang „Telegram“, „Siri“ oder „Uhr“, ohne Inhalt.",
              "Logs → Requests: input „Telegram“, „Siri“ or „Uhr“, without content."),
             ("Zustand → Live: die laufende Anfrage im Bild.", "Status → Live: the running request in the picture."),
+            ("Zustand → Logs: die Zeilen „watch: sync“, „watch: reminder …“ und „watch: Nachfragen“, ohne Inhalt.",
+             "Status → Logs: the lines „watch: sync“, „watch: reminder …“ and „watch: Nachfragen“, without content."),
         ],
         "code": [
             ("telegram.loop", ("fragt Telegram, ruht bei Notaus", "polls Telegram, rests with the kill switch")),
@@ -573,6 +591,11 @@ SEITEN = {
             ("chat._watch_run", ("Uhr: Antwort in den Verlauf", "watch: the answer into the history")),
             ("watch.run", ("liest den Strom in den Uhr-Auftrag", "reads the stream into the watch job")),
             ("watch.poll", ("Text und Ton stückweise", "text and sound piece by piece")),
+            ("watch.follow_ups", ("Nachfragen vom Modell, mit Zeitgrenze", "follow-ups from the model, with a time limit")),
+            ("watch.follow_clean", ("feste Prüfung der Nachfragen", "fixed check of the follow-ups")),
+            ("pebblewatch.watch_sync", ("Schnellbefehle und Erinnerungen für die Uhr", "quick commands and reminders for the watch")),
+            ("pebblewatch.watch_reminder", ("Erinnerung auf der Uhr: gespielt, später, beenden, +1, Stopp",
+                                            "reminder on the watch: played, later, end, +1, stop")),
             ("verlauf.keep", ("Tagesgespräch des Kanals oder Hauptgespräch", "the channel's day conversation or the main one")),
         ],
         "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus"],
@@ -888,7 +911,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "5cac6e02b8",
+        "stand": "845ef1e204",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

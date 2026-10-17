@@ -42,6 +42,8 @@ OHNE = {
     "androidupdate": "keine eigenen Daten: nur die App-Version im Speicher (Unterschalter der Android-App)",
     "androidassist": "keine eigenen Daten: Fragen und Antworten landen im Verlauf (Gespräche), dort löschbar",
     "androidlock": "keine eigenen Daten: die App fragt Android, der Spark speichert nichts",
+    "pebblefolge": "keine eigenen Daten: die Vorschläge leben nur mit der Antwort im Speicher",
+    "pebbleerinnern": "keine eigenen Daten: die Erinnerungen gehören zu Timer und Erinnerungen, die Uhr hält nur eine Kopie",
     "iphonepanel": "keine eigenen Daten (Unterschalter der iPhone-App)",
     "schreibapps": "keine eigenen Daten (Unterschalter der Schreibhilfe)",
     "begleitertun": "keine eigenen Daten (Unterschalter des Begleiters)",

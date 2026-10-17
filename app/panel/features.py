@@ -321,6 +321,14 @@ FEATURES = (
     F("begleiterbedienen", "Spark bedient den Rechner", "Spark operates the computer", "go", ("desk_operate",),
       parent="begleiter", me="deskbox", guide="begleiterbedienen"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), me="pebbox", guide="pebblepair"),
+    # more on the watch (pebblewatch.py, plan pebble-ideen/plan.md): follow-ups to tap, the profile's own fixed commands,
+    # its reminders and timers kept on the watch as wake-ups (they ring without the phone)
+    F("pebblefolge", "Uhr: Nachfragen zum Antippen", "Watch: follow-ups to tap", "go", ("pebble_follow",),
+      parent="pebble", me="pebbox", guide="pebblefolge"),
+    F("pebbleschnell", "Uhr: Schnellbefehle", "Watch: quick commands", "go", ("pebble_quick",),
+      parent="pebble", me="pebbox", guide="pebbleschnell"),
+    F("pebbleerinnern", "Uhr: Erinnerungen und Timer am Handgelenk", "Watch: reminders and timers on the wrist", "go",
+      ("pebble_remind", "reminders"), parent="pebble", me="pebbox", guide="pebbleerinnern"),
     # spark-tui in a terminal (terminal.py): chat, conversations, Heute and the agent's jobs, paired by a setup line
     F("terminal", "Terminal-Client", "Terminal client", "go", ("terminal",), me="termbox", guide="terminal"),
     # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi

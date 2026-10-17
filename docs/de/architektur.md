@@ -909,7 +909,7 @@ flowchart TD
 6. <a id="kn-kanaele-s6"></a>**Kurzer Verlauf**: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of).
 7. <a id="kn-kanaele-s7"></a>**Anfrage an /api/chat**: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser.
 8. <a id="kn-kanaele-s8"></a>**Antwort einsammeln**: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten.
-9. <a id="kn-kanaele-s9"></a>**Ausgabe je Kanal**: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind.
+9. <a id="kn-kanaele-s9"></a>**Ausgabe je Kanal**: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie.
 10. <a id="kn-kanaele-s10"></a>**Codewort schwärzen**: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen.
 11. <a id="kn-kanaele-s11"></a>**Im Verlauf des Profils**: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal.
 
@@ -933,18 +933,22 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 - **10** Minuten zählen bei Siri frühere Fragen ([Schritt 6](#kn-kanaele-s6))
 - **8** Uhr-Antworten gleichzeitig ([Schritt 9](#kn-kanaele-s9))
 - **10** Minuten bleibt eine Uhr-Antwort abrufbar ([Schritt 9](#kn-kanaele-s9))
+- **3** Nachfragen zum Antippen auf der Uhr ([Schritt 9](#kn-kanaele-s9))
+- **8** Erinnerungen und Timer auf der Uhr ([Schritt 9](#kn-kanaele-s9))
 
 #### Einstellen
 
 - Funktionen → Telegram: Bot-Token und Schalter (Standard aus).
 - Ich → Telegram: den eigenen Chat verknüpfen; Sprachnachrichten, private Daten, Smart Home und Mitteilungen einzeln erlauben.
-- Ich → Pebble-Uhr: die Uhr koppeln.
+- Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https) und die Schnellbefehle.
+- Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, je ein Schalter (Standard aus).
 - Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages.
 
 #### Was du siehst
 
 - Logs → Anfragen: Eingang „Telegram“, „Siri“ oder „Uhr“, ohne Inhalt.
 - Zustand → Live: die laufende Anfrage im Bild.
+- Zustand → Logs: die Zeilen „watch: sync“, „watch: reminder …“ und „watch: Nachfragen“, ohne Inhalt.
 
 #### Im Code
 
@@ -958,6 +962,10 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 - `app/panel/chat.py` `_watch_run`: Uhr: Antwort in den Verlauf ([Schritt 11](#kn-kanaele-s11))
 - `app/panel/watch.py` `run`: liest den Strom in den Uhr-Auftrag ([Schritt 8](#kn-kanaele-s8))
 - `app/panel/watch.py` `poll`: Text und Ton stückweise ([Schritt 9](#kn-kanaele-s9))
+- `app/panel/watch.py` `follow_ups`: Nachfragen vom Modell, mit Zeitgrenze ([Schritt 9](#kn-kanaele-s9))
+- `app/panel/watch.py` `follow_clean`: feste Prüfung der Nachfragen ([Schritt 9](#kn-kanaele-s9))
+- `app/panel/pebblewatch.py` `watch_sync`: Schnellbefehle und Erinnerungen für die Uhr ([Schritt 9](#kn-kanaele-s9))
+- `app/panel/pebblewatch.py` `watch_reminder`: Erinnerung auf der Uhr: gespielt, später, beenden, +1, Stopp ([Schritt 9](#kn-kanaele-s9))
 - `app/panel/verlauf.py` `keep`: Tagesgespräch des Kanals oder Hauptgespräch ([Schritt 11](#kn-kanaele-s11))
 
 Selbsttests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`

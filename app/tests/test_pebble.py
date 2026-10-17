@@ -1,5 +1,7 @@
 """Pebble watch (pebblewatch.py, watch.py): pairing with a setup code, the key's narrow scope, the log line."""
+import asyncio
 import json
+import time
 import unittest
 
 from tests import helpers
@@ -26,7 +28,7 @@ def profile(name, pin="1234"):
 
 
 def code_of(setup):
-    base, code = setup.split("#pebble=")
+    base, code = setup.split("&aussen=")[0].split("#pebble=")
     assert base == BASE, setup
     return code
 
@@ -39,12 +41,167 @@ class Pebble(unittest.TestCase):
             guard._rate.pop(k, None)
 
     def tearDown(self):
-        helpers.set_config(pebble=False, face="robot", deny={})
+        helpers.set_config(pebble=False, face="robot", deny={}, pebble_follow=False, pebble_quick=False,
+                           pebble_remind=False)
+
+    def watch_of(self, name):
+        """A paired watch of a new profile: (its client, the key header, the profile's id)."""
+        a = profile(name)
+        code = code_of(a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])
+        app = TestClient(panel.app)
+        h = {"X-Speech-Device": app.post("/api/pebble/pair", json={"code": code}).json()["token"]}
+        uid = next(u["id"] for u in profiles.names() if u["name"] == name)
+        for k in [k for k in guard._rate if k[0] in ("watchsync", "watchrem")]:
+            guard._rate.pop(k, None)
+        return a, app, h, uid
 
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["pebble"], False)
         self.assertNotIn("pebble_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
+        with open(helpers.APP + "/config.default.json") as f:
+            chat = json.load(f)["chat"]
+        for key in ("pebble_follow", "pebble_quick", "pebble_remind"):   # each extra its own admin switch, off
+            self.assertIs(chat[key], False, key)
+            self.assertNotIn(key, profiles.SETTINGS)
+
+    def test_second_address_only_https(self):
+        a = profile("Pebla")
+        setup = a.post("/api/profile/pebble/pair", json={"base": BASE, "out": "https://spark.example.org"}).json()["setup"]
+        self.assertTrue(setup.endswith("&aussen=https://spark.example.org"), setup)
+        self.assertTrue(code_of(setup))
+        for bad in ("http://spark.example.org", "https://spark.example.org/x", "javascript:alert(1)", "https://a b"):
+            r = a.post("/api/profile/pebble/pair", json={"base": BASE, "out": bad})
+            self.assertEqual(r.status_code, 400, bad)   # the key never goes through the internet without https
+        self.assertNotIn("aussen", a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])
+
+    def test_sync_sends_only_what_the_admin_released(self):
+        a, app, h, uid = self.watch_of("Pebline")
+        r = app.get("/api/watch/sync", headers=h).json()
+        self.assertEqual(r, {"quick": [], "agenda": None, "follow": False})   # all off: nothing on the watch
+        self.assertEqual(a.put("/api/profile/pebble/quick", json={"quick": ["Licht an"]}).status_code, 403)
+        helpers.set_config(pebble_quick=True, pebble_remind=True, pebble_follow=True)
+        for bad in ({"quick": "Licht an"}, {"quick": ["x" * 61]}, {"quick": [f"Satz {i}" for i in range(13)]}):
+            self.assertEqual(a.put("/api/profile/pebble/quick", json=bad).status_code, 400, bad)
+        self.assertEqual(a.put("/api/profile/pebble/quick", content="x" * 5000).status_code, 413)
+        r = a.put("/api/profile/pebble/quick", json={"quick": [" Licht\tan ", "Licht an", "Wetter morgen", ""]})
+        self.assertEqual(r.json()["quick"], ["Licht an", "Wetter morgen"])   # trimmed, doubles and empty lines gone
+        self.assertEqual(app.put("/api/profile/pebble/quick", json={"quick": []}, headers=h).status_code, 401)
+        now = time.time() * 1000
+        profiles.add_reminder(uid, "Tee\nfertig", now + 300_000, made=now - 60_000)
+        profiles.add_reminder(uid, "Müll", now + 86400_000, "weekly")
+        profiles.add_reminder(uid, "viel später", now + 40 * 86400_000)
+        r = app.get("/api/watch/sync", headers=h).json()
+        self.assertEqual(r["quick"], ["Licht an", "Wetter morgen"])
+        self.assertTrue(r["follow"])
+        self.assertEqual([(x["text"], x["rep"]) for x in r["agenda"]], [("Tee fertig", 0), ("Müll", 1)])
+        self.assertEqual(r["agenda"][0]["due"] - r["agenda"][0]["made"], 360)   # seconds: the ring of the timer
+        self.assertEqual(pebblewatch.held(uid), {x["id"] for x in r["agenda"]})
+        helpers.set_config(reminders=False)   # the reminders themselves off: none on the watch either
+        try:
+            self.assertIsNone(app.get("/api/watch/sync", headers=h).json()["agenda"])
+            self.assertEqual(pebblewatch.held(uid), frozenset())
+        finally:
+            helpers.set_config(reminders=True)
+        self.assertEqual(TestClient(panel.app).get("/api/watch/sync").status_code, 401)
+
+    def test_reminder_actions_from_the_watch(self):
+        _, app, h, uid = self.watch_of("Pebbo")
+        now = time.time() * 1000
+        x = profiles.add_reminder(uid, "Tee", now - 1000)
+        self.assertEqual(app.post("/api/watch/reminder", json={"id": x["id"], "act": "played"}, headers=h).status_code, 403)
+        helpers.set_config(pebble_remind=True)
+        for bad in ({"id": x["id"], "act": "delete"}, {"id": "../x", "act": "played"}, {"act": "played"}):
+            self.assertEqual(app.post("/api/watch/reminder", json=bad, headers=h).status_code, 400, bad)
+        r = app.post("/api/watch/reminder", json={"id": x["id"], "act": "played"}, headers=h).json()
+        self.assertTrue(r["ok"])
+        self.assertEqual(profiles.reminders(uid), [])   # taken: no other device rings it again
+        self.assertFalse(app.post("/api/watch/reminder", json={"id": x["id"], "act": "played"}, headers=h).json()["ok"])
+        # Später: taken already, the watch still knows the text; it comes back in ten minutes
+        r = app.post("/api/watch/reminder", json={"id": x["id"], "act": "snooze", "text": "Tee"}, headers=h).json()
+        self.assertTrue(r["ok"])
+        (again,) = profiles.reminders(uid)
+        self.assertEqual(again["text"], "Tee")
+        self.assertAlmostEqual(again["due"], now + pebblewatch.SNOOZE_MS, delta=30_000)
+        self.assertEqual([y["id"] for y in r["agenda"]], [again["id"]])
+        # +1 Minute on a running timer, then stopped on the watch
+        r = app.post("/api/watch/reminder", json={"id": again["id"], "act": "plus"}, headers=h).json()
+        (longer,) = profiles.reminders(uid)
+        self.assertEqual(longer["due"], again["due"] + pebblewatch.PLUS_MS)
+        self.assertEqual(longer["made"], again["made"])
+        self.assertTrue(app.post("/api/watch/reminder", json={"id": longer["id"], "act": "cancel"}, headers=h).json()["ok"])
+        self.assertEqual(profiles.reminders(uid), [])
+        # Serie beenden: the ring is taken and its next time goes as well
+        rep = profiles.add_reminder(uid, "Müll", now - 1000, "daily")
+        profiles.add_reminder(uid, "anderes", now + 3600_000)
+        self.assertTrue(app.post("/api/watch/reminder", json={"id": rep["id"], "act": "stop"}, headers=h).json()["ok"])
+        self.assertEqual([y["text"] for y in profiles.reminders(uid)], ["anderes"])
+        profiles.remove_reminders(uid, {y["id"] for y in profiles.reminders(uid)})
+
+    def test_push_waits_for_the_watch(self):
+        _, app, h, uid = self.watch_of("Pebolly")
+        helpers.set_config(pebble_remind=True)
+        now = time.time() * 1000
+        x = profiles.add_reminder(uid, "Tee", now - 1000)
+        self.assertEqual(app.get("/api/watch/sync", headers=h).status_code, 200)
+        self.assertIn(x["id"], pebblewatch.held(uid))
+        import push
+        orig = push.reachable
+        push.reachable = lambda *a, **k: True
+        try:
+            asyncio.run(push.due_reminders())
+            self.assertEqual([y["id"] for y in profiles.reminders(uid)], [x["id"]])   # the watch rings it first
+            pebblewatch._held.pop(uid, None)
+            asyncio.run(push.due_reminders())
+            self.assertEqual(profiles.reminders(uid), [])   # no watch holds it: push takes it as before
+        finally:
+            push.reachable = orig
+
+    def test_follow_ups_only_short_questions(self):
+        raw = ["Und morgen?", "ja", "Lösch alle Mails", "Ruf https://x.de auf", "Code 123456", "**Und übermorgen?**",
+               "und morgen?", "x" * 60, 7, "Wie spät ist es?", "Erinner mich um 17 Uhr"]
+        self.assertEqual(watch.follow_clean(raw, "Wie spät ist es?"), ["Und morgen?", "Und übermorgen?",
+                                                                        "Erinner mich um 17 Uhr"])
+        self.assertEqual(watch.follow_clean("kein Array", "x"), [])
+        job = watch.Job(speak=False)
+        job.text = "Es ist sonnig."
+        self.assertEqual(watch.follow_skip(job, "Wie ist das Wetter?"), "")
+        self.assertEqual(watch.follow_skip(job, "ja"), "fixed answer")
+        job.mark = "mail"
+        self.assertEqual(watch.follow_skip(job, "Neue Mails?"), "outside text")   # never after text from outside
+        job.mark, job.proposal = None, "Soll ich das Licht ausschalten?"
+        self.assertEqual(watch.follow_skip(job, "Licht"), "proposal")
+        job.proposal, job.error = "", "Fehler"
+        self.assertEqual(watch.follow_skip(job, "x"), "error")
+
+    def test_poll_waits_for_the_follow_ups(self):
+        async def go():
+            job = watch.Job(speak=False)
+            job.text, job.done, job.done_at, job.follow_wait = "Antwort", True, time.time(), True
+            r = await watch.poll(job, 0, 0, wait=0.2)
+            self.assertEqual((r["audio_end"], r["done"]), (True, False))   # text out, the follow-ups still coming
+            self.assertNotIn("follow", r)
+            job.follow, job.follow_wait = ["Und morgen?"], False
+            job.ping()
+            r = await watch.poll(job, len(job.text), 0, wait=0.2)
+            self.assertTrue(r["done"])
+            self.assertEqual((r["follow"], r["proposal"], r["agenda"]), (["Und morgen?"], "", False))
+            job2 = watch.Job(speak=False)   # a turn that never clears the wait does not hold the end back
+            job2.text, job2.done, job2.follow_wait = "x", True, True
+            job2.done_at = time.time() - watch.FOLLOW_TIMEOUT - 3
+            self.assertTrue((await watch.poll(job2, 1, 0, wait=0.2))["done"])
+        asyncio.run(go())
+
+    def test_run_keeps_proposal_and_reminder_marks(self):
+        class Stream:
+            async def _it(self):
+                for ev in ({"type": "text", "delta": "Soll ich?"}, {"type": "proposal", "text": "**Licht** aus?"},
+                           {"type": "reminder", "action": "set"}):
+                    yield "data:" + json.dumps(ev) + "\n"
+            body_iterator = property(lambda self: self._it())
+        job = watch.Job(speak=False)
+        asyncio.run(watch.run(job, Stream()))
+        self.assertEqual((job.text, job.proposal, job.agenda, job.done), ("Soll ich?", "Licht aus?", True, True))
 
     def test_pairing_needs_both_switches_and_works_once(self):
         a = profile("Paula")

@@ -1,8 +1,10 @@
 // Spark: voice assistant on the watch. SELECT asks (dictation via the phone), the phone
 // fetches the answer from the DGX Spark and sends text plus 8 kHz IMA ADPCM audio,
-// which plays on the watch speaker.
+// which plays on the watch speaker. Since 2.0: follow-ups to tap (DOWN at the end of an answer), ✓ and ✕ for a
+// proposal, quick commands (UP held) and reminders and timers kept on the watch (DOWN held, agenda.c).
 #include <pebble.h>
 #include "face.h"
+#include "agenda.h"
 
 #define ANSWER_MAX 3000
 #define RING_SIZE 16384        // ADPCM bytes: 4 s of speech
@@ -20,6 +22,9 @@
 #define SEND_TRIES 6           // attempts for a message to the phone
 #define FREED_EVERY 2          // seconds: repeat the buffer report (it may get lost)
 #define INBOX_MAX 4096
+#define FOLLOW_MAX 3
+#define FOLLOW_LEN 52
+#define PROPOSAL_LEN 300
 
 static Window *s_window;
 static Layer *s_face_layer;
@@ -46,9 +51,9 @@ static int32_t s_dict_ms;
 static AppTimer *s_watchdog;
 
 // messages to the phone: one at a time, repeated when they fail
-typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed } OutKind;
+typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed, OutRem, OutSync } OutKind;
 static OutKind s_out;          // what is on its way right now
-static bool s_q_pending, s_cancel_pending, s_reset_pending, s_freed_due;
+static bool s_q_pending, s_cancel_pending, s_reset_pending, s_freed_due, s_sync_pending;
 static int32_t s_cancel_seq;
 static int s_tries;
 static AppTimer *s_retry;
@@ -70,6 +75,13 @@ static AppTimer *s_timer;
 static uint8_t s_levels[MOUTH_DELAY];  // loudness per tick, played out ~0.5 s later
 static uint8_t s_level_pos, s_tick_level;
 
+// what the Spark adds to an answer, and how the phone reaches it
+static char s_follow[FOLLOW_MAX][FOLLOW_LEN];
+static int s_follow_n;
+static char s_proposal[PROPOSAL_LEN];
+static bool s_where_out;       // the phone reached the Spark over its address for on the road
+static bool s_woken;           // started by a reminder: no listening at the start
+
 static const int16_t STEPS[89] = {
   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
   73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408,
@@ -83,12 +95,19 @@ static void set_status(const char *text) {
   text_layer_set_text(s_status_layer, s_status);
 }
 
+// the status when nothing runs: what SELECT does, the follow-ups waiting below, the way to the Spark
+static void idle_status(void) {
+  snprintf(s_status, sizeof(s_status), "%s%s", s_follow_n ? "Unten: Nachfragen" : "SELECT: neue Frage",
+           s_where_out ? " · unterwegs" : "");
+  text_layer_set_text(s_status_layer, s_status);
+}
+
 static void update_text(void) {
   if (s_question[0]) {
     snprintf(s_body, sizeof(s_body), "» %s\n\n%s", s_question, s_answer);
   } else {
     snprintf(s_body, sizeof(s_body), "%s", s_answer[0] ? s_answer :
-             "SELECT: Frage stellen\nlang SELECT: neues Gespräch");
+             "SELECT: Frage stellen\nlang SELECT: neues Gespräch\nlang OBEN: Schnellbefehle\nlang UNTEN: Timer und Erinnerungen");
   }
   text_layer_set_text(s_text_layer, s_body);
   GRect bounds = layer_get_bounds(scroll_layer_get_layer(s_scroll_layer));
@@ -113,9 +132,13 @@ static void retry_later(uint32_t ms) {
 // Sends the most important waiting message. Every message is idempotent, so a repeat is harmless.
 static void flush_out(void) {
   if (s_out != OutNone) return;
+  static char rem_id[12], rem_text[64];
+  int32_t rem_act = 0;
   OutKind kind = s_q_pending ? OutQuestion : s_cancel_pending ? OutCancel : s_reset_pending ? OutReset
                : (s_busy && s_expect_audio && (s_freed_due || s_freed_total - s_freed_sent >= CREDIT_STEP))
-                 ? OutFreed : OutNone;
+                 ? OutFreed
+               : agenda_out_peek(rem_id, sizeof(rem_id), &rem_act, rem_text, sizeof(rem_text)) ? OutRem
+               : s_sync_pending ? OutSync : OutNone;
   if (kind == OutNone) return;
   DictionaryIterator *it;
   if (app_message_outbox_begin(&it) != APP_MSG_OK) {
@@ -138,6 +161,14 @@ static void flush_out(void) {
     case OutReset:
       dict_write_int32(it, MESSAGE_KEY_RESET, 1);
       break;
+    case OutRem:
+      dict_write_cstring(it, MESSAGE_KEY_REM_ID, rem_id);
+      dict_write_int32(it, MESSAGE_KEY_REM_ACT, rem_act);
+      dict_write_cstring(it, MESSAGE_KEY_REM_TEXT, rem_text);
+      break;
+    case OutSync:
+      dict_write_int32(it, MESSAGE_KEY_SYNC, 1);
+      break;
     default:
       s_freed_out = s_freed_total;
       s_freed_due = false;
@@ -159,6 +190,8 @@ static void outbox_sent(DictionaryIterator *it, void *context) {
     case OutCancel: s_cancel_pending = false; break;
     case OutReset: s_reset_pending = false; break;
     case OutFreed: if (s_freed_out > s_freed_sent) s_freed_sent = s_freed_out; break;
+    case OutRem: agenda_out_sent(); break;
+    case OutSync: s_sync_pending = false; break;
     default: break;
   }
   s_out = OutNone;
@@ -181,6 +214,14 @@ static void outbox_failed(DictionaryIterator *it, AppMessageResult reason, void 
     }
     if (kind == OutCancel) s_cancel_pending = false;
     if (kind == OutReset) s_reset_pending = false;
+    if (kind == OutSync) s_sync_pending = false;
+    if (kind == OutRem) {   // no phone now: the action stays queued (and stored) for the next start
+      if (s_retry) {
+        app_timer_cancel(s_retry);
+        s_retry = NULL;
+      }
+      return;
+    }
   }
   retry_later(150 * s_tries + 100);
 }
@@ -315,7 +356,7 @@ static void audio_tick(void *ctx) {
     if (s_audio_end && !s_fill && s_pcm_off >= s_pcm_len) {
       speaker_stream_close();    // the queued rest drains and plays out
       s_playing = false;
-      if (!s_busy) set_status("SELECT: neue Frage");
+      if (!s_busy) idle_status();
       app_timer_register(MOUTH_DELAY * 40, drained, NULL);
       return;
     }
@@ -372,6 +413,8 @@ static void ask(const char *text) {
   audio_reset();
   snprintf(s_question, sizeof(s_question), "%s", text);
   s_answer[0] = 0;
+  s_follow_n = 0;
+  s_proposal[0] = 0;
   update_text();
   scroll_layer_set_content_offset(s_scroll_layer, GPointZero, false);
   s_seq++;
@@ -387,17 +430,120 @@ static void ask(const char *text) {
   face_set_mode(FaceThink);
 }
 
+// ---------------------------------------------------------------- yes or no for a proposal
+
+static Window *s_confirm;
+static Layer *s_confirm_layer;
+
+static void confirm_draw(Layer *layer, GContext *ctx) {
+  GRect b = layer_get_bounds(layer);
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, b, 0, GCornerNone);
+  int w = b.size.w - 30 - PBL_IF_ROUND_ELSE(14, 0);
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack));
+  graphics_fill_rect(ctx, GRect(0, 0, w, PBL_IF_ROUND_ELSE(56, 44)), 0, GCornerNone);
+  int left = PBL_IF_ROUND_ELSE(22, 6);
+  graphics_context_set_text_color(ctx, GColorWhite);
+  graphics_draw_text(ctx, "Verstanden", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(left, PBL_IF_ROUND_ELSE(12, 2), w - left, 16),
+                     GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, "Bestätigen?", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(left, PBL_IF_ROUND_ELSE(22, 12), w - left, 28),
+                     GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_draw_text(ctx, s_proposal, fonts_get_system_font(FONT_KEY_GOTHIC_18),
+                     GRect(left, PBL_IF_ROUND_ELSE(60, 48), w - left - 4, b.size.h - PBL_IF_ROUND_ELSE(80, 52)),
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  agenda_draw_bar(ctx, b, 0, -1, 2);
+}
+
+static void confirm_close(void) {
+  if (s_confirm) window_stack_remove(s_confirm, true);
+}
+
+static void confirm_yes(ClickRecognizerRef r, void *ctx) {
+  confirm_close();
+  ask("Ja");
+}
+
+static void confirm_no(ClickRecognizerRef r, void *ctx) {
+  confirm_close();
+  ask("Nein");
+}
+
+static void confirm_clicks(void *ctx) {
+  window_single_click_subscribe(BUTTON_ID_UP, confirm_yes);
+  window_single_click_subscribe(BUTTON_ID_DOWN, confirm_no);
+}
+
+static void confirm_load(Window *w) {
+  Layer *root = window_get_root_layer(w);
+  s_confirm_layer = layer_create(layer_get_bounds(root));
+  layer_set_update_proc(s_confirm_layer, confirm_draw);
+  layer_add_child(root, s_confirm_layer);
+}
+
+static void confirm_unload(Window *w) {
+  layer_destroy(s_confirm_layer);
+  s_confirm_layer = NULL;
+  window_destroy(w);
+  if (s_confirm == w) s_confirm = NULL;
+}
+
+static void confirm_show(void) {
+  if (s_confirm) {
+    layer_mark_dirty(s_confirm_layer);
+    return;
+  }
+  s_confirm = window_create();
+  window_set_click_config_provider(s_confirm, confirm_clicks);
+  window_set_window_handlers(s_confirm, (WindowHandlers){.load = confirm_load, .unload = confirm_unload});
+  window_stack_push(s_confirm, true);
+}
+
+// ---------------------------------------------------------------- follow-ups to tap
+
+static int s_follow_pick = -1;
+
+static void follow_perform(ActionMenu *menu, const ActionMenuItem *item, void *ctx) {
+  s_follow_pick = (int)(intptr_t)action_menu_item_get_action_data(item);
+}
+
+static void follow_closed(ActionMenu *menu, const ActionMenuItem *performed, void *ctx) {
+  action_menu_hierarchy_destroy(action_menu_get_root_level(menu), NULL, NULL);
+  if (performed && s_follow_pick >= 0 && s_follow_pick < s_follow_n) {
+    static char q[FOLLOW_LEN];
+    snprintf(q, sizeof(q), "%s", s_follow[s_follow_pick]);
+    ask(q);   // a new question like a spoken one: the Spark checks it as always
+  }
+  s_follow_pick = -1;
+}
+
+static void follow_open(void) {
+  ActionMenuLevel *root = action_menu_level_create(s_follow_n);
+  for (int i = 0; i < s_follow_n; i++) {
+    action_menu_level_add_action(root, s_follow[i], follow_perform, (void *)(intptr_t)i);
+  }
+  ActionMenuConfig cfg = {
+    .root_level = root,
+    .colors = {.background = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack), .foreground = GColorWhite},
+    .align = ActionMenuAlignCenter,
+    .did_close = follow_closed,
+  };
+  s_follow_pick = -1;
+  action_menu_open(&cfg);
+}
+
 // The answer is complete when the text is in and, if speech was coming, its end too.
 static void finish_if_done(void) {
   if (!s_busy || !s_text_done || (s_expect_audio && !s_audio_end)) return;
   s_busy = false;
   if (!s_playing && !s_fill) {
-    set_status("SELECT: neue Frage");
+    idle_status();
     face_set_mode(FaceIdle);
     if (!s_expect_audio) vibes_short_pulse();
   } else {
     set_status("Spreche … SELECT: Stopp");
   }
+  if (s_proposal[0]) confirm_show();   // the Spark waits for yes or no: ✓ and ✕ instead of speaking it
 }
 
 static void dictation_done(DictationSession *session, DictationSessionStatus status,
@@ -437,7 +583,7 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
   if (s_playing || s_fill) {  // first press stops the speech
     audio_reset();
     cancel_answer();
-    set_status("SELECT: neue Frage");
+    idle_status();
     face_set_mode(FaceIdle);
     return;
   }
@@ -478,15 +624,53 @@ static void select_long(ClickRecognizerRef recognizer, void *context) {
   flush_out();
   s_question[0] = 0;
   s_answer[0] = 0;
+  s_follow_n = 0;
+  s_proposal[0] = 0;
   update_text();
   vibes_short_pulse();
   set_status("Neues Gespräch");
   face_set_mode(FaceIdle);
 }
 
+// UP and DOWN scroll the answer as before; DOWN at its end opens the follow-ups. Held: the two lists (agenda.c),
+// with fresh data from the phone.
+static void up_click(ClickRecognizerRef recognizer, void *context) {
+  scroll_layer_scroll_up_click_handler(recognizer, s_scroll_layer);
+}
+
+static void down_click(ClickRecognizerRef recognizer, void *context) {
+  GSize content = scroll_layer_get_content_size(s_scroll_layer);
+  GRect frame = layer_get_frame(scroll_layer_get_layer(s_scroll_layer));
+  GPoint off = scroll_layer_get_content_offset(s_scroll_layer);
+  if (s_follow_n && !s_busy && -off.y + frame.size.h >= content.h - 4) {
+    follow_open();
+    return;
+  }
+  scroll_layer_scroll_down_click_handler(recognizer, s_scroll_layer);
+}
+
+static void ask_sync(void) {
+  s_sync_pending = true;
+  flush_out();
+}
+
+static void up_long(ClickRecognizerRef recognizer, void *context) {
+  ask_sync();
+  quick_show_list();
+}
+
+static void down_long(ClickRecognizerRef recognizer, void *context) {
+  ask_sync();
+  agenda_show_list();
+}
+
 static void click_config(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click);
   window_long_click_subscribe(BUTTON_ID_SELECT, 600, select_long, select_long_up);
+  window_single_click_subscribe(BUTTON_ID_UP, up_click);
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_click);
+  window_long_click_subscribe(BUTTON_ID_UP, 700, up_long, NULL);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 700, down_long, NULL);
 }
 
 // ---------------------------------------------------------------- messages
@@ -518,6 +702,38 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   }
   if ((t = dict_find(it, MESSAGE_KEY_STATUS))) {
     set_status(t->value->cstring);
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_QUICK))) {
+    quick_set(t->value->cstring);
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_REMIND)) && t->value->int32 == 0) {
+    agenda_off();   // the admin switched reminders on the watch off: no wake-ups any more
+  } else if ((t = dict_find(it, MESSAGE_KEY_AGENDA))) {
+    agenda_set(t->value->cstring);
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_WHERE))) {
+    s_where_out = t->value->int32 != 0;
+    if (!s_busy && !s_playing) idle_status();
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_FOLLOW))) {
+    // up to FOLLOW_MAX lines; shown when the answer is done (DOWN at its end)
+    const char *p = t->value->cstring;
+    s_follow_n = 0;
+    while (*p && s_follow_n < FOLLOW_MAX) {
+      const char *end = strchr(p, '\n');
+      size_t len = end ? (size_t)(end - p) : strlen(p);
+      if (len >= FOLLOW_LEN) len = FOLLOW_LEN - 1;
+      if (len) {
+        memcpy(s_follow[s_follow_n], p, len);
+        s_follow[s_follow_n][len] = 0;
+        s_follow_n++;
+      }
+      if (!end) break;
+      p = end + 1;
+    }
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_PROPOSAL))) {
+    snprintf(s_proposal, sizeof(s_proposal), "%s", t->value->cstring);
   }
   if ((t = dict_find(it, MESSAGE_KEY_ANSWER))) {
     size_t have = strlen(s_answer);
@@ -581,7 +797,7 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(s_text_layer, PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
   scroll_layer_add_child(s_scroll_layer, text_layer_get_layer(s_text_layer));
   layer_add_child(root, scroll_layer_get_layer(s_scroll_layer));
-  set_status("SELECT: Frage stellen");
+  set_status(s_where_out ? "SELECT: Frage stellen · unterwegs" : "SELECT: Frage stellen");
   update_text();
 }
 
@@ -594,6 +810,10 @@ static void window_unload(Window *window) {
 
 static void start_listening(void *ctx) {
   listen();
+}
+
+static void ask_from_list(const char *text) {
+  ask(text);   // a quick command goes like a spoken question
 }
 
 static void init(void) {
@@ -619,10 +839,14 @@ static void init(void) {
   if (s_inbox > INBOX_MAX) s_inbox = INBOX_MAX;
   app_message_open(s_inbox, 1024);
   s_seq = (int32_t)(time(NULL) & 0xffff) * 16;
-  if (s_autolisten) app_timer_register(500, start_listening, NULL);
+  agenda_init(ask_from_list, flush_out);
+  s_woken = agenda_launch();   // a reminder's wake-up: its alert is on top, no listening
+  if (s_autolisten && !s_woken) app_timer_register(500, start_listening, NULL);
+  flush_out();   // reminder actions still waiting from last time
 }
 
 static void deinit(void) {
+  agenda_deinit();
   audio_reset();
   if (s_busy && !s_q_pending) {   // last word to the phone, no time to wait for retries
     DictionaryIterator *it;

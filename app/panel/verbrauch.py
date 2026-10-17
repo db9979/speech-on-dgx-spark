@@ -95,7 +95,7 @@ AUFGABEN = {
     # the conversation and what belongs to answering
     "Gespräch": "gespraech", "Bild beschreiben": "gespraech", "Antwort sprechen": "gespraech", "Frage hören": "gespraech",
     "Lautsprecher": "gespraech", "Telegram": "gespraech", "Home Assistant Assist": "gespraech", "Stimme anhören": "gespraech",
-    "Beschwerde": "gespraech",
+    "Beschwerde": "gespraech", "Uhr-Nachfragen": "gespraech",
     # the switch
     "Weiche": "weiche", "Werkzeugwahl": "weiche",
     # background work (vorrang)

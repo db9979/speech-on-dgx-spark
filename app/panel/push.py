@@ -322,7 +322,10 @@ async def due_reminders():
         if not reachable(uid, private=False) or not features.allowed("reminders", uid, c):
             continue   # (the admin may have blocked reminders for this profile: Personen und Geräte → Gesperrte Funktionen)
         by = now - (PAGE_GRACE if page_lately(uid) else 0)
-        for x in [x for x in profiles.reminders(uid) if x.get("due", 0) <= by]:
+        import pebblewatch   # a reminder the watch holds as a wake-up: the watch rings it, push waits for that first
+        on_watch = pebblewatch.held(uid)
+        for x in [x for x in profiles.reminders(uid)
+                  if x.get("due", 0) <= (by - pebblewatch.WATCH_GRACE if x.get("id") in on_watch else by)]:
             if not profiles.take_reminder(uid, x["id"], by):
                 continue   # a device played it in the meantime
             if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped, with a line

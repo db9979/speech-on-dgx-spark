@@ -1576,6 +1576,13 @@
 "titel": "CarPlay: Zuhören im Auto",
 "text": "iPhone-App aus TestFlight auf V01.0.734 oder neuer bringen, iPhone mit dem Auto verbinden, ohne die App am iPhone zu öffnen. Im Auto Spark → „Mit Spark sprechen“ und eine lange Frage mit kurzen Denkpausen in normaler Lautstärke bei Fahrgeräusch stellen: Spark hört bis zum Ende zu und springt nicht zum Startbildschirm zurück. Nach der Antwort 15 Sekunden schweigen: erst dann geht das Mikrofon aus und die Startliste erscheint. Am iPhone selbst endet eine Frage weiter nach kurzer Pause.",
 "thread": "iPhone-App aufpäppeln"
+},
+{
+"id": "P249",
+"v": 735,
+"titel": "Pebble-Uhr 2.0 unterwegs und am Handgelenk",
+"text": "A: Unter Funktionen → Pebble-Uhr die drei Unterschalter Nachfragen, Schnellbefehle und Erinnerungen am Handgelenk einschalten. Die neue Uhr-App über den QR-Code unter Ich → Pebble-Uhr laden, dort „Adresse unterwegs“ (https des Reverse-Proxy) eintragen, neu koppeln und zwei Schnellbefehle speichern. Im WLAN fragen: unter der Antwort öffnet UNTEN bis zu drei Nachfragen, antippen fragt weiter. „Stell einen Timer auf 2 Minuten“: lang UNTEN zeigt ihn mit Ring, nach 2 Minuten vibriert die Uhr auch mit Handy im Flugmodus, das Handy klingelt nicht zusätzlich. Lang OBEN zeigt die Schnellbefehle. Mit WLAN aus über Mobilfunk fragen: die Uhr zeigt „unterwegs“ und antwortet.",
+"thread": "Pebble-Uhr erweitern"
 }
 ]
 }

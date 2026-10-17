@@ -169,18 +169,28 @@ async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_
 // The watch app's settings on the phone take one line instead of address and key; the address is the
 // plain panel port at home (the Pebble app does not trust the self-signed certificate).
 function pebBase(){return location.protocol==='https:'&&location.port&&location.port!=='443'?'http://'+location.hostname+':31080':location.origin}
+// the address for on the road (https only): this page's own one when it was opened through the reverse proxy
+function pebOut(){return location.protocol==='https:'&&(!location.port||location.port==='443')?location.origin:''}
 async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_ON){box.innerHTML='';return}
   let d={watches:[],on:false,minutes:10};try{d=await (await api('/api/profile/pebble')).json()}catch{}
   const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
   box.innerHTML=`<div class="intro">${t('Die Uhr-App „Spark“ für Pebble: Knopf drücken, fragen, die Antwort kommt als Text und über den Lautsprecher der Uhr. Jede Uhr bekommt einen eigenen Schlüssel, der nur fragen darf.','The "Spark" watch app for Pebble: press the button, ask, the answer comes as text and through the watch speaker. Each watch gets its own key that may only ask.')}</div>
     <ul class="facts">${d.watches.map(p=>`<li><span><b>${esc(p.name)}</b><br><small class="mut">${t('zuletzt','last used')}: ${esc(when(p.last))}</small></span><button class="b" type="button" data-pebdel="${esc(p.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch keine Uhr gekoppelt.','No watch paired yet.')}</span></li>`}</ul>
     ${d.on?`<label>${t('Adresse, unter der das Handy den Spark erreicht','Address the phone reaches the Spark at')}</label><input id="pebbase" value="${esc(pebBase())}" autocomplete="off">
+      <label>${t('Adresse unterwegs (nur https, leer: nur zu Hause)','Address on the road (https only, empty: at home only)')}</label><input id="pebout" value="${esc(pebOut())}" placeholder="https://…" autocomplete="off">
+      <div class="fh">${t('Antwortet die Adresse von zu Hause nicht, nimmt die Uhr-App diese, etwa deinen Reverse Proxy mit echtem Zertifikat. Die Uhr zeigt dann „unterwegs“.','When the home address does not answer, the watch app takes this one, e.g. your reverse proxy with a real certificate. The watch then shows "on the road".')}</div>
       <div class="fh"><b>1. ${t('App auf die Uhr','App onto the watch')}</b> ${t('Mit der Kamera des Handys scannen, das mit der Uhr verbunden ist, die Datei laden und mit der Pebble-App öffnen.','Scan with the camera of the phone paired with the watch, load the file and open it with the Pebble app.')}${d.app?' '+t('Version','Version')+' '+esc(d.app)+'.':''}</div>
       <div id="pebqr"></div>
       <div class="fh"><b>2. ${t('Uhr verbunden?','Watch connected?')}</b> ${t('In der Pebble-App muss die Uhr unter Geräte als verbunden stehen, sonst bleiben die Einstellungen von „Spark“ grau.','The Pebble app must show the watch as connected under Devices, otherwise the settings of "Spark" stay grey.')}</div>
       <div class="fh"><b>3. ${t('Koppeln','Pair')}</b> ${t('„Pebble koppeln“ tippen, die Zeile kopieren und in den Einstellungen von „Spark“ bei „Einrichtungscode“ einfügen.','Tap "Pair a Pebble", copy the line and paste it in the settings of "Spark" under "Setup code".')}</div>
       <div class="row"><button class="b p" type="button" id="pebpair">${t('Pebble koppeln','Pair a Pebble')}</button></div>`:''}
-    <div id="pebcode"></div><div class="fh" id="pebmsg"></div>`;
+    <div id="pebcode"></div><div class="fh" id="pebmsg"></div>
+    ${d.quick_on?`<label for="pebquick">${t('Schnellbefehle auf der Uhr (ein Satz pro Zeile)','Quick commands on the watch (one sentence per line)')}</label>
+      <textarea id="pebquick" rows="5" maxlength="${(d.len+1)*d.max}" placeholder="${esc(t('Licht Wohnzimmer aus\nTimer 10 Minuten\nWie wird das Wetter?','Living room light off\nTimer 10 minutes\nWhat will the weather be?'))}">${esc((d.quick||[]).join('\n'))}</textarea>
+      <div class="fh">${t('Höchstens ','At most ')}${d.max} ${t('Sätze mit je','sentences of')} ${d.len} ${t('Zeichen. Auf der Uhr lang OBEN drücken, Mitte schickt den Satz wie eine gesprochene Frage.','characters each. Hold UP on the watch, SELECT sends the sentence like a spoken question.')}</div>
+      <div class="row"><button class="b" type="button" id="pebquicksave">${t('Speichern','Save')}</button></div>`:''}
+    ${d.remind_on?`<div class="fh"><b>${t('Erinnerungen und Timer','Reminders and timers')}</b> ${t('Die nächsten 8 liegen auf der Uhr und vibrieren auch ohne Handy. Lang UNTEN zeigt sie mit Restzeit; beim Klingeln: OBEN erledigt, Mitte in 10 Minuten nochmal, UNTEN Serie beenden.','The next 8 are kept on the watch and vibrate even without the phone. Hold DOWN to see them with the time left; when one rings: UP done, SELECT again in 10 minutes, DOWN end the series.')}</div>`:''}
+    ${d.follow_on?`<div class="fh"><b>${t('Nachfragen','Follow-ups')}</b> ${t('Unter einer Antwort am Ende UNTEN drücken: bis zu drei Folgefragen zum Antippen.','At the end of an answer press DOWN: up to three follow-up questions to tap.')}</div>`:''}`;
   xbind(box,showPeb);
   box.querySelectorAll('[data-pebdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Uhr entfernen? Ihr Schlüssel gilt dann sofort nicht mehr.','Remove the watch? Its key stops working at once.')))return;
     try{await api('/api/profile/pebble/'+encodeURIComponent(b.dataset.pebdel),{method:'DELETE'});showPeb()}catch(e){xmsg('pebmsg',e.message,true)}});
@@ -189,7 +199,8 @@ async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_
     q.innerHTML=`${r.qr?`<div class="mfaqr" style="background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0">${r.qr}</div>`:''}<div class="fh"><a href="${esc(r.url)}">${t('App-Datei öffnen','Open the app file')}</a></div>`}
     catch(e){q.innerHTML='';xmsg('pebmsg',e.message,true)}};
   if($('pebbase')){$('pebbase').onchange=pebQr;pebQr()}
-  if($('pebpair'))$('pebpair').onclick=async()=>{try{const r=await (await api('/api/profile/pebble/pair',xjson('POST',{base:$('pebbase').value.trim()}))).json();
+  if($('pebquicksave'))$('pebquicksave').onclick=async()=>{try{await api('/api/profile/pebble/quick',xjson('PUT',{quick:$('pebquick').value.split('\n').map(x=>x.trim()).filter(Boolean)}));xmsg('pebmsg',t('Gespeichert. Die Uhr holt sie beim nächsten Öffnen der App.','Saved. The watch fetches them the next time the app opens.'))}catch(e){xmsg('pebmsg',e.message,true)}};
+  if($('pebpair'))$('pebpair').onclick=async()=>{try{const r=await (await api('/api/profile/pebble/pair',xjson('POST',{base:$('pebbase').value.trim(),out:$('pebout').value.trim()}))).json();
     const c=$('pebcode');c.innerHTML='';const inp=document.createElement('input');inp.readOnly=true;inp.value=r.setup;inp.id='pebsetup';c.appendChild(inp);
     const row=document.createElement('div');row.className='row';const cp=document.createElement('button');cp.type='button';cp.className='b p';cp.textContent=t('Kopieren','Copy');row.appendChild(cp);c.appendChild(row);
     const fh=document.createElement('div');fh.className='fh';fh.textContent=t('In der Pebble-App am Handy bei „Spark“ die Einstellungen öffnen und unter „Einrichtungscode“ einfügen, dann Speichern. Gilt ','In the Pebble app on the phone open the settings of "Spark", paste under "Setup code", then Save. Valid for ')+r.minutes+t(' Minuten und nur einmal.',' minutes and once only.');c.appendChild(fh);

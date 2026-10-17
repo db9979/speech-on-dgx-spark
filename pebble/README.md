@@ -24,6 +24,18 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
 - `src/pkjs/config.js`: settings page (setup code from Ich → Pebble-Uhr, or Spark address and
   device key; speech, volume, auto-listen).
 
+- `src/c/agenda.c` (app 2.0): reminders, timers and quick commands kept on the watch. The phone sends the next
+  reminders (`AGENDA`, "id|due|made|rep|text" per line, `REMIND` 0 when the admin switched it off) and the quick
+  commands (`QUICK`); they sit in persistent storage (keys 100-141) and every reminder gets a wake-up, so it rings
+  without the phone. Alert: UP close, SELECT later (10 min), DOWN end a series; timer ring: UP +1 min, long DOWN stop.
+  What the watch rang or changed goes back through one queued `REM_ID`/`REM_ACT` message (`POST /api/watch/reminder`).
+  Long UP shows the quick commands, long DOWN the reminders.
+- Follow-ups (`FOLLOW`, up to 3 lines) open with DOWN at the end of an answer; a proposal (`PROPOSAL`) shows ✓ and ✕,
+  which send "Ja" or "Nein". `WHERE` 1 shows "unterwegs" when the phone uses the second address.
+- `src/pkjs/index.js` also keeps a second address (`server_out`, https only, from the setup line's `&aussen=`): when
+  home does not answer within 4 s it uses that one for 5 minutes. `GET /api/watch/sync` fills the watch at start,
+  after a reminder was set and after saving the settings.
+
 Platforms: emery (Pebble Time 2) and flint (Core 2 Duo) with speaker, gabbro (Pebble Round 2)
 text only.
 

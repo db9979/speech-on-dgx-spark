@@ -26,7 +26,11 @@ module.exports = function (s) {
     'Adresse und Schlüssel selbst ein.</small>' +
     '<label for="server">Spark-Adresse</label>' +
     '<input id="server" type="url" autocapitalize="off" autocorrect="off" value="' + esc(s.server || 'http://tars:31080') + '">' +
-    '<small>Zu Hause z.&nbsp;B. http://tars:31080 oder http://192.168.x.y:31080, unterwegs die Adresse im VPN (Tailscale).</small>' +
+    '<small>Zu Hause z.&nbsp;B. http://tars:31080 oder http://192.168.x.y:31080.</small>' +
+    '<label for="out">Adresse unterwegs</label>' +
+    '<input id="out" type="url" autocapitalize="off" autocorrect="off" placeholder="https://…" value="' + esc(s.server_out) + '">' +
+    '<small>Nur https, z.&nbsp;B. dein Reverse Proxy oder die Adresse im VPN. Antwortet die Adresse von zu Hause nicht, ' +
+    'nimmt die App diese. Leer: nur zu Hause.</small>' +
     '<label for="key">Geräteschlüssel</label>' +
     '<input id="key" type="text" autocapitalize="off" autocorrect="off" value="' + esc(s.device_key) + '">' +
     '<small>Kommt mit dem Einrichtungscode. Ohne Schlüssel fragst du als Gast.</small>' +
@@ -38,7 +42,7 @@ module.exports = function (s) {
     '<script>' +
     'var g=function(i){return document.getElementById(i)};' +
     'g("vol").oninput=function(){g("vv").textContent=this.value};' +
-    'g("save").onclick=function(){var r={setup:g("setup").value.trim(),server:g("server").value.trim(),device_key:g("key").value.trim(),' +
+    'g("save").onclick=function(){var r={setup:g("setup").value.trim(),server:g("server").value.trim(),server_out:g("out").value.trim(),device_key:g("key").value.trim(),' +
     'SPEAK:g("speak").checked,VOLUME:parseInt(g("vol").value,10),AUTOLISTEN:g("auto").checked};' +
     'var m=/[?&]return_to=([^&]*)/.exec(location.search);' +
     'location.href=(m?decodeURIComponent(m[1]):"pebblejs://close#")+encodeURIComponent(JSON.stringify(r))};' +

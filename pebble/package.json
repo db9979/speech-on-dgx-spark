@@ -1,7 +1,7 @@
 {
   "name": "speech-spark",
   "author": "Speech on DGX Spark",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "keywords": [
     "pebble-app"
   ],
@@ -42,7 +42,17 @@
       "INBOX",
       "DICT_MS",
       "FACE",
-      "STALLS"
+      "STALLS",
+      "QUICK",
+      "AGENDA",
+      "REMIND",
+      "FOLLOW",
+      "PROPOSAL",
+      "WHERE",
+      "REM_ID",
+      "REM_ACT",
+      "REM_TEXT",
+      "SYNC"
     ],
     "resources": {
       "media": []

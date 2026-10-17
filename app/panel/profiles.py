@@ -913,6 +913,9 @@ SETTINGS = {
     "berater_note": (True, lambda v: isinstance(v, bool)),
     "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
     "android_live": (True, lambda v: isinstance(v, bool)),  # ... with a lasting connection: notes at once
+    # Uhr: Schnellbefehle (pebblewatch.py, admin chat.pebble_quick): the profile's own fixed sentences on the watch
+    "peb_cmds": ([], lambda v: isinstance(v, list) and len(v) <= 12 and all(
+        isinstance(x, str) and 0 < len(x) <= 60 and x == x.strip() and not re.search(r"[\x00-\x1f\x7f]", x) for x in v)),
     "report_notify": (True, lambda v: isinstance(v, bool)),   # an admin profile hears of a new report (meldung.tell_admins)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_ha": (False, lambda v: isinstance(v, bool)),
@@ -1142,8 +1145,10 @@ def reminders(uid):
 REPEATS = ("daily", "weekdays", "weekly", "monthly")   # „Erinnere mich jeden Montag an den Müll“
 
 
-def add_reminder(uid, text, due, every=""):
-    item = {"id": secrets.token_hex(4), "text": re.sub(r"\s+", " ", str(text)).strip()[:200], "due": int(due)}
+def add_reminder(uid, text, due, every="", made=None):
+    item = {"id": secrets.token_hex(4), "text": re.sub(r"\s+", " ", str(text)).strip()[:200], "due": int(due),
+            # when it was set (epoch ms): the watch draws a timer's ring from it (pebblewatch.agenda)
+            "made": int(made if made is not None else time.time() * 1000)}
     if every in REPEATS:
         item["every"] = every
     with _lock:
