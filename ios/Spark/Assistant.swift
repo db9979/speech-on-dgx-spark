@@ -84,6 +84,11 @@ final class Conversation: ObservableObject {
     static let endSilence: TimeInterval = 0.8   // quiet after speech that ends a question
     static let giveUp: TimeInterval = 8         // nothing said: the microphone goes off (as in the panel)
     static let maxQuestion: TimeInterval = 30
+    /// In the car (CarPlay): the car's microphone is quieter and the road louder, people pause while driving.
+    /// So a quieter voice counts, a longer pause ends a question, and the microphone stays open while
+    /// anything like a voice comes in; it goes off only after this long without one.
+    static let carEndSilence: TimeInterval = 1.6
+    static let carGiveUp: TimeInterval = 15
     /// voice needed before a recording counts as a question: a click, a cough or the room never reach the Spark
     static let minSpeech: TimeInterval = 0.15
     /// after the chime the microphone ignores this long (the tone and the end of the answer still ring in it)
@@ -153,6 +158,8 @@ final class Conversation: ObservableObject {
     private var deafUntil = Date.distantPast
     private var loudSince: Date?
     private var floor: Float = 0.02
+    /// last time something like a voice came in while listening (the car keeps the microphone open for it)
+    private var lastVoice = Date()
     private var streamDone = true
     private var last = Date.distantPast
     private var lastActivity = Date()
@@ -502,6 +509,7 @@ final class Conversation: ObservableObject {
         self.opened = opened
         startedAt = Date()
         lastLoud = Date()
+        lastVoice = Date()
         phase = .listening
     }
 
@@ -509,7 +517,8 @@ final class Conversation: ObservableObject {
         level = lvl
         ring.append(contentsOf: samples)
         if ring.count > Int(AudioEngine.rate * 2) { ring.removeFirst(ring.count - Int(AudioEngine.rate * 2)) }
-        let threshold = max(0.06, floor * 2.5)
+        // the car: a quieter voice over the road noise still counts (see carEndSilence)
+        let threshold = inCar ? max(0.025, floor * 1.8) : max(0.06, floor * 2.5)
         if lvl < threshold { floor = lvl < floor ? floor * 0.9 + lvl * 0.1 : floor * 0.995 + lvl * 0.005 }
         let now = Date()
         switch phase {
@@ -522,8 +531,10 @@ final class Conversation: ObservableObject {
                 loud += Double(samples.count) / AudioEngine.rate
                 if loud >= Self.minSpeech { heard = true }
             }
-            if heard && now.timeIntervalSince(lastLoud) > Self.endSilence { finish() }
-            else if !heard && now.timeIntervalSince(startedAt) > Self.giveUp {
+            if inCar && lvl > max(0.015, floor * 1.3) { lastVoice = now }
+            if heard && now.timeIntervalSince(lastLoud) > (inCar ? Self.carEndSilence : Self.endSilence) { finish() }
+            else if !heard && (inCar ? now.timeIntervalSince(lastVoice) > Self.carGiveUp
+                                     : now.timeIntervalSince(startedAt) > Self.giveUp) {
                 pcm = []
                 notice = Prefs.handsFree ? String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.") : nil
                 base()

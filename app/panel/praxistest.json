@@ -1569,6 +1569,13 @@
 "titel": "Android: Spark als Assistent und Teilen",
 "text": "A: Funktionen → Android-App → „Android: Spark als Assistent“ und „Android: Fingerabdruck für Admins“ einschalten, App 1.4.0 installieren und einmal öffnen (Fingerabdruck kommt bei einem Admin-Profil). Spark als digitalen Assistenten wählen, in einer anderen App lange Ein/Aus drücken: das Blatt mit dem Gesicht hört zu, „Wie wird das Wetter morgen?“ wird kurz vorgelesen, das Gespräch steht danach unter Chats. Widget „Spark“ auf den Startbildschirm legen (Zahlen für heute), Kachel „Spark zuhören“ hinzufügen, lange aufs App-Symbol drücken (Kurzbefehle). Ein Foto aus der Galerie an Spark teilen → „Dazu fragen“: das Bild hängt am Chat. Ein PDF teilen → „Nur ablegen“: es steht unter Meine Dokumente. Schalter wieder aus: das Blatt öffnet die App wie früher, Kachel ist grau, unter Zustand → Logs steht „android: assistant refused …“ nur, wenn das Blatt doch fragt.",
 "thread": "Android-App wie die iPhone-App"
+},
+{
+"id": "P248",
+"v": 734,
+"titel": "CarPlay: Zuhören im Auto",
+"text": "iPhone-App aus TestFlight auf V01.0.734 oder neuer bringen, iPhone mit dem Auto verbinden, ohne die App am iPhone zu öffnen. Im Auto Spark → „Mit Spark sprechen“ und eine lange Frage mit kurzen Denkpausen in normaler Lautstärke bei Fahrgeräusch stellen: Spark hört bis zum Ende zu und springt nicht zum Startbildschirm zurück. Nach der Antwort 15 Sekunden schweigen: erst dann geht das Mikrofon aus und die Startliste erscheint. Am iPhone selbst endet eine Frage weiter nach kurzer Pause.",
+"thread": "iPhone-App aufpäppeln"
 }
 ]
 }
