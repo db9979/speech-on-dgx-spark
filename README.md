@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.757** OLED pages "Pi" and "TARS": CPU and RAM load as two big numbers
 - **V01.0.756** Simpler models page: one tile per kind, "Try" and search at Hugging Face
 - **V01.0.755** More precise and faster: times per kind of question, names for listening, units and abbreviations spoken in full
 - **V01.0.754** iPhone app: review code for Apple's review and demo "Look without a Spark"
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.750** Faster, tidier web app: an admin's start on slow phones from 11.5 to about 2 s (jump links once per frame, Status cards only while Status is open, guides when opened), start page gzipped, after updates only changed files load again; wider chat on computers, pages end with room for the floating face, Status menu with symbols and blocks, whole back button on phones
 - **V01.0.749** Typing in the chat is smooth again, also with a long conversation
 - **V01.0.748** The apps show the last state as soon as they open and load visibly instead of staying blank
-- **V01.0.747** Chat calls show both sides on Live, monitoring and the Steuerzentrale: devices, voice or video, ringing or connected and both people (names only with consent)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

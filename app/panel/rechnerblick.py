@@ -245,6 +245,16 @@ def karte(k, now=None, mono=None):
     return out
 
 
+def last(k):
+    """The last CPU and RAM load of one computer in % ("modell" or "panel"), None where not measured yet: the OLED
+    pages "Pi" and "TARS" (gehaeuse.py, Dominik 2026-10-17 "1a")."""
+    with _lock:
+        m = dict(_letzt.get(k) or {})
+    tot, frei = m.get("ram_total"), m.get("ram_frei")
+    ram = round(100 * (tot - frei) / tot) if isinstance(tot, (int, float)) and isinstance(frei, (int, float)) and tot > 0 else None
+    return {"cpu": m.get("cpu"), "ram": ram}
+
+
 def fuer_status(now=None, mono=None):
     """/api/status "rechner": {"an": False} on one Spark, else both cards (the model computer first)."""
     if not an():
