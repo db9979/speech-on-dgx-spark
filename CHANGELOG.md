@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.761** · 2026-10-17 · Genauer und schneller, Paket C: „Einfaches sofort beantworten“ (Uhrzeit, Datum, Rechnen, Einheiten ohne Sprachmodell), „Schnellere Websuche“ (3 s je Seite, passende Stellen, 10 Minuten Speicher), „Antwort-Prüfung erweitern“ (Grad, km, Prozent, Namen), Qualitätstest mit Qwen-Empfehlung und top_k
 - **V01.0.760** · 2026-10-17 · Genauer und schneller, Paket B: eine erkannte Fragenart bekommt immer dieselbe Werkzeugliste (der Server liest den Anfang aus dem Zwischenspeicher), „Großes Gedächtnis kürzen“ gibt dem Modell bei vielen Fakten nur die neuesten und die passenden
 - **V01.0.759** · 2026-10-17 · Fix: Einstellungen fragen bei einem Admin-Profil nicht mehr nach dem zweiten Schritt des Panel-Passworts (kein „/api/mfa 403“ mehr in der Konsole)
 - **V01.0.758** · 2026-10-17 · Funktionen und Personen und Geräte mit Symbolen wie Zustand und Einstellungen: jede Seite im Menü daneben und jede Gruppe der Funktionen hat ihr farbiges Symbol

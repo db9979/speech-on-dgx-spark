@@ -4,6 +4,11 @@ names a time, a date, a score or an amount of money that is nowhere in what the 
 question, the conversation, the instructions with today's date, the tool results of this answer).
 Only figures written with digits (or a score in words) are checked, so a plain sentence never falls
 out; "10:00" counts as "10 Uhr", "13.10.2026" as "13. Oktober", "3:1" as "3 zu 1".
+
+Antwort-Prüfung erweitern (chat.answer_check_more, plan genauer-und-schneller, 9; off by default): also temperatures
+("14 Grad", "-3 °C"), distances in km and percentages must be in what the model was given, with room for rounding
+(MORE_SLACK: "14 Grad" for 14.3 is right, "20 Grad" for 14.3 is not), and a quoted name („Kaffee mit Anke“) must be
+in it in every data answer, not only in one that read the calendar.
 """
 import re
 
@@ -30,6 +35,32 @@ MONEY = re.compile(r"(\d{1,3}(?:[.\s]\d{3})*|\d+)(?:,(\d{1,2})|\.(\d{2})(?!\d))?
                    r"|(?:€|eur\b)\s*(\d+)(?:[.,](\d{1,2}))?")
 # "13.10." alone is a date, never the time 13:10; "3:1" is a score, "10:00" a time
 TIMELIKE = re.compile(r"\b([01]?\d|2[0-3]):([0-5]\d)(?!\d)")
+_V = r"((?:-|minus\s+)?\d{1,5}(?:[.,]\d{1,2})?)"
+_RANGE = r"(?:" + _V + r"\s*(?:bis|und|to|and|-|–)\s*)?" + _V
+DEGREES = re.compile(_RANGE + r"\s*(?:°\s*c\b|°(?!\s*f)|grad\b(?!\s+fahrenheit)|degrees?\s+celsius\b)")
+KM = re.compile(_RANGE + r"\s*(?:km\b(?!/)|kilometer(?:n)?\b(?!\s+pro)|kilometres?\b(?!\s+per))")
+PERCENT = re.compile(_RANGE + r"\s*(?:%|prozent\b|percent\b)")
+MORE = {"c": DEGREES, "k": KM, "p": PERCENT}
+# room for rounding, in tenths: a degree, a percent point, for km one km or a tenth of the value
+MORE_SLACK = {"c": 10, "p": 10, "k": 10}
+
+
+def _tenths(x):
+    neg = x.startswith("-") or x.startswith("minus")
+    v = round(float(re.sub(r"^(-|minus\s+)", "", x).replace(",", ".")) * 10)
+    return -v if neg else v
+
+
+def more_facts(text):
+    """Temperatures, km and percentages in a text, as ("c"|"k"|"p", tenths)."""
+    low = (text or "").lower()
+    out = set()
+    for kind, rx in MORE.items():
+        for m in rx.finditer(low):
+            for g in (m.group(1), m.group(2)):
+                if g:
+                    out.add((kind, _tenths(g)))
+    return out
 
 
 def facts(text):
@@ -84,24 +115,30 @@ def _money(low):
                 yield m
 
 
-def known(texts):
+def known(texts, more=False):
     """Every figure the model was given. A score "3:1" in a result also stands for the time-like
-    reading and the other way round, so neither spelling is held back."""
+    reading and the other way round, so neither spelling is held back. more: temperatures, km, percentages too."""
     have = set()
     for t in texts:
         if isinstance(t, str):
-            have |= facts(t)
+            have |= facts(t) | (more_facts(t) if more else set())
     for k in list(have):
         if k[0] == "t":
             have.add(("s", k[1], k[2]))
     return have
 
 
-def unsupported(sentence, have):
+def unsupported(sentence, have, more=False):
     """The figures of sentence that are not in have (empty: the sentence may be said)."""
     miss = []
-    for f in sorted(facts(sentence)):
+    for f in sorted(facts(sentence) | (more_facts(sentence) if more else set())):
         if f in have:
+            continue
+        if f[0] in MORE:   # rounded is right, made up is not
+            slack = max(MORE_SLACK[f[0]], abs(f[1]) // 10) if f[0] == "k" else MORE_SLACK[f[0]]
+            if any(k[0] == f[0] and abs(k[1] - f[1]) <= slack for k in have):
+                continue
+            miss.append(f)
             continue
         if f[0] == "t" and f[2] == 0 and any(k[0] == "t" and k[1] == f[1] for k in have):
             continue  # "um 10" for 10:15 is vague, not made up
@@ -112,8 +149,10 @@ def unsupported(sentence, have):
 
 
 def label(f):
+    if f[0] in MORE:
+        return f"{f[1] / 10:g} " + {"c": "Grad", "k": "km", "p": "%"}[f[0]]
     return {"t": "{1}:{2:02d} Uhr", "d": "{1}.{2}.", "s": "{1}:{2}", "m": "{1},{2:02d} €",
-            "n": "Termin aus früherer Antwort"}[f[0]].format(*f)
+            "n": "Termin aus früherer Antwort", "q": "Name, der nirgends steht"}[f[0]].format(*f)
 
 
 FALLBACK = {"de": "Genauere Angaben dazu habe ich nicht.", "en": "I have no more precise details on that."}
@@ -137,6 +176,7 @@ def fresh_texts(msgs):
 
 
 OLD = ("n", 0, 0)   # held back: a quoted name not read in this answer (unquoted)
+NAME = ("q", 0, 0)  # Antwort-Prüfung erweitern: a quoted name in nothing the model was given
 QUOTED = re.compile(r"[„“\"»«]([^„“”\"»«\n]{2,80})[“”\"«»]")
 
 

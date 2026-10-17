@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "8e23615bcd",
+        "stand": "43cd59ed8e",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -93,9 +93,13 @@ SEITEN = {
             S("s9", "schritt", ("Anfrage an den Dienst", "Request to the service"),
               ("mit versiegeltem Zugang", "with sealed login"),
               ("Das Panel öffnet den Zugang des Profils (Token, Passwort) erst jetzt und schickt ihn nur an die "
-               "eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse.",
+               "eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse. Mit „Schnellere Websuche“ "
+               "hat jede Trefferseite höchstens {chat.PAGE_SECONDS} s, bringt die zur Frage passenden Stellen, und "
+               "dieselbe Suche kommt {chat.SEARCH_CACHE|min} Minuten lang aus dem Arbeitsspeicher.",
                "The panel unseals the profile's login (token, password) only now and sends it only to the entered "
-               "site. Mail goes over IMAP with TLS to the checked address.")),
+               "site. Mail goes over IMAP with TLS to the checked address. With „Faster web search“ each result page "
+               "gets at most {chat.PAGE_SECONDS} s, brings the parts that fit the question, and the same search comes "
+               "from memory for {chat.SEARCH_CACHE|min} minutes.")),
             S("s10", "frage", ("Antwort zu groß?", "Answer too large?"),
               ("höchstens {netguard.MAX_BYTES|mb}, MCP {mcp.MAX_BYTES|mb}", "at most {netguard.MAX_BYTES|mb}, MCP {mcp.MAX_BYTES|mb}"),
               ("Über den Wächter wird jede Antwort an der Grenze des Moduls abgeschnitten, auch nach dem Entpacken.",

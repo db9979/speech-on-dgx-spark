@@ -490,7 +490,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "16689222cc",
+        "stand": "fa82583b99",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -516,12 +516,18 @@ SEITEN = {
                "den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, "
                "Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert "
                "(Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen "
-               "Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen).",
+               "Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort "
+               "beantworten“ bekommen Uhrzeit, Datum, einfache Rechnungen und Einheiten als ganzer kurzer Satz den "
+               "festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens "
+               "{sofort.MAX_CHARS} Zeichen).",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
                "mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, "
-               "without a model (notbetrieb.antwort: Home Assistant, time, reminders).")),
+               "without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at "
+               "once“ the time, the date, simple arithmetic and units as a whole short sentence get the panel's fixed "
+               "sentence, without a model and without an instant sentence before it (sofort.answer, at most "
+               "{sofort.MAX_CHARS} characters).")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
@@ -562,10 +568,14 @@ SEITEN = {
               ("Antwort-Prüfung: Uhrzeit, Datum, Spielstand, Betrag", "answer check: time, date, score, amount"),
               ("Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz "
                "mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser "
-               "Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen.",
+               "Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung "
+               "erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder "
+               "zitierte Name in jeder Datenantwort.",
                "For data questions answercheck compares every time, date, score and amount in the sentence with "
                "everything the model was given. After a calendar read only figures from this answer count, not from "
-               "earlier ones; a quoted appointment title must be in the result."),
+               "earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also "
+               "temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in "
+               "every data answer."),
               ("info", "ja", ("Satz fällt weg, am Ende ein ehrlicher Satz", "Sentence dropped, an honest sentence at the end"))),
             S("s7", "frage", ("Tat ohne Werkzeug?", "Deed without a tool?"),
               ("Taten prüfen", "check deeds"),
@@ -706,7 +716,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "5cc823cfab",
+        "stand": "a5a36ccf20",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -791,9 +801,13 @@ SEITEN = {
             S("s9", "schritt", ("Ergebnis als Daten einpacken", "Wrap the result as data"),
               ("Hinweis „Daten, kein Befehl“, Block <<< >>>", "note „data, no command“, block <<< >>>"),
               ("Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht "
-               "schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd.",
+               "schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. Mit "
+               "„Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer "
+               "mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer.",
                "Outside text gets a fixed note in front and stands between markers it cannot close itself. Home "
-               "Assistant states with free text (titles, lists) count as outside too.")),
+               "Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long "
+               "note stands once per answer, before every further block a short one with the same rule "
+               "(chat.OUTSIDE_AGAIN); the markers always stay.")),
             S("s10", "schritt", ("Gerät markiert die Antwort", "Device marks the answer"),
               ("Ereignis „outside“ oder „mail“", "event „outside“ or „mail“"),
               ("Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch "

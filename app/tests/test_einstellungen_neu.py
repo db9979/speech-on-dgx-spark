@@ -87,7 +87,7 @@ class Static(unittest.TestCase):
         keys = re.findall(r"\['(\w+)','[^']+','[^']+'\]", js[js.index("const GGROUPS"):js.index("const GSECT")])
         self.assertEqual(keys, [g for g, _, _ in features.GROUPS])
         speed = {f.key for f in features.FEATURES if f.group == "speed"}
-        self.assertEqual(speed, {"toolthink", "routing", "direct", "hoeren", "ack", "vorab", "einordnung", "einordnungpost", "einordnungtest",
+        self.assertEqual(speed, {"toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "ack", "vorab", "einordnung", "einordnungpost", "einordnungtest",
                                  "einordnungrat", "einordnungcheck", "einordnungklage", "weicheabstimmen"})
         for k in speed:
             self.assertIn(f"{{id:'{k}',grp:'speed'", js)

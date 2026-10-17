@@ -81,6 +81,9 @@ F = Feature
 FEATURES = (
     # conversation
     F("search", "Websuche", "Web search", "talk", ("search",), guide="search"),
+    # chat.web_search (plan genauer-und-schneller, 7): 3 s per page, the fitting parts, 10 minutes in memory
+    F("suchschnell", "Schnellere Websuche", "Faster web search", "talk", ("search_fast",), parent="search",
+      guide="suchschnell"),
     F("wiki", "Wikipedia direkt", "Wikipedia straight away", "talk", ("wiki",), me="setbox", guide="wiki"),
     F("kiwix", "Eigenes Kiwix-Archiv", "Own Kiwix archive", "talk", ("kiwix",), me="setbox", guide="kiwix"),
     F("lokal", "Erst lokal suchen", "Look locally first", "talk", ("local_first",), me="setbox", guide="lokal"),
@@ -105,6 +108,8 @@ FEATURES = (
     # hoerwoerter.py (plan genauer-und-schneller, 5): the speech recognition gets the names of rooms, devices, people
     F("hoeren", "Namen fürs Hören", "Names for listening", "speed", ("hoer_namen",), guide="hoeren"),
     # chat.memory_split (plan genauer-und-schneller, 4): a long memory keeps a fixed core, older facts only when they fit
+    # sofort.py (plan genauer-und-schneller, 6): time, date, arithmetic and units as the panel's fixed sentence
+    F("sofort", "Einfaches sofort beantworten", "Answer simple things at once", "speed", ("sofort",), guide="sofort"),
     F("gedkurz", "Großes Gedächtnis kürzen", "Trim a large memory", "speed", ("memory_trim",), guide="gedkurz"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),
@@ -524,7 +529,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "weicheabstimmen"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "weicheabstimmen"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.
@@ -591,6 +596,7 @@ def grund_state(c=None):
 SPARK_NAMES = {"public": ("Gastzugang", "Guest access"), "thinking": ("Vorher nachdenken", "Think first"),
                "prompt_cache": ("Schneller Antwortbeginn", "Faster first words"),
                "answer_check": ("Antworten prüfen", "Check answers"),
+               "answer_check_more": ("Antwort-Prüfung erweitern", "Extended answer check"),
                "action_check": ("Taten prüfen", "Check deeds"), "loop_stop": ("Fehlerschleife stoppen", "Stop error loops"), "datetime": ("Datum und Uhrzeit mitgeben", "Pass date and time"),
                "face_life": ("Gesicht zeigt, was es tut", "Face shows what it does")}
 

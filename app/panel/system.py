@@ -22,7 +22,7 @@ import profiles  # noqa: E402
 import quality  # noqa: E402
 import vorrang  # noqa: E402
 from common import load_config  # noqa: E402
-from core import spawn, DEFAULTS, admin_code_fresh, auth  # noqa: E402
+from core import spawn, DEFAULTS, admin_code_fresh, auth, json_body  # noqa: E402
 
 router = APIRouter()
 
@@ -244,7 +244,8 @@ async def kiwix_check(request: Request):
 
 @router.get("/api/quality", dependencies=[Depends(auth)])
 def quality_result():
-    return {"running": quality.running(), "progress": quality.progress(), "last": quality.last(), "own": quality.own()}
+    return {"running": quality.running(), "progress": quality.progress(), "last": quality.last(), "own": quality.own(),
+            "compare": quality.compare()}
 
 
 @router.delete("/api/quality/cases/{cid}", dependencies=[Depends(auth)])
@@ -255,9 +256,11 @@ def quality_drop_case(cid: str):
 
 
 @router.post("/api/quality", dependencies=[Depends(auth)])
-async def quality_now():
-    if not quality.running():
-        spawn(quality.run("manual"))
+async def quality_now(request: Request):
+    guard.limit(request, "pruef", admin=True)
+    body = await json_body(request, 200, lenient=True)
+    if not quality.running():   # "qwen": once with Qwen's recommended word choice (quality.QWEN_SAMPLING)
+        spawn(quality.run("manual", "qwen" if body.get("sampling") == "qwen" else "eigen"))
         await asyncio.sleep(0.1)
     return {"running": True, "progress": quality.progress(), "last": quality.last()}
 

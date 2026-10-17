@@ -912,8 +912,9 @@ function qProg(p){const box=$('qprog'),bar=$('qbar');box.hidden=!p;if(!p)return;
   const left=d?Math.round(p.seconds/d*(n-d)):0;
   $('qprogtxt').textContent=n?`${t('Frage','Question')} ${Math.min(d+1,n)} ${t('von','of')} ${n}`+(d>=3&&left>0?` · ${t('noch etwa','about')} ${left<60?left+' s':Math.round(left/60)+' min'}${t('',' left')}`:''):t('startet …','starting …')}
 function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d.progress||{done:0,total:0,seconds:0}):null);
-  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,2000)}
-  else{$('qgo').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
+  qCompare(d&&d.compare);
+  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=$('qgoqwen').disabled=true;qTimer=setTimeout(loadQuality,2000)}
+  else{$('qgo').disabled=$('qgoqwen').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
   const none=h=>{$('qsum').innerHTML=h;$('qlist').innerHTML='';$('qallbox').hidden=true};
   if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
   if(r.error)return none(`<span class="err">${esc(r.error)}</span>`);
@@ -924,7 +925,7 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
   $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> `
     +(bad.length?'':`<b>${t('Alle Fragen richtig.','All questions right.')}</b> `)
     +(flaky.length?`<span class="pill warn">${flaky.length} ${t('erst im zweiten Versuch','only on the second try')}</span> `:'')
-    +`<div class="fh">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature}${r.tool_temperature!=null?' / '+r.tool_temperature+t(' bei der Werkzeugwahl',' choosing tools'):''} · ${min(r.seconds)}</div>`;
+    +`<div class="fh">${esc(r.model||'')}${r.sampling==='qwen'?' · '+t('mit Qwen-Empfehlung','with Qwen\'s recommendation'):''} · ${t('Temperatur','temperature')} ${r.temperature}${r.tool_temperature!=null?' / '+r.tool_temperature+t(' bei der Werkzeugwahl',' choosing tools'):''} · ${min(r.seconds)}</div>`;
   const mark=x=>(x.new?` <span class="pill warn">${t('neu kaputt','newly broken')}</span>`:'')
     +(x.wobbly?` <span class="mut">${t('wackelt','wobbles')} (${x.wobbly} ${t('von','of')} ${x.runs})</span>`:'');
   const extra=x=>(x.flaky&&x.first?`<br>${t('Erster Versuch','First try')}: ${esc(x.first.why.join('; '))}`:'')
@@ -944,7 +945,12 @@ function qOwn(l){if(!l)return;$('qownbox').style.display=l.length?'':'none';
 $('qown').addEventListener('click',async e=>{const b=e.target.closest('[data-qdrop]');if(!b)return;
   try{qOwn((await (await api('/api/quality/cases/'+encodeURIComponent(b.dataset.qdrop),{method:'DELETE'})).json()).own)}catch(err){$('qmsg').innerHTML=`<span class="err">${esc(err.message)}</span>`}});
 async function loadQuality(){try{const d=await (await api('/api/quality')).json();qRender(d);qOwn(d.own)}catch{}}
-$('qgo').onclick=async()=>{try{qRender(await (await api('/api/quality',{method:'POST'})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// Wortwahl messen (quality.QWEN_SAMPLING): the newest run with the own values beside the newest with Qwen's recommendation
+function qCompare(c){const box=$('qcmp'),e=c&&c.eigen,q=c&&c.qwen;box.hidden=!(e&&q);if(!(e&&q))return;
+  box.textContent=`${t('Eigene Wortwahl','Own word choice')} ${e.passed} / ${e.total} · ${t('Qwen-Empfehlung','Qwen\'s recommendation')} ${q.passed} / ${q.total}`
+    +(q.passed>e.passed?' · '+t('Die Empfehlung war besser: unter Einstellungen → Sprachmodell top_p 0,8, top_k 20 und presence_penalty 1 eintragen.','The recommendation was better: set top_p 0.8, top_k 20 and presence_penalty 1 under Settings → Language model.'):'')}
+const qStart=body=>async()=>{try{qRender(await (await api('/api/quality',{method:'POST',body:JSON.stringify(body)})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('qgo').onclick=qStart({});$('qgoqwen').onclick=qStart({sampling:'qwen'});
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore'),move:t('Umzug (mit Schlüssel)','move (with key)')};

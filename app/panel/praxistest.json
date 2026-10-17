@@ -1709,6 +1709,13 @@
 "titel": "Genauer und schneller, Paket B",
 "text": "A: Funktionen → Großes Gedächtnis kürzen an, Einstellungen → Sprachmodell → Schneller Antwortbeginn an. P: zwei Fragen derselben Art nacheinander stellen („Erinnere mich in 10 Minuten an den Herd“, dann „Stell einen Timer auf 5 Minuten“): die zweite Antwort beginnt spürbar schneller. Ein Profil mit sehr vielen gemerkten Fakten fragt nach einem alten Fakt mit einem Wort daraus („Wie heißt mein Zahnarzt?“): die Antwort stimmt. Admin: Zustand → Logs, Bereich Gespräch: „Gedächtnis gekürzt, … von … Fakten fest, … passende dazu“.",
 "thread": "Assistent genauer und schneller"
+},
+{
+"id": "P268",
+"v": 761,
+"titel": "Genauer und schneller, Paket C",
+"text": "A: Funktionen → Einfaches sofort beantworten an, Funktionen → Websuche → Schnellere Websuche an, Einstellungen → Sprachmodell → Antwort-Prüfung erweitern an. P: „Wie spät ist es?“, „Der Wievielte ist morgen?“, „Was ist 17 mal 23?“, „Wie viel sind 3 Zoll in Zentimeter?“: die Antwort kommt sofort ohne „Moment“. „Wie spät ist es in Tokio?“ beantwortet weiter das Sprachmodell. Eine Websuche („Wann hat der Baumarkt heute offen?“) zweimal stellen: die zweite kommt sofort. Admin: Zustand → Prüfen → Qualitätstest „Mit Qwen-Empfehlung prüfen“: danach stehen beide Ergebnisse nebeneinander.",
+"thread": "Assistent genauer und schneller"
 }
 ]
 }

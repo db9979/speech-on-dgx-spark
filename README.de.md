@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.761** Genauer und schneller, Paket C: Einfaches sofort beantworten, schnellere Websuche, Antwort-Prüfung erweitert, Wortwahl messen
 - **V01.0.760** Genauer und schneller, Paket B: feste Werkzeugliste je Fragenart, großes Gedächtnis kürzen
 - **V01.0.759** Fix: Einstellungen ohne „/api/mfa 403“ bei Admin-Profilen
 - **V01.0.758** Funktionen und Personen mit Symbolen wie Zustand und Einstellungen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.754** iPhone-App: Prüf-Code für Apples Prüfung und Vorführung „Ohne Spark ansehen“
 - **V01.0.753** Rot-Fix: Technik-Seite „Vorbereiten“ wieder auf dem Stand von .752
 - **V01.0.752** Rechner fernsteuern: Folgebitten wie „Das Terminal in den Vordergrund“ oder „Nochmal“ gehen an den Rechner von eben
-- **V01.0.751** Fix: die Karten unter Zustand laden wieder beim Öffnen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

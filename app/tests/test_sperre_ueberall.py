@@ -338,6 +338,7 @@ ADMIN_ON_OK = {
     "berater.py:admin_case": "admin endpoint",
     "berater.py:admin_explain": "admin endpoint",
     "berater.py:admin_explain_area": "admin endpoint",
+    "chat.py:_answer": "Einfaches sofort beantworten for a guest (no profile, no tool, no data: plain question and answer); a profile goes through features.allowed sofort",
     "chats.py:admin_on": "Spark switch; per profile chats.usable (features.allowed)",
     "chats.py:groups_on": "Spark switch of a chat kind; members checked with chats.usable",
     "chats.py:invite_on": "Spark switch; the inviting profile checked with chats.usable",

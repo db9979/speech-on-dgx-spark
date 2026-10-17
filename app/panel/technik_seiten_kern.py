@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "2dbb6d632f",
+        "stand": "4dddcf232f",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -76,13 +76,15 @@ SEITEN = {
                "When no model is configured, the panel asks /models once and keeps the first name for this address.")),
             S("s4", "schritt", ("Anfrage bauen", "Build the request"),
               ("stream, max_tokens, Temperatur, Denken aus", "stream, max_tokens, temperature, thinking off"),
-              ("Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist "
+              ("Die Anfrage streamt, mit Länge, Temperatur, top_p, top_k und presence_penalty aus den Einstellungen "
+               "(0 = Standard des Servers; der Qualitätstest vergleicht mit der Qwen-Empfehlung). Denken ist "
                "aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Der "
                "Server meldet am Ende immer, wie viel er gelesen und geschrieben hat und wie viel aus seinem "
                "Zwischenspeicher kam.",
-               "The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is "
-               "off unless „Think first“ is on. While a tool is chosen its own temperature applies. The server always reports "
-               "at the end how much it read and wrote and how much came from its cache.")),
+               "The request streams, with length, temperature, top_p, top_k and presence_penalty from the settings (0 = "
+               "the server's default; the quality test compares with Qwen's recommendation). Thinking is "
+               "off unless „Think first“ is on. While a tool is chosen its own temperature applies. The server always "
+               "reports at the end how much it read and wrote and how much came from its cache.")),
             S("s5", "frage", ("Wartet jemand mit Vorrang?", "Someone with priority waiting?"),
               ("Vorrang für Personen", "priority for people"),
               ("Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens "
@@ -217,7 +219,7 @@ SEITEN = {
             ("llm.model", ("Modellname aus Einstellung oder /models", "model name from settings or /models")),
             ("llm.url", ("die eine Adresse des Sprachmodells", "the one address of the language model")),
             ("llm.complete", ("Aufruf jeder Hintergrundaufgabe, wartet in vorrang", "the call of every background job, waits in vorrang")),
-            ("chat.sampling", ("top_p und presence_penalty", "top_p and presence_penalty")),
+            ("chat.sampling", ("top_p, top_k und presence_penalty", "top_p, top_k and presence_penalty")),
             ("chat.first_within", ("die erste Zeile muss rechtzeitig kommen", "the first line must come in time")),
             ("chat.ContextFull", ("Anfrage länger als der Kontext", "request longer than the context")),
             ("chat.llm_error_code", ("Fehler als festes Kürzel", "error as a fixed code")),

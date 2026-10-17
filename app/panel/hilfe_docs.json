@@ -1805,7 +1805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage kommt an: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). 2. Strom öffnen, Sofort-Satz: Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz (ohne GPU); bleibt die Antwort danach still, kommt einmal ein Brücken-Satz. 3. Was das Panel selbst erledigt: Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, „Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten. 4. Runde vorbereiten: Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge."
+"text": "1. Frage kommt an: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort beantworten“ bekommen Uhrzeit, Datum, einfache Rechnungen und Einheiten als ganzer kurzer Satz den festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens 80 Zeichen). 2. Strom öffnen, Sofort-Satz: Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz (ohne GPU); bleibt die Antwort danach still, kommt einmal ein Brücken-Satz. 3. Was das Panel selbst erledigt: Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, „Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft "
 },
 {
 "lang": "de",
@@ -1813,7 +1813,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens 700 Tokens; eine längere Antwort endet am letzten ganzen Satz. 5. Streamen und in Sätze schneiden: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat n"
+"text": "das jetzt. Das Ergebnis geht wie ein Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten. 4. Runde vorbereiten: Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens 700 Tokens; eine längere Antwort endet am letzten ganzen Satz. 5. Streamen und in Sätze schneiden: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis s"
 },
 {
 "lang": "de",
@@ -1821,7 +1821,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Sa"
+"text": "tehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Mod"
 },
 {
 "lang": "de",
@@ -1829,7 +1829,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "tz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das G"
+"text": "ell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage sc"
 },
 {
 "lang": "de",
@@ -1837,7 +1837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "erät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort."
+"text": "hon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort."
 },
 {
 "lang": "de",
@@ -1925,7 +1925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solc"
+"text": " dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein"
 },
 {
 "lang": "de",
@@ -1933,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "he Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
+"text": " kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
 },
 {
 "lang": "de",
@@ -2317,7 +2317,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", Erinnerungen) gehen ohne Modell (notbetrieb.antwort). 3. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 4. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 5. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p und presence_penalty aus den Einstellungen. Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Der Server meldet am Ende immer, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam. 6. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. Davor prüft das Panel das Kontingent (Tag, Woche, Monat): ein Profil darüber bekommt einen festen Satz statt einer Antwort, feste Befehle ohn"
+"text": ", Erinnerungen) gehen ohne Modell (notbetrieb.antwort). 3. Verbindung für diese Antwort: Jede Antwort hat eine eigene Verbindung mit dem eingestellten Zeitlimit (ein Wert außerhalb gilt nicht) und fünf Sekunden zum Verbinden. Ist ein Schlüssel eingetragen, geht er als Bearer mit. Das Modell ist ein fester eigener Dienst und läuft nicht über den Wächter. 4. Modellname: Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für diese Adresse. 5. Anfrage bauen: Die Anfrage streamt, mit Länge, Temperatur, top_p, top_k und presence_penalty aus den Einstellungen (0 = Standard des Servers; der Qualitätstest vergleicht mit der Qwen-Empfehlung). Denken ist aus, außer „Vorher nachdenken“ ist an. Während der Werkzeugwahl gilt die eigene Temperatur dafür. Der Server meldet am Ende immer, wie viel er gelesen und geschrieben hat und wie viel aus seinem Zwischenspeicher kam. 6. Wartet jemand mit Vorrang?: Hat eine andere Person Vorrang und ihre Antwort noch keinen ersten Satz, wartet diese Runde höchstens die eingestellte Zeit (bis 5 Sekunden). Eine Antwort mit Vorrang hält andere höchstens 30 Sekunden auf. Davor prüft das Panel das Kontingent (Tag, Woche, Mon"
 },
 {
 "lang": "de",
@@ -2325,7 +2325,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e Modell gehen weiter. 7. Eine Runde an das Modell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 8. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 9. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 10. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 11. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 12. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon aus dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum"
+"text": "at): ein Profil darüber bekommt einen festen Satz statt einer Antwort, feste Befehle ohne Modell gehen weiter. 7. Eine Runde an das Modell: Die Runde geht an die eingestellte Adresse. Lehnt der Server die erzwungene Werkzeugwahl ab, geht dieselbe Runde einmal ohne sie. 8. Zu lang für das Modell?: Meldet der Server, dass die Anfrage länger als sein Kontext ist, kürzt das Panel in der ersten Runde den Verlauf auf ein Viertel des Verlaufsbudgets und fragt einmal neu. 9. Erste Zeile rechtzeitig?: Die erste Zeile muss innerhalb von 90 Sekunden kommen (oder des kürzeren Zeitlimits). Ein Modell, das länger schweigt, hängt: die Antwort endet mit einem klaren Satz statt mit Minuten Stille. 10. Zeilen lesen: Jede Zeile ist ein Stück JSON. Werkzeugaufrufe kommen in Teilen und werden nach ihrer Nummer zusammengesetzt; Denktext, den der Server getrennt liefert, wird nur gezählt. Unlesbare Zeilen werden übersprungen. 11. Nur Antworttext weiter: Denktext im Text (<think> … </think>) und Werkzeugaufrufe, die als Text kommen, werden nie gezeigt oder gesprochen. Der Rest geht Stück für Stück an „Antwort bauen“. 12. Runde festhalten: Für den Anfrage-Verlauf zählen nur Zahlen: gelesene Tokens, davon a"
 },
 {
 "lang": "de",
@@ -2333,7 +2333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " ersten Wort, Wartezeit wegen Vorrang. Der Verbrauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers geschätzt, rund 3.5 Zeichen je Token). 13. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 14. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
+"text": "us dem Zwischenspeicher, Größe von Systemprompt, Werkzeugliste und Verlauf, Zeit bis zum ersten Wort, Wartezeit wegen Vorrang. Der Verbrauchszähler zählt gelesene und geschriebene Tokens je Aufgabe und Profil (ohne Meldung des Servers geschätzt, rund 3.5 Zeichen je Token). 13. Fehler unterwegs?: Ein Fehler wird zu einem festen Kürzel: nicht erreichbar, zu langsam, Schlüssel abgelehnt, Modell fehlt. Bei „nicht erreichbar“ und „zu langsam“ wird ein fester Satz auch gesprochen, wenn noch nichts gesagt war. Gäste sehen nur die Art des Fehlers, nie seinen Text. 14. Text und Werkzeugaufrufe zurück: Die Runde gibt zurück, warum sie endete und welche Werkzeuge das Modell aufrufen will. Was davon läuft, entscheidet das Panel."
 },
 {
 "lang": "de",
@@ -2373,7 +2373,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/llm.py model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/llm.py url: die eine Adresse des Sprachmodells (Schritt 1) - app/panel/llm.py complete: Aufruf jeder Hintergrundaufgabe, wartet in vorrang (Schritt 1) - app/panel/chat.py sampling: top_p und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gefragt (S"
+"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/llm.py model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/llm.py url: die eine Adresse des Sprachmodells (Schritt 1) - app/panel/llm.py complete: Aufruf jeder Hintergrundaufgabe, wartet in vorrang (Schritt 1) - app/panel/chat.py sampling: top_p, top_k und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gef"
 },
 {
 "lang": "de",
@@ -2381,7 +2381,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "chritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn das Sprachmodell neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: welche Grenze ist voll: Tag, Woche oder Monat? (Schritt 6) - app/panel/verbrauch.py warn: Vorwarnung unter der Antwort, einmal je Zeitraum (Schritt 12)"
+"text": "ragt (Schritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn das Sprachmodell neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: welche Grenze ist voll: Tag, Woche oder Monat? (Schritt 6) - app/panel/verbrauch.py warn: Vorwarnung unter der Antwort, einmal je Zeitraum (Schritt 12)"
 },
 {
 "lang": "de",
@@ -2685,7 +2685,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ush laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. 7. Stufe des Dienstes: Jedes Modul ruft den Wächter mit seiner festen Stufe: Home Assistant und Kiwix mit Heimnetz; Kalender, Kontakte, Aufgaben, Mail und MCP mit Nutzer; reMarkable und Seiten aus der Suche mit nur Internet. Die Stufe steht im Code, nicht in den Einstellungen. 8. Wächter erlaubt die Adresse?: Der Wächter löst den Namen einmal auf und prüft jede Adresse: keine eigenen Dienste, kein 169.254, Heimnetz nur auf Stufe Heimnetz oder mit Schalter, im Notaus kein Internet. Danach verbindet er genau mit der geprüften Adresse. 9. Anfrage an den Dienst: Das Panel öffnet den Zugang des Profils (Token, Passwort) erst jetzt und schickt ihn nur an die eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse. 10. Antwort zu groß?: Über den Wächter wird jede Antwort an der Grenze des Moduls abgeschnitten, auch nach dem Entpacken. 11. Ergebnis für Mein Zustand und Live: Ob der Dienst geantwortet oder die Anmeldung abgelehnt hat, sieht das Profil unter Ich → Mein Zustand; die Live-Seite zählt, was der W"
+"text": "ush laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. 7. Stufe des Dienstes: Jedes Modul ruft den Wächter mit seiner festen Stufe: Home Assistant und Kiwix mit Heimnetz; Kalender, Kontakte, Aufgaben, Mail und MCP mit Nutzer; reMarkable und Seiten aus der Suche mit nur Internet. Die Stufe steht im Code, nicht in den Einstellungen. 8. Wächter erlaubt die Adresse?: Der Wächter löst den Namen einmal auf und prüft jede Adresse: keine eigenen Dienste, kein 169.254, Heimnetz nur auf Stufe Heimnetz oder mit Schalter, im Notaus kein Internet. Danach verbindet er genau mit der geprüften Adresse. 9. Anfrage an den Dienst: Das Panel öffnet den Zugang des Profils (Token, Passwort) erst jetzt und schickt ihn nur an die eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse. Mit „Schnellere Websuche“ hat jede Trefferseite höchstens 3 s, bringt die zur Frage passenden Stellen, und dieselbe Suche kommt 10 Minuten lang aus dem Arbeitsspeicher. 10. Antwort zu groß?: Über den Wächter wird jede Antwort an der Grenze des Moduls abgeschnitten, auch nach dem Entpacken. 11. E"
 },
 {
 "lang": "de",
@@ -2693,7 +2693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ächter erlaubt oder gesperrt hat. Inhalte gehen nirgends hin. 12. Antwort als Daten ans Modell: Das Werkzeug gibt die Antwort als Daten zurück. Liest es fremden Text (Mail, Kalender, Archiv, Webseite, MCP im Lesemodus), gilt die Antwort ab jetzt als eine mit Text von außen; siehe Schritt 4."
+"text": "rgebnis für Mein Zustand und Live: Ob der Dienst geantwortet oder die Anmeldung abgelehnt hat, sieht das Profil unter Ich → Mein Zustand; die Live-Seite zählt, was der Wächter erlaubt oder gesperrt hat. Inhalte gehen nirgends hin. 12. Antwort als Daten ans Modell: Das Werkzeug gibt die Antwort als Daten zurück. Liest es fremden Text (Mail, Kalender, Archiv, Webseite, MCP im Lesemodus), gilt die Antwort ab jetzt als eine mit Text von außen; siehe Schritt 4."
 },
 {
 "lang": "de",
@@ -5766,6 +5766,30 @@
 "head": "Genauer und schneller (seit V01.0.755)",
 "title": "Genauer und schneller (seit V01.0.755)",
 "text": "“ und Hinweiswörtern trifft schon 198 von 211 Alltagsfragen, keine falsch)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Genauer und schneller (seit V01.0.755)",
+"title": "Genauer und schneller (seit V01.0.755)",
+"text": "- Einfaches sofort beantworten (*Funktionen → Einfaches sofort beantworten*, chat.sofort, aus; sofort.py): Uhrzeit („Wie spät ist es?“), Datum und Wochentag („Der Wievielte ist morgen?“), einfache Rechnungen („Was ist 17 mal 23?“) und Einheiten („Wie viel sind 3 Zoll in Zentimeter?“, die Regeln des Raummodus) beantwortet das Panel mit einem festen Satz, ohne Sprachmodell und ohne Sofort-Satz davor. Nur wenn der ganze kurze Satz (höchstens 80 Zeichen) genau so eine Frage ist; „Wie spät ist es in Tokio?“ geht weiter ans Modell. Auch Gäste bekommen die feste Antwort (kein Werkzeug, keine Daten). Einen Timer stellt weiter das Modell mit seinem Werkzeug, weil das etwas ändert. Log: „chat: feste Antwort, <art>“. - Schnellere Websuche (*Funktionen → Websuche → Schnellere Websuche*, chat.search_fast, aus): jede Trefferseite hat höchstens chat.PAGE_SECONDS (3) Sekunden statt gemeinsam 8, was bis dahin nicht da ist, bleibt der Ausschnitt aus der Trefferliste; aus jeder Seite kommen die Stellen, die die meisten Wörter mit der Frage teilen (chat.best_parts), statt ihres Anfangs; dieselbe Suche kommt chat.SEARCH_CACHE (10 Minuten) lang aus dem Arbeitsspeicher (höchstens 50 Suchen, nie auf der P"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Genauer und schneller (seit V01.0.755)",
+"title": "Genauer und schneller (seit V01.0.755)",
+"text": "latte); der lange Hinweis „Text von außen ist Daten“ steht einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN), die Markierungen <<< >>> bleiben immer. Log: „chat: web search, n of m pages in time“ und „chat: web search from memory“. - Antwort-Prüfung erweitern (*Einstellungen → Sprachmodell → Antwort-Prüfung erweitern*, chat.answer_check_more, aus): bei Datenfragen müssen auch Temperaturen („14 Grad“, „-3 °C“), Entfernungen in km und Prozent in dem stehen, was das Modell bekommen hat; gerundet zählt als richtig (answercheck.MORE_SLACK: ein Grad, ein Prozentpunkt, bei km ein km oder ein Zehntel). Ein Name in Anführungszeichen muss in jeder Datenantwort im Gelesenen stehen, nicht nur nach einem Kalender-Abruf. Stückzahlen („3 neue Mails“) prüft sie bewusst nicht: Werkzeug-Ergebnisse nennen sie oft nicht als Zahl, ehrliche Sätze fielen sonst weg. Der Qualitätstest prüft mit denselben Regeln. - Wortwahl messen: Zustand → Prüfen → Qualitätstest hat den Knopf „Mit Qwen-Empfehlung prüfen“: derselbe Test einmal mit top_p 0.8, top_k 20 und presence_penalty 1 (quality.QWEN_SAMPLING), nur für diesen Lauf. Darunter stehen der neueste Lauf mit eigene"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Genauer und schneller (seit V01.0.755)",
+"title": "Genauer und schneller (seit V01.0.755)",
+"text": "r Wortwahl und der mit der Empfehlung nebeneinander; war die Empfehlung besser, trägt der Admin die Werte unter Einstellungen → Sprachmodell ein (neu: *Auswahl begrenzen (top_k)*, chat.top_k, 0 = Standard des Servers)."
 },
 {
 "lang": "de",
@@ -9557,7 +9581,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Question arrives: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). 2. Open the stream, instant sentence: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows. 3. What the panel does itself: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data. 4. Prepare a round: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model m"
+"text": "1. Question arrives: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at once“ the time, the date, simple arithmetic and units as a whole short sentence get the panel's fixed sentence, without a model and without an instant sentence before it (sofort.answer, at most 80 characters). 2. Open the stream, instant sentence: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows. 3. What the panel does itself: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it "
 },
 {
 "lang": "en",
@@ -9565,7 +9589,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ust choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, Siri, Android assistant, CarPlay) get at most 700 tokens; a longer answer ends at its last full sentence. 5. Stream and cut into sentences: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early. 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. 7. Deed without a tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a"
+"text": "runs now. The result goes to the model like a tool result, outside text wrapped as data. 4. Prepare a round: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, Siri, Android assistant, CarPlay) get at most 700 tokens; a longer answer ends at its last full sentence. 5. Stream and cut into sentences: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early. 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLA"
 },
 {
 "lang": "en",
@@ -9573,7 +9597,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (we"
+"text": "CK) and every quoted name in every data answer. 7. Deed without a tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up t"
 },
 {
 "lang": "en",
@@ -9581,7 +9605,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "iche.learn), never a word of the question. 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once."
+"text": "o the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases "
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once."
 },
 {
 "lang": "en",
@@ -9661,7 +9693,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from we"
+"text": "s further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Recor"
 },
 {
 "lang": "en",
@@ -9669,7 +9701,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "rkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
+"text": "d: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
 },
 {
 "lang": "en",
@@ -10045,7 +10077,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "work without a model (notbetrieb.antwort). 3. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 4. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 5. Build the request: The request streams, with length, temperature, top_p and presence_penalty from the settings. Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. The server always reports at the end how much it read and wrote and how much came from its cache. 6. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the quota (day, week, month) is checked: a profile over it gets a fixed sentence instead of an answer, fixed commands without a model still work. 7. One round to the model: The round goes to the configured add"
+"text": "work without a model (notbetrieb.antwort). 3. Connection for this answer: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard. 4. Model name: When no model is configured, the panel asks /models once and keeps the first name for this address. 5. Build the request: The request streams, with length, temperature, top_p, top_k and presence_penalty from the settings (0 = the server's default; the quality test compares with Qwen's recommendation). Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. The server always reports at the end how much it read and wrote and how much came from its cache. 6. Someone with priority waiting?: When another person has priority and their answer has no first sentence yet, this round waits at most the configured time (up to 5 seconds). An answer with priority holds others up for at most 30 seconds. Before that the quota (day, week, month) is checked: a profile over it gets a fixed sentence instead of an answer, fixed commands wit"
 },
 {
 "lang": "en",
@@ -10053,7 +10085,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ress. When the server refuses the forced tool choice, the same round goes once without it. 8. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 9. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 10. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 11. Only answer text goes on: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 12. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. The usage counter counts tokens read and written per task and profile (estimated without the server's report, about 3.5 character"
+"text": "hout a model still work. 7. One round to the model: The round goes to the configured address. When the server refuses the forced tool choice, the same round goes once without it. 8. Too long for the model?: When the server says the request is longer than its context, the panel cuts the history to a quarter of the history budget in the first round and asks once more. 9. First line in time?: The first line must come within 90 seconds (or the shorter time limit). A model that stays silent longer hangs: the answer ends with a clear sentence instead of minutes of silence. 10. Read the lines: Every line is a piece of JSON. Tool calls come in parts and are put together by their number; thinking the server hands over separately is only counted. Unreadable lines are skipped. 11. Only answer text goes on: Thinking inside the text (<think> … </think>) and tool calls that come as text are never shown or spoken. The rest goes piece by piece to „build answer“. 12. Record the round: For the request trace only numbers count: tokens read, of them from the cache, size of system prompt, tool list and history, time to the first word, waiting time for priority. The usage counter counts tokens read and "
 },
 {
 "lang": "en",
@@ -10061,7 +10093,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s per token). 13. Error on the way?: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 14. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
+"text": "written per task and profile (estimated without the server's report, about 3.5 characters per token). 13. Error on the way?: An error becomes a fixed code: not reachable, too slow, key refused, model missing. With „not reachable“ and „too slow“ a fixed sentence is also spoken when nothing was said yet. Guests see only the kind of error, never its text. 14. Text and tool calls back: The round returns why it ended and which tools the model wants to call. The panel decides what of it runs."
 },
 {
 "lang": "en",
@@ -10101,7 +10133,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/llm.py model: model name from settings or /models (step 4) - app/panel/llm.py url: the one address of the language model (step 1) - app/panel/llm.py complete: the call of every background job, waits in vorrang (step 1) - app/panel/chat.py sampling: top_p and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py auto_tick: maintenance pause by "
+"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/llm.py model: model name from settings or /models (step 4) - app/panel/llm.py url: the one address of the language model (step 1) - app/panel/llm.py complete: the call of every background job, waits in vorrang (step 1) - app/panel/chat.py sampling: top_p, top_k and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py auto_tick: maintenance pa"
 },
 {
 "lang": "en",
@@ -10109,7 +10141,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "itself when the language model restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: which limit is full: day, week or month? (step 6) - app/panel/verbrauch.py warn: the warning under the answer, once per period (step 12)"
+"text": "use by itself when the language model restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: which limit is full: day, week or month? (step 6) - app/panel/verbrauch.py warn: the warning under the answer, once per period (step 12)"
 },
 {
 "lang": "en",
@@ -10413,7 +10445,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " self-test reports every module that connects directly and is missing there. 7. Level of the service: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The level is in the code, not in the settings. 8. Guard allows the address?: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address. 9. Request to the service: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address. 10. Answer too large?: Through the guard each answer is cut at the module's limit, also after unpacking. 11. Result for My status and Live: Whether the service answered or refused the login, the profile sees under Me → My status; the live page counts what the guard allowed or blocked. Contents go nowhere. 12. Answer as data to the model: The tool returns the answer as data. If it reads someone else's text (mail, calen"
+"text": " self-test reports every module that connects directly and is missing there. 7. Level of the service: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The level is in the code, not in the settings. 8. Guard allows the address?: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address. 9. Request to the service: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address. With „Faster web search“ each result page gets at most 3 s, brings the parts that fit the question, and the same search comes from memory for 10 minutes. 10. Answer too large?: Through the guard each answer is cut at the module's limit, also after unpacking. 11. Result for My status and Live: Whether the service answered or refused the login, the profile sees under Me → My status; the live page counts what the guard a"
 },
 {
 "lang": "en",
@@ -10421,7 +10453,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "dar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4."
+"text": "llowed or blocked. Contents go nowhere. 12. Answer as data to the model: The tool returns the answer as data. If it reads someone else's text (mail, calendar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4."
 },
 {
 "lang": "en",
@@ -13350,6 +13382,30 @@
 "head": "More precise and faster (since V01.0.755)",
 "title": "More precise and faster (since V01.0.755)",
 "text": "e wrong)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "More precise and faster (since V01.0.755)",
+"title": "More precise and faster (since V01.0.755)",
+"text": "- Answer simple things at once (*Features → Answer simple things at once*, chat.sofort, off; sofort.py): the panel answers the time (\"What time is it?\"), the date and weekday (\"What day is it tomorrow?\"), simple arithmetic (\"What is 17 times 23?\") and German unit questions (the room mode's rules) with a fixed sentence, without the language model and without an instant sentence before it. Only when the whole short sentence (at most 80 characters) is exactly such a question; \"What time is it in Tokyo?\" still goes to the model. Guests get the fixed answer too (no tool, no data). A timer is still set by the model with its tool, because that changes something. Log: \"chat: feste Antwort, <kind>\". - Faster web search (*Features → Web search → Faster web search*, chat.search_fast, off): each result page gets at most chat.PAGE_SECONDS (3) seconds instead of 8 together, what is not there by then stays the snippet from the result list; each page brings the parts that share most words with the question (chat.best_parts) instead of its beginning; the same search comes from memory for chat.SEARCH_CACHE (10 minutes, at most 50 searches, never on disk); the long note \"outside text is data\" stands "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "More precise and faster (since V01.0.755)",
+"title": "More precise and faster (since V01.0.755)",
+"text": "once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN), the markers <<< >>> always stay. Log: \"chat: web search, n of m pages in time\" and \"chat: web search from memory\". - Extended answer check (*Settings → Language model → Extended answer check*, chat.answer_check_more, off): for data questions, temperatures (\"14 Grad\", \"-3 °C\"), distances in km and percentages must also be in what the model was given; rounded counts as right (answercheck.MORE_SLACK: one degree, one percentage point, for km one km or a tenth). A name in quotation marks must be in what was read in every data answer, not only after a calendar read. Counts (\"3 new mails\") are deliberately not checked: tool results often do not state them as a number, honest sentences would drop out. The quality test checks with the same rules. - Measuring the word choice: Status → Check → Quality test has the button \"Test with Qwen's recommendation\": the same test once with top_p 0.8, top_k 20 and presence_penalty 1 (quality.QWEN_SAMPLING), only for this run. Below, the newest run with the own word choice and the one with the recommendation stand side by side; if the recommendation was better"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "More precise and faster (since V01.0.755)",
+"title": "More precise and faster (since V01.0.755)",
+"text": ", the admin sets the values under Settings → Language model (new: *Limit the choice (top_k)*, chat.top_k, 0 = the server's default)."
 },
 {
 "lang": "en",

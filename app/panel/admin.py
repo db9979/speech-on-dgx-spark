@@ -780,6 +780,9 @@ def validate(new):
         raise HTTPException(400, "top_p: 0 (Standard des Servers) oder 0.05 bis 1")
     if pp is None or not 0 <= pp <= 2:
         raise HTTPException(400, "presence_penalty: 0 (Standard des Servers) bis 2")
+    tk = ch.get("top_k", 0)
+    if not isinstance(tk, int) or isinstance(tk, bool) or not 0 <= tk <= 100:
+        raise HTTPException(400, "top_k: 0 (Standard des Servers) bis 100")
     try:
         chat.parse_tool_words(ch.get("tool_words", ""))
     except ValueError as e:

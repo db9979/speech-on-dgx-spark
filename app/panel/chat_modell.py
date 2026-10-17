@@ -25,7 +25,7 @@ import vorab
 import wartung
 
 
-async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, ha, ha_direct, ha_read, known,
+async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,
                      lheaders, llm_round, locked, messages, need, out, own_browser, run_tool, said_before, search, sentences,
                      settle, small, speak, src, t0, think_tools, tm, tool_temp, tools, tr, trace, turn, vip, who):
     """The model side of one answer (was chat._answer's inner model_side): asks the language model, runs its tool
@@ -33,6 +33,16 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
     as chat.NAME at call time, so a test that patches chat still reaches them."""
     verbrauch.WHO.set(verbrauch.who_of(who))   # what this answer asks the models counts for this profile
     try:
+        if fixed:   # Einfaches sofort beantworten (sofort.py): the panel's fixed sentence, no model
+            kind, note = fixed
+            print("chat: feste Antwort,", kind, flush=True)
+            if tr:
+                tr.step("prep", "Feste Antwort (Panel)", time.time(), panel=True)
+            trace["calls"].append({"name": "Feste Antwort (Panel)", "args": "", "result": kind})
+            await out.put({"type": "text", "delta": note})
+            trace["said"] += note
+            await sentences.put(note)
+            return
         if wartung.paused("llm"):
             # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out; in Notbetrieb with
             # Parakeet (notbetrieb.py) a few fixed commands first, by fixed rules, still without a model

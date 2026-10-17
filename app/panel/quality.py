@@ -26,6 +26,10 @@ HISTORY = os.path.join(STATE, "quality-history.json")
 OWN = os.path.join(STATE, "quality-cases.json")   # questions profiles handed over after a correction
 MAX_OWN = 30
 KEEP = 20  # runs in the history
+# Wortwahl messen (plan genauer-und-schneller, 8): the test once more with Qwen's recommendation for answers without
+# thinking; only for this run, the settings stay. Zustand → Prüfen → Qualitätstest shows both results side by side,
+# the admin then sets the values under Einstellungen → Sprachmodell if the recommendation was better.
+QWEN_SAMPLING = {"top_p": 0.8, "top_k": 20, "presence_penalty": 1.0}
 TIME = r"\b\d{1,2}([:.]\d{2})\s*(uhr)?\b|\b\d{1,2}\s*uhr\b"
 NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
 # "no access" in other words: „Ich habe gerade keine Möglichkeit, in dein Konto zu schauen“ is as right as „kein Zugriff“
@@ -294,7 +298,8 @@ async def _run_case(c, ccfg, headers, model, case):
         if ccfg.get("action_check", True) and (not names or names & set(taten.KIND)) else None
     held, figures = [], check_on and bool(need or called)
     if figures or deeds:
-        answer, held = heard(answer, [m.get("content") for m in msgs], figures, deeds)
+        answer, held = heard(answer, [m.get("content") for m in msgs], figures, deeds,
+                             ccfg.get("answer_check_more") is True)
     return {"answer": answer, "raw": raw, "held": held, "retried": retried, "tools": called,
             "seconds": round(time.time() - t0, 1), "results": [m.get("content") for m in msgs if m.get("role") == "tool"]}
 
@@ -315,7 +320,7 @@ async def judge(ccfg, case, got):
     return {"passt": round(ans["passt"]["score"], 2), "erfunden": round(ans["erfunden"]["yes"], 2)}
 
 
-def heard(answer, given, figures=True, deeds=None):
+def heard(answer, given, figures=True, deeds=None, more=False):
     """What the user hears of answer after the panel's checks, as in chat.speak: with figures, sentences with figures
     that are in nothing given are left out and one honest sentence comes instead; with deeds ({"acts", "offered",
     "looked", "ran"}, Taten prüfen) a sentence claiming or announcing a deed no tool did is left out, and the fixed
@@ -323,10 +328,12 @@ def heard(answer, given, figures=True, deeds=None):
     import answercheck
     import chat
     done, rest = chat.split_sentences(answer + " ", False)
-    have = answercheck.known(given) if figures else set()
+    have = answercheck.known(given, more) if figures else set()
     keep, held, kinds = [], [], []
     for x in done + ([rest.strip()] if rest.strip() else []):
-        miss = answercheck.unsupported(x, have) if figures else []
+        miss = answercheck.unsupported(x, have, more) if figures else []
+        if figures and more and not miss and answercheck.unquoted(x, given):   # Antwort-Prüfung erweitern
+            miss = [answercheck.NAME]
         deed = taten.check(x, deeds["acts"], deeds["offered"], deeds["looked"]) if deeds and not miss else []
         if miss:
             held += [answercheck.label(f) for f in miss]
@@ -387,12 +394,26 @@ def _check(case, answer, called, held=()):
     return why
 
 
-async def run(reason="manual"):
+def compare():
+    """The newest run with the own values and the newest with Qwen's recommendation (from the history), numbers only."""
+    out = {}
+    for h in reversed(history()):
+        k = h.get("sampling") or "eigen"
+        if k not in out:
+            out[k] = {"t": h["t"], "passed": h["passed"], "total": h["total"], "version": h.get("version", "")}
+    return out
+
+
+async def run(reason="manual", sampling="eigen"):
     if _lock.locked():
         return last()
     async with _lock:
         cfg = load_config()
         ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
+        if sampling == "qwen":   # only for this run, never written to the settings
+            ccfg = dict(ccfg, **QWEN_SAMPLING)
+        else:
+            sampling = "eigen"
         headers = llm.headers(ccfg)
         out = []
         t0 = time.time()
@@ -427,6 +448,7 @@ async def run(reason="manual"):
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
                "temperature": float(ccfg.get("temperature", 0.3)),
                "tool_temperature": float(ccfg.get("tool_temperature", 0.1)), "cases": out,
+               "sampling": sampling, "sampling_values": chat_sampling(ccfg),
                "passed": sum(x["ok"] for x in out), "total": len(out)}
         try:
             from core import app_version
@@ -435,10 +457,15 @@ async def run(reason="manual"):
             pass
         _history(res)
         _save(res)
-        print(f"quality: test ({reason}): {res['passed']}/{res['total']}", flush=True)
+        print(f"quality: test ({reason}, {sampling}): {res['passed']}/{res['total']}", flush=True)
         import live
         live.mark("Qualitätstest", f"{res['passed']} von {res['total']} richtig, {res['seconds']} s")
         return res
+
+
+def chat_sampling(ccfg):
+    import chat
+    return chat.sampling(ccfg)
 
 
 def _save(res):
@@ -463,6 +490,7 @@ def _history(res):
         x["runs"] = len(seen)
         x["new"] = bool(not x["ok"] and seen and x["id"] not in seen[-1].get("fail", []))
     prev.append({"t": res["t"], "version": res.get("version", ""), "model": res["model"], "passed": res["passed"],
+                 "sampling": res.get("sampling", "eigen"),
                  "total": res["total"], "ids": [x["id"] for x in res["cases"]],
                  "fail": [x["id"] for x in res["cases"] if not x["ok"]],
                  "flaky": [x["id"] for x in res["cases"] if x.get("flaky")]})

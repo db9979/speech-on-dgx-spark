@@ -114,6 +114,8 @@ WITHOUT = {
     "direct": "Einstellung, wie Antworten entstehen",
     "hoeren": "Einstellung, wie die Spracherkennung hört",
     "gedkurz": "Einstellung, wie Antworten entstehen",
+    "sofort": "Einstellung, wie Antworten entstehen",
+    "suchschnell": "Einstellung, wie die Websuche liest",
     "ack": "Einstellung, wie Antworten entstehen",
     "vorab": "Einstellung, wie Antworten entstehen",
     "einordnung": "Signal fürs Panel, keine Bitte",
