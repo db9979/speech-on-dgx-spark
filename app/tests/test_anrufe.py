@@ -343,11 +343,20 @@ class Visible(Base):
             call = self.call(a, cid).json()["call"]
             rec = anrufe._calls[call]["rec"]     # under Geräte like a request, from ringing to the end
             self.assertIsNotNone(rec)
-            self.assertEqual((rec.intent, rec.done), ("Anruf", False))
+            self.assertEqual((rec.intent, rec.done), ("Anruf · klingelt", False))
             self.assertIn(rec, live._run.values())
+            row = live._req(rec, "monitor", time.time())
+            self.assertEqual((row["dev"], row["who"]), ("Browser ↔ …", "Person ↔ Person"))   # no names without consent
             n = {c["name"]: c["n"] for c in live._conns(time.time())}
             self.assertEqual((n.get("Anruf klingelt"), n.get("Anruf im Chat")), (1, None))
             b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B})
+            self.assertEqual(rec.intent, "Anruf · verbunden")
+            self.assertEqual(live._req(rec, "admin", time.time())["dev"], "Browser ↔ Browser")
+            for u in (a, b):     # with both people's consent both names show, still never the chat
+                profiles.save_settings(uid_of(u), {"trace_name": True})
+            row = live._req(rec, "admin", time.time())
+            self.assertEqual(row["who"], "Anwalda ↔ Anrolf", row)
+            self.assertNotIn(cid, json.dumps(row))
             rows = [c for c in live._conns(time.time()) if c["name"].startswith("Anruf")]
             self.assertEqual([(c["name"], c["n"]) for c in rows], [("Anruf im Chat", 1)])
             self.assertNotIn("Anwalda", json.dumps(rows))

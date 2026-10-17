@@ -648,17 +648,25 @@ def _now_at(rec, now):
 
 def _who(rec, view):
     """(person, device) as this view may show them."""
-    import profiles
     if rec.kind == "admin":
         return "Admin", rec.device if view == "admin" else ""
     if rec.kind == "spark":
         return "Spark", ""
     if rec.kind != "profile" or not rec.who:
         return "Gast", ""
-    p = profiles.by_id(rec.who)
+    name, named = _person(rec.who, view)
+    if getattr(rec, "peer", ""):    # a call in a chat (anrufe.py): both people, each name only with its own consent
+        return name + " ↔ " + _person(rec.peer, view)[0], ""
+    return name, rec.device if named else ""
+
+
+def _person(uid, view):
+    """(name, named): a profile's name as this view may show it."""
+    import profiles
+    p = profiles.by_id(uid)
     if p and profiles.settings(p["id"]).get("trace_name") is True and (view == "admin" or cfg().get("live_names") is True):
-        return p["name"], rec.device
-    return ("Profil" if view == "admin" else "Person"), ""
+        return p["name"], True
+    return ("Profil" if view == "admin" else "Person"), False
 
 
 def _gone_from(rec):
@@ -681,7 +689,7 @@ def _req(rec, view, now):
         steps.append({"k": s["k"], "n": n, "a": s["a"], "d": s["d"], "ok": x.get("ok", True) is not False,
                       "to": target(n) if s["k"] == "tool" else ("qwen" if s["k"] == "llm" else "")})
     end, gone = getattr(rec, "t_end", None), _gone_from(rec)
-    return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
+    return {"id": rec.id, "client": rec.client, "dev": getattr(rec, "label", "") or device or CLIENT.get(rec.client, "Gerät"), "who": person,
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
             "auto": bool(getattr(rec, "auto", False)), "src": getattr(rec, "src", "") if getattr(rec, "auto", False) else "", "direct": bool(getattr(rec, "direct", False)),
             "prio": bool(getattr(rec, "prio", False)),

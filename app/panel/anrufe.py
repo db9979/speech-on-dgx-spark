@@ -99,11 +99,37 @@ def _log(what, **nums):
     chats._log("call " + what, **nums)
 
 
-def _seen(client, uid):
-    """Live, Monitoring and the Steuerzentrale show a call under Geräte like a request, from ringing to the end
-    (live.begin, the caller's profile, the fixed word "Anruf"; never the other person or the chat)."""
+def _client(request):
+    """"app" for the iPhone app's own key, else "web" (a browser login; the Android app's page is one)."""
+    if request.headers.get(profiles.DEVICE_HEADER):
+        return "app" if (profiles.device(request) or {}).get("scope") == "app" else "web"
+    return "web"
+
+
+def _kind(x, state):
+    return ("Videoanruf" if x["video"] else "Anruf") + " · " + state
+
+
+def _seen(x, client):
+    """Live, Monitoring and the Steuerzentrale show a call under Geräte as one entry from ringing to the end
+    (Dominik 2026-10-17): both kinds of device ("Browser ↔ iPhone-App"), sound or video, ringing or connected, and
+    both people, each name only with its own consent (live._who); never the chat or a word of it."""
     import live
-    return live.begin(client if client in ("web", "app") else "web", "", uid=uid, why="Anruf")
+    x["aclient"] = client if client in ("web", "app") else "web"
+    rec = live.begin(x["aclient"], "", uid=x["a"], why=_kind(x, "klingelt"))
+    if rec is not None:
+        rec.peer = x["b"]
+        rec.label = live.CLIENT[x["aclient"]] + " ↔ …"
+    return rec
+
+
+def _talks(x, client):
+    """The call was answered on a device of kind client: its entry says so."""
+    import live
+    rec = x.get("rec")
+    if rec is not None:
+        rec.intent = _kind(x, "verbunden")
+        rec.label = live.CLIENT[x["aclient"]] + " ↔ " + live.CLIENT[client if client in ("web", "app") else "web"]
 
 
 def _gone(x):
@@ -198,7 +224,7 @@ async def start(uid, cid, video, dev, now=None, client="web"):
              "talk": 0.0}
         _calls[call] = x
         busy = any(y["state"] in ("ring", "talk") and other in (y["a"], y["b"]) for k, y in _calls.items() if k != call)
-    x["rec"] = _seen(client, uid)
+    x["rec"] = _seen(x, client)
     _count.today()["calls"] += 1
     _live("📞 Anruf beginnt")
     if busy or _quiet(other):
@@ -280,8 +306,8 @@ def _get(uid, call):
     return x
 
 
-def answer(uid, call, dev, now=None):
-    """The called person's device dev takes the call."""
+def answer(uid, call, dev, now=None, client="web"):
+    """The called person's device dev (client "web" or "app") takes the call."""
     import chats
     now = time.time() if now is None else now
     with _lock:
@@ -289,6 +315,7 @@ def answer(uid, call, dev, now=None):
         if uid != x["b"] or x["state"] != "ring":
             raise LookupError("no such call")
         x.update(state="talk", bdev=dev, talk=now)
+    _talks(x, client)
     chats._send_event(x["a"], {"type": "call_ok", "id": x["cid"], "call": call, "dev": dev})
     chats._send_event(x["b"], {"type": "call_taken", "id": x["cid"], "call": call, "dev": dev})
     _count.today()["talked"] += 1
@@ -599,9 +626,8 @@ async def api_start(request: Request, prof=Depends(_on)):
     body = await json_body(request, 1024)
     dev = _ids(body, call=False)
     try:
-        app = (profiles.device(request) or {}).get("scope") == "app" if request.headers.get(profiles.DEVICE_HEADER) else False
         call, state = await start(prof["id"], chats._cid(body.get("id")), body.get("video") is True, dev,
-                                  client="app" if app else "web")
+                                  client=_client(request))
     except (PermissionError, ValueError, OverflowError, LookupError) as e:
         if isinstance(e, LookupError):
             _log("refused", why="no chat")
@@ -613,7 +639,7 @@ async def api_start(request: Request, prof=Depends(_on)):
 async def api_answer(request: Request, prof=Depends(_on)):
     call, dev = _ids(await json_body(request, 1024))
     try:
-        x = answer(prof["id"], call, dev)
+        x = answer(prof["id"], call, dev, client=_client(request))
     except LookupError as e:
         _log("answer refused", why="no call")
         raise _err(e)

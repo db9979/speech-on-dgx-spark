@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.747** · 2026-10-17 · Anrufe im Chat zeigen auf Live, Monitoring und der Steuerzentrale beide Seiten: Geräte, Sprache oder Video, klingelt oder verbunden und beide Personen (Namen nur mit Zustimmung)
 - **V01.0.746** · 2026-10-17 · iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil, die Filter über den Dokumenten reagieren je für sich
 - **V01.0.745** · 2026-10-17 · Begleiter am Mac: „Am PC handeln einstellen“ aufgeräumt, Schalter rechts in einer Spalte, in Karten wie im Panel, Farbleiste unter dem Titel schmaler
 - **V01.0.744** · 2026-10-17 · Aufträge mit Plan, Rückfrage und Vorschlag: ein Auftrag zeigt seine Schritte als Liste, fragt einmal nach, schlägt am Ende eine Erinnerung, einen Termin oder einen Listeneintrag vor, ausgeführt erst nach deinem Ja auf genau diesen Vorschlag, und lässt sich während er läuft ergänzen (Panel, Android, iPhone)
