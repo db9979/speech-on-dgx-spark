@@ -1,6 +1,46 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Lange Gespräche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long conversations"
+          }
+        }
+      }
+    },
+    "Lange Gespräche einstellen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set long conversations?"
+          }
+        }
+      }
+    },
+    "Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The language model restarts for it and does not answer for a few minutes."
+          }
+        }
+      }
+    },
+    "Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All conversations share one context store. More room costs memory that pictures, music and the vision model then lack. The language model restarts for it."
+          }
+        }
+      }
+    },
     "%@\n\nNur koppeln, wenn das dein eigener Spark ist.": {
       "localizations": {
         "en": {

@@ -2,7 +2,7 @@
 installation runs itself, one line each in modelle.json, read only here.
 
 Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]
-[kv8] [dspark]` stops the
+[dspark]` stops the
 qwen38 lanes for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM on
 127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
 starts qwen38 again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
@@ -11,7 +11,7 @@ A main model candidate is also measured with 2 and 4 long questions at once and 
 the engine's own count of the context room (Dominik 2026-10-17: 2-4 at once with a context of 64K or more).
 
 A variant ("basis": an earlier entry's id) takes that entry and changes only the fields it names, its vllm fields
-merged (one source: Qwen3.8 with its context store in FP8, or with the DSpark helper model). A helper model
+merged (one source: Qwen3.8 with the DSpark helper model). A helper model
 (vllm "entwurf") is a second repository with a pinned commit, fetched and checked like the main one.
 
 Rules for every entry (test_modelle): the engine is one we know, the repository a plain "owner/name", the revision
@@ -151,8 +151,11 @@ def _pruefe_vllm(m):
     a = m.get("anteil")
     if isinstance(a, bool) or not isinstance(a, (int, float)) or not 0.02 <= a <= ANTEIL_MAX:
         raise Fehler("anteil")
-    k = m.get("kontext")
-    if isinstance(k, bool) or not isinstance(k, int) or not 2048 <= k <= 262144:
+    for key in ("kontext", "kontext_max"):
+        k = m.get(key, m.get("kontext"))
+        if isinstance(k, bool) or not isinstance(k, int) or not 2048 <= k <= 262144:
+            raise Fehler("kontext")
+    if m.get("kontext_max", m["kontext"]) < m["kontext"]:
         raise Fehler("kontext")
     if not all(isinstance(m.get(x), bool) for x in ("kann_sehen", "werkzeuge")):
         raise Fehler("schalter")
@@ -293,6 +296,7 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
     own = cfg.get("llm", {})
     if own.get("enabled"):
         m = kat.get(own.get("modell"))
+        m = _platz(m, cfg) if m and m["engine"] == "vllm" and m["art"] == "llm" else m
         add(m, m["anteil"] * total_gib + 1.5 if m and m["engine"] == "vllm" else None)
         if m and not m.get("kann_sehen"):
             add(kat.get(own.get("sehen_modell")), None, "bei_bedarf")
@@ -378,11 +382,11 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
-    vl30, kv8, dspark (one entry each that is measured only on request); no word means llm and sehen."""
+    vl30, dspark (one entry each that is measured only on request); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4", "vl30": "qwen3-vl-30b-a3b-fp8",
-              "kv8": "qwen38-27b-nvfp4-kv8", "dspark": "qwen38-27b-nvfp4-dspark"}
+              "dspark": "qwen38-27b-nvfp4-dspark"}
     wunsch.update({i: i for i, m in kat.items() if m.get("eigen")})     # stage E5: an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -449,6 +453,71 @@ def fest_revision(m, messung=None):
     return rev
 
 
+# Zustand → Modelle „Lange Gespräche“ (Dominik 2026-10-17): the own language model's context store as fixed choices,
+# (extra memory share, longest question in tokens; None = the catalog's). It is one pool: about 15 GiB hold 4
+# conversations of 64K or one of 256K (Qwen3.8 NVFP4 on tars: 7.7 GiB for 131K, the KV cache already in FP8)
+PLATZ = {"standard": (0.0, None), "4x64k": (0.07, 65536), "1x256k": (0.07, 262144)}
+PLATZ_NAMEN = {"standard": ("Standard: 1 Gespräch mit 128K oder 2 mit 64K", "Standard: 1 conversation of 128K or 2 of 64K"),
+               "4x64k": ("4 Gespräche gleichzeitig mit je 64K", "4 conversations at once of 64K each"),
+               "1x256k": ("1 sehr langes Gespräch mit 256K", "1 very long conversation of 256K")}
+
+
+def mit_platz(m, platz):
+    """The language model's entry with the context store llm.platz picks; Fehler when the choice or the model does not
+    allow it (a longer context than the model knows: kontext_max)."""
+    if platz in (None, "standard"):
+        return m
+    if platz not in PLATZ or m["engine"] != "vllm" or m["art"] != "llm":
+        raise Fehler("platz")
+    plus, kontext = PLATZ[platz]
+    if kontext > m.get("kontext_max", m["kontext"]):
+        raise Fehler("kontext")
+    return dict(m, anteil=round(min(m["anteil"] + plus, ANTEIL_MAX), 2), kontext=kontext)
+
+
+def _platz(m, cfg):
+    """mit_platz for the engine that starts: a choice this model does not allow (after a switch) counts as standard."""
+    try:
+        return mit_platz(m, cfg.get("llm", {}).get("platz"))
+    except Fehler:
+        return m
+
+
+def platz_pruefen(platz, cfg, total_gib, lanes=(), kat=None):
+    """The fixed rules for „Lange Gespräche“: a known choice, after the move, one the model allows, not the one set, and
+    the budget must not end up too tight. Returns the entry as it would start; raises Fehler with a fixed word."""
+    if platz not in PLATZ:
+        raise Fehler("platz")
+    c = cfg.get("llm", {})
+    if not c.get("enabled"):
+        raise Fehler("aus")
+    neu = mit_platz(eintrag(c.get("modell"), kat), platz)
+    if (c.get("platz") or "standard") == platz:
+        raise Fehler("schon")
+    probe = json.loads(json.dumps(cfg))
+    probe.setdefault("llm", {})["platz"] = platz
+    if budget(probe, total_gib, lanes, kat)["regel"] == "zu_knapp":
+        raise Fehler("budget")
+    return neu
+
+
+def platz_wahl(cfg, total_gib, lanes=(), kat=None):
+    """For the page: the choices with their extra memory and why one is not possible (a fixed word, "" when it is)."""
+    c = cfg.get("llm", {})
+    m = (kat or katalog()).get(c.get("modell"))
+    out = []
+    for p, (plus, _) in PLATZ.items():
+        try:
+            if m is None:
+                raise Fehler("aus")
+            platz_pruefen(p, cfg, total_gib, lanes, kat)
+            nein = ""
+        except Fehler as e:
+            nein = str(e)
+        out.append({"id": p, "name": PLATZ_NAMEN[p], "plus_gib": round(plus * total_gib, 1), "nein": nein})
+    return {"jetzt": c.get("platz") or "standard", "wahl": out}
+
+
 def rolle(art, cfg, kat=None):
     """(entry, port) of the engine speech-spark-llm (art llm) or speech-spark-sehen (art sehen), from config llm.*."""
     if art not in ROLLEN:
@@ -459,7 +528,7 @@ def rolle(art, cfg, kat=None):
     port = c.get(port_feld, port_std)
     if m["engine"] != "vllm" or m["art"] != art or isinstance(port, bool) or not isinstance(port, int) or port == MESS_PORT and art != "llm":
         raise Fehler("art")
-    return m, port
+    return (_platz(m, cfg) if art == "llm" else m), port
 
 
 def signatur(art, cfg, messung=None, kat=None):
@@ -816,11 +885,20 @@ class Speicher(threading.Thread):
             self.tiefst = min(self.tiefst, mem_available_gib())
 
 
+def im_gang(text):
+    """True when a line of `systemctl is-active <units>` is one of IM_GANG (any of the units works)."""
+    return any(x.strip() in IM_GANG for x in str(text).splitlines())
+
+
+def stand(text):
+    """The last STAND_MAX progress lines of a measurement from journal text (-o cat): only lines of the fixed shape."""
+    return [x for x in (y.strip() for y in str(text).splitlines()) if STAND.match(x)][-STAND_MAX:]
+
+
 def _aktiv(einheit):
     if not einheit:
         return True
-    r = subprocess.run(["systemctl", "is-active", einheit], capture_output=True, text=True)
-    return r.stdout.strip() in ("active", "activating")
+    return im_gang(subprocess.run(["systemctl", "is-active", einheit], capture_output=True, text=True).stdout)
 
 
 def warte_bereit(m, port, einheit="", frist=GESUND_S, now=time.monotonic, sleep=time.sleep):
@@ -1080,6 +1158,11 @@ WECHSEL_UNIT = "speech-spark-wechsel"
 MESS_WUNSCH = os.path.join(STATE, "modelle-messen-wunsch.json")
 MESS_UNIT = "speech-spark-messen"
 MESS_WUNSCH_UNIT = "speech-spark-messen-wunsch"
+# a oneshot unit (speech-spark-wechsel, -messen-wunsch, -update) is "activating" for as long as it works, so
+# `systemctl is-active -q` alone never saw a running measurement (Dominik 2026-10-17: „Messen“ showed nothing)
+IM_GANG = ("active", "activating", "deactivating", "reloading")
+STAND = re.compile(r"^modelle: [A-Za-z0-9 .,:%/()_+-]{1,160}$")   # a progress line: fixed words and numbers only
+STAND_MAX = 6
 ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
 TAUSCH = ("llm", "sehen", "asr", "tts", "bild")          # the kinds that switch (small CPU models come with features)
 INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild"}   # kinds install.sh sets up (wahl = its short key)
@@ -1210,9 +1293,14 @@ def entfernbar(mid, cfg, now=None, path=WECHSEL, kat=None, hf_home=None):
     return ordner
 
 
+def _wunsch_ok(art, was):
+    """A switch (a kind, an id or "zurueck") or „Lange Gespräche“ (art platz, one of PLATZ)."""
+    return (art in TAUSCH and (was == "zurueck" or bool(ID.match(str(was))))) or (art == "platz" and was in PLATZ)
+
+
 def wunsch_schreiben(art, was, path=WUNSCH):
-    """The panel's wish (switch to an id, or "zurueck"): checked again by root before anything happens."""
-    if art not in TAUSCH or not (was == "zurueck" or ID.match(str(was))):
+    """The panel's wish (switch to an id, or "zurueck"; or art platz): checked again by root before anything happens."""
+    if not _wunsch_ok(art, was):
         raise Fehler("wunsch")
     write_json(path, {"art": art, "was": was, "zeit": int(time.time())}, indent=1)
 
@@ -1230,6 +1318,18 @@ def wechsel_anfragen(art, was, cfg, total_gib, lanes, starten, laeuft=False):
     return m
 
 
+def platz_anfragen(platz, cfg, total_gib, lanes, starten, laeuft=False):
+    """„Lange Gespräche“ asked for: the fixed rules, the wish for root (art platz), then starten() starts WECHSEL_UNIT,
+    which restarts the language model with it. Returns the entry as it will start; raises Fehler."""
+    if laeuft:
+        raise Fehler("laeuft")
+    m = platz_pruefen(platz, cfg, total_gib, lanes)
+    wunsch_schreiben("platz", platz)
+    if not starten():
+        raise Fehler("start")
+    return m
+
+
 def wunsch_nehmen(path=WUNSCH, now=None):
     """Root takes the wish once (the file is gone afterwards); a wish older than 10 minutes counts as none."""
     data = read_json(path, {})
@@ -1239,7 +1339,7 @@ def wunsch_nehmen(path=WUNSCH, now=None):
         pass
     now = time.time() if now is None else now
     art, was = str(data.get("art", "")), str(data.get("was", ""))
-    if art not in TAUSCH or not (was == "zurueck" or ID.match(was)) or not 0 <= now - float(data.get("zeit", 0)) <= 600:
+    if not _wunsch_ok(art, was) or not 0 <= now - float(data.get("zeit", 0)) <= 600:
         raise Fehler("wunsch")
     return art, was
 
@@ -1545,6 +1645,20 @@ def cli(args, log=print):
             return 0
         if cmd == "entfernbar":
             log(entfernbar(args[1], load_config()))
+            return 0
+        if cmd == "platz-pruefen":            # root checks again what the panel checked
+            platz_pruefen(args[1], load_config(), gesamt_gib())
+            return 0
+        if cmd == "platz-jetzt":
+            log(load_config().get("llm", {}).get("platz") or "standard")
+            return 0
+        if cmd == "platz-schalten":           # also back to the one before (no budget check: it ran before)
+            if args[1] not in PLATZ:
+                raise Fehler("platz")
+            raw = _roh()
+            raw.setdefault("llm", {})["platz"] = args[1]
+            _schreib(raw)
+            log(f"modelle: schalter platz {args[1]}")
             return 0
         if cmd == "wunsch-schreiben":
             wunsch_schreiben(args[1], args[2])

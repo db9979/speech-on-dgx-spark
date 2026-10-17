@@ -38,7 +38,7 @@ import netguard  # noqa: E402
 import guard  # noqa: E402
 import modelle  # noqa: E402
 import steuer  # noqa: E402
-from common import load_config, read_json  # noqa: E402
+from common import journal, load_config, read_json  # noqa: E402
 from core import admin_code, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
@@ -67,7 +67,9 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "laeuft": "Ein Modellwechsel läuft schon.", "misst": "Eine Messung läuft gerade.",
          "start": "Der Wechsel ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
          "start_messen": "Die Messung ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
-         "rechner": "Der Modell-Rechner antwortet gerade nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
+         "rechner": "Der Modell-Rechner antwortet gerade nicht.",
+         # „Lange Gespräche“
+         "platz": "Diese Auswahl gibt es nicht.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
 STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
 EIGEN_BODY = 512
 
@@ -82,20 +84,28 @@ def _an(cfg=None):
     return features.admin_on("modellwechsel", None if cfg is None else cfg.get("chat", {}))
 
 
-def _laeuft():
+def _im_gang(*units):
+    """The states of the units, one line each (`systemctl is-active`); "" when systemctl does not answer."""
     try:
-        return subprocess.run(["systemctl", "is-active", "-q", modelle.WECHSEL_UNIT], timeout=5).returncode == 0
+        return subprocess.run(["systemctl", "is-active", *units], capture_output=True, text=True, timeout=5).stdout
     except (OSError, subprocess.SubprocessError):
-        return False
+        return ""
+
+
+def _laeuft():
+    return modelle.im_gang(_im_gang(modelle.WECHSEL_UNIT))
 
 
 def _misst():
     """A measurement runs here (the command line's unit or the one for „Messen“)."""
-    try:
-        return subprocess.run(["systemctl", "is-active", "-q", modelle.MESS_UNIT, modelle.MESS_WUNSCH_UNIT],
-                              timeout=5).returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        return False
+    return modelle.im_gang(_im_gang(modelle.MESS_UNIT, modelle.MESS_WUNSCH_UNIT))
+
+
+def _stand():
+    """While a measurement runs here: its last progress lines (modelle.stand), from the unit that works."""
+    units = (modelle.MESS_UNIT, modelle.MESS_WUNSCH_UNIT)
+    unit = next((u for u, z in zip(units, _im_gang(*units).splitlines()) if modelle.im_gang(z)), "")
+    return modelle.stand(journal(unit, 60)) if unit else []
 
 
 def _starten(unit=modelle.WECHSEL_UNIT):
@@ -107,15 +117,17 @@ def _starten(unit=modelle.WECHSEL_UNIT):
 
 
 def _quelle(cfg):
-    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst) of the computer the models run on; HTTPException
-    503 when that is another one and it does not answer. laeuft and misst are None here (asked when needed)."""
+    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst, stand) of the computer the models run on;
+    HTTPException 503 when that is another one and it does not answer. laeuft, misst and stand are None here (asked
+    when needed)."""
     if steuer.remote(cfg):
         d = steuer.modelle(cfg)
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
+        stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
         return (d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
-                d.get("misst", False))
-    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None, None
+                d.get("misst", False), stand)
+    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None, None, None
 
 
 def _fehler(e, was="wechsel"):
@@ -138,10 +150,10 @@ def _lanes():
     return [f for _, f in admin._qwen38_lanes()]
 
 
-def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
+def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst = _quelle(cfg)
+    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst, stand = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
     lanes = q_lanes if lanes is None else lanes
     messung = q_messung if messung is None else messung
@@ -165,9 +177,14 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
                          "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]) or m["engine"] == "extern",
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
-    laeuft = (_laeuft() if laeuft is None else laeuft) if an else False
+    laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
-    wechsel = {"an": an, "laeuft": laeuft, "misst": misst, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
+    stand = (_stand() if stand is None else stand) if misst else []
+    # just asked for: the unit starts in a moment (--no-block), the page shows it at once
+    platz = modelle.platz_wahl(cfg, total_gib, lanes, kat) if an and cfg.get("llm", {}).get("enabled") else None
+    for p in (platz or {}).get("wahl", []):
+        p["name"] = p["name"][i]
+    wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
@@ -180,7 +197,7 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, lanes, _, laeuft, kat, _, misst = _quelle(cfg)
+            total_gib, lanes, _, laeuft, kat, _, misst, _ = _quelle(cfg)
             b = modelle.budget(cfg, total_gib, lanes, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
@@ -235,7 +252,7 @@ async def admin_messen(request: Request):
     print("modelle: messen angefragt", flush=True)
     guard.log("modelle_messen", detail=name)
     _live["t"] = None
-    return seite(cfg, lang="en" if request.query_params.get("lang") == "en" else "de")
+    return seite(cfg, lang="en" if request.query_params.get("lang") == "en" else "de", gestartet=True)
 
 
 def _wunsch(request, art, was, mid=""):
@@ -265,7 +282,40 @@ def _wunsch(request, art, was, mid=""):
     print(f"modelle: wechsel {art} angefragt", flush=True)
     guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]}: {name}")
     _live["t"] = None
-    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
+
+
+@router.post("/api/admin/modelle/platz", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_platz(request: Request):
+    """„Lange Gespräche“ (Dominik 2026-10-17): the own language model's context store as one of modelle.PLATZ; root
+    (speech-spark-wechsel) restarts it with the new memory share and context, here or on the model computer."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    was = str(body.get("platz", ""))[:16]
+    if not _an():
+        print("modelle: platz abgelehnt aus", flush=True)
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = steuer.call("platz", (was,), cfg=cfg, timeout=30)
+        if not isinstance(d, dict):
+            _fehler("rechner", "platz")
+        if d.get("ok") is not True:
+            _fehler(d.get("fehler") if d.get("fehler") in GRUND else "wunsch", "platz")
+    else:
+        if _misst():
+            _fehler("misst", "platz")
+        try:
+            modelle.platz_anfragen(was, cfg, modelle.gesamt_gib(), _lanes(), _starten, _laeuft())
+        except modelle.Fehler as e:
+            if str(e) == "start":
+                print("modelle: platz start fehler", flush=True)
+                raise HTTPException(503, GRUND["start"])
+            _fehler(e, "platz")
+    print("modelle: platz angefragt", flush=True)
+    guard.log("modelle_wechsel", detail=f"Lange Gespräche: {modelle.PLATZ_NAMEN[was][0]}")
+    _live["t"] = None
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
 
 
 @router.post("/api/admin/modelle/wechseln", dependencies=[Depends(auth), Depends(admin_code)])

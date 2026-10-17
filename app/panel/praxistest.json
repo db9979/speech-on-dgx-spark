@@ -1534,6 +1534,20 @@
 "titel": "Meine Sachen in der iPhone-App",
 "text": "A: Im Chat oben links auf das Kachel-Symbol tippen: „Meine Sachen“ zeigt Dokumente, Vom Spark erstellt, Bilder, Musik und Gedächtnis mit Zahlen und die Suche über alles. Bei Dokumente die Filter „Frist offen“ und „Wird gelesen“, Sortieren nach Name und „Auswählen“ probieren, ein Dokument öffnen, einen Tag dazugeben und an die Frist erinnern lassen. Bei Bilder etwas malen lassen, bei Musik ein Stück abspielen, beim Gedächtnis einen Eintrag ändern und löschen. Unter Funktionen eine davon sperren: die Kachel verschwindet in der App.",
 "thread": "Dokumente und Sachen in der iPhone-App"
+},
+{
+"id": "P243",
+"v": 728,
+"titel": "Messung sichtbar",
+"text": "A: Unter Zustand → Modelle bei einem Modell auf „Messen“ tippen und bestätigen. Sofort steht oben „Eine Messung läuft“, darunter erst „Startet gerade …“ und dann die letzten Zeilen der Messung (z. B. „modelle: lade …“, „modelle: frei zum messen … GiB“); sie wechseln alle paar Sekunden. In der iPhone-App unter Zustand → Modelle dasselbe. Am Ende verschwindet der Kasten und die Zahlen stehen beim Modell.",
+"thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P244",
+"v": 728,
+"titel": "Lange Gespräche",
+"text": "A: Nach dem Update unter Zustand → Modelle im Kasten „Lange Gespräche“ „4 Gespräche gleichzeitig mit je 64K“ wählen, „Übernehmen“ und bestätigen. Oben steht, dass ein Wechsel läuft; nach ein paar Minuten antwortet das Sprachmodell wieder und die Wahl ist mit „jetzt“ markiert. B: „1 sehr langes Gespräch mit 256K“ wählen und ein langes Dokument fragen (die erste Antwort dauert dann länger). C: Zurück auf „Standard“. In der iPhone-App unter Zustand → Modelle dasselbe.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

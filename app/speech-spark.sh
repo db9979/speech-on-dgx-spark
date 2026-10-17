@@ -17,7 +17,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [kv8] [dspark] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
@@ -40,6 +40,15 @@ VAR=${SPEECH_SPARK_VAR:-/var/lib/speech-spark}
 CONFIG="$ETC/config.json"
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+# any of the units works: a oneshot unit (speech-spark-wechsel, -messen-wunsch, -update) is "activating" for as long
+# as it runs, which the quiet is-active check alone does not count (modelle.IM_GANG)
+im_gang() {
+  local z
+  for z in $(systemctl is-active "$@" 2>/dev/null); do
+    case "$z" in active|activating|deactivating|reloading) return 0 ;; esac
+  done
+  return 1
+}
 need_root() { [ "$(id -u)" = 0 ] || die "run with sudo: sudo speech-spark $*"; }
 cfg() { jq -r "$1" "$CONFIG"; }
 # change the config with jq (cfg_put <filter> [jq args]); the file belongs to the service user (the panel writes it
@@ -424,7 +433,7 @@ cmd_messen_wunsch() {
   done
   { [ -x "$PREFIX/venv-llm/bin/vllm" ] || [ -x "$PREFIX/venv-engine/bin/vllm" ]; } \
     || { echo "modelle: messung abgelehnt venv fehlt"; return 1; }
-  if systemctl is-active -q "$MESS_UNIT" "$WECHSEL_UNIT" speech-spark-update; then
+  if im_gang "$MESS_UNIT" "$WECHSEL_UNIT" speech-spark-update; then
     echo "modelle: messung abgelehnt laeuft"; return 1
   fi
   echo "modelle: messung aus dem panel ${#ids[@]} modell"
@@ -499,16 +508,16 @@ cmd_umzug_intern() {
 
 run_umzug() {  # $1 = uebernehmen|zurueck: in its own unit, so a closed terminal never leaves the chat without a model
   local self follow
-  systemctl is-active -q "$UMZUG_UNIT" && die "a move is running already: sudo speech-spark logs umzug"
-  systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running; move afterwards"
-  systemctl is-active -q speech-spark-update && die "an update is running; move afterwards"
+  im_gang "$UMZUG_UNIT" && die "a move is running already: sudo speech-spark logs umzug"
+  im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running; move afterwards"
+  im_gang speech-spark-update && die "an update is running; move afterwards"
   self=$(readlink -f -- "$0")
   systemd-run --quiet --collect --unit="$UMZUG_UNIT" -p LogNamespace=speech-spark -p TimeoutStopSec=180 \
     --setenv=SPEECH_SPARK_PREFIX="$PREFIX" --setenv=SPEECH_SPARK_ETC="$ETC" --setenv=SPEECH_SPARK_VAR="$VAR" \
     /bin/bash "$self" modelle umzug-intern "$1"
   journalctl --namespace=speech-spark -u "$UMZUG_UNIT" -f -n 0 --no-pager -o cat &
   follow=$!
-  while systemctl is-active -q "$UMZUG_UNIT"; do sleep 5; done
+  while im_gang "$UMZUG_UNIT"; do sleep 5; done
   sleep 1; kill "$follow" 2>/dev/null || true
 }
 
@@ -568,12 +577,39 @@ wechsel() {  # $1 = art, $2 = id
   echo "modelle: umgeschaltet $art $mid"
 }
 
+# Zustand → Modelle „Lange Gespräche“: root checks the choice again, writes llm.platz and restarts the own language model
+# with its new memory share and context; when it does not answer, back to the choice before
+platz_setzen() {  # $1 = one of modelle.PLATZ
+  local neu=$1 alt out pause=0
+  out=$(as_panel_user ../modelle.py platz-pruefen "$neu") \
+    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: platz abgelehnt"; return 1; }
+  alt=$(as_panel_user ../modelle.py platz-jetzt)
+  echo "modelle: platz $neu startet"
+  if can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+    as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: platz ohne wartungspause"
+  fi
+  as_panel_user ../modelle.py platz-schalten "$neu" || { echo "modelle: platz abgelehnt einstellung"; return 1; }
+  systemctl stop speech-spark-llm.service || true
+  mem_settle
+  systemctl start speech-spark-llm.service || true
+  if as_panel_user ../modelle.py rundlauf; then
+    echo "modelle: platz $neu ok"
+  else
+    echo "modelle: platz $neu fehler, zurueck"
+    as_panel_user ../modelle.py platz-schalten "$alt" || echo "modelle: platz zurueck fehler"
+    systemctl restart speech-spark-llm.service || true
+  fi
+  [ "$pause" = 1 ] && { as_panel_user wartung.py weiter || true; }
+  return 0
+}
+
 cmd_wunsch_intern() {
   local art was out
   out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
   read -r art was <<<"$(tail -n1 <<<"$out")"
-  if systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT"; then echo "modelle: wechsel abgelehnt misst"; return 1; fi
+  if im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT"; then echo "modelle: wechsel abgelehnt misst"; return 1; fi
   [[ "${was:-}" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: wechsel abgelehnt wunsch"; return 1; }
+  if [ "$art" = platz ]; then platz_setzen "$was"; return; fi
   if [ "$was" = zurueck ]; then
     out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
     was=$(tail -n1 <<<"$out")
@@ -588,7 +624,7 @@ run_wechsel() {  # $1 = art, $2 = id or zurueck: the wish, then the fixed unit (
   local follow rc=0
   systemctl cat "$WECHSEL_UNIT.service" >/dev/null 2>&1 || die "the unit is missing; run sudo speech-spark update first"
   for u in "$WECHSEL_UNIT" "$UMZUG_UNIT" "$MESS_UNIT" "$MESS_WUNSCH_UNIT" speech-spark-update; do
-    systemctl is-active -q "$u" && die "$u is running; switch afterwards"
+    im_gang "$u" && die "$u is running; switch afterwards"
   done
   as_panel_user ../modelle.py wunsch-schreiben "$1" "$2" || die "speech-spark modelle wechseln llm|sehen|asr|tts|bild <id> (ids: speech-spark modelle liste)"
   echo "Wechsel läuft (auch wenn du dieses Fenster schließt): sudo speech-spark logs wechsel"
@@ -645,9 +681,9 @@ cmd_modelle() {
       for a in "$@"; do [ "$a" = --yes ] && yes=1 || was+=("$a"); done
       [ -x "$PREFIX/venv-llm/bin/vllm" ] || [ -x "$PREFIX/venv-engine/bin/vllm" ] \
         || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
-      systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
-      systemctl is-active -q speech-spark-update && die "an update is running; measure afterwards"
-      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [kv8] [dspark] [eigen-…] [--yes]"
+      im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
+      im_gang speech-spark-update && die "an update is running; measure afterwards"
+      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]"
       echo "Messen: $ids"
       echo "Das lädt fehlende Modelle, stoppt das laufende Sprachmodell (eigenes oder qwen38) für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
@@ -663,7 +699,7 @@ cmd_modelle() {
       echo "Die Messung läuft (auch wenn du dieses Fenster schließt). Ergebnis: Zustand → Logs oder sudo speech-spark logs messen"
       journalctl --namespace=speech-spark -u "$MESS_UNIT" -f -n 0 --no-pager -o cat &
       follow=$!
-      while systemctl is-active -q "$MESS_UNIT"; do sleep 5; done
+      while im_gang "$MESS_UNIT"; do sleep 5; done
       sleep 1; kill "$follow" 2>/dev/null || true
       ;;
     messen-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_intern "$@" ;;
@@ -687,7 +723,7 @@ cmd_modelle() {
     zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
     entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;
     wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_wunsch_intern ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [kv8] [dspark] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
   esac
 }
 

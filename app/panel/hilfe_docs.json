@@ -2685,7 +2685,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Spark teilen",
 "title": "Spark teilen",
-"text": "Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten, Modelle wechseln oder messen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts."
+"text": "Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten, Modelle wechseln oder messen und „Lange Gespräche“ einstellen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts."
 },
 {
 "lang": "de",
@@ -2733,7 +2733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 11 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 12 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
 },
 {
 "lang": "de",
@@ -10053,7 +10053,7 @@
 "file": "Architecture and data flow",
 "head": "Spark split",
 "title": "Spark split",
-"text": "The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting services, switching or measuring models are done there by the Wärter. Without the split everything runs on the DGX and this box does nothing."
+"text": "The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting services, switching or measuring models and setting \"Long conversations\" are done there by the Wärter. Without the split everything runs on the DGX and this box does nothing."
 },
 {
 "lang": "en",
@@ -10093,7 +10093,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 11 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 12 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
 },
 {
 "lang": "en",

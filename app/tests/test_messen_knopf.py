@@ -23,6 +23,7 @@ import guard  # noqa: E402
 import modelle  # noqa: E402
 import modellseite  # noqa: E402
 import steuer  # noqa: E402
+import tarswart  # noqa: E402
 from tests import test_waerter  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -66,6 +67,64 @@ class Regeln(unittest.TestCase):
                 modelle.messen_wunsch_nehmen(self.p, now=T0)
 
 
+class Laeuft(unittest.TestCase):
+    """Dominik 2026-10-17: after „Messen“ nothing showed. A oneshot unit is "activating" for as long as it works."""
+    def test_a_working_oneshot_unit_counts(self):
+        for text, ok in (("activating", True), ("inactive\nactivating", True), ("active", True), ("deactivating", True),
+                         ("inactive\nfailed", False), ("", False), ("unknown", False)):
+            self.assertIs(modelle.im_gang(text), ok, text)
+
+    def test_progress_lines_are_fixed_words_and_numbers_only(self):
+        text = "\n".join(["Das lädt fehlende Modelle", "modelle: lade gemma-4-26b-a4b (falls noch nicht da)",
+                          "modelle: frei zum messen 102.8 GiB", "INFO vllm: loading weights",
+                          "modelle: messung x frage 1 erste 0.22 s, 400 tokens, 23.4 tok/s", "modelle: " + "x" * 200,
+                          "modelle: antwort <b>hallo</b>", "modelle: Grüße"] + [f"modelle: messung x schritt {i}" for i in range(8)])
+        got = modelle.stand(text)
+        self.assertEqual(len(got), modelle.STAND_MAX)
+        self.assertEqual(got[-1], "modelle: messung x schritt 7")
+        self.assertTrue(all(modelle.STAND.match(x) for x in got))
+        self.assertEqual(modelle.stand(text.split("modelle: messung x schritt 0")[0])[-2:],
+                         ["modelle: frei zum messen 102.8 GiB", "modelle: messung x frage 1 erste 0.22 s, 400 tokens, 23.4 tok/s"])
+
+    def test_the_panel_sees_a_working_unit_and_shows_its_lines(self):
+        an = subprocess.CompletedProcess([], 3, "inactive\nactivating\n", "")
+        with mock.patch.object(modellseite.subprocess, "run", return_value=an) as run, \
+                mock.patch.object(modellseite, "journal", return_value="x\nmodelle: messung gemma-4-26b-a4b start\n") as j:
+            self.assertTrue(modellseite._misst())
+            self.assertEqual(modellseite._stand(), ["modelle: messung gemma-4-26b-a4b start"])
+        self.assertEqual(run.call_args[0][0][:2], ["systemctl", "is-active"])
+        self.assertEqual(j.call_args[0][0], modelle.MESS_WUNSCH_UNIT)
+        with mock.patch.object(modellseite.subprocess, "run", return_value=subprocess.CompletedProcess([], 3, "inactive\ninactive\n", "")):
+            self.assertFalse(modellseite._misst())
+            self.assertFalse(modellseite._laeuft())
+            self.assertEqual(modellseite._stand(), [])
+
+    def test_lines_from_the_model_computer_are_checked_again(self):
+        d = {"gesamt_gib": 121.0, "lanes": [], "messung": {}, "wechsel": {}, "eigene": [], "laeuft": False, "misst": True,
+             "stand": ["modelle: frei zum messen 90.1 GiB", "<script>", 7, "modelle: Grüße"]}
+        with mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "call", return_value=d):
+            self.assertEqual(modellseite._quelle(common.load_config())[7], ["modelle: frei zum messen 90.1 GiB"])
+            d["misst"] = False
+            self.assertEqual(modellseite._quelle(common.load_config())[7], [])
+            d["stand"] = "modelle: x"
+            with self.assertRaises(Exception):
+                modellseite._quelle(common.load_config())       # not a list: the answer counts as none
+
+    def test_the_shell_counts_a_working_oneshot_unit(self):
+        sh = open(os.path.join(helpers.APP, "speech-spark.sh")).read()
+        self.assertNotIn("systemctl is-active -q", sh)
+        body = sh[sh.index("im_gang() {"):]
+        body = body[:body.index("\n}\n") + 3]
+        d = tempfile.mkdtemp()
+        for state, rc in (("activating", 0), ("inactive", 1)):
+            with open(os.path.join(d, "systemctl"), "w") as f:
+                f.write(f"#!/bin/sh\necho inactive\necho {state}\nexit 3\n")
+            os.chmod(os.path.join(d, "systemctl"), 0o755)
+            r = subprocess.run(["bash", "-c", "set -euo pipefail\n" + body + "im_gang a b"],
+                               env=dict(os.environ, PATH=d + os.pathsep + os.environ["PATH"]))
+            self.assertEqual(r.returncode, rc, state)
+
+
 class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_messen", "modelle_wechsel", "modelle")]:
@@ -103,6 +162,7 @@ class Panel(unittest.TestCase):
         self.assertEqual(modelle.messen_wunsch_nehmen(), ["qwen3-vl-30b-a3b-fp8"])
         self.assertIn("modelle: messen abgelehnt engine", out.getvalue())
         self.assertIn("modelle: messen angefragt", out.getvalue())
+        self.assertIs(r.json()["wechsel"]["misst"], True)          # the page shows it at once, before the unit works
         rows = {m["id"]: m for a in r.json()["arten"] for m in a["modelle"]}
         self.assertTrue(rows["gemma-4-26b-a4b"]["messbar"])
         self.assertFalse(rows["qwen3-asr-1.7b"]["messbar"])
@@ -150,6 +210,24 @@ class Waerter(test_waerter.Base):
         self.assertIn("waerter: messen abgelehnt engine", out.getvalue())
         d = self.post(test_waerter.body("modelle")).json()
         self.assertIs(d["misst"], False)
+        self.assertEqual(d["stand"], [])
+
+    def test_a_running_measurement_there_shows_its_lines(self):
+        alt = self.run.__class__.__call__
+
+        def run(fake, cmd, timeout=10, env=None):
+            if cmd[:2] == ["systemctl", "is-active"] and modelle.MESS_UNIT in cmd:
+                fake.calls.append(cmd)
+                return 3, "activating\ninactive\n"
+            return alt(fake, cmd, timeout, env)
+        with mock.patch.object(test_waerter.FakeRun, "__call__", run), \
+                mock.patch.object(tarswart, "journal", return_value="modelle: lade x\nAntwort: hallo\n") as j, \
+                redirect_stdout(io.StringIO()):
+            d = self.post(test_waerter.body("modelle")).json()
+            self.assertEqual(self.post(test_waerter.body("wechseln", ["asr", "qwen3-asr-0.6b"])).json()["fehler"], "misst")
+        self.assertIs(d["misst"], True)
+        self.assertEqual(d["stand"], ["modelle: lade x"])
+        self.assertEqual(j.call_args[0][0], modelle.MESS_UNIT)
 
     def test_the_panel_takes_the_flag_and_an_old_waerter_without_it(self):
         d = {"gesamt_gib": 121.0, "lanes": [], "messung": {}, "wechsel": {}, "eigene": [], "laeuft": False}

@@ -74,7 +74,8 @@
     "sehen_port": 31017,
     "sehen_modell": "qwen3-vl-8b-fp8",
     "sehen_leerlauf_min": 10,
-    "max_body_mb": 32
+    "max_body_mb": 32,
+    "platz": "standard"
   },
   "api": {
     "key": "",

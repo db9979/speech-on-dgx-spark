@@ -558,7 +558,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/modelle-messen-wunsch.json` | The panel's wish for the next measurement (Status → Models "Measure"), seconds | – | no |
 | `state/modelle-messung.json` | Model measurement (numbers only) | – | no |
 | `state/modelle-wechsel.json` | Per kind the model before the last switch (7 days to bring back) | – | no |
-| `state/modelle-wunsch.json` | The panel's wish for the next model switch, seconds | – | no |
+| `state/modelle-wunsch.json` | The panel's wish for the next model switch or "Long conversations", seconds | – | no |
 | `state/musik-test-2b-1.mp3` | Sample 1 with 2B (Test music) | – | no |
 | `state/musik-test-2b-2.mp3` | Sample 2 with 2B (Test music) | – | no |
 | `state/musik-test-2b-klein-1.mp3` | Sample 1 with 2B small (Test music) | – | no |
@@ -2866,7 +2866,7 @@ Self-tests: `test_waechter_umgehung`, `test_notaus`
 
 ### Spark split
 
-The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting services, switching or measuring models are done there by the Wärter. Without the split everything runs on the DGX and this box does nothing.
+The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting services, switching or measuring models and setting "Long conversations" are done there by the Wärter. Without the split everything runs on the DGX and this box does nothing.
 
 **Why:** Speech, text and pictures then cross the home network. No one in the network should read along, pose as the DGX or give the DGX commands.
 
@@ -2918,7 +2918,7 @@ flowchart TD
 
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
-- **11** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
+- **12** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
 - **30 s** without an answer until Notbetrieb ([step 10](#kn-teilen-s8))
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))

@@ -348,6 +348,7 @@ struct ModelsView: View {
     @State private var eArt = "llm"                // stage E5: an own model from Hugging Face
     @State private var eRepo = ""
     @State private var vorschlag: [String: Any]?
+    @State private var platz = ""                  // „Lange Gespräche“: the picked choice (modelle.PLATZ)
 
     var body: some View {
         let w = d["wechsel"] as? [String: Any] ?? [:]
@@ -358,7 +359,13 @@ struct ModelsView: View {
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if misst {
-                Text("Eine Messung läuft. Das Sprachmodell pausiert so lange; die Zahlen erscheinen hier, sobald sie fertig ist.").foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Eine Messung läuft. Das Sprachmodell pausiert so lange; die Zahlen erscheinen hier, sobald sie fertig ist.").foregroundStyle(.secondary)
+                    let stand = w["stand"] as? [String] ?? []
+                    if stand.isEmpty { ProgressView() } else {     // the measurement's own lines: fixed words and numbers
+                        Text(verbatim: stand.joined(separator: "\n")).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    }
+                }
             } else if laeuft {
                 Text(SparkAPI.way(String(localized: "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs."))).foregroundStyle(.secondary)
             }
@@ -372,6 +379,25 @@ struct ModelsView: View {
                     Text("Beim Modell auf „Wechseln“ oder „Messen“ tippen. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")
                 } else {
                     Text(SparkAPI.way(String(localized: "Zum Wechseln und Messen Funktionen → Modelle wechseln einschalten. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")))
+                }
+            }
+            if !laeuft, let p = w["platz"] as? [String: Any] {
+                let wahl = p["wahl"] as? [[String: Any]] ?? []
+                let jetzt = p["jetzt"] as? String ?? "standard"
+                Section {
+                    Picker("Lange Gespräche", selection: Binding(get: { platz.isEmpty ? jetzt : platz }, set: { platz = $0 })) {
+                        ForEach(Array(wahl.enumerated()), id: \.offset) { _, x in
+                            let nein = x["nein"] as? String ?? ""
+                            Text(verbatim: (x["name"] as? String ?? "") + ((x["plus_gib"] as? NSNumber)?.doubleValue ?? 0 > 0
+                                ? " (+" + Self.gib(x["plus_gib"]) + ")" : "") + (nein.isEmpty || nein == "schon" ? "" : " ✕"))
+                                .tag(x["id"] as? String ?? "")
+                        }
+                    }.pickerStyle(.inline).labelsHidden()
+                    let gewaehlt = platz.isEmpty ? jetzt : platz
+                    let ok = (wahl.first { $0["id"] as? String == gewaehlt }?["nein"] as? String ?? "x").isEmpty
+                    Button("Übernehmen") { ask = ["platz": gewaehlt] }.disabled(gewaehlt == jetzt || !ok)
+                } header: { Text("Lange Gespräche") } footer: {
+                    Text("Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.")
                 }
             }
             ForEach(Array((d["arten"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, a in
@@ -435,14 +461,24 @@ struct ModelsView: View {
         .navigationTitle("Modelle")
         .refreshable { await load() }
         .task { await load() }
+        .task(id: misst) {      // while a measurement runs: its progress every few seconds
+            while misst && !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(8))
+                await load()
+                if (d["wechsel"] as? [String: Any])?["misst"] as? Bool != true { break }
+            }
+        }
         .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : ask?["loeschen"] != nil
                                                ? "Eigenes Modell löschen?" : ask?["dazu"] != nil ? "Eigenes Modell hinzufügen?"
-                                               : ask?["messen"] != nil ? "Modell messen?" : "Modell wechseln?"),
+                                               : ask?["messen"] != nil ? "Modell messen?" : ask?["platz"] != nil
+                                               ? "Lange Gespräche einstellen?" : "Modell wechseln?"),
                             isPresented: Binding(get: { ask != nil }, set: { if !$0 { ask = nil } }), titleVisibility: .visible) {
             Button("Ja") { if let a = ask { Task { await send(a) } } }
         } message: {
             if ask?["messen"] != nil {
                 Text("Das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.")
+            } else if ask?["platz"] != nil {
+                Text("Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.")
             } else if ask?["loeschen"] != nil {
                 Text("Das Modell kommt aus der Liste und von der Platte.")
             } else if ask?["dazu"] != nil {
@@ -463,6 +499,9 @@ struct ModelsView: View {
         do {
             if a["messen"] != nil {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/messen", query: lang, body: ["id": a["id"] ?? ""])
+            } else if let p = a["platz"] {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/platz", query: lang, body: ["platz": p])
+                platz = ""
             } else if a["loeschen"] != nil {
                 let id = (a["id"] ?? "").addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
                 d = try await AdminSession.shared.object("DELETE", "api/admin/modelle/eigen/" + id, query: lang)

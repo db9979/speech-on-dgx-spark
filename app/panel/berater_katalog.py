@@ -181,7 +181,7 @@ OHNE = {
     ),
     # Eigene Modelle (llm_tor.py, modelle.py): ports, model and the switch come from install and the model commands
     "llm": (
-        "enabled", "engine_port", "host", "max_body_mb", "modell", "port", "sehen_leerlauf_min", "sehen_modell",
+        "enabled", "engine_port", "host", "max_body_mb", "modell", "platz", "port", "sehen_leerlauf_min", "sehen_modell",
         "sehen_port",
     ),
     "logs": (

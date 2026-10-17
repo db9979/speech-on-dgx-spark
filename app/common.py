@@ -707,7 +707,7 @@ SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend"}
 # reports it in its status; the panel takes it over, never the other way round
 MODEL_CHOICE = {"asr": ("model", "aligner_model", "recognizer"), "tts": ("model", "voicedesign_model"),
                 "image": ("enabled", "variant"), "music": ("enabled", "variant"),
-                "llm": ("enabled", "modell", "sehen_modell")}
+                "llm": ("enabled", "modell", "sehen_modell", "platz")}
 
 
 def _keep(sec):

@@ -558,7 +558,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/modelle-messen-wunsch.json` | Wunsch des Panels für die nächste Messung (Zustand → Modelle „Messen“), Sekunden | – | nein |
 | `state/modelle-messung.json` | Messung der Modelle (nur Zahlen) | – | nein |
 | `state/modelle-wechsel.json` | Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar) | – | nein |
-| `state/modelle-wunsch.json` | Wunsch des Panels für den nächsten Modellwechsel, Sekunden | – | nein |
+| `state/modelle-wunsch.json` | Wunsch des Panels für den nächsten Modellwechsel oder „Lange Gespräche“, Sekunden | – | nein |
 | `state/musik-test-2b-1.mp3` | Probestück 1 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-2.mp3` | Probestück 2 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-1.mp3` | Probestück 1 mit 2B klein (Musik testen) | – | nein |
@@ -2866,7 +2866,7 @@ Selbsttests: `test_waechter_umgehung`, `test_notaus`
 
 ### Spark teilen
 
-Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten, Modelle wechseln oder messen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts.
+Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten, Modelle wechseln oder messen und „Lange Gespräche“ einstellen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts.
 
 **Warum:** Sprache, Text und Bilder gehen dann durch das Heimnetz. Niemand im Netz soll mitlesen, sich als DGX ausgeben oder dem DGX Befehle geben können.
 
@@ -2918,7 +2918,7 @@ flowchart TD
 
 - **600 s** lebt ein Kopplungscode ([Schritt 2](#kn-teilen-s2))
 - **60 s** darf die Zeit eines Befehls daneben liegen ([Schritt 7](#kn-teilen-s7))
-- **11** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
+- **12** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
 - **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 10](#kn-teilen-s8))
 - **80 °C** Hinweis, der Panel-Rechner ist warm ([Schritt 8](#kn-teilen-s9))
 - **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))

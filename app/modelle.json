@@ -18,6 +18,7 @@
       "gemessen": false,
       "anteil": 0.3,
       "kontext": 131072,
+      "kontext_max": 262144,
       "kann_sehen": true,
       "werkzeuge": true,
       "vllm": {
@@ -36,19 +37,6 @@
       "betrieb": "resident"
     },
     {
-      "id": "qwen38-27b-nvfp4-kv8",
-      "basis": "qwen38-27b-nvfp4",
-      "name": {
-        "de": "Qwen3.8 27B NVFP4, Gesprächsspeicher FP8",
-        "en": "Qwen3.8 27B NVFP4, FP8 context store"
-      },
-      "gemessen": false,
-      "vllm": {
-        "kv_cache_dtype": "fp8"
-      },
-      "messen": "auf_wunsch"
-    },
-    {
       "id": "qwen38-27b-nvfp4-dspark",
       "basis": "qwen38-27b-nvfp4",
       "name": {
@@ -58,9 +46,9 @@
       "lizenz": "Apache-2.0, DSpark-Hilfsmodell: other",
       "gewerblich": false,
       "platte_gb": 24,
-      "need_gib": 40,
+      "need_gib": 46,
       "gemessen": false,
-      "anteil": 0.33,
+      "anteil": 0.38,
       "vllm": {
         "mtp": 0,
         "entwurf": {

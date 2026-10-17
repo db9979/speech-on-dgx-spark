@@ -149,17 +149,17 @@ class Varianten(unittest.TestCase):
 
     def test_a_variant_is_its_basis_with_only_the_named_fields(self):
         kat = modelle.katalog()
-        basis, kv8, ds = kat["qwen38-27b-nvfp4"], kat["qwen38-27b-nvfp4-kv8"], kat["qwen38-27b-nvfp4-dspark"]
-        for v in (kv8, ds):
-            self.assertEqual((v["repo"], v["revision"], v["kontext"]), (basis["repo"], basis["revision"], basis["kontext"]))
-            self.assertEqual(v["messen"], "auf_wunsch")
-            self.assertEqual(v["anfrage"], basis["anfrage"])
-            self.assertFalse(v["gemessen"])
-        self.assertEqual(kv8["vllm"], dict(basis["vllm"], kv_cache_dtype="fp8"))
-        self.assertIn("--kv-cache-dtype", modelle.vllm_args(kv8))
-        self.assertNotIn("--kv-cache-dtype", modelle.vllm_args(basis))
+        basis, ds = kat["qwen38-27b-nvfp4"], kat["qwen38-27b-nvfp4-dspark"]
+        self.assertEqual((ds["repo"], ds["revision"], ds["kontext"]), (basis["repo"], basis["revision"], basis["kontext"]))
+        self.assertEqual(ds["messen"], "auf_wunsch")
+        self.assertEqual(ds["anfrage"], basis["anfrage"])
+        self.assertFalse(ds["gemessen"])
+        self.assertEqual({k: v for k, v in ds["vllm"].items() if k not in ("mtp", "entwurf")},
+                         {k: v for k, v in basis["vllm"].items() if k != "mtp"})
+        self.assertGreater(ds["anteil"], basis["anteil"])          # the helper and its room need more (tars: 0.33 too little)
         self.assertFalse(ds["gewerblich"])                            # the helper model's licence is "other"
-        self.assertEqual(modelle.messliste(["kv8", "dspark"]), ["qwen38-27b-nvfp4-kv8", "qwen38-27b-nvfp4-dspark"])
+        self.assertEqual(modelle.messliste(["dspark"]), ["qwen38-27b-nvfp4-dspark"])
+        self.assertNotIn("qwen38-27b-nvfp4-kv8", kat)                 # Qwen3.8 NVFP4 keeps its context store in FP8 already
 
     def test_broken_variants_are_refused(self):
         for bad in ({"id": "v-1", "basis": "gibts-nicht", "name": {"de": "a", "en": "a"}},
@@ -212,7 +212,7 @@ class Varianten(unittest.TestCase):
         with mock.patch.object(modelle, "jetzt_id", side_effect=lambda art, c, k=None: "qwen38-27b-nvfp4" if art == "llm" else ""), \
                 mock.patch.object(modelle, "aktiv", return_value=[]):
             with self.assertRaises(modelle.Fehler) as e:
-                modelle.entfernbar("qwen38-27b-nvfp4-kv8", cfg, path=os.path.join(tempfile.mkdtemp(), "w.json"))
+                modelle.entfernbar("qwen38-27b-nvfp4-dspark", cfg, path=os.path.join(tempfile.mkdtemp(), "w.json"))
         self.assertEqual(str(e.exception), "aktiv")
 
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.728** · 2026-10-17 · Zustand → Modelle „Lange Gespräche“: feste Auswahl für den Gesprächsspeicher des eigenen Sprachmodells (Standard, 4 × 64K, 1 × 256K), im Panel und in der iPhone-App, mit Budget-Prüfung, Neustart durch root und Rückfall, wenn das Modell nicht antwortet. Dazu: Zustand → Modelle: nach „Messen“ steht sofort „Eine Messung läuft“ mit den letzten Zeilen der Messung (laufende oneshot-Einheiten zählen jetzt als „läuft“); DSpark misst mit 38 % Speicher, die Variante `kv8` fällt weg (Qwen3.8 NVFP4 hat schon FP8-Gesprächsspeicher)
 - **V01.0.727** · 2026-10-17 · Rot-Fix: test_bilder kennt die Bilder unter „Meine Sachen“ der iPhone-App (iphone.THINGS, nur mit der Freigabe von Bilder malen)
 - **V01.0.726** · 2026-10-17 · iPhone-App: neue Seite „Meine Sachen“ mit Dokumenten (Filter, Sortieren, Zeitgruppen, Auswählen, Detailseite), Vom Spark erstellt, Bildern, Musik und Gedächtnis samt Suche über alles; jede Kachel folgt nur der Freigabe ihrer Funktion, der Profilschalter „Dokumente aus der App“ entfällt
 - **V01.0.725** · 2026-10-17 · Rechner fernsteuern in drei Stufen: mehr feste Befehle am PC (Programm nach vorn, Fenster, Tasten, Ordner, Rechner), Bildschirm zeigen und bedienen aus Panel und Apps (fernsicht.py), und der Spark bedient den Rechner Schritt für Schritt, jeder Schritt am Rechner bestätigt (bedienen.py); beides eigene Admin-Schalter, aus

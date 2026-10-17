@@ -41,9 +41,21 @@ function mdArt(a,w,d){if(!a.modelle.length)return '';
     `<th>${esc(t('Betrieb','Runs'))}</th><th>${esc(t('Lizenz','Licence'))}</th><th>${esc(t('Messung','Measurement'))}</th>${w.an?'<th></th>':''}</tr></thead><tbody>${rows}</tbody></table></div>${mdAlt(a,w,d)}</div>`}
 function mdWechsel(w){if(!w.an)return `<div class="mut vb-note">${esc(t('Wechseln: Funktionen → Modelle wechseln einschalten.','Switching: switch on Features → Switch models.'))}</div>`;
   return (w.laeuft?`<div class="card"><b>${esc(t('Ein Modellwechsel läuft.','A model switch is running.'))}</b> <span class="mut">${esc(t('Fortschritt unter Zustand → Logs (Modellwechsel); die Seite zeigt das Ergebnis, sobald er fertig ist.','Progress under Status → Logs (model switch); the page shows the result once it is done.'))}</span></div>`:'')+
-    (w.misst?`<div class="card"><b>${esc(t('Eine Messung läuft.','A measurement is running.'))}</b> <span class="mut">${esc(t('Das Sprachmodell pausiert so lange (pro Modell etwa 10 bis 25 Minuten); die Zahlen erscheinen hier, sobald sie fertig ist.','The language model pauses meanwhile (about 10 to 25 minutes per model); the numbers show here once it is done.'))}</span></div>`:'')}
+    (w.misst?`<div class="card"><b>${esc(t('Eine Messung läuft.','A measurement is running.'))}</b> <span class="mut">${esc(t('Das Sprachmodell pausiert so lange (pro Modell etwa 10 bis 25 Minuten); die Zahlen erscheinen hier, sobald sie fertig ist.','The language model pauses meanwhile (about 10 to 25 minutes per model); the numbers show here once it is done.'))}</span>`+
+      ((w.stand||[]).length?`<pre class="mdstand">${esc(w.stand.join('\n'))}</pre>`:`<div class="mut">${esc(t('Startet gerade …','Starting …'))}</div>`)+`</div>`:'')}
+// „Lange Gespräche“: the own language model's context store as fixed choices (modelle.PLATZ); the panel checks the
+// budget, root restarts the model with it
+function mdPlatz(w){const p=w.platz;if(!p||w.laeuft||w.misst)return '';
+  const grund={budget:t('Speicher zu knapp','not enough memory'),kontext:t('kann dieses Modell nicht','this model cannot')};
+  const zeilen=p.wahl.map(x=>`<label class="row"><input type="radio" name="mdplatz" value="${esc(x.id)}"${x.id===p.jetzt?' checked':''}${x.nein&&x.nein!=='schon'?' disabled':''}> ${esc(x.name)}`+
+    `${x.plus_gib?' <span class="mut">(+'+esc(mdGib(x.plus_gib))+')</span>':''}${x.id===p.jetzt?' <span class="mut">· '+esc(t('jetzt','now'))+'</span>':''}${grund[x.nein]?' <span class="mut">· '+esc(grund[x.nein])+'</span>':''}</label>`).join('');
+  return `<div class="card"><h3>${esc(t('Lange Gespräche','Long conversations'))}</h3>${zeilen}`+
+    `<div class="row"><button type="button" class="b sm" id="mdplatzok">${esc(t('Übernehmen','Apply'))}</button></div>`+
+    `<div class="mut vb-note">${esc(t('Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.','All conversations share one context store. More room costs memory that pictures, music and the vision model then lack. The language model restarts for it.'))}</div></div>`}
 async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;const msg=$('mdmsg');msg.textContent='';
-  try{await api(url+(L==='en'?'?lang=en':''),method==='POST'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});loadModelle()}catch(e){msg.textContent=e.message}}
+  // the answer is the page itself (after „Messen“ already showing the measurement that starts in a moment)
+  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
+    let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
 function mdEigen(w){if(!w.an||!w.eigene||w.laeuft)return '';
   return `<div class="card"><h3>${esc(t('Eigenes Modell hinzufügen','Add an own model'))}</h3><div class="row">`+
     `<select id="mdeart" aria-label="${esc(t('Art','Kind'))}"><option value="llm">${esc(t('Sprachmodell','Language model'))}</option><option value="sehen">${esc(t('Bildverständnis','Image understanding'))}</option></select>`+
@@ -64,14 +76,18 @@ function mdKnoepfe(d){const main=$('mdmain');
     mdPost('/api/admin/modelle/wechseln',{art:b.dataset.mdw,id:b.dataset.mdid},t('Zu „'+(m?m.name:b.dataset.mdid)+'“ wechseln? Der Spark lädt und prüft das Modell; das alte bleibt '+d.wechsel.tage+' Tage zum Zurückholen.','Switch to "'+(m?m.name:b.dataset.mdid)+'"? The Spark loads and checks the model; the old one stays '+d.wechsel.tage+' days to bring back.'))});
   main.querySelectorAll('[data-mdm]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdm);
     mdPost('/api/admin/modelle/messen',{id:b.dataset.mdm},t('„'+(m?m.name:b.dataset.mdm)+'“ messen? Der Spark lädt es falls nötig, das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.','Measure "'+(m?m.name:b.dataset.mdm)+'"? The Spark downloads it if needed, the language model pauses for about 10 to 25 minutes and starts again afterwards. Nothing is switched.'))});
+  if($('mdplatzok'))$('mdplatzok').onclick=()=>{const r=main.querySelector('input[name=mdplatz]:checked'),p=(d.wechsel||{}).platz;if(!r||!p)return;
+    if(r.value===p.jetzt){$('mdmsg').textContent=t('Das ist schon eingestellt.','That is set already.');return}
+    const n=(p.wahl.find(x=>x.id===r.value)||{}).name||r.value;
+    mdPost('/api/admin/modelle/platz',{platz:r.value},t('„'+n+'“ einstellen? Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.','Set "'+n+'"? The language model restarts for it and does not answer for a few minutes.'))};
   main.querySelectorAll('[data-mdz]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/zurueck',{art:b.dataset.mdz},t('Das vorige Modell zurückholen?','Bring back the previous model?')));
   main.querySelectorAll('[data-mde]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.mde),null,t('Dieses eigene Modell aus der Liste und von der Platte löschen?','Delete this own model from the list and from the disk?'),'DELETE'));
   if($('mdepr'))$('mdepr').onclick=mdPruefen}
-async function loadModelle(){const main=$('mdmain'),msg=$('mdmsg');if(!main)return;msg.textContent='';
-  let d;try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
+async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main)return;msg.textContent='';
+  let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
-  main.innerHTML=mdWechsel(w)+`<div class="vb-two">${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdEigen(w)}</div>`+
+  main.innerHTML=mdWechsel(w)+`<div class="vb-two">${mdBudget(d.budget)}${mdPlatz(w)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdEigen(w)}</div>`+
     `<div class="mut vb-note">${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Switch models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
-  clearTimeout(window.mdTick);if(w.laeuft||w.misst)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},15000)}
+  clearTimeout(window.mdTick);if(w.laeuft||w.misst)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst?8000:15000)}

@@ -64,7 +64,7 @@ body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}
 .updlock{z-index:1000;backdrop-filter:blur(3px)}.updlock .modalcard{width:min(440px,100%)}
 .ulbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 8px}.ulbar i{display:block;height:100%;width:3%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .8s ease}
 .updlock.ask .ulbar,.updlock.ask .ulrow #ultime{display:none}.updlock.fail .ulbar i{background:var(--warn)}.updlock.busy .ulbar i{animation:ulpulse 1.4s ease-in-out infinite}@keyframes ulpulse{50%{opacity:.55}}
-.ulrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:8px}.ullog{max-height:160px;overflow:auto;font-size:11px;margin-top:10px}
+.ulrow{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:8px}.ullog{max-height:160px;overflow:auto;font-size:11px;margin-top:10px}.mdstand{max-height:140px;overflow:auto;font-size:12px;margin:8px 0 0;white-space:pre-wrap}
 .updlock .row[hidden],.updlock details[hidden]{display:none}.ulp summary{cursor:pointer;color:var(--mut);font-size:13px;margin-top:4px}   /* .row would beat [hidden]: each state shows only its own buttons */
 .updtoast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1001;background:var(--card);box-shadow:var(--shadow);border-radius:12px;padding:10px 16px;font-size:14px}
 .modalcard{width:min(380px,100%);animation:pop .2s ease}
