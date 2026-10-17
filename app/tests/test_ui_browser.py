@@ -2556,6 +2556,10 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#pname"))
                     await pg.click("#pnew summary")
                     self.assertTrue(await pg.is_visible("#pname"))
+                    # 25 profiles a page, by name: after the tests before, "Uitest" can be on page 2 (red on GitHub
+                    # at V01.0.721 when the parts were cut anew), so the search brings it up; awaited, not typed, so
+                    # no late reload of the list wipes the open detail
+                    await pg.evaluate("PL.q='Uitest';PL.page=0;loadProf()")
                     await pg.click(f"#proflist [data-popen='{me}']")
                     await pg.wait_for_selector("#pdetail .pdet")
                     heads = await pg.evaluate("[...document.querySelectorAll('#pdetail h3.sec')].map(x=>x.textContent)")

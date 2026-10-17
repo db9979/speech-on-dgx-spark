@@ -50,7 +50,10 @@ def after_mail(question):
 
 class Search(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(search=True, search_url=SEARX, public=True)
+        # shipped on (Grundausstattung): the Weiche would name web_search itself instead of "required"
+        helpers.keep_chat(self, "routing", "direct_read", "prefetch")
+        helpers.set_config(search=True, search_url=SEARX, public=True,
+                           routing=False, direct_read=False, prefetch=False)
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):

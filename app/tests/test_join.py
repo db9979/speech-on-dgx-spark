@@ -366,6 +366,7 @@ class Setup(unittest.TestCase):
         uid = uid_of("Rm Rita")
         keys = lambda: {x["key"]: x for x in c.get("/api/profile/setup").json()["items"]}
         self.assertNotIn("remarkable", keys())
+        helpers.keep_chat(self, "documents")         # ships on (DEFAULT_ON): back as it was, never left off
         helpers.set_config(documents=True, doc_pictures=True, remarkable=True)
         try:
             onboard._cache.clear()
@@ -376,7 +377,7 @@ class Setup(unittest.TestCase):
             onboard._cache.clear()
             self.assertTrue(keys()["remarkable"]["done"])
         finally:
-            helpers.set_config(documents=False, doc_pictures=False, remarkable=False)
+            helpers.set_config(doc_pictures=False, remarkable=False)
 
     def test_setup_only_for_profiles(self):
         self.assertIn(TestClient(panel.app).get("/api/profile/setup").status_code, (401, 403))

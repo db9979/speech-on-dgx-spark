@@ -236,6 +236,8 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("not available", answer(ask(a, 'TOOL !mail_list {}')))
 
     def test_unknown_to_assist(self):
+        helpers.keep_chat(self, "klaeren")          # shipped on (Grundausstattung): here the list of all hits
+        helpers.set_config(klaeren=False)
         a = profile("Theda")
         url = f"http://127.0.0.1:{helpers.HA_PORT}"
         a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN})
@@ -1637,6 +1639,9 @@ class Mail(unittest.TestCase):
         mail._cache.clear()
 
     def test_no_made_up_mail(self):
+        # shipped on (Grundausstattung): "Eindeutiges direkt abrufen" would read the mail without the model's turn
+        helpers.keep_chat(self, "routing", "direct_read", "prefetch")
+        helpers.set_config(routing=False, direct_read=False, prefetch=False)
         a, g = profile("Piet"), TestClient(panel.app)
         helpers.LLM_CALLS.clear()
         answer(ask(g, "Habe ich neue Mails?"))
