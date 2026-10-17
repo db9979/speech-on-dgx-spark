@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.753** · 2026-10-17 · Rot-Fix: Fingerabdruck der Knoten-Seite „Vorbereiten“ (Zustand → Technik) mit .752 nachgezogen, test_technik grün
 - **V01.0.752** · 2026-10-17 · Rechner fernsteuern: Folgebitten wie „Das Terminal in den Vordergrund.“ oder „Nochmal“ gehen an den Rechner, den eine der zwei Nachrichten davor genannt hat; „in den Vordergrund“/„nach vorne“ ist ein klarer Auftrag (der Spark muss am Rechner nachfragen statt es nur anzukündigen); eine Bildschirm-Beschreibung sperrt die nächste Bitte nicht mehr, und eine abgelehnte oder fehlgeschlagene sperrt gar nichts
 - **V01.0.751** · 2026-10-17 · ROT-FIX für .750: die Karten unter Zustand laden wieder (der neue Abruf hieß wie die Heute-Kacheln und wurde von ihnen überschrieben), Selbsttest prüft die Namen
 - **V01.0.750** · 2026-10-17 · Webanwendung schneller und aufgeräumter: Admin-Start auf langsamen Handys von 11,5 auf etwa 2 s (Sprung-Links einmal pro Bild, Zustand-Karten nur bei offenem Zustand, Anleitungen beim Öffnen), Startseite gepackt, nach Updates nur geänderte Dateien neu; Chat am PC breiter, Seiten enden mit Platz fürs schwebende Gesicht, Zustand-Menü mit Symbolen und Blöcken, ganzer Zurück-Knopf am Handy
