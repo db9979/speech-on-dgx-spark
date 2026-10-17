@@ -1,6 +1,306 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Ausprobieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try"
+          }
+        }
+      }
+    },
+    "Ausprobiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tried"
+          }
+        }
+      }
+    },
+    "Bauart unbekannt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown architecture"
+          }
+        }
+      }
+    },
+    "Bei Hugging Face suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Hugging Face"
+          }
+        }
+      }
+    },
+    "Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark downloads it if needed and measures it; the language model pauses for about 10 to 25 minutes. Afterwards the page asks whether to switch."
+          }
+        }
+      }
+    },
+    "Gewechselt wird nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is switched."
+          }
+        }
+      }
+    },
+    "Läuft jetzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running now"
+          }
+        }
+      }
+    },
+    "Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More: long conversations, measurements, measuring, bringing back"
+          }
+        }
+      }
+    },
+    "Nur offene Modelle mit safetensors, ohne eigenen Code, mit einer Bauart, die die Engine kennt, und die in den Speicher passen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only open models with safetensors, without code of their own, with an architecture the engine knows, that fit into memory."
+          }
+        }
+      }
+    },
+    "Suchwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search words"
+          }
+        }
+      }
+    },
+    "Weniger anzeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        }
+      }
+    },
+    "bei Bedarf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on demand"
+          }
+        }
+      }
+    },
+    "braucht eigenen Code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "needs code of its own"
+          }
+        }
+      }
+    },
+    "erst messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "measure first"
+          }
+        }
+      }
+    },
+    "erst umziehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "move first"
+          }
+        }
+      }
+    },
+    "geht nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not possible"
+          }
+        }
+      }
+    },
+    "keine safetensors": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no safetensors"
+          }
+        }
+      }
+    },
+    "nicht wählbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not selectable"
+          }
+        }
+      }
+    },
+    "noch nicht gemessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not measured yet"
+          }
+        }
+      }
+    },
+    "nur privat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "private use only"
+          }
+        }
+      }
+    },
+    "privat oder mit Freigabe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "private or gated"
+          }
+        }
+      }
+    },
+    "schon in der Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "already in the list"
+          }
+        }
+      }
+    },
+    "zu knapp": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "too tight"
+          }
+        }
+      }
+    },
+    "„Ausprobieren“ lädt das Modell falls nötig und misst es; danach fragt die Seite mit den Zahlen, ob gewechselt wird. Das alte Modell bleibt 7 Tage zum Zurückholen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"Try\" downloads the model if needed and measures it; afterwards the page asks with the numbers whether to switch. The old model stays 7 days to bring back."
+          }
+        }
+      }
+    },
+    "Modell ausprobieren?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try the model?"
+          }
+        }
+      }
+    },
+    "Frage verwerfen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard the question?"
+          }
+        }
+      }
+    },
+    "Fest belegt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taken"
+          }
+        }
+      }
+    },
+    "Stand %@, Platte %@ GB, Speicher ~%@, Lizenz %@. Geladen wird erst beim Ausprobieren.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit %@, disk %@ GB, memory ~%@, licence %@. It downloads only when trying it."
+          }
+        }
+      }
+    },
+    "„%@“ wird ausprobiert: erst laden und messen, dann fragt die Seite hier.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying \"%@\": first download and measure, then the page asks here."
+          }
+        }
+      }
+    },
+    "„%@“: die Messung ist abgebrochen. Das jetzige Modell bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\": the measurement broke off. The current model stays."
+          }
+        }
+      }
+    },
     "Das dauert länger als sonst …": {
       "localizations": {
         "en": {

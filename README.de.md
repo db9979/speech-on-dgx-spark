@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.756** Modelle einfacher: eine Kachel je Art, „Ausprobieren“ und Suche bei Hugging Face
 - **V01.0.755** Genauer und schneller: Zeiten je Fragenart, Namen fürs Hören, Einheiten und Abkürzungen ausgesprochen
 - **V01.0.754** iPhone-App: Prüf-Code für Apples Prüfung und Vorführung „Ohne Spark ansehen“
 - **V01.0.753** Rot-Fix: Technik-Seite „Vorbereiten“ wieder auf dem Stand von .752
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.749** Tippen im Chat wieder flüssig, auch bei langem Verlauf
 - **V01.0.748** Apps zeigen beim Öffnen gleich den letzten Stand und laden sichtbar, statt leer zu bleiben
 - **V01.0.747** Anrufe im Chat zeigen auf Live, Monitoring und der Steuerzentrale beide Seiten: Geräte, Sprache oder Video, klingelt oder verbunden und beide Personen (Namen nur mit Zustimmung)
-- **V01.0.746** iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

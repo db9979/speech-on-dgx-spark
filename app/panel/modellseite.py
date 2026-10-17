@@ -69,7 +69,7 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "start_messen": "Die Messung ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
          "rechner": "Der Modell-Rechner antwortet gerade nicht.",
          # „Lange Gespräche“
-         "platz": "Diese Auswahl gibt es nicht.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
+         "platz": "Diese Auswahl gibt es nicht.", "suche": "Suchwort mit Buchstaben, Zahlen, Leerzeichen, Punkt, Strich.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
 STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
 EIGEN_BODY = 512
 
@@ -184,7 +184,13 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestart
     platz = modelle.platz_wahl(cfg, total_gib, lanes, kat) if an and cfg.get("llm", {}).get("enabled") else None
     for p in (platz or {}).get("wahl", []):
         p["name"] = p["name"][i]
-    wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
+    probe = modelle.probe_stand(kat, messung, laufend, misst or gestartet) if an else None
+    if probe:
+        probe["name"] = kat[probe["id"]]["name"]["en" if i else "de"]
+        probe["jetzt_name"] = kat[probe["jetzt_id"]]["name"]["en" if i else "de"] if probe["jetzt_id"] else ""
+        probe["waehlbar"] = next((m["waehlbar"] for a in arten for m in a["modelle"] if m["id"] == probe["id"]), False)
+    wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "probe": probe,
+               "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
@@ -229,6 +235,7 @@ async def admin_messen(request: Request):
     guard.limit(request, "modelle_messen", None, True)
     body = await core.json_body(request, MAX_BODY)
     mid = str(body.get("id", ""))[:48]
+    probe = body.get("probe") is True        # „Ausprobieren“: afterwards the page asks whether to switch
     if not _an():
         print("modelle: messen abgelehnt aus", flush=True)
         raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
@@ -250,6 +257,13 @@ async def admin_messen(request: Request):
                 raise HTTPException(503, GRUND["start_messen"])
             _fehler(e, "messen")
     print("modelle: messen angefragt", flush=True)
+    if probe:
+        kat = _quelle(cfg)[4]                 # with the model computer's own models
+        if mid in kat and kat[mid]["art"] in modelle.TAUSCH:
+            modelle.probe_merken(mid, kat[mid]["art"])
+            print("modelle: ausprobieren angefragt", flush=True)
+        else:
+            print("modelle: ausprobieren abgelehnt art", flush=True)
     guard.log("modelle_messen", detail=name)
     _live["t"] = None
     return seite(cfg, lang="en" if request.query_params.get("lang") == "en" else "de", gestartet=True)
@@ -280,6 +294,8 @@ def _wunsch(request, art, was, mid=""):
                 raise HTTPException(503, GRUND["start"])
             _fehler(e)
     print(f"modelle: wechsel {art} angefragt", flush=True)
+    if (read_json(modelle.PROBE, {}) or {}).get("art") == art and modelle.probe_weg():
+        print("modelle: ausprobieren erledigt", flush=True)
     guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]}: {name}")
     _live["t"] = None
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
@@ -339,6 +355,17 @@ async def admin_zurueck(request: Request):
     return _wunsch(request, art, "zurueck")
 
 
+@router.delete("/api/admin/modelle/probe", dependencies=[Depends(auth)])
+def admin_probe_weg(request: Request):
+    """„Verwerfen“ after „Ausprobieren“: the question whether to switch goes away, nothing else changes."""
+    guard.limit(request, "modelle", None, True)
+    if modelle.probe_weg():
+        print("modelle: ausprobieren verworfen", flush=True)
+    else:
+        print("modelle: ausprobieren verworfen keins", flush=True)
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
 # ---------------------------------------------------------------- stage E5: own models
 async def _hf_info(repo, rev=""):
     """The metadata of one commit (or the newest) from Hugging Face, through netguard (public internet only)."""
@@ -369,6 +396,38 @@ def _eigen_tor(request):
 def _zeige(m):
     return {k: m[k] for k in ("id", "art", "name", "repo", "revision", "lizenz", "gewerblich", "platte_gb", "need_gib",
                               "kann_sehen", "werkzeuge")}
+
+
+@router.post("/api/admin/modelle/eigen/suche", dependencies=[Depends(auth)])
+async def eigen_suche(request: Request):
+    """„Suchen“ (Dominik 2026-10-17 „3a“): Hugging Face's public search through netguard; the hits get the quick rules
+    of modelle.such_treffer, nothing is kept, downloaded or added."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    body = await core.json_body(request, EIGEN_BODY)
+    art = str(body.get("art", ""))[:16]
+    import httpx
+    try:
+        url = modelle.such_url(str(body.get("q", ""))[:80])
+        try:
+            async with netguard.client(netguard.PUBLIC, max_bytes=modelle.SUCHE_ANTWORT_MAX, timeout=20,
+                                       follow_redirects=False) as c:
+                r = await c.get(url)
+        except (httpx.HTTPError, OSError, ValueError):
+            raise modelle.Fehler("netz")
+        if r.status_code != 200:
+            raise modelle.Fehler("antwort")
+        try:
+            items = r.json()
+        except ValueError:
+            raise modelle.Fehler("antwort")
+        q = _quelle(load_config())
+        treffer = modelle.such_treffer(items, art, q[0], q[4])
+    except modelle.Fehler as e:
+        print(f"modelle: suche abgelehnt {e}", flush=True)
+        raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
+    print(f"modelle: suche {len(treffer)} treffer", flush=True)
+    return {"treffer": treffer}
 
 
 @router.post("/api/admin/modelle/eigen/pruefen", dependencies=[Depends(auth)])

@@ -1,10 +1,12 @@
 // ---------------------------------------------------------------- Zustand → Modelle (admin)
 // The model catalog (app/modelle.json) per kind, the models this configuration runs, the memory budget and the last
-// measurement (sudo speech-spark modelle messen, or „Messen“ per model). Stage E4, with Funktionen → Modelle wechseln on: „Wechseln“ per
-// model and „Zurückholen“ per kind for 7 days; the root unit speech-spark-wechsel does the work, the panel only asks.
-// Stage E5, with Funktionen → Eigene Modelle on: „Prüfen“ and „Hinzufügen“ of a Hugging Face model for the language
-// model or image understanding (the panel checks the fixed rules), „Löschen“ per own model.
-const MD_NEIN={revision:['noch nicht gemessen','not measured yet'],aus:['erst umziehen','move first'],budget:['zu knapp','too tight'],engine:['nicht wählbar','not selectable'],ungeprueft:['erst messen','measure first']};
+// measurement. Since Dominik's „1a 2a“ (2026-10-17) the page opens with a memory bar and one tile per kind („Läuft
+// jetzt“); with Funktionen → Modelle wechseln on, „Wechseln“ on a tile shows that kind's models as cards: „Wechseln“,
+// or „Ausprobieren“ (measure first, the page then asks with the numbers), and for the language model and image
+// understanding, with Eigene Modelle on, „Suchen“ at Hugging Face („3a“: the panel checks the fixed rules, „Hinzufügen“
+// checks the pinned commit again). Measurements, „Lange Gespräche“ and „Zurückholen“ are under „Mehr“. The root units
+// do the work, the panel only asks.
+const MD_NEIN={revision:['noch nicht gemessen','not measured yet'],schon:['schon in der Liste','already in the list'],zugang:['privat oder mit Freigabe','private or gated'],code:['braucht eigenen Code','needs code of its own'],format:['keine safetensors','no safetensors'],architektur:['Bauart unbekannt','unknown architecture'],aus:['erst umziehen','move first'],budget:['zu knapp','too tight'],engine:['nicht wählbar','not selectable'],ungeprueft:['erst messen','measure first']};
 const MD_REGEL={alle:['Alle Modelle passen gleichzeitig in den Speicher.','All models fit into memory at the same time.'],
   ein_platz:['Knapp: Modelle bei Bedarf (Bilder malen, Bildverständnis, Nachsortieren) laden nacheinander, nie gleichzeitig.','Tight: models on demand (painting pictures, image understanding, re-ranking) load one after the other, never at once.'],
   zu_knapp:['Zu knapp: neben den festen Modellen bleibt weniger als die Reserve. Ein kleineres Modell wählen oder qwen38 im 1M-Modus abschalten.','Too tight: beside the fixed models less than the reserve is left. Choose a smaller model or switch qwen38 out of its 1M mode.']};
@@ -25,10 +27,7 @@ function mdBudget(b){const pct=v=>Math.max(0,Math.min(100,Math.round(100*v/(b.ge
     `</tbody></table></div><div class="mut vb-note">${esc(t(...(MD_REGEL[b.regel]||['',''])))}</div></div>`}
 // „Messen“ (Dominik 2026-10-17): like sudo speech-spark modelle messen <id>; the language model pauses meanwhile
 function mdMessKnopf(m,w){return m.messbar&&!w.laeuft&&!w.misst?` <button type="button" class="b sm" data-mdm="${esc(m.id)}">${esc(t('Messen','Measure'))}</button>`:''}
-function mdTun(m,a,w){if(!w.an)return '';if(m.aktiv)return mdMessKnopf(m,w);
-  const weg=w.eigene&&m.eigen&&!w.laeuft?` <button type="button" class="b sm danger" data-mde="${esc(m.id)}">${esc(t('Löschen','Delete'))}</button>`:'';
-  if(m.waehlbar)return (w.laeuft||w.misst?'':`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`)+mdMessKnopf(m,w)+weg;
-  return (MD_NEIN[m.nein]?`<span class="mut">${esc(t(...MD_NEIN[m.nein]))}</span>`:'')+mdMessKnopf(m,w)+weg}
+function mdTun(m,a,w){return w.an?mdMessKnopf(m,w):''}
 function mdAlt(a,w,d){const x=(w.alte||{})[a.art];if(!w.an||!x)return '';
   const n=(d.arten.flatMap(y=>y.modelle).find(y=>y.id===x.id)||{}).name||x.id;
   return `<div class="row vb-note"><span class="mut">${esc(t('Vorher: ','Before: ')+n+(x.tage_frei?t(' · noch '+x.tage_frei+' Tage zurückholbar',' · can be brought back for '+x.tage_frei+' more days'):t(' · älter als '+w.tage+' Tage',' · older than '+w.tage+' days')))}</span>`+
@@ -56,21 +55,56 @@ async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;co
   // the answer is the page itself (after „Messen“ already showing the measurement that starts in a moment)
   try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
     let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
-function mdEigen(w){if(!w.an||!w.eigene||w.laeuft)return '';
-  return `<div class="card"><h3>${esc(t('Eigenes Modell hinzufügen','Add an own model'))}</h3><div class="row">`+
-    `<select id="mdeart" aria-label="${esc(t('Art','Kind'))}"><option value="llm">${esc(t('Sprachmodell','Language model'))}</option><option value="sehen">${esc(t('Bildverständnis','Image understanding'))}</option></select>`+
-    ` <input id="mderepo" maxlength="200" placeholder="besitzer/modell" aria-label="${esc(t('Name bei Hugging Face','Name on Hugging Face'))}" autocomplete="off" spellcheck="false">`+
-    ` <button type="button" class="b sm" id="mdepr">${esc(t('Prüfen','Check'))}</button></div><div id="mdevor"></div>`+
-    `<div class="mut vb-note">${esc(t('Nur offene Modelle mit safetensors, ohne eigenen Code, mit einer Bauart, die die Engine kennt. Geladen wird erst beim Wechseln, gepinnt auf den geprüften Stand.','Only open models with safetensors, without code of their own, with an architecture the engine knows. It downloads only when switching, pinned to the checked state.'))}</div></div>`}
-function mdVorschlag(v){return `<div class="vb-tw"><table class="vb-tab"><tbody>`+
-  [[t('Name','Name'),v.name[L==='en'?'en':'de']],[t('Stand','Commit'),v.revision.slice(0,12)],[t('Platte','Disk'),v.platte_gb+' GB'],[t('Speicher','Memory'),'~'+mdGib(v.need_gib)],
-   [t('Lizenz','Licence'),v.lizenz+(v.gewerblich?'':t(' (nur privat)',' (private use only)'))],[t('Werkzeuge','Tools'),v.werkzeuge?t('ja','yes'):t('nein','no')],[t('Sieht Bilder','Sees pictures'),v.kann_sehen?t('ja','yes'):t('nein','no')]]
-    .map(([k,x])=>`<tr><td>${esc(k)}</td><td>${esc(String(x))}</td></tr>`).join('')+
-  `</tbody></table></div><div class="row"><button type="button" class="b sm" id="mdedazu">${esc(t('Hinzufügen','Add'))}</button></div>`}
-async function mdPruefen(){const msg=$('mdmsg'),vor=$('mdevor'),art=$('mdeart').value,repo=$('mderepo').value.trim();msg.textContent='';vor.innerHTML='';if(!repo)return;
-  let v;try{v=(await (await api('/api/admin/modelle/eigen/pruefen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({art,repo})})).json()).vorschlag}catch(e){msg.textContent=e.message;return}
-  vor.innerHTML=mdVorschlag(v);
-  $('mdedazu').onclick=()=>mdPost('/api/admin/modelle/eigen',{art,repo,revision:v.revision},t('„'+repo+'“ zur Liste hinzufügen? Geladen wird erst beim Wechseln.','Add "'+repo+'" to the list? It downloads only when switching.'))}
+// „Läuft jetzt“: the memory bar and one tile per kind with the model it runs
+let MD_OFFEN='',MD_MEHR=false;const MD_TREFFER={};
+function mdBalken(b){const pct=v=>Math.max(0,Math.min(100,Math.round(100*v/(b.gesamt||1))));
+  const belegt=b.fest+b.system+b.reserve;
+  return `<div class="card mdbalken"><div class="row mdzeile"><b>${esc(t('Speicher','Memory'))}</b><span class="mut">${esc(mdGib(belegt)+t(' von ',' of ')+mdGib(b.gesamt)+t(' fest belegt',' taken'))}</span></div>`+
+    `<div class="vb-hb vb-qbar"><i class="${b.regel==='zu_knapp'?'full':b.regel==='ein_platz'?'warn':''}" style="width:${pct(belegt)}%"></i></div>`+
+    `<div class="mut vb-note">${esc(t('Frei für Modelle bei Bedarf: ','Free for models on demand: ')+mdGib(b.frei))} · ${esc(t(...(MD_REGEL[b.regel]||['',''])))}</div></div>`}
+function mdKurz(m){const x=m.messung||{};return [x.tok_s!=null?x.tok_s+' tok/s':'',mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib),m.betrieb==='resident'?'':t('bei Bedarf','on demand')].filter(Boolean).join(' · ')}
+function mdKachel(a,w){const m=a.modelle.find(x=>x.aktiv);
+  const wahl=w.an&&!w.laeuft&&!w.misst&&(a.modelle.some(x=>!x.aktiv&&(x.waehlbar||x.messbar))||(w.eigene&&['llm','sehen'].includes(a.art)));
+  return `<div class="mdkachel${MD_OFFEN===a.art?' offen':''}"><span class="mut">${esc(a.name)}</span><b>${esc(m?m.name:t('keins','none'))}</b>`+
+    `<span class="mut mdzahl">${esc(m?mdKurz(m):'')}</span>`+
+    (wahl?`<span><button type="button" class="b sm" data-mdo="${esc(a.art)}" aria-expanded="${MD_OFFEN===a.art}">${esc(MD_OFFEN===a.art?t('Schließen','Close'):t('Wechseln','Switch'))}</button></span>`:'')+`</div>`}
+// „Wechseln“: the kind's models as cards
+function mdKarte(m,a,w){const x=m.messung||{},probe=['revision','ungeprueft'].includes(m.nein)&&m.messbar;
+  const tun=m.aktiv?`<span class="pill ok">${esc(t('läuft','running'))}</span>`:m.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`:
+    probe?`<button type="button" class="b sm" data-mdp="${esc(m.id)}">${esc(t('Ausprobieren','Try'))}</button>`:`<span class="mut">${esc(t(...(MD_NEIN[m.nein]||['nicht wählbar','not selectable'])))}</span>`;
+  const weg=w.eigene&&m.eigen&&!m.aktiv?` <button type="button" class="b sm danger" data-mde="${esc(m.id)}">${esc(t('Löschen','Delete'))}</button>`:'';
+  const zeile=[x.ok===false?t('Messung abgebrochen','measurement broke off'):x.tok_s!=null?x.tok_s+t(' tok/s gemessen',' tok/s measured'):probe?t('noch nicht gemessen','not measured yet'):'',
+    (m.gemessen?'':'~')+mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib),m.betrieb==='resident'?t('immer geladen','always loaded'):t('bei Bedarf','on demand'),m.lizenz].filter(Boolean).join(' · ');
+  return `<div class="mdkarte${!m.aktiv&&!m.waehlbar&&!probe?' aus':''}"><div class="mdkopf"><b>${esc(m.name)}</b>${m.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}${m.eigen?` <span class="pill">${esc(t('eigenes','own'))}</span>`:''}</div>`+
+    `<div class="mdtun">${tun}${weg}</div><div class="mut mdzahl">${esc(zeile)}</div></div>`}
+function mdTreffer(art){const l=MD_TREFFER[art];if(!l)return '';if(!l.length)return `<div class="mut vb-note">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`;
+  return l.map(h=>`<div class="mdkarte${h.nein?' aus':''}"><div class="mdkopf"><b>${esc(h.repo)}</b>${h.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}</div>`+
+    `<div class="mdtun">${h.nein?`<span class="mut">${esc(t(...(MD_NEIN[h.nein]||['geht nicht','not possible'])))}</span>`:`<button type="button" class="b sm" data-mdh="${esc(h.repo)}">${esc(t('Hinzufügen','Add'))}</button>`}</div>`+
+    `<div class="mut mdzahl">${esc([h.gb!=null?h.gb+' GB':'',h.need_gib!=null?'~'+mdGib(h.need_gib):'',h.lizenz,h.downloads.toLocaleString(L==='en'?'en':'de')+t(' Downloads',' downloads')].filter(Boolean).join(' · '))}</div></div>`).join('')}
+function mdWahl(d,w){const a=d.arten.find(x=>x.art===MD_OFFEN);if(!a||!w.an||w.laeuft||w.misst)return '';
+  const such=w.eigene&&['llm','sehen'].includes(a.art)?`<h4>${esc(t('Bei Hugging Face suchen','Search Hugging Face'))}</h4><div class="row">`+
+    `<input id="mdq" maxlength="60" placeholder="${esc(t('z. B. qwen coder','e.g. qwen coder'))}" aria-label="${esc(t('Suchwort','Search words'))}" autocomplete="off" spellcheck="false">`+
+    ` <button type="button" class="b sm" id="mdqs">${esc(t('Suchen','Search'))}</button></div><div class="mdkarten">${mdTreffer(a.art)}</div>`+
+    `<div class="mut vb-note">${esc(t('Nur offene Modelle mit safetensors, ohne eigenen Code, mit einer Bauart, die die Engine kennt, und die in den Speicher passen. Geladen wird erst beim Ausprobieren, gepinnt auf den geprüften Stand.','Only open models with safetensors, without code of their own, with an architecture the engine knows, that fit into memory. It downloads only when trying it, pinned to the checked state.'))}</div>`:'';
+  return `<div class="card mdwahl"><h3>${esc(a.name)}: ${esc(t('Modell wählen','choose a model'))}</h3><div class="mdkarten">${a.modelle.map(m=>mdKarte(m,a,w)).join('')}</div>`+
+    `<div class="mut vb-note">${esc(t('„Ausprobieren“ lädt das Modell falls nötig und misst es (das Sprachmodell pausiert so lange); danach fragt die Seite mit den Zahlen, ob gewechselt wird. Das alte Modell bleibt '+w.tage+' Tage zum Zurückholen.','"Try" downloads the model if needed and measures it (the language model pauses meanwhile); afterwards the page asks with the numbers whether to switch. The old model stays '+w.tage+' days to bring back.'))}</div>${such}</div>`}
+// after „Ausprobieren“: the question with the numbers
+function mdProbe(w){const p=w.probe;if(!p||w.laeuft)return '';
+  if(!p.fertig)return `<div class="card"><b>${esc(t('„'+p.name+'“ wird ausprobiert.','Trying "'+p.name+'".'))}</b> <span class="mut">${esc(t('Erst laden und messen, dann fragt die Seite hier.','First download and measure, then the page asks here.'))}</span></div>`;
+  const weg=`<button type="button" class="b sm" id="mdpv">${esc(t('Verwerfen','Discard'))}</button>`;
+  if(!p.ok)return `<div class="card"><b>${esc(t('„'+p.name+'“: die Messung ist abgebrochen.','"'+p.name+'": the measurement broke off.'))}</b> <span class="mut">${esc(t('So läuft es auf dem Spark nicht; das jetzige Modell bleibt. Was passiert ist: Zustand → Logs (Messen).','It does not run on the Spark like this; the current model stays. What happened: Status → Logs (measuring).'))}</span><div class="row">${weg}</div></div>`;
+  const vgl=p.tok_s!=null?p.tok_s+' tok/s'+(p.jetzt_tok_s!=null?t(' (jetzt „'+p.jetzt_name+'“: '+p.jetzt_tok_s+' tok/s)',' (now "'+p.jetzt_name+'": '+p.jetzt_tok_s+' tok/s)'):''):'';
+  return `<div class="card"><b>${esc(t('„'+p.name+'“ ist gemessen: ','"'+p.name+'" is measured: ')+vgl)}</b> <span class="mut">${esc(p.waehlbar?t('Wechseln?','Switch?'):t('Wechseln geht so nicht (Speicher oder Regel), siehe Karte.','Switching is not possible like this (memory or rule), see the card.'))}</span>`+
+    `<div class="row">${p.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(p.art)}" data-mdid="${esc(p.id)}">${esc(t('Wechseln','Switch'))}</button> `:''}${weg}</div></div>`}
+async function mdSuchen(){const art=MD_OFFEN,q=($('mdq')||{}).value||'',msg=$('mdmsg');msg.textContent='';if(!q.trim())return;
+  try{MD_TREFFER[art]=(await (await api('/api/admin/modelle/eigen/suche',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({art,q:q.trim()})})).json()).treffer||[]}catch(e){msg.textContent=e.message;return}
+  loadModelle(MD_SEITE)}
+// „Hinzufügen“ from a hit: the full check on the newest commit, then the entry pinned to it
+async function mdDazu(repo){const art=MD_OFFEN,msg=$('mdmsg');msg.textContent='';let v;
+  try{v=(await (await api('/api/admin/modelle/eigen/pruefen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({art,repo})})).json()).vorschlag}catch(e){msg.textContent=e.message;return}
+  MD_TREFFER[art]=(MD_TREFFER[art]||[]).filter(h=>h.repo!==repo);
+  mdPost('/api/admin/modelle/eigen',{art,repo,revision:v.revision},t('„'+repo+'“ hinzufügen? Stand '+v.revision.slice(0,12)+', Platte '+v.platte_gb+' GB, Speicher ~'+mdGib(v.need_gib)+', Lizenz '+v.lizenz+'. Geladen wird erst beim Ausprobieren.',
+    'Add "'+repo+'"? Commit '+v.revision.slice(0,12)+', disk '+v.platte_gb+' GB, memory ~'+mdGib(v.need_gib)+', licence '+v.lizenz+'. It downloads only when trying it.'))}
 function mdKnoepfe(d){const main=$('mdmain');
   main.querySelectorAll('[data-mdw]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdid);
     mdPost('/api/admin/modelle/wechseln',{art:b.dataset.mdw,id:b.dataset.mdid},t('Zu „'+(m?m.name:b.dataset.mdid)+'“ wechseln? Der Spark lädt und prüft das Modell; das alte bleibt '+d.wechsel.tage+' Tage zum Zurückholen.','Switch to "'+(m?m.name:b.dataset.mdid)+'"? The Spark loads and checks the model; the old one stays '+d.wechsel.tage+' days to bring back.'))});
@@ -82,12 +116,22 @@ function mdKnoepfe(d){const main=$('mdmain');
     mdPost('/api/admin/modelle/platz',{platz:r.value},t('„'+n+'“ einstellen? Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.','Set "'+n+'"? The language model restarts for it and does not answer for a few minutes.'))};
   main.querySelectorAll('[data-mdz]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/zurueck',{art:b.dataset.mdz},t('Das vorige Modell zurückholen?','Bring back the previous model?')));
   main.querySelectorAll('[data-mde]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.mde),null,t('Dieses eigene Modell aus der Liste und von der Platte löschen?','Delete this own model from the list and from the disk?'),'DELETE'));
-  if($('mdepr'))$('mdepr').onclick=mdPruefen}
+  main.querySelectorAll('[data-mdo]').forEach(b=>b.onclick=()=>{MD_OFFEN=MD_OFFEN===b.dataset.mdo?'':b.dataset.mdo;loadModelle(MD_SEITE)});
+  main.querySelectorAll('[data-mdp]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdp);
+    mdPost('/api/admin/modelle/messen',{id:b.dataset.mdp,probe:true},t('„'+(m?m.name:b.dataset.mdp)+'“ ausprobieren? Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.','Try "'+(m?m.name:b.dataset.mdp)+'"? The Spark downloads it if needed and measures it; the language model pauses for about 10 to 25 minutes. Afterwards the page asks whether to switch.'))});
+  main.querySelectorAll('[data-mdh]').forEach(b=>b.onclick=()=>mdDazu(b.dataset.mdh));
+  if($('mdqs')){$('mdqs').onclick=mdSuchen;$('mdq').onkeydown=e=>{if(e.key==='Enter')mdSuchen()}}
+  if($('mdpv'))$('mdpv').onclick=()=>mdPost('/api/admin/modelle/probe',null,t('Die Frage zum ausprobierten Modell verwerfen? Gewechselt wird nichts.','Discard the question about the tried model? Nothing is switched.'),'DELETE');
+  const mehr=$('mdmehr');if(mehr)mehr.ontoggle=()=>{MD_MEHR=mehr.open}}
+let MD_SEITE=null;
 async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main)return;msg.textContent='';
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
-  main.innerHTML=mdWechsel(w)+`<div class="vb-two">${mdBudget(d.budget)}${mdPlatz(w)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdEigen(w)}</div>`+
+  MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
+  main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
+    `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen','More: long conversations, measurements, measuring, bringing back'))}</summary>`+
+    `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}</div>`+
     `<div class="mut vb-note">${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Switch models) or on the Spark: sudo speech-spark modelle messen'))}`+
-    ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div>`;
+    ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
   clearTimeout(window.mdTick);if(w.laeuft||w.misst)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst?8000:15000)}

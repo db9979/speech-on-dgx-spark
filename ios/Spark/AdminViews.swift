@@ -345,9 +345,13 @@ struct ModelsView: View {
     @State private var d: [String: Any] = [:]
     @State private var error: String?
     @State private var ask: [String: String]?      // stage E4: {art, id, name} to switch, or {art, zurueck} to bring back
-    @State private var eArt = "llm"                // stage E5: an own model from Hugging Face
+    @State private var eArt = "llm"                // stage E5: an own model from Hugging Face, found by „Suchen“
     @State private var eRepo = ""
     @State private var vorschlag: [String: Any]?
+    @State private var offen = ""                  // the kind whose models show as a choice („Wechseln“ on its row)
+    @State private var mehr = false                // „Mehr“: measurements, Lange Gespräche, Zurückholen
+    @State private var suche = ""
+    @State private var treffer: [[String: Any]]?
     @State private var platz = ""                  // „Lange Gespräche“: the picked choice (modelle.PLATZ)
 
     var body: some View {
@@ -356,6 +360,7 @@ struct ModelsView: View {
         let laeuft = w["laeuft"] as? Bool == true || misst      // a switch and a measurement never run at once
         let alte = w["alte"] as? [String: Any] ?? [:]
         let eigene = an && w["eigene"] as? Bool == true
+        let arten = (d["arten"] as? [[String: Any]] ?? []).filter { !($0["modelle"] as? [[String: Any]] ?? []).isEmpty }
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if misst {
@@ -369,19 +374,46 @@ struct ModelsView: View {
             } else if laeuft {
                 Text(SparkAPI.way(String(localized: "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs."))).foregroundStyle(.secondary)
             }
+            if let p = w["probe"] as? [String: Any], !laeuft || misst { probeSection(p) }
             let b = d["budget"] as? [String: Any] ?? [:]
             Section {
-                LabeledContent("Feste Modelle") { Text(verbatim: Self.gib(b["fest"])) }
-                LabeledContent("Modelle bei Bedarf") { Text(verbatim: Self.gib(b["bedarf"])) }
+                let ges = (b["gesamt"] as? NSNumber)?.doubleValue ?? 0
+                let belegt = ["fest", "system", "reserve"].reduce(0.0) { $0 + ((b[$1] as? NSNumber)?.doubleValue ?? 0) }
+                if ges > 0 { ProgressView(value: min(belegt, ges), total: ges).tint(b["regel"] as? String == "alle" ? .accentColor : .orange) }
+                LabeledContent("Fest belegt") { Text(verbatim: Self.gib(belegt) + " / " + Self.gib(ges)) }
                 LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
-            } header: { Text("Speicher-Budget") } footer: {
-                if an {
-                    Text("Beim Modell auf „Wechseln“ oder „Messen“ tippen. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")
-                } else {
+                ForEach(Array(arten.enumerated()), id: \.offset) { _, a in
+                    let art = a["art"] as? String ?? ""
+                    let rows = a["modelle"] as? [[String: Any]] ?? []
+                    let m = rows.first { $0["aktiv"] as? Bool == true }
+                    let wahl = an && !laeuft && (rows.contains { $0["aktiv"] as? Bool != true && ($0["waehlbar"] as? Bool == true || $0["messbar"] as? Bool == true) }
+                                                 || (eigene && (art == "llm" || art == "sehen")))
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: a["name"] as? String ?? "").font(.caption).foregroundStyle(.secondary)
+                            Text(verbatim: m?["name"] as? String ?? "–")
+                            if let m { Text(verbatim: Self.kurz(m)).font(.caption).foregroundStyle(.secondary) }
+                        }
+                        Spacer()
+                        if wahl {
+                            Button(LocalizedStringKey(offen == art ? "Schließen" : "Wechseln")) { offen = offen == art ? "" : art; treffer = nil; suche = "" }
+                                .buttonStyle(.bordered).font(.caption)
+                        }
+                    }
+                }
+            } header: { Text("Läuft jetzt") } footer: {
+                if !an {
                     Text(SparkAPI.way(String(localized: "Zum Wechseln und Messen Funktionen → Modelle wechseln einschalten. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")))
                 }
             }
-            if !laeuft, let p = w["platz"] as? [String: Any] {
+            if an && !laeuft, let a = arten.first(where: { $0["art"] as? String == offen }) {
+                wahlSection(a, eigene: eigene)
+                if eigene && (offen == "llm" || offen == "sehen") { sucheSection() }
+            }
+            Section {
+                Button(LocalizedStringKey(mehr ? "Weniger anzeigen" : "Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen")) { mehr.toggle() }
+            }
+            if mehr && !laeuft, let p = w["platz"] as? [String: Any] {
                 let wahl = p["wahl"] as? [[String: Any]] ?? []
                 let jetzt = p["jetzt"] as? String ?? "standard"
                 Section {
@@ -400,10 +432,10 @@ struct ModelsView: View {
                     Text("Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.")
                 }
             }
-            ForEach(Array((d["arten"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, a in
-                let rows = a["modelle"] as? [[String: Any]] ?? []
-                let art = a["art"] as? String ?? ""
-                if !rows.isEmpty {
+            if mehr {
+                ForEach(Array(arten.enumerated()), id: \.offset) { _, a in
+                    let rows = a["modelle"] as? [[String: Any]] ?? []
+                    let art = a["art"] as? String ?? ""
                     Section {
                         ForEach(Array(rows.enumerated()), id: \.offset) { _, m in
                             LabeledContent {
@@ -412,21 +444,10 @@ struct ModelsView: View {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: m["name"] as? String ?? "")
                                     if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
-                                    if m["eigen"] as? Bool == true { Text("eigenes").font(.caption).foregroundStyle(.secondary) }
                                     if let t = Self.mess(m["messung"]) { Text(verbatim: t).font(.caption).foregroundStyle(.secondary) }
-                                    if an && !laeuft && m["waehlbar"] as? Bool == true && m["aktiv"] as? Bool != true {
-                                        Button("Wechseln") {
-                                            ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""]
-                                        }.font(.caption).buttonStyle(.borderless)
-                                    }
                                     if !laeuft && m["messbar"] as? Bool == true {
                                         Button("Messen") {
                                             ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "messen": "1"]
-                                        }.font(.caption).buttonStyle(.borderless)
-                                    }
-                                    if eigene && !laeuft && m["eigen"] as? Bool == true && m["aktiv"] as? Bool != true {
-                                        Button("Löschen", role: .destructive) {
-                                            ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "loeschen": "1"]
                                         }.font(.caption).buttonStyle(.borderless)
                                     }
                                 }
@@ -436,25 +457,6 @@ struct ModelsView: View {
                             Button("Vorheriges Modell zurückholen") { ask = ["art": art, "zurueck": "1"] }
                         }
                     } header: { Text(verbatim: a["name"] as? String ?? "") }
-                }
-            }
-            if eigene && !laeuft {
-                Section {
-                    Picker("Art", selection: $eArt) {
-                        Text("Sprachmodell").tag("llm")
-                        Text("Bildverständnis").tag("sehen")
-                    }
-                    TextField(text: $eRepo) { Text(verbatim: "besitzer/modell") }
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    Button("Prüfen") { Task { await pruefen() } }.disabled(eRepo.trimmingCharacters(in: .whitespaces).isEmpty)
-                    if let v = vorschlag {
-                        LabeledContent("Stand") { Text(verbatim: String((v["revision"] as? String ?? "").prefix(12))) }
-                        LabeledContent("Lizenz") { Text(verbatim: v["lizenz"] as? String ?? "") }
-                        LabeledContent("Speicher") { Text(verbatim: "~" + Self.gib(v["need_gib"])) }
-                        Button("Hinzufügen") { ask = ["dazu": "1", "name": eRepo] }
-                    }
-                } header: { Text("Eigenes Modell hinzufügen") } footer: {
-                    Text("Nur offene Modelle mit safetensors, ohne eigenen Code. Geladen wird erst beim Wechseln.")
                 }
             }
         }
@@ -468,21 +470,28 @@ struct ModelsView: View {
                 if (d["wechsel"] as? [String: Any])?["misst"] as? Bool != true { break }
             }
         }
-        .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : ask?["loeschen"] != nil
+        .confirmationDialog(LocalizedStringKey(ask?["probe"] != nil ? "Modell ausprobieren?" : ask?["verwerfen"] != nil
+                                               ? "Frage verwerfen?" : ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : ask?["loeschen"] != nil
                                                ? "Eigenes Modell löschen?" : ask?["dazu"] != nil ? "Eigenes Modell hinzufügen?"
                                                : ask?["messen"] != nil ? "Modell messen?" : ask?["platz"] != nil
                                                ? "Lange Gespräche einstellen?" : "Modell wechseln?"),
                             isPresented: Binding(get: { ask != nil }, set: { if !$0 { ask = nil } }), titleVisibility: .visible) {
             Button("Ja") { if let a = ask { Task { await send(a) } } }
         } message: {
-            if ask?["messen"] != nil {
+            if ask?["probe"] != nil {
+                Text("Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.")
+            } else if ask?["verwerfen"] != nil {
+                Text("Gewechselt wird nichts.")
+            } else if ask?["messen"] != nil {
                 Text("Das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.")
             } else if ask?["platz"] != nil {
                 Text("Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.")
             } else if ask?["loeschen"] != nil {
                 Text("Das Modell kommt aus der Liste und von der Platte.")
-            } else if ask?["dazu"] != nil {
-                Text("Geladen wird erst beim Wechseln.")
+            } else if ask?["dazu"] != nil, let v = vorschlag {
+                Text(verbatim: String(format: String(localized: "Stand %@, Platte %@ GB, Speicher ~%@, Lizenz %@. Geladen wird erst beim Ausprobieren."),
+                                      String((v["revision"] as? String ?? "").prefix(12)), "\((v["platte_gb"] as? NSNumber)?.intValue ?? 0)",
+                                      Self.gib(v["need_gib"]), v["lizenz"] as? String ?? ""))
             } else {
                 Text("Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.")
             }
@@ -497,7 +506,11 @@ struct ModelsView: View {
     private func send(_ a: [String: String]) async {
         let lang = ["lang": UsageView.de ? "de" : "en"]
         do {
-            if a["messen"] != nil {
+            if a["probe"] != nil {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/messen", query: lang, body: ["id": a["id"] ?? "", "probe": true])
+            } else if a["verwerfen"] != nil {
+                d = try await AdminSession.shared.object("DELETE", "api/admin/modelle/probe", query: lang)
+            } else if a["messen"] != nil {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/messen", query: lang, body: ["id": a["id"] ?? ""])
             } else if let p = a["platz"] {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/platz", query: lang, body: ["platz": p])
@@ -509,6 +522,7 @@ struct ModelsView: View {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen", query: lang,
                                                          body: ["art": eArt, "repo": eRepo.trimmingCharacters(in: .whitespaces),
                                                                 "revision": v["revision"] as? String ?? ""])
+                treffer = treffer?.filter { $0["repo"] as? String != eRepo }
                 vorschlag = nil; eRepo = ""
             } else if a["zurueck"] != nil {
                 d = try await AdminSession.shared.object("POST", "api/admin/modelle/zurueck", query: lang, body: ["art": a["art"] ?? ""])
@@ -521,13 +535,129 @@ struct ModelsView: View {
         ask = nil
     }
 
-    private func pruefen() async {
+    /// „Hinzufügen“ on a hit: the full check of the newest commit, then the question with what would be added.
+    private func dazu(_ repo: String) async {
         vorschlag = nil
         do {
-            let r = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen/pruefen",
-                                                         body: ["art": eArt, "repo": eRepo.trimmingCharacters(in: .whitespaces)])
-            vorschlag = r["vorschlag"] as? [String: Any]; error = nil
+            let r = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen/pruefen", body: ["art": offen, "repo": repo])
+            vorschlag = r["vorschlag"] as? [String: Any]; eArt = offen; eRepo = repo; error = nil
+            if vorschlag != nil { ask = ["dazu": "1", "name": repo] }
         } catch { self.error = error.localizedDescription }
+    }
+
+    private func suchen() async {
+        let q = suche.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        do {
+            let r = try await AdminSession.shared.object("POST", "api/admin/modelle/eigen/suche", body: ["art": offen, "q": q])
+            treffer = r["treffer"] as? [[String: Any]] ?? []; error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    /// After „Ausprobieren“: still measuring, broke off, or the numbers with „Wechseln“.
+    @ViewBuilder private func probeSection(_ p: [String: Any]) -> some View {
+        let name = p["name"] as? String ?? ""
+        Section {
+            if p["fertig"] as? Bool != true {
+                Text(verbatim: String(format: String(localized: "„%@“ wird ausprobiert: erst laden und messen, dann fragt die Seite hier."), name))
+            } else if p["ok"] as? Bool != true {
+                Text(verbatim: String(format: String(localized: "„%@“: die Messung ist abgebrochen. Das jetzige Modell bleibt."), name))
+                Button("Verwerfen") { ask = ["verwerfen": "1"] }
+            } else {
+                let t = (p["tok_s"] as? NSNumber).map { String(format: "%.1f tok/s", $0.doubleValue) } ?? "–"
+                let j = (p["jetzt_tok_s"] as? NSNumber).map { String(format: "%.1f tok/s", $0.doubleValue) } ?? "–"
+                LabeledContent(LocalizedStringKey("Ausprobiert")) { Text(verbatim: t) }
+                LabeledContent { Text(verbatim: j) } label: { Text(verbatim: p["jetzt_name"] as? String ?? "") }
+                if p["waehlbar"] as? Bool == true {
+                    Button("Wechseln") { ask = ["art": p["art"] as? String ?? "", "id": p["id"] as? String ?? "", "name": name] }
+                }
+                Button("Verwerfen") { ask = ["verwerfen": "1"] }
+            }
+        } header: { Text(verbatim: name) }
+    }
+
+    /// „Wechseln“ on a kind: its models with what can be done with each.
+    @ViewBuilder private func wahlSection(_ a: [String: Any], eigene: Bool) -> some View {
+        let art = a["art"] as? String ?? ""
+        Section {
+            ForEach(Array((a["modelle"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, m in
+                let nein = m["nein"] as? String ?? ""
+                let probe = (nein == "revision" || nein == "ungeprueft") && m["messbar"] as? Bool == true
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: m["name"] as? String ?? "")
+                        Text(verbatim: Self.kurz(m)).font(.caption).foregroundStyle(.secondary)
+                        if m["gewerblich"] as? Bool == false { Text("nur privat").font(.caption).foregroundStyle(.orange) }
+                    }
+                    Spacer()
+                    if m["aktiv"] as? Bool == true {
+                        Text("läuft").font(.caption).foregroundStyle(.green)
+                    } else if m["waehlbar"] as? Bool == true {
+                        Button("Wechseln") { ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""] }
+                            .buttonStyle(.bordered).font(.caption)
+                    } else if probe {
+                        Button("Ausprobieren") { ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "probe": "1"] }
+                            .buttonStyle(.bordered).font(.caption)
+                    } else {
+                        Text(LocalizedStringKey(Self.nein[nein] ?? "nicht wählbar")).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .swipeActions {
+                    if eigene && m["eigen"] as? Bool == true && m["aktiv"] as? Bool != true {
+                        Button("Löschen", role: .destructive) {
+                            ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "loeschen": "1"]
+                        }
+                    }
+                }
+            }
+        } header: { Text(verbatim: a["name"] as? String ?? "") } footer: {
+            Text("„Ausprobieren“ lädt das Modell falls nötig und misst es; danach fragt die Seite mit den Zahlen, ob gewechselt wird. Das alte Modell bleibt 7 Tage zum Zurückholen.")
+        }
+    }
+
+    /// „Bei Hugging Face suchen“: the hits with the quick rules; „Hinzufügen“ checks the commit again.
+    @ViewBuilder private func sucheSection() -> some View {
+        Section {
+            HStack {
+                TextField("Suchwort", text: $suche).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .onSubmit { Task { await suchen() } }
+                Button("Suchen") { Task { await suchen() } }.disabled(suche.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            if let l = treffer, l.isEmpty { Text("Nichts gefunden.").foregroundStyle(.secondary) }
+            ForEach(Array((treffer ?? []).enumerated()), id: \.offset) { _, h in
+                let nein = h["nein"] as? String ?? ""
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: h["repo"] as? String ?? "")
+                        Text(verbatim: [(h["gb"] as? NSNumber).map { String(format: "%.1f GB", $0.doubleValue) } ?? "",
+                                        h["lizenz"] as? String ?? "", "\((h["downloads"] as? NSNumber)?.intValue ?? 0) ⬇"]
+                            .filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if nein.isEmpty {
+                        Button("Hinzufügen") { Task { await dazu(h["repo"] as? String ?? "") } }.buttonStyle(.bordered).font(.caption)
+                    } else {
+                        Text(LocalizedStringKey(Self.nein[nein] ?? "geht nicht")).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+        } header: { Text("Bei Hugging Face suchen") } footer: {
+            Text("Nur offene Modelle mit safetensors, ohne eigenen Code, mit einer Bauart, die die Engine kennt, und die in den Speicher passen.")
+        }
+    }
+
+    /// Why a model or a hit cannot be picked (the panel's fixed words).
+    static let nein = ["revision": "noch nicht gemessen", "aus": "erst umziehen", "budget": "zu knapp", "engine": "nicht wählbar",
+                       "ungeprueft": "erst messen", "schon": "schon in der Liste", "zugang": "privat oder mit Freigabe",
+                       "code": "braucht eigenen Code", "format": "keine safetensors", "architektur": "Bauart unbekannt"]
+
+    /// One line: measured tempo, memory, on demand.
+    static func kurz(_ m: [String: Any]) -> String {
+        var out: [String] = []
+        if let t = ((m["messung"] as? [String: Any])?["tok_s"] as? NSNumber)?.doubleValue { out.append(String(format: "%.1f tok/s", t)) }
+        out.append(((m["gemessen"] as? Bool ?? true) ? "" : "~") + gib(m["aktiv"] as? Bool == true ? (m["gib"] ?? m["need_gib"]) : m["need_gib"]))
+        if m["betrieb"] as? String == "bei_bedarf" { out.append(String(localized: "bei Bedarf")) }
+        return out.joined(separator: " · ")
     }
 
     static func gib(_ v: Any?) -> String {

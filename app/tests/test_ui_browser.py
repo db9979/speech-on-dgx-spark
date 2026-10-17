@@ -1702,6 +1702,65 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_models_page_tiles_cards_and_try(self):
+        """Zustand → Modelle (Dominik 2026-10-17 „1a 2a 3a“): a memory bar and one tile per kind; „Wechseln“ on a tile
+        shows that kind's models as cards (switch, try, or greyed with the reason) and the Hugging Face search; after
+        „Ausprobieren“ the question with the numbers; measurements under „Mehr“. No overflow at 320, 390 and 1280 px."""
+        def m(mid, name, **k):
+            return dict({"id": mid, "name": name, "engine": "vllm", "need_gib": 30, "waehlbar": False, "nein": "", "eigen": False,
+                         "messbar": True, "gemessen": True, "betrieb": "resident", "lizenz": "apache-2.0", "gewerblich": True,
+                         "aktiv": False, "gib": None, "fest": True, "messung": {}}, **k)
+        arten = [{"art": "llm", "name": "Sprachmodell", "modelle": [
+                     m("qwen38-27b-nvfp4", "Qwen3.8 27B NVFP4", aktiv=True, gib=36.3, messung={"tok_s": 24.7}),
+                     m("qwen38-27b-nvfp4-dspark", "Qwen3.8 27B NVFP4 mit DSpark", nein="revision", gemessen=False),
+                     m("gemma-4-26b-a4b", "Gemma 4 26B A4B", waehlbar=True, messung={"tok_s": 41.0}),
+                     m("kolibri-1-nvfp4", "Kolibri-1 NVFP4 mit einem sehr langen Namen", nein="budget", gewerblich=False)]},
+                 {"art": "sehen", "name": "Bildverständnis", "modelle": [m("qwen3-vl-8b-fp8", "Qwen3-VL 8B", aktiv=True, betrieb="bei_bedarf")]},
+                 {"art": "asr", "name": "Spracherkennung", "modelle": [m("qwen3-asr-1.7b", "Qwen3-ASR 1.7B", aktiv=True, engine="qwen-asr", messbar=False),
+                                                                       m("qwen3-asr-0.6b", "Qwen3-ASR 0.6B", waehlbar=True, engine="qwen-asr", messbar=False)]},
+                 {"art": "tts", "name": "Sprachausgabe", "modelle": [m("qwen3-tts-0.6b", "Qwen3-TTS 0.6B", aktiv=True, messbar=False)]},
+                 {"art": "klein", "name": "Kleine Modelle", "modelle": []}]
+        probe = {"id": "qwen38-27b-nvfp4-dspark", "art": "llm", "fertig": True, "ok": True, "tok_s": 31.2, "jetzt_id": "qwen38-27b-nvfp4",
+                 "jetzt_tok_s": 24.7, "name": "Qwen3.8 27B NVFP4 mit DSpark", "jetzt_name": "Qwen3.8 27B NVFP4", "waehlbar": True}
+        d = {"arten": arten, "budget": {"gesamt": 121.7, "system": 8, "reserve": 10, "fest": 56.4, "bedarf": 12, "bedarf_max": 12, "frei": 47.3, "regel": "alle"},
+             "messung_zeit": 1800000000, "wechsel": {"an": True, "laeuft": False, "misst": False, "stand": [], "platz": None, "probe": None,
+                                                     "alte": {}, "tage": 7, "eigene": True}}
+        treffer = [{"repo": "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8", "downloads": 1200000, "lizenz": "apache-2.0", "gewerblich": True, "gb": 31.0, "need_gib": 41, "nein": ""},
+                   {"repo": "someone/qwen-coder-custom", "downloads": 12, "lizenz": "unbekannt", "gewerblich": False, "gb": None, "need_gib": None, "nein": "code"}]
+
+        async def go():
+            async with async_playwright() as p:
+                for w in (320, 390, 1280):
+                    br, pg, errors = await self.page(p, w, 900)
+                    await pg.route("**/api/admin/modelle/eigen/suche", lambda r: r.fulfill(status=200, content_type="application/json",
+                                                                                         body=json.dumps({"treffer": treffer})))
+                    await pg.evaluate("goSec('models')")
+                    await self.loaded(pg)                 # the page's own load first, then the example data
+                    await pg.wait_for_timeout(500)
+                    await pg.evaluate(f"loadModelle({json.dumps(d)})")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdmain .mdkachel').length"), 4)   # empty kinds have no tile
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdmain [data-mdo]').length"), 3)  # llm, sehen (search), asr; not tts
+                    self.assertFalse(await pg.evaluate("$('mdmehr').open"))
+                    await pg.evaluate("document.querySelector('[data-mdo=llm]').click()")
+                    got = await pg.evaluate("[...document.querySelectorAll('.mdwahl > .mdkarten > .mdkarte')].map(k=>[k.classList.contains('aus'),"
+                                            "!!k.querySelector('[data-mdw]'),!!k.querySelector('[data-mdp]')])")
+                    self.assertEqual(got, [[False, False, False], [False, False, True], [False, True, False], [True, False, False]])
+                    await pg.fill("#mdq", "qwen coder")
+                    await pg.evaluate("$('mdqs').click()")
+                    await pg.wait_for_selector("[data-mdh]", timeout=20000)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('[data-mdh]').length"), 1)          # the one with code: greyed
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"modelle-{w}.png"), full_page=True)
+                    d["wechsel"]["probe"] = probe
+                    await pg.evaluate(f"loadModelle({json.dumps(d)})")
+                    self.assertIn("31.2 tok/s", await pg.evaluate("$('mdmain').textContent"))
+                    self.assertTrue(await pg.evaluate("!!$('mdpv')&&!!document.querySelector('.card [data-mdid=\"qwen38-27b-nvfp4-dspark\"]')"))
+                    d["wechsel"]["probe"] = None
+                    self.assertEqual(errors, [])
+                    await br.close()
+        self.run_async(go())
+
     def test_llm_model_choice(self):
         """V01.0.292: Einstellungen → Sprachmodell offers the models the server reports; picking one fills the saved
         field, „Anderes eingeben …“ shows the text field again."""

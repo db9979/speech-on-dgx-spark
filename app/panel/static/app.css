@@ -1604,3 +1604,10 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .dkvpic canvas{max-width:100%;max-height:100%;background:#000;border-radius:6px;touch-action:none}
 .dkview.ctl .dkvpic canvas{outline:2px solid #e5484d}
 .dkvkeys{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid var(--line,#333)}.dkvkeys input{flex:1 1 180px;min-width:0}
+/* Zustand → Modelle: memory bar, one tile per kind, the kind's models as cards (Dominik 2026-10-17 „1a 2a 3a“) */
+.mdbalken .mdzeile{justify-content:space-between}.mdkacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+.mdkachel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:3px;align-content:start;min-width:0}
+.mdkachel.offen{border-color:var(--acc)}.mdkachel b{overflow-wrap:anywhere}.mdzahl{font-size:12px;font-variant-numeric:tabular-nums}
+.mdkarten{display:grid;gap:8px;margin:8px 0}.mdkarte{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.mdkarte .mdkopf{min-width:0;overflow-wrap:anywhere}.mdkarte .mdtun{grid-row:1/span 2;grid-column:2;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.mdkarte.aus{opacity:.6}.mdwahl h4{margin:14px 0 4px}.mdwahl #mdq{flex:1;min-width:140px}.mdmehr{margin-top:12px}.mdmehr>summary{cursor:pointer;font-weight:600;margin-bottom:10px}

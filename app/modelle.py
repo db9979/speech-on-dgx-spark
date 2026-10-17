@@ -1469,6 +1469,113 @@ def eigen_vorschlag(info, art, repo, total_gib):
     return eigen_ok(m)
 
 
+
+# Zustand → Modelle „Suchen“ (Dominik 2026-10-17 „3a“): Hugging Face's public search for the language model or image
+# understanding. The hits are data: each one only gets the quick rules below (the full check of eigen_vorschlag runs
+# again on „Hinzufügen“, on the pinned commit), nothing is downloaded or added by searching.
+HF_SUCHE = ("https://huggingface.co/api/models?search={q}&filter=safetensors&sort=downloads&direction=-1&limit=40"
+            "&expand[]=config&expand[]=tags&expand[]=safetensors&expand[]=downloads&expand[]=cardData&expand[]=gated")
+SUCHE_Q = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._/-]{1,59}$")
+SUCHE_MAX = 20
+SUCHE_ANTWORT_MAX = 4 * 1024 * 1024
+# bytes per weight of a dtype in the safetensors header (packed 4-bit formats come as U8 or I8)
+DTYPE_BYTES = {"F64": 8, "I64": 8, "F32": 4, "I32": 4, "U32": 4, "BF16": 2, "F16": 2, "I16": 2, "U16": 2,
+               "F8_E4M3": 1, "F8_E5M2": 1, "F8_E8M0": 1, "I8": 1, "U8": 1, "BOOL": 1}
+
+
+def such_url(q):
+    """The search address for an admin's words (letters, digits, space and ._/- only); Fehler("suche") otherwise."""
+    q = str(q or "").strip()
+    if not SUCHE_Q.match(q) or ".." in q:
+        raise Fehler("suche")
+    return HF_SUCHE.format(q=urllib.request.quote(q, safe=""))
+
+
+def such_treffer(items, art, total_gib, kat=None):
+    """The hits for the page: [{repo, downloads, lizenz, gb, need_gib, nein}], „nein“ a fixed word when a rule already
+    says no (zugang, code, format, architektur, budget, schon); names that do not match REPO are dropped."""
+    if art not in VLLM_ARCH:
+        raise Fehler("art")
+    if not isinstance(items, list):
+        raise Fehler("antwort")
+    kat = katalog() if kat is None else kat
+    da = {m.get("repo") for m in kat.values()}
+    out = []
+    for x in items:
+        if not isinstance(x, dict) or len(out) >= SUCHE_MAX:
+            continue
+        repo = x.get("id") if isinstance(x.get("id"), str) else ""
+        if not REPO.match(repo) or ".." in repo:
+            continue
+        tags = [t for t in x.get("tags") or [] if isinstance(t, str)]
+        cfg = x.get("config") if isinstance(x.get("config"), dict) else {}
+        arch = (cfg.get("architectures") or [""])[0] if isinstance(cfg.get("architectures"), list) else ""
+        st = x.get("safetensors") if isinstance(x.get("safetensors"), dict) else {}
+        par = st.get("parameters") if isinstance(st.get("parameters"), dict) else {}
+        byte = sum(v * DTYPE_BYTES.get(k, 2) for k, v in par.items() if isinstance(v, int) and v >= 0)
+        gib = byte / 2**30 if byte else None
+        need = round(gib + KV_GIB[art]) if gib is not None else None
+        card = x.get("cardData") if isinstance(x.get("cardData"), dict) else {}
+        lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+        if repo in da:
+            nein = "schon"
+        elif x.get("gated") or x.get("private") or x.get("disabled"):
+            nein = "zugang"
+        elif "custom_code" in tags or "auto_map" in json.dumps(cfg):
+            nein = "code"
+        elif "safetensors" not in tags and not par:
+            nein = "format"
+        elif arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
+            nein = "architektur"
+        elif need is not None and need / total_gib > ANTEIL_MAX:
+            nein = "budget"
+        else:
+            nein = ""
+        d = x.get("downloads")
+        out.append({"repo": repo, "downloads": d if isinstance(d, int) and d >= 0 else 0, "lizenz": lizenz,
+                    "gewerblich": lizenz in FREI, "gb": round(byte / 1e9, 1) if byte else None, "need_gib": need,
+                    "nein": nein})
+    return out
+
+
+# „Ausprobieren“ (Dominik 2026-10-17 „2a“): „Messen“ with a note; once the measurement of that model is done the page
+# asks, with the numbers, whether to switch. One note at a time, for a day; a switch or „Verwerfen“ removes it.
+PROBE = os.path.join(STATE, "modelle-probe.json")
+PROBE_SEK = 86400
+
+
+def probe_merken(mid, art, path=PROBE, now=None):
+    if not ID.match(str(mid)) or art not in TAUSCH:
+        raise Fehler("wunsch")
+    write_json(path, {"id": mid, "art": art, "zeit": int(time.time() if now is None else now)}, indent=1)
+
+
+def probe_weg(path=PROBE):
+    try:
+        os.remove(path)
+        return True
+    except FileNotFoundError:
+        return False
+
+
+def probe_stand(kat, messung, laufend, misst, path=PROBE, now=None):
+    """For the page: {id, art, fertig, ok, tok_s, jetzt_id, jetzt_tok_s} of the model being tried, None without one."""
+    p = read_json(path, {})
+    now = time.time() if now is None else now
+    mid, art = str(p.get("id", "")), str(p.get("art", ""))
+    try:
+        zeit = float(p.get("zeit", 0))
+    except (TypeError, ValueError):
+        return None
+    if mid not in kat or kat[mid]["art"] != art or not 0 <= now - zeit <= PROBE_SEK:
+        return None
+    r = (messung.get("modelle") or {}).get(mid) or {}
+    fertig = not misst and isinstance(r.get("zeit"), (int, float)) and r["zeit"] >= zeit - 60
+    jetzt = next((i for i in laufend if i in kat and kat[i]["art"] == art), "")
+    rj = (messung.get("modelle") or {}).get(jetzt) or {}
+    return {"id": mid, "art": art, "fertig": fertig, "ok": fertig and r.get("ok") is not False,
+            "tok_s": r.get("tok_s") if fertig else None, "jetzt_id": jetzt, "jetzt_tok_s": rj.get("tok_s")}
+
 def eigene(path=EIGENE):
     return [m for m in read_json(path, {}).get("modelle") or [] if isinstance(m, dict)]
 

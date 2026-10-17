@@ -563,11 +563,13 @@ class Seite(unittest.TestCase):
         self.assertNotIn("onclick=", js.replace(".onclick=", ""))
         self.assertNotIn("fetch(", js)
         # stage E4: the page changes only through the two switch endpoints and „Messen“ (behind Funktionen → Modelle
-        # wechseln) and „Lange Gespräche“ (same switch); stage E5 adds the own models (behind Funktionen → Eigene
-        # Modelle): add, delete, and the check
+        # wechseln), „Lange Gespräche“ (same switch) and „Verwerfen“ after „Ausprobieren“; stage E5 adds the own models
+        # (behind Funktionen → Eigene Modelle): add, delete, the search and the check, which change nothing
         self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
                          ["/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/messen",
-                          "/api/admin/modelle/platz", "/api/admin/modelle/wechseln", "/api/admin/modelle/zurueck"])
-        self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js), ["/api/admin/modelle/eigen/pruefen"])
-        self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 1)        # the check
+                          "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/wechseln",
+                          "/api/admin/modelle/zurueck"])
+        self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js),
+                         ["/api/admin/modelle/eigen/suche", "/api/admin/modelle/eigen/pruefen"])
+        self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 2)        # the search and the check
         self.assertEqual(len(re.findall(r"\bmethod='POST'", js)), 1)                          # mdPost's default
