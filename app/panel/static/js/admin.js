@@ -138,6 +138,9 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
   const hrs=Array.isArray(g.hours)&&g.hours.length===24?g.hours:null;
   if(hrs&&hrs.some(x=>x>0))tb.appendChild(zDay(hrs,req));
   tb.appendChild(zCard('acc','chat',t('Antworten','Answers'),String(g.answers||0),'',g.answers?t('ansehen unter Logs','see them in the logs'):t('noch keine Antwort','no answer yet'),null,req));
+  const ak=g.aktiv;   // people with a request in the last 10 minutes (aktiv.py), as on the case's display
+  if(ak)tb.appendChild(zCard(ak.gesamt?'ok':'','user',t('Aktiv (10 min)','Active (10 min)'),String(ak.gesamt||0),'',
+    t(`${ak.profile||0} Profile · ${ak.gaeste||0} Gäste`,`${ak.profile||0} profiles · ${ak.gaeste||0} guests`)));
   if(g.first_sound!=null)tb.appendChild(zCard(g.slower?'warn':'acc','timer',t('Erster Ton','First sound'),fmt(g.first_sound,'',1),' s',
     g.slower?t('langsamer als sonst','slower than usual'):t('im Mittel','median'),null,req));
   if(sk)tb.appendChild(zCard(!sk.known?'':sk.online<sk.known?'warn':'ok','esp',t('Lautsprecher','Speakers'),String(sk.online),t(' von ',' of ')+sk.known+t(' online',' online'),

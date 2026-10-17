@@ -115,11 +115,14 @@ class Rec:
                 "errors": self.errors, "status": self.status()}
 
 
-def start(t0, client, who=None, kind="guest", device=""):
+def start(t0, client, who=None, kind="guest", device="", ort=""):
     """A new record, or None while both admin switches are off (then nothing is kept at all). With only
     Zustand → Live on (live.py) the record is watched in memory and never written; with only the
-    Einstellungs-Assistent on (faelle.py) it is summed up at the end of the answer and never written."""
+    Einstellungs-Assistent on (faelle.py) it is summed up at the end of the answer and never written.
+    Before the switches every request counts for "Aktiv 10 min" (aktiv.py; ort tells guests apart, never kept)."""
     try:
+        import aktiv
+        aktiv.sah(t0, who, kind, client, device, ort)
         import faelle
         import live
         keep, watch = on(), live.on()

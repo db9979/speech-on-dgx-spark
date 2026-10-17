@@ -476,7 +476,8 @@ def begin(client, device, t=None, uid=None, auto=False, why="", request=None, sr
     try:
         import tracelog
         kind = "profile" if uid else "spark" if auto else "guest"
-        rec = tracelog.start(time.time() if t is None else t, client, uid, kind, device)
+        rec = tracelog.start(time.time() if t is None else t, client, uid, kind, device,
+                             ort=guard.client_ip(request) if request is not None else "")
         if rec is not None:
             rec.auto, rec.direct = bool(auto), True
             if auto:
@@ -1478,7 +1479,16 @@ def snapshot(view="admin", now=None):
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
             "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "test_run",
                                               "test_ok", "test_total")},
-            "stats": node_stats(now)}
+            "stats": node_stats(now), "aktiv": _aktiv(now)}
+
+
+def _aktiv(now):
+    """Aktiv in den letzten 10 Minuten (aktiv.py): numbers only, also while Live was off before."""
+    try:
+        import aktiv
+        return aktiv.zahlen(now)
+    except Exception:
+        return {"gesamt": 0, "profile": 0, "gaeste": 0}
 
 
 def _devup_sub(d):

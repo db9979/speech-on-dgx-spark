@@ -5,7 +5,8 @@ The case of a panel computer. The first one is the SunFounder Pironman 5 around 
 through the Pi's device files, no extra package and no service of its own:
 
     OLED            pages of fixed words and numbers for the admin, never a name or a text of a profile (the display
-                    is seen by everyone in the room): Spark, Dienste und Wartung, Pi, DGX weg oder in Pause, Netz
+                    is seen by everyone in the room): Spark, Dienste und Wartung, Pi, DGX weg oder in Pause, Netz, …,
+                    Aktiv 10 min (one big number of people, aktiv.py)
     LEDs            the status as a colour: green ready, yellow Wartungspause or an open hint, red model computer gone
                     or a service down; brightness of its own, off at night
     case fans       the kernel switches them by the CPU temperature (overlay gpio-fan in config.txt, nothing runs for it);
@@ -67,7 +68,9 @@ SEITEN = (("spark", "Spark", "Spark"), ("dienste", "Dienste und Wartung", "Servi
           ("pi", "Pi", "Pi"), ("dgx", "DGX weg oder in Pause", "DGX gone or paused"), ("netz", "Netz", "Network"),
           ("dgxdetail", "DGX im Detail", "DGX in detail"), ("sicherheit", "Sicherheit", "Security"),
           ("geraete", "Geräte", "Devices"), ("haus", "Haus", "House"), ("strom", "Strom", "Power"),
-          ("version", "Version", "Version"))
+          ("version", "Version", "Version"), ("aktiv", "Aktiv 10 min", "Active 10 min"))
+# pages drawn with one big number instead of lines (bild): "Aktiv 10 min" (Dominik 2026-10-17 "1b 2a 3a")
+GROSS = ("aktiv",)
 FARBEN = {"gruen": (0, 255, 0), "gelb": (255, 150, 0), "rot": (255, 0, 0), "aus": (0, 0, 0)}
 NACHT = ("aus", "dunkel", "an")
 ANZEIGE = ("immer", "probleme")   # "probleme": dark while everything is green
@@ -377,6 +380,10 @@ def zeilen(key, now=None):
     if key == "strom":
         jetzt, war = _strom()
         return ["Strom", "Spannung " + jetzt, "Drossel " + war, "Pi an " + _dauer(_safe(rechner.laeuft_s))]
+    if key == "aktiv":    # aktiv.py: who had a request in the last 10 minutes, numbers only
+        import aktiv
+        n = aktiv.zahlen(now)
+        return ["Aktiv 10 min", str(n["gesamt"]), f"Profile {n['profile']}", f"Gaeste {n['gaeste']}"]
     if key == "version":
         try:
             import core as _core
@@ -475,17 +482,42 @@ def seiten(c, now=None):
     return keys or ["spark"]
 
 
-def bild(lines, drehen=False, versatz=(0, 0)):
+def bild(lines, drehen=False, versatz=(0, 0), key=""):
     from PIL import Image, ImageDraw, ImageFont
     img = Image.new("1", (W, H), 0)
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
     dx, dy = versatz
+    if key in GROSS and len(lines) >= 2:
+        _gross(draw, font, lines, dx, dy)
+        return img.rotate(180) if drehen else img
     for i, line in enumerate(lines[:5]):
         draw.text((dx, dy + i * 12), line[:21], fill=1, font=font)
         if i == 0:
             draw.line((0, dy + 11, W - 1, dy + 11), fill=1)
     return img.rotate(180) if drehen else img
+
+
+def _gross(draw, font, lines, dx, dy):
+    """A page with one big number (GROSS): the title on top, the number left (as large as fits 70 points), up to two
+    small lines right of a divider. Pillow's own scalable font, no font file."""
+    from PIL import ImageFont
+    draw.text((dx, dy), lines[0][:21], fill=1, font=font)
+    draw.line((0, dy + 11, W - 1, dy + 11), fill=1)
+    zahl_ = lines[1][:4]
+    for size in (46, 36, 28, 22):
+        big = ImageFont.load_default(size=size)
+        x0, y0, x1, y1 = draw.textbbox((0, 0), zahl_, font=big, stroke_width=1)
+        if x1 - x0 <= 66:
+            break
+    draw.text((dx + (70 - (x1 - x0)) // 2 - x0, dy + 15 + (46 - (y1 - y0)) // 2 - y0), zahl_, fill=1, font=big,
+              stroke_width=1, stroke_fill=1)
+    draw.line((dx + 72, dy + 16, dx + 72, dy + 60), fill=1)
+    for i, line in enumerate(lines[2:4]):     # "Profile 3": the word small, its number below it a bit larger
+        wort, _, n = line.rpartition(" ")
+        draw.text((dx + 77, dy + 13 + i * 25), (wort or n)[:8], fill=1, font=font)
+        if wort:
+            draw.text((dx + 77, dy + 21 + i * 25), n[:5], fill=1, font=ImageFont.load_default(size=13))
 
 
 def versatz(now):
@@ -509,7 +541,7 @@ def vorschau(c=None, now=None):
     out = []
     for k in reihenfolge(c):
         try:
-            b = bits(bild(zeilen(k, now)))
+            b = bits(bild(zeilen(k, now), key=k))
         except Exception as e:
             print("gehaeuse: vorschau fehler", type(e).__name__, flush=True)
             b = ""
@@ -602,7 +634,7 @@ def _oled(c, now, farbe, dark, night_off):
         i = _st["i"] % len(keys)
         key = keys[i]
         lines = zeilen(key, now)
-        img = bild(lines, c.get("gehaeuse_drehung") == 180, versatz(now))
+        img = bild(lines, c.get("gehaeuse_drehung") == 180, versatz(now), key)
         roh = "\n".join(lines).encode()
         if roh != _st["roh"]:
             _st.update(roh=roh, gleich=now)
@@ -611,7 +643,7 @@ def _oled(c, now, farbe, dark, night_off):
             hell = min(hell, GLEICH_HELL)     # the same picture for 10 minutes: darker against burn-in
         oled_hell(a, hell)
         oled_zeigen(a, img)
-        _st.update(seite=key, i=i + 1, next=now + zahl(c, "gehaeuse_wechsel_s"), bild=bild(lines))
+        _st.update(seite=key, i=i + 1, next=now + zahl(c, "gehaeuse_wechsel_s"), bild=bild(lines, key=key))
     except OSError as e:
         _fehler("oled", e, now)
 

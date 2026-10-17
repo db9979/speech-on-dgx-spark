@@ -206,7 +206,29 @@ class Seiten(Base):
             self.assertTrue(1 <= len(lines) <= 5, key)
             for line in lines:
                 self.assertLessEqual(len(line), 21, (key, line))
-        self.assertEqual(len(gehaeuse.SEITEN), 11)
+        self.assertEqual(len(gehaeuse.SEITEN), 12)
+
+    def test_active_people_as_one_big_number(self):
+        """Dominik 2026-10-17 "1b 2a 3a": page "Aktiv 10 min" with the people of the last 10 minutes as one big number,
+        profiles and guests beside it; in the normal rotation, switched and moved like the others; never a name."""
+        import aktiv
+        aktiv._seen.clear()
+        self.addCleanup(aktiv._seen.clear)
+        aktiv.sah(T0 - 60, "u1", "profile", "web")
+        aktiv.sah(T0 - 30, None, "guest", "speaker", ort="10.0.0.9")
+        self.assertEqual(gehaeuse.zeilen("aktiv", T0), ["Aktiv 10 min", "2", "Profile 1", "Gaeste 1"])
+        c = self.on()
+        self.assertIn("aktiv", gehaeuse.seiten(c, T0))
+        self.assertNotIn("aktiv", gehaeuse.seiten(dict(c, gehaeuse_seiten_aus=["aktiv"]), T0))
+        gross = gehaeuse.bild(gehaeuse.zeilen("aktiv", T0), key="aktiv")
+        klein = gehaeuse.bild(["Aktiv 10 min", "2"])
+        hoch = [y for y in range(gehaeuse.H) if any(gross.getpixel((x, y)) for x in range(70))]
+        self.assertGreater(max(hoch) - 14, 30, "the number is big: more than 30 points high")
+        self.assertNotEqual(gross.tobytes(), klein.tobytes())
+        for n in ("7", "88", "123", "9999"):     # every count fits left of the divider
+            img = gehaeuse.bild(["Aktiv 10 min", n, "Profile 1", "Gaeste 0"], key="aktiv")
+            self.assertTrue(any(img.getpixel((x, 40)) for x in range(70)), n)
+            self.assertFalse(any(img.getpixel((x, y)) for x in range(70, 72) for y in range(14, 64)), n)
 
     def test_the_admins_order(self):
         c = self.on(gehaeuse_reihenfolge=["version", "pi"])
@@ -264,7 +286,7 @@ class Seiten(Base):
         admin.post("/api/login", json={"password": "secret-admin"})
         r = admin.get("/api/admin/gehaeuse/vorschau")
         self.assertEqual(r.status_code, 200, r.text)
-        self.assertEqual(len(r.json()["seiten"]), 11)
+        self.assertEqual(len(r.json()["seiten"]), len(gehaeuse.SEITEN))
 
 class Wunsch(Base):
     def test_only_a_fresh_wish_with_the_switch_on(self):

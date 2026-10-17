@@ -192,7 +192,10 @@ def kopf(R, d, jetzt):
           .replace("Wed", "Mi").replace("Thu", "Do").replace("Fri", "Fr").replace("Sat", "Sa").replace("Sun", "So"), "W")
     g, door = live.get("guard") or {}, live.get("door") or {}
     an, aus = (d.get("zeiten") or [7, 23])[:2]
-    R.segs(1, 1, [("Heute ", "m"), (zahl(tag.get("answers")), "W"), (" Antworten  ·  erster Ton Ø ", "m"),
+    ak = live.get("aktiv") or {}     # aktiv.py: people with a request in the last 10 minutes
+    R.segs(1, 1, [("Aktiv 10 min ", "m"), (zahl(ak.get("gesamt")), "W"),
+                  (f" ({zahl(ak.get('profile'))} Profile · {zahl(ak.get('gaeste'))} Gäste)  ·  ", "m"),
+                  ("Heute ", "m"), (zahl(tag.get("answers")), "W"), (" Antworten  ·  erster Ton Ø ", "m"),
                   (zahl(tag.get("first_sound"), 1) + " s", "y" if tag.get("slower") else "W"),
                   ("  ·  Wächter ", "m"), (f"{zahl(g.get('ok'))} erlaubt", "W"), (" · ", "m"), (f"{zahl(g.get('bad'))} geblockt", "y" if g.get("bad") else "g"),
                   ("  ·  Eingang ", "m"), (f"{zahl(door.get('in'))} rein", "W"), (" · ", "m"), (f"{zahl(door.get('out'))} abgewiesen", "y" if door.get("out") else "g"),

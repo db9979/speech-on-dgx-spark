@@ -1564,7 +1564,8 @@ def start_trace(request, turn, t_req, t0):
         else body.get("client") if body.get("client") in tracelog.CLIENTS else "web"
     who = turn.who
     kind = "profile" if who else "admin" if not turn.device_owner and admin_cookie_ok(request) else "guest"
-    tr = tracelog.start(t_req, client, who and who["id"], kind, profiles.device_name(request) if who or kind == "admin" else "")
+    tr = tracelog.start(t_req, client, who and who["id"], kind, profiles.device_name(request) if who or kind == "admin" else "",
+                        ort=guard.client_ip(request))
     if not tr:
         return None
     if getattr(tr, "watched", False):   # Zustand → Live: from the internet? (shown under "Über das Internet")

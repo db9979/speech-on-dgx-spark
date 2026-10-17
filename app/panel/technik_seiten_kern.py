@@ -465,7 +465,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "b841f69fe4",
+        "stand": "15ea3f94d7",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -490,9 +490,13 @@ SEITEN = {
             S("s1", "start", ("Anfrage kommt an", "A request comes in"),
               ("tracelog.start", "tracelog.start"),
               ("Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen "
-               "Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät.",
+               "Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. Vor jedem Schalter zählt aktiv.py "
+               "die Anfrage für „Aktiv 10 min“ (OLED, Monitoring, Live): ein Profil einmal, ein Gast je Gerät als "
+               "gekürzter Hash, nichts vom Spark selbst, nur im Speicher.",
                "Chat, writing help, creating documents and what the Spark does by itself create a record at the start: "
-               "channel, kind (profile, guest, admin, Spark) and device.")),
+               "channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request "
+               "for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, "
+               "nothing of the Spark itself, in memory only.")),
             S("s2", "frage", ("Etwas eingeschaltet?", "Anything switched on?"),
               ("Anfragen verfolgen, Live oder Fälle", "trace requests, Live or cases"),
               ("Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen "

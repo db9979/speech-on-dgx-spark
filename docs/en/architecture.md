@@ -317,6 +317,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | Module | Task |
 |---|---|
 | `app/panel/admin.py` | Admin pages: status, configuration, services, logs, tests, cloned voices, benchmark, profiles and devices. |
+| `app/panel/aktiv.py` | Aktiv in den letzten 10 Minuten: how many people used the Spark lately. |
 | `app/panel/backup.py` | Backups of everything the panel keeps: profiles (memory, conversations, documents, calendars, mail, Home Assistant, voices of speaker ID), cloned voices, set … |
 | `app/panel/befund.py` | Befund: the cause of a case, worked out before any proposal. |
 | `app/panel/berater.py` | Einstellungs-Assistent: cases become proposals. |
@@ -2182,7 +2183,7 @@ flowchart TD
   s7 -->|no| s7x
 ```
 
-1. <a id="kn-betrieb-s1"></a>**A request comes in**: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device.
+1. <a id="kn-betrieb-s1"></a>**A request comes in**: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only.
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.

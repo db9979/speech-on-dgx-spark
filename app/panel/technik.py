@@ -205,6 +205,7 @@ MODULE = {
     "health": ("betrieb", "Stabilität: Wächter für hängende Dienste, Echtprüfung"),
     "live": ("betrieb", "Live-Übersicht: was der Spark gerade tut"),
     "tracelog": ("betrieb", "Logs → Anfragen: der Weg jeder Anfrage"),
+    "aktiv": ("betrieb", "Aktiv in den letzten 10 Minuten: Profile und Gäste als Zahl, nur im Speicher (OLED, Monitoring, Live)"),
     "logfilter": ("betrieb", "Diagnose-Filter und Hinweise für die Logs"),
     "latency": ("betrieb", "Wartezeit bis zum ersten Ton"),
     "verbrauch": ("betrieb", "Verbrauchszähler je Modell, Aufgabe und Profil, Kontingent für Tag, Woche und Monat"),

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.724** · 2026-10-17 · OLED-Seite „Aktiv 10 min“: wie viele Menschen in den letzten 10 Minuten da waren, als große Zahl mit Profilen und Gästen; dieselbe Zahl in Monitoring, Live, Steuerzentrale und iPhone-App
 - **V01.0.723** · 2026-10-17 · Rot-Fix nach der Grundausstattung: Selbsttests setzen die jetzt ab Werk eingeschalteten Schalter selbst (Weiche, Rückfrage), test_join lässt „Eigene Dokumente“ nicht mehr aus, der Profil-Test sucht sein Profil statt Seite 1 anzunehmen
 - **V01.0.722** · 2026-10-17 · `modelle messen`: 2 und 4 Fragen gleichzeitig, eine 60K-Frage und Platz im Gesprächsspeicher; Qwen3.8 als Variante mit Gesprächsspeicher FP8 (`kv8`) und mit DSpark-Hilfsmodell (`dspark`)
 - **V01.0.721** · 2026-10-17 · Grundausstattung für Neulinge: 16 Gesprächsfunktionen sind bei neuen Installationen an; bestehende bekommen auf Funktionen die Karte „Alle übernehmen“, die Frage „Darf der Spark ins Internet?“ und den Filter „Empfohlen“, neue Profile sehen zuerst, wo man etwas einstellt

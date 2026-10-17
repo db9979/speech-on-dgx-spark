@@ -281,6 +281,16 @@
         }
       }
     },
+    "Aktiv (10 min)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active (10 min)"
+          }
+        }
+      }
+    },
     "Alle": {
       "localizations": {
         "en": {
@@ -4147,6 +4157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profiles"
+          }
+        }
+      }
+    },
+    "Profile / Gäste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiles / guests"
           }
         }
       }

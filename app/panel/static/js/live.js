@@ -78,6 +78,8 @@ function kpis(d){const s=d.sys||{},h=s.hist||{},run=d.reqs.filter(r=>!r.done);
     [tt('Internet jetzt','Internet now'),net,tt('Anfr.','req.'),null,'var(--c4)'],['GPU',num(s.gpu,0),'%',h.gpu,'var(--c3)'],[tt('Speicher frei','Memory free'),num(s.free),'GiB',h.avail,'var(--c5)'],
     [s.pi?tt('CPU Modell-Rechner','CPU model computer'):'CPU',num(s.cpu,0),'%',h.cpu,'var(--c6)'],[tt('Wächter heute','Wächter today'),d.guard.bad,tt('geblockt','blocked'),null,'var(--bad)']];
   if(s.pi)k.splice(6,0,[tt('CPU Panel-Rechner','CPU panel computer'),num(s.pi.cpu,0),'%',s.pi.hist,'var(--c2)']);   // models on another computer (rechnerblick.py)
+  const a=d.aktiv||{};   // people with a request in the last 10 minutes (aktiv.py), the same number as on the case's display
+  k.splice(1,0,[tt('Aktiv 10 min','Active 10 min'),a.gesamt||0,tt(`${a.profile||0} Profile · ${a.gaeste||0} Gäste`,`${a.profile||0} profiles · ${a.gaeste||0} guests`),null,'var(--c3)']);
   el('lvkpi').innerHTML=k.map(x=>`<div class="card kpi"><div class="l">${lvE(x[0])}</div><div class="v">${lvE(x[1])}<small>${lvE(x[2])}</small></div>${x[3]?spark(x[3],x[4]):''}</div>`).join('')}
 
 // ------------------------------------------------------------------ the flow picture

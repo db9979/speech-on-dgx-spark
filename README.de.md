@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.724** OLED-Seite „Aktiv 10 min“: wie viele Menschen in den letzten 10 Minuten da waren, als große Zahl mit Profilen und Gästen; dieselbe Zahl in Monitoring, Live, Steuerzentrale und iPhone-App
 - **V01.0.723** Fix Selbsttests: Tests setzen die neu eingeschalteten Schalter selbst
 - **V01.0.722** Messen, ob Qwen3.8 2 bis 4 Fragen gleichzeitig mit 64K Kontext schafft, dazu zwei schnellere Arten (FP8-Speicher, DSpark)
 - **V01.0.721** Grundausstattung für Neulinge: 16 Gesprächsfunktionen sind bei neuen Installationen an; bestehende bekommen auf Funktionen die Karte „Alle übernehmen“, die Frage „Darf der Spark ins Internet?“ und den Filter „Empfohlen“, neue Profile sehen zuerst, wo man etwas einstellt
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.717** Kolibri-1 misst mit genug Speicher (liegt schon in FP8 vor, 78B)
 - **V01.0.716** Fix Selbsttest: die Prüfungen am Quelltext lesen die Modellseite jetzt in ihrer eigenen Datei
 - **V01.0.715** `modelle messen` klappt neben dem eigenen Sprachmodell; Kolibri-1 lädt als FP8
-- **V01.0.714** Musik: „Musik stück“ und „… Track“ werden erkannt, nach einer Websuche macht der eigene Wunsch das Lied mit den Akkorden von davor
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

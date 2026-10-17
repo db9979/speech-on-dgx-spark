@@ -386,6 +386,7 @@ def glance(cfg):
     (does the language model answer?) and the "Heute" tiles; "slower" is latency's fixed rule (clearly slower than the
     week), which colours the first-sound tile; "hours" are the answers per hour for the bars. Only times and counts, never
     what was said."""
+    import aktiv
     import latency
     import vorrang
     from core import app_version
@@ -399,7 +400,7 @@ def glance(cfg):
                      "seconds": llm.get("seconds") if llm else None},
            "answers": day.get("n", 0), "first_sound": day.get("median"), "slower": lat["warn"] is not None,
            "hours": lat["hours"],
-           "background": vorrang.today()}
+           "background": vorrang.today(), "aktiv": aktiv.zahlen()}
     if features.admin_on("esp32", cfg.get("chat", {})):
         import esp32
         out["speakers"] = {"known": len(esp32.clients()), "online": len(esp32._live)}

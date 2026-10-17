@@ -169,7 +169,11 @@ struct StatusView: View {
                 } else { alertRows(rest) }
             }
             let sys = d["system"] as? [String: Any] ?? [:], gpu = d["gpu"] as? [String: Any] ?? [:]
+            // people with a request in the last 10 minutes (aktiv.py, the same number as on the case's display)
+            let ak = (d["glance"] as? [String: Any])?["aktiv"] as? [String: Any] ?? [:]
             Section("Spark") {
+                LabeledContent("Aktiv (10 min)") { Text(verbatim: Self.num(ak["gesamt"])) }
+                LabeledContent("Profile / Gäste") { Text(verbatim: Self.num(ak["profile"]) + " / " + Self.num(ak["gaeste"])) }
                 LabeledContent("Speicher frei") { Text(verbatim: Self.num(sys["mem_avail_gib"]) + " / " + Self.num(sys["mem_total_gib"]) + " GiB") }
                 LabeledContent("CPU") { Text(verbatim: Self.num(sys["cpu"]) + " %") }
                 LabeledContent("GPU") { Text(verbatim: Self.num(gpu["util"]) + " % · " + Self.num(gpu["temp"]) + " °C · " + Self.num(gpu["power"]) + " W") }

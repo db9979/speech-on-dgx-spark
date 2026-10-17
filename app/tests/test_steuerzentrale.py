@@ -65,7 +65,8 @@ def beispiel(split=True, n_targets=None):
                      "bus": {"rule": 2, "timer": 1}, "events": [{"t": T0 - 9, "area": "Anfrage", "text": "a0 fertig in 1,3 s"}],
                      "conns": [{"name": "Lautsprecher", "n": 2}, {"name": "Terminal", "n": 1}],
                      "sys": {"cpu": 20, "gpu": 50, "free": 80.5, "temp": 55, "hist": {"gpu": [1, 2], "cpu": [3], "avail": [80]}},
-                     "notaus": {"level": 0}, "wartung": {"on": False}, "upd": {"run": False}}}
+                     "notaus": {"level": 0}, "wartung": {"on": False}, "upd": {"run": False},
+                     "aktiv": {"gesamt": 4, "profile": 3, "gaeste": 1}}}
 
 
 class Panel(unittest.TestCase):
@@ -314,6 +315,14 @@ class Bild(unittest.TestCase):
         self.assertTrue(sz.schrift((1280, 720), da=da).endswith("TerminusBold16.psf.gz"))
         self.assertIsNone(sz.schrift((1920, 1080), da=lambda p: False))
         self.assertIsNone(sz.schrift(None, da=da))
+
+    def test_active_people_in_the_header(self):
+        """Aktiv 10 min (aktiv.py, Dominik 2026-10-17): the same number as on the OLED, in the second header row."""
+        text = sz.bild(beispiel(), 200, 60, T0).text().splitlines()[1]
+        self.assertIn("Aktiv 10 min 4 (3 Profile · 1 Gäste)", text)
+        d = beispiel()
+        del d["live"]["aktiv"]
+        self.assertIn("Aktiv 10 min – (– Profile · – Gäste)", sz.bild(d, 200, 60, T0).text().splitlines()[1])
 
     def test_curve_and_numbers(self):
         self.assertEqual(sz.linie([0, 100], 4, 0, 100), "▁▁██")

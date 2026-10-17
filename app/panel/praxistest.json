@@ -1513,6 +1513,13 @@
 "titel": "Qwen3.8 gleichzeitig und schneller messen",
 "text": "A: Unter Zustand → Modelle bei „Qwen3.8 27B NVFP4“, danach bei „…Gesprächsspeicher FP8“ und „…mit DSpark“ auf „Messen“ tippen (je etwa 20 bis 30 Minuten). Danach stehen beim Modell auch „2 gleichzeitig … tok/s je Antwort“, „4 gleichzeitig …“, „60K Tokens: erste … s“ und „Platz für … × 64K“, in der iPhone-App dieselben Zahlen kurz. Scheitert DSpark, steht dort „abgebrochen“ und das Sprachmodell antwortet trotzdem wieder.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P240",
+"v": 724,
+"titel": "OLED: Aktiv 10 min",
+"text": "A: Funktionen → Gehäuse: die Seite „Aktiv 10 min“ ist in der Reihe und zeigt eine große Zahl, daneben Profile und Gäste. Am Handy und am Rechner je eine Frage stellen: am Display steht dasselbe Profil nur einmal, ein Gerät ohne Anmeldung zählt als Gast. Dieselbe Zahl steht unter Zustand → Monitoring „Aktiv (10 min)“, in Zustand → Live oben und in der Steuerzentrale. Nach 10 Minuten ohne Frage steht 0.",
+"thread": "Neue OLED-Seite mit aktiven Nutzern"
 }
 ]
 }
