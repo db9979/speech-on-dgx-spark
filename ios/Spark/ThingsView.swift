@@ -15,8 +15,27 @@ final class ThingsModel: ObservableObject {
     @Published var tidy = false
     @Published var loading = true
     @Published var error: String?
+    /// the numbers on the tiles from last time (Merken.swift: only how many, never a name), while the Spark answers
+    @Published var keptAt: Date?
+    private var counts: [String: Int] = [:]
+
+    /// a tile's number: the fresh one, or the kept one while nothing fresh came
+    func count(_ part: String, _ n: Int) -> Int { keptAt != nil && n == 0 ? counts[part] ?? 0 : n }
 
     func load(_ a: Allowed) async {
+        if loading, keptAt == nil, let k = Merken.object("sachen"), let c = k.d as? [String: Int] {
+            counts = c
+            keptAt = k.at
+        }
+        await Merken.timed("sachen") { await fetch(a) }
+        if error == nil {
+            keptAt = nil
+            Merken.keepObject("sachen", ["documents": docs.count, "made": made.count, "bilder": pictures.count,
+                                         "musik": songs.count, "memory": facts.count])
+        }
+    }
+
+    private func fetch(_ a: Allowed) async {
         guard let api = SparkAPI.current else { return }
         error = nil
         // each part on its own: one that is off or fails leaves the others standing
@@ -143,23 +162,24 @@ struct ThingsView: View {
                 if hits.isEmpty { Text("Nichts gefunden.").foregroundStyle(.secondary) }
                 ForEach(hits) { h in NavigationLink { h.page } label: { row(h) } }
             } else {
+                if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
                 Section {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                         if a.areas.contains("documents") {
-                            tile(.documents, "Dokumente", "doc.text", .blue, m.docs.count, docNote)
+                            tile(.documents, "Dokumente", "doc.text", .blue, m.count("documents", m.docs.count), docNote)
                         }
                         if a.make {
-                            tile(.made, "Vom Spark erstellt", "wand.and.stars", .indigo, m.made.count,
+                            tile(.made, "Vom Spark erstellt", "wand.and.stars", .indigo, m.count("made", m.made.count),
                                  m.made.first.map { Text($0.updated, format: .relative(presentation: .named)) })
                         }
                         if a.areas.contains("bilder") {
-                            tile(.pictures, "Bilder", "photo.on.rectangle", .orange, m.pictures.count, nil)
+                            tile(.pictures, "Bilder", "photo.on.rectangle", .orange, m.count("bilder", m.pictures.count), nil)
                         }
                         if a.areas.contains("musik") {
-                            tile(.music, "Musik", "music.note", .pink, m.songs.count, m.songs.first.map { Text(verbatim: $0.title) })
+                            tile(.music, "Musik", "music.note", .pink, m.count("musik", m.songs.count), m.songs.first.map { Text(verbatim: $0.title) })
                         }
                         if a.areas.contains("memory") {
-                            tile(.memory, "Gedächtnis", "brain", .green, m.facts.count, m.tidy ? Text("Vorschläge zum Aufräumen") : nil)
+                            tile(.memory, "Gedächtnis", "brain", .green, m.count("memory", m.facts.count), m.tidy ? Text("Vorschläge zum Aufräumen") : nil)
                         }
                     }
                     .listRowInsets(EdgeInsets())
@@ -181,7 +201,7 @@ struct ThingsView: View {
         .searchable(text: $search, prompt: Text("In allem suchen"))
         .refreshable { await m.load(a) }
         .task { await m.load(a) }
-        .overlay { if m.loading { ProgressView() } }
+        .overlay { if m.loading && m.keptAt == nil { LadeZeilen(rows: 4).padding() } }
         .navigationDestination(item: $open) { $0.page }
         .onChange(of: talk.allowed) { _, a in Task { await m.load(a) } }
     }

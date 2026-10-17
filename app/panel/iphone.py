@@ -17,6 +17,7 @@ import urllib.parse
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+import appmerken
 import appupdate
 import guard
 import kopplung
@@ -281,7 +282,7 @@ def _admin_role(uid):
 
 
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
-def app_hello(prof=Depends(own_profile)):
+def app_hello(prof=Depends(own_profile), request: Request = None):
     """The app checks its key: whose it is and which Spark."""
     s = profiles.settings(prof["id"])
     import apns
@@ -319,7 +320,10 @@ def app_hello(prof=Depends(own_profile)):
             # "Vom Spark erstellt" (docmake.py): the made documents to look at, download and share
             "make": features.allowed("erstellen", prof["id"]),
             # calls between profiles (anrufe.py): call buttons in a chat of two, CallKit, VoIP push only with this on
-            "calls": _calls_on(prof["id"])}
+            "calls": _calls_on(prof["id"]),
+            # "Apps merken sich den letzten Stand" (appmerken.py): the app may keep the last state on the phone;
+            # without it the app deletes what it kept
+            "keep": appmerken.keep(prof, request)}
 
 
 def _calls_on(uid):

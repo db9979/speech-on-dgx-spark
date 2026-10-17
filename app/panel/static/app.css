@@ -1358,6 +1358,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 @keyframes lzshine{0%{background-position:100% 0}100%{background-position:0 0}}
 .lz-stale>*:not(.lz-chip):not(.lz-skrow){opacity:.55;transition:opacity .2s}
 .lz-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;margin:4px 0;font-size:11.5px;font-weight:600;border-radius:99px;padding:1px 9px;background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);white-space:normal}
+.merknote[hidden]{display:none}   /* Apps merken sich den letzten Stand (merken.js): the age of the kept conversations */
 .lz-chip.w{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
 .lz-err{margin:8px 0;padding:10px 12px;border:1px solid color-mix(in srgb,var(--bad) 40%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--bad) 5%,var(--card));display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .lz-err p{margin:0;flex-basis:100%;overflow-wrap:anywhere}.lz-err .mut{font-size:12.5px;overflow-wrap:anywhere}

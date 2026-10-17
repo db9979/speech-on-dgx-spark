@@ -571,7 +571,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              # Probleme melden (meldung.py): draft, preview, send exactly the previewed text, answers, delete
              "/api/report", "/api/report/draft", "/api/report/preview", "/api/report/send", "/api/report/thread", "/api/report/delete",
              "/api/make",             # Dokumente erstellen (docmake.py): the list of made documents, read only
-             "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
+             "/api/write", "/api/write/assist",   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
+             "/api/app/langsam")      # a page of the app took long: page word and milliseconds into the log (appmerken.py)
 # looking at an own document again (wissen.reader: only with Eigene Dokumente); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),
                 # a made document (docmake.py), its preview and its file: reading only, never changing or sending

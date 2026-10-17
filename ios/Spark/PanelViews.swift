@@ -21,7 +21,7 @@ struct PanelBridgeView: View {
     var body: some View {
         List {
             Section {
-                if !loaded { ProgressView() }
+                if !loaded { LadeZeilen(rows: 4) }
                 ForEach(pages, id: \.0) { p in row(Text(verbatim: p.1), p.0) }
             } header: { Text("Ich") } footer: {
                 Text("Öffnet das Panel hier in der App an dieser Stelle. Beim ersten Mal meldest du dich an wie im Browser.")
@@ -50,9 +50,18 @@ struct PanelBridgeView: View {
 
     private func load() async {
         defer { loaded = true }
-        guard let api = SparkAPI.current, let d = try? await api.object("GET", "api/features"),
-              let list = d["pages"] as? [[String: Any]] else { return }
-        pages = list.prefix(60).compactMap { p in
+        if pages.isEmpty, let k = Merken.object("funktionen") {   // the last state first (Merken.swift)
+            pages = Self.pages(k.d)
+            loaded = true
+        }
+        guard let api = SparkAPI.current, let d = try? await api.object("GET", "api/features") else { return }
+        Merken.keepObject("funktionen", d)
+        pages = Self.pages(d)
+    }
+
+    private static func pages(_ d: [String: Any]) -> [(String, String)] {
+        guard let list = d["pages"] as? [[String: Any]] else { return [] }
+        return list.prefix(60).compactMap { p in
             guard let id = p["id"] as? String, id.range(of: #"^[a-z]{2,12}$"#, options: .regularExpression) != nil,
                   let name = FeaturesView.pick(p["name"]) else { return nil }
             return ("me=" + id, name)

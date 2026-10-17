@@ -30,7 +30,14 @@ extension SparkAPI {
 
     /// /api/features: whether this profile may use a function (on on the Spark, not blocked, own preference on)
     func can(_ key: String) async -> Bool {
-        guard let d = try? await object("GET", "api/features"), let list = d["features"] as? [[String: Any]] else { return false }
+        guard let d = try? await object("GET", "api/features") else { return false }
+        Merken.keepObject("funktionen", d)   // for the next start (Merken.swift)
+        return Self.can(d, key)
+    }
+
+    /// The same from an answer of /api/features (also the one the app kept).
+    static func can(_ d: [String: Any]?, _ key: String) -> Bool {
+        guard let list = d?["features"] as? [[String: Any]] else { return false }
         return list.prefix(200).contains { $0["key"] as? String == key && $0["can"] as? Bool == true }
     }
 

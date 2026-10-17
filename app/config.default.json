@@ -288,6 +288,7 @@
     "calls_turn_host": "",
     "history_one": false,
     "history_offline": false,
+    "app_cache": true,
     "svc_watch_users": false,
     "berater": false,
     "berater_explain": false,

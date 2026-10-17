@@ -14,6 +14,8 @@ final class ProfileModel: ObservableObject {
     @Published var loading = true
     @Published var error: String?
     @Published var sample = false
+    /// the values shown are the ones kept last time (Merken.swift), from then; nil once the Spark answered
+    @Published var keptAt: Date?
 
     func load() async {
         if let d = Demo.profile {
@@ -23,8 +25,16 @@ final class ProfileModel: ObservableObject {
             return
         }
         guard let api = SparkAPI.current else { return }
+        if loading, keptAt == nil, let k = Merken.object("einstellungen") {
+            show(k.d)
+            keptAt = k.at
+            loading = false
+        }
         do {
-            show(try await api.profileSettings())
+            let d = try await Merken.timed("einstellungen") { try await api.profileSettings() }
+            Merken.keepObject("einstellungen", d)
+            show(d)
+            keptAt = nil
             voices = (try? await api.voices()) ?? []
             error = nil
         } catch {
@@ -104,8 +114,9 @@ struct ProfileView: View {
     var body: some View {
         Form {
             if m.loading {
-                ProgressView()
+                LadeZeilen()
             } else {
+                if let k = m.keptAt { StandNote(at: k, loading: m.error == nil).listRowBackground(Color.clear) }
                 if let e = m.error {
                     Section { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                 }

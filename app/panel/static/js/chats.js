@@ -41,7 +41,10 @@ window.cxStart=who=>{const on=!!(who&&who.chats_use);
 function cxBadge(){const n=(CX.S&&CX.S.chats||[]).reduce((a,c)=>a+(c.mute?0:c.unread),0)+((CX.S&&CX.S.far_asks)||0),txt=n>99?'99+':String(n);
   for(const e of [cxEl('cxcnt'),document.querySelector('#mbar button[data-m=chats] .ncnt'),document.querySelector('#aptabs [data-tab=chats] .apcnt')])
     if(e){e.hidden=!n;e.textContent=txt}}
-async function cxLoad(){try{CX.S=await cxApi('/api/chats')}catch(e){return}
+// inside the Android app the kept list comes first (merken.js), the Spark's answer replaces it
+async function cxLoad(){const t0=performance.now();if(!CX.S){const k=merkGet('chats');if(k&&k.d&&k.d.on){CX.S=k.d;cxBadge();if(CX.shown){cxEl('cxoff').hidden=true;cxEl('cxsplit').hidden=false;cxList()}}}
+  try{CX.S=await cxApi('/api/chats')}catch(e){return}
+  merkPut('chats',CX.S);merkTime('chats',t0);
   cxBadge();if(!CX.shown)return;
   if(!CX.S.on){cxOff();return}
   cxEl('cxoff').hidden=true;cxEl('cxsplit').hidden=false;cxList()}

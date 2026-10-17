@@ -95,8 +95,9 @@ struct Note {
     let mail: Bool
 }
 
-/// What the profile allows the app (from /api/iphone/hello; the panel decides).
-struct Allowed: Equatable {
+/// What the profile allows the app (from /api/iphone/hello; the panel decides). Codable: the app keeps the last one
+/// while "Apps merken sich den letzten Stand" is on (Merken.swift).
+struct Allowed: Equatable, Codable {
     var profile = ""
     var language = "auto"
     var listen = false
@@ -128,6 +129,8 @@ struct Allowed: Equatable {
     var make = false
     /// Anrufe (anrufe.py): voice and video in a chat of two, ringing through CallKit (Calls.swift)
     var calls = false
+    /// "Apps merken sich den letzten Stand" (appmerken.py): the app may keep the last state; else it deletes it
+    var keep = false
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -347,7 +350,7 @@ struct SparkAPI {
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
                        adminRole: ["admin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
                        report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false,
-                       calls: d["calls"] as? Bool ?? false)
+                       calls: d["calls"] as? Bool ?? false, keep: d["keep"] as? Bool ?? false)
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).
@@ -473,6 +476,11 @@ struct SparkAPI {
     func convos() async throws -> [SavedConvo] {
         let (data, response) = try await URLSession.shared.data(for: request("api/profile/convos"))
         try Self.check(data, response)
+        return Self.convoList(data)
+    }
+
+    /// The list as /api/profile/convos sends it (also what the app kept of it, Merken.swift).
+    static func convoList(_ data: Data) -> [SavedConvo] {
         let list = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
         return list.compactMap { d in
             guard let id = d["id"] as? String, let msgs = d["msgs"] as? [[String: Any]], !msgs.isEmpty else { return nil }

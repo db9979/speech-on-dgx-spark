@@ -376,6 +376,8 @@ FEATURES = (
       me="appbox", guide="iphonepush"),
     F("iphonepanel", "Panel-Bereiche in der iPhone-App", "Panel areas in the iPhone app", "go", ("iphone_panel",),
       parent="iphone", me="appbox", guide="iphonepanel"),
+    # appmerken.py: the iPhone and the Android app keep the last state of their profile on the phone (no files, no keys)
+    F("appmerken", "Apps merken sich den letzten Stand", "Apps keep the last state", "go", ("app_cache",), guide="appmerken"),
     F("iphoneupdate", "Spark-Update über die iPhone-App", "Spark update from the iPhone app", "go", ("iphone_update",),
       parent="iphone", guide="iphoneupdate"),
     # security
@@ -553,6 +555,7 @@ GRUNDAUSSTATTUNG = {
     "chat.feature_sentences": "Finden: „Probier mal“ und „Das kannst du auch sagen“ mit Sätzen, die bei dir gehen",
     "chat.tasks": "Alltag: Einkaufsliste und Aufgaben auf dem Spark, ohne Konto",
     "chat.history_live": "Alltag: der Verlauf steht sofort auf allen eigenen Geräten",
+    "chat.app_cache": "Alltag: die Apps zeigen beim Öffnen gleich den letzten Stand, nur auf dem eigenen Handy",
 }
 # the part that needs the internet: never shipped on, only by the admin's answer to „Darf der Spark ins Internet?“
 # on Funktionen (chat.grund_internet keeps the answer); the web search only once a SearXNG address is stored

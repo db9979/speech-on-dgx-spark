@@ -45,6 +45,7 @@ since V01.0.296) and adds only what a page cannot do:
 - **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
 - **Calm during a Spark update** (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows "Spark startet neu … Die Seite kommt gleich wieder." (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, "Adresse ändern" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place.
+- **Last state at once** (from 1.4.1, V01.0.748, function "Apps keep the last state"): nothing stays blank on the first load: after a second "Verbinde mit dem Spark …" (connecting), after 8 seconds "Das dauert länger als sonst …" (takes longer), when the Spark cannot be reached "Noch einmal" (try again) and "Adresse ändern". Then the page in the app shows the conversations (the 20 newest with 50 messages each), the chat list and the own settings of last time at once, above the conversation with "As of 16:05 · refreshing …" until the Spark has answered. When the app comes to the front it fetches settings and chats once in the background (at most every 5 minutes). When the start or a list needs more than 2 seconds, Status → Logs (area Apps) shows `app: langsam <page> <ms> ms android`.
 - **Save the battery** (from 1.3.3, V01.0.668): in the background the app pauses its page (no polling, no open connections of the page); coming back it catches up. During a call the page stays awake. "Mitteilungen sofort" keeps running independently.
 - **Camera for video calls** (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound.
 - **Update in the app** (1.3.0 and later, V01.0.533): admin: Features → Android app → "Android: update in the app" (off).
@@ -102,6 +103,11 @@ since V01.0.296) and adds only what a page cannot do:
   of appointments and messages. Waiting questions stay in the app only (at most 10, one day).
 - Shared files go through the Spark's normal ways (`/api/chat/image`, `/api/profile/docs`) with their rights, size and
   rate limits; the app reads only content addresses (`content://`), no file paths.
+- Last state: admin switch `chat.app_cache` (on in the basic set), blockable per profile. The page keeps only inside
+  the app (mark "SparkAndroid/") and only while `/api/profile/settings` says "app_keep"; when the Spark says no it
+  deletes everything. The copy lies in the app's page storage (in the app's encrypted storage, apart per profile), never
+  keys, codes, admin pages or files. Signing out and another profile delete it. A browser keeps nothing this way (that
+  is "Read history offline" with a trusted browser).
 - Fingerprint for admins: its own admin switch `chat.android_lock` (off); it applies only to a login with an admin
   role. A phone without any screen lock has nothing to check: the app says so and opens.
 

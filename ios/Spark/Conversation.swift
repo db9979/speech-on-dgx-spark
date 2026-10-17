@@ -131,7 +131,8 @@ final class AppState: ObservableObject {
 
     /// Whose key and what the profile allows; nil when the Spark cannot be reached.
     func refresh() async -> Allowed? {
-        guard let api = SparkAPI.current, let r = try? await api.hello() else { return nil }
+        guard let api = SparkAPI.current, let r = try? await Merken.timed("start", { try await api.hello() }) else { return nil }
+        Merken.saw(r)
         Store.profile = r.profile
         Store.language = r.language
         profile = r.profile
@@ -140,6 +141,7 @@ final class AppState: ObservableObject {
 
     func unpair() {
         ChatSec.shared.forget()   // before Store.forget: its keychain entry is named after the Spark and the profile
+        Merken.forget()           // what the app kept of this profile (Merken.swift)
         Store.forget()
         Outbox.clear()
         AppleReminders.forget()

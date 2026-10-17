@@ -3,7 +3,7 @@
 const ME_LOAD={p:null,next:null};   // Ich's boxes: the load running now and the one queued after it (openMe)
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
-  if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE)offlineWipe(true);convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
+  if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE){offlineWipe(true);merkWipe(true)}convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
   loadSettings();rem.load();if(window.room)room.show();guestLock()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
 const isGuest=()=>!PROFILE&&!ADMIN;
@@ -613,7 +613,7 @@ $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/logi
     if(GATE||r.admin){location.reload();return}   // an admin profile: the page loads again with the admin menu
     const who=await (await api('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
   catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
-$('proflogout').onclick=async()=>{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
+$('proflogout').onclick=async()=>{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);merkWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
 // ---------------------------------------------------------------- conversation settings
@@ -711,9 +711,14 @@ async function refreshAllow(){const d=await (await api('/api/profile/settings'))
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}
 // the one load of the defaults, lists and own values (SETP, chat.js); without an answer the last ones stay and it asks
 // again shortly, so nothing works on settings it never got
-function loadSettings(){return SETP=(async()=>{let d=null;try{d=await (await api('/api/profile/settings')).json()}catch{}
-  if(d&&d.defaults){SDEF={...d.defaults};SETC={choices:d.choices||{},ranges:d.ranges||{}};S={...SDEF,...(d.settings||{})};ALLOW=d.allow||{};OFFLINE_HERE=!!d.offline_here}
-  else if(!Object.keys(SDEF).length)setTimeout(()=>loadSettings().catch(()=>{}),5000);
+// Inside the Android app the kept settings come first (merken.js) and the Spark's answer replaces them.
+const setFrom=d=>{SDEF={...d.defaults};SETC={choices:d.choices||{},ranges:d.ranges||{}};S={...SDEF,...(d.settings||{})};ALLOW=d.allow||{}};
+function loadSettings(){return SETP=(async()=>{let d=null;const k=!Object.keys(SDEF).length?merkGet('einstellungen'):null,t0=performance.now();
+  if(k&&k.d&&k.d.defaults){setFrom(k.d);MERKST.setKept=true;applySet()}
+  try{d=await (await api('/api/profile/settings')).json()}catch{}
+  if(d&&d.defaults){setFrom(d);MERKST.setKept=false;OFFLINE_HERE=!!d.offline_here;merkAllow(d.app_keep);merkTime('einstellungen',t0);merkPage();
+    merkPut('einstellungen',{settings:d.settings,defaults:d.defaults,choices:d.choices,ranges:d.ranges,allow:d.allow})}
+  else if(!Object.keys(SDEF).length||MERKST.setKept)setTimeout(()=>loadSettings().catch(()=>{}),5000);
   if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
   applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)})()}
 const setReady=()=>(SETP||loadSettings()).catch(()=>{});   // the Spark's defaults and lists are in (renderSet, admin.js)

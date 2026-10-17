@@ -222,6 +222,7 @@ WITHOUT = {
     "verlaufsync": "Abgleich im Hintergrund",
     "eingespraech": "Abgleich im Hintergrund",
     "offlinelesen": "Abgleich im Hintergrund",
+    "appmerken": "Speicher in der App, nichts zu fragen",
     # deliberately not by voice: security, secrets, the admin's own decisions
     "speaker": "Schutzregel",
     "spkcode": "Schutzregel",

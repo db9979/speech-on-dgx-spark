@@ -1242,13 +1242,16 @@ def profile_settings(request: Request):
     prof = profiles.current(request)
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
     chat = load_config().get("chat", {})
+    import appmerken
     import verlauf
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
             # the allowed values and bounds (profiles.CHOICES, RANGES): the browser builds its lists only from these
             "choices": profiles.CHOICES, "ranges": profiles.RANGES,
             "profile": prof, "allow": _allow(prof, chat),
             # this browser may keep the conversations for reading offline (trusted, verlauf.offline_here); else it deletes them
-            "offline_here": verlauf.offline_here(prof, request)}
+            "offline_here": verlauf.offline_here(prof, request),
+            # the Android app may keep the last state of this profile (appmerken.py, merken.js); else it deletes it
+            "app_keep": appmerken.keep(prof, request)}
 
 
 # which functions the admin released for this profile (features.py), only for a signed-in profile

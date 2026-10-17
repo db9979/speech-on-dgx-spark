@@ -487,13 +487,17 @@ const convos={cache:[],
     let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
     for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
     try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
-    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now()}
-    catch{const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
+    // inside the Android app the kept conversations at once (merken.js), until the Spark answers
+    const k=!this.cache.length?merkGet('verlauf'):null,t0=performance.now();let seen=null;
+    if(k&&Array.isArray(k.d)){this.cache=k.d;merkNote(k.at);fillConvos();if(!chat.msgs.length)openConvo(latestConvo());seen=chat.cid}
+    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now();merkConvos(this.cache);merkTime('verlauf',t0);
+      if(k){merkNote(null);if(seen&&chat.cid===seen&&chat.saved===chat.msgs.length){const top=latestConvo();if(top!==seen)openConvo(top);else convoAdopt(this.cache.find(x=>x.id===seen))}}}
+    catch{if(k){merkFailed();return}const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
   // what changed on other devices since the last look (deleted ones disappear); false when nothing came back
   async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0));
     try{const d=await (await api('/api/profile/convos?since='+since)).json();if(!d||!Array.isArray(d.items))return false;
       const ids=new Set(d.ids||[]),got=new Set(d.items.map(x=>x.id));
-      this.cache=[...d.items,...this.cache.filter(x=>ids.has(x.id)&&!got.has(x.id))].sort((a,b)=>b.updated-a.updated);this.at=Date.now();return true}
+      this.cache=[...d.items,...this.cache.filter(x=>ids.has(x.id)&&!got.has(x.id))].sort((a,b)=>b.updated-a.updated);this.at=Date.now();if(d.items.length)merkConvos(this.cache);return true}
     catch{return false}}};
 // "whole": the conversation as it is here replaces the Spark's copy (after deleting messages); otherwise only
 // the messages not yet saved (chat.saved counts them) are added there

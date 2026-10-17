@@ -45,7 +45,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "resseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle. - Akku schonen (ab 1.3.3, V01.0.668): Im Hintergrund pausiert die App ihre Seite (keine Abfragen, keine offenen Verbindungen der Seite); beim Zurückholen holt sie nach. Während eines Anrufs bleibt die Seite wach. „Mitteilungen sofort“ läuft unabhängig davon weiter. - Kamera für Videoanrufe (ab 1.3.1, V01.0.556): Die App fragt beim ersten Videoanruf in Chats nach der Kamera, beim ersten Anruf nach dem Mikrofon; nur für die Seite des eigenen Sparks. Ohne Kamera geht der Anruf mit Ton weiter. - Update in der App (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus). Freigegeben zeigt die App oben einen Streifen „Neue App-Version … · Jetzt aktualisieren“ (✕ blendet ihn bis zur nächsten Version aus); auch die Mitteilung „Neue Spark-App“ und der Knopf unter Ich → Android-App starten das Update. Die App fragt nur ihren eigenen Spark (/api/profile/android: Version, Größe, SHA-256), nie GitHub, und lädt die APK mit ihrer Anmeldung von GET /api/android/apk in ihren Cache. Vor dem Installi"
+"text": "resseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle. - Letzter Stand sofort da (ab 1.4.1, V01.0.748, Funktion „Apps merken sich den letzten Stand“): Beim ersten Laden bleibt nichts leer: nach einer Sekunde „Verbinde mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“, ist der Spark nicht erreichbar, „Noch einmal“ und „Adresse ändern“. Danach zeigt die Seite in der App sofort die Gespräche (die 20 neuesten mit je 50 Nachrichten), die Chat-Liste und die eigenen Einstellungen vom letzten Mal, über dem Gespräch mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat. Kommt die App nach vorne, holt sie Einstellungen und Chats einmal im Hintergrund (höchstens alle 5 Minuten). Braucht der Start oder eine Liste länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) app: langsam <Seite> <ms> ms android. - Akku schonen (ab 1.3.3, V01.0.668): Im Hintergrund pausiert die App ihre Seite (keine Abfragen, keine offenen Verbindungen der Seite); beim Zurückholen holt sie nach. Während eines Anrufs bleibt die Seite wach. „Mitteilungen sofort“ läuf"
 },
 {
 "lang": "de",
@@ -77,7 +77,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": " Die Seite gibt der App nichts mit: der Knopf ist der feste Link sparkapp:update, den die App abfängt. Log: android: app update … sent to … oder … refused … reason …. - Mitteilungen liegen nur im Speicher (24 Stunden, höchstens 30 pro Profil) und gehen nur an die eigene Anmeldung. - Spark als Assistent: eigener Admin-Schalter chat.android_assist (aus), sperrbar je Profil, nie Gäste. Der Spark prüft jede Frage des Blatts selbst (Gerät „android“); ohne Freigabe antwortet er 403 und schreibt android: assistant refused for … reason … ins Log. Die App erfährt die Freigabe nur aus /api/profile/android und blendet Widget, Kachel und Kurzbefehle danach aus oder ein. Das Mikrofon läuft nur, solange das Blatt offen ist und die Frage dauert (höchstens 30 Sekunden); auf dem Sperrbildschirm erst nach dem Entsperren. Das Widget zeigt nur Zahlen, nie Titel oder Namen von Terminen und Nachrichten. Wartende Fragen liegen nur in der App (höchstens 10, einen Tag). - Geteilte Dateien gehen über die normalen Wege des Spark (/api/chat/image, /api/profile/docs) mit ihren Rechten, Größen- und Ratenlimits; die App liest nur Inhalts-Adressen (content://), keine Dateipfade. - Fingerabdruck für Admins: eigene"
+"text": " Die Seite gibt der App nichts mit: der Knopf ist der feste Link sparkapp:update, den die App abfängt. Log: android: app update … sent to … oder … refused … reason …. - Mitteilungen liegen nur im Speicher (24 Stunden, höchstens 30 pro Profil) und gehen nur an die eigene Anmeldung. - Spark als Assistent: eigener Admin-Schalter chat.android_assist (aus), sperrbar je Profil, nie Gäste. Der Spark prüft jede Frage des Blatts selbst (Gerät „android“); ohne Freigabe antwortet er 403 und schreibt android: assistant refused for … reason … ins Log. Die App erfährt die Freigabe nur aus /api/profile/android und blendet Widget, Kachel und Kurzbefehle danach aus oder ein. Das Mikrofon läuft nur, solange das Blatt offen ist und die Frage dauert (höchstens 30 Sekunden); auf dem Sperrbildschirm erst nach dem Entsperren. Das Widget zeigt nur Zahlen, nie Titel oder Namen von Terminen und Nachrichten. Wartende Fragen liegen nur in der App (höchstens 10, einen Tag). - Geteilte Dateien gehen über die normalen Wege des Spark (/api/chat/image, /api/profile/docs) mit ihren Rechten, Größen- und Ratenlimits; die App liest nur Inhalts-Adressen (content://), keine Dateipfade. - Letzter Stand: Admin-Schalter ch"
 },
 {
 "lang": "de",
@@ -85,7 +85,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "r Admin-Schalter chat.android_lock (aus); er greift nur bei einer Anmeldung mit Admin-Rolle. Das Handy ohne jede Displaysperre kann nichts prüfen: dann sagt die App das und öffnet."
+"text": "at.app_cache (in der Grundausstattung an), sperrbar je Profil. Die Seite merkt sich nur in der App (Kennung „SparkAndroid/“) und nur, solange /api/profile/settings „app_keep“ sagt; sagt der Spark nein, löscht sie alles. Die Kopie liegt im Seitenspeicher der App (im verschlüsselten Speicher der App, getrennt je Profil), nie Schlüssel, Codes, Admin-Seiten oder Dateien. Abmelden und ein anderes Profil löschen sie. Ein Browser merkt sich so nichts (dafür gibt es „Verlauf offline lesen“ mit vertrautem Browser). - Fingerabdruck für Admins: eigener Admin-Schalter chat.android_lock (aus); er greift nur bei einer Anmeldung mit Admin-Rolle. Das Handy ohne jede Displaysperre kann nichts prüfen: dann sagt die App das und öffnet."
 },
 {
 "lang": "de",
@@ -989,7 +989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 68 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private C"
+"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 69 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private C"
 },
 {
 "lang": "de",
@@ -997,7 +997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "hats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -1013,7 +1013,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 68 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 69 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
 },
 {
 "lang": "de",
@@ -6101,7 +6101,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": " sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
+"text": " sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Letzter Stand sofort da (seit V01.0.748, Funktion „Apps merken sich den letzten Stand“): Verlauf, Chats, Mein Profil, Einstellungen und „Im Panel öffnen“ zeigen beim Öffnen sofort den Stand vom letzten Mal, oben mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat (dann verschwindet der Hinweis, oder er sagt „Spark gerade nicht erreichbar“). Gemerkt werden die 20 neuesten Gespräche mit je 50 Nachrichten, die Chat-Liste und die letzte Seite von bis zu 20 Chats, die eigenen Einstellungen und Funktionen und die Zahlen auf den Kacheln von „Meine Sachen“ (nur wie viele, kein Name); private Chats und Chats mit „Nachrichten verschwinden“ nie. Ohne gemerkten Stand zeigt die Seite graue Platzhalter, nach einer Sekunde „Verbinde mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“ und bei einem Fehler „Noch einmal“. Kommt die App nach vorne, holt sie Verlauf, Chats und Einstellungen einma"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"title": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"text": "l im Hintergrund (höchstens alle 5 Minuten). Braucht eine Seite länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) eine Zeile app: langsam <Seite> <ms> ms iphone. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
 },
 {
 "lang": "de",
@@ -6357,7 +6365,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "h „Ja“ auf dem iPhone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel. - Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB. - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht. - Spark-Update: Rechte vergibt nur der Admin (mit seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür. - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf. - Anrufe: Ton und Bild gehen verschlüsselt (DTLS-SRTP) direkt zwischen den Geräten oder über den eigenen Vermittler des Sparks, nie über Apple. Apple bekommt bei"
+"text": "h „Ja“ auf dem iPhone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel. - Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB. - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht. - Letzter Stand (Admin-Schalter chat.app_cache, in der Grundausstattung an, sperrbar je Profil): Die App merkt sich nur, solange GET /api/iphone/hello „keep“ sagt; sagt der Spark nein, löscht sie alles sofort. Die Dateien liegen im eigenen Speicher der App mit Datenschutz „vollständig“ (gesperrt unlesbar), nie in der iCloud- oder Computer-Sicherung, in einem Ordner je Kopplung (sein Name ist ein Hash aus Adresse und Schlüssel, nie der Schlüssel). Entkoppeln, eine neue Kopplung und ein anderes Profil löschen alles. Nie gemerkt: Schlüssel, Codes, „Spark verwalten“, private und verschwindende Chats, Dateien und Bilder. Gemerkte Rechte schalten nichts ein (Mikrofon, Push, Anrufe, Apple Erinnerungen warten auf die Antwort des Spark). - Spark-Update: Rechte vergibt nur der Admin (mi"
 },
 {
 "lang": "de",
@@ -6365,7 +6373,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "m Klingeln nur eine Zufallsnummer, Name und Art holt die App mit ihrem Schlüssel vom Spark. Der App-Schlüssel erreicht nur die Anruf-Wege (Start, Annehmen, Signal, Ende, Info, ICE), und nur für Anrufe, an denen sein Profil beteiligt ist. Das Sprachmodell kann keinen Anruf starten. - Private Chats: Der Schlüssel des iPhones liegt im Secure Enclave und verlässt es nie; der Spark sieht nur verschlüsselte Nachrichten. Ein neuer Schlüssel braucht den Code des zweiten Schritts, wie ein neues Gerät. - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil."
+"text": "t seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür. - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf. - Anrufe: Ton und Bild gehen verschlüsselt (DTLS-SRTP) direkt zwischen den Geräten oder über den eigenen Vermittler des Sparks, nie über Apple. Apple bekommt beim Klingeln nur eine Zufallsnummer, Name und Art holt die App mit ihrem Schlüssel vom Spark. Der App-Schlüssel erreicht nur die Anruf-Wege (Start, Annehmen, Signal, Ende, Info, ICE), und nur für Anrufe, an denen sein Profil beteiligt ist. Das Sprachmodell kann keinen Anruf starten. - Private Chats: Der Schlüssel des iPhones liegt im Secure Enclave und verlässt es nie; der Spark sieht nur verschlüsselte Nachrichten. Ein neuer Schlüssel braucht den Code des zw"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "eiten Schritts, wie ein neues Gerät. - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil."
 },
 {
 "lang": "de",
@@ -7629,7 +7645,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "admin: Features → Android app → \"Android: fingerprint for admins\" (off). When the app is signed in with a profile with an admin role, it asks for the phone's fingerprint, face or screen lock when opened and after 5 minutes in the background (like Face ID before \"Spark verwalten\" in the iPhone app). Android checks it; the app learns only yes or no, the Spark nothing. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Calm during a Spark update (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows \"Spark startet neu … Die Seite kommt gleich wieder.\" (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place. - Sav"
+"text": "admin: Features → Android app → \"Android: fingerprint for admins\" (off). When the app is signed in with a profile with an admin role, it asks for the phone's fingerprint, face or screen lock when opened and after 5 minutes in the background (like Face ID before \"Spark verwalten\" in the iPhone app). Android checks it; the app learns only yes or no, the Spark nothing. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Calm during a Spark update (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows \"Spark startet neu … Die Seite kommt gleich wieder.\" (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place. - Las"
 },
 {
 "lang": "en",
@@ -7637,7 +7653,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "e the battery (from 1.3.3, V01.0.668): in the background the app pauses its page (no polling, no open connections of the page); coming back it catches up. During a call the page stays awake. \"Mitteilungen sofort\" keeps running independently. - Camera for video calls (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the own Spark's page. Without the camera the call goes on with sound. - Update in the app (1.3.0 and later, V01.0.533): admin: Features → Android app → \"Android: update in the app\" (off). Once released the app shows a strip \"New app version … · Update now\" at the top (✕ hides it until the next version); the note \"New Spark app\" and the button under Me → Android app start the update too. The app asks only its own Spark (/api/profile/android: version, size, SHA-256), never GitHub, and loads the APK with its sign-in from GET /api/android/apk into its cache. Before installing it checks itself: size and SHA-256 as reported, package name io.github.db9979.spark, a higher version code, the same signing key as the installed app. Then Android's package installer takes over; it checks the signa"
+"text": "t state at once (from 1.4.1, V01.0.748, function \"Apps keep the last state\"): nothing stays blank on the first load: after a second \"Verbinde mit dem Spark …\" (connecting), after 8 seconds \"Das dauert länger als sonst …\" (takes longer), when the Spark cannot be reached \"Noch einmal\" (try again) and \"Adresse ändern\". Then the page in the app shows the conversations (the 20 newest with 50 messages each), the chat list and the own settings of last time at once, above the conversation with \"As of 16:05 · refreshing …\" until the Spark has answered. When the app comes to the front it fetches settings and chats once in the background (at most every 5 minutes). When the start or a list needs more than 2 seconds, Status → Logs (area Apps) shows app: langsam <page> <ms> ms android. - Save the battery (from 1.3.3, V01.0.668): in the background the app pauses its page (no polling, no open connections of the page); coming back it catches up. During a call the page stays awake. \"Mitteilungen sofort\" keeps running independently. - Camera for video calls (1.3.1 and later, V01.0.556): the app asks for the camera at the first video call in Chats, for the microphone at the first call; only for the ow"
 },
 {
 "lang": "en",
@@ -7669,7 +7685,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Security",
 "title": "Security",
-"text": "is the fixed link sparkapp:update the app catches. Log: android: app update … sent to … or … refused … reason …. - Notes stay in memory only (24 hours, at most 30 per profile) and only go to the profile's own login. - Spark as assistant: its own admin switch chat.android_assist (off), blockable per profile, never guests. The Spark checks every question of the sheet itself (device \"android\"); without the release it answers 403 and logs android: assistant refused for … reason …. The app learns the release only from /api/profile/android and shows or hides widget, tile and shortcuts by it. The microphone runs only while the sheet is open and the question lasts (at most 30 seconds); on the lock screen only after unlocking. The widget shows numbers only, never titles or names of appointments and messages. Waiting questions stay in the app only (at most 10, one day). - Shared files go through the Spark's normal ways (/api/chat/image, /api/profile/docs) with their rights, size and rate limits; the app reads only content addresses (content://), no file paths. - Fingerprint for admins: its own admin switch chat.android_lock (off); it applies only to a login with an admin role. A phone withou"
+"text": "is the fixed link sparkapp:update the app catches. Log: android: app update … sent to … or … refused … reason …. - Notes stay in memory only (24 hours, at most 30 per profile) and only go to the profile's own login. - Spark as assistant: its own admin switch chat.android_assist (off), blockable per profile, never guests. The Spark checks every question of the sheet itself (device \"android\"); without the release it answers 403 and logs android: assistant refused for … reason …. The app learns the release only from /api/profile/android and shows or hides widget, tile and shortcuts by it. The microphone runs only while the sheet is open and the question lasts (at most 30 seconds); on the lock screen only after unlocking. The widget shows numbers only, never titles or names of appointments and messages. Waiting questions stay in the app only (at most 10, one day). - Shared files go through the Spark's normal ways (/api/chat/image, /api/profile/docs) with their rights, size and rate limits; the app reads only content addresses (content://), no file paths. - Last state: admin switch chat.app_cache (on in the basic set), blockable per profile. The page keeps only inside the app (mark \"Spa"
 },
 {
 "lang": "en",
@@ -7677,7 +7693,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Security",
 "title": "Security",
-"text": "t any screen lock has nothing to check: the app says so and opens."
+"text": "rkAndroid/\") and only while /api/profile/settings says \"app_keep\"; when the Spark says no it deletes everything. The copy lies in the app's page storage (in the app's encrypted storage, apart per profile), never keys, codes, admin pages or files. Signing out and another profile delete it. A browser keeps nothing this way (that is \"Read history offline\" with a trusted browser). - Fingerprint for admins: its own admin switch chat.android_lock (off); it applies only to a login with an admin role. A phone without any screen lock has nothing to check: the app says so and opens."
 },
 {
 "lang": "en",
@@ -8557,7 +8573,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "rites. 7. Path allowed for the app?: An app key only works for the 68 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as devic"
+"text": "rites. 7. Path allowed for the app?: An app key only works for the 69 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as devic"
 },
 {
 "lang": "en",
@@ -8565,7 +8581,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "e „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -8581,7 +8597,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 68 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 69 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
 },
 {
 "lang": "en",
@@ -13461,7 +13477,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view. - Save the battery (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under \"On battery\") or CarPlay runs. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
+"text": "list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view. - Last state at once (since V01.0.748, function \"Apps keep the last state\"): history, chats, My profile, settings and \"Open in the panel\" show the state of last time as soon as they open, with \"As of 16:05 · refreshing …\" on top until the Spark has answered (then the note goes, or it says \"Spark not reachable right now\"). Kept are the 20 newest conversations with 50 messages each, the chat list and the last page of up to 20 chats, the own settings and functions and the numbers on the tiles of \"My things\" (only how many, no name); private chats and chats with \"messages vanish\" never. Without a kept state the page shows grey placeholders, after a second \"Connecting to the Spark …\", after 8 seconds \"This takes longer than usual …\" and on an error \"Try again\". When the app comes to the front it fetches history, chats and settings once in the background (at most every 5 minutes). When a page needs more than 2 seconds, Status → Logs (area Apps) shows a line app: langsam <page> <ms> ms iphone. - Save the battery (since V01.0.668): in the background the app stops its audio eng"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Quick start, history, photos, offline",
+"title": "Quick start, history, photos, offline",
+"text": "ine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under \"On battery\") or CarPlay runs. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
 },
 {
 "lang": "en",
@@ -13677,7 +13701,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "ions), at most 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB. - Waiting questions stay on the iPhone and are deleted when unpairing. - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Calls: sound and picture travel encrypted (DTLS-SRTP) directly between the devices or through the Spark's own relay, never through Apple. When ringing, Apple only gets a random number; name and kind the app fetches from the Spark with its key. The app key reaches only the call paths (start, answer, signal, end, info, ICE), and only for calls its profile takes part in. The language model cannot start a call. - Private chats: the iPhone's key lives in the Secure Enclav"
+"text": "ions), at most 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB. - Waiting questions stay on the iPhone and are deleted when unpairing. - Last state (admin switch chat.app_cache, on in the basic set, blockable per profile): the app keeps only while GET /api/iphone/hello says \"keep\"; when the Spark says no it deletes everything at once. The files lie in the app's own storage with data protection \"complete\" (unreadable while locked), never in an iCloud or computer backup, in one folder per pairing (its name is a hash of address and key, never the key). Unpairing, a new pairing and another profile delete everything. Never kept: keys, codes, \"Manage Spark\", private and vanishing chats, files and pictures. Kept rights switch nothing on (microphone, push, calls, Apple Reminders wait for the Spark's answer). - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed G"
 },
 {
 "lang": "en",
@@ -13685,7 +13709,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "e and never leaves it; the Spark only sees encrypted messages. A new key needs the second step's code, like a new device. - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile."
+"text": "itHub tests are installed. Every start is in the security log, and the language model has no tool for it. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Calls: sound and picture travel encrypted (DTLS-SRTP) directly between the devices or through the Spark's own relay, never through Apple. When ringing, Apple only gets a random number; name and kind the app fetches from the Spark with its key. The app key reaches only the call paths (start, answer, signal, end, info, ICE), and only for calls its profile takes part in. The language model cannot start a call. - Private chats: the iPhone's key lives in the Secure Enclave and never leaves it; the Spark only sees encrypted messages. A new key needs the second step's code, like a new device. - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile."
 },
 {
 "lang": "en",

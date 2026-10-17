@@ -267,9 +267,15 @@ struct ChatView: View {
                     demoProfile = s == "profile"
                     return
                 }
+                // the last state first (Merken.swift): the buttons are there before the Spark answers
+                if talk.allowed == Allowed(), let a = Merken.allowed() { talk.allowed = a }
                 await talk.begin(await app.refresh())
             }
-            .onChange(of: scene) { talk.scene(scene) }
+            .onChange(of: scene) {
+                talk.scene(scene)
+                // back in front: conversations, chats and settings fetched ahead (at most every 5 minutes, Merken.swift)
+                if scene == .active { Task { await Merken.prefetch(chats: chats.state.on) } }
+            }
             .onChange(of: talk.standing, initial: true) { UIApplication.shared.isIdleTimerDisabled = talk.standing }
             .alert(talk.offer?.question ?? "", isPresented: Binding(get: { talk.offer != nil }, set: { if !$0 { talk.offer = nil } })) {
                 Button("Ja") { if let o = talk.offer { talk.offer = nil; PhoneAction.run(o) } }
@@ -517,6 +523,8 @@ struct HistoryView: View {
     @State private var loading = true
     @State private var failed: String?
     @State private var search = ""
+    /// the list shown is the one kept last time (Merken.swift), from then
+    @State private var keptAt: Date?
 
     private var shown: [SavedConvo] {
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
@@ -529,25 +537,28 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if loading {
-                    ProgressView()
-                } else if let failed {
-                    ContentUnavailableView("Verlauf nicht geladen", systemImage: "wifi.exclamationmark", description: Text(failed))
+                if loading && keptAt == nil {
+                    List { LadeZeilen() }
+                } else if let failed, keptAt == nil {
+                    LadeFehler(title: "Verlauf nicht geladen", message: failed) { await load() }
                 } else if list.isEmpty {
                     ContentUnavailableView("Noch keine Gespräche", systemImage: "clock")
                 } else {
-                    List(shown) { c in
-                        Button {
-                            talk.resume(c)
-                            dismiss()
-                        } label: {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
-                                Text(c.updated, format: .dateTime.day().month().hour().minute())
-                                    .font(.footnote).foregroundStyle(.secondary)
+                    List {
+                        if let keptAt { StandNote(at: keptAt, loading: loading).listRowSeparator(.hidden) }
+                        ForEach(shown) { c in
+                            Button {
+                                talk.resume(c)
+                                dismiss()
+                            } label: {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                                    Text(c.updated, format: .dateTime.day().month().hour().minute())
+                                        .font(.footnote).foregroundStyle(.secondary)
+                                }
                             }
+                            .foregroundStyle(.primary)
                         }
-                        .foregroundStyle(.primary)
                     }
                     .searchable(text: $search)
                 }
@@ -557,10 +568,22 @@ struct HistoryView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .task {
                 if let demo = Demo.convos { list = demo; loading = false; return }
-                do { list = try await SparkAPI.current?.convos() ?? [] } catch { failed = error.localizedDescription }
-                loading = false
+                if let k = Merken.convoList(), !k.list.isEmpty { list = k.list; keptAt = k.at }
+                await load()
             }
         }
+    }
+
+    private func load() async {
+        loading = true
+        failed = nil
+        do {
+            let got = try await Merken.timed("verlauf") { try await SparkAPI.current?.convos() ?? [] }
+            list = got
+            keptAt = nil
+            Merken.keepConvos(got)
+        } catch { failed = error.localizedDescription }
+        loading = false
     }
 }
 
@@ -1077,7 +1100,14 @@ struct SettingsView: View {
             .navigationTitle("Einstellungen")
             .onAppear { openPages.removeAll() }   // back on this page: nothing below is open any more
             .task { await loadTalk() }
-            .task { if Demo.scene == nil { myStatus = await SparkAPI.current?.can("mystatus") ?? false } }
+            .task {
+                guard Demo.scene == nil else { return }
+                myStatus = SparkAPI.can(Merken.object("funktionen")?.d, "mystatus")   // the last state first (Merken.swift)
+                if let api = SparkAPI.current, let d = try? await api.object("GET", "api/features") {
+                    Merken.keepObject("funktionen", d)
+                    myStatus = SparkAPI.can(d, "mystatus")
+                }
+            }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .confirmationDialog("Schlüssel von diesem iPhone löschen?", isPresented: $confirm, titleVisibility: .visible) {
                 Button("Entkoppeln", role: .destructive) {
@@ -1093,6 +1123,7 @@ struct SettingsView: View {
     private func loadTalk() async {
         guard Demo.scene == nil, let api = SparkAPI.current, let d = try? await api.profileSettings(),
               let p = d["settings"] as? [String: Any] else { synced = true; return }
+        Merken.keepObject("einstellungen", d)
         if let h = p["hands"] as? Bool, h != handsFree { handsFree = h }
         if let b = p["barge"] as? Bool, b != bargeIn { bargeIn = b }
         if let v = p["speak"] as? Bool, v != speakAnswers { speakAnswers = v }

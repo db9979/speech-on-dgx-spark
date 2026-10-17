@@ -170,6 +170,7 @@ MODULE = {
     "apns": ("geraete", "Mitteilungen an die iPhone-App"),
     "push": ("geraete", "Web-Push für Erinnerungen"),
     "appupdate": ("geraete", "Spark-Update aus der iPhone-App"),
+    "appmerken": ("geraete", "Apps merken sich den letzten Stand: ob eine App ihn behalten darf, langsame Seiten ins Log"),
     "pebblewatch": ("geraete", "Kopplung der Pebble-Uhr"),
     "terminal": ("geraete", "Terminal-Client spark-tui: Kopplung mit gepinntem Zertifikat, Schlüssel nur für Chat, Heute, Aufträge"),
     "kopplung": ("geraete", "Einmal-Codes zum Koppeln: iPhone, Pebble, Schreibhilfe, Begleiter, Terminal"),

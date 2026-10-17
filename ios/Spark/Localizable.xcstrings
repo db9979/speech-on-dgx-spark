@@ -1,6 +1,66 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Das dauert länger als sonst …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This takes longer than usual …"
+          }
+        }
+      }
+    },
+    "Verbinde mit dem Spark …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to the Spark …"
+          }
+        }
+      }
+    },
+    "Lädt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading …"
+          }
+        }
+      }
+    },
+    "Stand %@ · wird aktualisiert …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of %@ · refreshing …"
+          }
+        }
+      }
+    },
+    "Stand %@ · Spark gerade nicht erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of %@ · Spark not reachable right now"
+          }
+        }
+      }
+    },
+    "Noch einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
     "Lange Gespräche": {
       "localizations": {
         "en": {

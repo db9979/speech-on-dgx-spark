@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.748** The apps show the last state as soon as they open and load visibly instead of staying blank
 - **V01.0.747** Chat calls show both sides on Live, monitoring and the Steuerzentrale: devices, voice or video, ringing or connected and both people (names only with consent)
 - **V01.0.746** iPhone app: every tile under "My things" opens its own part
 - **V01.0.745** Companion on the Mac: "Act on the PC" settings tidied up, switches on the right in cards
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.741** Describe the screen: ask "What do you see on my Mac?", the computer asks first, the description is shown but never stored
 - **V01.0.740** Self-test fix: the Kiwix test switches the Weiche off itself
 - **V01.0.739** Reddit and feeds: connect your own Reddit inbox, subreddits and feeds, news comes at once or in the daily briefing
-- **V01.0.738** Control centre in colour: boxes with a surface and round corners, the tools box names the tools used last
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

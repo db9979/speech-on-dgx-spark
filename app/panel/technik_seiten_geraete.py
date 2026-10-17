@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "7349d962e1",
+        "stand": "45a7e57948",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "b589998d9e",
+        "stand": "75d6a899f7",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -299,13 +299,15 @@ SEITEN = {
                "der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private "
                "Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. "
                "Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als "
-               "Assistent“ freigegeben ist (android.assist_gate).",
+               "Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt "
+               "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
                "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
                "only the call's random number; the app asks the Spark who calls. For private chats the app makes its own "
                "key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as "
-               "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate)."),
+               "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with "
+               "„keep“ (appmerken.keep); on no it deletes it."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, jobs)"))),
@@ -943,7 +945,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "a8431ca319",
+        "stand": "6b6e8b35fd",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

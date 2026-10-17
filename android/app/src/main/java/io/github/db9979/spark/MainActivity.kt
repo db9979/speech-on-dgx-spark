@@ -54,6 +54,11 @@ class MainActivity : Activity() {
     private lateinit var hint: TextView
     private lateinit var strip: LinearLayout
     private lateinit var wait: LinearLayout
+    private lateinit var waitText: TextView
+    private lateinit var waitBar: ProgressBar
+    private lateinit var waitRetry: Button
+    /** counts the loads: a note planned for an earlier load does not show any more */
+    private var waitGen = 0
     private lateinit var cover: LinearLayout
     private lateinit var coverText: TextView
     private var unlocking = false
@@ -212,7 +217,26 @@ class MainActivity : Activity() {
             if (cut >= 0) web.evaluateJavascript("location.hash='';location.hash=" + JSONObject.quote(url.substring(cut)), null)
             return
         }
+        if (!loadedOnce) firstLoad()
         web.loadUrl(url)
+    }
+
+    /**
+     * The first load of the page (Apps merken sich den letzten Stand, 2026-10-17): nothing stays blank and silent.
+     * After a second "Verbinde mit dem Spark …", after 8 s "Das dauert länger als sonst …" (the steps of the panel's
+     * laden.js); the page itself then shows what it kept (merken.js) until the Spark has answered.
+     */
+    private fun firstLoad() {
+        val gen = ++waitGen
+        web.postDelayed({ if (gen == waitGen && !loadedOnce) showWait("Verbinde mit dem Spark …", false) }, 1000)
+        web.postDelayed({ if (gen == waitGen && !loadedOnce) showWait("Das dauert länger als sonst … Die Seite kommt, sobald der Spark antwortet.", false) }, 8000)
+    }
+
+    private fun showWait(text: String, retry: Boolean) {
+        waitText.text = text
+        waitBar.visibility = if (retry) View.GONE else View.VISIBLE
+        waitRetry.visibility = if (retry) View.VISIBLE else View.GONE
+        wait.visibility = View.VISIBLE
     }
 
     // ------------------------------------------------------------ the page
@@ -243,6 +267,7 @@ class MainActivity : Activity() {
                 if (failedNow) { failedNow = false; return }
                 loadedOnce = true
                 retries = 0
+                waitGen++
                 wait.visibility = View.GONE
             }
 
@@ -252,14 +277,16 @@ class MainActivity : Activity() {
                 // instead of the address screen; only after about five minutes the address screen again
                 if (loadedOnce && retries < 25) {
                     failedNow = true
-                    wait.visibility = View.VISIBLE
+                    showWait("Spark startet neu … Die Seite kommt gleich wieder.", false)
                     val delay = minOf(15_000L, 2_000L shl minOf(retries, 3))
                     retries++
                     web.postDelayed({ web.reload() }, delay)
                     return
                 }
-                wait.visibility = View.GONE
-                showSetup("Der Spark ist nicht erreichbar (${err.description}). Adresse prüfen oder später noch einmal.")
+                // the first load: the reason with "Noch einmal" and "Adresse ändern" instead of a blank page
+                failedNow = true
+                waitGen++
+                showWait("Der Spark ist nicht erreichbar (${err.description}). Noch einmal versuchen oder die Adresse prüfen.", true)
             }
         }
         w.webChromeClient = object : WebChromeClient() {
@@ -551,7 +578,8 @@ class MainActivity : Activity() {
         box.isClickable = true
         val p = (24 * resources.displayMetrics.density).toInt()
         box.setPadding(p, p, p, p)
-        box.addView(ProgressBar(this))
+        waitBar = ProgressBar(this)
+        box.addView(waitBar)
         val t = TextView(this)
         t.text = "Spark startet neu … Die Seite kommt gleich wieder."
         t.textSize = 16f
@@ -559,9 +587,19 @@ class MainActivity : Activity() {
         t.setTextColor(if (dark) Color.LTGRAY else Color.DKGRAY)
         t.setPadding(0, p / 2, 0, p / 2)
         box.addView(t)
+        waitText = t
+        waitRetry = Button(this)
+        waitRetry.text = "Noch einmal"
+        waitRetry.visibility = View.GONE
+        waitRetry.setOnClickListener {
+            showWait("Verbinde mit dem Spark …", false)
+            if (!loadedOnce) firstLoad()
+            web.reload()
+        }
+        box.addView(waitRetry)
         val other = Button(this)
         other.text = "Adresse ändern"
-        other.setOnClickListener { wait.visibility = View.GONE; showSetup(null) }
+        other.setOnClickListener { waitGen++; wait.visibility = View.GONE; showSetup(null) }
         box.addView(other)
         box.visibility = View.GONE
         return box

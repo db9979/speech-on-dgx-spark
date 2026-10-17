@@ -281,6 +281,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/android.py` | The Android app "Spark": a thin shell around the page. |
 | `app/panel/anrufe.py` | Anrufe: Sprache und Video zwischen zwei Profilen. |
 | `app/panel/apns.py` | Push notifications to the iPhone app over Apple's push service (APNs), also while the app is closed. |
+| `app/panel/appmerken.py` | „Apps merken sich den letzten Stand“. |
 | `app/panel/appupdate.py` | Spark updates from the iPhone app: a notice when a new tested version is ready, and starting it. |
 | `app/panel/bedienen.py` | Spark bedient den Rechner: on the person's word ("Schreib am PC in Word …") the assistant works on the own PC or Mac step by step, looking at its screen (fer … |
 | `app/panel/begleiter.py` | Spark-Begleiter: a small program in the Windows notification area and the Mac menu bar (tools/begleiter/windows, tools/begleiter/mac) with these parts, each … |
@@ -801,9 +802,9 @@ flowchart TD
 4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits.
 5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
-7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 68 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
+7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 69 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
 8. <a id="kn-apps-s8"></a>**App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
-9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate).
+9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it.
 10. <a id="kn-apps-s10"></a>**Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
 11. <a id="kn-apps-s11"></a>**Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
 
@@ -826,7 +827,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 
 - **10** minutes a pairing code is valid ([step 3](#kn-apps-s3))
 - **5** iPhones per profile ([step 2](#kn-apps-s2))
-- **68** fixed paths for the app key ([step 7](#kn-apps-s7))
+- **69** fixed paths for the app key ([step 7](#kn-apps-s7))
 - **30** minutes an Android download link is valid ([step 3](#kn-apps-s3))
 - **5** downloads per Android link ([step 3](#kn-apps-s3))
 - **10** minutes a terminal pairing line is valid ([step 3](#kn-apps-s3))

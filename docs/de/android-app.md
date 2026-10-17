@@ -45,6 +45,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Notaus-Kachel** (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe [Sicherheit und Betrieb](sicherheit-und-betrieb.md)).
 - **Neue Version:** Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat.
 - **Ruhig beim Update des Spark** (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die App „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa fünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle.
+- **Letzter Stand sofort da** (ab 1.4.1, V01.0.748, Funktion „Apps merken sich den letzten Stand“): Beim ersten Laden bleibt nichts leer: nach einer Sekunde „Verbinde mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“, ist der Spark nicht erreichbar, „Noch einmal“ und „Adresse ändern“. Danach zeigt die Seite in der App sofort die Gespräche (die 20 neuesten mit je 50 Nachrichten), die Chat-Liste und die eigenen Einstellungen vom letzten Mal, über dem Gespräch mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat. Kommt die App nach vorne, holt sie Einstellungen und Chats einmal im Hintergrund (höchstens alle 5 Minuten). Braucht der Start oder eine Liste länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) `app: langsam <Seite> <ms> ms android`.
 - **Akku schonen** (ab 1.3.3, V01.0.668): Im Hintergrund pausiert die App ihre Seite (keine Abfragen, keine offenen Verbindungen der Seite); beim Zurückholen holt sie nach. Während eines Anrufs bleibt die Seite wach. „Mitteilungen sofort“ läuft unabhängig davon weiter.
 - **Kamera für Videoanrufe** (ab 1.3.1, V01.0.556): Die App fragt beim ersten Videoanruf in Chats nach der Kamera, beim ersten Anruf nach dem Mikrofon; nur für die Seite des eigenen Sparks. Ohne Kamera geht der Anruf mit Ton weiter.
 - **Update in der App** (ab 1.3.0, V01.0.533): Admin: Funktionen → Android-App → „Android: Update in der App“ (aus).
@@ -105,6 +106,11 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
   einen Tag).
 - Geteilte Dateien gehen über die normalen Wege des Spark (`/api/chat/image`, `/api/profile/docs`) mit ihren Rechten,
   Größen- und Ratenlimits; die App liest nur Inhalts-Adressen (`content://`), keine Dateipfade.
+- Letzter Stand: Admin-Schalter `chat.app_cache` (in der Grundausstattung an), sperrbar je Profil. Die Seite merkt
+  sich nur in der App (Kennung „SparkAndroid/“) und nur, solange `/api/profile/settings` „app_keep“ sagt; sagt der Spark
+  nein, löscht sie alles. Die Kopie liegt im Seitenspeicher der App (im verschlüsselten Speicher der App, getrennt je
+  Profil), nie Schlüssel, Codes, Admin-Seiten oder Dateien. Abmelden und ein anderes Profil löschen sie. Ein Browser
+  merkt sich so nichts (dafür gibt es „Verlauf offline lesen“ mit vertrautem Browser).
 - Fingerabdruck für Admins: eigener Admin-Schalter `chat.android_lock` (aus); er greift nur bei einer Anmeldung mit
   Admin-Rolle. Das Handy ohne jede Displaysperre kann nichts prüfen: dann sagt die App das und öffnet.
 

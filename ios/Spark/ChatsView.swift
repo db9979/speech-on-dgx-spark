@@ -174,6 +174,12 @@ extension SparkAPI {
     func chats() async throws -> ChatState {
         let (data, response) = try await URLSession.shared.data(for: request("api/chats"))
         try Self.check(data, response)
+        Merken.keep("chats", data)   // the last list for the next start (Merken.swift)
+        return Self.chatState(data)
+    }
+
+    /// The list as /api/chats sends it (also what the app kept of it).
+    static func chatState(_ data: Data) -> ChatState {
         let d = Self.object(data)
         var s = ChatState()
         s.enabled = d["enabled"] as? Bool ?? false
@@ -272,6 +278,16 @@ extension SparkAPI {
         r.url = c.url
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
+        let p = Self.chatPage(data)
+        // the newest page for the next start (Merken.swift): never a private chat or one whose messages vanish
+        if before.isEmpty, let name = Merken.name(chat: id) {
+            if p.priv || p.vanish != 0 { Merken.drop(name) } else { Merken.keep(name, data) }
+        }
+        return p
+    }
+
+    /// One page as /api/chats/items sends it (also the page the app kept).
+    static func chatPage(_ data: Data) -> ChatPage {
         let d = Self.object(data)
         var p = ChatPage()
         p.kind = d["kind"] as? String ?? "one"
@@ -514,14 +530,21 @@ final class ChatsModel: ObservableObject {
     @Published var error: String?
     @Published var hits: [ChatHit] = []
     @Published var finding = false
+    /// the list shown is the one kept last time (Merken.swift), from then; nil once the Spark answered
+    @Published var keptAt: Date?
     private var soon: Task<Void, Never>?
 
     var unread: Int { state.chats.filter { !$0.muted }.reduce(0) { $0 + $1.unread } }
 
     func load() async {
         guard let api = SparkAPI.current else { return }
+        if loading, keptAt == nil, let k = Merken.get("chats") {
+            state = SparkAPI.chatState(k.data)
+            keptAt = k.at
+        }
         do {
-            state = try await api.chats()
+            state = try await Merken.timed("chats") { try await api.chats() }
+            keptAt = nil
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -580,8 +603,9 @@ struct ChatsView: View {
             List {
                 if let nk = newDevice { transfer(nk) }
                 if let n = shareNote { Text(verbatim: "🔒 " + n).foregroundStyle(.secondary) }
-                if m.loading {
-                    ProgressView()
+                if let k = m.keptAt { StandNote(at: k, loading: m.loading).listRowSeparator(.hidden) }
+                if m.loading && m.keptAt == nil {
+                    LadeZeilen()
                 } else if !m.state.on {
                     Text(SparkAPI.way(m.state.enabled
                         ? String(localized: "Chats hat der Admin für dich gesperrt.")
@@ -919,9 +943,19 @@ final class ChatThreadModel: ObservableObject {
     private var typedAt = Date.distantPast
     private var soon: Task<Void, Never>?
 
+    /// the page shown is the one kept last time (Merken.swift), from then; nil once the Spark answered
+    @Published var keptAt: Date?
+    /// the Spark answered once (or said no): until then an empty chat shows placeholders, not "Schreib die erste …"
+    @Published var loaded = false
+
     init(id: String, title: String) {
         self.id = id
         page.title = title
+        if let name = Merken.name(chat: id), let k = Merken.get(name) {
+            page = SparkAPI.chatPage(k.data)
+            if page.title.isEmpty { page.title = title }
+            keptAt = k.at
+        }
     }
 
     var lines: [ChatLine] {
@@ -932,7 +966,8 @@ final class ChatThreadModel: ObservableObject {
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
-            var p = try await api.chatItems(id)
+            var p = try await Merken.timed("chat") { try await api.chatItems(id) }
+            keptAt = nil
             if p.title.isEmpty { p.title = page.title }
             if p.priv { await openBoxes(&p) }
             if older.isEmpty { moreOlder = p.more }
@@ -947,6 +982,7 @@ final class ChatThreadModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+        loaded = true
     }
 
     /// Private chat: the boxes become text for this iPhone (ChatSec.swift); without a key it can neither read nor write.
@@ -1178,6 +1214,7 @@ struct ChatThreadView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 6) {
+                        if let k = m.keptAt { StandNote(at: k, loading: m.error == nil) }
                         if m.moreOlder {
                             Button("Ältere Nachrichten") { Task { await m.loadOlder() } }
                                 .font(.footnote).disabled(m.busy).padding(.top, 6)
@@ -1186,7 +1223,9 @@ struct ChatThreadView: View {
                             Text(verbatim: "⏱ " + String(localized: "Nachrichten verschwinden") + " " + ChatChoice.vanishText(m.page.vanish))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
-                        if lines.isEmpty {
+                        if lines.isEmpty && !m.loaded {
+                            LadeZeilen(rows: 4)
+                        } else if lines.isEmpty {
                             Text(verbatim: m.page.group ? String(localized: "Die Gruppe ist da. Schreib die erste Nachricht.")
                                                         : String(localized: "Schreib die erste Nachricht."))
                                 .font(.footnote).foregroundStyle(.secondary).padding(.top, 20)

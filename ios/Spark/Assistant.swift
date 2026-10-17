@@ -731,6 +731,7 @@ final class Conversation: ObservableObject {
         defer { checking = false }
         do {
             allowed = try await api.hello(timeout: 8)
+            Merken.saw(allowed)
             unreachable = false
             Task { await refreshRooms(now: true) }
             flushNext()

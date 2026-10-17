@@ -35,7 +35,8 @@ PANEL = os.path.join(APP, "panel")
 OUT_OK = {"instant_ack": "the recordings stay on the Spark",
           "prefetch": "only the services the profile set up itself, the same calls as for a plain question",
           "tasks": "CalDAV only once the profile sets it up itself",
-          "history_live": "only between the profile's own devices and the Spark"}
+          "history_live": "only between the profile's own devices and the Spark",
+          "app_cache": "a copy only in the app's protected storage on the profile's own phone"}
 ALL = [k.split(".", 1)[1] for k in (*features.GRUNDAUSSTATTUNG, *features.GRUND_INTERNET)]
 
 
