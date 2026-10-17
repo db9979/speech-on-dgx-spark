@@ -5,6 +5,7 @@ core (paths, logins), monitor (samples), account (login and the profile's own da
 chat (assistant, tools, learning, watch), admin (settings, services, voices), update."""
 import asyncio
 import gzip
+import hashlib
 import os
 import re
 import sys
@@ -539,28 +540,47 @@ async def learner():
 
 
 _PAGE = {}
+_TAG = {}   # path -> (mtime, size, fingerprint)
+
+
+def file_tag(path):
+    """The fingerprint of a style or script: the first 12 hex digits of its SHA-256. It is the ?v= on the page's
+    links, so after an update only files that really changed are loaded again (V01.0.750); before, every update
+    (several a day) loaded all 2.2 MB once more."""
+    st = os.stat(path)
+    hit = _TAG.get(path)
+    if not hit or hit[:2] != (st.st_mtime, st.st_size):
+        with open(path, "rb") as f:
+            hit = _TAG[path] = (st.st_mtime, st.st_size, hashlib.sha256(f.read()).hexdigest()[:12])
+    return hit[2]
 
 
 def page_html():
-    """index.html with the version on every style and script link (/static/js/chat.js?v=V01.0.119) and in
-    <meta name="spark-version">: after an update the browser loads the new files at once (no Strg+F5,
-    also behind a caching proxy), and an open page sees that a newer version is there (base.js)."""
+    """index.html with the fingerprint of each file on every style and script link (/static/js/chat.js?v=3fa9c0d1e2b4,
+    file_tag) and the version in <meta name="spark-version">: after an update the browser loads the changed files at
+    once (no Strg+F5, also behind a caching proxy), and an open page sees that a newer version is there (base.js)."""
     path = os.path.join(STATIC, "index.html")
     ver = re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "0"
     key = (ver, os.path.getmtime(path))
     if _PAGE.get("key") != key:
         with open(path, encoding="utf-8") as f:
             html = f.read()
-        html = re.sub(r'((?:href|src)="/static/(?:js/)?[a-z0-9\-]+\.(?:css|js))"', rf'\1?v={ver}"', html)
+        html = re.sub(r'((?:href|src)="/static/((?:js/)?[a-z0-9\-]+\.(?:css|js)))"',
+                      lambda m: f'{m.group(1)}?v={file_tag(os.path.join(STATIC, m.group(2)))}"', html)
         html = html.replace("<head>", f'<head>\n<meta name="spark-version" content="{ver}">', 1)
-        _PAGE.update(key=key, html=html)
+        _PAGE.update(key=key, html=html, gz=gzip.compress(html.encode("utf-8"), 6, mtime=0))
     return _PAGE["html"]
 
 
 @app.get("/")
-def index():
-    # never stored: the page names the current files, those are only revalidated (no-cache)
-    return HTMLResponse(page_html(), headers={"Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0"})
+def index(request: Request):
+    # never stored: the page names the current files, those are only revalidated (no-cache). Gzipped when the browser
+    # takes it (212 KB → about 40 KB); the page is the same for everybody and holds no secret (no BREACH target).
+    html = page_html()
+    head = {"Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0", "Vary": "Accept-Encoding"}
+    if "gzip" in request.headers.get("accept-encoding", "").lower():
+        return Response(_PAGE["gz"], media_type="text/html; charset=utf-8", headers={**head, "Content-Encoding": "gzip"})
+    return HTMLResponse(html, headers=head)
 
 
 # App files (installable assistant). Public like the start page: they hold no data.
@@ -574,11 +594,13 @@ _GZ = {}   # path -> (mtime, size, gzipped bytes)
 
 def _asset(request: Request, path, media):
     """A style or script of the page. Gzipped when the browser takes it (a third of the size; kept in memory per
-    file version). With ?v= of the running version the browser keeps it a day without asking (an update changes
-    ?v=, page_html; a day, not longer, in case a file was fetched mid-update). Without, or with an older ?v=, it is
-    revalidated (no-cache)."""
+    file version). With ?v= of its own fingerprint (file_tag, the start page) the browser keeps it a year without
+    asking: changed content gets another ?v=. With ?v= of the running version (live.html, scripts loading scripts)
+    a day (an update changes ?v=; not longer, in case a file was fetched mid-update). Else revalidated (no-cache)."""
     ver = re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "0"
-    cache = "public, max-age=86400" if request.query_params.get("v") == ver else "no-cache"
+    v = request.query_params.get("v")
+    cache = ("public, max-age=31536000, immutable" if v == file_tag(path) else
+             "public, max-age=86400" if v == ver else "no-cache")
     if "gzip" not in request.headers.get("accept-encoding", "").lower():
         return FileResponse(path, media_type=media, headers={"Cache-Control": cache, "Vary": "Accept-Encoding"})
     st = os.stat(path)

@@ -511,7 +511,8 @@ class Browser(unittest.TestCase):
                     async with pg.expect_navigation():
                         await pg.evaluate("verWatch.back=Date.now();verCheck()")
                     await self.until(pg, "typeof SPARK_VER!=='undefined'&&SPARK_VER==='V99.0.1'", 20)
-                    self.assertIn("/static/js/base.js?v=V99.0.1",
+                    # the links carry each file's fingerprint (V01.0.750): unchanged files stay in the browser
+                    self.assertIn("/static/js/base.js?v=" + panel.file_tag(os.path.join(panel.STATIC, "js", "base.js")),
                                   await pg.evaluate("[...document.scripts].map(s=>s.src).join(' ')"))
                 finally:
                     panel.app_version, account.app_version = old_p, old_a

@@ -1643,6 +1643,13 @@
 "titel": "Tippen im Chat bei langem Gespräch",
 "text": "A: Im Assistenten am Rechner (Browser) ein Gespräch mit vielen Fragen öffnen und einen langen Satz schnell ins Eingabefeld tippen. Die Buchstaben erscheinen sofort, nichts hakt, auch wenn man kurz stehen bleibt und weitertippt. Beim Öffnen des Gesprächs steht unten die letzte Antwort, und man kann ganz nach oben blättern.",
 "thread": "Langsames Tippen im Chat"
+},
+{
+"id": "P259",
+"v": 750,
+"titel": "Webanwendung schneller und aufgeräumter",
+"text": "A: Nach dem Update am Handy im Browser das Panel als Admin neu laden: der Assistent ist nach etwa 2 s bedienbar. Am Rechner: die Spalte mit dem Gesicht ist schmal, Sprechen oben, Neu und Stopp darunter, die Schalter untereinander. Einstellungen ganz nach unten blättern: unter der letzten Zeile ist Platz, das schwebende Gesicht unten rechts verdeckt dort nichts. Zustand öffnen: links die Blöcke Beobachten, Prüfen und Technik mit Symbolen, die Karten (Dienste, Speicher, Verbrauch) erscheinen gleich; unter Live steht die Fußzeile unten am Fenster. Funktionen → Anleitungen zeigt alle Anleitungen, „Anleitung“ an einem Schalter klappt ihren Text auf. Am Handy Verwalten → Einstellungen: oben links steht „Verwalten“ ganz und läuft nie in den Titel. Ein zweites Update später: die Seite lädt spürbar schneller, weil unveränderte Dateien im Browser bleiben.",
+"thread": "Webanwendung schöner und schneller"
 }
 ]
 }

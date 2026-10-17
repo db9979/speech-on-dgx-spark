@@ -158,7 +158,7 @@ document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 2
 function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',chats:'chats',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
-const GROUPS={chat:[['chat','']],chats:[['chats','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')],['verb',t('Verbessern','Improve')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['praxis',t('Praxistest','Hands-on test')],['tech',t('Technik','Architecture')]],
+const GROUPS={chat:[['chat','']],chats:[['chats','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
   feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
@@ -189,9 +189,13 @@ const SUBDESC={mon:()=>($('ztitle')||{}).textContent||'',test:()=>t('Funktionspr
   prof:()=>t('Profile, Gäste und Geräte mit Schlüssel','Profiles, guests and devices with a key'),
   apps:()=>t('Open WebUI, andere Apps, Pebble, Siri, curl und Python','Open WebUI, other apps, Pebble, Siri, curl and Python')};
 const GNAME={mon:t('Zustand','Status'),feat:t('Funktionen','Features'),prof:t('Personen und Geräte','People and devices')};
+// Zustand in three blocks like Einstellungen (Webanwendung 6, V01.0.750): the heading stands before the first page of
+// its block, each page gets its symbol (seite.js pageIcon, appended after the text like in #cfgnav)
+const SUBGRP={mon:t('Beobachten','Watch'),test:t('Prüfen','Check'),usage:t('Technik','Technology')};
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav'),many=items.length>1;bar.hidden=!many;document.querySelector('main').classList.toggle('hassub',many);
   if(!many)document.querySelector('main').classList.remove('sublist');
-  bar.innerHTML=!many?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');
+  bar.innerHTML=!many?'':items.map(([id,l])=>(g==='mon'&&SUBGRP[id]?`<div class="cgrp">${esc(SUBGRP[id])}</div>`:'')+`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');
+  if(window.pageIcon)bar.querySelectorAll('button[data-sub]').forEach(b=>{const i=pageIcon('z:'+b.dataset.sub);if(i){b.appendChild(i);b.classList.add('hasic')}});
   $('subback').querySelector('span').textContent=GNAME[g]||'';
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);document.querySelector('main').classList.remove('sublist');showSec(b.dataset.sub);if(NARROW())window.scrollTo(0,0)});updBadge(window.UPD)}
 $('subback').onclick=()=>{const m=document.querySelector('main');m.classList.add('sublist');const z=bar=>bar&&bar.querySelector('[data-sub=mon] small');const sm=z($('subnav'));if(sm)sm.textContent=SUBDESC.mon();window.scrollTo(0,0)};

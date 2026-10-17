@@ -114,6 +114,9 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
   if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
+  // the back label takes the room up to the title, so „Verwalten“ stands whole beside a short title and shortens
+  // beside a long one (Webanwendung 7, V01.0.750); one measurement per change of page
+  back.style.maxWidth='';if(bl&&show){const r=$('aptitle').getBoundingClientRect().left-back.getBoundingClientRect().left-6;if(r>40)back.style.maxWidth=Math.floor(r)+'px'}
   if(lead.dataset.h!==lh){lead.innerHTML=lh;lead.dataset.h=lh}if(trail.dataset.h!==th){trail.innerHTML=th;trail.dataset.h=th}
   B.classList.toggle('apsub',show&&!!bl);
   sync()}

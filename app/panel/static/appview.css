@@ -22,8 +22,10 @@ body.appview.inchat #apbar{flex:none;background:var(--apcard);border-bottom:0}
 .aplead,.aptrail{display:flex;gap:2px}.aptrail{margin-left:auto}
 @media (max-width:360px){.apib{width:36px}}   /* the magnifier at the top (plaene/suche-gesicht.md): room for the title at 320 px */
 .apib{width:42px;height:42px;display:grid;place-items:center;border:0;background:none;color:var(--acc);cursor:pointer;padding:0}.apib svg{width:24px;height:24px}
-.apnb{display:flex;align-items:center;border:0;background:none;color:var(--acc);font:inherit;font-size:17px;padding:8px 6px 8px 0;min-height:44px;cursor:pointer;max-width:32vw}
-.apnb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.apnb svg{width:26px;height:26px;flex:none}
+/* the back label never runs into the title: appview.js render() gives it the room up to the title, this is the
+   upper bound; the arrow is small, so „Verwalten“ fits whole at 390 px (Webanwendung 7, V01.0.750) */
+.apnb{display:flex;align-items:center;border:0;background:none;color:var(--acc);font:inherit;font-size:17px;padding:8px 0;min-height:44px;cursor:pointer;max-width:calc(30vw + 8px)}
+.apnb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.apnb svg{width:22px;height:22px;flex:none;margin-right:-1px}
 #apback[hidden]{display:none}
 /* ---- tab bar */
 body.appview.aptabs #aptabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--apbarbg);
@@ -157,8 +159,6 @@ body.appview.appage #credit{display:none}
    bar, not over the switches at the right edge; its bubble opens below it */
 body.appview:not(.inchat) #fab,body.appview:has(#profmodal[style*="grid"]) #fab{top:calc(env(safe-area-inset-top) + 3px);bottom:auto!important;right:8px;flex-direction:column-reverse}
 body.appview:not(.inchat) #fab .fabface,body.appview:has(#profmodal[style*="grid"]) #fab .fabface{width:38px;height:38px;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-/* the back label never runs into the title: at most a quarter of the width */
-.apnb{max-width:calc(30vw - 8px)}
 /* Ich (Paket 4): the page on the background like the settings, the rows in their boxes */
 body.appview .mebody #setbox.ptab{background:none;padding:0}
 body.appview .mebody .ptab:has(.ic-tabwrap,.ic-list,.ic-card){background:none;padding:0}

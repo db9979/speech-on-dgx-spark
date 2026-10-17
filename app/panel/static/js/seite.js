@@ -55,7 +55,13 @@ const IC={start:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],fe
   asr:['teal','M9 3h6v11H9zM5 11a7 7 0 0014 0M12 18v3'],tts:['teal','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 010 6M19 6a8 8 0 010 12'],
   voices:['teal','M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2'],sec:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4'],
   sysc:['gray','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'],upd:['green','M12 3v12M7 10l5 5 5-5M4 20h16'],
-  bak:['green','M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10']};
+  bak:['green','M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10'],
+  // the pages of Zustand (base.js subnav): Beobachten blue, Prüfen green, Technik violet
+  'z:mon':['blue','M3 12h4l3-7 4 14 3-7h4'],'z:live':['blue','M12 12h.01M8.5 8.5a5 5 0 000 7M15.5 8.5a5 5 0 010 7M5.6 5.6a9 9 0 000 12.8M18.4 5.6a9 9 0 010 12.8'],
+  'z:logs':['blue','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],'z:test':['green','M5 12l5 5L20 7'],
+  'z:verb':['green','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],'z:praxis':['green','M9 4h6v3H9zM7 5H5v16h14V5h-2M9 14l2 2 4-4'],
+  'z:usage':['violet','M4 20V10M10 20V4M16 20v-7M22 20H2'],'z:models':['violet','M12 3a4 4 0 00-4 4 4 4 0 00-3 6.5A4 4 0 009 20h6a4 4 0 004-6.5A4 4 0 0016 7a4 4 0 00-4-4zM12 3v17'],
+  'z:tech':['violet','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4']};
 const NS='http://www.w3.org/2000/svg';
 function icon(k){const d=IC[k];if(!d)return null;const sp=document.createElement('span');sp.className='cic c-'+d[0];sp.setAttribute('aria-hidden','true');
   const sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox','0 0 24 24');const pa=document.createElementNS(NS,'path');pa.setAttribute('d',d[1]);sv.appendChild(pa);sp.appendChild(sv);return sp}

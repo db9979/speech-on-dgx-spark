@@ -1805,8 +1805,9 @@ function featTags(g,row){const lbl=row.querySelector('.lbl');if(!lbl||lbl.queryS
 function guidesSwitches(){GUIDES.filter(g=>g.sw).forEach(g=>{const el=$(g.sw);if(!el||document.querySelector(`[data-gbtn="${g.id}"]`))return;
   const row=el.closest('.setrow'),anchor=row||(el.closest('label.chk')||el),after=row||(anchor.nextElementSibling&&anchor.nextElementSibling.classList.contains('fh')?anchor.nextElementSibling:anchor);
   const btn=document.createElement('button');btn.type='button';btn.className='gbtn';btn.dataset.gbtn=g.id;btn.textContent=t('Anleitung','Guide');
-  const box=document.createElement('div');box.className='guide inline';box.hidden=true;box.innerHTML=`<div class="gbody">${guideHTML(g)}</div>`;
-  btn.onclick=()=>{box.hidden=!box.hidden;btn.classList.toggle('on',!box.hidden)};
+  // the text is written at the first tap: some 70 guides at every page start were most of guides.js' time (V01.0.750)
+  const box=document.createElement('div');box.className='guide inline';box.hidden=true;
+  btn.onclick=()=>{if(!box.firstChild)box.innerHTML=`<div class="gbody">${guideHTML(g)}</div>`;box.hidden=!box.hidden;btn.classList.toggle('on',!box.hidden)};
   (row?row.querySelector('.lbl'):after).appendChild(btn);after.after(box)})}
 // "Ich" window: the guides of a page at its top (re-added when a page redraws itself).
 function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(g=>g.me===id);
@@ -1814,8 +1815,10 @@ function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(
 // Group of an "Ich" page, for the headers in its menu.
 const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='hands');return g?g.grp:null};
 // Funktionen → Anleitungen: all guides, grouped.
-function guidesAll(){const el=$('guidelist');if(!el)return;
+function guidesAll(){const el=$('guidelist');if(!el||el.firstChild)return;
   el.innerHTML=GGROUPS.map(([gid,de,en])=>`<div class="ggrp"><h3>${esc(t(de,en))}</h3><div data-g="${gid}"></div></div>`).join('');
   GUIDES.forEach(g=>el.querySelector(`[data-g="${g.grp}"]`).appendChild(guideBox(g,false,true)))}
-function guidesInit(){guidesFeat();guidesSwitches();guidesAll()}
+// the list of all guides is drawn when its page (Funktionen → Anleitungen) opens, not at every page start
+function guidesInit(){guidesFeat();guidesSwitches();const sec=$('int');if(!sec)return;if(sec.classList.contains('on'))guidesAll();
+  new MutationObserver(()=>{if(sec.classList.contains('on'))guidesAll()}).observe(sec,{attributes:true,attributeFilter:['class']})}
 guidesInit();

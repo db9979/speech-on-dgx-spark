@@ -3,6 +3,7 @@
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import base64
+import hashlib
 import json
 import os
 import time
@@ -93,16 +94,23 @@ class Page(unittest.TestCase):
         self.assertIn(f'<meta name="spark-version" content="{ver}">', r.text)
         links = re.findall(r'(?:src|href)="(/static/(?:js/)?[^"/]+\.(?:js|css)[^"]*)"', r.text)
         self.assertGreater(len(links), 10)
+        static = os.path.join(os.path.dirname(panel.__file__), "static")
         for f in links:
-            self.assertTrue(f.endswith("?v=" + ver), f)
-            # V01.0.406: the running version's files are kept a day (an update changes ?v=), others revalidated
-            self.assertEqual(g.get(f).headers["cache-control"], "public, max-age=86400", f)
-            self.assertEqual(g.get(f.replace("?v=" + ver, "?v=V0")).headers["cache-control"], "no-cache", f)
+            # V01.0.750: ?v= is the file's own fingerprint, so an update loads only what changed; such a link is
+            # kept a year without asking. The running version (live.html, scripts loading scripts) a day (V01.0.406),
+            # anything else is revalidated.
+            path, tag = f.split("?v=")
+            with open(os.path.join(static, path[len("/static/"):]), "rb") as fh:
+                self.assertEqual(tag, hashlib.sha256(fh.read()).hexdigest()[:12], f)
+            self.assertEqual(g.get(f).headers["cache-control"], "public, max-age=31536000, immutable", f)
+            self.assertEqual(g.get(path + "?v=" + ver).headers["cache-control"], "public, max-age=86400", f)
+            self.assertEqual(g.get(path + "?v=V0").headers["cache-control"], "no-cache", f)
+            self.assertEqual(g.get(path + "?v=000000000000").headers["cache-control"], "no-cache", f)
         self.assertEqual(g.get("/sw.js?v=" + ver).headers["cache-control"], "no-cache")
-        # every script and stylesheet tag, whatever its name, goes through the version (new files too)
+        # every script and stylesheet tag, whatever its name, goes through the fingerprint (new files too)
         tags = re.findall(r'<script[^>]*\ssrc="([^"]+)"|<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', r.text)
         for f in [a or b for a, b in tags]:
-            self.assertTrue(f.startswith("/static/") and f.endswith("?v=" + ver), "Link ohne Version: " + f)
+            self.assertTrue(f.startswith("/static/") and re.search(r"\?v=[0-9a-f]{12}$", f), "Link ohne Fingerabdruck: " + f)
         # scripts loading more scripts or styles later name the version as well
         js_dir = os.path.join(os.path.dirname(panel.__file__), "static", "js")
         for name in os.listdir(js_dir):

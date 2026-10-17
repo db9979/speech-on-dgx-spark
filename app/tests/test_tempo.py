@@ -176,8 +176,58 @@ class PageFiles(unittest.TestCase):
             self.assertEqual(z.content, raw.content)   # the client unpacks it: same file
             self.assertLess(len(gzip.compress(raw.content)), len(raw.content) * 0.6)
             self.assertIn("Accept-Encoding", z.headers.get("vary", ""))
+        # the start page too (V01.0.750: 212 KB went out unpacked), and it stays never stored
+        raw = c.get("/", headers={"Accept-Encoding": "identity"})
+        z = c.get("/", headers={"Accept-Encoding": "gzip"})
+        self.assertEqual(z.headers.get("content-encoding"), "gzip")
+        self.assertIsNone(raw.headers.get("content-encoding"))
+        self.assertEqual(z.text, raw.text)
+        self.assertEqual(z.headers["cache-control"], "no-store")
+        self.assertIn("Accept-Encoding", z.headers.get("vary", ""))
         self.assertEqual(c.get("/static/js/nope.js").status_code, 404)
         self.assertEqual(c.get("/static/js/..%2Fpanel.py").status_code, 404)
+
+
+class QuickStart(unittest.TestCase):
+    """Webanwendung (V01.0.750, Dominik 2026-10-17): an admin's page start on a slow phone took 11.5 s. The jump links
+    asked getComputedStyle for every hint (the page was recalculated each time), the Zustand cards asked the panel 13
+    times while the assistant was open, and some 70 guides were written at every start."""
+
+    @staticmethod
+    def js(name):
+        import os
+        with open(os.path.join(os.path.dirname(panel.__file__), "static", "js", name), encoding="utf-8") as f:
+            return f.read()
+
+    def test_zustand_cards_ask_only_while_zustand_is_seen(self):
+        import re
+        start = self.js("start.js")
+        cards = re.search(r"zCards\(\[(.*?)\]\);", start).group(1)
+        names = re.findall(r"'(z[A-Z]\w*)'", cards)
+        self.assertGreaterEqual(len(names), 10)
+        for n in names:
+            self.assertNotRegex(start, r"\b" + n + r"\(\)", n + " is called at the start again: zCards only")
+            self.assertNotIn("setInterval(" + n, start)
+        admin_js = self.js("admin.js")
+        body = admin_js[admin_js.index("function zCards("):]
+        self.assertIn("if(zSeen())f()", body[:300])    # the timer asks only while Zustand is seen
+        self.assertIn("zCardsNow()", admin_js[:admin_js.index("async function refresh(")])   # at once when it opens
+
+    def test_jump_links_look_at_the_menu_once_per_frame(self):
+        way = self.js("way.js")
+        root = way[way.index("function wayRootOk("):way.index("// the open parts of a page")]
+        self.assertIn("wayFrame()", root)
+        self.assertEqual(way.count("wayVis("), 1, "wayVis (getComputedStyle) only in wayRootOk, kept per frame")
+        self.assertIn("const l=k.low;", way)   # names lowered once per frame, not per hint
+
+    def test_guides_are_written_when_they_are_opened(self):
+        g = self.js("guides.js")
+        init = g[g.index("function guidesInit("):]
+        self.assertIn("if(sec.classList.contains('on'))guidesAll()", init)   # the list only with its page open
+        self.assertNotIn(";guidesAll();", init)
+        sw = g[g.index("function guidesSwitches("):g.index("function guidesMe(")]
+        build = sw[:sw.index("btn.onclick")]
+        self.assertNotIn("guideHTML", build, "the inline guide is written at the first tap, not at the start")
 
 
 class SpeechRestart(unittest.TestCase):

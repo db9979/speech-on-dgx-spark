@@ -18,11 +18,15 @@ const WAY_SKIP='[role=log],a,button,label,summary,select,option,textarea,input,[
 const wayLow=s=>(s||'').toLocaleLowerCase('de');
 const wayVis=e=>!!e&&!e.hidden&&getComputedStyle(e).display!=='none';
 const wayWait=ms=>new Promise(r=>setTimeout(r,ms));
-let WAY_MEMO=null;   // the names per step, kept for one frame (a page can hold many hints)
+let WAY_MEMO=null;   // the names per step and which menus are seen, kept for one frame (a page can hold many hints)
+const wayFrame=()=>{if(!WAY_MEMO){WAY_MEMO=new Map();requestAnimationFrame(()=>{WAY_MEMO=null})}return WAY_MEMO};
 function wayRootOk(k,all){
   if(k==='me')return all||(typeof PROFILE!=='undefined'&&!!PROFILE&&!(typeof GATE!=='undefined'&&GATE));
   if(typeof ADMIN==='undefined'||!ADMIN||typeof KIOSK!=='undefined'&&KIOSK)return false;
-  return all||wayVis(document.querySelector(`nav button[data-s=${k}]`))}
+  if(all)return true;
+  // once per frame: getComputedStyle after each link put in recalculated the whole page (8 s at an admin's start
+  // on a slow phone, V01.0.749)
+  const M=wayFrame(),key='vis:'+k;if(!M.has(key))M.set(key,wayVis(document.querySelector(`nav button[data-s=${k}]`)));return M.get(key)}
 // the open parts of a page around an element: folded boxes, the function's detail
 function wayOpen(el){for(let d=el.closest('details');d;d=d.parentElement.closest('details'))d.open=true;
   if(typeof featShow==='function')featShow(el)}
@@ -30,10 +34,9 @@ async function wayMe(id){if(typeof openMe!=='function')return;
   if($('profmodal').style.display==='grid'&&$(id)&&typeof ptab==='function'){meLast=id;ptab(id);return}
   await openMe(id)}
 function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
-  if(!WAY_MEMO){WAY_MEMO=new Map();requestAnimationFrame(()=>{WAY_MEMO=null})}
-  if(WAY_MEMO.has(key))return WAY_MEMO.get(key);
+  if(wayFrame().has(key))return WAY_MEMO.get(key);
   const out=[],seen=new Set(),add=(label,go,ctx,el)=>{label=(label||'').replace(/\s+/g,' ').trim().replace(/[:：]$/,'');
-    if(!label||label.length>90||seen.has(wayLow(label)))return;seen.add(wayLow(label));out.push({label,go,ctx:ctx||c,el})};
+    const low=wayLow(label);if(!label||label.length>90||seen.has(low))return;seen.add(low);out.push({label,low,go,ctx:ctx||c,el})};
   // not inside guides, not a tab that is off (Logs → Anfragen without the recording)
   const inside=(root,go)=>{if(root)root.querySelectorAll(WAY_SEL).forEach(e=>{if(e.closest('details.guide')||e.hidden&&e.matches(WAY_TAB))return;add(visText(e),()=>go(e),c,e)})};
   if(c.k==='cfg'){
@@ -55,7 +58,7 @@ function wayKeep(key,out){WAY_MEMO.set(key,out);return out}
 // („Spark-Begleiter“ for „Spark-Begleiter am PC und Mac“, „Eigene Lautsprecher“ for „… (ESP32)“)
 const WAY_END=/[\p{L}\p{N}]/u;
 function wayStep(text,i,kids){const rest=wayLow(text.slice(i,i+120));let best=null,part=null,pl=0;
-  for(const k of kids){const l=wayLow(k.label);
+  for(const k of kids){const l=k.low;   // lowered once per frame (wayKids), not per hint
     if(l.length>(best?best.label.length:0)&&rest.startsWith(l)&&!WAY_END.test(rest.charAt(l.length)))best=k;
     else if(!best){const n=wayShort(rest,l);if(n>pl){pl=n;part=k}}}
   return best||(part&&{...part,label:text.slice(i,i+pl)})}
@@ -79,7 +82,7 @@ function wayParse(text,at=0,all=false){
       hit=kid;steps++;pos=end=e;ctx=kid.ctx;m=WAY_ARROW.exec(text.slice(pos))}
     // the quoted name of a setting after the way: „Live-Seite“, “Live page”
     const q=/^\s*[„“"]([^“”"„]{1,80})[“”"]/.exec(text.slice(end));
-    if(hit&&q){const kid=wayKids(ctx,all).find(x=>wayLow(x.label)===wayLow(q[1].trim()));if(kid){hit=kid;end+=q[0].length;quoted=true}}
+    if(hit&&q){const kid=wayKids(ctx,all).find(x=>x.low===wayLow(q[1].trim()));if(kid){hit=kid;end+=q[0].length;quoted=true}}
     return hit?{start:at,end,hit,steps,want,quoted:q?quoted:null}:null}
   return null}
 // Opens the place step by step: Ich and some pages draw their rows only once they open, so after a jump the way

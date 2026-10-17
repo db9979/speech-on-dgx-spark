@@ -3348,6 +3348,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Schneller Start und aufgeräumte Seiten (V01.0.750)",
+"text": "Schneller Start und aufgeräumte Seiten (V01.0.750): Der Seitenstart eines Admins dauerte auf einem langsamen Handy (4-fach gedrosselte CPU) 11,5 s, jetzt etwa 2 s; mit nur einem Profil 2,1 s, jetzt etwa 1,8 s. Die Sprung-Links fragten für jeden Hinweis ab, ob ein Menü sichtbar ist, und ließen den Browser dafür jedes Mal die ganze Seite neu berechnen; das geschieht jetzt einmal pro Bild. Die Karten unter Zustand (Hört gerade zu, Dienste, NAS, Verbrauch und andere) fragen den Spark nur, solange Zustand offen ist, beim Öffnen alle zusammen. Die Liste aller Anleitungen entsteht erst unter Funktionen → Anleitungen, der Text hinter „Anleitung“ an einem Schalter beim ersten Antippen. Die Startseite geht gepackt hinaus (212 KB → etwa 40 KB), und jede Skript- und Stildatei trägt ihren Fingerabdruck statt der Versionsnummer: nach einem Update lädt der Browser nur, was sich geändert hat, den Rest behält er bis zu einem Jahr. Am Rechner ist die Spalte mit dem Gesicht 320 statt 420 px breit (Knöpfe und Schalter untereinander), der Verlauf bekommt den Platz. Abseits des Assistenten endet jede Seite mit Platz für das schwebende Gesicht: ihre letzten Zeilen lassen sich immer darunter hervorschiebe"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Schneller Start und aufgeräumte Seiten (V01.0.750)",
+"text": "n, die Breite der Seiten bleibt gleich. Zustand hat sein Menü wie Einstellungen: Symbole und die Blöcke Beobachten (Monitoring, Live, Logs), Prüfen (Prüfen, Verbessern, Praxistest) und Technik (Verbrauch, Modelle, Technik); die Fußzeile steht unten am Fenster. Am Handy steht „Verwalten“ ganz im Zurück-Knopf."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Als App aufs Handy",
 "text": "Als App aufs Handy: https://SPARK:31443 im Handy-Browser öffnen, Zertifikatswarnung bestätigen, dann im Browser-Menü „Zum Startbildschirm hinzufügen“ (iPhone: Safari → Teilen → „Zum Home-Bildschirm“). Der Assistent startet dann mit eigenem Icon im Vollbild. Mit dem selbst erstellten Zertifikat legt Android eine Verknüpfung statt einer installierten App an; das funktioniert genauso, nur ohne Eintrag in der App-Liste."
 },
@@ -10870,6 +10886,22 @@
 "head": "Voice chat",
 "title": "Typing comes first, part 2 (V01.0.749)",
 "text": "Typing comes first, part 2 (V01.0.749): while text stands in the field, the field is marked \"hastext\" instead of \"typing\": the old name started an answer's waiting dots (.typing::after) invisibly at the field, and they laid out the whole page sixty times a second. The face's loading wheel turns only while it shows (thinking, searching). The conversation is closed off (#chatlog{contain:strict}): a letter no longer lays out every bubble of a long conversation again. Measured with the CPU slowed down six times and 120 bubbles: long tasks while typing from about 150 ms to 0, time to the next picture on average from 37 to about 25 ms."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Quick start and tidier pages (V01.0.750)",
+"text": "Quick start and tidier pages (V01.0.750): an admin's page start on a slow phone (CPU throttled four times) took 11.5 s, now about 2 s; with only a profile 2.1 s, now about 1.8 s. The jump links asked for every hint whether a menu is visible, and the browser recalculated the whole page each time; that now happens once per frame. The cards under Status (Listening now, Services, NAS, Usage and others) ask the Spark only while Status is open, all together when it opens. The list of all guides is drawn under Features → Guides, the text behind „Guide“ at a switch at the first tap. The start page goes out gzipped (212 KB → about 40 KB), and every script and style file carries its fingerprint instead of the version number: after an update the browser loads only what changed and keeps the rest up to a year. On computers the face column is 320 instead of 420 px wide (buttons and switches one below the other), the conversation gets the room. Away from the assistant every page ends with room for the floating face: its last rows can always be scrolled out from under it, the width of the pages stays the same. Status has its menu like Settings: symbols and the blocks Watch (Monitoring, Live, Logs"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Quick start and tidier pages (V01.0.750)",
+"text": "), Check (Checks, Improve, Hands-on test) and Technology (Usage, Models, Architecture); the footer stands at the bottom of the window. On phones „Manage“/„Verwalten“ fits whole into the back button."
 },
 {
 "lang": "en",

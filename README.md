@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.750** Faster, tidier web app: an admin's start on slow phones from 11.5 to about 2 s (jump links once per frame, Status cards only while Status is open, guides when opened), start page gzipped, after updates only changed files load again; wider chat on computers, pages end with room for the floating face, Status menu with symbols and blocks, whole back button on phones
 - **V01.0.749** Typing in the chat is smooth again, also with a long conversation
 - **V01.0.748** The apps show the last state as soon as they open and load visibly instead of staying blank
 - **V01.0.747** Chat calls show both sides on Live, monitoring and the Steuerzentrale: devices, voice or video, ringing or connected and both people (names only with consent)
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.743** Show steps and approvals: below every answer the tools the assistant used, and proposals as a card with "Yes" and "No"
 - **V01.0.742** Fix: profiles no longer get the admin sign-in window when the page starts
 - **V01.0.741** Describe the screen: ask "What do you see on my Mac?", the computer asks first, the description is shown but never stored
-- **V01.0.740** Self-test fix: the Kiwix test switches the Weiche off itself
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
