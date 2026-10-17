@@ -106,11 +106,15 @@ async def prepare(request):
     # other outside text keeps that mark (the browser is the person's own and has no reason to lie)
     # every message (the latest too, which the trimming always keeps) is cut at chat.MAX_TURN_CHARS:
     # the word rules below run over it on the event loop
-    # a described screen (bedienen.look) is never carried on: later turns see only profiles.SCREEN_NOTE
-    messages = [dict({"role": m["role"], "content": profiles.SCREEN_NOTE if m.get("screen") and m["role"] == "assistant"
-                      else m["content"][:chat.MAX_TURN_CHARS]},
-                     **({"mark": "mail" if m.get("mail") else "outside"} if m.get("mail") or m.get("outside") or m.get("screen")
-                        else {}))
+    # a described screen (bedienen.look) is never carried on: later turns see only profiles.SCREEN_NOTE, the panel's
+    # own sentence, so no word of the screen is left and nothing is locked by it (V01.0.752: "Hol das Terminal nach
+    # vorn" right after "Was siehst du?" was locked before)
+    # (not named "screen": the turn is built from locals(), and turn.screen says this answer described a screen)
+    def screen_msg(m):   # marked by the browser or the app, or the note stored in its place before V01.0.752
+        return m["role"] == "assistant" and (bool(m.get("screen")) or m["content"].strip() == profiles.SCREEN_NOTE)
+    messages = [dict({"role": m["role"], "content": profiles.SCREEN_NOTE if screen_msg(m) else m["content"][:chat.MAX_TURN_CHARS]},
+                     **({"mark": "mail" if m.get("mail") else "outside"}
+                        if (m.get("mail") or m.get("outside")) and not screen_msg(m) else {}))
                 for m in (body.get("messages") if isinstance(body.get("messages"), list) else [])
                 if isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
                 and m["content"].strip()]
@@ -764,6 +768,8 @@ async def prepare(request):
                        "client": body.get("client"), "src": src,
                        "before": messages[-2]["content"] if len(messages) > 1 and messages[-2]["role"] == "assistant"
                        and isinstance(messages[-2].get("content"), str) else "",
+                       # the person's own two messages before this one (a follow-up like "Nochmal", begleiter.offer)
+                       "asked": [m["content"] for m in messages[:-1] if m["role"] == "user"][-2:],
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
     if messages[-1]["role"] == "user" and isinstance(messages[-1].get("content"), str):

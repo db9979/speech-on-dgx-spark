@@ -1299,9 +1299,12 @@ SEND_TOOL = {"type": "function", "function": {
 DO_WORDS = re.compile(r"\b(öffne\w*|oeffne\w*|mach\w*\s+(\w+\s+){0,4}auf|start\w*|ruf\w*\s+(\w+\s+){0,4}auf|"
                       r"spiel\w*|pausier\w*|stopp\w*|lauter|leiser|stumm\w*|sperr\w*|nächst\w*|vorig\w*|zeig\w*|"
                       r"wechsel\w*|schließ\w*|schliess\w*|minimier\w*|maximier\w*|vollbild\w*|tipp\w*|"
-                      r"folie\w*|ruhezustand|kurzbefehl\w*|führ\w*\s+(\w+\s+){0,4}aus|drück\w*|"
+                      r"folie\w*|ruhezustand|kurzbefehl\w*|führ\w*\s+(\w+\s+){0,4}aus|drück\w*|vordergrund|"
+                      r"nach\s+vorn\w*|"
                       r"open|launch|play|pause|mute|lock|switch|close|minimi[sz]e|maximi[sz]e|fullscreen|type|"
                       r"press|sleep|shortcut)\b", re.I)
+# a retry ("Nochmal, hat nicht geklappt") goes on with the order before
+AGAIN_WORDS = re.compile(r"\b(nochmal|nochmals|noch\s+(ein)?mal|erneut|wieder|again|retry)\b", re.I)
 # „Bildschirm beschreiben“ (bedienen.look): a question about what the own computer shows
 LOOK_WORDS = re.compile(r"\b(siehst|sieht|sehen|schau\w*|guck\w*|beschreib\w*|offen|läuft|laufen|"
                         r"see|look|describe)\b", re.I)
@@ -1325,6 +1328,8 @@ MEDIA_WORDS = re.compile(r"\b(lauter|leiser|stumm\w*|pausier\w*|nächst\w*\s+(ti
                          r"vollbild\w*|(nächst\w*|vorig\w*|vorherig\w*)\s+folie|folie\s+(weiter|zurück|vor)|"
                          r"ruhezustand|bildschirm\s+aus\w*|(öffne\w*|zeig\w*)\s+(\w+\s+){0,3}(downloads|dokumente|"
                          r"schreibtisch|desktop)|kurzbefehl\w*|tipp\w*\s+.{1,}|"
+                         # a program to the front (focus, V01.0.752: "Das Terminal in den Vordergrund")
+                         r"vordergrund|nach\s+vorn\w*|bring\s+(\w+\s+){0,3}to\s+(the\s+)?front|"
                          r"switch\s+to\s+\w+|close\s+(the\s+)?window|full\s*screen|next\s+slide|previous\s+slide)\b",
                          re.I)
 
@@ -1349,7 +1354,11 @@ def offer(ctx):
     text = str(ctx.get("text") or "")
     here = ctx.get("client") == "desk"     # the question came from the Begleiter: "the computer" is this one
     devs = act_devices(who["id"])
-    named = bool(ACT_WORDS.search(text))
+    # a follow-up in the person's own words goes on about the computer one of its last two own messages named
+    # ("Was läuft auf meinem Mac?" → "Das Terminal in den Vordergrund." → "Nochmal"), a fixed rule (V01.0.752)
+    follow = bool((DO_WORDS.search(text) or AGAIN_WORDS.search(text))
+                  and any(ACT_WORDS.search(str(b)) for b in (ctx.get("asked") or [])[-2:]))
+    named = bool(ACT_WORDS.search(text)) or follow
     act = bool((named or (here and DO_WORDS.search(text))) and devs)
     send = bool(PC_WORDS.search(text) and SEND_WORDS.search(text) and inbox_devices(who["id"]))
     import bedienen
@@ -1383,7 +1392,7 @@ def offer(ctx):
     must = "pc_look" if look else "pc_action" if act and (here or named) and must_act(devs, text) else None
     return {"tools": tools, "hint": " ".join(([ACT_HINT] if act else []) + ([SEND_HINT] if send else [])
                                              + ([LOOK_HINT] if look else [])),
-            "must": must, "outside": {"pc_look"} if look else set(), "keep": {"pc_look"} if look else set(),
+            "must": must, "outside": set(), "keep": {"pc_look"} if look else set(),
             "changes": {"pc_action"} if act else set(),
             "filler": {t["function"]["name"]: filler[t["function"]["name"]] for t in tools}}
 

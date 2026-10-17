@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "56dff5faf5",
+        "stand": "748f18913a",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -39,10 +39,11 @@ SEITEN = {
               ("Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei "
                "Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die "
                "Person in eigenen Worten ein Lied, bleibt so eine Antwort bis {musik.BACK} Nachrichten zurück als Daten "
-               "dabei (Akkorde, Stil).",
+               "dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.",
                "The history is trimmed to its budget. If an answer from outside text is among the last three messages, "
                "this turn starts locked; older ones are not sent at all. When the person asks for a song in their own "
-               "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style).")),
+               "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style). A screen "
+               "description only comes along as a fixed note and locks nothing.")),
             S("s3", "frage", ("Gast oder fremde Stimme?", "Guest or unknown voice?"),
               ("kein Profil oder Lautsprecher/Telefon erkennt die Stimme nicht",
                "no profile or the speaker/phone does not know the voice"),
@@ -479,7 +480,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "3e64d6fccb",
+        "stand": "ab58f7d77a",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],

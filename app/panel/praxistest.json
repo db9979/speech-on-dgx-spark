@@ -1626,7 +1626,10 @@
 "text": "A: Funktionen → „Ablauf und Freigabe zeigen“ an. P: im Assistenten „Was steht morgen in meinem Kalender?“ fragen: unter der Antwort steht zugeklappt „1 Werkzeug benutzt · … s“, aufgeklappt „✓ Termine lesen“. Dann „Trag mir morgen um 10 Uhr Zahnarzt ein“: unter der Antwort die Karte „Wartet auf dein Ja: Termin“ mit Ja und Nein; „Nein“ tippen, nichts wird eingetragen; noch einmal fragen und „Ja“ tippen, der Termin steht im Kalender. Dasselbe in der iPhone-App und in der Android-App.",
 "thread": "Ideen aus Redde"
 },
-{"id": "P256", "v": 744, "titel": "Auftrag mit Plan, Rückfrage und Vorschlag",
+{
+"id": "P256",
+"v": 744,
+"titel": "Auftrag mit Plan, Rückfrage und Vorschlag",
 "text": "A: Funktionen → Agent-Funktionen → „Aufträge mit Plan, Rückfrage und Vorschlag“ an. P: unter Ich → Aufträge „Recherchiere zwei leise Geschirrspüler und frag mich nach dem Budget, dann erinnere mich am Samstag um 10 Uhr ans Bestellen“ starten: der Auftrag zeigt seinen Plan mit Häkchen, dann die Frage mit Antworten zum Antippen (die Mitteilung nennt die Frage nicht); eine Antwort tippen. Während er läuft „Nur Bosch“ nachschieben. Unter dem fertigen Bericht steht „Vorschlag: Erinnerung …“ mit Warnung und Ja/Nein; „Ja“ tippen, die Erinnerung steht unter Erinnerungen. Dasselbe in der iPhone-App (Auftrag öffnen) und in der Android-App.",
 "thread": "Ideen aus Redde"
 },
@@ -1650,6 +1653,13 @@
 "titel": "Webanwendung schneller und aufgeräumter",
 "text": "A: Nach dem Update am Handy im Browser das Panel als Admin neu laden: der Assistent ist nach etwa 2 s bedienbar. Am Rechner: die Spalte mit dem Gesicht ist schmal, Sprechen oben, Neu und Stopp darunter, die Schalter untereinander. Einstellungen ganz nach unten blättern: unter der letzten Zeile ist Platz, das schwebende Gesicht unten rechts verdeckt dort nichts. Zustand öffnen: links die Blöcke Beobachten, Prüfen und Technik mit Symbolen, die Karten (Dienste, Speicher, Verbrauch) erscheinen gleich; unter Live steht die Fußzeile unten am Fenster. Funktionen → Anleitungen zeigt alle Anleitungen, „Anleitung“ an einem Schalter klappt ihren Text auf. Am Handy Verwalten → Einstellungen: oben links steht „Verwalten“ ganz und läuft nie in den Titel. Ein zweites Update später: die Seite lädt spürbar schneller, weil unveränderte Dateien im Browser bleiben.",
 "thread": "Webanwendung schöner und schneller"
+},
+{
+"id": "P260",
+"v": 752,
+"titel": "Programm am Mac nach vorn holen",
+"text": "A: Funktionen → Spark bedient den Rechner ist an, unter Ich → Begleiter beim Mac „Am PC handeln“ an und das Terminal unter den freigegebenen Programmen. P: In der iPhone-App „Was läuft auf meinem Mac?“ fragen, dann „Das Terminal in den Vordergrund.“: am Mac erscheint die Rückfrage, nach dem Ja kommt das Terminal nach vorn. „Nochmal“ fragt wieder am Mac. Danach „Wie wird das Wetter?“: keine Rückfrage am Mac.",
+"thread": "Rechner fernsteuern"
 }
 ]
 }

@@ -1111,7 +1111,8 @@ def _clean_msg(m, uid=None):
     screen = m["role"] == "assistant" and _screen(uid, m)
     d = dict({"role": m["role"], "content": SCREEN_NOTE if screen else str(m["content"])[:MAX_MSG_LEN]},
              **({"mail": True} if m.get("mail") else {}),
-             **({"outside": True} if (m.get("outside") or screen) and not m.get("mail") else {}))
+             # the note is the panel's own sentence: marked "screen", it locks nothing in a later turn (V01.0.752)
+             **({"screen": True} if screen else {"outside": True} if m.get("outside") and not m.get("mail") else {}))
     if m.get("via") in VIA:
         d["via"] = m["via"]
     att = _att(m.get("att")) if m["role"] == "assistant" and not screen else []

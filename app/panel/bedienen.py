@@ -94,6 +94,8 @@ LOOK_RESULT = {"abgelehnt": "Am Rechner abgelehnt: den Bildschirm hat der Spark 
                "Sprachmodell": "Das Sprachmodell konnte das Bild gerade nicht beschreiben.",
                "nicht verbunden": "Der Rechner ist gerade nicht verbunden.", "Notaus": "Ein Notaus hält das gerade an.",
                "läuft": "Der Spark sieht oder bedient deinen Rechner gerade schon."}
+# a description really came back: only then the answer rests on outside text (chat.py marks it, V01.0.752)
+LOOK_PREFIX = "Auf dem Bildschirm (einmal angesehen, nicht gespeichert): "
 _looks = set()            # uids with a look running (memory only)
 _jobs = {}                # uid -> job (memory only)
 
@@ -256,7 +258,7 @@ async def look(uid, did, question):
                 why = "Sprachmodell"
         print(f"begleiter: ansehen ende ({why or 'beschrieben'}) | {profiles.log_name(prof)}", flush=True)
         begleiter._live(f"Spark sieht Bildschirm: {why or 'beschrieben'}")
-        return LOOK_RESULT[why] if why else "Auf dem Bildschirm (einmal angesehen, nicht gespeichert): " + text
+        return LOOK_RESULT[why] if why else LOOK_PREFIX + text
     finally:
         _looks.discard(uid)
 

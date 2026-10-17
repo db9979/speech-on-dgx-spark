@@ -276,7 +276,10 @@ class Job(unittest.TestCase):
         ctx = {"who": prof, "own": True, "text": "Was siehst du gerade auf meinem Mac?"}
         o = begleiter.offer(ctx)
         self.assertIn("pc_look", [x["function"]["name"] for x in o["tools"]])
-        self.assertEqual((o["must"], o["outside"]), ("pc_look", {"pc_look"}))
+        # the answer is locked only once a description came back (chat.py, bedienen.LOOK_PREFIX): a refusal or a lost
+        # connection is the panel's own sentence and locks nothing (V01.0.752)
+        self.assertEqual((o["must"], o["outside"]), ("pc_look", set()))
+        self.assertFalse(any(r.startswith(bedienen.LOOK_PREFIX) for r in bedienen.LOOK_RESULT.values()))
         # an order stays an order ("Sperr den Bildschirm", "Öffne …"): no looking
         o = begleiter.offer(dict(ctx, text="Öffne auf meinem Mac Safari"))
         self.assertNotIn("pc_look", [x["function"]["name"] for x in o["tools"]])
@@ -284,6 +287,25 @@ class Job(unittest.TestCase):
         o = begleiter.offer(ctx)
         self.assertEqual(o["tools"], [])
         self.assertIn("Funktionen → Spark bedient den Rechner ist aus", o["hint"])
+
+    def test_a_follow_up_goes_on_about_the_computer_named_before(self):
+        """„Das Terminal in den Vordergrund.“ and „Nochmal“ after „Was läuft auf meinem Mac?“ (Dominik, V01.0.752)."""
+        c, prog, did, uid = self.ready("BdGreta")
+        ctx = {"who": {"id": uid, "name": "BdGreta"}, "own": True, "asked": ["Was läuft auf meinem Mac?"]}
+        names = lambda o: [x["function"]["name"] for x in (o or {}).get("tools", [])]   # noqa: E731
+        o = begleiter.offer(dict(ctx, text="Das Terminal in den Vordergrund."))
+        self.assertIn("pc_action", names(o))
+        o = begleiter.offer(dict(ctx, text="Nochmal, hat nicht geklappt.",
+                                 asked=["Was läuft auf meinem Mac?", "Das Terminal in den Vordergrund."]))
+        self.assertIn("pc_action", names(o))
+        # named three own messages ago, or no order at all: nothing about the computer
+        o = begleiter.offer(dict(ctx, text="Nochmal.", asked=["Was läuft auf meinem Mac?", "Wie spät ist es?", "Danke"]))
+        self.assertNotIn("pc_action", names(o))
+        o = begleiter.offer(dict(ctx, text="Wie wird das Wetter?"))
+        self.assertNotIn("pc_action", names(o))
+        # naming it right away: a program to the front is a clear order, so the model must really call the tool
+        o = begleiter.offer(dict(ctx, text="Hol Safari auf meinem Mac nach vorne", asked=[]))
+        self.assertEqual(o["must"], "pc_action")
 
 
 class NotKept(unittest.TestCase):
@@ -300,11 +322,41 @@ class NotKept(unittest.TestCase):
             out = [profiles._clean_msg(m, uid) for m in msgs]
         self.assertEqual([m["content"] for m in out],
                          ["Was siehst du?", profiles.SCREEN_NOTE, "Etwas anderes.", profiles.SCREEN_NOTE])
-        self.assertTrue(out[1]["outside"] and out[3]["outside"])
+        # marked "screen", not "outside": the note is the panel's own sentence and locks nothing later (V01.0.752)
+        self.assertTrue(out[1]["screen"] and out[3]["screen"])
+        self.assertFalse(out[1].get("outside") or out[3].get("outside"))
         # another profile, or a day later: untouched
         self.assertEqual(profiles._clean_msg(msgs[1], "u-andere")["content"], msgs[1]["content"])
         with unittest.mock.patch.object(profiles.time, "time", return_value=1000.0 + profiles.SCREEN_KEEP + 1):
             self.assertEqual(profiles._clean_msg(msgs[1], uid)["content"], msgs[1]["content"])
+
+    def test_a_described_screen_locks_nothing_in_the_next_turn(self):
+        """„Hol das Terminal nach vorn“ right after „Was siehst du?“ was locked like outside text (V01.0.752): the
+        description is replaced by the note, so no word of the screen is left to lock anything."""
+        import contextlib
+        import io
+        import profiles
+        from fastapi.testclient import TestClient
+        import panel
+
+        def lock_of(answer):
+            helpers.set_config(public=True)
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    r = TestClient(panel.app).post("/api/chat", json={"messages": [
+                        {"role": "user", "content": "Was siehst du auf meinem Mac?"}, answer,
+                        {"role": "user", "content": "Das Terminal in den Vordergrund."}]})
+                self.assertEqual(r.status_code, 200, r.text)
+                helpers.events(r)
+            finally:
+                helpers.set_config(public=False)
+            return [ln.split("| gesperrt ")[1].split(" ")[0] for ln in buf.getvalue().splitlines() if "| gesperrt " in ln]
+        desc = "Vorn ist das Terminal offen, dahinter Safari."
+        self.assertEqual(lock_of({"role": "assistant", "content": desc, "outside": True, "screen": True}), ["nichts"])
+        self.assertEqual(lock_of({"role": "assistant", "content": profiles.SCREEN_NOTE, "outside": True}), ["nichts"])
+        # other outside text still locks the next turn
+        self.assertEqual(lock_of({"role": "assistant", "content": desc, "outside": True}), ["outside"])
 
 
 if __name__ == "__main__":

@@ -1790,6 +1790,12 @@ async def _answer(request, turn):
             return result
         if name in CAL_READS and name in st["offered"]:
             st["cal"] = True
+        import bedienen
+        # a described screen is outside text; a refusal or a lost connection is the panel's own sentence and locks
+        # nothing (before, any pc_look call locked this answer and the next ones, V01.0.752)
+        looked = name == "pc_look" and name in st["offered"] and result.startswith(bedienen.LOOK_PREFIX)
+        if looked:
+            st["outside"] = True
         if name in HA_READS and name in st["offered"] and not result.startswith("Not done"):
             # media titles, text states, all attributes of one entity, list entries: other people's words
             if name == "home_assistant_todo" or homeassistant.free_text(result):
@@ -1798,7 +1804,7 @@ async def _answer(request, turn):
         elif (st["mail"], st["outside"]) != was or name in READS_OUTSIDE or name in ex["outside"] or name in ex["mail"]:
             if name in st["offered"] and not result.startswith("Not done"):
                 result = wrap_outside(result)
-        if name == "pc_look" and name in st["offered"] and result.startswith("Auf dem Bildschirm"):
+        if looked:
             # „Bildschirm beschreiben“ (bedienen.look, decision „Nur anzeigen“): shown and spoken, never kept
             turn.screen = True
             await out.put({"type": "screen"})
