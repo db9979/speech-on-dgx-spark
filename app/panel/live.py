@@ -1344,6 +1344,8 @@ def snapshot(view="admin", now=None):
                 x["sub"] = x["sub"].replace("LLM · auf dem Spark", "LLM-Tor · auf dem Spark", 1)
             if mb.get("wechsel"):                # stage E4: a model switch runs (that it runs, never which model)
                 x["sub"] += " · Modellwechsel läuft"
+            if mb.get("messen"):                 # a measurement runs (that it runs, never which model)
+                x["sub"] += " · Messung läuft"
         if x["id"] == "nas" and nasl.get("on"):   # NAS: connections and how many failed their last check (no address)
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")

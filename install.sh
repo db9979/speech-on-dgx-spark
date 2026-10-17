@@ -928,7 +928,8 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
-  printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel\n'   # stage E4: takes the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-messen-wunsch\n'   # Zustand → Modelle „Messen“: the same
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
@@ -1294,6 +1295,22 @@ Type=oneshot
 Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle wunsch-intern
 TimeoutStartSec=2h
+EOF
+
+# Zustand → Modelle „Messen“ (Dominik 2026-10-17): measures the model the panel asked for, like speech-spark modelle
+# messen. It takes only the wish file modelle.py wrote and checks the ids again as root; nothing else can be passed in.
+cat >/etc/systemd/system/speech-spark-messen-wunsch.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: measure one model for the panel
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle messen-wunsch-intern
+TimeoutStartSec=4h
+TimeoutStopSec=180
 EOF
 
 # Plan raspberry-split B7: sets up or removes the case of the panel computer (Funktionen → Gehäuse). It takes only the

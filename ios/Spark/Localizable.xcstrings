@@ -7791,26 +7791,6 @@
         }
       }
     },
-    "Wechseln: beim Modell auf „Wechseln“ tippen. Messen auf dem Spark: sudo speech-spark modelle messen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Switching: tap “Switch” next to a model. Measure on the Spark: sudo speech-spark modelle messen"
-          }
-        }
-      }
-    },
-    "Zum Wechseln Funktionen → Modelle wechseln einschalten. Messen auf dem Spark: sudo speech-spark modelle messen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To switch, turn on Features → Switch models. Measure on the Spark: sudo speech-spark modelle messen"
-          }
-        }
-      }
-    },
     "Vorheriges Modell zurückholen": {
       "localizations": {
         "en": {
@@ -9427,6 +9407,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whole way"
+          }
+        }
+      }
+    },
+    "Beim Modell auf „Wechseln“ oder „Messen“ tippen. Messen geht auch auf dem Spark: sudo speech-spark modelle messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap „Switch“ or „Measure“ at a model. Measuring also works on the Spark: sudo speech-spark modelle messen"
+          }
+        }
+      }
+    },
+    "Zum Wechseln und Messen Funktionen → Modelle wechseln einschalten. Messen geht auch auf dem Spark: sudo speech-spark modelle messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To switch and measure, turn on Features → Switch models. Measuring also works on the Spark: sudo speech-spark modelle messen"
+          }
+        }
+      }
+    },
+    "Eine Messung läuft. Das Sprachmodell pausiert so lange; die Zahlen erscheinen hier, sobald sie fertig ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A measurement is running. The language model pauses meanwhile; the numbers show here once it is done."
+          }
+        }
+      }
+    },
+    "Messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measure"
+          }
+        }
+      }
+    },
+    "Modell messen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measure the model?"
+          }
+        }
+      }
+    },
+    "Das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The language model pauses for about 10 to 25 minutes and starts again afterwards. Nothing is switched."
           }
         }
       }

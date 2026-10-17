@@ -232,7 +232,7 @@ MODULE = {
     "hilfe": ("betrieb", "Spark-Hilfe und Index der Doku"),
     "wege": ("betrieb", "Sprung-Links in Texten außerhalb des Panels"),
     "praxistest": ("betrieb", "Zustand → Praxistest: die Prüfpunkte aus praxistest.json, je Punkt klappt, Problem oder später (nur Admins)"),
-    "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messung, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
+    "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
     "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),
     "technik_seiten": ("betrieb", "Knoten-Seiten: der Baustein S für einen Schritt"),

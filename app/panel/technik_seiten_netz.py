@@ -280,7 +280,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "aebad33f3c",
+        "stand": "dc96ebfcbf",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
@@ -292,11 +292,11 @@ SEITEN = {
         },
         "kurz": ("Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle "
                  "bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie "
-                 "Dienste starten oder Modelle wechseln erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem "
+                 "Dienste starten, Modelle wechseln oder messen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem "
                  "DGX, und dieser Kasten tut nichts.",
                  "The Spark split puts the panel on its own computer, for example a Raspberry Pi 5; the models stay on "
                  "the DGX. Everything between the two goes through the DGX's TLS-Tor, and fixed handles like starting "
-                 "services or switching models are done there by the Wärter. Without the split everything runs on the "
+                 "services, switching or measuring models are done there by the Wärter. Without the split everything runs on the "
                  "DGX and this box does nothing."),
         "warum": ("Sprache, Text und Bilder gehen dann durch das Heimnetz. Niemand im Netz soll mitlesen, sich als DGX "
                   "ausgeben oder dem DGX Befehle geben können.",

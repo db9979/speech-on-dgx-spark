@@ -103,6 +103,7 @@ flowchart TB
 | `speech-spark-watch` | – | Wächter, nur ohne Panel |
 | `speech-spark-update` | – | Update, nur auf Knopfdruck |
 | `speech-spark-wechsel` | – | Ein Modell wechseln (Zustand → Modelle), nur auf Knopfdruck |
+| `speech-spark-messen-wunsch` | – | Ein Modell messen (Zustand → Modelle „Messen“), nur auf Knopfdruck |
 | `speech-spark-gehaeuse` | – | Gehäuse des Panel-Rechners einrichten (Pironman 5: Lüfter, OLED), nur mit `--gehaeuse` |
 | `speech-spark-schirm` | – (fragt nur 127.0.0.1:31080) | Steuerzentrale als Text auf dem Bildschirm des Panel-Rechners (tty1), nur mit dem Schalter an |
 
@@ -330,7 +331,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/live.py` | Live-Übersicht: was der Spark gerade tut |
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
-| `app/panel/modellseite.py` | Zustand → Modelle: Katalog, Speicher-Budget, Messung, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen |
+| `app/panel/modellseite.py` | Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
 | `app/panel/nasablage.py` | Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten |
@@ -550,6 +551,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/mfa-admin.json` | Zweiter Schritt des Admins | versiegelt | ja |
 | `state/migrated-chunk10` | Einmalige Umstellung erledigt | – | nein |
 | `state/modelle-eigene.json` | Eigene Modelle des Admins (Hugging-Face-Name, fester Commit, Speicherbedarf) | – | nein |
+| `state/modelle-messen-wunsch.json` | Wunsch des Panels für die nächste Messung (Zustand → Modelle „Messen“), Sekunden | – | nein |
 | `state/modelle-messung.json` | Messung der Modelle (nur Zahlen) | – | nein |
 | `state/modelle-wechsel.json` | Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar) | – | nein |
 | `state/modelle-wunsch.json` | Wunsch des Panels für den nächsten Modellwechsel, Sekunden | – | nein |
@@ -2859,7 +2861,7 @@ Selbsttests: `test_waechter_umgehung`, `test_notaus`
 
 ### Spark teilen
 
-Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten oder Modelle wechseln erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts.
+Spark teilen stellt das Panel auf einen eigenen Rechner, zum Beispiel einen Raspberry Pi 5; die Modelle bleiben auf dem DGX. Zwischen beiden geht alles durch das TLS-Tor des DGX, und feste Handgriffe wie Dienste starten, Modelle wechseln oder messen erledigt dort der Wärter. Ohne Spark teilen läuft alles auf dem DGX, und dieser Kasten tut nichts.
 
 **Warum:** Sprache, Text und Bilder gehen dann durch das Heimnetz. Niemand im Netz soll mitlesen, sich als DGX ausgeben oder dem DGX Befehle geben können.
 
@@ -2911,7 +2913,7 @@ flowchart TD
 
 - **600 s** lebt ein Kopplungscode ([Schritt 2](#kn-teilen-s2))
 - **60 s** darf die Zeit eines Befehls daneben liegen ([Schritt 7](#kn-teilen-s7))
-- **10** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
+- **11** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
 - **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 10](#kn-teilen-s8))
 - **80 °C** Hinweis, der Panel-Rechner ist warm ([Schritt 8](#kn-teilen-s9))
 - **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
@@ -2995,7 +2997,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 31), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 70). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 31), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 71). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3006,7 +3008,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **31** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **70** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **71** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

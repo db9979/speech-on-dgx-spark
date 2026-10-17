@@ -128,14 +128,15 @@ def modellwahl(cfg, got):
 
 
 def modelle(cfg=None):
-    """Zustand → Modelle from the model computer: {gesamt_gib, lanes, messung, wechsel, eigene, laeuft}, checked;
+    """Zustand → Modelle from the model computer: {gesamt_gib, lanes, messung, wechsel, eigene, laeuft, misst}, checked;
     None when it does not answer or sends something else."""
     d = call("modelle", cfg=cfg, timeout=15)
     try:
         ok = (isinstance(d, dict) and isinstance(d["gesamt_gib"], (int, float)) and 1 <= d["gesamt_gib"] <= 8192
               and isinstance(d["lanes"], list) and all(isinstance(x, (int, float)) and 0 < x <= 1 for x in d["lanes"])
               and isinstance(d["messung"], dict) and isinstance(d["wechsel"], dict)
-              and isinstance(d["eigene"], list) and isinstance(d["laeuft"], bool))
+              and isinstance(d["eigene"], list) and isinstance(d["laeuft"], bool)
+              and isinstance(d.get("misst", False), bool))     # a measurement runs (a Wärter before V01.0.719: none)
     except KeyError:
         ok = False
     return d if ok else None

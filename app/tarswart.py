@@ -16,8 +16,9 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 never addresses, ports or backends, model ids only Qwen's)
     logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
     modelle                     what Zustand → Modelle needs from here: memory, qwen38 lanes, measurement, switches,
-                                own models, whether a switch runs
+                                own models, whether a switch or a measurement runs
     wechseln <art> <id|zurueck> a switch with the fixed rules (modelle.wechsel_anfragen), then speech-spark-wechsel
+    messen <id>                 Zustand → Modelle „Messen“ (modelle.messen_anfragen), then speech-spark-messen-wunsch
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
@@ -50,7 +51,8 @@ MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
-COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "eigen_dazu", "eigen_weg", "weiter", "update")
+COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "eigen_dazu", "eigen_weg", "weiter",
+            "update")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu")
@@ -174,11 +176,16 @@ def _wechsel_laeuft():
     return run(["systemctl", "is-active", "-q", modelle.WECHSEL_UNIT])[0] == 0
 
 
+def _misst():
+    """A measurement runs (the command line's unit or the one for the panel's „Messen“)."""
+    return run(["systemctl", "is-active", "-q", modelle.MESS_UNIT, modelle.MESS_WUNSCH_UNIT])[0] == 0
+
+
 def modelle_daten():
     """Read only, asked by the page and the Live view: no line, like status."""
     return {"gesamt_gib": round(modelle.gesamt_gib(), 1), "lanes": [f for _, f in qwen38_lanes() if f],
             "messung": read_json(modelle.MESSUNG, {}), "wechsel": read_json(modelle.WECHSEL, {}),
-            "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft()}
+            "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), "misst": _misst()}
 
 
 def wechseln(art, was):
@@ -187,6 +194,9 @@ def wechseln(art, was):
 
     def starten():
         return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT], timeout=20)[0] == 0
+    if _misst():
+        print("waerter: wechseln abgelehnt misst", flush=True)
+        return {"ok": False, "fehler": "misst"}
     try:
         m = modelle.wechsel_anfragen(art, was, load_config(), modelle.gesamt_gib(), [f for _, f in qwen38_lanes() if f],
                                      starten, _wechsel_laeuft())
@@ -194,6 +204,22 @@ def wechseln(art, was):
         print(f"waerter: wechseln abgelehnt {e}", flush=True)
         return {"ok": False, "fehler": str(e)}
     print(f"waerter: wechseln {art} ok", flush=True)
+    return {"ok": True, "name": m["name"]["de"]}
+
+
+def messen(mid):
+    """Zustand → Modelle „Messen“: the rule (modelle.messen_anfragen), the wish, then speech-spark-messen-wunsch."""
+    if not modelle.ID.match(mid):
+        raise ValueError("befehl")
+
+    def starten():
+        return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.MESS_WUNSCH_UNIT], timeout=20)[0] == 0
+    try:
+        m = modelle.messen_anfragen(mid, starten, _misst() or _wechsel_laeuft())
+    except modelle.Fehler as e:
+        print(f"waerter: messen abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: messen ok", flush=True)
     return {"ok": True, "name": m["name"]["de"]}
 
 
@@ -298,6 +324,8 @@ async def wart(request: Request):
             return JSONResponse(update())
         if cmd == "eigen_weg":
             return JSONResponse(eigen_weg(*args) if len(args) == 1 else eigen_weg(""))
+        if cmd == "messen":
+            return JSONResponse(messen(*args) if len(args) == 1 else messen(""))
         two = {"logs": logs, "wechseln": wechseln, "einheit": einheit}[cmd]
         return JSONResponse(two(*args) if len(args) == 2 else two("", ""))
     except ValueError:

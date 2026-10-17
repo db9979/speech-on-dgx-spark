@@ -920,6 +920,11 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
 WECHSEL = os.path.join(STATE, "modelle-wechsel.json")   # per kind the model before the last switch, for 7 days
 WUNSCH = os.path.join(STATE, "modelle-wunsch.json")     # the panel's wish for the root unit speech-spark-wechsel
 WECHSEL_UNIT = "speech-spark-wechsel"
+# Zustand → Modelle „Messen“ (Dominik 2026-10-17): the panel's wish for the fixed root unit MESS_WUNSCH_UNIT, which
+# measures like `speech-spark modelle messen` does in its transient unit MESS_UNIT; one of the two at a time
+MESS_WUNSCH = os.path.join(STATE, "modelle-messen-wunsch.json")
+MESS_UNIT = "speech-spark-messen"
+MESS_WUNSCH_UNIT = "speech-spark-messen-wunsch"
 ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
 TAUSCH = ("llm", "sehen", "asr", "tts", "bild")          # the kinds that switch (small CPU models come with features)
 INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild"}   # kinds install.sh sets up (wahl = its short key)
@@ -1080,6 +1085,43 @@ def wunsch_nehmen(path=WUNSCH, now=None):
     if art not in TAUSCH or not (was == "zurueck" or ID.match(was)) or not 0 <= now - float(data.get("zeit", 0)) <= 600:
         raise Fehler("wunsch")
     return art, was
+
+
+def messen_pruefen(mid, kat=None):
+    """A model the panel may have measured: an engine this installation starts itself (vLLM), from the catalog or an
+    own entry. Raises Fehler (unbekannt, engine)."""
+    kat = katalog() if kat is None else kat
+    if not isinstance(mid, str) or not ID.match(mid) or mid not in kat:
+        raise Fehler("unbekannt")
+    if kat[mid]["engine"] != "vllm":
+        raise Fehler("engine")
+    return kat[mid]
+
+
+def messen_anfragen(mid, starten, laeuft=False, path=MESS_WUNSCH, kat=None):
+    """„Messen“ asked for on Zustand → Modelle: the rule, the wish for root, then starten() starts MESS_WUNSCH_UNIT.
+    laeuft: a measurement or a switch runs already. Returns the entry; raises Fehler (misst, unbekannt, engine, start)."""
+    if laeuft:
+        raise Fehler("misst")
+    m = messen_pruefen(mid, kat)
+    write_json(path, {"ids": [mid], "zeit": int(time.time())}, indent=1)
+    if not starten():
+        raise Fehler("start")
+    return m
+
+
+def messen_wunsch_nehmen(path=MESS_WUNSCH, now=None, kat=None):
+    """Root takes the measuring wish once (the file is gone afterwards); older than 10 minutes counts as none."""
+    data = read_json(path, {})
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+    now = time.time() if now is None else now
+    ids = data.get("ids")
+    if not isinstance(ids, list) or not 1 <= len(ids) <= 4 or not 0 <= now - float(data.get("zeit", 0)) <= 600:
+        raise Fehler("wunsch")
+    return [messen_pruefen(i, kat)["id"] for i in ids]
 
 
 # ---------------------------------------------------------------- stage E5: the admin's own models
@@ -1352,6 +1394,9 @@ def cli(args, log=print):
             return 0
         if cmd == "wunsch-nehmen":
             log(" ".join(wunsch_nehmen()))
+            return 0
+        if cmd == "messen-wunsch-nehmen":
+            log(" ".join(messen_wunsch_nehmen()))
             return 0
         if cmd == "ergebnis":
             data = read_json(MESSUNG, {})

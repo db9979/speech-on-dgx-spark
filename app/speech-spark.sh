@@ -192,7 +192,7 @@ cmd_logs() {
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
     asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
-    messen) units=(-u speech-spark-messen -u speech-spark-messen-engine) ;;
+    messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
     *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel or all" ;;
@@ -279,6 +279,7 @@ cmd_pause() {
 # the terminal never leaves qwen38 stopped: the unit's trap always starts the qwen38 lanes again.
 MESS_UNIT=speech-spark-messen
 MESS_ENGINE=speech-spark-messen-engine
+MESS_WUNSCH_UNIT=speech-spark-messen-wunsch   # Zustand → Modelle „Messen“: a fixed root unit takes the panel's wish
 MESS_PORT=31016
 UMZUG_UNIT=speech-spark-umzug
 WECHSEL_UNIT=speech-spark-wechsel   # stage E4: a fixed root unit; the panel and the command line leave a wish for it
@@ -367,7 +368,7 @@ mess_restore() {
   echo "modelle: messung ende"
 }
 
-# inside the unit $MESS_UNIT, as root: $@ = catalog ids
+# inside the unit $MESS_UNIT (or $MESS_WUNSCH_UNIT), as root: $@ = catalog ids
 cmd_messen_intern() {
   local mid repo rev commit out rc minutes ids=() commits=()
   MESS_QWEN=(); MESS_PAUSE=0
@@ -410,6 +411,24 @@ cmd_messen_intern() {
       mess_engine "${ids[$i]}" "${commits[$i]}" --ohne-mtp || true
     fi
   done
+}
+
+# inside $MESS_WUNSCH_UNIT, as root (Zustand → Modelle „Messen“): only the ids modelle.py takes from the panel's
+# wish, checked again; the same rules as the command line, then the same measurement
+cmd_messen_wunsch() {
+  local ids=() mid
+  read -r -a ids < <(as_panel_user ../modelle.py messen-wunsch-nehmen) || true
+  [ "${#ids[@]}" -gt 0 ] || { echo "modelle: messung abgelehnt wunsch"; return 1; }
+  for mid in "${ids[@]}"; do
+    [[ "$mid" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: messung abgelehnt wunsch"; return 1; }
+  done
+  { [ -x "$PREFIX/venv-llm/bin/vllm" ] || [ -x "$PREFIX/venv-engine/bin/vllm" ]; } \
+    || { echo "modelle: messung abgelehnt venv fehlt"; return 1; }
+  if systemctl is-active -q "$MESS_UNIT" "$WECHSEL_UNIT" speech-spark-update; then
+    echo "modelle: messung abgelehnt laeuft"; return 1
+  fi
+  echo "modelle: messung aus dem panel ${#ids[@]} modell"
+  cmd_messen_intern "${ids[@]}"
 }
 
 # ---------------------------------------------------------------- the move (stage E3), inside $UMZUG_UNIT as root
@@ -481,7 +500,7 @@ cmd_umzug_intern() {
 run_umzug() {  # $1 = uebernehmen|zurueck: in its own unit, so a closed terminal never leaves the chat without a model
   local self follow
   systemctl is-active -q "$UMZUG_UNIT" && die "a move is running already: sudo speech-spark logs umzug"
-  systemctl is-active -q "$MESS_UNIT" && die "a measurement is running; move afterwards"
+  systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running; move afterwards"
   systemctl is-active -q speech-spark-update && die "an update is running; move afterwards"
   self=$(readlink -f -- "$0")
   systemd-run --quiet --collect --unit="$UMZUG_UNIT" -p LogNamespace=speech-spark -p TimeoutStopSec=180 \
@@ -553,6 +572,7 @@ cmd_wunsch_intern() {
   local art was out
   out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
   read -r art was <<<"$(tail -n1 <<<"$out")"
+  if systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT"; then echo "modelle: wechsel abgelehnt misst"; return 1; fi
   [[ "${was:-}" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: wechsel abgelehnt wunsch"; return 1; }
   if [ "$was" = zurueck ]; then
     out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
@@ -567,7 +587,7 @@ cmd_wunsch_intern() {
 run_wechsel() {  # $1 = art, $2 = id or zurueck: the wish, then the fixed unit (keeps running when the terminal closes)
   local follow rc=0
   systemctl cat "$WECHSEL_UNIT.service" >/dev/null 2>&1 || die "the unit is missing; run sudo speech-spark update first"
-  for u in "$WECHSEL_UNIT" "$UMZUG_UNIT" "$MESS_UNIT" speech-spark-update; do
+  for u in "$WECHSEL_UNIT" "$UMZUG_UNIT" "$MESS_UNIT" "$MESS_WUNSCH_UNIT" speech-spark-update; do
     systemctl is-active -q "$u" && die "$u is running; switch afterwards"
   done
   as_panel_user ../modelle.py wunsch-schreiben "$1" "$2" || die "speech-spark modelle wechseln llm|sehen|asr|tts|bild <id> (ids: speech-spark modelle liste)"
@@ -625,7 +645,7 @@ cmd_modelle() {
       for a in "$@"; do [ "$a" = --yes ] && yes=1 || was+=("$a"); done
       [ -x "$PREFIX/venv-llm/bin/vllm" ] || [ -x "$PREFIX/venv-engine/bin/vllm" ] \
         || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
-      systemctl is-active -q "$MESS_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
+      systemctl is-active -q "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
       systemctl is-active -q speech-spark-update && die "an update is running; measure afterwards"
       ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [eigen-…] [--yes]"
       echo "Messen: $ids"
@@ -647,6 +667,7 @@ cmd_modelle() {
       sleep 1; kill "$follow" 2>/dev/null || true
       ;;
     messen-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_intern "$@" ;;
+    messen-wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_wunsch ;;
     llm)
       case "${2:-}" in
         uebernehmen)

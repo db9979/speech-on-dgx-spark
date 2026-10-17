@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.719** · 2026-10-17 · Zustand → Modelle: „Messen“ je Modell im Panel und in der iPhone-App, auch für tars; Live zeigt „Messung läuft“
 - **V01.0.718** · 2026-10-17 · `modelle messen gemma vl30`: Gemma 4 26B A4B und neu Qwen3-VL 30B A3B FP8 als schnelles Hauptmodell messen
 - **V01.0.717** · 2026-10-17 · Kolibri-1 misst mit 74 % Speicher: es liegt schon in FP8 vor (78B, 73,6 GiB geladen), `--quantization fp8` fällt weg
 - **V01.0.716** · 2026-10-16 · Rot-Fix: Selbsttests lesen die Modellseite in chat_modell.py

@@ -134,12 +134,13 @@ class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_wechsel", "modelle")]:
             guard._rate.pop(k, None)
-        self.saved = modellseite._lanes, modellseite._laeuft
+        self.saved = modellseite._lanes, modellseite._laeuft, modellseite._misst
         modellseite._lanes = lambda: []
         modellseite._laeuft = lambda: False
+        modellseite._misst = lambda: False        # no measurement runs (test_messen_knopf checks one that does)
 
     def tearDown(self):
-        modellseite._lanes, modellseite._laeuft = self.saved
+        modellseite._lanes, modellseite._laeuft, modellseite._misst = self.saved
         helpers.set_config(modelle_wechseln=False)
         try:
             os.remove(modelle.WUNSCH)
@@ -219,7 +220,7 @@ class Kommando(unittest.TestCase):
     def test_the_panel_may_start_only_the_fixed_unit(self):
         if self.inst is None:
             self.skipTest("install.sh is not part of an app/-only copy")
-        self.assertIn("/usr/bin/systemctl start --no-block speech-spark-wechsel\\n'", self.inst)
+        self.assertIn("/usr/bin/systemctl start --no-block speech-spark-wechsel'", self.inst)
         self.assertIn("ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle wunsch-intern", self.inst)
 
 

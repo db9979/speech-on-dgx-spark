@@ -386,7 +386,7 @@ class Kommando(unittest.TestCase):
     def test_wired(self):
         self.assertIn("modelle) shift; cmd_modelle", self.sh)
         self.assertIn("as_panel_user ../modelle.py", self.sh)
-        self.assertIn("messen) units=(-u speech-spark-messen -u speech-spark-messen-engine)", self.sh)
+        self.assertIn("messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine)", self.sh)
         # the help text (sed range) reaches the new lines
         head = self.sh.splitlines()
         rng = re.search(r"sed -n '2,(\d+)p'", self.sh).group(1)
@@ -562,11 +562,11 @@ class Seite(unittest.TestCase):
         self.assertIn('"Modelle": "Models"', en)
         self.assertNotIn("onclick=", js.replace(".onclick=", ""))
         self.assertNotIn("fetch(", js)
-        # stage E4: the page changes only through the two switch endpoints (behind Funktionen → Modelle wechseln);
-        # stage E5 adds the own models (behind Funktionen → Eigene Modelle): add, delete, and the check that keeps nothing
+        # stage E4: the page changes only through the two switch endpoints and „Messen“ (behind Funktionen → Modelle
+        # wechseln); stage E5 adds the own models (behind Funktionen → Eigene Modelle): add, delete, and the check
         self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
-                         ["/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/wechseln",
-                          "/api/admin/modelle/zurueck"])
+                         ["/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/messen",
+                          "/api/admin/modelle/wechseln", "/api/admin/modelle/zurueck"])
         self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js), ["/api/admin/modelle/eigen/pruefen"])
         self.assertEqual(len(re.findall(r"method:\s*'(?:POST|PUT|DELETE)'", js)), 1)        # the check
         self.assertEqual(len(re.findall(r"\bmethod='POST'", js)), 1)                          # mdPost's default

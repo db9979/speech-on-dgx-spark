@@ -336,7 +336,7 @@ struct StatusView: View {
 // ---------------------------------------------------------------- Zustand → Verbrauch (verbrauch.py, admin only)
 
 /// Zustand → Modelle (stage E1): the model catalog, the models that run, the memory budget and the last measurement.
-/// Only to look at; nothing here switches a model.
+/// With Funktionen → Modelle wechseln: „Wechseln“, „Zurückholen“, own models and „Messen“ per model.
 struct ModelsView: View {
     @State private var d: [String: Any] = [:]
     @State private var error: String?
@@ -347,12 +347,15 @@ struct ModelsView: View {
 
     var body: some View {
         let w = d["wechsel"] as? [String: Any] ?? [:]
-        let an = w["an"] as? Bool == true, laeuft = w["laeuft"] as? Bool == true
+        let an = w["an"] as? Bool == true, misst = w["misst"] as? Bool == true
+        let laeuft = w["laeuft"] as? Bool == true || misst      // a switch and a measurement never run at once
         let alte = w["alte"] as? [String: Any] ?? [:]
         let eigene = an && w["eigene"] as? Bool == true
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
-            if laeuft {
+            if misst {
+                Text("Eine Messung läuft. Das Sprachmodell pausiert so lange; die Zahlen erscheinen hier, sobald sie fertig ist.").foregroundStyle(.secondary)
+            } else if laeuft {
                 Text(SparkAPI.way(String(localized: "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs."))).foregroundStyle(.secondary)
             }
             let b = d["budget"] as? [String: Any] ?? [:]
@@ -362,9 +365,9 @@ struct ModelsView: View {
                 LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
             } header: { Text("Speicher-Budget") } footer: {
                 if an {
-                    Text("Wechseln: beim Modell auf „Wechseln“ tippen. Messen auf dem Spark: sudo speech-spark modelle messen")
+                    Text("Beim Modell auf „Wechseln“ oder „Messen“ tippen. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")
                 } else {
-                    Text(SparkAPI.way(String(localized: "Zum Wechseln Funktionen → Modelle wechseln einschalten. Messen auf dem Spark: sudo speech-spark modelle messen")))
+                    Text(SparkAPI.way(String(localized: "Zum Wechseln und Messen Funktionen → Modelle wechseln einschalten. Messen geht auch auf dem Spark: sudo speech-spark modelle messen")))
                 }
             }
             ForEach(Array((d["arten"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, a in
@@ -383,6 +386,11 @@ struct ModelsView: View {
                                     if an && !laeuft && m["waehlbar"] as? Bool == true && m["aktiv"] as? Bool != true {
                                         Button("Wechseln") {
                                             ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""]
+                                        }.font(.caption).buttonStyle(.borderless)
+                                    }
+                                    if !laeuft && m["messbar"] as? Bool == true {
+                                        Button("Messen") {
+                                            ask = ["id": m["id"] as? String ?? "", "name": m["name"] as? String ?? "", "messen": "1"]
                                         }.font(.caption).buttonStyle(.borderless)
                                     }
                                     if eigene && !laeuft && m["eigen"] as? Bool == true && m["aktiv"] as? Bool != true {
@@ -423,11 +431,14 @@ struct ModelsView: View {
         .refreshable { await load() }
         .task { await load() }
         .confirmationDialog(LocalizedStringKey(ask?["zurueck"] != nil ? "Vorheriges Modell zurückholen?" : ask?["loeschen"] != nil
-                                               ? "Eigenes Modell löschen?" : ask?["dazu"] != nil ? "Eigenes Modell hinzufügen?" : "Modell wechseln?"),
+                                               ? "Eigenes Modell löschen?" : ask?["dazu"] != nil ? "Eigenes Modell hinzufügen?"
+                                               : ask?["messen"] != nil ? "Modell messen?" : "Modell wechseln?"),
                             isPresented: Binding(get: { ask != nil }, set: { if !$0 { ask = nil } }), titleVisibility: .visible) {
             Button("Ja") { if let a = ask { Task { await send(a) } } }
         } message: {
-            if ask?["loeschen"] != nil {
+            if ask?["messen"] != nil {
+                Text("Das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.")
+            } else if ask?["loeschen"] != nil {
                 Text("Das Modell kommt aus der Liste und von der Platte.")
             } else if ask?["dazu"] != nil {
                 Text("Geladen wird erst beim Wechseln.")
@@ -445,7 +456,9 @@ struct ModelsView: View {
     private func send(_ a: [String: String]) async {
         let lang = ["lang": UsageView.de ? "de" : "en"]
         do {
-            if a["loeschen"] != nil {
+            if a["messen"] != nil {
+                d = try await AdminSession.shared.object("POST", "api/admin/modelle/messen", query: lang, body: ["id": a["id"] ?? ""])
+            } else if a["loeschen"] != nil {
                 let id = (a["id"] ?? "").addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
                 d = try await AdminSession.shared.object("DELETE", "api/admin/modelle/eigen/" + id, query: lang)
             } else if a["dazu"] != nil, let v = vorschlag {

@@ -153,7 +153,7 @@ WITHOUT = {
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",
     "schirm": "schirm.py und steuerzentrale.py: Textanzeige am Bildschirm des Panel-Rechners, nur Art, Ort, Zeit und Zahlen, kein Werkzeug",
     "notbetriebasr": "notbetrieb.py: feste Befehle nach festen Regeln, nur im Notbetrieb, kein Sprachmodell und kein Werkzeug",
-    "modellwechsel": "Zustand → Modelle, nur Admins mit frischem Code; der Wechsel läuft als root in speech-spark-wechsel, kein Werkzeug",
+    "modellwechsel": "Zustand → Modelle, nur Admins mit frischem Code; Wechsel und Messen laufen als root in speech-spark-wechsel und speech-spark-messen-wunsch, kein Werkzeug",
     "modelleeigen": "Zustand → Modelle, nur Admins; das Panel liest nur Metadaten von Hugging Face, kein Werkzeug",
     "meldenadmin": "meldet sich von selbst",
     "bewertenzurueck": "meldet sich von selbst",

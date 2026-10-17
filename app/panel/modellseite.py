@@ -6,7 +6,9 @@ the fixed rule that follows from the numbers (all at once, one on-demand model a
 `sudo speech-spark modelle messen` (STATE/modelle-messung.json) next to each measured model.
 
 Stage E4 (admin switch Funktionen → Modelle wechseln, default off): "Wechseln" per model and "Zurückholen" per kind
-for 7 days. The panel checks the fixed rules (modelle.wechsel_pruefen, with the running qwen38 lanes in the budget),
+for 7 days. With the same switch "Messen" per model (Dominik 2026-10-17): the wish for the root unit
+speech-spark-messen-wunsch, which measures like `sudo speech-spark modelle messen <id>`; the language model pauses
+meanwhile, a switch waits until the measurement is done and the other way round. The panel checks the fixed rules (modelle.wechsel_pruefen, with the running qwen38 lanes in the budget),
 leaves a wish file and starts the root unit speech-spark-wechsel, which checks everything again and does the work
 (download, check, switch, restart, round trip). Only names, numbers and fixed words; never an address, a key or a
 text of an answer.
@@ -60,10 +62,11 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "architektur": "Diese Bauart kennt die Engine nicht.", "eigen": "ungültig", "voll": "Schon 20 eigene Modelle.",
          "aktiv": "Das Modell läuft gerade.", "netz": "Hugging Face ist gerade nicht erreichbar.",
          # plan Raspberry-Pi split: the model computer's answers
-         "laeuft": "Ein Modellwechsel läuft schon.",
+         "laeuft": "Ein Modellwechsel läuft schon.", "misst": "Eine Messung läuft gerade.",
          "start": "Der Wechsel ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
+         "start_messen": "Die Messung ließ sich nicht starten. Auf dem Spark: sudo speech-spark update, dann noch einmal.",
          "rechner": "Der Modell-Rechner antwortet gerade nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
-STATUS = {"laeuft": 409, "start": 503, "rechner": 503}
+STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
 EIGEN_BODY = 512
 
 
@@ -84,30 +87,39 @@ def _laeuft():
         return False
 
 
-def _starten():
+def _misst():
+    """A measurement runs here (the command line's unit or the one for „Messen“)."""
     try:
-        r = subprocess.run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT],
-                           capture_output=True, timeout=20)
+        return subprocess.run(["systemctl", "is-active", "-q", modelle.MESS_UNIT, modelle.MESS_WUNSCH_UNIT],
+                              timeout=5).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _starten(unit=modelle.WECHSEL_UNIT):
+    try:
+        r = subprocess.run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", unit], capture_output=True, timeout=20)
         return r.returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
 
 
 def _quelle(cfg):
-    """(total_gib, lanes, messung, laeuft, kat, alte switches) of the computer the models run on; HTTPException 503
-    when that is another one and it does not answer."""
+    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst) of the computer the models run on; HTTPException
+    503 when that is another one and it does not answer. laeuft and misst are None here (asked when needed)."""
     if steuer.remote(cfg):
         d = steuer.modelle(cfg)
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
-        return d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"]
-    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None
+        return (d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
+                d.get("misst", False))
+    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None, None
 
 
-def _fehler(e):
-    """The HTTP answer for a refused switch (a fixed word from here or from the model computer)."""
+def _fehler(e, was="wechsel"):
+    """The HTTP answer for a refused switch or measurement (a fixed word from here or from the model computer)."""
     word = str(e)
-    print(f"modelle: wechsel abgelehnt {word}", flush=True)
+    print(f"modelle: {was} abgelehnt {word}", flush=True)
     raise HTTPException(STATUS.get(word, 400), GRUND.get(word, "ungültig"))
 
 
@@ -127,7 +139,7 @@ def _lanes():
 def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_lanes, q_messung, laeuft, kat, wechsel = _quelle(cfg)
+    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
     lanes = q_lanes if lanes is None else lanes
     messung = q_messung if messung is None else messung
@@ -146,13 +158,14 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de"):
             nein = _waehlbar(art, mid, cfg, total_gib, lanes, kat, messung) if an and art in modelle.TAUSCH else "art"
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
-                         "eigen": bool(m.get("eigen")),
+                         "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm",
                          "gemessen": m["gemessen"], "betrieb": m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
                          "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]) or m["engine"] == "extern",
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = (_laeuft() if laeuft is None else laeuft) if an else False
-    wechsel = {"an": an, "laeuft": laeuft, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
+    misst = bool(_misst() if misst is None else misst)
+    wechsel = {"an": an, "laeuft": laeuft, "misst": misst, "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
@@ -165,13 +178,15 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, lanes, _, laeuft, kat, _ = _quelle(cfg)
+            total_gib, lanes, _, laeuft, kat, _, misst = _quelle(cfg)
             b = modelle.budget(cfg, total_gib, lanes, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
                 _live["v"]["eigen"] = modelle.rolle("llm", cfg, kat)[0]["name"]["de"]
             if _an(cfg) and (_laeuft() if laeuft is None else laeuft):   # stage E4: a switch runs (never which model)
                 _live["v"]["wechsel"] = True
+            if _misst() if misst is None else misst:   # a measurement runs (from the panel or the command line)
+                _live["v"]["messen"] = True
         except Exception:
             _live["v"] = {"on": False}
         _live["t"] = now
@@ -186,6 +201,39 @@ def admin_modelle(request: Request, lang: str = "de"):
     """Zustand → Modelle: catalog, active models, memory budget and the last measurement (names and numbers only)."""
     guard.limit(request, "modelle", None, True)
     return seite(lang="en" if lang == "en" else "de")
+
+
+@router.post("/api/admin/modelle/messen", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_messen(request: Request):
+    """„Messen“: one model measured like `speech-spark modelle messen`, here or on the model computer (Dominik
+    2026-10-17). The language model pauses meanwhile; the root unit speech-spark-messen-wunsch does the work."""
+    guard.limit(request, "modelle_messen", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    mid = str(body.get("id", ""))[:48]
+    if not _an():
+        print("modelle: messen abgelehnt aus", flush=True)
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = steuer.call("messen", (mid,), cfg=cfg, timeout=30)
+        if not isinstance(d, dict):
+            _fehler("rechner", "messen")
+        if d.get("ok") is not True:
+            word = d.get("fehler") if d.get("fehler") in GRUND else "wunsch"
+            _fehler("start_messen" if word == "start" else word, "messen")
+        name = str(d.get("name") or "")[:48]
+    else:
+        try:
+            name = modelle.messen_anfragen(mid, lambda: _starten(modelle.MESS_WUNSCH_UNIT), _misst() or _laeuft())["name"]["de"]
+        except modelle.Fehler as e:
+            if str(e) == "start":
+                print("modelle: messen start fehler", flush=True)
+                raise HTTPException(503, GRUND["start_messen"])
+            _fehler(e, "messen")
+    print("modelle: messen angefragt", flush=True)
+    guard.log("modelle_messen", detail=name)
+    _live["t"] = None
+    return seite(cfg, lang="en" if request.query_params.get("lang") == "en" else "de")
 
 
 def _wunsch(request, art, was, mid=""):
@@ -203,6 +251,8 @@ def _wunsch(request, art, was, mid=""):
             _fehler(d.get("fehler") if d.get("fehler") in GRUND else "wunsch")
         name = str(d.get("name") or "")[:48]
     else:
+        if _misst():
+            _fehler("misst")
         try:
             name = modelle.wechsel_anfragen(art, was, cfg, modelle.gesamt_gib(), _lanes(), _starten, _laeuft())["name"]["de"]
         except modelle.Fehler as e:
