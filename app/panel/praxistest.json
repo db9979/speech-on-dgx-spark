@@ -1597,6 +1597,13 @@
 "titel": "Pebble-Uhr: Nachrichten, Fernbedienung, Schritte",
 "text": "A: Unter Funktionen → Pebble-Uhr die Unterschalter Nachrichten, Antwortvorschläge, Fernbedienung sowie Schritte, Puls und Schlaf einschalten und die Uhr-App 2.2 über den QR-Code unter Ich → Pebble-Uhr laden. Unter Ich → Pebble-Uhr den Fernseher und ein Licht anhaken, „Geräte speichern“. Auf der Uhr lang OBEN, „Nachrichten“, einen Chat öffnen: die letzten Nachrichten stehen da, UNTEN am Ende „Bin unterwegs“ antippen; im Panel steht die Antwort im Chat. „Fernbedienung“, Fernseher, „Aus“: der Fernseher geht aus. Nach dem nächsten Öffnen der App stehen unter Ich → Pebble-Uhr die Schritte des Tages; „Alle löschen“ leert sie.",
 "thread": "Pebble-Uhr erweitern"
+},
+{
+"id": "P252",
+"v": 738,
+"titel": "Steuerzentrale: Farbflächen und zuletzt benutzte Werkzeuge",
+"text": "A: Am Bildschirm des Panel-Rechners nach dem Wetter fragen und warten, bis die Anfrage ausgeblendet ist. Im Kasten Werkzeuge steht dann „zuletzt ✓ Websuche 09:12“ (Full HD: „✓ Websuche“), nicht mehr „Suchen · Schalten · Lesen“. Nach einem Neustart des Panels steht wieder „Suchen · Schalten · Lesen“, bis ein Werkzeug lief. Die Kästen haben dunkle Farbflächen und runde Ecken, der aktive Kasten gelb, jedes Gerät in der Farbe seiner Anfrage; die Rahmen tars und pi bleiben dunkel.",
+"thread": "Panel und Dienste auf Raspberry Pi 5"
 }
 ]
 }

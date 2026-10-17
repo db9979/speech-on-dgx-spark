@@ -272,6 +272,40 @@ class Bild(unittest.TestCase):
         self.assertEqual(sz.werkzeug_teile(sz.gezeigt(d)), [])
         self.assertIn("Suchen · Schalten · Lesen", sz.bild(d, 240, 67).text())
 
+    def test_the_tool_box_names_the_last_tools_when_quiet(self):
+        # Dominik 2026-10-17 (photo): with nothing running the box only said "Suchen · Schalten · Lesen";
+        # now it names the last tools from the Live returns, newest first, each once, with ✓/✗ and the time
+        d = beispiel()
+        d["live"]["reqs"] = []
+        t0 = time.mktime((2026, 10, 17, 9, 12, 0, 0, 0, -1))
+        d["live"]["rets"] = [{"t": t0, "tool": "Websuche", "ok": True}, {"t": t0 - 300, "tool": "Kalender", "ok": False},
+                             {"t": t0 - 400, "tool": "Websuche", "ok": True}]
+        self.assertEqual(sz.zuletzt_teile(d["live"]), [("✓ Websuche 09:12", "w"), (" · ", "m"), ("✗ Kalender 09:07", "w")])
+        self.assertEqual(sz.zuletzt_teile(d["live"], False)[0], ("✓ Websuche", "w"))
+        groß = sz.bild(d, 240, 67).text()
+        self.assertIn("zuletzt ✓ Websuche 09:12", groß)
+        self.assertNotIn("Suchen · Schalten · Lesen", groß)
+        self.assertRegex(sz.bild(d, 160, 45).text(), r"Werkzeuge ✓ Websuche")
+        d["live"]["rets"] = []
+        self.assertIn("Suchen · Schalten · Lesen", sz.bild(d, 240, 67).text())
+
+    def test_boxes_have_a_surface_and_round_corners(self):
+        # Dominik 2026-10-17 picked draft 1: every box gets a coloured surface (the console's dark colours 1-7) and
+        # round corners; the frames of the computers stay dark, the palette is set on the Linux console only
+        R = sz.Raster(30, 12)
+        R.box(0, 0, 30, 12, "b", "tars", "b", flaeche=False)
+        R.box(2, 2, 10, 4, "y", voll=True)
+        self.assertEqual((R.z[2][2][0], R.z[2][11][0], R.z[5][2][0], R.z[5][11][0]), ("╭", "╮", "╰", "╯"))
+        self.assertEqual(R.bg[3][5], sz.FLAECHE["y"])
+        self.assertEqual(R.bg[2][5], 0)                   # the frame line itself has no surface
+        self.assertEqual(R.bg[8][20], 0)                  # inside the computer's frame
+        self.assertTrue(all(0 < v < 8 for v in sz.FLAECHE.values()))
+        self.assertEqual(sz.farbtafel().count("\033]P"), 16)
+        self.assertEqual(sz.farbtafel(False), "\033]R")
+        self.assertEqual(sz.ersetzen("╭─╮╰╯", set("┌─┐└┘")), "┌─┐└┘")   # a font without round corners
+        t = sz.bild(beispiel(), 240, 67)
+        self.assertTrue(any(v for row in t.bg for v in row))
+
     def test_every_live_service_has_its_line(self):
         """Dominik 2026-10-16: the screen grows with every change. Every box of the Live picture is drawn or counted."""
         d = beispiel()

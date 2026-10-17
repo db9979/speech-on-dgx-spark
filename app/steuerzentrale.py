@@ -42,7 +42,7 @@ ERSATZ = {"▁": "_", "▂": "▄", "▃": "▄", "▅": "▄", "▆": "█", "�
           "●": "•", "○": "o", "┄": "-", "┆": "¦", "━": "═", "┃": "║", "┓": "╗", "┗": "╚", "┛": "╝", "┏": "╔", "╌": "-",
           "⚠": "!", "…": "~", "↻": "@", "√": "v", "►": ">", "•": "*", "¦": "|", "═": "=", "║": "|", "╗": "+", "╚": "+",
           "╝": "+", "╔": "+", "▄": "_", "█": "#", "░": ".", "▌": "|", "─": "-", "│": "|", "┌": "+", "┐": "+", "└": "+",
-          "┘": "+", "→": ">", "↓": "v", "·": ".", "°": "o", "Ø": "O", "▲": "^"}
+          "┘": "+", "╭": "┌", "╮": "┐", "╰": "└", "╯": "┘", "→": ">", "↓": "v", "·": ".", "°": "o", "Ø": "O", "▲": "^"}
 STUFEN = (("asr", "Hören", "Spracherkennung", "modell"), ("weiche", "Weiche", "Absicht", "panel"),
           ("llm", "Sprachmodell", "Antwort", "modell"), ("tool", "Werkzeuge", "Suchen · Schalten · Lesen", "panel"),
           ("tts", "Sprechen", "Sprachausgabe", "modell"))
@@ -56,10 +56,15 @@ ZUSTAND = {"active": "läuft", "inactive": "aus", "activating": "startet", "deac
 
 
 # ---------------------------------------------------------------- the picture as a grid of (glyph, colour)
+# a box's own surface (Dominik 2026-10-17, draft 1): its colour -> the console colour 1-7 behind its inside
+FLAECHE = {"y": 3, "c": 6, "p": 5, "g": 2, "b": 4, "d": 4, "w": 4, "m": 4}
+
+
 class Raster:
     def __init__(self, w, h):
         self.w, self.h = w, h
         self.z = [[(" ", "w")] * w for _ in range(h)]
+        self.bg = [[0] * w for _ in range(h)]      # the surface behind each cell (0: the screen's own)
 
     def put(self, x, y, s, col="w"):
         if 0 <= y < self.h:
@@ -83,13 +88,16 @@ class Raster:
         for y in range(min(y1, y2), max(y1, y2) + 1):
             self.put(x, y, ch, col)
 
-    def box(self, x, y, w, h, col="d", titel="", tcol="W", voll=False):
+    def box(self, x, y, w, h, col="d", titel="", tcol="W", voll=False, flaeche=True):
         if w < 2 or h < 2:
             return
         for i in range(1, h - 1) if voll else ():      # covers what was drawn below it
             self.put(x + 1, y + i, " " * (w - 2), "w")
-        self.put(x, y, "┌" + "─" * (w - 2) + "┐", col)
-        self.put(x, y + h - 1, "└" + "─" * (w - 2) + "┘", col)
+        for yy in range(max(0, y + 1), min(self.h, y + h - 1)):
+            for xx in range(max(0, x + 1), min(self.w, x + w - 1)):
+                self.bg[yy][xx] = FLAECHE.get(col, 0) if flaeche else 0
+        self.put(x, y, "╭" + "─" * (w - 2) + "╮", col)
+        self.put(x, y + h - 1, "╰" + "─" * (w - 2) + "╯", col)
         for i in range(1, h - 1):
             self.put(x, y + i, "│", col)
             self.put(x + w - 1, y + i, "│", col)
@@ -209,7 +217,7 @@ def bahn(R, x, w, top, bot, k, karte, live):
     name = (karte or {}).get("name") or ("dieser Rechner" if k == "spark" else RECHNER.get(k, ""))
     titel = f"{name} · {RECHNER[k]}" if k in RECHNER else f"{name} · Panel und Modelle"
     weg_ = k == "modell" and karte and not karte.get("ok")
-    R.box(x, top, w, bot - top + 1, "r" if weg_ else "b", kurz(titel, w - 6), "r" if weg_ else "b")
+    R.box(x, top, w, bot - top + 1, "r" if weg_ else "b", kurz(titel, w - 6), "r" if weg_ else "b", flaeche=False)   # the frame stays dark
     i, n = x + 2, max(4, (w - 26) // 2)
     if k == "spark":
         s = live.get("sys") or {}
@@ -253,6 +261,20 @@ def werkzeug_teile(lauf):
         mark = "▶" if jetzt else "✓" if ts[-1].get("ok", True) is not False else "✗"
         mehr = f" +{len(ts) - 1}" if len(ts) > 1 else ""
         teile += ([(" · ", "m")] if teile else []) + [(f"{mark} {name}{mehr}", FARBEN[j % len(FARBEN)])]
+    return teile
+
+
+def zuletzt_teile(live, zeit=True):
+    """While no shown request uses a tool: the last tools that gave something back, newest first, each name once,
+    with ✓/✗ and the time (Dominik 2026-10-17: "Suchen · Schalten · Lesen" says nothing)."""
+    teile, namen = [], set()
+    for x in live.get("rets") or []:
+        name = x.get("tool") if isinstance(x, dict) else None
+        if not name or name in namen:
+            continue
+        namen.add(name)
+        mark = "✓" if x.get("ok", True) is not False else "✗"
+        teile += ([(" · ", "m")] if teile else []) + [(f"{mark} {name}" + (f" {uhr(x.get('t'), False)}" if zeit else ""), "w")]
     return teile
 
 
@@ -310,6 +332,7 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
         bx, y, bw = pos[key]
         aktiv = [j for j, r in enumerate(lauf) if SCHRITT.get(r.get("stage")) == key]
         teile = werkzeug_teile(lauf) if key == "tool" else []
+        vorher = [] if teile or key != "tool" else zuletzt_teile(live, hoch == 4)   # nothing running: what ran last
         R.box(bx, y, bw, hoch, "y" if aktiv else "d", voll=True)
         e = R.put(bx + 2, y + 1, name, "W")
         if aktiv and not teile:             # the tools carry their own ▶
@@ -324,7 +347,9 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
         runden = max([sum(1 for st in r.get("steps") or [] if st.get("k") == "llm") for r in lauf] or [0])
         if key == "llm" and runden > 1:
             sub += f" · Runde {runden}"
-        zx, zy = (bx + 2, y + 2) if hoch == 4 else (e + (1 if teile else 3), y + 1)
+        zx, zy = (bx + 2, y + 2) if hoch == 4 else (e + (1 if teile or vorher else 3), y + 1)
+        if vorher:                           # a low box has no room for the word and the times
+            zx, teile = R.put(zx, zy, "zuletzt ", "m") if hoch == 4 else zx, vorher
         if teile:
             bis = bx + bw - (2 if hoch == 4 else 5)
             namen = teile[::2]               # every other part is the dot between two
@@ -683,21 +708,44 @@ def schluessel():
 
 
 PAARE = {"w": (7, 0), "W": (7, 1), "g": (2, 1), "y": (3, 1), "r": (1, 1), "c": (6, 1), "m": (0, 1), "d": (0, 1),
-         "p": (5, 1), "o": (3, 0), "b": (4, 1), "K": (0, 2)}
+         "p": (5, 1), "o": (1, 0), "b": (4, 1), "K": (0, 2)}
+# the console's 16 colours: 0-7 are the dark surfaces (the only ones a cell's background can take, 1 the orange of
+# the Internet), 8-15 the bright writing (bold). Only on the Linux console (ESC ] P), back with ESC ] R at the end.
+TAFEL = ("0c1024", "ffa040", "143a22", "3a3214", "22224a", "3a1840", "123844", "c8cce0",
+         "8890b0", "ff5f5f", "5cf08c", "ffd84f", "8c8cff", "ff6cff", "5ce0ff", "ffffff")
+
+
+def farbtafel(an=True):
+    """The escape that sets (or resets) the console palette."""
+    return "".join(f"\033]P{i:x}{c}" for i, c in enumerate(TAFEL)) if an else "\033]R"
+
+
+def paar(farben, col, bg):
+    """The curses attribute for writing col on the surface bg, a colour pair made the first time it is needed."""
+    import curses
+    if (col, bg) not in farben:
+        fg, art = PAARE[col]
+        n = len(farben) + 1
+        if bg and n < curses.COLOR_PAIRS and art != 2:
+            curses.init_pair(n, fg, bg)
+            farben[(col, bg)] = curses.color_pair(n) | (curses.A_BOLD if art == 1 else 0)
+        else:                               # no pair left: the colour on the screen's own background
+            farben[(col, bg)] = farben[(col, 0)]
+    return farben[(col, bg)]
 
 
 def zeigen(scr, R, have, versatz, farben):
     import curses
     dx, dy = versatz
     for y, row in enumerate(R.z):
-        x = 0
+        x, bgs = 0, R.bg[y]
         while x < len(row):
-            col = row[x][1]
+            col, bg = row[x][1], bgs[x]
             j = x
-            while j < len(row) and row[j][1] == col:
+            while j < len(row) and row[j][1] == col and bgs[j] == bg:
                 j += 1
             try:
-                scr.addstr(y + dy, x + dx, ersetzen("".join(c for c, _ in row[x:j]), have), farben[col])
+                scr.addstr(y + dy, x + dx, ersetzen("".join(c for c, _ in row[x:j]), have), paar(farben, col, bg))
             except curses.error:
                 pass
             x = j
@@ -711,8 +759,8 @@ def lauf(scr):
     curses.start_color()
     farben = {}
     for i, (k, (fg, art)) in enumerate(PAARE.items(), 1):
-        curses.init_pair(i, fg if art != 2 else 0, 0 if art != 2 else 6)
-        farben[k] = curses.color_pair(i) | (curses.A_BOLD if art == 1 else 0)
+        curses.init_pair(i, fg if art != 2 else 7, 0 if art != 2 else 6)    # 2: white on the cyan surface
+        farben[(k, 0)] = curses.color_pair(i) | (curses.A_BOLD if art else 0)
     scr.nodelay(True)
     port = (load_config("panel") or {}).get("port", 31080)
     px, wahl0, font, have, an, code0 = None, None, None, None, True, None
@@ -769,7 +817,16 @@ def main(argv):
     import locale
     locale.setlocale(locale.LC_ALL, "")
     print("schirm: start", file=sys.stderr, flush=True)
-    curses.wrapper(lauf)
+    tafel = os.environ.get("TERM") == "linux"
+    if tafel:
+        sys.stdout.write(farbtafel())
+        sys.stdout.flush()
+    try:
+        curses.wrapper(lauf)
+    finally:
+        if tafel:
+            sys.stdout.write(farbtafel(False))
+            sys.stdout.flush()
     return 0
 
 

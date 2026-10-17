@@ -7141,7 +7141,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Steuerzentrale am Bildschirm",
 "title": "Steuerzentrale am Bildschirm",
-"text": "- Oben: Gesamtzustand, laufende Anfragen, Hinweise, Wartung und Version, darunter die Zahlen des Tages (Antworten, erster Ton, Wächter, Eingang, Sicherung, Zeiten des Bildschirms). - Mitte: die Stufen Hören, Weiche, Sprachmodell, Werkzeuge und Sprechen im Rahmen des Rechners, auf dem sie laufen; bei Spark teilen tars und Pi nebeneinander mit CPU, GPU, Arbeitsspeicher, Temperatur und 20-Minuten-Kurve. Jede laufende Anfrage hat eine eigene Farbe und springt sichtbar zwischen den Rechnern hin und her; die Wege laufen unter den Kästen durch, und eine fertige Antwort bleibt mit „fertig in … s“ stehen wie in der Live-Übersicht. Im Kasten Werkzeuge steht jedes benutzte Werkzeug in der Farbe seiner Anfrage, mit ▶ läuft, ✓ fertig oder ✗ Fehler; bei Full HD ein Name und „+N“ für die übrigen. - Links die Geräte mit Anfrage, die verbundenen Geräte und Zugriffe über das Internet; rechts die Dienste und Ziele der Live-Übersicht, die gerade benutzt werden (die übrigen in einer Zeile „+ N bereit“ und „+ N ruhig“, wie in Zustand → Live), das Internet hinter dem Wächter, „Braucht dich“, Modelle und Dienste, die letzten Ereignisse, Sicherheit und Wartung. - Unten die letzten 20 Minuten als Kurven (GP"
+"text": "- Oben: Gesamtzustand, laufende Anfragen, Hinweise, Wartung und Version, darunter die Zahlen des Tages (Antworten, erster Ton, Wächter, Eingang, Sicherung, Zeiten des Bildschirms). - Mitte: die Stufen Hören, Weiche, Sprachmodell, Werkzeuge und Sprechen im Rahmen des Rechners, auf dem sie laufen; bei Spark teilen tars und Pi nebeneinander mit CPU, GPU, Arbeitsspeicher, Temperatur und 20-Minuten-Kurve. Jede laufende Anfrage hat eine eigene Farbe und springt sichtbar zwischen den Rechnern hin und her; die Wege laufen unter den Kästen durch, und eine fertige Antwort bleibt mit „fertig in … s“ stehen wie in der Live-Übersicht. Im Kasten Werkzeuge steht jedes benutzte Werkzeug in der Farbe seiner Anfrage, mit ▶ läuft, ✓ fertig oder ✗ Fehler; bei Full HD ein Name und „+N“ für die übrigen. Läuft gerade nichts, stehen dort die zuletzt benutzten Werkzeuge mit ✓ oder ✗ (bei 4K mit Uhrzeit). Jeder Kasten hat eine dunkle Farbfläche in seiner Farbe und runde Ecken (eigene Farbtafel der Konsole, beim Beenden zurückgesetzt); die Rahmen der beiden Rechner bleiben dunkel. - Links die Geräte mit Anfrage, die verbundenen Geräte und Zugriffe über das Internet; rechts die Dienste und Ziele der Live-Über"
 },
 {
 "lang": "de",
@@ -7149,7 +7149,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Steuerzentrale am Bildschirm",
 "title": "Steuerzentrale am Bildschirm",
-"text": "U, CPU, freier Speicher, Temperatur) und die Antworten je Stunde."
+"text": "sicht, die gerade benutzt werden (die übrigen in einer Zeile „+ N bereit“ und „+ N ruhig“, wie in Zustand → Live), das Internet hinter dem Wächter, „Braucht dich“, Modelle und Dienste, die letzten Ereignisse, Sicherheit und Wartung. - Unten die letzten 20 Minuten als Kurven (GPU, CPU, freier Speicher, Temperatur) und die Antworten je Stunde."
 },
 {
 "lang": "de",
@@ -14397,7 +14397,15 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Control centre on the screen",
 "title": "Control centre on the screen",
-"text": "- Top: overall state, running requests, notes, maintenance and version, below it the day's numbers (answers, first sound, Wächter, entrance, backup, the screen's times). - Middle: the stages Hören, Weiche, Sprachmodell, Werkzeuge and Sprechen in the frame of the computer they run on; with Spark split tars and the Pi side by side with CPU, GPU, memory, temperature and a 20-minute curve. Every running request has its own colour and visibly jumps between the computers; the ways run underneath the boxes, and a finished answer stays with \"fertig in … s\" as in the Live view. The Werkzeuge box names every tool in use in the colour of its request, with ▶ running, ✓ done or ✗ failed; on Full HD one name and \"+N\" for the others. - Left the devices with a request, the connected devices and access over the internet; right the services and targets of the Live view that are in use right now (the others in one line \"+ N ready\" and \"+ N quiet\", as in Status → Live), the internet behind the Wächter, \"Braucht dich\", models and services, the last events, security and maintenance. - Bottom the last 20 minutes as curves (GPU, CPU, free memory, temperature) and the answers per hour."
+"text": "- Top: overall state, running requests, notes, maintenance and version, below it the day's numbers (answers, first sound, Wächter, entrance, backup, the screen's times). - Middle: the stages Hören, Weiche, Sprachmodell, Werkzeuge and Sprechen in the frame of the computer they run on; with Spark split tars and the Pi side by side with CPU, GPU, memory, temperature and a 20-minute curve. Every running request has its own colour and visibly jumps between the computers; the ways run underneath the boxes, and a finished answer stays with \"fertig in … s\" as in the Live view. The Werkzeuge box names every tool in use in the colour of its request, with ▶ running, ✓ done or ✗ failed; on Full HD one name and \"+N\" for the others. While nothing runs, it shows the tools used last with ✓ or ✗ (on 4K with the time). Every box has a dark surface in its colour and round corners (the console's own palette, reset on exit); the frames of the two computers stay dark. - Left the devices with a request, the connected devices and access over the internet; right the services and targets of the Live view that are in use right now (the others in one line \"+ N ready\" and \"+ N quiet\", as in Status → Live), the"
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Control centre on the screen",
+"title": "Control centre on the screen",
+"text": " internet behind the Wächter, \"Braucht dich\", models and services, the last events, security and maintenance. - Bottom the last 20 minutes as curves (GPU, CPU, free memory, temperature) and the answers per hour."
 },
 {
 "lang": "en",
