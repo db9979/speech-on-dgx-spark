@@ -1636,6 +1636,13 @@
 "titel": "Apps zeigen gleich den letzten Stand",
 "text": "A: Funktionen → Apps merken sich den letzten Stand ist an (Grundausstattung). P: iPhone-App (neuer TestFlight-Build) einmal öffnen, Verlauf, Chats und Mein Profil ansehen, App ganz schließen. Im Flugmodus wieder öffnen: Verlauf, Chats und Mein Profil zeigen sofort den Stand von vorher mit „Stand … · Spark gerade nicht erreichbar“. Flugmodus aus: der Hinweis wird zu „wird aktualisiert …“ und verschwindet. Android-App 1.4.1: beim Start „Verbinde mit dem Spark …“ statt weißer Seite, danach sofort das letzte Gespräch mit „Stand …“ darüber. Entkoppeln bzw. Abmelden und neu anmelden: nichts vom alten Stand ist mehr da. Admin: Zustand → Logs, Bereich Apps: bei langsamem Netz steht „app: langsam … ms iphone“.",
 "thread": "Apps zwischenspeichern und Ladeanzeige"
+},
+{
+"id": "P258",
+"v": 749,
+"titel": "Tippen im Chat bei langem Gespräch",
+"text": "A: Im Assistenten am Rechner (Browser) ein Gespräch mit vielen Fragen öffnen und einen langen Satz schnell ins Eingabefeld tippen. Die Buchstaben erscheinen sofort, nichts hakt, auch wenn man kurz stehen bleibt und weitertippt. Beim Öffnen des Gesprächs steht unten die letzte Antwort, und man kann ganz nach oben blättern.",
+"thread": "Langsames Tippen im Chat"
 }
 ]
 }

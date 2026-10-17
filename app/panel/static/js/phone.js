@@ -29,9 +29,10 @@ function layout(){const m=MOBILE.matches;
   if(!m&&mtog.parentNode)mtog.remove();placeFace()}
 new MutationObserver(placeFace).observe($('chatlog'),{childList:true});
 MOBILE.addEventListener('change',layout);
-// the class only when it changes (empty ↔ text), not a class write in every keystroke
+// the class only when it changes (empty ↔ text), not a class write in every keystroke; "hastext", not "typing":
+// .typing::after are the answer's moving dots, which redrew the whole page sixty times a second while text stood here
 {const box=document.querySelector('.composer'),ti=$('chattext');let on=null;
- const sync=v=>{if(v!==on){on=v;box.classList.toggle('typing',v)}};
+ const sync=v=>{if(v!==on){on=v;box.classList.toggle('hastext',v)}};
  ti.addEventListener('input',()=>sync(!!ti.value.trim()));
  $('chatsend').addEventListener('click',()=>setTimeout(()=>sync(!!ti.value.trim()),0));
  ti.addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(()=>sync(false),0)})}

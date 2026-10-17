@@ -3340,6 +3340,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Tippen geht vor, Teil 2 (V01.0.749)",
+"text": "Tippen geht vor, Teil 2 (V01.0.749): Steht Text im Eingabefeld, heißt es dort „hastext“ statt „typing“: der alte Name startete die Warte-Punkte einer Antwort (.typing::after) unsichtbar am Eingabefeld, die die ganze Seite 60-mal pro Sekunde neu setzten. Das Lade-Rad im Gesicht dreht nur noch, wenn es zu sehen ist (Denken, Suchen). Der Verlauf ist abgeschlossen (#chatlog{contain:strict}): ein Buchstabe setzt nicht mehr jede Blase eines langen Gesprächs neu. Gemessen mit 6-fach gedrosselter CPU und 120 Blasen: lange Aufgaben beim Tippen von etwa 150 ms auf 0, Zeit bis zum nächsten Bild im Mittel von 37 auf etwa 25 ms."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Als App aufs Handy",
 "text": "Als App aufs Handy: https://SPARK:31443 im Handy-Browser öffnen, Zertifikatswarnung bestätigen, dann im Browser-Menü „Zum Startbildschirm hinzufügen“ (iPhone: Safari → Teilen → „Zum Home-Bildschirm“). Der Assistent startet dann mit eigenem Icon im Vollbild. Mit dem selbst erstellten Zertifikat legt Android eine Verknüpfung statt einer installierten App an; das funktioniert genauso, nur ohne Eintrag in der App-Liste."
 },
@@ -10854,6 +10862,14 @@
 "head": "Voice chat",
 "title": "Typing comes first (V01.0.701)",
 "text": "Typing comes first (V01.0.701): while something is typed into the text field, the face draws only about ten pictures a second instead of sixty (until 1.5 s after the last letter), and the page asks which face is on screen only four times a second. Typing stays smooth on slower phones, tablets and in the Android app. In the iPhone app the line to type in is its own view: a letter redraws only that line, not the face and the conversation."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Typing comes first, part 2 (V01.0.749)",
+"text": "Typing comes first, part 2 (V01.0.749): while text stands in the field, the field is marked \"hastext\" instead of \"typing\": the old name started an answer's waiting dots (.typing::after) invisibly at the field, and they laid out the whole page sixty times a second. The face's loading wheel turns only while it shows (thinking, searching). The conversation is closed off (#chatlog{contain:strict}): a letter no longer lays out every bubble of a long conversation again. Measured with the CPU slowed down six times and 120 bubbles: long tasks while typing from about 150 ms to 0, time to the next picture on average from 37 to about 25 ms."
 },
 {
 "lang": "en",

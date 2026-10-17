@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.749** Tippen im Chat wieder flüssig, auch bei langem Verlauf
 - **V01.0.748** Apps zeigen beim Öffnen gleich den letzten Stand und laden sichtbar, statt leer zu bleiben
 - **V01.0.747** Anrufe im Chat zeigen auf Live, Monitoring und der Steuerzentrale beide Seiten: Geräte, Sprache oder Video, klingelt oder verbunden und beide Personen (Namen nur mit Zustimmung)
 - **V01.0.746** iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.742** Rot-Fix: Profile bekommen beim Seitenstart kein Admin-Anmeldefenster mehr
 - **V01.0.741** Bildschirm beschreiben: „Was siehst du auf meinem Mac?“ fragen, der Rechner fragt vorher, die Beschreibung wird gezeigt, aber nie gespeichert
 - **V01.0.740** Rot-Fix: der Kiwix-Selbsttest stellt die Weiche selbst ab
-- **V01.0.739** Reddit und Feeds: eigenen Reddit-Posteingang, Subreddits und Feeds verbinden, Neues kommt sofort oder im Tagesbrief
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.749** · 2026-10-17 · Tippen im Chat wieder flüssig: am Eingabefeld liefen die Warte-Punkte der Antwort unsichtbar mit und zeichneten die Seite 60-mal pro Sekunde neu; das Lade-Rad im Gesicht dreht nur noch, wenn es zu sehen ist; ein langer Verlauf wird beim Tippen nicht mehr neu gesetzt
 - **V01.0.748** · 2026-10-17 · Apps merken sich den letzten Stand: iPhone- und Android-App zeigen Verlauf, Chats und Einstellungen sofort vom letzten Mal, laden sichtbar (Platzhalter, „Verbinde mit dem Spark …“, „Noch einmal“), holen im Hintergrund vor und melden langsame Seiten ins Log; Android-App 1.4.1
 - **V01.0.747** · 2026-10-17 · Anrufe im Chat zeigen auf Live, Monitoring und der Steuerzentrale beide Seiten: Geräte, Sprache oder Video, klingelt oder verbunden und beide Personen (Namen nur mit Zustimmung)
 - **V01.0.746** · 2026-10-17 · iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil, die Filter über den Dokumenten reagieren je für sich

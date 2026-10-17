@@ -2882,7 +2882,8 @@ class Browser(unittest.TestCase):
     def test_typing_comes_before_the_face(self):
         """Dominik 2026-10-16 („das Tippen ist total langsam“): while something is typed the face draws at most about
         ten pictures a second (face.js FD), so the keyboard gets the time; the composer's class changes only when the
-        line goes from empty to text and back (phone.js)."""
+        line goes from empty to text and back (phone.js), no endless animation runs behind it and the conversation
+        is closed off (app.css #chatlog contain:strict)."""
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
@@ -2894,9 +2895,17 @@ class Browser(unittest.TestCase):
                 n1, t1 = await pg.evaluate("[FD.n,performance.now()]")
                 per_s = (n1 - n0) / max(0.5, (t1 - t0) / 1000)
                 self.assertLessEqual(per_s, 15, f"{per_s:.1f} Bilder je Sekunde beim Tippen")
-                self.assertIn("typing", await pg.evaluate("document.querySelector('.composer').className"))
+                self.assertIn("hastext", await pg.evaluate("document.querySelector('.composer').className"))
+                # Dominik 2026-10-17 („die Eingabe im Chat ist total langsam“): while text stands in the field and the
+                # chat waits, no endless animation runs (the class was "typing", which started the answer's moving dots
+                # .typing::after and redrew the page sixty times a second; the face's hidden spinner turned as well)
+                running = await pg.evaluate("document.getAnimations().filter(a=>a.playState==='running')"
+                                            ".map(a=>(a.animationName||'?')+' '+(a.effect&&a.effect.pseudoElement||''))")
+                self.assertEqual(running, [], "endless animations while typing")
+                # the conversation is closed off, so a keystroke does not lay out every bubble of a long one again
+                self.assertIn("strict", await pg.evaluate("getComputedStyle($('chatlog')).contain"))
                 await pg.fill("#chattext", "")
-                self.assertNotIn("typing", await pg.evaluate("document.querySelector('.composer').className"))
+                self.assertNotIn("hastext", await pg.evaluate("document.querySelector('.composer').className"))
                 # after typing the face moves as before again
                 await pg.wait_for_timeout(1700)
                 n2 = await pg.evaluate("FD.n")
