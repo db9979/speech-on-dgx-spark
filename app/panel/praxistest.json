@@ -1506,6 +1506,13 @@
 "titel": "Grundausstattung übernehmen",
 "text": "A: Funktionen öffnen. Oben steht die Karte „Grundausstattung für ein gutes Gespräch“ mit dem, was noch aus ist. „Alle übernehmen“ tippen: die Karte meldet die Zahl, die Zeilen tragen „Empfohlen“ und sind an, der Filter „Empfohlen“ zeigt nur sie. „Darf der Spark ins Internet?“ mit Ja oder Nein beantworten, dann verschwindet die Karte. Unter Zustand → Logs → Admin-Protokoll steht die Änderung mit „Rückgängig“. Ein neues Profil sieht im leeren Chat zuerst „Wo stelle ich die Stimme ein?“.",
 "thread": "Gute Grundeinstellungen für Neulinge"
+},
+{
+"id": "P239",
+"v": 722,
+"titel": "Qwen3.8 gleichzeitig und schneller messen",
+"text": "A: Unter Zustand → Modelle bei „Qwen3.8 27B NVFP4“, danach bei „…Gesprächsspeicher FP8“ und „…mit DSpark“ auf „Messen“ tippen (je etwa 20 bis 30 Minuten). Danach stehen beim Modell auch „2 gleichzeitig … tok/s je Antwort“, „4 gleichzeitig …“, „60K Tokens: erste … s“ und „Platz für … × 64K“, in der iPhone-App dieselben Zahlen kurz. Scheitert DSpark, steht dort „abgebrochen“ und das Sprachmodell antwortet trotzdem wieder.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

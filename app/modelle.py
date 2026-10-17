@@ -1,11 +1,18 @@
 """Modell-Katalog (plan plaene/eigene-modelle.md, Dominik 2026-10-14 „1a 2a 3a 4a 5a 6a“): the models this
 installation runs itself, one line each in modelle.json, read only here.
 
-Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]` stops the
+Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]
+[kv8] [dspark]` stops the
 qwen38 lanes for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM on
 127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
 starts qwen38 again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
 fixed words and numbers, never an answer's text). Nothing is switched by a measurement and nothing is deleted.
+A main model candidate is also measured with 2 and 4 long questions at once and one question of about 60K tokens, and
+the engine's own count of the context room (Dominik 2026-10-17: 2-4 at once with a context of 64K or more).
+
+A variant ("basis": an earlier entry's id) takes that entry and changes only the fields it names, its vllm fields
+merged (one source: Qwen3.8 with its context store in FP8, or with the DSpark helper model). A helper model
+(vllm "entwurf") is a second repository with a pinned commit, fetched and checked like the main one.
 
 Rules for every entry (test_modelle): the engine is one we know, the repository a plain "owner/name", the revision
 a full commit or empty (empty only to measure), the memory share at most ANTEIL_MAX (above ~0.80 the GB10 freezes),
@@ -52,10 +59,12 @@ BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
-VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
+VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype", "entwurf",
              "venv")
 VENVS = ("llm", "kolibri")       # $PREFIX/venv-<name>: venv-llm (install.sh --llm), venv-kolibri (install.sh --kolibri)
 KV = ("fp8",)
+# speculative decoding with a helper model (vllm "entwurf"): the method and its fixed extra settings for vLLM
+ENTWURF = {"dspark": {"draft_sample_method": "probabilistic"}}
 LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--max-logprobs; System One in llm_tor.py)
 ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017)}   # config llm.*
 ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
@@ -84,6 +93,11 @@ VORLAUF = "\n".join(f"Regel {i}: Antworte kurz, freundlich und auf Deutsch, nenn
                      f"und frag nach, wenn etwas fehlt." for i in range(1, 261))
 VORLAUF_FRAGE = "Nenne die Nummer der ersten Regel."
 LANG = "Erzähl ausführlich, wie ein Leuchtturm funktioniert, von der Lampe bis zur Kennung. Etwa 300 Wörter."
+# several answers at once, each after a long question of its own (about VORLAUF's 8k tokens), and one question of
+# about LANG_ZIEL tokens; KONTEXT_ZIEL is the length the context room is counted in
+PARALLEL = (2, 4)
+LANG_ZIEL = 60000
+KONTEXT_ZIEL = 65536
 WERKZEUG = {"type": "function", "function": {
     "name": "wetter", "description": "Wettervorhersage für einen Ort",
     "parameters": {"type": "object", "properties": {"ort": {"type": "string"}, "tag": {"type": "string"}},
@@ -159,6 +173,14 @@ def _pruefe_vllm(m):
         raise Fehler("kv_cache_dtype")
     if v.get("venv", "llm") not in VENVS:
         raise Fehler("venv")
+    if "entwurf" in v:
+        e = v["entwurf"]
+        if not isinstance(e, dict) or set(e) != {"methode", "repo", "revision", "tokens"} or e["methode"] not in ENTWURF:
+            raise Fehler("entwurf")
+        if not REPO.match(str(e["repo"])) or ".." in e["repo"] or not REV.match(str(e["revision"])):
+            raise Fehler("entwurf")
+        if isinstance(e["tokens"], bool) or not isinstance(e["tokens"], int) or not 1 <= e["tokens"] <= 16 or v.get("mtp"):
+            raise Fehler("entwurf")
 
 
 def _aus_bildmodell(m):
@@ -184,6 +206,18 @@ def _aus_bildmodell(m):
                 platte_gb=bildmodell.disk_gb(m["variante"]))
 
 
+def _aus_basis(m, davor):
+    """A variant: the earlier entry named in "basis" with this entry's fields over it, vllm and anfrage merged."""
+    if not isinstance(m, dict) or "basis" not in m:
+        return m
+    b = davor.get(m["basis"])
+    if b is None or b.get("basis") or b["engine"] != "vllm":
+        raise Fehler("basis")
+    if not isinstance(m.get("vllm", {}), dict) or not isinstance(m.get("anfrage", {}), dict):
+        raise Fehler("felder")
+    return {**b, **m, "vllm": {**b["vllm"], **m.get("vllm", {})}, "anfrage": {**b["anfrage"], **m.get("anfrage", {})}}
+
+
 def katalog(path=KATALOG, eigene=None):
     """{id: entry} from modelle.json; every entry checked, ids unique. Then the admin's own entries (stage E5,
     STATE/modelle-eigene.json, only with the shipped catalog): each checked by the same rules plus eigen_ok();
@@ -192,7 +226,7 @@ def katalog(path=KATALOG, eigene=None):
         data = json.load(f)
     out = {}
     for m in data.get("modelle", []):
-        m = _aus_bildmodell(m)
+        m = _aus_bildmodell(_aus_basis(m, out))
         pruefe_eintrag(m)
         if m["id"] in out:
             raise Fehler("doppelt")
@@ -344,10 +378,11 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
-    vl30 (one entry each that is measured only on request); no word means llm and sehen."""
+    vl30, kv8, dspark (one entry each that is measured only on request); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
-    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4", "vl30": "qwen3-vl-30b-a3b-fp8"}
+    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4", "vl30": "qwen3-vl-30b-a3b-fp8",
+              "kv8": "qwen38-27b-nvfp4-kv8", "dspark": "qwen38-27b-nvfp4-dspark"}
     wunsch.update({i: i for i, m in kat.items() if m.get("eigen")})     # stage E5: an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -387,6 +422,12 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
         a += ["--limit-mm-per-prompt.image", str(v.get("bilder_pro_frage", 2))]
     if mtp and v.get("mtp"):
         a += ["--speculative-config", json.dumps({"method": "mtp", "num_speculative_tokens": v["mtp"]})]
+    if v.get("entwurf"):     # the helper model from the cache (offline), its commit pinned; never measured without it
+        if not mtp:
+            raise Fehler("entwurf")
+        e = v["entwurf"]
+        a += ["--speculative-config", json.dumps({"method": e["methode"], "model": e["repo"], "revision": e["revision"],
+                                                  "num_speculative_tokens": e["tokens"], **ENTWURF[e["methode"]]})]
     return a
 
 
@@ -436,6 +477,9 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     m, port = rolle(art, cfg, kat)
     rev = fest_revision(m, messung)
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
+    if m["vllm"].get("entwurf"):
+        e = m["vllm"]["entwurf"]
+        pruefen(hf_ordner(e, hf_home), e["revision"], hashes=False)
     return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
 
 
@@ -510,11 +554,8 @@ def pruefen(ordner, rev, hashes=True):
     return n, size
 
 
-def vorbereiten(m, hf_home=None):
-    """Makes sure the weights are in the cache (download only the ERLAUBT kinds) and checks them. Returns the
-    commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure)."""
-    ordner = hf_ordner(m, hf_home)
-    rev = m["revision"]
+def _laden(repo, rev, ordner):
+    """One repository's commit in the cache, checked; downloads only the ERLAUBT kinds when the check fails."""
     if rev:
         try:
             pruefen(ordner, rev)
@@ -522,11 +563,22 @@ def vorbereiten(m, hf_home=None):
         except Fehler:
             pass
     from huggingface_hub import snapshot_download
-    path = snapshot_download(m["repo"], revision=rev or None, allow_patterns=list(ERLAUBT))
+    path = snapshot_download(repo, revision=rev or None, allow_patterns=list(ERLAUBT))
     commit = os.path.basename(os.path.normpath(path))
     if rev and commit != rev:
         raise Fehler("revision")
     pruefen(ordner, commit)
+    return commit
+
+
+def vorbereiten(m, hf_home=None):
+    """Makes sure the weights are in the cache (download only the ERLAUBT kinds) and checks them. Returns the
+    commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure). A helper
+    model (vllm "entwurf") always has its own pinned commit and is fetched and checked the same way."""
+    commit = _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
+    e = (m.get("vllm") or {}).get("entwurf")
+    if e:
+        _laden(e["repo"], e["revision"], hf_ordner(e, hf_home))
     return commit
 
 
@@ -548,8 +600,9 @@ def _body(m, messages, max_tokens, **extra):
             **m["anfrage"], **extra}
 
 
-def stream_messen(port, body, timeout=300, now=time.monotonic):
-    """One streamed answer: (seconds to the first token, tokens, tokens per second after the first)."""
+def stream_messen(port, body, timeout=300, now=time.monotonic, usage=None):
+    """One streamed answer: (seconds to the first token, tokens, tokens per second after the first); usage (a dict)
+    takes the engine's token counts."""
     body = dict(body, stream=True, stream_options={"include_usage": True})
     req = urllib.request.Request(f"http://127.0.0.1:{port}{CHAT}", json.dumps(body).encode(),
                                  {"Content-Type": "application/json"})
@@ -565,6 +618,8 @@ def stream_messen(port, body, timeout=300, now=time.monotonic):
                     first = now()
             if d.get("usage"):
                 tokens = int(d["usage"].get("completion_tokens") or 0)
+                if usage is not None:
+                    usage.update(prompt_tokens=int(d["usage"].get("prompt_tokens") or 0), completion_tokens=tokens)
     end = now()
     if first is None:
         raise Fehler("leer")
@@ -608,6 +663,93 @@ def cache_messen(m, port, zeit, log=print):
         pass
     anteil = f"{int(r['zwischenspeicher'] * 100)} %" if "zwischenspeicher" in r else "unbekannt"
     log(f"modelle: messung {m['id']} zwischenspeicher {anteil}, erste kalt {kalt} s, warm {warm} s")
+    return r
+
+
+def kv_platz(text):
+    """Tokens the engine's context store holds (num_gpu_blocks × block_size of vllm:cache_config_info), None when
+    absent; for a model with linear attention layers (Qwen3.8) an estimate."""
+    z = re.search(r"^vllm:cache_config_info\{([^}]*)\}", text, re.M)
+    if not z:
+        return None
+    f = dict(re.findall(r'(\w+)="([^"]*)"', z.group(1)))
+    try:
+        return int(f["num_gpu_blocks"]) * int(f["block_size"])
+    except (KeyError, ValueError):
+        return None
+
+
+def _je_vorlauf(m, port):
+    """Tokens of VORLAUF by the engine's own /tokenize (8000 when it does not answer: then fewer copies, never more)."""
+    try:
+        n = int(_post(port, "/tokenize", {"model": m["id"], "prompt": VORLAUF}, timeout=60)["count"])
+        return n if n > 0 else 8000
+    except Exception:
+        return 8000
+
+
+def langer_text(kopf, kopien):
+    """A long fixed question start: VORLAUF `kopien` times; kopf (run, kind, number) keeps each one out of the
+    prefix cache of the others."""
+    return kopf + "\n" + "\n".join(f"Teil {i + 1}\n{VORLAUF}" for i in range(kopien))
+
+
+def _gleichzeitig(port, bodies, timeout=600):
+    """The streamed answers at once: one (first, tokens, tok/s) each, or an exception's word."""
+    out = [None] * len(bodies)
+
+    def eins(i):
+        try:
+            out[i] = stream_messen(port, bodies[i], timeout)
+        except Exception as e:
+            out[i] = str(e) if isinstance(e, Fehler) else type(e).__name__.lower()[:24]
+    t = [threading.Thread(target=eins, args=(i,), daemon=True) for i in range(len(bodies))]
+    for x in t:
+        x.start()
+    for x in t:
+        x.join(timeout + 30)
+    return out
+
+
+def parallel_messen(m, port, zeit, log=print):
+    """Several answers at once after long questions of their own, one question of about LANG_ZIEL tokens and the
+    context room (numbers only; the answers are dropped). A part that fails gives its word, the rest still runs."""
+    mid, r = m["id"], {}
+    try:
+        platz = kv_platz(_get(port, "/metrics"))
+    except Exception:
+        platz = None
+    if platz:
+        r["kv_tokens"] = platz
+        r["platz_64k"] = platz // KONTEXT_ZIEL
+        log(f"modelle: messung {mid} gespraechsspeicher {platz} tokens, platz fuer {r['platz_64k']} mal 64k")
+    for n in PARALLEL:
+        if n > m["vllm"].get("max_seqs", 8):
+            continue
+        bodies = [_body(m, [{"role": "system", "content": langer_text(f"Messlauf {zeit} gleichzeitig {n} nr {k}", 1)},
+                            {"role": "user", "content": LANG}], 300) for k in range(n)]
+        res = _gleichzeitig(port, bodies)
+        gut = [x for x in res if isinstance(x, tuple)]
+        if len(gut) < n:
+            r[f"par{n}_fehler"] = next(x for x in res if not isinstance(x, tuple)) or "zeit"
+            log(f"modelle: messung {mid} {n} gleichzeitig fehler {r[f'par{n}_fehler']}")
+            continue
+        r[f"par{n}_tok_s"] = round(sorted(x[2] for x in gut)[(n - 1) // 2], 1)     # per answer, the lower middle
+        r[f"par{n}_summe"] = round(sum(x[2] for x in gut), 1)
+        r[f"par{n}_erste_s"] = round(max(x[0] for x in gut), 2)
+        log(f"modelle: messung {mid} {n} gleichzeitig je antwort {r[f'par{n}_tok_s']} tok/s, zusammen "
+            f"{r[f'par{n}_summe']} tok/s, erste spaetestens {r[f'par{n}_erste_s']} s")
+    ziel = min(LANG_ZIEL, m["kontext"] - 2048)
+    kopien = max(1, ziel // _je_vorlauf(m, port))
+    usage = {}
+    try:
+        a, _, t = stream_messen(port, _body(m, [{"role": "system", "content": langer_text(f"Messlauf {zeit} lang", kopien)},
+                                                {"role": "user", "content": LANG}], 300), 900, usage=usage)
+        r.update(lang_tokens=usage.get("prompt_tokens", 0), lang_erste_s=a, lang_tok_s=t)
+        log(f"modelle: messung {mid} lang {r['lang_tokens']} tokens, erste {a} s, {t} tok/s")
+    except Exception as e:
+        r["lang_fehler"] = str(e) if isinstance(e, Fehler) else type(e).__name__.lower()[:24]
+        log(f"modelle: messung {mid} lang fehler {r['lang_fehler']}")
     return r
 
 
@@ -747,6 +889,8 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
             pass
         if m["kontext"] >= 16384:
             r.update(cache_messen(m, port, r["zeit"], log))
+        if m["art"] == "llm" and m["kontext"] >= 32768:     # a main model candidate: several at once, long context
+            r.update(parallel_messen(m, port, r["zeit"], log))
         if m["werkzeuge"]:
             ok = werkzeug_ok(_post(port, CHAT, _body(
                 m, [{"role": "user", "content": WERKZEUG_FRAGE}], 200, tools=[WERKZEUG], tool_choice="auto")))
@@ -801,6 +945,17 @@ def zeile(mid, r):
         teile.append(f"zwischenspeicher {int(r['zwischenspeicher'] * 100)} %")
     if "mtp" in r:
         teile.append("mtp " + r["mtp"])
+    for n in PARALLEL:
+        if f"par{n}_tok_s" in r:
+            teile.append(f"{n} gleichzeitig {r[f'par{n}_tok_s']} tok/s je antwort")
+        elif f"par{n}_fehler" in r:
+            teile.append(f"{n} gleichzeitig fehler {r[f'par{n}_fehler']}")
+    if "lang_tokens" in r:
+        teile.append(f"lang {r['lang_tokens']} tokens erste {r['lang_erste_s']} s")
+    elif "lang_fehler" in r:
+        teile.append(f"lang fehler {r['lang_fehler']}")
+    if "platz_64k" in r:
+        teile.append(f"platz {r['platz_64k']} mal 64k")
     for key, wort in (("werkzeug", "werkzeug"), ("bild_text", "text"), ("bild_szene", "szene"), ("bild_ok", "bild")):
         if key in r:
             teile.append(f"{wort} {'ok' if r[key] else 'falsch'}")
@@ -1042,7 +1197,9 @@ def entfernbar(mid, cfg, now=None, path=WECHSEL, kat=None, hf_home=None):
     m = eintrag(mid, kat)
     if m["engine"] not in ENTFERNBAR or not m["repo"]:
         raise Fehler("art")
-    if any(jetzt_id(a, cfg, kat) == mid for a in TAUSCH) or any(x["id"] == mid for x in aktiv(cfg, 0, (), kat)):
+    # a variant shares its folder with its basis: none of the entries with this repository may run
+    teilen = {i for i, x in kat.items() if x["repo"] == m["repo"]}
+    if any(jetzt_id(a, cfg, kat) in teilen for a in TAUSCH) or any(x["id"] in teilen for x in aktiv(cfg, 0, (), kat)):
         raise Fehler("aktiv")
     w = read_json(path, {}).get(m["art"]) or {}
     if w.get("alt") == mid and (time.time() if now is None else now) - float(w.get("zeit", 0)) <= ALT_TAGE * 86400:

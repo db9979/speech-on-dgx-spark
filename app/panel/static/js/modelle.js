@@ -12,6 +12,9 @@ function mdGib(v){return v==null?'–':(Math.round(v*10)/10).toLocaleString(L===
 function mdMess(m){const x=m.messung||{};if(!Object.keys(x).length)return '';if(x.ok===false)return t('abgebrochen','broke off');
   const ja=v=>v?t('ok','ok'):t('falsch','wrong');
   return [x.tok_s!=null?x.tok_s+' tok/s':'',x.erste_s!=null?t('erste ','first ')+x.erste_s+' s':'',x.mtp_annahme!=null?'MTP '+Math.round(x.mtp_annahme*100)+' %':'',x.erste_warm_s!=null?t('warm ','warm ')+x.erste_warm_s+' s':'',x.zwischenspeicher!=null?t('Zwischenspeicher ','Prefix cache ')+Math.round(x.zwischenspeicher*100)+' %':'',
+    ...[2,4].map(n=>x['par'+n+'_tok_s']!=null?n+t(' gleichzeitig ',' at once ')+x['par'+n+'_tok_s']+t(' tok/s je Antwort',' tok/s per answer'):x['par'+n+'_fehler']?n+t(' gleichzeitig: Fehler',' at once: error'):''),
+    x.lang_tokens!=null?Math.round(x.lang_tokens/1000)+t('K Tokens: erste ','K tokens: first ')+x.lang_erste_s+' s':x.lang_fehler?t('lange Frage: Fehler','long question: error'):'',
+    x.platz_64k!=null?t('Platz für ','Room for ')+x.platz_64k+t(' × 64K',' × 64K'):'',
     'werkzeug' in x?t('Werkzeug ','Tool ')+ja(x.werkzeug):'','bild_text' in x?t('Text ','Text ')+ja(x.bild_text):'','bild_szene' in x?t('Szene ','Scene ')+ja(x.bild_szene):''].filter(Boolean).join(' · ')}
 function mdBudget(b){const pct=v=>Math.max(0,Math.min(100,Math.round(100*v/(b.gesamt||1))));
   return `<div class="card"><h3>${esc(t('Speicher-Budget','Memory budget'))}</h3><div class="vb-hb vb-qbar"><i class="${b.regel==='alle'?'':'full'}" style="width:${pct(b.fest+b.system+b.reserve)}%"></i></div>`+

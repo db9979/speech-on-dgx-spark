@@ -383,6 +383,7 @@ struct ModelsView: View {
                                     Text(verbatim: m["name"] as? String ?? "")
                                     if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
                                     if m["eigen"] as? Bool == true { Text("eigenes").font(.caption).foregroundStyle(.secondary) }
+                                    if let t = Self.mess(m["messung"]) { Text(verbatim: t).font(.caption).foregroundStyle(.secondary) }
                                     if an && !laeuft && m["waehlbar"] as? Bool == true && m["aktiv"] as? Bool != true {
                                         Button("Wechseln") {
                                             ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""]
@@ -489,6 +490,21 @@ struct ModelsView: View {
     static func gib(_ v: Any?) -> String {
         guard let n = (v as? NSNumber)?.doubleValue else { return "–" }
         return String(format: "%.1f GiB", n)
+    }
+
+    /// The last measurement in numbers only (no words to translate): tempo, first word, 2 and 4 at once, the long
+    /// question and the room for 64K conversations; nil when not measured, "–" when it broke off.
+    static func mess(_ v: Any?) -> String? {
+        guard let x = v as? [String: Any], !x.isEmpty else { return nil }
+        if x["ok"] as? Bool == false { return "–" }
+        let n = { (k: String) in (x[k] as? NSNumber)?.doubleValue }
+        var out: [String] = []
+        if let t = n("tok_s") { out.append(String(format: "%.1f tok/s", t)) }
+        if let t = n("erste_s") { out.append(String(format: "%.2f s", t)) }
+        for p in [2, 4] { if let t = n("par\(p)_tok_s") { out.append(String(format: "%d× %.1f tok/s", p, t)) } }
+        if let t = n("lang_tokens"), let e = n("lang_erste_s") { out.append(String(format: "%.0fK %.1f s", t / 1000, e)) }
+        if let t = n("platz_64k") { out.append(String(format: "64K ×%.0f", t)) }
+        return out.isEmpty ? nil : out.joined(separator: " · ")
     }
 }
 

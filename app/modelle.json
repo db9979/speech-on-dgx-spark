@@ -36,6 +36,43 @@
       "betrieb": "resident"
     },
     {
+      "id": "qwen38-27b-nvfp4-kv8",
+      "basis": "qwen38-27b-nvfp4",
+      "name": {
+        "de": "Qwen3.8 27B NVFP4, Gesprächsspeicher FP8",
+        "en": "Qwen3.8 27B NVFP4, FP8 context store"
+      },
+      "gemessen": false,
+      "vllm": {
+        "kv_cache_dtype": "fp8"
+      },
+      "messen": "auf_wunsch"
+    },
+    {
+      "id": "qwen38-27b-nvfp4-dspark",
+      "basis": "qwen38-27b-nvfp4",
+      "name": {
+        "de": "Qwen3.8 27B NVFP4 mit DSpark (nur privat)",
+        "en": "Qwen3.8 27B NVFP4 with DSpark (private use only)"
+      },
+      "lizenz": "Apache-2.0, DSpark-Hilfsmodell: other",
+      "gewerblich": false,
+      "platte_gb": 24,
+      "need_gib": 40,
+      "gemessen": false,
+      "anteil": 0.33,
+      "vllm": {
+        "mtp": 0,
+        "entwurf": {
+          "methode": "dspark",
+          "repo": "RadixArk/Qwen3.8-27B-DSpark",
+          "revision": "b9a5dbdf03bc999c6c73c426b19c2d9041cea393",
+          "tokens": 7
+        }
+      },
+      "messen": "auf_wunsch"
+    },
+    {
       "id": "qwen38-27b-fp8",
       "art": "llm",
       "name": {

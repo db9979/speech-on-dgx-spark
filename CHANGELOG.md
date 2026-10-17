@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.722** · 2026-10-17 · `modelle messen`: 2 und 4 Fragen gleichzeitig, eine 60K-Frage und Platz im Gesprächsspeicher; Qwen3.8 als Variante mit Gesprächsspeicher FP8 (`kv8`) und mit DSpark-Hilfsmodell (`dspark`)
 - **V01.0.721** · 2026-10-17 · Grundausstattung für Neulinge: 16 Gesprächsfunktionen sind bei neuen Installationen an; bestehende bekommen auf Funktionen die Karte „Alle übernehmen“, die Frage „Darf der Spark ins Internet?“ und den Filter „Empfohlen“, neue Profile sehen zuerst, wo man etwas einstellt
 - **V01.0.720** · 2026-10-16 · Aufräumen chat.py: die Sprachausgabe einer Antwort in eigene Datei chat_ton.py
 - **V01.0.719** · 2026-10-17 · Zustand → Modelle: „Messen“ je Modell im Panel und in der iPhone-App, auch für tars; Live zeigt „Messung läuft“
