@@ -215,8 +215,39 @@ Möglich ist nur:
 | Bildschirm sperren | sofort sperren |
 | Text zeigen | ein Fenster mit einfachem Text |
 
+| Programm nach vorn | ein Programm aus der Liste nach vorn holen (läuft es nicht, wird es gestartet) |
+| Fenster | das Fenster vorn schließen (⌘W), ins Dock (⌘M), zoomen oder Vollbild (⌃⌘F) |
+| Taste | nur aus einer festen Liste: Bild ab/auf (Folien), Leertaste, Return, Esc, Tab, ⌘Z, ⇧⌘Z, ⌘C, ⌘V, ⌘S, ⌘R, ⌘F |
+| Tippen | die eigenen Worte der Person (höchstens 500 Zeichen) ins Fenster vorn |
+| Ordner | Dokumente, Downloads, Schreibtisch, Bilder, Musik, Filme, Zuletzt benutzt |
+| Mac | Ruhezustand, Bildschirm aus (`pmset`) |
+| Kurzbefehl | ein hier freigegebener Kurzbefehl aus der App Kurzbefehle (`shortcuts run`) |
+
 Alles andere lehnt der Begleiter ab, auch wenn es der Spark schickt; dieselbe Bitte läuft nie zweimal. Medien- und
-Lautstärketasten brauchen die Freigabe **Bedienungshilfen**.
+Lautstärketasten, Fenster, Tasten und Tippen brauchen die Freigabe **Bedienungshilfen**.
+
+Unter **Am PC handeln einstellen** (im Menü des Begleiters) legst du fest, welche Arten **ohne Rückfrage** laufen
+(danach zeigt der Begleiter einen Hinweis; Seiten, Tippen und Text zeigen fragen immer), und welche **Kurzbefehle**
+der Spark nennen darf. Beides geht nur hier am Mac, nie aus dem Panel; „Künftig ohne Rückfrage“ lässt sich auch direkt
+im Dialog anhaken. Bitten kommen sofort an: der Begleiter wartet mit `GET /api/desk/wait` auf sie.
+
+**Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen** (Teil `view`, Admin-Schalter `chat.desk_view`):
+Tippt man im Panel unter Ich → Begleiter „Bildschirm ansehen“ oder „Bedienen“, fragt der Begleiter hier: **Ablehnen**,
+**Nur ansehen** oder **Erlauben** (nur bei „Bedienen“); ohne Antwort nach 60 s gilt Ablehnen. Danach zeigt er einen
+roten Rahmen und oben eine Leiste mit **Beenden**, schickt bis zu vier JPEG-Bilder je Sekunde vom Hauptbildschirm
+(`screencapture -x -m`, die Datei liegt in einem privaten Ordner und wird sofort gelöscht, höchstens 1600 Pixel) und
+führt nach „Erlauben“ Klicks, Mausbewegungen, Scrollen, feste Tasten (keine ⌘-Leertaste, kein ⌘-Tab) und getippten
+Text aus. Braucht **Bildschirmaufnahme**, zum Bedienen **Bedienungshilfen**. Beenden auch mit Mein Notaus.
+
+**Rechner fernsteuern, Stufe 3: Spark bedient den Rechner** (Admin-Schalter `chat.desk_operate`, Teile `act` und
+`view`): Sagt man „Spark, schreib in Outlook an Anna …“, kommt dieselbe Anfrage mit dem Auftrag; Ablehnen ist
+vorgewählt. Danach bekommt der Begleiter einen Schritt nach dem anderen (`"t":"step"`: Klick, Doppelklick,
+Rechtsklick, Scrollen, feste Taste, Text) und zeigt jeden mit rot markiertem Ziel: **Stopp** (vorgewählt),
+**Überspringen** oder **Erlauben**; ohne Antwort nach 60 s gilt Stopp. Erst nach „Erlauben“ holt er das Programm
+von vorher wieder nach vorn und führt den Schritt aus, dann meldet er `POST /api/desk/view/step`. Text, der nicht
+im Auftrag stand, steht als Warnung darüber; „Spark fragt nach“ (Nein / Weiter) kommt, wenn auf dem Bildschirm etwas
+wie eine Anweisung stand. Mit jedem Bild schickt er Name und Pfad des Programms vorn, der Spark prüft es gegen die
+freigegebenen. Die Frage ist ein Hinweisfenster, der rote Ring klickt durch; beide und die Leiste sind aus den Bildern ausgenommen (`sharingType = .none`). Braucht „Bildschirmaufnahme“ und „Bedienungshilfen“.
 
 Damit man die Programme im Panel **auswählen** kann statt Name und Pfad zu tippen, schickt der Begleiter, solange
 dieser Teil an ist, die Liste der installierten Programme an den Spark: beim Start, wenn der Teil eingeschaltet

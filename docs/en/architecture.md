@@ -279,10 +279,12 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/anrufe.py` | Anrufe: Sprache und Video zwischen zwei Profilen. |
 | `app/panel/apns.py` | Push notifications to the iPhone app over Apple's push service (APNs), also while the app is closed. |
 | `app/panel/appupdate.py` | Spark updates from the iPhone app: a notice when a new tested version is ready, and starting it. |
+| `app/panel/bedienen.py` | Spark bedient den Rechner: on the person's word ("Schreib am PC in Word …") the assistant works on the own PC or Mac step by step, looking at its screen (fer … |
 | `app/panel/begleiter.py` | Spark-Begleiter: a small program in the Windows notification area and the Mac menu bar (tools/begleiter/windows, tools/begleiter/mac) with these parts, each … |
 | `app/panel/chats.py` | Chats between the people of this Spark. |
 | `app/panel/chatsec.py` | Private chats with end-to-end encryption. |
 | `app/panel/esp32.py` | Own speakers: small ESP32-S3 boards (microphone, amplifier, maybe a small display) with the open XiaoZhi firmware, talking to this Spark instead of a cloud. |
+| `app/panel/fernsicht.py` | Bildschirm zeigen und bedienen: the profile looks at its own PC or Mac from the panel, the iPhone or Android (Me → Begleiter) and, when the person at the com … |
 | `app/panel/geraeteupdate.py` | Geräte-Updates: an overview of what the Spark keeps for the devices, a note when a new version is there, the speakers updated at night and a note when XiaoZh … |
 | `app/panel/hintergrund.py` | Me → My status. |
 | `app/panel/iphone.py` | The iPhone app "Spark" (ios/ in the repo): pairing and what the app may do. |

@@ -28,8 +28,27 @@ internal static class ActRunner
         return false;
     }
 
+    /// <summary>
+    /// Was hier am PC ohne Rückfrage laufen darf, wenn die Person es für die Art einschaltet (wie
+    /// <c>begleiter.ACT_AUTO_OK</c> im Panel). Seite öffnen, Text tippen und Text zeigen fragen immer.
+    /// </summary>
+    public static readonly string[] AutoOk = { "app", "media", "volume", "lock", "focus", "window", "key", "folder", "power", "shortcut" };
+
+    /// <summary>Arten, deren Tasten im Fenster vorn landen: nach der Rückfrage kommt das alte Fenster wieder nach vorn.</summary>
+    public static readonly string[] NeedsFront = { "key", "type", "window" };
+
+    public static readonly IReadOnlyDictionary<string, string> KindLabels = new Dictionary<string, string>
+    {
+        ["app"] = "Programm öffnen", ["media"] = "Musik", ["volume"] = "Lautstärke", ["lock"] = "Bildschirm sperren",
+        ["focus"] = "Programm nach vorn", ["window"] = "Fenster schließen, minimieren, Vollbild", ["key"] = "Tasten (weiter, zurück, Rückgängig …)",
+        ["folder"] = "Ordner öffnen", ["power"] = "Ruhezustand, Bildschirm aus", ["shortcut"] = "Kurzbefehle",
+    };
+
+    /// <summary>Darf diese Art jetzt ohne Dialog laufen (hier am PC so eingestellt)?</summary>
+    public static bool MaySkip(string action, AppConfig config) => AutoOk.Contains(action) && config.ActAuto.Contains(action);
+
     /// <summary>Prüft die Bitte. Gibt den Plan zurück oder <c>null</c> mit einem Fehlertext für den Spark.</summary>
-    public static ActPlan? Plan(ActAsk ask, DeskConfig desk, out string error)
+    public static ActPlan? Plan(ActAsk ask, DeskConfig desk, IReadOnlyList<ActScript> scripts, out string error)
     {
         error = "";
         string arg = ask.Arg.Trim();
@@ -119,6 +138,86 @@ internal static class ActRunner
 
                 string text = arg.Length > 4000 ? arg[..4000] + " …" : arg;
                 return new ActPlan("Zeigt eine Nachricht an.", () => new MessageForm(text).Show());
+
+            case "focus":
+                ActApp? front = desk.ActApps.FirstOrDefault(a => string.Equals(a.Name, arg, StringComparison.OrdinalIgnoreCase));
+                if (front is null || !IsStartablePath(front.Path))
+                {
+                    error = "Dieses Programm steht nicht in der Liste des Geräts.";
+                    return null;
+                }
+
+                return new ActPlan($"Holt „{Clip(front.Name, 60)}“ nach vorn (oder startet es).", () => ActDo.Focus(front));
+
+            case "window":
+                string? what = arg switch
+                {
+                    "close" => "Schließt das Fenster vorn.",
+                    "minimize" => "Minimiert das Fenster vorn.",
+                    "maximize" => "Maximiert das Fenster vorn.",
+                    "fullscreen" => "Vollbild an/aus (F11) im Fenster vorn.",
+                    _ => null,
+                };
+                if (what is null)
+                {
+                    error = "Unbekannte Fenster-Aktion.";
+                    return null;
+                }
+
+                return new ActPlan(what, () => ActDo.Window(arg));
+
+            case "key":
+                if (!ActDo.Keys.TryGetValue(arg, out var key))
+                {
+                    error = "Diese Taste ist nicht erlaubt.";
+                    return null;
+                }
+
+                return new ActPlan("Drückt " + key.Label + " im Fenster vorn.", () => ActDo.Chord(key.Keys));
+
+            case "type":
+                string typed = ask.Arg.Trim();
+                if (typed.Length is 0 or > 500)
+                {
+                    error = "Kein oder zu langer Text zum Tippen.";
+                    return null;
+                }
+
+                return new ActPlan("Tippt ins Fenster vorn: „" + Clip(typed.ReplaceLineEndings(" "), 200) + "“", () => ActDo.Type(typed));
+
+            case "folder":
+                if (!ActDo.Folders.TryGetValue(arg, out string? folder))
+                {
+                    error = "Diesen Ordner kennt der Begleiter nicht.";
+                    return null;
+                }
+
+                return new ActPlan($"Öffnet den Ordner „{folder}“.", () => ActDo.Folder(arg));
+
+            case "power":
+                string? power = arg switch
+                {
+                    "sleep" => "Schickt den PC in den Ruhezustand.",
+                    "display_off" => "Schaltet den Bildschirm aus.",
+                    _ => null,
+                };
+                if (power is null)
+                {
+                    error = "Unbekannte Aktion für den Rechner.";
+                    return null;
+                }
+
+                return new ActPlan(power, () => ActDo.Power(arg));
+
+            case "shortcut":
+                ActScript? script = scripts.FirstOrDefault(x => string.Equals(x.Name, arg, StringComparison.OrdinalIgnoreCase));
+                if (script is null || !ActDo.IsScript(script.Path))
+                {
+                    error = "Diesen Kurzbefehl gibt es hier am PC nicht (Begleiter → Am PC handeln einstellen).";
+                    return null;
+                }
+
+                return new ActPlan($"Führt den Kurzbefehl „{Clip(script.Name, 60)}“ aus ({Clip(script.Path, 120)}).", () => ActDo.Script(script));
 
             default:
                 error = "Diese Handlung ist am PC nicht erlaubt.";
@@ -214,7 +313,10 @@ internal sealed class ActConfirmForm : ThemedForm
     private Rectangle _face;
     private Rectangle _title;
 
-    public ActConfirmForm(string text, string description)
+    private readonly ToggleSwitch? _skip;
+
+    /// <param name="skipLabel">Art, die die Person hier künftig ohne Rückfrage erlauben darf, sonst <c>null</c>.</param>
+    public ActConfirmForm(string text, string description, string? skipLabel = null)
     {
         Text = "Spark-Begleiter – Spark möchte etwas tun";
         FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -234,6 +336,12 @@ internal sealed class ActConfirmForm : ThemedForm
         _question.Text = $"Spark möchte: {(shown.Length > 0 ? shown : "etwas am PC tun")}. Erlauben?";
         _detail.Text = description;
         Controls.AddRange(new Control[] { _question, _detail, _countdown, _deny, _allow });
+        if (skipLabel is not null)
+        {
+            _skip = new ToggleSwitch("Künftig ohne Rückfrage: " + skipLabel) { TabIndex = 2 };
+            Controls.Add(_skip);
+        }
+
         _deny.TabIndex = 0; // Nein zuerst: Enter allein erlaubt nichts
         _allow.TabIndex = 1;
         _allow.Click += (_, _) =>
@@ -253,6 +361,9 @@ internal sealed class ActConfirmForm : ThemedForm
 
     /// <summary>„Erlauben“ geklickt.</summary>
     public bool Allowed { get; private set; }
+
+    /// <summary>„Künftig ohne Rückfrage“ eingeschaltet (zählt nur zusammen mit „Erlauben“).</summary>
+    public bool SkipFromNow => Allowed && _skip?.Checked == true;
 
     /// <summary>Zeigt die Rückfrage und wartet auf die Antwort (oder 60 s).</summary>
     public Task<bool> AskAsync()
@@ -297,6 +408,11 @@ internal sealed class ActConfirmForm : ThemedForm
         y += face + S(12);
         y += _question.Fit(pad, y, inner) + S(8);
         y += _detail.Fit(pad, y, inner) + S(10);
+        if (_skip is not null)
+        {
+            y += _skip.Fit(pad, y, inner) + S(10);
+        }
+
         y += _countdown.Fit(pad, y, inner) + S(14);
         Size allow = _allow.Preferred();
         Size deny = _deny.Preferred();

@@ -58,7 +58,7 @@ internal static class InboxStore
     /// <summary>&lt;Downloads&gt;\Vom Spark (der echte Downloads-Ordner, auch wenn er verschoben wurde).</summary>
     public static string Folder => Path.Combine(Downloads(), "Vom Spark");
 
-    private static string Downloads()
+    internal static string Downloads()
     {
         try
         {

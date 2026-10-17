@@ -34,11 +34,14 @@ internal static class Parts
     // Knopf "Spark" in Outlook classic, Word, Excel und neues Outlook einrichten (2026-10-12) – aus, bis das Panel ihn einschaltet.
     public const string Office = "office";
 
+    // Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen – aus, bis das Panel ihn einschaltet.
+    public const string View = "view";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
     public static readonly string[] All =
     {
         Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
-        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office,
+        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office, View,
     };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
@@ -68,6 +71,7 @@ internal static class Parts
         Home => "Smart-Home-Knöpfe",
         Daily => "Tagesstart und Feierabend",
         Office => "Office-Add-ins",
+        View => "Bildschirm zeigen und bedienen",
         _ => part,
     };
 }

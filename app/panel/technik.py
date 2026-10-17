@@ -179,6 +179,8 @@ MODULE = {
     "telefon_ich": ("geraete", "Ich → Telefon: eigene Rufnummern mit Code, Telefon-PIN, Telefonate"),
     "telefon_anruf": ("geraete", "Der Spark ruft an: Weckruf, Erinnerung, Rückruf, Alarm bei Dienstausfall"),
     "begleiter": ("geraete", "Spark-Begleiter für Windows und Mac"),
+    "fernsicht": ("geraete", "Bildschirm zeigen und bedienen: Bilder vom Begleiter ins Panel, Eingaben zurück"),
+    "bedienen": ("geraete", "Spark bedient den Rechner: ein Schritt nach dem anderen, jeder am Rechner bestätigt"),
     "speakers": ("geraete", "Sprechererkennung pro Profil"),
     "spkcode": ("geraete", "Codewort am geteilten Lautsprecher"),
     "room": ("geraete", "Raummodus: hört zu und hilft in einer Pause"),

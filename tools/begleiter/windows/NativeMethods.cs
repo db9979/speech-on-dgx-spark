@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace SparkBegleiter;
 
 /// <summary>Die wenigen Win32-Funktionen, die WinForms nicht selbst anbietet.</summary>
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     public const int WM_HOTKEY = 0x0312;
 

@@ -1295,6 +1295,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
+        StopFern(); // eine laufende Bildschirm-Sitzung endet sofort, auch ohne Spark
+
         string? key = _config.GetKey();
         if (key is null || string.IsNullOrEmpty(_config.Base))
         {

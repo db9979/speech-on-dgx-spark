@@ -279,10 +279,12 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/anrufe.py` | Anrufe mit Sprache und Video in Chats zu zweit, Vermittler (TURN) für unterwegs |
 | `app/panel/apns.py` | Mitteilungen an die iPhone-App |
 | `app/panel/appupdate.py` | Spark-Update aus der iPhone-App |
+| `app/panel/bedienen.py` | Spark bedient den Rechner: ein Schritt nach dem anderen, jeder am Rechner bestätigt |
 | `app/panel/begleiter.py` | Spark-Begleiter für Windows und Mac |
 | `app/panel/chats.py` | Chats zwischen den Profilen, verschlüsselt |
 | `app/panel/chatsec.py` | Private Chats mit Ende-zu-Ende-Verschlüsselung |
 | `app/panel/esp32.py` | Eigene ESP32-Lautsprecher und ihre Firmware |
+| `app/panel/fernsicht.py` | Bildschirm zeigen und bedienen: Bilder vom Begleiter ins Panel, Eingaben zurück |
 | `app/panel/geraeteupdate.py` | Übersicht und Hinweise zu Geräte-Updates |
 | `app/panel/hintergrund.py` | Ich → Mein Zustand |
 | `app/panel/iphone.py` | iPhone-App: Kopplung und Rechte |

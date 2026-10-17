@@ -86,6 +86,14 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         return try await send(r)
     }
 
+    /// POST raw bytes (a JPEG of "Bildschirm zeigen", fernsicht.py); the answer is JSON as everywhere.
+    func postData(_ path: String, _ data: Data, contentType: String, timeout: TimeInterval) async throws -> [String: Any] {
+        var r = try request(path, method: "POST", timeout: timeout)
+        r.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        r.httpBody = data
+        return try await send(r)
+    }
+
     private func request(_ path: String, method: String, timeout: TimeInterval) throws -> URLRequest {
         guard let url = URL(string: base + "/" + path) else {
             throw SparkProblem.failed("Die Adresse des Spark ist ungültig.")
@@ -322,9 +330,10 @@ extension SparkClient {
         return ((d["wake"] as? Bool) ?? false, ((d["rest"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
-    /// POST /api/desk/act: the answer to one of the Spark's wishes.
-    func act(id: String, ok: Bool, error: String?) async throws {
-        var body: [String: Any] = ["id": id, "ok": ok]
+    /// POST /api/desk/act: the answer to one of the Spark's wishes. auto: it ran without the dialog (set on this
+    /// Mac); failed: allowed, but it did not work or the Begleiter cannot do it (not "refused").
+    func act(id: String, ok: Bool, error: String?, auto: Bool = false, failed: Bool = false) async throws {
+        var body: [String: Any] = ["id": id, "ok": ok, "auto": auto, "failed": failed]
         if let error, !error.isEmpty { body["error"] = String(error.prefix(300)) }
         _ = try await postJSON("api/desk/act", body, timeout: 30)
     }

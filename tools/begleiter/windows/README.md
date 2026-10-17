@@ -171,6 +171,34 @@ höchstens einmal ausgeführt. Damit man die Programme im Panel nur auswählen m
 solange der Teil an ist – beim Start, beim Einschalten und einmal am Tag die Liste der Startmenü-Einträge
 (Name und Pfad der Verknüpfung, ohne Deinstallieren-/Hilfe-Einträge, höchstens 600) an den Spark.
 
+**Rechner fernsteuern, Stufe 1:** Dazu kommen feste Befehle: ein freigegebenes Programm nach vorn holen, das
+Fenster vorn schließen, minimieren, maximieren oder auf Vollbild (F11) stellen, feste Tasten (Bild ab/auf für
+Folien, Leertaste, Eingabe, Esc, Tab, Strg+Z/Y/C/V/S/F, F5), Text tippen (nur die eigenen Worte der Person, höchstens
+500 Zeichen), einen Ordner öffnen (Dokumente, Downloads, Desktop, Bilder, Musik, Videos, Zuletzt verwendet), Ruhezustand,
+Bildschirm aus und Kurzbefehle. Freie Tastenkombinationen (Win+R, Strg+Alt+Entf) gibt es nicht. Im Menü unter
+**Am PC handeln einstellen …** legst du fest, welche Arten **ohne Rückfrage** laufen (danach zeigt der Begleiter einen
+Hinweis; Seiten, Tippen und Text zeigen fragen immer), und gibst **Kurzbefehle** frei (.ps1, .bat, .cmd, .lnk, .exe;
+der Spark kennt nur den Namen). Beides geht nur hier am PC, nie aus dem Panel. „Künftig ohne Rückfrage“ lässt sich
+auch direkt in der Rückfrage anhaken. Bitten kommen sofort an: der Begleiter wartet mit `GET /api/desk/wait` auf sie.
+
+**Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen** (Teil `view`, Admin-Schalter `chat.desk_view`):
+Tippt man im Panel unter Ich → Begleiter „Bildschirm ansehen“ oder „Bedienen“, fragt der Begleiter hier: **Ablehnen**
+(vorgewählt), **Nur ansehen** oder **Erlauben** (nur bei „Bedienen“); ohne Antwort nach 60 s gilt Ablehnen. Danach
+zeigt er einen roten Rahmen und oben eine Leiste mit **Beenden**, schickt bis zu vier JPEG-Bilder je Sekunde vom
+Hauptbildschirm (höchstens 1600 Pixel breit, nur im Speicher) und führt nach „Erlauben“ Klicks, Mausbewegungen,
+Scrollen, feste Tasten (`ActDo.ViewKeys`, keine Windows-Taste, kein Alt+Tab) und getippten Text aus. Beenden auch im
+Menü (**Bildschirm-Sitzung beenden**) und mit Mein Notaus. Die Anfrage kommt mit `GET /api/desk/wait`.
+
+**Rechner fernsteuern, Stufe 3: Spark bedient den Rechner** (Admin-Schalter `chat.desk_operate`, Teile `act` und
+`view`): Sagt man „Spark, schreib in Outlook an Anna …“, kommt dieselbe Anfrage mit dem Auftrag; Ablehnen ist
+vorgewählt. Danach bekommt der Begleiter einen Schritt nach dem anderen (`"t":"step"`: Klick, Doppelklick,
+Rechtsklick, Scrollen, feste Taste, Text) und zeigt jeden mit rot markiertem Ziel: **Stopp** (vorgewählt),
+**Überspringen** oder **Erlauben**; ohne Antwort nach 60 s gilt Stopp. Erst nach „Erlauben“ holt er das Programm
+von vorher wieder nach vorn und führt den Schritt aus, dann meldet er `POST /api/desk/view/step`. Text, der nicht
+im Auftrag stand, steht als Warnung darüber; „Spark fragt nach“ (Nein / Weiter) kommt, wenn auf dem Bildschirm etwas
+wie eine Anweisung stand. Mit jedem Bild schickt er Name und Pfad des Programms vorn, der Spark prüft es gegen die
+freigegebenen. Die Frage ist ein eigenes Fenster (`StepForm`), der rote Ring (`ViewMarker`) klickt durch; beide und die Leiste sind aus den Bildern ausgenommen (`WDA_EXCLUDEFROMCAPTURE`).
+
 **Weckwort:** Ist der Teil an, hört der Begleiter am Standard-Mikrofon mit – sichtbar am **Ring um das
 Symbol**. Erst wenn es lauter als das Grundrauschen wird, nimmt er den Satz auf (bis zu einer kurzen Pause,
 höchstens 5 Sekunden) und lässt den Spark prüfen, ob das Weckwort darin war; sonst wird nichts geschickt

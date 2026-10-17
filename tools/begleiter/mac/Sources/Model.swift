@@ -18,7 +18,7 @@ struct LangInfo: Identifiable, Equatable {
 struct DeskConfig: Equatable {
     static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
                             "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
-                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office"]
+                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office", "view"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -54,6 +54,8 @@ struct DeskConfig: Equatable {
     var coffee: URL = CoffeeLink.fallback
     /// config.act.apps: the programs the Spark may start on this Mac (set in the panel per device)
     var actApps: [ActApp] = []
+    /// config.act.wait: hold GET /api/desk/wait so a wish of the Spark arrives at once (Rechner fernsteuern)
+    var actWait = false
     /// config.wake.word
     var wakeWord = "Hey Spark"
     /// Version 4: config.meeting, config.home
@@ -103,6 +105,7 @@ struct DeskConfig: Equatable {
         updateVersion = (d["update"] as? [String: Any])?["version"] as? String
         coffee = CoffeeLink.accept(d["coffee"])
         actApps = ActApp.list((d["act"] as? [String: Any])?["apps"])
+        actWait = (d["act"] as? [String: Any])?["wait"] as? Bool ?? false
         wakeWord = WakeWord.parse(d["wake"])
         v4 = V4Config(d)
         face = FaceKind(d["face"])
@@ -511,6 +514,8 @@ final class AppModel: ObservableObject {
         Wake.shared.apply(on: on && part("wake"))
         if !(on && part("act")) { ActCenter.shared.clear() }
         InstalledApps.shared.apply(on: on && part("act"))
+        ActWait.shared.apply(on: on && (part("act") || part("view")))
+        ViewCenter.shared.apply(on: on && part("view"))
         if !(on && part("inbox")) { InboxCenter.shared.clear() }
         Speaker.shared.apply(on: on && part("speak"))
         AgendaCenter.shared.apply(on: on && part("agenda"))
@@ -550,6 +555,7 @@ final class AppModel: ObservableObject {
         go.hasDestructiveAction = true
         a.addButton(withTitle: "Abbrechen")
         guard a.runModal() == .alertFirstButtonReturn else { return }
+        ViewCenter.shared.stop(tell: false)   // a running screen session ends at once, also without the Spark
         Task {
             do {
                 _ = try await client.postJSON("api/desk/notaus", [:], timeout: 30)

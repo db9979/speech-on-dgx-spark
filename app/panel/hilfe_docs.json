@@ -4404,6 +4404,54 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 1: mehr feste Befehle (V01.0.725)",
+"text": "Rechner fernsteuern, Stufe 1: mehr feste Befehle (V01.0.725): „Am PC handeln“ kann jetzt auch ein freigegebenes Programm nach vorn holen („Wechsel zu Outlook“), das vordere Fenster schließen, minimieren, maximieren oder auf Vollbild stellen, feste Tasten drücken (weiter, zurück, Leertaste, Eingabe, Esc, Tab, Rückgängig, Wiederholen, Kopieren, Einfügen, Sichern, Neu laden, Suchen), deine eigenen Worte tippen („Tipp am PC: Bin gleich da“), einen Ordner öffnen (Dokumente, Downloads, Schreibtisch, Bilder, Musik, Videos, Zuletzt benutzt), den Rechner schlafen legen oder den Bildschirm ausschalten und einen Kurzbefehl starten. Kurzbefehle (Mac: aus der App Kurzbefehle; Windows: Skripte, Verknüpfungen, Programme) gibst du nur am Rechner selbst frei (Begleiter → „Am PC handeln einstellen“), der Spark kennt nur ihre Namen. Freie Tastenkombinationen gibt es nicht. Getippt wird nur, was du in diesem Satz selbst gesagt hast; erfindet das Modell Wörter dazu, lehnt das Panel ab. Der Rechner fragt wie bisher; im Fenster kannst du „Künftig ohne Rückfrage“ für eine Art wählen (nicht für Seiten, Tippen und Text zeigen). Das stellst du nur am Rechner ein und zurück, Ich → Begleiter zeigt es nur an. B"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 1: mehr feste Befehle (V01.0.725)",
+"text": "itten kommen jetzt sofort an: der Begleiter wartet mit einer offenen Anfrage auf sie statt alle 10 Sekunden nachzusehen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen (V01.0.725)",
+"text": "Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen (V01.0.725): Unter Ich → Begleiter tippst du beim Gerät „Bildschirm ansehen“ oder „Bedienen“ und siehst den Hauptbildschirm deines eigenen PCs oder Macs im Panel, in der iPhone- oder Android-App. Der Rechner fragt jedes Mal: Ablehnen (vorgewählt), Nur ansehen oder Erlauben (nur wenn Bedienen gefragt war). Nach „Erlauben“ ist ein Tippen oder Klick auf das Bild ein Klick am Rechner, Ziehen bewegt die Maus, das Mausrad scrollt, „Rechtsklick“ macht den nächsten Tipp zum Rechtsklick; Text und feste Tasten (Esc, Tab, Eingabe, Löschen, Pfeile, Kopieren, Einfügen, Rückgängig) kommen über die Leiste unter dem Bild. Windows-Taste, Cmd-Leertaste, Alt+Tab und Strg+Alt+Entf gibt es nicht. Solange es läuft, zeigt der Rechner einen roten Rahmen und oben eine Leiste mit „Beenden“; Beenden geht auch im Begleiter-Menü (Windows), mit Mein Notaus und im Panel. Bis zu vier Bilder je Sekunde, höchstens 1600 Pixel breit; der Spark hält nur das neueste Bild im Arbeitsspeicher und vergisst es mit dem Ende. Keine Aufzeichnung, kein Verlauf. Höchstens 30 Minuten; schaut niemand mehr zu oder schickt der Rechner nichts mehr, endet die Sitzung nach 30"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen (V01.0.725)",
+"text": " Sekunden. Eigener Admin-Schalter (Funktionen → Bildschirm zeigen und bedienen) und eigener Teil beim Gerät, beides aus, bis man es einschaltet; nur eigene Rechner, nie Gäste. Auf dem Mac braucht der Begleiter die Freigaben „Bildschirmaufnahme“ und für Bedienen „Bedienungshilfen“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 3: Spark bedient den Rechner (V01.0.725)",
+"text": "Rechner fernsteuern, Stufe 3: Spark bedient den Rechner (V01.0.725): „Spark, schreib in Outlook an Anna, dass ich um drei da bin“ – der Spark erledigt den Auftrag an deinem eigenen PC oder Mac Schritt für Schritt: Er sieht den Bildschirm, schlägt genau einen Schritt vor (Klick, Doppelklick, Rechtsklick, Scrollen, feste Taste oder Text tippen), und der Rechner zeigt ihn mit rot markiertem Ziel und fragt: Stopp (vorgewählt), Überspringen oder Erlauben. Erst nach „Erlauben“ geschieht der Schritt; 60 Sekunden ohne Antwort gelten als Stopp. Schutz gegen untergeschobene Befehle: Der Auftrag steht vom ersten Satz an fest und muss in deinen eigenen Worten stehen; Text auf dem Bildschirm ist für den Spark nur Inhalt. Getippt wird nur Text aus deinem Auftrag, alles andere steht als Warnung über dem Schritt. Vorn darf nur ein unter „Am PC handeln“ freigegebenes Programm sein; Terminal, Einstellungen, Anmeldefenster, Passwort-Manager und der Begleiter selbst sind immer gesperrt. Sieht etwas auf dem Bildschirm wie eine Anweisung an den Spark aus, hält er an und fragt (Nein / Weiter). Höchstens 30 Schritte und 5 Minuten; Stopp, „Beenden“ in der Leiste und Mein Notaus beenden es sofort. Das Ergeb"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rechner fernsteuern, Stufe 3: Spark bedient den Rechner (V01.0.725)",
+"text": "nis kommt als Meldung mit festen Wörtern („Am Rechner: erledigt (4 Schritte)“); Bilder und Bildschirmtext landen nie im Gedächtnis, im Verlauf oder im Chat. Eigener Admin-Schalter (Funktionen → Spark bedient den Rechner), aus, bis man ihn einschaltet; beim Gerät müssen „Am PC handeln“ und „Bildschirm zeigen und bedienen“ an sein. Braucht ein Sprachmodell, das Bilder sieht."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Office-Add-ins aus dem Begleiter (V01.0.433)",
 "text": "Office-Add-ins aus dem Begleiter (V01.0.433): Neuer Teil „Office-Add-ins“ (pro Gerät, aus; braucht die Schreibhilfe). Im Begleiter dann „Office-Add-ins einrichten …“; er fragt vorher. Outlook classic (Windows): Knopf „Spark“ im Menüband (Hauptfenster und Lesen: Antwort entwerfen, Übersetzen; Verfassen: Text verbessern, Übersetzen), auch mit iCloud- oder IMAP-Konten. Der Knopf schickt nur ein festes Wort an den laufenden Begleiter, der wie bei seinen Tastenkürzeln arbeitet; gesendet wird nie. Word und Excel (Windows und Mac): der Begleiter trägt das Office-Add-in selbst ein. Dafür das Panel einmal über seine https-Adresse öffnen, unter Ich → Begleiter speichern; „In anderen Programmen“ der Schreibhilfe muss der Admin freigegeben haben. Neues Outlook, Outlook für Mac und im Web: der Begleiter zeigt die Datei und öffnet die Seite „Aus Datei hinzufügen“; das Hinzufügen macht man selbst (Microsoft erlaubt es nicht anders, nur für Microsoft 365, Exchange oder Outlook.com). Teil aus: alles wird wieder ausgetragen."
 },
@@ -11598,6 +11646,46 @@
 "head": "Voice chat",
 "title": "Acting on the PC from a speaker or the phone (V01.0.419)",
 "text": "Acting on the PC from a speaker or the phone (V01.0.419): a clear order naming the computer (\"Open heise.de on my Mac\") is now reliably sent to the computer from there too; the question still comes at the computer. When it cannot go (no computer paired, \"Act on the PC\" off at the device or for the profile), the Spark says exactly that instead of trying other tools. Speech recognition may write \"Mac\" as \"Mäc\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remote control of the computer, stage 1: more fixed orders (V01.0.725)",
+"text": "Remote control of the computer, stage 1: more fixed orders (V01.0.725): \"Act on the PC\" can now also bring a released program to the front (\"Switch to Outlook\"), close, minimize, maximize or full-screen the front window, press fixed keys (next, previous, space, enter, Esc, Tab, undo, redo, copy, paste, save, reload, find), type your own words (\"Type on the PC: be right there\"), open a folder (Documents, Downloads, Desktop, Pictures, Music, Videos, Recent), put the computer to sleep or turn the screen off and run a shortcut. Shortcuts (Mac: from the Shortcuts app; Windows: scripts, links, programs) are released only at the computer itself (companion → \"Am PC handeln einstellen\"); the Spark knows only their names. There are no free key combinations. Only what you said yourself in this sentence is typed; if the model adds words, the panel refuses. The computer asks as before; in the window you can pick \"Without asking from now on\" for a kind (not for pages, typing and showing a text). You set and undo that only at the computer, Me → Companion only shows it. Requests now arrive at once: the companion waits for them with an open request instead of looking every 10 seconds."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remote control of the computer, stage 2: show and operate the screen (V01.0.725)",
+"text": "Remote control of the computer, stage 2: show and operate the screen (V01.0.725): Under Me → Companion tap \"View screen\" or \"Operate\" for the device and you see the main screen of your own PC or Mac in the panel or in the iPhone or Android app. The computer asks every time: Decline (preselected), View only or Allow (only when operating was asked for). After \"Allow\" a tap or click on the picture is a click on the computer, dragging moves the mouse, the wheel scrolls, \"Right click\" makes the next tap a right click; text and fixed keys (Esc, Tab, Enter, Backspace, arrows, Copy, Paste, Undo) come through the bar below the picture. There is no Windows key, Cmd-Space, Alt+Tab or Ctrl+Alt+Del. While it runs the computer shows a red frame and a bar on top with \"Beenden\" (End); ending also works in the companion menu (Windows), with My emergency stop and in the panel. Up to four pictures a second, at most 1600 pixels wide; the Spark keeps only the newest picture in memory and forgets it at the end. No recording, no history. At most 30 minutes; when nobody watches any more or the computer stops sending, the session ends after 30 seconds. Own admin switch (Features → Show and operate the scre"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remote control of the computer, stage 2: show and operate the screen (V01.0.725)",
+"text": "en) and own part per device, both off until switched on; only own computers, never guests. On the Mac the companion needs the permissions \"Screen Recording\" and, for operating, \"Accessibility\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remote control of the computer, stage 3: Spark operates the computer (V01.0.725)",
+"text": "Remote control of the computer, stage 3: Spark operates the computer (V01.0.725): \"Spark, write to Anna in Outlook that I'll be there at three\" – the Spark does the task on your own PC or Mac step by step: it sees the screen, proposes exactly one step (click, double click, right click, scroll, a fixed key or typing text), and the computer shows it with the target marked in red and asks: Stop (preselected), Skip or Allow. Only after \"Allow\" does the step happen; 60 seconds without an answer count as Stop. Protection against injected orders: the task is fixed from the first sentence and must be in your own words; text on the screen is only content for the Spark. Only text from your task is typed, anything else is shown as a warning above the step. Only a program released under \"Act on the PC\" may be in front; terminal, settings, login windows, password managers and the Companion itself are always blocked. If something on the screen looks like an order to the Spark, it pauses and asks (No / Continue). At most 30 steps and 5 minutes; Stop, \"End\" in the bar and My emergency stop end it at once. The result comes as a notice in fixed words (\"On the computer: done (4 steps)\"); pictures and"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remote control of the computer, stage 3: Spark operates the computer (V01.0.725)",
+"text": " screen text never go to memory, history or chat. Own admin switch (Features → Spark operates the computer), off until switched on; on the device both \"Act on the PC\" and \"Show and operate the screen\" must be on. Needs a language model that sees pictures."
 },
 {
 "lang": "en",

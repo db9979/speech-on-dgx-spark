@@ -310,6 +310,12 @@ FEATURES = (
       parent="begleiter", me="deskbox", guide="begleitertun"),
     F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
       parent="begleiter", me="deskbox", guide="begleitermeeting"),
+    # Rechner fernsteuern, Stufe 2 (fernsicht.py): look at the own PC or Mac and, when allowed there, operate it
+    F("begleiterschirm", "Bildschirm zeigen und bedienen", "Show and operate the screen", "go", ("desk_view",),
+      parent="begleiter", me="deskbox", guide="begleiterschirm"),
+    # Stufe 3 (bedienen.py): the Spark operates the own computer step by step, every step confirmed there
+    F("begleiterbedienen", "Spark bedient den Rechner", "Spark operates the computer", "go", ("desk_operate",),
+      parent="begleiter", me="deskbox", guide="begleiterbedienen"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), me="pebbox", guide="pebblepair"),
     # spark-tui in a terminal (terminal.py): chat, conversations, Heute and the agent's jobs, paired by a setup line
     F("terminal", "Terminal-Client", "Terminal client", "go", ("terminal",), me="termbox", guide="terminal"),

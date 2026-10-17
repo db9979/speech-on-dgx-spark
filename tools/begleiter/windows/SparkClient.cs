@@ -75,7 +75,7 @@ internal sealed record FileResult(string? Text, string? Id, string? Name);
 /// Adresse geredet, Zertifikate werden immer normal geprüft, und es wird nichts protokolliert.
 /// Der Geräteschlüssel steht nur im Kopf X-Speech-Device, nie in der Adresse.
 /// </summary>
-internal static class SparkClient
+internal static partial class SparkClient
 {
     private const string DeviceHeader = "X-Speech-Device";
 
@@ -165,19 +165,7 @@ internal static class SparkClient
             }
         }
 
-        var asks = new List<ActAsk>();
-        if (json["asks"] is JsonArray askList)
-        {
-            foreach (JsonNode? item in askList.Take(20))
-            {
-                // Kennung als Text oder Zahl; nur harmlose Zeichen, weil sie in die Adresse kommt.
-                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                if (item is JsonObject o && id is { Length: > 0 and <= 64 } && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
-                {
-                    asks.Add(new ActAsk(id, Json.Str(o["action"]) ?? "", Json.Str(o["arg"]) ?? "", Json.Str(o["text"]) ?? ""));
-                }
-            }
-        }
+        List<ActAsk> asks = ParseAsks(json);
 
         var inbox = new List<InboxItem>();
         if (json["inbox"] is JsonArray inboxList)
@@ -655,10 +643,53 @@ internal static class SparkClient
         return (Json.Bool(json["wake"]) ?? false, (Json.Str(json["rest"]) ?? "").Trim());
     }
 
-    /// <summary>POST /api/desk/act {"id","ok","error"?} – Ergebnis einer Bitte (erlaubt und ausgeführt, abgelehnt oder Fehler).</summary>
-    public static async Task ActResultAsync(string baseUrl, string key, string id, bool ok, string? error, CancellationToken ct)
+    private static List<ActAsk> ParseAsks(JsonNode json)
     {
-        var body = new JsonObject { ["id"] = id, ["ok"] = ok };
+        var asks = new List<ActAsk>();
+        if (json["asks"] is JsonArray askList)
+        {
+            foreach (JsonNode? item in askList.Take(20))
+            {
+                // Kennung als Text oder Zahl; nur harmlose Zeichen, weil sie in die Adresse kommt.
+                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (item is JsonObject o && id is { Length: > 0 and <= 64 } && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+                {
+                    asks.Add(new ActAsk(id, Json.Str(o["action"]) ?? "", Json.Str(o["arg"]) ?? "", Json.Str(o["text"]) ?? ""));
+                }
+            }
+        }
+
+        return asks;
+    }
+
+    /// <summary>GET /api/desk/wait – wartet bis zu 25 s auf neue Bitten (Teil "act") und Bildschirm-Anfragen
+    /// (Teil "view"); leer, wenn keine kam.</summary>
+    public static async Task<(IReadOnlyList<ActAsk> Asks, IReadOnlyList<ViewAsk> Views)> WaitAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/wait");
+        JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
+        return (ParseAsks(json), ParseViews(json));
+    }
+
+    /// <summary>POST /api/desk/local – was die Person hier am PC eingestellt hat: Namen der Kurzbefehle und „ohne Rückfrage“.</summary>
+    public static async Task LocalAsync(string baseUrl, string key, IEnumerable<string> shortcuts, IEnumerable<string> auto, CancellationToken ct)
+    {
+        var body = new JsonObject
+        {
+            ["shortcuts"] = new JsonArray(shortcuts.Take(30).Select(n => (JsonNode?)JsonValue.Create(n)).ToArray()),
+            ["auto"] = new JsonArray(auto.Take(20).Select(n => (JsonNode?)JsonValue.Create(n)).ToArray()),
+        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/local") { Content = JsonContent(body) };
+        _ = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>POST /api/desk/act {"id","ok","error"?,"auto"?} – Ergebnis einer Bitte (erlaubt und ausgeführt, abgelehnt oder Fehler).</summary>
+    /// <param name="auto">Ohne Rückfrage gelaufen (hier am PC so eingestellt).</param>
+    /// <param name="failed">Erlaubt, aber es ging nicht (oder der Begleiter kann es nicht) – nicht „abgelehnt“.</param>
+    public static async Task ActResultAsync(string baseUrl, string key, string id, bool ok, string? error, CancellationToken ct,
+                                            bool auto = false, bool failed = false)
+    {
+        var body = new JsonObject { ["id"] = id, ["ok"] = ok, ["auto"] = auto, ["failed"] = failed };
         if (!ok && !string.IsNullOrEmpty(error))
         {
             body["error"] = error.Length > 300 ? error[..300] : error;

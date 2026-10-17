@@ -1520,6 +1520,13 @@
 "titel": "OLED: Aktiv 10 min",
 "text": "A: Funktionen → Gehäuse: die Seite „Aktiv 10 min“ ist in der Reihe und zeigt eine große Zahl, daneben Profile und Gäste. Am Handy und am Rechner je eine Frage stellen: am Display steht dasselbe Profil nur einmal, ein Gerät ohne Anmeldung zählt als Gast. Dieselbe Zahl steht unter Zustand → Monitoring „Aktiv (10 min)“, in Zustand → Live oben und in der Steuerzentrale. Nach 10 Minuten ohne Frage steht 0.",
 "thread": "Neue OLED-Seite mit aktiven Nutzern"
+},
+{
+"id": "P241",
+"v": 725,
+"titel": "Rechner fernsteuern",
+"text": "A: Funktionen → Bildschirm zeigen und bedienen und Funktionen → Spark bedient den Rechner einschalten; beim eigenen Rechner unter Ich → Begleiter „Am PC handeln“ (mit Outlook oder einem anderen Programm freigegeben) und „Bildschirm zeigen und bedienen“ an. 1) „Wechsel zu Outlook“ sagen: Outlook kommt nach vorn. 2) Ich → Begleiter → „Bedienen“: am Rechner erscheint die Frage (Ablehnen vorgewählt), nach „Erlauben“ roter Rahmen, im Panel das Bild; ein Tipp klickt am Rechner, „Beenden“ hört auf. 3) „Spark, schreib in Outlook eine neue Mail an mich mit Test“: am Rechner kommt die Frage mit dem Auftrag, danach jeder Schritt mit rotem Ring und Stopp/Überspringen/Erlauben; „Stopp“ beendet sofort, am Ende kommt „Am Rechner: …“ als Meldung. Auf dem Mac braucht der Begleiter „Bildschirmaufnahme“ und „Bedienungshilfen“.",
+"thread": "Rechner fernsteuern"
 }
 ]
 }

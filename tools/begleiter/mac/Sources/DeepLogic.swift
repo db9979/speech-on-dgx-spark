@@ -146,9 +146,17 @@ enum ActPlan: Equatable {
     case volume(String)     // up | down | mute
     case lock
     case show(String)
+    // Rechner fernsteuern, Stufe 1 (2026-10-17): fixed lists only, never a free key combination
+    case focus(ActApp)
+    case window(String)     // close | minimize | maximize | fullscreen
+    case key(String)        // ActKeys.all
+    case type(String)       // the person's own words (the panel checked them)
+    case folder(String)     // ActFolders.all
+    case power(String)      // sleep | display_off
+    case shortcut(String)   // a Shortcuts name released here (ActLocal.shortcuts)
     case refuse(String)
 
-    static func make(_ ask: ActAsk, apps: [ActApp]) -> ActPlan {
+    static func make(_ ask: ActAsk, apps: [ActApp], shortcuts: [String] = []) -> ActPlan {
         let arg = ask.arg.trimmingCharacters(in: .whitespacesAndNewlines)
         switch ask.action {
         case "url":
@@ -157,13 +165,13 @@ enum ActPlan: Equatable {
                 return .refuse("Nur http- und https-Adressen.")
             }
             return .url(u)
-        case "app":
+        case "app", "focus":
             guard let a = apps.first(where: { $0.name == arg })
                     ?? apps.first(where: { $0.name.lowercased() == arg.lowercased() }) else {
                 return .refuse("Dieses Programm steht nicht in der Liste im Panel.")
             }
             guard a.target != nil else { return .refuse("Der Eintrag im Panel ist kein Programm.") }
-            return .app(a)
+            return ask.action == "app" ? .app(a) : .focus(a)
         case "media":
             let a = arg.lowercased()
             return ["play", "pause", "next", "previous"].contains(a) ? .media(a) : .refuse("Unbekannter Medienbefehl.")
@@ -175,9 +183,79 @@ enum ActPlan: Equatable {
         case "show":
             let t = ask.arg.trimmingCharacters(in: .whitespacesAndNewlines)
             return t.isEmpty ? .refuse("Kein Text zum Zeigen.") : .show(t)
+        case "window":
+            return ["close", "minimize", "maximize", "fullscreen"].contains(arg) ? .window(arg)
+                : .refuse("Unbekannte Fenster-Aktion.")
+        case "key":
+            return ActKeys.all.contains(arg) ? .key(arg) : .refuse("Diese Taste ist nicht erlaubt.")
+        case "type":
+            let t = ask.arg.trimmingCharacters(in: .whitespacesAndNewlines)
+            return t.isEmpty || t.count > 500 ? .refuse("Kein oder zu langer Text zum Tippen.") : .type(t)
+        case "folder":
+            return ActFolders.all.contains(arg) ? .folder(arg) : .refuse("Diesen Ordner kennt der Begleiter nicht.")
+        case "power":
+            return ["sleep", "display_off"].contains(arg) ? .power(arg) : .refuse("Unbekannte Aktion für den Mac.")
+        case "shortcut":
+            guard let n = shortcuts.first(where: { $0.lowercased() == arg.lowercased() }) else {
+                return .refuse("Diesen Kurzbefehl gibt es hier nicht (Begleiter → Am PC handeln einstellen).")
+            }
+            return .shortcut(n)
         default:
             return .refuse("Diese Aktion kann der Begleiter nicht.")
         }
+    }
+}
+
+/// The keys the Spark may press (as begleiter.ACT_ARGS["key"] in the panel), with what the dialog says.
+enum ActKeys {
+    static let all = ["next", "previous", "space", "enter", "escape", "tab", "undo", "redo", "copy", "paste", "save",
+                      "reload", "find"]
+    static let labels: [String: String] = [
+        "next": "weiter (Bild ab)", "previous": "zurück (Bild auf)", "space": "Leertaste", "enter": "Eingabe",
+        "escape": "Esc", "tab": "Tab", "undo": "⌘Z (Widerrufen)", "redo": "⇧⌘Z (Wiederholen)", "copy": "⌘C (Kopieren)",
+        "paste": "⌘V (Einsetzen)", "save": "⌘S (Sichern)", "reload": "⌘R (Neu laden)", "find": "⌘F (Suchen)",
+    ]
+}
+
+enum ActFolders {
+    static let all = ["documents", "downloads", "desktop", "pictures", "music", "videos", "recent"]
+    static let labels: [String: String] = [
+        "documents": "Dokumente", "downloads": "Downloads", "desktop": "Schreibtisch", "pictures": "Bilder",
+        "music": "Musik", "videos": "Filme", "recent": "Zuletzt benutzt",
+    ]
+}
+
+/// What the person chose on this Mac (never the panel): kinds without the dialog and released Shortcuts.
+enum ActLocal {
+    /// as begleiter.ACT_AUTO_OK: opening an address, typing and showing a text always ask
+    static let autoOk = ["app", "media", "volume", "lock", "focus", "window", "key", "folder", "power", "shortcut"]
+    static let needsFront = ["key", "type", "window"]
+    static let labels: [String: String] = [
+        "app": "Programm öffnen", "media": "Musik", "volume": "Lautstärke", "lock": "Bildschirm sperren",
+        "focus": "Programm nach vorn", "window": "Fenster schließen, minimieren, Vollbild",
+        "key": "Tasten (weiter, zurück, Widerrufen …)", "folder": "Ordner öffnen",
+        "power": "Ruhezustand, Bildschirm aus", "shortcut": "Kurzbefehle",
+    ]
+    static let autoKey = "act.auto"
+    static let shortcutsKey = "act.shortcuts"
+
+    static var auto: [String] {
+        get { (UserDefaults.standard.stringArray(forKey: autoKey) ?? []).filter { autoOk.contains($0) } }
+        set { UserDefaults.standard.set(newValue.filter { autoOk.contains($0) }, forKey: autoKey) }
+    }
+
+    static var shortcuts: [String] {
+        get { Array((UserDefaults.standard.stringArray(forKey: shortcutsKey) ?? []).filter(validName).prefix(30)) }
+        set { UserDefaults.standard.set(Array(newValue.filter(validName).prefix(30)), forKey: shortcutsKey) }
+    }
+
+    static func maySkip(_ action: String) -> Bool { autoOk.contains(action) && auto.contains(action) }
+
+    /// a name the panel accepts (printable, no quotes, slashes or angle brackets, at most 40 characters)
+    static func validName(_ n: String) -> Bool {
+        let bad = CharacterSet(charactersIn: "\"'`/\\<>|").union(.controlCharacters)
+        return !n.isEmpty && n.count <= 40 && n.unicodeScalars.allSatisfy { !bad.contains($0) }
+            && n.trimmingCharacters(in: .whitespaces) == n
     }
 }
 

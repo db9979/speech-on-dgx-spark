@@ -53,24 +53,39 @@ final class ActCenter {
     private func handle(_ ask: ActAsk) async {
         let model = AppModel.shared
         guard model.part("act"), let client = model.client else { return }
-        let plan = ActPlan.make(ask, apps: model.config?.actApps ?? [])
+        let plan = ActPlan.make(ask, apps: model.config?.actApps ?? [], shortcuts: ActLocal.shortcuts)
         if case .refuse(let why) = plan {
-            await answer(client, ask.id, ok: false, error: why)
+            await answer(client, ask.id, ok: false, error: why, failed: true)
             HUD.show("Spark wollte etwas, das der Begleiter nicht kann: \(why)", symbol: "hand.raised", seconds: 6)
             return
         }
-        guard confirm(ask, plan: plan) else {
-            await answer(client, ask.id, ok: false, error: "Nicht erlaubt.")
-            return
+        // "ohne Rückfrage" is chosen only on this Mac (Am PC handeln einstellen), never by the panel
+        let auto = ActLocal.maySkip(ask.action)
+        let front = NSWorkspace.shared.frontmostApplication
+        if !auto {
+            guard confirm(ask, plan: plan) else {
+                await answer(client, ask.id, ok: false, error: "Nicht erlaubt.")
+                return
+            }
+            if ActLocal.needsFront.contains(ask.action), let front,
+               front.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+                front.activate(options: [])          // keys and window orders go to the window from before
+                try? await Task.sleep(nanoseconds: 300_000_000)
+            }
         }
         let problem = run(plan)
-        await answer(client, ask.id, ok: problem == nil, error: problem)
-        if let problem { HUD.show(problem, symbol: "exclamationmark.triangle") }
+        await answer(client, ask.id, ok: problem == nil, error: problem, auto: auto, failed: problem != nil)
+        if let problem {
+            HUD.show(problem, symbol: "exclamationmark.triangle")
+        } else if auto {
+            HUD.show("Spark (ohne Rückfrage): " + detail(plan), symbol: "hand.tap", seconds: 4)
+        }
     }
 
-    private func answer(_ client: SparkClient, _ id: String, ok: Bool, error: String?) async {
+    private func answer(_ client: SparkClient, _ id: String, ok: Bool, error: String?, auto: Bool = false,
+                        failed: Bool = false) async {
         do {
-            try await client.act(id: id, ok: ok, error: error)
+            try await client.act(id: id, ok: ok, error: error, auto: auto, failed: failed)
         } catch {
             AppModel.shared.absorb(error)
         }
@@ -81,6 +96,7 @@ final class ActCenter {
         switch plan {
         case .url(let u): return "Adresse öffnen: " + String(u.absoluteString.prefix(300))
         case .app(let a): return "Programm starten: " + a.name
+        case .focus(let a): return "„\(a.name)“ nach vorn holen (oder starten)"
         case .media(let m):
             switch m {
             case "next": return "Medien: nächster Titel"
@@ -95,11 +111,24 @@ final class ActCenter {
             }
         case .lock: return "Bildschirm sperren"
         case .show: return "Einen Text anzeigen"
+        case .window(let w):
+            switch w {
+            case "close": return "Fenster vorn schließen (⌘W)"
+            case "minimize": return "Fenster vorn ins Dock (⌘M)"
+            case "maximize": return "Fenster vorn zoomen"
+            default: return "Vollbild an/aus (⌃⌘F)"
+            }
+        case .key(let k): return "Taste im Fenster vorn: " + (ActKeys.labels[k] ?? k)
+        case .type(let t): return "Tippt ins Fenster vorn: „" + String(t.replacingOccurrences(of: "\n", with: " ").prefix(200)) + "“"
+        case .folder(let f): return "Ordner öffnen: " + (ActFolders.labels[f] ?? f)
+        case .power(let p): return p == "sleep" ? "Mac in den Ruhezustand" : "Bildschirm aus"
+        case .shortcut(let n): return "Kurzbefehl ausführen: " + n
         case .refuse(let w): return w
         }
     }
 
-    /// "Spark möchte: <text>. Erlauben?" — floating, in front, 60 s without answer = Nein.
+    /// "Spark möchte: <text>. Erlauben?" — floating, in front, 60 s without answer = Nein. For a kind that may run
+    /// without asking, the box "Künftig ohne Rückfrage" sets that on this Mac (only together with "Erlauben").
     private func confirm(_ ask: ActAsk, plan: ActPlan) -> Bool {
         NSApp.activate(ignoringOtherApps: true)
         let a = NSAlert()
@@ -110,6 +139,11 @@ final class ActCenter {
         a.addButton(withTitle: "Erlauben")
         let no = a.addButton(withTitle: "Nein")
         no.keyEquivalent = "\u{1b}"
+        if ActLocal.autoOk.contains(ask.action) {
+            a.showsSuppressionButton = true
+            a.suppressionButton?.title = "Künftig ohne Rückfrage: " + (ActLocal.labels[ask.action] ?? ask.action)
+            a.suppressionButton?.state = .off
+        }
         a.window.level = .floating
         // a timer in the modal run loop mode; abortModal is the documented way to end a modal run from a timer
         let timer = Timer(timeInterval: Self.timeout, repeats: false) { _ in
@@ -118,7 +152,12 @@ final class ActCenter {
         RunLoop.main.add(timer, forMode: .modalPanel)
         let r = a.runModal()
         timer.invalidate()
-        return r == .alertFirstButtonReturn
+        let allowed = r == .alertFirstButtonReturn
+        if allowed, a.suppressionButton?.state == .on, !ActLocal.auto.contains(ask.action) {
+            ActLocal.auto = ActLocal.auto + [ask.action]
+            ActWait.shared.sendLocal()
+        }
+        return allowed
     }
 
     // ------------------------------------------------------------------ doing it
@@ -130,6 +169,8 @@ final class ActCenter {
             return NSWorkspace.shared.open(u) ? nil : "Die Adresse ließ sich nicht öffnen."
         case .app(let a):
             return openApp(a)
+        case .focus(let a):
+            return focusApp(a)
         case .media(let m):
             guard Access.trusted else { return needAccess() }
             switch m {
@@ -151,14 +192,49 @@ final class ActCenter {
         case .show(let t):
             ShowText.show(t)
             return nil
+        case .window(let w):
+            guard Access.trusted else { return needAccess() }
+            return ActMac.window(w)
+        case .key(let k):
+            guard Access.trusted else { return needAccess() }
+            return ActMac.key(k)
+        case .type(let t):
+            guard Access.trusted else { return needAccess() }
+            ActMac.type(t)
+            return nil
+        case .folder(let f):
+            return ActMac.folder(f)
+        case .power(let p):
+            return ActMac.power(p)
+        case .shortcut(let n):
+            return ActMac.shortcut(n)
         case .refuse(let w):
             return w
         }
     }
 
+    private func focusApp(_ a: ActApp) -> String? {
+        let own = ProcessInfo.processInfo.processIdentifier
+        let running = NSWorkspace.shared.runningApplications.first { r in
+            guard r.processIdentifier != own else { return false }
+            switch a.target {
+            case .bundle(let b)?: return r.bundleIdentifier?.lowercased() == b.lowercased()
+            case .path(let p)?: return r.bundleURL?.standardizedFileURL.path == URL(fileURLWithPath: p).standardizedFileURL.path
+            case .name(let n)?: return r.bundleURL?.deletingPathExtension().lastPathComponent.lowercased() == n.lowercased()
+            case nil: return false
+            }
+        }
+        if let running {
+            if running.isHidden { running.unhide() }
+            running.activate(options: [])
+            return nil
+        }
+        return openApp(a)
+    }
+
     private func needAccess() -> String {
         Access.askOnce()
-        return "Für Medien- und Lautstärketasten braucht der Begleiter die Freigabe Bedienungshilfen."
+        return "Für Tasten, Fenster und Tippen braucht der Begleiter die Freigabe Bedienungshilfen."
     }
 
     private func openApp(_ a: ActApp) -> String? {

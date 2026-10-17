@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.725** Remote control of the computer: more fixed voice orders on the PC, view and operate the screen from the phone or panel, and the Spark does tasks on the computer step by step, each step confirmed there
 - **V01.0.724** OLED page "Aktiv 10 min": how many people were here in the last 10 minutes, as one big number with profiles and guests; the same number in Monitoring, Live, the Steuerzentrale and the iPhone app
 - **V01.0.723** Self-test fix: tests set the switches now shipped on themselves
 - **V01.0.722** Measure whether Qwen3.8 handles 2 to 4 questions at once with 64K context, plus two faster kinds (FP8 store, DSpark)
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.718** Two fast models to measure: Gemma 4 26B A4B and Qwen3-VL 30B A3B
 - **V01.0.717** Kolibri-1 measures with enough memory (already FP8, 78B)
 - **V01.0.716** Self-test fix: the source checks read the model side in its own file
-- **V01.0.715** `modelle messen` works next to the own language model; Kolibri-1 loads as FP8
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

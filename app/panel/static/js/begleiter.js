@@ -16,7 +16,7 @@ const DESK_PARTS=[['write',['Schreibhilfe','Writing help'],['Markierten Text ver
   ['mail',['Antwort entwerfen','Draft a reply'],['Zur offenen Mail in Outlook (Windows) oder Apple Mail eine Antwort als Entwurf. Gesendet wird nie.','A reply draft to the open mail in Outlook (Windows) or Apple Mail. Never sent.']],
   ['folder',['Ordner Spark-Wissen','Spark knowledge folder'],['Was du in den Ordner „Spark-Wissen“ legst, kommt in deine Dokumente.','What you put into the folder "Spark-Wissen" goes into your documents.']],
   ['actions',['Knöpfe in Meldungen','Buttons in notes'],['Antworten, Später oder Panel öffnen direkt in der Mitteilung.','Reply, Later or Open panel right in the notification.']],
-  ['act',['Am PC handeln','Act on the PC'],['Der Spark darf eine Seite oder ein freigegebenes Programm öffnen, Musik und Lautstärke steuern oder sperren. Jedes Mal fragt der Rechner vorher.','The Spark may open a page or a released program, control music and volume or lock. The computer asks every time.']],
+  ['act',['Am PC handeln','Act on the PC'],['Der Spark darf auf deinen Zuruf Seiten und freigegebene Programme öffnen, Fenster wechseln, Folien weiterschalten, deine Worte tippen, Ordner öffnen, Musik steuern oder sperren. Der Rechner fragt vorher, außer du hast es dort für eine Art abgeschaltet.','On your word the Spark may open pages and released programs, switch windows, move slides, type your words, open folders, control music or lock. The computer asks first unless you turned that off there for a kind.']],
   ['wake',['Weckwort am PC','Wake word on the PC'],['„Hey Spark“ über das Mikrofon des Rechners. Hört nur, solange es an ist; das Symbol zeigt es.','"Hey Spark" through the computer\'s microphone. Listens only while on; the icon shows it.']],
   ['speak',['Vorlesen','Read aloud'],['Markierten Text in deiner Spark-Stimme vorlesen (Strg+Alt+L, Mac ⌥⌘L).','Read marked text aloud in your Spark voice (Ctrl+Alt+L, Mac ⌥⌘L).']],
   ['inbox',['Vom Handy auf den PC','From the phone to the PC'],['Text, Link oder Datei vom Spark auf diesen Rechner: Text in die Zwischenablage, Links nur nach Rückfrage, Dateien in „Downloads/Vom Spark“.','Text, link or file from the Spark to this computer: text into the clipboard, links only after asking, files into "Downloads/Vom Spark".']],
@@ -25,19 +25,25 @@ const DESK_PARTS=[['write',['Schreibhilfe','Writing help'],['Markierten Text ver
   ['meeting',['Besprechung mitschreiben','Write along in meetings'],['Nur auf Klick, mit sichtbarer Leiste: Zusammenfassung und Aufgaben danach. Alle Beteiligten müssen einverstanden sein.','Only on a click, with a visible bar: summary and tasks afterwards. Everybody taking part must agree.']],
   ['home',['Smart-Home-Knöpfe','Smart home buttons'],['Knöpfe für Licht, Schalter und Szenen deines Home Assistant im Begleiter; das Codewort gilt wie bei der Stimme.','Buttons for lights, switches and scenes of your Home Assistant in the companion; the code word applies as by voice.']],
   ['daily',['Tagesstart und Feierabend','Start and end of the day'],['Morgens dein Tagesüberblick, abends die Termine von morgen und was offen ist.','In the morning your daily overview, in the evening tomorrow\'s appointments and what is open.']],
-  ['office',['Office-Add-ins','Office add-ins'],['Knopf „Spark“ in Outlook classic (auch mit iCloud): verbessern, Antwort entwerfen, übersetzen. Word, Excel und das neue Outlook richtet der Begleiter auf Wunsch ein; dafür hier einmal über die https-Adresse speichern.','A "Spark" button in Outlook classic (also with iCloud): improve, draft a reply, translate. Word, Excel and the new Outlook are set up by the companion on request; for that save here once over the https address.']]];
+  ['office',['Office-Add-ins','Office add-ins'],['Knopf „Spark“ in Outlook classic (auch mit iCloud): verbessern, Antwort entwerfen, übersetzen. Word, Excel und das neue Outlook richtet der Begleiter auf Wunsch ein; dafür hier einmal über die https-Adresse speichern.','A "Spark" button in Outlook classic (also with iCloud): improve, draft a reply, translate. Word, Excel and the new Outlook are set up by the companion on request; for that save here once over the https address.']],
+  ['view',['Bildschirm zeigen und bedienen','Show and operate the screen'],['Den Bildschirm hier ansehen und, wenn du es am Rechner erlaubst, mit Maus und Tastatur bedienen. Jedes Mal mit Rückfrage am Rechner, roter Rahmen solange es läuft, nichts wird aufgezeichnet.','Look at the screen here and, when you allow it at the computer, operate it with mouse and keyboard. Asked at the computer every time, a red frame while it runs, nothing is recorded.']]];
 // the parts of an open device in small sections (Dominik 2026-10-11: clear with several devices)
 const DESK_GROUPS=[['Schreiben und Fragen','Writing and asking',['write','ask','dictate','speak','context','mail','office']],
-  ['Am Rechner','On the computer',['files','screen','folder','act','wake','inbox']],
+  ['Am Rechner','On the computer',['files','screen','folder','act','view','wake','inbox']],
   ['Meldungen und Tag','Notes and the day',['notes','actions','agenda','daily','quiet','meeting']],
   ['Zuhause','Home',['home']],['Zustand und Sicherheit','State and safety',['status','notaus']]];
 let deskOpen=null;try{deskOpen=localStorage.getItem('deskOpen')}catch{}
 const deskWhy=(k,d)=>k==='write'||k==='context'||k==='mail'||k==='office'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):
   k==='folder'?t('Erst eigene Dokumente einschalten.','Turn on own documents first.'):k==='act'?t('Erst unter Funktionen → Spark-Begleiter „Darf am PC handeln“ einschalten.','Turn on "May act on the PC" under Features → Spark companion first.'):
   k==='meeting'?t('Erst unter Funktionen → Spark-Begleiter „Besprechungen mitschreiben“ einschalten.','Turn on "Write along in meetings" under Features → Spark companion first.'):
+  k==='view'?t('Erst unter Funktionen → Spark-Begleiter „Bildschirm zeigen und bedienen“ einschalten.','Turn on "Show and operate the screen" under Features → Spark companion first.'):
   k==='home'?t('Erst Home Assistant verbinden (Funktionen und Ich → Smart Home).','Connect Home Assistant first (Features and Me → Smart home).'):'';
 // a smart home button row: name and one of the entities the profile may switch (GET /api/profile/desk/entities)
 const deskBtn=(b,ents)=>`<div class="two2" data-dbtn><div><input data-bn maxlength="40" placeholder="${esc(t('Name','Name'))}" value="${esc(b.name||'')}"></div><div><select data-be><option value="">${esc(t('– Gerät wählen –','– pick a device –'))}</option>${ents.map(e=>`<option value="${esc(e.entity)}" data-kind="${esc(e.kind)}"${e.entity===b.entity?' selected':''}>${esc(e.name)} (${esc(e.entity)})</option>`).join('')}${b.entity&&!ents.some(e=>e.entity===b.entity)?`<option value="${esc(b.entity)}" data-kind="${esc(b.kind)}" selected>${esc(b.entity)}</option>`:''}</select></div></div>`;
+// what the person chose at the computer itself (Rechner fernsteuern, Stufe 1): shown here, changed only there
+const DESK_AUTO={app:['Programm öffnen','Open a program'],media:['Musik','Music'],volume:['Lautstärke','Volume'],lock:['Sperren','Lock'],focus:['Programm nach vorn','Program to the front'],window:['Fenster','Window'],key:['Tasten','Keys'],folder:['Ordner','Folders'],power:['Ruhezustand, Bildschirm aus','Sleep, screen off'],shortcut:['Kurzbefehle','Shortcuts']};
+function deskLocal(l){l=l||{shortcuts:[],auto:[]};const a=l.auto.map(k=>DESK_AUTO[k]?t(DESK_AUTO[k][0],DESK_AUTO[k][1]):k);
+  return `<div class="fh">${esc(t('Ohne Rückfrage am Rechner: ','Without asking at the computer: '))}<b>${esc(a.length?a.join(', '):t('nichts, er fragt immer','nothing, it always asks'))}</b><br>${esc(t('Kurzbefehle: ','Shortcuts: '))}<b>${esc(l.shortcuts.length?l.shortcuts.join(', '):t('keine','none'))}</b><br>${esc(t('Beides stellst du nur am Rechner selbst ein (Begleiter → Einstellungen → Am PC handeln). Tippen und Adressen fragen immer.','You set both only at the computer itself (companion → Settings → Act on the PC). Typing and addresses always ask.'))}</div>`}
 function deskTime(s){return new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}
 async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DESK_ON){box.innerHTML='';return}
   let d={on:false,allowed:{},devices:[],minutes:10,downloads:{},arts:[],langs:[]};try{d=await (await api('/api/profile/desk')).json()}catch{}
@@ -56,6 +62,7 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
       <small class="mut">${esc(t(on+' von '+DESK_PARTS.length+' Teilen an',on+' of '+DESK_PARTS.length+' parts on'))}</small></span><span class="dkchev" aria-hidden="true">›</span></button>
       <div class="dkbody" hidden>
       ${others.length?`<div class="dkcopy"><label>${esc(t('Einstellungen übernehmen von','Take the settings of'))}</label><select data-dcopy="${esc(x.id)}"><option value="">${esc(t('– Gerät wählen –','– pick a device –'))}</option>${others.map(o=>`<option value="${esc(o.id)}">${esc(o.name.replace(/^Begleiter /,''))}</option>`).join('')}</select></div>`:''}
+      ${d.allowed.view&&c.parts.view?`<div class="row dkviewrow">${x.online?`<button class="b p" type="button" data-dview="${esc(x.id)}" data-want="view">${esc(t('Bildschirm ansehen','View screen'))}</button><button class="b" type="button" data-dview="${esc(x.id)}" data-want="control">${esc(t('Bedienen','Operate'))}</button>`:`<span class="fh mut">${esc(t('Bildschirm ansehen geht, sobald der Rechner verbunden ist.','Viewing the screen works once the computer is connected.'))}</span>`}</div>`:''}
       ${parts}
       <details><summary>${esc(t('Schreibhilfe: Voreinstellungen','Writing help: defaults'))}</summary>
         <div class="two2"><div><label>${esc(t('Art','Kind'))}</label><select data-dw="art">${opt(d.arts,c.write.art)}</select></div>
@@ -68,7 +75,8 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
         <div class="fh">${esc(t('Nur diese Programme darf der Spark öffnen, je mit Rückfrage am Rechner. Name, wie du ihn sagst; Pfad, wie der Rechner das Programm startet (z. B. C:\\Windows\\notepad.exe oder /Applications/Safari.app).','Only these programs may the Spark open, each with a question at the computer. Name as you say it; path as the computer starts it (e.g. C:\\Windows\\notepad.exe or /Applications/Safari.app).'))}</div>
         <label>${esc(t('Programm suchen','Find a program'))}</label>${inst.length?`<input data-dfind list="${dl}" maxlength="40" placeholder="${esc(t('Name eintippen, dann wählen','Type a name, then pick'))}"><datalist id="${dl}">${inst.map(a=>`<option value="${esc(a.name)}"></option>`).join('')}</datalist>`:`<div class="fh mut">${esc(t('Liste kommt vom Rechner, sobald der Begleiter läuft.','The list comes from the computer once the companion runs.'))}</div>`}
         <div data-dapps>${(c.act.apps.length?c.act.apps:[{name:'',path:''}]).map(a=>`<div class="two2" data-dapp><div><input data-an maxlength="40" placeholder="${esc(t('Name','Name'))}" value="${esc(a.name)}"></div><div><input data-ap maxlength="300" placeholder="${esc(t('Pfad','Path'))}" value="${esc(a.path)}"></div></div>`).join('')}</div>
-        <button class="b" type="button" data-daddapp="${esc(x.id)}">${esc(t('Weiteres Programm','Another program'))}</button></details>`:''}
+        <button class="b" type="button" data-daddapp="${esc(x.id)}">${esc(t('Weiteres Programm','Another program'))}</button>
+        ${deskLocal(x.local)}</details>`:''}
       ${d.allowed.home?`<details><summary>${esc(t('Smart-Home-Knöpfe','Smart home buttons'))}</summary>
         <div class="fh">${esc(t('Bis zu 12 Knöpfe im Begleiter: Licht, Schalter, Lüfter, Klima (an/aus) und Szenen deines Home Assistant. Schlösser, Alarm und Skripte nie. Mit Codewort fragt der Begleiter danach.','Up to 12 buttons in the companion: lights, switches, fans, climate (on/off) and scenes of your Home Assistant. Never locks, alarms or scripts. With a code word the companion asks for it.'))}</div>
         <div data-dbtns>${(c.home.buttons.length?c.home.buttons:[{}]).map(b=>deskBtn(b,ents)).join('')}</div>
@@ -151,6 +159,7 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     try{await api('/api/profile/desk/send',{method:'POST',body:fd});c.querySelector('[data-stext]').value='';c.querySelector('[data-sfile]').value='';
       if(m)m.textContent=t('Liegt bereit; der Rechner holt es beim nächsten Abruf.','Ready; the computer takes it with its next check.')}
     catch(e){if(m)m.textContent=e.message}});
+  box.querySelectorAll('[data-dview]').forEach(b=>b.onclick=()=>deskView(b.dataset.dview,b.dataset.want));
   box.querySelectorAll('[data-ddel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Gerät entfernen? Sein Schlüssel gilt dann nicht mehr.','Remove the device? Its key stops working.')))return;
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(b.dataset.ddel),{method:'DELETE'});showDesk()}catch(e){xmsg('dkmsg',e.message,true)}})}
 // Admin: Funktionen → Spark-Begleiter shows which program versions the Spark keeps for updates and fetches them now.
@@ -161,3 +170,53 @@ async function deskAdmin(){if(!$('deskadmin'))return;let d={};try{d=await (await
   st.textContent=t('Für Updates auf dem Spark: ','Kept on the Spark for updates: ')+part('Windows','windows',d.windows)+' · '+part('Mac','mac',d.mac);
   $('deskfetch').onclick=async()=>{st.textContent=t('Hole die Programme von GitHub …','Fetching the programs from GitHub …');
     try{await api('/api/admin/desk/fetch',xjson('POST'));deskAdmin()}catch(e){st.textContent=e.message}}}
+
+// ---------------------------------------------------------------- Bildschirm zeigen und bedienen (fernsicht.py)
+// Rechner fernsteuern, Stufe 2: the computer's newest picture (long poll, plain fetch so the loading bar stays
+// quiet) and, when the person there allowed it, inputs: a tap or click is a click, dragging moves the mouse, the
+// wheel scrolls, text and fixed keys from the bar. Points go as 0..1 of the picture; the computer checks them again.
+const DV_KEYS=[['escape','Esc'],['tab','Tab'],['enter','⏎'],['backspace','⌫'],['left','←'],['up','↑'],['down','↓'],['right','→'],['copy',['Kopieren','Copy']],['paste',['Einfügen','Paste']],['undo',['Rückgängig','Undo']]];
+const DV_STATE={asked:['Am Rechner wird gefragt …','Asking at the computer …'],view:['Nur ansehen','View only'],control:['Bedienen erlaubt','Operating allowed'],
+  no:['Am Rechner abgelehnt.','Declined at the computer.'],ended:['Beendet.','Ended.']};
+async function deskView(did,want){let r;
+  try{r=await (await api('/api/profile/desk/view',xjson('POST',{did,want}))).json()}catch(e){xmsg('dkmsg',e.message,true);return}
+  const sid=encodeURIComponent(r.id),base='/api/profile/desk/view/'+sid;
+  const ov=document.createElement('div');ov.className='dkview';ov.setAttribute('role','dialog');ov.setAttribute('aria-label',t('Bildschirm des Rechners','The computer\'s screen'));
+  ov.innerHTML=`<div class="dkvbar"><b data-vstate></b><span class="mut" data-vwhy></span><button class="b" type="button" data-vright aria-pressed="false" hidden>${esc(t('Rechtsklick','Right click'))}</button><button class="b p" type="button" data-vend>${esc(t('Beenden','End'))}</button></div>
+    <div class="dkvpic"><canvas data-vcv tabindex="0"></canvas></div>
+    <div class="dkvkeys" hidden><input data-vtext maxlength="200" placeholder="${esc(t('Text für den Rechner','Text for the computer'))}" autocomplete="off"><button class="b" type="button" data-vsend>${esc(t('Tippen','Type'))}</button>
+    ${DV_KEYS.map(([k,l])=>`<button class="b" type="button" data-vkey="${k}">${esc(Array.isArray(l)?t(l[0],l[1]):l)}</button>`).join('')}</div>`;
+  document.body.appendChild(ov);
+  const cv=ov.querySelector('[data-vcv]'),cx=cv.getContext('2d'),q=[];let live=true,after=0,mode='asked',right=false,sending=false,down=null,lastMove=0;
+  const say=(st,why)=>{ov.querySelector('[data-vstate]').textContent=t(...(DV_STATE[st]||DV_STATE.ended));ov.querySelector('[data-vwhy]').textContent=why?' · '+why:'';
+    const c=st==='control';ov.querySelector('.dkvkeys').hidden=!c;ov.querySelector('[data-vright]').hidden=!c;ov.classList.toggle('ctl',c)};
+  const close=async()=>{if(!live)return;live=false;try{await api(base,{method:'DELETE'})}catch{}ov.remove()};
+  ov.querySelector('[data-vend]').onclick=close;
+  const flush=async()=>{if(sending||!q.length||mode!=='control')return;sending=true;const events=q.splice(0,40);
+    try{await /*raw: many small inputs, no switch refresh after each*/fetch(base+'/input',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({events})})}catch{}sending=false;if(q.length)flush()};
+  const push=e=>{if(mode!=='control')return;q.push(e);flush()};
+  const at=ev=>{const b=cv.getBoundingClientRect();return {x:Math.min(1,Math.max(0,(ev.clientX-b.left)/b.width)),y:Math.min(1,Math.max(0,(ev.clientY-b.top)/b.height))}};
+  cv.addEventListener('pointerdown',ev=>{if(mode!=='control')return;down={...at(ev),sx:ev.clientX,sy:ev.clientY,moved:false};cv.setPointerCapture(ev.pointerId)});
+  cv.addEventListener('pointermove',ev=>{if(!down)return;if(Math.hypot(ev.clientX-down.sx,ev.clientY-down.sy)>8)down.moved=true;
+    const n=Date.now();if(down.moved&&n-lastMove>80){lastMove=n;push({t:'move',...at(ev)})}});
+  cv.addEventListener('pointerup',ev=>{if(!down)return;const p=at(ev),was=down;down=null;if(!was.moved){push({t:'click',...p,b:right?'right':'left'});
+    if(right){right=false;ov.querySelector('[data-vright]').setAttribute('aria-pressed','false')}}});
+  cv.addEventListener('dblclick',ev=>push({t:'click',...at(ev),b:'double'}));
+  cv.addEventListener('contextmenu',ev=>{ev.preventDefault();push({t:'click',...at(ev),b:'right'})});
+  cv.addEventListener('wheel',ev=>{if(mode!=='control')return;ev.preventDefault();push({t:'scroll',dy:Math.max(-10,Math.min(10,Math.round(-ev.deltaY/40)||(ev.deltaY<0?1:-1)))})},{passive:false});
+  ov.querySelector('[data-vright]').onclick=e=>{right=!right;e.currentTarget.setAttribute('aria-pressed',String(right))};
+  const typeIt=()=>{const i=ov.querySelector('[data-vtext]');if(i.value){push({t:'text',s:i.value});i.value=''}};
+  ov.querySelector('[data-vsend]').onclick=typeIt;
+  ov.querySelector('[data-vtext]').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();typeIt()}});
+  ov.querySelectorAll('[data-vkey]').forEach(b=>b.onclick=()=>push({t:'key',k:b.dataset.vkey}));
+  say('asked');
+  while(live){let res;
+    try{res=await /*raw: long poll, no loading bar*/fetch(base+'?after='+after,{cache:'no-store'})}catch{await new Promise(z=>setTimeout(z,2000));continue}
+    if(!live)break;
+    if(!res.ok){let m='';try{m=(await res.json()).detail||''}catch{}say('ended',m);live=false;break}
+    mode=res.headers.get('X-Spark-State')||'ended';
+    if((res.headers.get('content-type')||'').startsWith('image/')){after=+res.headers.get('X-Spark-Seq')||after;
+      try{const bm=await createImageBitmap(await res.blob());if(cv.width!==bm.width||cv.height!==bm.height){cv.width=bm.width;cv.height=bm.height}cx.drawImage(bm,0,0);if(bm.close)bm.close()}catch{}
+      say(mode)}
+    else{let j={};try{j=await res.json()}catch{}say(mode,j.why||'');if(mode==='no'||mode==='ended')live=false}}
+  if(document.body.contains(ov)){const bar=ov.querySelector('.dkvbar');ov.querySelector('[data-vend]').textContent=t('Schließen','Close');ov.querySelector('[data-vend]').onclick=()=>ov.remove();bar.classList.add('done')}}

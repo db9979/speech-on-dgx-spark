@@ -614,6 +614,12 @@ DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/
               "/api/desk/speak", "/api/desk/inbox/file", "/api/desk/inbox/done", "/api/desk/agenda", "/api/desk/remind",
               "/api/desk/busy", "/api/desk/meeting/start", "/api/desk/meeting/chunk", "/api/desk/meeting/end",
               "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps",
+              # Rechner fernsteuern, Stufe 1: what the person chose at the computer, the held wait for orders
+              "/api/desk/local", "/api/desk/wait",
+              # Stufe 2 (fernsicht.py): answer at the computer, pictures out, inputs in, end
+              "/api/desk/view/answer", "/api/desk/view/frame", "/api/desk/view/input", "/api/desk/view/end",
+              # Stufe 3 (bedienen.py): the answer to one step
+              "/api/desk/view/step",
               # Office-Add-ins (2026-10-12): the three manifests
               "/api/desk/office/word.xml", "/api/desk/office/excel.xml", "/api/desk/office/outlook.xml")
 DESK_GATE = [lambda uid: False]

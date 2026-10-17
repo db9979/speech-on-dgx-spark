@@ -188,6 +188,8 @@ WITHOUT = {
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter Ich → E-Mail",
     "schreibapps": "Kanal in anderen Programmen",
     "begleitermeeting": "startet am Begleiter",
+    "begleiterschirm": "startet unter Ich → Begleiter, bedient wird mit Maus und Tastatur, nicht per Sprache",
+    "begleiterbedienen": "wirkt über pc_action (action task), nur wo erlaubt angeboten",
     "roomtv": "Verhalten im Raum-Modus",
     "roomha": "Verhalten im Raum-Modus",
     "chatgroups": "Gruppen in der Oberfläche",

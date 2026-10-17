@@ -87,6 +87,15 @@ internal sealed class AppConfig
             ? t
             : fallback;
 
+    /// <summary>
+    /// Teil "act": Arten, die hier ohne Rückfrage laufen (nur hier am PC einstellbar, nie vom Panel; das Panel
+    /// bekommt nur die Liste zum Anzeigen). Nur Arten aus <see cref="ActRunner.AutoOk"/> zählen.
+    /// </summary>
+    public List<string> ActAuto { get; set; } = new();
+
+    /// <summary>Teil "act": die hier freigegebenen Kurzbefehle (Skripte). Der Spark kennt nur die Namen.</summary>
+    public List<ActScript> ActScripts { get; set; } = new();
+
     /// <summary>Zuletzt vom Spark geholte Einstellungen (enthält keine Geheimnisse).</summary>
     public DeskConfig? Desk { get; set; }
 

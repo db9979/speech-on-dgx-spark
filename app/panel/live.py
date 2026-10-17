@@ -733,6 +733,16 @@ def _conns(now):
     except Exception:
         pass
     try:
+        # Bildschirm zeigen und bedienen (fernsicht.py): running sessions by kind, only the counts
+        import fernsicht
+        c = fernsicht.counts()
+        for name, k in (("Bildschirm ansehen", "view"), ("Bildschirm bedienen", "control"), ("Bildschirm gefragt", "asked"),
+                        ("Spark bedient Rechner", "operate")):
+            if c.get(k):
+                out.append({"name": name, "proto": "Bilder über das Panel · Begleiter", "dir": "aus", "n": int(c[k])})
+    except Exception:
+        pass
+    try:
         import terminal
         n = terminal.online(now)
         if n:

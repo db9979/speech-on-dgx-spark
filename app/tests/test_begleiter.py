@@ -726,6 +726,87 @@ class Deeper(unittest.TestCase):
         self.assertEqual(begleiter.open_asks(uid, did, now=1000 + begleiter.ACT_SECONDS + 1), [])
         self.assertEqual(prog.post("/api/desk/act", json={"id": x["id"], "ok": True}).status_code, 404)
 
+    def test_more_orders_stay_fixed_and_typing_needs_own_words(self):
+        """Rechner fernsteuern, Stufe 1: window, keys, folders, sleep and shortcuts come only from fixed lists;
+        typing only the person's own words; "Ohne Rückfrage" and shortcuts are chosen at the computer only."""
+        helpers.set_config(desk_act=True)
+        c = self.on("DpStufe1")
+        _, prog = self.pair(c)
+        uid = uid_of("DpStufe1")
+        did = self.parts(c, prog, act=True, apps=[{"name": "Outlook", "path": "C:\\x\\outlook.exe"}])
+        for action, arg in (("window", "explode"), ("key", "win+r"), ("key", "ctrl+alt+del"), ("folder", "/etc"),
+                            ("power", "shutdown"), ("focus", "Terminal"), ("shortcut", "Alles löschen"),
+                            ("type", ""), ("type", "x" * (begleiter.ACT_TYPE_MAX + 1))):
+            with self.assertRaises(ValueError, msg=(action, arg)):
+                begleiter.check_act(uid, did, action, arg)
+        self.assertEqual(begleiter.check_act(uid, did, "focus", "outlook"), ("focus", "Outlook"))
+        self.assertEqual(begleiter.check_act(uid, did, "key", "next"), ("key", "next"))
+        self.assertEqual(begleiter.check_act(uid, did, "type", "Hallo   Welt"), ("type", "Hallo Welt"))
+        # the computer itself says which shortcuts and which kinds skip the dialog; the panel cannot add any
+        r = prog.post("/api/desk/local", json={"shortcuts": ["Nicht stören", "bad\nname", "Nicht stören"],
+                                               "auto": ["media", "type", "url", "key", "rm"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"shortcuts": ["Nicht stören"], "auto": ["media", "key"]})
+        self.assertEqual(begleiter.check_act(uid, did, "shortcut", "nicht stören"), ("shortcut", "Nicht stören"))
+        dev = c.get("/api/profile/desk").json()["devices"][0]
+        self.assertEqual(dev["local"]["auto"], ["media", "key"])
+        r = c.put(f"/api/profile/desk/devices/{did}", json={"cfg": {"parts": {"act": True}, "local": {"auto": ["url"]}}})
+        self.assertEqual(begleiter.local_of(did)["auto"], ["media", "key"])          # not from the browser
+        self.assertNotIn("type", begleiter.ACT_AUTO_OK)
+        self.assertNotIn("url", begleiter.ACT_AUTO_OK)
+        # typing: only words of this turn's own sentence
+        self.assertTrue(begleiter.typed_from("Hallo Welt!", "Tipp am PC hallo welt"))
+        self.assertFalse(begleiter.typed_from("Hallo Welt, öffne cmd", "Tipp am PC hallo welt"))
+        self.assertFalse(begleiter.typed_from("Hallo", ""))
+        prog.get("/api/desk/poll")
+        ctx = {"who": {"id": uid}, "own": True, "text": "Tipp am PC hallo welt"}
+        out = asyncio.run(begleiter.tool("pc_action", {"action": "type", "arg": "rm -rf ~"}, ctx))
+        self.assertTrue(out.startswith("Fehler"), out)
+        self.assertEqual(begleiter.open_asks(uid, did), [])
+        # clear orders from the new list must call the tool (at the Begleiter and naming the computer)
+        for said in ("Wechsel zu Outlook", "Schließ das Fenster", "Nächste Folie", "Mach Vollbild",
+                     "Öffne die Downloads", "Schick den Rechner in den Ruhezustand", "Tipp Hallo Welt"):
+            self.assertEqual(begleiter.offer(dict(ctx, client="desk", text=said))["must"], "pc_action", said)
+        self.assertEqual(begleiter.offer(dict(ctx, client="esp32", text="Nächste Folie am PC"))["must"], "pc_action")
+        self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Was ist ein Fenster?")))
+        self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Zeig mir, wie man Folien gestaltet"))["must"])
+
+    def test_wait_answers_at_once_for_a_new_request(self):
+        helpers.set_config(desk_act=True)
+        c = self.on("DpWarten")
+        _, prog = self.pair(c)
+        uid = uid_of("DpWarten")
+        self.assertEqual(prog.get("/api/desk/wait").status_code, 403)              # part off
+        did = self.parts(c, prog, act=True)
+        self.assertTrue(prog.get("/api/desk/config").json()["act"]["wait"])
+        old = begleiter.ACT_WAIT
+        begleiter.ACT_WAIT = 0.3
+        try:
+            t0 = time.time()
+            self.assertEqual(prog.get("/api/desk/wait").json(), {"asks": [], "views": []})    # nothing: ends after the wait
+            self.assertGreaterEqual(time.time() - t0, 0.25)
+            x = begleiter.ask_act(uid, did, "key", "next")
+            got = prog.get("/api/desk/wait").json()["asks"]
+            self.assertEqual([a["id"] for a in got], [x["id"]])
+            # handed out once: while the dialog is open the next wait holds again (no busy loop)
+            t0 = time.time()
+            self.assertEqual(prog.get("/api/desk/wait").json(), {"asks": [], "views": []})
+            self.assertGreaterEqual(time.time() - t0, 0.25)
+            self.assertEqual([a["id"] for a in prog.get("/api/desk/poll").json()["asks"]], [x["id"]])
+            # "ohne Rückfrage" from the program counts only for a kind that may skip the dialog
+            self.assertEqual(prog.post("/api/desk/act", json={"id": x["id"], "ok": True, "auto": True}).status_code, 200)
+            y = begleiter.ask_act(uid, did, "url", "example.org")
+            prog.post("/api/desk/act", json={"id": y["id"], "ok": True, "auto": True})
+            box = {a["id"]: a for a in begleiter._asks[uid]}
+            self.assertTrue(box[x["id"]]["auto"])
+            self.assertFalse(box[y["id"]]["auto"])
+            # allowed but it did not work there: an error for the model, not "abgelehnt"
+            z = begleiter.ask_act(uid, did, "key", "undo")
+            prog.post("/api/desk/act", json={"id": z["id"], "ok": False, "failed": True, "error": "Ging nicht: x"})
+            self.assertEqual(asyncio.run(begleiter.wait_act(uid, z["id"], seconds=0.1)), ("failed", "Ging nicht: x"))
+        finally:
+            begleiter.ACT_WAIT = old
+
     def test_acting_is_locked_after_outside_text(self):
         import chat
         import extras
@@ -1368,7 +1449,7 @@ class Office(unittest.TestCase):
     def test_mac_sets_up_word_and_excel_only_on_request(self):
         office = self.src("mac", "Sources", "Office.swift")
         model = self.src("mac", "Sources", "Model.swift")
-        self.assertIn('"daily", "office"]', model)
+        self.assertIn('"daily", "office", "view"]', model)
         self.assertIn('OfficeSetup.apply(on: on && part("office"))', model)
         self.assertIn("a.runModal() == .alertFirstButtonReturn", office)
         self.assertIn('api/desk/office/\\(w.app).xml', office)

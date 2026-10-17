@@ -113,6 +113,9 @@ internal sealed class DeskConfig
     /// <summary>Programme, die der Spark (nach Rückfrage) starten darf – config.act.apps.</summary>
     public List<ActApp> ActApps { get; set; } = new();
 
+    /// <summary>Teil "act": auf Bitten warten (GET /api/desk/wait), damit sie sofort ankommen (config.act.wait).</summary>
+    public bool ActWait { get; set; }
+
     /// <summary>Das Weckwort des Spark (config.wake.word), nur zur Anzeige.</summary>
     public string WakeWord { get; set; } = "Hey Spark";
 
@@ -205,6 +208,11 @@ internal sealed class DeskConfig
         if (json["dictate"] is JsonObject dictate)
         {
             config.DictateSprache = Json.Str(dictate["sprache"]) ?? "auto";
+        }
+
+        if (json["act"] is JsonObject actWait)
+        {
+            config.ActWait = Json.Bool(actWait["wait"]) ?? false;
         }
 
         if (json["act"] is JsonObject act && act["apps"] is JsonArray apps)

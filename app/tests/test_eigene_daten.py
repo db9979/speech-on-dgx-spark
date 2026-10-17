@@ -44,6 +44,8 @@ OHNE = {
     "schreibapps": "keine eigenen Daten (Unterschalter der Schreibhilfe)",
     "begleitertun": "keine eigenen Daten (Unterschalter des Begleiters)",
     "begleitermeeting": "keine eigenen Daten: Mitschriften landen als Dokumente",
+    "begleiterschirm": "keine eigenen Daten: nur das neueste Bild im Arbeitsspeicher, weg mit dem Ende der Sitzung",
+    "begleiterbedienen": "keine eigenen Daten: der Auftrag lebt nur im Arbeitsspeicher, das Ergebnis ist eine Meldung",
     "room": "keine eigenen Daten: der Raum-Modus läuft am Lautsprecher",
     "roomtv": "keine eigenen Daten (Unterschalter des Raum-Modus)",
     "roomfar": "keine eigenen Daten (Unterschalter des Raum-Modus)",

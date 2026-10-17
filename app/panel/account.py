@@ -81,7 +81,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "terminal": "terminal",
-       "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
+       "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting", "desk_view": "begleiterschirm", "desk_operate": "begleiterbedienen",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",

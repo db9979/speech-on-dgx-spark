@@ -152,6 +152,10 @@ struct TrayPanel: View {
                     note: "Word, Excel und Outlook") {
                 OfficeSetup.start(model: model)
             }
+            partRow("act", "Am PC handeln einstellen", symbol: "hand.tap", hotkey: nil,
+                    note: "Ohne Rückfrage, Kurzbefehle") {
+                ActSettings.show()
+            }
             partRow("folder", "Spark-Wissen-Ordner", symbol: "folder", hotkey: nil,
                     note: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText) {
                 folder.reveal()

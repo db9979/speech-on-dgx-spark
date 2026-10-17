@@ -1567,3 +1567,11 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .pt-chip{font-size:12px;font-weight:500;padding:1px 8px;border-radius:999px;background:var(--line)}
 .pt-problem{color:var(--bad)}.pt-ok,.pt-erledigt{color:var(--ok)}.pt-spaeter{color:var(--warn)}
 @media (max-width:600px){.pt-row{flex-wrap:wrap}.pt-v{min-width:0}.pt-btns{width:100%;justify-content:flex-start}}
+/* Bildschirm zeigen und bedienen (begleiter.js deskView, fernsicht.py) */
+.dkviewrow{margin:8px 0 4px;gap:8px}
+.dkview{position:fixed;inset:0;z-index:300;background:var(--bg,#111);display:flex;flex-direction:column}
+.dkvbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line,#333)}.dkvbar [data-vwhy]{flex:1;min-width:0}
+.dkvpic{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding:8px}
+.dkvpic canvas{max-width:100%;max-height:100%;background:#000;border-radius:6px;touch-action:none}
+.dkview.ctl .dkvpic canvas{outline:2px solid #e5484d}
+.dkvkeys{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-top:1px solid var(--line,#333)}.dkvkeys input{flex:1 1 180px;min-width:0}

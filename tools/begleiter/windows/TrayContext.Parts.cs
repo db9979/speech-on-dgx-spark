@@ -122,6 +122,7 @@ internal sealed partial class TrayContext
 
         SyncParts4();
         SyncOffice();
+        SyncFern();
         UpdateIcon();
     }
 
@@ -140,6 +141,7 @@ internal sealed partial class TrayContext
         _laterTimers.Clear();
         _fileQueue.Clear();
         _actQueue.Clear();
+        StopFern();
         _mailForm?.Close();
         StopParts4();
         if (removeFileMenu)
@@ -205,6 +207,7 @@ internal sealed partial class TrayContext
         }
 
         any |= AddPartMenuItems4();
+        any |= AddFernMenuItems();
         return any;
     }
 
@@ -689,19 +692,38 @@ internal sealed partial class TrayContext
     private async Task HandleActAsync(ActAsk ask)
     {
         bool ok = false;
+        bool auto = false;
+        bool failed = false;
         string? error;
         if (_desk is null || !IsOn(Parts.Act))
         {
             error = "Der Teil ist am PC aus.";
+            failed = true;
         }
-        else if (ActRunner.Plan(ask, _desk, out string problem) is not { } plan)
+        else if (ActRunner.Plan(ask, _desk, _config.ActScripts, out string problem) is not { } plan)
         {
             error = problem;
+            failed = true;
         }
         else
         {
-            using var dialog = new ActConfirmForm(ask.Text, plan.Description);
-            bool allowed = await dialog.AskAsync();
+            // „ohne Rückfrage“ stellt die Person nur hier am PC ein (Am PC handeln einstellen), nie das Panel
+            auto = ActRunner.MaySkip(ask.Action, _config);
+            bool allowed = auto;
+            IntPtr before = NativeMethods.GetForegroundWindow();
+            if (!auto)
+            {
+                using var dialog = new ActConfirmForm(ask.Text, plan.Description,
+                    ActRunner.AutoOk.Contains(ask.Action) ? ActRunner.KindLabels[ask.Action] : null);
+                allowed = await dialog.AskAsync();
+                if (dialog.SkipFromNow && !_config.ActAuto.Contains(ask.Action))
+                {
+                    _config.ActAuto.Add(ask.Action);
+                    TrySave();
+                    _ = SendActLocalAsync();
+                }
+            }
+
             if (!allowed)
             {
                 error = "Am PC abgelehnt (oder keine Antwort in 60 s).";
@@ -714,14 +736,24 @@ internal sealed partial class TrayContext
             {
                 try
                 {
+                    if (!auto && ActRunner.NeedsFront.Contains(ask.Action))
+                    {
+                        await ActDo.RestoreAsync(before);   // Tasten und Fenster-Befehle gehen an das Fenster von vorher
+                    }
+
                     plan.Run();
                     ok = true;
                     error = null;
+                    if (auto)
+                    {
+                        Notify("Spark (ohne Rückfrage): " + plan.Description, ToolTipIcon.Info);
+                    }
                 }
                 catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or FileNotFoundException
                                                or IOException or UnauthorizedAccessException or ObjectDisposedException)
                 {
                     error = "Ging nicht: " + ex.Message;
+                    failed = true;
                 }
             }
         }
@@ -733,7 +765,7 @@ internal sealed partial class TrayContext
 
         try
         {
-            await SparkClient.ActResultAsync(creds.Base, creds.Key, ask.Id, ok, error, CancellationToken.None);
+            await SparkClient.ActResultAsync(creds.Base, creds.Key, ask.Id, ok, error, CancellationToken.None, auto, failed);
         }
         catch (SparkException ex)
         {
