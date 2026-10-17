@@ -68,9 +68,13 @@ SEITEN = (("spark", "Spark", "Spark"), ("dienste", "Dienste und Wartung", "Servi
           ("pi", "Pi", "Pi"), ("dgx", "DGX weg oder in Pause", "DGX gone or paused"), ("netz", "Netz", "Network"),
           ("dgxdetail", "DGX im Detail", "DGX in detail"), ("sicherheit", "Sicherheit", "Security"),
           ("geraete", "Geräte", "Devices"), ("haus", "Haus", "House"), ("strom", "Strom", "Power"),
-          ("version", "Version", "Version"), ("aktiv", "Aktiv 10 min", "Active 10 min"))
+          ("version", "Version", "Version"), ("aktiv", "Aktiv 10 min", "Active 10 min"),
+          ("lastpi", "CPU und RAM Pi", "CPU and RAM Pi"), ("lasttars", "CPU und RAM TARS", "CPU and RAM TARS"))
 # pages drawn with one big number instead of lines (bild): "Aktiv 10 min" (Dominik 2026-10-17 "1b 2a 3a")
 GROSS = ("aktiv",)
+# pages drawn with two big numbers, CPU left and RAM right in % (Dominik 2026-10-17 "1a, Namen Pi und TARS");
+# "TARS" only while the models run on another computer
+ZWEI = ("lastpi", "lasttars")
 FARBEN = {"gruen": (0, 255, 0), "gelb": (255, 150, 0), "rot": (255, 0, 0), "aus": (0, 0, 0)}
 NACHT = ("aus", "dunkel", "an")
 ANZEIGE = ("immer", "probleme")   # "probleme": dark while everything is green
@@ -384,6 +388,15 @@ def zeilen(key, now=None):
         import aktiv
         n = aktiv.zahlen(now)
         return ["Aktiv 10 min", str(n["gesamt"]), f"Profile {n['profile']}", f"Gaeste {n['gaeste']}"]
+    if key in ZWEI:       # CPU and RAM in %: the Pi measured here, TARS from its last status (rechnerblick.py)
+        if key == "lastpi":
+            p = _pi()
+            return ["Pi", _num(p["cpu"]), _num(p["ram"])]
+        if steuer.remote() and steuer.weg(now):
+            return ["TARS weg", "-", "-"]
+        import rechnerblick
+        t = rechnerblick.last("modell")
+        return ["TARS", _num(t["cpu"]), _num(t["ram"])]
     if key == "version":
         try:
             import core as _core
@@ -476,6 +489,13 @@ def seiten(c, now=None):
     elif dgx and "dgx" in keys:
         keys.remove("dgx")
         keys.insert(0, "dgx")
+    try:
+        import steuer
+        geteilt = steuer.remote()
+    except Exception:
+        geteilt = False
+    if not geteilt and "lasttars" in keys:
+        keys.remove("lasttars")
     if farbe != "gruen" and "dienste" in keys and not dgx:
         keys.remove("dienste")
         keys.insert(0, "dienste")
@@ -488,6 +508,9 @@ def bild(lines, drehen=False, versatz=(0, 0), key=""):
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
     dx, dy = versatz
+    if key in ZWEI and len(lines) >= 3:
+        _zwei(draw, font, lines, dx, dy)
+        return img.rotate(180) if drehen else img
     if key in GROSS and len(lines) >= 2:
         _gross(draw, font, lines, dx, dy)
         return img.rotate(180) if drehen else img
@@ -518,6 +541,27 @@ def _gross(draw, font, lines, dx, dy):
         draw.text((dx + 77, dy + 13 + i * 25), (wort or n)[:8], fill=1, font=font)
         if wort:
             draw.text((dx + 77, dy + 21 + i * 25), n[:5], fill=1, font=ImageFont.load_default(size=13))
+
+
+def _zwei(draw, font, lines, dx, dy):
+    """A page with two big numbers (ZWEI): the title on top, CPU left and RAM right of a divider, "CPU %" and "RAM %"
+    under them; each number as large as fits its half."""
+    from PIL import ImageFont
+    draw.text((dx, dy), lines[0][:21], fill=1, font=font)
+    draw.line((0, dy + 11, W - 1, dy + 11), fill=1)
+    draw.line((dx + 63, dy + 14, dx + 63, dy + 62), fill=1)
+    for i, (wert, wort) in enumerate(((lines[1], "CPU %"), (lines[2], "RAM %"))):
+        x0 = dx + i * 66
+        wert = wert[:3]
+        for size in (34, 28, 22):
+            big = ImageFont.load_default(size=size)
+            a, b, c, d = draw.textbbox((0, 0), wert, font=big, stroke_width=1)
+            if c - a <= 58:
+                break
+        draw.text((x0 + (62 - (c - a)) // 2 - a, dy + 15 + (34 - (d - b)) // 2 - b), wert, fill=1, font=big,
+                  stroke_width=1, stroke_fill=1)
+        w = draw.textlength(wort, font=font)
+        draw.text((x0 + (62 - w) // 2, dy + 52), wort, fill=1, font=font)
 
 
 def versatz(now):

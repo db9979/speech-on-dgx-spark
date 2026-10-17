@@ -206,7 +206,7 @@ class Seiten(Base):
             self.assertTrue(1 <= len(lines) <= 5, key)
             for line in lines:
                 self.assertLessEqual(len(line), 21, (key, line))
-        self.assertEqual(len(gehaeuse.SEITEN), 12)
+        self.assertEqual(len(gehaeuse.SEITEN), 14)
 
     def test_active_people_as_one_big_number(self):
         """Dominik 2026-10-17 "1b 2a 3a": page "Aktiv 10 min" with the people of the last 10 minutes as one big number,
@@ -229,6 +229,28 @@ class Seiten(Base):
             img = gehaeuse.bild(["Aktiv 10 min", n, "Profile 1", "Gaeste 0"], key="aktiv")
             self.assertTrue(any(img.getpixel((x, 40)) for x in range(70)), n)
             self.assertFalse(any(img.getpixel((x, y)) for x in range(70, 72) for y in range(14, 64)), n)
+
+    def test_cpu_and_ram_as_two_big_numbers(self):
+        """Dominik 2026-10-17 "1a, Namen Pi und TARS": pages "Pi" and "TARS" with CPU left and RAM right in %, as two
+        big numbers; "TARS" only while the models run on another computer, "-" while it is gone."""
+        import rechnerblick
+        with mock.patch.object(gehaeuse, "_pi", return_value={"cpu": 12.4, "ram": 9.0, "temp": None, "platte": None, "luefter": None}):
+            self.assertEqual(gehaeuse.zeilen("lastpi", T0), ["Pi", "12", "9"])
+        with mock.patch.dict(rechnerblick._letzt, {"modell": {"cpu": 64.2, "ram_total": 120.0, "ram_frei": 30.0}}), \
+                mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "weg", return_value=False):
+            self.assertEqual(gehaeuse.zeilen("lasttars", T0), ["TARS", "64", "75"])
+            self.assertIn("lasttars", gehaeuse.seiten(self.on(), T0))
+        with mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "weg", return_value=True):
+            self.assertEqual(gehaeuse.zeilen("lasttars", T0), ["TARS weg", "-", "-"])
+        with mock.patch.object(steuer, "remote", return_value=False):
+            self.assertNotIn("lasttars", gehaeuse.seiten(self.on(), T0), "one Spark: no second computer")
+        for cpu, ram in (("7", "100"), ("100", "100"), ("?", "?")):
+            img = gehaeuse.bild(["TARS", cpu, ram], key="lasttars")
+            links = [y for y in range(14, 50) if any(img.getpixel((x, y)) for x in range(62))]
+            rechts = [y for y in range(14, 50) if any(img.getpixel((x, y)) for x in range(65, 128))]
+            self.assertGreaterEqual(max(links) - min(links), 18, (cpu, "big: more than twice the small font"))
+            self.assertGreaterEqual(max(rechts) - min(rechts), 18, (ram, "big: more than twice the small font"))
+            self.assertFalse(any(img.getpixel((x, y)) for x in (62, 64) for y in range(14, 64)), "numbers stay off the divider")
 
     def test_the_admins_order(self):
         c = self.on(gehaeuse_reihenfolge=["version", "pi"])

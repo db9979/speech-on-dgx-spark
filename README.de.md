@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.763** OLED-Seiten „Pi“ und „TARS“: CPU- und RAM-Auslastung als zwei große Zahlen
 - **V01.0.762** Qwen3.8 Flash Next in Docker messen (nur auf tars, ohne Netz, vorerst nur messen)
 - **V01.0.761** Genauer und schneller, Paket C: Einfaches sofort beantworten, schnellere Websuche, Antwort-Prüfung erweitert, Wortwahl messen
 - **V01.0.760** Genauer und schneller, Paket B: feste Werkzeugliste je Fragenart, großes Gedächtnis kürzen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.756** Modelle einfacher: eine Kachel je Art, „Ausprobieren“ und Suche bei Hugging Face
 - **V01.0.755** Genauer und schneller: Zeiten je Fragenart, Namen fürs Hören, Einheiten und Abkürzungen ausgesprochen
 - **V01.0.754** iPhone-App: Prüf-Code für Apples Prüfung und Vorführung „Ohne Spark ansehen“
-- **V01.0.753** Rot-Fix: Technik-Seite „Vorbereiten“ wieder auf dem Stand von .752
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

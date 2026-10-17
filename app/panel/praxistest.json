@@ -1723,6 +1723,13 @@
 "titel": "Qwen3.8 Flash Next in Docker messen",
 "text": "A: Auf tars `sudo speech-spark status`: eine Zeile „Docker: …“. B: `sudo speech-spark modelle messen flash` (oder Zustand → Modelle → Sprachmodell „Wechseln“ → bei „Qwen3.8 Flash Next FP4 (Docker …)“ „Ausprobieren“): Gewichte (rund 95 GiB) und Image laden, solange das Sprachmodell läuft, dann misst es beide Anteile; das erste Laden kann bis zu einer Stunde dauern. Zustand → Logs (System): „modelle: image … geladen“, „modelle: messung … start docker“, „dockertor: offen port 31016“, danach die Messzeilen. C: Während der Messung `sudo docker ps`: der Container speech-spark-messen-engine; danach ist er weg und das Sprachmodell läuft wieder. D: Die Karte zeigt „Docker: vorerst nur messen“ statt „Wechseln“. Bricht die Messung ab, den Log-Auszug in den Thread kopieren.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P270",
+"v": 763,
+"titel": "OLED: CPU und RAM",
+"text": "A: Funktionen → Gehäuse: die Seiten „CPU und RAM Pi“ und „CPU und RAM TARS“ sind in der Reihe. Am Display steht „Pi“ bzw. „TARS“ mit zwei großen Zahlen, links CPU %, rechts RAM %. Die Werte passen ungefähr zu Zustand → Monitoring → Rechner. Ist TARS aus, zeigt seine Seite „TARS weg“.",
+"thread": "Neue OLED-Seite mit aktiven Nutzern"
 }
 ]
 }
