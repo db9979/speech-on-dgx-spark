@@ -96,10 +96,29 @@ struct ThingHit: Identifiable {
     }
 }
 
+/// The parts of Meine Sachen, one per tile.
+enum ThingPart: String, Identifiable {
+    case documents, made, pictures, music, memory
+    var id: String { rawValue }
+
+    @MainActor @ViewBuilder var page: some View {
+        switch self {
+        case .documents: DocumentsView()
+        case .made: MadeDocsView()
+        case .pictures: PicturesView()
+        case .music: SongsView()
+        case .memory: MemoryView()
+        }
+    }
+}
+
 struct ThingsView: View {
     @ObservedObject private var talk = Conversation.shared
     @StateObject private var m = ThingsModel()
     @State private var search = ""
+    /// the tile tapped last: several NavigationLinks in one List row all fire on a tap (Dominik 2026-10-17: a tile did
+    /// not open its own part), so a tile is a Button and the page opens through navigationDestination
+    @State private var open: ThingPart?
 
     nonisolated static func docIcon(_ d: SparkDoc) -> String {
         if d.source == "remarkable" { return "pencil.and.scribble" }
@@ -127,22 +146,20 @@ struct ThingsView: View {
                 Section {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                         if a.areas.contains("documents") {
-                            tile("Dokumente", "doc.text", .blue, m.docs.count, docNote) { DocumentsView() }
+                            tile(.documents, "Dokumente", "doc.text", .blue, m.docs.count, docNote)
                         }
                         if a.make {
-                            tile("Vom Spark erstellt", "wand.and.stars", .indigo, m.made.count,
-                                 m.made.first.map { Text($0.updated, format: .relative(presentation: .named)) }) { MadeDocsView() }
+                            tile(.made, "Vom Spark erstellt", "wand.and.stars", .indigo, m.made.count,
+                                 m.made.first.map { Text($0.updated, format: .relative(presentation: .named)) })
                         }
                         if a.areas.contains("bilder") {
-                            tile("Bilder", "photo.on.rectangle", .orange, m.pictures.count, nil) { PicturesView() }
+                            tile(.pictures, "Bilder", "photo.on.rectangle", .orange, m.pictures.count, nil)
                         }
                         if a.areas.contains("musik") {
-                            tile("Musik", "music.note", .pink, m.songs.count,
-                                 m.songs.first.map { Text(verbatim: $0.title) }) { SongsView() }
+                            tile(.music, "Musik", "music.note", .pink, m.songs.count, m.songs.first.map { Text(verbatim: $0.title) })
                         }
                         if a.areas.contains("memory") {
-                            tile("Gedächtnis", "brain", .green, m.facts.count,
-                                 m.tidy ? Text("Vorschläge zum Aufräumen") : nil) { MemoryView() }
+                            tile(.memory, "Gedächtnis", "brain", .green, m.facts.count, m.tidy ? Text("Vorschläge zum Aufräumen") : nil)
                         }
                     }
                     .listRowInsets(EdgeInsets())
@@ -165,6 +182,7 @@ struct ThingsView: View {
         .refreshable { await m.load(a) }
         .task { await m.load(a) }
         .overlay { if m.loading { ProgressView() } }
+        .navigationDestination(item: $open) { $0.page }
         .onChange(of: talk.allowed) { _, a in Task { await m.load(a) } }
     }
 
@@ -185,9 +203,9 @@ struct ThingsView: View {
         return f.string(from: Date())
     }
 
-    private func tile<V: View>(_ name: LocalizedStringKey, _ icon: String, _ tint: Color, _ count: Int, _ note: Text?,
-                               @ViewBuilder page: @escaping () -> V) -> some View {
-        NavigationLink { page() } label: {
+    private func tile(_ part: ThingPart, _ name: LocalizedStringKey, _ icon: String, _ tint: Color, _ count: Int,
+                      _ note: Text?) -> some View {
+        Button { open = part } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Image(systemName: icon).font(.title3).foregroundStyle(.white)
                     .frame(width: 34, height: 34).background(tint, in: RoundedRectangle(cornerRadius: 8))
@@ -198,8 +216,9 @@ struct ThingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
     }
 
     private func row(_ h: ThingHit) -> some View {

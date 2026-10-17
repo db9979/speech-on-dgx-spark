@@ -242,7 +242,7 @@ struct DocumentsView: View {
                                 .background(filter == f ? Color.accentColor : Color(.secondarySystemGroupedBackground), in: Capsule())
                                 .foregroundStyle(filter == f ? .white : .primary)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.borderless)   // each chip on its own in the List row
                     }
                 }
             }

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.746** iPhone app: every tile under "My things" opens its own part
 - **V01.0.745** Companion on the Mac: "Act on the PC" settings tidied up, switches on the right in cards
 - **V01.0.744** Jobs with plan, questions and proposals: a job shows its steps, asks once, proposes a reminder, appointment or list entry carried out only after your Yes, and takes additions while it runs
 - **V01.0.743** Show steps and approvals: below every answer the tools the assistant used, and proposals as a card with "Yes" and "No"
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.739** Reddit and feeds: connect your own Reddit inbox, subreddits and feeds, news comes at once or in the daily briefing
 - **V01.0.738** Control centre in colour: boxes with a surface and round corners, the tools box names the tools used last
 - **V01.0.737** Pebble watch: read and answer messages, remote, steps, pulse and sleep
-- **V01.0.736** Pebble watch: own Spark watchface, my day and my week, quick notes with place
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

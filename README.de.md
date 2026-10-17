@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.746** iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil
 - **V01.0.745** Begleiter am Mac: „Am PC handeln einstellen“ aufgeräumt, Schalter rechts in Karten
 - **V01.0.744** Aufträge mit Plan, Rückfrage und Vorschlag: ein Auftrag zeigt seine Schritte, fragt einmal nach, schlägt eine Erinnerung, einen Termin oder einen Listeneintrag vor, den erst dein Ja ausführt, und lässt sich ergänzen, während er läuft
 - **V01.0.743** Ablauf und Freigabe zeigen: unter jeder Antwort, welche Werkzeuge der Assistent benutzt hat, und Vorschläge als Karte mit „Ja“ und „Nein“
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.739** Reddit und Feeds: eigenen Reddit-Posteingang, Subreddits und Feeds verbinden, Neues kommt sofort oder im Tagesbrief
 - **V01.0.738** Steuerzentrale farbiger: Kästen mit Farbfläche und runden Ecken, Werkzeuge nennt die zuletzt benutzten
 - **V01.0.737** Pebble-Uhr: Nachrichten lesen und beantworten, Fernbedienung, Schritte, Puls und Schlaf
-- **V01.0.736** Pebble-Uhr: eigenes Spark-Zifferblatt, Mein Tag und Meine Woche, Schnell merken mit Ort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
