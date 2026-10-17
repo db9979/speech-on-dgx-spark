@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.758** · 2026-10-17 · Funktionen und Personen und Geräte mit Symbolen wie Zustand und Einstellungen: jede Seite im Menü daneben und jede Gruppe der Funktionen hat ihr farbiges Symbol
 - **V01.0.757** · 2026-10-17 · Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung mit 10 Reparaturen, Diagnose und Reparatur mit OpenCode in einer Sandbox auf dem Modell-Rechner (eigener Nutzer, kein Netz außer dem eigenen LLM-Tor ganz hinten, keine Daten), jede Nacht testen, Live/Monitoring/Steuerzentrale; Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an Übungs- und Prüfhälfte gemessen
 - **V01.0.756** · 2026-10-17 · Zustand → Modelle einfacher: Speicherbalken und eine Kachel je Art, „Wechseln“ zeigt Karten mit „Ausprobieren“ (laden, messen, dann mit den Zahlen fragen), Suche bei Hugging Face mit den festen Regeln; Messwerte, Lange Gespräche und Zurückholen unter „Mehr“; auch in der iPhone-App
 - **V01.0.755** · 2026-10-17 · Genauer und schneller, Paket A: Zustand → Prüfen zeigt die Zeiten je Fragenart und je Version, Antworten ohne Bildschirm sind gedeckelt, „Namen fürs Hören“ gibt der Spracherkennung Räume, Geräte und Personen, Einheiten und Abkürzungen werden ausgesprochen

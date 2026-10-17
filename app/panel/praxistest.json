@@ -1688,6 +1688,13 @@
 "titel": "Werkstatt und Weiche abstimmen",
 "text": "A: Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt, dann sudo speech-spark werkstatt status: OpenCode 1.18.34 da. Im Panel Funktionen → Werkstatt einschalten, „Testlauf“ antippen: die Zeile zeigt „Testlauf läuft“, Zustand → Live hat den Kasten Werkstatt, Monitoring die Einheit Werkstatt beim Modell-Rechner; danach steht der Testlauf mit grün, rot und wackelig da. „Code-Messung“ (fragt nach dem Code) läuft mehrere Stunden, danach steht beim Sprachmodell „n von 10 Reparaturen grün“. Ein Problem eintippen und „Diagnose“: eine Antwort in Worten, kein Patch. „Reparatur“: ein Patch mit den geänderten Dateien und ihren Tests, „Verwerfen“ löscht ihn. Funktionen → unter Gezielte Werkzeugwahl „Weiche abstimmen“ an, dann Funktionen → Weiche → „Abstimmen“: ein Vorschlag mit Übungs- und Prüfhälfte, „Übernehmen“ speichert die Wörter, „Rückgängig“ nimmt sie zurück.",
 "thread": "OpenCode-Werkstatt"
+},
+{
+"id": "P265",
+"v": 758,
+"titel": "Symbole auf Funktionen und Personen",
+"text": "A: Am Rechner Funktionen öffnen: links Funktionen, Weiche und Anleitungen mit farbigen Symbolen, die Gruppen der Liste (Gespräch, Tempo und Genauigkeit …) haben ihr Symbol wie unter Ich. Personen und Geräte: Personen und Geräte, Apps und Schnittstellen mit Symbolen. Am Handy in Verwalten dasselbe in der Liste.",
+"thread": "Webanwendung schöner und schneller"
 }
 ]
 }

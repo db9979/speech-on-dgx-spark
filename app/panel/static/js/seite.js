@@ -61,7 +61,12 @@ const IC={start:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],fe
   'z:logs':['blue','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],'z:test':['green','M5 12l5 5L20 7'],
   'z:verb':['green','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],'z:praxis':['green','M9 4h6v3H9zM7 5H5v16h14V5h-2M9 14l2 2 4-4'],
   'z:usage':['violet','M4 20V10M10 20V4M16 20v-7M22 20H2'],'z:models':['violet','M12 3a4 4 0 00-4 4 4 4 0 00-3 6.5A4 4 0 009 20h6a4 4 0 004-6.5A4 4 0 0016 7a4 4 0 00-4-4zM12 3v17'],
-  'z:tech':['violet','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4']};
+  'z:tech':['violet','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'],
+  // Funktionen and Personen und Geräte the same way (Dominik 2026-10-17: „durchgängigen Style verwenden“)
+  'z:feat':['violet','M4 6h16M4 12h16M4 18h16'],'z:route':['teal','M6 3v6a6 6 0 006 6h6M15 12l3 3-3 3M6 21v-6'],
+  'z:int':['amber','M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7'],
+  'z:prof':['blue','M9 11a4 4 0 100-8 4 4 0 000 8zM2 21a7 7 0 0114 0M17 3.5a4 4 0 010 7M22 21a7 7 0 00-5-6.7'],
+  'z:apps':['green','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z']};
 const NS='http://www.w3.org/2000/svg';
 function icon(k){const d=IC[k];if(!d)return null;const sp=document.createElement('span');sp.className='cic c-'+d[0];sp.setAttribute('aria-hidden','true');
   const sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox','0 0 24 24');const pa=document.createElementNS(NS,'path');pa.setAttribute('d',d[1]);sv.appendChild(pa);sp.appendChild(sv);return sp}
@@ -74,6 +79,10 @@ const MEG={talk:['violet','M4 5h16v11H9l-5 4z'],speed:['violet','M13 3L5 14h6l-1
 const MEI={overbox:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],gobox:['green','M5 21V4h11l-2 4 2 4H5'],kannbox:['amber','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],setbox:['violet','M4 5h16v11H9l-5 4z'],
   loginbox:['gray','M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0'],bgbox:['red','M3 12h4l3-7 4 14 3-7h4'],usebox:['blue','M4 20V10M10 20V4M16 20v-7M22 20H2'],telbox:['green','M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2'],logbox:['gray','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],
   secbox:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4'],voicebox:['teal','M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2'],rpbox:['amber','M12 8v5M12 16h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z']};
+// the groups of Funktionen (guides.js guidesFeat) carry the symbol of the same group in Ich
+function featGroupIcons(){document.querySelectorAll('#pane-feat .fgrp>summary b').forEach(b=>{const g=b.closest('.fgrp').dataset.grp,d=MEG[g];
+  if(!d||b.querySelector('.cic'))return;IC['g:'+g]=d;b.appendChild(icon('g:'+g))})}
+featGroupIcons();
 function meIcons(){const nav=$('ptabs');if(!nav)return;nav.querySelectorAll('button[data-t]').forEach(b=>{if(b.querySelector('.cic'))return;
   const id=b.dataset.t,g=typeof meGroup==='function'?meGroup(id):null,d=MEI[id]||MEG[g];if(!d)return;
   IC['me:'+id]=d;const i=icon('me:'+id);b.appendChild(i);b.classList.add('hasic')})}

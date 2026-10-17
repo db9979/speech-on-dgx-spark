@@ -412,6 +412,7 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 }
 /* guides (guides.js): groups in Funktionen, an "Anleitung" per service, headers in the "Ich" menu */
 .fgrp{margin-top:14px}.fitem>.fdetail{margin:0 0 10px 18px!important;padding:2px 0 8px 12px;border-left:2px solid var(--line)}.fgrp>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:8px 0;border-bottom:2px solid var(--line);font-size:15px}
+.fgrp>summary b{display:inline-flex;align-items:center;gap:10px}
 .fcount{font-size:12px;color:var(--mut);font-weight:400}
 /* Funktionen as short lines (guides.js featItem): name + switch, the rest opens with the arrow or a tap on the name */
 .fitem{border-bottom:1px solid var(--line)}.fitem>.setrow{border-bottom:0}.fitem>.setrow:first-child .lbl{cursor:pointer}

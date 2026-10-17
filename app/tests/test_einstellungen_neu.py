@@ -27,6 +27,21 @@ class Static(unittest.TestCase):
         for before in ("admin", "me", "guides", "notaus"):
             self.assertLess(scripts.index(before), scripts.index("seite"), before)
 
+    def test_every_menu_page_has_its_symbol(self):
+        """One style on every page with a second column (Dominik 2026-10-17: „durchgängigen Style verwenden“): each
+        page of Zustand, Funktionen and Personen und Geräte has its symbol (seite.js IC 'z:<id>'), each group of
+        Funktionen the symbol of the same group in Ich (MEG)."""
+        base, seite, guides = read("js", "base.js"), read("js", "seite.js"), read("js", "guides.js")
+        groups = base[base.index("const GROUPS={"):base.index("const lastSec")]
+        for g in ("mon", "feat", "prof"):
+            body = groups[groups.index(g + ":["):]
+            body = body[:body.index("]],") + 2]
+            for page in re.findall(r"\['([a-z]+)',t\(", body):
+                self.assertIn(f"'z:{page}':[", seite, f"{g}/{page} without a symbol")
+        meg = seite[seite.index("const MEG={"):seite.index("const MEI=")]
+        for gid in re.findall(r"\['([a-z]+)','[^']+','[^']+'\]", guides[guides.index("const GGROUPS="):guides.index("const GSECT=")]):
+            self.assertRegex(meg, r"\b" + gid + r":\[", gid)
+        self.assertIn("featGroupIcons();", seite)
     def test_frame_only_changes_the_look(self):
         js = read("js", "seite.js")
         # no new requests, no HTML from data: buttons get their text with textContent
