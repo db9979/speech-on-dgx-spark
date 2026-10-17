@@ -104,6 +104,36 @@
       "betrieb": "resident"
     },
     {
+      "id": "qwen3-vl-30b-a3b-fp8",
+      "art": "llm",
+      "name": {
+        "de": "Qwen3-VL 30B A3B FP8 (schnell, sieht)",
+        "en": "Qwen3-VL 30B A3B FP8 (fast, can see)"
+      },
+      "engine": "vllm",
+      "repo": "Qwen/Qwen3-VL-30B-A3B-Instruct-FP8",
+      "revision": "",
+      "lizenz": "Apache-2.0",
+      "gewerblich": true,
+      "platte_gb": 33,
+      "need_gib": 44,
+      "gemessen": false,
+      "anteil": 0.36,
+      "kontext": 65536,
+      "kann_sehen": true,
+      "werkzeuge": true,
+      "vllm": {
+        "tool_call_parser": "hermes",
+        "max_seqs": 8,
+        "bilder_pro_frage": 4
+      },
+      "anfrage": {
+        "top_k": 20
+      },
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
       "revision": "",
       "gewerblich": true,
       "gemessen": false,

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.718** Two fast models to measure: Gemma 4 26B A4B and Qwen3-VL 30B A3B
 - **V01.0.717** Kolibri-1 measures with enough memory (already FP8, 78B)
 - **V01.0.716** Self-test fix: the source checks read the model side in its own file
 - **V01.0.715** `modelle messen` works next to the own language model; Kolibri-1 loads as FP8
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.711** Speaker firmware 2.5.2.8: now builds on XiaoZhi 2.5.2, all own patches unchanged
 - **V01.0.710** Speakers: if the board still has the old DGX address, the diagnosis names the right one on the Pi
 - **V01.0.709** Cleanup: the proposals under “Improve” come from three smaller parts, shared pieces only once
-- **V01.0.708** Phone behind a router with NAT: the Spark learns the address the PBX sees and says which ports to forward
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

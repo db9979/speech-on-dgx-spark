@@ -1,7 +1,7 @@
 """Modell-Katalog (plan plaene/eigene-modelle.md, Dominik 2026-10-14 „1a 2a 3a 4a 5a 6a“): the models this
 installation runs itself, one line each in modelle.json, read only here.
 
-Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma]` stops the
+Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]` stops the
 qwen38 lanes for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM on
 127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
 starts qwen38 again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
@@ -343,11 +343,11 @@ def wahl_zeilen(art, kat=None):
 
 
 def messliste(was, kat=None):
-    """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma
-    (one entry each that is measured only on request); no word means llm and sehen."""
+    """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
+    vl30 (one entry each that is measured only on request); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
-    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4"}
+    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4", "vl30": "qwen3-vl-30b-a3b-fp8"}
     wunsch.update({i: i for i, m in kat.items() if m.get("eigen")})     # stage E5: an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -759,7 +759,8 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
             log(f"modelle: messung {mid} sehen text {'ok' if r['bild_text'] else 'falsch'}, "
                 f"szene {'ok' if r['bild_szene'] else 'falsch'}")
         cfg = load_config()
-        if m["art"] == "llm" and cfg.get("image", {}).get("enabled"):
+        # a picture painted meanwhile: for every candidate main model, also one filed to see that takes tools (Gemma 4)
+        if (m["art"] == "llm" or m["werkzeuge"]) and cfg.get("image", {}).get("enabled"):
             maler = threading.Thread(target=_bild_malen, args=(cfg, r), daemon=True)
             maler.start()
             a, n, t = stream_messen(port, _body(m, [{"role": "user", "content": LANG}], 600))

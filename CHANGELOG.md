@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.718** · 2026-10-17 · `modelle messen gemma vl30`: Gemma 4 26B A4B und neu Qwen3-VL 30B A3B FP8 als schnelles Hauptmodell messen
 - **V01.0.717** · 2026-10-17 · Kolibri-1 misst mit 74 % Speicher: es liegt schon in FP8 vor (78B, 73,6 GiB geladen), `--quantization fp8` fällt weg
 - **V01.0.716** · 2026-10-16 · Rot-Fix: Selbsttests lesen die Modellseite in chat_modell.py
 - **V01.0.715** · 2026-10-16 · `speech-spark modelle messen` misst auch neben dem eigenen Sprachmodell (vorher „messung abgelehnt port belegt“, weil dessen Engine den Messport hatte) und sagt richtig, dass es das laufende Sprachmodell stoppt; Kolibri-1 lädt als FP8 (bf16-Gewichte passten nicht in den Anteil)

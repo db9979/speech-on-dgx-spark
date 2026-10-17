@@ -143,6 +143,13 @@ class Katalog(unittest.TestCase):
         self.assertNotIn("gemma-4-26b-a4b", modelle.messliste(["llm", "sehen"]))
         self.assertIn("gemma-4-26b-a4b", modelle.messliste(["gemma"]))
         self.assertIn("qwen38-27b-fp8", modelle.messliste(["fp8"]))
+        # the two fast MoE candidates for the main model (Dominik 2026-10-17 "ja 1+2"), in catalog order
+        self.assertEqual(modelle.messliste(["gemma", "vl30"]), ["qwen3-vl-30b-a3b-fp8", "gemma-4-26b-a4b"])
+        m = modelle.katalog()["qwen3-vl-30b-a3b-fp8"]
+        self.assertEqual((m["art"], m["kann_sehen"], m["werkzeuge"]), ("llm", True, True))
+        a = modelle.vllm_args(m, revision="c" * 40)
+        self.assertEqual(a[a.index("--tool-call-parser") + 1], "hermes")
+        self.assertNotIn("--reasoning-parser", a)                       # the Instruct model does not think aloud
         with self.assertRaises(modelle.Fehler):
             modelle.messliste(["alles; rm"])
 
